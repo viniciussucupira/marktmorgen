@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 
-const SUPPORT = "mailto:viniciussucupira091@gmail.com";
+const SUPPORT = "mailto:support@nimbuslabsai.com";
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -115,7 +115,7 @@ export function SiteFooter() {
           <li>
             Written support, in English, from{" "}
             <a href={SUPPORT} className="font-medium text-white underline underline-offset-4">
-              viniciussucupira091@gmail.com
+              support@nimbuslabsai.com
             </a>
           </li>
         </ul>

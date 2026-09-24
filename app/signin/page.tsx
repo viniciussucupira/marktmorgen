@@ -137,7 +137,7 @@ export default async function SignInPage({
               <Icon name="mail" size={18} className="mt-0.5 shrink-0 text-violet-deep" />
               <span>
                 Trouble signing in?{" "}
-                <a href="mailto:viniciussucupira091@gmail.com" className="link">
+                <a href="mailto:support@nimbuslabsai.com" className="link">
                   Write to us
                 </a>{" "}
                 and a person answers.

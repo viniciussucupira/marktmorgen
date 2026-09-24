@@ -132,7 +132,7 @@ const RELEASES: { date: string; items: string }[] = [
 /* Facts a creator can check before trusting us with a store. */
 const TRUST: { icon: IconName; title: string; body: string; href: string; link: string }[] = [
   { icon: "user", title: "Who builds it", body: "Vinicius Sucupira, the founder, who writes the code and answers the email.", href: "/proof/questions", link: "The awkward questions" },
-  { icon: "mail", title: "How to reach us", body: "By email. A person reads every message and answers in writing, in English.", href: "mailto:viniciussucupira091@gmail.com", link: "Write to us" },
+  { icon: "mail", title: "How to reach us", body: "By email. A person reads every message and answers in writing, in English.", href: "mailto:support@nimbuslabsai.com", link: "Write to us" },
   { icon: "bank", title: "Where the money is", body: "Every sale is processed by Stripe on the creator's own account. We never hold a balance of yours.", href: "/platform/your-stripe", link: "How the money moves" },
   { icon: "shield", title: "What we keep about you", body: "What the service needs to run, listed in plain words, with who processes it for us. Nothing is sold.", href: "/privacy", link: "Privacy policy" },
   { icon: "receipt", title: "The rules, in writing", body: "The terms of the service, and a full refund of any charge from us you ask for within 14 days.", href: "/terms", link: "Terms and refunds" },

@@ -474,7 +474,7 @@ export default function HelpPage() {
                   .
                 </p>
               </div>
-              <a href="mailto:viniciussucupira091@gmail.com" className="btn btn-primary shrink-0">
+              <a href="mailto:support@nimbuslabsai.com" className="btn btn-primary shrink-0">
                 <Icon name="mail" size={18} />
                 Email support
               </a>
