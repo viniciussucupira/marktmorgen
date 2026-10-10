@@ -1819,6 +1819,41 @@ try {
   }
 
   await keepSmall();
+  part("A cart left at its checkout: one reminder, and the cart put back");
+  {
+    const remind = (enabled) => studio.evaluate(async (enabled) => (await (await fetch("/api/store/recovery", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled, address: "1 Harbor Road, Portland, ME 04101" }) })).json()).ok === true, enabled);
+    is("with reminders switched on", await remind(true), true);
+    const cart = `${ids["Weeknight Dinners"]},${ids["Pantry Checklist"]}`;
+    await open(page, `${LOCAL}/@localshop/left?cart=${cart}`);
+    const card = page.locator("main .st-card");
+    is("the way back from a cart's checkout says nothing was charged, and what was in it", [
+      await words(page.locator("h1")),
+      (await words(card)).includes("Weeknight Dinners"),
+      (await words(card)).includes("Pantry Checklist"),
+      await card.getByRole("link", { name: "Back to your cart" }).first().getAttribute("href"),
+    ], ["You left before paying for your cart", true, true, `/@localshop?restore=${cart}#cart`]);
+    await card.getByLabel("Your email").fill("cartleft@example.com");
+    await Promise.all([page.waitForURL(/status=asked/), card.getByRole("button", { name: "Remind me once" }).click()]);
+    is("one reminder of the cart can be asked for, with no address in the link", [
+      (await words(card)).includes("will email you once, with your cart."),
+      page.url().includes("cartleft"),
+    ], [true, false]);
+    await open(page, `${LOCAL}/@localshop`);
+    await page.evaluate(() => window.localStorage.clear());
+    await open(page, `${LOCAL}/@localshop?restore=${cart}#cart`);
+    const panel = page.getByRole("region", { name: "Your cart" });
+    await panel.locator("form[data-checkout]").waitFor({ timeout: 15_000 });
+    is("the reminder's link puts the cart back as it was, open, and leaves the address clean", [
+      (await words(panel)).includes("Weeknight Dinners"),
+      (await words(panel)).includes("Pantry Checklist"),
+      await words(page.locator("#cart .st-cart-open")),
+      page.url().includes("restore="),
+    ], [true, true, "Cart, 2 products", false]);
+    await page.evaluate(() => window.localStorage.clear());
+    is("and off again", await remind(false), true);
+  }
+
+  await keepSmall();
   part("A picture in an email, kept on this site");
   {
     await open(studio, `${LOCAL}/studio/email?store=${fresh}`);

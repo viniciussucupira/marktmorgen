@@ -1,7 +1,7 @@
 import { StickyBuy } from "@/components/sticky-buy";
 import { AddToCart, CartButton } from "@/components/store-cart";
 import { offersCart } from "@/lib/cart-checkout";
-import { cartable } from "@/lib/cart-rules";
+import { cartable, readCartIds } from "@/lib/cart-rules";
 import { forVisitor } from "@/lib/visitor";
 import { MoreFrom, moreFrom } from "@/components/more-from";
 import { ExitOfferSlot } from "@/components/exit-offer-slot";
@@ -477,7 +477,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
         {w.everythingFrom(store.name)}
       </Link>
       <StoreTracking store={store} presence product={product.id} />
-      {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={cartNotice} /> : null}
+      {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}
     </div>
   );
 

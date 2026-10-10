@@ -53,7 +53,13 @@ import { type SessionRecord, fromCreator, storeBase } from "@/lib/purchase-email
 import { activePwyw } from "@/lib/pay-what-you-want";
 import { SITE_URL } from "@/lib/site-url";
 import type { Store } from "@/lib/store";
-import { readListing } from "@/lib/catalog";
+import { readListing, readListings } from "@/lib/catalog";
+import { BUMP_KEYS } from "@/lib/bundle-rules";
+import { cartable, readCartIds } from "@/lib/cart-rules";
+import { cartWords } from "@/lib/buyer-words/cart";
+import { saleOff, salePrice } from "@/lib/store-sale";
+import { cartAskIds } from "@/lib/checkout-ask-cart";
+import type { Listing } from "@/lib/store";
 import { membershipLine, speech } from "@/lib/buyer-words";
 import { givingWords } from "@/lib/buyer-words/giving";
 
@@ -89,6 +95,11 @@ export async function accountCountry(store: Store): Promise<CountryAnswer> {
     console.error("reading the account country failed", error);
     return { state: "unknown" };
   }
+}
+
+/** Where a cart's reminder leads: the store, with the cart put back as it was and open (components/store-cart.tsx). */
+export function cartLink(store: Store, ids: string[]): string {
+  return `${storeBase(store)}?restore=${ids.map(encodeURIComponent).join(",")}#cart`;
 }
 
 /** Where a reminder's link leads: the product's own page on the store. */
@@ -140,8 +151,8 @@ export async function stopReminders(token: string): Promise<boolean> {
   }
 }
 
-/** Whether the address paid this store for this product after the checkout opened. */
-async function paidSince(store: Store, email: string, productId: string, since: number): Promise<boolean> {
+/** Whether the address paid this store for any of these products after the checkout opened. */
+async function paidSince(store: Store, email: string, productIds: string[], since: number): Promise<boolean> {
   const handles = saleHandles(store);
   const query = new URLSearchParams({
     "customer_details[email]": email,
@@ -151,12 +162,25 @@ async function paidSince(store: Store, email: string, productId: string, since: 
   });
   const listed = await onAccount("GET", store.stripeAccountId as string, `/checkout/sessions?${query}`);
   const rows = Array.isArray(listed.data) ? (listed.data as SessionRecord[]) : [];
+  // The product an order is for, and the ones added to it, as from a cart (lib/bundle-rules.ts, BUMP_KEYS).
+  const bought = (row: SessionRecord) => [row.metadata?.product, ...BUMP_KEYS.map((key) => row.metadata?.[key])];
   return rows.some(
-    (row) => isSettled(row) && handles.has(row.metadata?.store ?? "") && row.metadata?.product === productId,
+    (row) => isSettled(row) && handles.has(row.metadata?.store ?? "") && bought(row).some((id) => id && productIds.includes(id)),
   );
 }
 
 export type RemindOutcome = "sent" | "skip" | "failed";
+
+/** The products of a cart that can still go in one and be bought now, in its order. */
+async function cartItems(store: Store, raw: (string | undefined)[]): Promise<Listing[]> {
+  const ids = readCartIds(raw.filter((id): id is string => typeof id === "string" && id !== ""));
+  if (ids.length === 0) return [];
+  const listed = await readListings(store, ids);
+  return ids.flatMap((id) => {
+    const product = listed.find((p) => p.id === id);
+    return product && cartable(product) && canSellProduct(store, product) ? [product] : [];
+  });
+}
 
 /**
  * Sends the reminder for one checkout that closed unpaid, when everything
@@ -182,14 +206,25 @@ export async function remindAbandoned(
   const email = typeof typed === "string" && typed ? typed : typeof session.customer_email === "string" ? session.customer_email : "";
   if (!email) return "skip";
 
+  const created = typeof session.created === "number" ? session.created : closed - RECOVERY_OPEN_SECONDS;
+  // A cart (lib/cart-checkout.ts): one reminder of what is in it that can still be bought.
+  if (meta.cart === "yes") {
+    const items = await cartItems(store, [meta.product, ...BUMP_KEYS.map((key) => meta[key])]);
+    if (items.length === 0) return "skip";
+    return deliver(store, { kind: "cart", items }, email, {
+      claim: id,
+      since: created,
+      why: givingWords(store.language).recoverWhyCheckout(store.name),
+    });
+  }
+
   // Only something that can still be bought, and bought now.
   const product = meta.product ? await readListing(store, meta.product) : null;
   if (!product || product.call || !canSellProduct(store, product)) return "skip";
   const left = await stockLeft(store, product).catch(() => null);
   if (left === 0) return "skip";
 
-  const created = typeof session.created === "number" ? session.created : closed - RECOVERY_OPEN_SECONDS;
-  return deliver(store, product, email, {
+  return deliver(store, { kind: "product", product }, email, {
     claim: id,
     since: created,
     why: givingWords(store.language).recoverWhyCheckout(store.name),
@@ -206,12 +241,19 @@ export async function remindAsked(
   ask: { productId: string; email: string; askedAt: number; key: string; from?: "checkout" | "page" },
 ): Promise<RemindOutcome> {
   if (!recoveryOn(store) || !store.stripeAccountId || !store.statsId) return "skip";
+  // A cart, asked for on the way back from its checkout (lib/checkout-ask.ts, CART_ASK).
+  const cart = cartAskIds(ask.productId);
+  if (cart) {
+    const items = await cartItems(store, cart);
+    if (items.length === 0) return "skip";
+    return deliver(store, { kind: "cart", items }, ask.email, { claim: `ask-${ask.key}`, since: ask.askedAt, why: givingWords(store.language).recoverWhyAsked(store.name) });
+  }
   const product = await readListing(store, ask.productId);
   if (!product || product.call || product.hidden || !canSellProduct(store, product)) return "skip";
   const left = await stockLeft(store, product).catch(() => null);
   if (left === 0) return "skip";
   const g = givingWords(store.language);
-  return deliver(store, product, ask.email, {
+  return deliver(store, { kind: "product", product }, ask.email, {
     claim: `ask-${ask.key}`,
     since: ask.askedAt,
     why: g.recoverWhyAsked(store.name),
@@ -230,16 +272,19 @@ export async function remindAsked(
  */
 async function deliver(
   store: Store,
-  product: NonNullable<Awaited<ReturnType<typeof readListing>>>,
+  about: { kind: "product"; product: Listing } | { kind: "cart"; items: Listing[] },
   email: string,
   how: { claim: string; since: number; why: string; subject?: string; lead?: string; only?: string },
 ): Promise<RemindOutcome> {
   const id = how.claim;
   const statsId = store.statsId as string;
+  const ids = about.kind === "cart" ? about.items.map((p) => p.id) : [about.product.id];
+  // What "once a week" counts: one product, or one cart of the same products in any order.
+  const onceFor = about.kind === "cart" ? `cart:${[...ids].sort().join(",")}` : about.product.id;
   const [sent, off, once, contact] = await redisPipeline([
     ["EXISTS", sentKey(id)],
     ["EXISTS", offKey(statsId, email)],
-    ["EXISTS", onceKey(statsId, email, product.id)],
+    ["EXISTS", onceKey(statsId, email, onceFor)],
     store.listId ? ["HGET", leadsKey(store.listId), normaliseEmail(email)] : ["EXISTS", "nl:none"],
   ]);
   if (Number(sent) === 1 || Number(off) === 1 || Number(once) === 1) return "skip";
@@ -247,7 +292,7 @@ async function deliver(
   // reminder is their email.
   if (store.listId && parseContact(contact)?.unsub) return "skip";
 
-  if (await paidSince(store, email, product.id, how.since)) {
+  if (await paidSince(store, email, ids, how.since)) {
     await redisPipeline([["SET", sentKey(id), "paid", "EX", ONCE_PER_SECONDS]]);
     return "skip";
   }
@@ -255,13 +300,36 @@ async function deliver(
   // Taken before sending: whichever pass gets here first is the only one.
   const [claimed, claimedOnce] = await redisPipeline([
     ["SET", sentKey(id), "sending", "NX", "EX", ONCE_PER_SECONDS * 2],
-    ["SET", onceKey(statsId, email, product.id), "1", "NX", "EX", ONCE_PER_SECONDS],
+    ["SET", onceKey(statsId, email, onceFor), "1", "NX", "EX", ONCE_PER_SECONDS],
   ]);
   if (claimed === null || claimedOnce === null) return "skip";
 
   const name = store.name;
   const { w, money } = speech(store);
   const g = givingWords(store.language);
+  const stop = await stopLink(store, email);
+  const foot = [how.only ?? g.recoverOnly(how.why), "", g.recoverStop(name, stop.page), `${name} · ${store.recovery.address}`, g.sentWith];
+  let subject: string;
+  let text: string;
+  if (about.kind === "cart") {
+    const c = cartWords(store.language);
+    const titles = about.items.map((p) => p.title);
+    const listed = titles.length > 1 ? `${titles.slice(0, -1).join(", ")} ${c.and} ${titles[titles.length - 1]}` : titles[0];
+    const now = Math.floor(Date.now() / 1000);
+    subject = c.mailSubject(name);
+    text = [
+      c.mailLead(listed, name),
+      "",
+      c.mailHere,
+      cartLink(store, ids),
+      "",
+      c.mailPrices,
+      ...about.items.map((p) => `- ${p.title}: ${money(salePrice(p.priceCents, saleOff(store.sale, p, now)))}`),
+      "",
+      ...foot,
+    ].join("\n");
+  } else {
+  const product = about.product;
   // The price as the store page says it: the floor of a price the buyer
   // chooses, and a membership's trial and set number of payments with it.
   const price = money(fromPriceCents(product));
@@ -271,8 +339,8 @@ async function deliver(
     : product.recurring
       ? from(membershipLine(store, product.recurring, price, activeIntro(product, store.tiers)))
       : from(price);
-  const stop = await stopLink(store, email);
-  const text = [
+  subject = how.subject ?? g.recoverSubject(product.title);
+  text = [
     how.lead ?? g.recoverLead(product.title, name),
     "",
     g.recoverHere,
@@ -280,12 +348,9 @@ async function deliver(
     "",
     g.recoverPrice(priceWords),
     "",
-    how.only ?? g.recoverOnly(how.why),
-    "",
-    g.recoverStop(name, stop.page),
-    `${name} · ${store.recovery.address}`,
-    g.sentWith,
+    ...foot,
   ].join("\n");
+  }
 
   let ok = false;
   try {
@@ -294,7 +359,7 @@ async function deliver(
       // from their own address where there is one (lib/mail-from.ts).
       from: fromCreator(store),
       to: email,
-      subject: (how.subject ?? g.recoverSubject(product.title)).slice(0, 200),
+      subject: subject.slice(0, 200),
       text,
       replyTo: store.email,
       headers: { "List-Unsubscribe": `<${stop.oneClick}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
@@ -304,7 +369,7 @@ async function deliver(
     if (ok) {
       await redisPipeline([["SET", sentKey(id), "sent", "EX", ONCE_PER_SECONDS * 2]]);
     } else {
-      await redisPipeline([["DEL", sentKey(id)], ["DEL", onceKey(statsId, email, product.id)]]);
+      await redisPipeline([["DEL", sentKey(id)], ["DEL", onceKey(statsId, email, onceFor)]]);
     }
   }
   return ok ? "sent" : "failed";

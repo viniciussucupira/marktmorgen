@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import { CartButton } from "@/components/store-cart";
 import { offersCart } from "@/lib/cart-checkout";
-import { cartable } from "@/lib/cart-rules";
+import { cartable, readCartIds } from "@/lib/cart-rules";
 import { faqData } from "@/lib/store-faq";
 import { JsonLd } from "@/components/structured-data";
 import { contactOpen } from "@/lib/store-contact";
@@ -687,7 +687,7 @@ export default async function StorePage({ params, searchParams }: Params) {
               </Link>
             ) : null}
             <StoreTracking store={store} countVisit />
-            {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={cartNotice} /> : null}
+            {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}
             <ExitOfferSlot store={store} />
           </div>
         </div>

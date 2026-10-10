@@ -95,10 +95,30 @@ type Line = { id: string; title: string; href: string; price: string; ok: boolea
  * what it opens: each product with its price as the store charges it now,
  * the total, and the button that pays for them all.
  */
-export function CartButton({ handle, lang, notice }: { handle: string; lang: LanguageCode; notice: "changed" | "error" | null }) {
+export function CartButton({
+  handle,
+  lang,
+  notice,
+  restore = [],
+}: {
+  handle: string;
+  lang: LanguageCode;
+  notice: "changed" | "error" | null;
+  /** A cart put back as it was, from a reminder's link or the way back from its checkout (lib/checkout-recovery.ts, cartLink). */
+  restore?: string[];
+}) {
   const c = cartWords(lang);
   const ids = useCart(handle);
-  const [open, setOpen] = useState(notice !== null);
+  const [open, setOpen] = useState(notice !== null || restore.length > 0);
+  const restoring = restore.join(",");
+  useEffect(() => {
+    if (!restoring) return;
+    write(handle, restoring.split(","));
+    // Put back once: a reload or a shared address does not put it back again over what was changed since.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("restore");
+    window.history.replaceState(window.history.state, "", url.toString());
+  }, [handle, restoring]);
   const [lines, setLines] = useState<Line[] | null>(null);
   const [total, setTotal] = useState("");
   const [deal, setDeal] = useState<{ percent: number; saved: string } | null>(null);
@@ -128,7 +148,7 @@ export function CartButton({ handle, lang, notice }: { handle: string; lang: Lan
     if (open) panel.current?.focus();
   }, [open]);
 
-  if (ids.length === 0 && notice === null) return null;
+  if (ids.length === 0 && notice === null && !restoring) return null;
   const shown = (lines ?? []).filter((line) => ids.includes(line.id));
   const payable = shown.filter((line) => line.ok);
 

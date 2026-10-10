@@ -44,6 +44,10 @@
  * hour, tomorrow or in three days (lib/ask-when.ts), with every rule above.
  * Its email says it was asked for on the page, not that a checkout was left.
  *
+ * And for a whole cart (added 10 October 2026), on the way back from its
+ * checkout: one reminder of what is in it, with a link that puts the cart
+ * back as it was (lib/checkout-recovery.ts, cartLink).
+ *
  *   nl:recover:asks     asks waiting, by when each is due (a sorted set)
  */
 import { createHash } from "node:crypto";
@@ -55,6 +59,8 @@ import { remindAsked } from "@/lib/checkout-recovery";
 import { canSellProduct } from "@/lib/store-checkout";
 import type { Listing, Store } from "@/lib/store";
 import { ASK_WHENS, type AskWhen } from "@/lib/ask-when";
+import { cartable } from "@/lib/cart-rules";
+import { cartAskKey } from "@/lib/checkout-ask-cart";
 
 /** How long after asking the reminder goes: the same hour the other one waits. */
 export const ASK_AFTER_SECONDS = 60 * 60;
@@ -117,19 +123,36 @@ export function parseAsk(member: unknown): Ask | null {
 export const askKey = (ask: Pick<Ask, "statsId" | "productId" | "email" | "askedAt">) =>
   createHash("sha256").update(`nimbus-ask:${ask.statsId}|${ask.productId}|${normaliseEmail(ask.email)}|${ask.askedAt}`).digest("hex").slice(0, 32);
 
+/**
+ * Keeps an ask for a reminder of a whole cart, on the way back from its
+ * checkout (lib/cart-checkout.ts): the products in it that can still go in
+ * one, each checked by the caller. The same queue, limits and email rules.
+ */
+export async function askCartReminder(input: { store: Store; items: Listing[]; email: string; ip: string }): Promise<AskOutcome> {
+  const { store } = input;
+  const items = input.items.filter((product) => cartable(product) && canSellProduct(store, product));
+  if (!isRedisConfigured() || !store.statsId || !recoveryOn(store) || items.length === 0) return "closed";
+  return keep(store, cartAskKey(items.map((p) => p.id)), input.email, input.ip, "checkout", ASK_AFTER_SECONDS);
+}
+
 /** Keeps an ask for a reminder. Says what happened; never throws at the buyer. */
 export async function askReminder(input: { store: Store; product: Listing | null; email: string; ip: string; from?: AskFrom; when?: AskWhen }): Promise<AskOutcome> {
   const { store, product } = input;
   if (!isRedisConfigured() || !store.statsId || !askable(store, product)) return "closed";
-  const email = normaliseEmail(input.email);
-  if (!email || email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) return "email";
-  if (!(await withinLimit("remind-ask", input.ip, ASKS_PER_ADDRESS_HOUR, 3600))) return "limited";
-  if (!(await withinLimit("remind-store", store.statsId, ASKS_PER_STORE_DAY, 86_400))) return "limited";
-  const askedAt = Math.floor(Date.now() / 1000);
   const from = input.from ?? "checkout";
   const after = from === "page" && input.when ? ASK_WHENS[input.when] : ASK_AFTER_SECONDS;
+  return keep(store, product.id, input.email, input.ip, from, after);
+}
+
+async function keep(store: Store, productId: string, typed: string, ip: string, from: AskFrom, after: number): Promise<AskOutcome> {
+  const statsId = store.statsId as string;
+  const email = normaliseEmail(typed);
+  if (!email || email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) return "email";
+  if (!(await withinLimit("remind-ask", ip, ASKS_PER_ADDRESS_HOUR, 3600))) return "limited";
+  if (!(await withinLimit("remind-store", statsId, ASKS_PER_STORE_DAY, 86_400))) return "limited";
+  const askedAt = Math.floor(Date.now() / 1000);
   await redisPipeline([
-    ["ZADD", QUEUE, askedAt + after, askMember({ statsId: store.statsId, handle: store.handle, productId: product.id, email, askedAt, from, after })],
+    ["ZADD", QUEUE, askedAt + after, askMember({ statsId, handle: store.handle, productId, email, askedAt, from, after })],
   ]);
   return "asked";
 }

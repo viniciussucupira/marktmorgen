@@ -31,6 +31,7 @@ import { LANGUAGES } from "@/lib/store-language";
 import { type CameFrom, hasSource } from "@/lib/came-from";
 import { isHouseStore } from "@/lib/house-store";
 import { MAX_CART, dealOff } from "@/lib/cart-rules";
+import { applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
 
 const DISPLAY_NAME = "branding_settings[display_name]";
 
@@ -142,6 +143,13 @@ export async function createCartCheckout(
   applyTaxDocuments(store, body, false);
   onlyInstantMethods(body);
   inTheCurrencyShown(body);
+  // A store with reminders on (lib/checkout-recovery.ts): Stripe asks for
+  // consent where it offers to, and the way back leads to a page that offers
+  // one reminder of the whole cart, which the buyer asks for themselves.
+  const recovering = recoveryOn(store);
+  if (recovering && store.recovery.asks) applyRecovery(body);
+  if (recovering) body.set("cancel_url", `${origin}/@${store.handle}/left?cart=${products.map((p) => encodeURIComponent(p.id)).join(",")}`);
+  let asking = recovering && store.recovery.asks;
   let named = isHouseStore(store);
   if (named) body.set(DISPLAY_NAME, store.name);
   let documents = store.tax.ids || store.tax.invoices;
@@ -155,6 +163,13 @@ export async function createCartCheckout(
       if (named && error instanceof StripeError && error.status === 400) {
         body.delete(DISPLAY_NAME);
         named = false;
+        continue;
+      }
+      if (asking && refusedRecovery(error)) {
+        // Stripe decides which accounts it asks for consent for: refused, the cart still sells.
+        console.error("cart checkout refused the reminder fields; opened without them", error);
+        withoutRecovery(body);
+        asking = false;
         continue;
       }
       if (documents && refusedTaxDocuments(error)) {
