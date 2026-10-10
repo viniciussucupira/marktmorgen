@@ -2,8 +2,9 @@ import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
-import { readListing } from "@/lib/catalog";
-import { askReminder } from "@/lib/checkout-ask";
+import { readListing, readListings } from "@/lib/catalog";
+import { readCartIds } from "@/lib/cart-rules";
+import { askCartReminder, askReminder } from "@/lib/checkout-ask";
 import { type AskWhen, isAskWhen } from "@/lib/ask-when";
 
 const MAX_BODY_BYTES = 2_000;
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
   if (fromAnotherSite(request)) return new Response("forbidden", { status: 403 });
   let handle = "";
   let productId = "";
+  let cart: string[] = [];
   let email = "";
   let honeypot = "";
   let fromPage = false;
@@ -32,6 +34,8 @@ export async function POST(request: NextRequest) {
     };
     handle = normaliseHandle(read("handle"));
     productId = read("product").slice(0, 40);
+    // A whole cart, from the way back from its checkout (lib/checkout-ask.ts, askCartReminder).
+    cart = readCartIds(read("cart").slice(0, 400).split(","));
     email = read("email").slice(0, 300);
     honeypot = read("website");
     fromPage = read("from") === "page";
@@ -48,13 +52,16 @@ export async function POST(request: NextRequest) {
       headers: {
         Location: fromPage
           ? `${origin}/@${store.handle}/p/${encodeURIComponent(productId)}?asked=${status}&when=${when}#remind`
-          : `${origin}/@${store.handle}/left?p=${encodeURIComponent(productId)}&status=${status}`,
+          : cart.length
+            ? `${origin}/@${store.handle}/left?cart=${cart.map(encodeURIComponent).join(",")}&status=${status}`
+            : `${origin}/@${store.handle}/left?p=${encodeURIComponent(productId)}&status=${status}`,
         "Cache-Control": "no-store",
       },
     });
   // A form filled in by something that fills in every field is told it worked.
   if (honeypot.trim()) return away("asked");
   try {
+    if (cart.length) return away(await askCartReminder({ store, items: await readListings(store, cart), email, ip: clientAddress(request) }));
     const product = productId ? await readListing(store, productId) : null;
     return away(await askReminder({ store, product, email, ip: clientAddress(request), from: fromPage ? "page" : "checkout", when }));
   } catch (error) {

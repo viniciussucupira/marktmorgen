@@ -49,8 +49,10 @@ test("the form cannot be turned on somebody's inbox, or run up a bill", () => {
   assert.ok(ASKS_PER_STORE_DAY * 0.0009 < 0.25);
   assert.equal(ASK_AFTER_SECONDS, 3600, "the same hour the other reminder waits");
   const src = code("lib/checkout-ask.ts");
-  assert.match(src, /withinLimit\("remind-ask", input\.ip, ASKS_PER_ADDRESS_HOUR, 3600\)/);
-  assert.match(src, /withinLimit\("remind-store", store\.statsId, ASKS_PER_STORE_DAY, 86_400\)/);
+  assert.match(src, /withinLimit\("remind-ask", ip, ASKS_PER_ADDRESS_HOUR, 3600\)/);
+  assert.match(src, /withinLimit\("remind-store", statsId, ASKS_PER_STORE_DAY, 86_400\)/);
+  // A product's ask and a cart's go through the one place those limits are.
+  assert.equal((src.match(/return keep\(store, /g) ?? []).length, 2);
 });
 
 test("an ask is one email: it puts nobody on the creator's list", () => {
@@ -70,9 +72,10 @@ test("it is taken off the queue before anything is sent, and never put back", ()
 
 test("both kinds of yes go through the one set of limits", () => {
   const src = code("lib/checkout-recovery.ts");
-  assert.equal((src.match(/return deliver\(store, product,/g) ?? []).length, 2, "Stripe's box and the buyer's own ask");
+  assert.equal((src.match(/return deliver\(store, \{ kind: "product", product \},/g) ?? []).length, 2, "Stripe's box and the buyer's own ask");
+  assert.equal((src.match(/return deliver\(store, \{ kind: "cart", items \},/g) ?? []).length, 2, "and the same two for a whole cart");
   const deliver = src.slice(src.indexOf("async function deliver("));
-  for (const guard of ["offKey(statsId, email)", "onceKey(statsId, email, product.id)", "parseContact(contact)?.unsub", "paidSince(store, email, product.id, how.since)"]) {
+  for (const guard of ["offKey(statsId, email)", "onceKey(statsId, email, onceFor)", "parseContact(contact)?.unsub", "paidSince(store, email, ids, how.since)"]) {
     assert.ok(deliver.includes(guard), `the one email is always behind ${guard}`);
   }
   // The words are the store's language's (lib/buyer-words/giving.ts); the English ones say it so.

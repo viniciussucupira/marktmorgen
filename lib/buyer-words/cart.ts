@@ -25,6 +25,16 @@ const en = {
   close: "Close",
   changed: "Something in your cart changed since you added it. Look it over and check out again.",
   error: "The payment page could not be opened. Nothing was charged. Try again in a moment.",
+  // ---- A reminder of a cart left at checkout (lib/checkout-recovery.ts) ----
+  leftTitle: "You left before paying for your cart",
+  backToCart: "Back to your cart",
+  remindNote: (store: string) => `Leave your email and ${store} sends you one reminder with your cart, in about an hour. One email. It does not add you to any list.`,
+  willEmail: (store: string) => `${store} will email you once, with your cart. If you pay for it before then, no reminder is sent.`,
+  mailSubject: (store: string) => `Your cart at ${store}`,
+  mailLead: (titles: string, store: string) => `You put ${titles} in your cart at ${store} and did not finish paying, so nothing was charged.`,
+  mailHere: "Your cart is here, ready to pay:",
+  mailPrices: "What each costs today:",
+  and: "and",
 };
 
 export type CartWords = typeof en;
@@ -48,6 +58,15 @@ const es: CartWords = {
   close: "Cerrar",
   changed: "Algo de tu carrito cambió desde que lo añadiste. Revísalo y vuelve a pagar.",
   error: "No se pudo abrir la página de pago. No se cobró nada. Inténtalo de nuevo en un momento.",
+  leftTitle: "Te fuiste antes de pagar tu carrito",
+  backToCart: "Volver a tu carrito",
+  remindNote: (store) => `Deja tu email y ${store} te enviará un solo recordatorio con tu carrito, en una hora más o menos. Un solo email. No te añade a ninguna lista.`,
+  willEmail: (store) => `${store} te escribirá una sola vez, con tu carrito. Si lo pagas antes, no se envía ningún recordatorio.`,
+  mailSubject: (store) => `Tu carrito en ${store}`,
+  mailLead: (titles, store) => `Pusiste ${titles} en tu carrito de ${store} y no terminaste de pagar, así que no se ha cobrado nada.`,
+  mailHere: "Tu carrito está aquí, listo para pagar:",
+  mailPrices: "Lo que cuesta cada uno hoy:",
+  and: "y",
 };
 
 const fr: CartWords = {
@@ -69,6 +88,15 @@ const fr: CartWords = {
   close: "Fermer",
   changed: "Quelque chose a changé dans votre panier depuis votre ajout. Vérifiez-le et payez de nouveau.",
   error: "La page de paiement n'a pas pu s'ouvrir. Rien n'a été débité. Réessayez dans un instant.",
+  leftTitle: "Vous avez quitté la page avant de payer votre panier",
+  backToCart: "Retour à votre panier",
+  remindNote: (store) => `Laissez votre e-mail et ${store} vous enverra un seul rappel avec votre panier, dans une heure environ. Un seul e-mail. Il ne vous inscrit à aucune liste.`,
+  willEmail: (store) => `${store} vous enverra un seul e-mail, avec votre panier. Si vous le payez d'ici là, aucun rappel n'est envoyé.`,
+  mailSubject: (store) => `Votre panier chez ${store}`,
+  mailLead: (titles, store) => `Vous avez mis ${titles} dans votre panier chez ${store} sans aller au bout du paiement, donc rien n'a été débité.`,
+  mailHere: `Votre panier est ici, prêt à être payé${S}:`,
+  mailPrices: `Le prix de chacun aujourd'hui${S}:`,
+  and: "et",
 };
 
 const de: CartWords = {
@@ -90,6 +118,15 @@ const de: CartWords = {
   close: "Schließen",
   changed: "Seit dem Hinzufügen hat sich etwas in Ihrem Warenkorb geändert. Prüfen Sie ihn und gehen Sie erneut zur Kasse.",
   error: "Die Zahlungsseite konnte nicht geöffnet werden. Es wurde nichts berechnet. Versuchen Sie es gleich noch einmal.",
+  leftTitle: "Sie haben die Seite verlassen, bevor Sie Ihren Warenkorb bezahlt haben",
+  backToCart: "Zurück zu Ihrem Warenkorb",
+  remindNote: (store) => `Hinterlassen Sie Ihre E-Mail-Adresse, und ${store} schickt Ihnen in etwa einer Stunde eine einzige Erinnerung mit Ihrem Warenkorb. Eine E-Mail. Sie werden in keine Liste aufgenommen.`,
+  willEmail: (store) => `${store} schickt Ihnen einmalig eine E-Mail mit Ihrem Warenkorb. Wenn Sie ihn vorher bezahlen, wird keine Erinnerung gesendet.`,
+  mailSubject: (store) => `Ihr Warenkorb bei ${store}`,
+  mailLead: (titles, store) => `Sie haben ${titles} bei ${store} in den Warenkorb gelegt und nicht fertig bezahlt, daher wurde nichts berechnet.`,
+  mailHere: "Ihr Warenkorb ist hier, bereit zum Bezahlen:",
+  mailPrices: "Was jedes heute kostet:",
+  and: "und",
 };
 
 const it: CartWords = {
@@ -111,6 +148,15 @@ const it: CartWords = {
   close: "Chiudi",
   changed: "Qualcosa nel tuo carrello è cambiato da quando l'hai aggiunto. Controllalo e paga di nuovo.",
   error: "Non è stato possibile aprire la pagina di pagamento. Non è stato addebitato nulla. Riprova tra poco.",
+  leftTitle: "Hai lasciato la pagina prima di pagare il tuo carrello",
+  backToCart: "Torna al tuo carrello",
+  remindNote: (store) => `Lascia la tua email e ${store} ti invierà un solo promemoria con il tuo carrello, tra circa un'ora. Una sola email. Non ti aggiunge a nessuna lista.`,
+  willEmail: (store) => `${store} ti scriverà una sola volta, con il tuo carrello. Se lo paghi prima, non viene inviato nessun promemoria.`,
+  mailSubject: (store) => `Il tuo carrello su ${store}`,
+  mailLead: (titles, store) => `Hai messo ${titles} nel tuo carrello su ${store} e non hai finito di pagare, quindi non è stato addebitato nulla.`,
+  mailHere: "Il tuo carrello è qui, pronto da pagare:",
+  mailPrices: "Quanto costa ciascuno oggi:",
+  and: "e",
 };
 
 const nl: CartWords = {
@@ -132,6 +178,15 @@ const nl: CartWords = {
   close: "Sluiten",
   changed: "Er is iets in je winkelwagen veranderd sinds je het toevoegde. Bekijk het en reken opnieuw af.",
   error: "De betaalpagina kon niet worden geopend. Er is niets afgeschreven. Probeer het zo opnieuw.",
+  leftTitle: "Je ging weg voordat je je winkelwagen had betaald",
+  backToCart: "Terug naar je winkelwagen",
+  remindNote: (store) => `Laat je e-mailadres achter en ${store} stuurt je over ongeveer een uur één herinnering met je winkelwagen. Eén e-mail. Je wordt aan geen enkele lijst toegevoegd.`,
+  willEmail: (store) => `${store} mailt je één keer, met je winkelwagen. Betaal je hem voor die tijd, dan wordt er geen herinnering gestuurd.`,
+  mailSubject: (store) => `Je winkelwagen bij ${store}`,
+  mailLead: (titles, store) => `Je legde ${titles} in je winkelwagen bij ${store} en rekende niet af, dus er is niets afgeschreven.`,
+  mailHere: "Je winkelwagen staat hier klaar om af te rekenen:",
+  mailPrices: "Wat elk vandaag kost:",
+  and: "en",
 };
 
 const pt: CartWords = {
@@ -153,6 +208,15 @@ const pt: CartWords = {
   close: "Fechar",
   changed: "Algo no seu carrinho mudou desde que o adicionou. Reveja-o e pague novamente.",
   error: "Não foi possível abrir a página de pagamento. Nada foi cobrado. Tente novamente daqui a pouco.",
+  leftTitle: "Saiu antes de pagar o seu carrinho",
+  backToCart: "Voltar ao seu carrinho",
+  remindNote: (store) => `Deixe o seu email e ${store} envia-lhe um único lembrete com o seu carrinho, daqui a cerca de uma hora. Um único email. Não o adiciona a nenhuma lista.`,
+  willEmail: (store) => `${store} vai enviar-lhe um único email, com o seu carrinho. Se o pagar antes disso, não é enviado nenhum lembrete.`,
+  mailSubject: (store) => `O seu carrinho em ${store}`,
+  mailLead: (titles, store) => `Colocou ${titles} no seu carrinho em ${store} e não terminou o pagamento, por isso nada foi cobrado.`,
+  mailHere: "O seu carrinho está aqui, pronto a pagar:",
+  mailPrices: "Quanto custa cada um hoje:",
+  and: "e",
 };
 
 export const CART_WORDS: Record<LanguageCode, CartWords> = { en, es, fr, de, it, nl, pt };

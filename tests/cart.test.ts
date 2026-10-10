@@ -13,6 +13,7 @@
  *   - an affiliate's share is kept for each line.
  */
 import { MAX_CART, NO_DEAL, cartable, dealOff, parseCartDeal, readCartIds } from "@/lib/cart-rules";
+import { NO_RECOVERY } from "@/lib/recovery-setting";
 import { cartPrice, createCartCheckout, offersCart } from "@/lib/cart-checkout";
 import { KIND } from "@/lib/catalog";
 import { NO_SALE } from "@/lib/store-sale";
@@ -42,6 +43,7 @@ function shop(more: Partial<Store> = {}): Store {
     stripeAccountId: "acct_test_cart0001",
     sale: { ...NO_SALE },
     cartDeal: { ...NO_DEAL },
+    recovery: { ...NO_RECOVERY },
     fair: undefined,
     hasDiscounts: true,
     tax: { enabled: false, included: false, ids: false, invoices: false },
