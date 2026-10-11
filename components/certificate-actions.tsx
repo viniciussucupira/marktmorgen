@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 /** What the two buttons say, in the store's language (lib/buyer-words/courses.ts). */
-export type CertificateActionWords = { print: string; copy: string; copied: string; prompt: string; addToLinkedIn: string; shareOnLinkedIn: string };
+export type CertificateActionWords = { print: string; copy: string; copied: string; prompt: string; addToLinkedIn: string; shareOnLinkedIn: string; downloadPdf?: string };
 
 const ENGLISH: CertificateActionWords = {
   print: "Print or save as PDF",
@@ -21,7 +21,7 @@ const ENGLISH: CertificateActionWords = {
  * post. Each LinkedIn link opens LinkedIn's own page, filled in, where the
  * student decides; nothing is posted for them.
  */
-export function CertificateActions({ url, linkedIn, words = ENGLISH }: { url: string; linkedIn?: { add: string; share: string }; words?: CertificateActionWords }) {
+export function CertificateActions({ url, linkedIn, pdf, words = ENGLISH }: { url: string; linkedIn?: { add: string; share: string }; pdf?: string; words?: CertificateActionWords }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
@@ -34,6 +34,11 @@ export function CertificateActions({ url, linkedIn, words = ENGLISH }: { url: st
             {words.shareOnLinkedIn}
           </a>
         </>
+      ) : null}
+      {pdf ? (
+        <a href={pdf} className="btn btn-secondary" download data-pdf>
+          {words.downloadPdf ?? "Download PDF"}
+        </a>
       ) : null}
       <button type="button" className={linkedIn ? "btn btn-secondary" : "btn st-btn"} onClick={() => window.print()}>
         {words.print}
