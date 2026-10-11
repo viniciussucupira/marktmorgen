@@ -23,7 +23,7 @@ import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { NotConnected, disconnect, finishConsent, meetView } from "@/lib/meet-connect";
 import { ProviderError, ZOOM_ARRIVAL_COOKIE, cameForZoom } from "@/lib/meet-providers";
 import { startConnect } from "@/lib/meet-routes";
-import { TEST_MEETING_MINUTES, TEST_MEETING_TITLE, makeTest, readTests, removeTest } from "@/lib/meet-test";
+import { TEST_MEETING_MINUTES, TEST_MEETING_TITLE, TEST_MOVE_MINUTES, makeTest, moveTest, readTests, removeTest } from "@/lib/meet-test";
 import { claimHandle, ensureStatsId, storeForEmail } from "@/lib/store";
 import { proxy } from "@/proxy";
 import { store as redis } from "./redis-stub";
@@ -54,6 +54,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     return json(201, { id: meetingNumber, join_url: `https://us05web.zoom.us/j/${meetingNumber}?pwd=abc` });
   }
   if (url.hostname === "api.zoom.us" && /^\/v2\/meetings\/\d+$/.test(url.pathname) && method === "DELETE") return json(204, null);
+  if (url.hostname === "api.zoom.us" && /^\/v2\/meetings\/\d+$/.test(url.pathname) && method === "PATCH") return json(204, null);
   return json(404, { message: "no stand-in" });
 }) as typeof fetch;
 
@@ -126,11 +127,25 @@ async function main(): Promise<void> {
   const again = await makeTest(statsId, "zoom", NOW + 60_000);
   is("asked twice: the same one, and Zoom is not asked again", [again.id, seen.filter((s) => s.method === "POST" && s.url.endsWith("/users/me/meetings")).length], [test.id, 1]);
 
+  part("Moving it, as a buyer's move does");
+  seen.length = 0;
+  const moved = await moveTest(statsId, "zoom");
+  const patched = seen.filter((s) => s.method === "PATCH");
+  is("one change is asked of Zoom, on that meeting", patched.map((s) => s.url), [`https://api.zoom.us/v2/meetings/${test.id}`]);
+  const shifted = JSON.parse(patched[0].body) as { start_time: string; duration: number; timezone: string };
+  is(
+    "an hour later, the same length",
+    [shifted.start_time.replace(/Z$/, ".000Z").replace(/\.000\.000Z$/, ".000Z"), shifted.duration, shifted.timezone],
+    [new Date(test.start + TEST_MOVE_MINUTES * 60_000).toISOString(), TEST_MEETING_MINUTES, "UTC"],
+  );
+  is("the same meeting and link, at the new time, kept for the page", [moved?.id, moved?.link, moved?.start, (await readTests(statsId, ["zoom"])).zoom?.start], [test.id, test.link, test.start + TEST_MOVE_MINUTES * 60_000, test.start + TEST_MOVE_MINUTES * 60_000]);
+
   part("Deleting it");
   seen.length = 0;
   is("deleted", await removeTest(statsId, "zoom"), true);
   is("on Zoom, by its own number", seen.filter((s) => s.method === "DELETE").map((s) => s.url), [`https://api.zoom.us/v2/meetings/${test.id}`]);
   is("and forgotten here", await readTests(statsId, ["zoom"]), {});
+  is("with none left, there is nothing to move", await moveTest(statsId, "zoom"), null);
 
   part("A provider that fails");
   failMeetings = 1;

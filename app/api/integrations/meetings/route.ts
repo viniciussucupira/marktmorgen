@@ -3,7 +3,7 @@ import { noticeCreator } from "@/lib/account-notice";
 import { isMeetProvider } from "@/lib/call-setup";
 import { ACCOUNT_NAMES, NotConnected, disconnect, logProblem, meetView } from "@/lib/meet-connect";
 import { ProviderError, isConfigured } from "@/lib/meet-providers";
-import { makeTest, removeTest } from "@/lib/meet-test";
+import { makeTest, moveTest, removeTest } from "@/lib/meet-test";
 import { withinLimit } from "@/lib/request-guard";
 import { guardStoreWrite } from "@/lib/store-request";
 
@@ -20,6 +20,7 @@ export const maxDuration = 30;
  *                deleted, and the owner is told by email (lib/meet-connect.ts)
  *   test         makes one test meeting on the connected account, or gives
  *                back the one already there (lib/meet-test.ts)
+ *   movetest     moves that test meeting an hour later, as a buyer's move does
  *   untest       deletes that test meeting on the account, and forgets it
  *
  * Only the owner and Admins ("settings", lib/team-roles.ts).
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
   const { store, body } = guarded;
   const provider = body.provider;
   const action = body.action;
-  if ((action !== "disconnect" && action !== "test" && action !== "untest") || !isMeetProvider(provider) || !isConfigured(provider)) {
+  if ((action !== "disconnect" && action !== "test" && action !== "movetest" && action !== "untest") || !isMeetProvider(provider) || !isConfigured(provider)) {
     return Response.json({ ok: false, error: "invalid" }, { status: 400 });
   }
   if (!store.statsId) {
@@ -41,9 +42,13 @@ export async function POST(request: NextRequest) {
   if (!(await withinLimit("meet-manage", store.statsId, PER_MINUTE, 60))) {
     return Response.json({ ok: false, error: "limited" }, { status: 429 });
   }
-  if (action === "test" || action === "untest") {
+  if (action === "test" || action === "movetest" || action === "untest") {
     try {
       if (action === "test") return Response.json({ ok: true, test: await makeTest(store.statsId, provider) });
+      if (action === "movetest") {
+        const moved = await moveTest(store.statsId, provider);
+        return moved ? Response.json({ ok: true, test: moved }) : Response.json({ ok: false, error: "no_test" }, { status: 400 });
+      }
       await removeTest(store.statsId, provider);
       return Response.json({ ok: true, test: null });
     } catch (error) {
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
       const why = error instanceof ProviderError ? error.message : "it could not be reached";
       console.error("a test meeting failed", error);
       // Said where every meeting that could not be made is said: under Recent problems.
-      await logProblem(store.statsId, provider, action === "test" ? "A test meeting could not be made" : "The test meeting could not be deleted", why);
+      await logProblem(store.statsId, provider, action === "test" ? "A test meeting could not be made" : action === "movetest" ? "The test meeting could not be moved" : "The test meeting could not be deleted", why);
       return Response.json({ ok: false, error: "meeting_failed" }, { status: 502 });
     }
   }

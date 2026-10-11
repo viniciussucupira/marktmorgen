@@ -5,8 +5,8 @@
  * Whether a meeting is really made there shows the first time somebody
  * books a call, which is the worst moment to find out that it is not. So the
  * Video calls page has a button: it makes one meeting on the connected
- * account, an hour from now, with nobody invited, shows its link, and takes
- * it away again when asked. It is made with the same calls a booking's
+ * account, an hour from now, with nobody invited, shows its link, moves it an
+ * hour later when asked — what a buyer's move does — and takes it away again. It is made with the same calls a booking's
  * meeting is made with (lib/meet-providers.ts), so what it proves is the
  * thing itself.
  *
@@ -18,7 +18,7 @@
 import { randomBytes } from "node:crypto";
 import type { MeetProvider } from "@/lib/call-setup";
 import { accessFor, testKey } from "@/lib/meet-connect";
-import { eventId, googleCreate, googleDelete, zoomCreate, zoomDelete } from "@/lib/meet-providers";
+import { eventId, googleCreate, googleDelete, googleMove, zoomCreate, zoomDelete, zoomMove } from "@/lib/meet-providers";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 
 export type TestMeeting = { id: string; link: string; start: number; end: number; madeAt: number };
@@ -76,6 +76,27 @@ export async function makeTest(statsId: string, provider: MeetProvider, now = Da
   const test: TestMeeting = { id: meeting.id, link: meeting.link, start, end, madeAt: now };
   await redisPipeline([["SET", testKey(statsId, provider), JSON.stringify(test)]]);
   return test;
+}
+
+/** How far the test meeting is moved: the same hour a buyer's move would. */
+export const TEST_MOVE_MINUTES = 60;
+
+/**
+ * Moves the test meeting an hour later on the creator's account, with the
+ * same call a booking's meeting is moved with when its buyer picks another
+ * time (lib/meet-links.ts). Null when there is no test meeting to move.
+ */
+export async function moveTest(statsId: string, provider: MeetProvider): Promise<TestMeeting | null> {
+  const had = (await readTests(statsId, [provider]))[provider];
+  if (!had) return null;
+  const access = await accessFor(statsId, provider);
+  const shift = TEST_MOVE_MINUTES * 60_000;
+  const when = { start: had.start + shift, end: had.end + shift, tz: "UTC" };
+  if (provider === "zoom") await zoomMove(access.token, had.id, when);
+  else await googleMove(access.token, had.id, when);
+  const moved: TestMeeting = { ...had, start: when.start, end: when.end };
+  await redisPipeline([["SET", testKey(statsId, provider), JSON.stringify(moved)]]);
+  return moved;
 }
 
 /** Deletes the test meeting on the creator's account, and forgets it. False when there was none. */
