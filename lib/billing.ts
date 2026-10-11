@@ -438,7 +438,7 @@ function periodStart(subscription: Record<string, unknown>): number {
  * simply over. How long the retries last is set in our Stripe account
  * (Billing, retries), which ends the subscription when they run out.
  */
-function pastDueInGrace(subscription: Record<string, unknown>): boolean {
+export function pastDueInGrace(subscription: Record<string, unknown>): boolean {
   const start = periodStart(subscription);
   const trialEnd = typeof subscription.trial_end === "number" ? subscription.trial_end : 0;
   return !(trialEnd && start && Math.abs(start - trialEnd) < 24 * 60 * 60);
@@ -534,6 +534,55 @@ export async function readSubscription(
   }
 
   return stateOf(subscription);
+}
+
+/**
+ * The subscription as Stripe has it, for a caller that has to read more than
+ * the state: when it started, and the card it is charged on. Null when Stripe
+ * does not have it; thrown when Stripe could not be asked.
+ */
+export async function subscriptionRecord(subscriptionId: string): Promise<Record<string, unknown> | null> {
+  if (!SUBSCRIPTION_PATTERN.test(subscriptionId)) return null;
+  try {
+    return await onPlatform("GET", `/subscriptions/${encodeURIComponent(subscriptionId)}`);
+  } catch (error) {
+    if (error instanceof BillingError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+/**
+ * Starts a store's plan again on the card it was last paid with, without the
+ * creator at the keyboard: the end of a break they chose (lib/plan-pause.ts).
+ *
+ * Charged at once, or not at all: if the bank declines, or wants the creator
+ * to confirm, Stripe makes nothing and this throws, so a store never ends up
+ * with a subscription that is open and unpaid. The plan is the one they had,
+ * monthly, at today's price, with no trial.
+ */
+export async function restartPlan(input: {
+  store: Pick<Store, "handle">;
+  customerId: string;
+  paymentMethod: string;
+  tier: Tier;
+  idempotencyKey: string;
+}): Promise<StartedSubscription> {
+  if (!CUSTOMER_PATTERN.test(input.customerId)) throw new Error("not a customer of ours");
+  if (!/^(pm|card|src)_[A-Za-z0-9]{6,64}$/.test(input.paymentMethod)) throw new Error("no card to charge");
+  const body = new URLSearchParams({
+    customer: input.customerId,
+    "items[0][price]": await ensurePrice(input.tier, "month"),
+    default_payment_method: input.paymentMethod,
+    off_session: "true",
+    payment_behavior: "error_if_incomplete",
+    "metadata[store]": input.store.handle,
+    "metadata[tier]": input.tier,
+    "metadata[restarted]": "break",
+  });
+  const subscription = await onPlatform("POST", "/subscriptions", body, { idempotencyKey: input.idempotencyKey });
+  const started = startedFrom(subscription);
+  if (!started) throw new Error(`the restarted plan is not in good standing: ${String(subscription.status)}`);
+  return started;
 }
 
 /**
@@ -662,11 +711,14 @@ export async function switchPlan(
  * email, for the reminders sent before a charge.
  */
 export async function listSubscriptions(
-  status: "trialing" | "active" | "all",
+  status: "trialing" | "active" | "past_due" | "all",
   startingAfter?: string,
 ): Promise<{ data: Record<string, unknown>[]; hasMore: boolean }> {
   const query = new URLSearchParams({ status, limit: "100" });
   query.append("expand[]", "data.customer");
+  // A renewal that failed is told about with the page that pays it, which is
+  // on the invoice, not on the subscription (lib/billing-reminders.ts).
+  if (status === "past_due") query.append("expand[]", "data.latest_invoice");
   if (startingAfter) query.set("starting_after", startingAfter);
   const page = await onPlatform("GET", `/subscriptions?${query}`);
   return {
@@ -676,6 +728,21 @@ export async function listSubscriptions(
 }
 
 export { periodEnd };
+
+/**
+ * Makes whatever card pays this subscription's next invoice its card from then
+ * on. Stripe retries a subscription on its own default card before the
+ * customer's, so without this a creator who pays a failed invoice with a new
+ * card would see the next renewal fail on the old one again.
+ */
+export async function keepCardThatPays(subscriptionId: string): Promise<void> {
+  if (!SUBSCRIPTION_PATTERN.test(subscriptionId)) return;
+  await onPlatform(
+    "POST",
+    `/subscriptions/${encodeURIComponent(subscriptionId)}`,
+    new URLSearchParams({ "payment_settings[save_default_payment_method]": "on_subscription" }),
+  );
+}
 
 /** The customer a subscription belongs to, whether or not it was expanded. */
 export function customerOf(subscription: Record<string, unknown>): { id: string; email: string } {

@@ -8,6 +8,7 @@ import {
 } from "@/lib/billing";
 import { setSubscription } from "@/lib/store";
 import { limited } from "@/lib/request-guard";
+import { dropPause, pauseOf, undoPause } from "@/lib/plan-pause";
 
 /**
  * Cancels the creator's subscription, or takes the cancellation back.
@@ -37,7 +38,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // "Keep my subscription" on a store with a break set takes the break back,
+    // so it is not counted against the once a year (lib/plan-pause.ts).
+    if (intent === "resume" && (await pauseOf(store))) {
+      const done = await undoPause(store);
+      return away(origin, studio(done === "kept" ? "billing=resumed" : "billing=ended"));
+    }
     const state = await setCancelAtPeriodEnd(store.subscriptionId, intent === "cancel");
+    // Leaving outright: a break that was set has nothing left to start again.
+    if (intent === "cancel") await dropPause(store).catch((error) => console.error("dropping a break failed", error));
     if (state.state !== "active") {
       await setSubscription(ref, { active: false });
       return away(origin, studio("billing=ended"));

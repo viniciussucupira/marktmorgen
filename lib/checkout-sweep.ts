@@ -36,6 +36,7 @@
  * guarded by their own marks, so a store seen twice is only work, never a
  * second email.
  */
+import { noteFirstSale } from "@/lib/yearly-offer";
 import { revokeRefundedGifts } from "@/lib/gifts";
 import { revokeRefundedPreorders } from "@/lib/preorders";
 import { revokeRefundedGroups } from "@/lib/group-buy";
@@ -167,6 +168,12 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
           await noteSession(store, row as Parameters<typeof noteSession>[1], owners, partners);
         }
       }
+    }
+    // The store's first sale ever, noted once, with the yearly plan offered
+    // at the moment it is most worth keeping (lib/yearly-offer.ts). Not on the
+    // demo's account, which canConfirm leaves out.
+    if (paid.length && canConfirm(store)) {
+      await noteFirstSale(store, paid).catch((error) => console.error("noting a first sale failed", store.handle, error));
     }
     // The creator's phone and email platform, told of each sale once.
     if (listensToSales(store)) {

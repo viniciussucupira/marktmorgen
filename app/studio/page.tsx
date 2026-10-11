@@ -1,3 +1,6 @@
+import { firstSaleAt } from "@/lib/yearly-offer";
+import { breakRunning, pauseOf } from "@/lib/plan-pause";
+import { PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS, PAUSE_EVERY_DAYS } from "@/lib/plan-pause-rules";
 import { MarkShipped } from "@/components/mark-shipped";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import { lowestPriceCents } from "@/lib/product-option";
@@ -372,6 +375,54 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
     title: "Stripe did not answer",
     body: "Nothing changed and nothing was charged. Try again in a moment.",
   },
+  paused: {
+    title: "Your break is set",
+    body: "Your store keeps taking payments until the date below, and then nothing is charged until your plan starts again by itself. We have emailed you the dates, and will write a week before.",
+  },
+  "pause-undone": {
+    title: "The break is off",
+    body: "Your plan goes on as before, and the break was not counted. Nothing was charged.",
+  },
+  "pause-dropped": {
+    title: "Your plan will not start again by itself",
+    body: "Start it below whenever you want to sell again. Nothing was charged.",
+  },
+  "pause-trial": {
+    title: "A break comes after the trial",
+    body: `It is for a plan that has been paid for at least ${PAID_MONTHS_BEFORE_PAUSE} months. Nothing was changed.`,
+  },
+  "pause-early": {
+    title: "Not yet",
+    body: `A break is for a plan that has been paid for at least ${PAID_MONTHS_BEFORE_PAUSE} months. Nothing was changed.`,
+  },
+  "pause-yearly": {
+    title: "A yearly plan has no break",
+    body: "The year is already paid for, so there is nothing to stop. Nothing was changed.",
+  },
+  "pause-canceling": {
+    title: "Your subscription is already set to stop",
+    body: "Keep it first, with the button below, and then choose a break. Nothing was changed.",
+  },
+  "pause-pending": {
+    title: "A change is already waiting on your bank",
+    body: "Take a break once it has gone through. Nothing was changed.",
+  },
+  "pause-recent": {
+    title: "One break a year",
+    body: "This store has taken its break in the last twelve months. You can still cancel. Nothing was changed.",
+  },
+  "pause-card": {
+    title: "There is no card to start your plan again on",
+    body: "Update your card at Stripe first, then take the break. Nothing was changed.",
+  },
+  "pause-standing": {
+    title: "This subscription cannot take a break right now",
+    body: "Stripe says it is not in good standing. Nothing was changed.",
+  },
+  "pause-error": {
+    title: "Stripe did not answer",
+    body: "Nothing changed and nothing was charged. Try again in a moment.",
+  },
   "pro-closed": {
     title: "That plan is not open yet",
     body: "Nothing was charged and nothing was changed.",
@@ -599,6 +650,16 @@ export default async function StudioPage({
   const cancelling = live?.state === "active" && live.cancelsAtEnd;
   // How this creator is billed, and what the other way would cost them.
   const billedYearly = live?.state === "active" ? live.cycle === "year" : current?.cycle === "year";
+  // A store that has sold sees the yearly plan offered open, not folded away
+  // (lib/yearly-offer.ts). One read, and only for a monthly plan.
+  const firstSale = store && paid && !billedYearly ? await firstSaleAt(store) : 0;
+  // A break the creator chose (lib/plan-pause.ts): set and not yet begun on
+  // this subscription, or begun, with the plan starting again on its day.
+  const pause = store && isBillingConfigured() ? await pauseOf(store).catch(() => null) : null;
+  const pauseSet = Boolean(pause && store && pause.subscription === store.subscriptionId && paid);
+  const onBreakNow = Boolean(pause && !paid && breakRunning(pause));
+  const breakDay = (seconds: number) =>
+    new Date(seconds * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
   const tier = current?.tier ?? "creator";
   // The store's own domain: shown where this deployment can add one, and its
   // records read from Vercel only while it is not yet live.
@@ -2001,7 +2062,22 @@ export default async function StudioPage({
                   its hours. Both are shown above as they are counted.
                 </p>
 
-                {paid && cancelling ? (
+                {paid && cancelling && pauseSet && pause ? (
+                  <>
+                    <p className="mt-5 notice notice-success font-semibold">
+                      {`Break set. Your store keeps taking payments until ${breakDay(pause.from)}. From then until ${breakDay(pause.until)} nothing is charged and your checkout is closed, and on ${breakDay(pause.until)} your plan starts again by itself at ${priceWords(pause.tier, "month")}.`}
+                    </p>
+                    <form action={`/api/billing/pause${pin}`} method="post" className="mt-4">
+                      <input type="hidden" name="intent" value="undo" />
+                      <button type="submit" className="btn btn-primary">
+                        Take the break back
+                      </button>
+                    </form>
+                    <p className="mt-3 text-sm text-ink-soft">
+                      Your plan then goes on as before, and the break is not counted.
+                    </p>
+                  </>
+                ) : paid && cancelling ? (
                   <>
                     <p className="mt-5 notice notice-warn font-semibold">
                       {trialing
@@ -2048,10 +2124,15 @@ export default async function StudioPage({
                         </form>
                       </details>
                     ) : (
-                      <details className="mt-4">
+                      <details className="mt-4" open={firstSale > 0}>
                         <summary className="cursor-pointer text-sm font-bold text-ink underline underline-offset-2">
                           {`Pay yearly and save $${yearSaving(tier) / 100}`}
                         </summary>
+                        {firstSale > 0 ? (
+                          <p className="mt-3 text-sm font-semibold text-ink-soft">
+                            {`Your store made its first sale on ${new Date(firstSale * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}. If you plan to keep selling, the yearly plan costs $${yearSaving(tier) / 100} less than twelve monthly payments.`}
+                          </p>
+                        ) : null}
                         <p className="mt-3 text-sm text-ink-soft">
                           {trialing
                             ? `Nothing is charged now. When the trial ends you pay $${(PLAN_PRICES[tier].year / 100).toLocaleString("en-US")} for the year, instead of ${priceWords(tier, "month")} — $${yearSaving(tier) / 100} less over the year.`
@@ -2149,6 +2230,29 @@ export default async function StudioPage({
                         </form>
                       </details>
                     ) : null}
+                    {/*
+                      A break before the way out (lib/plan-pause.ts): a
+                      creator who is stopping for a season keeps everything
+                      and is started again by itself, instead of leaving.
+                    */}
+                    {!trialing && !billedYearly && !changePending ? (
+                      <details className="mt-4">
+                        <summary className="cursor-pointer text-sm font-bold text-ink underline underline-offset-2">
+                          Take a break instead
+                        </summary>
+                        <p className="mt-3 text-sm text-ink-soft">
+                          {`Your store keeps taking payments until ${endsOn ?? "the end of the period you already paid for"}. Then, for the months you choose, nothing is charged and your checkout is closed. Your page stays up, everything you put up is kept, and buyers can still download what they bought. On the last day your plan starts again by itself, at ${priceWords(tier, "month")} on the card you pay with now, and we write a week before. One break every ${PAUSE_EVERY_DAYS === 365 ? "year" : `${PAUSE_EVERY_DAYS} days`}, once your plan has been paid for ${PAID_MONTHS_BEFORE_PAUSE} months.`}
+                        </p>
+                        <form action={`/api/billing/pause${pin}`} method="post" className="mt-3 flex flex-wrap gap-2">
+                          <input type="hidden" name="intent" value="pause" />
+                          {PAUSE_MONTHS.map((months) => (
+                            <button key={months} type="submit" name="months" value={String(months)} className="btn btn-secondary btn-sm">
+                              {months === 1 ? "Pause for 1 month" : `Pause for ${months} months`}
+                            </button>
+                          ))}
+                        </form>
+                      </details>
+                    ) : null}
                     <details className="mt-4">
                       <summary className="cursor-pointer text-sm font-bold text-ink underline underline-offset-2">
                         Cancel the subscription
@@ -2191,6 +2295,19 @@ export default async function StudioPage({
                   </>
                 ) : (
                   <>
+                    {onBreakNow && pause ? (
+                      <div className="mt-5">
+                        <p className="notice notice-info font-semibold">
+                          {`Your store is on a break until ${breakDay(pause.until)}. Nothing is charged, your checkout is closed, and everything you put up is kept. On ${breakDay(pause.until)} your plan starts again by itself at ${priceWords(pause.tier, "month")}. To sell sooner, start it below today.`}
+                        </p>
+                        <form action={`/api/billing/pause${pin}`} method="post" className="mt-3">
+                          <input type="hidden" name="intent" value="undo" />
+                          <button type="submit" className="btn btn-secondary btn-sm">
+                            Do not start it again
+                          </button>
+                        </form>
+                      </div>
+                    ) : null}
                     <p className="mt-5 text-ink-soft">
                       Your address, your page, the editor and connecting Stripe
                       are free and stay free. What the subscription switches on

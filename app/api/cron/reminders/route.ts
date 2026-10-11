@@ -2,11 +2,14 @@ import type { NextRequest } from "next/server";
 import { cronAllowed } from "@/lib/request-guard";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { isBillingConfigured } from "@/lib/billing";
-import { sendReminders } from "@/lib/billing-reminders";
+import { sendFailedPlanNotices, sendReminders } from "@/lib/billing-reminders";
+import { runBreaks } from "@/lib/plan-pause";
 
 /**
  * Run on a schedule by Vercel: warns every creator before a trial turns into
- * a charge, and before a yearly plan renews.
+ * a charge, and before a yearly plan renews, and tells one whose payment
+ * failed where to pay it. And ends the breaks creators chose: told a week
+ * before, and the plan started again on the day (lib/plan-pause.ts).
  *
  * Safe to run more than once: each charge is warned of once, only to the person
  * paying it, and one run at a time.
@@ -25,7 +28,9 @@ export async function GET(request: NextRequest) {
   if (got === null) return Response.json({ ok: true, busy: true });
   try {
     const counts = await sendReminders();
-    return Response.json({ ok: true, ...counts }, { headers: { "Cache-Control": "no-store" } });
+    const failed = await sendFailedPlanNotices();
+    const breaks = await runBreaks();
+    return Response.json({ ok: true, ...counts, failedPayments: failed, breaks }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("sending billing reminders failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
