@@ -57,6 +57,8 @@ import { ordersWords } from "@/lib/buyer-words/orders";
 import { groupLinkBoxWords, licenceKeyBoxWords } from "@/lib/buyer-words/giving";
 import { speech } from "@/lib/buyer-words";
 import { LANGUAGES } from "@/lib/store-language";
+import { HeardAsk } from "@/components/heard-ask";
+import { heardOff } from "@/lib/heard";
 
 export async function generateMetadata({ params }: Pick<Params, "params">): Promise<Metadata> {
   const { handle } = await params;
@@ -667,6 +669,8 @@ export default async function ThanksPage({ params, searchParams }: Params) {
     `/api/store/download?${new URLSearchParams({ handle: store.handle, session_id: sessionId ?? "", ...extra, pid: id })}`;
 
   const notice = order.state !== "paid" ? t.notices[order.state] : null;
+  // Asked once a paid order is shown, unless the creator switched it off.
+  const askHeard = order.state === "paid" && Boolean(sessionId) && !booked && !(await heardOff(store.handle).catch(() => true));
   const upsellAnswer = typeof query.upsell === "string" && Object.hasOwn(UPSELL_NOTES, query.upsell) ? UPSELL_NOTES[query.upsell] : null;
   const upsellNote =
     order.state === "paid" && upsellAnswer && (upsellAnswer.always || (!funnel?.taken.length && !funnel?.notes.length))
@@ -1157,6 +1161,9 @@ export default async function ThanksPage({ params, searchParams }: Params) {
 
         {/* The creator's own note after paying (lib/thanks-note.ts). */}
         {thanksNote ? <ThanksNoteView note={thanksNote} heading={t.noteFrom(store.name)} lang={store.language} /> : null}
+
+        {/* One question, skippable: where they heard of the store (lib/heard.ts). */}
+        {askHeard && sessionId ? <HeardAsk handle={store.handle} session={sessionId} storeName={store.name} lang={store.language} /> : null}
 
         {toReview.length > 0 && sessionId ? (
           <section id="review" aria-labelledby="review-title" className="st-card mt-6 scroll-mt-6 p-7 sm:p-10">

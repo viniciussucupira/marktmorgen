@@ -48,7 +48,43 @@ export type Sub = {
   start: number;
   ended: number;
   trialEnd: number;
+  /**
+   * The channel it was sold through (lib/visit-channel.ts), "direct" for none
+   * the store could name, and "unrecorded" for one sold before channels were
+   * written onto memberships on October 11, 2026.
+   */
+  channel: string;
 };
+
+/**
+ * Who stays (added 11 October 2026): the memberships begun in one month, and
+ * the share still running a number of months later. Mixpanel, Amplitude and
+ * Matomo call it a cohort table; it is how a membership business sees whether
+ * the people who join now stay as long as the people who joined before.
+ */
+export type Cohort = {
+  /** The month the memberships began, "2026-08". */
+  month: string;
+  started: number;
+  /** For each age in STAY_AGES, the share (0 to 1) still running at it, or null before every one of them can be that old. */
+  stayed: (number | null)[];
+};
+
+/** By the channel it was sold through: of those begun in the last year, how many stayed and for how long. */
+export type ChannelStay = {
+  channel: string;
+  started: number;
+  /** Still running now (paying, in a trial, or with a payment being retried). */
+  running: number;
+  /** The share still running three months in, of those begun at least three months ago; null with none that old. */
+  stayed3: number | null;
+  /** Months each was kept on average, so far: a running one counts the months it has run. */
+  months: number;
+};
+
+/** The ages a cohort is read at, in months. */
+export const STAY_AGES = [1, 2, 3, 6, 12];
+const MONTH = 30.4375 * DAY;
 
 export type ProductNumbers = { product: string; members: number; trialing: number; mrr: number };
 
@@ -75,6 +111,10 @@ export type Numbers = {
   /** Whether every membership Stripe holds was read. */
   complete: boolean;
   at: number;
+  /** The last twelve months' cohorts, newest first; absent on a reading from before October 11, 2026. */
+  cohorts?: Cohort[];
+  /** By the channel each was sold through, the biggest first; absent on a reading from before. */
+  byChannel?: ChannelStay[];
 };
 
 const LIVE = new Set(["active", "trialing", "past_due"]);
@@ -155,6 +195,8 @@ export function numbersFrom(subs: Sub[], currency: string, now: number, complete
     }
   }
   out.churn30 = payingThen > 0 ? churned / payingThen : null;
+  out.cohorts = cohortsFrom(subs, now);
+  out.byChannel = channelsFrom(subs, now);
   out.mrr = Math.round(out.mrr);
   out.atRiskMrr = Math.round(out.atRiskMrr);
   out.endedMrr30 = Math.round(out.endedMrr30);
@@ -162,6 +204,57 @@ export function numbersFrom(subs: Sub[], currency: string, now: number, complete
     .map((row) => ({ ...row, mrr: Math.round(row.mrr) }))
     .sort((a, b) => b.mrr - a.mrr || b.members - a.members);
   return out;
+}
+
+/** Whether a membership was still running at a moment: begun by then and not ended by then. */
+const runningAt = (sub: Sub, at: number) => sub.start <= at && (!sub.ended || sub.ended > at);
+
+/** The month a moment falls in, "2026-08" (UTC). */
+const monthOf = (seconds: number) => new Date(seconds * 1000).toISOString().slice(0, 7);
+
+/** The last twelve months' cohorts, newest first. Pure. */
+export function cohortsFrom(subs: Sub[], now: number): Cohort[] {
+  const months: string[] = [];
+  const today = new Date(now * 1000);
+  for (let i = 0; i < 12; i += 1) months.push(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - i, 1)).toISOString().slice(0, 7));
+  return months
+    .map((month) => {
+      const group = subs.filter((sub) => sub.start > 0 && monthOf(sub.start) === month);
+      const stayed = STAY_AGES.map((age) => {
+        // Only memberships that can already be that old are counted at that age.
+        const old = group.filter((sub) => sub.start + age * MONTH <= now);
+        if (!old.length || old.length < group.length) return null;
+        return old.filter((sub) => runningAt(sub, sub.start + age * MONTH)).length / old.length;
+      });
+      return { month, started: group.length, stayed };
+    })
+    .filter((cohort) => cohort.started > 0);
+}
+
+/** By channel, for memberships begun in the last year. Pure. */
+export function channelsFrom(subs: Sub[], now: number): ChannelStay[] {
+  const by = new Map<string, { started: number; running: number; old: number; stayed: number; months: number }>();
+  for (const sub of subs) {
+    if (!sub.start || sub.start < now - 365 * DAY) continue;
+    const row = by.get(sub.channel) ?? { started: 0, running: 0, old: 0, stayed: 0, months: 0 };
+    row.started += 1;
+    if (LIVE.has(sub.status) && (!sub.ended || sub.ended > now)) row.running += 1;
+    if (sub.start + 3 * MONTH <= now) {
+      row.old += 1;
+      if (runningAt(sub, sub.start + 3 * MONTH)) row.stayed += 1;
+    }
+    row.months += (Math.min(sub.ended || now, now) - sub.start) / MONTH;
+    by.set(sub.channel, row);
+  }
+  return [...by.entries()]
+    .map(([channel, r]) => ({
+      channel,
+      started: r.started,
+      running: r.running,
+      stayed3: r.old ? r.stayed / r.old : null,
+      months: Math.round((r.months / r.started) * 10) / 10,
+    }))
+    .sort((a, b) => b.started - a.started || a.channel.localeCompare(b.channel));
 }
 
 type Raw = {
@@ -195,6 +288,7 @@ export function readSub(raw: Raw, handles: Set<string>): Sub | null {
     start: num(raw.start_date),
     ended: num(raw.ended_at),
     trialEnd: num(raw.trial_end),
+    channel: "channel" in meta ? (meta.channel && meta.channel !== "direct" ? meta.channel : "direct") : meta.utm_source || "unrecorded",
   };
 }
 

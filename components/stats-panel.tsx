@@ -5,47 +5,14 @@ import { useEffect, useState } from "react";
 import type { AllTimeSales, Ranked, RangeKey, StatsData } from "@/lib/stats";
 import { StoreField } from "@/components/studio-store-pin";
 import { formatMoney } from "@/lib/money";
+import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
 import type { StatsNote } from "@/lib/stats-notes";
 import { type AdSpend, spendBy } from "@/lib/ad-spend-rules";
 import { READ_MIN_VISITORS, READ_SAMPLE } from "@/lib/page-read-sample";
 import { NumbersNotes } from "@/components/numbers-notes";
 import { AdSpendEditor } from "@/components/ad-spend-editor";
-
-const SOURCE_NAMES: Record<string, string> = {
-  instagram: "Instagram",
-  tiktok: "TikTok",
-  youtube: "YouTube",
-  facebook: "Facebook",
-  x: "X",
-  threads: "Threads",
-  linkedin: "LinkedIn",
-  pinterest: "Pinterest",
-  snapchat: "Snapchat",
-  reddit: "Reddit",
-  linktree: "Linktree",
-  google: "Google",
-  bing: "Bing",
-  duckduckgo: "DuckDuckGo",
-  email: "Email",
-  whatsapp: "WhatsApp",
-  chatgpt: "ChatGPT",
-  perplexity: "Perplexity",
-  claude: "Claude",
-  gemini: "Gemini",
-  copilot: "Copilot",
-  deepseek: "DeepSeek",
-  grok: "Grok",
-  qr: "QR code",
-  device: "Shared from a phone",
-  direct: "Direct, or an app that hides it",
-};
-
-/** A channel's name where money is concerned: "direct" there means nothing the store could name. */
-function channelName(source: string): string {
-  if (source === "direct") return "Direct or unknown";
-  if (source === "unrecorded") return "Sold before channels were recorded";
-  return SOURCE_NAMES[source] ?? source;
-}
+import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
+import { toast } from "@/components/toast";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -176,6 +143,71 @@ function Breakdown({
   );
 }
 
+/**
+ * What buyers answered when asked, after paying, where they heard of the
+ * store (lib/heard.ts): the channels no link can see — a friend, a message, a
+ * podcast. With the switch for the question itself.
+ */
+function HeardTable({
+  rows,
+  money,
+  ask,
+  canSet,
+}: {
+  rows: { answer: string; buyers: number; cents: number }[];
+  money: (cents: number) => string;
+  ask: boolean;
+  canSet: boolean;
+}) {
+  const [asking, setAsking] = useState(ask);
+  const [busy, setBusy] = useState(false);
+  const total = rows.reduce((n, r) => n + r.buyers, 0);
+  async function toggle() {
+    setBusy(true);
+    try {
+      const response = await fetch("/api/store/heard-ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ask: !asking }) });
+      const body = (await response.json().catch(() => ({}))) as { ok?: boolean; ask?: boolean };
+      if (body.ok && typeof body.ask === "boolean") {
+        setAsking(body.ask);
+        toast(body.ask ? "Buyers are asked again." : "Buyers are no longer asked.");
+      } else toast("That did not save. Try again.");
+    } catch {
+      toast("That did not save. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="mt-6">
+      <p className="text-sm font-bold text-ink">Where buyers say they heard of you</p>
+      {rows.length ? (
+        <ul className="mt-2 divide-y divide-line text-sm">
+          {rows.map((row) => (
+            <li key={row.answer} className="flex items-baseline justify-between gap-3 py-1.5">
+              <span className="min-w-0 truncate text-ink">{isHeardAnswer(row.answer) ? HEARD_NAMES[row.answer] : row.answer}</span>
+              <span className="shrink-0 tabular-nums text-ink-soft">
+                {`${count(row.buyers)} ${row.buyers === 1 ? "buyer" : "buyers"} · ${Math.round((row.buyers / Math.max(1, total)) * 100)}%${row.cents ? ` · ${money(row.cents)}` : ""}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-xs text-ink-soft">{asking ? "No answers in these days yet." : "Buyers are not being asked."}</p>
+      )}
+      <p className="mt-2 text-xs text-ink-soft">
+        {asking
+          ? "After paying, buyers are asked this one question, which they can skip. It finds what no link can: a friend who told them, a message, a podcast. Only the answer and the sale's amount are kept, nothing about the buyer. "
+          : "When it is on, buyers are asked this one question after paying, and can skip it. "}
+        {canSet ? (
+          <button type="button" className="font-semibold text-violet-deep underline underline-offset-4" disabled={busy} onClick={() => void toggle()}>
+            {asking ? "Stop asking" : "Ask buyers"}
+          </button>
+        ) : null}
+      </p>
+    </div>
+  );
+}
+
 type LiveNow = { visitors: number; sources: { source: string; visitors: number }[] };
 
 /**
@@ -236,11 +268,17 @@ export function StatsPanel({
   canExport = true,
   notes: notesGiven = [],
   spends: spendsGiven = [],
+  askHeard = true,
+  canSetHeard = false,
 }: {
   data: StatsData;
   canExport?: boolean;
   notes?: StatsNote[];
   spends?: AdSpend[];
+  /** Whether buyers are asked where they heard of the store (lib/heard.ts). */
+  askHeard?: boolean;
+  /** Whether this person may switch that question on or off. */
+  canSetHeard?: boolean;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [notes, setNotes] = useState(notesGiven);
@@ -351,6 +389,8 @@ export function StatsPanel({
   ]
     .filter((name) => name !== "direct" && name !== "unrecorded")
     .map((value) => ({ value, label: channelName(value) }));
+  // What buyers said when asked where they heard of the store.
+  const heard = range === "all" ? [] : data.heard?.[range] ?? [];
   // The store page item by item, once enough visits were measured to say anything.
   const reach = range === "all" ? null : data.reach?.[range] ?? null;
   const withFreeColumn = channels.some((row) => row.free > 0);
@@ -702,6 +742,8 @@ export function StatsPanel({
           </p>
         </div>
       ) : null}
+
+      {range !== "all" ? <HeardTable rows={heard} money={money} ask={askHeard} canSet={canSetHeard} /> : null}
 
       {countries.length || devices.length ? (
         <div className="mt-6 grid gap-6 sm:grid-cols-2">

@@ -196,6 +196,40 @@ export async function countReach(statsId: string, field: string, now = Date.now(
   await redisPipeline([["HINCRBY", countsKey(statsId, dayKey(now)), field, 1]]).catch(() => {});
 }
 
+/**
+ * One buyer's answer to "where did you hear about us?" (lib/heard.ts), and
+ * the money of the sale it was given for, on the day's record. Once per paid
+ * order, so the day's expiry is written with it rather than trusted to a view.
+ */
+export async function countHeard(statsId: string, answer: string, cents: number, now = Date.now()): Promise<void> {
+  if (!isRedisConfigured()) return;
+  const counts = countsKey(statsId, dayKey(now));
+  await redisPipeline([
+    ["HINCRBY", counts, `h:${answer}`, 1],
+    ...(cents > 0 ? [["HINCRBY", counts, `hc:${answer}`, Math.round(cents)]] : []),
+    ["EXPIRE", counts, TTL_SECONDS],
+  ]);
+}
+
+/** The store page's views and the checkouts started from one day to another, both counted: one read a day, at most 90. */
+export async function daysCounts(statsId: string, from: string, to: string): Promise<{ views: number; checkouts: number }> {
+  const out = { views: 0, checkouts: 0 };
+  if (!isRedisConfigured() || from > to) return out;
+  const dates: string[] = [];
+  for (let at = Date.parse(`${from}T00:00:00Z`); dates.length < 90; at += 86400_000) {
+    const day = dayKey(at);
+    if (day > to) break;
+    dates.push(day);
+  }
+  const replies = await redisPipeline(dates.map((d) => ["HMGET", countsKey(statsId, d), "v", "c"]));
+  for (const reply of replies) {
+    if (!Array.isArray(reply)) continue;
+    out.views += Number(reply[0]) || 0;
+    out.checkouts += Number(reply[1]) || 0;
+  }
+  return out;
+}
+
 /** The store page's views on each of the `days` days before today, oldest first: one read a day. */
 export async function viewsBefore(store: Store, days: number, now = Date.now()): Promise<number[]> {
   if (!store.statsId || !isRedisConfigured()) return [];
@@ -285,6 +319,8 @@ export type WindowStats = {
   freeBySource: Ranked;
   /** Measured visits of the store's page, by furthest item and item clicked (lib/page-read.ts); the field without "sr:". */
   reach: Record<string, number>;
+  /** Buyers' answers to "where did you hear about us?" (lib/heard.ts), and the money of the sales each was given for. */
+  heard: Record<string, { buyers: number; cents: number }>;
 };
 
 export type Windows = { d7: WindowStats; d30: WindowStats; d90: WindowStats };
@@ -323,6 +359,7 @@ class Tally {
   checkoutsBySource = new Map<string, number>();
   freeBySource = new Map<string, number>();
   reach: Record<string, number> = {};
+  heard: Record<string, { buyers: number; cents: number }> = {};
 
   add(field: string, count: number) {
     if (field === "v") this.views += count;
@@ -338,6 +375,8 @@ class Tally {
     else if (field.startsWith("cs:")) this.checkoutsBySource.set(field.slice(3), (this.checkoutsBySource.get(field.slice(3)) ?? 0) + count);
     else if (field.startsWith("fs:")) this.freeBySource.set(field.slice(3), (this.freeBySource.get(field.slice(3)) ?? 0) + count);
     else if (field.startsWith("sr:")) this.reach[field.slice(3)] = (this.reach[field.slice(3)] ?? 0) + count;
+    else if (field.startsWith("h:")) (this.heard[field.slice(2)] ??= { buyers: 0, cents: 0 }).buyers += count;
+    else if (field.startsWith("hc:")) (this.heard[field.slice(3)] ??= { buyers: 0, cents: 0 }).cents += count;
   }
 
   window(visitors: number): WindowStats {
@@ -356,6 +395,7 @@ class Tally {
       checkoutsBySource: ranked(this.checkoutsBySource),
       freeBySource: ranked(this.freeBySource),
       reach: this.reach,
+      heard: this.heard,
     };
   }
 }
@@ -515,7 +555,7 @@ async function readLife(store: Store, now: number): Promise<(WindowStats & { sin
           // Countries and devices are kept by the day only: copied into the
           // all-time record they would start it on whatever day it was filled.
           for (const [field, count] of day) {
-            if (field.startsWith("k:") || field.startsWith("d:") || field.startsWith("sr:")) continue;
+            if (field.startsWith("k:") || field.startsWith("d:") || field.startsWith("sr:") || field.startsWith("h:") || field.startsWith("hc:")) continue;
             tally.set(field, (tally.get(field) ?? 0) + count);
           }
           visitors += Number(replies[dates.length + i]) || 0;
@@ -1044,6 +1084,8 @@ export type StatsData = {
    * they were not read, or not read in full.
    */
   previous: Record<"d7" | "d30" | "d90", { visitors: number; views: number; checkouts: number; sales: number | null; cents: number | null }>;
+  /** Buyers' answers to "where did you hear about us?" for the window, the most first (lib/heard.ts). */
+  heard: Record<"d7" | "d30" | "d90", { answer: string; buyers: number; cents: number }[]>;
 };
 
 export type ReachItem = { item: string; kind: "product" | "link" | "part"; title: string; position: number; reached: number; clicks: number };
@@ -1092,6 +1134,7 @@ const EMPTY_WINDOW: WindowStats = {
   checkoutsBySource: [],
   freeBySource: [],
   reach: {},
+  heard: {},
 };
 
 export type ChannelRow = { source: string; visits: number; checkouts: number; free: number; sales: number; cents: number };
@@ -1249,6 +1292,15 @@ export function studioStats(
         return [k, { ...visits, sales: sold ? sold.sales : null, cents: sold ? sold.cents : null }];
       }),
     ) as StatsData["previous"],
+    heard: Object.fromEntries(
+      (["d7", "d30", "d90"] as const).map((k) => [
+        k,
+        Object.entries(w[k].heard ?? {})
+          .map(([answer, v]) => ({ answer, ...v }))
+          .filter((row) => row.buyers > 0)
+          .sort((a, b) => b.buyers - a.buyers || b.cents - a.cents || a.answer.localeCompare(b.answer)),
+      ]),
+    ) as StatsData["heard"],
     reach: {
       d7: reachItems(store, w.d7.reach ?? {}, titles),
       d30: reachItems(store, w.d30.reach ?? {}, titles),

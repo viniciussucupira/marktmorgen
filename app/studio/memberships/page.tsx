@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
-import { membershipNumbers } from "@/lib/membership-numbers";
+import { STAY_AGES, membershipNumbers } from "@/lib/membership-numbers";
+import { channelName } from "@/lib/channel-names";
 import { readListings } from "@/lib/catalog";
 import { formatMoney } from "@/lib/money";
 
@@ -17,6 +18,11 @@ export const metadata: Metadata = {
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
 const percent = (n: number) => `${Math.round(n * 1000) / 10}%`;
+
+const monthName = (month: string) => {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+};
 
 /**
  * Recurring revenue, members, churn and trials (lib/membership-numbers.ts),
@@ -131,6 +137,85 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                   </div>
                 )}
               </section>
+
+              {numbers.cohorts && numbers.cohorts.length ? (
+                <section aria-labelledby="stay-title" className="card mt-8 p-6 sm:p-8">
+                  <h2 id="stay-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Who stays</h2>
+                  <p className="mt-1 max-w-2xl text-sm text-ink-soft">
+                    The memberships begun in each month, and the share still running one, two, three, six and twelve months
+                    later. If the newer rows keep fewer people than the older ones, something changed for those who join now.
+                  </p>
+                  <div className="mt-4 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="stay-title">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="text-xs uppercase tracking-[0.08em] text-ink-mute">
+                          <th scope="col" className="py-2 pr-4 font-semibold">Began in</th>
+                          <th scope="col" className="py-2 pr-3 text-right font-semibold">Members</th>
+                          {STAY_AGES.map((age) => (
+                            <th key={age} scope="col" className="whitespace-nowrap py-2 pl-3 text-right font-semibold">
+                              {`${age} ${age === 1 ? "month" : "months"}`}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-line">
+                        {numbers.cohorts.map((c) => (
+                          <tr key={c.month}>
+                            <th scope="row" className="whitespace-nowrap py-2.5 pr-4 font-semibold text-ink">{monthName(c.month)}</th>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">{c.started}</td>
+                            {c.stayed.map((share, i) => (
+                              <td key={STAY_AGES[i]} className="py-2.5 pl-3 text-right tabular-nums">
+                                {share === null ? <span className="text-ink-mute">—</span> : percent(share)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 text-xs text-ink-soft">
+                    A dash is an age every member of that month has not reached yet. Free trials are counted from the day they began.
+                  </p>
+
+                  {numbers.byChannel && numbers.byChannel.length ? (
+                    <>
+                      <h3 className="mt-8 text-base font-semibold text-ink">By the channel they joined through, last 12 months</h3>
+                      <div className="mt-3 overflow-x-auto" tabIndex={0} role="region" aria-label="Who stays, by channel">
+                        <table className="w-full text-left text-sm">
+                          <thead>
+                            <tr className="text-xs uppercase tracking-[0.08em] text-ink-mute">
+                              <th scope="col" className="py-2 pr-4 font-semibold">Channel</th>
+                              <th scope="col" className="py-2 pr-3 text-right font-semibold">Joined</th>
+                              <th scope="col" className="py-2 pr-3 text-right font-semibold">Still members</th>
+                              <th scope="col" className="py-2 pr-3 text-right font-semibold" title="Of those who joined at least three months ago, the share still running three months in">
+                                After 3 months
+                              </th>
+                              <th scope="col" className="py-2 text-right font-semibold" title="Months each was kept on average, so far">
+                                Months kept
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-line">
+                            {numbers.byChannel.map((row) => (
+                              <tr key={row.channel}>
+                                <th scope="row" className="py-2.5 pr-4 font-semibold text-ink">{channelName(row.channel)}</th>
+                                <td className="py-2.5 pr-3 text-right tabular-nums">{row.started}</td>
+                                <td className="py-2.5 pr-3 text-right tabular-nums">{row.running}</td>
+                                <td className="py-2.5 pr-3 text-right tabular-nums">{row.stayed3 === null ? "—" : percent(row.stayed3)}</td>
+                                <td className="py-2.5 text-right tabular-nums">{row.months.toFixed(1)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="mt-2 text-xs text-ink-soft">
+                        A channel that brings fewer members who stay longer can be worth more than one that brings many who
+                        leave. Memberships sold before October 11, 2026 have no channel written on them and are counted apart.
+                      </p>
+                    </>
+                  ) : null}
+                </section>
+              ) : null}
 
               <section aria-labelledby="how-title" className="card mt-8 p-6 sm:p-8">
                 <h2 id="how-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">How each number is worked out</h2>

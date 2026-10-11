@@ -23,6 +23,7 @@ const sub = (over: Partial<Sub>): Sub => ({
   start: now - 100 * DAY,
   ended: 0,
   trialEnd: 0,
+  channel: "direct",
   ...over,
 });
 
