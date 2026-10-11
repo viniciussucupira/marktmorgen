@@ -50,11 +50,15 @@ const countsKey = (statsId: string, day: string) => `nl:stats:${statsId}:${day}`
 const visitorsKey = (statsId: string, day: string) => `nl:stats:${statsId}:${day}:u`;
 const lifeKey = (statsId: string) => `nl:stats:${statsId}:life`;
 const lifeLockKey = (statsId: string) => `nl:stats:${statsId}:life:lock`;
+/** Who is on the store now: one member per visitor and page, scored by when (readLive). */
+const liveKey = (statsId: string) => `nl:stats:${statsId}:live`;
+/** How long somebody counts as on the store after their last page. */
+export const LIVE_MINUTES = 5;
 
 import { isBot, classifySource, cleanTag } from "@/lib/source-rules";
 export { isBot, classifySource, cleanTag };
 
-export type HitKind = "view" | "checkout" | "link" | "product";
+export type HitKind = "view" | "checkout" | "link" | "product" | "signup";
 
 /**
  * Counts one thing a visitor did.
@@ -84,8 +88,8 @@ export async function recordHit(
     free?: boolean;
   },
   now = Date.now(),
-): Promise<void> {
-  if (!store.statsId || !isRedisConfigured() || isBot(hit.userAgent)) return;
+): Promise<number | null> {
+  if (!store.statsId || !isRedisConfigured() || isBot(hit.userAgent)) return null;
   const day = dayKey(now);
   const counts = countsKey(store.statsId, day);
   const life = lifeKey(store.statsId);
@@ -116,6 +120,10 @@ export async function recordHit(
     // than one that starts on an arbitrary day.
     if (hit.country) commands.push(["HINCRBY", counts, `k:${hit.country}`, 1]);
     if (hit.device) commands.push(["HINCRBY", counts, `d:${hit.device}`, 1]);
+    // Who is here now (readLive): one command, the visitor's day-fingerprint
+    // cut short, the page and where they came from. Its expiry is set with the
+    // day's first view, below, so the set never outlives a day without views.
+    commands.push(["ZADD", liveKey(store.statsId), now, `${visitor.slice(0, 10)}|${(hit.source || "direct").slice(0, 40)}`]);
     pfAt = commands.length;
     commands.push(["PFADD", visitors, visitor]);
   } else if (hit.kind === "checkout" && hit.id) {
@@ -128,6 +136,13 @@ export async function recordHit(
     const channel = hit.channel && hit.channel !== "direct" ? hit.channel : "direct";
     both(`cs:${channel}`);
     if (hit.free) both(`fs:${channel}`);
+  } else if (hit.kind === "signup") {
+    // An address left in the store's sign-up box or on a product's waitlist
+    // (added 11 October 2026), counted under its channel beside the free
+    // products' addresses: everybody who asked to hear from the creator.
+    const channel = hit.channel && hit.channel !== "direct" ? hit.channel : "direct";
+    firstAt = commands.length;
+    both(`fs:${channel}`);
   } else if (hit.kind === "link" && hit.id) {
     firstAt = commands.length;
     both(`l:${hit.id}`);
@@ -140,9 +155,9 @@ export async function recordHit(
     // record, so "all time" has no figure for it rather than a wrong one.
     const [opened] = await redisPipeline([["HINCRBY", counts, `pv:${hit.id}`, 1]]);
     if (Number(opened) === 1) await redisPipeline([["EXPIRE", counts, TTL_SECONDS]]);
-    return;
+    return null;
   } else {
-    return;
+    return null;
   }
   const results = await redisPipeline(commands);
   // Written once, not on every hit (11 October 2026: every visit's commands
@@ -155,11 +170,78 @@ export async function recordHit(
   const follow: (string | number)[][] = [];
   if (firstAt >= 0 && Number(results[firstAt]) === 1) {
     follow.push(["EXPIRE", counts, TTL_SECONDS], ["HSETNX", life, "started", day]);
+    if (hit.kind === "view") follow.push(["EXPIRE", liveKey(store.statsId), 86400]);
   }
   if (pfAt >= 0 && Number(results[pfAt]) === 1) {
     follow.push(["HINCRBY", life, "u", 1], ["EXPIRE", visitorsKey(store.statsId, day), TTL_SECONDS]);
   }
   if (follow.length) await redisPipeline(follow);
+  // The store page's views so far today, for the busy-day alert (lib/stats-report.ts).
+  return hit.kind === "view" ? Number(results[firstAt]) || null : null;
+}
+
+/** The store page's views on each of the `days` days before today, oldest first: one read a day. */
+export async function viewsBefore(store: Store, days: number, now = Date.now()): Promise<number[]> {
+  if (!store.statsId || !isRedisConfigured()) return [];
+  const dates = lastDays(now - 86400_000, days);
+  const replies = await redisPipeline(dates.map((d) => ["HGET", countsKey(store.statsId as string, d), "v"]));
+  return replies.map((r) => Number(r) || 0);
+}
+
+/** Today's channels by views so far, biggest first. */
+export async function sourcesToday(store: Store, now = Date.now()): Promise<Ranked> {
+  if (!store.statsId || !isRedisConfigured()) return [];
+  const [raw] = await redisPipeline([["HGETALL", countsKey(store.statsId, dayKey(now))]]);
+  const tally = new Tally();
+  for (const [field, count] of pairs(raw)) if (field.startsWith("r:")) tally.add(field, count);
+  return tally.window(0).sources;
+}
+
+export type Live = {
+  /** People who opened the store's page in the last LIVE_MINUTES minutes, each once. */
+  visitors: number;
+  /** Where they came from. */
+  sources: { source: string; visitors: number }[];
+};
+
+/**
+ * Who opened the store in the last few minutes (added 11 October 2026),
+ * each person once, under where they came from. Written by the store page's
+ * own count — one command, inside what a visit is costed at — and not by a
+ * product's page, whose count has no room for it (tests/traffic-cost.ts):
+ * somebody who goes on from the store page to a product counts for five
+ * minutes from the store page. Read when the studio asks, every half minute
+ * while it is open; members older than half an hour are let go on each read,
+ * and the set lapses a day after a day's first view. Nothing in it can be
+ * turned back into a person: ten characters of a fingerprint that changes
+ * every day.
+ */
+export async function readLive(store: Store, now = Date.now()): Promise<Live> {
+  const empty: Live = { visitors: 0, sources: [] };
+  if (!store.statsId || !isRedisConfigured()) return empty;
+  const key = liveKey(store.statsId);
+  const [, members] = await redisPipeline([
+    ["ZREMRANGEBYSCORE", key, 0, now - 30 * 60_000],
+    ["ZRANGEBYSCORE", key, now - LIVE_MINUTES * 60_000, "+inf", "WITHSCORES"],
+  ]);
+  const flat = Array.isArray(members) ? (members as unknown[]).map(String) : [];
+  const latest = new Map<string, { source: string; at: number }>();
+  for (let i = 0; i + 1 < flat.length; i += 2) {
+    const [who, source] = flat[i].split("|");
+    const at = Number(flat[i + 1]) || 0;
+    if (!who) continue;
+    const seen = latest.get(who);
+    if (!seen || at >= seen.at) latest.set(who, { source: source || "direct", at });
+  }
+  const by = new Map<string, number>();
+  for (const v of latest.values()) by.set(v.source, (by.get(v.source) ?? 0) + 1);
+  return {
+    visitors: latest.size,
+    sources: [...by.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 10)
+      .map(([source, visitors]) => ({ source, visitors })),
+  };
 }
 
 export type DayStats = { date: string; views: number; visitors: number; checkouts: number };
@@ -454,6 +536,8 @@ export type SalesStats = {
   renewals?: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean; bySource?: RenewalsBySource };
   /** What each channel brought in, credited to the buyer's FIRST visit from somewhere (lib/visit-channel.ts). */
   firstBySource?: { source: string; currency: string; cents: number; sales: number }[];
+  /** Money by campaign — one post, when its link was made for it — for each window, in the store's currency. */
+  byCampaignIn?: Record<"d7" | "d30" | "d90", { campaign: string; source: string; cents: number; sales: number }[]>;
   /** bySource for each window, so a channel's sales sit beside its visits for the same days. */
   bySourceIn?: Record<"d7" | "d30" | "d90", { source: string; currency: string; cents: number; sales: number }[]>;
 };
@@ -723,6 +807,18 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   const fromDay = (cut: string) =>
     revenueBySource(own.filter((sale) => dayKey(sale.created) >= cut).map((sale) => ({ cents: sale.cents, currency: sale.currency, source: sale.source })));
   out.bySourceIn = { d7: fromDay(cut7), d30: fromDay(cut30), d90: out.bySource };
+  const campaignsFrom = (cut: string) => {
+    const by = new Map<string, { campaign: string; source: string; cents: number; sales: number }>();
+    for (const sale of own) {
+      if (!sale.campaign || dayKey(sale.created) < cut) continue;
+      const row = by.get(sale.campaign) ?? { campaign: sale.campaign, source: sale.source, cents: 0, sales: 0 };
+      row.cents += sale.cents;
+      row.sales += 1;
+      by.set(sale.campaign, row);
+    }
+    return [...by.values()].sort((a, b) => b.cents - a.cents || a.campaign.localeCompare(b.campaign));
+  };
+  out.byCampaignIn = { d7: campaignsFrom(cut7), d30: campaignsFrom(cut30), d90: campaignsFrom("") };
   out.firstBySource = revenueBySource(
     sales.filter((sale) => sale.currency === store.currency && !sale.upsell).map((sale) => ({
       cents: sale.cents,
@@ -827,6 +923,12 @@ export type StatsData = {
    * addresses asked for from it, and its sales and revenue. Biggest first.
    */
   channels: Record<"d7" | "d30" | "d90", ChannelRow[]>;
+  /**
+   * Each campaign — a post, when the creator made its link with the post's
+   * name (lib/share-links.ts postLink) — with its visits and the money it
+   * brought, for the window. Biggest first.
+   */
+  posts: Record<"d7" | "d30" | "d90", { campaign: string; source: string; visits: number; sales: number; cents: number }[]>;
   /** Page views by country and by device, for the window; empty for "all", which keeps neither. */
   countries: Record<RangeKey, Ranked>;
   devices: Record<RangeKey, Ranked>;
@@ -878,6 +980,23 @@ export function channelRows(
   return [...rows.values()]
     .filter((r) => r.visits || r.checkouts || r.sales)
     .sort((a, b) => b.cents - a.cents || b.sales - a.sales || b.checkouts - a.checkouts || b.visits - a.visits || a.source.localeCompare(b.source));
+}
+
+/** One window's posts: the visits each campaign tag brought, beside the money its sales carried. */
+export function postRows(
+  window: WindowStats,
+  sales: { campaign: string; source: string; cents: number; sales: number }[] | undefined,
+): StatsData["posts"]["d7"] {
+  const rows = new Map<string, StatsData["posts"]["d7"][number]>();
+  for (const c of window.campaigns ?? []) rows.set(c.name, { campaign: c.name, source: "", visits: c.visits, sales: 0, cents: 0 });
+  for (const s of sales ?? []) {
+    const row = rows.get(s.campaign) ?? { campaign: s.campaign, source: s.source, visits: 0, sales: 0, cents: 0 };
+    row.source = row.source || s.source;
+    row.sales += s.sales;
+    row.cents += s.cents;
+    rows.set(s.campaign, row);
+  }
+  return [...rows.values()].sort((a, b) => b.cents - a.cents || b.sales - a.sales || b.visits - a.visits || a.campaign.localeCompare(b.campaign));
 }
 
 /**
@@ -968,6 +1087,11 @@ export function studioStats(
       d7: channelRows(w.d7, ownCurrency(sales?.bySourceIn?.d7)),
       d30: channelRows(w.d30, ownCurrency(sales?.bySourceIn?.d30)),
       d90: channelRows(w.d90, ownCurrency(sales?.bySourceIn?.d90 ?? sales?.bySource)),
+    },
+    posts: {
+      d7: postRows(w.d7, sales?.byCampaignIn?.d7),
+      d30: postRows(w.d30, sales?.byCampaignIn?.d30),
+      d90: postRows(w.d90, sales?.byCampaignIn?.d90),
     },
     countries: per((k) => (k === "all" ? [] : w[k].countries ?? [])),
     devices: per((k) => (k === "all" ? [] : w[k].devices ?? [])),

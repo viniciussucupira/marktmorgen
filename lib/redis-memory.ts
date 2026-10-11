@@ -330,6 +330,17 @@ export class MemoryRedis {
         }
         return gone;
       }
+      case "ZREMRANGEBYSCORE": {
+        // Inclusive on both ends, as Redis is without "(".
+        const z = this.zset(key);
+        const low = args[0] === "-inf" ? -Infinity : Number(args[0]);
+        const high = args[1] === "+inf" ? Infinity : Number(args[1]);
+        let gone = 0;
+        for (let i = z.length - 1; i >= 0; i -= 1) {
+          if (z[i].score >= low && z[i].score <= high) { z.splice(i, 1); gone += 1; }
+        }
+        return gone;
+      }
       case "ZCARD":
         return this.zset(key).length;
       case "ZSCORE": {

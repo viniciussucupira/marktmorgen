@@ -220,6 +220,21 @@ export default function DevelopersPage() {
         </p>
       </LegalSection>
 
+      <LegalSection title="Ask your AI assistant">
+        <p>
+          Marktmorgen is also an MCP server, so an assistant that speaks the Model Context Protocol — Claude, ChatGPT,
+          Cursor and others — can answer questions like &quot;which channel made me money this month?&quot; from your own
+          numbers. Add it as a remote server at <code className="font-mono">https://marktmorgen.com/api/mcp</code>, with
+          the header <code className="font-mono">Authorization: Bearer nl_live_…</code> and one of your keys.
+        </p>
+        <p>
+          It can read three things: your numbers (the same as <code className="font-mono">/api/v1/stats</code>), your
+          products, and which store the key belongs to. It changes nothing, and it does not read your buyers&apos;,
+          subscribers&apos; or affiliates&apos; addresses: what an assistant reads is kept by whoever runs the assistant,
+          and the people on your list did not agree to that. The endpoints above are where your own tools read them.
+        </p>
+      </LegalSection>
+
       <LegalSection title="Affiliates">
         <Endpoint path="/api/v1/affiliates">
           Every affiliate, with what they earned, were paid and are owed — the numbers on your affiliates page.

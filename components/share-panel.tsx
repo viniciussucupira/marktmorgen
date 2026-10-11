@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
-import { qrFileName, qrSvg, shareLinks, taggedFor } from "@/lib/share-links";
+import { POST_PLACES, postLink, postName, qrFileName, qrSvg, shareLinks, taggedFor } from "@/lib/share-links";
 
 /**
  * Sharing a page (added 8 October 2026): its address to copy, a QR code to
@@ -27,6 +27,9 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
   }, [qrUrl]);
   const svg = grid ? qrSvg(grid.modules, grid.size) : "";
   const [canShare, setCanShare] = useState(false);
+  const [postPlace, setPostPlace] = useState("instagram");
+  const [post, setPost] = useState("");
+  const forPost = postName(post) ? postLink(url, postPlace, post) : "";
   useEffect(() => {
     const id = window.setTimeout(() => setCanShare(typeof navigator.share === "function"), 0);
     return () => window.clearTimeout(id);
@@ -66,9 +69,9 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
     }, "image/png");
   }
 
-  async function copy() {
+  async function copy(text = url) {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(text);
       toast("Link copied.");
     } catch {
       toast("Select the link and copy it.");
@@ -112,6 +115,44 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
           </div>
           <p className="mt-1 text-xs text-ink-soft">
             Each opens that site&apos;s own page to post from, with the words in; nothing is posted for you. Each link is tagged, so your numbers show which one brought visitors and sales.
+          </p>
+        </div>
+        <div>
+          <p className="field-label">A link for one post</p>
+          <div className="flex flex-wrap gap-2">
+            <label className="sr-only" htmlFor="share-post-place">
+              Where the post goes
+            </label>
+            <select id="share-post-place" className="field w-auto" value={postPlace} onChange={(e) => setPostPlace(e.target.value)}>
+              {POST_PLACES.map((p) => (
+                <option key={p.place} value={p.place}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="share-post-name">
+              Name of the post
+            </label>
+            <input
+              id="share-post-name"
+              className="field min-w-0 flex-1"
+              placeholder="A name for the post, like october-reel"
+              maxLength={60}
+              value={post}
+              onChange={(e) => setPost(e.target.value)}
+            />
+          </div>
+          {forPost ? (
+            <div className="mt-2 flex flex-wrap gap-2">
+              <input aria-label="The post's link" className="field min-w-0 flex-1" readOnly value={forPost} onFocus={(e) => e.currentTarget.select()} />
+              <button type="button" onClick={() => void copy(forPost)} className="btn btn-secondary">
+                <Icon name="copy" size={16} />
+                Copy
+              </button>
+            </div>
+          ) : null}
+          <p className="mt-1 text-xs text-ink-soft">
+            Put this link in one post&apos;s caption or bio, and your numbers show what that post brought: visits, sales and revenue.
           </p>
         </div>
       </div>

@@ -181,6 +181,13 @@ export default function PrivacyPage() {
           never a person.
         </p>
         <p>
+          So a creator can see how many people are on their store page right
+          now, the first ten characters of that day&apos;s fingerprint are kept
+          for up to half an hour, beside the site the visitor came from, and
+          then deleted; they cannot be turned back into an address, and the
+          creator sees only a count.
+        </p>
+        <p>
           A creator&apos;s plan covers a number of visits a month, so visits
           are also counted for that, on any page of a store that is opened:
           one for each visitor each day. For this we make a second one-way
