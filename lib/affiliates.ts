@@ -1562,3 +1562,66 @@ export function bookCsv(book: Book, all: Affiliate[]): string {
   ];
   return [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
+
+/**
+ * A program's own numbers, for the affiliate directory when its creator
+ * allowed them (lib/affiliate-setting.ts, AffiliateSetting.numbers): what an
+ * affiliate deciding whether to apply most wants to know, and the thing no
+ * program elsewhere shows before they join.
+ *
+ * Read from the same records the creator's book is (readBook), counted the
+ * same way: clicks once per visitor a day; sales credited to an affiliate,
+ * never their own purchases; what those sales earned at the share each was
+ * made at, before any refund, because refunds are read from the creator's
+ * Stripe account only when the book is opened; and what the creator wrote
+ * down as paid. Only amounts in the store's own currency are added up.
+ */
+export type ProgramNumbers = {
+  /** Affiliates approved today. */
+  affiliates: number;
+  /** Clicks counted, and the sales credited to a click. */
+  clicks: number;
+  clickSales: number;
+  /** What the sales credited to a click earned, before refunds. */
+  clickEarnedCents: number;
+  /** Every sale credited to an affiliate (a click, a code or a buyer kept), and what they earned before refunds. */
+  sales: number;
+  earnedCents: number;
+  /** What the creator wrote down as paid to affiliates. */
+  paidCents: number;
+  /** When the first affiliate was approved, in ms; 0 when none is. */
+  since: number;
+};
+
+export async function programNumbers(store: Store): Promise<ProgramNumbers | null> {
+  if (!store.statsId || !isRedisConfigured()) return null;
+  const statsId = store.statsId;
+  const [people, clicks, sales, payouts] = await redisPipeline([
+    ["HGETALL", peopleKey(statsId)],
+    ["HGETALL", clicksKey(statsId)],
+    ["HGETALL", salesKey(statsId)],
+    ["HGETALL", payoutsKey(statsId)],
+  ]);
+  const approved = pairs(people)
+    .map(([, raw]) => parseAffiliate(raw))
+    .filter((a): a is Affiliate => a !== null && a.status === "approved");
+  const currency = store.currency.toLowerCase();
+  const referrals = pairs(sales)
+    .map(([, raw]) => parseReferral(raw))
+    .filter((r): r is Referral => r !== null && !r.self && (r.currency || "usd").toLowerCase() === currency);
+  const earned = (r: Referral) => commissionOn(r.base, r.rate);
+  const byClick = referrals.filter((r) => r.how === "click");
+  return {
+    affiliates: approved.length,
+    clicks: pairs(clicks).reduce((sum, [, n]) => sum + (Number(n) || 0), 0),
+    clickSales: byClick.length,
+    clickEarnedCents: byClick.reduce((sum, r) => sum + earned(r), 0),
+    sales: referrals.length,
+    earnedCents: referrals.reduce((sum, r) => sum + earned(r), 0),
+    paidCents: pairs(payouts)
+      .map(([, raw]) => parsePayout(raw))
+      .filter((p): p is Payout => p !== null && (p.currency || "usd").toLowerCase() === currency)
+      .reduce((sum, p) => sum + p.cents, 0),
+    since: approved.reduce((first, a) => (first === 0 || (a.decidedAt > 0 && a.decidedAt < first) ? a.decidedAt : first), 0),
+  };
+}

@@ -95,6 +95,15 @@ export type AffiliateSetting = {
    */
   directory: boolean;
   /**
+   * Whether the directory may also show this program's own numbers
+   * (lib/affiliates.ts, programNumbers): how many affiliates it has, the
+   * clicks they brought, the sales those clicks made and what the creator
+   * says they have paid. A second consent, apart from being listed, because
+   * it publishes figures about the creator's business; anything but an
+   * explicit yes is a no.
+   */
+  numbers: boolean;
+  /**
    * Whether a buyer, once credited to an affiliate, stays with that affiliate
    * for every later purchase — with no cookie and no expiry
    * (lib/affiliate-bond.ts). Off until the creator switches it on, because it
@@ -153,6 +162,7 @@ export const NO_AFFILIATES: AffiliateSetting = {
   hold: 0,
   buyers: false,
   directory: false,
+  numbers: false,
   lifetime: false,
 };
 
@@ -189,6 +199,7 @@ export function parseAffiliateSetting(raw: unknown): AffiliateSetting {
     buyers: value.buyers === true,
     // Consent is given, never assumed: anything but an explicit yes is a no.
     directory: value.directory === true,
+    numbers: value.numbers === true,
     // Likewise: a programme already running is not quietly re-pointed.
     lifetime: value.lifetime === true,
   };

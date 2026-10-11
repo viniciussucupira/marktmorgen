@@ -2470,7 +2470,7 @@ try {
     is("the studio says where the program would be listed, and what the row shows", (await words(studio.locator("main"))).includes("People looking for something to promote find it at marktmorgen.com/affiliate-programs"), true);
     const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
     const terms = { action: "settings", enabled: true, percent: 35, days: 45, rule: "last", payday: 10, hold: 14, rates: {}, buyers: false, lifetime: true };
-    const saved = await post("/api/store/affiliates", { ...terms, directory: true });
+    const saved = await post("/api/store/affiliates", { ...terms, directory: true, numbers: true });
     is("listed with one box", saved.ok, true);
     await open(page, `${LOCAL}/affiliate-programs`);
     const row = page.locator("[data-program=localshop]");
@@ -2482,6 +2482,7 @@ try {
       text.includes("Pays on the 10th of each month, once a sale is 14 days old"),
       (await row.locator("[data-earns]").count()) > 0,
     ], ["35% of each sale", true, true, true, true]);
+    is("its own numbers, because the creator allowed them; no rate per click before 100 clicks", [(await words(row.locator("[data-numbers]"))).toLowerCase().includes("shown by the creator's choice"), (await words(row.locator("[data-numbers]"))).includes("shown after 100 clicks") || /of clicks became a sale/.test(await words(row.locator("[data-numbers]")))], [true, true]);
     is("the order and the rules for affiliates are on the page", [(await words(page.locator("#order"))).includes("Nobody can pay to be placed higher"), (await words(page.locator("main"))).includes("Say it is an affiliate link")], [true, true]);
     is("kept from search engines while there are fewer than ten programs", await page.locator('meta[name="robots"]').getAttribute("content"), "noindex, follow");
     await page.getByLabel("Search programs and products").fill("zzzz nothing like this");

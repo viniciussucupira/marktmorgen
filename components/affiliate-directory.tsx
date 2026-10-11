@@ -1,15 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { DirectoryRow } from "@/lib/affiliate-directory";
+import type { DirectoryNumbers, DirectoryRow } from "@/lib/affiliate-directory";
+import { MIN_CLICKS_FOR_RATES } from "@/lib/affiliate-directory-rules";
 import { ordinal } from "@/lib/affiliate-setting";
 import { formatMoney } from "@/lib/money";
 import { LANGUAGES, type LanguageCode } from "@/lib/store-language";
 
-type Sort = "share" | "products" | "name";
+type Sort = "share" | "conversion" | "products" | "name";
 
 const SORTS: { id: Sort; label: string }[] = [
   { id: "share", label: "Highest share first" },
+  { id: "conversion", label: "Most sales per click" },
   { id: "products", label: "Most products that earn" },
   { id: "name", label: "Name, A to Z" },
 ];
@@ -39,6 +41,7 @@ export function AffiliateDirectory({ rows }: { rows: DirectoryRow[] }) {
   const [language, setLanguage] = useState<"" | LanguageCode>("");
   const [lifetime, setLifetime] = useState(false);
   const [payday, setPayday] = useState(false);
+  const [shows, setShows] = useState(false);
   const [sort, setSort] = useState<Sort>("share");
 
   const languages = useMemo(() => [...new Set(rows.map((row) => row.language))], [rows]);
@@ -50,12 +53,14 @@ export function AffiliateDirectory({ rows }: { rows: DirectoryRow[] }) {
         (!language || row.language === language) &&
         (!lifetime || row.lifetime) &&
         (!payday || row.payday > 0) &&
+        (!shows || row.numbers !== null) &&
         words.every((word) => haystack(row).includes(word)),
     );
+    if (sort === "conversion") return [...kept].sort((a, b) => (b.numbers?.conversion ?? -1) - (a.numbers?.conversion ?? -1) || b.topRate - a.topRate || a.name.localeCompare(b.name, "en"));
     if (sort === "products") return [...kept].sort((a, b) => b.earning - a.earning || b.topRate - a.topRate || a.name.localeCompare(b.name, "en"));
     if (sort === "name") return [...kept].sort((a, b) => a.name.localeCompare(b.name, "en"));
     return kept;
-  }, [rows, query, language, lifetime, payday, sort]);
+  }, [rows, query, language, lifetime, payday, shows, sort]);
 
   return (
     <div>
@@ -94,6 +99,10 @@ export function AffiliateDirectory({ rows }: { rows: DirectoryRow[] }) {
             <input type="checkbox" className="h-5 w-5" checked={payday} onChange={(event) => setPayday(event.target.checked)} />
             Pays on a set day each month
           </label>
+          <label className="flex min-h-11 items-center gap-2 text-sm text-ink">
+            <input type="checkbox" className="h-5 w-5" checked={shows} onChange={(event) => setShows(event.target.checked)} />
+            Shows its own numbers
+          </label>
         </div>
       </form>
 
@@ -126,6 +135,7 @@ export function AffiliateDirectory({ rows }: { rows: DirectoryRow[] }) {
                   </li>
                 ))}
               </ul>
+              {row.numbers ? <Numbers numbers={row.numbers} currency={row.currency} /> : null}
               <h3 className="mt-5 text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">
                 {row.earning > row.products.length ? `${row.products.length} of the ${row.earning} products that earn` : row.earning === 1 ? "The product that earns" : "The products that earn"}
               </h3>
@@ -159,6 +169,41 @@ export function AffiliateDirectory({ rows }: { rows: DirectoryRow[] }) {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+const count = (n: number) => n.toLocaleString("en-US");
+
+/** A program's own numbers, as its creator allowed them to be shown. */
+function Numbers({ numbers, currency }: { numbers: DirectoryNumbers; currency: string }) {
+  const since = numbers.since ? new Date(numbers.since).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }) : "";
+  const tiles = [
+    { label: numbers.affiliates === 1 ? "affiliate" : "affiliates", value: count(numbers.affiliates), note: since ? `since ${since}` : "" },
+    { label: numbers.clicks === 1 ? "click brought" : "clicks brought", value: count(numbers.clicks), note: `${count(numbers.clickSales)} ${numbers.clickSales === 1 ? "sale" : "sales"} from them` },
+    numbers.conversion !== null
+      ? { label: "of clicks became a sale", value: `${numbers.conversion}%`, note: numbers.per100Cents !== null ? `${formatMoney(numbers.per100Cents, currency)} earned per 100 clicks` : "" }
+      : { label: "rates per click", value: "\u2014", note: `shown after ${MIN_CLICKS_FOR_RATES} clicks` },
+    { label: "recorded as paid", value: formatMoney(numbers.paidCents, currency), note: `of ${formatMoney(numbers.earnedCents, currency)} earned` },
+  ];
+  return (
+    <div className="mt-5 rounded-2xl bg-sand/70 p-3" data-numbers>
+      <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Its numbers, shown by the creator&apos;s choice</p>
+      <dl className="mt-2 grid grid-cols-2 gap-3">
+        {tiles.map((tile) => (
+          <div key={tile.label}>
+            <dt className="sr-only">{tile.label}</dt>
+            <dd>
+              <span className="block text-lg font-semibold tabular-nums text-ink">{tile.value}</span>
+              <span className="block text-xs text-ink-soft">
+                {tile.label}
+                {tile.note ? ` · ${tile.note}` : ""}
+              </span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-xs text-ink-soft">Every figure is counted from the program&apos;s records since it began, before refunds. What was paid is what the creator recorded paying.</p>
     </div>
   );
 }

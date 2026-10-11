@@ -587,6 +587,7 @@ function Terms({
   const [hold, setHold] = useState(String(setting.hold));
   const [buyers, setBuyers] = useState(setting.buyers);
   const [directory, setDirectory] = useState(setting.directory);
+  const [numbers, setNumbers] = useState(setting.numbers);
   const [lifetime, setLifetime] = useState(setting.lifetime);
   const [rates, setRates] = useState<Record<string, string>>(
     Object.fromEntries(Object.entries(setting.rates).map(([id, n]) => [id, String(n)])),
@@ -617,6 +618,7 @@ function Terms({
               buyers,
               lifetime,
               directory,
+              numbers: directory && numbers,
               rates: chosen,
             },
             enabled ? "Affiliate program saved." : "Affiliate program switched off.",
@@ -682,6 +684,24 @@ function Terms({
             </span>
           </span>
         </label>
+        {directory ? (
+          <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3 sm:ml-8">
+            <input
+              type="checkbox"
+              checked={numbers}
+              onChange={(e) => setNumbers(e.target.checked)}
+              className="h-5 w-5 shrink-0 accent-[var(--violet)]"
+            />
+            <span className="text-sm">
+              <span className="block font-semibold text-ink">Show my program&apos;s numbers there too</span>
+              <span className="block text-ink-soft">
+                How many affiliates you have and since when, the clicks they brought, the sales those clicks made, what they
+                earned before refunds and what you have recorded as paid to them. Rates per click show once there are 100
+                clicks. Affiliates choose programs by these; no figure about a buyer is ever shown.
+              </span>
+            </span>
+          </label>
+        ) : null}
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <label className="block" htmlFor="aff-percent">
