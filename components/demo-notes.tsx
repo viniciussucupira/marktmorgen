@@ -38,8 +38,8 @@ export function DemoNote({ full = false }: { full?: boolean }) {
   return (
     <p className="st-note mt-6 text-sm">
       <strong>This is a demo store.</strong> Its checkout runs in Stripe&apos;s test mode: no real money moves and no
-      real card is charged. Pay with the test card {TEST_CARD}, any future date and any CVC, and the file is yours
-      to download.
+      real card is charged. Pay with the test card {TEST_CARD}, any future date and any CVC. What you buy is real:
+      the files download, and a booked call holds its time and gets its own meeting link.
       {full
         ? " On a creator's store the same checkout takes real payments, on the creator's own Stripe account: Marktmorgen never holds the money and takes none of it."
         : null}
