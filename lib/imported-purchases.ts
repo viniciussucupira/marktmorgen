@@ -28,6 +28,7 @@
  * the creator's own PayPal account (lib/paypal-sales.ts). Each is shown for
  * what it is on the list of purchases, never as brought over.
  */
+import { rememberBuyers } from "@/lib/buyer-library";
 import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -127,8 +128,11 @@ export async function grantImported(
   job: string,
   grants: { email: string; productId: string; items: string[] | null; option?: string | null }[],
   atSeconds = Math.floor(Date.now() / 1000),
+  /** The store's own id, so each address finds the store in its library (lib/buyer-library.ts). */
+  sid = "",
 ): Promise<boolean[]> {
   if (!grants.length || !isRedisConfigured()) return grants.map(() => false);
+  if (sid) await rememberBuyers(sid, grants.map((g) => g.email));
   const answers = await redisPipeline(
     grants.map((g) => [
       "HSETNX",

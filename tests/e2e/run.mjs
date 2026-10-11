@@ -2497,6 +2497,22 @@ try {
   }
 
   await keepSmall();
+  part("A buyer's library: every store they bought from, in one place");
+  {
+    await open(page, `${LOCAL}/library`);
+    await page.fill('input[name="email"]', "buyer@example.com");
+    await Promise.all([page.waitForURL(/status=sent/, { timeout: 60_000 }), page.locator("main button[type=submit]").click()]);
+    const mail = services.emails().filter((email) => [].concat(email.to).includes("buyer@example.com") && email.subject === "Your purchases on Marktmorgen").at(-1);
+    const link = mail?.text.match(/https?:\/\/\S+\/library\?token=[0-9a-f]{64}/)?.[0] ?? "";
+    is("asked for by the address paid with, a link is emailed to it", Boolean(link), true);
+    await open(page, local(link));
+    const shelf = page.locator("[data-library-store='localshop']");
+    is("the store it bought from is there, with the way to its purchases", [await shelf.count(), await shelf.getByRole("link", { name: "Open your purchases" }).count()], [1, 1]);
+    await open(page, local((await shelf.getByRole("link", { name: "Open your purchases" }).getAttribute("href")) ?? ""));
+    is("which opens that store's own list for the same address", [/\/@localshop\/orders\?token=[0-9a-f]{64}$/.test(page.url()), await page.locator("h1", { hasText: "Your purchases" }).count() > 0], [true, true]);
+  }
+
+  await keepSmall();
   part("Renewals in the studio's numbers, apart from new sales");
   {
     await open(studio, `${LOCAL}/studio`);

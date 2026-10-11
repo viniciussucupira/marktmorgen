@@ -407,7 +407,7 @@ export async function takePlace(input: {
     ["EXPIRE", takenKey(group.id), GROUP_KEPT_SECONDS],
   ]);
 
-  const [given] = await grantImported(group.s, groupJob(group.id), [{ email, productId: group.p, items: group.items ?? null, option: group.o ?? null }], at);
+  const [given] = await grantImported(group.s, groupJob(group.id), [{ email, productId: group.p, items: group.items ?? null, option: group.o ?? null }], at, store.sid);
   if (!given) {
     // It reached this address another way in the same instant.
     await giveBack();

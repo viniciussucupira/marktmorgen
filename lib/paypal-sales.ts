@@ -461,7 +461,7 @@ export async function deliverPayPal(input: {
   const { store, paid, product, base } = input;
   if (!store.statsId) return;
   const items = product.bundle?.length ? product.bundle : null;
-  await grantImported(store.statsId, `paypal:${paid.order}`, [{ email: paid.email, productId: product.id, items }], paid.at);
+  await grantImported(store.statsId, `paypal:${paid.order}`, [{ email: paid.email, productId: product.id, items }], paid.at, store.sid);
   if (!store.pastBuyers) await setPastBuyers(storeRef(store));
   for (const id of [product.id, ...(items ?? [])]) await input.recordStart(paid.email, id, paid.at);
   const link = (await input.ordersLink(paid.email)) ?? `${base}/orders`;

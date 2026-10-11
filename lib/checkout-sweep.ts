@@ -48,7 +48,7 @@ import { isSettled } from "@/lib/instant-pay";
 import { CONFIRM_WITHIN_SECONDS, type SessionRecord, canConfirm, confirmPurchase, confirmationKey } from "@/lib/purchase-email";
 import { remindAbandoned } from "@/lib/checkout-recovery";
 import { recoveryOn } from "@/lib/recovery-setting";
-import { type Store, saleHandles, storesAfter } from "@/lib/store";
+import { type Store, ensureStoreId, saleHandles, storeRef, storesAfter } from "@/lib/store";
 import { listingsNamed, sellsThings } from "@/lib/catalog";
 import { affiliatesOn, listPartners, noteSession } from "@/lib/affiliates";
 import { affiliateForCodes, codeOwners } from "@/lib/affiliate-codes";
@@ -56,6 +56,8 @@ import { revokeRefunded, storeHasKeys } from "@/lib/licence-keys";
 import { markRefundedReviews, storeHasReviews } from "@/lib/review-proof";
 import { listensToSales, noteSales } from "@/lib/sale-events";
 import { listOrder, listedAlready } from "@/lib/buyer-list";
+import { rememberBuyers } from "@/lib/buyer-library";
+import { isHouseStore } from "@/lib/house-store";
 import { deliveredIds } from "@/lib/bundle-rules";
 
 const CURSOR_KEY = "nl:sweep:cursor";
@@ -190,6 +192,22 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
       if (outcome === "failed") counts.failed += 1;
     }
 
+    // Every buyer of an ordinary order finds this store in their library,
+    // whether or not they reached the thanks page (lib/buyer-library.ts).
+    {
+      const handles = saleHandles(store);
+      const buyers = paid.flatMap((row) => {
+        const meta = row.metadata ?? {};
+        const email = typeof row.customer_details?.email === "string" ? row.customer_details.email : "";
+        return email && handles.has(meta.store ?? "") && meta.kind !== "tip" && deliveredIds(meta).length > 0 ? [email] : [];
+      });
+      // Never the demo store's, whose checkout takes any address (lib/house-store.ts).
+      if (buyers.length && !isHouseStore(store)) {
+        // A store made before stores had ids is given its own now.
+        const sid = store.sid || (await ensureStoreId(storeRef(store)).catch(() => null))?.sid || "";
+        await rememberBuyers(sid, buyers);
+      }
+    }
     // A buyer who never reached the thanks page is put on the list all the
     // same, with what they bought, and their sequences start (lib/buyer-list.ts).
     if (store.listId && paid.length && Date.now() < deadline) {

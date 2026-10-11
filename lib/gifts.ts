@@ -151,7 +151,7 @@ export async function deliverGift(input: {
   const pi = typeof session.payment_intent === "string" ? session.payment_intent : "";
   const created = typeof session.created === "number" ? session.created : now();
   const grant = grantsOf(session, gift);
-  await grantImported(gift.s, `gift:${gift.id}`, [grant], created);
+  await grantImported(gift.s, `gift:${gift.id}`, [grant], created, store.sid);
   // The doors that read what an address was given are opened for this store.
   if (!store.pastBuyers) await setPastBuyers(storeRef(store));
   // A course, or a course inside a bundle, is dated from the day it was paid.

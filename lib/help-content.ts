@@ -491,6 +491,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "I bought from several creators here. Is there one place with all of it?",
+        a: [
+          "Yes: your library, at marktmorgen.com/library. Type the address you paid with and we email you a link that opens, for 24 hours, every store you bought from on Marktmorgen, each with a button to your purchases there: courses, files, memberships and calls. No account and no password.",
+          "We send that email only if the address bought something here, and the page says the same either way. For your library we keep only which stores an address bought from, under a one-way hash of it; what you bought is read from each creator's own records when you open it. Purchases count from October 11, 2026, when the library opened; for anything bought before, each store's own link to your purchases still works.",
+        ],
+      },
+      {
         q: "Can my store have pages besides its products, like an About page?",
         a: [
           "Yes, on every plan: up to 10 pages of your own, from Your pages in the studio. Each is built from the same blocks as a sales page (a headline, text, pictures, a video, steps, who it is for, questions, things said about you elsewhere, your products, a countdown and buttons) and follows your store's look.",

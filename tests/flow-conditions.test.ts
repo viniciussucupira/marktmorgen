@@ -21,6 +21,7 @@ import { importContactRows, noteProduct, parseContact, leadsKey, tokensFor, unsu
 import { listOrder, listedAlready } from "@/lib/buyer-list";
 import { sweepCheckouts } from "@/lib/checkout-sweep";
 import { addProduct, claimHandle, ensureListId, ensureStatsId, setMailSettings, setStripeAccount, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
+import { storesBoughtFrom } from "@/lib/buyer-library";
 import { countingFor, noteClick, stopCounting, usedLinkIn } from "@/lib/mail-clicks";
 import { stepCampaign } from "@/lib/mail-links";
 import { SITE_URL } from "@/lib/site-url";
@@ -164,6 +165,7 @@ async function main(): Promise<void> {
   const [fay] = await redis.pipeline([["HGET", leadsKey(list), "fay@example.com"]]);
   is("a buyer who never reached the thanks page is on the list, with what they bought", [counts.listed, parseContact(fay)?.agreed, parseContact(fay)?.ids], [1, true, [course.product.id]]);
   is("and the job does not do it twice", (await sweepCheckouts(Date.now() + 20_000)).listed, 0);
+  is("and the store is in that buyer's library (lib/buyer-library.ts)", (await storesBoughtFrom("fay@example.com")).includes((await storeForEmail(OWNER))!.sid), true);
 
   part("Which links somebody used, only if they allowed it");
   // Gus ticked both boxes; Hal only the first; Ivy came in on an import, which can never allow it.
