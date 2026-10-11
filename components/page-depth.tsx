@@ -60,6 +60,7 @@ export function PageDepth({ token, product, ask = null }: { token: string; produ
     // The video played: its block, and how far into it, the furthest reached.
     let videoBlock = "";
     let videoAt = "";
+    let youtubeLength = 0;
     const buy = document.getElementById("buy");
     const watch = new IntersectionObserver(
       (entries) => {
@@ -119,10 +120,13 @@ export function PageDepth({ token, product, ask = null }: { token: string; produ
       }
       if (!data || typeof data !== "object") return;
       const message = data as { event?: string; info?: { currentTime?: number; duration?: number }; data?: { percent?: number } };
-      if (/youtube/.test(event.origin) && message.event === "infoDelivery") {
-        const t = Number(message.info?.currentTime);
+      if (/youtube/.test(event.origin) && (message.event === "infoDelivery" || message.event === "initialDelivery")) {
+        // YouTube says the length once, near the start, and the time on every
+        // message after: the length is kept from whichever message carried it.
         const d = Number(message.info?.duration);
-        if (t > 0 && d > 0) reached(quartile(t / d));
+        if (d > 0) youtubeLength = d;
+        const t = Number(message.info?.currentTime);
+        if (t > 0 && youtubeLength > 0) reached(quartile(t / youtubeLength));
       } else if (/vimeo\.com$/.test(event.origin) && message.event === "timeupdate") {
         const p = Number(message.data?.percent);
         if (p > 0) reached(quartile(p));
