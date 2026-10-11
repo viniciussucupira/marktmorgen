@@ -104,6 +104,14 @@ export type AffiliateSetting = {
    */
   numbers: boolean;
   /**
+   * Whether approved affiliates may have posts drafted for them on their own
+   * page (lib/affiliate-kit.ts), each one of the store's writing jobs for the
+   * month and never more than a quarter of them. On unless the creator
+   * switches it off: it spends the creator's allowance only to help sell the
+   * creator's products, and every post says it is an affiliate link.
+   */
+  kit: boolean;
+  /**
    * Whether a buyer, once credited to an affiliate, stays with that affiliate
    * for every later purchase — with no cookie and no expiry
    * (lib/affiliate-bond.ts). Off until the creator switches it on, because it
@@ -163,6 +171,7 @@ export const NO_AFFILIATES: AffiliateSetting = {
   buyers: false,
   directory: false,
   numbers: false,
+  kit: true,
   lifetime: false,
 };
 
@@ -200,6 +209,8 @@ export function parseAffiliateSetting(raw: unknown): AffiliateSetting {
     // Consent is given, never assumed: anything but an explicit yes is a no.
     directory: value.directory === true,
     numbers: value.numbers === true,
+    // Missing on every program saved before it existed: on, as for a new one.
+    kit: value.kit !== false,
     // Likewise: a programme already running is not quietly re-pointed.
     lifetime: value.lifetime === true,
   };

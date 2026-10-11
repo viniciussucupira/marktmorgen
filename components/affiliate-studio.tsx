@@ -588,6 +588,7 @@ function Terms({
   const [buyers, setBuyers] = useState(setting.buyers);
   const [directory, setDirectory] = useState(setting.directory);
   const [numbers, setNumbers] = useState(setting.numbers);
+  const [kit, setKit] = useState(setting.kit);
   const [lifetime, setLifetime] = useState(setting.lifetime);
   const [rates, setRates] = useState<Record<string, string>>(
     Object.fromEntries(Object.entries(setting.rates).map(([id, n]) => [id, String(n)])),
@@ -619,6 +620,7 @@ function Terms({
               lifetime,
               directory,
               numbers: directory && numbers,
+              kit,
               rates: chosen,
             },
             enabled ? "Affiliate program saved." : "Affiliate program switched off.",
@@ -655,6 +657,23 @@ function Terms({
             <span className="block text-ink-soft">
               The thanks page and the purchase email offer everyone who buys their own link, approved at once. Anyone you
               declined or removed stays out, and everyone else still applies.
+            </span>
+          </span>
+        </label>
+
+        <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3">
+          <input
+            type="checkbox"
+            checked={kit}
+            onChange={(e) => setKit(e.target.checked)}
+            className="h-5 w-5 shrink-0 accent-[var(--violet)]"
+          />
+          <span className="text-sm">
+            <span className="block font-semibold text-ink">Draft posts for my affiliates</span>
+            <span className="block text-ink-soft">
+              On their own page, approved affiliates pick one of your products and get three posts written from its page, in
+              your store&apos;s language, each ending with their link and a line saying they earn from it. Up to 3 a day each;
+              every draft is one of your writing jobs for the month, and your affiliates together never use more than a quarter.
             </span>
           </span>
         </label>

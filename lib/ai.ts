@@ -62,6 +62,9 @@ function model(): string {
 
 const monthKey = (store: Store, now: Date) => `nl:ai:${store.statsId}:${now.toISOString().slice(0, 7)}`;
 
+/** The key a store's month of writing jobs is counted under, for work counted elsewhere against the same month (lib/affiliate-kit.ts). */
+export const aiMonthKey = monthKey;
+
 /** Writing jobs this store may ask for this month. */
 export function aiAllowance(store: Store, now = Date.now()): number {
   if (inTrial(store, now / 1000)) return AI_MONTHLY.trial;
@@ -1282,4 +1285,37 @@ function pickWords(block: PageBlock, json: Record<string, unknown>): Record<stri
     }
   }
   return out;
+}
+
+/**
+ * Three posts an approved affiliate shares, drafted from a product's page
+ * (added 11 October 2026; lib/affiliate-kit-rules.ts). Written as a
+ * recommendation in the affiliate's voice, in the store's language, never
+ * claiming they used it unless their own line says so. The link and the line
+ * saying they earn from it are added afterwards, by finishPost, never by the
+ * model. Uncounted here: lib/affiliate-kit.ts counts it against the store's
+ * month of writing jobs, within a share kept for affiliates.
+ */
+export async function writeAffiliatePosts(store: Store, input: { facts: string; note: string }): Promise<{ x: string; instagram: string; linkedin: string } | null> {
+  if (!isAiConfigured()) return null;
+  const system = [
+    "You write three short posts an affiliate shares to recommend another person's product to the people who follow them.",
+    honesty(storeLanguage(store)),
+    "Write in the first person as the affiliate, not as the person who made it: 'I found', 'if you are', 'made by'. Use the creator's name or store name when you mention who made it.",
+    "Never say or suggest the affiliate bought, used or tried the product, or got any result from it, unless the affiliate's own note says so, and then only what the note says.",
+    "No links, addresses, 'link below' or 'link in bio', and no line about commissions or ads: the link and a line saying it is an affiliate link are added for you.",
+    [
+      "Return only a JSON object with these keys:",
+      '"x": at most 200 characters, one post.',
+      '"instagram": a caption of at most 550 characters, short paragraphs, at most three relevant hashtags on the last line.',
+      '"linkedin": at most 650 characters, short paragraphs, plain and useful, no hashtags.',
+    ].join("\n"),
+  ].join("\n\n");
+  const note = block(input.note, 400);
+  const prompt = [`Everything the product's page says:\n${block(input.facts, 6_000)}`, note ? `The affiliate's own note about who they share with and how they know it:\n${note}` : "The affiliate gave no note: say nothing about having used it."].join("\n\n");
+  const answer = await ask(system, prompt, 1_000);
+  const json = answer ? jsonIn(answer) : null;
+  if (!json) return null;
+  const posts = { x: block(json.x, 230), instagram: block(json.instagram, 800), linkedin: block(json.linkedin, 900) };
+  return posts.x && posts.instagram && posts.linkedin ? posts : null;
 }

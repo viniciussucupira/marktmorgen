@@ -1,0 +1,96 @@
+/**
+ * Posts for an affiliate, on the server (lib/affiliate-kit-rules.ts has the
+ * why). Checks who is asking and for what, holds the store to its limits,
+ * reads the product's page as the public reads it, asks the model, and adds
+ * the affiliate's own link and the line that says they earn from it.
+ *
+ *   nl:affkit:<statsId>:<affiliate>:<YYYY-MM-DD>   drafts one affiliate asked for that day
+ *   nl:affkit:<statsId>:<YYYY-MM>                  drafts the store's affiliates asked for that month
+ *   nl:ai:<statsId>:<YYYY-MM>                      the store's month of writing jobs, which each draft is one of (lib/ai.ts)
+ */
+import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import type { Store } from "@/lib/store";
+import { type Affiliate, affiliatesOn } from "@/lib/affiliates";
+import { commissionRate } from "@/lib/affiliate-setting";
+import { readListing, type Listing } from "@/lib/catalog";
+import { readAbout } from "@/lib/product-about";
+import { readPage } from "@/lib/sales-page-store";
+import { pageShown } from "@/lib/sales-page";
+import { factsFor } from "@/lib/answers";
+import { aiAllowance, aiMonthKey, isAiConfigured, writeAffiliatePosts } from "@/lib/ai";
+import { storeBase } from "@/lib/purchase-email";
+import { productSegment } from "@/lib/product-slug";
+import { DISCLOSURE, DISCLOSURE_SHORT, KIT_PER_DAY, MAX_KIT_NOTE, type AffiliatePosts, finishPost, kitMonthly } from "@/lib/affiliate-kit-rules";
+
+const dayKey = (store: Store, affiliate: Affiliate, now: Date) => `nl:affkit:${store.statsId}:${affiliate.id}:${now.toISOString().slice(0, 10)}`;
+const monthKey = (store: Store, now: Date) => `nl:affkit:${store.statsId}:${now.toISOString().slice(0, 7)}`;
+
+/** A product an affiliate earns on: paid, sold once, on the store, and not left out at 0% for them. */
+export function kitProduct(store: Store, affiliate: Affiliate, listing: Listing | null): listing is Listing {
+  return Boolean(
+    listing &&
+      listing.priceCents > 0 &&
+      !listing.hidden &&
+      !listing.recurring &&
+      !listing.plan &&
+      commissionRate(store.affiliates, listing.id, affiliate.rate) > 0,
+  );
+}
+
+/** The affiliate's link to one product's own page. */
+export function productAffiliateLink(store: Store, product: Pick<Listing, "id" | "title">, code: string): string {
+  return `${storeBase(store)}/p/${productSegment(product)}?via=${code}`;
+}
+
+export type KitResult = { ok: true; posts: AffiliatePosts; left: number } | { ok: false; reason: "off" | "unknown" | "day" | "month" | "failed" };
+
+/** Drafts one affiliate's three posts about one product, within the limits. */
+export async function draftKit(store: Store, affiliate: Affiliate, productId: string, rawNote: string, now = new Date()): Promise<KitResult> {
+  if (!isAiConfigured() || !isRedisConfigured() || !store.statsId || !affiliatesOn(store) || !store.affiliates.kit || affiliate.status !== "approved") return { ok: false, reason: "off" };
+  const product = await readListing(store, productId);
+  if (!kitProduct(store, affiliate, product)) return { ok: false, reason: "unknown" };
+  const note = rawNote.replace(/\s+/g, " ").trim().slice(0, MAX_KIT_NOTE);
+  const day = dayKey(store, affiliate, now);
+  const month = monthKey(store, now);
+  const jobs = aiMonthKey(store, now);
+  const [today, , thisMonth, , storeMonth] = await redisPipeline([
+    ["INCR", day],
+    ["EXPIRE", day, 2 * 86_400],
+    ["INCR", month],
+    ["EXPIRE", month, 40 * 86_400],
+    ["INCR", jobs],
+    ["EXPIRE", jobs, 40 * 86_400],
+  ]);
+  const giveBack = () => redisPipeline([["DECR", day], ["DECR", month], ["DECR", jobs]]).catch(() => null);
+  if (Number(today) > KIT_PER_DAY) {
+    await giveBack();
+    return { ok: false, reason: "day" };
+  }
+  const allowance = aiAllowance(store, now.getTime());
+  if (Number(thisMonth) > kitMonthly(allowance) || Number(storeMonth) > allowance) {
+    await giveBack();
+    return { ok: false, reason: "month" };
+  }
+  let posts: AffiliatePosts | null = null;
+  try {
+    const [about, page] = await Promise.all([readAbout(store.statsId, product.id).catch(() => ""), readPage(store.statsId, product.id).catch(() => null)]);
+    posts = await writeAffiliatePosts(store, { facts: factsFor(store, product, about, page && pageShown(page) ? page : null), note });
+  } catch (error) {
+    console.error("drafting an affiliate's posts failed", error);
+  }
+  if (!posts) {
+    await giveBack();
+    return { ok: false, reason: "failed" };
+  }
+  const link = productAffiliateLink(store, product, affiliate.code);
+  const full = DISCLOSURE[store.language] ?? DISCLOSURE.en;
+  return {
+    ok: true,
+    posts: {
+      x: finishPost(posts.x, link, DISCLOSURE_SHORT[store.language] ?? DISCLOSURE_SHORT.en),
+      instagram: finishPost(posts.instagram, link, full),
+      linkedin: finishPost(posts.linkedin, link, full),
+    },
+    left: Math.max(0, KIT_PER_DAY - Number(today)),
+  };
+}

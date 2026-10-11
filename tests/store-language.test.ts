@@ -83,7 +83,8 @@ const SAME: Record<string, Record<string, string[]>> = {
   },
   membership: { fr: ["fromName"], nl: ["fromName"], pt: ["fromName"] },
   // "Label: link".
-  affiliates: { es: ["doorText"], de: ["doorText"], it: ["doorText"], nl: ["doorText"], pt: ["doorText"] },
+  // "Product" is the Dutch word too.
+  affiliates: { es: ["doorText"], de: ["doorText"], it: ["doorText"], nl: ["doorText", "kit.product"], pt: ["doorText"] },
   // Words the languages took from English: Community, Feed, Level, Post, Messages, likes, studio; "7 h 7 min", "7 pts".
   community: {
     es: ["lengthHoursMinutes", "pts"],

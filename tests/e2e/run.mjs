@@ -2497,6 +2497,46 @@ try {
     is("unchecked, it leaves the page at once", await page.locator("[data-program=localshop]").count(), 0);
   }
 
+  part("Posts drafted for an affiliate, each saying it is an affiliate link");
+  {
+    const fan = "kit.fan@example.com";
+    await open(page, `${LOCAL}/@localshop/affiliates`);
+    await page.fill("#aff-email", fan);
+    await Promise.all([page.waitForURL(/status=sent/), page.getByRole("button", { name: "Email me a link to apply" }).click()]);
+    let mail = null;
+    for (let i = 0; i < 40 && !mail; i += 1) {
+      mail = services.emails().find((email) => [email.to].flat().includes(fan)) ?? null;
+      if (!mail) await new Promise((wait) => setTimeout(wait, 250));
+    }
+    const link = String(mail?.text ?? "").match(/https?:\/\/\S+\/@localshop\/affiliates\S*/)?.[0] ?? "";
+    await open(page, local(link));
+    await Promise.all([page.waitForLoadState("networkidle"), page.getByRole("button", { name: "Open my affiliate page" }).click()]);
+    await open(studio, `${LOCAL}/studio/affiliates`);
+    await studio.locator("li", { hasText: fan }).getByRole("button", { name: "Approve" }).click();
+    await studio.getByText("Affiliate approved.").first().waitFor({ timeout: 30_000 });
+    await open(page, `${LOCAL}/@localshop/affiliates`);
+    const kit = page.locator("[data-kit]");
+    await kit.getByLabel("Who you share with, and how you know it (optional)").fill("My followers cook on weeknights.");
+    await kit.getByRole("button", { name: "Write three posts" }).click();
+    await kit.locator("[data-posts]").waitFor({ timeout: 30_000 });
+    const posts = await kit.locator("[data-posts] textarea").evaluateAll((boxes) => boxes.map((box) => box.value));
+    is("three posts, each with the affiliate's link to the product and the line saying they earn from it", [
+      posts.length,
+      posts.every((post) => /\/@localshop\/p\/\S+\?via=[a-z0-9]+/.test(post)),
+      posts[0].includes("#ad (affiliate link)"),
+      posts[1].includes("Affiliate link: I earn a commission if you buy through it."),
+      posts[2].includes("Affiliate link: I earn a commission if you buy through it."),
+    ], [3, true, true, true, true]);
+    const asked = services.writing().filter((body) => String(body.system ?? "").startsWith("You write three short posts an affiliate shares")).at(-1);
+    is("written from the product's page and the affiliate's own note, never claiming they used it", [
+      String(asked?.messages?.[0]?.content ?? "").includes("My followers cook on weeknights."),
+      String(asked?.system ?? "").includes("Never say or suggest the affiliate bought, used or tried the product"),
+    ], [true, true]);
+    if (process.env.E2E_SHOTS) await kit.screenshot({ path: join(process.env.E2E_SHOTS, "affiliate-kit.png") });
+    const signedOut = await studio.evaluate(async () => (await fetch("/api/store/affiliates/kit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ handle: "localshop", product: "x" }) })).status);
+    is("nobody but a signed-in affiliate can ask", signedOut, 401);
+  }
+
   await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
