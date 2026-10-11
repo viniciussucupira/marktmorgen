@@ -38,6 +38,16 @@ export async function startServices(port) {
   const writing = [];
   let counter = 0;
   const blobs = new Map();
+  const subscriptionUpdates = [];
+  let pauseSub = {
+    id: "sub_PauseMember0001",
+    object: "subscription",
+    status: "active",
+    customer: "cus_PauseMember01",
+    metadata: { store: "localshop", product: "club" },
+    pause_collection: null,
+    items: { data: [{ id: "si_PauseMember01", current_period_end: Math.floor(Date.now() / 1000) + 20 * 86_400, price: { unit_amount: 2000, currency: "usd", recurring: { interval: "month", interval_count: 1 } } }] },
+  };
 
   const readBytes = (req) =>
     new Promise((done) => {
@@ -224,6 +234,29 @@ export async function startServices(port) {
           data: [{ id: "in_local_renewal_0001", object: "invoice", status: "paid", billing_reason: "subscription_cycle", amount_paid: 2000, currency: "usd", created: Math.floor(Date.now() / 1000) - 86_400, subscription_details: { metadata: { store: "localshop", product: "club" } } }],
         });
       }
+      // One member of the local store, on the creator's own account, who pauses and comes back (lib/membership-pause.ts).
+      if (req.method === "GET" && path === "/v1/customers" && url.searchParams.get("email") === "pause.member@example.com") {
+        return json(res, 200, { object: "list", has_more: false, data: [{ id: "cus_PauseMember01", object: "customer" }] });
+      }
+      if (req.method === "GET" && path === "/v1/customers/cus_PauseMember01") return json(res, 200, { id: "cus_PauseMember01", object: "customer", email: "pause.member@example.com" });
+      if (req.method === "GET" && path === "/v1/subscriptions" && url.searchParams.get("customer") === "cus_PauseMember01") {
+        return json(res, 200, { object: "list", has_more: false, data: [pauseSub] });
+      }
+      if (req.method === "POST" && path === "/v1/subscriptions/sub_PauseMember0001") {
+        const body = new URLSearchParams(await read(req));
+        subscriptionUpdates.push(Object.fromEntries(body));
+        const metadata = { ...pauseSub.metadata };
+        for (const [key, value] of body) {
+          const field = key.match(/^metadata\[(.+)\]$/);
+          if (field) metadata[field[1]] = value;
+        }
+        pauseSub = {
+          ...pauseSub,
+          metadata,
+          pause_collection: body.has("pause_collection") ? null : body.get("pause_collection[resumes_at]") ? { behavior: "void", resumes_at: Number(body.get("pause_collection[resumes_at]")) } : pauseSub.pause_collection,
+        };
+        return json(res, 200, pauseSub);
+      }
       if (req.method === "GET" && path.startsWith("/v1/")) return json(res, 200, { object: "list", data: [], has_more: false });
       unknown.push(`${req.method} ${path}`);
       return json(res, 404, { error: { type: "invalid_request_error", message: `no stand-in for ${req.method} ${path}` } });
@@ -239,6 +272,7 @@ export async function startServices(port) {
     coupons: () => [...coupons],
     unknown: () => [...unknown],
     writing: () => [...writing],
+    subscriptionUpdates: () => [...subscriptionUpdates],
     /** What was written to the file store, by its path. */
     blobs: () => new Map(blobs),
     /** The database itself, for a test to read or set what only time or many buyers would make. */

@@ -60,6 +60,7 @@ import { type Pixels, NO_PIXELS, parsePixels } from "@/lib/pixels";
 import { type TaxSetting, NO_TAX, parseTax } from "@/lib/tax";
 import { type RecoverySetting, NO_RECOVERY, parseRecovery } from "@/lib/recovery-setting";
 import { type SaveOffer, NO_SAVE, parseSaveOffer } from "@/lib/save-offer";
+import { parsePauseMonths } from "@/lib/membership-pause-rules";
 import { type WinBack, NO_WINBACK, parseWinBack } from "@/lib/winback";
 import { type StoreSale, NO_SALE, parseSale } from "@/lib/store-sale";
 import { parseTiers } from "@/lib/tier-rules";
@@ -455,6 +456,12 @@ export type Store = {
    */
   save: SaveOffer;
   /**
+   * How many months a member may pause their membership for, instead of
+   * cancelling it, from the page they manage it on (lib/membership-pause.ts):
+   * 1, 2 or 3; 0 is off, which every store starts as.
+   */
+  pause: number;
+  /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
    */
@@ -801,6 +808,7 @@ function parseStore(raw: unknown): Store | null {
       // Stores written before the offer existed have none, as every store
       // does until its creator sets one.
       save: parseSaveOffer(value.save),
+      pause: parsePauseMonths(value.pause),
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
       tiers: parseTiers(value.tiers),
@@ -985,6 +993,7 @@ async function freshStore(fields: {
     tax: { ...NO_TAX },
     recovery: { ...NO_RECOVERY },
     save: { ...NO_SAVE },
+    pause: 0,
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
     tiers: [],
@@ -2118,6 +2127,14 @@ export async function setSaveOffer(
   save: SaveOffer,
 ): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" }> {
   const next = await patchStore(email, () => ({ save: parseSaveOffer(save) }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/** Saves how many months members may pause for, 0 to switch it off. */
+export async function setPauseMonths(email: string, months: unknown): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" | "months" }> {
+  const pause = parsePauseMonths(months);
+  if (pause !== months) return { ok: false, reason: "months" };
+  const next = await patchStore(email, () => ({ pause }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 

@@ -32,6 +32,7 @@ import { canOffer, saveOn } from "@/lib/save-offer";
 import { productOfSub } from "@/lib/tier-rules";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 import { membershipWords } from "@/lib/buyer-words/membership";
+import { type PauseSub, cannotPause, pauseOf, periodEndOf } from "@/lib/membership-pause-rules";
 
 /** How long the emailed link keeps working. */
 export const MANAGE_LINK_SECONDS = 60 * 60;
@@ -358,6 +359,12 @@ export type Membership = {
    * no Cancel button: there is nothing left to cancel.
    */
   endsAt: number | null;
+  /** A pause the member chose (lib/membership-pause-rules.ts), started or still to start; null when there is none. */
+  pause: { from: number; until: number } | null;
+  /** Whether the member may pause it now, as the store allows. */
+  canPause: boolean;
+  /** When the period already paid for ends, in seconds: where a pause would start. */
+  periodEnd: number;
 };
 
 const SUB_PATTERN = /^sub_[A-Za-z0-9]{6,64}$/;
@@ -457,6 +464,9 @@ export async function membershipsFor(store: Store, token: string): Promise<Membe
       interval: typeof price?.recurring?.interval === "string" ? price.recurring.interval : "month",
       intervalCount: typeof price?.recurring?.interval_count === "number" ? price.recurring.interval_count : 1,
       endsAt: endsAtOf(sub),
+      pause: pauseOf(sub as PauseSub),
+      canPause: cannotPause(sub as PauseSub, store.pause) === null,
+      periodEnd: periodEndOf(sub as PauseSub),
     };
   });
 }

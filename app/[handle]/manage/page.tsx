@@ -10,6 +10,11 @@ import { speech } from "@/lib/buyer-words";
 import { membershipWords } from "@/lib/buyer-words/membership";
 import { choicesFor, liveTiers } from "@/lib/tier-switch";
 
+/** The time the page is drawn at, in seconds: whether a pause has started yet. */
+function secondsNow(): number {
+  return Math.floor(Date.now() / 1000);
+}
+
 type Params = {
   params: Promise<{ handle: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -52,7 +57,9 @@ export default async function ManagePage({ params, searchParams }: Params) {
   const say = speech(store);
   const { w } = say;
   const m = membershipWords(store.language);
-  const notice = token && !live ? m.manageNotices.expired : m.manageNotices[status] ?? null;
+  const pauseNotice: Record<string, string> = { paused: "paused", resumed: "resumed", "cannot-pause": "cannot", "resume-declined": "declined" };
+  const notice = token && !live ? m.manageNotices.expired : m.manageNotices[status] ?? (pauseNotice[status] ? m.pauseNotices[pauseNotice[status]] : null);
+  const nowSeconds = secondsNow();
   const hours = Math.round(MANAGE_LINK_SECONDS / 3600);
   // Out loud, the way a member thinks about what they pay: "$29 a month".
   const every = (one: Membership) =>
@@ -135,6 +142,23 @@ export default async function ManagePage({ params, searchParams }: Params) {
                           {one.endsAt ? `${one.amount ? " · " : ""}${m.ends(endDate(one.endsAt))}` : null}
                         </p>
                       </div>
+                      {one.pause ? (
+                        <div className="basis-full" data-paused>
+                          <p className="st-note text-sm font-semibold">
+                            {nowSeconds >= one.pause.from ? m.pause.pausedUntil(endDate(one.pause.until)) : m.pause.startsPause(endDate(one.pause.from), endDate(one.pause.until))}
+                          </p>
+                          <form action="/api/store/manage/pause" method="post" className="mt-2">
+                            <input type="hidden" name="handle" value={store.handle} />
+                            <input type="hidden" name="token" value={token} />
+                            <input type="hidden" name="subscription" value={one.id} />
+                            <input type="hidden" name="action" value="resume" />
+                            <button type="submit" className="btn btn-secondary btn-sm">
+                              {m.pause.resume}
+                            </button>
+                          </form>
+                          {nowSeconds >= one.pause.from ? <p className="st-muted mt-1 text-xs">{m.pause.resumeNote}</p> : null}
+                        </div>
+                      ) : null}
                       {one.endsAt === null ? (
                         <form action="/api/store/manage/cancel" method="post">
                           <input type="hidden" name="handle" value={store.handle} />
@@ -145,7 +169,34 @@ export default async function ManagePage({ params, searchParams }: Params) {
                           </button>
                         </form>
                       ) : null}
-                      {(() => {
+                      {one.canPause && one.endsAt === null && !one.pause ? (
+                        <details className="mt-3 w-full basis-full" data-pause>
+                          <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--st-text)" }}>
+                            {m.pause.button}
+                          </summary>
+                          <form action="/api/store/manage/pause" method="post" className="mt-2 space-y-2">
+                            <input type="hidden" name="handle" value={store.handle} />
+                            <input type="hidden" name="token" value={token} />
+                            <input type="hidden" name="subscription" value={one.id} />
+                            <input type="hidden" name="action" value="pause" />
+                            <label className="st-label block" htmlFor={`pause-${one.id}`}>
+                              {m.pause.choose}
+                            </label>
+                            <select id={`pause-${one.id}`} name="months" className="st-field" defaultValue="1">
+                              {Array.from({ length: store.pause }, (_, i) => i + 1).map((n) => (
+                                <option key={n} value={n}>
+                                  {m.pause.months(n)}
+                                </option>
+                              ))}
+                            </select>
+                            <p className="st-muted text-xs">{m.pause.note(one.periodEnd ? endDate(one.periodEnd) : "")}</p>
+                            <button type="submit" className="btn st-btn btn-sm">
+                              {m.pause.confirm}
+                            </button>
+                          </form>
+                        </details>
+                      ) : null}
+                      {one.pause ? null : (() => {
                         const choices = choicesFor(store, one, tiers);
                         if (!choices.length) return null;
                         return (

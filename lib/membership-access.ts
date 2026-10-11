@@ -18,7 +18,8 @@
  * Open means Stripe calls the membership active, in its free trial, or past
  * due — a payment failed and Stripe is still retrying it, which is the
  * member's grace, not a reason to lock them out mid-retry. Anything else —
- * cancelled, unpaid after the retries, paused, a first payment never made —
+ * cancelled, unpaid after the retries, paused (by Stripe, or by a pause the
+ * member chose, memberState), a first payment never made —
  * is ended, and the member is shown a page that says so plainly, with the
  * way to join again and, where a card can be fixed, the way to fix it.
  *
@@ -34,6 +35,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
 import type { Listing, Store } from "@/lib/store";
+import { type PauseSub, pausedNow } from "@/lib/membership-pause-rules";
 
 /** The states in which a membership still hands over what it sells. */
 export const LIVE_STATES = new Set(["active", "trialing", "past_due"]);
@@ -46,6 +48,24 @@ const statusKey = (account: string, subscription: string) => `nl:member:status:$
 
 export function isLive(status: unknown): boolean {
   return typeof status === "string" && LIVE_STATES.has(status);
+}
+
+/**
+ * The state a membership's doors go by: Stripe's own, or "paused" while a
+ * pause its member chose is running (lib/membership-pause-rules.ts). Stripe
+ * keeps calling a paused membership active, because it is not cancelled;
+ * here it is not being paid for, so it opens nothing until the pause ends.
+ */
+export function memberState(sub: unknown): string | null {
+  if (!sub || typeof sub !== "object") return null;
+  const status = (sub as { status?: unknown }).status;
+  if (typeof status !== "string") return null;
+  return pausedNow(sub as PauseSub) ? "paused" : status;
+}
+
+/** Whether a membership, as Stripe sent it, opens its doors now. */
+export function isLiveSub(sub: unknown): boolean {
+  return isLive(memberState(sub));
 }
 
 /**
@@ -64,10 +84,7 @@ export function soldAMembership(product: Listing, session: { mode?: unknown; met
  * check whether someone still pays stays shut rather than open.
  */
 export async function membershipStatus(store: Store, subscription: unknown): Promise<string | null> {
-  if (subscription && typeof subscription === "object") {
-    const status = (subscription as { status?: unknown }).status;
-    return typeof status === "string" ? status : null;
-  }
+  if (subscription && typeof subscription === "object") return memberState(subscription);
   const account = store.stripeAccountId;
   if (typeof subscription !== "string" || !SUBSCRIPTION_PATTERN.test(subscription) || !account) return null;
   if (isRedisConfigured()) {
@@ -75,11 +92,17 @@ export async function membershipStatus(store: Store, subscription: unknown): Pro
     if (typeof cached === "string" && cached) return cached;
   }
   const sub = await onAccount("GET", account, `/subscriptions/${encodeURIComponent(subscription)}`);
-  const status = typeof sub.status === "string" ? sub.status : null;
+  const status = memberState(sub);
   if (status && isRedisConfigured()) {
     await redisPipeline([["SET", statusKey(account, subscription), status, "EX", STATUS_SECONDS]]);
   }
   return status;
+}
+
+/** Forgets what was kept of a membership's state, after it was changed here (lib/membership-pause.ts). */
+export async function forgetStatus(account: string, subscription: string): Promise<void> {
+  if (!isRedisConfigured() || !SUBSCRIPTION_PATTERN.test(subscription)) return;
+  await redisPipeline([["DEL", statusKey(account, subscription)]]);
 }
 
 /** The page that tells a member their membership ended, and how to renew. */

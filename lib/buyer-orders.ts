@@ -35,7 +35,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount, platformKey } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
 import type { ProductFile } from "@/lib/product-file";
-import { isLive, soldAMembership } from "@/lib/membership-access";
+import { isLiveSub, soldAMembership } from "@/lib/membership-access";
 import { purchaseRefunded, refundedInFull } from "@/lib/refunds";
 import type { Listing, Store } from "@/lib/store";
 import { listingFinder, readListings, sellsAny, sellsThings } from "@/lib/catalog";
@@ -348,7 +348,7 @@ export async function purchasesFor(store: Store, email: string): Promise<Purchas
       const member = soldAMembership(product, { mode: session.mode, metadata: meta });
       if (member) {
         const sub = session.subscription as { status?: unknown } | null;
-        if (!sub || typeof sub !== "object" || !isLive(sub.status)) {
+        if (!sub || typeof sub !== "object" || !isLiveSub(sub)) {
           found.set(id, {
             reference: id,
             kind: "sale",
