@@ -70,7 +70,8 @@ export default async function OpengraphImage({ params }: Params) {
             }}
           >
             <div style={{ display: "flex", fontSize: 26, fontWeight: 700, color: colours.accent, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-              {`${w.kicker}${w.kickerAccent}`}
+              {/* The sheet's two-part heading as one line, with one space where the two meet. */}
+              {`${w.kicker.trim()} ${w.kickerAccent.trim()}`}
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ display: "flex", fontSize: 26, color: "#5b554c" }}>{w.certifies}</div>
