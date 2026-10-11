@@ -301,6 +301,11 @@ export async function claimMonth(handle: string, month: string): Promise<boolean
   return ok !== null;
 }
 
+/** Lets a month's claim go, when the numbers could not be read, so a later run tries again. */
+export async function releaseMonth(handle: string, month: string): Promise<void> {
+  if (isRedisConfigured()) await redisPipeline([["DEL", monthSentKey(month, handle)]]);
+}
+
 /**
  * The month's email (added 11 October 2026), sent on the 1st for the month
  * just ended, as Kissmetrics and Baremetrics send theirs: the month's
@@ -373,7 +378,8 @@ export function monthlyMessage(store: Store, data: StatsData, month: string, sto
   }
   lines.push("", `Everything, day by day, is in your studio: ${SITE_URL}/studio`);
   lines.push("", `You get this on the 1st of each month while your store has visitors. To stop it, the weekly one and the busy-day one: ${stopUrl}`);
-  const subject = known ? `${store.name} in ${title}: ${money(now.cents)} from ${now.sales.toLocaleString("en-US")} ${now.sales === 1 ? "sale" : "sales"}` : `${store.name} in ${title}`;
+  // The money is sales and renewals together, so it is not said to be "from" the count of sales.
+  const subject = known ? `${store.name} in ${title}: ${money(now.cents)} in sales and renewals` : `${store.name} in ${title}`;
   return { subject: subject.slice(0, 180), text: lines.join("\n") };
 }
 

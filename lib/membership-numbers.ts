@@ -135,7 +135,7 @@ export function leavingFrom(subs: Sub[], currency: string, now: number): Leaving
  * The next three months, if the pace of the last 90 days holds (added 11
  * October 2026), as Baremetrics' Forecast does: each month keeps the share of
  * paying members the last 90 days kept, and gains the recurring revenue the
- * last 90 days gained. An estimate, said as one; null when fewer than
+ * last 90 days gained from members who joined in them and are still paying. An estimate, said as one; null when fewer than
  * FORECAST_MIN members were paying 90 days ago, because a pace read off three
  * people is not a pace.
  */
@@ -162,7 +162,10 @@ export function forecastFrom(subs: Sub[], currency: string, now: number, mrr: nu
     if (paying < t90 && (!sub.ended || sub.ended > t90)) {
       base += 1;
       if (sub.ended && sub.ended <= now) left += 1;
-    } else if (paying >= t90 && paying <= now) {
+    } else if (paying >= t90 && paying <= now && PAYING.has(sub.status) && (!sub.ended || sub.ended > now)) {
+      // Only those still paying: one that joined and left again inside the
+      // 90 days gained nothing, and the departures of members who joined
+      // before them are all the loss that is read.
       gained += monthly(sub.amount, sub.interval, sub.count);
     }
   }

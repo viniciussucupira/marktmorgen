@@ -27,7 +27,7 @@ import { renewalsFrom, type StatsData } from "@/lib/stats";
 import { audienceCsv, buyerAudience } from "@/lib/ad-audience";
 import { stopWriting, upsertContact } from "@/lib/contacts";
 import { goalProgress, moneyByDay, readGoal } from "@/lib/sales-goal-rules";
-import { readSalesGoal, setSalesGoal } from "@/lib/sales-goal";
+import { goalForMonth, readSalesGoal, setSalesGoal } from "@/lib/sales-goal";
 import { recordsFrom } from "@/lib/records";
 import { lastMonthOf, monthlyMessage, weeklyMessage } from "@/lib/stats-report";
 import { insightsFrom } from "@/lib/insights";
@@ -119,6 +119,8 @@ async function main(): Promise<void> {
   is("losing one of eleven in 90 days is about 3% a month", Math.round(forecast.lost * 1000), 31);
   is("gaining one $10 member in 90 days is $3.33 a month", forecast.gained, 333);
   is("each month keeps its share and adds its gain", forecast.months, [10989, 10979, 10969]);
+  is("a member who joined and left inside the 90 days gained nothing", forecastFrom([...ten, ...Array.from({ length: 9 }, () => member({ start: now - 80 * DAY, ended: now - 50 * DAY, status: "canceled" }))], "usd", now, 10_000)!.gained, 0);
+  is("nor one whose first payment never went through", forecastFrom([...ten, member({ start: now - 10 * DAY, status: "incomplete_expired" })], "usd", now, 10_000)!.gained, 0);
   is("a trial that ended unpaid never paid", forecastFrom([...ten, member({ start: now - 20 * DAY, trialEnd: now - 6 * DAY, ended: now - 6 * DAY })], "usd", now, 10_000)!.gained, 0);
 
   part("A checkout Stripe would not open");
@@ -169,8 +171,9 @@ async function main(): Promise<void> {
 
   part("The month's goal");
   is("a goal is a whole positive amount, or 0 for none", [readGoal(300000), readGoal(0), readGoal(-1), readGoal(1.5), readGoal("x")], [300000, 0, null, null, null]);
-  await setSalesGoal(store.statsId!, 300_000);
-  is("kept for the store", await readSalesGoal(store.statsId), 300_000);
+  await setSalesGoal(store.statsId!, 300_000, "usd", Date.parse("2026-10-01T03:00:00Z"));
+  is("kept for the store, with the month it was set in", await readSalesGoal(store.statsId, "usd"), { cents: 300_000, since: "2026-10" });
+  is("and not read as a goal in another currency", await readSalesGoal(store.statsId, "jpy"), { cents: 0, since: "" });
   const channelDays = { instagram: { "2026-10-01": 50_000, "2026-10-05": 40_000, "2026-09-30": 99_000 }, direct: { "2026-10-05": 10_000 } };
   const byDay = moneyByDay(channelDays);
   is("every channel's money on a day added up", byDay["2026-10-05"], 50_000);
@@ -245,6 +248,7 @@ async function main(): Promise<void> {
   is("the Monday email carries the goal", /October goal: \$300 of \$3,000 \(10%\), \$135 a day needed for the 20 days left\./.test(week.text), true);
   is("the month just ended is the one before today", lastMonthOf(Date.parse("2026-10-01T09:00:00Z")), "2026-09");
   const month = monthlyMessage(store, data, "2026-09", "https://marktmorgen.com/stop", 5_000)!;
+  is("a goal set on the 1st is not held against the month before it, only against its own and after", [goalForMonth({ cents: 300_000, since: "2026-10" }, "2026-09"), goalForMonth({ cents: 300_000, since: "2026-10" }, "2026-10"), goalForMonth({ cents: 300_000, since: "2026-08" }, "2026-09")], [0, 300_000, 300_000]);
   is("the month's email: its visitors set beside the month before, its money, its best day and the goal", [
     month.subject,
     /Visitors: 300 \(down 3\.2% on the month before\)/.test(month.text),
@@ -252,22 +256,23 @@ async function main(): Promise<void> {
     /Best day: Thursday, September 3, \$70\./.test(month.text),
     /Your goal of \$50 was reached: 300%\./.test(month.text),
     /To stop it, the weekly one and the busy-day one: https:\/\/marktmorgen\.com\/stop/.test(month.text),
-  ], ["Harbor Kitchen in September 2026: $150 from 0 sales", true, true, true, true, true]);
+  ], ["Harbor Kitchen in September 2026: $150 in sales and renewals", true, true, true, true, true]);
   is("a month with nobody and nothing says nothing", monthlyMessage(store, { ...data, days: [], channelDays: {} }, "2026-09", "x"), null);
 
   part("Slack and Discord");
   is("only a Slack or Discord webhook address is taken", [chatKind(SLACK), chatKind(DISCORD), chatKind("https://example.com/hook"), chatKind("http://hooks.slack.com/services/T0000/B0000/abcdefghijk"), chatKind("https://discord.com.evil.io/api/webhooks/123456/abcdefghijklmnopqrstuvwxyz")], ["slack", "discord", null, null, null]);
-  is("anything else is refused before a request is made", [await setChatAddress("harbor", "Harbor Kitchen", "https://127.0.0.1/x"), posted.length], ["invalid", 0]);
+  is("anything else is refused before a request is made", [await setChatAddress(store.statsId!, "Harbor Kitchen", "https://127.0.0.1/x"), posted.length], ["invalid", 0]);
   chatAnswers = 404;
-  is("an address the chat will not post to is not kept", [await setChatAddress("harbor", "Harbor Kitchen", SLACK), await chatSetup("harbor")], ["refused", null]);
+  is("an address the chat will not post to is not kept", [await setChatAddress(store.statsId!, "Harbor Kitchen", SLACK), await chatSetup(store.statsId)], ["refused", null]);
   chatAnswers = 200;
-  is("one that took a first message is kept", [await setChatAddress("harbor", "Harbor Kitchen", SLACK), await chatSetup("harbor"), await chatAddress("harbor")], ["saved", "slack", SLACK]);
-  const [kept] = await redisPipeline([["GET", "nl:chatsum:harbor"]]);
+  is("one that took a first message is kept", [await setChatAddress(store.statsId!, "Harbor Kitchen", SLACK), await chatSetup(store.statsId), await chatAddress(store.statsId)], ["saved", "slack", SLACK]);
+  const [kept] = await redisPipeline([["GET", `nl:chatsum:${store.statsId}`]]);
   is("sealed, never as given", [typeof kept, String(kept).includes("hooks.slack.com")], ["string", false]);
   is("Slack's marks escaped, so a name cannot ping a channel", chatBody("slack", "<!channel> & co"), { text: "&lt;!channel&gt; &amp; co" });
   is("Discord pings nobody and stays under its length", [chatBody("discord", "@everyone").allowed_mentions, String(chatBody("discord", "x".repeat(3000)).content).length], [{ parse: [] }, 1986]);
   is("the email's lines about stopping it are not posted", forChat("Sales: 3\n\nYou get this every Monday while your store has visitors. To stop it: https://x"), "Sales: 3");
-  is("forgotten when emptied", [await setChatAddress("harbor", "Harbor Kitchen", ""), await chatSetup("harbor")], ["removed", null]);
+  is("kept by the store, not by its address, so another store with the same handle never reaches the channel", [await chatAddress("harbor"), await chatAddress(null)], [null, null]);
+  is("forgotten when emptied", [await setChatAddress(store.statsId!, "Harbor Kitchen", ""), await chatSetup(store.statsId)], ["removed", null]);
 
   done();
 }

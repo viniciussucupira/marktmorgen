@@ -77,6 +77,8 @@ export async function noteCheckoutTrouble(store: Store, error: unknown, now = Da
       "This email comes at most once a day, and only on a day Stripe refuses.",
     ].join("\n"),
   }).catch(() => false);
+  // Not sent: the day's claim is let go, so the next refusal tries again.
+  if (!sent) await redisPipeline([["DEL", mailKey(store.statsId, day)]]).catch(() => undefined);
   return sent ? "emailed" : "counted";
 }
 

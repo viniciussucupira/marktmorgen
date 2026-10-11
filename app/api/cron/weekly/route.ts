@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 15));
     const folders = [...new Set([...(await visitedFolders(monthKey(now))), ...(await visitedFolders(monthKey(lastMonth)))])];
     for (const folder of folders) {
-      if (out.sent + out.failed >= MAX_PER_RUN || Date.now() - started > TIME_BUDGET_MS) break;
+      if (out.looked >= MAX_PER_RUN || Date.now() - started > TIME_BUDGET_MS) break;
       const store = await storeOf(folder).catch(() => null);
       if (!store) continue;
       const standing = standingOf(store);
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         continue;
       }
       const emailOff = await weeklyOff(store.handle);
-      const chat = await chatAddress(store.handle).catch(() => null);
+      const chat = await chatAddress(store.statsId).catch(() => null);
       if (emailOff && !chat) {
         out.stopped += 1;
         continue;
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       const token = weeklyToken(store.handle);
       const stopUrl = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&t=${encodeURIComponent(token)}`;
       const spends = await readSpends(store.statsId).catch(() => []);
-      const goal = await readSalesGoal(store.statsId).catch(() => 0);
+      const goal = (await readSalesGoal(store.statsId, store.currency).catch(() => ({ cents: 0 }))).cents;
       const message = data && token ? weeklyMessage(store, data, stopUrl, spends, goal) : null;
       if (!message) {
         out.quiet += 1;

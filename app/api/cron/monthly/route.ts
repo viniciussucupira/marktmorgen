@@ -7,8 +7,8 @@ import { monthKey } from "@/lib/delivery";
 import { storeOf } from "@/lib/usage-billing";
 import { standingOf } from "@/lib/plan-standing";
 import { SITE_URL } from "@/lib/site-url";
-import { claimMonth, lastMonthOf, monthlyMessage, readNumbers, weeklyOff, weeklyToken } from "@/lib/stats-report";
-import { readSalesGoal } from "@/lib/sales-goal";
+import { claimMonth, lastMonthOf, releaseMonth, monthlyMessage, readNumbers, weeklyOff, weeklyToken } from "@/lib/stats-report";
+import { goalForMonth, readSalesGoal } from "@/lib/sales-goal";
 import { chatAddress, forChat, postToChat } from "@/lib/chat-summary";
 
 /**
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         continue;
       }
       const emailOff = await weeklyOff(store.handle);
-      const chat = await chatAddress(store.handle).catch(() => null);
+      const chat = await chatAddress(store.statsId).catch(() => null);
       if (emailOff && !chat) {
         out.stopped += 1;
         continue;
@@ -60,9 +60,17 @@ export async function GET(request: NextRequest) {
       if (!(await claimMonth(store.handle, month))) continue;
       out.looked += 1;
       const data = await readNumbers(store).catch(() => null);
+      if (!data) {
+        // Not read this time: the month is let go, so a later run tries again.
+        await releaseMonth(store.handle, month).catch(() => undefined);
+        out.failed += 1;
+        continue;
+      }
       const token = weeklyToken(store.handle);
       const stopUrl = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&t=${encodeURIComponent(token)}`;
-      const goal = await readSalesGoal(store.statsId).catch(() => 0);
+      // Only a goal set by the month being reported is measured: one set on the 1st is for the month ahead.
+      const kept = await readSalesGoal(store.statsId, store.currency).catch(() => ({ cents: 0, since: "" }));
+      const goal = goalForMonth(kept, month);
       const message = data && token ? monthlyMessage(store, data, month, stopUrl, goal) : null;
       if (!message) {
         out.quiet += 1;
