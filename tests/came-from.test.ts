@@ -114,8 +114,11 @@ test("the studio is given the channel money, in the store's currency only", () =
   const panel = readFileSync(join(process.cwd(), "components/stats-panel.tsx"), "utf8");
   assert.match(panel, /Where the money came from/, "the table has to exist, or none of this is visible");
   assert.match(panel, /Per visitor/, "and revenue per visitor, which is the number the whole report is for");
+  // The names live in one list since 11 October 2026 (lib/channel-names.ts), which the panel reads.
+  const names = readFileSync(join(process.cwd(), "lib/channel-names.ts"), "utf8");
+  assert.match(panel, /channelName/, "the panel names channels through the one list");
   assert.match(
-    panel,
+    names,
     /Direct or unknown/,
     "a sale from nowhere nameable is named plainly rather than shown as the word 'direct'",
   );

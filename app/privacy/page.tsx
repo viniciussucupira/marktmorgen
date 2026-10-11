@@ -554,8 +554,24 @@ export default function PrivacyPage() {
           </strong>{" "}
           When a visitor leaves a product&apos;s sales page, the page sends the
           id of the furthest of its sections they saw, and we add one to that
-          section&apos;s count. No cookie is set and nothing about the visitor
-          is sent or kept.
+          section&apos;s count. On a store&apos;s own page it sends the furthest
+          item they saw &mdash; a product, a link or a part of the page &mdash;
+          where it stood, and the item they clicked, if any, and we add one to
+          that day&apos;s count of it. Each page decides at random to send this
+          for one visitor in eight, and for nobody else. No cookie is set and
+          nothing about the visitor is sent or kept.
+        </p>
+        <p id="heard">
+          <strong className="text-black">
+            Where a buyer heard of a store.
+          </strong>{" "}
+          After paying, a buyer may be asked one question, which they can skip:
+          where they heard of the store. If they answer, we check that the order
+          is a paid order of that store, add one to that day&apos;s count of the
+          answer and the order&apos;s amount to its total, and mark the order as
+          answered for 30 days so it is counted once. The answer is not kept
+          with the order, the buyer or the time, and the creator sees only the
+          counts.
         </p>
         <p id="affiliates">
           <strong className="text-black">

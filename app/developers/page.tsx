@@ -204,7 +204,8 @@ export default function DevelopersPage() {
           { "channel": "instagram", "visits": 240, "checkouts": 19, "signups": 4, "sales": 6, "revenue": 17400 }
         ],
         "countries": [{ "country": "US", "views": 388 }],
-        "devices": [{ "device": "mobile", "views": 521 }]
+        "devices": [{ "device": "mobile", "views": 521 }],
+        "previous": { "visitors": 335, "page_views": 540, "checkouts": 24, "sales": 7, "revenue": 20300 }
       },
       "last_30_days": { "...": "the same fields" },
       "last_90_days": { "...": "the same fields" }
@@ -216,7 +217,9 @@ export default function DevelopersPage() {
           and <code className="font-mono">revenue</code> are <code className="font-mono">null</code> when Stripe could not be read
           (<code className="font-mono">&quot;sales&quot;: &quot;error&quot;</code>) or is not connected yet (<code className="font-mono">&quot;none&quot;</code>).
           A <code className="font-mono">channel</code> of <code className="font-mono">direct</code> is a visit or sale from nowhere
-          the store could name.
+          the store could name. <code className="font-mono">previous</code> is the same number of days just before, to compare
+          with; its <code className="font-mono">sales</code> and <code className="font-mono">revenue</code> are{" "}
+          <code className="font-mono">null</code> when Stripe could not be read that far back in full.
         </p>
       </LegalSection>
 

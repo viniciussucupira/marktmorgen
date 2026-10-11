@@ -53,6 +53,8 @@ import { isSoon, soonProducts } from "@/lib/waitlist";
 import { centsWords } from "@/lib/watch-rules";
 import { store as redis } from "./redis-stub";
 import { COMMANDS, PAGES_PER_VISIT, STATIC_FILES, visitCost } from "./traffic-cost";
+import { POST as readRoute } from "@/app/api/store/read/route";
+import { STORE_SCOPE, readToken } from "@/lib/page-read";
 import { done, is, part } from "./check";
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
@@ -374,6 +376,16 @@ async function main(): Promise<void> {
   await countLater("192.0.2.52");
   const laterCount = await counted(() => countLater("192.0.2.51"));
   is("and saying it was opened is too, with the product's own visitor", laterCount <= COMMANDS.laterCount, true);
+  // How a page was read, sent by one visitor in eight as they leave (lib/page-read.ts):
+  // the route, with a block of a sales page counted before and one of the store's page.
+  const readStore = (await storeForHandle("joy"))!;
+  const readRequest = (body: Record<string, unknown>) =>
+    readRoute(new Request("https://marktmorgen.com/api/store/read", { method: "POST", headers: { "user-agent": "Mozilla/5.0 (iPhone)" }, body: JSON.stringify(body) }) as never);
+  await readRequest({ t: readToken(readStore.statsId, product.id), k: "d", p: product.id, b: "blok0001" });
+  const depthCount = await counted(() => readRequest({ t: readToken(readStore.statsId, product.id), k: "d", p: product.id, b: "blok0001" }));
+  const reachCount = await counted(() => readRequest({ t: readToken(readStore.statsId, STORE_SCOPE), k: "s", n: 2, b: `p:${product.id}`, c: "" }));
+  // Exactly one each: none would mean nothing was counted, which would pass the model for the wrong reason.
+  is("and how a page was read is too, without reading the store", [depthCount, reachCount], [COMMANDS.readBeacon, COMMANDS.readBeacon]);
   is("the visit this is all worked out for is a heavy one", [PAGES_PER_VISIT, STATIC_FILES, visitCost() > 0.0002, visitCost() < 0.0003], [3, 13, true, true]);
 
   part("Where it is counted, and where a store rests");

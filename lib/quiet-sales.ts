@@ -90,10 +90,10 @@ export async function checkQuiet(store: Store, now = Date.now()): Promise<QuietO
   if (!isRedisConfigured() || !isSenderConfigured() || !store.stripeAccountId) return "skipped";
   const standing = standingOf(store);
   if (standing !== "paid" && standing !== "trial") return "skipped";
+  if (await weeklyOff(store.handle)) return "skipped";
   const day = new Date(now).toISOString().slice(0, 10);
   const [first] = await redisPipeline([["SET", checkedKey(day, store.handle), "1", "NX", "EX", 2 * 86400]]);
   if (first === null) return "seen";
-  if (await weeklyOff(store.handle)) return "skipped";
   const verdict = isQuiet(await saleTimes(store, now), now);
   if (!verdict.quiet) return "fine";
   const [claimed] = await redisPipeline([["SET", sentKey(store.handle, verdict.last), "1", "NX", "EX", 90 * 86400]]);

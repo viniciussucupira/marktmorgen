@@ -26,7 +26,7 @@ const TOOLS = [
   {
     name: "get_numbers",
     description:
-      "The store's numbers for the last 7, 30 and 90 days: visitors, checkouts, sales and revenue; each channel (instagram, tiktok, newsletter…) from visit to sale; and page views by country and device. Money is in the smallest unit of the store's currency (cents for USD), before Stripe's fee.",
+      "The store's numbers for the last 7, 30 and 90 days: visitors, checkouts, sales and revenue; each channel (instagram, tiktok, newsletter…) from visit to sale; and page views by country and device, each window with the same stretch of days just before it under previous. Money is in the smallest unit of the store's currency (cents for USD), before Stripe's fee.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     annotations: { readOnlyHint: true },
   },
