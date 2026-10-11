@@ -27,6 +27,11 @@
  *   - Never over the creator's own. A link that already carries a utm tag is
  *     one they are measuring their own way, and it is not touched.
  *
+ * One exception, only for somebody who ticked a box of its own to allow it:
+ * in a sequence's emails, their links to the store carry one more parameter,
+ * which says the link was theirs, so the next email can go only to those who
+ * used one, or did not (lib/mail-clicks.ts says how, and how it is taken back).
+ *
  * And what it counts, said plainly because the page says it too: a sale made
  * on the page the link opened. Somebody who reads the email on Monday and
  * comes back by themselves on Friday is not counted for it (lib/came-from.ts
@@ -79,7 +84,13 @@ export function isOwnLink(url: URL, store: Pick<Store, "handle" | "domain">): bo
  * creator's own store and they have not tagged it themselves. Anything that
  * is not an address this can read comes back unchanged.
  */
-export function taggedLink(href: string, store: Pick<Store, "handle" | "domain">, tag: MailTag): string {
+export function taggedLink(
+  href: string,
+  store: Pick<Store, "handle" | "domain">,
+  tag: MailTag,
+  /** The reader's own key, only when they allowed their link use to be seen (lib/mail-clicks.ts). */
+  readerKey?: string,
+): string {
   let url: URL;
   try {
     url = new URL(href);
@@ -91,5 +102,6 @@ export function taggedLink(href: string, store: Pick<Store, "handle" | "domain">
   url.searchParams.set("utm_source", MAIL_SOURCE);
   url.searchParams.set("utm_medium", tag.medium);
   url.searchParams.set("utm_campaign", tag.campaign);
+  if (readerKey && tag.medium === "sequence") url.searchParams.set("mk", readerKey);
   return url.toString();
 }

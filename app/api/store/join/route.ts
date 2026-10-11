@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
   let handle = "";
   let email = "";
   let honeypot = "";
+  let clicks = false;
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
     const read = (name: string) => {
@@ -28,6 +29,8 @@ export async function POST(request: NextRequest) {
     handle = normaliseHandle(read("handle"));
     email = read("email").slice(0, 300);
     honeypot = read("website");
+    // Its own box under the address, empty unless ticked (lib/mail-clicks.ts).
+    clicks = read("clicks") === "yes";
   } catch {
     return new Response("Bad request", { status: 400 });
   }
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
   // A field no person can see: whatever filled it in is told it worked, and nothing is sent.
   if (honeypot.trim()) return away("sent");
   try {
-    const result = await askToJoin({ store, email, ip: clientAddress(request), origin: linkOrigin(request, store) });
+    const result = await askToJoin({ store, email, clicks, ip: clientAddress(request), origin: linkOrigin(request, store) });
     // Counted under the channel the visitor came from (lib/visit-channel.ts).
     if (result === "sent") after(() => countHit(request, store, { kind: "signup" }));
     return away(result);

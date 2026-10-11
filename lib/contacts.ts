@@ -68,6 +68,12 @@ export type Contact = {
   tags: string[];
   /** When an import brought them or marked them as agreeing; "" when none did. */
   importedAt: string;
+  /**
+   * When they allowed the creator to see which links in a sequence's emails
+   * they use (lib/mail-clicks.ts), by ticking a box of its own when they
+   * joined; absent when they did not, or took it back. Never set by an import.
+   */
+  clicks?: string;
 };
 
 /** How long a name kept for a contact may be, and how many labels of what length. */
@@ -114,6 +120,7 @@ export function parseContact(raw: unknown): Contact | null {
       name: typeof value.name === "string" ? value.name.slice(0, MAX_CONTACT_NAME) : "",
       tags: Array.isArray(value.tags) ? readTags(value.tags.filter((t): t is string => typeof t === "string")) : [],
       importedAt: typeof value.importedAt === "string" ? value.importedAt : "",
+      ...(typeof value.clicks === "string" && value.clicks ? { clicks: value.clicks } : {}),
     };
   } catch {
     return null;
@@ -142,7 +149,16 @@ export type AddResult = {
 export async function upsertContact(
   listId: string,
   rawEmail: string,
-  input: { agreed: boolean; explicit: boolean; source: ContactSource; productId?: string; title?: string; at?: string },
+  input: {
+    agreed: boolean;
+    explicit: boolean;
+    source: ContactSource;
+    productId?: string;
+    title?: string;
+    at?: string;
+    /** They also ticked the box allowing their link use to be seen (lib/mail-clicks.ts). */
+    clicks?: boolean;
+  },
 ): Promise<AddResult> {
   const none = { joined: false, gotProduct: false, full: false };
   if (!isRedisConfigured() || !listId) return none;
@@ -191,6 +207,11 @@ export async function upsertContact(
     tags: before?.tags ?? [],
     importedAt: before?.importedAt ?? "",
   };
+  // Allowed only by their own tick, given with a yes to the list; kept once
+  // given, unless they left since — coming back, they are asked again.
+  const allowed = input.clicks === true && input.agreed && input.explicit;
+  const clicks = resubscribe ? (allowed ? input.at || now : "") : before?.clicks || (allowed ? input.at || now : "");
+  if (clicks) next.clicks = clicks;
   const commands: (string | number)[][] = [["HSET", key, email, JSON.stringify(next)]];
   if (input.agreed && !before?.agreed) commands.push(["INCR", agreedKey(listId)]);
   if (resubscribe) commands.push(["DECR", unsubKey(listId)]);
@@ -432,7 +453,13 @@ async function casWrite(key: string, writes: { email: string; value: string; was
  * the moment of sending, so anyone who left since the send began is not in
  * the answer and is not written to.
  */
-export async function tokensFor(listId: string, emails: string[], handle: string): Promise<Map<string, string>> {
+export async function tokensFor(
+  listId: string,
+  emails: string[],
+  handle: string,
+  /** Filled with those of them who allowed their link use to be seen (lib/mail-clicks.ts), when given. */
+  counting?: Set<string>,
+): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   if (!emails.length) return out;
   const key = leadsKey(listId);
@@ -447,6 +474,7 @@ export async function tokensFor(listId: string, emails: string[], handle: string
       const raw = found[i];
       const contact = parseContact(raw);
       if (!contact || !mailable(contact) || typeof raw !== "string") return;
+      if (contact.clicks) counting?.add(email);
       if (contact.t) {
         out.set(email, contact.t);
         return;
@@ -497,7 +525,10 @@ export async function unsubscribe(token: string): Promise<{ listId: string; emai
   if (!found) return null;
   const { listId, email, contact } = found;
   if (contact.unsub) return { listId, email };
-  const next: Contact = { ...contact, unsub: true, unsubAt: new Date().toISOString() };
+  // Leaving takes back the permission to see their link use as well.
+  const { clicks: _left, ...kept } = contact;
+  void _left;
+  const next: Contact = { ...kept, unsub: true, unsubAt: new Date().toISOString() };
   const commands: (string | number)[][] = [["HSET", leadsKey(listId), email, JSON.stringify(next)]];
   if (contact.agreed) commands.push(["INCR", unsubKey(listId)]);
   await redisPipeline(commands);
@@ -523,7 +554,9 @@ export async function stopWriting(listId: string, rawEmail: string, why: "bounce
     const [raw] = await redisPipeline([["HGET", key, email]]);
     const contact = parseContact(raw);
     if (!contact || contact.unsub || typeof raw !== "string") return false;
-    const next: Contact = { ...contact, unsub: true, unsubAt: new Date().toISOString(), gone: why };
+    const { clicks: _left, ...kept } = contact;
+    void _left;
+    const next: Contact = { ...kept, unsub: true, unsubAt: new Date().toISOString(), gone: why };
     const [written] = await casWrite(key, [{ email, value: JSON.stringify(next), was: sha1(raw) }]);
     if (!written) continue;
     if (contact.agreed) await redisPipeline([["INCR", unsubKey(listId)]]);

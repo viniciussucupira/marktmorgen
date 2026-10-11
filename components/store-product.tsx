@@ -436,7 +436,7 @@ export function GroupBox({ store, product, problem = "" }: { store: Store; produ
  * inbox before it counts. The box to hear more from the creator starts
  * empty, like every such box here.
  */
-export function WaitlistForm({ store, product }: { store: Store; product: Listing }) {
+export function WaitlistForm({ store, product, writes = false }: { store: Store; product: Listing; writes?: boolean }) {
   const { w } = speech(store);
   return (
     <form id="waitlist" action="/api/store/waitlist/join" method="post" className="mt-4 scroll-mt-24 space-y-3">
@@ -463,9 +463,10 @@ export function WaitlistForm({ store, product }: { store: Store; product: Listin
         className="st-field"
       />
       <label htmlFor={`wc-${product.id}`} className="st-muted flex cursor-pointer items-start gap-3 text-sm">
-        <input id={`wc-${product.id}`} type="checkbox" name="consent" value="yes" className="mt-0.5 h-4 w-4 shrink-0" />
+        <input id={`wc-${product.id}`} type="checkbox" name="consent" value="yes" data-joins="" className="mt-0.5 h-4 w-4 shrink-0" />
         <span>{w.alsoOtherEmails(store.name)}</span>
       </label>
+      {writes ? <ClicksBox id={`wk-${product.id}`} label={w.alsoClicks(store.mail?.fromName || store.name)} /> : null}
       <button type="submit" className="btn st-btn btn-block">
         {w.tellMe}
       </button>
@@ -480,7 +481,7 @@ export function WaitlistForm({ store, product }: { store: Store; product: Listin
  * it does not come out, and the waitlist still there for whoever would rather
  * wait. Plain HTML, like every form that opens a payment page.
  */
-export function PreorderForm({ store, product, day }: { store: Store; product: Listing; day: string }) {
+export function PreorderForm({ store, product, day, writes = false }: { store: Store; product: Listing; day: string; writes?: boolean }) {
   const { money, date } = speech(store);
   const p = preorderWords(store.language);
   const price = money(salePrice(product.priceCents, offNow(store, product)));
@@ -500,7 +501,7 @@ export function PreorderForm({ store, product, day }: { store: Store; product: L
       </form>
       <details className="mt-4">
         <summary className="st-footer-link cursor-pointer text-sm font-semibold">{p.orWait}</summary>
-        <WaitlistForm store={store} product={product} />
+        <WaitlistForm store={store} product={product} writes={writes} />
       </details>
     </div>
   );
@@ -517,6 +518,21 @@ export function PreorderForm({ store, product, day }: { store: Store; product: L
  * form is plain HTML: it works with JavaScript turned off, and nothing it
  * sends can set a price.
  */
+/**
+ * The second box, under the one that joins the list: allowing the creator to
+ * see which links in a sequence's emails this person uses (lib/mail-clicks.ts).
+ * Empty, and shown only once the first is ticked (globals.css, .ask-clicks);
+ * the server counts it only with the first.
+ */
+export function ClicksBox({ id, label, className = "", always = false }: { id: string; label: string; className?: string; always?: boolean }) {
+  return (
+    <label htmlFor={id} className={`st-muted cursor-pointer items-start gap-3 text-sm ${always ? "flex" : "ask-clicks"} ${className}`} data-clicks-box="">
+      <input id={id} type="checkbox" name="clicks" value="yes" className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>{label}</span>
+    </label>
+  );
+}
+
 export function BuyBox({
   store,
   product,
@@ -558,7 +574,7 @@ export function BuyBox({
    */
   place?: string;
 }) {
-  if (soon && !isFree(product)) return preorder ? <PreorderForm store={store} product={product} day={preorder} /> : <WaitlistForm store={store} product={product} />;
+  if (soon && !isFree(product)) return preorder ? <PreorderForm store={store} product={product} day={preorder} writes={writes} /> : <WaitlistForm store={store} product={product} writes={writes} />;
   const { w, money } = speech(store);
   const options = sellableOptions(product);
   const every = product.recurring ? ` ${w.every(product.recurring.interval)}` : "";
@@ -616,9 +632,10 @@ export function BuyBox({
           className="st-field"
         />
         <label htmlFor={`c-${place}${product.id}`} className="st-muted flex cursor-pointer items-start gap-3 text-sm">
-          <input id={`c-${place}${product.id}`} type="checkbox" name="consent" value="yes" className="mt-0.5 h-4 w-4 shrink-0" />
+          <input id={`c-${place}${product.id}`} type="checkbox" name="consent" value="yes" data-joins="" className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{w.alsoEmails(store.name)}</span>
         </label>
+        {writes ? <ClicksBox id={`k-${place}${product.id}`} label={w.alsoClicks(store.mail?.fromName || store.name)} /> : null}
         <button type="submit" className="btn st-btn btn-block">
           {w.emailItToMe}
         </button>
@@ -830,10 +847,13 @@ export function BuyBox({
         /* Starts empty, like every box here: buying is not agreeing to more email.
            Offered where the creator writes to their list here, or sends this
            product's buyers to their own email platform (lib/email-sync.ts). */
-        <label htmlFor={`n-${product.id}`} className="st-muted mb-4 flex cursor-pointer items-start gap-3 text-sm">
-          <input id={`n-${product.id}`} type="checkbox" name="news" value="yes" className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{w.alsoEmails(store.mail?.fromName || store.name)}</span>
-        </label>
+        <>
+          <label htmlFor={`n-${product.id}`} className="st-muted mb-4 flex cursor-pointer items-start gap-3 text-sm">
+            <input id={`n-${product.id}`} type="checkbox" name="news" value="yes" data-joins="" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{w.alsoEmails(store.mail?.fromName || store.name)}</span>
+          </label>
+          {writes ? <ClicksBox id={`k-${product.id}`} label={w.alsoClicks(store.mail?.fromName || store.name)} className="mb-4" /> : null}
+        </>
       ) : null}
       <button type="submit" className="btn st-btn btn-block">
         <span className="bump-off">

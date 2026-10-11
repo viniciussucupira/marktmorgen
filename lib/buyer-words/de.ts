@@ -109,6 +109,7 @@ export const de: BuyerWords = {
   namePlaceholder: "Dana",
   alsoOtherEmails: (store) => `Senden Sie mir auch andere E-Mails von ${store}. Ich kann mich jederzeit abmelden.`,
   alsoEmails: (store) => `Senden Sie mir auch E-Mails von ${store}. Ich kann mich jederzeit abmelden.`,
+  alsoClicks: (store) => `${store} sehen lassen, welche Links in den E-Mails ich nutze, damit ich bekomme, was zu mir passt. Ich kann das in jeder E-Mail beenden.`,
   tellMe: "Benachrichtigen, wenn es erscheint",
   waitlistNote: (store) =>
     `Sie bestätigen in Ihrem Posteingang und erhalten eine einzige E-Mail, wenn es in den Verkauf geht – sonst nichts. Ihre Adresse geht nur an ${store}, wenn Sie das Kästchen angekreuzt haben.`,

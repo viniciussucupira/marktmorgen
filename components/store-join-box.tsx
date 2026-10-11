@@ -1,6 +1,8 @@
 import type { Store } from "@/lib/store";
 import { joinWords } from "@/lib/buyer-words/join";
 import { speech } from "@/lib/buyer-words";
+import { canWrite } from "@/lib/mail";
+import { ClicksBox } from "@/components/store-product";
 
 /**
  * The sign-up box on the store page (lib/store-join.ts). A plain form, so it
@@ -43,6 +45,8 @@ export function StoreJoinBox({ store }: { store: Store }) {
             {w.button}
           </button>
         </div>
+        {/* Joining is the yes to the list; this one is its own, and starts empty. */}
+        {canWrite(store) ? <ClicksBox id="join-clicks" label={said.w.alsoClicks(store.mail?.fromName || store.name)} className="mt-3" always /> : null}
       </form>
     </section>
   );

@@ -2377,6 +2377,24 @@ try {
   }
 
   await keepSmall();
+  part("Which links a buyer uses, asked apart and only after joining");
+  {
+    await open(studio, `${LOCAL}/studio?store=${fresh}`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "Pantry Map", price: "0" });
+    const map = made.product?.id ?? "";
+    await post("/api/store/product", { action: "link", id: map, link: "https://example.com/pantry-map" });
+    await open(page, `${LOCAL}/@freshshop/p/${map}`);
+    const form = page.locator('form[action="/api/store/free"]').first();
+    const second = form.locator("[data-clicks-box]");
+    const before = await second.isVisible();
+    await form.locator("input[name=consent]").check();
+    const after = await second.isVisible();
+    is("a second box, empty, shown only once the box to hear from the creator is ticked", [before, after, await second.locator("input").isChecked(), (await words(second)).startsWith("Let Fresh Kitchen see which links")], [false, true, false, true]);
+    await post("/api/store/product", { action: "remove", id: map });
+  }
+
+  await keepSmall();
   part("A phone number asked at checkout, in Stripe's own box");
   {
     await open(studio, `${LOCAL}/studio`);

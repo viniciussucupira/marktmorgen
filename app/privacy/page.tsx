@@ -415,16 +415,40 @@ export default function PrivacyPage() {
           behalf, under the creator&apos;s name, through our email provider.
           For each one we use your address, the email the creator wrote and a
           random code for your unsubscribe link. We do not put tracking pixels
-          or tracked links in them. A link to the creator&apos;s own store
+          in them, and their links are not tracked person by person unless you
+          allow it, as set out below. A link to the creator&apos;s own store
           carries a tag naming the email it is in, or one of two subject lines
           when the creator is trying two, each sent to a part of the list
           chosen at random. The tag is the same for everyone who got that
           email or that subject line: it lets the store count visits and sales
           by email, and says nothing about who you are. Which of a
-          creator&apos;s automatic emails reach you is decided only by what
-          their list already holds about you — what you got or bought from
-          them, and any labels their import brought — never by what you open
-          or click. Our email provider
+          creator&apos;s automatic emails reach you is decided by what their
+          list already holds about you — what you got or bought from them, and
+          any labels their import brought — and never by whether you open an
+          email.
+        </p>
+        <p id="links">
+          <strong className="text-black">Which links you use, only if you allow it.</strong>{" "}
+          Where you join a creator&apos;s list, a second box, empty and
+          separate from the first, asks whether the creator may see which links
+          in their emails you use, so their automatic emails can send you what
+          fits. If you check it, we record when. Then, in those automatic
+          emails only, each link to the creator&apos;s own store carries one
+          more code made from your unsubscribe code, which cannot be turned back
+          into it. When such a link opens a page of the store, that page tells
+          us which email the link was in, and the code is taken out of the
+          address bar. We keep which of those emails you used a link in, for 90
+          days after the last one, and the creator&apos;s automatic emails use
+          it to decide whether you get a particular email: for example, one
+          sent only to those who used the link in the email before, or only to
+          those who did not. The creator does not get a list of what you did.
+          Nothing is recorded for a link to anywhere else, for a one-off email,
+          or for opening an email. Every email that carries the code has a line
+          at its foot to stop it: one press, and nothing more is recorded, what
+          was recorded is deleted at once, and you stay on the list.
+          Unsubscribing stops it too. If you do not check the box, nothing about
+          which links you use is recorded, ever. In the European Economic Area
+          and the United Kingdom, the legal basis is your consent. Our email provider
           tells us when one of these emails could not be delivered to your
           address for good, or when you report one as spam: we record that,
           and when, for your address on that creator&apos;s list, you are not

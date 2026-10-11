@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
   let productId = "";
   let email = "";
   let consent = false;
+  let clicks = false;
   let honeypot = "";
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
@@ -31,6 +32,8 @@ export async function POST(request: NextRequest) {
     productId = read("product").slice(0, 40);
     email = read("email").slice(0, 300);
     consent = read("consent") === "yes";
+    // Its own box, counted only with the first (lib/mail-clicks.ts).
+    clicks = consent && read("clicks") === "yes";
     honeypot = read("website");
   } catch {
     return new Response("Bad request", { status: 400 });
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
   if (!product || product.hidden) return new Response(null, { status: 303, headers: { Location: `${origin}/@${store.handle}` } });
   if (honeypot.trim()) return away("sent");
   try {
-    const result = await joinWaitlist({ store, product, email, consent, ip: clientAddress(request), origin: linkOrigin(request, store) });
+    const result = await joinWaitlist({ store, product, email, consent, clicks, ip: clientAddress(request), origin: linkOrigin(request, store) });
     // Counted under the channel the visitor came from (lib/visit-channel.ts).
     if (result === "sent") after(() => countHit(request, store, { kind: "signup" }));
     return away(result);

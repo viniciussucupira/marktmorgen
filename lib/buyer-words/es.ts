@@ -112,6 +112,7 @@ export const es: BuyerWords = {
   namePlaceholder: "Dana",
   alsoOtherEmails: (store) => `Envíame también otros emails de ${store}. Puedo darme de baja cuando quiera.`,
   alsoEmails: (store) => `Envíame también emails de ${store}. Puedo darme de baja cuando quiera.`,
+  alsoClicks: (store) => `Permitir que ${store} vea qué enlaces de sus emails uso, para enviarme lo que me interese. Puedo dejarlo desde cualquier email.`,
   tellMe: "Avísame cuando salga",
   waitlistNote: (store) =>
     `Lo confirmas desde tu bandeja de entrada y recibes un único email cuando salga a la venta, nada más. Tu dirección solo llega a ${store} si marcaste la casilla.`,

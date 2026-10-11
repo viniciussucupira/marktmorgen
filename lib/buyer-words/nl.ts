@@ -106,6 +106,7 @@ export const nl: BuyerWords = {
   namePlaceholder: "Dana",
   alsoOtherEmails: (store) => `Stuur me ook andere e-mails van ${store}. Ik kan me altijd afmelden.`,
   alsoEmails: (store) => `Stuur me ook e-mails van ${store}. Ik kan me altijd afmelden.`,
+  alsoClicks: (store) => `Laat ${store} zien welke links in de e-mails ik gebruik, zodat ik krijg wat bij me past. Ik kan dit in elke e-mail stoppen.`,
   tellMe: "Laat het me weten als het uit is",
   waitlistNote: (store) =>
     `Je bevestigt vanuit je inbox en krijgt één e-mail zodra het te koop is, verder niets. Je adres gaat alleen naar ${store} als je het vakje hebt aangevinkt.`,

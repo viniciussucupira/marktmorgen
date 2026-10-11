@@ -19,23 +19,28 @@
  *     goes on to the next one, or leaves the sequence there, as the creator
  *     chooses.
  *
- * Read only from what the list has always kept about each person: what they
+ * Read from what the list has always kept about each person: what they
  * asked for or bought, how they first agreed, and the labels an import
- * brought (lib/contacts.ts). Never from what they opened or clicked: the
- * emails carry no tracking pixel and no link that says who used it
- * (lib/mail-links.ts; the privacy page says so), and a condition built on
- * clicks would need both.
+ * brought (lib/contacts.ts). And one more, only for somebody who allowed it
+ * with a box of its own: whether they used a link to the store in the email
+ * before this one (lib/mail-clicks.ts). Somebody who did not allow it counts
+ * as not having used one. Never from opens: there is no tracking pixel.
  *
  * Browser-safe.
  */
 
-export type StepIf = "has" | "lacks" | "buyer" | "lead" | "tag" | "untagged";
-export const STEP_IFS: readonly StepIf[] = ["has", "lacks", "buyer", "lead", "tag", "untagged"];
+export type StepIf = "has" | "lacks" | "buyer" | "lead" | "tag" | "untagged" | "clicked" | "unclicked";
+export const STEP_IFS: readonly StepIf[] = ["has", "lacks", "buyer", "lead", "tag", "untagged", "clicked", "unclicked"];
 
 export type StepCondition =
   | { if: "has" | "lacks"; productId: string }
   | { if: "buyer" | "lead" }
-  | { if: "tag" | "untagged"; tag: string };
+  | { if: "tag" | "untagged"; tag: string }
+  /** Used a link to the store in the email before this one, or did not (lib/mail-clicks.ts). */
+  | { if: "clicked" | "unclicked" };
+
+/** Whether a condition reads the email before, so cannot be on the first. */
+export const readsEmailBefore = (condition: StepCondition | null | undefined): boolean => condition?.if === "clicked" || condition?.if === "unclicked";
 
 /** What happens to somebody a condition does not hold for. */
 export type Otherwise = "skip" | "end";
@@ -46,8 +51,12 @@ export type FlowGoal = { productId: string } | { any: true };
 /** The longest label a condition can name; the same as an imported label's (lib/contacts.ts). */
 export const MAX_CONDITION_TAG = 40;
 
-/** What a condition is read against: one person, as the list keeps them. */
-export type Person = { ids: readonly string[]; source: string; tags: readonly string[] };
+/**
+ * What a condition is read against: one person, as the list keeps them, and
+ * whether they used a link in the email before (only ever true for somebody
+ * who allowed it to be seen).
+ */
+export type Person = { ids: readonly string[]; source: string; tags: readonly string[]; used?: boolean };
 
 const sameTag = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
 
@@ -71,6 +80,10 @@ export function holds(condition: StepCondition, person: Person, paid: ReadonlySe
       return person.tags.some((t) => sameTag(t, condition.tag));
     case "untagged":
       return !person.tags.some((t) => sameTag(t, condition.tag));
+    case "clicked":
+      return person.used === true;
+    case "unclicked":
+      return person.used !== true;
   }
 }
 

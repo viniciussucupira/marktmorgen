@@ -44,6 +44,8 @@ export type WaitEntry = {
   ok: number;
   /** They also asked to hear from the creator. */
   c: boolean;
+  /** And allowed their link use in sequences to be seen (lib/mail-clicks.ts); only with `c`. */
+  k?: boolean;
   /** The token behind their link to leave. */
   t: string;
 };
@@ -53,7 +55,7 @@ export function parseEntry(raw: unknown): WaitEntry | null {
   try {
     const v = JSON.parse(raw) as Record<string, unknown>;
     if (typeof v.t !== "string") return null;
-    return { at: Number(v.at) || 0, ok: Number(v.ok) || 0, c: v.c === true, t: v.t };
+    return { at: Number(v.at) || 0, ok: Number(v.ok) || 0, c: v.c === true, ...(v.c === true && v.k === true ? { k: true } : {}), t: v.t };
   } catch {
     return null;
   }

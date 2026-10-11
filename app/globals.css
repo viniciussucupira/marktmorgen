@@ -2268,6 +2268,14 @@ a.chip {
 }
 
 /*
+   The box allowing a creator to see which links in a sequence's emails one
+   uses (components/store-product.tsx, ClicksBox; lib/mail-clicks.ts): shown
+   only once the box joining the list is ticked.
+*/
+.ask-clicks { display: none; }
+form:has(input[data-joins]:checked) .ask-clicks { display: flex; }
+
+/*
    Boxes at checkout (components/store-product.tsx, BuyBox): the buy button
    says the total of what is checked. Up to three boxes, so a line is written
    for each combination, named by which boxes it holds (t-101 is the first
