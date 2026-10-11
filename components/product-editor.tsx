@@ -18,6 +18,8 @@ import { ProductUpdateBox } from "@/components/product-update-box";
 import { ShippingEditor } from "@/components/shipping-editor";
 import { CheckoutFieldsEditor } from "@/components/checkout-fields-editor";
 import { ProductImageEditor } from "@/components/product-image-editor";
+import type { CoverLook } from "@/components/cover-maker";
+import type { LanguageCode } from "@/lib/store-language";
 import { LicenceKeyEditor } from "@/components/licence-key-editor";
 import { PdfStampToggle } from "@/components/pdf-stamp-toggle";
 import { PdfPreviewToggle } from "@/components/pdf-preview-toggle";
@@ -1505,6 +1507,7 @@ export function ProductEditor({
   waitlists = {},
   preorders = {},
   mailAddress = "",
+  cover = null,
 }: {
   /** The products shown: every one, or one page of a long list. */
   products: Product[];
@@ -1548,6 +1551,8 @@ export function ProductEditor({
   preorders?: Record<string, PreorderView>;
   /** The store's postal address for email, offered for a launch email's foot. */
   mailAddress?: string;
+  /** The store's color, letters, name and language, for the cover maker (components/cover-maker.tsx). */
+  cover?: (CoverLook & { language: LanguageCode }) | null;
 }) {
   const router = useRouter();
   const sid = useStudioStore();
@@ -2046,7 +2051,7 @@ export function ProductEditor({
 
                 {open ? (
                 <div id={panel}>
-                <ProductImageEditor product={product} folder={imageFolder} />
+                <ProductImageEditor product={product} folder={imageFolder} cover={cover} />
 
                 {/*
                   With price options there is nothing to attach to the product
