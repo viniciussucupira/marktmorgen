@@ -14,6 +14,10 @@ import { fairCoupon } from "@/lib/fair-coupon";
 import { introCoupon } from "@/lib/intro-coupon";
 import { activeIntro } from "@/lib/intro-price";
 import { activeYearly } from "@/lib/yearly-price";
+import { activeShipping } from "@/lib/shipping";
+import { type ShipAddress, shippingAddressOf, wasShipped } from "@/lib/shipping-address";
+import { type Shipped, readShipped } from "@/lib/shipments";
+import { shippingWords } from "@/lib/buyer-words/shipping";
 import { GIFT_ID } from "@/lib/gift-rules";
 import { GROUP_ID, canGroup, payable, peopleWords } from "@/lib/group-rules";
 import { commissionRate } from "@/lib/affiliate-setting";
@@ -129,6 +133,8 @@ export function canSellProduct(store: Store, product: Listing): boolean {
   if (product.course) return product.course.lessons > 0;
   // A private podcast delivers its episodes: it is ready once it has one.
   if (product.podcast) return product.podcast.episodes > 0;
+  // A physical product delivers what the creator ships (lib/shipping.ts).
+  if (activeShipping(product)) return true;
   if (product.options.length > 0) return sellableOptions(product).length > 0;
   return product.file !== null || product.link !== null;
 }
@@ -245,6 +251,9 @@ export async function createCheckout(
   }
   // A call is booked for a time, through its own door, never bought blind.
   if (product.call) throw new Error("A call is booked, not bought directly");
+  // A physical product is shipped to the buyer who pays for it: not as a gift or for a group (lib/shipping.ts).
+  const shipping = activeShipping(product);
+  if (shipping && (extras.gift || extras.group)) throw new Error("This is shipped to the buyer who pays for it");
 
   // A bundle's list is read now and written onto the checkout, so what this
   // buyer gets is what it held when they paid, whatever it holds later.
@@ -319,6 +328,26 @@ export async function createCheckout(
   }
   if (bundled) {
     for (const [key, value] of Object.entries(bundleMeta("bundle", bundled.map((p) => p.id)))) body.set(`metadata[${key}]`, value);
+  }
+
+  // Shipped by the creator (lib/shipping.ts): Stripe asks for an address in a
+  // country it goes to, and adds the shipping as its own line before paying.
+  if (shipping) {
+    const sw = shippingWords(store.language);
+    shipping.countries.forEach((code, i) => body.set(`shipping_address_collection[allowed_countries][${i}]`, code));
+    const rate = "shipping_options[0][shipping_rate_data]";
+    body.set(`${rate}[type]`, "fixed_amount");
+    body.set(`${rate}[fixed_amount][amount]`, String(shipping.cents));
+    body.set(`${rate}[fixed_amount][currency]`, store.currency);
+    body.set(`${rate}[display_name]`, [shipping.cents > 0 ? sw.rate : sw.freeRate, shipping.note].filter(Boolean).join(" · ").slice(0, 100));
+    // Stripe Tax: shipping taxed as shipping, and the product as goods rather than the account's default.
+    if (store.tax.enabled) {
+      body.set(`${rate}[tax_behavior]`, store.tax.included ? "inclusive" : "exclusive");
+      body.set(`${rate}[tax_code]`, "txcd_92010001");
+      body.set("line_items[0][price_data][product_data][tax_code]", "txcd_99999999");
+    }
+    body.set("metadata[ship]", "yes");
+    body.set("payment_intent_data[metadata][ship]", "yes");
   }
 
   // Stripe's page shows the product's picture beside its name, when there is
@@ -897,6 +926,10 @@ export type Sale = {
   trial: boolean;
   /** Given through "Support my work" (lib/store-tips.ts): nothing was bought and nothing is delivered. */
   isTip: boolean;
+  /** A physical product the creator ships (lib/shipping.ts): where it is going; null for anything else. */
+  shipTo?: ShipAddress | null;
+  /** And when it was marked as shipped (lib/shipments.ts); null while it has not been. */
+  shipped?: Shipped | null;
 };
 
 // Each state is its own member so a check on one narrows the rest away;
@@ -978,9 +1011,14 @@ export async function listSales(store: Store): Promise<SaleList> {
         answers: readAnswers(row),
         trial: Number(row.metadata?.trial_days) > 0,
         isTip: row.metadata?.kind === "tip",
+        shipTo: wasShipped(row) ? (shippingAddressOf(row as Record<string, unknown>) ?? { name: "", lines: [], country: "" }) : null,
+        shipped: null,
       };
     })
     .filter((sale) => sale.reference !== "");
+  // When each shipped order was marked as sent, read at once.
+  const shippedAt = await readShipped(sales.filter((sale) => sale.shipTo).map((sale) => sale.reference)).catch(() => new Map<string, Shipped>());
+  for (const sale of sales) if (sale.shipTo) sale.shipped = shippedAt.get(sale.reference) ?? null;
 
   // Products taken in one click after paying are their own charges, not
   // checkouts, so they are read from the payments on the same account.

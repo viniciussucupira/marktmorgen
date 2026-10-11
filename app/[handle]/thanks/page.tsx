@@ -51,6 +51,8 @@ import { type SaleRecord, noteSale } from "@/lib/sale-events";
 import { BundleDelivery } from "@/components/bundle-delivery";
 import type { BundleContents } from "@/lib/bundles";
 import { thanksWords } from "@/lib/buyer-words/thanks";
+import { shippingWords } from "@/lib/buyer-words/shipping";
+import { shippingAddressOf, wasShipped } from "@/lib/shipping-address";
 import { ordersWords } from "@/lib/buyer-words/orders";
 import { groupLinkBoxWords, licenceKeyBoxWords } from "@/lib/buyer-words/giving";
 import { speech } from "@/lib/buyer-words";
@@ -861,6 +863,22 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     {t.courseDeviceNote(store.name, order.email ?? t.theAddressYouPaidWith)}
                   </p>
                 </>
+              ) : wasShipped(order.record) ? (
+                /* A physical product the creator ships (lib/shipping.ts): where it is going, and who sends it. */
+                <div className="mt-7 rounded-2xl px-5 py-4 text-sm" style={{ background: "var(--st-accent-soft)", color: "var(--st-text)" }} data-ship-to="">
+                  <p className="font-bold">{shippingWords(store.language).goingTo}</p>
+                  {(() => {
+                    const to = shippingAddressOf(order.record as Record<string, unknown>, speech(store).lang.locale);
+                    return to ? (
+                      <address className="mt-1 not-italic leading-relaxed">
+                        {[to.name, ...to.lines].filter(Boolean).map((line, i) => (
+                          <span key={i} className="block">{line}</span>
+                        ))}
+                      </address>
+                    ) : null;
+                  })()}
+                  <p className="st-muted mt-3">{shippingWords(store.language).shipsBy(store.name)}</p>
+                </div>
               ) : order.link ? (
                 <>
                   {/* Shown rather than followed. A buyer who has paid should

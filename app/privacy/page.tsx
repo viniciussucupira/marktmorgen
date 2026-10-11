@@ -88,7 +88,11 @@ export default function PrivacyPage() {
           at checkout, or asks for a phone number in Stripe&apos;s own phone
           box, the answers are kept with the payment on the creator&apos;s own
           Stripe account, shown to the creator, and for a booked call included
-          in the creator&apos;s booking email.
+          in the creator&apos;s booking email. For a physical product the
+          creator ships, the address you type on Stripe&apos;s page is kept
+          the same way and shown to the creator so they can send it; we keep
+          only when they marked it as shipped and the tracking link they
+          gave, for 400 days, to email you once that it is on its way.
         </p>
         <p>
           <strong className="text-black">An update to something you bought.</strong>{" "}

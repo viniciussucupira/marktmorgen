@@ -34,6 +34,8 @@
  * its license key when it hands one out — kept under the offer's payment,
  * the same reference the thanks page and the list of purchases use.
  */
+import { shippingWords } from "@/lib/buyer-words/shipping";
+import { shippingAddressOf, wasShipped } from "@/lib/shipping-address";
 import { recordPackage } from "@/lib/call-packages";
 import { type ThanksNote } from "@/lib/thanks-note";
 import { readThanksNote } from "@/lib/thanks-note-store";
@@ -244,6 +246,11 @@ export function confirmationFor(
     lines.push(words.addPodcastAt(`${base}/podcast/${product.id}`), "", words.podcastNote(email));
   } else if (product.course) {
     lines.push(words.startCourseAt(`${base}/course/${product.id}`), "", words.courseNote(email));
+  } else if (wasShipped(session)) {
+    // A physical product the creator ships (lib/shipping.ts): where it is going, and who sends it.
+    const sw = shippingWords(store.language);
+    const to = shippingAddressOf(session as unknown as Record<string, unknown>, said.lang.locale);
+    lines.push(`${sw.goingTo}:`, ...(to ? [to.name, ...to.lines].filter(Boolean) : []), "", sw.shipsBy(name));
   } else {
     lines.push(words.openWhatYouBought(`${base}/thanks?session_id=${id}`), "", words.threeDays(`${base}/orders`, email, name));
   }

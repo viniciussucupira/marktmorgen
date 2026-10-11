@@ -47,7 +47,7 @@ export function guideFacts(store: Store, products: Listing[]): string {
     const entry = [
       `[${index + 1}] ${product.title}`,
       `Price: ${priceWords(product, store.currency, store.tiers)}`,
-      `What it is: ${deliveryWords(product)}`,
+      `What it is: ${deliveryWords(product, store.currency)}`,
       product.summary ? `In one line: ${product.summary.slice(0, 300)}` : "",
     ]
       .filter(Boolean)

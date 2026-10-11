@@ -2378,6 +2378,45 @@ try {
   }
 
   await keepSmall();
+  part("A physical product, shipped by the creator");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "The Supper Book", summary: "Printed, 120 pages.", price: "35" });
+    const book = made.product?.id ?? "";
+    await open(studio, `${LOCAL}/studio`);
+    await studio.locator("button[aria-expanded]", { hasText: "The Supper Book" }).first().click();
+    await studio.getByRole("button", { name: "Ship it: a physical product, sent by you" }).first().click();
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Save shipping" }) });
+    await form.getByLabel("Shipping cost per order, in dollars").fill("6");
+    await form.getByLabel("Ships to").selectOption("na");
+    await form.getByLabel("When it ships (optional)").fill("Ships within 3 business days");
+    await form.getByRole("button", { name: "Save shipping" }).click();
+    await studio.getByText("Shipped by you: $6.00 shipping · The United States and Canada").or(studio.getByText("Shipped by you: $6 shipping · The United States and Canada")).first().waitFor({ timeout: 30_000 });
+    is("set up in the studio, and said back", await studio.getByText(/^Shipped by you: \$6/).count() > 0, true);
+
+    await open(page, `${LOCAL}/@localshop/p/${book}`);
+    is("its page says what shipping costs, where it goes and when", await words(page.locator("#buy [data-shipping]").first()), "+ $6 shipping · Ships to: United States and Canada · Ships within 3 business days");
+    await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
+    const paid = services.checkouts().at(-1);
+    is("Stripe asks for the address and adds the shipping", [paid.metadata.ship, paid.shipping_cost?.amount_total], ["yes", 600]);
+    is("the page after paying says where it is going and who sends it", [(await words(page.locator("[data-ship-to]"))).includes("1 Main St"), (await words(page.locator("[data-ship-to]"))).includes("ships it and emails you when it is on its way")], [true, true]);
+
+    await open(studio, `${LOCAL}/studio`);
+    const ship = studio.locator("form", { has: studio.getByRole("button", { name: "Mark as shipped" }) }).first();
+    await ship.getByLabel("Tracking link (optional)").fill("https://tools.usps.com/go/TrackConfirmAction?tLabels=9400");
+    await ship.getByRole("button", { name: "Mark as shipped" }).click();
+    await studio.getByText(/^Marked as shipped on/).first().waitFor({ timeout: 30_000 });
+    let mail = null;
+    for (let i = 0; i < 40 && !mail; i += 1) {
+      mail = services.emails().find((email) => String(email.subject ?? "") === "The Supper Book is on its way") ?? null;
+      if (!mail) await new Promise((wait) => setTimeout(wait, 250));
+    }
+    is("marked as shipped, and the buyer told with the tracking link", String(mail?.text ?? "").includes("https://tools.usps.com/go/TrackConfirmAction?tLabels=9400"), true);
+    await post("/api/store/product", { action: "remove", id: book });
+  }
+
+  await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);

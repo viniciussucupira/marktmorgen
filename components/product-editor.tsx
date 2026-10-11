@@ -15,6 +15,7 @@ import { CheckoutExtras, bumpChoices } from "@/components/checkout-extras";
 import type { ExtraNotes } from "@/lib/extras-notes";
 import type { BumpChoice, ProductPaging } from "@/lib/catalog";
 import { ProductUpdateBox } from "@/components/product-update-box";
+import { ShippingEditor } from "@/components/shipping-editor";
 import { CheckoutFieldsEditor } from "@/components/checkout-fields-editor";
 import { ProductImageEditor } from "@/components/product-image-editor";
 import { LicenceKeyEditor } from "@/components/licence-key-editor";
@@ -126,6 +127,15 @@ const MESSAGES: Record<string, string> = {
   preorders: "Buyers have pre-ordered this and are waiting for it. Put it on sale, which hands it to them, or refund their pre-orders in your Stripe dashboard first.",
   call: "This is a paid call, so it has one price, charged once, and delivers a time rather than a file. Stop selling it as a call first to change that.",
   course: "This is a course: it cannot be free, and it delivers its lessons rather than a file or a link of its own. Its lessons are changed from its own page.",
+  shipped: "This is a physical product you ship: sold once, at one price, with nothing else to hand over. Under Shipping, stop shipping it first to change that.",
+  ship_free: "A product you ship needs a price.",
+  ship_membership: "A product you ship is sold once, not as a membership.",
+  ship_call: "A call delivers a time, so it cannot be shipped.",
+  ship_options: "A product you ship has one price. Take its options off first.",
+  ship_pwyw: "A product you ship has a set price, so buyers cannot choose it.",
+  ship_plan: "A product you ship is paid in full. Stop its payment plan first.",
+  ship_delivery: "This product already hands over a file, a link, a course, a podcast or a bundle. Take that off first, or make a new product to ship.",
+  ship_price: "Type a shipping cost of 0 for free shipping, or at least the least your currency can charge.",
   bundle: "This is a bundle: one sale, at one price, of the products in it. It cannot be free, a membership, pay what you want, have several prices or a file of its own. Change what is in it on its bundle page.",
   too_big: `That file is over ${maxFileLabel()}, the largest one file can be.`,
   storage_full: "Your store is holding as much as one store can hold. Delete a file you no longer sell to make room — nothing already bought is affected.",
@@ -1373,7 +1383,8 @@ function badges(product: Product): string[] {
   }
   if (product.pwyw) out.push("Pay what you want");
   if (product.options.length) out.push(`${product.options.length} prices`);
-  if (!isFree(product) && !product.call && !product.course && !product.bundle && !product.file && !product.link && !product.options.some((o) => o.file || o.link)) {
+  if (product.shipping) out.push("Shipped");
+  if (!isFree(product) && !product.call && !product.course && !product.bundle && !product.shipping && !product.file && !product.link && !product.options.some((o) => o.file || o.link)) {
     out.push("Nothing to hand over yet");
   }
   if (product.image) out.push(product.display === "preview" ? "Preview" : product.display === "callout" ? "Callout" : "Button");
@@ -2037,12 +2048,12 @@ export function ProductEditor({
                   would be one nobody is ever sent. So the block moves inside
                   the options rather than sitting above them unused.
                 */}
-                {product.course || product.bundle ? null : <CallEditor product={product} email={email} meetings={meetings} />}
+                {product.course || product.bundle || product.shipping ? null : <CallEditor product={product} email={email} meetings={meetings} />}
                 {product.call?.kind === "weekly" ? (
                   <PackageEditor productId={product.id} singleCents={product.priceCents} currency={currency} initial={product.callPackage ?? null} />
                 ) : null}
-                {product.call || product.bundle || product.podcast ? null : <CourseToggle product={product} newComments={newComments[product.id] ?? 0} />}
-                {product.call || product.bundle || product.course ? null : <PodcastToggle product={product} />}
+                {product.call || product.bundle || product.podcast || product.shipping ? null : <CourseToggle product={product} newComments={newComments[product.id] ?? 0} />}
+                {product.call || product.bundle || product.course || product.shipping ? null : <PodcastToggle product={product} />}
                 {product.priceCents > 0 && !product.hidden ? (
                   <WaitlistPanel
                     productId={product.id}
@@ -2053,9 +2064,11 @@ export function ProductEditor({
                     hasContent={hasContent(product)}
                   />
                 ) : null}
-                {product.call || product.course ? null : <BundleToggle product={product} />}
+                {product.call || product.course || product.shipping ? null : <BundleToggle product={product} />}
+                {/* A physical product the creator ships (lib/shipping.ts), on one that hands over nothing else. */}
+                <ShippingEditor product={product} />
 
-                {product.call || product.course || product.bundle ? null : (
+                {product.call || product.course || product.bundle || product.shipping ? null : (
                 <>
                 {product.options.length === 0 ? (
                   <FileBlock
