@@ -35,6 +35,8 @@ const en = {
   mailHere: "Your cart is here, ready to pay:",
   mailPrices: "What each costs today:",
   and: "and",
+  suggestHead: "Often bought with these",
+  suggestWhy: (n: number, title: string) => `${n} buyers of ${title} also bought it`,
 };
 
 export type CartWords = typeof en;
@@ -67,6 +69,8 @@ const es: CartWords = {
   mailHere: "Tu carrito está aquí, listo para pagar:",
   mailPrices: "Lo que cuesta cada uno hoy:",
   and: "y",
+  suggestHead: "Se suelen comprar con estos",
+  suggestWhy: (n, title) => `${n} compradores de ${title} también lo compraron`,
 };
 
 const fr: CartWords = {
@@ -97,6 +101,8 @@ const fr: CartWords = {
   mailHere: `Votre panier est ici, prêt à être payé${S}:`,
   mailPrices: `Le prix de chacun aujourd'hui${S}:`,
   and: "et",
+  suggestHead: "Souvent achetés avec ceux-ci",
+  suggestWhy: (n, title) => `${n}${S}acheteurs de ${title} l'ont aussi acheté`,
 };
 
 const de: CartWords = {
@@ -127,6 +133,8 @@ const de: CartWords = {
   mailHere: "Ihr Warenkorb ist hier, bereit zum Bezahlen:",
   mailPrices: "Was jedes heute kostet:",
   and: "und",
+  suggestHead: "Oft zusammen damit gekauft",
+  suggestWhy: (n, title) => `${n} Käufer von ${title} haben es auch gekauft`,
 };
 
 const it: CartWords = {
@@ -157,6 +165,8 @@ const it: CartWords = {
   mailHere: "Il tuo carrello è qui, pronto da pagare:",
   mailPrices: "Quanto costa ciascuno oggi:",
   and: "e",
+  suggestHead: "Spesso acquistati insieme a questi",
+  suggestWhy: (n, title) => `${n} acquirenti di ${title} lo hanno acquistato anche`,
 };
 
 const nl: CartWords = {
@@ -187,6 +197,8 @@ const nl: CartWords = {
   mailHere: "Je winkelwagen staat hier klaar om af te rekenen:",
   mailPrices: "Wat elk vandaag kost:",
   and: "en",
+  suggestHead: "Vaak samen hiermee gekocht",
+  suggestWhy: (n, title) => `${n} kopers van ${title} kochten het ook`,
 };
 
 const pt: CartWords = {
@@ -217,6 +229,8 @@ const pt: CartWords = {
   mailHere: "O seu carrinho está aqui, pronto a pagar:",
   mailPrices: "Quanto custa cada um hoje:",
   and: "e",
+  suggestHead: "Muitas vezes comprados com estes",
+  suggestWhy: (n, title) => `${n} compradores de ${title} também o compraram`,
 };
 
 export const CART_WORDS: Record<LanguageCode, CartWords> = { en, es, fr, de, it, nl, pt };

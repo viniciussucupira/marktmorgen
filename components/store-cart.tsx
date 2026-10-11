@@ -89,6 +89,8 @@ export function AddToCart({
 }
 
 type Line = { id: string; title: string; href: string; price: string; ok: boolean };
+/** Something the buyers of what is in the cart also bought (lib/also-bought.ts), with why it is shown. */
+type Suggestion = { id: string; title: string; href: string; price: string; why: string };
 
 /**
  * The cart's button, at the top of the page once something is in it, and
@@ -123,6 +125,7 @@ export function CartButton({
   const [total, setTotal] = useState("");
   const [deal, setDeal] = useState<{ percent: number; saved: string } | null>(null);
   const [next, setNext] = useState<{ more: number; percent: number } | null>(null);
+  const [suggest, setSuggest] = useState<Suggestion[]>([]);
   const panel = useRef<HTMLDivElement>(null);
   const wanted = ids.join(",");
 
@@ -131,12 +134,13 @@ export function CartButton({
     let live = true;
     fetch(`/api/store/cart?${new URLSearchParams({ handle, ids: wanted })}`)
       .then((r) => r.json())
-      .then((data: { ok?: boolean; items?: Line[]; total?: string; deal?: { percent: number; saved: string } | null; next?: { more: number; percent: number } | null }) => {
+      .then((data: { ok?: boolean; items?: Line[]; total?: string; deal?: { percent: number; saved: string } | null; next?: { more: number; percent: number } | null; suggest?: Suggestion[] }) => {
         if (!live || !data.ok) return;
         setLines(data.items ?? []);
         setTotal(data.total ?? "");
         setDeal(data.deal ?? null);
         setNext(data.next ?? null);
+        setSuggest(data.suggest ?? []);
       })
       .catch(() => {});
     return () => {
@@ -202,6 +206,37 @@ export function CartButton({
                   </li>
                 ))}
               </ul>
+              {suggest.filter((item) => !ids.includes(item.id)).length > 0 && ids.length < MAX_CART ? (
+                <div className="mt-2 rounded-2xl p-3" style={{ background: "var(--st-accent-soft)" }}>
+                  <p className="text-sm font-semibold">{c.suggestHead}</p>
+                  <ul className="mt-2 space-y-2">
+                    {suggest
+                      .filter((item) => !ids.includes(item.id))
+                      .map((item) => (
+                        <li key={item.id} className="flex items-center justify-between gap-3">
+                          <span className="min-w-0">
+                            <a href={item.href} className="st-title-link block text-sm font-semibold">{item.title}</a>
+                            <span className="st-muted block text-xs">{item.why}</span>
+                          </span>
+                          <span className="flex shrink-0 items-center gap-2">
+                            <span className="st-price text-sm tabular-nums">{item.price}</span>
+                            <button
+                              type="button"
+                              className="btn st-btn-ghost btn-sm"
+                              aria-label={`${c.add}: ${item.title}`}
+                              onClick={() => {
+                                const now = read(handle);
+                                if (!now.includes(item.id) && now.length < MAX_CART) write(handle, [...now, item.id]);
+                              }}
+                            >
+                              {c.add}
+                            </button>
+                          </span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ) : null}
               {payable.length > 0 ? (
                 <form action="/api/store/cart" method="post" target="_top" className="mt-3 space-y-3" data-checkout="">
                   <input type="hidden" name="handle" value={handle} />
