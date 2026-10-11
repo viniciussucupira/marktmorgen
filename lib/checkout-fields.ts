@@ -28,14 +28,25 @@ export const MAX_DROPDOWN_OPTIONS = 200;
 export const MAX_DROPDOWN_OPTION_LENGTH = 100;
 export const MIN_DROPDOWN_OPTIONS = 2;
 
-export const FIELD_TYPES = ["text", "numeric", "dropdown"] as const;
+export const FIELD_TYPES = ["text", "numeric", "dropdown", "phone"] as const;
 export type FieldType = (typeof FIELD_TYPES)[number];
 
 export const FIELD_TYPE_NAMES: Record<FieldType, string> = {
   text: "Short answer",
   numeric: "Number",
   dropdown: "Choose from a list",
+  phone: "Phone number",
 };
+
+/**
+ * A phone number (added 11 October 2026) is not one of Stripe's custom
+ * fields: it is Stripe's own phone box (phone_number_collection), which asks
+ * for the country and checks the number is one, and which Stripe always
+ * requires once it is on. So it is asked once at most, is never optional, and
+ * its label is Stripe's own, in the buyer's language; the creator reads the
+ * answer on the sale as "Phone".
+ */
+export const PHONE_LABEL = "Phone number";
 
 export type CheckoutField = {
   /** What the buyer reads above the box, in the creator's words. */
@@ -68,7 +79,10 @@ export function parseFields(raw: unknown): CheckoutField[] {
         ? value.options.map((option) => clean(option, MAX_DROPDOWN_OPTION_LENGTH)).filter(Boolean).slice(0, MAX_DROPDOWN_OPTIONS)
         : [];
     if (value.type === "dropdown" && options.length < MIN_DROPDOWN_OPTIONS) continue;
-    fields.push({ label, type: value.type, optional: value.optional === true, options });
+    if (value.type === "phone") {
+      if (fields.some((field) => field.type === "phone")) continue;
+      fields.push({ label: PHONE_LABEL, type: "phone", optional: false, options: [] });
+    } else fields.push({ label, type: value.type, optional: value.optional === true, options });
     if (fields.length >= MAX_CHECKOUT_FIELDS) break;
   }
   return fields;
@@ -76,7 +90,7 @@ export function parseFields(raw: unknown): CheckoutField[] {
 
 export type FieldsProblem =
   | { reason: "too_many" }
-  | { reason: "label" | "type" | "options_few" | "options_many" | "option_long" | "options_same" | "label_long"; at: number };
+  | { reason: "label" | "type" | "options_few" | "options_many" | "option_long" | "options_same" | "label_long" | "phone_twice"; at: number };
 
 /**
  * Reads what the studio sent, strictly. Where parseFields quietly drops what
@@ -89,6 +103,12 @@ export function readFields(raw: unknown): CheckoutField[] | FieldsProblem {
   const fields: CheckoutField[] = [];
   for (let at = 0; at < raw.length; at += 1) {
     const value = (raw[at] && typeof raw[at] === "object" ? raw[at] : {}) as Record<string, unknown>;
+    if (value.type === "phone") {
+      // Stripe's own box, with its own words: nothing to label, never optional.
+      if (fields.some((field) => field.type === "phone")) return { reason: "phone_twice", at };
+      fields.push({ label: PHONE_LABEL, type: "phone", optional: false, options: [] });
+      continue;
+    }
     const typed = typeof value.label === "string" ? value.label.replace(/\s+/g, " ").trim() : "";
     if (!typed) return { reason: "label", at };
     if (typed.length > MAX_FIELD_LABEL_LENGTH) return { reason: "label_long", at };
@@ -120,7 +140,10 @@ export function readFields(raw: unknown): CheckoutField[] | FieldsProblem {
  * since reworded or removed still reads right on an old sale.
  */
 export function applyCheckoutFields(body: URLSearchParams, fields: CheckoutField[] | undefined): void {
-  (fields ?? []).slice(0, MAX_CHECKOUT_FIELDS).forEach((field, i) => {
+  const asked = (fields ?? []).slice(0, MAX_CHECKOUT_FIELDS);
+  // The phone is Stripe's own box, not a custom field (PHONE_LABEL above).
+  if (asked.some((field) => field.type === "phone")) body.set("phone_number_collection[enabled]", "true");
+  asked.filter((field) => field.type !== "phone").forEach((field, i) => {
     const at = `custom_fields[${i}]`;
     body.set(`${at}[key]`, `question${i + 1}`);
     body.set(`${at}[label][type]`, "custom");
@@ -147,8 +170,8 @@ type SessionField = {
   text?: { value?: unknown } | null;
 };
 
-/** The answers a finished checkout carries, skipping questions left empty. */
-export function readAnswers(session: { custom_fields?: unknown }): Answer[] {
+/** The answers a finished checkout carries, skipping questions left empty, and the phone number when one was asked for. */
+export function readAnswers(session: { custom_fields?: unknown; customer_details?: unknown }): Answer[] {
   const list = Array.isArray(session.custom_fields) ? (session.custom_fields as SessionField[]) : [];
   const answers: Answer[] = [];
   for (const field of list) {
@@ -165,5 +188,8 @@ export function readAnswers(session: { custom_fields?: unknown }): Answer[] {
     }
     if (label && value) answers.push({ label, value });
   }
+  const details = session.customer_details && typeof session.customer_details === "object" ? (session.customer_details as { phone?: unknown }) : null;
+  const phone = details?.phone;
+  if (typeof phone === "string" && phone.trim()) answers.push({ label: "Phone", value: phone.trim().slice(0, 40) });
   return answers;
 }

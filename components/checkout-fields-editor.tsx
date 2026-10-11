@@ -37,6 +37,7 @@ function problemText(reason: string, at: number | undefined): string {
     options_many: `Stripe allows up to ${MAX_DROPDOWN_OPTIONS} choices in a list.`,
     option_long: `each choice can be up to ${MAX_DROPDOWN_OPTION_LENGTH} characters.`,
     options_same: "two choices say the same thing. Make each one different.",
+    phone_twice: "the phone number is already asked for once. Remove this one.",
     too_many: `Stripe's checkout asks up to ${MAX_CHECKOUT_FIELDS} questions.`,
     free: "something free never reaches the checkout, so it cannot ask questions.",
     store_full: "your store has reached the most it can hold. Shorten a long list of choices, or remove something.",
@@ -144,6 +145,15 @@ export function CheckoutFieldsEditor({ product }: { product: Product }) {
           return (
             <li key={i} className="rounded-xl border border-line bg-paper p-3">
               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
+                {row.type === "phone" ? (
+                  <div>
+                    <p className="field-label">{`Question ${i + 1}`}</p>
+                    <p className="mt-1 text-sm text-ink">
+                      Stripe&apos;s own phone box, in the buyer&apos;s language: they pick their country and type the number, and Stripe checks it is a
+                      real one. It is always required. The number is shown on the sale, and for a call in your booking email.
+                    </p>
+                  </div>
+                ) : (
                 <label className="block" htmlFor={`${id}-l`}>
                   <span className="field-label">{`Question ${i + 1}`}</span>
                   <input
@@ -151,7 +161,7 @@ export function CheckoutFieldsEditor({ product }: { product: Product }) {
                     type="text"
                     maxLength={MAX_FIELD_LABEL_LENGTH}
                     value={row.label}
-                    placeholder={row.type === "dropdown" ? "Your size" : row.type === "numeric" ? "Your phone number" : "Name to print on it"}
+                    placeholder={row.type === "dropdown" ? "Your size" : row.type === "numeric" ? "How many people will join" : "Name to print on it"}
                     onChange={(event) => update(i, { label: event.target.value })}
                     className="field mt-1"
                   />
@@ -159,6 +169,7 @@ export function CheckoutFieldsEditor({ product }: { product: Product }) {
                     {`${MAX_FIELD_LABEL_LENGTH - row.label.length} characters left`}
                   </span>
                 </label>
+                )}
                 <label className="block" htmlFor={`${id}-t`}>
                   <span className="field-label">Answer</span>
                   <select
@@ -167,7 +178,7 @@ export function CheckoutFieldsEditor({ product }: { product: Product }) {
                     onChange={(event) => update(i, { type: event.target.value as FieldType })}
                     className="field mt-1"
                   >
-                    {FIELD_TYPES.map((type) => (
+                    {FIELD_TYPES.filter((type) => type !== "phone" || row.type === "phone" || !rows.some((other) => other.type === "phone")).map((type) => (
                       <option key={type} value={type}>
                         {FIELD_TYPE_NAMES[type]}
                       </option>
@@ -190,12 +201,15 @@ export function CheckoutFieldsEditor({ product }: { product: Product }) {
                     {`${row.options.split(/\n/).filter((line) => line.trim()).length} of up to ${MAX_DROPDOWN_OPTIONS}`}
                   </span>
                 </label>
-              ) : (
+              ) : row.type === "phone" ? null : (
                 <p className="mt-2 text-xs text-ink-soft">
                   {row.type === "numeric" ? "Digits only, up to 255 of them." : "Up to 255 characters."}
                 </p>
               )}
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                {row.type === "phone" ? (
+                  <span className="text-sm text-ink-soft">Always required by Stripe</span>
+                ) : (
                 <label htmlFor={`${id}-r`} className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
                   <input
                     id={`${id}-r`}
@@ -206,6 +220,7 @@ export function CheckoutFieldsEditor({ product }: { product: Product }) {
                   />
                   Required before paying
                 </label>
+                )}
                 <button
                   type="button"
                   className="text-sm font-bold text-ink-soft underline underline-offset-4 transition hover:text-danger"

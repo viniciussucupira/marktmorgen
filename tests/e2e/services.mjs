@@ -180,7 +180,8 @@ export async function startServices(port) {
           currency: body.get("line_items[0][price_data][currency]") ?? "usd",
           payment_intent: `pi_local${String(counter).padStart(16, "0")}`,
           metadata,
-          customer_details: { email: "buyer@example.com" },
+          // The phone, as Stripe's own phone box would have taken it, only where it was asked for.
+          customer_details: body.get("phone_number_collection[enabled]") === "true" ? { email: "buyer@example.com", phone: "+15125550142" } : { email: "buyer@example.com" },
           customer_email: null,
           // What a real checkout would take off, kept for the test to read.
           discount_coupon: body.get("discounts[0][coupon]"),
