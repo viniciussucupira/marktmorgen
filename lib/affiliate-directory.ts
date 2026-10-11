@@ -12,6 +12,12 @@
  * sale of it earns at today's price. Read from the store's own record, never
  * typed for the directory.
  *
+ * And, only when the creator allows it too (a second box, apart from being
+ * listed), the program's own numbers (lib/affiliates.ts, programNumbers):
+ * its affiliates and since when, the clicks they brought and the sales those
+ * clicks made, what they earned before refunds and what the creator recorded
+ * as paid. A rate per click is shown only from MIN_CLICKS_FOR_RATES clicks.
+ *
  * What it never says. No earnings an affiliate "can make", no ranking for
  * money, no score whose formula is kept from the people ranked by it: the
  * order is written on the page (DIRECTORY_ORDER), and nobody can pay to be
@@ -40,6 +46,10 @@ import { isHouseStore } from "@/lib/house-store";
 import { imageUrl } from "@/lib/product-image";
 import { DIRECTORY_CACHE, listedStores, wouldList } from "@/lib/directory-index";
 import type { LanguageCode } from "@/lib/store-language";
+import { programNumbers } from "@/lib/affiliates";
+import { MIN_CLICKS_FOR_RATES } from "@/lib/affiliate-directory-rules";
+
+export { MIN_CLICKS_FOR_RATES };
 
 /** Products shown under one program: the rest are on its store. */
 export const PRODUCTS_PER_ROW = 4;
@@ -82,6 +92,24 @@ export type DirectoryRow = {
   products: DirectoryProduct[];
   /** How many products earn in all, of which `products` shows the first few. */
   earning: number;
+  /** The program's own numbers, when its creator allowed them (lib/affiliates.ts, programNumbers); null otherwise. */
+  numbers: DirectoryNumbers | null;
+};
+
+export type DirectoryNumbers = {
+  affiliates: number;
+  /** When the first affiliate was approved, in ms; 0 when none is yet. */
+  since: number;
+  clicks: number;
+  /** Sales credited to a click, and what share of the clicks became one: null below MIN_CLICKS_FOR_RATES. */
+  clickSales: number;
+  conversion: number | null;
+  /** What 100 clicks earned, before refunds: null below MIN_CLICKS_FOR_RATES. */
+  per100Cents: number | null;
+  /** Every sale credited to an affiliate, what they earned before refunds, and what the creator recorded as paid. */
+  sales: number;
+  earnedCents: number;
+  paidCents: number;
 };
 
 /** A product an affiliate earns on: paid, sold once (memberships and payment plans earn nothing), on the store, and not left out of the program. */
@@ -126,6 +154,24 @@ export function directoryRow(store: Store): DirectoryRow | null {
     buyers: s.buyers,
     products: products.slice(0, PRODUCTS_PER_ROW),
     earning: products.length,
+    numbers: null,
+  };
+}
+
+/** A program's numbers as the directory shows them: rates only once there are enough clicks to mean something. */
+export function directoryNumbers(raw: Awaited<ReturnType<typeof programNumbers>>): DirectoryNumbers | null {
+  if (!raw) return null;
+  const enough = raw.clicks >= MIN_CLICKS_FOR_RATES;
+  return {
+    affiliates: raw.affiliates,
+    since: raw.since,
+    clicks: raw.clicks,
+    clickSales: raw.clickSales,
+    conversion: enough ? Math.round((raw.clickSales / raw.clicks) * 1000) / 10 : null,
+    per100Cents: enough ? Math.floor((raw.clickEarnedCents * 100) / raw.clicks) : null,
+    sales: raw.sales,
+    earnedCents: raw.earnedCents,
+    paidCents: raw.paidCents,
   };
 }
 
@@ -161,7 +207,17 @@ export async function readDirectory(): Promise<DirectoryRow[]> {
     cursor = page.next;
   } while (cursor !== "0" && sids.length < MAX_ROWS);
   const stores = await Promise.all(sids.slice(0, MAX_ROWS).map((sid) => storeForId(sid).catch(() => null)));
-  const rows = sortRows(stores.map((store) => (store ? directoryRow(store) : null)).filter((row): row is DirectoryRow => row !== null));
+  const rows = sortRows(
+    (
+      await Promise.all(
+        stores.map(async (store) => {
+          const row = store ? directoryRow(store) : null;
+          if (!row || !store || !store.affiliates.numbers) return row;
+          return { ...row, numbers: directoryNumbers(await programNumbers(store).catch(() => null)) };
+        }),
+      )
+    ).filter((row): row is DirectoryRow => row !== null),
+  );
   await redisPipeline([["SET", DIRECTORY_CACHE, JSON.stringify(rows), "EX", KEEP_SECONDS]]).catch(() => null);
   return rows;
 }

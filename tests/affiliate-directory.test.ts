@@ -13,7 +13,9 @@
  */
 import { addProduct, claimHandle, ensureStatsId, setAffiliateSetting, setProductHidden, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { parseAffiliateSetting } from "@/lib/affiliate-setting";
-import { DIRECTORY_ORDER, directoryRow, readDirectory, sortRows, type DirectoryRow } from "@/lib/affiliate-directory";
+import { DIRECTORY_ORDER, MIN_CLICKS_FOR_RATES, directoryNumbers, directoryRow, readDirectory, sortRows, type DirectoryRow } from "@/lib/affiliate-directory";
+import { programNumbers } from "@/lib/affiliates";
+import { redisPipeline } from "@/lib/redis";
 import { HOUSE_OWNER } from "@/lib/house-store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -85,6 +87,30 @@ async function main(): Promise<void> {
   part("Taken off at once");
   await setAffiliateSetting(D, parseAffiliateSetting({ ...terms, percent: 40, rates: {}, directory: false }));
   is("unchecking the box leaves the page on the next read, not ten minutes later", (await readDirectory()).map((r) => r.handle), ["breadhouse"]);
+
+  part("A program's own numbers, only with a second yes");
+  is("listed without them unless the creator also allowed them", (await readDirectory()).find((r) => r.handle === "breadhouse")?.numbers, null);
+  const bread = (await storeForEmail(A))!;
+  const sid = bread.statsId!;
+  const aff = (id: string, decidedAt: number, status = "approved") => JSON.stringify({ id, email: `${id}@example.com`, code: id.slice(0, 6), status, decidedAt });
+  const sale = (ref: string, a: string, base: number, rate: number, how: string, extra: Record<string, unknown> = {}) => JSON.stringify({ ref, aff: a, base, rate, how, currency: "usd", ...extra });
+  await redisPipeline([
+    ["HSET", `nl:aff:${sid}:people`, "aaaaaaaaaaaa", aff("aaaaaaaaaaaa", Date.UTC(2026, 2, 5)), "bbbbbbbbbbbb", aff("bbbbbbbbbbbb", Date.UTC(2026, 5, 1)), "cccccccccccc", aff("cccccccccccc", Date.UTC(2026, 1, 1), "pending")],
+    ["HSET", `nl:aff:${sid}:clicks`, "aaaaaaaaaaaa", "150", "bbbbbbbbbbbb", "50"],
+    ["HSET", `nl:aff:${sid}:sales`, "cs_1", sale("cs_1", "aaaaaaaaaaaa", 2000, 30, "click"), "cs_2", sale("cs_2", "aaaaaaaaaaaa", 12000, 40, "click"), "cs_3", sale("cs_3", "bbbbbbbbbbbb", 2000, 30, "code"), "cs_4", sale("cs_4", "bbbbbbbbbbbb", 2000, 30, "click", { self: true }), "cs_5", sale("cs_5", "bbbbbbbbbbbb", 2000, 30, "click", { currency: "eur" })],
+    ["HSET", `nl:aff:${sid}:payouts`, "p1", JSON.stringify({ id: "p1", aff: "aaaaaaaaaaaa", cents: 3000, currency: "usd" })],
+  ]);
+  const raw = await programNumbers(bread);
+  is(
+    "counted as the creator's book counts: approved affiliates, every click, sales not their own and in the store's currency, earned before refunds, recorded as paid",
+    raw,
+    { affiliates: 2, clicks: 200, clickSales: 2, clickEarnedCents: 5400, sales: 3, earnedCents: 6000, paidCents: 3000, since: Date.UTC(2026, 2, 5) },
+  );
+  is("rates per click from 200 clicks: one in a hundred became a sale, $27 earned per 100 clicks", [directoryNumbers(raw)?.conversion, directoryNumbers(raw)?.per100Cents], [1, 2700]);
+  is(`and none below ${MIN_CLICKS_FOR_RATES} clicks: one sale would move them too far`, [directoryNumbers({ ...raw!, clicks: 99 })?.conversion, directoryNumbers({ ...raw!, clicks: 99 })?.per100Cents], [null, null]);
+  await setAffiliateSetting(A, parseAffiliateSetting({ ...terms, directory: true, numbers: true }));
+  is("with the second yes, the directory shows them", (await readDirectory()).find((r) => r.handle === "breadhouse")?.numbers?.paidCents, 3000);
+  is("only an explicit yes counts as one", parseAffiliateSetting({ numbers: "yes" }).numbers, false);
 
   done();
 }
