@@ -2168,6 +2168,22 @@ try {
       await section.getByRole("link").first().getAttribute("href").then((href) => href?.includes("/p/")),
     ], ["Buyers of Weeknight Dinners also bought", true, true, true]);
     is("and the store's other products under it leave that one out", await page.locator("section[aria-labelledby=more-from-title]").getByText("Pantry Checklist").count(), 0);
+    // The cart suggests it too, beside what is in it.
+    await page.evaluate(() => window.localStorage.clear());
+    await open(page, `${LOCAL}/@localshop/p/${product}`);
+    await page.getByRole("button", { name: "Add to cart" }).first().click();
+    await page.locator("#cart .st-cart-open").click();
+    const cartPanel = page.getByRole("region", { name: "Your cart" });
+    await cartPanel.getByText("Often bought with these").waitFor({ timeout: 15_000 });
+    is("the open cart offers what the buyers of what is in it also bought", [
+      (await words(cartPanel)).includes("Pantry Checklist"),
+      (await words(cartPanel)).includes("4 buyers of Weeknight Dinners also bought it"),
+    ], [true, true]);
+    await cartPanel.getByRole("button", { name: "Add to cart: Pantry Checklist" }).click();
+    await cartPanel.getByText("Often bought with these").waitFor({ state: "detached", timeout: 15_000 });
+    await cartPanel.locator("ul li a", { hasText: "Pantry Checklist" }).first().waitFor({ timeout: 15_000 });
+    is("added with one press, and no longer suggested", [await words(page.locator("#cart .st-cart-open")), (await words(cartPanel)).includes("Pantry Checklist")], ["Cart, 2 products", true]);
+    await page.evaluate(() => window.localStorage.clear());
     is("switched off again", await setSold(false), true);
     await open(page, `${LOCAL}/@localshop/p/${product}`);
     is("and the page says nothing about it", await section.count(), 0);

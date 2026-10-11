@@ -2,9 +2,12 @@ import { type NextRequest, after } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { readListings, readProduct } from "@/lib/catalog";
-import { canSell } from "@/lib/store-checkout";
+import { canSell, canSellProduct } from "@/lib/store-checkout";
 import { cartPrice, createCartCheckout } from "@/lib/cart-checkout";
-import { cartable, dealOff, readCartIds } from "@/lib/cart-rules";
+import { MAX_CART, cartable, dealOff, readCartIds } from "@/lib/cart-rules";
+import { readSoldCounts } from "@/lib/sold-count";
+import { cartWords } from "@/lib/buyer-words/cart";
+import type { Store } from "@/lib/store";
 import { salePrice } from "@/lib/store-sale";
 import { soonState } from "@/lib/preorders";
 import { outOfKeys } from "@/lib/licence-keys";
@@ -49,6 +52,9 @@ export async function GET(request: NextRequest) {
   const deal = dealOff(store.cartDeal, payable.length);
   const total = payable.reduce((sum, item) => sum + salePrice(item.cents, deal), 0);
   const more = store.cartDeal.on && payable.length > 0 && payable.length < store.cartDeal.min ? store.cartDeal.min - payable.length : 0;
+  // What the buyers of what is in the cart also bought (lib/also-bought.ts), on a
+  // store that shows what was bought: up to two that could go in it too, most bought first.
+  const suggest = await suggestions(store, payable.map((item) => ({ id: item.id, title: item.title })), ids, coming.soon, country, locale).catch(() => []);
   return Response.json(
     {
       ok: true,
@@ -56,9 +62,54 @@ export async function GET(request: NextRequest) {
       deal: deal > 0 ? { percent: deal, saved: formatMoney(before - total, store.currency, locale) } : null,
       next: more > 0 ? { more, percent: store.cartDeal.percent } : null,
       total: formatMoney(total, store.currency, locale),
+      suggest,
     },
     { headers: { "Cache-Control": "private, no-store" } },
   );
+}
+
+/** How many products the cart suggests at most. */
+const MAX_SUGGEST = 2;
+
+async function suggestions(
+  store: Store,
+  inCart: { id: string; title: string }[],
+  ids: string[],
+  soon: Set<string>,
+  country: string,
+  locale: string,
+): Promise<{ id: string; title: string; href: string; price: string; why: string; count: number }[]> {
+  if (inCart.length === 0 || ids.length >= MAX_CART || !canSell(store)) return [];
+  const counts = await readSoldCounts(store);
+  if (!counts) return [];
+  // Each other product, with the most buyers it shares with anything in the cart.
+  const best = new Map<string, { count: number; with: string }>();
+  for (const item of inCart) {
+    for (const [other, count] of counts.together[item.id] ?? []) {
+      if (ids.includes(other) || soon.has(other)) continue;
+      if ((best.get(other)?.count ?? 0) < count) best.set(other, { count, with: item.title });
+    }
+  }
+  if (best.size === 0) return [];
+  const ranked = [...best.entries()].sort((a, b) => b[1].count - a[1].count).slice(0, MAX_SUGGEST * 3);
+  const listed = await readListings(store, ranked.map(([id]) => id));
+  const words = cartWords(store.language);
+  const out: { id: string; title: string; href: string; price: string; why: string; count: number }[] = [];
+  for (const [id, pair] of ranked) {
+    const product = listed.find((p) => p.id === id);
+    if (!product || !cartable(product) || !canSellProduct(store, product)) continue;
+    if (product.keys && (await outOfKeys(store, product).catch(() => true))) continue;
+    out.push({
+      id,
+      title: product.title,
+      href: `/@${store.handle}/p/${productSegment(product)}`,
+      price: formatMoney(cartPrice(store, product, country).cents, store.currency, locale),
+      why: words.suggestWhy(pair.count, pair.with),
+      count: pair.count,
+    });
+    if (out.length >= MAX_SUGGEST) break;
+  }
+  return out;
 }
 
 /**
