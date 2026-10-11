@@ -1334,6 +1334,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "eye", title: "Answers shown fairly", body: "After a try the student sees what they got right. The rest are shown once they pass or run out of tries." },
           { icon: "type", title: "The name as they typed it", body: "The certificate carries the student's name exactly as typed, with the course title and your name as they were that day." },
           { icon: "globe", title: "A page that proves it", body: "Each certificate has its own address on your store that anyone can open to check it. It is kept out of search engines." },
+          { icon: "link", title: "On their LinkedIn, pointing at your store", body: "One press opens LinkedIn's own form to add it to the student's profile, filled in: the course, you as the issuer, the month, its ID and its page as the credential. Another opens a LinkedIn post with its link, which unfolds into a picture of the certificate in your store's colors. Every student who shows it off sends people to your store." },
           { icon: "ban", title: "Withdrawn when it has to be", body: "Issued to the wrong name, or to someone you refunded? Withdraw it, and its page says it was withdrawn." },
           { icon: "list", title: "Your list of certificates", body: "Your studio lists the certificates of each course, who earned them and when." },
         ],

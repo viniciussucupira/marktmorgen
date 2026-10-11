@@ -6,7 +6,7 @@ import { lookStyle } from "@/lib/store-look";
 import { photoUrl } from "@/lib/photo-limits";
 import { SITE_URL } from "@/lib/site-url";
 import { storeKey } from "@/lib/learn";
-import { CERT_ID_PATTERN, type Certificate, readCertificate } from "@/lib/certificate";
+import { CERT_ID_PATTERN, type Certificate, linkedInAddUrl, linkedInShareUrl, readCertificate } from "@/lib/certificate";
 import { readCourse } from "@/lib/course";
 import { CertificateActions } from "@/components/certificate-actions";
 import { readCourseListing } from "@/lib/catalog";
@@ -128,7 +128,8 @@ export default async function CertificatePage({ params, searchParams }: Params) 
             <div className="mt-5">
               <CertificateActions
                 url={url}
-                words={{ print: w.printOrSave, copy: w.copyLink, copied: w.linkCopied, prompt: w.copyThisLink }}
+                linkedIn={{ add: linkedInAddUrl(certificate, url), share: linkedInShareUrl(url) }}
+                words={{ print: w.printOrSave, copy: w.copyLink, copied: w.linkCopied, prompt: w.copyThisLink, addToLinkedIn: w.addToLinkedIn, shareOnLinkedIn: w.shareOnLinkedIn }}
               />
             </div>
           )}

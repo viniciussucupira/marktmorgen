@@ -232,6 +232,9 @@ const en = {
   copyLink: "Copy the link",
   linkCopied: "Link copied",
   copyThisLink: "Copy this link",
+  /** On LinkedIn's own pages: the certification form filled in, and a post with the link (lib/certificate.ts). */
+  addToLinkedIn: "Add to LinkedIn profile",
+  shareOnLinkedIn: "Share on LinkedIn",
 
   // ---- A private podcast -----------------------------------------------------------------
   podcastNotices: {
@@ -480,6 +483,8 @@ const es: CoursesWords = {
   copyLink: "Copiar el enlace",
   linkCopied: "Enlace copiado",
   copyThisLink: "Copia este enlace",
+  addToLinkedIn: "Añadir al perfil de LinkedIn",
+  shareOnLinkedIn: "Compartir en LinkedIn",
 
   podcastNotices: {
     sent: {
@@ -725,6 +730,8 @@ const fr: CoursesWords = {
   copyLink: "Copier le lien",
   linkCopied: "Lien copié",
   copyThisLink: "Copiez ce lien",
+  addToLinkedIn: "Ajouter au profil LinkedIn",
+  shareOnLinkedIn: "Partager sur LinkedIn",
 
   podcastNotices: {
     sent: {
@@ -966,6 +973,8 @@ const de: CoursesWords = {
   copyLink: "Link kopieren",
   linkCopied: "Link kopiert",
   copyThisLink: "Diesen Link kopieren",
+  addToLinkedIn: "Zum LinkedIn-Profil hinzufügen",
+  shareOnLinkedIn: "Auf LinkedIn teilen",
 
   podcastNotices: {
     sent: {
@@ -1208,6 +1217,8 @@ const it: CoursesWords = {
   copyLink: "Copia il link",
   linkCopied: "Link copiato",
   copyThisLink: "Copia questo link",
+  addToLinkedIn: "Aggiungi al profilo LinkedIn",
+  shareOnLinkedIn: "Condividi su LinkedIn",
 
   podcastNotices: {
     sent: {
@@ -1451,6 +1462,8 @@ const nl: CoursesWords = {
   copyLink: "Kopieer de link",
   linkCopied: "Link gekopieerd",
   copyThisLink: "Kopieer deze link",
+  addToLinkedIn: "Toevoegen aan LinkedIn-profiel",
+  shareOnLinkedIn: "Delen op LinkedIn",
 
   podcastNotices: {
     sent: {
@@ -1694,6 +1707,8 @@ const pt: CoursesWords = {
   copyLink: "Copiar a ligação",
   linkCopied: "Ligação copiada",
   copyThisLink: "Copie esta ligação",
+  addToLinkedIn: "Adicionar ao perfil do LinkedIn",
+  shareOnLinkedIn: "Partilhar no LinkedIn",
 
   podcastNotices: {
     sent: {

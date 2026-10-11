@@ -3,24 +3,39 @@
 import { useState } from "react";
 
 /** What the two buttons say, in the store's language (lib/buyer-words/courses.ts). */
-export type CertificateActionWords = { print: string; copy: string; copied: string; prompt: string };
+export type CertificateActionWords = { print: string; copy: string; copied: string; prompt: string; addToLinkedIn: string; shareOnLinkedIn: string };
 
 const ENGLISH: CertificateActionWords = {
   print: "Print or save as PDF",
   copy: "Copy the link",
   copied: "Link copied",
   prompt: "Copy this link",
+  addToLinkedIn: "Add to LinkedIn profile",
+  shareOnLinkedIn: "Share on LinkedIn",
 };
 
 /**
- * The two things a student does with a certificate: print it (or save it as a
- * PDF from the print dialog, which every browser offers) and share its link.
+ * What a student does with a certificate: print it (or save it as a PDF from
+ * the print dialog, which every browser offers), share its link, and put it
+ * on LinkedIn — on their profile, with this page as the credential, or in a
+ * post. Each LinkedIn link opens LinkedIn's own page, filled in, where the
+ * student decides; nothing is posted for them.
  */
-export function CertificateActions({ url, words = ENGLISH }: { url: string; words?: CertificateActionWords }) {
+export function CertificateActions({ url, linkedIn, words = ENGLISH }: { url: string; linkedIn?: { add: string; share: string }; words?: CertificateActionWords }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
-      <button type="button" className="btn st-btn" onClick={() => window.print()}>
+      {linkedIn ? (
+        <>
+          <a href={linkedIn.add} target="_blank" rel="noopener noreferrer" className="btn st-btn">
+            {words.addToLinkedIn}
+          </a>
+          <a href={linkedIn.share} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+            {words.shareOnLinkedIn}
+          </a>
+        </>
+      ) : null}
+      <button type="button" className={linkedIn ? "btn btn-secondary" : "btn st-btn"} onClick={() => window.print()}>
         {words.print}
       </button>
       <button
