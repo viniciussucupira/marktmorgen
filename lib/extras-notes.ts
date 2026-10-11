@@ -54,7 +54,7 @@ export function extraNotes(product: Product, all: Listing[], currency: string): 
   if (boxes.some(Boolean)) notes.bumps = boxes;
 
   const plan = planState(product);
-  if (plan && "paused" in plan) notes.plan = planPauseWords(plan.paused, plan.plan, product.priceCents, currency);
+  if (plan && "paused" in plan) notes.plan = planPauseWords(plan.paused, plan.plan, product, currency);
 
   const funnel = funnelHealth(all, product);
   if (funnel && (funnel.off !== null || funnel.dark.length > 0)) {
@@ -136,7 +136,7 @@ export function quietedBy(
     // Its own plan, which only its own price and shape can silence.
     if (product.id === changedId) {
       const plan = planState(product);
-      if (plan && "paused" in plan) say(title, planPauseWords(plan.paused, plan.plan, product.priceCents, currency));
+      if (plan && "paused" in plan) say(title, planPauseWords(plan.paused, plan.plan, product, currency));
     }
   }
   return lines;

@@ -66,6 +66,7 @@ import {
   setAnswers,
   setCartDeal,
   setProductNote,
+  setProductExtras,
   setFaq,
   setTips,
   setProductImage,
@@ -180,6 +181,13 @@ Choose one week, or five weeks at a lower price per week. Each is a PDF you down
     { label: "1 week", price: "27", file: "weekly-meal-planner.pdf" },
     { label: "5 weeks", price: "39", file: "meal-planner-5-weeks.pdf" },
   ] satisfies { label: string; price: string; file: DemoFileName }[],
+  /**
+   * A payment plan over both prices (lib/product-extras.ts), so a visitor
+   * sees each price with its own payments, as a buyer of a creator's store
+   * would: 3 monthly payments of $9 for one week, of $13 for five. In Stripe's
+   * test mode like the rest of the demo, and it stops by itself after the third.
+   */
+  plan: { payments: 3, interval: "month", each: { "1 week": 900, "5 weeks": 1300 } },
 } as const;
 
 /**
@@ -685,6 +693,24 @@ async function ensureNote(store: Store, product: Listing, pending: string[]): Pr
   return marked.store;
 }
 
+/** The payment plan over both prices, saved the way the studio's extras route saves one. */
+async function ensurePlan(store: Store, product: Listing, pending: string[]): Promise<Store> {
+  const want = DEMO_PRODUCT.plan;
+  const options: Record<string, number> = {};
+  for (const option of product.options) {
+    const cents = want.each[option.label as keyof typeof want.each];
+    if (cents) options[option.id] = cents;
+  }
+  const plan = { payments: want.payments, interval: want.interval, amountCents: Math.min(...Object.values(options)), options };
+  if (JSON.stringify(product.plan) === JSON.stringify(plan)) return store;
+  const done = await setProductExtras(REF, product.id, { plan });
+  if (!done.ok) {
+    pending.push(refused("plan", done.reason));
+    return store;
+  }
+  return done.store;
+}
+
 /** The product's sales page, saved the way the studio's page route saves one. */
 async function ensurePage(store: Store, product: Listing, pending: string[]): Promise<Store> {
   if (!store.statsId) {
@@ -790,6 +816,7 @@ async function build(before: Mark | null, deps: SeedDeps): Promise<Mark> {
   store = await ensureAbout(store, made.product, pending);
   store = await ensurePage(store, made.product, pending);
   store = await ensureNote(store, made.product, pending);
+  store = await ensurePlan(store, made.product, pending);
   store = await ensurePost(store, made.product, pending);
   for (const extra of DEMO_EXTRAS) store = await ensureExtra(store, extra, mark, deps, pending);
 

@@ -7,7 +7,7 @@ import { toast } from "@/components/toast";
 import type { Listing, Product } from "@/lib/store";
 import type { BumpChoice } from "@/lib/catalog";
 import { useStudioHref } from "@/components/studio-store-pin";
-import { type Currency, currencyRule, fieldPrefix, formatMoney, moneyField } from "@/lib/money";
+import { type Currency, currencyRule, fieldPrefix, formatMoney, moneyField, readMoney } from "@/lib/money";
 import { useStoreCurrency } from "@/components/store-currency";
 import {
   type Bump,
@@ -45,6 +45,7 @@ const amountMessages = (currency: Currency): Record<string, string> => {
   return {
     price: `Type an amount of at least ${least}. An offer at checkout costs no more than that product on its own, and a payment plan's payments add up to at least the full price.`,
     plan: `Pick how many payments, how often, and an amount of at least ${least} for each.`,
+    plan_price: `Set a payment for every price, of at least ${least}, so that the payments add up to at least that price.`,
   };
 };
 
@@ -241,7 +242,7 @@ export function CheckoutExtras({
           Offer more after they pay
         </Link>
       )}
-      {product.options.length > 0 || product.pwyw ? (
+      {product.pwyw ? (
         <Quiet lines={notes?.plan ? [notes.plan] : []} />
       ) : (
         <div>
@@ -426,6 +427,17 @@ function PlanBlock({
   // Each payment rounded up to a whole unit (a whole dollar, a hundred yen).
   const suggested = (n: number) => moneyField(Math.ceil(product.priceCents / n / 100) * 100, currency);
   const [price, setPrice] = useState(current ? moneyField(current.amountCents, currency) : suggested(3));
+  // Several prices: one payment for each, suggested from that price the same way.
+  const several = product.options.length > 0;
+  const suggestedFor = (cents: number, n: number) => moneyField(Math.ceil(cents / n / 100) * 100, currency);
+  const [each, setEach] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      product.options.map((option) => {
+        const saved = current?.options?.[option.id];
+        return [option.id, saved ? moneyField(saved, currency) : suggestedFor(option.priceCents, current?.payments ?? 3)];
+      }),
+    ),
+  );
   const link = "text-sm font-bold text-ink-soft underline underline-offset-4 transition hover:text-violet-deep";
   const id = `plan-${product.id}`;
 
@@ -435,10 +447,15 @@ function PlanBlock({
         className="rounded-[var(--r-sm)] border border-line bg-white p-4"
         onSubmit={(e) => {
           e.preventDefault();
-          onSend({ plan: { payments, interval, price: price.trim() } }, "Payment plan saved.");
+          onSend(
+            several
+              ? { plan: { payments, interval, options: Object.fromEntries(product.options.map((option) => [option.id, (each[option.id] ?? "").trim()])) } }
+              : { plan: { payments, interval, price: price.trim() } },
+            "Payment plan saved.",
+          );
         }}
       >
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className={`grid gap-3 ${several ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
           <label className="block" htmlFor={`${id}-n`}>
             <span className="field-label">Payments</span>
             <select
@@ -447,7 +464,10 @@ function PlanBlock({
               onChange={(e) => {
                 const n = Number(e.target.value);
                 setPayments(n);
-                if (!current) setPrice(suggested(n));
+                if (!current) {
+                  setPrice(suggested(n));
+                  setEach(Object.fromEntries(product.options.map((option) => [option.id, suggestedFor(option.priceCents, n)])));
+                }
               }}
               className="field"
             >
@@ -463,23 +483,55 @@ function PlanBlock({
               <option value="week">Every week</option>
             </select>
           </label>
-          <label className="block" htmlFor={`${id}-p`}>
-            <span className="field-label">{currency === "usd" ? "Each payment, in dollars" : `Each payment, ${fieldPrefix(currency)}`}</span>
-            <input
-              id={`${id}-p`}
-              type="text"
-              inputMode="decimal"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="field"
-              required
-            />
-          </label>
+          {several ? null : (
+            <label className="block" htmlFor={`${id}-p`}>
+              <span className="field-label">{currency === "usd" ? "Each payment, in dollars" : `Each payment, ${fieldPrefix(currency)}`}</span>
+              <input
+                id={`${id}-p`}
+                type="text"
+                inputMode="decimal"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="field"
+                required
+              />
+            </label>
+          )}
         </div>
+        {several ? (
+          <fieldset className="mt-3">
+            <legend className="field-label">{currency === "usd" ? "Each payment, in dollars, for each price" : `Each payment for each price, ${fieldPrefix(currency)}`}</legend>
+            <div className="mt-1 space-y-2">
+              {product.options.map((option) => {
+                const typed = readMoney(each[option.id] ?? "", currency);
+                const short = typed !== null && typed > 0 && typed * payments < option.priceCents;
+                return (
+                  <div key={option.id} className="grid items-center gap-2 sm:grid-cols-[1fr_10rem]">
+                    <label htmlFor={`${id}-o-${option.id}`} className="text-sm text-ink">
+                      <span className="font-semibold">{option.label}</span>
+                      <span className="text-ink-soft">{` \u00b7 ${formatMoney(option.priceCents, currency)}`}</span>
+                      {short ? <span className="block text-xs text-ink-soft">{`${payments} of these come to less than ${formatMoney(option.priceCents, currency)}.`}</span> : null}
+                    </label>
+                    <input
+                      id={`${id}-o-${option.id}`}
+                      type="text"
+                      inputMode="decimal"
+                      value={each[option.id] ?? ""}
+                      onChange={(e) => setEach((was) => ({ ...was, [option.id]: e.target.value }))}
+                      className="field"
+                      aria-invalid={short || undefined}
+                      required
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </fieldset>
+        ) : null}
         <p className="mt-2 text-xs text-ink-soft">
           Buyers choose between paying in full and the plan. They get the product after the first payment; the rest are
           charged to the same card on your own Stripe account, and the plan stops by itself after the last one. The
-          payments add up to at least the full price.
+          payments add up to at least the full price{several ? ", for each price, and buyers see each price\u2019s payments beside it" : ""}.
         </p>
         {error ? <p className="notice notice-error mt-3" role="alert">{error}</p> : null}
         <div className="mt-3 flex flex-wrap gap-3">
@@ -497,7 +549,7 @@ function PlanBlock({
     return (
       <p className="text-sm text-ink-soft">
         <span className={`font-semibold ${paused ? "text-ink-soft" : "text-ink"}`}>
-          {paused ? `Payment plan, paused: ${planWords(current, currency)}` : `Payment plan: ${planWords(current, currency)}`}
+          {`${paused ? "Payment plan, paused" : "Payment plan"}: ${planWords(current, currency)}${current.options && several ? `, from ${formatMoney(current.amountCents, currency)} each` : ""}`}
         </span>
         {" \u00b7 "}
         <button type="button" className={link} onClick={onOpen}>Change</button>

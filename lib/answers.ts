@@ -81,7 +81,13 @@ export function priceWords(product: Listing, currency: string, tiers: readonly s
   if (isFree(product)) return "Free.";
   const money = (cents: number) => formatMoney(cents, currency);
   if (product.options.length > 0) {
-    return `It is sold at several prices, and the buyer picks one: ${product.options.map((o) => `${o.label} for ${money(o.priceCents)}`).join("; ")}.`;
+    // With a payment plan over the prices (lib/product-extras.ts), each one's payments are said beside it.
+    const plan = product.recurring ? null : activePlan(product);
+    const each = (o: Listing["options"][number]) => {
+      const cents = plan?.options?.[o.id];
+      return cents ? ` (or ${plan!.payments} ${plan!.interval === "week" ? "weekly" : "monthly"} payments of ${money(cents)})` : "";
+    };
+    return `It is sold at several prices, and the buyer picks one: ${product.options.map((o) => `${o.label} for ${money(o.priceCents)}${each(o)}`).join("; ")}.`;
   }
   if (product.recurring) {
     // An introductory price is said first (lib/intro-price.ts), as on the page.

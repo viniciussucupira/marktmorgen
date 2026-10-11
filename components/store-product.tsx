@@ -8,7 +8,7 @@ import Link from "next/link";
 import { isFree, syncTakesBuyer, type Listing, type Store } from "@/lib/store";
 import { canSellProduct, fromPriceCents, sellableOptions } from "@/lib/store-checkout";
 import { canGiveProduct } from "@/lib/free";
-import { activeBumps, activePlan } from "@/lib/product-extras";
+import { activeBumps, activePlan, planFor } from "@/lib/product-extras";
 import { activePwyw } from "@/lib/pay-what-you-want";
 import { imageUrl, IMAGE_SIZES, imageSrcSet } from "@/lib/product-image";
 import type { PageAction } from "@/components/sales-blocks";
@@ -567,6 +567,11 @@ export function BuyBox({
   // The boxes at checkout, each checked or not on its own (lib/product-extras.ts).
   const extras = activeBumps(related, product);
   const plan = activePlan(product);
+  // On a product with several prices, each one's payments: "3 monthly payments of $13".
+  const planAt = (optionId: string) => {
+    const each = plan && options.length > 0 ? planFor(product, optionId) : null;
+    return each ? planLine(store, each) : null;
+  };
   const pwyw = activePwyw(product);
   const trial = product.recurring && product.recurring.trialDays > 0 ? product.recurring.trialDays : 0;
   // A membership's introductory price (lib/intro-price.ts): what the button and the line under it say.
@@ -705,7 +710,7 @@ export function BuyBox({
           <select id={`os-${product.id}`} name="option" defaultValue={startingOption(options)?.id} className="st-field mt-2">
             {options.map((option) => (
               <option key={option.id} value={option.id}>
-                {`${w.priced(option.label, `${money(option.priceCents)}${every}`)}${units.get(option.id) ? ` (${unitWords(units.get(option.id)!)})` : ""}${option.best ? w.recommendedAfter : ""}`}
+                {`${w.priced(option.label, `${money(option.priceCents)}${every}`)}${units.get(option.id) ? ` (${unitWords(units.get(option.id)!)})` : ""}${planAt(option.id) ? ` · ${w.orPlan(planAt(option.id)!)}` : ""}${option.best ? w.recommendedAfter : ""}`}
               </option>
             ))}
           </select>
@@ -736,6 +741,8 @@ export function BuyBox({
                 </span>
                 <span className="font-semibold tabular-nums">{`${money(option.priceCents)}${every}`}</span>
                 {units.get(option.id) ? <span className="st-muted st-unit text-sm tabular-nums">{unitWords(units.get(option.id)!)}</span> : null}
+                {/* With a payment plan, what each payment is at this price: the plan's radio below says how many. */}
+                {planAt(option.id) ? <span className="st-muted st-unit text-sm tabular-nums">{w.orPlan(planAt(option.id)!)}</span> : null}
                 {option.details.length > 0 ? (
                   <ul className="st-includes">
                     {option.details.map((line, at) => (
@@ -752,19 +759,20 @@ export function BuyBox({
         <fieldset className="mb-4">
           <legend className="sr-only">{w.howToPayFor(product.title)}</legend>
           <div className="space-y-2">
-            <label htmlFor={`pf-${product.id}`} className="st-option">
+            {/* With several prices, the amounts are written beside each price above, so these say only how. */}
+            <label htmlFor={`pf-${place}${product.id}`} className="st-option">
               <span className="flex items-center gap-3">
-                <input id={`pf-${product.id}`} type="radio" name="pay" value="full" defaultChecked className="h-4 w-4" />
+                <input id={`pf-${place}${product.id}`} type="radio" name="pay" value="full" defaultChecked className="h-4 w-4" />
                 <span className="font-bold">{w.payInFull}</span>
               </span>
-              <span className="font-semibold tabular-nums">{money(salePrice(product.priceCents, off))}</span>
+              {options.length > 0 ? null : <span className="font-semibold tabular-nums">{money(salePrice(product.priceCents, off))}</span>}
             </label>
-            <label htmlFor={`pp-${product.id}`} className="st-option">
+            <label htmlFor={`pp-${place}${product.id}`} className="st-option">
               <span className="flex items-center gap-3">
-                <input id={`pp-${product.id}`} type="radio" name="pay" value="plan" className="h-4 w-4" />
+                <input id={`pp-${place}${product.id}`} type="radio" name="pay" value="plan" className="h-4 w-4" />
                 <span className="font-bold">{planLine(store, plan)}</span>
               </span>
-              <span className="font-semibold tabular-nums">{w.today(money(plan.amountCents))}</span>
+              {options.length > 0 ? null : <span className="font-semibold tabular-nums">{w.today(money(plan.amountCents))}</span>}
             </label>
           </div>
         </fieldset>
@@ -844,7 +852,7 @@ export function BuyBox({
           the one that matches what is checked (app/globals.css, "Boxes at
           checkout"), so it is right with scripts turned off too.
         */}
-        {plan ? <span className="plan-on">{w.startPlanToday(money(plan.amountCents))}</span> : null}
+        {plan ? <span className="plan-on">{options.length > 0 ? w.continueOption : w.startPlanToday(money(plan.amountCents))}</span> : null}
         {/* Paid yearly: the button says the year's price (app/globals.css, "Boxes at checkout"). A trial says the trial either way. */}
         {yearly && !trial ? <span className="year-on">{w.subscribeFor(money(yearly.cents), w.every("year"))}</span> : null}
         {combinations(extras.length).map((picked) => {
@@ -856,7 +864,7 @@ export function BuyBox({
             <span key={code}>
               {plan ? (
                 <span className={`plan-bump-t pt-${code}`}>
-                  {w.startPlanWith(named, money(plan.amountCents + chosen.reduce((sum, extra) => sum + extra.bump.priceCents, 0)))}
+                  {options.length > 0 ? w.buyItWith(named) : w.startPlanWith(named, money(plan.amountCents + chosen.reduce((sum, extra) => sum + extra.bump.priceCents, 0)))}
                 </span>
               ) : null}
               <span className={`bump-t t-${code}`}>

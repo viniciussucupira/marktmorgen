@@ -41,6 +41,8 @@ export const en = {
   /** "3 monthly payments of $110". */
   planWords: (payments: number, interval: "week" | "month", amount: string) =>
     `${payments} ${interval === "week" ? "weekly" : "monthly"} payments of ${amount}`,
+  /** "3 monthly payments", where each price has its own amount. */
+  planCount: (payments: number, interval: "week" | "month") => `${payments} ${interval === "week" ? "weekly" : "monthly"} payments`,
   endsIn: (unit: Unit, n: number) =>
     unit === "day" ? `Ends in ${n} days` : unit === "hour" ? `Ends in ${n} ${plural(n, "hour", "hours")}` : `Ends in ${n} ${plural(n, "minute", "minutes")}`,
 

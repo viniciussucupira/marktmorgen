@@ -415,7 +415,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can buyers pay in installments?",
         a: [
-          "Yes. Under any one-off product with one price, offer a payment plan: two to twelve payments, weekly or monthly, of an amount you choose, adding up to at least the full price. The buyer picks between paying in full and the plan, and the button says what is charged today.",
+          "Yes. Under any one-off product, offer a payment plan: two to twelve payments, weekly or monthly, of an amount you choose, adding up to at least the full price. On a product with several prices, you set what each payment is for each price, and each price shows its own payments beside it. The buyer picks between paying in full and the plan, and the button says what is charged today.",
           "They get the product after the first payment. The rest are charged to the same card on your own Stripe account, and the plan's end date is set as soon as the first payment is through \u2014 and checked again every day for anyone who paid and closed the page \u2014 so no buyer is ever charged one payment more than they agreed to. A plan is not a membership, so it is not canceled from your page; a buyer who needs to change something replies to their order confirmation email, which reaches you.",
         ],
       },

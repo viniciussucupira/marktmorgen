@@ -32,6 +32,8 @@ export const es: BuyerWords = {
   introThen: (intro, count, interval, then) => `${intro} ${introFirst(count, interval)}, luego ${then}`,
   planWords: (payments, interval, amount) =>
     `${payments} ${plural(payments, "pago", "pagos")} ${interval === "week" ? plural(payments, "semanal", "semanales") : plural(payments, "mensual", "mensuales")} de ${amount}`,
+  planCount: (payments, interval) =>
+    `${payments} ${plural(payments, "pago", "pagos")} ${interval === "week" ? plural(payments, "semanal", "semanales") : plural(payments, "mensual", "mensuales")}`,
   endsIn: (unit, n) =>
     unit === "day"
       ? `Termina en ${n} días`
