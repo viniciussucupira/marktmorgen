@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -656,9 +658,9 @@ function Terms({
         </label>
 
         {/*
-          Consent for a directory that does not exist, asked in the future
-          tense (lib/affiliate-setting.ts, AffiliateSetting.directory). Nothing
-          reads it yet, and the wording must never imply a page is live.
+          Consent to be listed in the affiliate directory
+          (app/affiliate-programs, lib/affiliate-directory.ts). It says what the
+          row shows, so nothing on it is a surprise.
         */}
         <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3">
           <input
@@ -668,11 +670,15 @@ function Terms({
             className="h-5 w-5 shrink-0 accent-[var(--violet)]"
           />
           <span className="text-sm">
-            <span className="block font-semibold text-ink">List my program in the affiliate directory, if one opens</span>
+            <span className="block font-semibold text-ink">List my program in the affiliate directory</span>
             <span className="block text-ink-soft">
-              There is no directory today. If Marktmorgen ever opens one — a page where people looking for something to promote
-              can find programs like yours — this says yours may be in it, showing your share, your window and your payment
-              day. Nothing is published while this is the only thing it does, and you can switch it off at any time.
+              People looking for something to promote find it at{" "}
+              <Link href="/affiliate-programs" className="font-semibold text-violet-deep underline underline-offset-2">
+                marktmorgen.com/affiliate-programs
+              </Link>
+              : your store&apos;s name and address, your share, your window, your payment day and up to four products that earn,
+              each with what one sale earns, and a link to apply. It shows while your store can take payments. Uncheck this and save,
+              and it leaves the page at once.
             </span>
           </span>
         </label>

@@ -219,6 +219,7 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                     {a.orAddVia(affiliate.code)}
                   </p>
                   <p className="st-muted mt-2 text-sm">{attribution(store.affiliates)}</p>
+                  <p className="st-muted mt-2 text-sm" data-disclose>{a.termDisclose}</p>
                   {/*
                     A code of the store's own, given to this affiliate
                     (lib/affiliate-codes.ts). It is the only thing on this page
@@ -434,6 +435,7 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                       a.termShare(terms.percent, different.length > 0),
                       attribution(terms),
                       a.termRefunds,
+                      a.termDisclose,
                       promise(terms),
                       store.affiliates.buyers ? a.termBuyers(store.name) : a.termApproves(store.name),
                     ].map((line) => (

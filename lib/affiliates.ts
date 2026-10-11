@@ -938,6 +938,8 @@ export async function decide(store: Store, id: string, decision: Decision): Prom
           affiliate.rate === null && Object.keys(store.affiliates.rates).length > 0,
         ),
         "",
+        a.termDisclose,
+        "",
         a.approvedPage(`${SITE_URL}/@${store.handle}/affiliates`),
         "",
         a.paidByStore(store.name),
