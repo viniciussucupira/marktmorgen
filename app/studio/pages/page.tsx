@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { readableFile } from "@/lib/product-file";
 import { ThanksNoteEditor } from "@/components/thanks-note-editor";
 import { readThanksNote } from "@/lib/thanks-note-store";
 import { cookies } from "next/headers";
@@ -195,6 +196,7 @@ export default async function StudioPagesPage({ searchParams }: Params) {
                   : null,
                 defaultLabel: action.label || "Get it now",
                 leadsTo,
+                pdf: readableFile(selected) !== null,
               }}
               initial={page}
               folder={await imageFolder(view.ref)}

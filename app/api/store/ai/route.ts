@@ -1,5 +1,9 @@
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
+import { readFileWhole } from "@/lib/file-store";
+import { READ_PDF_PAGES } from "@/lib/ai-rules";
+import { firstPages } from "@/lib/pdf-preview";
+import { MAX_STAMP_BYTES, readableFile } from "@/lib/product-file";
 import { withinLimit } from "@/lib/request-guard";
 import { describePicture, fillBlock, reviewPage, rewriteBlock, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct } from "@/lib/ai";
 import { SOCIALS, type SocialNetwork, isSocialNetwork } from "@/lib/store-socials";
@@ -71,6 +75,15 @@ export async function POST(request: NextRequest) {
               : product.file
                 ? "download"
                 : "link";
+    // The product's own PDF, its first pages only, when the creator asked for it to be read (lib/ai.ts, readPdfFacts).
+    let pdf: Uint8Array | null = null;
+    if (body.readFile === true) {
+      const file = readableFile(product);
+      if (!file) return fail("file");
+      const bytes = await readFileWhole(file.pathname, MAX_STAMP_BYTES).catch(() => null);
+      pdf = bytes ? await firstPages(bytes, READ_PDF_PAGES).catch(() => null) : null;
+      if (!pdf) return fail("file");
+    }
     return answer(
       writePage(store, {
         title: product.title,
@@ -79,6 +92,7 @@ export async function POST(request: NextRequest) {
         summary: product.summary,
         about,
         notes,
+        pdf,
       }),
     );
   }

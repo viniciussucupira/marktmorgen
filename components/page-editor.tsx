@@ -88,6 +88,7 @@ import {
   videoAddress,
 } from "@/lib/sales-page";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { READ_PDF_JOBS, READ_PDF_PAGES } from "@/lib/ai-rules";
 import type { PageFacts } from "@/lib/page-facts";
 import { blockWords } from "@/lib/buyer-words/blocks";
 import type { LanguageCode } from "@/lib/store-language";
@@ -165,6 +166,8 @@ export type EditorProduct = {
   /** What a button says when its label is left empty, and where it leads, in words. */
   defaultLabel: string;
   leadsTo: string;
+  /** Whether it has a PDF its page can be written from (lib/ai.ts, readPdfFacts). */
+  pdf?: boolean;
 };
 
 /** A block as the editor holds it: a hero keeps the video address as typed, too. */
@@ -655,6 +658,8 @@ export function PageEditor({
     setOpen(blocks[1]?.id ?? blocks[0].id);
   }
 
+  // Whether "Write the whole page with AI" reads the product's own PDF first (lib/ai.ts, readPdfFacts).
+  const [readFile, setReadFile] = useState(product.pdf === true);
   const [copyFrom, setCopyFrom] = useState(pagesToCopy[0]?.id ?? "");
   const [copying, setCopying] = useState(false);
   const [copyNote, setCopyNote] = useState<string | null>(null);
@@ -1742,7 +1747,18 @@ export function PageEditor({
               hint={`A full draft — headline, what the buyer gets, what is inside, questions and buttons — from ${product.title}'s name, price and description. Add anything else it should know below, or leave the box empty. It replaces the blocks here; nothing is saved until you press Save.`}
               placeholder="Who it is for, what makes it different, what buyers ask you most. Your refund promise, if you have one."
               allowEmpty
-              payload={() => ({ kind: "page", product: product.id })}
+              payload={() => ({ kind: "page", product: product.id, readFile: product.pdf === true && readFile })}
+              extra={
+                product.pdf ? (
+                  <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-ink">
+                    <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-violet-brand" checked={readFile} onChange={(e) => setReadFile(e.target.checked)} />
+                    <span>
+                      <span className="font-semibold">{`Read the first ${READ_PDF_PAGES} pages of ${product.title}'s PDF too`}</span>
+                      <span className="block text-ink-soft">{`So \u201cWhat's inside\u201d lists its real contents. Takes ${1 + READ_PDF_JOBS} of your writing jobs instead of 1. Only those pages are read, and nothing is kept.`}</span>
+                    </span>
+                  </label>
+                ) : undefined
+              }
               onResult={(draft) => {
                 const page = blocksFromDraft(draft, Boolean(product.picture));
                 setDrafts(toDrafts(page));

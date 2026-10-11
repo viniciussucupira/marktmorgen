@@ -197,3 +197,9 @@ export function safeFileName(raw: string): string {
   const cleaned = base.replace(/[\u0000-\u001f"\\]/g, "").trim();
   return cleaned.slice(0, 120) || "file";
 }
+
+/** The PDF a product's page can be written from (lib/ai.ts, readPdfFacts): its own file, or else its first option's, when a PDF small enough to read. */
+export function readableFile(product: { file: ProductFile | null; options: { file?: ProductFile | null }[] }): ProductFile | null {
+  const candidates = [product.file, ...product.options.map((o) => o.file ?? null)];
+  return candidates.find((f): f is ProductFile => Boolean(f && isPdf(f) && f.bytes <= MAX_STAMP_BYTES)) ?? null;
+}
