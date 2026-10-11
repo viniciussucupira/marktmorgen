@@ -4,12 +4,18 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { isBillingConfigured } from "@/lib/billing";
 import { sendFailedPlanNotices, sendReminders } from "@/lib/billing-reminders";
 import { runBreaks } from "@/lib/plan-pause";
+import { sendTrialNudges } from "@/lib/trial-nudges";
+
+/** Four passes over our subscriptions, one after another. */
+export const maxDuration = 60;
 
 /**
  * Run on a schedule by Vercel: warns every creator before a trial turns into
  * a charge, and before a yearly plan renews, and tells one whose payment
  * failed where to pay it. And ends the breaks creators chose: told a week
- * before, and the plan started again on the day (lib/plan-pause.ts).
+ * before, and the plan started again on the day (lib/plan-pause.ts). And
+ * writes twice during a trial to a store that has not sold yet, with the one
+ * step that would help it most (lib/trial-nudges.ts).
  *
  * Safe to run more than once: each charge is warned of once, only to the person
  * paying it, and one run at a time.
@@ -30,7 +36,8 @@ export async function GET(request: NextRequest) {
     const counts = await sendReminders();
     const failed = await sendFailedPlanNotices();
     const breaks = await runBreaks();
-    return Response.json({ ok: true, ...counts, failedPayments: failed, breaks }, { headers: { "Cache-Control": "no-store" } });
+    const nudges = await sendTrialNudges();
+    return Response.json({ ok: true, ...counts, failedPayments: failed, breaks, nudges }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("sending billing reminders failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
