@@ -45,6 +45,7 @@ const MESSAGES: Record<string, string> = {
   limited: "That is too many changes in a minute. Wait a moment and try again.",
   server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
   not_connected: "That account is not connected, or needs connecting again. Connect it, then try once more.",
+  no_test: "There is no test meeting to move. Make one first.",
   meeting_failed: "The provider did not do it. What it answered is under Recent problems; try again in a moment.",
 };
 
@@ -82,22 +83,31 @@ export function MeetingConnections({
   const [error, setError] = useState<string | null>(null);
   const [tests, setTests] = useState(firstTests);
   const [testing, setTesting] = useState<MeetProvider | null>(null);
+  /** Which of the test meeting's steps is running, so only its button says so. */
+  const [doing, setDoing] = useState<"test" | "movetest" | "untest" | null>(null);
 
   /** Makes the test meeting on the connected account, or deletes it there. */
-  async function test(provider: MeetProvider, make: boolean) {
+  async function test(provider: MeetProvider, step: "test" | "movetest" | "untest") {
     if (testing || busy) return;
     setTesting(provider);
+    setDoing(step);
     setError(null);
     try {
       const response = await fetch("/api/integrations/meetings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: make ? "test" : "untest", provider }),
+        body: JSON.stringify({ action: step, provider }),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; test?: TestMeeting | null };
       if (data.ok) {
         setTests((all) => ({ ...all, [provider]: data.test ?? undefined }));
-        toast(make ? `Test meeting made on your ${ACCOUNTS[provider].name} account.` : "Test meeting deleted.");
+        toast(
+          step === "test"
+            ? `Test meeting made on your ${ACCOUNTS[provider].name} account.`
+            : step === "movetest"
+              ? `Test meeting moved an hour later on your ${ACCOUNTS[provider].name} account.`
+              : "Test meeting deleted.",
+        );
         return;
       }
       setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
@@ -106,6 +116,7 @@ export function MeetingConnections({
       setError(MESSAGES.server_error);
     } finally {
       setTesting(null);
+      setDoing(null);
     }
   }
 
@@ -218,23 +229,35 @@ export function MeetingConnections({
                   {tests[provider] ? (
                     <>
                       <p className="mt-1 text-sm text-ink-soft">
-                        {`A test meeting is on your ${info.name} account, set for ${when(tests[provider].start)}, with nobody invited. Open it to see it, then delete it.`}
+                        {`A test meeting is on your ${info.name} account, set for ${when(tests[provider].start)}, with nobody invited. Open it to see it. Move it an hour later to check what a buyer's move does, then delete it.`}
                       </p>
                       <p className="mt-2 break-all text-sm">
                         <a href={tests[provider].link} target="_blank" rel="noopener noreferrer" className="link">
                           {tests[provider].link}
                         </a>
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => test(provider, false)}
-                        disabled={testing !== null || busy !== null}
-                        aria-busy={testing === provider}
-                        className="btn btn-secondary btn-sm mt-3"
-                      >
-                        <Icon name="trash" size={16} />
-                        {testing === provider ? "Deleting…" : "Delete the test meeting"}
-                      </button>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => test(provider, "movetest")}
+                          disabled={testing !== null || busy !== null}
+                          aria-busy={testing === provider && doing === "movetest"}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          <Icon name="refresh" size={16} />
+                          {testing === provider && doing === "movetest" ? "Moving it…" : "Move it an hour later"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => test(provider, "untest")}
+                          disabled={testing !== null || busy !== null}
+                          aria-busy={testing === provider && doing === "untest"}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          <Icon name="trash" size={16} />
+                          {testing === provider && doing === "untest" ? "Deleting…" : "Delete the test meeting"}
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <>
@@ -243,7 +266,7 @@ export function MeetingConnections({
                       </p>
                       <button
                         type="button"
-                        onClick={() => test(provider, true)}
+                        onClick={() => test(provider, "test")}
                         disabled={testing !== null || busy !== null}
                         aria-busy={testing === provider}
                         className="btn btn-secondary btn-sm mt-3"
