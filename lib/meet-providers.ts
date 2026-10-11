@@ -102,7 +102,7 @@ export function configuredProviders(): MeetProvider[] {
  * that built it, so until the Marketplace listing is approved Zoom is offered
  * to the preview stores alone, and to stores signed in with a Zoom address,
  * which is how Zoom's own reviewers test the app before approving it;
- * ZOOM_LIVE=1 opens it to every store. A store that already has Zoom
+ * ZOOM_APPROVED (or ZOOM_LIVE=1) opens it to every store. A store that already has Zoom
  * connected keeps it either way (usableProviders).
  *
  * The demo store is open to Zoom too (lib/house-store.ts): it is the one
@@ -118,6 +118,18 @@ export function configuredProviders(): MeetProvider[] {
  * turned away on Zoom's own page.
  */
 const ZOOM_PREVIEW_STORES = new Set(["dc83ed016f0d4a83b71461bca159d8f5"]);
+
+/**
+ * Whether Zoom's App Marketplace has approved the app, which is what lets any
+ * Zoom account add it. Kept in the code rather than only in a setting, so
+ * opening Zoom to every store is one reviewed change that every deployment
+ * carries; ZOOM_LIVE=1 still opens it where it is set.
+ *
+ * Resubmitted for review on 11 October 2026. Turn to true the day Zoom
+ * approves it, and not before: until then Zoom turns away every account but
+ * the one that built the app, on its own consent page.
+ */
+export const ZOOM_APPROVED: boolean = false;
 /** Zoom's App Marketplace reviewers sign up with their work address. */
 const ZOOM_REVIEWER = /@([a-z0-9-]+\.)*(zoom\.us|zoom\.com)$/i;
 
@@ -135,6 +147,7 @@ export function offeredProviders(store: OfferedTo, review = false): MeetProvider
   const email = typeof store === "object" && store ? (store.email ?? "").trim() : "";
   const zoomOpen =
     review ||
+    ZOOM_APPROVED ||
     env("ZOOM_LIVE") === "1" ||
     Boolean(sid && ZOOM_PREVIEW_STORES.has(sid)) ||
     isHouseAddress(email) ||
