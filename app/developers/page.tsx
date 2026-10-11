@@ -184,7 +184,7 @@ export default function DevelopersPage() {
 }`}</Code>
       </LegalSection>
 
-      <LegalSection title="Affiliates">
+      <LegalSection title="Numbers">
         <Endpoint path="/api/v1/stats">
           Your numbers for the last 7, 30 and 90 days, the same ones your studio shows: visitors, checkouts, sales and
           revenue, each channel from visit to sale, and page views by country and by device.
@@ -218,7 +218,9 @@ export default function DevelopersPage() {
           A <code className="font-mono">channel</code> of <code className="font-mono">direct</code> is a visit or sale from nowhere
           the store could name.
         </p>
+      </LegalSection>
 
+      <LegalSection title="Affiliates">
         <Endpoint path="/api/v1/affiliates">
           Every affiliate, with what they earned, were paid and are owed — the numbers on your affiliates page.
         </Endpoint>
