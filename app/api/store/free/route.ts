@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await requestCopy({ store, product, email, consent, ip, origin: linkOrigin(request, store) });
-    if (result === "sent") after(() => countHit(request, store, { kind: "checkout", id: product.id }));
+    if (result === "sent") after(() => countHit(request, store, { kind: "checkout", id: product.id, free: true }));
     return away(`${page}&status=${result}`);
   } catch (error) {
     console.error("sending a free copy failed", error);

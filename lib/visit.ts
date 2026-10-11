@@ -8,6 +8,9 @@ import { type HitKind, isBot, recordHit } from "@/lib/stats";
 import type { Store } from "@/lib/store";
 import { affiliateCookieName, recordClick } from "@/lib/affiliates";
 import { recordVisit } from "@/lib/traffic";
+import { countryOf, deviceOf } from "@/lib/source-rules";
+import { channelOfRequest } from "@/lib/visit-channel";
+import { requestHost } from "@/lib/request-origin";
 
 export function clientIp(request: NextRequest): string {
   return (
@@ -31,14 +34,19 @@ async function isOwner(request: NextRequest, store: Store): Promise<boolean> {
 export async function countHit(
   request: NextRequest,
   store: Store,
-  hit: { kind: HitKind; id?: string; source?: string; medium?: string; campaign?: string },
+  hit: { kind: HitKind; id?: string; source?: string; medium?: string; campaign?: string; free?: boolean },
 ): Promise<void> {
   try {
     if (await isOwner(request, store)) return;
+    const userAgent = request.headers.get("user-agent") ?? "";
     await recordHit(store, {
       ...hit,
       ip: clientIp(request),
-      userAgent: request.headers.get("user-agent") ?? "",
+      userAgent,
+      // A view says where and on what (lib/stats.ts); a checkout says which
+      // channel it came from, read the way the sale itself is credited.
+      ...(hit.kind === "view" ? { country: countryOf(request.headers.get("x-vercel-ip-country")), device: deviceOf(userAgent) } : {}),
+      ...(hit.kind === "checkout" ? { channel: channelOfRequest(request, store.handle, requestHost(request)).channel } : {}),
     });
   } catch (error) {
     console.error("counting a visit failed", error);

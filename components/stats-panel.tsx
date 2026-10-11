@@ -103,8 +103,29 @@ function longDate(date: string): string {
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
 
+const COUNTRY = typeof Intl !== "undefined" && "DisplayNames" in Intl ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
+function countryName(code: string): string {
+  try {
+    return COUNTRY?.of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+const DEVICE_NAMES: Record<string, string> = { mobile: "Phone", tablet: "Tablet", desktop: "Computer" };
+
 /** One list of where visits came from, with a bar each. */
-function Breakdown({ title, rows, named = false }: { title: string; rows: Ranked; named?: boolean }) {
+function Breakdown({
+  title,
+  rows,
+  named = false,
+  label,
+}: {
+  title: string;
+  rows: Ranked;
+  named?: boolean;
+  /** How a row's name is shown, when it is a code (a country, a device). */
+  label?: (name: string) => string;
+}) {
   const total = rows.reduce((sum, s) => sum + s.visits, 0) || 1;
   return (
     <div className="min-w-0">
@@ -115,7 +136,7 @@ function Breakdown({ title, rows, named = false }: { title: string; rows: Ranked
           return (
             <li key={row.name} className="text-sm">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="min-w-0 truncate font-semibold text-ink">{named ? SOURCE_NAMES[row.name] ?? row.name : row.name}</span>
+                <span className="min-w-0 truncate font-semibold text-ink">{label ? label(row.name) : named ? SOURCE_NAMES[row.name] ?? row.name : row.name}</span>
                 <span className="shrink-0 tabular-nums text-ink-soft">{`${count(row.visits)} · ${share}%`}</span>
               </div>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-paper ring-1 ring-line" aria-hidden="true">
@@ -211,6 +232,12 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
     .sort((a, b) => b.cents - a.cents || b.sales - a.sales || b.checkouts - a.checkouts);
   const shownProducts = products.filter((p) => p.views > 0 || p.checkouts || p.sales).length ? products.filter((p) => p.views > 0 || p.checkouts || p.sales) : products;
   const withRenewalColumn = data.revenueBySource.some((row) => row.renewals > 0);
+  // Each channel for the range chosen; "all" has none, because sales are read for 90 days.
+  const channels = range === "all" ? [] : data.channels?.[range] ?? [];
+  const withFreeColumn = channels.some((row) => row.free > 0);
+  // Page views by country and device, kept by the day: none for "all".
+  const countries = data.countries?.[range] ?? [];
+  const devices = data.devices?.[range] ?? [];
   // Where buyers first found the store, shown when it says something the table
   // above does not: some buyer first came from somewhere other than where they bought.
   const firstFound = (data.firstBySource ?? []).filter((row) => row.source !== "direct");
@@ -380,6 +407,62 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
             Switzerland and Brazil), or a browser asks not to be followed, only the page&apos;s tags count.
             {withRenewalColumn ? " A renewal counts under the channel its membership or plan was sold through." : ""}
           </p>
+        </div>
+      ) : null}
+
+      {channels.length ? (
+        <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-channels">
+          <table className="w-full text-left text-sm">
+            <caption id="numbers-channels" className="text-left text-sm font-bold text-ink">
+              Each channel, from visit to sale
+            </caption>
+            <thead>
+              <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                <th scope="col" className="py-1 font-semibold">Channel</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Visits</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Pressed buy, book or get it free">
+                  Checkouts
+                </th>
+                {withFreeColumn ? (
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Addresses asked for by a free product">
+                    Signups
+                  </th>
+                ) : null}
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Sales for every 100 visits from the channel">
+                  Converts
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {channels.map((row) => (
+                <tr key={row.source} className="border-b border-line/60">
+                  <th scope="row" className="py-1 pr-3 font-medium text-ink">
+                    {channelName(row.source)}
+                  </th>
+                  <td className="py-1 pl-3 text-right tabular-nums">{count(row.visits)}</td>
+                  <td className="py-1 pl-3 text-right tabular-nums">{count(row.checkouts)}</td>
+                  {withFreeColumn ? <td className="py-1 pl-3 text-right tabular-nums">{count(row.free)}</td> : null}
+                  <td className="py-1 pl-3 text-right tabular-nums">{salesHere ? count(row.sales) : "—"}</td>
+                  <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{salesHere ? money(row.cents) : "—"}</td>
+                  <td className="py-1 pl-3 text-right tabular-nums">{salesHere && row.visits >= row.sales ? rate(row.sales, row.visits) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-xs text-ink-soft">
+            Visits are counted under where each visit came from; checkouts, signups and sales under the channel the buyer is
+            credited to, so a buyer who first came from Instagram and returned later still counts there. Checkouts and
+            signups by channel are counted from October 11, 2026.
+          </p>
+        </div>
+      ) : null}
+
+      {countries.length || devices.length ? (
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          {countries.length ? <Breakdown title="Where in the world" rows={countries} label={countryName} /> : null}
+          {devices.length ? <Breakdown title="On what" rows={devices} label={(name) => DEVICE_NAMES[name] ?? name} /> : null}
         </div>
       ) : null}
 
