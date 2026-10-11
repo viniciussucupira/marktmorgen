@@ -14,6 +14,7 @@ import { BundleToggle } from "@/components/bundle-toggle";
 import { CheckoutExtras, bumpChoices } from "@/components/checkout-extras";
 import type { ExtraNotes } from "@/lib/extras-notes";
 import type { BumpChoice, ProductPaging } from "@/lib/catalog";
+import { ProductUpdateBox } from "@/components/product-update-box";
 import { CheckoutFieldsEditor } from "@/components/checkout-fields-editor";
 import { ProductImageEditor } from "@/components/product-image-editor";
 import { LicenceKeyEditor } from "@/components/licence-key-editor";
@@ -2115,6 +2116,7 @@ export function ProductEditor({
                 <div className="mt-2">
                   <CheckoutFieldsEditor product={product} />
                 </div>
+                <ProductUpdateBox product={product} />
                 </div>
                 ) : null}
               </>

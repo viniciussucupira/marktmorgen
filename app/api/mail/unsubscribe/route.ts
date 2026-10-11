@@ -5,6 +5,7 @@ import { STOP_TOKEN, stopReminders } from "@/lib/checkout-recovery";
 import { COMMUNITY_UNSUB, stopAnnouncements } from "@/lib/community-mail";
 import { limited } from "@/lib/request-guard";
 import { REVIEW_STOP, stopReviewRequests } from "@/lib/review-requests";
+import { UPDATE_STOP, stopUpdates } from "@/lib/product-updates";
 
 /**
  * Leaving a creator's list. A mail app's own unsubscribe button posts here
@@ -17,7 +18,9 @@ import { REVIEW_STOP, stopReviewRequests } from "@/lib/review-requests";
  * who may never have joined the list, and a community member's announcement
  * emails (a `c` link, lib/community-mail.ts), which leaves them in the
  * community and on or off the list exactly as they were, and a store's
- * emails asking for a review (a `v` link, lib/review-requests.ts).
+ * emails asking for a review (a `v` link, lib/review-requests.ts), and a
+ * store's emails telling its buyers of an update (a `u` link,
+ * lib/product-updates.ts).
  */
 export async function POST(request: NextRequest) {
   const origin = originFrom(request);
@@ -25,8 +28,9 @@ export async function POST(request: NextRequest) {
   const reminder = (request.nextUrl.searchParams.get("r") ?? "").slice(0, 60);
   const community = (request.nextUrl.searchParams.get("c") ?? "").slice(0, 60);
   const review = (request.nextUrl.searchParams.get("v") ?? "").slice(0, 60);
+  const update = (request.nextUrl.searchParams.get("u") ?? "").slice(0, 60);
   let fromPage = false;
-  if (!UNSUB_TOKEN.test(token) && !STOP_TOKEN.test(reminder) && !COMMUNITY_UNSUB.test(community) && !REVIEW_STOP.test(review)) {
+  if (!UNSUB_TOKEN.test(token) && !STOP_TOKEN.test(reminder) && !COMMUNITY_UNSUB.test(community) && !REVIEW_STOP.test(review) && !UPDATE_STOP.test(update)) {
     return new Response("Not found.", { status: 404 });
   }
   try {
@@ -35,14 +39,16 @@ export async function POST(request: NextRequest) {
   } catch {
     fromPage = false;
   }
-  const done = REVIEW_STOP.test(review)
+  const done = UPDATE_STOP.test(update)
+    ? await stopUpdates(update)
+    : REVIEW_STOP.test(review)
     ? await stopReviewRequests(review)
     : COMMUNITY_UNSUB.test(community)
     ? await stopAnnouncements(community)
     : STOP_TOKEN.test(reminder)
       ? await stopReminders(reminder)
       : await unsubscribe(token);
-  const which = REVIEW_STOP.test(review) ? `v=${review}` : COMMUNITY_UNSUB.test(community) ? `c=${community}` : STOP_TOKEN.test(reminder) ? `r=${reminder}` : `t=${token}`;
+  const which = UPDATE_STOP.test(update) ? `u=${update}` : REVIEW_STOP.test(review) ? `v=${review}` : COMMUNITY_UNSUB.test(community) ? `c=${community}` : STOP_TOKEN.test(reminder) ? `r=${reminder}` : `t=${token}`;
   if (fromPage) {
     return new Response(null, {
       status: 303,
@@ -62,7 +68,10 @@ export async function GET(request: NextRequest) {
   const reminder = (request.nextUrl.searchParams.get("r") ?? "").slice(0, 60);
   const community = (request.nextUrl.searchParams.get("c") ?? "").slice(0, 60);
   const review = (request.nextUrl.searchParams.get("v") ?? "").slice(0, 60);
-  const which = review
+  const update = (request.nextUrl.searchParams.get("u") ?? "").slice(0, 60);
+  const which = update
+    ? `u=${encodeURIComponent(update)}`
+    : review
     ? `v=${encodeURIComponent(review)}`
     : community
     ? `c=${encodeURIComponent(community)}`

@@ -9,6 +9,7 @@ import { isSenderConfigured } from "@/lib/email";
 import { storeForHandle } from "@/lib/store";
 import { advanceAll } from "@/lib/broadcasts";
 import { advanceAnnouncements } from "@/lib/community-mail";
+import { advanceUpdates } from "@/lib/product-updates";
 import { sendDueSteps } from "@/lib/flows";
 import { sendCallReminders } from "@/lib/call-reminders";
 import { runEventQueue } from "@/lib/community-event-mail";
@@ -153,6 +154,13 @@ async function run(request: NextRequest, started: number): Promise<Response> {
     } catch (error) {
       console.error("sending community announcements failed", error);
     }
+    // A product's buyers told it was updated (lib/product-updates.ts).
+    let updates = 0;
+    try {
+      updates = await advanceUpdates(storeForHandle, deadline);
+    } catch (error) {
+      console.error("sending product updates failed", error);
+    }
     // The one email to a waitlist when its product goes on sale
     // (lib/waitlist.ts), in the same slot as the creators' other emails.
     let launches = 0;
@@ -197,7 +205,7 @@ async function run(request: NextRequest, started: number): Promise<Response> {
     // Nothing started after fifty: a webhook try can take eight more, and the
     // whole run has sixty.
     const webhooks = await runWebhooks(webhooksBy, meetingsCutoff);
-    return Response.json({ ok: true, checkouts, offers, broadcasts, announcements, launches, preorders, ...steps, calls, events, reviews, webhooks }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ ok: true, checkouts, offers, broadcasts, announcements, updates, launches, preorders, ...steps, calls, events, reviews, webhooks }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("the email job failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
