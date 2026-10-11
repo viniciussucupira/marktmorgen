@@ -42,7 +42,7 @@ import { DEMO_CONNECTED_ACCOUNT } from "@/lib/demo-account";
 import { type DemoFileName, getDemoFile } from "@/lib/demo-file";
 import { rememberFolderOwner } from "@/lib/delivery";
 import { timed } from "@/lib/fetch-timeout";
-import { HOUSE_HANDLE, HOUSE_OWNER } from "@/lib/house-store";
+import { DEMO_STUDIO_ADMIN, HOUSE_HANDLE, HOUSE_OWNER } from "@/lib/house-store";
 import { readAbout, writeAbout } from "@/lib/product-about";
 import { type ProductFile, fileFolder } from "@/lib/product-file";
 import { IMAGE_CONTENT_TYPES, MAX_IMAGE_BYTES, SMALL_LONG_SIDE, type ProductImage, imagePath, imagePaths } from "@/lib/product-image";
@@ -405,16 +405,13 @@ const sha = (value: string | Uint8Array) => createHash("sha256").update(value).d
 
 /** Everything above, and the files themselves, as one short word. */
 /**
- * Who may open the demo store's studio, from DEMO_STUDIO_ADMIN.
- *
- * The demo store has no owner anybody can sign in as (lib/house-store.ts),
- * and its Zoom and Google Calendar connections are made in the studio like
- * every creator's. So one address is put on its team as an Admin, and that
- * address signs in the ordinary way, on their own account. Empty, or not an
- * address, puts nobody there.
+ * Who may open the demo store's studio (lib/house-store.ts): the address
+ * written there, or the one DEMO_STUDIO_ADMIN names instead. Anything that
+ * is not an address puts nobody on the team.
  */
 function demoStudioAdmin(): string {
-  const value = (process.env.DEMO_STUDIO_ADMIN ?? "").trim().toLowerCase();
+  const set = (process.env.DEMO_STUDIO_ADMIN ?? "").trim().toLowerCase();
+  const value = set || DEMO_STUDIO_ADMIN;
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value) ? value : "";
 }
 
@@ -947,7 +944,7 @@ async function build(before: Mark | null, deps: SeedDeps): Promise<Mark> {
   store = await ensureCall(store, mark, deps, pending);
 
   // Whoever connects the demo store's Zoom and Google Calendar in its studio
-  // (lib/team.ts, putMember). Nobody, when DEMO_STUDIO_ADMIN is not set.
+  // (lib/team.ts, putMember), from lib/house-store.ts.
   const admin = demoStudioAdmin();
   if (admin) {
     const done = await putMember(store, admin, "admin").catch(() => false);
