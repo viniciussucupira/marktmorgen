@@ -11,13 +11,17 @@
  * enough to mean something; on a quiet week the list is empty, and empty is
  * the honest answer.
  *
+ * Ads are called by lib/ad-spend-rules.ts: spend more at SCALE_AT back for
+ * each 1 spent, cut below 1.
+ *
  * Pure: the studio's panel and the weekly email both call it on StatsData.
  */
 import type { StatsData } from "@/lib/stats";
-import { type AdSpend, spendBy } from "@/lib/ad-spend-rules";
+import { type AdSpend, spendBy, verdictFor } from "@/lib/ad-spend-rules";
 import { channelName } from "@/lib/channel-names";
 import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
 import { formatMoney } from "@/lib/money";
+import { recordsFrom } from "@/lib/records";
 
 export type Insight = { text: string; tone: "good" | "bad" | "info" };
 
@@ -46,9 +50,27 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
     const spent = spendBy(spends, days[0].date, days[days.length - 1].date);
     for (const [channel, cost] of spent.channels) {
       const brought = data.channels?.[window]?.find((row) => row.source === channel)?.cents ?? 0;
-      if (cost >= 1000 && brought < cost) {
-        out.push({ text: `Ads on ${channelName(channel)} cost ${money(cost)} in the last ${span} and brought ${money(brought)} in sales.`, tone: "bad" });
+      const call = verdictFor(brought, cost);
+      if (call === "cut") {
+        out.push({ text: `Ads on ${channelName(channel)} cost ${money(cost)} in the last ${span} and brought ${money(brought)} in sales: worth cutting, or changing.`, tone: "bad" });
+      } else if (call === "scale") {
+        out.push({
+          text: `Ads on ${channelName(channel)} cost ${money(cost)} in the last ${span} and brought ${money(brought)} in sales, ${(brought / cost).toFixed(1)} back for each 1 spent: worth spending more there.`,
+          tone: "good",
+        });
       }
+    }
+  }
+
+  // A record of the last 90 days, set in the last 7 (lib/records.ts).
+  if (known && data.days.length) {
+    const records = recordsFrom(data.channelDays, data.days[data.days.length - 1].date);
+    if (records.bestWeek) {
+      out.push({ text: `Your best 7 days of the last 90: ${money(records.bestWeek.cents)} in sales and renewals. Worth noting what you did this week.`, tone: "good" });
+    } else if (records.bestDay) {
+      const [y, m, d] = records.bestDay.day.split("-").map(Number);
+      const name = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" });
+      out.push({ text: `${name} was your best day of the last 90: ${money(records.bestDay.cents)} in sales and renewals. Worth noting what you did that day.`, tone: "good" });
     }
   }
 

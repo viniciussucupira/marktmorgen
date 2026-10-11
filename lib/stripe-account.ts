@@ -65,6 +65,8 @@ export function checkoutClosesAt(): number {
 export class StripeError extends Error {
   readonly status: number;
   readonly code: string;
+  /** Stripe's own sentence, alone, for a person to read (lib/checkout-trouble.ts). */
+  readonly stripeMessage: string;
 
   constructor(status: number, code: string, stripeMessage: string) {
     // Stripe's own sentence is kept, because a bare code in a log is a trip
@@ -72,6 +74,7 @@ export class StripeError extends Error {
     super(`Stripe request failed (${status} ${code}): ${stripeMessage}`);
     this.status = status;
     this.code = code;
+    this.stripeMessage = stripeMessage;
   }
 }
 

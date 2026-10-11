@@ -7,7 +7,7 @@ import { StoreField } from "@/components/studio-store-pin";
 import { formatMoney } from "@/lib/money";
 import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
 import type { StatsNote } from "@/lib/stats-notes";
-import { type AdSpend, spendBy } from "@/lib/ad-spend-rules";
+import { type AdSpend, VERDICT_NAMES, paybackOf, spendBy, verdictFor } from "@/lib/ad-spend-rules";
 import { READ_MIN_VISITORS, READ_SAMPLE } from "@/lib/page-read-sample";
 import { NumbersNotes } from "@/components/numbers-notes";
 import { AdSpendEditor } from "@/components/ad-spend-editor";
@@ -15,6 +15,10 @@ import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
 import { toast } from "@/components/toast";
 import { insightsFrom } from "@/lib/insights";
 import { WeeklyTeamPicker } from "@/components/weekly-team-picker";
+import { SalesGoalCard } from "@/components/sales-goal-card";
+import { ChatSummaryEditor } from "@/components/chat-summary-editor";
+import { moneyByDay } from "@/lib/sales-goal-rules";
+import type { ChatKind } from "@/lib/chat-summary";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -273,6 +277,8 @@ export function StatsPanel({
   askHeard = true,
   canSetHeard = false,
   weeklyTeam = null,
+  goal = 0,
+  chat,
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -284,6 +290,10 @@ export function StatsPanel({
   canSetHeard?: boolean;
   /** For whoever runs the team: members who see the numbers, and those who get the weekly email too. */
   weeklyTeam?: { members: string[]; chosen: string[] } | null;
+  /** The month's goal (lib/sales-goal-rules.ts), 0 for none. */
+  goal?: number;
+  /** For whoever may change settings: the chat the numbers are posted to (lib/chat-summary.ts); undefined for anybody else. */
+  chat?: ChatKind | null;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [notes, setNotes] = useState(notesGiven);
@@ -483,6 +493,10 @@ export function StatsPanel({
           </div>
         ))}
       </dl>
+
+      {salesKnown && data.days.length ? (
+        <SalesGoalCard goal={goal} byDay={moneyByDay(data.channelDays)} today={data.days[data.days.length - 1].date} currency={data.currency ?? "usd"} />
+      ) : null}
 
       {range !== "all" && insights.length ? (
         <div className="mt-5 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" role="region" aria-labelledby="numbers-insights">
@@ -691,6 +705,12 @@ export function StatsPanel({
                     <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Revenue for every unit of currency spent on ads there">
                       Back per 1
                     </th>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Spend more at 2 back for each 1 spent or better, cut below 1, keep in between; said from 10 of spend">
+                      Call
+                    </th>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Days from the first day of spend until the channel's money, renewals included, covered it">
+                      Paid back
+                    </th>
                   </>
                 ) : null}
               </tr>
@@ -712,6 +732,8 @@ export function StatsPanel({
                     (() => {
                       const cost = spent?.channels.get(row.source) ?? 0;
                       const left = row.cents - cost;
+                      const call = salesHere ? verdictFor(row.cents, cost) : null;
+                      const payback = salesHere && cost ? paybackOf(spends, row.source, data.channelDays?.[row.source], days[0].date, days[days.length - 1].date) : null;
                       return (
                         <>
                           <td className="py-1 pl-3 text-right tabular-nums">{cost ? money(cost) : "—"}</td>
@@ -719,6 +741,18 @@ export function StatsPanel({
                             {cost && salesHere ? money(left) : "—"}
                           </td>
                           <td className="py-1 pl-3 text-right tabular-nums">{cost && salesHere ? (row.cents / cost).toFixed(2) : "—"}</td>
+                          <td
+                            className={`whitespace-nowrap py-1 pl-3 text-right font-semibold ${call === "scale" ? "text-mint-deep" : call === "cut" ? "text-danger" : "text-ink"}`}
+                          >
+                            {call ? VERDICT_NAMES[call] : "—"}
+                          </td>
+                          <td className="whitespace-nowrap py-1 pl-3 text-right tabular-nums">
+                            {payback
+                              ? payback.days !== null
+                                ? `${payback.days} ${payback.days === 1 ? "day" : "days"}`
+                                : `Not yet, ${Math.min(99, Math.floor((payback.back / payback.spent) * 100))}%`
+                              : "—"}
+                          </td>
                         </>
                       );
                     })()
@@ -732,7 +766,7 @@ export function StatsPanel({
             credited to, so a buyer who first came from Instagram and returned later still counts there. Checkouts and
             signups by channel are counted from October 11, 2026.
             {withSpend
-              ? " Left is the channel's revenue less what you spent on ads there in these days, before Stripe's fee; renewals that came later are not in it."
+              ? " Left is the channel's revenue less what you spent on ads there in these days, before Stripe's fee; renewals that came later are not in it. The call says spend more where each 1 spent brought 2 or more, cut where it brought less than 1, and keep in between, once 10 or more was spent; it does not know your own costs. Paid back counts the days from the first day of spend until the channel's money, renewals of the memberships it sold included, covered what was spent; money the channel brings without ads counts too, so ads alone may have taken longer."
               : ""}
           </p>
         </div>
@@ -1075,6 +1109,23 @@ export function StatsPanel({
             </button>
           </form>
         </div>
+        {canExport ? (
+          <div className="mt-4 border-t border-line pt-4">
+            <p className="text-sm font-bold text-ink">Your buyers, for ad audiences</p>
+            <p className="mt-1 text-xs text-ink-soft">
+              One column of email addresses, the file Meta (Audiences, Custom audience, Customer list) and TikTok (Audiences,
+              Customer file) take. Use it to stop showing ads to people who already bought, or to ask for more people like them.
+              Only buyers who ticked the box to hear from you and have not left your list are in it, and nothing but their
+              address. Upload it only where your buyers&apos; permission covers it: that is yours to answer for.
+            </p>
+            <form action="/api/store/audience" method="get" className="mt-3">
+              <StoreField />
+              <button type="submit" className="btn btn-secondary btn-sm">
+                Download buyers for ads
+              </button>
+            </form>
+          </div>
+        ) : null}
         {/*
           The sales file is described only where its button is. Without Stripe
           connected there is no button, and a sentence about a file nobody can
@@ -1092,6 +1143,7 @@ export function StatsPanel({
           Visits go back as far as they are kept, 400 days.
         </p>
         {weeklyTeam ? <WeeklyTeamPicker members={weeklyTeam.members} chosen={weeklyTeam.chosen} /> : null}
+        {chat !== undefined ? <ChatSummaryEditor kind={chat} /> : null}
       </div>
 
       <p className="mt-6 text-xs leading-relaxed text-ink-soft">

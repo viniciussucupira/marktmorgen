@@ -97,3 +97,61 @@ export function spendBy(entries: AdSpend[], from: string, to: string): { channel
   }
   return { channels, campaigns, total };
 }
+
+/**
+ * Spend more, keep, or cut, for one channel's ads (added 11 October 2026).
+ * Wicked Reports sells this call as "Scale, Chill or Kill"; here it is two
+ * lines over the figures the row already shows: a channel whose sales came to
+ * at least SCALE_AT times what its ads cost is worth more money, one whose
+ * sales did not cover its ads is losing it, and the rest hold their own. Said
+ * only once at least VERDICT_MIN_CENTS was spent, because $3 of ads proves
+ * nothing either way. Before Stripe's fee and the creator's own costs, which
+ * only they know, and the panel says so.
+ */
+export const SCALE_AT = 2;
+export const VERDICT_MIN_CENTS = 1000;
+export type Verdict = "scale" | "keep" | "cut";
+export const VERDICT_NAMES: Record<Verdict, string> = { scale: "Spend more", keep: "Keep", cut: "Cut" };
+
+export function verdictFor(cents: number, cost: number): Verdict | null {
+  if (!Number.isFinite(cost) || cost < VERDICT_MIN_CENTS) return null;
+  const back = cents / cost;
+  return back >= SCALE_AT ? "scale" : back >= 1 ? "keep" : "cut";
+}
+
+/** The day after `day`, as YYYY-MM-DD. */
+function nextDay(day: string): string {
+  return new Date(Date.parse(`${day}T00:00:00Z`) + DAY_MS).toISOString().slice(0, 10);
+}
+
+/**
+ * When one channel's ads paid for themselves (added 11 October 2026), as
+ * Ripples reads payback: from the first day money was spent on it inside the
+ * days shown, the channel's money — first sales and the renewals of the
+ * memberships it sold, day by day (lib/stats.ts, channelDays) — added up until
+ * it reaches everything spent on it in those days. `days` is how many days
+ * that took, counting the first; null while it has not happened, with `back`
+ * saying how much has come back so far. Null altogether below
+ * VERDICT_MIN_CENTS of spend.
+ */
+export function paybackOf(
+  entries: AdSpend[],
+  channel: string,
+  money: Record<string, number> | undefined,
+  from: string,
+  to: string,
+): { spent: number; back: number; days: number | null } | null {
+  const mine = entries.filter((entry) => entry.channel === channel && spendWithin(entry, from, to) > 0);
+  const spent = mine.reduce((sum, entry) => sum + spendWithin(entry, from, to), 0);
+  if (spent < VERDICT_MIN_CENTS) return null;
+  const first = mine.reduce((day, entry) => (entry.from < day ? entry.from : day), to);
+  const start = first > from ? first : from;
+  let back = 0;
+  let count = 0;
+  for (let day = start; day <= to && count < 401; day = nextDay(day)) {
+    count += 1;
+    back += money?.[day] ?? 0;
+    if (back >= spent) return { spent, back, days: count };
+  }
+  return { spent, back, days: null };
+}

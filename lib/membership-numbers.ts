@@ -54,7 +54,129 @@ export type Sub = {
    * written onto memberships on October 11, 2026.
    */
   channel: string;
+  /** When the member asked to cancel (seconds), 0 for never; and why, as Stripe's portal recorded it. */
+  canceledAt: number;
+  /** Stripe's own reason: "cancellation_requested", "payment_failed" or "payment_disputed"; "" for none. */
+  cancelCause: string;
+  /** The answer the member picked in the portal ("too_expensive", "unused"…), "" for none. */
+  feedback: string;
+  /** What the member wrote, if anything, at most COMMENT_LENGTH characters. */
+  comment: string;
 };
+
+/**
+ * Why members leave (added 11 October 2026). The Stripe page where a member
+ * cancels (lib/membership-manage.ts) asks them why, from a short list, with
+ * room for a sentence; Stripe keeps the answer on the membership. Baremetrics
+ * sells reading those answers as Cancellation Insights. Here they are summed
+ * over the last year and the latest sentences shown as written, without the
+ * member's name or address beside them.
+ */
+export const LEAVE_REASONS = ["too_expensive", "unused", "missing_features", "switched_service", "too_complex", "low_quality", "customer_service", "other"] as const;
+export type LeaveReason = (typeof LEAVE_REASONS)[number];
+export const LEAVE_NAMES: Record<LeaveReason, string> = {
+  too_expensive: "It costs too much",
+  unused: "I don't use it enough",
+  missing_features: "Something I need is missing",
+  switched_service: "I moved to something else",
+  too_complex: "It's too hard to use",
+  low_quality: "The quality isn't good enough",
+  customer_service: "I wasn't helped when I asked",
+  other: "Another reason",
+};
+export const isLeaveReason = (value: string): value is LeaveReason => (LEAVE_REASONS as readonly string[]).includes(value);
+const COMMENT_LENGTH = 400;
+const MAX_COMMENTS = 10;
+
+export type Leaving = {
+  /** Members who asked to cancel in the last year, by their own choice (not a failed payment). */
+  canceled: number;
+  /** Of them, how many picked a reason. */
+  answered: number;
+  /** The reasons picked, most first. */
+  reasons: { reason: LeaveReason; members: number; mrr: number }[];
+  /** Memberships ended by a payment that never went through, in the last year. */
+  paymentFailed: number;
+  /** The latest sentences members wrote, newest first. */
+  comments: { at: number; reason: LeaveReason | ""; text: string }[];
+};
+
+/** Why members left in the last year. Pure. */
+export function leavingFrom(subs: Sub[], currency: string, now: number): Leaving {
+  const since = now - 365 * DAY;
+  const by = new Map<LeaveReason, { members: number; mrr: number }>();
+  const out: Leaving = { canceled: 0, answered: 0, reasons: [], paymentFailed: 0, comments: [] };
+  for (const sub of subs) {
+    const at = sub.canceledAt || (sub.cancelCause ? sub.ended : 0);
+    if (!at || at < since || at > now) continue;
+    if (sub.cancelCause === "payment_failed" || sub.cancelCause === "payment_disputed") {
+      out.paymentFailed += 1;
+      continue;
+    }
+    out.canceled += 1;
+    const reason = isLeaveReason(sub.feedback) ? sub.feedback : "";
+    if (reason) {
+      out.answered += 1;
+      const row = by.get(reason) ?? { members: 0, mrr: 0 };
+      row.members += 1;
+      if (sub.currency === currency) row.mrr += monthly(sub.amount, sub.interval, sub.count);
+      by.set(reason, row);
+    }
+    if (sub.comment) out.comments.push({ at, reason, text: sub.comment });
+  }
+  out.reasons = [...by.entries()]
+    .map(([reason, r]) => ({ reason, members: r.members, mrr: Math.round(r.mrr) }))
+    .sort((a, b) => b.members - a.members || b.mrr - a.mrr);
+  out.comments = out.comments.sort((a, b) => b.at - a.at).slice(0, MAX_COMMENTS);
+  return out;
+}
+
+/**
+ * The next three months, if the pace of the last 90 days holds (added 11
+ * October 2026), as Baremetrics' Forecast does: each month keeps the share of
+ * paying members the last 90 days kept, and gains the recurring revenue the
+ * last 90 days gained. An estimate, said as one; null when fewer than
+ * FORECAST_MIN members were paying 90 days ago, because a pace read off three
+ * people is not a pace.
+ */
+export type Forecast = {
+  /** Monthly recurring revenue at the end of each of the next three months. */
+  months: number[];
+  /** Recurring revenue gained a month, on average over the last 90 days. */
+  gained: number;
+  /** The share of paying members lost a month, on average over the last 90 days (0 to 1). */
+  lost: number;
+};
+export const FORECAST_MIN = 5;
+
+export function forecastFrom(subs: Sub[], currency: string, now: number, mrr: number): Forecast | null {
+  const t90 = now - 90 * DAY;
+  let base = 0;
+  let left = 0;
+  let gained = 0;
+  for (const sub of subs) {
+    if (sub.currency !== currency || !sub.start) continue;
+    const paying = Math.max(sub.start, sub.trialEnd || 0);
+    // A trial that ended without a payment never paid.
+    if (sub.trialEnd && sub.ended && sub.ended <= sub.trialEnd + DAY) continue;
+    if (paying < t90 && (!sub.ended || sub.ended > t90)) {
+      base += 1;
+      if (sub.ended && sub.ended <= now) left += 1;
+    } else if (paying >= t90 && paying <= now) {
+      gained += monthly(sub.amount, sub.interval, sub.count);
+    }
+  }
+  if (base < FORECAST_MIN) return null;
+  const lost = 1 - Math.pow(1 - left / base, 1 / 3);
+  const perMonth = gained / 3;
+  const months: number[] = [];
+  let at = mrr;
+  for (let i = 0; i < 3; i += 1) {
+    at = at * (1 - lost) + perMonth;
+    months.push(Math.round(at));
+  }
+  return { months, gained: Math.round(perMonth), lost };
+}
 
 /**
  * Who stays (added 11 October 2026): the memberships begun in one month, and
@@ -115,6 +237,10 @@ export type Numbers = {
   cohorts?: Cohort[];
   /** By the channel each was sold through, the biggest first; absent on a reading from before. */
   byChannel?: ChannelStay[];
+  /** Why members left in the last year; absent on a reading from before. */
+  leaving?: Leaving;
+  /** The next three months at the pace of the last 90 days; null with too few members to read a pace from. */
+  forecast?: Forecast | null;
 };
 
 const LIVE = new Set(["active", "trialing", "past_due"]);
@@ -197,6 +323,8 @@ export function numbersFrom(subs: Sub[], currency: string, now: number, complete
   out.churn30 = payingThen > 0 ? churned / payingThen : null;
   out.cohorts = cohortsFrom(subs, now);
   out.byChannel = channelsFrom(subs, now);
+  out.leaving = leavingFrom(subs, currency, now);
+  out.forecast = forecastFrom(subs, currency, now, out.mrr);
   out.mrr = Math.round(out.mrr);
   out.atRiskMrr = Math.round(out.atRiskMrr);
   out.endedMrr30 = Math.round(out.endedMrr30);
@@ -265,6 +393,8 @@ type Raw = {
   start_date?: unknown;
   ended_at?: unknown;
   trial_end?: unknown;
+  canceled_at?: unknown;
+  cancellation_details?: { reason?: unknown; feedback?: unknown; comment?: unknown } | null;
   items?: { data?: { quantity?: unknown; price?: { unit_amount?: unknown; recurring?: { interval?: unknown; interval_count?: unknown } | null } | null }[] } | null;
 };
 
@@ -289,6 +419,12 @@ export function readSub(raw: Raw, handles: Set<string>): Sub | null {
     ended: num(raw.ended_at),
     trialEnd: num(raw.trial_end),
     channel: "channel" in meta ? (meta.channel && meta.channel !== "direct" ? meta.channel : "direct") : meta.utm_source || "unrecorded",
+    // A membership with a set number of payments is given its end when it is
+    // bought; that is not somebody leaving.
+    canceledAt: meta.ends_after ? 0 : num(raw.canceled_at),
+    cancelCause: !meta.ends_after && typeof raw.cancellation_details?.reason === "string" ? raw.cancellation_details.reason : "",
+    feedback: typeof raw.cancellation_details?.feedback === "string" ? raw.cancellation_details.feedback : "",
+    comment: typeof raw.cancellation_details?.comment === "string" ? raw.cancellation_details.comment.replace(/\s+/g, " ").trim().slice(0, COMMENT_LENGTH) : "",
   };
 }
 

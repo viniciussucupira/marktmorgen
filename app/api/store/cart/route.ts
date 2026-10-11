@@ -21,6 +21,7 @@ import { viaCookieName } from "@/lib/affiliate-setting";
 import { countHit } from "@/lib/visit";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { productSegment } from "@/lib/product-slug";
+import { noteCheckoutTrouble } from "@/lib/checkout-trouble";
 
 /**
  * What a cart holds, as the store has it now (`GET ?handle=&ids=a,b`): each
@@ -167,6 +168,7 @@ export async function POST(request: NextRequest) {
     return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("a cart's checkout failed", error);
+    after(() => noteCheckoutTrouble(store, error).catch(() => {}));
     return away(`/@${store.handle}?cart=error#cart`);
   }
 }
