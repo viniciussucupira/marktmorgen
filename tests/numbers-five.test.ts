@@ -96,13 +96,13 @@ async function main(): Promise<void> {
   is("sent for a paid order of this store", await sendServerPurchase(store, "cs_test_server00000001", buyer, NOW), "sent");
   is("once", await sendServerPurchase(store, "cs_test_server00000001", buyer, NOW), "already");
   is("only to the platform with a pixel and a token", sentOut.map((s) => new URL(s.url).hostname), ["graph.facebook.com"]);
-  const metaSent = sentOut[0].body as { data: { event_id: string; user_data: Record<string, unknown>; custom_data: { value: number } }[]; access_token: string };
+  const metaSent = sentOut[0].body as { data: { event_id: string; user_data: Record<string, unknown>; custom_data: { value: number } }[] };
   is("with the order's id, the email hashed and the money in dollars", [
     metaSent.data[0].event_id,
     metaSent.data[0].user_data.em,
     metaSent.data[0].user_data.fbp,
     metaSent.data[0].custom_data.value,
-    metaSent.access_token === META_TOKEN,
+    new URL(sentOut[0].url).searchParams.get("access_token") === META_TOKEN && !JSON.stringify(metaSent).includes(META_TOKEN),
   ], ["cs_test_server00000001", [sha256("buyer@example.com")], "fb.1.1.1", 49, true]);
   is("and what it answered is kept for the studio", (await serverSetup(statsId)).last?.meta, "Received");
   const order = { id: "cs_x", created: 1, cents: 1000, currency: "usd", product: "p", email: null };
