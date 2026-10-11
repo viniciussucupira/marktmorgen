@@ -8,7 +8,7 @@ import { MAX_KEYS } from "@/lib/api-key-rules";
 export const metadata: Metadata = {
   title: "Developers — Marktmorgen",
   description:
-    "The Marktmorgen API: read your list, members, course students, affiliates and bookings from your own tools, with keys you make in your studio. On every plan.",
+    "The Marktmorgen API: read your list, members, course students, affiliates, bookings and numbers from your own tools, with keys you make in your studio. On every plan.",
 };
 
 /**
@@ -185,6 +185,40 @@ export default function DevelopersPage() {
       </LegalSection>
 
       <LegalSection title="Affiliates">
+        <Endpoint path="/api/v1/stats">
+          Your numbers for the last 7, 30 and 90 days, the same ones your studio shows: visitors, checkouts, sales and
+          revenue, each channel from visit to sale, and page views by country and by device.
+        </Endpoint>
+        <Code>{`{
+  "data": {
+    "currency": "usd",
+    "sales": "ok",
+    "days": {
+      "last_7_days": {
+        "visitors": 412,
+        "page_views": 655,
+        "checkouts": 31,
+        "sales": 9,
+        "revenue": 26100,
+        "channels": [
+          { "channel": "instagram", "visits": 240, "checkouts": 19, "signups": 4, "sales": 6, "revenue": 17400 }
+        ],
+        "countries": [{ "country": "US", "views": 388 }],
+        "devices": [{ "device": "mobile", "views": 521 }]
+      },
+      "last_30_days": { "...": "the same fields" },
+      "last_90_days": { "...": "the same fields" }
+    }
+  }
+}`}</Code>
+        <p>
+          Money is in the smallest unit of your store&apos;s currency, before Stripe&apos;s fee. <code className="font-mono">sales</code>{" "}
+          and <code className="font-mono">revenue</code> are <code className="font-mono">null</code> when Stripe could not be read
+          (<code className="font-mono">&quot;sales&quot;: &quot;error&quot;</code>) or is not connected yet (<code className="font-mono">&quot;none&quot;</code>).
+          A <code className="font-mono">channel</code> of <code className="font-mono">direct</code> is a visit or sale from nowhere
+          the store could name.
+        </p>
+
         <Endpoint path="/api/v1/affiliates">
           Every affiliate, with what they earned, were paid and are owed — the numbers on your affiliates page.
         </Endpoint>

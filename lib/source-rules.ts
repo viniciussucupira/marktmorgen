@@ -76,3 +76,20 @@ export function classifySource(input: { referrer: string; utm: string; userAgent
 export function cleanTag(raw: string): string {
   return raw.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 30);
 }
+
+/**
+ * The kind of device a page was opened on, from the browser's own words:
+ * "tablet", "mobile" or "desktop". An iPad that asks for the desktop site
+ * says it is a Mac and is counted as one; nothing here pretends to know more
+ * than the browser said.
+ */
+export function deviceOf(userAgent: string): "mobile" | "tablet" | "desktop" {
+  if (/iPad|Tablet|PlayBook|Silk|Kindle|Android(?!.*Mobi)/i.test(userAgent)) return "tablet";
+  if (/Mobi|iPhone|iPod|Android|Windows Phone|Opera Mini/i.test(userAgent)) return "mobile";
+  return "desktop";
+}
+
+/** A country as the host reads it, two capital letters, or "" when it does not say. */
+export function countryOf(header: string | null | undefined): string {
+  return header && /^[A-Z]{2}$/.test(header) && header !== "XX" ? header : "";
+}

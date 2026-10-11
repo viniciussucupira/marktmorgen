@@ -129,7 +129,7 @@ async function counted(work: () => Promise<unknown>): Promise<number> {
 
 /** The request a page's count arrives as. */
 function asking(ip: string, userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)", session = ""): never {
-  const request = new Request("https://marktmorgen.com/api/store/hit", { method: "POST", headers: { "user-agent": userAgent, "x-forwarded-for": ip } });
+  const request = new Request("https://marktmorgen.com/api/store/hit", { method: "POST", headers: { "user-agent": userAgent, "x-forwarded-for": ip, "x-vercel-ip-country": "US" } });
   (request as unknown as { cookies: unknown }).cookies = { get: (name: string) => (name === SESSION_COOKIE && session ? { value: session } : undefined) };
   return request as never;
 }

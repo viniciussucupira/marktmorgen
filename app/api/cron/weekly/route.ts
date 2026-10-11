@@ -1,0 +1,86 @@
+import type { NextRequest } from "next/server";
+import { cronAllowed } from "@/lib/request-guard";
+import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { visitedFolders } from "@/lib/traffic";
+import { monthKey } from "@/lib/delivery";
+import { storeOf } from "@/lib/usage-billing";
+import { standingOf } from "@/lib/plan-standing";
+import { SITE_URL } from "@/lib/site-url";
+import { claimWeek, readNumbers, weeklyMessage, weeklyOff, weeklyToken } from "@/lib/stats-report";
+
+/**
+ * The weekly email to each creator whose store had visitors (lib/stats-report.ts).
+ *
+ * Runs every hour on Mondays and Tuesdays and sends to at most MAX_PER_RUN
+ * stores a run, so a growing number of stores is worked through over the day
+ * without a run outliving its time; each store is claimed for the week before
+ * anything is read, so nobody gets two. Only stores with a plan running —
+ * paid or in its trial — are written to: what the email costs is then a
+ * fraction of a cent inside a plan that pays for it.
+ *
+ * A store whose creator pressed "Stop" is left alone, and a store that had no
+ * visitors in the week is not written to at all.
+ */
+export const maxDuration = 60;
+const MAX_PER_RUN = 25;
+const TIME_BUDGET_MS = 45_000;
+
+export async function GET(request: NextRequest) {
+  if (!(await cronAllowed(request))) {
+    return new Response("Unauthorized", { status: 401, headers: { "Cache-Control": "no-store" } });
+  }
+  if (!isRedisConfigured() || !isSenderConfigured()) {
+    return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
+  }
+  const [got] = await redisPipeline([["SET", "nl:weekly:lock", "1", "NX", "EX", 120]]);
+  if (got === null) return Response.json({ ok: true, busy: true });
+
+  const started = Date.now();
+  const out = { looked: 0, sent: 0, quiet: 0, stopped: 0, unpaid: 0, failed: 0 };
+  try {
+    const now = new Date();
+    const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 15));
+    const folders = [...new Set([...(await visitedFolders(monthKey(now))), ...(await visitedFolders(monthKey(lastMonth)))])];
+    for (const folder of folders) {
+      if (out.sent + out.failed >= MAX_PER_RUN || Date.now() - started > TIME_BUDGET_MS) break;
+      const store = await storeOf(folder).catch(() => null);
+      if (!store) continue;
+      const standing = standingOf(store);
+      if (standing !== "paid" && standing !== "trial") {
+        out.unpaid += 1;
+        continue;
+      }
+      if (await weeklyOff(store.handle)) {
+        out.stopped += 1;
+        continue;
+      }
+      if (!(await claimWeek(store.handle))) continue;
+      out.looked += 1;
+      const data = await readNumbers(store).catch(() => null);
+      const token = weeklyToken(store.handle);
+      const stopUrl = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&t=${encodeURIComponent(token)}`;
+      const message = data && token ? weeklyMessage(store, data, stopUrl) : null;
+      if (!message) {
+        out.quiet += 1;
+        continue;
+      }
+      const ok = await sendEmail({
+        from: NIMBUS_FROM,
+        to: store.email,
+        subject: message.subject,
+        text: message.text,
+        headers: { "List-Unsubscribe": `<${stopUrl}>` },
+      }).catch(() => false);
+      if (ok) out.sent += 1;
+      else out.failed += 1;
+    }
+    console.log(`weekly: ${JSON.stringify(out)}`);
+    return Response.json({ ok: true, ...out }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    console.error("weekly emails failed", error);
+    return Response.json({ ok: false, error: "failed", ...out }, { status: 500 });
+  } finally {
+    await redisPipeline([["DEL", "nl:weekly:lock"]]).catch(() => undefined);
+  }
+}

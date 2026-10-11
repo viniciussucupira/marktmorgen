@@ -66,7 +66,23 @@ export type HitKind = "view" | "checkout" | "link" | "product";
  */
 export async function recordHit(
   store: Store,
-  hit: { kind: HitKind; id?: string; source?: string; medium?: string; campaign?: string; ip: string; userAgent: string },
+  hit: {
+    kind: HitKind;
+    id?: string;
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    ip: string;
+    userAgent: string;
+    /** A view's country, two letters, as the host read it (lib/visit.ts). */
+    country?: string;
+    /** A view's kind of device: "mobile", "tablet" or "desktop" (lib/source-rules.ts deviceOf). */
+    device?: string;
+    /** A checkout's channel (lib/visit-channel.ts), "" or "direct" when none. */
+    channel?: string;
+    /** A checkout that was a free product's address asked for. */
+    free?: boolean;
+  },
   now = Date.now(),
 ): Promise<void> {
   if (!store.statsId || !isRedisConfigured() || isBot(hit.userAgent)) return;
@@ -79,23 +95,41 @@ export async function recordHit(
     commands.push(["HINCRBY", life, field, 1]);
   };
   let pfAt = -1;
+  // The position of the day's own count for this kind of hit: when it comes
+  // back as 1, this is the first such write of the day, and only then are
+  // the day's expiry and the all-time record's start written (below).
+  let firstAt = -1;
   if (hit.kind === "view") {
     const visitor = createHash("sha256")
       .update(`${day}|${store.statsId}|${hit.ip}|${hit.userAgent}`)
       .digest("hex")
       .slice(0, 24);
     const visitors = visitorsKey(store.statsId, day);
+    firstAt = commands.length;
     both("v");
     both(`r:${hit.source || "direct"}`);
     if (hit.medium) both(`m:${hit.medium}`);
     if (hit.campaign) both(`g:${hit.campaign}`);
+    // Where in the world, and on what, added 11 October 2026. The day's
+    // record only, like a product page's views: two commands, held in the
+    // cost of a visit (tests/traffic-cost.ts), and no all-time figure rather
+    // than one that starts on an arbitrary day.
+    if (hit.country) commands.push(["HINCRBY", counts, `k:${hit.country}`, 1]);
+    if (hit.device) commands.push(["HINCRBY", counts, `d:${hit.device}`, 1]);
     pfAt = commands.length;
     commands.push(["PFADD", visitors, visitor]);
-    commands.push(["EXPIRE", visitors, TTL_SECONDS]);
   } else if (hit.kind === "checkout" && hit.id) {
+    firstAt = commands.length;
     both("c");
     both(`c:${hit.id}`);
+    // The channel the checkout came from (lib/visit-channel.ts), so each
+    // channel's visits, checkouts and sales can be read side by side; and,
+    // for a free product, the address asked for, under the same channel.
+    const channel = hit.channel && hit.channel !== "direct" ? hit.channel : "direct";
+    both(`cs:${channel}`);
+    if (hit.free) both(`fs:${channel}`);
   } else if (hit.kind === "link" && hit.id) {
+    firstAt = commands.length;
     both(`l:${hit.id}`);
   } else if (hit.kind === "product" && hit.id) {
     // A product's own page was opened (each page load sends this once,
@@ -110,13 +144,22 @@ export async function recordHit(
   } else {
     return;
   }
-  commands.push(["EXPIRE", counts, TTL_SECONDS]);
-  // The day the all-time record started counting, so filling it from the
-  // kept days never counts that day or any after it twice.
-  commands.push(["HSETNX", life, "started", day]);
   const results = await redisPipeline(commands);
-  // A visitor new to today is a visitor for all time too.
-  if (pfAt >= 0 && Number(results[pfAt]) === 1) await redisPipeline([["HINCRBY", life, "u", 1]]);
+  // Written once, not on every hit (11 October 2026: every visit's commands
+  // are a cost held to what a plan charges, tests/traffic-cost.ts, and these
+  // three were sent on every page view though they change nothing after the
+  // first). The day's expiry and the day the all-time record started counting
+  // — so filling it from the kept days never counts that day or any after it
+  // twice — with the day's first write of this kind; the visitors' expiry with
+  // the visitor new to the day, who is a visitor for all time too.
+  const follow: (string | number)[][] = [];
+  if (firstAt >= 0 && Number(results[firstAt]) === 1) {
+    follow.push(["EXPIRE", counts, TTL_SECONDS], ["HSETNX", life, "started", day]);
+  }
+  if (pfAt >= 0 && Number(results[pfAt]) === 1) {
+    follow.push(["HINCRBY", life, "u", 1], ["EXPIRE", visitorsKey(store.statsId, day), TTL_SECONDS]);
+  }
+  if (follow.length) await redisPipeline(follow);
 }
 
 export type DayStats = { date: string; views: number; visitors: number; checkouts: number };
@@ -136,6 +179,12 @@ export type WindowStats = {
   /** Times each product's own page was opened. */
   viewsByProduct: Record<string, number>;
   linkClicks: Record<string, number>;
+  /** Page views by country (two letters) and by kind of device; kept by the day only. */
+  countries: Ranked;
+  devices: Ranked;
+  /** Checkouts started, and free products' addresses asked for, by channel (lib/visit-channel.ts). */
+  checkoutsBySource: Ranked;
+  freeBySource: Ranked;
 };
 
 export type Windows = { d7: WindowStats; d30: WindowStats; d90: WindowStats };
@@ -164,6 +213,10 @@ class Tally {
   checkoutsByProduct: Record<string, number> = {};
   viewsByProduct: Record<string, number> = {};
   linkClicks: Record<string, number> = {};
+  countries = new Map<string, number>();
+  devices = new Map<string, number>();
+  checkoutsBySource = new Map<string, number>();
+  freeBySource = new Map<string, number>();
 
   add(field: string, count: number) {
     if (field === "v") this.views += count;
@@ -174,6 +227,10 @@ class Tally {
     else if (field.startsWith("c:")) this.checkoutsByProduct[field.slice(2)] = (this.checkoutsByProduct[field.slice(2)] ?? 0) + count;
     else if (field.startsWith("pv:")) this.viewsByProduct[field.slice(3)] = (this.viewsByProduct[field.slice(3)] ?? 0) + count;
     else if (field.startsWith("l:")) this.linkClicks[field.slice(2)] = (this.linkClicks[field.slice(2)] ?? 0) + count;
+    else if (field.startsWith("k:")) this.countries.set(field.slice(2), (this.countries.get(field.slice(2)) ?? 0) + count);
+    else if (field.startsWith("d:")) this.devices.set(field.slice(2), (this.devices.get(field.slice(2)) ?? 0) + count);
+    else if (field.startsWith("cs:")) this.checkoutsBySource.set(field.slice(3), (this.checkoutsBySource.get(field.slice(3)) ?? 0) + count);
+    else if (field.startsWith("fs:")) this.freeBySource.set(field.slice(3), (this.freeBySource.get(field.slice(3)) ?? 0) + count);
   }
 
   window(visitors: number): WindowStats {
@@ -187,6 +244,10 @@ class Tally {
       checkoutsByProduct: this.checkoutsByProduct,
       viewsByProduct: this.viewsByProduct,
       linkClicks: this.linkClicks,
+      countries: ranked(this.countries),
+      devices: ranked(this.devices),
+      checkoutsBySource: ranked(this.checkoutsBySource),
+      freeBySource: ranked(this.freeBySource),
     };
   }
 }
@@ -322,7 +383,12 @@ async function readLife(store: Store, now: number): Promise<(WindowStats & { sin
         dates.forEach((date, i) => {
           const day = pairs(replies[i]);
           if (day.length && !first) first = date;
-          for (const [field, count] of day) tally.set(field, (tally.get(field) ?? 0) + count);
+          // Countries and devices are kept by the day only: copied into the
+          // all-time record they would start it on whatever day it was filled.
+          for (const [field, count] of day) {
+            if (field.startsWith("k:") || field.startsWith("d:")) continue;
+            tally.set(field, (tally.get(field) ?? 0) + count);
+          }
           visitors += Number(replies[dates.length + i]) || 0;
         });
       }
@@ -343,7 +409,7 @@ async function readLife(store: Store, now: number): Promise<(WindowStats & { sin
   // A record that has gathered too many one-off sources lets the smallest go.
   if (fields.size > LIFE_MAX_FIELDS) {
     const drop: string[] = [];
-    for (const prefix of ["r:", "m:", "g:"]) {
+    for (const prefix of ["r:", "m:", "g:", "cs:", "fs:"]) {
       const kind = [...fields.entries()].filter(([f]) => f.startsWith(prefix)).sort((a, b) => b[1] - a[1]);
       drop.push(...kind.slice(LIFE_KEEP_PER_KIND).map(([f]) => f));
     }
@@ -388,6 +454,8 @@ export type SalesStats = {
   renewals?: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean; bySource?: RenewalsBySource };
   /** What each channel brought in, credited to the buyer's FIRST visit from somewhere (lib/visit-channel.ts). */
   firstBySource?: { source: string; currency: string; cents: number; sales: number }[];
+  /** bySource for each window, so a channel's sales sit beside its visits for the same days. */
+  bySourceIn?: Record<"d7" | "d30" | "d90", { source: string; currency: string; cents: number; sales: number }[]>;
 };
 
 /** Payments after the first, and what they came to, in the store's currency. */
@@ -651,6 +719,10 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
       source: sale.source,
     })),
   );
+  const own = sales.filter((sale) => sale.currency === store.currency);
+  const fromDay = (cut: string) =>
+    revenueBySource(own.filter((sale) => dayKey(sale.created) >= cut).map((sale) => ({ cents: sale.cents, currency: sale.currency, source: sale.source })));
+  out.bySourceIn = { d7: fromDay(cut7), d30: fromDay(cut30), d90: out.bySource };
   out.firstBySource = revenueBySource(
     sales.filter((sale) => sale.currency === store.currency && !sale.upsell).map((sale) => ({
       cents: sale.cents,
@@ -749,11 +821,64 @@ export type StatsData = {
    * buyer's first one.
    */
   firstBySource: { source: string; cents: number; sales: number }[];
+  /**
+   * Each channel from visit to sale for the window (not "all": sales are read
+   * for 90 days): visits from it, checkouts started from it, free products'
+   * addresses asked for from it, and its sales and revenue. Biggest first.
+   */
+  channels: Record<"d7" | "d30" | "d90", ChannelRow[]>;
+  /** Page views by country and by device, for the window; empty for "all", which keeps neither. */
+  countries: Record<RangeKey, Ranked>;
+  devices: Record<RangeKey, Ranked>;
   /** Memberships renewed and later plan payments, by window (SalesStats.renewals); null when they could not be read. */
   renewals: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean } | null;
 };
 
-const EMPTY_WINDOW: WindowStats = { visitors: 0, views: 0, checkouts: 0, sources: [], mediums: [], campaigns: [], checkoutsByProduct: {}, viewsByProduct: {}, linkClicks: {} };
+const EMPTY_WINDOW: WindowStats = {
+  visitors: 0,
+  views: 0,
+  checkouts: 0,
+  sources: [],
+  mediums: [],
+  campaigns: [],
+  checkoutsByProduct: {},
+  viewsByProduct: {},
+  linkClicks: {},
+  countries: [],
+  devices: [],
+  checkoutsBySource: [],
+  freeBySource: [],
+};
+
+export type ChannelRow = { source: string; visits: number; checkouts: number; free: number; sales: number; cents: number };
+
+/** One window's channels, put together from the visit counts and the sales read from Stripe. */
+export function channelRows(
+  window: WindowStats,
+  sales: { source: string; cents: number; sales: number }[] | undefined,
+): ChannelRow[] {
+  const rows = new Map<string, ChannelRow>();
+  const row = (source: string) => {
+    const name = source || "direct";
+    let found = rows.get(name);
+    if (!found) {
+      found = { source: name, visits: 0, checkouts: 0, free: 0, sales: 0, cents: 0 };
+      rows.set(name, found);
+    }
+    return found;
+  };
+  for (const s of window.sources ?? []) row(s.name).visits += s.visits;
+  for (const s of window.checkoutsBySource ?? []) row(s.name).checkouts += s.visits;
+  for (const s of window.freeBySource ?? []) row(s.name).free += s.visits;
+  for (const s of sales ?? []) {
+    const r = row(s.source);
+    r.sales += s.sales;
+    r.cents += s.cents;
+  }
+  return [...rows.values()]
+    .filter((r) => r.visits || r.checkouts || r.sales)
+    .sort((a, b) => b.cents - a.cents || b.sales - a.sales || b.checkouts - a.checkouts || b.visits - a.visits || a.source.localeCompare(b.source));
+}
 
 /**
  * First sales and the renewals they went on to bring, by channel: what each
@@ -812,6 +937,8 @@ export function studioStats(
   const salesOf = (key: RangeKey) => (key === "all" ? zero : sales?.totals[key] ?? zero);
   const keys: RangeKey[] = ["d7", "d30", "d90", "all"];
   const per = <T,>(pick: (key: RangeKey) => T) => Object.fromEntries(keys.map((k) => [k, pick(k)])) as Record<RangeKey, T>;
+  const ownCurrency = (rows: { source: string; currency: string; cents: number; sales: number }[] | undefined) =>
+    rows?.filter((r) => r.currency === store.currency);
   return {
     days,
     totals: per((k) => ({ visitors: w[k].visitors, views: w[k].views, checkouts: w[k].checkouts, ...salesOf(k) })),
@@ -837,6 +964,13 @@ export function studioStats(
       (sales?.bySource ?? []).filter((row) => row.currency === store.currency),
       sales?.renewals?.bySource ?? [],
     ),
+    channels: {
+      d7: channelRows(w.d7, ownCurrency(sales?.bySourceIn?.d7)),
+      d30: channelRows(w.d30, ownCurrency(sales?.bySourceIn?.d30)),
+      d90: channelRows(w.d90, ownCurrency(sales?.bySourceIn?.d90 ?? sales?.bySource)),
+    },
+    countries: per((k) => (k === "all" ? [] : w[k].countries ?? [])),
+    devices: per((k) => (k === "all" ? [] : w[k].devices ?? [])),
     firstBySource: (sales?.firstBySource ?? [])
       .filter((row) => row.currency === store.currency)
       .map(({ source, cents, sales: n }) => ({ source, cents, sales: n })),

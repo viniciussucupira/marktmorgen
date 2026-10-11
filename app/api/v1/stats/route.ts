@@ -1,0 +1,22 @@
+import { apiError, apiOk, apiStore } from "@/lib/api-guard";
+import { readNumbers, summaryOf } from "@/lib/stats-report";
+
+/**
+ * GET /api/v1/stats — the store's numbers for the last 7, 30 and 90 days:
+ * visitors, checkouts, sales and revenue, each channel from visit to sale,
+ * and page views by country and by device. The same figures the studio
+ * shows; money in the smallest unit of the store's currency, and null where
+ * Stripe could not be read.
+ */
+export async function GET(request: Request) {
+  const store = await apiStore(request);
+  if (store instanceof Response) return store;
+  try {
+    const data = await readNumbers(store);
+    if (!data) return apiError(503, "unavailable", "Your numbers could not be read just now. Try again in a moment.");
+    return apiOk({ data: summaryOf(data) });
+  } catch (error) {
+    console.error("api: stats failed", error);
+    return apiError(502, "unavailable", "Your numbers could not be read just now. Try again in a moment.");
+  }
+}

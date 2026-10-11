@@ -816,6 +816,8 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "download", title: "Sales as a file", body: "Every paid sale for the last 30 or 90 days or all time, read from your Stripe account, as a CSV. Up to 5,000 sales in one file, and it says so when there are more." },
           { icon: "chart", title: "Visits and sources as files", body: "Your visits day by day, and where visitors came from, as CSV files." },
           { icon: "target", title: "Every product on its own line", body: "Each product's page views, checkouts started, sales and revenue side by side for each window, with how many sales every 100 views of its page brought. No cookie." },
+          { icon: "mail", title: "Your week, every Monday", body: "An email with the week's visitors, checkouts, sales and the three channels that brought the most, while your store has visitors. One click at its foot stops it." },
+          { icon: "eye", title: "Where in the world, and on what", body: "Page views by country and by phone, tablet or computer, for the last 7, 30 and 90 days. Counted, not guessed, and nothing about who." },
           { icon: "chart", title: "Which channel made you money", body: "Every sale, and every renewal after it, under the channel that brought the buyer: a link you tagged, a site, or the Instagram or TikTok app, remembered for 30 days so a buyer who comes back later by typing your address still counts where they came from. Beside it, where buyers first found you, and the path from visit to checkout to sale." },
         ],
       },

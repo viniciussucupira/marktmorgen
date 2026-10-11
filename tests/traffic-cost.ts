@@ -91,15 +91,24 @@ const PICTURES_ON_A_LATER_PAGE = 4;
 export const COMMANDS = {
   /** Drawing the front page of a store that pays. */
   frontPage: 4,
-  /** Counting it: the store's stats and the visit. */
-  frontCount: 14,
+  /**
+   * Counting it: the store's stats and the visit. Since October 11, 2026 the
+   * view also counts its country and kind of device on the day's record
+   * (lib/stats.ts), two commands, paid for by no longer sending the day's
+   * expiry and the all-time record's start on every view but with the day's
+   * first one only. 12 measured with a country, held at 13; the visit as a
+   * whole costs what it did (13 + 4, as 14 + 3 before).
+   */
+  frontCount: 13,
   /**
    * What a visitor new to the day adds, once: the visit, how long the day
    * is kept, and the store's all-time visitors. A month's first visit, and
    * each hundredth after, writes five more (lib/traffic.ts, markMonth):
    * a twentieth of a command to the visit, inside what is rounded up here.
+   * Since October 11, 2026 also the expiry of the day's visitors, written
+   * with the visitor new to the day rather than with every view.
    */
-  firstOfDay: 3,
+  firstOfDay: 4,
   /**
    * Drawing another page of the store, and saying it was opened. On a
    * product's own page that also counts the page's view (lib/stats.ts, added
