@@ -222,6 +222,8 @@ export const es: BuyerWords = {
   everythingFrom: (store) => `Todo de ${store}`,
   getTitle: (title) => `Consigue ${title}`,
   moreFrom: (store) => `Más de ${store}`,
+  alsoBought: (title) => `Quienes compraron ${title} también compraron`,
+  boughtBoth: (n) => `${n} compradores compraron los dos`,
 
   reviews: "Reseñas",
   verifiedReviews: (count, written) => `${written} ${plural(count, "reseña verificada", "reseñas verificadas")}`,

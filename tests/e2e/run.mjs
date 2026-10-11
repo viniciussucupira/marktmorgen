@@ -2101,6 +2101,43 @@ try {
   }
 
   await keepSmall();
+  part("What the buyers of a product also bought");
+  {
+    // The store shows what was bought, as its creator can choose under Look.
+    await open(page, `${LOCAL}/@localshop`);
+    const look = await page.evaluate(() => {
+      const root = document.querySelector(".st-page");
+      return { theme: [...(root?.classList ?? [])].find((c) => c.startsWith("st-theme-"))?.slice(9) ?? "light", accent: getComputedStyle(root).getPropertyValue("--st-accent").trim() };
+    });
+    const setSold = (sold) => studio.evaluate(async ([look, sold]) => (await (await fetch("/api/store/look", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...look, badge: true, sold }) })).json()).ok === true, [look, sold]);
+    await open(studio, `${LOCAL}/studio`);
+    is("the creator shows what was bought", await setSold(true), true);
+    const product = ids["Weeknight Dinners"];
+    // Its counts are read from Stripe after a page is sent; then three buyers' worth of
+    // pairs is put where that reading keeps them, as many buyers over months would.
+    await open(page, `${LOCAL}/@localshop/p/${product}`);
+    let key = "";
+    for (let i = 0; i < 40 && !key; i += 1) {
+      const [scan] = await services.redis([["SCAN", "0", "MATCH", "nl:sold:*", "COUNT", "1000"]]);
+      key = (scan?.[1] ?? []).find((k) => !k.includes(":lock:")) ?? "";
+      if (!key) await new Promise((wait) => setTimeout(wait, 250));
+    }
+    await services.redis([["SET", key, JSON.stringify({ at: Date.now(), p: {}, t: { [product]: [[ids["Pantry Checklist"], 4]] } })]]);
+    await open(page, `${LOCAL}/@localshop/p/${product}`);
+    const section = page.locator("section[aria-labelledby=also-bought-title]");
+    is("its page says what its buyers also bought, and how many bought both", [
+      await words(section.locator("h2")),
+      (await words(section)).includes("Pantry Checklist"),
+      (await words(section)).includes("4 buyers bought both"),
+      await section.getByRole("link").first().getAttribute("href").then((href) => href?.includes("/p/")),
+    ], ["Buyers of Weeknight Dinners also bought", true, true, true]);
+    is("and the store's other products under it leave that one out", await page.locator("section[aria-labelledby=more-from-title]").getByText("Pantry Checklist").count(), 0);
+    is("switched off again", await setSold(false), true);
+    await open(page, `${LOCAL}/@localshop/p/${product}`);
+    is("and the page says nothing about it", await section.count(), 0);
+  }
+
+  await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);

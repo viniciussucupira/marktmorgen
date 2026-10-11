@@ -20,10 +20,11 @@
  *     sale later refunded was still bought, and nothing here says "students",
  *     "happy customers" or anything else the count does not measure.
  *
- *   nl:sold:<statsId>   {"at": ms, "p": {"<product>": sales}}, for SOLD_KEEP_SECONDS
+ *   nl:sold:<statsId>   {"at": ms, "p": {"<product>": sales}, "t": what buyers also bought (lib/also-bought.ts)}, for SOLD_KEEP_SECONDS
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Store } from "@/lib/store";
+import { type Together, parseTogether } from "@/lib/also-bought";
 
 /** Below this, nothing is said. */
 export const SHOWN_FROM = 10;
@@ -35,7 +36,7 @@ const SOLD_KEEP_SECONDS = 7 * 24 * 60 * 60;
 const soldKey = (statsId: string) => `nl:sold:${statsId}`;
 const lockKey = (statsId: string) => `nl:sold:lock:${statsId}`;
 
-export type SoldCounts = { at: number; byProduct: Record<string, number> };
+export type SoldCounts = { at: number; byProduct: Record<string, number>; together: Together };
 
 /** The words a page shows, or null when there is nothing worth saying. */
 export function soldWords(count: number | undefined): string | null {
@@ -49,13 +50,13 @@ export async function readSoldCounts(store: Store): Promise<SoldCounts | null> {
   const [raw] = await redisPipeline([["GET", soldKey(store.statsId)]]);
   if (typeof raw !== "string" || !raw) return null;
   try {
-    const value = JSON.parse(raw) as { at?: unknown; p?: unknown };
+    const value = JSON.parse(raw) as { at?: unknown; p?: unknown; t?: unknown };
     if (typeof value.at !== "number" || !value.p || typeof value.p !== "object") return null;
     const byProduct: Record<string, number> = {};
     for (const [id, n] of Object.entries(value.p as Record<string, unknown>)) {
       if (typeof n === "number" && Number.isInteger(n) && n > 0) byProduct[id] = n;
     }
-    return { at: value.at, byProduct };
+    return { at: value.at, byProduct, together: parseTogether(value.t) };
   } catch {
     return null;
   }
@@ -73,7 +74,7 @@ export function stale(counts: SoldCounts | null, now = Date.now()): boolean {
  */
 export async function refreshSoldCounts(
   store: Store,
-  read: (store: Store) => Promise<{ byProduct: Record<string, { sales: number }> } | null>,
+  read: (store: Store) => Promise<{ byProduct: Record<string, { sales: number }>; together?: Together } | null>,
   now = Date.now(),
 ): Promise<SoldCounts | null> {
   if (!store.look.sold || !store.statsId || !store.stripeAccountId || !isRedisConfigured()) return null;
@@ -84,8 +85,9 @@ export async function refreshSoldCounts(
     if (!all) return null;
     const p: Record<string, number> = {};
     for (const [id, row] of Object.entries(all.byProduct)) if (id && row.sales > 0) p[id] = row.sales;
-    await redisPipeline([["SET", soldKey(store.statsId), JSON.stringify({ at: now, p }), "EX", SOLD_KEEP_SECONDS]]);
-    return { at: now, byProduct: p };
+    const t = parseTogether(all.together);
+    await redisPipeline([["SET", soldKey(store.statsId), JSON.stringify({ at: now, p, t }), "EX", SOLD_KEEP_SECONDS]]);
+    return { at: now, byProduct: p, together: t };
   } catch (error) {
     console.error("counting what each product sold failed", error);
     return null;

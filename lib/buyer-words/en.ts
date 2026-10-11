@@ -238,6 +238,8 @@ export const en = {
   everythingFrom: (store: string) => `Everything from ${store}`,
   getTitle: (title: string) => `Get ${title}`,
   moreFrom: (store: string) => `More from ${store}`,
+  alsoBought: (title: string) => `Buyers of ${title} also bought`,
+  boughtBoth: (n: number) => `${n} buyers bought both`,
 
   // ---- Reviews ----------------------------------------------------------------------------
   reviews: "Reviews",

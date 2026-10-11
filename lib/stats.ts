@@ -24,6 +24,7 @@
  * account, which is the only record of money that deserves the name.
  */
 import { saleHandles } from "@/lib/store";
+import { type Together, parseTogether, togetherFrom } from "@/lib/also-bought";
 import { createHash } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
@@ -458,6 +459,8 @@ export type AllTimeSales = {
   currency: string;
   /** Sales in another currency, left out of the totals. */
   elsewhere: number;
+  /** What the buyers of each product also bought (lib/also-bought.ts); absent on a reading from before it. */
+  together?: Together;
 };
 
 type Row = {
@@ -618,7 +621,7 @@ export async function readAllTimeSales(store: Store): Promise<AllTimeSales | nul
       try {
         const kept = JSON.parse(cached) as AllTimeSales;
         // Read again when the store has changed its currency since.
-        if ((kept.currency ?? "usd") === store.currency) return { ...kept, currency: kept.currency ?? "usd", elsewhere: kept.elsewhere ?? 0 };
+        if ((kept.currency ?? "usd") === store.currency) return { ...kept, currency: kept.currency ?? "usd", elsewhere: kept.elsewhere ?? 0, together: parseTogether(kept.together) };
       } catch {
         // Read again below.
       }
@@ -638,6 +641,7 @@ export async function readAllTimeSales(store: Store): Promise<AllTimeSales | nul
     p.cents += sale.cents;
   }
   if (sales.length) out.since = dayKey(sales[sales.length - 1].created);
+  out.together = togetherFrom(sales);
   if (store.statsId && isRedisConfigured()) {
     await redisPipeline([["SET", allSalesKey(store.statsId), JSON.stringify(out), "EX", ALL_SALES_SECONDS]]).catch(() => {});
   }

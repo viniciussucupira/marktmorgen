@@ -3,7 +3,7 @@ import { AddToCart, CartButton } from "@/components/store-cart";
 import { offersCart } from "@/lib/cart-checkout";
 import { cartable, readCartIds } from "@/lib/cart-rules";
 import { forVisitor } from "@/lib/visitor";
-import { MoreFrom, moreFrom } from "@/components/more-from";
+import { ALSO_BOUGHT_COUNT, AlsoBought, MoreFrom, moreFrom } from "@/components/more-from";
 import { ExitOfferSlot } from "@/components/exit-offer-slot";
 import { PageDepth } from "@/components/page-depth";
 import { previewable } from "@/lib/pdf-preview";
@@ -469,7 +469,21 @@ export default async function ProductPage({ params, searchParams }: Params) {
   );
 
   // The creator's other products, from what the store record already holds.
-  const more = <MoreFrom store={store} products={moreFrom(store, product.id, soldCounts?.byProduct ?? null)} />;
+  // What the buyers of this one also bought, counted from the store's own sales (lib/also-bought.ts).
+  const pairs = soldCounts?.together[product.id] ?? [];
+  const pairedListings = pairs.length ? await readListings(store, pairs.map(([id]) => id)).catch(() => []) : [];
+  const alsoBought = pairs
+    .flatMap(([id, count]) => {
+      const other = pairedListings.find((p) => p.id === id);
+      return other && other.id !== product.id && !other.hidden && canSellProduct(store, other) ? [{ product: other, count }] : [];
+    })
+    .slice(0, ALSO_BOUGHT_COUNT);
+  const more = (
+    <>
+      <AlsoBought store={store} title={product.title} items={alsoBought} />
+      <MoreFrom store={store} products={moreFrom(store, product.id, soldCounts?.byProduct ?? null, alsoBought.map((item) => item.product.id))} />
+    </>
+  );
 
   const footer = (
     <div className="mt-10 text-center">
