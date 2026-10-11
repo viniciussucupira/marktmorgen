@@ -126,6 +126,14 @@ export async function startServices(port) {
             ? JSON.stringify({ bios: ["Weeknight dinners for busy parents.", "Cook once, eat all week."], products: [{ title: "Sunday Meal Planner", summary: "A week of dinners planned on one page.", kind: "download", price: "12" }, { title: "Monthly Menu Club", summary: "A new menu every month.", kind: "membership", price: "7" }], faq: [{ q: "How do I get the planner?", a: "As a download right after paying." }] })
           : system.startsWith("You write the short introduction at the top of a creator's media kit")
             ? JSON.stringify({ pitches: ["I cook weeknight dinners for busy families, and they cook along.", "Recipes for home cooks who plan the week ahead."] })
+          : system.startsWith("You write a short quiz")
+            ? JSON.stringify({
+                questions: [
+                  { text: "What goes into a starter?", choices: ["Flour and water", "Sugar and milk", "Salt and oil"], correct: [0], explanation: "The lesson mixes equal weights of flour and water." },
+                  { text: "How often is it fed?", choices: ["Every day", "Every week", "Every month"], correct: [0], explanation: "The lesson feeds it every day." },
+                  { text: "When is it ready?", choices: ["When it doubles", "When it turns blue", "When it dries out"], correct: [0], explanation: "The lesson waits until it doubles." },
+                ],
+              })
           : system.startsWith("You write the one line")
             ? JSON.stringify({ lines: ["Weeknight dinners for busy families.", "Recipes and planners for home cooks.", "Cook once, eat all week."] })
             : "A plain line.";

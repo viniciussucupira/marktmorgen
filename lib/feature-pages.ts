@@ -1321,7 +1321,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "how",
         title: "From a lesson to a certificate",
         items: [
-          { title: "Add a quiz to a lesson", body: "Up to 20 questions, each with one right answer or several, and a line of explanation shown afterward." },
+          { title: "Add a quiz to a lesson", body: "Up to 20 questions, each with one right answer or several, and a line of explanation shown afterward. Or let AI draft 3 to 10 from the lesson's text, with answers of the same length and the right one in a different place each time, for you to read, change and save." },
           { title: "Set the rules", body: "The pass mark, how many tries (up to 10, or as many as they like), and whether later lessons stay locked until it is passed." },
           { title: "Switch certificates on", body: "A student who finishes every lesson and passes every quiz that has to be passed types their name and gets a certificate." },
         ],
@@ -1596,6 +1596,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "globe", title: "A page in another language", body: "The whole page translated into any of the store's seven languages in one step, names, numbers and prices kept, with Undo." },
           { icon: "camera", title: "Pictures described", body: "The description a person who cannot see a picture hears, written from the picture itself." },
           { icon: "list", title: "A course outline", body: "Up to 8 modules of up to 8 lessons, from what the course is about.", href: "/platform/courses" },
+          { icon: "check", title: "A quiz for a lesson", body: "Questions drawn from the lesson's own text, or the main points you type for a video, with believable wrong answers of the same length and the right one moved around. They land in the quiz for you to read, change and save.", href: "/platform/quizzes-and-certificates" },
           { icon: "user", title: "The line about your store", body: "Three lines for under your store's name, from what it sells, to pick from or not.", href: "/platform/store-page" },
           { icon: "star", title: "Replies to reviews", body: "A public reply drafted from the buyer's own review, in their language. For a low rating it owns the problem without arguing or promising anything you did not.", href: "/platform/reviews" },
           { icon: "link", title: "Posts that bring visitors", body: "A post for X, an Instagram caption and a LinkedIn post about a product or the whole store, each with the right tagged link, so your numbers show which one brought the sale." },

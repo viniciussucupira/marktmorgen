@@ -5,7 +5,7 @@ import { READ_PDF_PAGES } from "@/lib/ai-rules";
 import { firstPages } from "@/lib/pdf-preview";
 import { MAX_STAMP_BYTES, readableFile } from "@/lib/product-file";
 import { withinLimit } from "@/lib/request-guard";
-import { describePicture, fillBlock, reviewPage, rewriteBlock, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct } from "@/lib/ai";
+import { describePicture, fillBlock, reviewPage, rewriteBlock, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct, writeQuiz } from "@/lib/ai";
 import { SOCIALS, type SocialNetwork, isSocialNetwork } from "@/lib/store-socials";
 import { isRewriteStyle } from "@/lib/block-rewrite-rules";
 import { deliveryWords, factsFor, missedQuestions, priceWords } from "@/lib/answers";
@@ -25,11 +25,13 @@ import { AI_PER_MINUTE, EMAIL_GOALS, type EmailGoal, MAX_AI_NOTES, type ProductK
 import { get } from "@/lib/blob";
 import { imageType, ownsImagePath } from "@/lib/product-image";
 import { imageFolder } from "@/lib/store";
+import { findLesson, readBody, readCourse } from "@/lib/course";
+import { DEFAULT_QUIZ_DRAFT, QUIZ_DRAFT_COUNTS } from "@/lib/quiz-draft";
 
 const KINDS: ProductKind[] = ["download", "link", "course", "membership", "call", "bundle"];
 
 /**
- * The writing help (lib/ai.ts): `{ kind: "product" | "page" | "review" | "block" | "fill" | "alt" | "translate" | "bio" | "faq" | "kit" | "setup" | "reply" | "posts" | "blog" | "outline" | "email", … }`.
+ * The writing help (lib/ai.ts): `{ kind: "product" | "page" | "review" | "block" | "fill" | "alt" | "translate" | "bio" | "faq" | "kit" | "setup" | "reply" | "posts" | "blog" | "outline" | "email" | "quiz", … }`.
  * It writes into the studio's own boxes and saves nothing: whatever comes back
  * is the creator's to read, change and keep, or not.
  *
@@ -247,6 +249,17 @@ export async function POST(request: NextRequest) {
   }
   if (body.kind === "outline") {
     return answer(writeOutline(store, { title: text(body.title, 200), notes }));
+  }
+  if (body.kind === "quiz") {
+    // The lesson is read here, from the creator's own course, never sent by the page.
+    const product = await readListing(store, text(body.id, 40));
+    const course = product?.course ? await readCourse(product.course.id) : null;
+    const found = course ? findLesson(course, text(body.lessonId, 40)) : null;
+    if (!product || !course || !found) return fail("unknown", 404);
+    const asked = Number(body.count);
+    const count = (QUIZ_DRAFT_COUNTS as readonly number[]).includes(asked) ? asked : DEFAULT_QUIZ_DRAFT;
+    const lessonText = await readBody(course.id, found.lesson.id);
+    return answer(writeQuiz(store, { course: product.title, lesson: found.lesson.title, text: lessonText, notes, count }));
   }
   if (body.kind === "email") {
     const goal = EMAIL_GOALS.some((g) => g.id === body.goal) ? (body.goal as EmailGoal) : "update";
