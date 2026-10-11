@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import type { AllTimeSales, Ranked, RangeKey, StatsData } from "@/lib/stats";
+import type { AllTimeSales, Ranked, RangeKey, StatsData, Today } from "@/lib/stats";
 import { StoreField } from "@/components/studio-store-pin";
 import { formatMoney } from "@/lib/money";
 import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
@@ -19,6 +19,7 @@ import { SalesGoalCard } from "@/components/sales-goal-card";
 import { ChatSummaryEditor } from "@/components/chat-summary-editor";
 import { moneyByDay } from "@/lib/sales-goal-rules";
 import type { ChatKind } from "@/lib/chat-summary";
+import { NoCountToggle } from "@/components/no-count-toggle";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -26,11 +27,40 @@ import type { ChatKind } from "@/lib/chat-summary";
  * which is the number a creator can change (a clearer page, a better price).
  * Only counts the store already keeps; nothing new is recorded for it.
  */
-function Funnel({ visitors, checkouts, sales, salesHere }: { visitors: number; checkouts: number; sales: number; salesHere: boolean }) {
+function Funnel({
+  visitors,
+  checkouts,
+  sales,
+  salesHere,
+  before = null,
+  span = "",
+}: {
+  visitors: number;
+  checkouts: number;
+  sales: number;
+  salesHere: boolean;
+  /** The same stretch just before (added 11 October 2026, as Plausible compares funnels over time): each step's rate then, beside its rate now. */
+  before?: { visitors: number; checkouts: number; sales: number | null } | null;
+  span?: string;
+}) {
+  // A step's rate in the stretch before, and whether it went up or down; nothing where there was nothing to divide.
+  const then = (part: number | null | undefined, whole: number, now: number) => {
+    if (!before || part === null || part === undefined || !whole) return null;
+    const was = part / whole;
+    const tone = Math.abs(now - was) < 0.0005 ? "flat" : now > was ? "up" : "down";
+    return { text: `${rate(part, whole)} in the ${span} before`, tone };
+  };
   const steps = [
-    { label: "Visitors", value: visitors, note: "" },
-    { label: "Started a checkout", value: checkouts, note: rate(checkouts, visitors) + " of visitors" },
-    ...(salesHere ? [{ label: "Paid", value: sales, note: rate(sales, checkouts) + " of checkouts" }] : []),
+    { label: "Visitors", value: visitors, note: "", then: null },
+    {
+      label: "Started a checkout",
+      value: checkouts,
+      note: rate(checkouts, visitors) + " of visitors",
+      then: visitors ? then(before?.checkouts, before?.visitors ?? 0, checkouts / visitors) : null,
+    },
+    ...(salesHere
+      ? [{ label: "Paid", value: sales, note: rate(sales, checkouts) + " of checkouts", then: checkouts ? then(before?.sales, before?.checkouts ?? 0, sales / checkouts) : null }]
+      : []),
   ];
   const top = Math.max(1, visitors);
   return (
@@ -48,6 +78,12 @@ function Funnel({ visitors, checkouts, sales, salesHere }: { visitors: number; c
                 {step.note ? ` · ${step.note}` : ""}
               </span>
             </div>
+            {step.then ? (
+              <p className={`text-right text-xs tabular-nums ${step.then.tone === "up" ? "text-mint-deep" : step.then.tone === "down" ? "text-danger" : "text-ink-soft"}`}>
+                {step.then.tone === "up" ? "↑ " : step.then.tone === "down" ? "↓ " : ""}
+                {step.then.text}
+              </p>
+            ) : null}
             <div className="mt-1 h-2 overflow-hidden rounded-full bg-paper ring-1 ring-line" aria-hidden="true">
               <div className="h-full rounded-full bg-violet-brand/70" style={{ width: `${Math.max(1, Math.min(100, (step.value / top) * 100))}%` }} />
             </div>
@@ -214,13 +250,13 @@ function HeardTable({
   );
 }
 
-type LiveNow = { visitors: number; sources: { source: string; visitors: number }[] };
+type LiveNow = { visitors: number; sources: { source: string; visitors: number }[]; today: Today | null };
 
 /**
  * Who is on the store right now: asked every half minute while the page is
  * open and in view, and not at all from a tab in the background.
  */
-function RightNow() {
+function RightNow({ currency }: { currency: string }) {
   const [live, setLive] = useState<LiveNow | null>(null);
   useEffect(() => {
     let stopped = false;
@@ -229,7 +265,7 @@ function RightNow() {
       try {
         const response = await fetch("/api/store/live", { cache: "no-store" });
         const body = (await response.json().catch(() => ({}))) as { ok?: boolean } & Partial<LiveNow>;
-        if (!stopped && body.ok) setLive({ visitors: body.visitors ?? 0, sources: body.sources ?? [] });
+        if (!stopped && body.ok) setLive({ visitors: body.visitors ?? 0, sources: body.sources ?? [], today: body.today ?? null });
       } catch {
         // A missed reading is simply the next one's to make.
       }
@@ -264,6 +300,30 @@ function RightNow() {
         </ul>
       ) : null}
       <p className="mt-2 text-xs text-ink-soft">Your store page, each person once, updated every half minute. Nothing about who.</p>
+      {live.today ? (
+        <div className="mt-4 border-t border-line pt-3">
+          <p className="text-sm font-bold text-ink">Today so far</p>
+          <dl className="mt-2 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+            {[
+              { label: "Visitors", value: count(live.today.visitors) },
+              { label: "Checkouts started", value: count(live.today.checkouts) },
+              { label: "Sales", value: live.today.sales ? count(live.today.sales.sales) : "—" },
+              { label: "Revenue", value: live.today.sales ? formatMoney(live.today.sales.cents, currency) : "—" },
+            ].map((tile) => (
+              <div key={tile.label}>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-mute">{tile.label}</dt>
+                <dd className="text-lg font-semibold tabular-nums text-ink">{tile.value}</dd>
+              </div>
+            ))}
+          </dl>
+          {live.today.sources.length ? (
+            <p className="mt-2 text-xs text-ink-soft">
+              {`Visits from ${live.today.sources.map((s) => `${channelName(s.source)} ${count(s.visits)}`).join(", ")}.`}
+            </p>
+          ) : null}
+          <p className="mt-1 text-xs text-ink-soft">The day in UTC, like every day here. Sales are paid ones, read from Stripe every two minutes.</p>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -279,6 +339,7 @@ export function StatsPanel({
   weeklyTeam = null,
   goal = 0,
   chat,
+  deviceMarked = null,
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -294,6 +355,8 @@ export function StatsPanel({
   goal?: number;
   /** For whoever may change settings: the chat the numbers are posted to (lib/chat-summary.ts); undefined for anybody else. */
   chat?: ChatKind | null;
+  /** Whether this browser is marked not to be counted on the store (lib/no-count.ts); null to leave the switch out. */
+  deviceMarked?: boolean | null;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [notes, setNotes] = useState(notesGiven);
@@ -589,10 +652,17 @@ export function StatsPanel({
         the first one alone. Only the last ninety days, because that is as far
         back as the sales reading goes, and it says so.
       */}
-      <RightNow />
+      <RightNow currency={data.currency ?? "usd"} />
 
       {range !== "all" && totals.visitors > 0 ? (
-        <Funnel visitors={totals.visitors} checkouts={totals.checkouts} sales={totals.sales} salesHere={salesHere} />
+        <Funnel
+          visitors={totals.visitors}
+          checkouts={totals.checkouts}
+          sales={totals.sales}
+          salesHere={salesHere}
+          before={before ? { visitors: before.visitors, checkouts: before.checkouts, sales: before.sales } : null}
+          span={span}
+        />
       ) : null}
 
       {data.revenueBySource.length ? (
@@ -1146,8 +1216,10 @@ export function StatsPanel({
         {chat !== undefined ? <ChatSummaryEditor kind={chat} /> : null}
       </div>
 
+      {deviceMarked !== null ? <NoCountToggle marked={deviceMarked} /> : null}
+
       <p className="mt-6 text-xs leading-relaxed text-ink-soft">
-        Counted without cookies, and your own visits while logged in are not counted. A visitor is one person on one
+        Counted without cookies, and your own visits and your team&apos;s while logged in are not counted, nor those of a device you marked. A visitor is one person on one
         device on one day. Days run midnight to midnight UTC. Sales are read from your own Stripe account: new
         purchases and new members, before Stripe&apos;s fee and any refund. Renewals are the payments after the first of
         memberships and payment plans, from the paid invoices of your store&apos;s subscriptions over the last 90 days;

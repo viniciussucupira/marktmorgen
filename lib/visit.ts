@@ -12,6 +12,8 @@ import { countryOf, deviceOf } from "@/lib/source-rules";
 import { channelOfRequest } from "@/lib/visit-channel";
 import { requestHost } from "@/lib/request-origin";
 import { maybeBusyAlert } from "@/lib/stats-report";
+import { readTeam } from "@/lib/team";
+import { NO_COUNT_COOKIE, isMarkedDevice } from "@/lib/no-count";
 
 export function clientIp(request: NextRequest): string {
   return (
@@ -21,11 +23,25 @@ export function clientIp(request: NextRequest): string {
   );
 }
 
+/**
+ * Whether a visit is the store's own people looking at it (widened on 11
+ * October 2026, as Fathom's "Remove Unwanted Visits" and Plausible's "exclude
+ * your own visits" do): the owner signed in, anybody on the store's team
+ * signed in, or a device the creator marked in the studio as not to be
+ * counted (lib/no-count.ts). Each of them inflated the visitors and made the
+ * share that buys look worse than it is. A buyer carries none of these, so
+ * their visit costs nothing more to read.
+ */
 async function isOwner(request: NextRequest, store: Store): Promise<boolean> {
+  if (isMarkedDevice(request.cookies.get(NO_COUNT_COOKIE)?.value, store.sid)) return true;
   const session = request.cookies.get(SESSION_COOKIE)?.value;
   if (!session) return false;
-  const email = await emailForSession(session).catch(() => null);
-  return Boolean(email) && email!.toLowerCase() === store.email.toLowerCase();
+  const email = (await emailForSession(session).catch(() => null))?.toLowerCase();
+  if (!email) return false;
+  if (email === store.email.toLowerCase()) return true;
+  if (!store.sid) return false;
+  const team = await readTeam(store.sid).catch(() => null);
+  return Boolean(team?.members.some((m) => m.email.toLowerCase() === email));
 }
 
 /**
