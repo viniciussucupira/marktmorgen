@@ -652,7 +652,7 @@ async function purchasesStep(job: ImportJob, store: Store, rows: string[][]): Pr
     skipped.push({ line: v.line, column: "email", problem: `The same buyer and product as row ${seen[i]}`, value: v.email });
     return false;
   });
-  const given = await grantImported(statsId, job.id, fresh.map((v) => ({ email: v.email, productId: v.productId, items: v.bundle })));
+  const given = await grantImported(statsId, job.id, fresh.map((v) => ({ email: v.email, productId: v.productId, items: v.bundle })), undefined, store.sid);
   const toMail: string[] = [];
   given.forEach((isNew, i) => {
     if (isNew) {

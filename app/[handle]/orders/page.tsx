@@ -1,3 +1,5 @@
+import { SITE_URL } from "@/lib/site-url";
+import { isHouseStore } from "@/lib/house-store";
 import { feedToken } from "@/lib/podcast-access";
 import { preorderWords } from "@/lib/buyer-words/preorder";
 import type { Metadata } from "next";
@@ -482,6 +484,14 @@ export default async function OrdersPage({ params, searchParams }: Params) {
           <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
             {said.w.backTo(store.name)}
           </Link>
+          {/* Every store this address bought from, in one place (lib/buyer-library.ts). Never on the demo store. */}
+          {isHouseStore(store) ? null : (
+            <p className="mt-3">
+              <a href={`${SITE_URL}/library`} className="st-footer-link text-sm" data-library-link>
+                {words.libraryLink}
+              </a>
+            </p>
+          )}
         </div>
       </main>
     </div>

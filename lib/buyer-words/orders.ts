@@ -26,6 +26,8 @@ const S = " ";
 const en = {
   // ---- The page --------------------------------------------------------------
   pageTitle: "Your purchases",
+  /** A buyer's library across every store (lib/buyer-library.ts), linked from the foot of the list. */
+  libraryLink: "Bought from other creators on Marktmorgen too? See everything in one place",
   notices: {
     email: {
       title: "That does not look like an email address",
@@ -255,6 +257,7 @@ const esWhere = (withPaypal: boolean) => (withPaypal ? "en su propia cuenta de S
 
 const es: OrdersWords = {
   pageTitle: "Tus compras",
+  libraryLink: "¿También compraste a otros creadores en Marktmorgen? Míralo todo en un solo lugar",
   notices: {
     email: {
       title: "Eso no parece una dirección de email",
@@ -458,6 +461,7 @@ const frWhere = (withPaypal: boolean) => (withPaypal ? "sur son propre compte St
 
 const fr: OrdersWords = {
   pageTitle: "Vos achats",
+  libraryLink: `Vous avez aussi acheté chez d'autres créateurs sur Marktmorgen${S}? Retrouvez tout au même endroit`,
   notices: {
     email: {
       title: "Cette adresse e-mail ne semble pas valide",
@@ -659,6 +663,7 @@ const deWhere = (withPaypal: boolean) => (withPaypal ? "über das eigene Stripe-
 
 const de: OrdersWords = {
   pageTitle: "Ihre Käufe",
+  libraryLink: "Auch bei anderen Creators auf Marktmorgen gekauft? Alles an einem Ort",
   notices: {
     email: {
       title: "Das sieht nicht nach einer E-Mail-Adresse aus",
@@ -865,6 +870,7 @@ const itThe = (percent: number) => (/^(1|8|11|8\d)$/.test(String(percent)) ? "l'
 
 const it: OrdersWords = {
   pageTitle: "I tuoi acquisti",
+  libraryLink: "Hai acquistato anche da altri creator su Marktmorgen? Trova tutto in un unico posto",
   notices: {
     email: {
       title: "Questo non sembra un indirizzo email",
@@ -1067,6 +1073,7 @@ const nlWhere = (withPaypal: boolean) => (withPaypal ? "via het eigen Stripe- of
 
 const nl: OrdersWords = {
   pageTitle: "Je aankopen",
+  libraryLink: "Ook bij andere makers op Marktmorgen gekocht? Zie alles op één plek",
   notices: {
     email: {
       title: "Dat lijkt geen e-mailadres",
@@ -1268,6 +1275,7 @@ const ptWhere = (withPaypal: boolean) => (withPaypal ? "na própria conta Stripe
 
 const pt: OrdersWords = {
   pageTitle: "As suas compras",
+  libraryLink: "Comprou também a outros criadores na Marktmorgen? Veja tudo num só lugar",
   notices: {
     email: {
       title: "Isso não parece um endereço de email",

@@ -10,7 +10,7 @@ import { GroupLinkBox } from "@/components/group-link-box";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { type Listing, normaliseHandle, storeForPage } from "@/lib/store";
+import { type Listing, ensureStoreId, normaliseHandle, storeForPage, storeRef } from "@/lib/store";
 import { formatMoney, toMajor } from "@/lib/money";
 import { linkHost } from "@/lib/product-link";
 import { DOWNLOAD_WINDOW_SECONDS, type Order, readOrder } from "@/lib/store-checkout";
@@ -32,6 +32,7 @@ import { buyersJoin, noteSession } from "@/lib/affiliates";
 import { recordEnrollment } from "@/lib/learn";
 import { upsertContact } from "@/lib/contacts";
 import { listOrder } from "@/lib/buyer-list";
+import { rememberBuyers } from "@/lib/buyer-library";
 import { canRecover, ordersLinkFor } from "@/lib/buyer-orders";
 import { readPaid, stillPending } from "@/lib/paypal-sales";
 import { saleClock } from "@/lib/store-sale";
@@ -444,6 +445,13 @@ export default async function ThanksPage({ params, searchParams }: Params) {
   // noted against them, and any sequence that starts with joining or with
   // one of these products starts for them — once per checkout, whichever of
   // this page and the five-minute job gets there first (lib/buyer-list.ts).
+  // The store goes in the buyer's library of everything they bought here (lib/buyer-library.ts).
+  // Never the demo store's, whose checkout takes any address (lib/house-store.ts).
+  if (order.state === "paid" && order.email && !order.gift && !order.group && !isHouseStore(store)) {
+    // A store made before stores had ids is given its own now.
+    const sid = store.sid || (await ensureStoreId(storeRef(store)).catch(() => null))?.sid || "";
+    await rememberBuyers(sid, [order.email]);
+  }
   if (order.state === "paid" && order.email && store.listId) {
     await listOrder(store, {
       sessionId: order.reference,

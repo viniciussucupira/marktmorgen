@@ -432,6 +432,19 @@ export default function PrivacyPage() {
           hours, lets only that browser take the offer. We keep a record of
           whether the offer was taken, tied to that order, for eight days.
         </p>
+        <p id="library">
+          <strong className="text-black">Your library.</strong> So that you
+          can find everything you bought from creators here in one place
+          (marktmorgen.com/library), we keep, for each email address that
+          bought something, which stores it bought from: the store&apos;s id
+          only, under a one-way hash of the address. Not what you bought, when
+          or for how much; each store&apos;s list is read from that
+          creator&apos;s own payment records when you open it. It is kept for
+          three years after your last purchase. When you ask for your library,
+          we email a link that opens it for 24 hours, only if that address
+          bought something, and the page says the same either way. The
+          creators do not see it.
+        </p>
         <p>
           <strong className="text-black">
             Free copies, and a creator&apos;s list.
