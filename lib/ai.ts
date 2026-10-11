@@ -33,6 +33,7 @@ import { type PageBlock, type SalesPage, emptyBlock, parsePage } from "@/lib/sal
 import { MAX_TRANSLATE_PARTS, pageWords, translateParts, withWords } from "@/lib/page-translate";
 import { READ_PDF_JOBS, READ_PDF_PAGES } from "@/lib/ai-rules";
 import { type DraftedQuestion, MAX_QUIZ_SOURCE, readDrafted, shuffleAnswers } from "@/lib/quiz-draft";
+import { type DraftedStep, readDraftedSteps } from "@/lib/sequence-draft";
 import { MAX_CHOICE_LENGTH, MAX_EXPLANATION_LENGTH, MAX_QUESTIONS, MAX_QUESTION_LENGTH } from "@/lib/quiz";
 import { FILLABLE, REWRITABLE, REWRITE_STYLES, type RewriteStyle, addsNumbers, blockText } from "@/lib/block-rewrite-rules";
 
@@ -783,6 +784,64 @@ export async function writeEmail(
     const subject = line(json?.subject, MAX_SUBJECT);
     const body = block(json?.body, MAX_EMAIL_BODY);
     return subject && body ? { subject, body } : null;
+  });
+}
+
+const MOMENTS: Record<"joined" | "product" | "bought", string> = {
+  joined: "a welcome sequence for somebody who has just joined the creator's email list: who the creator is and what they make, something useful, then what they sell and where",
+  product: "the emails somebody gets in the days after they got one product: how to make the most of it, then, only where it fits, what else the creator sells",
+  bought: "the emails after somebody's first purchase from the creator: a thank you and where their orders are, something useful, then, only where it fits, what else the creator sells",
+};
+
+/**
+ * The emails of a sequence (lib/sequence-draft.ts), written for the moment it
+ * starts on, from what the store sells. In the store's language, as the
+ * creator, with only the store's own links, which are checked here again.
+ */
+export async function writeSequence(
+  store: Store,
+  input: {
+    trigger: "joined" | "product" | "bought";
+    /** The product a "product" sequence follows. */
+    product: { title: string; summary: string; price: string; link: string } | null;
+    /** What else the store sells, in its own order. */
+    products: { title: string; summary: string; price: string; link: string }[];
+    storeLink: string;
+    ordersLink: string;
+    notes: string;
+    count: number;
+  },
+  now = Date.now(),
+): Promise<AiResult<DraftedStep[]>> {
+  const notes = block(input.notes, MAX_AI_NOTES);
+  const count = Math.max(1, Math.min(input.count, 10));
+  const links = [input.storeLink, input.ordersLink, ...(input.product ? [input.product.link] : []), ...input.products.map((p) => p.link)];
+  const listed = (p: { title: string; summary: string; price: string; link: string }) =>
+    `- ${line(p.title, MAX_TITLE)} (${line(p.price, 80)}): ${line(p.summary, 240) || "no summary"} ${line(p.link, 300)}`;
+  return counted(store, now, async () => {
+    const system = [
+      `You write ${count} emails that go out by themselves, one after another, from a creator to one person: ${MOMENTS[input.trigger]}.`,
+      honesty(storeLanguage(store)),
+      "Write as the creator, in the first person, as one person writing to another who asked to hear from them. Each email does one thing and is short.",
+      "Use only these web addresses, exactly as given, each on its own line, and only where the email points there: the store's page, the orders page and the product pages listed. Never write any other address.",
+      "Sell gently: say what a product is, who it is for and where it is, at the price given. Never invent a discount, a deadline, a bonus or how many are left.",
+      `Return only a JSON object: {"emails": [{"waitDays": number, "subject": string, "body": string}]} with exactly ${count} emails. "waitDays" is how many days after the one before it goes (the first: 0, or 1 after a purchase), 1 to 14 for the others. Subjects at most 70 characters, no clickbait. Bodies plain text, at most 1,500 characters, paragraphs separated by one blank line, signed with the creator's name.`,
+      "Do not add an unsubscribe line: one is added to every email.",
+    ].join("\n\n");
+    const prompt = [
+      `Creator: ${line(store.mail?.fromName || store.name, 60)}`,
+      `Store: ${line(store.name, 80)} ${line(input.storeLink, 300)}`,
+      `Orders page (where a buyer finds what they bought): ${line(input.ordersLink, 300)}`,
+      input.product ? `The product this sequence follows:\n${listed(input.product)}` : "",
+      input.products.length ? `What the store sells:\n${input.products.map(listed).join("\n")}` : "The store sells nothing yet.",
+      notes ? `What the creator wants these emails to say:\n${notes}` : "",
+    ]
+      .filter((part) => part !== "")
+      .join("\n\n");
+    const answer = await ask(system, prompt, 6_000);
+    const json = answer ? jsonIn(answer) : null;
+    const steps = readDraftedSteps(json?.emails, count, links);
+    return steps.length ? steps : null;
   });
 }
 

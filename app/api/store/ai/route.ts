@@ -5,7 +5,7 @@ import { READ_PDF_PAGES } from "@/lib/ai-rules";
 import { firstPages } from "@/lib/pdf-preview";
 import { MAX_STAMP_BYTES, readableFile } from "@/lib/product-file";
 import { withinLimit } from "@/lib/request-guard";
-import { describePicture, fillBlock, reviewPage, rewriteBlock, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct, writeQuiz } from "@/lib/ai";
+import { describePicture, fillBlock, reviewPage, rewriteBlock, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct, writeQuiz, writeSequence } from "@/lib/ai";
 import { SOCIALS, type SocialNetwork, isSocialNetwork } from "@/lib/store-socials";
 import { isRewriteStyle } from "@/lib/block-rewrite-rules";
 import { deliveryWords, factsFor, missedQuestions, priceWords } from "@/lib/answers";
@@ -16,7 +16,10 @@ import { readDepth, reachShares } from "@/lib/page-depth";
 import { LANGUAGES, isLanguage } from "@/lib/store-language";
 import { readStats } from "@/lib/stats";
 import { isFree } from "@/lib/store";
-import { readListing } from "@/lib/catalog";
+import { idsOfKind, productIds, readListing, readListings } from "@/lib/catalog";
+import { DEFAULT_SEQUENCE_DRAFT, MAX_SEQUENCE_PRODUCTS, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
+import { storeBase } from "@/lib/purchase-email";
+import { productLink } from "@/lib/checkout-recovery";
 import { readAbout } from "@/lib/product-about";
 import { readReview } from "@/lib/reviews";
 import { MAX_REPLY_TEXT } from "@/lib/review-summary";
@@ -31,7 +34,7 @@ import { DEFAULT_QUIZ_DRAFT, QUIZ_DRAFT_COUNTS } from "@/lib/quiz-draft";
 const KINDS: ProductKind[] = ["download", "link", "course", "membership", "call", "bundle"];
 
 /**
- * The writing help (lib/ai.ts): `{ kind: "product" | "page" | "review" | "block" | "fill" | "alt" | "translate" | "bio" | "faq" | "kit" | "setup" | "reply" | "posts" | "blog" | "outline" | "email" | "quiz", … }`.
+ * The writing help (lib/ai.ts): `{ kind: "product" | "page" | "review" | "block" | "fill" | "alt" | "translate" | "bio" | "faq" | "kit" | "setup" | "reply" | "posts" | "blog" | "outline" | "email" | "quiz" | "sequence", … }`.
  * It writes into the studio's own boxes and saves nothing: whatever comes back
  * is the creator's to read, change and keep, or not.
  *
@@ -41,7 +44,7 @@ const KINDS: ProductKind[] = ["download", "link", "course", "membership", "call"
 export async function POST(request: NextRequest) {
   // A review or a translation sends the page being edited, which may be long, and
   // twice as long with a second version being tested (lib/sales-page.ts, MAX_PAGE_BYTES).
-  const guarded = await guardStoreWrite(request, (body) => (body.kind === "email" ? "draft" : body.kind === "bio" || body.kind === "faq" || body.kind === "kit" || body.kind === "setup" || body.kind === "blog" || (body.kind === "posts" && !body.product) ? "page" : body.kind === "reply" ? "reviews" : "products"), 280_000);
+  const guarded = await guardStoreWrite(request, (body) => (body.kind === "email" || body.kind === "sequence" ? "draft" : body.kind === "bio" || body.kind === "faq" || body.kind === "kit" || body.kind === "setup" || body.kind === "blog" || (body.kind === "posts" && !body.product) ? "page" : body.kind === "reply" ? "reviews" : "products"), 280_000);
   if (!guarded.ok) return guarded.response;
   const { body, store } = guarded;
   const fail = (error: string, status = 400) => Response.json({ ok: false, error }, { status });
@@ -260,6 +263,36 @@ export async function POST(request: NextRequest) {
     const count = (QUIZ_DRAFT_COUNTS as readonly number[]).includes(asked) ? asked : DEFAULT_QUIZ_DRAFT;
     const lessonText = await readBody(course.id, found.lesson.id);
     return answer(writeQuiz(store, { course: product.title, lesson: found.lesson.title, text: lessonText, notes, count }));
+  }
+  if (body.kind === "sequence") {
+    // What the store sells is read here, from its own records: names, prices
+    // and links the page never sends. Drafts and free things are not sold.
+    const trigger = body.trigger === "product" || body.trigger === "bought" ? body.trigger : "joined";
+    const hidden = new Set(idsOfKind(store, "hidden"));
+    const paid = new Set(idsOfKind(store, "paid"));
+    const ids = productIds(store).filter((id) => !hidden.has(id) && paid.has(id)).slice(0, MAX_SEQUENCE_PRODUCTS);
+    const listings = await readListings(store, ids);
+    const facts = (p: (typeof listings)[number]) => ({ title: p.title, summary: p.summary, price: priceWords(p, store.currency, store.tiers), link: productLink(store, p.id) });
+    let followed: ReturnType<typeof facts> | null = null;
+    if (trigger === "product") {
+      const chosen = await readListing(store, text(body.productId, 40));
+      if (!chosen) return fail("unknown", 404);
+      followed = facts(chosen);
+    }
+    const asked = Number(body.count);
+    const count = (SEQUENCE_DRAFT_COUNTS as readonly number[]).includes(asked) ? asked : DEFAULT_SEQUENCE_DRAFT;
+    const base = storeBase(store);
+    return answer(
+      writeSequence(store, {
+        trigger,
+        product: followed,
+        products: listings.filter((p) => !followed || p.id !== text(body.productId, 40)).map(facts),
+        storeLink: base,
+        ordersLink: `${base}/orders`,
+        notes,
+        count,
+      }),
+    );
   }
   if (body.kind === "email") {
     const goal = EMAIL_GOALS.some((g) => g.id === body.goal) ? (body.goal as EmailGoal) : "update";

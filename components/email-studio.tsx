@@ -2,6 +2,7 @@
 
 import { AiAssist, AiOn } from "@/components/ai-assist";
 import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
+import { DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -205,7 +206,11 @@ export function EmailStudio(props: {
             </AiOn>
             <Drafts drafts={props.drafts} products={props.products} open={open} onOpen={setOpen} />
             <History broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
-            {props.canSend ? <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} /> : null}
+            {props.canSend ? (
+              <AiOn value={props.ai ?? { on: false, left: 0 }}>
+                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} />
+              </AiOn>
+            ) : null}
           </>
         ) : props.canSettings ? (
           <div className="card p-6 sm:p-8">
@@ -1030,6 +1035,7 @@ function Flows({
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<FlowDraft | null>(null);
+  const [draftCount, setDraftCount] = useState<number>(DEFAULT_SEQUENCE_DRAFT);
   // Each step's box, so a picture goes where the cursor is.
   const stepBoxes = useRef<(HTMLTextAreaElement | null)[]>([]);
   const [busy, setBusy] = useState(false);
@@ -1201,6 +1207,37 @@ function Flows({
               </select>
             </label>
           ) : null}
+          <AiAssist<DraftedStep[]>
+            title="Write the emails with AI"
+            hint="For the moment chosen above, from what your store sells: its products' names, summaries, prices and links, and anything you add here. Only your store's own links are kept. The emails fill the sequence below for you to read and change; nothing is saved or sent until you save it."
+            placeholder="Optional: what these emails should say, or the tone. For example: share my three favorite weeknight tricks before mentioning the meal planner."
+            allowEmpty
+            extra={
+              <label className="flex flex-wrap items-center gap-2 text-sm text-ink">
+                <span className="font-semibold">How many emails</span>
+                <select className="field w-auto" value={draftCount} onChange={(e) => setDraftCount(Number(e.target.value))}>
+                  {SEQUENCE_DRAFT_COUNTS.map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </label>
+            }
+            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" ? draft.productId : "", count: draftCount })}
+            onResult={(written) =>
+              setDraft((current) => {
+                if (!current) return current;
+                const steps: StepDraft[] = written.map((w) =>
+                  w.delayHours > 0 && w.delayHours % 24 === 0
+                    ? { wait: String(w.delayHours / 24), unit: "days", subject: w.subject, body: w.body }
+                    : { wait: String(w.delayHours), unit: "hours", subject: w.subject, body: w.body },
+                );
+                // Emails still empty are replaced; the creator's own are kept, and these follow them.
+                const kept = current.steps.filter((x) => x.subject.trim() || x.body.trim());
+                return { ...current, steps: [...kept, ...steps].slice(0, 10) };
+              })
+            }
+            done="The emails are in the sequence below. Read each one, change what you like, then save it."
+          />
           <ol className="space-y-4">
             {draft.steps.map((s, i) => (
               <li key={i} className="rounded-[var(--r-sm)] bg-sand p-4">
