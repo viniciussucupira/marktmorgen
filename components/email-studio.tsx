@@ -9,7 +9,8 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { MailPictureButton } from "@/components/mail-picture-button";
-import type { Flow } from "@/lib/flows";
+import type { Flow, FlowCounts, FlowStep } from "@/lib/flows";
+import { MAX_CONDITION_TAG, type StepCondition, type StepIf } from "@/lib/flow-rules";
 import type { MailSettings } from "@/lib/store";
 import { StoreField } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
@@ -40,7 +41,7 @@ const MESSAGES: Record<string, string> = {
   name: "Give the sequence a name.",
   trigger: "Choose what starts the sequence.",
   steps: "A sequence has between one and ten emails.",
-  step: "Every email in the sequence needs a subject, some text, and a wait of up to a year.",
+  step: "Every email in the sequence needs a subject, some text, and a wait of up to a year. A condition needs its product, or its label.",
   unknown: "That is not there anymore. Reload the page.",
   send: "The email service did not take it just now. Nothing was sent; try again in a moment.",
   signed_out: "Your session ended. Log in again.",
@@ -51,7 +52,8 @@ const MESSAGES: Record<string, string> = {
   starters_nothing: "Your store already has a sequence for each of those moments. They are under Sequences.",
   keep_unsent: "Only an email that has finished going out can be kept sending.",
   keep_excludes:
-    "This email left out the people who already own a product, and a sequence cannot leave anyone out. Write it again instead, and choose who it goes to.",
+    "This email was narrowed two ways at once, and an email in a sequence keeps one condition. Write it again instead, and choose who it goes to.",
+  goal: "That ending would stop the sequence before its first email. Choose another, or none.",
   keep_already: "This email is already going to new people by itself. It is under Sequences.",
   keep_full: "That sequence already holds 10 emails. Remove one under Sequences first.",
   too_many_flows: "A store keeps 10 sequences at most. Remove one under Sequences first.",
@@ -88,6 +90,8 @@ type BroadcastRow = {
   productId: string | null;
   /** Everybody, only buyers, or only people who have not bought yet (lib/contacts.ts). */
   who: Who;
+  /** Left out the people who own this product. */
+  notProductId: string | null;
   /** Whether its links carry its tag, so its sales can be counted at all (lib/mail-links.ts). */
   tagged: boolean;
   /** What it sold, from the creator's own Stripe account; null when nothing is counted for it. */
@@ -98,7 +102,7 @@ type BroadcastRow = {
   test: SubjectTest | null;
 };
 type Money = { sales: number; cents: number };
-type FlowRow = Flow & { stats: { started: number; sent: number }; money: Money | null };
+type FlowRow = Flow & { stats: FlowCounts; money: Money | null };
 
 /** "3 sales · $117.00 from its links in the last 90 days", in the store's own currency. */
 function soldWords(money: Money, currency: string): string {
@@ -115,6 +119,29 @@ function broughtWords(visits: number | null, money: Money | null, currency: stri
   if (money) return `${came ? `${came} · ` : ""}${soldWords(money, currency)}`;
   if (came && visits) return `${came} from its links in the last 90 days · no sale yet`;
   return came ? "No visit or sale from its links yet" : "No sale from its links yet";
+}
+
+/**
+ * Who a sent email goes on reaching once it is kept sending (lib/mail-reuse.ts):
+ * "Everyone who joins and has not bought yet".
+ */
+function keptWords(b: Pick<BroadcastRow, "who" | "productId" | "notProductId">, products: { id: string; title: string }[]): string {
+  const title = (id: string | null) => products.find((p) => p.id === id)?.title ?? "that product";
+  const start =
+    b.who === "buyers" && !b.productId
+      ? "Everyone who buys something for the first time"
+      : b.productId
+        ? `Everyone who gets ${title(b.productId)}`
+        : "Everyone who joins";
+  if (b.notProductId) return `${start} and does not have ${title(b.notProductId)}`;
+  if (b.who === "leads") return `${start} and has not bought yet`;
+  if (b.who === "buyers" && b.productId) return `${start} and has paid`;
+  return start;
+}
+
+/** Whether a sent email can be kept sending: narrowed at most one way beyond what starts its sequence. */
+function keepable(b: Pick<BroadcastRow, "who" | "productId" | "notProductId">): boolean {
+  return [Boolean(b.notProductId), b.who === "leads", b.who === "buyers" && Boolean(b.productId)].filter(Boolean).length < 2;
 }
 
 /** "a day", "4 hours": how long the rest of a list waits for a subject test. */
@@ -893,13 +920,7 @@ function History({
     const a = await call({ action: "keep", id: b.id });
     setBusy(false);
     if (!a.ok) return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
-    const event =
-      b.who === "buyers"
-        ? "buys something for the first time"
-        : b.productId
-          ? `gets ${products.find((p) => p.id === b.productId)?.title ?? "that product"}`
-          : "joins your list";
-    toast(`Done. Everyone who ${event} from now on gets this email ${waitWords(Number(a.waitHours))} later. It is under Sequences, switched on.`);
+    toast(`Done. ${keptWords(b, products)} from now on gets this email ${waitWords(Number(a.waitHours))} later. It is under Sequences, switched on.`);
     router.refresh();
   }
   return (
@@ -968,20 +989,16 @@ function History({
                 >
                   Write it again
                 </button>
-                {/* Not offered for an email to people who have not bought:
-                    a sequence cannot leave out the ones who join by buying. */}
-                {canSend && b.who !== "leads" ? (
+                {/* Not offered for an email narrowed two ways at once: an
+                    email in a sequence keeps one condition (lib/mail-reuse.ts). */}
+                {canSend && keepable(b) ? (
                   <button
                     type="button"
                     aria-busy={busy} disabled={busy}
                     className="inline-flex min-h-11 items-center text-left text-sm font-bold text-ink underline underline-offset-4"
                     onClick={() => keep(b)}
                   >
-                    {b.who === "buyers"
-                      ? "Keep sending it to everyone who buys"
-                      : b.productId
-                      ? `Keep sending it to everyone who gets ${products.find((p) => p.id === b.productId)?.title ?? "that product"}`
-                      : "Keep sending it to everyone who joins"}
+                    {`Keep sending it to ${keptWords(b, products).replace(/^Everyone/, "everyone")}`}
                   </button>
                 ) : null}
               </div>
@@ -994,30 +1011,116 @@ function History({
   );
 }
 
-type StepDraft = { id?: string; wait: string; unit: "hours" | "days"; subject: string; body: string };
-type FlowDraft = { id?: string; name: string; trigger: "joined" | "product" | "bought"; productId: string; active: boolean; steps: StepDraft[] };
+/**
+ * One email of a sequence as the form holds it. `when` is "" for everyone;
+ * its product or label is kept apart, so switching between conditions does
+ * not lose what was chosen (lib/flow-rules.ts).
+ */
+type StepDraft = {
+  id?: string;
+  wait: string;
+  unit: "hours" | "days";
+  subject: string;
+  body: string;
+  when: StepIf | "";
+  whenProduct: string;
+  whenTag: string;
+  otherwise: "skip" | "end";
+};
+type FlowDraft = {
+  id?: string;
+  name: string;
+  trigger: "joined" | "product" | "bought";
+  productId: string;
+  active: boolean;
+  steps: StepDraft[];
+  /** When it ends early: never, once they have bought anything, or once they get one product. */
+  goal: "" | "any" | "product";
+  goalProduct: string;
+};
+
+/** What each condition is called in the form, in the order offered. */
+const STEP_IF_WORDS: { value: StepIf | ""; label: string }[] = [
+  { value: "", label: "Everyone still in the sequence" },
+  { value: "lacks", label: "Only those who do not have a product" },
+  { value: "has", label: "Only those who have a product" },
+  { value: "lead", label: "Only those who have not bought anything yet" },
+  { value: "buyer", label: "Only those who have bought something" },
+  { value: "tag", label: "Only those with a label" },
+  { value: "untagged", label: "Only those without a label" },
+];
+
+function blankStep(wait: string, unit: "hours" | "days", firstProduct: string): StepDraft {
+  return { wait, unit, subject: "", body: "", when: "", whenProduct: firstProduct, whenTag: "", otherwise: "skip" };
+}
+
+function stepToDraft(s: FlowStep, firstProduct: string): StepDraft {
+  const when = s.when;
+  return {
+    id: s.id,
+    ...(s.delayHours % 24 === 0 && s.delayHours > 0 ? { wait: String(s.delayHours / 24), unit: "days" as const } : { wait: String(s.delayHours), unit: "hours" as const }),
+    subject: s.subject,
+    body: s.body,
+    when: when?.if ?? "",
+    whenProduct: when && "productId" in when ? when.productId : firstProduct,
+    whenTag: when && "tag" in when ? when.tag : "",
+    otherwise: s.otherwise === "end" ? "end" : "skip",
+  };
+}
+
+/** The condition a step draft stands for, as the server reads it. */
+function conditionOf(s: StepDraft): StepCondition | null {
+  if (s.when === "has" || s.when === "lacks") return { if: s.when, productId: s.whenProduct };
+  if (s.when === "tag" || s.when === "untagged") return { if: s.when, tag: s.whenTag };
+  if (s.when === "buyer" || s.when === "lead") return { if: s.when };
+  return null;
+}
+
+/** "Only to those who do not have The Weeknight Plan; the others skip it." */
+function conditionWords(step: FlowStep, products: { id: string; title: string }[]): string {
+  const when = step.when;
+  if (!when) return "";
+  const title = (id: string) => products.find((p) => p.id === id)?.title ?? "a product no longer in your store";
+  const who =
+    "productId" in when
+      ? `who ${when.if === "has" ? "have" : "do not have"} ${title(when.productId)}`
+      : "tag" in when
+        ? `${when.if === "tag" ? "labeled" : "not labeled"} “${when.tag}”`
+        : when.if === "buyer"
+          ? "who have bought something"
+          : "who have not bought anything yet";
+  return `Only to those ${who}; ${step.otherwise === "end" ? "for the others, the sequence ends there" : "the others skip it"}.`;
+}
+
+/** "Ends for anyone who gets The Weeknight Plan." */
+function goalWords(flow: Pick<Flow, "goal">, products: { id: string; title: string }[]): string {
+  if (!flow.goal) return "";
+  if ("any" in flow.goal) return "Ends for anyone once they have bought something";
+  return `Ends for anyone who gets ${products.find((p) => "productId" in flow.goal! && p.id === flow.goal.productId)?.title ?? "a product no longer in your store"}`;
+}
 
 function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
+  const first = products[0]?.id ?? "";
   if (!flow) {
     return {
       name: "Welcome",
       trigger: "joined",
-      productId: products[0]?.id ?? "",
+      productId: first,
       active: true,
-      steps: [{ wait: "0", unit: "hours", subject: "", body: "" }],
+      steps: [blankStep("0", "hours", first)],
+      goal: "",
+      goalProduct: first,
     };
   }
   return {
     id: flow.id,
     name: flow.name,
     trigger: flow.trigger,
-    productId: flow.productId ?? products[0]?.id ?? "",
+    productId: flow.productId ?? first,
     active: flow.active,
-    steps: flow.steps.map((s) =>
-      s.delayHours % 24 === 0 && s.delayHours > 0
-        ? { id: s.id, wait: String(s.delayHours / 24), unit: "days", subject: s.subject, body: s.body }
-        : { id: s.id, wait: String(s.delayHours), unit: "hours", subject: s.subject, body: s.body },
-    ),
+    steps: flow.steps.map((s) => stepToDraft(s, first)),
+    goal: !flow.goal ? "" : "any" in flow.goal ? "any" : "product",
+    goalProduct: flow.goal && "productId" in flow.goal ? flow.goal.productId : first,
   };
 }
 
@@ -1060,12 +1163,17 @@ function Flows({
         trigger: draft.trigger,
         productId: draft.trigger === "product" ? draft.productId : null,
         active: draft.active,
-        steps: draft.steps.map((s) => ({
-          id: s.id,
-          delayHours: (Number(s.wait) || 0) * (s.unit === "days" ? 24 : 1),
-          subject: s.subject,
-          body: s.body,
-        })),
+        steps: draft.steps.map((s) => {
+          const when = conditionOf(s);
+          return {
+            id: s.id,
+            delayHours: (Number(s.wait) || 0) * (s.unit === "days" ? 24 : 1),
+            subject: s.subject,
+            body: s.body,
+            ...(when ? { when, otherwise: s.otherwise } : {}),
+          };
+        }),
+        goal: draft.goal === "any" ? { any: true } : draft.goal === "product" ? { productId: draft.goalProduct } : null,
       },
     });
     setBusy(false);
@@ -1145,7 +1253,22 @@ function Flows({
                 <span className="tag">{f.active ? "On" : "Paused"}</span>
               </div>
               <p className="mt-1 text-sm text-ink-soft">{`${triggerWords(f)} · ${f.steps.length} ${f.steps.length === 1 ? "email" : "emails"}`}</p>
-              <p className="mt-1 text-sm text-ink-soft">{`${n(f.stats.started)} started · ${n(f.stats.sent)} emails sent`}</p>
+              {f.goal ? <p className="mt-1 text-sm text-ink-soft" data-flow-goal>{`${goalWords(f, products)}.`}</p> : null}
+              {f.steps.some((step) => step.when) ? (
+                <ul className="mt-1 text-sm text-ink-soft">
+                  {f.steps.map((step, i) =>
+                    step.when ? <li key={step.id}>{`Email ${i + 1}: ${conditionWords(step, products)}`}</li> : null,
+                  )}
+                </ul>
+              ) : null}
+              <p className="mt-1 text-sm text-ink-soft">
+                {[
+                  `${n(f.stats.started)} started`,
+                  `${n(f.stats.sent)} emails sent`,
+                  ...(f.goal || f.stats.reached ? [`${n(f.stats.reached)} left ${f.goal && "productId" in f.goal ? "once they got it" : "once they bought"}`] : []),
+                  ...(f.steps.some((s) => s.when) || f.stats.skipped ? [`${n(f.stats.skipped)} skipped by a condition`] : []),
+                ].join(" · ")}
+              </p>
               {f.money ? <p className="mt-1 text-sm font-semibold text-ink">{soldWords(f.money, currency)}</p> : null}
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
                 <button type="button" className="text-ink-soft underline underline-offset-4 hover:text-violet-deep" onClick={() => setDraft(toDraft(f, products))}>
@@ -1189,7 +1312,12 @@ function Flows({
               className="field mt-2"
               value={draft.trigger}
               onChange={(e) =>
-                setDraft({ ...draft, trigger: e.target.value === "product" ? "product" : e.target.value === "bought" ? "bought" : "joined" })
+                setDraft((current) => {
+                  if (!current) return current;
+                  const trigger = e.target.value === "product" ? "product" : e.target.value === "bought" ? "bought" : "joined";
+                  // A sequence that starts with a purchase cannot end at one.
+                  return { ...current, trigger, goal: trigger === "bought" && current.goal === "any" ? "" : current.goal };
+                })
               }
             >
               <option value="joined">Someone joins your list</option>
@@ -1207,6 +1335,36 @@ function Flows({
               </select>
             </label>
           ) : null}
+          {/* The sequence's end (lib/flow-rules.ts): once somebody has what
+              it was selling, the rest of it is not for them. */}
+          <div>
+            <label className="block">
+              <span className="field-label">Ends early</span>
+              <select
+                className="field mt-2"
+                data-flow-goal-choice
+                value={draft.goal}
+                onChange={(e) => setDraft({ ...draft, goal: e.target.value === "any" ? "any" : e.target.value === "product" ? "product" : "" })}
+              >
+                <option value="">Never: everyone gets every email</option>
+                {draft.trigger === "bought" ? null : <option value="any">Once they have bought anything</option>}
+                {products.length ? <option value="product">Once they get a product</option> : null}
+              </select>
+            </label>
+            {draft.goal === "product" ? (
+              <label className="mt-3 block">
+                <span className="sr-only">The product it ends on</span>
+                <select className="field" value={draft.goalProduct} onChange={(e) => setDraft({ ...draft, goalProduct: e.target.value })}>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>{p.title}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            <p className="mt-2 text-sm text-ink-soft">
+              Checked before each email. Someone who buys while in it gets none of the emails still to come.
+            </p>
+          </div>
           <AiAssist<DraftedStep[]>
             title="Write the emails with AI"
             hint="For the moment chosen above, from what your store sells: its products' names, summaries, prices and links, and anything you add here. Only your store's own links are kept. The emails fill the sequence below for you to read and change; nothing is saved or sent until you save it."
@@ -1226,11 +1384,13 @@ function Flows({
             onResult={(written) =>
               setDraft((current) => {
                 if (!current) return current;
-                const steps: StepDraft[] = written.map((w) =>
-                  w.delayHours > 0 && w.delayHours % 24 === 0
-                    ? { wait: String(w.delayHours / 24), unit: "days", subject: w.subject, body: w.body }
-                    : { wait: String(w.delayHours), unit: "hours", subject: w.subject, body: w.body },
-                );
+                const steps: StepDraft[] = written.map((w) => ({
+                  ...(w.delayHours > 0 && w.delayHours % 24 === 0
+                    ? blankStep(String(w.delayHours / 24), "days", products[0]?.id ?? "")
+                    : blankStep(String(w.delayHours), "hours", products[0]?.id ?? "")),
+                  subject: w.subject,
+                  body: w.body,
+                }));
                 // Emails still empty are replaced; the creator's own are kept, and these follow them.
                 const kept = current.steps.filter((x) => x.subject.trim() || x.body.trim());
                 return { ...current, steps: [...kept, ...steps].slice(0, 10) };
@@ -1280,6 +1440,48 @@ function Flows({
                 <div className="mt-2">
                   <MailPictureButton body={s.body} onChange={(next) => setStep(i, { body: next })} box={() => stepBoxes.current[i] ?? null} />
                 </div>
+                {/* Who this email is for (lib/flow-rules.ts). Read from what
+                    your list keeps — what each person has and the labels an
+                    import brought — never from opens or clicks. */}
+                <div className="mt-3 flex flex-wrap items-end gap-2" data-step-condition>
+                  <label className="block min-w-0 flex-1">
+                    <span className="text-sm text-ink-soft">Send it to</span>
+                    <select
+                      className="field mt-1"
+                      value={s.when}
+                      onChange={(e) => setStep(i, { when: STEP_IF_WORDS.find((w) => w.value === e.target.value)?.value ?? "" })}
+                    >
+                      {STEP_IF_WORDS.filter((w) => products.length || (w.value !== "has" && w.value !== "lacks")).map((w) => (
+                        <option key={w.value} value={w.value}>{w.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  {s.when === "has" || s.when === "lacks" ? (
+                    <label className="block min-w-0 flex-1">
+                      <span className="text-sm text-ink-soft">Product</span>
+                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(i, { whenProduct: e.target.value })}>
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>{p.title}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  {s.when === "tag" || s.when === "untagged" ? (
+                    <label className="block min-w-0 flex-1">
+                      <span className="text-sm text-ink-soft">Label, as your import brought it</span>
+                      <input className="field mt-1" maxLength={MAX_CONDITION_TAG} value={s.whenTag} onChange={(e) => setStep(i, { whenTag: e.target.value })} />
+                    </label>
+                  ) : null}
+                </div>
+                {s.when ? (
+                  <label className="mt-2 block">
+                    <span className="text-sm text-ink-soft">Everyone else</span>
+                    <select className="field mt-1" value={s.otherwise} onChange={(e) => setStep(i, { otherwise: e.target.value === "end" ? "end" : "skip" })}>
+                      <option value="skip">Skips this email and goes on to the next</option>
+                      <option value="end">Leaves the sequence here</option>
+                    </select>
+                  </label>
+                ) : null}
                 {draft.steps.length > 1 ? (
                   <button
                     type="button"
@@ -1296,7 +1498,7 @@ function Flows({
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              onClick={() => setDraft({ ...draft, steps: [...draft.steps, { wait: "2", unit: "days", subject: "", body: "" }] })}
+              onClick={() => setDraft({ ...draft, steps: [...draft.steps, blankStep("2", "days", products[0]?.id ?? "")] })}
             >
               Add an email
             </button>

@@ -2339,6 +2339,44 @@ try {
   }
 
   await keepSmall();
+  part("A sequence that stops selling to buyers, and an email only for some");
+  {
+    await open(studio, `${LOCAL}/studio/email?store=${fresh}`);
+    await studio.getByRole("button", { name: "New sequence" }).click();
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Save the sequence" }) });
+    await form.getByLabel("Name, for you").fill("Launch with conditions");
+    await form.locator("[data-flow-goal-choice]").selectOption("any");
+    const subjects = () => form.locator("ol > li input[maxlength='150']");
+    const bodies = () => form.locator("ol > li textarea");
+    await subjects().nth(0).fill("The doors open");
+    await bodies().nth(0).fill("Hello,\n\nThe course is open.");
+    await form.getByRole("button", { name: "Add an email" }).click();
+    await subjects().nth(1).fill("Still thinking about it?");
+    await bodies().nth(1).fill("Hello,\n\nIt closes Friday.");
+    const second = form.locator("ol > li").nth(1);
+    await second.getByLabel("Send it to").selectOption("lead");
+    await second.getByLabel("Everyone else").selectOption("end");
+    await form.getByRole("button", { name: "Save the sequence" }).click();
+    const row = studio.locator("li", { hasText: "Launch with conditions" }).first();
+    await row.waitFor({ timeout: 30_000 });
+    is("the list says when it ends and who each email is for", [
+      await words(row.locator("[data-flow-goal]")),
+      (await words(row)).includes("Email 2: Only to those who have not bought anything yet; for the others, the sequence ends there."),
+    ], ["Ends for anyone once they have bought something.", true]);
+    await row.getByRole("button", { name: "Edit" }).click();
+    is("and it opens again as saved", [
+      await form.locator("[data-flow-goal-choice]").inputValue(),
+      await form.locator("ol > li").nth(1).getByLabel("Send it to").inputValue(),
+      await form.locator("ol > li").nth(1).getByLabel("Everyone else").inputValue(),
+    ], ["any", "lead", "end"]);
+    await form.getByLabel("Starts when").selectOption("bought");
+    is("a sequence that starts with a purchase cannot end at one", [await form.locator("[data-flow-goal-choice]").inputValue(), await form.locator("[data-flow-goal-choice] option[value=any]").count()], ["", 0]);
+    await form.getByRole("button", { name: "Close" }).click();
+    await row.getByRole("button", { name: "Remove" }).click();
+    await row.waitFor({ state: "detached", timeout: 30_000 });
+  }
+
+  await keepSmall();
   part("A phone number asked at checkout, in Stripe's own box");
   {
     await open(studio, `${LOCAL}/studio`);

@@ -98,9 +98,12 @@ test("the same email is not kept twice", () => {
   assert.deepEqual(planKeep(sent({ subject: "The  five-week plan is here ", body: "Hello.\r\n\r\nIt is ready.\n" }), LIST, [home], null), { ok: false, reason: "already" });
 });
 
-test("an email that left out a product's owners is refused, not sent to them", () => {
-  // "You have not bought this yet", arriving for somebody who has.
-  assert.deepEqual(planKeep(sent({ notProductId: "prod2" }), LIST, [], null), { ok: false, reason: "excludes" });
+test("an email that left out a product's owners keeps leaving them out, as its condition", () => {
+  // "You have not bought this yet" must never arrive for somebody who has.
+  const plan = planKeep(sent({ notProductId: "prod2" }), LIST, [], null);
+  assert.ok(plan.ok);
+  const steps = plan.raw.steps as { when?: unknown; otherwise?: unknown }[];
+  assert.deepEqual([steps.at(-1)?.when, steps.at(-1)?.otherwise], [{ if: "lacks", productId: "prod2" }, "skip"]);
 });
 
 test("only an email that finished going out can be kept", () => {
@@ -157,6 +160,13 @@ test("an email to buyers is kept for everybody who buys, in a sequence of its ow
 });
 
 test("an email to people who have not bought is not kept sending to people who join by buying", () => {
-  assert.deepEqual(planKeep(sent({ who: "leads" }), LIST, [], null), { ok: false, reason: "excludes" });
-  assert.deepEqual(planKeep(sent({ who: "buyers", productId: "prod1" }), LIST, [], "Plan"), { ok: false, reason: "excludes" });
+  const leads = planKeep(sent({ who: "leads" }), LIST, [], null);
+  assert.ok(leads.ok);
+  assert.equal(leads.raw.trigger, "joined");
+  assert.deepEqual((leads.raw.steps as { when?: unknown }[]).at(-1)?.when, { if: "lead" });
+  const buyersOfOne = planKeep(sent({ who: "buyers", productId: "prod1" }), LIST, [], "Plan");
+  assert.ok(buyersOfOne.ok);
+  assert.deepEqual([buyersOfOne.raw.trigger, buyersOfOne.raw.productId, (buyersOfOne.raw.steps as { when?: unknown }[]).at(-1)?.when], ["product", "prod1", { if: "buyer" }]);
+  // Narrowed two ways at once is more than one email's condition.
+  assert.deepEqual(planKeep(sent({ who: "leads", notProductId: "prod2" }), LIST, [], null), { ok: false, reason: "excludes" });
 });

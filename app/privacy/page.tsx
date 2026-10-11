@@ -420,7 +420,11 @@ export default function PrivacyPage() {
           when the creator is trying two, each sent to a part of the list
           chosen at random. The tag is the same for everyone who got that
           email or that subject line: it lets the store count visits and sales
-          by email, and says nothing about who you are. Our email provider
+          by email, and says nothing about who you are. Which of a
+          creator&apos;s automatic emails reach you is decided only by what
+          their list already holds about you — what you got or bought from
+          them, and any labels their import brought — never by what you open
+          or click. Our email provider
           tells us when one of these emails could not be delivered to your
           address for good, or when you report one as spam: we record that,
           and when, for your address on that creator&apos;s list, you are not

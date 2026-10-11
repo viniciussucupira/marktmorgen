@@ -30,8 +30,8 @@ import { UPSELL_COOKIE, funnelView, settleUpsells } from "@/lib/upsell";
 import { imageUrl } from "@/lib/product-image";
 import { buyersJoin, noteSession } from "@/lib/affiliates";
 import { recordEnrollment } from "@/lib/learn";
-import { noteProduct, upsertContact } from "@/lib/contacts";
-import { enroll } from "@/lib/flows";
+import { upsertContact } from "@/lib/contacts";
+import { listOrder } from "@/lib/buyer-list";
 import { canRecover, ordersLinkFor } from "@/lib/buyer-orders";
 import { readPaid, stillPending } from "@/lib/paypal-sales";
 import { saleClock } from "@/lib/store-sale";
@@ -440,40 +440,18 @@ export default async function ThanksPage({ params, searchParams }: Params) {
     }
   }
 
-  // A buyer who ticked the box joins the creator's list, and any sequence
-  // that starts with joining or with this product starts for them.
-  if (order.state === "paid" && order.news && order.email && store.listId) {
-    try {
-      const added = await upsertContact(store.listId, order.email, {
-        agreed: true,
-        explicit: true,
-        at: new Date(order.created * 1000).toISOString(),
-        source: "buyer",
-        productId: order.product.id,
-        title: order.product.title,
-      });
-      await enroll(store, order.email, { joined: added.joined, productId: order.product.id });
-      // Each product of a bundle is noted too, and starts its own sequence.
-      for (const item of bundled) {
-        if (await noteProduct(store.listId, order.email, item.id, item.title)) {
-          await enroll(store, order.email, { joined: false, productId: item.id });
-        }
-      }
-    } catch (error) {
-      console.error("adding a buyer to a list failed", error);
-    }
-  } else if (order.state === "paid" && order.email && store.listId) {
-    // Someone already on the list who buys without the box: nobody new is
-    // added, but a sequence about this product starts for them.
-    try {
-      for (const got of [order.product, ...bundled]) {
-        if (await noteProduct(store.listId, order.email, got.id, got.title)) {
-          await enroll(store, order.email, { joined: false, productId: got.id });
-        }
-      }
-    } catch (error) {
-      console.error("noting a purchase on a list failed", error);
-    }
+  // A buyer who ticked the box joins the creator's list, what they bought is
+  // noted against them, and any sequence that starts with joining or with
+  // one of these products starts for them — once per checkout, whichever of
+  // this page and the five-minute job gets there first (lib/buyer-list.ts).
+  if (order.state === "paid" && order.email && store.listId) {
+    await listOrder(store, {
+      sessionId: order.reference,
+      email: order.email,
+      news: order.news,
+      created: order.created,
+      products: [order.product, ...order.bumps.map((added) => added.product), ...bundled].map((p) => ({ id: p.id, title: p.title })),
+    });
   }
 
   // The buyer's confirmation email, sent once whichever of this page and the
