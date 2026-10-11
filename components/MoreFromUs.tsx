@@ -14,7 +14,7 @@ const products = [
     "Polish your professional emails and messages."
   ],
   ["Tactword","https://tactword.com/","Help your team write clear customer replies."],
-  ["NativeApply","https://nativeapply.net/","Polish resumes, cover letters, and job-search messages."]
+  ["Hireword","https://hireword.com/","Polish resumes, cover letters, and job-search messages."]
 ];
 
 export default function MoreFromUs() {
