@@ -34,6 +34,7 @@ export const de: BuyerWords = {
   introThen: (intro, count, interval, then) => `${intro} ${introFirst(count, interval)}, danach ${then}`,
   planWords: (payments, interval, amount) =>
     `${payments} ${interval === "week" ? "wöchentliche" : "monatliche"} Raten von je ${amount}`,
+  planCount: (payments, interval) => `${payments} ${interval === "week" ? "wöchentliche" : "monatliche"} Raten`,
   endsIn: (unit, n) =>
     unit === "day" ? `Endet in ${n} Tagen` : unit === "hour" ? `Endet in ${n} ${plural(n, "Stunde", "Stunden")}` : `Endet in ${n} ${plural(n, "Minute", "Minuten")}`,
 

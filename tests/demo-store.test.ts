@@ -28,6 +28,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { offersCart } from "@/lib/cart-checkout";
 import { readThanksNote } from "@/lib/thanks-note-store";
+import { planFor } from "@/lib/product-extras";
 import { DEMO_EXTRAS, DEMO_PRODUCT, DEMO_STORE, type SeedDeps, ensureDemoStore, imageSize, seedFingerprint } from "@/lib/demo-seed";
 import { DEMO_CONNECTED_ACCOUNT } from "@/lib/demo-account";
 import { getDemoFile } from "@/lib/demo-file";
@@ -159,6 +160,7 @@ async function main(): Promise<void> {
   is("its own questions, each true of the demo", store.faq.map((item) => item.q), DEMO_STORE.faq.map((item) => item.q));
   const note = listing.note ? await readThanksNote(store.statsId, listing.id) : null;
   is("Jenny's note after paying: words and one button back to us, no video", [Boolean(note?.body), note?.video ?? null, note?.button?.label], [true, null, "Open a store like this one"]);
+  is("both prices can be paid in 3 monthly payments, each its own", listing.options.map((o) => planFor(listing, o.id)?.amountCents), [900, 1300]);
   is("buy more, save more is on, so a visitor sees it under Add to cart", [store.cartDeal, offersCart(store)], [{ on: true, min: 2, percent: 10 }, true]);
   is("the demo's one link is in the spotlight", store.links.map((l) => [l.title, l.spotlight]), [[DEMO_STORE.link.title, true]]);
   is("which can be bought", canSellProduct(store, listing), true);

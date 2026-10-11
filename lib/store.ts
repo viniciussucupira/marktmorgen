@@ -65,7 +65,7 @@ import { parseTiers } from "@/lib/tier-rules";
 import { ENDED_INDEX } from "@/lib/plan-standing";
 import { type Cycle, type Tier, parseCycle, parseTier } from "@/lib/plan";
 import { COMMUNITY_ID } from "@/lib/community-text";
-import { type Bump, MAX_BUMPS, type Plan, bumpTargets, canBeBumped, isOneOff } from "@/lib/product-extras";
+import { type Bump, MAX_BUMPS, type Plan, bumpTargets, canBeBumped, isOneOff, uncoveredOption } from "@/lib/product-extras";
 import { type Funnel, type FunnelProblem, funnelProblem } from "@/lib/funnel";
 import { type AffiliateSetting, parseAffiliateSetting } from "@/lib/affiliate-setting";
 import { type ReviewAsk, parseReviewAsk } from "@/lib/review-ask";
@@ -1995,7 +1995,7 @@ export async function ensureListId(email: string): Promise<Store | null> {
 
 export type ExtrasResult =
   | { ok: true; store: Store; product: Product }
-  | { ok: false; reason: "none" | "unknown" | "kind" | "target" | "price" | "sold_with" | "twice" | "full" | "slot" };
+  | { ok: false; reason: "none" | "unknown" | "kind" | "target" | "price" | "plan_price" | "sold_with" | "twice" | "full" | "slot" };
 
 /**
  * Sets or clears a product's limited quantity and its order bump.
@@ -2021,7 +2021,7 @@ export async function setProductExtras(
    */
   change: { stock?: number | null; bump?: Bump | null; slot?: number; plan?: Plan | null },
 ): Promise<ExtrasResult> {
-  return onProduct<"kind" | "target" | "price" | "sold_with" | "twice" | "full" | "slot">(
+  return onProduct<"kind" | "target" | "price" | "plan_price" | "sold_with" | "twice" | "full" | "slot">(
     email,
     id,
     async (product, store) => {
@@ -2059,12 +2059,26 @@ export async function setProductExtras(
         }
       }
       if (change.plan !== undefined) {
-        if (change.plan !== null) {
-          if (!isOneOff(product) || product.options.length > 0 || product.pwyw) return { ok: false, reason: "kind" };
-          if (change.plan.payments * change.plan.amountCents < product.priceCents) return { ok: false, reason: "price" };
-          if (change.plan.amountCents < currencyRule(store.currency).minCharge) return { ok: false, reason: "price" };
+        let plan = change.plan;
+        if (plan !== null) {
+          if (!isOneOff(product) || product.pwyw) return { ok: false, reason: "kind" };
+          if (product.options.length > 0) {
+            // Several prices: a payment for each, kept only for prices the
+            // product has, every one the buyer can pick covered in full.
+            const ids = new Set(product.options.map((option) => option.id));
+            const options = Object.fromEntries(Object.entries(plan.options ?? {}).filter(([id]) => ids.has(id)));
+            const each = Object.values(options);
+            if (each.length === 0) return { ok: false, reason: "plan_price" };
+            plan = { payments: plan.payments, interval: plan.interval, amountCents: Math.min(...each), options };
+            if (uncoveredOption(product, plan)) return { ok: false, reason: "plan_price" };
+          } else {
+            plan = { payments: plan.payments, interval: plan.interval, amountCents: plan.amountCents };
+            if (plan.payments * plan.amountCents < product.priceCents) return { ok: false, reason: "price" };
+          }
+          // Stripe's smallest charge in the store's currency (lib/money.ts); amountCents is the smallest payment.
+          if (plan.amountCents < currencyRule(store.currency).minCharge) return { ok: false, reason: "price" };
         }
-        next.plan = change.plan;
+        next.plan = plan;
       }
       return next;
     },

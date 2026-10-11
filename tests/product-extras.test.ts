@@ -136,7 +136,7 @@ part("A payment plan, and why it is not being offered");
   is("and activePlan agrees", activePlan(raised), null);
   is(
     "the sentence does the arithmetic for the creator",
-    planPauseWords("short", plan, 40_000, "usd"),
+    planPauseWords("short", plan, raised, "usd"),
     "3 payments of $110 come to $330, less than the $400 price. Raise each payment, add one, or lower the price.",
   );
 

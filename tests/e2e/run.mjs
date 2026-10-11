@@ -2190,6 +2190,64 @@ try {
   }
 
   await keepSmall();
+  part("A payment plan at each of several prices");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    await studio.getByRole("button", { name: "Add something to sell" }).click();
+    await studio.getByLabel("What you are selling").fill("Sourdough Guide");
+    await studio.getByLabel("Price", { exact: true }).fill("27");
+    await studio.getByRole("button", { name: "Add it" }).click();
+    await studio.locator("li", { hasText: "Sourdough Guide" }).first().waitFor({ timeout: 30_000 });
+    const guide = await studio.evaluate(() => {
+      const link = [...document.querySelectorAll("a[href*='/p/']")].find((a) => a.closest("li")?.textContent?.includes("Sourdough Guide"));
+      return link ? link.getAttribute("href").split("/p/")[1].split(/[?#]/)[0].split("-").pop() : "";
+    });
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    await post("/api/store/option", { action: "add", id: guide, label: "1 week", price: "27" });
+    await post("/api/store/option", { action: "add", id: guide, label: "5 weeks", price: "39" });
+    // The two prices' ids, from the product's own record.
+    const [scan] = await services.redis([["SCAN", "0", "MATCH", `nl:catalog:*:l:${guide}`, "COUNT", "100000"]]);
+    const [record] = await services.redis([["GET", scan[1][0]]]);
+    const [one, five] = JSON.parse(record).options.map((option) => option.id);
+    await post("/api/store/product", { action: "link", id: one, link: "https://example.com/sourdough-1" });
+    await post("/api/store/product", { action: "link", id: five, link: "https://example.com/sourdough-5" });
+
+    await open(studio, `${LOCAL}/studio`);
+    await studio.locator("button[aria-expanded]", { hasText: "Sourdough Guide" }).first().click();
+    await studio.getByRole("button", { name: "Offer a payment plan" }).first().click();
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Save the plan" }) });
+    const amounts = form.locator("fieldset input[inputmode=decimal]");
+    is("one payment for each price, suggested from it", await amounts.evaluateAll((all) => all.map((input) => input.value)), ["9", "13"]);
+    await amounts.nth(1).fill("12");
+    is("the studio says when a price's payments fall short", (await words(form)).includes("3 of these come to less than $39."), true);
+    await form.getByRole("button", { name: "Save the plan" }).click();
+    const short = studio.getByText(/^Set a payment for every price/);
+    await short.waitFor({ timeout: 30_000 });
+    is("and the plan is not saved short", await short.count(), 1);
+    await amounts.nth(1).fill("13");
+    await form.getByRole("button", { name: "Save the plan" }).click();
+    await studio.getByText("Payment plan: 3 monthly payments, from $9 each").waitFor({ timeout: 30_000 });
+    is("saved, and said with where it starts", await studio.getByText("Payment plan: 3 monthly payments, from $9 each").count(), 1);
+
+    await open(page, `${LOCAL}/@localshop/p/${guide}`);
+    const box = page.locator("#buy");
+    const buy = box.locator("form[data-checkout] button[type=submit]").first();
+    is("each price says its own payments, and the plan how many", [
+      (await words(box)).includes("or 3 monthly payments of $9"),
+      (await words(box)).includes("or 3 monthly payments of $13"),
+      await words(box.locator("label[for^=pp-]").first()),
+    ], [true, true, "3 monthly payments"]);
+    is("the page says it can be paid in a plan", (await words(page.locator("main"))).includes("Pay in full, or in 3 monthly payments"), true);
+    await box.locator(`input[name=option][value="${five}"]`).check();
+    await box.locator("input[name=pay][value=plan]").check();
+    is("the button still asks for the price picked", await words(buy), "Continue with this option");
+    await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), buy.click()]);
+    const paid = services.checkouts().at(-1);
+    is("Stripe charges that price's first payment, in a plan, and keeps which price", [paid.mode, paid.amount_total, paid.metadata.kind, paid.metadata.plan_payments, paid.metadata.option], ["subscription", 1300, "plan", "3", five]);
+    await post("/api/store/product", { action: "remove", id: guide });
+  }
+
+  await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);

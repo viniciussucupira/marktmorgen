@@ -94,9 +94,14 @@ export function speech(store: { language?: unknown; currency: string }): Speech 
 
 type Speaks = { language?: unknown; currency: string };
 
-/** "3 monthly payments of $110", in the store's language. */
-export function planLine(store: Speaks, plan: { payments: number; interval: "week" | "month"; amountCents: number }): string {
+/**
+ * "3 monthly payments of $110", in the store's language. A plan over several
+ * prices, each with its own amount (lib/product-extras.ts, planFor), is
+ * "3 monthly payments": the amount is said beside each price instead.
+ */
+export function planLine(store: Speaks, plan: { payments: number; interval: "week" | "month"; amountCents: number; options?: Record<string, number> }): string {
   const { w, money } = speech(store);
+  if (plan.options && Object.keys(plan.options).length > 0) return w.planCount(plan.payments, plan.interval);
   return w.planWords(plan.payments, plan.interval, money(plan.amountCents));
 }
 

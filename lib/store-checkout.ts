@@ -29,7 +29,7 @@ import {
 import { isPaidUp } from "@/lib/billing";
 import { livePromotionId } from "@/lib/discount";
 import { StripeError, checkoutClosesAt, onAccount, platformKey } from "@/lib/stripe-account";
-import { type Bump, MAX_BUMPS, activeBumps, activePlan, bumpTargets } from "@/lib/product-extras";
+import { type Bump, MAX_BUMPS, activeBumps, bumpTargets, planFor } from "@/lib/product-extras";
 import { planLine } from "@/lib/buyer-words";
 import { LANGUAGES } from "@/lib/store-language";
 import { type CameFrom, hasSource } from "@/lib/came-from";
@@ -268,7 +268,9 @@ export async function createCheckout(
   const membership = product.recurring;
   // Paying in instalments is a subscription that ends by itself; paying at
   // once is a single payment. The amount of each is the creator's, read here.
-  const plan = extras.plan && !membership ? activePlan(product) : null;
+  // On a product with several prices, the payments are those of the price picked.
+  const plan = extras.plan && !membership ? planFor(product, chosen?.id ?? null) : null;
+  if (extras.plan && !membership && !plan) throw new Error("This price cannot be paid in a plan");
   const recurring = membership !== null || plan !== null;
   const priceCents = plan ? plan.amountCents : chosen ? chosen.priceCents : product.priceCents;
   const baseName = chosen ? `${product.title} (${chosen.label})` : product.title;
@@ -499,7 +501,8 @@ export async function createCheckout(
     body.set("subscription_data[metadata][kind]", "plan");
     body.set("subscription_data[metadata][plan_payments]", String(plan.payments));
     body.set("subscription_data[metadata][plan_interval]", plan.interval);
-    body.set("subscription_data[description]", `${product.title}: ${planLine(store, plan)}`.slice(0, 500));
+    body.set("subscription_data[description]", `${baseName}: ${planLine(store, plan)}`.slice(0, 500));
+    if (chosen) body.set("subscription_data[metadata][option]", chosen.id);
   } else {
     body.set("payment_intent_data[metadata][store]", store.handle);
     body.set("payment_intent_data[metadata][product]", product.id);

@@ -31,6 +31,7 @@ export const nl: BuyerWords = {
   introThen: (intro, count, interval, then) => `${intro} ${introFirst(count, interval)}, daarna ${then}`,
   planWords: (payments, interval, amount) =>
     `${payments} ${interval === "week" ? "wekelijkse" : "maandelijkse"} termijnen van ${amount}`,
+  planCount: (payments, interval) => `${payments} ${interval === "week" ? "wekelijkse" : "maandelijkse"} termijnen`,
   endsIn: (unit, n) =>
     unit === "day" ? `Eindigt over ${n} dagen` : unit === "hour" ? `Eindigt over ${n} uur` : `Eindigt over ${n} ${plural(n, "minuut", "minuten")}`,
 

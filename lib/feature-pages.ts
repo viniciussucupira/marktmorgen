@@ -155,6 +155,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "calendar", who: "Sizes of the same plan", what: "One week to try, five weeks for the person who already trusts you, the whole season for the fan. Named “1 week” and “5 weeks,” the bigger one shows what each week costs in it and how much less that is, worked out from your own prices." },
           { icon: "key", who: "Licenses", what: "Personal use, commercial use and a team license, each delivering its own file and terms." },
           { icon: "video", who: "Plain and complete", what: "The PDF on its own, or the PDF with the videos, at a price that tells the buyer the difference." },
+          { icon: "repeat", who: "The bigger option, in payments", what: "Add a payment plan and each price gets payments of its own: three monthly payments of $13 for five weeks, of $9 for one. Each card says its own, and the buyer picks the price and then how to pay it." },
         ],
       },
       {
@@ -172,7 +173,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           "50 options per product at most, and 4,000 across a store.",
           "A course or podcast sold as a membership has one price: what a member pays each time is what it costs.",
-          "Payment plans are for products with one price, so a product with options is paid in full up front, or sold as a membership.",
+          "A payment plan on a product with options spreads each price in the same number of payments, each price with an amount of its own; the plan is paused while a price that can be bought has none.",
           "A product with options has fixed prices: pay-what-you-want pricing is for products with one price.",
         ],
       },

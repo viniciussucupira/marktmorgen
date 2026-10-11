@@ -24,6 +24,7 @@
 import type { Listing } from "@/lib/store";
 import { formatMoney } from "@/lib/money";
 import { MIN_BUNDLE_ITEMS } from "@/lib/bundle-rules";
+import { MAX_OPTIONS, OPTION_ID, type ProductOption, optionDelivers } from "@/lib/product-option";
 
 export type Bump = {
   /** Another product of the same store. */
@@ -274,8 +275,18 @@ export type Plan = {
   /** How many payments in all, the first one today. */
   payments: number;
   interval: "week" | "month";
-  /** Each payment, in the store currency's smallest unit. */
+  /**
+   * Each payment, in the store currency's smallest unit. On a product with
+   * several prices it is the smallest of `options`, which is what "from" means.
+   */
   amountCents: number;
+  /**
+   * On a product with several prices (lib/product-option.ts): each payment
+   * for each of them, by the option's id. The buyer picks a price and then
+   * how to pay it, and each price is spread in the same number of payments.
+   * Added 10 October 2026; a plan saved before has none.
+   */
+  options?: Record<string, number>;
 };
 
 export const MIN_PLAN_PAYMENTS = 2;
@@ -287,20 +298,41 @@ export function parsePlan(raw: unknown): Plan | null {
   const payments = Number(value.payments);
   if (!Number.isInteger(payments) || payments < MIN_PLAN_PAYMENTS || payments > MAX_PLAN_PAYMENTS) return null;
   if (value.interval !== "week" && value.interval !== "month") return null;
-  if (typeof value.amountCents !== "number" || !Number.isInteger(value.amountCents)) return null;
-  if (value.amountCents < MIN_BUMP_CENTS || value.amountCents > 10_000_000) return null;
+  const fair = (cents: unknown): cents is number => typeof cents === "number" && Number.isInteger(cents) && cents >= MIN_BUMP_CENTS && cents <= 10_000_000;
+  // Each price's payment, kept only for ids an option can have and amounts a payment can be.
+  const options: Record<string, number> = {};
+  if (value.options && typeof value.options === "object" && !Array.isArray(value.options)) {
+    for (const [id, cents] of Object.entries(value.options as Record<string, unknown>).slice(0, MAX_OPTIONS)) {
+      if (OPTION_ID.test(id) && fair(cents)) options[id] = cents;
+    }
+  }
+  const each = Object.values(options);
+  if (each.length > 0) return { payments, interval: value.interval, amountCents: Math.min(...each), options };
+  if (!fair(value.amountCents)) return null;
   return { payments, interval: value.interval, amountCents: value.amountCents };
 }
 
-/**
- * The plan a buyer may choose for this product, or null. A plan never adds up
- * to less than paying at once, and it is offered on a product with one price.
- */
+/** The options a plan has to cover: the ones a buyer is offered (lib/store-checkout.ts, sellableOptions). */
+function offeredOptions(product: Listing): ProductOption[] {
+  const opens = Boolean(product.course || product.podcast);
+  return product.options.filter((option) => optionDelivers(option, opens));
+}
+
+/** The first price on a product with several that its plan does not cover, and why; null when it covers them all. */
+export function uncoveredOption(product: Listing, plan: Plan): { option: ProductOption; why: "none" | "short" } | null {
+  for (const option of offeredOptions(product)) {
+    const cents = plan.options?.[option.id];
+    if (!cents) return { option, why: "none" };
+    if (plan.payments * cents < option.priceCents) return { option, why: "short" };
+  }
+  return null;
+}
+
 /** Why a payment plan a creator has set up is not being offered. */
 export type PlanPause =
   /** No longer a plain one-off sale. */
   | "kind"
-  /** Several prices to choose between: the plan has one amount. */
+  /** Several prices to choose between, and one of them has no payment set in the plan. */
   | "options"
   /** Buyers name their own price, so there is nothing fixed to spread. */
   | "pwyw"
@@ -318,32 +350,64 @@ export function planState(product: Listing): { plan: Plan } | { paused: PlanPaus
   const plan = product.plan;
   if (!plan) return null;
   if (!isOneOff(product)) return { paused: "kind", plan };
-  if (product.options.length > 0) return { paused: "options", plan };
+  if (product.options.length > 0) {
+    // Every price the buyer can pick has its own payment, adding up to at
+    // least that price; one without would be a choice the button cannot keep.
+    if (offeredOptions(product).length === 0) return { paused: "options", plan };
+    const gap = uncoveredOption(product, plan);
+    return gap ? { paused: gap.why === "none" ? "options" : "short", plan } : { plan };
+  }
   if (product.pwyw) return { paused: "pwyw", plan };
   if (plan.payments * plan.amountCents < product.priceCents) return { paused: "short", plan };
   return { plan };
 }
 
+/**
+ * The plan a buyer may choose for this product, or null. A plan never adds up
+ * to less than paying at once. On a product with several prices this is the
+ * plan as a whole; what each payment is depends on the price picked (planFor).
+ */
 export function activePlan(product: Listing): Plan | null {
   const state = planState(product);
   return state && !("paused" in state) ? state.plan : null;
 }
 
+/**
+ * The plan for the price the buyer picked: on a product with one price, the
+ * plan itself; on one with several, the same payments at that price's amount.
+ * Null when there is no plan, or the id names no price the plan covers.
+ */
+export function planFor(product: Listing, optionId: string | null): Plan | null {
+  const plan = activePlan(product);
+  if (!plan) return null;
+  if (product.options.length === 0) return { payments: plan.payments, interval: plan.interval, amountCents: plan.amountCents };
+  const cents = optionId ? plan.options?.[optionId] : undefined;
+  return cents ? { payments: plan.payments, interval: plan.interval, amountCents: cents } : null;
+}
+
 /** What the creator is told, and what to change to get the plan back. */
-export function planPauseWords(why: PlanPause, plan: Plan, priceCents: number, currency: string): string {
+export function planPauseWords(why: PlanPause, plan: Plan, product: Listing, currency: string): string {
+  const gap = product.options.length > 0 ? uncoveredOption(product, plan) : null;
   switch (why) {
     case "kind":
-      return "A payment plan only goes on a product with one price, sold once.";
+      return "A payment plan only goes on a product sold once.";
     case "options":
-      return "This product has several prices to choose between, and a plan spreads one price.";
+      return gap
+        ? `The plan has no payment for the \u201c${gap.option.label}\u201d price. Change the plan and set one, so every price can be paid in it.`
+        : "This product has several prices, and none of them can be sold right now.";
     case "pwyw":
       return "Buyers name their own price here, so there is no fixed price to spread.";
-    case "short":
-      return `${plan.payments} payments of ${formatMoney(plan.amountCents, currency)} come to ${formatMoney(plan.payments * plan.amountCents, currency)}, less than the ${formatMoney(priceCents, currency)} price. Raise each payment, add one, or lower the price.`;
+    case "short": {
+      const each = gap ? (plan.options?.[gap.option.id] ?? plan.amountCents) : plan.amountCents;
+      const price = gap ? gap.option.priceCents : product.priceCents;
+      const of = gap ? `the \u201c${gap.option.label}\u201d price of ${formatMoney(price, currency)}` : `the ${formatMoney(price, currency)} price`;
+      return `${plan.payments} payments of ${formatMoney(each, currency)} come to ${formatMoney(plan.payments * each, currency)}, less than ${of}. Raise each payment, add one, or lower the price.`;
+    }
   }
 }
 
-/** "3 monthly payments of $110", in the store's currency. */
+/** "3 monthly payments of $110", or "3 monthly payments" on a product with several prices, in the store's currency. */
 export function planWords(plan: Plan, currency: string): string {
-  return `${plan.payments} ${plan.interval === "week" ? "weekly" : "monthly"} payments of ${formatMoney(plan.amountCents, currency)}`;
+  const count = `${plan.payments} ${plan.interval === "week" ? "weekly" : "monthly"} payments`;
+  return plan.options && Object.keys(plan.options).length > 0 ? count : `${count} of ${formatMoney(plan.amountCents, currency)}`;
 }
