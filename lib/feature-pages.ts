@@ -2306,7 +2306,7 @@ export const CREATOR_PAGES: TopicPage[] = [
         kind: "limits",
         title: "Where it falls short for cooks today",
         items: [
-          "No physical products: a cookbook in print is sold elsewhere.",
+          "A printed cookbook ships from you: one shipping charge per order, to the countries you choose, and you mark each order shipped. No print-on-demand, and no live shipping rates from carriers.",
           "No printed plans made to order, and no personal plans generated for each buyer.",
           "A membership that hands over a link keeps working for someone who stops paying: change the link each month, or deliver the plans as a course.",
         ],
