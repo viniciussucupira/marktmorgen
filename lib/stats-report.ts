@@ -32,6 +32,11 @@ export type SummaryWindow = {
   devices: { device: string; views: number }[];
   /** The same number of days just before, to compare with; sales and revenue null where they were not read in full. */
   previous: { visitors: number; page_views: number; checkouts: number; sales: number | null; revenue: number | null };
+  /** Refunds given in the window; null when they were not read. */
+  refunded: number | null;
+  /** Money by the buyer's country, and by the ad it came from (utm_content), the biggest first. */
+  sales_by_country: { country: string; sales: number; revenue: number }[];
+  ads: { ad: string; channel: string; campaign: string; sales: number; revenue: number }[];
 };
 
 export type Summary = {
@@ -92,6 +97,9 @@ export function summaryOf(data: StatsData): Summary {
           revenue: known && p ? p.cents : null,
         };
       })(),
+      refunded: known && data.refunds ? data.refunds[w].reduce((n, r) => n + r.cents, 0) : null,
+      sales_by_country: known ? (data.salesCountries?.[w] ?? []).slice(0, 20).map((r) => ({ country: r.country, sales: r.sales, revenue: r.cents })) : [],
+      ads: known ? (data.ads?.[w] ?? []).slice(0, 20).map((r) => ({ ad: r.content, channel: r.source, campaign: r.campaign, sales: r.sales, revenue: r.cents })) : [],
     };
   }
   return { currency: data.currency, sales: data.sales, days };

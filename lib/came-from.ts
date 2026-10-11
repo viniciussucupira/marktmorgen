@@ -29,7 +29,7 @@
 /** The tags, as they are counted. Matches how lib/stats.ts cleans them. */
 import { sourceAlias } from "@/lib/source-rules";
 
-export type CameFrom = { source: string; medium: string; campaign: string };
+export type CameFrom = { source: string; medium: string; campaign: string; content?: string };
 
 export const NO_SOURCE: CameFrom = { source: "", medium: "", campaign: "" };
 
@@ -61,6 +61,7 @@ export function cameFrom(referer: string | null, ownHost: string): CameFrom {
     source: sourceAlias(tidy(url.searchParams.get("utm_source"))),
     medium: tidy(url.searchParams.get("utm_medium")),
     campaign: tidy(url.searchParams.get("utm_campaign"), 40),
+    content: tidy(url.searchParams.get("utm_content"), 40),
   };
 }
 

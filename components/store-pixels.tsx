@@ -165,7 +165,8 @@ function track(w: PixelWindow, pixels: Pixels, event: Exclude<PixelEvent, null> 
     const money = { value: event.value, currency: (event.currency ?? "usd").toUpperCase() };
     if (pixels.meta && w.fbq) w.fbq("track", "Purchase", { ...money, content_ids: [event.productId], content_type: "product" }, { eventID: event.id });
     if (pixels.google && w.gtag) w.gtag("event", "purchase", { ...money, transaction_id: event.id, items: [{ item_id: event.productId, item_name: event.title }] });
-    if (pixels.tiktok && ttq) ttq.track("CompletePayment", { ...money, contents: [{ content_id: event.productId, content_name: event.title }], content_type: "product" });
+    // The order's id as the event's, so TikTok counts this and the server's (lib/ad-events.ts) as one.
+    if (pixels.tiktok && ttq) ttq.track("CompletePayment", { ...money, contents: [{ content_id: event.productId, content_name: event.title }], content_type: "product" }, { event_id: event.id });
     if (pixels.pinterest && w.pintrk) w.pintrk("track", "checkout", { ...money, order_id: event.id, order_quantity: 1 });
   } else if (event.type === "lead") {
     if (pixels.meta && w.fbq) w.fbq("track", "Lead", { content_ids: [event.productId] });
@@ -222,7 +223,19 @@ export function StorePixels({
     start("tiktok", pixels.tiktok, startTikTok);
     start("pinterest", pixels.pinterest, startPinterest);
 
-    if (event?.type === "purchase" && once(`nl_px_sent:${event.id}`)) track(w, pixels, event);
+    if (event?.type === "purchase" && once(`nl_px_sent:${event.id}`)) {
+      track(w, pixels, event);
+      // The same purchase from our server too, where the creator set it up
+      // (lib/ad-events.ts): asked only here, where the pixels were allowed to run.
+      if (pixels.meta || pixels.tiktok) {
+        fetch("/api/store/ads-event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ h: handle, s: event.id }),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    }
     if (event?.type === "lead" && !started.has(`lead:${event.productId}`)) {
       started.add(`lead:${event.productId}`);
       track(w, pixels, event);
@@ -249,7 +262,7 @@ export function StorePixels({
     };
     document.addEventListener("submit", onSubmit, true);
     return () => document.removeEventListener("submit", onSubmit, true);
-  }, [state, pixels, event]);
+  }, [state, pixels, event, handle]);
 
   if (state === "unknown") return null;
 
