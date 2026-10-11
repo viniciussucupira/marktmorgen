@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { readListings } from "@/lib/catalog";
+import { readListings, recordListings } from "@/lib/catalog";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
@@ -24,6 +24,9 @@ import {
   readBook,
 } from "@/lib/affiliates";
 import { AffiliateLinkBox } from "@/components/affiliate-link-box";
+import { AffiliateKit } from "@/components/affiliate-kit";
+import { kitProduct } from "@/lib/affiliate-kit";
+import { isAiConfigured } from "@/lib/ai";
 
 type Params = {
   params: Promise<{ handle: string }>;
@@ -103,6 +106,14 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
   const notice = token && !linkFor ? a.notices.expired : a.notices[status] ?? null;
   // Products that earn differently from the store-wide share, by name.
   // Only products with a rate of their own can differ, so only those are read.
+  // The products an approved affiliate may have posts drafted about (lib/affiliate-kit.ts).
+  const kitProducts =
+    affiliate && affiliate.status === "approved" && isAiConfigured()
+      ? recordListings(store)
+          .filter((listing) => kitProduct(store, affiliate, listing))
+          .slice(0, 60)
+          .map((listing) => ({ id: listing.id, title: listing.title }))
+      : [];
   const different = (await readListings(store, Object.keys(terms.rates)))
     .filter((p) => !p.hidden && p.priceCents > 0 && p.recurring === null && commissionRate(terms, p.id) !== terms.percent)
     .map((p) => ({ title: p.title, rate: commissionRate(terms, p.id) }));
@@ -220,6 +231,7 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                   </p>
                   <p className="st-muted mt-2 text-sm">{attribution(store.affiliates)}</p>
                   <p className="st-muted mt-2 text-sm" data-disclose>{a.termDisclose}</p>
+                  <AffiliateKit handle={store.handle} language={store.language} products={kitProducts} />
                   {/*
                     A code of the store's own, given to this affiliate
                     (lib/affiliate-codes.ts). It is the only thing on this page

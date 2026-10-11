@@ -169,6 +169,23 @@ const en = {
   termShare: (percent: number, hasDifferent: boolean) =>
     `${percent}% of what a buyer pays before tax, on one-time purchases made through your link (memberships and payment plans do not earn)${hasDifferent ? "; some products differ, below" : ""}.`,
   termRefunds: "A refunded sale earns nothing, a partly refunded one earns only on what was kept, and your own purchases never earn.",
+  kit: {
+    head: "Posts to share, drafted for you",
+    intro: "Pick a product and get three short posts written from its page, with your link and a line saying you earn from it already in them. Read each one before you post it, and change anything that is not true for you.",
+    product: "Product",
+    note: "Who you share with, and how you know it (optional)",
+    notePlaceholder: "For example: my followers bake at home; I have used the starter guide for a year",
+    button: "Write three posts",
+    working: "Writing…",
+    left: (n: number) => (n === 1 ? "1 more today." : `${n} more today.`),
+    labels: { x: "For X", instagram: "For Instagram", linkedin: "For LinkedIn" },
+    errors: {
+      day: "That is today's limit. Come back tomorrow.",
+      month: "This store's posts for the month are used up. Write to the store if you need more.",
+      failed: "Nothing came back this time. Try again in a moment.",
+      other: "That could not be done. Reload the page and try again.",
+    },
+  },
   termDisclose: "Wherever you share your link, say that you earn from it, and promise only what the product does: no income or results it does not guarantee.",
   termBuyers: (store: string) =>
     `Anybody who bought from ${store} can join at once, from their order; everyone else applies and ${store} decides. ${store} pays you directly out of their own account: Marktmorgen never holds this money, so there is no minimum to reach and no deadline to claim it by.`,
@@ -406,6 +423,23 @@ const es: AffiliatesWords = {
     `${percent}${S}% de lo que paga un comprador antes de impuestos, en compras únicas hechas a través de tu enlace (las membresías y los pagos a plazos no generan nada)${hasDifferent ? "; algunos productos son distintos, abajo" : ""}.`,
   termRefunds:
     "Una venta reembolsada no genera nada, una reembolsada en parte genera solo sobre lo que se conservó, y tus propias compras nunca generan nada.",
+  kit: {
+    head: "Publicaciones para compartir, redactadas para ti",
+    intro: "Elige un producto y recibe tres publicaciones cortas escritas a partir de su página, con tu enlace y una línea que dice que ganas una comisión ya incluidos. Lee cada una antes de publicarla y cambia lo que no sea cierto para ti.",
+    product: "Producto",
+    note: "Con quién compartes y cómo lo conoces (opcional)",
+    notePlaceholder: "Por ejemplo: mis seguidores hornean en casa; uso la guía de masa madre desde hace un año",
+    button: "Escribir tres publicaciones",
+    working: "Escribiendo…",
+    left: (n) => (n === 1 ? "Te queda 1 hoy." : `Te quedan ${n} hoy.`),
+    labels: { x: "Para X", instagram: "Para Instagram", linkedin: "Para LinkedIn" },
+    errors: {
+      day: "Llegaste al límite de hoy. Vuelve mañana.",
+      month: "Las publicaciones de esta tienda para este mes se agotaron. Escribe a la tienda si necesitas más.",
+      failed: "Esta vez no llegó nada. Inténtalo de nuevo en un momento.",
+      other: "No se pudo hacer. Recarga la página e inténtalo de nuevo.",
+    },
+  },
   termDisclose: "Dondequiera que compartas tu enlace, di que ganas una comisión con él, y promete solo lo que el producto hace: ni ingresos ni resultados que no garantice.",
   termBuyers: (store) =>
     `Quien haya comprado en ${store} puede unirse al instante, desde su pedido; los demás envían una solicitud y ${store} decide. ${store} te paga directamente desde su propia cuenta: Marktmorgen nunca retiene este dinero, así que no hay mínimo que alcanzar ni fecha límite para reclamarlo.`,
@@ -625,6 +659,23 @@ const fr: AffiliatesWords = {
     `${percent}${S}% de ce qu'un acheteur paie hors taxes, sur les achats uniques effectués via votre lien (les abonnements et les paiements échelonnés ne rapportent rien)${hasDifferent ? `${S}; certains produits diffèrent, voir ci-dessous` : ""}.`,
   termRefunds:
     "Une vente remboursée ne rapporte rien, une vente partiellement remboursée ne rapporte que sur ce qui a été conservé, et vos propres achats ne rapportent jamais rien.",
+  kit: {
+    head: "Des publications à partager, rédigées pour vous",
+    intro: "Choisissez un produit et recevez trois courtes publications écrites à partir de sa page, avec votre lien et une ligne indiquant que vous touchez une commission, déjà intégrés. Relisez chacune avant de la publier et modifiez ce qui n'est pas vrai pour vous.",
+    product: "Produit",
+    note: "Avec qui vous partagez, et comment vous le connaissez (facultatif)",
+    notePlaceholder: `Par exemple${S}: mes abonnés font leur pain${S}; j'utilise le guide du levain depuis un an`,
+    button: "Écrire trois publications",
+    working: "Rédaction…",
+    left: (n) => `Encore ${n} aujourd'hui.`,
+    labels: { x: "Pour X", instagram: "Pour Instagram", linkedin: "Pour LinkedIn" },
+    errors: {
+      day: "C'est la limite d'aujourd'hui. Revenez demain.",
+      month: "Les publications de cette boutique pour ce mois sont épuisées. Écrivez à la boutique s'il vous en faut d'autres.",
+      failed: "Rien n'est revenu cette fois. Réessayez dans un instant.",
+      other: "Cela n'a pas pu être fait. Rechargez la page et réessayez.",
+    },
+  },
   termDisclose: `Partout où vous partagez votre lien, indiquez que vous touchez une commission, et ne promettez que ce que le produit fait${S}: ni revenus ni résultats qu'il ne garantit pas.`,
   termBuyers: (store) =>
     `Toute personne ayant acheté chez ${store} peut rejoindre le programme tout de suite, depuis sa commande${S}; les autres postulent et ${store} décide. ${store} vous paie directement depuis son propre compte${S}: Marktmorgen ne détient jamais cet argent, il n'y a donc aucun minimum à atteindre ni aucune date limite pour le réclamer.`,
@@ -850,6 +901,23 @@ const de: AffiliatesWords = {
     `${percent}${S}% dessen, was ein Käufer vor Steuern zahlt, bei Einmalkäufen über Ihren Link (Mitgliedschaften und Ratenzahlungen bringen nichts ein)${hasDifferent ? "; einige Produkte weichen ab, siehe unten" : ""}.`,
   termRefunds:
     "Ein erstatteter Verkauf bringt nichts ein, ein teilweise erstatteter nur auf das, was behalten wurde, und Ihre eigenen Käufe bringen nie etwas ein.",
+  kit: {
+    head: "Beiträge zum Teilen, für Sie entworfen",
+    intro: "Wählen Sie ein Produkt und erhalten Sie drei kurze Beiträge, geschrieben aus seiner Seite, mit Ihrem Link und einer Zeile, dass Sie daran verdienen, schon darin. Lesen Sie jeden vor dem Posten und ändern Sie, was für Sie nicht stimmt.",
+    product: "Produkt",
+    note: "Mit wem Sie teilen und woher Sie es kennen (optional)",
+    notePlaceholder: "Zum Beispiel: Meine Follower backen zu Hause; ich nutze den Sauerteig-Leitfaden seit einem Jahr",
+    button: "Drei Beiträge schreiben",
+    working: "Wird geschrieben…",
+    left: (n) => `Heute noch ${n}.`,
+    labels: { x: "Für X", instagram: "Für Instagram", linkedin: "Für LinkedIn" },
+    errors: {
+      day: "Das Tageslimit ist erreicht. Kommen Sie morgen wieder.",
+      month: "Die Beiträge dieses Shops für diesen Monat sind aufgebraucht. Schreiben Sie dem Shop, wenn Sie mehr brauchen.",
+      failed: "Diesmal kam nichts zurück. Versuchen Sie es gleich noch einmal.",
+      other: "Das ging nicht. Laden Sie die Seite neu und versuchen Sie es erneut.",
+    },
+  },
   termDisclose: "Sagen Sie überall, wo Sie Ihren Link teilen, dass Sie daran verdienen, und versprechen Sie nur, was das Produkt leistet: keine Einnahmen oder Ergebnisse, die es nicht garantiert.",
   termBuyers: (store) =>
     `Wer bei ${store} gekauft hat, kann sofort beitreten, direkt aus der Bestellung; alle anderen bewerben sich, und ${store} entscheidet. ${store} bezahlt Sie direkt vom eigenen Konto: Marktmorgen hält dieses Geld nie, daher gibt es keinen Mindestbetrag und keine Frist, bis zu der Sie es einfordern müssten.`,
@@ -1079,6 +1147,23 @@ const it: AffiliatesWords = {
     `${percent}${S}% di quanto un acquirente paga al netto delle tasse, sugli acquisti singoli fatti tramite il tuo link (abbonamenti e pagamenti rateali non fanno guadagnare)${hasDifferent ? "; alcuni prodotti fanno eccezione, qui sotto" : ""}.`,
   termRefunds:
     "Una vendita rimborsata non fa guadagnare nulla, una rimborsata in parte fa guadagnare solo su quanto è stato trattenuto, e i tuoi acquisti non fanno mai guadagnare.",
+  kit: {
+    head: "Post da condividere, scritti per te",
+    intro: "Scegli un prodotto e ricevi tre brevi post scritti a partire dalla sua pagina, con il tuo link e una riga che dice che guadagni una commissione già inclusi. Leggi ognuno prima di pubblicarlo e cambia ciò che per te non è vero.",
+    product: "Prodotto",
+    note: "Con chi condividi e come lo conosci (facoltativo)",
+    notePlaceholder: "Per esempio: chi mi segue fa il pane in casa; uso la guida al lievito madre da un anno",
+    button: "Scrivi tre post",
+    working: "Scrittura in corso…",
+    left: (n) => (n === 1 ? "Ancora 1 oggi." : `Ancora ${n} oggi.`),
+    labels: { x: "Per X", instagram: "Per Instagram", linkedin: "Per LinkedIn" },
+    errors: {
+      day: "Hai raggiunto il limite di oggi. Torna domani.",
+      month: "I post di questo negozio per questo mese sono finiti. Scrivi al negozio se te ne servono altri.",
+      failed: "Questa volta non è arrivato nulla. Riprova tra un momento.",
+      other: "Non è stato possibile. Ricarica la pagina e riprova.",
+    },
+  },
   termDisclose: "Ovunque condividi il tuo link, di' che ci guadagni una commissione, e prometti solo ciò che il prodotto fa: niente guadagni né risultati che non garantisce.",
   termBuyers: (store) =>
     `Chiunque abbia acquistato da ${store} può unirsi subito, dal proprio ordine; tutti gli altri si candidano e ${store} decide. ${store} ti paga direttamente dal proprio conto: Marktmorgen non detiene mai questo denaro, quindi non c'è un minimo da raggiungere né una scadenza entro cui richiederlo.`,
@@ -1302,6 +1387,23 @@ const nl: AffiliatesWords = {
     `${percent}${S}% van wat een koper vóór belasting betaalt, bij eenmalige aankopen via je link (lidmaatschappen en betalingen in termijnen leveren niets op)${hasDifferent ? "; sommige producten wijken af, zie hieronder" : ""}.`,
   termRefunds:
     "Een terugbetaalde verkoop levert niets op, een gedeeltelijk terugbetaalde alleen over wat is behouden, en je eigen aankopen leveren nooit iets op.",
+  kit: {
+    head: "Berichten om te delen, voor je geschreven",
+    intro: "Kies een product en krijg drie korte berichten, geschreven vanuit de pagina ervan, met je link en een regel dat je eraan verdient er al in. Lees ze voordat je ze plaatst en pas aan wat voor jou niet klopt.",
+    product: "Product",
+    note: "Met wie je deelt en hoe je het kent (optioneel)",
+    notePlaceholder: "Bijvoorbeeld: mijn volgers bakken thuis; ik gebruik de zuurdesemgids al een jaar",
+    button: "Schrijf drie berichten",
+    working: "Bezig met schrijven…",
+    left: (n) => `Vandaag nog ${n}.`,
+    labels: { x: "Voor X", instagram: "Voor Instagram", linkedin: "Voor LinkedIn" },
+    errors: {
+      day: "Je hebt de limiet van vandaag bereikt. Kom morgen terug.",
+      month: "De berichten van deze winkel voor deze maand zijn op. Schrijf de winkel als je er meer nodig hebt.",
+      failed: "Er kwam deze keer niets terug. Probeer het zo opnieuw.",
+      other: "Dat lukte niet. Laad de pagina opnieuw en probeer het nog eens.",
+    },
+  },
   termDisclose: "Zeg overal waar je je link deelt dat je eraan verdient, en beloof alleen wat het product doet: geen inkomsten of resultaten die het niet garandeert.",
   termBuyers: (store) =>
     `Iedereen die bij ${store} heeft gekocht, kan meteen meedoen, vanuit de eigen bestelling; alle anderen melden zich aan en ${store} beslist. ${store} betaalt je rechtstreeks vanaf de eigen rekening: Marktmorgen houdt dit geld nooit vast, dus er is geen minimum om te halen en geen deadline om het op te eisen.`,
@@ -1533,6 +1635,23 @@ const pt: AffiliatesWords = {
     `${percent}${S}% do que um comprador paga antes de impostos, em compras únicas feitas através da sua ligação (subscrições e pagamentos em prestações não geram nada)${hasDifferent ? "; alguns produtos são diferentes, abaixo" : ""}.`,
   termRefunds:
     "Uma venda reembolsada não gera nada, uma parcialmente reembolsada gera apenas sobre o que foi mantido, e as suas próprias compras nunca geram nada.",
+  kit: {
+    head: "Publicações para partilhar, redigidas para si",
+    intro: "Escolha um produto e receba três publicações curtas escritas a partir da página dele, já com a sua ligação e uma linha a dizer que recebe uma comissão. Leia cada uma antes de a publicar e altere o que não for verdade para si.",
+    product: "Produto",
+    note: "Com quem partilha e como conhece o produto (opcional)",
+    notePlaceholder: "Por exemplo: quem me segue faz pão em casa; uso o guia de massa-mãe há um ano",
+    button: "Escrever três publicações",
+    working: "A escrever…",
+    left: (n) => (n === 1 ? "Resta 1 hoje." : `Restam ${n} hoje.`),
+    labels: { x: "Para X", instagram: "Para Instagram", linkedin: "Para LinkedIn" },
+    errors: {
+      day: "Atingiu o limite de hoje. Volte amanhã.",
+      month: "As publicações desta loja para este mês esgotaram. Escreva à loja se precisar de mais.",
+      failed: "Desta vez não veio nada. Tente de novo dentro de momentos.",
+      other: "Não foi possível. Recarregue a página e tente de novo.",
+    },
+  },
   termDisclose: "Sempre que partilhar a sua ligação, diga que recebe uma comissão por ela e prometa apenas o que o produto faz: nem rendimentos nem resultados que ele não garanta.",
   termBuyers: (store) =>
     `Quem comprou em ${store} pode aderir de imediato, a partir da sua encomenda; os restantes candidatam-se e ${store} decide. ${store} paga-lhe diretamente a partir da própria conta: a Marktmorgen nunca detém este dinheiro, por isso não há mínimo a atingir nem prazo para o reclamar.`,
