@@ -1,0 +1,211 @@
+/**
+ * A break from the plan instead of leaving it (added 11 October 2026,
+ * lib/plan-pause.ts). What is checked:
+ *
+ *   - who may take one: paid up, past the trial, monthly, not stopping, with
+ *     no change waiting, paid for long enough, once a year;
+ *   - a break sets the subscription to stop at the end of the paid period,
+ *     writes down when the plan starts again and on which card, and the
+ *     closing of what the store keeps waits while it runs;
+ *   - taken back before it starts, the plan goes on and the year is given
+ *     back; taken back after, the plan simply is not started again;
+ *   - a week before the end the creator is told the date and the price,
+ *     once; on the day the plan is started again on the same card, charged
+ *     at once, and written down on the store;
+ *   - a card the bank refuses ends the break and the creator is told; Stripe
+ *     not answering is tried again the next day instead;
+ *   - a store that started again by hand is left alone.
+ */
+import { claimHandle, setSubscription, storeForEmail, storeRef } from "@/lib/store";
+import { onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
+import { addPeriods } from "@/lib/plans";
+import { done, is, part } from "./check";
+
+process.env.STRIPE_SECRET_KEY = "sk_test_plan_pause_only";
+process.env.RESEND_API_KEY = "re_test_plan_pause_only";
+
+const DAY = 86_400;
+const NOW = 1_791_700_000;
+const emails: { to: string; subject: string; text: string }[] = [];
+const subs: Record<string, Record<string, unknown>> = {};
+const created: URLSearchParams[] = [];
+let createAnswer: "ok" | "declined" | "down" = "ok";
+
+function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    id,
+    status: "active",
+    customer: "cus_TestPause0001",
+    default_payment_method: "pm_TestCard00001",
+    cancel_at_period_end: false,
+    start_date: NOW - 100 * DAY,
+    trial_end: NOW - 86 * DAY,
+    items: {
+      data: [
+        {
+          current_period_end: NOW + 10 * DAY,
+          price: { lookup_key: "nimbus_labs_creator_month", unit_amount: 2900, recurring: { interval: "month" } },
+        },
+      ],
+    },
+    ...over,
+  };
+}
+
+globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+  const url = new URL(String(input));
+  const method = init?.method ?? "GET";
+  if (url.hostname === "api.stripe.com") {
+    if (url.pathname === "/v1/prices" || url.pathname.startsWith("/v1/prices/search") || url.pathname.startsWith("/v1/products")) {
+      return new Response(JSON.stringify({ data: [{ id: "price_creator_month", lookup_key: "nimbus_labs_creator_month", active: true, unit_amount: 2900, recurring: { interval: "month" } }], has_more: false, id: "price_creator_month" }), { status: 200 });
+    }
+    if (url.pathname === "/v1/subscriptions" && method === "POST") {
+      const body = new URLSearchParams(String(init?.body ?? ""));
+      created.push(body);
+      if (createAnswer === "declined") return new Response(JSON.stringify({ error: { code: "card_declined", message: "Your card was declined." } }), { status: 402 });
+      if (createAnswer === "down") return new Response(JSON.stringify({ error: { type: "api_error", message: "down" } }), { status: 500 });
+      const fresh = subscription("sub_Restarted00001", { start_date: NOW, trial_end: null, customer: { id: body.get("customer"), email: "x@example.com" } });
+      subs.sub_Restarted00001 = fresh;
+      return new Response(JSON.stringify(fresh), { status: 200 });
+    }
+    const m = url.pathname.match(/^\/v1\/subscriptions\/(sub_[A-Za-z0-9]+)$/);
+    if (m && subs[m[1]]) {
+      if (method === "POST") {
+        const body = new URLSearchParams(String(init?.body ?? ""));
+        if (body.has("cancel_at_period_end")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
+      }
+      return new Response(JSON.stringify(subs[m[1]]), { status: 200 });
+    }
+    return new Response(JSON.stringify({ error: { message: `no route ${method} ${url.pathname}` } }), { status: 404 });
+  }
+  if (url.hostname === "api.resend.com") {
+    const body = JSON.parse(String(init?.body ?? "{}"));
+    emails.push({ to: Array.isArray(body.to) ? body.to[0] : body.to, subject: body.subject, text: body.text });
+    return new Response(JSON.stringify({ id: "re_1" }), { status: 200 });
+  }
+  return new Response("{}", { status: 404 });
+}) as typeof fetch;
+
+async function storeWith(email: string, handle: string, sub: string) {
+  await claimHandle(email, handle, "A store", "");
+  await setSubscription(email, { customerId: "cus_TestPause0001", subscriptionId: sub, active: true, tier: "creator", cycle: "month" });
+  return (await storeForEmail(email))!;
+}
+
+async function main() {
+  part("Who may take a break");
+  {
+    is("a monthly plan paid for months, never paused", pauseRefusal(subscription("sub_a"), NOW, false), null);
+    is("not in the trial", pauseRefusal(subscription("sub_a", { status: "trialing", trial_end: NOW + DAY }), NOW, false), "trial");
+    is("not a yearly plan", pauseRefusal(subscription("sub_a", { items: { data: [{ current_period_end: NOW + DAY, price: { lookup_key: "nimbus_labs_creator_year", unit_amount: 30000, recurring: { interval: "year" } } }] } }), NOW, false), "yearly");
+    is("not one set to stop", pauseRefusal(subscription("sub_a", { cancel_at_period_end: true }), NOW, false), "canceling");
+    is("not with a change waiting", pauseRefusal(subscription("sub_a", { pending_update: { expires_at: NOW + DAY } }), NOW, false), "pending");
+    is("not one behind on paying", pauseRefusal(subscription("sub_a", { status: "past_due" }), NOW, false), "standing");
+    // One month paid: the trial ended 20 days ago, so only the first charge went through.
+    is("not before two months are paid", pauseRefusal(subscription("sub_a", { trial_end: NOW - 20 * DAY, start_date: NOW - 34 * DAY }), NOW, false), "early");
+    // Exactly at the second charge.
+    const first = NOW - 31 * DAY;
+    is("from the second charge on", pauseRefusal(subscription("sub_a", { trial_end: first, start_date: first - 14 * DAY }), addPeriods(first, "month", 1), false), null);
+    is("not twice in a year", pauseRefusal(subscription("sub_a"), NOW, true), "recent");
+  }
+
+  part("Taking a break");
+  {
+    subs.sub_Pause0000001 = subscription("sub_Pause0000001");
+    const store = await storeWith("pause@example.com", "pausestore", "sub_Pause0000001");
+    const result = await pausePlan(store, 2, NOW);
+    is("it is set", result.kind, "paused");
+    is("the subscription stops at the end of the paid period", subs.sub_Pause0000001.cancel_at_period_end, true);
+    const record = await pauseOf(store);
+    is("from the end of the paid period", record?.from, NOW + 10 * DAY);
+    is("to two months after", record?.until, addPeriods(NOW + 10 * DAY, "month", 2));
+    is("on the card the plan is paid with", record?.paymentMethod, "pm_TestCard00001");
+    is("the closing waits while it runs", await onBreak(storeRef(store), NOW + 20 * DAY), true);
+    is("and not after it", await onBreak(storeRef(store), (record?.until ?? 0) + 1), false);
+
+    const again = await pausePlan(store, 1, NOW);
+    is("a second break the same year is refused", again.kind === "refused" ? again.reason : again.kind, "canceling");
+
+    const undone = await undoPause(store, NOW + DAY);
+    is("taken back before it starts, the plan goes on", undone, "kept");
+    is("the subscription no longer stops", subs.sub_Pause0000001.cancel_at_period_end, false);
+    is("and nothing is left set", await pauseOf(store), null);
+    const third = await pausePlan(store, 1, NOW + DAY);
+    is("the year is given back for a break that never began", third.kind, "paused");
+    // Taken back again, so this store's break does not end beside the next part's.
+    await undoPause(store, NOW + DAY);
+  }
+
+  part("The emails say the dates and the price");
+  {
+    const record = { subscription: "sub_x", customer: "cus_x", paymentMethod: "pm_x", tier: "creator" as const, from: NOW, until: NOW + 61 * DAY, told: 0 };
+    const set = pauseEmail("set", record);
+    is("set: when the checkout closes and when it opens", set.text.includes("Your store keeps taking payments until") && set.text.includes("starts again by itself, at $29 a month"), true);
+    const soon = pauseEmail("soon", record);
+    is("a week before: the charge and how to stop it", soon.text.includes("your card is charged $29") && soon.text.includes("one click"), true);
+    const failed = pauseEmail("failed", record);
+    is("failed: nothing was charged", failed.text.includes("Nothing was charged."), true);
+  }
+
+  part("The end of a break");
+  {
+    subs.sub_Restart00001 = subscription("sub_Restart00001");
+    const store = await storeWith("restart@example.com", "restartstore", "sub_Restart00001");
+    const set = await pausePlan(store, 1, NOW);
+    const until = set.kind === "paused" ? set.record.until : 0;
+    // The paid period ends: the store's plan has ended, as cancelling leaves it.
+    await setSubscription("restart@example.com", { active: false });
+
+    emails.length = 0;
+    await runBreaks(until - 10 * DAY);
+    is("nothing yet ten days before", emails.length, 0);
+    await runBreaks(until - 6 * DAY);
+    is("told a week before", emails.map((e) => e.subject), ["Your Marktmorgen plan starts again on " + new Date(until * 1000).toLocaleDateString("en-US", { timeZone: "UTC", month: "long", day: "numeric", year: "numeric" })]);
+    await runBreaks(until - 5 * DAY);
+    is("once", emails.length, 1);
+
+    const counts = await runBreaks(until + 60);
+    is("started again on the day", counts.restarted, 1);
+    is("on the same customer and card, charged at once", [created[0].get("customer"), created[0].get("default_payment_method"), created[0].get("payment_behavior"), created[0].get("off_session")], ["cus_TestPause0001", "pm_TestCard00001", "error_if_incomplete", "true"]);
+    const after = await storeForEmail("restart@example.com");
+    is("written down on the store", [after?.subscriptionActive, after?.subscriptionId], [true, "sub_Restarted00001"]);
+    is("the creator is told", emails[emails.length - 1]?.subject, "Your Marktmorgen plan has started again");
+    is("and the break is gone", await pauseOf(after!), null);
+  }
+
+  part("When the card is refused, or Stripe does not answer");
+  {
+    subs.sub_Decline00001 = subscription("sub_Decline00001");
+    const store = await storeWith("decline@example.com", "declinestore", "sub_Decline00001");
+    const set = await pausePlan(store, 1, NOW);
+    const until = set.kind === "paused" ? set.record.until : 0;
+    await setSubscription("decline@example.com", { active: false });
+
+    createAnswer = "down";
+    await runBreaks(until + 60);
+    is("Stripe not answering keeps the break, for the next day", (await pauseOf(store)) !== null, true);
+    createAnswer = "declined";
+    emails.length = 0;
+    const counts = await runBreaks(until + DAY);
+    is("a refused card ends the break", [counts.failed, await pauseOf(store)], [1, null]);
+    is("and the creator is told", emails.map((e) => e.subject), ["Your Marktmorgen plan could not start again"]);
+    is("the store does not sell", (await storeForEmail("decline@example.com"))?.subscriptionActive, false);
+    createAnswer = "ok";
+  }
+
+  part("A store that started again by hand");
+  {
+    subs.sub_ByHand000001 = subscription("sub_ByHand000001");
+    const store = await storeWith("byhand@example.com", "byhandstore", "sub_ByHand000001");
+    const set = await pausePlan(store, 1, NOW);
+    const until = set.kind === "paused" ? set.record.until : 0;
+    await setSubscription("byhand@example.com", { subscriptionId: "sub_OtherOne00001", active: true });
+    const before = created.length;
+    const counts = await runBreaks(until + 60);
+    is("is left alone", [counts.dropped, created.length - before], [1, 0]);
+  }
+
+  done();
+}
+
+main();

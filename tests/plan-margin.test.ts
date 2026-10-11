@@ -86,6 +86,7 @@ import { TOP_HEIGHT, viewingBytes } from "@/lib/stream-rules";
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED } from "@/lib/watch-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { LONGEST_PAUSE_MONTHS, PAID_MONTHS_BEFORE_PAUSE } from "@/lib/plan-pause-rules";
 import { SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
 import { visitCost } from "./traffic-cost";
 import { readFileSync } from "node:fs";
@@ -349,4 +350,26 @@ test("a buyer's download is bounded by nothing, and that is on purpose", () => {
     /What it deliberately does NOT do is stop a delivery/,
     "the reasoning for never blocking a paid download must stay written down",
   );
+});
+
+test("a break from the plan is paid for by the months before it, at its longest", () => {
+  // The dearest store a break can leave behind: it pays for the months a
+  // break needs before it (lib/plan-pause-rules.ts), runs every limit of its
+  // plan in each, takes the longest break with everything a paid plan may
+  // keep still kept, and then does not come back, so what it keeps runs on
+  // past the break until its last two notices are out (lib/plan-pause.ts
+  // holds the closing back while the break runs, and lets it go on after).
+  // What those months paid has to cover all of it, with a quarter to spare.
+  const months = PAID_MONTHS_BEFORE_PAUSE;
+  const afterMonths = (WARN_WEEK_DAYS * 2) / 30;
+  const kept = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * (LONGEST_PAUSE_MONTHS + afterMonths);
+  for (const tier of TIERS) {
+    const cost = months * worstCost(tier) + kept;
+    const net = months * netOf(tier);
+    const margin = (net - cost) / net;
+    assert.ok(
+      margin >= 0.25,
+      `${tier}: ${months} months at every limit, a ${LONGEST_PAUSE_MONTHS}-month break and the days after it cost $${cost.toFixed(2)} against the $${net.toFixed(2)} those months brought in, keeping ${(margin * 100).toFixed(0)}%.`,
+    );
+  }
 });

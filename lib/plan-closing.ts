@@ -56,6 +56,7 @@ import { CLOSING_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/l
 import { ENDED_INDEX, SETUP_STORAGE_BYTES, standingOf } from "@/lib/plan-standing";
 import { editPodcast, readPodcast, savePodcast } from "@/lib/podcast";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { onBreak } from "@/lib/plan-pause";
 import { withLock } from "@/lib/redis-lock";
 import { SITE_URL } from "@/lib/site-url";
 import { storageUsed, storageWords } from "@/lib/storage-quota";
@@ -105,6 +106,8 @@ export function removalDay(endedAt: number): number {
 export async function closingOf(store: Store, now = Date.now()): Promise<{ endedAt: number; day: number } | null> {
   const endedAt = Date.parse(store.planEndedAt);
   if (standingOf(store, now / 1000) !== "ended" || !Number.isFinite(endedAt) || !isRedisConfigured()) return null;
+  // A break the creator chose keeps everything until it ends (lib/plan-pause.ts).
+  if (await onBreak(storeRef(store), now / 1000)) return null;
   const [raw] = await redisPipeline([["GET", stateKey(storeRef(store))]]);
   const read = parseState(raw);
   const state: State = read.of === endedAt ? read : {};
@@ -374,6 +377,10 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
     await redisPipeline([["ZREM", ENDED_INDEX, key], ["DEL", stateKey(key)]]);
     return { key, state: "running" };
   }
+  // On a break the creator chose (lib/plan-pause.ts): everything is kept and
+  // nobody is written to until it ends. Nothing is written down either, so
+  // the day after it ends this store is looked at as if for the first time.
+  if (await onBreak(key, now / 1000)) return { key, state: "held", note: "on a break" };
   const [raw] = await redisPipeline([["GET", stateKey(key)]]);
   const read = parseState(raw);
   // Notices about an earlier ending say nothing about this one.
