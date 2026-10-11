@@ -32,6 +32,8 @@ import {
 import { type PageBlock, type SalesPage, emptyBlock, parsePage } from "@/lib/sales-page";
 import { MAX_TRANSLATE_PARTS, pageWords, translateParts, withWords } from "@/lib/page-translate";
 import { READ_PDF_JOBS, READ_PDF_PAGES } from "@/lib/ai-rules";
+import { type DraftedQuestion, MAX_QUIZ_SOURCE, readDrafted, shuffleAnswers } from "@/lib/quiz-draft";
+import { MAX_CHOICE_LENGTH, MAX_EXPLANATION_LENGTH, MAX_QUESTIONS, MAX_QUESTION_LENGTH } from "@/lib/quiz";
 import { FILLABLE, REWRITABLE, REWRITE_STYLES, type RewriteStyle, addsNumbers, blockText } from "@/lib/block-rewrite-rules";
 
 const API = /^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.ANTHROPIC_API_BASE ?? "")
@@ -697,6 +699,48 @@ export async function writeOutline(
       .filter((m) => m.title && m.lessons.length)
       .slice(0, MAX_AI_MODULES);
     return modules.length ? { modules } : null;
+  });
+}
+
+/**
+ * A lesson's quiz, drafted from the lesson (lib/quiz-draft.ts): questions a
+ * student who did the lesson can answer, in the store's language, because
+ * students read them. One job of the month's, like an outline.
+ */
+export async function writeQuiz(
+  store: Store,
+  input: { course: string; lesson: string; text: string; notes: string; count: number },
+  now = Date.now(),
+): Promise<AiResult<DraftedQuestion[]>> {
+  const source = block(input.text, MAX_QUIZ_SOURCE);
+  const notes = block(input.notes, MAX_AI_NOTES);
+  if (!source && !notes) return { ok: false, reason: "notes" };
+  const count = Math.max(1, Math.min(input.count, MAX_QUESTIONS));
+  return counted(store, now, async () => {
+    const system = [
+      "You write a short quiz for the end of one lesson of an online course, to check what a student took from it.",
+      honesty(storeLanguage(store)),
+      "Ask only what the lesson below teaches. Every question must be answerable from it alone; never from general knowledge it does not cover.",
+      "Ask about what matters for doing the thing the lesson teaches, not trivia such as names, dates or numbers mentioned in passing. No trick questions, no 'all of the above' or 'none of the above'.",
+      "Give each question 3 or 4 answers. The wrong ones are believable mistakes a student could make, never silly. Keep all the answers of a question about the same length and in the same form, so the length or wording never gives the right one away.",
+      "Most questions have one right answer. Use several right answers only where the lesson clearly lists several things that are all true.",
+      "The explanation says in one or two sentences why the right answer is right, in the lesson's own terms.",
+      `Return only a JSON object: {"questions": [{"text": string, "choices": [string], "correct": [number], "explanation": string}]}, where "correct" lists the positions (from 0) of the right answers. Exactly ${count} questions.`,
+      `Questions at most ${MAX_QUESTION_LENGTH} characters, answers at most ${MAX_CHOICE_LENGTH}, explanations at most ${MAX_EXPLANATION_LENGTH}.`,
+    ].join("\n\n");
+    const prompt = [
+      `Course: ${line(input.course, MAX_TITLE) || "(no name)"}`,
+      `Lesson: ${line(input.lesson, MAX_TITLE) || "(no name)"}`,
+      "",
+      source ? `The lesson's text:\n${source}` : "",
+      notes ? `What the creator wants the quiz to check:\n${notes}` : "",
+    ]
+      .filter((part) => part !== "")
+      .join("\n");
+    const answer = await ask(system, prompt, 4_000);
+    const json = answer ? jsonIn(answer) : null;
+    const questions = shuffleAnswers(readDrafted(json?.questions, count));
+    return questions.length ? questions : null;
   });
 }
 

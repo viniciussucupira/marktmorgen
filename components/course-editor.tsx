@@ -187,6 +187,7 @@ export function CourseEditor({
         <p className="notice notice-error" role="alert">{error}</p>
       ) : null}
 
+      <AiOn value={ai}>
       {course.modules.map((unit, index) => (
         <ModuleCard
           key={unit.id}
@@ -203,6 +204,7 @@ export function CourseEditor({
           onError={setError}
         />
       ))}
+      </AiOn>
 
       <AiOn value={ai}>
         <AiAssist<Outline>

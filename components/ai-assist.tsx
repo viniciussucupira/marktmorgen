@@ -35,6 +35,7 @@ export function AiAssist<T>({
   done,
   extra,
   allowEmpty = false,
+  emptyMessage,
 }: {
   /** The line that opens it, like "Write the description for me". */
   title: string;
@@ -52,6 +53,8 @@ export function AiAssist<T>({
    * from what the product already says, so the box only adds to it.
    */
   allowEmpty?: boolean;
+  /** What is said when the job had nothing to go on, where the usual words do not fit it. */
+  emptyMessage?: string;
 }) {
   const { on, left: startLeft } = useContext(AiOn);
   const [notes, setNotes] = useState("");
@@ -83,7 +86,7 @@ export function AiAssist<T>({
         if (typeof data.left === "number") setLeft(data.left);
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.failed);
+      setError(data.error === "notes" && emptyMessage ? emptyMessage : (MESSAGES[data.error ?? ""] ?? MESSAGES.failed));
     } catch {
       setError(MESSAGES.failed);
     } finally {
@@ -127,7 +130,7 @@ export function AiAssist<T>({
           </p>
         ) : null}
         <p className="text-xs text-ink-soft">
-          It uses only what you write here, never invents reviews, numbers, results or deadlines, and saves nothing until you
+          It uses only your own words, here and in your store, never invents reviews, numbers, results or deadlines, and saves nothing until you
           do. Read it before you publish: it is yours.
         </p>
       </div>

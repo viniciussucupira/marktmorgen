@@ -16,6 +16,8 @@ import {
   type QuizSetup,
 } from "@/lib/quiz";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { AiAssist } from "@/components/ai-assist";
+import { DEFAULT_QUIZ_DRAFT, type DraftedQuestion, QUIZ_DRAFT_COUNTS } from "@/lib/quiz-draft";
 
 type DraftQuestion = {
   id: string;
@@ -75,6 +77,7 @@ export function QuizEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [draftCount, setDraftCount] = useState<number>(DEFAULT_QUIZ_DRAFT);
 
   async function open() {
     setError(null);
@@ -210,6 +213,37 @@ export function QuizEditor({
           certificate needs it passed.
         </span>
       </label>
+
+      <div className="mt-5">
+        <AiAssist<DraftedQuestion[]>
+          title="Draft questions with AI"
+          hint="From this lesson's text, and anything you add here. The questions are added to the list below for you to read and change; nothing is saved until you press Save the quiz. The right answer is put in a different place from one question to the next."
+          placeholder="Optional: what the quiz should check, or the main points of a lesson that is only a video."
+          allowEmpty
+          emptyMessage="This lesson has no text yet. Write the main points it teaches in the box, and the questions are drawn from them."
+          extra={
+            <label className="flex flex-wrap items-center gap-2 text-sm text-ink">
+              <span className="font-semibold">How many questions</span>
+              <select className="field w-auto" value={draftCount} onChange={(e) => setDraftCount(Number(e.target.value))}>
+                {QUIZ_DRAFT_COUNTS.map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </label>
+          }
+          payload={() => ({ kind: "quiz", id: productId, lessonId, count: draftCount })}
+          onResult={(questions) =>
+            setDraft((current) => {
+              if (!current) return current;
+              // Questions still empty are replaced; the creator's own are kept, and these follow them.
+              const kept = current.questions.filter((q) => q.text.trim() || q.choices.some((c) => c.trim()));
+              const added = questions.map((q) => ({ id: "", text: q.text, kind: q.kind, choices: [...q.choices], correct: [...q.correct], explanation: q.explanation }));
+              return { ...current, questions: [...kept, ...added].slice(0, MAX_QUESTIONS) };
+            })
+          }
+          done="The questions are added below. Read each one, change what you like, then save the quiz."
+        />
+      </div>
 
       <ol className="mt-5 space-y-4">
         {draft.questions.map((question, qi) => {

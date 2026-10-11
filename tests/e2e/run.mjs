@@ -2271,6 +2271,40 @@ try {
   }
 
   await keepSmall();
+  part("A lesson's quiz drafted with AI, the right answer moving around");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "Sourdough at Home", price: "40" });
+    const bread = made.product?.id ?? "";
+    await post("/api/store/course", { action: "enable", id: bread });
+    const outlined = await post("/api/store/course", { action: "edit", id: bread, op: "outline", modules: [{ title: "Getting started", lessons: ["Your first starter"] }] });
+    // A new course may start with a module of its own: the lesson is found by its title.
+    const lessonId = (outlined.course?.modules ?? []).flatMap((m) => m.lessons).find((l) => l.title === "Your first starter")?.id ?? "";
+    await post("/api/store/course", { action: "body", id: bread, lessonId, text: "Mix equal weights of flour and water. Feed it every day. It is ready when it doubles." });
+    await open(studio, `${LOCAL}/studio/course/${bread}`);
+    await studio.locator("li", { hasText: "Your first starter" }).getByRole("button", { name: "Edit lesson" }).first().click();
+    await studio.getByRole("button", { name: "Add a quiz" }).click();
+    const quiz = studio.getByRole("form", { name: "Quiz" });
+    await quiz.getByText("Draft questions with AI").click();
+    await quiz.locator("select").first().selectOption("3");
+    await quiz.getByRole("button", { name: "Write a draft" }).click();
+    const said = quiz.locator("details").getByRole("status").or(quiz.locator("details").getByRole("alert"));
+    await said.first().waitFor({ timeout: 30_000 });
+    const saidWords = await words(said.first());
+    if (!saidWords.startsWith("The questions are added below.")) console.log(`        the studio said: ${saidWords}`);
+    is("the draft is said to be in", saidWords.startsWith("The questions are added below."), true);
+    const texts = await quiz.locator("ol > li textarea").evaluateAll((all) => all.filter((t) => t.id.endsWith("-text")).map((t) => t.value));
+    is("the questions are drafted from the lesson, in place of the empty one", texts, ["What goes into a starter?", "How often is it fed?", "When is it ready?"]);
+    const places = await quiz.locator("ol > li").evaluateAll((items) => items.map((item) => [...item.querySelectorAll('input[type="radio"][aria-label$="is right"]')].findIndex((input) => input.checked)));
+    is("the right answer is never in the same place two questions in a row", places.every((place, i) => place >= 0 && (i === 0 || place !== places[i - 1])), true);
+    await quiz.getByRole("button", { name: "Save the quiz" }).click();
+    await studio.getByText("3 questions · pass mark 70%").waitFor({ timeout: 30_000 });
+    is("and saved by the creator, as they are", await studio.getByText("3 questions · pass mark 70%").count(), 1);
+    await post("/api/store/product", { action: "remove", id: bread });
+  }
+
+  await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);
