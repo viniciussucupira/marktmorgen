@@ -484,6 +484,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can my store have pages besides its products, like an About page?",
+        a: [
+          "Yes, on every plan: up to 10 pages of your own, from Your pages in the studio. Each is built from the same blocks as a sales page (a headline, text, pictures, a video, steps, who it is for, questions, things said about you elsewhere, your products, a countdown and buttons) and follows your store's look.",
+          "A page has its own address under your store, such as /@yourname/about, and on your own domain, such as yourname.com/about. Its buttons lead to your store, or to one product you choose. Put it in the menu at the top of your store and of your other pages, or keep it out of the menu and share its link. A new page stays out of sight until you switch it on, or until a moment you set.",
+        ],
+      },
+      {
         q: "Can I email the people on my list?",
         a: [
           "Yes, on Pro. From your studio you write one-off emails to everyone who agreed to hear from you, or only to those who got one product, and send them now or at a time you choose. Sequences go out by themselves: a welcome when someone joins, a few emails in the days after someone buys. Each person goes through a sequence once. A sequence can end for anyone who buys, or gets one product, so it stops selling to people who already have it; and any of its emails can go only to those who have a product or do not, who have bought or not yet, or who carry a label from your import, the others skipping it or leaving there. An email can also go only to those who used a link to your store in the email before, or did not: that is counted only for readers who allowed it, with a box of its own when they joined, and they can stop it from any email. There is no open tracking. AI can write a sequence's emails for you, 3 to 7 of them, from your products' names, prices and links, with only your store's own links kept; you read them and save. And when a product gets a new version, “Tell buyers about an update” under it emails everyone who bought it, once a week at most, with your words and the link to their orders.",

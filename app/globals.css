@@ -2163,6 +2163,29 @@ a.chip {
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
+/* The menu of a store's own pages (components/store-pages-nav.tsx). */
+.st-pages-nav {
+  margin-top: 1.25rem;
+}
+.st-pages-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--st-line);
+  background: var(--st-card);
+  padding: 0.375rem 1rem;
+  color: var(--st-text);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+.st-pages-link:hover,
+.st-pages-link[aria-current="page"] {
+  border-color: var(--st-accent-text);
+  color: var(--st-accent-text);
+}
+
 /* A heading over one of the store's sections. */
 .st-section-title {
   margin-bottom: 0.875rem;

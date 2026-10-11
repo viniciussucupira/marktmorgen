@@ -911,7 +911,10 @@ export default async function StudioPage({
                     ]
                   : []),
                 ...(may("page")
-                  ? [{ href: studioPath(store, "", "blog"), title: "Blog", text: "Posts on your store's address that search engines find, each able to end on a product.", icon: "notebook" as const }]
+                  ? [
+                      { href: studioPath(store, "", "site"), title: "Your pages", text: "About, Start here, Work with me: pages of your own beside your products, linked from the top of your store.", icon: "layout" as const },
+                      { href: studioPath(store, "", "blog"), title: "Blog", text: "Posts on your store's address that search engines find, each able to end on a product.", icon: "notebook" as const },
+                    ]
                   : []),
                 ...(may("import")
                   ? [{ href: studioPath(store, "", "import"), title: "Moving from another platform", text: "Bring your list, products and past buyers.", icon: "door" as const }]

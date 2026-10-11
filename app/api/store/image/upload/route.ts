@@ -41,21 +41,26 @@ export async function POST(request: NextRequest) {
       getSignedToken: async (pathname, clientPayload) => {
         let productId = "";
         let linkId = "";
+        let pageId = "";
         try {
-          const parsed = JSON.parse(clientPayload ?? "{}") as { productId?: unknown; linkId?: unknown };
+          const parsed = JSON.parse(clientPayload ?? "{}") as { productId?: unknown; linkId?: unknown; pageId?: unknown };
           productId = typeof parsed.productId === "string" ? parsed.productId : "";
           linkId = typeof parsed.linkId === "string" ? parsed.linkId : "";
+          pageId = typeof parsed.pageId === "string" ? parsed.pageId : "";
         } catch {
           throw new Error("invalid");
         }
         // Who, which store and whether their role may change what the
         // picture is for: "products" for a product's, "page" for a link's
         // (lib/studio-route.ts). The folder below is that store's own.
-        const access = await studioAccess(request, linkId && !productId ? "page" : "products");
+        // A picture on one of the store's own pages (lib/site-page-rules.ts) is part of the public page too.
+        const access = await studioAccess(request, (linkId || pageId) && !productId ? "page" : "products");
         if (!access.ok) throw new Error(access.reason === "no_store" ? "none" : access.reason);
         const { store, ref } = access.access;
 
-        if (linkId && !productId) {
+        if (pageId && !productId) {
+          if (!store.sitePages.some((page) => page.id === pageId)) throw new Error("unknown");
+        } else if (linkId && !productId) {
           // A link's picture: a link on this store's page, never a heading.
           const link = store.links.find((each) => each.id === linkId);
           if (!link || isHeader(link)) throw new Error("unknown");

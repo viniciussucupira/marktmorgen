@@ -2440,6 +2440,28 @@ try {
   }
 
   await keepSmall();
+  part("A page of the store's own, in its menu and on its address");
+  {
+    await open(studio, `${LOCAL}/studio/site?store=${fresh}`);
+    await studio.locator("nav[aria-label='Your pages']").getByRole("button", { name: "About", exact: true }).click();
+    await studio.locator("#page-title").filter({ hasText: "About" }).waitFor({ timeout: 30_000 });
+    is("started from its blocks, out of sight until it is switched on", [await studio.getByRole("checkbox", { name: /Visitors see this page/ }).isChecked(), await studio.locator("[data-site-page-settings]").count()], [false, 1]);
+    await studio.getByRole("checkbox", { name: /Visitors see this page/ }).check();
+    await studio.getByRole("button", { name: "Save the page" }).click();
+    await studio.getByText("Page saved.").first().waitFor({ timeout: 30_000 });
+    await open(page, `${LOCAL}/@freshshop/about`);
+    is("on its address, in the store's look, with the store's menu", [
+      await page.locator("main[data-site-page='about']").count(),
+      (await words(page.locator("main[data-site-page='about']"))).includes("About"),
+      await page.locator("[data-store-pages] a[aria-current='page']").count(),
+    ], [1, true, 1]);
+    await open(page, `${LOCAL}/@freshshop`);
+    is("and in the menu at the top of the store", await page.locator("[data-store-pages] a", { hasText: "About" }).count(), 1);
+    await open(page, `${LOCAL}/@freshshop/no-such-page`);
+    is("an address that is no page is not found", (await page.locator("main[data-site-page]").count()), 0);
+  }
+
+  await keepSmall();
   part("A phone number asked at checkout, in Stripe's own box");
   {
     await open(studio, `${LOCAL}/studio`);

@@ -1,3 +1,4 @@
+import { StorePagesNav } from "@/components/store-pages-nav";
 import { after } from "next/server";
 import { CartButton } from "@/components/store-cart";
 import { offersCart } from "@/lib/cart-checkout";
@@ -336,6 +337,8 @@ export default async function StorePage({ params, searchParams }: Params) {
             <div className="mx-auto mt-3 flex max-w-xs flex-col items-center">
               <StoreShareButton name={store.name} lang={store.language} />
             </div>
+            {/* The store's own pages the creator put in the menu (lib/site-page-rules.ts). */}
+            <StorePagesNav store={store} />
             {/* The creator's welcome video, loaded only when played (components/video-embed.tsx). */}
             {store.intro && !searching ? (
               <div className="mx-auto mt-6 max-w-md text-left">
