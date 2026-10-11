@@ -38,6 +38,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { lockWait, timeLeft, withCutoff } from "@/lib/fetch-timeout";
 import type { MeetProvider } from "@/lib/call-setup";
+import { isHouseAddress } from "@/lib/house-store";
 import { SITE_URL } from "@/lib/site-url";
 
 const LOCAL = /^http:\/\/127\.0\.0\.1:\d+$/;
@@ -104,6 +105,11 @@ export function configuredProviders(): MeetProvider[] {
  * ZOOM_LIVE=1 opens it to every store. A store that already has Zoom
  * connected keeps it either way (usableProviders).
  *
+ * The demo store is open to Zoom too (lib/house-store.ts): it is the one
+ * store here that is ours, it sells a call like a creator's, and its
+ * meetings are what somebody trying Marktmorgen — or reviewing it — books
+ * and moves. Its studio is opened by whoever is on its team (lib/team.ts).
+ *
  * A reviewer does not always sign up with a Zoom address, so there is also
  * the review link: the Video calls page opened with `?zoom=review`, or with
  * `?from=zoom` as the listing in Zoom's Marketplace opens it, offers Zoom on
@@ -128,7 +134,11 @@ export function offeredProviders(store: OfferedTo, review = false): MeetProvider
   const sid = typeof store === "string" ? store : (store?.sid ?? null);
   const email = typeof store === "object" && store ? (store.email ?? "").trim() : "";
   const zoomOpen =
-    review || env("ZOOM_LIVE") === "1" || Boolean(sid && ZOOM_PREVIEW_STORES.has(sid)) || ZOOM_REVIEWER.test(email);
+    review ||
+    env("ZOOM_LIVE") === "1" ||
+    Boolean(sid && ZOOM_PREVIEW_STORES.has(sid)) ||
+    isHouseAddress(email) ||
+    ZOOM_REVIEWER.test(email);
   return configuredProviders().filter((p) => p !== "zoom" || zoomOpen);
 }
 

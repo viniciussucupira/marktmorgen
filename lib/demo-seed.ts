@@ -47,6 +47,8 @@ import { readAbout, writeAbout } from "@/lib/product-about";
 import { type ProductFile, fileFolder } from "@/lib/product-file";
 import { IMAGE_CONTENT_TYPES, MAX_IMAGE_BYTES, SMALL_LONG_SIDE, type ProductImage, imagePath, imagePaths } from "@/lib/product-image";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type CallSetup, type Range } from "@/lib/call-setup";
+import { putMember, readTeam } from "@/lib/team";
 import { SITE_URL } from "@/lib/site-url";
 import {
   type Listing,
@@ -61,6 +63,7 @@ import {
   imageFolder,
   setPhotoId,
   setProductAbout,
+  setProductCall,
   setProductDisplay,
   setProductFile,
   setAnswers,
@@ -250,6 +253,62 @@ type DemoExtra = (typeof DEMO_EXTRAS)[number];
 type PictureSpec = { id: string; query: string; small: string; alt: string };
 
 /**
+ * The call the demo store sells (added 11 October 2026): a booked time,
+ * delivered as a Zoom meeting on the store's own connected account
+ * (lib/meet-links.ts), so the demo shows the whole of what a creator sells —
+ * files and time — and not files alone.
+ *
+ * It is a product like any other: added, priced and set up through the same
+ * functions the studio calls, bought through the same checkout, in Stripe's
+ * test mode like everything else here. Whoever books one picks a time, pays
+ * with the test card, and is given the meeting's link on the thank-you page,
+ * with the same page's link to move it to another time.
+ *
+ * The hours are wide on purpose — every weekday, morning to evening, New York
+ * time — because somebody trying the demo should find a time without hunting
+ * for one, in their own part of the world.
+ */
+export const DEMO_CALL = {
+  title: "Meal-planning call",
+  summary: "Thirty minutes to plan your week's meals around what is already in your kitchen.",
+  price: "20",
+  about: `Half an hour, by video, to turn a week of "what do we eat tonight?" into a plan and one grocery list.
+
+What happens on the call:
+- You say who you cook for, what you have, and the nights that are always hard
+- We write the week together: breakfasts, lunches, dinners
+- You leave with the plan and the list, and know what to cook first
+
+Pick a time and pay with the test card. You get the meeting link the moment you book, on the page and in your calendar file.`,
+  image: {
+    id: "photo-1543269865-cbf427effbad",
+    query: "fm=webp&fit=crop&w=1200&h=675&q=70",
+    small: `fm=webp&fit=crop&w=${SMALL_LONG_SIDE}&h=450&q=70`,
+    alt: "Four people around a table with laptops, talking and laughing",
+  },
+  /**
+   * Weekly hours, Monday to Friday, 9:00 to 19:00 in New York — written as
+   * minutes from midnight, which is what a stretch is (lib/call-setup.ts).
+   * One buyer per time, an hour's notice, thirty days ahead, and a Zoom
+   * meeting for each booking.
+   */
+  setup: {
+    kind: "weekly",
+    minutes: 30,
+    tz: "America/New_York",
+    weekly: [[], [[540, 1140]], [[540, 1140]], [[540, 1140]], [[540, 1140]], [[540, 1140]], []],
+    noticeHours: 1,
+    horizonDays: 30,
+    bufferMinutes: 0,
+    room: null,
+    video: false,
+    meet: "zoom",
+    seats: 1,
+    sessions: [],
+  },
+} as const;
+
+/**
  * The product's own sales page, built from the blocks a creator adds in the
  * studio (added 9 October 2026), so whoever opens the demo sees a page made
  * with Marktmorgen rather than a plain description. Every sentence is true
@@ -345,9 +404,23 @@ export const RETRY_SECONDS = 10 * 60;
 const sha = (value: string | Uint8Array) => createHash("sha256").update(value).digest("hex");
 
 /** Everything above, and the files themselves, as one short word. */
+/**
+ * Who may open the demo store's studio, from DEMO_STUDIO_ADMIN.
+ *
+ * The demo store has no owner anybody can sign in as (lib/house-store.ts),
+ * and its Zoom and Google Calendar connections are made in the studio like
+ * every creator's. So one address is put on its team as an Admin, and that
+ * address signs in the ordinary way, on their own account. Empty, or not an
+ * address, puts nobody there.
+ */
+function demoStudioAdmin(): string {
+  const value = (process.env.DEMO_STUDIO_ADMIN ?? "").trim().toLowerCase();
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value) ? value : "";
+}
+
 export function seedFingerprint(): string {
   const files = [...DEMO_PRODUCT.options.map((option) => option.file), ...DEMO_EXTRAS.map((extra) => extra.file)].map((file) => sha(getDemoFile(file)));
-  return sha(JSON.stringify([HOUSE_HANDLE, DEMO_STORE, DEMO_PRODUCT, DEMO_EXTRAS, DEMO_PAGE, DEMO_POST, files, DEMO_CONNECTED_ACCOUNT])).slice(0, 24);
+  return sha(JSON.stringify([HOUSE_HANDLE, DEMO_STORE, DEMO_PRODUCT, DEMO_EXTRAS, DEMO_CALL, DEMO_PAGE, DEMO_POST, files, DEMO_CONNECTED_ACCOUNT, demoStudioAdmin()])).slice(0, 24);
 }
 
 type Mark = {
@@ -792,6 +865,58 @@ async function ensureExtra(store: Store, want: DemoExtra, mark: Mark, deps: Seed
   return ensureAbout(store, product, pending, want.about);
 }
 
+/**
+ * The call: added like any product, then given its hours, its length and the
+ * service its meetings are made on (setProductCall, the studio's own call).
+ * Its picture and its long description are kept the way the others' are.
+ */
+async function ensureCall(store: Store, mark: Mark, deps: SeedDeps, pending: string[]): Promise<Store> {
+  const find = async (from: Store) => (await readListings(from, productIds(from))).find((p) => p.title === DEMO_CALL.title) ?? null;
+  let product = await find(store);
+  if (!product) {
+    const made = await addProduct(REF, DEMO_CALL.title, DEMO_CALL.summary, DEMO_CALL.price);
+    if (!made.ok) {
+      pending.push(refused("product_call", made.reason));
+      return store;
+    }
+    store = made.store;
+  } else if (product.summary !== DEMO_CALL.summary || product.priceCents !== Number(DEMO_CALL.price) * 100) {
+    const done = await editProduct(REF, product.id, DEMO_CALL.title, DEMO_CALL.summary, DEMO_CALL.price);
+    if (done.ok) store = done.store;
+    else pending.push(refused("product_call", done.reason));
+  }
+  product = await find(store);
+  if (!product) return store;
+
+  // The hours themselves. Written only when what is there differs, so asking
+  // twice writes nothing; a setup saved by hand would be put back in line.
+  const want: CallSetup = {
+    kind: DEMO_CALL.setup.kind,
+    minutes: DEMO_CALL.setup.minutes,
+    tz: DEMO_CALL.setup.tz,
+    weekly: DEMO_CALL.setup.weekly.map((day) => day.map(([from, to]) => [from, to] as Range)),
+    noticeHours: DEMO_CALL.setup.noticeHours,
+    horizonDays: DEMO_CALL.setup.horizonDays,
+    bufferMinutes: DEMO_CALL.setup.bufferMinutes,
+    room: DEMO_CALL.setup.room,
+    video: DEMO_CALL.setup.video,
+    meet: DEMO_CALL.setup.meet,
+    seats: DEMO_CALL.setup.seats,
+    sessions: [],
+  };
+  if (JSON.stringify(product.call) !== JSON.stringify(want)) {
+    const done = await setProductCall(REF, product.id, want);
+    if (done.ok) store = done.store;
+    else pending.push(refused("call_setup", done.reason));
+    product = (await find(store)) ?? product;
+  }
+
+  const picture = await ensureImage(store, product, mark.images[DEMO_CALL.title] ?? "", deps, pending, DEMO_CALL.image, false);
+  store = picture.store;
+  mark.images[DEMO_CALL.title] = picture.source;
+  return ensureAbout(store, product, pending, DEMO_CALL.about);
+}
+
 /** Brings the demo store in line with this file, one step at a time. */
 async function build(before: Mark | null, deps: SeedDeps): Promise<Mark> {
   const pending: string[] = [];
@@ -819,6 +944,17 @@ async function build(before: Mark | null, deps: SeedDeps): Promise<Mark> {
   store = await ensurePlan(store, made.product, pending);
   store = await ensurePost(store, made.product, pending);
   for (const extra of DEMO_EXTRAS) store = await ensureExtra(store, extra, mark, deps, pending);
+  store = await ensureCall(store, mark, deps, pending);
+
+  // Whoever connects the demo store's Zoom and Google Calendar in its studio
+  // (lib/team.ts, putMember). Nobody, when DEMO_STUDIO_ADMIN is not set.
+  const admin = demoStudioAdmin();
+  if (admin) {
+    const done = await putMember(store, admin, "admin").catch(() => false);
+    if (!done && !(await readTeam(store.sid)).members.some((m) => m.email === admin)) {
+      pending.push(refused("studio_admin", "refused"));
+    }
+  }
 
   // The one thing all of it is for: the product can be bought.
   const fresh = await storeForEmail(REF);

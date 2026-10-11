@@ -316,6 +316,38 @@ export async function setMemberRole(store: Store, email: string, rawRole: unknow
   });
 }
 
+/**
+ * Puts somebody on a store's team without an invitation.
+ *
+ * Only one store has no owner to send invitations: the demo store, which
+ * nobody can sign in to (lib/house-store.ts) and which is put together in
+ * code instead (lib/demo-seed.ts). Its Zoom and Google Calendar connections
+ * are made in the studio like every creator's, so somebody has to be able to
+ * open that studio. This is how that person is put there, and it is called
+ * from the demo's own seed and nowhere else.
+ *
+ * Idempotent: asked twice, the second time writes nothing. The owner is
+ * never added, since they are already the owner.
+ */
+export async function putMember(store: Store, email: string, role: TeamRole): Promise<boolean> {
+  const address = normaliseEmail(email);
+  if (!EMAIL_PATTERN.test(address) || !store.sid || !isRedisConfigured()) return false;
+  if (address === normaliseEmail(store.email)) return false;
+  const added = await withTeam(store.sid, async () => {
+    const team = await readTeam(store.sid);
+    const member = team.members.find((m) => m.email === address);
+    if (member && member.role === role) return false;
+    if (!member && team.members.length >= MAX_TEAM) return false;
+    const members = member
+      ? team.members.map((m) => (m.email === address ? { ...m, role } : m))
+      : [...team.members, { email: address, role, joinedAt: new Date().toISOString() }];
+    await saveTeam(store.sid, { members, invites: team.invites });
+    return true;
+  });
+  if (added) await redisPipeline([["SADD", indexKey(address), store.sid]]).catch(() => {});
+  return added;
+}
+
 /** Takes someone off the team, whether the owner does it or they leave. */
 export async function removeMember(store: Store, email: string): Promise<boolean> {
   const address = normaliseEmail(email);
