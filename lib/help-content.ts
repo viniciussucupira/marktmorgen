@@ -4,6 +4,7 @@
  * the page shows. Each answer is plain text; numbers come from the rules they
  * describe, so the two can never disagree.
  */
+import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import { isDomainsConfigured } from "@/lib/domains";
 import { PRO_MONTHLY_EMAILS, REFUND_DAYS, TRIAL_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS } from "@/lib/plan";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
@@ -479,6 +480,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           "Under every lesson, students can ask questions and answer each other, under a name they choose; their email address is never shown, and only the course's students and you can read what they write. You answer as the creator from the lesson itself or from the course's page in your studio, the student gets an email with your answer, and your phone can tell you when a comment comes. You can hide or delete any comment, or switch comments off for the course without deleting them.",
           "The course can be sold once, in a payment plan, or as a membership that stays open while the member pays.",
           "Lesson videos are covered for 400 hours watched a month across your store, counted by the player as your students watch. Past that it is $0.03 for each hour watched, on your next invoice, and a student is never cut off for it. A store with no paid plan has nothing a charge can be added to, so its lesson videos pause past its hours until the plan is paid or the month turns: 400 hours a month in the free trial, and 10 hours a month before a plan starts and after one ends.",
+          `Captions can be uploaded as a .vtt or .srt file in any of 28 languages, or written by AI from what is said in the video: in the language spoken and up to two more, ${dollars(CENTS_PER_MINUTE)} a minute of video for each language, never less than ${dollars(MIN_CENTS)} a request. The price is shown before you confirm and charged then to the card your plan is paid with; anything not delivered within ${GIVE_UP_HOURS} hours is refunded. Read them before your students rely on them: a machine wrote them.`,
         ],
       },
       {

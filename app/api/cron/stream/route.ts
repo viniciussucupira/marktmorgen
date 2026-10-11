@@ -1,3 +1,4 @@
+import { sweepAutoCaptions } from "@/lib/auto-captions";
 import type { NextRequest } from "next/server";
 import { cronAllowed } from "@/lib/request-guard";
 import { withCutoff } from "@/lib/fetch-timeout";
@@ -35,9 +36,12 @@ async function run(request: NextRequest): Promise<Response> {
     if (counts.looked || counts.deleted) {
       console.log(`stream: looked at ${counts.looked}, ${counts.ready} ready, ${counts.failed} failed, ${counts.deleted} deleted`);
     }
+    // Captions being written by AI, asked after until they are all there (lib/auto-captions.ts).
+    const captions = await sweepAutoCaptions(Date.now() + 8_000);
+    if (captions.done) console.log(`captions: ${captions.done} request(s) settled`);
     const watched = await measureDue(Date.now() + 15_000);
     if (watched.read) console.log(`watch: read ${watched.read} store(s), ${watched.seconds} second(s) of video watched since the reading before`);
-    return Response.json({ ok: true, ...counts, watched }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ ok: true, ...counts, captions, watched }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("the video job failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

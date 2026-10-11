@@ -23,7 +23,11 @@ import {
   WithdrawCertificate,
 } from "@/components/course-editor";
 import { readListing } from "@/lib/catalog";
-import { streamCaptions, streamStates } from "@/lib/stream";
+import { isStreamConfigured, streamCaptions, streamStates } from "@/lib/stream";
+import { autoWriting } from "@/lib/auto-captions";
+import { isBillingConfigured } from "@/lib/billing";
+import { can } from "@/lib/team-roles";
+import { parseLanguage } from "@/lib/store-language";
 
 export const metadata: Metadata = {
   title: "Your course — Marktmorgen",
@@ -63,6 +67,11 @@ export default async function StudioCoursePage({
   const streams = await streamStates(videoPaths).catch(() => ({}));
   // And the languages each one has captions in.
   const captions = await streamCaptions(videoPaths).catch(() => ({}));
+  // And those being written by AI (lib/auto-captions.ts), which only somebody
+  // who may spend on the plan's card, on a store with a plan, may ask for.
+  const writing = await autoWriting(videoPaths).catch(() => ({}));
+  const autoCan =
+    can(view.role, "billing") && store.subscriptionActive && Boolean(store.subscriptionId && store.stripeCustomerId) && isBillingConfigured() && isStreamConfigured();
   const { students, total } = await studentsOf(course, 500);
   const lessons = lessonCount(course);
   const finished = students.filter((s) => lessons > 0 && s.done >= lessons).length;
@@ -137,6 +146,8 @@ export default async function StudioCoursePage({
           folder={folder}
           streams={streams}
           captions={captions}
+          writing={writing}
+          auto={{ can: autoCan, spoken: parseLanguage(store.language) }}
           title={product.title}
           ai={isAiConfigured() ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
         />
