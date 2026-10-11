@@ -19,9 +19,10 @@
  * and in their Stripe dashboard; pressing "Mark as shipped" emails the buyer,
  * with a tracking link if there is one (lib/shipments.ts).
  *
- * It is sold once, at one price, on its own: not with price options, a price
- * the buyer names, a payment plan, a cart, a gift or a group purchase, and
- * it delivers no file, link, course or call besides. A limited quantity and
+ * It is sold once, at one price or at several (sizes or versions: S, M, L;
+ * signed or not), on its own: not with a price the buyer names, a payment
+ * plan, a cart, a gift or a group purchase, and it delivers no file, link,
+ * course or call besides. A limited quantity and
  * the boxes at checkout work as they do on any product.
  *
  * Browser-safe: the studio reads the same rules the server holds it to.
@@ -97,7 +98,7 @@ export type ShipCandidate = {
   priceCents: number;
   recurring: unknown;
   call: unknown;
-  options: unknown[];
+  options: { file?: unknown; link?: unknown }[];
   pwyw: unknown;
   plan: unknown;
   file: unknown;
@@ -107,17 +108,18 @@ export type ShipCandidate = {
   bundle: unknown;
 };
 
-export type ShipProblem = "free" | "membership" | "call" | "options" | "pwyw" | "plan" | "delivery";
+export type ShipProblem = "free" | "membership" | "call" | "pwyw" | "plan" | "delivery";
 
 /** Why this product cannot be shipped, or null when it can: sold once, at one price, delivering nothing else. */
 export function shipProblem(product: ShipCandidate): ShipProblem | null {
   if (product.priceCents <= 0) return "free";
   if (product.recurring) return "membership";
   if (product.call) return "call";
-  if (product.options.length > 0) return "options";
+  // Several prices are sizes or versions of the same thing (added 11 October 2026): each ships the same way.
   if (product.pwyw) return "pwyw";
   if (product.plan) return "plan";
   if (product.file || product.link || product.course || product.podcast || product.bundle) return "delivery";
+  if (product.options.some((option) => option.file || option.link)) return "delivery";
   return null;
 }
 

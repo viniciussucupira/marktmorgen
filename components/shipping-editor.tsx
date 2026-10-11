@@ -131,7 +131,7 @@ export function ShippingEditor({ product }: { product: Product }) {
       <p className="mt-2 text-xs text-ink-soft">
         Stripe asks the buyer for an address in a country it ships to and adds the shipping before they pay. You send it yourself: the
         address is on the sale under What you have sold, where &ldquo;Mark as shipped&rdquo; emails the buyer, with a tracking link if you have one.
-        Sold once, at one price: no gifts, carts or price options.
+        Sold once: at one price, or at several for sizes or versions, added under Prices. No gifts or carts.
       </p>
       {error ? <p className="notice notice-error mt-3" role="alert">{error}</p> : null}
       <div className="mt-3 flex flex-wrap gap-3">

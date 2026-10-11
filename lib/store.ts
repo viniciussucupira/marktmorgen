@@ -2664,7 +2664,8 @@ async function changeDelivery(
     if (giving && product.id === id && (product.course || product.podcast)) return { ok: false as const, reason: "course" as const };
     if (giving && product.id === id && isBundle(product)) return { ok: false as const, reason: "bundle" as const };
     // A physical product delivers what the creator ships (lib/shipping.ts).
-    if (giving && product.id === id && product.shipping) return { ok: false as const, reason: "shipped" as const };
+    // Nor on one of its sizes or versions: each ships the same way.
+    if (giving && product.shipping) return { ok: false as const, reason: "shipped" as const };
     const done = rewriteDelivery(product, id, change);
     if (!done) return { ok: false as const, reason: "unknown" as const };
     const next = await save(store, { put: [done.product] });
@@ -2896,8 +2897,6 @@ export async function addOption(
     // Several prices on something given away would put a price on it.
     if (isFree(product)) return { ok: false, reason: "free" };
     if (product.call) return { ok: false, reason: "call" };
-    // A physical product is shipped at one price (lib/shipping.ts).
-    if (product.shipping) return { ok: false, reason: "call" };
     // A course or a private podcast may be sold at several prices (7 October
     // 2026): each option opens the same lessons or feed, and a file or link
     // on one is what that one adds. A membership course stays at one price,
