@@ -31,6 +31,7 @@ import {
 
 import { type PageBlock, type SalesPage, emptyBlock, parsePage } from "@/lib/sales-page";
 import { MAX_TRANSLATE_PARTS, pageWords, translateParts, withWords } from "@/lib/page-translate";
+import { READ_PDF_JOBS, READ_PDF_PAGES } from "@/lib/ai-rules";
 import { FILLABLE, REWRITABLE, REWRITE_STYLES, type RewriteStyle, addsNumbers, blockText } from "@/lib/block-rewrite-rules";
 
 const API = /^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.ANTHROPIC_API_BASE ?? "")
@@ -836,17 +837,61 @@ export type PageDraft = {
 /** A refund promise named, in any of the store languages: only then is a guarantee drafted. */
 export const REFUND_WORDS = /refund|money.?back|guarantee|reembols|devoluci|devolu[cç][aã]o|garant[iíi]|garanzi|rembours|r[uü]ckerstatt|geld.?zur[uü]ck|rimbors|terugbetal|geld.?terug/i;
 
+/**
+ * The first pages of a product's own PDF, read before its page is written
+ * (added 10 October 2026): what they actually hold — its parts, its format,
+ * who it says it is for — so "What's inside" is the book's real chapters
+ * rather than a guess. Read by the smaller model (answerModel), only what
+ * the pages show; the facts it returns are handed to the writer as such.
+ * READ_PDF_JOBS of the month's jobs, on top of the page's own one
+ * (lib/ai-rules.ts).
+ */
+
+async function readPdfFacts(pdf: Uint8Array): Promise<string | null> {
+  const system = [
+    "You read the first pages of a product a creator sells, given as a PDF.",
+    "List only what these pages actually show. Never add a chapter, a number, a result or a claim that is not on them, and never guess at the pages you were not given.",
+    'Return only a JSON object: {"parts": [{"title": at most 80 characters, "detail": at most 160 characters}] (its chapters, sections or contents, as the pages list them, at most 12), "format": at most 120 characters (what kind of document it is and how it is laid out), "for": at most 160 characters (who it says it is for, or an empty string if it does not say)}.',
+  ].join("\n\n");
+  const content = [
+    { type: "document", source: { type: "base64", media_type: "application/pdf", data: Buffer.from(pdf).toString("base64") } },
+    { type: "text", text: `These are the first ${READ_PDF_PAGES} pages at most.` },
+  ];
+  const answer = await askModel(system, content, 1_500, answerModel());
+  const json = answer ? jsonIn(answer) : null;
+  if (!json) return null;
+  const parts = (Array.isArray(json.parts) ? json.parts : [])
+    .map((p: unknown) => (p && typeof p === "object" ? (p as Record<string, unknown>) : {}))
+    .map((p: Record<string, unknown>) => ({ title: line(p.title, 80), detail: line(p.detail, 160) }))
+    .filter((p: { title: string }) => p.title)
+    .slice(0, 12);
+  const format = line(json.format, 120);
+  const audience = line(json.for, 160);
+  if (!parts.length && !format) return null;
+  return [
+    format ? `Format: ${format}` : "",
+    audience ? `Who it says it is for: ${audience}` : "",
+    parts.length ? `Its contents:\n${parts.map((p: { title: string; detail: string }) => `- ${p.title}${p.detail ? `: ${p.detail}` : ""}`).join("\n")}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 export async function writePage(
   store: Store,
-  input: { title: string; price: string; kind: ProductKind | "free"; summary: string; about: string; notes: string },
+  input: { title: string; price: string; kind: ProductKind | "free"; summary: string; about: string; notes: string; pdf?: Uint8Array | null },
   now = Date.now(),
 ): Promise<AiResult<PageDraft>> {
   const notes = block(input.notes, MAX_AI_NOTES);
   const about = block(input.about, MAX_ABOUT_LENGTH);
   const summary = line(input.summary, MAX_SUMMARY_LENGTH);
-  // Something has to be said about the product, by the creator, somewhere.
-  if (!notes && !about && !summary) return { ok: false, reason: "notes" };
+  const pdf = input.pdf && input.pdf.length > 0 ? input.pdf : null;
+  // Something has to be said about the product, by the creator or by its own file.
+  if (!notes && !about && !summary && !pdf) return { ok: false, reason: "notes" };
   return counted(store, now, async () => {
+    // What the product's own first pages hold, when the creator asked for them to be read.
+    const fileFacts = pdf ? await readPdfFacts(pdf) : null;
+    if (pdf && !fileFacts && !notes && !about && !summary) return null;
     const free = input.kind === "free";
     const system = [
       free
@@ -877,6 +922,7 @@ export async function writePage(
       summary ? `\nIts one-line summary:\n${summary}` : "",
       about ? `\nIts description, as the creator wrote it:\n${about}` : "",
       notes ? `\nWhat the creator adds for this page:\n${notes}` : "",
+      fileFacts ? `\nWhat the first pages of the product's own file show (use these for what is inside; say nothing about pages not listed):\n${fileFacts}` : "",
     ]
       .filter((l) => l !== "")
       .join("\n");
@@ -907,7 +953,7 @@ export async function writePage(
       seoDescription: line(json.seoDescription, 160),
     };
     return draft.headline && draft.benefits.length ? draft : null;
-  });
+  }, pdf ? 1 + READ_PDF_JOBS : 1);
 }
 
 /**

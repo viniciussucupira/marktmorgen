@@ -51,3 +51,13 @@ export const EMAIL_GOALS: { id: EmailGoal; label: string }[] = [
 /** The course outline the writer proposes: at most this many modules, and lessons in each. */
 export const MAX_AI_MODULES = 8;
 export const MAX_AI_LESSONS = 8;
+
+/**
+ * A sales page drafted from the product's own PDF too (lib/ai.ts,
+ * readPdfFacts): its first pages are read, at most this many, and the reading
+ * takes this many of the month's jobs on top of the page's own one. Ten pages
+ * read by the smaller model cost about what two drafts are costed at
+ * (tests/plan-margin.test.ts).
+ */
+export const READ_PDF_PAGES = 10;
+export const READ_PDF_JOBS = 2;
