@@ -2328,6 +2328,31 @@ try {
   }
 
   await keepSmall();
+  part("A phone number asked at checkout, in Stripe's own box");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "Coaching Notes", price: "9" });
+    const notes = made.product?.id ?? "";
+    await post("/api/store/product", { action: "link", id: notes, link: "https://example.com/coaching-notes" });
+    await open(studio, `${LOCAL}/studio`);
+    await studio.locator("button[aria-expanded]", { hasText: "Coaching Notes" }).first().click();
+    await studio.getByRole("button", { name: "Ask the buyer something at checkout" }).first().click();
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Save the questions" }) });
+    await form.getByLabel("Answer").selectOption("phone");
+    is("Stripe's own box needs no label, and is always required", [await form.getByText("Always required by Stripe").count(), await form.locator("input[type=text]").count()], [1, 0]);
+    await form.getByRole("button", { name: "Save the questions" }).click();
+    await studio.getByText("Asks at checkout: “Phone number”").first().waitFor({ timeout: 30_000 });
+    await open(page, `${LOCAL}/@localshop/p/${notes}`);
+    await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
+    const paid = services.checkouts().at(-1);
+    is("Stripe is asked for its phone box, and nothing is added to its questions", [paid.customer_details?.phone, paid.metadata.product], ["+15125550142", notes]);
+    await open(studio, `${LOCAL}/studio`);
+    is("the number is on the sale in the studio", (await studio.locator("body").innerText()).includes("+15125550142"), true);
+    await post("/api/store/product", { action: "remove", id: notes });
+  }
+
+  await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);

@@ -85,9 +85,10 @@ export default function PrivacyPage() {
           says is read from the payment on the creator&apos;s Stripe account.
           We keep only a mark that it was sent, tied to that checkout, for 40
           days, so it is never sent twice. If a creator asks buyers questions
-          at checkout, the answers are kept with the payment on the
-          creator&apos;s own Stripe account, shown to the creator, and for a
-          booked call included in the creator&apos;s booking email.
+          at checkout, or asks for a phone number in Stripe&apos;s own phone
+          box, the answers are kept with the payment on the creator&apos;s own
+          Stripe account, shown to the creator, and for a booked call included
+          in the creator&apos;s booking email.
         </p>
         <p>
           <strong className="text-black">A reminder after an unpaid checkout.</strong>{" "}
