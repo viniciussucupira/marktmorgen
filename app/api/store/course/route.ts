@@ -28,7 +28,10 @@ import {
   saveBody,
   saveCourse,
 } from "@/lib/course";
-import { emailKey, registerDrip, setBlocked } from "@/lib/learn";
+import { emailKey, registerDrip, setBlocked, storeKey, studentEmail } from "@/lib/learn";
+import { dropTask, readTaskFor, review, saveTask } from "@/lib/assignment";
+import { readTask } from "@/lib/assignment-rules";
+import { tellStudentOfReview } from "@/lib/assignment-notify";
 import { EMAIL_PATTERN } from "@/lib/auth";
 import { dropQuiz, readQuiz, readQuizFor, resetTries, saveQuiz, setupOf } from "@/lib/quiz";
 import { CERT_ID_PATTERN, withdrawCertificate } from "@/lib/certificate";
@@ -64,6 +67,9 @@ export async function GET(request: NextRequest) {
   const product = await readListing(store, id);
   const course = product?.course ? await readCourse(product.course.id) : null;
   if (!course || !findLesson(course, lessonId)) return Response.json({ ok: false, error: "unknown" }, { status: 404 });
+  if (request.nextUrl.searchParams.get("task") === "1") {
+    return Response.json({ ok: true, task: await readTaskFor(course.id, lessonId) }, { headers: { "Cache-Control": "no-store" } });
+  }
   if (request.nextUrl.searchParams.get("quiz") === "1") {
     return Response.json({ ok: true, quiz: await readQuizFor(course.id, lessonId) }, { headers: { "Cache-Control": "no-store" } });
   }
@@ -83,7 +89,10 @@ export async function GET(request: NextRequest) {
  * lessonId, quiz }` saves a lesson's quiz and `quiz: null` takes it off;
  * `{ action: "cert", id, on }` switches certificates on or off; `{ action:
  * "withdraw", id, certificate }` withdraws one; `{ action: "retries", id,
- * email }` gives a student their quiz tries back.
+ * email }` gives a student their quiz tries back; `{ action: "task", id,
+ * lessonId, task }` saves a lesson's assignment and `task: null` takes it off,
+ * with the work handed in for it; `{ action: "review", id, lessonId, who,
+ * verdict, feedback }` approves a student's work or asks for another try.
  *
  * `id` is always the product's, and the course is found through the
  * creator's own store, so nothing here can reach anyone else's course.
@@ -153,6 +162,39 @@ export async function POST(request: NextRequest) {
       }
       return Response.json({ ok: false, error: "invalid" }, { status: 400 });
     }
+    // A student's work read and answered (lib/assignment.ts): kept apart from
+    // the outline, so it never waits for the outline's lock.
+    if (action === "review") {
+      const courseId = product.course.id;
+      const course = await readCourse(courseId);
+      const found = course ? findLesson(course, text(body.lessonId, 20)) : null;
+      const who = text(body.who, 64);
+      if (!found?.lesson.task) return Response.json({ ok: false, error: "gone" }, { status: 404 });
+      const verdict = body.verdict === "approved" ? "approved" : body.verdict === "again" ? "again" : null;
+      if (!verdict) return Response.json({ ok: false, error: "invalid" }, { status: 400 });
+      const feedback = typeof body.feedback === "string" ? body.feedback : "";
+      // Asking for another try without saying what to change leaves the student with nothing to go on.
+      if (verdict === "again" && !feedback.trim()) return Response.json({ ok: false, error: "feedback" }, { status: 400 });
+      const to = await studentEmail(courseId, who);
+      const result = await review({ courseId, lessonId: found.lesson.id, who, email: to ?? "", verdict, feedback });
+      if (!result.ok) return Response.json({ ok: false, error: result.reason === "unknown" ? "gone" : "reviewed" }, { status: 409 });
+      const told = to
+        ? await tellStudentOfReview({
+            store,
+            product,
+            lessonId: found.lesson.id,
+            lessonTitle: found.lesson.title,
+            to,
+            submission: result.submission,
+            origin: originFrom(request),
+          }).catch((error: unknown) => {
+            console.error("a review email failed", error);
+            return false;
+          })
+        : false;
+      return Response.json({ ok: true, submission: result.submission, told });
+    }
+
     // One change at a time per course: each reads the whole outline and writes it
     // back, so two at once (two lessons uploading, two tabs) would drop one.
     const courseInfo = product.course;
@@ -187,9 +229,37 @@ export async function POST(request: NextRequest) {
         return Response.json({ ok: true });
       }
 
+      if (action === "task") {
+        const lessonId = text(body.lessonId, 20);
+        const found = findLesson(course, lessonId);
+        if (!found) return Response.json({ ok: false, error: "unknown" }, { status: 404 });
+        if (body.task === null) {
+          const result = editCourse(course, { op: "task", lessonId, task: null });
+          if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
+          await save(result.course);
+          // The work handed in for it goes with it, files and all.
+          const files = await dropTask(course.id, lessonId, storeKey(store));
+          if (files.length) await del(files).catch((error: unknown) => console.error("could not delete handed-in work", error));
+          return Response.json({ ok: true, course: result.course });
+        }
+        // A lesson is done by its quiz or by its assignment, never by both.
+        if (found.lesson.quiz) return Response.json({ ok: false, error: "quiz_there" }, { status: 400 });
+        const read = readTask(body.task);
+        if (!read.ok) return Response.json({ ok: false, error: "prompt" }, { status: 400 });
+        await saveTask(course.id, lessonId, read.task);
+        const { prompt: _prompt, ...setup } = read.task;
+        void _prompt;
+        const result = editCourse(course, { op: "task", lessonId, task: setup });
+        if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
+        await save(result.course);
+        return Response.json({ ok: true, course: result.course, task: read.task });
+      }
+
       if (action === "quiz") {
         const lessonId = text(body.lessonId, 20);
+        const hasTask = findLesson(course, lessonId)?.lesson.task;
         if (!findLesson(course, lessonId)) return Response.json({ ok: false, error: "unknown" }, { status: 404 });
+        if (hasTask && body.quiz !== null) return Response.json({ ok: false, error: "task_there" }, { status: 400 });
         if (body.quiz === null) {
           const result = editCourse(course, { op: "quiz", lessonId, quiz: null });
           if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
@@ -345,8 +415,15 @@ export async function POST(request: NextRequest) {
       }
       if (edit.op === "lesson-remove" || edit.op === "module-remove") {
         const kept = new Set(lessonsInOrder(result.course).map(({ lesson }) => lesson.id));
-        const gone = lessonsInOrder(course).map(({ lesson }) => lesson.id).filter((l) => !kept.has(l));
+        const goneLessons = lessonsInOrder(course).filter(({ lesson }) => !kept.has(lesson.id));
+        const gone = goneLessons.map(({ lesson }) => lesson.id);
         await dropLessonComments(course.id, gone).catch((error) => console.error("could not delete a lesson's comments", error));
+        // An assignment goes with its lesson, and the work handed in for it.
+        for (const { lesson } of goneLessons) {
+          if (!lesson.task) continue;
+          const files = await dropTask(course.id, lesson.id, storeKey(store)).catch(() => [] as string[]);
+          if (files.length) await del(files).catch((error: unknown) => console.error("could not delete handed-in work", error));
+        }
       }
       if (edit.op === "module-edit" || edit.op === "module-remove" || edit.op === "lesson-add" || edit.op === "outline") {
         await registerDrip(store, product, result.course);

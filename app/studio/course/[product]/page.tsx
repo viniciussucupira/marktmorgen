@@ -11,7 +11,7 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { lessonCount, lessonsInOrder, readCourse } from "@/lib/course";
-import { emailKey, studentsOf } from "@/lib/learn";
+import { emailKey, studentEmail, studentsOf } from "@/lib/learn";
 import { canSellProduct } from "@/lib/store-checkout";
 import { passedFor } from "@/lib/quiz";
 import { certificatesFor } from "@/lib/certificate";
@@ -28,6 +28,9 @@ import { autoWriting } from "@/lib/auto-captions";
 import { isBillingConfigured } from "@/lib/billing";
 import { can } from "@/lib/team-roles";
 import { parseLanguage } from "@/lib/store-language";
+import { CourseWorkStudio, type StudioWork } from "@/components/course-work-studio";
+import { submissionsOf, waitingWork } from "@/lib/assignment";
+
 
 export const metadata: Metadata = {
   title: "Your course — Marktmorgen",
@@ -85,6 +88,20 @@ export default async function StudioCoursePage({
   const [talking, recent] = await Promise.all([commentsOn(course.id), recentComments(course.id, 50)]);
   await markSeen(course.id);
   const titles = new Map(lessonsInOrder(course).map(({ lesson }) => [lesson.id, lesson.title]));
+  const aiState = isAiConfigured() ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
+  // Work handed in for the course's assignments (lib/assignment.ts): what is waiting, or everything.
+  const hasTasks = lessonsInOrder(course).some(({ lesson }) => lesson.task);
+  const showingWork = query.work === "all" ? "all" : "waiting";
+  const work = hasTasks ? await waitingWork(course.id, 50, showingWork === "all") : { rows: [], total: 0 };
+  const [handed, addresses] = await Promise.all([
+    submissionsOf(course.id, work.rows),
+    Promise.all(work.rows.map((row) => studentEmail(course.id, row.who).catch(() => null))),
+  ]);
+  const workRows: StudioWork[] = work.rows.flatMap((row, i) => {
+    const submission = handed[i];
+    const title = titles.get(row.lessonId);
+    return submission && title !== undefined ? [{ lessonId: row.lessonId, lessonTitle: title, who: row.who, email: addresses[i] ?? "", submission }] : [];
+  });
   const byId = new Map(recent.comments.map((c) => [c.id, c]));
   const shownComments: StudioComment[] = recent.comments
     .filter((c) => titles.has(c.lesson))
@@ -120,7 +137,7 @@ export default async function StudioCoursePage({
         <p className="eyebrow">Course</p>
         <h1 className="t-h2 mt-3 break-words">{product.title}</h1>
         <p className="mt-3 max-w-2xl text-ink-soft">
-          Modules hold lessons. A lesson can have a video, text, downloads, a link and a quiz, and any lesson can be a
+          Modules hold lessons. A lesson can have a video, text, downloads, a link, and a quiz or an assignment, and any lesson can be a
           free preview on your store. A module can open a number of days after each student joins, and they get an
           email the day it does.
         </p>
@@ -149,8 +166,19 @@ export default async function StudioCoursePage({
           writing={writing}
           auto={{ can: autoCan, spoken: parseLanguage(store.language) }}
           title={product.title}
-          ai={isAiConfigured() ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
+          ai={aiState}
         />
+
+        {hasTasks ? (
+          <CourseWorkStudio
+            productId={product.id}
+            rows={workRows}
+            total={work.total}
+            showing={showingWork}
+            hrefs={{ waiting: `${studioPath(store, "", `course/${product.id}`)}#work`, all: `${studioPath(store, "work=all", `course/${product.id}`)}#work` }}
+            ai={aiState}
+          />
+        ) : null}
 
         <CourseCommentsStudio
           productId={product.id}

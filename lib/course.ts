@@ -16,6 +16,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type ProductFile, parseProductFile } from "@/lib/product-file";
 import { type QuizSetup, parseSetup as parseQuizSetup } from "@/lib/quiz";
+import { type TaskSetup, parseTaskSetup } from "@/lib/assignment-rules";
 
 export const MAX_MODULES = 30;
 export const MAX_LESSONS = 200;
@@ -62,6 +63,13 @@ export type Lesson = {
    * themselves are kept apart (lib/quiz.ts).
    */
   quiz: QuizSetup | null;
+  /**
+   * The lesson's assignment, when it has one: whether the creator approves
+   * each, whether it holds later lessons shut, whether a file may be handed
+   * in. Its prompt is kept apart (lib/assignment.ts). A lesson has a quiz or
+   * an assignment, not both.
+   */
+  task?: TaskSetup | null;
 };
 
 export type CourseModule = {
@@ -142,6 +150,7 @@ function parseLesson(raw: unknown): Lesson | null {
     hasBody: value.hasBody === true,
     // Lessons written before quizzes existed have none.
     quiz: parseQuizSetup(value.quiz),
+    ...(value.task ? { task: parseTaskSetup(value.task) } : {}),
   };
 }
 
@@ -261,6 +270,7 @@ export type CourseEdit =
   | { op: "media"; lessonId: string; kind: "video" | "file"; file: ProductFile }
   | { op: "media-remove"; lessonId: string; pathname: string }
   | { op: "quiz"; lessonId: string; quiz: QuizSetup | null }
+  | { op: "task"; lessonId: string; task: TaskSetup | null }
   | { op: "certificate"; on: boolean }
   | { op: "start"; at: unknown }
   /** Several modules at once, each with its lessons by title: an outline taken from the writing help (lib/ai.ts). */
@@ -446,6 +456,14 @@ export function editCourse(course: Course, edit: CourseEdit): EditResult {
     }
     case "quiz": {
       const next = mapLesson(course, edit.lessonId, (lesson) => ({ ...lesson, quiz: edit.quiz }));
+      return next ? { ok: true, course: next, removed: [] } : { ok: false, reason: "unknown" };
+    }
+    case "task": {
+      const next = mapLesson(course, edit.lessonId, (lesson) => {
+        const { task: _was, ...rest } = lesson;
+        void _was;
+        return edit.task ? { ...rest, task: edit.task } : rest;
+      });
       return next ? { ok: true, course: next, removed: [] } : { ok: false, reason: "unknown" };
     }
     case "certificate":

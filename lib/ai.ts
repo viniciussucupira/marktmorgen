@@ -35,6 +35,7 @@ import { READ_PDF_JOBS, READ_PDF_PAGES } from "@/lib/ai-rules";
 import { type DraftedQuestion, MAX_QUIZ_SOURCE, readDrafted, shuffleAnswers } from "@/lib/quiz-draft";
 import { type DraftedStep, readDraftedSteps } from "@/lib/sequence-draft";
 import { MAX_CHOICE_LENGTH, MAX_EXPLANATION_LENGTH, MAX_QUESTIONS, MAX_QUESTION_LENGTH } from "@/lib/quiz";
+import { MAX_ANSWER_TEXT, MAX_FEEDBACK, MAX_TASK_PROMPT } from "@/lib/assignment-rules";
 import { FILLABLE, REWRITABLE, REWRITE_STYLES, type RewriteStyle, addsNumbers, blockText } from "@/lib/block-rewrite-rules";
 
 const API = /^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.ANTHROPIC_API_BASE ?? "")
@@ -745,6 +746,48 @@ export async function writeQuiz(
     const json = answer ? jsonIn(answer) : null;
     const questions = shuffleAnswers(readDrafted(json?.questions, count));
     return questions.length ? questions : null;
+  });
+}
+
+/**
+ * What a creator writes back to a student about their work on an assignment
+ * (lib/assignment.ts): a draft from the assignment and the student's answer,
+ * in the store's language, because the student reads it. The creator reads
+ * it, changes it and decides; nothing is sent from here. One job of the
+ * month's.
+ */
+export async function writeFeedback(
+  store: Store,
+  input: { course: string; lesson: string; prompt: string; answer: string; file: string; notes: string },
+  now = Date.now(),
+): Promise<AiResult<string>> {
+  const answer = block(input.answer, MAX_ANSWER_TEXT);
+  const notes = block(input.notes, MAX_AI_NOTES);
+  if (!answer && !notes) return { ok: false, reason: "notes" };
+  return counted(store, now, async () => {
+    const system = [
+      "You draft what the creator of an online course writes back to one student about the work they handed in for a lesson's assignment.",
+      honesty(storeLanguage(store)),
+      "Write as the creator, to the student, in the second person: warm, direct and useful, like a good teacher's note in the margin.",
+      "Judge the work only against what the assignment asks. Say first, specifically, what the student did well. Then what would make it better, as one to three concrete things to do, each tied to something in their answer. Never invent what is not in the answer, never grade it with a number, never pretend to have read a file you were not shown.",
+      "If the creator added their own view of the work, follow it: it decides whether the work is good enough, and the note says so in their way.",
+      `Return only a JSON object: {"feedback": string}. Plain text, at most ${MAX_FEEDBACK} characters, short paragraphs separated by one blank line, no greeting line and no signature.`,
+    ].join("\n\n");
+    const prompt = [
+      `Course: ${line(input.course, MAX_TITLE) || "(no name)"}`,
+      `Lesson: ${line(input.lesson, MAX_TITLE) || "(no name)"}`,
+      "",
+      `The assignment:\n${block(input.prompt, MAX_TASK_PROMPT)}`,
+      answer ? `The student's answer:\n${answer}` : "The student wrote no answer in words.",
+      input.file ? `The student also handed in a file, "${line(input.file, 120)}", which you cannot see.` : "",
+      notes ? `What the creator thinks of it:\n${notes}` : "",
+    ]
+      .filter((part) => part !== "")
+      .join("\n");
+    const reply = await ask(system, prompt, 1_500);
+    const json = reply ? jsonIn(reply) : null;
+    const feedback = block(json?.feedback, MAX_FEEDBACK);
+    return feedback || null;
   });
 }
 

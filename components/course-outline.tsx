@@ -42,12 +42,13 @@ export function CourseOutline({
   start: number | null;
   done: Set<string>;
   current?: string;
-  /** Lessons a quiz that must be passed still holds shut, for this student. */
+  /** Lessons a quiz that must be passed, or work to hand in, still holds shut, for this student: by the lesson holding them. */
   held?: Map<string, string>;
   language?: LanguageCode;
 }) {
   const w = coursesWords(language);
   const locale = LANGUAGES[parseLanguage(language)].locale;
+  const taskLessons = new Set(course.modules.flatMap((unit) => unit.lessons.filter((lesson) => lesson.task).map((lesson) => lesson.id)));
   return (
     <ol className="space-y-5">
       {course.modules.map((unit, mi) => {
@@ -84,6 +85,8 @@ export function CourseOutline({
               <ol className="mt-2 space-y-1">
                 {unit.lessons.map((lesson) => {
                   const waiting = open && Boolean(held?.has(lesson.id));
+                  // What holds it shut: a quiz to pass, or work to hand in (lib/assignment-rules.ts).
+                  const behindTask = waiting && taskLessons.has(held?.get(lesson.id) ?? "");
                   const reachable = (open && !waiting) || lesson.preview;
                   const isDone = done.has(lesson.id);
                   const here = lesson.id === current;
@@ -108,9 +111,11 @@ export function CourseOutline({
                         {isDone ? <span className="sr-only">{w.doneHidden}</span> : null}
                         {lesson.quiz ? (
                           <span className="st-muted ml-2 text-xs font-semibold">{lesson.quiz.required ? w.quizToPass : w.quiz}</span>
+                        ) : lesson.task ? (
+                          <span className="st-muted ml-2 text-xs font-semibold">{w.taskToHandIn}</span>
                         ) : null}
                         {waiting && !lesson.preview ? (
-                          <span className="st-muted block text-xs">{w.opensOnPass}</span>
+                          <span className="st-muted block text-xs">{behindTask ? w.opensOnTask : w.opensOnPass}</span>
                         ) : null}
                         {!open && lesson.preview ? (
                           <span className="ml-2 text-xs font-bold uppercase tracking-wide" style={{ color: "var(--st-accent-text)" }}>{w.freePreview}</span>

@@ -32,8 +32,10 @@ export async function GET(request: NextRequest) {
     }
     if (!access.learner.owner && course) {
       const passed = await passedQuizzes(course.id, emailKey(access.learner.email));
-      if (heldBack(course, passed).has(found.lesson.id)) {
-        return plain(403, w.opensOnPassFile);
+      const blocker = heldBack(course, passed).get(found.lesson.id);
+      if (blocker) {
+        // Held by a quiz to pass, or by work to hand in (lib/assignment-rules.ts).
+        return plain(403, findLesson(course, blocker)?.lesson.task ? `${w.opensOnTask}.` : w.opensOnPassFile);
       }
     }
   }

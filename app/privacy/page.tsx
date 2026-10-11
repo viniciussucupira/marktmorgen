@@ -822,6 +822,21 @@ export default function PrivacyPage() {
           goes on proving what it says; a withdrawn one says it was withdrawn.
           A student who wants theirs withdrawn asks the creator.
         </p>
+        <p id="assignments">
+          <strong className="text-black">Course assignments.</strong> When a
+          creator gives a lesson an assignment, we keep what each student hands
+          in for it: what they wrote, the file they added with its name and
+          size, when, how many times, and what the creator wrote back and
+          when, with their course progress. The file is kept privately with
+          the creator&apos;s store files, where only that student, the creator
+          and the creator&apos;s team can download it; a file uploaded and not
+          handed in is deleted within about a day, one replaced by a new one
+          is deleted at once, and everything is deleted when the creator
+          removes the assignment, the lesson or the course. When the creator
+          asks AI to draft a reply, the assignment and what the student wrote
+          are sent to Anthropic to write it, never the file. A student who
+          wants their work deleted asks the creator.
+        </p>
         <p id="stamping">
           <strong className="text-black">Stamped PDFs.</strong> When a creator
           switches on stamping for a product, every page of the PDF a buyer
@@ -1344,7 +1359,7 @@ export default function PrivacyPage() {
         <p>
           The same is true for the members of a creator&apos;s community, the
           people who apply to their affiliate program, their students&apos;
-          quiz answers and certificates, and their buyers&apos; reviews: the
+          quiz answers, handed-in work and certificates, and their buyers&apos; reviews: the
           creator is the controller, and we handle that data on their behalf.
           When a creator connects an email platform, Google Calendar or Zoom,
           or chooses Jitsi Meet for their calls and events, that is the

@@ -5,7 +5,8 @@ import { READ_PDF_PAGES } from "@/lib/ai-rules";
 import { firstPages } from "@/lib/pdf-preview";
 import { MAX_STAMP_BYTES, readableFile } from "@/lib/product-file";
 import { withinLimit } from "@/lib/request-guard";
-import { describePicture, fillBlock, reviewPage, rewriteBlock, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct, writeQuiz, writeSequence } from "@/lib/ai";
+import { describePicture, fillBlock, reviewPage, rewriteBlock, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct, writeQuiz, writeSequence, writeFeedback } from "@/lib/ai";
+import { readTaskFor, submissionOf } from "@/lib/assignment";
 import { SOCIALS, type SocialNetwork, isSocialNetwork } from "@/lib/store-socials";
 import { isRewriteStyle } from "@/lib/block-rewrite-rules";
 import { deliveryWords, factsFor, missedQuestions, priceWords } from "@/lib/answers";
@@ -34,7 +35,7 @@ import { DEFAULT_QUIZ_DRAFT, QUIZ_DRAFT_COUNTS } from "@/lib/quiz-draft";
 const KINDS: ProductKind[] = ["download", "link", "course", "membership", "call", "bundle"];
 
 /**
- * The writing help (lib/ai.ts): `{ kind: "product" | "page" | "review" | "block" | "fill" | "alt" | "translate" | "bio" | "faq" | "kit" | "setup" | "reply" | "posts" | "blog" | "outline" | "email" | "quiz" | "sequence", … }`.
+ * The writing help (lib/ai.ts): `{ kind: "product" | "page" | "review" | "block" | "fill" | "alt" | "translate" | "bio" | "faq" | "kit" | "setup" | "reply" | "posts" | "blog" | "outline" | "email" | "quiz" | "feedback" | "sequence", … }`.
  * It writes into the studio's own boxes and saves nothing: whatever comes back
  * is the creator's to read, change and keep, or not.
  *
@@ -265,6 +266,19 @@ export async function POST(request: NextRequest) {
     const count = (QUIZ_DRAFT_COUNTS as readonly number[]).includes(asked) ? asked : DEFAULT_QUIZ_DRAFT;
     const lessonText = await readBody(course.id, found.lesson.id);
     return answer(writeQuiz(store, { course: product.title, lesson: found.lesson.title, text: lessonText, notes, count }));
+  }
+  if (body.kind === "feedback") {
+    // What the student handed in and what was asked are read here, from the
+    // creator's own course, never sent by the page.
+    const product = await readListing(store, text(body.id, 40));
+    const course = product?.course ? await readCourse(product.course.id) : null;
+    const found = course ? findLesson(course, text(body.lessonId, 40)) : null;
+    if (!product || !course || !found?.lesson.task) return fail("unknown", 404);
+    const [task, work] = await Promise.all([readTaskFor(course.id, found.lesson.id), submissionOf(course.id, found.lesson.id, text(body.who, 64))]);
+    if (!task || !work) return fail("unknown", 404);
+    return answer(
+      writeFeedback(store, { course: product.title, lesson: found.lesson.title, prompt: task.prompt, answer: work.text, file: work.file?.name ?? "", notes }),
+    );
   }
   if (body.kind === "sequence") {
     // What the store sells is read here, from its own records: names, prices
