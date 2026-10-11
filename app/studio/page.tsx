@@ -1047,8 +1047,8 @@ export default async function StudioPage({
                         }
                       : null
                   }
-                  goal={await readSalesGoal(store.statsId).catch(() => 0)}
-                  chat={may("settings") ? await chatSetup(store.handle).catch(() => null) : undefined}
+                  goal={(await readSalesGoal(store.statsId, store.currency).catch(() => ({ cents: 0 }))).cents}
+                  chat={may("settings") ? await chatSetup(store.statsId).catch(() => null) : undefined}
                 />
               </div>
             ) : null}
