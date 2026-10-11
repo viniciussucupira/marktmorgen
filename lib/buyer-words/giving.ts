@@ -325,6 +325,11 @@ const en = {
   pageAskSubject: (title: string) => `A reminder about ${title}`,
   pageAskLead: (title: string, store: string) => `You asked ${store} to remind you about ${title}.`,
   pageAskOnly: (why: string) => `This is the only reminder about it. ${why}`,
+  /** A call whose checkout was left (lib/checkout-recovery.ts): the time was not kept, so the buyer picks one again. */
+  callSubject: (title: string) => `Your time for ${title} is not booked yet`,
+  callLead: (title: string, when: string, store: string) =>
+    `You picked ${when} for ${title} with ${store} and did not finish paying, so nothing was charged and the time was not kept for you.`,
+  callHere: "To book it, pick a time here:",
 
   // ---- A license key ---------------------------------------------------------------------------
   keyLabel: "Your license key",
@@ -637,6 +642,9 @@ const es: GivingWords = {
   pageAskSubject: (title) => `Un recordatorio sobre ${title}`,
   pageAskLead: (title, store) => `Pediste a ${store} que te recordara ${title}.`,
   pageAskOnly: (why) => `Este es el único recordatorio. ${why}`,
+  callSubject: (title) => `Tu hora para ${title} aún no está reservada`,
+  callLead: (title, when, store) => `Elegiste ${when} para ${title} con ${store} y no terminaste de pagar, así que no se ha cobrado nada y la hora no se ha guardado.`,
+  callHere: "Para reservarla, elige una hora aquí:",
 
   keyLabel: "Tu clave de licencia",
   keyLabelFor: (title) => `Tu clave de licencia de ${title}`,
@@ -942,6 +950,9 @@ const fr: GivingWords = {
   pageAskSubject: (title) => `Un rappel pour ${title}`,
   pageAskLead: (title, store) => `Vous avez demandé à ${store} de vous rappeler ${title}.`,
   pageAskOnly: (why) => `C'est le seul rappel. ${why}`,
+  callSubject: (title) => `Votre créneau pour ${title} n'est pas encore réservé`,
+  callLead: (title, when, store) => `Vous avez choisi ${when} pour ${title} avec ${store} sans terminer le paiement, donc rien n'a été débité et le créneau ne vous a pas été gardé.`,
+  callHere: `Pour réserver, choisissez un créneau ici${S}:`,
 
   keyLabel: "Votre clé de licence",
   keyLabelFor: (title) => `Votre clé de licence pour ${title}`,
@@ -1247,6 +1258,9 @@ const de: GivingWords = {
   pageAskSubject: (title) => `Eine Erinnerung an ${title}`,
   pageAskLead: (title, store) => `Sie haben ${store} gebeten, Sie an ${title} zu erinnern.`,
   pageAskOnly: (why) => `Das ist die einzige Erinnerung. ${why}`,
+  callSubject: (title) => `Ihr Termin für ${title} ist noch nicht gebucht`,
+  callLead: (title, when, store) => `Sie haben ${when} für ${title} bei ${store} gewählt und die Zahlung nicht abgeschlossen. Es wurde nichts berechnet, und der Termin wurde nicht für Sie freigehalten.`,
+  callHere: "Zum Buchen wählen Sie hier einen Termin:",
 
   keyLabel: "Ihr Lizenzschlüssel",
   keyLabelFor: (title) => `Ihr Lizenzschlüssel für ${title}`,
@@ -1556,6 +1570,9 @@ const it: GivingWords = {
   pageAskSubject: (title) => `Un promemoria per ${title}`,
   pageAskLead: (title, store) => `Hai chiesto a ${store} di ricordarti ${title}.`,
   pageAskOnly: (why) => `Questo è l'unico promemoria. ${why}`,
+  callSubject: (title) => `Il tuo orario per ${title} non è ancora prenotato`,
+  callLead: (title, when, store) => `Hai scelto ${when} per ${title} con ${store} e non hai finito di pagare, quindi non è stato addebitato nulla e l'orario non è stato tenuto per te.`,
+  callHere: "Per prenotare, scegli un orario qui:",
 
   keyLabel: "La tua chiave di licenza",
   keyLabelFor: (title) => `La tua chiave di licenza per ${title}`,
@@ -1858,6 +1875,9 @@ const nl: GivingWords = {
   pageAskSubject: (title) => `Een herinnering aan ${title}`,
   pageAskLead: (title, store) => `Je vroeg ${store} om je aan ${title} te herinneren.`,
   pageAskOnly: (why) => `Dit is de enige herinnering. ${why}`,
+  callSubject: (title) => `Je tijd voor ${title} is nog niet geboekt`,
+  callLead: (title, when, store) => `Je koos ${when} voor ${title} bij ${store} en hebt de betaling niet afgerond, dus er is niets afgeschreven en de tijd is niet voor je vastgehouden.`,
+  callHere: "Om te boeken, kies je hier een tijd:",
 
   keyLabel: "Je licentiesleutel",
   keyLabelFor: (title) => `Je licentiesleutel voor ${title}`,
@@ -2167,6 +2187,9 @@ const pt: GivingWords = {
   pageAskSubject: (title) => `Um lembrete sobre ${title}`,
   pageAskLead: (title, store) => `Pediu a ${store} um lembrete sobre ${title}.`,
   pageAskOnly: (why) => `Este é o único lembrete. ${why}`,
+  callSubject: (title) => `A sua hora para ${title} ainda não está marcada`,
+  callLead: (title, when, store) => `Escolheu ${when} para ${title} com ${store} e não terminou o pagamento, por isso nada foi cobrado e a hora não lhe foi reservada.`,
+  callHere: "Para marcar, escolha uma hora aqui:",
 
   keyLabel: "A sua chave de licença",
   keyLabelFor: (title) => `A sua chave de licença de ${title}`,

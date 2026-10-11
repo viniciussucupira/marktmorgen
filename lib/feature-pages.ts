@@ -410,7 +410,6 @@ export const FEATURE_PAGES: TopicPage[] = [
           "On a free personal Google account, Google ends meetings of three or more people after 60 minutes.",
           "Jitsi Meet is a free service run by a third party, not by us. Nobody needs an account to join, but the first person to open a room may be asked to sign in to Jitsi to start it, and the others wait until then.",
           "The call or the session itself happens on that service. Nothing is streamed or recorded here.",
-          "No reminder is sent to a buyer who left the checkout of a call without paying.",
         ],
       },
       {
@@ -422,6 +421,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { q: "Can I hold a free session for my members instead?", a: "Yes, as a live event in your community: members RSVP, get reminders and join from the event's page. Paid calls and live sessions are for selling seats; live events are for the people already let into your community." },
           { q: "Is sales tax added to calls?", a: "When you switch Stripe Tax on, it is added to calls as it is to everything else, on your own account." },
           { q: "Where is the video room, and who runs it?", a: "At meet.jit.si, the free Jitsi Meet service run by 8x8, not by us. Its link is in the booking and reminder emails, the calendar file, your bookings feed and the buyer's list of purchases. Open it a few minutes early: the first person in may be asked to sign in to Jitsi (with a Google account, for example) to start the meeting." },
+          { q: "What if a buyer picks a time and leaves without paying?", a: "The time is held for them while Stripe's page is open, about half an hour, and goes back on sale when it closes. With checkout reminders on, a buyer who agreed on that page to hear from you gets one email: the time they picked, that it was not kept, and a link to the times still open, at today's price. It is sent only while a time is left to book, never twice in a week, and never once they have booked." },
           { q: "How are Google Meet links made?", a: "Connect your own Google Calendar under Video calls in your studio, then choose Google Meet (automatic) under Where the call happens. Each booking gets an event with a Meet link on your primary calendar, with the buyer on its guest list; a group call or a live session has one event per time, with up to 200 guests who do not see one another. Google emails nobody: buyers get the link in our booking email, reminders and calendar file. A moved booking moves its event, and a full refund deletes a one-to-one call's event or takes the buyer off a group's guest list. If a meeting cannot be made, the booking gets your own link or a Jitsi Meet room, and we keep trying for a few hours. If a Meet link is made more than two hours before the call, it is emailed to those booked, up to 20 people." },
         ],
       },
@@ -484,7 +484,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           "A payment plan cannot be canceled from your page; a buyer who needs to change something replies to their order confirmation email, which reaches you.",
           "Pay what you want is for a product with one price, sold once: not with memberships, price options, payment plans, the box at checkout, calls or discount codes.",
           "Questions are short answers, numbers or lists: no phone-number or checkbox question, and none on free products.",
-          "Stripe shows its own consent box only on checkouts of US businesses, so outside the United States the reminder after an unpaid checkout reaches only a buyer who goes back from the checkout and asks for it. It is not sent for calls or live sessions.",
+          "Stripe shows its own consent box only on checkouts of US businesses, so outside the United States the reminder after an unpaid checkout reaches only a buyer who goes back from the checkout and asks for it. A call's reminder needs that box, so outside the United States none is sent for calls or live sessions.",
         ],
       },
       {
