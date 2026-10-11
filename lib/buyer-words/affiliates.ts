@@ -169,6 +169,7 @@ const en = {
   termShare: (percent: number, hasDifferent: boolean) =>
     `${percent}% of what a buyer pays before tax, on one-time purchases made through your link (memberships and payment plans do not earn)${hasDifferent ? "; some products differ, below" : ""}.`,
   termRefunds: "A refunded sale earns nothing, a partly refunded one earns only on what was kept, and your own purchases never earn.",
+  termDisclose: "Wherever you share your link, say that you earn from it, and promise only what the product does: no income or results it does not guarantee.",
   termBuyers: (store: string) =>
     `Anybody who bought from ${store} can join at once, from their order; everyone else applies and ${store} decides. ${store} pays you directly out of their own account: Marktmorgen never holds this money, so there is no minimum to reach and no deadline to claim it by.`,
   termApproves: (store: string) =>
@@ -405,6 +406,7 @@ const es: AffiliatesWords = {
     `${percent}${S}% de lo que paga un comprador antes de impuestos, en compras únicas hechas a través de tu enlace (las membresías y los pagos a plazos no generan nada)${hasDifferent ? "; algunos productos son distintos, abajo" : ""}.`,
   termRefunds:
     "Una venta reembolsada no genera nada, una reembolsada en parte genera solo sobre lo que se conservó, y tus propias compras nunca generan nada.",
+  termDisclose: "Dondequiera que compartas tu enlace, di que ganas una comisión con él, y promete solo lo que el producto hace: ni ingresos ni resultados que no garantice.",
   termBuyers: (store) =>
     `Quien haya comprado en ${store} puede unirse al instante, desde su pedido; los demás envían una solicitud y ${store} decide. ${store} te paga directamente desde su propia cuenta: Marktmorgen nunca retiene este dinero, así que no hay mínimo que alcanzar ni fecha límite para reclamarlo.`,
   termApproves: (store) =>
@@ -623,6 +625,7 @@ const fr: AffiliatesWords = {
     `${percent}${S}% de ce qu'un acheteur paie hors taxes, sur les achats uniques effectués via votre lien (les abonnements et les paiements échelonnés ne rapportent rien)${hasDifferent ? `${S}; certains produits diffèrent, voir ci-dessous` : ""}.`,
   termRefunds:
     "Une vente remboursée ne rapporte rien, une vente partiellement remboursée ne rapporte que sur ce qui a été conservé, et vos propres achats ne rapportent jamais rien.",
+  termDisclose: `Partout où vous partagez votre lien, indiquez que vous touchez une commission, et ne promettez que ce que le produit fait${S}: ni revenus ni résultats qu'il ne garantit pas.`,
   termBuyers: (store) =>
     `Toute personne ayant acheté chez ${store} peut rejoindre le programme tout de suite, depuis sa commande${S}; les autres postulent et ${store} décide. ${store} vous paie directement depuis son propre compte${S}: Marktmorgen ne détient jamais cet argent, il n'y a donc aucun minimum à atteindre ni aucune date limite pour le réclamer.`,
   termApproves: (store) =>
@@ -847,6 +850,7 @@ const de: AffiliatesWords = {
     `${percent}${S}% dessen, was ein Käufer vor Steuern zahlt, bei Einmalkäufen über Ihren Link (Mitgliedschaften und Ratenzahlungen bringen nichts ein)${hasDifferent ? "; einige Produkte weichen ab, siehe unten" : ""}.`,
   termRefunds:
     "Ein erstatteter Verkauf bringt nichts ein, ein teilweise erstatteter nur auf das, was behalten wurde, und Ihre eigenen Käufe bringen nie etwas ein.",
+  termDisclose: "Sagen Sie überall, wo Sie Ihren Link teilen, dass Sie daran verdienen, und versprechen Sie nur, was das Produkt leistet: keine Einnahmen oder Ergebnisse, die es nicht garantiert.",
   termBuyers: (store) =>
     `Wer bei ${store} gekauft hat, kann sofort beitreten, direkt aus der Bestellung; alle anderen bewerben sich, und ${store} entscheidet. ${store} bezahlt Sie direkt vom eigenen Konto: Marktmorgen hält dieses Geld nie, daher gibt es keinen Mindestbetrag und keine Frist, bis zu der Sie es einfordern müssten.`,
   termApproves: (store) =>
@@ -1075,6 +1079,7 @@ const it: AffiliatesWords = {
     `${percent}${S}% di quanto un acquirente paga al netto delle tasse, sugli acquisti singoli fatti tramite il tuo link (abbonamenti e pagamenti rateali non fanno guadagnare)${hasDifferent ? "; alcuni prodotti fanno eccezione, qui sotto" : ""}.`,
   termRefunds:
     "Una vendita rimborsata non fa guadagnare nulla, una rimborsata in parte fa guadagnare solo su quanto è stato trattenuto, e i tuoi acquisti non fanno mai guadagnare.",
+  termDisclose: "Ovunque condividi il tuo link, di' che ci guadagni una commissione, e prometti solo ciò che il prodotto fa: niente guadagni né risultati che non garantisce.",
   termBuyers: (store) =>
     `Chiunque abbia acquistato da ${store} può unirsi subito, dal proprio ordine; tutti gli altri si candidano e ${store} decide. ${store} ti paga direttamente dal proprio conto: Marktmorgen non detiene mai questo denaro, quindi non c'è un minimo da raggiungere né una scadenza entro cui richiederlo.`,
   termApproves: (store) =>
@@ -1297,6 +1302,7 @@ const nl: AffiliatesWords = {
     `${percent}${S}% van wat een koper vóór belasting betaalt, bij eenmalige aankopen via je link (lidmaatschappen en betalingen in termijnen leveren niets op)${hasDifferent ? "; sommige producten wijken af, zie hieronder" : ""}.`,
   termRefunds:
     "Een terugbetaalde verkoop levert niets op, een gedeeltelijk terugbetaalde alleen over wat is behouden, en je eigen aankopen leveren nooit iets op.",
+  termDisclose: "Zeg overal waar je je link deelt dat je eraan verdient, en beloof alleen wat het product doet: geen inkomsten of resultaten die het niet garandeert.",
   termBuyers: (store) =>
     `Iedereen die bij ${store} heeft gekocht, kan meteen meedoen, vanuit de eigen bestelling; alle anderen melden zich aan en ${store} beslist. ${store} betaalt je rechtstreeks vanaf de eigen rekening: Marktmorgen houdt dit geld nooit vast, dus er is geen minimum om te halen en geen deadline om het op te eisen.`,
   termApproves: (store) =>
@@ -1527,6 +1533,7 @@ const pt: AffiliatesWords = {
     `${percent}${S}% do que um comprador paga antes de impostos, em compras únicas feitas através da sua ligação (subscrições e pagamentos em prestações não geram nada)${hasDifferent ? "; alguns produtos são diferentes, abaixo" : ""}.`,
   termRefunds:
     "Uma venda reembolsada não gera nada, uma parcialmente reembolsada gera apenas sobre o que foi mantido, e as suas próprias compras nunca geram nada.",
+  termDisclose: "Sempre que partilhar a sua ligação, diga que recebe uma comissão por ela e prometa apenas o que o produto faz: nem rendimentos nem resultados que ele não garanta.",
   termBuyers: (store) =>
     `Quem comprou em ${store} pode aderir de imediato, a partir da sua encomenda; os restantes candidatam-se e ${store} decide. ${store} paga-lhe diretamente a partir da própria conta: a Marktmorgen nunca detém este dinheiro, por isso não há mínimo a atingir nem prazo para o reclamar.`,
   termApproves: (store) =>

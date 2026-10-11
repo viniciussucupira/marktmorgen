@@ -2464,6 +2464,38 @@ try {
     await post("/api/store/product", { action: "remove", id: loaf });
   }
 
+  part("The affiliate directory");
+  {
+    await open(studio, `${LOCAL}/studio/affiliates`);
+    is("the studio says where the program would be listed, and what the row shows", (await words(studio.locator("main"))).includes("People looking for something to promote find it at marktmorgen.com/affiliate-programs"), true);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const terms = { action: "settings", enabled: true, percent: 35, days: 45, rule: "last", payday: 10, hold: 14, rates: {}, buyers: false, lifetime: true };
+    const saved = await post("/api/store/affiliates", { ...terms, directory: true });
+    is("listed with one box", saved.ok, true);
+    await open(page, `${LOCAL}/affiliate-programs`);
+    const row = page.locator("[data-program=localshop]");
+    const text = await words(row);
+    is("its row, read from the store: the share, the window, a buyer kept, the payday, and a product with what one sale earns", [
+      await words(row.locator("[data-share]")),
+      text.includes("A click counts for 45 days; the last link followed earns the sale"),
+      text.includes("A buyer you bring stays yours"),
+      text.includes("Pays on the 10th of each month, once a sale is 14 days old"),
+      (await row.locator("[data-earns]").count()) > 0,
+    ], ["35% of each sale", true, true, true, true]);
+    is("the order and the rules for affiliates are on the page", [(await words(page.locator("#order"))).includes("Nobody can pay to be placed higher"), (await words(page.locator("main"))).includes("Say it is an affiliate link")], [true, true]);
+    is("kept from search engines while there are fewer than ten programs", await page.locator('meta[name="robots"]').getAttribute("content"), "noindex, follow");
+    await page.getByLabel("Search programs and products").fill("zzzz nothing like this");
+    is("search narrows the list, and says so", [await page.locator("[data-program]").count(), (await words(page.getByRole("status").first())).startsWith("Showing 0 of")], [0, true]);
+    await page.getByLabel("Search programs and products").fill("");
+    if (process.env.E2E_SHOTS) await page.locator("main").screenshot({ path: join(process.env.E2E_SHOTS, "affiliate-directory.png") });
+    await row.getByRole("link", { name: "See the program and apply" }).click();
+    await page.waitForURL(/\/@localshop\/affiliates/);
+    is("its program page asks for honest promotion before anyone applies", (await words(page.locator("main"))).includes("Wherever you share your link, say that you earn from it"), true);
+    await post("/api/store/affiliates", { ...terms, directory: false });
+    await open(page, `${LOCAL}/affiliate-programs`);
+    is("unchecked, it leaves the page at once", await page.locator("[data-program=localshop]").count(), 0);
+  }
+
   await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);

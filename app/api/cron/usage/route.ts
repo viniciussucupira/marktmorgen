@@ -13,7 +13,6 @@ import {
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { SITE_URL } from "@/lib/site-url";
-import { directoryReadiness } from "@/lib/directory-index";
 import { SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { watchedFolders, watchedIn } from "@/lib/watch";
 import { firstWord, settleAll, storeOf } from "@/lib/watch-billing";
@@ -58,8 +57,6 @@ import { SETUP_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor,
 export const maxDuration = 60;
 
 const TOLD = "nl:usage-watch:told";
-/** Set once, the first day the directory question is worth deciding. */
-const DIRECTORY_TOLD = "nl:dir:asked";
 
 type VideoRun = { stores: number; billed: number; cents: number; paused: number; failed: number; told: number };
 
@@ -269,40 +266,6 @@ export async function GET(request: NextRequest) {
     return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
   }
 
-  // Whether enough creators have agreed to be listed for a public directory of
-  // affiliate programmes to be worth opening (lib/directory-index.ts). Read
-  // daily so the answer arrives on its own, rather than waiting for somebody
-  // to remember to go and count. It opens nothing and publishes nothing.
-  const directory = await directoryReadiness().catch(() => null);
-  if (directory) {
-    console.log(`directory-watch: ${directory.listed}/${directory.needed} listed`);
-    if (directory.ready && isSenderConfigured()) {
-      // Once, ever. A number crossed is news the first morning and noise
-      // every morning after it.
-      const [first] = await redisPipeline([["SET", DIRECTORY_TOLD, "1", "NX"]]);
-      if (first !== null) {
-        await sendEmail({
-          from: NIMBUS_FROM,
-          to: SUPPORT_EMAIL,
-          subject: `${directory.listed} creators have agreed to be listed`,
-          text: [
-            directory.words,
-            "",
-            "Nothing has been published and no page exists. This is only the figure",
-            "arriving on its own, so the decision is made with it in front of you",
-            "rather than remembered.",
-            "",
-            "Worth knowing before deciding: running a public catalogue of other",
-            "people's products is a different business from hosting their stores. It",
-            "brings duties toward the people listed in it, and in the European Union",
-            "duties that apply to online marketplaces specifically, and neither",
-            "switches off again afterward.",
-          ].join("\n"),
-        }).catch((error) => console.error("sending the directory notice failed", error));
-      }
-    }
-  }
-
   const video = await videoRun();
   const visits = await visitsRun();
 
@@ -320,7 +283,7 @@ export async function GET(request: NextRequest) {
   const fresh = over.filter((s) => !seen.has(s.folder));
   if (fresh.length === 0) {
     return Response.json(
-      { ok: true, over: over.length, told: 0, video, visits, directory: directory ? { listed: directory.listed, ready: directory.ready } : null },
+      { ok: true, over: over.length, told: 0, video, visits },
       { headers: { "Cache-Control": "no-store" } },
     );
   }

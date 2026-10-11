@@ -276,47 +276,28 @@ test("directory consent is a no until the creator says otherwise", () => {
   assert.equal(parseAffiliateSetting({ directory: true }).directory, true);
 });
 
-test("no directory is built, only the permission to build one", () => {
-  // The slow part of a cross-store directory is consent, not the page, so the
-  // answer is collected now. The page is deliberately not here: a catalogue
-  // with ten stores in it tells an affiliate there is nobody home.
+test("the switch says where the program is listed and what the row shows", () => {
+  // The directory opened on 11 October 2026 (app/affiliate-programs). A
+  // creator says yes knowing exactly what is published about them.
   const studio = readFileSync(join(process.cwd(), "components/affiliate-studio.tsx"), "utf8");
-  assert.match(studio, /if one opens/, "the switch has to be worded in the future tense");
-  assert.match(studio, /There is no directory today/, "and say outright that nothing is published");
+  assert.match(studio, /marktmorgen\.com\/affiliate-programs/, "where it is");
+  assert.match(studio, /your share, your window, your payment day and up to four products that earn/, "what it shows");
+  assert.match(studio, /it leaves the page at once/, "and how to leave it");
 });
 
-test("a directory nobody can visit is in no plan card and no comparison", () => {
-  // Comparison pages may say a competitor has a marketplace and we do not —
-  // that is the honest line and it is already there. What they may never do is
-  // offer one of ours, or read the consent flag as though it produced a page.
-  for (const file of [
-    "components/home-parts.tsx",
-    "app/page.tsx",
-    "lib/site-pages.ts",
-    "lib/feature-pages.ts",
-    "lib/plan.ts",
-    "lib/home-faq.ts",
-  ]) {
+test("the directory is sold as a way to be found, never as income or buyers", () => {
+  // It finds a creator affiliates. It sends nobody buyers, and nothing on a
+  // page that sells a plan may say what anyone will earn from it.
+  for (const file of ["components/home-parts.tsx", "app/page.tsx", "lib/site-pages.ts", "lib/feature-pages.ts", "lib/plan.ts", "lib/home-faq.ts", "app/affiliate-programs/page.tsx"]) {
     const src = readFileSync(join(process.cwd(), file), "utf8");
-    assert.doesNotMatch(
-      src,
-      /affiliate directory/i,
-      `${file} sells a plan. The directory does not exist, so it cannot be named there.`,
-    );
-    assert.doesNotMatch(
-      src,
-      /affiliates\.directory|setting\.directory/,
-      `${file} must not read the consent flag: collecting an answer is not the same as having built the thing`,
-    );
+    assert.doesNotMatch(src, /affiliate directory[^.]*(sends you buyers|brings you sales|earn up to)/i, `${file} promises the directory more than it does`);
+    assert.doesNotMatch(src, /affiliates\.directory|setting\.directory/, `${file} must not read the consent flag: lib/directory-index.ts decides who is listed`);
   }
 });
 
-test("nothing anywhere builds a page out of that consent yet", () => {
-  // The day this changes, it should change on purpose: a public cross-store
-  // listing is a different business, with duties that do not switch off again.
-  //
+test("only the index reads that consent", () => {
   // One file may read it: lib/directory-index.ts, which keeps the list of who
-  // said yes and counts it, and builds nothing. That index had to exist
+  // said yes; the directory asks it (wouldList) rather than reading the flag. That index had to exist
   // alongside the consent, because the only other way to enumerate stores is
   // a SCAN of the whole keyspace — right for a nightly job, far too expensive
   // for a page. tests/directory-index.test.ts holds the rest of this.
@@ -324,5 +305,5 @@ test("nothing anywhere builds a page out of that consent yet", () => {
     .concat(walk("lib"), walk("components"))
     .filter((file) => /affiliates\.directory/.test(readFileSync(join(process.cwd(), file), "utf8")))
     .filter((file) => file !== "lib/directory-index.ts");
-  assert.deepEqual(hits, [], "the flag is read only by the index that records it: no page is made from it");
+  assert.deepEqual(hits, [], "the flag is read only by the index that records it");
 });

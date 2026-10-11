@@ -1,0 +1,95 @@
+/**
+ * The affiliate directory (lib/affiliate-directory.ts, opened 11 October
+ * 2026). What is checked:
+ *
+ *   - a program is listed only when its creator said yes, it is on with a
+ *     share, the store can take a card today and something earns;
+ *   - the demo store never, whatever it says;
+ *   - each product says what one sale earns at today's price, at its own
+ *     share; memberships, payment plans, drafts, free things and products
+ *     left out at 0% are not shown as earning;
+ *   - the order is the one written on the page;
+ *   - unchecking the box takes the program off the page at once.
+ */
+import { addProduct, claimHandle, ensureStatsId, setAffiliateSetting, setProductHidden, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
+import { parseAffiliateSetting } from "@/lib/affiliate-setting";
+import { DIRECTORY_ORDER, directoryRow, readDirectory, sortRows, type DirectoryRow } from "@/lib/affiliate-directory";
+import { HOUSE_OWNER } from "@/lib/house-store";
+import { store as redis } from "./redis-stub";
+import { done, is, part } from "./check";
+
+globalThis.fetch = (async () => new Response(JSON.stringify({ object: "list", data: [] }), { status: 200 })) as typeof fetch;
+
+async function selling(email: string, handle: string, name: string) {
+  await claimHandle(email, handle, name, "");
+  await ensureStatsId(email);
+  await setStripeAccount(email, `acct_1Test${handle.padEnd(11, "0").slice(0, 11)}`, true);
+  await setSubscription(email, { customerId: `cus_${handle}`, subscriptionId: `sub_${handle}`, active: true });
+}
+
+async function main(): Promise<void> {
+  redis.clear();
+  process.env.STRIPE_SECRET_KEY = "sk_test_directory_only_a_stand_in";
+
+  part("Who is listed");
+  const A = "baker@example.com";
+  await selling(A, "breadhouse", "Bread House");
+  const loaf = await addProduct(A, "Sourdough Guide", "", "20", null);
+  const course = await addProduct(A, "Pastry Course", "", "120", null);
+  const draft = await addProduct(A, "Secret Draft", "", "50", null);
+  const out = await addProduct(A, "Left Out", "", "40", null);
+  if (!loaf.ok || !course.ok || !draft.ok || !out.ok) throw new Error("no product");
+  await setProductHidden(A, draft.product.id, true);
+  const terms = { enabled: true, percent: 30, days: 30, rule: "last", payday: 15, hold: 30, buyers: true, directory: false, lifetime: true, rates: { [course.product.id]: 40, [out.product.id]: 0 } };
+  await setAffiliateSetting(A, parseAffiliateSetting(terms));
+  is("not without the creator's yes", directoryRow((await storeForEmail(A))!), null);
+  await setAffiliateSetting(A, parseAffiliateSetting({ ...terms, directory: true }));
+  const row = directoryRow((await storeForEmail(A))!) as DirectoryRow;
+  is("with it, the program's own terms", [row.handle, row.percent, row.topRate, row.days, row.rule, row.lifetime, row.payday, row.hold, row.buyers], ["breadhouse", 30, 40, 30, "last", true, 15, 30, true]);
+  is(
+    "each product that earns, with what one sale earns at its own share; a draft and a product left out are not there",
+    row.products.map((p) => [p.title, p.rate, p.earnCents]),
+    [["Sourdough Guide", 30, 600], ["Pastry Course", 40, 4800]],
+  );
+  is("the best one sale earns", row.topEarnCents, 4800);
+
+  const B = "nostripe@example.com";
+  await claimHandle(B, "nostripe", "No Stripe", "");
+  await ensureStatsId(B);
+  await addProduct(B, "Guide", "", "10", null);
+  await setAffiliateSetting(B, parseAffiliateSetting({ ...terms, rates: {}, directory: true }));
+  is("not a store that cannot take a card", directoryRow((await storeForEmail(B))!), null);
+
+  const C = "free@example.com";
+  await selling(C, "freeonly", "Free Only");
+  await addProduct(C, "Free Thing", "", "0", null);
+  await setAffiliateSetting(C, parseAffiliateSetting({ ...terms, rates: {}, directory: true }));
+  is("not a store where nothing earns", directoryRow((await storeForEmail(C))!), null);
+
+  await selling(HOUSE_OWNER, "harborkitchen", "Harbor Kitchen");
+  await addProduct(HOUSE_OWNER, "Meal Plan", "", "15", null);
+  await setAffiliateSetting(HOUSE_OWNER, parseAffiliateSetting({ ...terms, rates: {}, directory: true }));
+  is("never the demo store: it is made up", directoryRow((await storeForEmail(HOUSE_OWNER))!), null);
+
+  part("The order written on the page");
+  const D = "yoga@example.com";
+  await selling(D, "yogaroom", "Yoga Room");
+  await addProduct(D, "Flow", "", "30", null);
+  await addProduct(D, "Breath", "", "10", null);
+  await setAffiliateSetting(D, parseAffiliateSetting({ ...terms, percent: 40, rates: {}, directory: true }));
+  const rows = await readDirectory();
+  is("highest share first, then more products that earn, then name", rows.map((r) => r.handle), ["breadhouse", "yogaroom"]);
+  is("ties by share go to more products, then to the name", sortRows([{ ...row, handle: "b", name: "B", topRate: 40, earning: 1 }, { ...row, handle: "a", name: "A", topRate: 40, earning: 1 }, { ...row, handle: "c", name: "C", topRate: 40, earning: 3 }]).map((r) => r.handle), ["c", "a", "b"]);
+  is("and it says nobody pays to be higher", DIRECTORY_ORDER.includes("Nobody can pay to be placed higher"), true);
+
+  part("Taken off at once");
+  await setAffiliateSetting(D, parseAffiliateSetting({ ...terms, percent: 40, rates: {}, directory: false }));
+  is("unchecking the box leaves the page on the next read, not ten minutes later", (await readDirectory()).map((r) => r.handle), ["breadhouse"]);
+
+  done();
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

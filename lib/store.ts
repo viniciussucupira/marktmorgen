@@ -2277,9 +2277,9 @@ export async function setAffiliateSetting(
     const rates = Object.fromEntries(Object.entries(parsed.rates).filter(([id]) => known.has(id)));
     return { affiliates: { ...parsed, rates }, statsId: store.statsId ?? newListId() };
   });
-  // Whether this creator said their programme may be listed one day, kept in
-  // step on the save rather than reconstructed later by walking every store
-  // (lib/directory-index.ts). Nothing reads the list to publish anything.
+  // Whether this creator's program is listed in the affiliate directory, kept
+  // in step on the save rather than reconstructed by walking every store
+  // (lib/directory-index.ts); the save also drops the directory's kept rows.
   if (next) {
     await rememberListing(next).catch((error) => console.error("remembering a directory listing failed", error));
   }
