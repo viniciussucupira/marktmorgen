@@ -105,6 +105,7 @@ const BUILT = [
   "Calendar sync: busy times in up to three Google, Outlook or iCloud calendars hide call times, and a private feed puts your bookings in your calendar",
   "Webhooks: up to five addresses told about sales, members, leads, bookings and refunds, signed, for Zapier, Make or your own server",
   "Course quizzes of up to 20 questions, and certificates of completion with a page anyone can open to check them",
+  "Course assignments: students hand in writing or a file, and you approve it or ask for another try, with a reply AI can draft and the student gets by email",
   "License keys: one unique key per sale, uploaded or made here, with a public check your software can call",
   "PDF stamping: the buyer's email, the date and the order on every page of the PDF they download",
   "A full refund that closes what it paid for by itself: the download at once, the course within 10 minutes, the community within 5, and the license key revoked within about 5",

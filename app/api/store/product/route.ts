@@ -1,3 +1,5 @@
+import { dropCourseTasks } from "@/lib/assignment";
+import { storeKey } from "@/lib/learn";
 import { imagePaths } from "@/lib/product-image";
 import { waitingCount } from "@/lib/preorders";
 import type { NextRequest } from "next/server";
@@ -265,6 +267,11 @@ export async function POST(request: NextRequest) {
         // A course takes its lessons with it: their records, and their files.
         const course = going.course ? await readCourse(going.course.id).catch(() => null) : null;
         if (course) had.push(...filesInCourse(course));
+        // And the work its students handed in for its assignments (lib/assignment.ts).
+        if (course) {
+          const handed = await dropCourseTasks(course, storeKey(removed.store)).catch(() => [] as string[]);
+          had.push(...handed.map((pathname) => ({ pathname })));
+        }
         if (going.about) await dropAbout(removed.store.statsId, id).catch(() => {});
         if (going.note) await dropThanksNote(removed.store.statsId, id).catch(() => {});
         // Its page of blocks, and the reviews of a product nobody can buy any more.

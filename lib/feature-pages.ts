@@ -1368,12 +1368,12 @@ export const FEATURE_PAGES: TopicPage[] = [
     title: "Quizzes that teach,",
     highlight: "a certificate that proves it",
     intro:
-      "A quiz after any lesson, marked on our side, and a certificate of completion with a page of its own that anyone can open to check it.",
+      "A quiz after any lesson, marked on our side, or an assignment students hand in and you read, and a certificate of completion with a page of its own that anyone can open to check it.",
     badge: WORKING,
     accent: "from-pink-brand to-violet-brand",
     plan: "creator",
     group: "deliver",
-    menu: { label: "Quizzes and certificates", description: "Questions after a lesson, a certificate at the end.", icon: "cap" },
+    menu: { label: "Quizzes and certificates", description: "Questions or an assignment after a lesson, a certificate at the end.", icon: "cap" },
     related: ["courses", "memberships", "community", "email"],
     blocks: [
       {
@@ -1382,6 +1382,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           { title: "Add a quiz to a lesson", body: "Up to 20 questions, each with one right answer or several, and a line of explanation shown afterward. Or let AI draft 3 to 10 from the lesson's text, with answers of the same length and the right one in a different place each time, for you to read, change and save." },
           { title: "Set the rules", body: "The pass mark, how many tries (up to 10, or as many as they like), and whether later lessons stay locked until it is passed." },
+          { title: "Or give an assignment", body: "Ask students to do something and hand it in: a few paragraphs, a file of up to 10 MB, or both. You read it, write back, and approve it or ask for another try; what you write reaches them by email, in your store's language." },
           { title: "Switch certificates on", body: "A student who finishes every lesson and passes every quiz that has to be passed types their name and gets a certificate." },
         ],
       },
@@ -1396,6 +1397,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "link", title: "On their LinkedIn, pointing at your store", body: "One press opens LinkedIn's own form to add it to the student's profile, filled in: the course, you as the issuer, the month, its ID and its page as the credential. Another opens a LinkedIn post with its link, which unfolds into a picture of the certificate in your store's colors. Every student who shows it off sends people to your store." },
           { icon: "ban", title: "Withdrawn when it has to be", body: "Issued to the wrong name, or to someone you refunded? Withdraw it, and its page says it was withdrawn." },
           { icon: "list", title: "Your list of certificates", body: "Your studio lists the certificates of each course, who earned them and when." },
+          { icon: "check", title: "Work you read, answers they get", body: "Handed-in work waits for you in the studio, with one email an hour at most when there is some. AI can draft your reply from the assignment and the student's answer, for you to change before anything is sent. Approving finishes the lesson, and can be what opens the next one." },
         ],
       },
       {
@@ -1403,8 +1405,10 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "What it does not do yet",
         items: [
           "The certificate is a page of its own and a PDF file the student downloads. The file is drawn in Latin, Greek and Cyrillic letters; a name in another script is printed from the page instead.",
-          "Questions are multiple choice, with one right answer or several. No written answers.",
-          "One quiz per lesson, up to 20 questions.",
+          "Quiz questions are multiple choice, with one right answer or several. Written answers and files are what an assignment is for.",
+          "One quiz or one assignment per lesson, not both. A quiz holds up to 20 questions.",
+          "AI drafts a reply from what a student wrote; it does not open the files they hand in.",
+          "A store's students keep up to 2 GB of handed-in files together, thousands of documents. Past that they hand in text until old work is removed with its assignment.",
           "A student who used all their tries asks you for more by replying to their purchase email.",
         ],
       },
@@ -1414,6 +1418,9 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           { q: "Can a certificate be faked by editing a link?", a: "No. Its page is read from our record of it, never from anything in the address. Anyone checking one should open its page on your store." },
           { q: "Does passing a quiz count as finishing the lesson?", a: "Yes. Passing marks the lesson done, which is what a certificate counts." },
+          { q: "When is a lesson with an assignment done?", a: "When the student hands it in, or, if you read each one, when you approve it. Either way it counts toward the certificate, and you choose whether the lessons after it wait." },
+          { q: "Where are the files students hand in kept?", a: "Privately, with your store's files, where only the student who handed one in and you and your team can download it. Removing the assignment or the lesson deletes them." },
+          { q: "Does Kajabi take written work and files?", a: "Its assessments take a paragraph or a file upload of up to 10 MB, according to its help center, read on October 11, 2026." },
           { q: "Does Stan have quizzes and certificates?", a: "Not according to its help center, read on September 17, 2026." },
         ],
       },

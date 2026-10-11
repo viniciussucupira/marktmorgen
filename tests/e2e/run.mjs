@@ -2472,6 +2472,53 @@ try {
   }
 
   await keepSmall();
+  part("An assignment on a lesson: set in the studio, shown on the lesson, closed to strangers");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "Copywriting Workshop", price: "60" });
+    const workshop = made.product?.id ?? "";
+    await post("/api/store/course", { action: "enable", id: workshop });
+    const outlined = await post("/api/store/course", { action: "edit", id: workshop, op: "outline", modules: [{ title: "Week one", lessons: ["Your opening line", "Your offer"] }] });
+    const lessons = (outlined.course?.modules ?? []).flatMap((m) => m.lessons);
+    const lessonId = lessons.find((l) => l.title === "Your opening line")?.id ?? "";
+    await open(studio, `${LOCAL}/studio/course/${workshop}`);
+    await studio.locator("li", { hasText: "Your opening line" }).getByRole("button", { name: "Edit lesson" }).first().click();
+    await studio.getByRole("button", { name: "Add an assignment" }).click();
+    const form = studio.getByRole("form", { name: "Assignment" });
+    await form.getByLabel("What the student does").fill("Write the first line of your own sales page, and say who it is for.");
+    await form.getByRole("checkbox", { name: /Students must finish it to go on/ }).check();
+    await form.getByRole("button", { name: "Save the assignment" }).click();
+    await studio.getByText("you read and approve each one · must be finished to go on · a file may be added").waitFor({ timeout: 30_000 });
+    is("saved with its switches, and the quiz makes way for it", [
+      await studio.getByText("you read and approve each one · must be finished to go on · a file may be added").count(),
+      await studio.getByRole("button", { name: "Add a quiz" }).count(),
+    ], [1, 0]);
+    const quizToo = await post("/api/store/course", { action: "quiz", id: workshop, lessonId, quiz: { passPercent: "70", attempts: "", required: false, questions: [{ text: "Q?", kind: "single", choices: ["A", "B"], correct: [0], explanation: "" }] } });
+    is("a quiz on the same lesson is refused", quizToo.error, "task_there");
+    await open(studio, `${LOCAL}/studio/course/${workshop}`);
+    is("the studio keeps a place for the work handed in", (await words(studio.locator("#work"))).includes("Nothing is waiting."), true);
+    const student = await studio.getByRole("link", { name: "See it as a student does" }).getAttribute("href");
+    await open(studio, `${LOCAL}${student}/${lessonId}`);
+    const section = studio.locator("#task");
+    is("the creator sees it on the lesson as students do, and where to read their work", [
+      (await words(section)).includes("Write the first line of your own sales page"),
+      (await words(section)).includes("You read it in your studio"),
+      await section.locator("textarea").count(),
+    ], [true, true, 0]);
+    const handle = (student ?? "").split("/")[1]?.replace(/^@/, "") ?? "";
+    await open(page, `${LOCAL}/@${handle}`);
+    const stranger = await page.evaluate(async ([handle, product, lesson]) => {
+      const handIn = await fetch("/api/store/course/task", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ handle, product, lesson, text: "Mine", file: null }) });
+      const door = await fetch("/api/store/course/task/upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "blob.generate-presigned-url", payload: { pathname: "x.pdf", clientPayload: JSON.stringify({ handle, product, lesson, type: "application/pdf" }), multipart: false } }) });
+      const file = await fetch(`/api/store/course/task?h=${handle}&p=${product}&l=${lesson}`);
+      return [handIn.status, door.status, file.status];
+    }, [handle, workshop, lessonId]);
+    is("somebody who has not bought it can hand in nothing, upload nothing and download nothing", stranger, [403, 403, 403]);
+    await post("/api/store/product", { action: "remove", id: workshop });
+  }
+
+  await keepSmall();
   part("A phone number asked at checkout, in Stripe's own box");
   {
     await open(studio, `${LOCAL}/studio`);

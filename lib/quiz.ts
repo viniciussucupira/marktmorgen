@@ -269,7 +269,9 @@ export function heldBack(course: Course, passed: Set<string>): Map<string, strin
   let blocker: string | null = null;
   for (const { lesson } of lessonsInOrder(course)) {
     if (blocker) held.set(lesson.id, blocker);
-    if (!blocker && lesson.quiz?.required && !passed.has(lesson.id)) blocker = lesson.id;
+    // A required quiz, or an assignment that holds the rest shut (lib/assignment-rules.ts),
+    // not yet passed: an assignment done is written down beside the quizzes passed.
+    if (!blocker && (lesson.quiz?.required || lesson.task?.gate) && !passed.has(lesson.id)) blocker = lesson.id;
   }
   return held;
 }
@@ -389,7 +391,16 @@ export async function submitQuiz(
   return { ok: true, grade, attempt };
 }
 
-/** The lessons whose quizzes this student has passed. */
+/**
+ * Writes a lesson down as passed for a student without a quiz: an assignment
+ * done (lib/assignment.ts), which holds later lessons shut as a quiz does.
+ */
+export async function markPassed(courseId: string, who: string, lessonId: string): Promise<void> {
+  if (!isRedisConfigured()) return;
+  await redisPipeline([["SADD", passedKey(courseId, who), lessonId]]);
+}
+
+/** The lessons whose quizzes this student has passed, and the assignments they have done. */
 export async function passedQuizzes(courseId: string, who: string): Promise<Set<string>> {
   if (!isRedisConfigured()) return new Set();
   const [raw] = await redisPipeline([["SMEMBERS", passedKey(courseId, who)]]);

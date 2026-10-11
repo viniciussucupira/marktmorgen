@@ -47,6 +47,11 @@ export async function POST(request: NextRequest) {
     if (course && heldBack(course, passed).has(lessonId)) {
       return new Response(null, { status: 303, headers: { Location: base } });
     }
+    // A lesson with an assignment is done when the work is handed in, or
+    // approved (lib/assignment.ts), and not by a button either way.
+    if (found.lesson.task) {
+      return new Response(null, { status: 303, headers: { Location: `${base}/${lessonId}#task`, "Cache-Control": "no-store" } });
+    }
     if (done && found.lesson.quiz?.required && !passed.has(lessonId)) {
       return new Response(null, { status: 303, headers: { Location: `${base}/${lessonId}#quiz`, "Cache-Control": "no-store" } });
     }

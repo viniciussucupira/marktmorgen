@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { uploadReason, uploadSoldFile } from "@/lib/sold-file-upload";
 import { toast } from "@/components/toast";
 import { QuizEditor } from "@/components/quiz-editor";
+import { TaskEditor } from "@/components/task-editor";
 import {
   type Course,
   type CourseModule,
@@ -433,6 +434,7 @@ function ModuleCard({
                   lesson.files.length ? `${lesson.files.length} ${lesson.files.length === 1 ? "download" : "downloads"}` : null,
                   lesson.link ? "link" : null,
                   lesson.quiz ? `quiz${lesson.quiz.required ? ", must pass" : ""}` : null,
+                  lesson.task ? `assignment${lesson.task.gate ? ", must finish" : ""}` : null,
                   lesson.preview ? "free preview" : null,
                 ]
                   .filter(Boolean)
@@ -733,12 +735,14 @@ function LessonEditor({
         ) : null}
       </div>
 
-      <QuizEditor productId={productId} lessonId={lesson.id} setup={lesson.quiz} onCourse={onCourse} />
+      {/* A lesson is finished by a quiz or by an assignment (lib/assignment-rules.ts), never by both. */}
+      {lesson.task ? null : <QuizEditor productId={productId} lessonId={lesson.id} setup={lesson.quiz} onCourse={onCourse} />}
+      <TaskEditor productId={productId} lessonId={lesson.id} setup={lesson.task ?? null} hasQuiz={Boolean(lesson.quiz)} onCourse={onCourse} />
 
       <div className="border-t border-line pt-4">
         {removing ? (
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="text-ink-soft">Remove this lesson with its video, text and downloads?</span>
+            <span className="text-ink-soft">{lesson.task ? "Remove this lesson with its video, text, downloads and the work handed in for its assignment?" : "Remove this lesson with its video, text and downloads?"}</span>
             <button
               type="button"
               aria-busy={busy} disabled={busy}

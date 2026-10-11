@@ -13,6 +13,9 @@ import { type Attempt, attemptOf, heldBack, passedQuizzes, readQuizFor } from "@
 import { CourseOutline } from "@/components/course-outline";
 import { LessonText } from "@/components/lesson-text";
 import { LessonQuiz } from "@/components/lesson-quiz";
+import { LessonTask } from "@/components/lesson-task";
+import { readTaskFor, submissionOf } from "@/lib/assignment";
+import type { Submission } from "@/lib/assignment-rules";
 import { readListing } from "@/lib/catalog";
 import { LessonComments } from "@/components/lesson-comments";
 import { commenterName, commentsOn, lessonComments } from "@/lib/lesson-comments";
@@ -96,16 +99,19 @@ export default async function LessonPage({ params, searchParams }: Params) {
   // A quiz that has to be passed holds the lessons after it shut, for a student.
   const held = student ? heldBack(course, passed) : new Map<string, string>();
   const blocker = held.get(lesson.id);
-  if (blocker && !lesson.preview) redirect(`${base}/${blocker}?held=1#quiz`);
+  if (blocker && !lesson.preview) redirect(`${base}/${blocker}?held=1#${findLesson(course, blocker)?.lesson.task ? "task" : "quiz"}`);
 
   const query = await searchParams;
-  const [body, video, quiz, attempt] = await Promise.all([
+  const [body, video, quiz, attempt, task, work] = await Promise.all([
     lesson.hasBody ? readBody(course.id, lesson.id) : Promise.resolve(""),
     // A store with no plan that can be charged plays video for the hours
     // it has, and is paused past them (lib/plan-standing.ts).
     lesson.video ? lessonVideo(lesson.video, videoLimitFor(store)) : Promise.resolve(null),
     lesson.quiz ? readQuizFor(course.id, lesson.id) : Promise.resolve(null),
     lesson.quiz && student ? attemptOf(course.id, lesson.id, who) : Promise.resolve<Attempt | null>(null),
+    // An assignment, and what this student handed in for it (lib/assignment.ts).
+    lesson.task ? readTaskFor(course.id, lesson.id) : Promise.resolve(null),
+    lesson.task && student ? submissionOf(course.id, lesson.id, who) : Promise.resolve<Submission | null>(null),
   ]);
   const quizMode = access.state === "open" && access.learner.owner ? "owner" : student && open ? "student" : "visitor";
   // Comments are for the course's students and its creator; a visitor on a
@@ -120,6 +126,8 @@ export default async function LessonPage({ params, searchParams }: Params) {
     : [false, [], ""];
   const threads = reader && talking ? threadsFor(comments, reader).slice(0, SHOWN_THREADS) : [];
   const mustPass = Boolean(student && quiz && lesson.quiz?.required && !passed.has(lesson.id));
+  // Work to hand in, still holding the lessons after it shut.
+  const mustHandIn = Boolean(student && task && lesson.task?.gate && !passed.has(lesson.id));
 
   const order = lessonsInOrder(course);
   const at = order.findIndex((entry) => entry.lesson.id === lesson.id);
@@ -151,6 +159,11 @@ export default async function LessonPage({ params, searchParams }: Params) {
             {query.held === "1" && mustPass ? (
               <p className="st-note mt-4 text-sm" role="status">
                 <strong>{w.heldStrong}</strong>{` ${w.heldRest}`}
+              </p>
+            ) : null}
+            {query.held === "1" && mustHandIn ? (
+              <p className="st-note mt-4 text-sm" role="status">
+                {task?.review ? <strong>{w.heldTaskReviewStrong}</strong> : <><strong>{w.heldTaskStrong}</strong>{` ${w.heldRest}`}</>}
               </p>
             ) : null}
 
@@ -236,7 +249,7 @@ export default async function LessonPage({ params, searchParams }: Params) {
               </div>
             ) : null}
 
-            {!lesson.video && !body && !lesson.link && lesson.files.length === 0 && !quiz ? (
+            {!lesson.video && !body && !lesson.link && lesson.files.length === 0 && !quiz && !task ? (
               <p className="st-muted mt-6">{w.emptyLesson}</p>
             ) : null}
 
@@ -253,9 +266,24 @@ export default async function LessonPage({ params, searchParams }: Params) {
               />
             ) : null}
 
+            {task && lesson.task ? (
+              <LessonTask
+                prompt={task.prompt}
+                setup={{ review: task.review, file: task.file }}
+                initial={work}
+                mode={quizMode}
+                where={{ handle: store.handle, product: product.id, lesson: lesson.id }}
+                storeName={store.name}
+                language={store.language}
+              />
+            ) : null}
+
             <div className="mt-8 flex flex-wrap items-center gap-3 border-t pt-6" style={{ borderColor: "var(--st-line)" }}>
               {student && open && mustPass ? (
                 <p className="st-muted text-sm font-semibold">{w.passAbove}</p>
+              ) : student && open && lesson.task ? (
+                // Done by handing the work in, or by its approval, never by a button.
+                isDone ? <span className="text-sm font-semibold" style={{ color: "var(--st-text)" }}>{w.doneMark}</span> : null
               ) : student && open ? (
                 <form action="/api/store/course/progress" method="post" className="flex flex-wrap items-center gap-3">
                   <input type="hidden" name="handle" value={store.handle} />
@@ -276,7 +304,7 @@ export default async function LessonPage({ params, searchParams }: Params) {
                   )}
                 </form>
               ) : null}
-              {next && (isDone || !student || !open) ? (
+              {next && (isDone || !student || !open || lesson.task) ? (
                 <Link href={`${base}/${next.lesson.id}`} className="btn st-btn">{w.nextLesson}</Link>
               ) : null}
               {previous ? (
