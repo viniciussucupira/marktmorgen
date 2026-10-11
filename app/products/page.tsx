@@ -3,7 +3,7 @@ import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 
 const title = "Our products — Solrenning";
-const description = "Meet NativeApply, Tactword, Fluentsmith, Hazelsong, and the Marktmorgen creator store. Find the right tool for your writing or business.";
+const description = "Meet Hireword, Tactword, Fluentsmith, Hazelsong, and the Marktmorgen creator store. Find the right tool for your writing or business.";
 export const metadata: Metadata = {
   title, description,
   alternates: { canonical: "/products" },
@@ -16,7 +16,7 @@ const groups = [
     title: "Find the right words",
     description: "Choose a writing tool for the work in front of you.",
     products: [
-      { name: "NativeApply", initials: "NA", category: "For your next job", href: "https://nativeapply.net/", domain: "nativeapply.net", color: "#1749a3", background: "#edf3ff", description: "Rewrite resumes, cover letters, and recruiter messages in clear, natural English.", action: "Explore NativeApply" },
+      { name: "Hireword", initials: "Hw", category: "For your next job", href: "https://hireword.com/", domain: "hireword.com", color: "#1749a3", background: "#edf3ff", description: "Rewrite resumes, cover letters, and recruiter messages in clear, natural English.", action: "Explore Hireword" },
       { name: "Tactword", initials: "T", category: "For customer-facing teams", href: "https://tactword.com/", domain: "tactword.com", color: "#116558", background: "#eaf7f2", description: "Help support and sales teams write clearer customer replies, with shared style notes and team access.", action: "Explore Tactword" },
       { name: "Fluentsmith", initials: "F", category: "For everyday work writing", href: "https://www.fluentsmith.com/", domain: "fluentsmith.com", color: "#744027", background: "#fff1e6", description: "Polish emails and messages, choosing the tone that fits what you want to say.", action: "Explore Fluentsmith" },
     ],
