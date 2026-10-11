@@ -107,7 +107,7 @@ async function main(): Promise<void> {
   // On Pro, so its studio writes to a list (app/studio/email).
   await setSubscription(storeRef(fresh.store), { active: true, tier: "pro", cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0 });
   await setMailSettings(storeRef(fresh.store), { fromName: "Fresh Kitchen", address: "1 Main St, Austin, TX 78701" });
-  console.log(JSON.stringify({ ids, reviews, fresh: fresh.store.sid, session: await openSession(OWNER) }));
+  console.log(JSON.stringify({ ids, reviews, fresh: fresh.store.sid, session: await openSession(OWNER), statsId }));
 }
 
 main().catch((error) => {

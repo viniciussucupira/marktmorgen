@@ -71,6 +71,32 @@ export function cleanName(raw: unknown): string | null {
   return name;
 }
 
+/**
+ * LinkedIn's own form for adding a certification to a profile, filled in from
+ * the record: the course as the certification, the creator as who issued it,
+ * the month it was issued, its ID, and this page as the credential LinkedIn
+ * links to. The student checks it and saves it there themselves; nothing is
+ * posted for them. The parameters are LinkedIn's "Add to Profile" ones.
+ */
+export function linkedInAddUrl(certificate: Pick<Certificate, "id" | "title" | "creator" | "issuedAt">, pageUrl: string): string {
+  const issued = new Date(certificate.issuedAt * 1000);
+  const query = new URLSearchParams({
+    startTask: "CERTIFICATION_NAME",
+    name: certificate.title,
+    organizationName: certificate.creator,
+    issueYear: String(issued.getUTCFullYear()),
+    issueMonth: String(issued.getUTCMonth() + 1),
+    certId: certificate.id,
+    certUrl: pageUrl,
+  });
+  return `https://www.linkedin.com/profile/add?${query}`;
+}
+
+/** LinkedIn's page for writing a post about a link, with this page's link in it. */
+export function linkedInShareUrl(pageUrl: string): string {
+  return `https://www.linkedin.com/sharing/share-offsite/?${new URLSearchParams({ url: pageUrl })}`;
+}
+
 /** Whether this student has done everything a certificate asks. */
 export function hasFinished(course: Course, done: Set<string>, passed: Set<string>): boolean {
   const lessons = lessonsInOrder(course);

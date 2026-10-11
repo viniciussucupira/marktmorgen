@@ -180,7 +180,7 @@ try {
     child.on("close", (status) => done({ status, ...said }));
   });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.err}`);
-  const { ids, reviews: seededReviews, fresh, session } = JSON.parse(seeded.out.trim().split("\n").at(-1));
+  const { ids, reviews: seededReviews, fresh, session, statsId } = JSON.parse(seeded.out.trim().split("\n").at(-1));
 
   // Built once, before it is served (see PRODUCTION above).
   if (PRODUCTION) {
@@ -2245,6 +2245,29 @@ try {
     const paid = services.checkouts().at(-1);
     is("Stripe charges that price's first payment, in a plan, and keeps which price", [paid.mode, paid.amount_total, paid.metadata.kind, paid.metadata.plan_payments, paid.metadata.option], ["subscription", 1300, "plan", "3", five]);
     await post("/api/store/product", { action: "remove", id: guide });
+  }
+
+  await keepSmall();
+  part("A certificate, put on LinkedIn and shared as a picture of itself");
+  {
+    // A certificate as issued (lib/certificate.ts), for a student of the store.
+    const cert = "e2ecert000000001";
+    const record = { id: cert, store: statsId, productId: ids["Knife Skills"], courseId: "e2ecourse1", name: "Ana Souza", title: "Knife Skills", creator: "Local Shop", email: "ana@example.com", issuedAt: Math.floor(Date.UTC(2026, 9, 10) / 1000), withdrawnAt: 0 };
+    await services.redis([["SET", `nl:cert:${cert}`, JSON.stringify(record)]]);
+    await open(page, `${LOCAL}/@localshop/certificate/${cert}`);
+    const add = new URL(await page.getByRole("link", { name: "Add to LinkedIn profile" }).getAttribute("href"));
+    is("the page offers LinkedIn's form, filled in from the record", [add.hostname, add.searchParams.get("name"), add.searchParams.get("organizationName"), add.searchParams.get("certId"), add.searchParams.get("certUrl")?.endsWith(`/@localshop/certificate/${cert}`)], ["www.linkedin.com", "Knife Skills", "Local Shop", cert, true]);
+    is("and a post about it, opening in a new tab", [await page.getByRole("link", { name: "Share on LinkedIn" }).getAttribute("target"), (await page.getByRole("link", { name: "Share on LinkedIn" }).getAttribute("href"))?.startsWith("https://www.linkedin.com/sharing/share-offsite/?url=")], ["_blank", true]);
+    const og = await page.evaluate(() => document.querySelector('meta[property="og:image"]')?.getAttribute("content") ?? "");
+    const picture = await fetch(og.replace(/^https?:\/\/[^/]+/, LOCAL));
+    is("its link unfolds into a picture of the certificate", [picture.status, picture.headers.get("content-type")], [200, "image/png"]);
+    if (process.env.E2E_SHOTS) {
+      const { writeFileSync } = await import("node:fs");
+      writeFileSync(`${process.env.E2E_SHOTS}/certificate-card.png`, Buffer.from(await picture.arrayBuffer()));
+    }
+    await services.redis([["SET", `nl:cert:${cert}`, JSON.stringify({ ...record, withdrawnAt: Math.floor(Date.now() / 1000) })]]);
+    await open(page, `${LOCAL}/@localshop/certificate/${cert}`);
+    is("withdrawn, it is offered nowhere", await page.getByRole("link", { name: "Add to LinkedIn profile" }).count(), 0);
   }
 
   await keepSmall();
