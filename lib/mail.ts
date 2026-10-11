@@ -24,6 +24,7 @@ import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import type { Store } from "@/lib/store";
 import { creatorAddress } from "@/lib/mail-from";
 import { type MailTag, taggedLink } from "@/lib/mail-links";
+import { rememberLinkKeys } from "@/lib/mail-clicks";
 import { type Pause, healthId, healthTags, noteSent, pausedFor, rampBack, rampRoom } from "@/lib/mail-health";
 import { affiliatesWords } from "@/lib/buyer-words/affiliates";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
@@ -361,7 +362,16 @@ export type Door = {
 };
 
 /** One email, for one reader, with everything it has to carry. */
-export function render(store: Store, subject: string, body: string, token: string | null, door?: Door, tag?: MailTag): Rendered {
+export function render(
+  store: Store,
+  subject: string,
+  body: string,
+  token: string | null,
+  door?: Door,
+  tag?: MailTag,
+  /** The reader's link key, when they allowed their link use to be seen (lib/mail-clicks.ts): their links carry it, and the foot says how to stop it. */
+  readerKey?: string,
+): Rendered {
   const fromName = store.mail?.fromName || store.name;
   const address = store.mail?.address ?? "";
   const unsub = door ? door.page : token ? `${SITE_URL}/unsubscribe?t=${token}` : `${SITE_URL}/@${store.handle}`;
@@ -373,12 +383,16 @@ export function render(store: Store, subject: string, body: string, token: strin
   const label = door ? door.label : a.footerUnsubscribe;
   const after = door ? door.after : a.footerUnsubscribeAfter(fromName);
   const sent = door?.sent ?? a.sentWith;
+  // Said only in a sequence's email to somebody who allowed it, with the way to stop it.
+  const counting = Boolean(readerKey && token && !door && tag?.medium === "sequence");
+  const stopCounting = counting ? `${SITE_URL}/unsubscribe?l=${token}` : "";
   const html = `<!doctype html><html lang="${escape(door?.lang ?? LANGUAGES[parseLanguage(store.language)].locale)}"><body style="margin:0;padding:0;background:#f7f5f0">
 <div style="max-width:560px;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1c1917">
-<div style="background:#ffffff;border-radius:16px;padding:28px 24px">${bodyHtml(body, tag ? (href) => taggedLink(href, store, tag) : undefined)}</div>
+<div style="background:#ffffff;border-radius:16px;padding:28px 24px">${bodyHtml(body, tag ? (href) => taggedLink(href, store, tag, counting ? readerKey : undefined) : undefined)}</div>
 <div style="padding:20px 8px 0;font-size:13px;line-height:1.5;color:#57534e">
 <p style="margin:0 0 8px">${escape(why)}</p>
 <p style="margin:0 0 8px"><a href="${escape(unsub)}" style="color:#57534e;text-decoration:underline">${escape(label)}</a> ${escape(after)}</p>
+${counting ? `<p style="margin:0 0 8px">${escape(a.clicksOn(fromName))} <a href="${escape(stopCounting)}" style="color:#57534e;text-decoration:underline">${escape(a.clicksStop)}</a></p>` : ""}
 ${address ? `<p style="margin:0 0 8px">${escape(fromName)} · ${escape(address)}</p>` : ""}
 <p style="margin:0">${escape(sent)}</p>
 </div></div></body></html>`;
@@ -388,6 +402,7 @@ ${address ? `<p style="margin:0 0 8px">${escape(fromName)} · ${escape(address)}
     "—",
     why,
     door ? door.line ?? a.doorText(door.label, unsub) : a.unsubscribeText(unsub),
+    counting ? `${a.clicksOn(fromName)} ${a.clicksStopText(stopCounting)}` : "",
     address ? `${fromName} · ${address}` : "",
     sent,
   ]
@@ -471,11 +486,15 @@ export async function sendTo(
       await rampBack(watched, chunk.length);
       return { done, rest: emails.slice(i), stopped: reserved === "month" ? "allowance" : reserved };
     }
-    const tokens = await tokensFor(store.listId as string, chunk, store.handle);
+    // In a sequence, those who allowed their link use to be seen get links that say so (lib/mail-clicks.ts).
+    const counting = tag?.medium === "sequence" ? new Set<string>() : undefined;
+    const tokens = await tokensFor(store.listId as string, chunk, store.handle, counting);
+    const keys = counting?.size ? await rememberLinkKeys([...counting].map((email) => tokens.get(email) ?? "")) : new Map<string, string>();
     const messages: BatchMessage[] = chunk
       .filter((email) => tokens.has(email))
       .map((email) => {
-        const r = render(store, subject, body, tokens.get(email)!, undefined, tag);
+        const token = tokens.get(email)!;
+        const r = render(store, subject, body, token, undefined, tag, counting?.has(email) ? keys.get(token) : undefined);
         return { from: fromLine(store), to: email, subject: r.subject, text: r.text, html: r.html, replyTo: store.email, headers: r.headers, tags };
       });
     if (messages.length) await paced();

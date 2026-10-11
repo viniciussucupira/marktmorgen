@@ -148,6 +148,8 @@ export type Claim = {
   e: string;
   /** Whether the box was ticked. */
   c: boolean;
+  /** Whether the second box was ticked too, allowing their link use to be seen (lib/mail-clicks.ts). */
+  k?: boolean;
   /** When it was asked for. */
   at: string;
 };
@@ -164,6 +166,8 @@ export async function requestCopy(input: {
   product: Listing;
   email: string;
   consent: boolean;
+  /** The second box, allowing their link use in sequences to be seen; only with the first. */
+  clicks?: boolean;
   ip: string;
   origin: string;
 }): Promise<RequestResult> {
@@ -184,6 +188,7 @@ export async function requestCopy(input: {
     p: product.id,
     e: email,
     c: consent,
+    ...(consent && input.clicks ? { k: true } : {}),
     at: new Date().toISOString(),
   };
   await redisPipeline([
@@ -235,6 +240,7 @@ function parseClaim(raw: unknown): Claim | null {
       p: value.p,
       e: value.e,
       c: value.c === true,
+      ...(value.c === true && value.k === true ? { k: true } : {}),
       at: typeof value.at === "string" ? value.at : "",
     };
   } catch {
@@ -286,6 +292,7 @@ export async function recordLead(
     const result = await upsertContact(store.listId, claim.e, {
       agreed: claim.c,
       explicit: claim.c,
+      clicks: claim.k === true,
       source: "free",
       productId: claim.p,
       title,

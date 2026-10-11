@@ -21,7 +21,8 @@ import { MAX_MAIL_BODY, MAX_SUBJECT, monthlyAllowance, sendTo } from "@/lib/mail
 import type { Store } from "@/lib/store";
 import { hasProduct, idsOfKind } from "@/lib/catalog";
 import { stepCampaign } from "@/lib/mail-links";
-import { type FlowGoal, type Otherwise, type StepCondition, goalClash, holds, readCondition, readGoal, reached } from "@/lib/flow-rules";
+import { type FlowGoal, type Otherwise, type StepCondition, goalClash, holds, readCondition, readGoal, readsEmailBefore, reached } from "@/lib/flow-rules";
+import { usedLinkIn } from "@/lib/mail-clicks";
 
 export const MAX_FLOWS = 10;
 export const MAX_STEPS = 10;
@@ -138,7 +139,8 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   const steps: FlowStep[] = [];
   for (const s of rawSteps) {
     const step = cleanStep(s, known);
-    if (!step) return { ok: false, reason: "step" };
+    // A condition on the email before cannot be on the first email.
+    if (!step || (steps.length === 0 && readsEmailBefore(step.when))) return { ok: false, reason: "step" };
     steps.push(step);
   }
   const goal = readGoal(raw.goal, known);
@@ -322,6 +324,10 @@ export async function sendDueSteps(
     // end and who this email is not for (lib/flow-rules.ts) — read from the
     // same rows, so a condition costs no read of its own.
     const paid = flow.goal || step.when ? new Set(idsOfKind(store, "paid")) : new Set<string>();
+    // Who used a link in the email before, for a condition on it: only ever
+    // somebody who allowed it to be seen (lib/mail-clicks.ts).
+    const before = flow.steps[index - 1];
+    const used = readsEmailBefore(step.when) && before ? await usedLinkIn(listId, stepCampaign(flow.id, before.id), emails) : new Set<string>();
     const still: string[] = [];
     const onward: string[] = [];
     let done = 0;
@@ -336,7 +342,7 @@ export async function sendDueSteps(
         done += 1;
         return;
       }
-      if (step.when && !holds(step.when, contact, paid)) {
+      if (step.when && !holds(step.when, { ...contact, used: used.has(email) }, paid)) {
         if (step.otherwise === "end" || !following) left += 1;
         else onward.push(email);
         return;

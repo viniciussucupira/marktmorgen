@@ -449,6 +449,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
       sessionId: order.reference,
       email: order.email,
       news: order.news,
+      clicks: order.clicks,
       created: order.created,
       products: [order.product, ...order.bumps.map((added) => added.product), ...bundled].map((p) => ({ id: p.id, title: p.title })),
     });

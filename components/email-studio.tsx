@@ -928,7 +928,8 @@ function History({
       <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
       <p className="mt-2 text-sm text-ink-soft">
         A visit is a page of your store opened through one of an email&apos;s links, and a sale is one made on that page.
-        Nothing in an email reports back, so there is no open rate here, and nothing is kept about who visited.
+        Nothing in an email reports back, so there is no open rate here, and nothing is kept about who visited. (In sequences,
+        readers who allowed it are counted as having used a link or not, only to choose their next email.)
       </p>
       <ul className="mt-4 divide-y divide-line">
         {broadcasts.map((b) => (
@@ -1048,6 +1049,8 @@ const STEP_IF_WORDS: { value: StepIf | ""; label: string }[] = [
   { value: "buyer", label: "Only those who have bought something" },
   { value: "tag", label: "Only those with a label" },
   { value: "untagged", label: "Only those without a label" },
+  { value: "clicked", label: "Only those who used a link in the email before" },
+  { value: "unclicked", label: "Only those who did not use a link in the email before" },
 ];
 
 function blankStep(wait: string, unit: "hours" | "days", firstProduct: string): StepDraft {
@@ -1072,7 +1075,7 @@ function stepToDraft(s: FlowStep, firstProduct: string): StepDraft {
 function conditionOf(s: StepDraft): StepCondition | null {
   if (s.when === "has" || s.when === "lacks") return { if: s.when, productId: s.whenProduct };
   if (s.when === "tag" || s.when === "untagged") return { if: s.when, tag: s.whenTag };
-  if (s.when === "buyer" || s.when === "lead") return { if: s.when };
+  if (s.when === "buyer" || s.when === "lead" || s.when === "clicked" || s.when === "unclicked") return { if: s.when };
   return null;
 }
 
@@ -1088,7 +1091,11 @@ function conditionWords(step: FlowStep, products: { id: string; title: string }[
         ? `${when.if === "tag" ? "labeled" : "not labeled"} “${when.tag}”`
         : when.if === "buyer"
           ? "who have bought something"
-          : "who have not bought anything yet";
+          : when.if === "lead"
+            ? "who have not bought anything yet"
+            : when.if === "clicked"
+              ? "who used a link in the email before"
+              : "who did not use a link in the email before";
   return `Only to those ${who}; ${step.otherwise === "end" ? "for the others, the sequence ends there" : "the others skip it"}.`;
 }
 
@@ -1442,7 +1449,8 @@ function Flows({
                 </div>
                 {/* Who this email is for (lib/flow-rules.ts). Read from what
                     your list keeps — what each person has and the labels an
-                    import brought — never from opens or clicks. */}
+                    import brought, and links used, only for readers who allowed it
+                    (lib/mail-clicks.ts) — never from opens. */}
                 <div className="mt-3 flex flex-wrap items-end gap-2" data-step-condition>
                   <label className="block min-w-0 flex-1">
                     <span className="text-sm text-ink-soft">Send it to</span>
@@ -1451,7 +1459,9 @@ function Flows({
                       value={s.when}
                       onChange={(e) => setStep(i, { when: STEP_IF_WORDS.find((w) => w.value === e.target.value)?.value ?? "" })}
                     >
-                      {STEP_IF_WORDS.filter((w) => products.length || (w.value !== "has" && w.value !== "lacks")).map((w) => (
+                      {STEP_IF_WORDS.filter(
+                        (w) => (products.length || (w.value !== "has" && w.value !== "lacks")) && (i > 0 || (w.value !== "clicked" && w.value !== "unclicked")),
+                      ).map((w) => (
                         <option key={w.value} value={w.value}>{w.label}</option>
                       ))}
                     </select>
@@ -1473,6 +1483,12 @@ function Flows({
                     </label>
                   ) : null}
                 </div>
+                {s.when === "clicked" || s.when === "unclicked" ? (
+                  <p className="mt-2 text-sm text-ink-soft">
+                    Counted only for readers who allowed it with a box of its own when they joined, and only for links to your
+                    store. Everyone else counts as not having used one.
+                  </p>
+                ) : null}
                 {s.when ? (
                   <label className="mt-2 block">
                     <span className="text-sm text-ink-soft">Everyone else</span>
@@ -1486,7 +1502,15 @@ function Flows({
                   <button
                     type="button"
                     className="mt-2 text-sm font-bold text-ink-soft underline underline-offset-4 hover:text-danger"
-                    onClick={() => setDraft({ ...draft, steps: draft.steps.filter((_, j) => j !== i) })}
+                    onClick={() =>
+                      setDraft({
+                        ...draft,
+                        // The email that becomes the first has no email before it to read.
+                        steps: draft.steps
+                          .filter((_, j) => j !== i)
+                          .map((x, j) => (j === 0 && (x.when === "clicked" || x.when === "unclicked") ? { ...x, when: "" } : x)),
+                      })
+                    }
                   >
                     Remove this email
                   </button>

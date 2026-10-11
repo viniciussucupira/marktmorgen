@@ -202,6 +202,7 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
           sessionId: row.id as string,
           email,
           news: row.metadata?.news === "yes",
+          clicks: row.metadata?.news === "yes" && row.metadata?.clicks === "yes",
           created: typeof row.created === "number" ? row.created : Math.floor(Date.now() / 1000),
           products: products.map((p) => ({ id: p.id, title: p.title })),
         })) === "done") counts.listed += 1;

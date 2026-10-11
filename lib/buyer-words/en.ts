@@ -123,6 +123,7 @@ export const en = {
   namePlaceholder: "Dana",
   alsoOtherEmails: (store: string) => `Also send me other emails from ${store}. I can unsubscribe whenever I like.`,
   alsoEmails: (store: string) => `Also send me emails from ${store}. I can unsubscribe whenever I like.`,
+  alsoClicks: (store: string) => `Let ${store} see which links in their emails I use, to send me what fits. I can stop this from any email.`,
   tellMe: "Tell me when it is out",
   waitlistNote: (store: string) =>
     `You confirm from your inbox, then get one email when it goes on sale, and that is all. Your address goes to ${store} only if you checked the box.`,

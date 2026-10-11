@@ -9,6 +9,7 @@ import { iconUrl, shortName, themeColour } from "@/lib/store-app";
 import { StoreApp } from "@/components/store-app";
 import { isHouseStore } from "@/lib/house-store";
 import { DemoStrip } from "@/components/demo-notes";
+import { MailClick } from "@/components/mail-click";
 
 /**
  * Around every page of a creator's store: the store's own manifest, icon and
@@ -73,6 +74,8 @@ export default async function StoreLayout({ children, params }: LayoutProps<"/[h
       {store && isHouseStore(store) ? <DemoStrip /> : null}
       {children}
       <StoreApp />
+      {/* A link from a sequence's email, used by somebody who allowed it to be seen (lib/mail-clicks.ts). */}
+      {store ? <MailClick /> : null}
     </>
   );
 }

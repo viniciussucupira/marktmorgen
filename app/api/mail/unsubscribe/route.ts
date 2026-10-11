@@ -6,6 +6,7 @@ import { COMMUNITY_UNSUB, stopAnnouncements } from "@/lib/community-mail";
 import { limited } from "@/lib/request-guard";
 import { REVIEW_STOP, stopReviewRequests } from "@/lib/review-requests";
 import { UPDATE_STOP, stopUpdates } from "@/lib/product-updates";
+import { stopCounting } from "@/lib/mail-clicks";
 
 /**
  * Leaving a creator's list. A mail app's own unsubscribe button posts here
@@ -20,10 +21,20 @@ import { UPDATE_STOP, stopUpdates } from "@/lib/product-updates";
  * community and on or off the list exactly as they were, and a store's
  * emails asking for a review (a `v` link, lib/review-requests.ts), and a
  * store's emails telling its buyers of an update (a `u` link,
- * lib/product-updates.ts).
+ * lib/product-updates.ts). And an `l` link stops the counting of which
+ * links somebody uses, which they allowed apart (lib/mail-clicks.ts),
+ * leaving them on the list.
  */
 export async function POST(request: NextRequest) {
   const origin = originFrom(request);
+  const links = (request.nextUrl.searchParams.get("l") ?? "").slice(0, 60);
+  if (UNSUB_TOKEN.test(links)) {
+    const found = await stopCounting(links);
+    return new Response(null, {
+      status: 303,
+      headers: { Location: `${origin}/unsubscribe?l=${links}&done=${found ? "1" : "0"}`, "Cache-Control": "no-store" },
+    });
+  }
   const token = (request.nextUrl.searchParams.get("t") ?? "").slice(0, 60);
   const reminder = (request.nextUrl.searchParams.get("r") ?? "").slice(0, 60);
   const community = (request.nextUrl.searchParams.get("c") ?? "").slice(0, 60);

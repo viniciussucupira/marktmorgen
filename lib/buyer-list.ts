@@ -26,6 +26,8 @@ export type ListedOrder = {
   email: string;
   /** The buyer ticked the box to hear from the creator. */
   news: boolean;
+  /** And the second box, allowing their link use in sequences to be seen (lib/mail-clicks.ts). */
+  clicks?: boolean;
   /** When it was paid, in seconds. */
   created: number;
   /** What it handed over: the product bought first, then what came with it. */
@@ -65,6 +67,7 @@ export async function listOrder(store: Store, order: ListedOrder): Promise<"done
         explicit: true,
         at: new Date(order.created * 1000).toISOString(),
         source: "buyer",
+        clicks: order.clicks === true,
         productId: first.id,
         title: first.title,
       });

@@ -9,6 +9,7 @@ import { type Store, storeForPage } from "@/lib/store";
 import { REVIEW_STOP, readReviewStop } from "@/lib/review-requests";
 import { affiliatesWords } from "@/lib/buyer-words/affiliates";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
+import { countingFor } from "@/lib/mail-clicks";
 
 type Query = { [key: string]: string | string[] | undefined };
 
@@ -43,7 +44,7 @@ async function storeOf(query: Query): Promise<Store | null> {
     const found = UPDATE_STOP.test(update) ? await readUpdateStop(update) : null;
     return found?.handle ? storeForPage(found.handle) : null;
   }
-  const token = param(query, "t");
+  const token = param(query, "t") || param(query, "l");
   const found = token ? await readUnsubToken(token) : null;
   const store = found?.handle ? await storeForPage(found.handle) : null;
   return store && found && store.listId === found.listId ? store : null;
@@ -72,6 +73,8 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
   if (update) return <StopUpdates token={update} done={query.done === "1"} />;
   const community = param(query, "c");
   if (community) return <StopAnnouncements token={community} done={query.done === "1"} />;
+  const links = param(query, "l");
+  if (links) return <StopLinkCounting token={links} store={await storeOf(query)} done={query.done === "1"} />;
   const token = param(query, "t");
   const done = query.done === "1";
   const found = token ? await readUnsubToken(token) : null;
@@ -99,6 +102,43 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
             <form action={`/api/mail/unsubscribe?t=${token}`} method="post" className="mt-6">
               <input type="hidden" name="from" value="page" />
               <button type="submit" className="btn btn-primary btn-block">{a.unsubscribeButton}</button>
+            </form>
+          </>
+        )}
+        <p className="mt-6 text-sm text-ink-mute">{a.onBehalfCreator}</p>
+      </div>
+    </main>
+  );
+}
+
+/**
+ * One button that stops the counting of which links somebody uses in a
+ * store's sequences, which they allowed apart from joining (lib/mail-clicks.ts).
+ * They stay on the list; what was counted is deleted.
+ */
+async function StopLinkCounting({ token, store, done }: { token: string; store: Store | null; done: boolean }) {
+  const found = await countingFor(token);
+  const name = store ? store.mail?.fromName || store.name : "";
+  const a = wordsFor(store);
+  return (
+    <main id="content" lang={localeOf(store)} className="min-h-screen bg-paper px-4 py-20 text-ink">
+      <div className="card mx-auto max-w-md p-7 sm:p-9">
+        {!found ? (
+          <>
+            <h1 className="t-h3">{a.unknownLink}</h1>
+            <p className="mt-3 text-ink-soft">{a.unknownListBody}</p>
+          </>
+        ) : done || !found.on ? (
+          <>
+            <h1 className="t-h3">{a.clicksDoneTitle}</h1>
+            <p className="mt-3 text-ink-soft">{a.clicksDone(found.email, name)}</p>
+          </>
+        ) : (
+          <>
+            <h1 className="t-h3">{a.clicksAsk(name)}</h1>
+            <p className="mt-3 text-ink-soft">{a.clicksFor(found.email)}</p>
+            <form action={`/api/mail/unsubscribe?l=${token}`} method="post" className="mt-6">
+              <button type="submit" className="btn btn-primary btn-block">{a.clicksButton}</button>
             </form>
           </>
         )}

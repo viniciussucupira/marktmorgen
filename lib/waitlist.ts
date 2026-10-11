@@ -94,6 +94,8 @@ export async function joinWaitlist(input: {
   product: Listing;
   email: string;
   consent: boolean;
+  /** The second box, allowing their link use in sequences to be seen; only with the first. */
+  clicks?: boolean;
   ip: string;
   origin: string;
 }): Promise<JoinResult> {
@@ -115,7 +117,8 @@ export async function joinWaitlist(input: {
   if (!before && Number(size) >= MAX_WAITLIST) return "full";
 
   const leave = before?.t ?? newToken();
-  const entry: WaitEntry = { at: before?.at ?? now(), ok: before?.ok ?? 0, c: Boolean(before?.c) || consent, t: leave };
+  const asked = Boolean(before?.c) || consent;
+  const entry: WaitEntry = { at: before?.at ?? now(), ok: before?.ok ?? 0, c: asked, ...(asked && (before?.k || (consent && input.clicks)) ? { k: true } : {}), t: leave };
   const confirm = newToken();
   const grant = (k: TokenGrant["k"]): string => JSON.stringify({ s: sid, h: store.handle, p: product.id, e: email, k } satisfies TokenGrant);
   await redisPipeline([
@@ -172,7 +175,7 @@ export async function confirmSpot(token: string, store: Store | null): Promise<{
     await redisPipeline([["HSET", listKey(grant.s, grant.p), grant.e, JSON.stringify({ ...entry, ok: now() })]]);
   }
   if (entry.c && store.listId) {
-    await upsertContact(store.listId, grant.e, { agreed: true, explicit: true, source: "free", at: new Date().toISOString() }).catch((error) =>
+    await upsertContact(store.listId, grant.e, { agreed: true, explicit: true, clicks: entry.k === true, source: "free", at: new Date().toISOString() }).catch((error) =>
       console.error("could not add a waitlist address to a list", error),
     );
   }

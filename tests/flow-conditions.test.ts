@@ -17,10 +17,13 @@
  */
 import { holds, reached, goalClash, readCondition } from "@/lib/flow-rules";
 import { enroll, flowStats, readFlows, saveFlow, sendDueSteps } from "@/lib/flows";
-import { importContactRows, noteProduct, parseContact, leadsKey, upsertContact } from "@/lib/contacts";
+import { importContactRows, noteProduct, parseContact, leadsKey, tokensFor, unsubscribe, upsertContact } from "@/lib/contacts";
 import { listOrder, listedAlready } from "@/lib/buyer-list";
 import { sweepCheckouts } from "@/lib/checkout-sweep";
 import { addProduct, claimHandle, ensureListId, ensureStatsId, setMailSettings, setStripeAccount, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
+import { countingFor, noteClick, stopCounting, usedLinkIn } from "@/lib/mail-clicks";
+import { stepCampaign } from "@/lib/mail-links";
+import { SITE_URL } from "@/lib/site-url";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -29,15 +32,16 @@ const realNow = Date.now;
 let shift = 0;
 Date.now = () => realNow() + shift;
 
-const sent: { to: string; subject: string }[] = [];
+const sent: { to: string; subject: string; html: string; text: string }[] = [];
 let sessions: Record<string, unknown>[] = [];
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
   const url = new URL(String(input));
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
   if (url.hostname === "api.resend.com") {
-    const body = JSON.parse(String(init?.body)) as { to: string | string[]; subject: string } | { to: string[]; subject: string }[];
+    type Sent = { to: string | string[]; subject: string; html?: string; text?: string };
+    const body = JSON.parse(String(init?.body)) as Sent | Sent[];
     const all = Array.isArray(body) ? body : [body];
-    for (const m of all) sent.push({ to: [m.to].flat()[0], subject: m.subject });
+    for (const m of all) sent.push({ to: [m.to].flat()[0], subject: m.subject, html: m.html ?? "", text: m.text ?? "" });
     return json(Array.isArray(body) ? { data: all.map((_, i) => ({ id: `email_${sent.length}_${i}` })) } : { id: `email_${sent.length}` });
   }
   if (url.pathname === "/v1/checkout/sessions") return json({ object: "list", data: sessions, has_more: false });
@@ -160,6 +164,74 @@ async function main(): Promise<void> {
   const [fay] = await redis.pipeline([["HGET", leadsKey(list), "fay@example.com"]]);
   is("a buyer who never reached the thanks page is on the list, with what they bought", [counts.listed, parseContact(fay)?.agreed, parseContact(fay)?.ids], [1, true, [course.product.id]]);
   is("and the job does not do it twice", (await sweepCheckouts(Date.now() + 20_000)).listed, 0);
+
+  part("Which links somebody used, only if they allowed it");
+  // Gus ticked both boxes; Hal only the first; Ivy came in on an import, which can never allow it.
+  await upsertContact(list, "gus@example.com", { agreed: true, explicit: true, clicks: true, source: "free", productId: guide.product.id, title: "Pantry Guide" });
+  await upsertContact(list, "hal@example.com", { agreed: true, explicit: true, source: "free", productId: guide.product.id, title: "Pantry Guide" });
+  await upsertContact(list, "ivy@example.com", { agreed: true, explicit: false, clicks: true, source: "import" });
+  const row = async (email: string) => parseContact((await redis.pipeline([["HGET", leadsKey(list), email]]))[0]);
+  is("allowed only by somebody's own tick, with their yes to the list", [Boolean((await row("gus@example.com"))?.clicks), Boolean((await row("hal@example.com"))?.clicks), Boolean((await row("ivy@example.com"))?.clicks)], [true, false, false]);
+  const firstClick = { delayHours: 0, subject: "The guide, and the course", body: `Hello.\n\nThe course: ${SITE_URL}/@harbor/p/${course.product.id}` };
+  is("a condition on the email before cannot be on the first", (await saveFlow(store, { name: "Clicks", trigger: "product", productId: guide.product.id, active: true, steps: [{ ...firstClick, when: { if: "clicked" } }] })).ok, false);
+  const clicksFlow = await saveFlow(store, {
+    name: "Clicks",
+    trigger: "product",
+    productId: guide.product.id,
+    active: true,
+    steps: [firstClick, { delayHours: 24, subject: "Since you looked", body: "More about it.", when: { if: "clicked" } }, { delayHours: 24, subject: "In case you missed it", body: "Here it is again.", when: { if: "unclicked" } }],
+  });
+  if (!clicksFlow.ok) throw new Error(`no flow: ${clicksFlow.reason}`);
+  const cf = clicksFlow.flows.at(-1)!;
+  for (const email of ["gus@example.com", "hal@example.com"]) await enroll(store, email, { joined: false, productId: guide.product.id });
+  await run();
+  const toGus = sent.find((m) => m.to === "gus@example.com" && m.subject === "The guide, and the course")!;
+  const toHal = sent.find((m) => m.to === "hal@example.com" && m.subject === "The guide, and the course")!;
+  const gusLink = new URL(toGus.html.match(/href="([^"]+\/p\/[^"]+)"/)![1].replace(/&amp;/g, "&"));
+  const halLink = new URL(toHal.html.match(/href="([^"]+\/p\/[^"]+)"/)![1].replace(/&amp;/g, "&"));
+  const gusToken = (await row("gus@example.com"))!.t;
+  is("only Gus's links carry his key, and only his email says how to stop it", [
+    /^[0-9a-f]{24}$/.test(gusLink.searchParams.get("mk") ?? ""),
+    halLink.searchParams.has("mk"),
+    toGus.html.includes(`/unsubscribe?l=${gusToken}`) && toGus.text.includes(`/unsubscribe?l=${gusToken}`),
+    toHal.html.includes("/unsubscribe?l="),
+    gusLink.searchParams.get("utm_campaign"),
+  ], [true, false, true, false, stepCampaign(cf.id, cf.steps[0].id)]);
+  is("the key is not the unsubscribe code", (gusLink.searchParams.get("mk") ?? "").includes(gusToken.slice(0, 24)), false);
+  is("a page opened through his link notes it; a made-up key notes nothing", [
+    await noteClick(gusLink.searchParams.get("mk")!, gusLink.searchParams.get("utm_campaign")!),
+    await noteClick("0".repeat(24), gusLink.searchParams.get("utm_campaign")!),
+    await noteClick(gusLink.searchParams.get("mk")!, "b-not-a-sequence"),
+  ], [true, false, false]);
+  shift += 25 * HOUR;
+  await run();
+  is("the email for those who used a link: Gus only", to("Since you looked"), ["gus@example.com"]);
+  shift += 25 * HOUR;
+  await run();
+  is("the one for those who did not use the email before's link: both, as neither used one there", to("In case you missed it"), ["gus@example.com", "hal@example.com"]);
+
+  part("Taken back in one press, and by leaving");
+  is("the stop page knows it is on", (await countingFor(gusToken))?.on, true);
+  await stopCounting(gusToken);
+  is("stopped: what was counted is deleted, the permission gone, his key leads nowhere, and he is still on the list", [
+    (await usedLinkIn(list, stepCampaign(cf.id, cf.steps[0].id), ["gus@example.com"])).size,
+    Boolean((await row("gus@example.com"))?.clicks),
+    await noteClick(gusLink.searchParams.get("mk")!, gusLink.searchParams.get("utm_campaign")!),
+    (await row("gus@example.com"))?.agreed && !(await row("gus@example.com"))?.unsub,
+  ], [0, false, false, true]);
+  is("ticking it again after leaving the list asks again: coming back without it, it stays off", await (async () => {
+    await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, clicks: true, source: "free" });
+    const jo = await row("jo@example.com");
+    // A token, as the first email to Jo would make.
+    const t = (await tokensFor(list, ["jo@example.com"], "harbor")).get("jo@example.com")!;
+    await unsubscribe(t);
+    const left = Boolean((await row("jo@example.com"))?.clicks);
+    shift += 1000;
+    await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, source: "free", at: new Date(Date.now()).toISOString() });
+    return [Boolean(jo?.clicks), left, Boolean((await row("jo@example.com"))?.clicks), (await row("jo@example.com"))?.unsub];
+  })(), [true, false, false, false]);
+  const withClicks = await listOrder(store, { ...order, sessionId: "cs_test_thanks0000003", email: "kai@example.com", clicks: true });
+  is("a buyer who ticked both boxes at checkout", [withClicks, Boolean((await row("kai@example.com"))?.clicks)], ["done", true]);
 
   Date.now = realNow;
   done();

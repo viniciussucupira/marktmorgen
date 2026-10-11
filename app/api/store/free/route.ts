@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
   let productId = "";
   let email = "";
   let consent = false;
+  let clicks = false;
   let honeypot = "";
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
     // Only an explicit "yes" counts. A box that is missing, empty or carries
     // anything else is a box that was not ticked.
     consent = read("consent") === "yes";
+    // Its own box, which counts only with the first (lib/mail-clicks.ts).
+    clicks = consent && read("clicks") === "yes";
     honeypot = read("website");
   } catch {
     return new Response("Bad request", { status: 400 });
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
     "unknown";
 
   try {
-    const result = await requestCopy({ store, product, email, consent, ip, origin: linkOrigin(request, store) });
+    const result = await requestCopy({ store, product, email, consent, clicks, ip, origin: linkOrigin(request, store) });
     if (result === "sent") after(() => countHit(request, store, { kind: "checkout", id: product.id, free: true }));
     return away(`${page}&status=${result}`);
   } catch (error) {

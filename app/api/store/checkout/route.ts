@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
   let plan = false;
   let yearly = false;
   let news = false;
+  let clicks = false;
   // Bought for somebody else (lib/gifts.ts): who, from whom, and a message.
   let giftTo = "";
   let giftFrom = "";
@@ -89,6 +90,8 @@ export async function POST(request: NextRequest) {
     yearly = form.get("billing") === "year";
     // Only a box the buyer ticked, and only on a store that can write to them.
     news = form.get("news") === "yes";
+    // Its own box, allowing their link use in sequences to be seen; only with the first (lib/mail-clicks.ts).
+    clicks = news && form.get("clicks") === "yes";
     const read = (name: string, max: number) => {
       const value = form.get(name);
       return typeof value === "string" ? value.slice(0, max) : "";
@@ -195,6 +198,8 @@ export async function POST(request: NextRequest) {
         // Kept only where the box was offered: the creator writes to their
         // list here, or sends this product's buyers to their email platform.
         news: news && (canWrite(store) || syncTakesBuyer(store, product.id)),
+        // Only where the creator writes to their list here: that is where it is counted.
+        clicks: clicks && canWrite(store),
         via,
         gift,
         group,

@@ -115,6 +115,7 @@ export const fr: BuyerWords = {
   namePlaceholder: "Dana",
   alsoOtherEmails: (store) => `Envoyez-moi aussi d'autres e-mails de ${store}. Je peux me désabonner quand je veux.`,
   alsoEmails: (store) => `Envoyez-moi aussi des e-mails de ${store}. Je peux me désabonner quand je veux.`,
+  alsoClicks: (store) => `Permettre à ${store} de voir quels liens de ses e-mails j'utilise, pour m'envoyer ce qui m'intéresse. Je peux arrêter depuis n'importe quel e-mail.`,
   tellMe: "Prévenez-moi à sa sortie",
   waitlistNote: (store) =>
     `Vous confirmez depuis votre boîte de réception, puis recevez un seul e-mail quand il sera en vente, et c'est tout. Votre adresse n'est transmise à ${store} que si vous avez coché la case.`,

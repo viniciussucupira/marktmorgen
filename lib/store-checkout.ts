@@ -200,6 +200,8 @@ export async function createCheckout(
     buyerKey?: string;
     /** The buyer ticked the box to hear from the creator. */
     news?: boolean;
+    /** And the second box, allowing their link use in sequences to be seen (lib/mail-clicks.ts). */
+    clicks?: boolean;
     /**
      * The affiliate whose link the buyer followed, still inside the store's
      * window, and the share this product earns them (lib/affiliates.ts).
@@ -474,6 +476,7 @@ export async function createCheckout(
   }
   if (extras.buyerKey && !extras.gift) body.set("metadata[buyer_key]", extras.buyerKey);
   if (extras.news) body.set("metadata[news]", "yes");
+  if (extras.news && extras.clicks) body.set("metadata[clicks]", "yes");
 
   // Sent by an affiliate: who, and the share as it is today, kept with the
   // charge so a later change of terms never changes what this sale earned.
@@ -714,6 +717,8 @@ export type Order =
       buyerKey: string | null;
       /** The buyer ticked the box to hear from the creator. */
       news: boolean;
+      /** And allowed their link use in sequences to be seen (lib/mail-clicks.ts). */
+      clicks: boolean;
       /** For a membership: the days free before the first payment, 0 for none. */
       trialDays: number;
       /** For a membership that ends by itself: after how many payments. */
@@ -895,6 +900,7 @@ export async function readOrder(
     upsellKey: typeof metadata?.upsell_key === "string" ? metadata.upsell_key : null,
     buyerKey: typeof metadata?.buyer_key === "string" ? metadata.buyer_key : null,
     news: metadata?.news === "yes",
+    clicks: metadata?.news === "yes" && metadata?.clicks === "yes",
     trialDays: Number.isInteger(Number(metadata?.trial_days)) ? Math.max(0, Number(metadata?.trial_days)) : 0,
     endsAfter: Number.isInteger(Number(metadata?.ends_after)) ? Math.max(0, Number(metadata?.ends_after)) : 0,
     answers: readAnswers(session),
