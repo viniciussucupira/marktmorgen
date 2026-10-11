@@ -1,3 +1,4 @@
+import { channelOfRequest } from "@/lib/visit-channel";
 import { type NextRequest, after } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
@@ -29,7 +30,13 @@ export async function POST(request: NextRequest) {
   if (!product || !isCallProduct(product) || product.call.kind !== "weekly" || !product.callPackage) return away(`/@${store.handle}`);
   if (!canSellProduct(store, product) || (await isSoon(store, product.id).catch(() => false))) return away(`/@${store.handle}/book/${product.id}?status=unavailable`);
   try {
-    const made = await packageCheckout(store, product, product.callPackage, linkOrigin(request, store));
+    const made = await packageCheckout(
+      store,
+      product,
+      product.callPackage,
+      linkOrigin(request, store),
+      channelOfRequest(request, store.handle, new URL(origin).hostname),
+    );
     after(() => countHit(request, store, { kind: "checkout", id: product.id }));
     return new Response(null, { status: 303, headers: { Location: made.url, "Cache-Control": "no-store" } });
   } catch (error) {

@@ -1,3 +1,4 @@
+import { channelOfRequest } from "@/lib/visit-channel";
 import { holdSession, prepareSession } from "@/lib/call-packages";
 import { isSoon } from "@/lib/waitlist";
 import { type NextRequest, after } from "next/server";
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
     origin: linkOrigin(request, store),
     via,
     fromPackage: prepared && prepared.ok ? prepared.fromPackage : null,
+    channel: channelOfRequest(request, store.handle, new URL(origin).hostname),
   });
   if (!result.ok) return back(result.reason);
   // The session counts against the package from now; if another tab took the

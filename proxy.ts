@@ -9,6 +9,7 @@ import { isPlatformHost, requestHost } from "@/lib/request-origin";
 import { ZOOM_ARRIVAL_COOKIE, ZOOM_ARRIVAL_SECONDS, arrivedForZoom } from "@/lib/zoom-arrival";
 import { CODE_COOKIE_SECONDS, codeCookieName, readLinkCode } from "@/lib/code-link";
 import { AB_COOKIE, AB_COOKIE_SECONDS, readBucket } from "@/lib/headline-test-rules";
+import { CHANNEL_COOKIE_SECONDS, channelCookieName, nextChannelCookie, touchFrom } from "@/lib/visit-channel";
 
 /**
  * A creator's own domain, served as their store.
@@ -104,6 +105,40 @@ function withTestGroup(request: NextRequest, productPage: boolean, response: Nex
     value: String(bytes[0] % 1000),
     path: "/",
     maxAge: AB_COOKIE_SECONDS,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: request.nextUrl.protocol === "https:",
+  });
+  return response;
+}
+
+/**
+ * A visit to a store from somewhere nameable — a tagged link, a site that
+ * sent the visitor, an app's built-in browser — is remembered for thirty
+ * days in a cookie of the store's own, so a sale made on a later, typed-in
+ * visit is still credited to where the buyer came from (lib/visit-channel.ts).
+ * A visit from nowhere nameable changes nothing.
+ *
+ * Not where the law asks for consent before such a cookie (the places the ad
+ * pixels ask first, lib/pixels.ts), and never for a browser sending Global
+ * Privacy Control: those sales are credited by the page's own tags, as before.
+ */
+function withChannel(request: NextRequest, handle: string, ownHost: string, response: NextResponse): NextResponse {
+  if (!handle || request.method !== "GET") return response;
+  if (needsConsent(request.headers.get("x-vercel-ip-country")) || request.headers.get("sec-gpc") === "1") return response;
+  const touch = touchFrom({
+    url: request.nextUrl,
+    referrer: request.headers.get("referer") ?? "",
+    userAgent: request.headers.get("user-agent") ?? "",
+    ownHost,
+  });
+  if (!touch) return response;
+  const name = channelCookieName(handle);
+  response.cookies.set({
+    name,
+    value: nextChannelCookie(request.cookies.get(name)?.value, touch, Date.now() / 1000),
+    path: "/",
+    maxAge: CHANNEL_COOKIE_SECONDS,
     httpOnly: true,
     sameSite: "lax",
     secure: request.nextUrl.protocol === "https:",
@@ -229,7 +264,8 @@ export async function proxy(request: NextRequest) {
     headers.delete(PATH_HEADER);
     const policy = withPolicy(request.nextUrl.pathname, headers);
     const productPage = /^\/(?:@|%40)[^/]+\/p\/[^/]+\/?$/i.test(request.nextUrl.pathname);
-    return answer(withTestGroup(request, productPage, withZoomArrival(request, withCodeLink(request, store, withAffiliateClick(request, store, NextResponse.next({ request: { headers } }))))), policy);
+    const visited = handleInPath(request.nextUrl.pathname);
+    return answer(withChannel(request, visited, host, withTestGroup(request, productPage, withZoomArrival(request, withCodeLink(request, store, withAffiliateClick(request, store, NextResponse.next({ request: { headers } })))))), policy);
   }
 
   const { pathname, search } = request.nextUrl;
@@ -243,7 +279,7 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = path;
     const policy = withPolicy(path, headers);
-    return answer(withTestGroup(request, /^\/@[^/]+\/p\/[^/]+\/?$/i.test(path), withCodeLink(request, handle, withAffiliateClick(request, handle, NextResponse.rewrite(url, { request: { headers } })))), policy);
+    return answer(withChannel(request, handle, host, withTestGroup(request, /^\/@[^/]+\/p\/[^/]+\/?$/i.test(path), withCodeLink(request, handle, withAffiliateClick(request, handle, NextResponse.rewrite(url, { request: { headers } }))))), policy);
   };
 
   if (pathname === "/") return rewrite(`/@${handle}`);
@@ -256,7 +292,7 @@ export async function proxy(request: NextRequest) {
   const own = pathname.match(/^\/@([^/]+)(\/.*)?$/);
   if (own && decodeURIComponent(own[1]).toLowerCase() === handle) {
     const policy = withPolicy(pathname, headers);
-    return answer(withCodeLink(request, handle, withAffiliateClick(request, handle, NextResponse.next({ request: { headers } }))), policy);
+    return answer(withChannel(request, handle, host, withCodeLink(request, handle, withAffiliateClick(request, handle, NextResponse.next({ request: { headers } })))), policy);
   }
   return NextResponse.redirect(`${SITE_URL}${pathname}${search}`, 308);
 }

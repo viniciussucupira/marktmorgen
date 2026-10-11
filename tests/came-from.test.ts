@@ -112,12 +112,12 @@ test("the studio is given the channel money, in the store's currency only", () =
   );
 
   const panel = readFileSync(join(process.cwd(), "components/stats-panel.tsx"), "utf8");
-  assert.match(panel, /What each link brought in/, "the table has to exist, or none of this is visible");
+  assert.match(panel, /Where the money came from/, "the table has to exist, or none of this is visible");
   assert.match(panel, /Per visitor/, "and revenue per visitor, which is the number the whole report is for");
   assert.match(
     panel,
-    /No tag on the link/,
-    "an untagged sale is named plainly rather than shown as the word 'direct'",
+    /Direct or unknown/,
+    "a sale from nowhere nameable is named plainly rather than shown as the word 'direct'",
   );
 });
 
@@ -125,7 +125,7 @@ test("a sale carries its channel from the checkout all the way to the report", (
   const checkout = readFileSync(join(process.cwd(), "lib/store-checkout.ts"), "utf8");
   assert.match(checkout, /metadata\[utm_source\]/, "written onto the Stripe session");
   const stats = readFileSync(join(process.cwd(), "lib/stats.ts"), "utf8");
-  assert.match(stats, /source: meta\.utm_source/, "and read back off it when the sale is read");
+  assert.match(stats, /const source = meta\.utm_source \|\| named\(meta\.channel\)/, "and read back off it when the sale is read, the page's tag first");
 
   const route = readFileSync(join(process.cwd(), "app/api/store/checkout/route.ts"), "utf8");
   assert.match(route, /cameFrom\(request\.headers\.get\("referer"\)/, "read from the page the button was on");

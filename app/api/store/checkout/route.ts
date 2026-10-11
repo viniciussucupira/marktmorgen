@@ -21,6 +21,7 @@ import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/requ
 import { readListings, readProduct } from "@/lib/catalog";
 import { bundleReady, chosenItems, deliverableItems, picks } from "@/lib/bundle-rules";
 import { cameFrom } from "@/lib/came-from";
+import { channelOfRequest } from "@/lib/visit-channel";
 import { codeCookieName, readLinkCode } from "@/lib/code-link";
 import { AB_COOKIE, count as countTest, readBucket, readCounts, versionFor, winner } from "@/lib/headline-test";
 import { readPage } from "@/lib/sales-page-store";
@@ -202,6 +203,9 @@ export async function POST(request: NextRequest) {
         // the button was pressed on (lib/came-from.ts). Nothing is stored and
         // nobody is identified: the tag rides to Stripe with the payment.
         cameFrom: cameFrom(request.headers.get("referer"), new URL(origin).hostname),
+        // The channel this sale is credited to: the page's own tags, else the
+        // one remembered for this visitor (lib/visit-channel.ts), else direct.
+        channel: channelOfRequest(request, store.handle, new URL(origin).hostname),
         // A code that came in a link to this store (lib/code-link.ts), applied
         // by Stripe only if it is one of the creator's live codes.
         code: readLinkCode(request.cookies.get(codeCookieName(store.handle))?.value) || undefined,

@@ -65,6 +65,12 @@ export async function createCartCheckout(
   extras: {
     country?: string;
     cameFrom?: CameFrom;
+    /**
+     * The channel this sale is credited to, as Stripe metadata
+     * (lib/visit-channel.ts channelMetadata): the page's own tags, else the
+     * channel remembered for this visitor, else direct. Written on the session.
+     */
+    channel?: Record<string, string>;
     /** The affiliate whose link the buyer followed, still inside the store's window (lib/affiliates.ts). */
     via?: { aff: string; rate: number; own?: number | null } | null;
   } = {},
@@ -131,6 +137,7 @@ export async function createCartCheckout(
       });
     }
   }
+  for (const [key, value] of Object.entries(extras.channel ?? {})) body.set(`metadata[${key}]`, value);
   if (extras.cameFrom && hasSource(extras.cameFrom)) {
     if (extras.cameFrom.source) body.set("metadata[utm_source]", extras.cameFrom.source);
     if (extras.cameFrom.medium) body.set("metadata[utm_medium]", extras.cameFrom.medium);

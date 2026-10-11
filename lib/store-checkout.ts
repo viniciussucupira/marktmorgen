@@ -186,6 +186,14 @@ export async function createCheckout(
      */
     cameFrom?: CameFrom;
     /**
+     * The channel this sale is credited to, as Stripe metadata
+     * (lib/visit-channel.ts channelMetadata): the page's own tags, else the
+     * channel remembered for this visitor, else direct. Written on the session
+     * and, for a membership or payment plan, on the subscription, so every
+     * renewal carries it too.
+     */
+    channel?: Record<string, string>;
+    /**
      * For a course: the fingerprint of the secret the buyer's browser keeps,
      * so the course opens right away in the browser that paid.
      */
@@ -325,6 +333,10 @@ export async function createCheckout(
     if (extras.cameFrom.source) body.set("metadata[utm_source]", extras.cameFrom.source);
     if (extras.cameFrom.medium) body.set("metadata[utm_medium]", extras.cameFrom.medium);
     if (extras.cameFrom.campaign) body.set("metadata[utm_campaign]", extras.cameFrom.campaign);
+  }
+  for (const [key, value] of Object.entries(extras.channel ?? {})) {
+    body.set(`metadata[${key}]`, value);
+    if (recurring) body.set(`subscription_data[metadata][${key}]`, value);
   }
   if (bundled) {
     for (const [key, value] of Object.entries(bundleMeta("bundle", bundled.map((p) => p.id)))) body.set(`metadata[${key}]`, value);

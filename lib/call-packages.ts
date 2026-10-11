@@ -138,10 +138,18 @@ export function packageCheckoutBody(store: Store, product: Listing, pkg: CallPac
 }
 
 /** Opens the checkout that buys a package, on the creator's own account. */
-export async function packageCheckout(store: Store, product: Listing, pkg: CallPackage, origin: string): Promise<{ url: string; id: string }> {
+export async function packageCheckout(
+  store: Store,
+  product: Listing,
+  pkg: CallPackage,
+  origin: string,
+  /** The channel this sale is credited to, as Stripe metadata (lib/visit-channel.ts channelOfRequest). */
+  channel: Record<string, string> = {},
+): Promise<{ url: string; id: string }> {
   if (!store.stripeAccountId) throw new Error("This store has no account");
   const account = store.stripeAccountId;
   const body = packageCheckoutBody(store, product, pkg, origin);
+  for (const [key, value] of Object.entries(channel)) body.set(`metadata[${key}]`, value);
   const made = await openKeepingTheSale(body, () => onAccount("POST", account, "/checkout/sessions", body));
   if (typeof made.url !== "string" || typeof made.id !== "string") throw new Error("Stripe returned no checkout");
   return { url: made.url, id: made.id };
