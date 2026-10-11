@@ -20,7 +20,7 @@ export default function PrivacyPage() {
   // Named only while the files creators sell are kept there (lib/vault.ts).
   const cloudflare = isVaultConfigured();
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 10, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="October 11, 2026">
       <p>
         Marktmorgen (“Marktmorgen,” “we,” “us,” or “our”) is operated by
         Solrenning, an independent software studio. This Privacy Policy
@@ -521,6 +521,25 @@ export default function PrivacyPage() {
           European Economic Area, the United Kingdom, Switzerland or Brazil, or
           whose country we cannot tell, get no such cookie: they see the first
           version and are not counted.
+        </p>
+        <p id="channels">
+          <strong className="text-black">
+            Where a store&apos;s buyers came from.
+          </strong>{" "}
+          When someone reaches a store&apos;s page from somewhere we can name
+          — a link the creator tagged, another site, or the Instagram or
+          TikTok app — a cookie named <code>nl_ch_</code> followed by the
+          store&apos;s address keeps, for 30 days, the name of that place and
+          of the first such place in the last 90 days, with the two dates. If
+          they then buy, those names are written on the payment in the
+          creator&apos;s own Stripe account, so the creator can see which of
+          their channels brought the sale; renewals of a membership carry them
+          too. It holds nothing else, identifies nobody, is sent to no other
+          store, and we keep no copy. Visitors in the European Economic Area,
+          the United Kingdom, Switzerland or Brazil, or whose country we cannot
+          tell, and anyone whose browser sends Global Privacy Control, get no
+          such cookie: their purchase is credited only by the tags on the page
+          they bought from.
         </p>
         <p id="page-depth">
           <strong className="text-black">

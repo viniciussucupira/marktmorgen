@@ -325,7 +325,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         a: [
           "Yes, one product at a time. In your studio, under \u201cSell from your own website,\u201d pick the product and copy the code: a card with its picture, price, buyers' rating and buy button, or a plain button in your store's color that leads to the product's page. Paste it into a block that takes HTML, called Embed, Code or Custom HTML in most website builders.",
           "The card is drawn by us on every visit, so a new price, a sale or a sell-out shows on your site at once. Its button opens Stripe's checkout in a new tab, on your own Stripe account, and your site stays open behind it. A product with options to pick, a time to book or an email to give opens its own page instead.",
-          "Give the place a name, such as blog, and sales made through that code are listed under it in your numbers, in What each link brought in. Nothing is counted as a visit and no cookie is set on your site. The whole store cannot be put inside another site, only one product per code.",
+          "Give the place a name, such as blog, and sales made through that code are listed under it in your numbers, in Where the money came from. Nothing is counted as a visit and no cookie is set on your site. The whole store cannot be put inside another site, only one product per code.",
         ],
       },
       {

@@ -133,7 +133,7 @@ export function BuyButtonEditor({
         </label>
       </div>
       <p className="mt-2 text-sm text-ink-soft">
-        {`Sales made through it are listed as “${embedPlace(place)}” under What each link brought in, in your numbers, so two codes on two sites can be told apart.`}
+        {`Sales made through it are listed as “${embedPlace(place)}” under Where the money came from, in your numbers, so two codes on two sites can be told apart.`}
       </p>
 
       <fieldset className="mt-5">

@@ -15,6 +15,7 @@ import { readCountry } from "@/lib/fair-price";
 import { formatMoney } from "@/lib/money";
 import { LANGUAGES } from "@/lib/store-language";
 import { cameFrom } from "@/lib/came-from";
+import { channelOfRequest } from "@/lib/visit-channel";
 import { affiliateCookieName, attributionFor } from "@/lib/affiliates";
 import { viaCookieName } from "@/lib/affiliate-setting";
 import { countHit } from "@/lib/visit";
@@ -157,6 +158,9 @@ export async function POST(request: NextRequest) {
     const opened = await createCartCheckout(store, products, linkOrigin(request, store), {
       country: readCountry(request.headers.get("x-vercel-ip-country")),
       cameFrom: cameFrom(request.headers.get("referer"), new URL(origin).hostname),
+        // The channel this sale is credited to: the page's own tags, else the
+        // one remembered for this visitor (lib/visit-channel.ts), else direct.
+        channel: channelOfRequest(request, store.handle, new URL(origin).hostname),
       via,
     });
     for (const product of products) after(() => countHit(request, store, { kind: "checkout", id: product.id }));

@@ -816,13 +816,15 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "download", title: "Sales as a file", body: "Every paid sale for the last 30 or 90 days or all time, read from your Stripe account, as a CSV. Up to 5,000 sales in one file, and it says so when there are more." },
           { icon: "chart", title: "Visits and sources as files", body: "Your visits day by day, and where visitors came from, as CSV files." },
           { icon: "target", title: "Every product on its own line", body: "Each product's page views, checkouts started, sales and revenue side by side for each window, with how many sales every 100 views of its page brought. No cookie." },
+          { icon: "chart", title: "Which channel made you money", body: "Every sale, and every renewal after it, under the channel that brought the buyer: a link you tagged, a site, or the Instagram or TikTok app, remembered for 30 days so a buyer who comes back later by typing your address still counts where they came from. Beside it, where buyers first found you, and the path from visit to checkout to sale." },
         ],
       },
       {
         kind: "limits",
         title: "What it does not do yet",
         items: [
-          "Renewals — memberships renewed and later plan payments — are shown apart from revenue, for up to the last 90 days; all of them are in your Stripe dashboard.",
+          "Renewals — memberships renewed and later plan payments — are shown apart from revenue, for up to the last 90 days, and by channel only for memberships sold from October 11, 2026; all of them are in your Stripe dashboard.",
+          "A channel is remembered in the buyer's browser, so one who changes device, clears cookies or is in a place where the law asks first (the EU, the UK, Switzerland, Brazil) is credited only by the tags on the page they bought from.",
           "All time starts at the first visit still on record; daily visits are kept for about thirteen months.",
           "A test compares two versions of one product's page, or two headlines, by checkouts opened: not prices, and not more than two at once.",
         ],
@@ -832,6 +834,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "Questions about your numbers",
         items: [
           { q: "Do the visit counts set cookies?", a: "No. They set no cookie and keep no personal data, so there is nothing about them to ask a visitor. The ad pixels are different, which is why visitors are asked first where the law says so." },
+          { q: "How do you know which channel a sale came from?", a: "From the tags on the page it was bought from, or, without tags, from the last place the buyer came from in the 30 days before, which a small cookie of your store's remembers. The channel is written on the payment in your own Stripe account, so you can check any sale there. Nothing about the buyer is kept by us, and where the law asks visitors first, or a browser asks not to be followed, no such cookie is set." },
           { q: "Why do my numbers differ from Stripe's?", a: "Sales here are new purchases and new members before Stripe's fee and any refund. Renewals and refunds are in your Stripe dashboard." },
         ],
       },

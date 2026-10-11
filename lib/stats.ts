@@ -51,76 +51,8 @@ const visitorsKey = (statsId: string, day: string) => `nl:stats:${statsId}:${day
 const lifeKey = (statsId: string) => `nl:stats:${statsId}:life`;
 const lifeLockKey = (statsId: string) => `nl:stats:${statsId}:life:lock`;
 
-const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|headless|lighthouse|pingdom|uptime|monitor|curl|wget|python|node-fetch|axios|go-http|java\/|okhttp|scrapy|httpclient/i;
-
-export function isBot(userAgent: string): boolean {
-  return !userAgent || BOT.test(userAgent);
-}
-
-/** Referring sites grouped under the name a creator knows them by. */
-const KNOWN: [RegExp, string][] = [
-  [/(^|\.)instagram\.com$/, "instagram"],
-  [/(^|\.)tiktok\.com$/, "tiktok"],
-  [/(^|\.)(youtube\.com|youtu\.be)$/, "youtube"],
-  [/(^|\.)(facebook\.com|fb\.com|fb\.me)$/, "facebook"],
-  [/(^|\.)(t\.co|twitter\.com|x\.com)$/, "x"],
-  [/(^|\.)threads\.(net|com)$/, "threads"],
-  [/(^|\.)(linkedin\.com|lnkd\.in)$/, "linkedin"],
-  [/(^|\.)(pinterest\.[a-z.]+|pin\.it)$/, "pinterest"],
-  [/(^|\.)snapchat\.com$/, "snapchat"],
-  [/(^|\.)reddit\.com$/, "reddit"],
-  [/(^|\.)(linktr\.ee|linktree\.com)$/, "linktree"],
-  [/(^|\.)google\.[a-z.]+$/, "google"],
-  [/(^|\.)bing\.com$/, "bing"],
-  [/(^|\.)duckduckgo\.com$/, "duckduckgo"],
-  [/(^|\.)(mail\.google\.com|outlook\.live\.com|mail\.yahoo\.com)$/, "email"],
-];
-
-/** The names of the in-app browsers that send no referrer at all. */
-const IN_APP: [RegExp, string][] = [
-  [/Instagram/i, "instagram"],
-  [/FBAN|FBAV|FB_IAB/i, "facebook"],
-  [/musical_ly|BytedanceWebview|TikTok/i, "tiktok"],
-  [/Pinterest/i, "pinterest"],
-  [/Snapchat/i, "snapchat"],
-  [/LinkedInApp/i, "linkedin"],
-  [/Twitter/i, "x"],
-];
-
-/**
- * Where a visit came from, in a word.
- *
- * A campaign tag the creator put on their own link wins, then the site that
- * sent the visitor, then the app whose built-in browser opened the page —
- * Instagram and TikTok send no referrer, and that is where most of a
- * creator's visitors are. What is left is "direct".
- */
-export function classifySource(input: { referrer: string; utm: string; userAgent: string; ownHost: string }): string {
-  const utm = input.utm.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 30);
-  if (utm) return utm;
-  let host = "";
-  try {
-    host = input.referrer ? new URL(input.referrer).hostname.toLowerCase() : "";
-  } catch {
-    host = "";
-  }
-  if (host && host !== input.ownHost) {
-    for (const [pattern, name] of KNOWN) if (pattern.test(host)) return name;
-    return host.replace(/^www\./, "").slice(0, 60);
-  }
-  for (const [pattern, name] of IN_APP) if (pattern.test(input.userAgent)) return name;
-  return "direct";
-}
-
-
-/**
- * A utm_medium or utm_campaign tag as it is counted: lower case, letters,
- * digits, dots, dashes and underscores, at most thirty characters; an empty
- * string when nothing is left.
- */
-export function cleanTag(raw: string): string {
-  return raw.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 30);
-}
+import { isBot, classifySource, cleanTag } from "@/lib/source-rules";
+export { isBot, classifySource, cleanTag };
 
 export type HitKind = "view" | "checkout" | "link" | "product";
 
@@ -453,11 +385,19 @@ export type SalesStats = {
    * this store's subscriptions. A first payment is a checkout and is in the
    * sales above, so it is never counted twice. Absent on a reading from before.
    */
-  renewals?: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean };
+  renewals?: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean; bySource?: RenewalsBySource };
+  /** What each channel brought in, credited to the buyer's FIRST visit from somewhere (lib/visit-channel.ts). */
+  firstBySource?: { source: string; currency: string; cents: number; sales: number }[];
 };
 
 /** Payments after the first, and what they came to, in the store's currency. */
 export type Renewals = { payments: number; cents: number };
+
+/** Renewals over the last 90 days by the channel the subscription was sold through; "" is direct. */
+export type RenewalsBySource = ({ source: string } & Renewals)[];
+
+/** The channel of a subscription sold before channels were written onto subscriptions. */
+export const UNRECORDED = "unrecorded";
 
 export type AllTimeSales = {
   totals: SalesWindow;
@@ -494,11 +434,30 @@ export type Sale = {
   currency: string;
   row: Record<string, unknown>;
   upsell: boolean;
-  /** The utm_source on the link this sale came from, "" when untagged (lib/came-from.ts). */
+  /**
+   * The channel this sale is credited to, "" when it came from nowhere the
+   * store could name: the utm_source on the page it was bought from
+   * (lib/came-from.ts), else the channel remembered for the buyer's visit
+   * (lib/visit-channel.ts), which sales from before 11 October 2026 lack.
+   */
   source: string;
   medium: string;
   campaign: string;
+  /** The channel of the buyer's first visit from somewhere, where it was remembered; else `source`. */
+  first: string;
 };
+
+/** The channel a checkout's metadata credits, "" for direct (lib/visit-channel.ts). */
+function saleChannel(meta: Record<string, string>): { source: string; medium: string; campaign: string; first: string } {
+  const named = (value: string | undefined) => (value && value !== "direct" ? value : "");
+  const source = meta.utm_source || named(meta.channel);
+  return {
+    source,
+    medium: meta.utm_medium || meta.channel_medium || "",
+    campaign: meta.utm_campaign || meta.channel_campaign || "",
+    first: named(meta.channel_first) || source,
+  };
+}
 
 /** The currency Stripe reports on a checkout or a payment; US dollars when it says none. */
 const currencyOf = (row: { currency?: unknown }) => (typeof row.currency === "string" && row.currency ? row.currency.toLowerCase() : "usd");
@@ -545,9 +504,7 @@ export async function readPaidSales(store: Store, since: number, pages: number):
       currency: currencyOf(row),
       row: raw,
       upsell: false,
-      source: meta.utm_source ?? "",
-      medium: meta.utm_medium ?? "",
-      campaign: meta.utm_campaign ?? "",
+      ...saleChannel(meta),
     });
   });
   // Products taken in one click after paying are charges of their own.
@@ -567,6 +524,7 @@ export async function readPaidSales(store: Store, since: number, pages: number):
       source: "",
       medium: "",
       campaign: "",
+      first: "",
     });
   });
   sales.sort((a, b) => b.created - a.created);
@@ -589,15 +547,22 @@ function invoiceMeta(invoice: Record<string, unknown>): Record<string, string> {
  * opened. At most `pages` pages of a hundred. Pure on what it is handed, so a
  * test can give it invoices.
  */
-export function renewalsFrom(store: Store, invoices: Record<string, unknown>[], now: number, currency: string): { d7: Renewals; d30: Renewals; d90: Renewals } {
+export function renewalsFrom(
+  store: Store,
+  invoices: Record<string, unknown>[],
+  now: number,
+  currency: string,
+): { d7: Renewals; d30: Renewals; d90: Renewals; bySource: RenewalsBySource } {
   const handles = saleHandles(store);
   const cut7 = dayKey(now - 6 * 86400_000);
   const cut30 = dayKey(now - 29 * 86400_000);
   const zero = (): Renewals => ({ payments: 0, cents: 0 });
   const out = { d7: zero(), d30: zero(), d90: zero() };
+  const by = new Map<string, Renewals>();
   for (const invoice of invoices) {
     if (invoice.status !== "paid" || invoice.billing_reason !== "subscription_cycle") continue;
-    if (!handles.has(invoiceMeta(invoice).store ?? "")) continue;
+    const meta = invoiceMeta(invoice);
+    if (!handles.has(meta.store ?? "")) continue;
     if (currencyOf(invoice) !== currency) continue;
     const cents = typeof invoice.amount_paid === "number" ? invoice.amount_paid : 0;
     if (cents <= 0) continue;
@@ -607,8 +572,18 @@ export function renewalsFrom(store: Store, invoices: Record<string, unknown>[], 
       out[w].payments += 1;
       out[w].cents += cents;
     }
+    // The channel the subscription was sold through, which every renewal
+    // carries in its subscription's metadata (lib/visit-channel.ts). One sold
+    // before channels were written down says nothing, and is kept apart as
+    // UNRECORDED rather than counted as direct, which would be a guess.
+    const source = "channel" in meta ? (meta.channel === "direct" ? "" : meta.channel) : meta.utm_source || UNRECORDED;
+    const row = by.get(source) ?? zero();
+    row.payments += 1;
+    row.cents += cents;
+    by.set(source, row);
   }
-  return out;
+  const bySource = [...by.entries()].map(([source, r]) => ({ source, ...r })).sort((a, b) => b.cents - a.cents || a.source.localeCompare(b.source));
+  return { ...out, bySource };
 }
 
 async function readRenewals(store: Store, since: number, now: number, pages: number): Promise<SalesStats["renewals"]> {
@@ -674,6 +649,13 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
       cents: sale.cents,
       currency: sale.currency,
       source: sale.source,
+    })),
+  );
+  out.firstBySource = revenueBySource(
+    sales.filter((sale) => sale.currency === store.currency && !sale.upsell).map((sale) => ({
+      cents: sale.cents,
+      currency: sale.currency,
+      source: sale.first,
     })),
   );
   return out;
@@ -759,12 +741,42 @@ export type StatsData = {
    * in the same month were two numbers that never met, and a creator cannot
    * decide where to spend their week on the first one alone.
    */
-  revenueBySource: { source: string; cents: number; sales: number }[];
+  revenueBySource: { source: string; cents: number; sales: number; renewalCents: number; renewals: number }[];
+  /**
+   * The same money credited to where each buyer FIRST came from, rather than
+   * to the visit they bought on (lib/visit-channel.ts). Renewals are not in
+   * it: a subscription remembers the channel it was sold through, not the
+   * buyer's first one.
+   */
+  firstBySource: { source: string; cents: number; sales: number }[];
   /** Memberships renewed and later plan payments, by window (SalesStats.renewals); null when they could not be read. */
   renewals: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean } | null;
 };
 
 const EMPTY_WINDOW: WindowStats = { visitors: 0, views: 0, checkouts: 0, sources: [], mediums: [], campaigns: [], checkoutsByProduct: {}, viewsByProduct: {}, linkClicks: {} };
+
+/**
+ * First sales and the renewals they went on to bring, by channel: what each
+ * channel is worth over the 90 days, not only what it sold on the day. A
+ * channel with renewals and no first sale in the window still gets its row.
+ */
+export function withRenewals(
+  firsts: { source: string; cents: number; sales: number }[],
+  renewals: RenewalsBySource,
+): StatsData["revenueBySource"] {
+  const rows = new Map<string, StatsData["revenueBySource"][number]>();
+  for (const f of firsts) rows.set(f.source, { source: f.source, cents: f.cents, sales: f.sales, renewalCents: 0, renewals: 0 });
+  for (const r of renewals) {
+    const source = r.source || "direct";
+    const row = rows.get(source) ?? { source, cents: 0, sales: 0, renewalCents: 0, renewals: 0 };
+    row.renewalCents += r.cents;
+    row.renewals += r.payments;
+    rows.set(source, row);
+  }
+  return [...rows.values()].sort(
+    (a, b) => b.cents + b.renewalCents - (a.cents + a.renewalCents) || a.source.localeCompare(b.source),
+  );
+}
 
 /** Visits and sales put together, the shape the studio's panel draws. */
 /** Products listed in the numbers when none has any activity yet: the first ones in the store's order. */
@@ -821,7 +833,11 @@ export function studioStats(
     currency: store.currency,
     elsewhere: sales?.elsewhere ?? 0,
     since: stats.life?.since ?? "",
-    revenueBySource: (sales?.bySource ?? [])
+    revenueBySource: withRenewals(
+      (sales?.bySource ?? []).filter((row) => row.currency === store.currency),
+      sales?.renewals?.bySource ?? [],
+    ),
+    firstBySource: (sales?.firstBySource ?? [])
       .filter((row) => row.currency === store.currency)
       .map(({ source, cents, sales: n }) => ({ source, cents, sales: n })),
     renewals: sales?.renewals ?? null,

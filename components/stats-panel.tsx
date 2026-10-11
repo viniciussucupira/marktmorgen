@@ -28,6 +28,55 @@ const SOURCE_NAMES: Record<string, string> = {
   direct: "Direct, or an app that hides it",
 };
 
+/** A channel's name where money is concerned: "direct" there means nothing the store could name. */
+function channelName(source: string): string {
+  if (source === "direct") return "Direct or unknown";
+  if (source === "unrecorded") return "Sold before channels were recorded";
+  return SOURCE_NAMES[source] ?? source;
+}
+
+/**
+ * The store's funnel for the range: people, then the ones who started a
+ * checkout, then the ones who paid — with how many went on at each step,
+ * which is the number a creator can change (a clearer page, a better price).
+ * Only counts the store already keeps; nothing new is recorded for it.
+ */
+function Funnel({ visitors, checkouts, sales, salesHere }: { visitors: number; checkouts: number; sales: number; salesHere: boolean }) {
+  const steps = [
+    { label: "Visitors", value: visitors, note: "" },
+    { label: "Started a checkout", value: checkouts, note: rate(checkouts, visitors) + " of visitors" },
+    ...(salesHere ? [{ label: "Paid", value: sales, note: rate(sales, checkouts) + " of checkouts" }] : []),
+  ];
+  const top = Math.max(1, visitors);
+  return (
+    <div className="mt-6" role="group" aria-labelledby="numbers-funnel">
+      <p id="numbers-funnel" className="text-sm font-bold text-ink">
+        From visit to sale
+      </p>
+      <ol className="mt-3 space-y-2">
+        {steps.map((step) => (
+          <li key={step.label} className="text-sm">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="font-semibold text-ink">{step.label}</span>
+              <span className="shrink-0 tabular-nums text-ink-soft">
+                {count(step.value)}
+                {step.note ? ` · ${step.note}` : ""}
+              </span>
+            </div>
+            <div className="mt-1 h-2 overflow-hidden rounded-full bg-paper ring-1 ring-line" aria-hidden="true">
+              <div className="h-full rounded-full bg-violet-brand/70" style={{ width: `${Math.max(1, Math.min(100, (step.value / top) * 100))}%` }} />
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 text-xs text-ink-soft">
+        A visitor is counted once a day, so somebody who comes back on another day and pays is one more visitor too. A free
+        product&apos;s checkouts are the addresses asked for, and are never paid.
+      </p>
+    </div>
+  );
+}
+
 const RANGES: { key: RangeKey; label: string }[] = [
   { key: "d7", label: "7 days" },
   { key: "d30", label: "30 days" },
@@ -161,6 +210,10 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
     })
     .sort((a, b) => b.cents - a.cents || b.sales - a.sales || b.checkouts - a.checkouts);
   const shownProducts = products.filter((p) => p.views > 0 || p.checkouts || p.sales).length ? products.filter((p) => p.views > 0 || p.checkouts || p.sales) : products;
+  const withRenewalColumn = data.revenueBySource.some((row) => row.renewals > 0);
+  // Where buyers first found the store, shown when it says something the table
+  // above does not: some buyer first came from somewhere other than where they bought.
+  const firstFound = (data.firstBySource ?? []).filter((row) => row.source !== "direct");
   const sources = data.sources[range];
   const mediums = data.mediums[range];
   const campaigns = data.campaigns[range];
@@ -276,34 +329,74 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
         the first one alone. Only the last ninety days, because that is as far
         back as the sales reading goes, and it says so.
       */}
+      {range !== "all" && totals.visitors > 0 ? (
+        <Funnel visitors={totals.visitors} checkouts={totals.checkouts} sales={totals.sales} salesHere={salesHere} />
+      ) : null}
+
       {data.revenueBySource.length ? (
         <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-revenue-source">
           <table className="w-full text-left text-sm">
             <caption id="numbers-revenue-source" className="text-left text-sm font-bold text-ink">
-              What each link brought in, last 90 days
+              Where the money came from, last 90 days
             </caption>
             <thead>
               <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
-                <th scope="col" className="py-1 font-semibold">Link</th>
-                <th scope="col" className="py-1 text-right font-semibold">Sales</th>
-                <th scope="col" className="py-1 text-right font-semibold">Revenue</th>
+                <th scope="col" className="py-1 font-semibold">Channel</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
+                {withRenewalColumn ? (
+                  <>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Memberships renewed and later plan payments, by the channel the subscription was sold through">
+                      Renewals
+                    </th>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold">Total</th>
+                  </>
+                ) : null}
               </tr>
             </thead>
             <tbody>
               {data.revenueBySource.map((row) => (
                 <tr key={row.source} className="border-b border-line/60">
                   <th scope="row" className="py-1 pr-3 font-medium text-ink">
-                    {row.source === "direct" ? "No tag on the link" : SOURCE_NAMES[row.source] ?? row.source}
+                    {channelName(row.source)}
                   </th>
-                  <td className="py-1 text-right tabular-nums">{count(row.sales)}</td>
-                  <td className="py-1 text-right font-semibold tabular-nums text-ink">{money(row.cents)}</td>
+                  <td className="py-1 pl-3 text-right tabular-nums">{count(row.sales)}</td>
+                  <td className="py-1 pl-3 text-right tabular-nums">{money(row.cents)}</td>
+                  {withRenewalColumn ? (
+                    <>
+                      <td className="py-1 pl-3 text-right tabular-nums">{row.renewals ? money(row.renewalCents) : "—"}</td>
+                      <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{money(row.cents + row.renewalCents)}</td>
+                    </>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="mt-2 text-xs text-ink-soft">
-            Read from your own Stripe account, so it is the money that actually arrived. A sale counts under the tag on
-            the page it was bought from; one with no tag is counted as untagged rather than guessed at.
+            Read from your own Stripe account, so it is the money that actually arrived. A sale counts under the tags on the
+            page it was bought from; without tags, under the last place the buyer came from in the 30 days before — a link
+            you shared, a site, or the Instagram or TikTok app — so somebody who found you on Instagram and came back later by
+            typing your address is still counted under Instagram. Where the law asks visitors first (the EU, the UK,
+            Switzerland and Brazil), or a browser asks not to be followed, only the page&apos;s tags count.
+            {withRenewalColumn ? " A renewal counts under the channel its membership or plan was sold through." : ""}
+          </p>
+        </div>
+      ) : null}
+
+      {firstFound.length ? (
+        <div className="mt-6">
+          <p className="text-sm font-bold text-ink">Where buyers first found you, last 90 days</p>
+          <ul className="mt-2 divide-y divide-line text-sm">
+            {firstFound.slice(0, 8).map((row) => (
+              <li key={row.source} className="flex items-baseline justify-between gap-3 py-1.5">
+                <span className="min-w-0 truncate text-ink">{channelName(row.source)}</span>
+                <span className="shrink-0 tabular-nums text-ink-soft">{`${count(row.sales)} ${row.sales === 1 ? "sale" : "sales"} · ${money(row.cents)}`}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-ink-soft">
+            The same sales, credited to the first place each buyer came from in the 90 days before, rather than to the visit
+            they bought on: where people discover you, beside where they decide.
           </p>
         </div>
       ) : null}

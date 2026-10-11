@@ -32,7 +32,13 @@ export function tipsOpen(store: Store): boolean {
 }
 
 /** Opens the checkout for one gift and returns where to send the visitor. */
-export async function createTipCheckout(store: Store, origin: string, amount: number): Promise<{ url: string; id: string }> {
+export async function createTipCheckout(
+  store: Store,
+  origin: string,
+  amount: number,
+  /** The channel this sale is credited to, as Stripe metadata (lib/visit-channel.ts channelOfRequest). */
+  channel: Record<string, string> = {},
+): Promise<{ url: string; id: string }> {
   if (!tipsOpen(store) || !store.stripeAccountId) throw new Error("This store takes no support");
   // Checked again where the charge is built, whatever the route checked.
   if (!tipInRange(amount, store.currency)) throw new Error("An amount out of range");
@@ -46,6 +52,7 @@ export async function createTipCheckout(store: Store, origin: string, amount: nu
     "line_items[0][price_data][product_data][name]": w.lineName(store.name).slice(0, 250),
     "metadata[store]": store.handle,
     "metadata[kind]": "tip",
+    ...Object.fromEntries(Object.entries(channel).map(([key, value]) => [`metadata[${key}]`, value])),
     "metadata[title]": TIP_TITLE,
     "payment_intent_data[metadata][store]": store.handle,
     "payment_intent_data[metadata][kind]": "tip",

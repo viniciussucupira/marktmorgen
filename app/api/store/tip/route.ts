@@ -1,3 +1,4 @@
+import { channelOfRequest } from "@/lib/visit-channel";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
@@ -44,7 +45,12 @@ export async function POST(request: NextRequest) {
   // Twenty a connection in ten minutes per store: far past any fan, short of a script trying cards.
   if (!(await withinLimit("tip", `${clientAddress(request)}|${store.handle}`, 20, 600))) return away("limited");
   try {
-    const opened = await createTipCheckout(store, linkOrigin(request, store), amount);
+    const opened = await createTipCheckout(
+      store,
+      linkOrigin(request, store),
+      amount,
+      channelOfRequest(request, store.handle, new URL(origin).hostname),
+    );
     return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("opening a support checkout failed", error);

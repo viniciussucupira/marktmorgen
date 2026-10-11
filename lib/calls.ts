@@ -529,6 +529,8 @@ export function callCheckoutBody(input: {
   origin: string;
   via: { aff: string; rate: number } | null;
   fromPackage: { id: string; coupon: string; email: string; back: string } | null;
+  /** The channel this sale is credited to, as Stripe metadata (lib/visit-channel.ts). */
+  channel?: Record<string, string>;
 }): URLSearchParams {
   const { store, product, start, end, buyerTz, origin } = input;
   const pkg = input.fromPackage;
@@ -550,6 +552,7 @@ export function callCheckoutBody(input: {
     "metadata[product]": product.id,
     "metadata[title]": name.slice(0, 480),
     "metadata[kind]": "call",
+    ...Object.fromEntries(Object.entries(input.channel ?? {}).map(([key, value]) => [`metadata[${key}]`, value])),
     "metadata[start]": String(start),
     "metadata[end]": String(end),
     "metadata[tz]": buyerTz,
@@ -610,6 +613,8 @@ export async function holdAndCheckout(input: {
    * the package's address, so the booking is theirs.
    */
   fromPackage?: { id: string; coupon: string; email: string; back: string } | null;
+  /** The channel this sale is credited to, as Stripe metadata (lib/visit-channel.ts channelOfRequest). */
+  channel?: Record<string, string>;
 }): Promise<HoldResult> {
   const { store, product, start, origin } = input;
   const setup = product.call;
@@ -635,7 +640,7 @@ export async function holdAndCheckout(input: {
     if (!isBookable(setup, now, busy, start, product.id)) return { ok: false, reason: "taken" };
 
     const pkg = input.fromPackage ?? null;
-    const body = callCheckoutBody({ store, product, start, end, buyerTz, origin, via: input.via ?? null, fromPackage: pkg });
+    const body = callCheckoutBody({ store, product, start, end, buyerTz, origin, via: input.via ?? null, fromPackage: pkg, channel: input.channel });
 
     // A session from a package is a checkout with nothing to pay, which Stripe
     // takes only at API version 2023-08-16 or later
