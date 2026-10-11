@@ -42,12 +42,19 @@ export const FIRST_CHANNEL_DAYS = 90;
 /** A sale that came from nowhere the store could name. */
 export const DIRECT = "direct";
 
-export type Touch = { source: string; medium: string; campaign: string };
+/**
+ * One visit's channel. `content` is the utm_content tag: which ad, which
+ * video of a campaign (added 11 October 2026), so a sale can be credited to
+ * the ad that brought it and not only to its campaign.
+ */
+export type Touch = { source: string; medium: string; campaign: string; content?: string };
 
 export type Channel = {
   last: string;
   medium: string;
   campaign: string;
+  /** The latest visit's utm_content; empty for a cookie written before it was kept. */
+  content: string;
   lastAt: number;
   first: string;
   firstAt: number;
@@ -73,15 +80,16 @@ export function touchFrom(input: { url: URL; referrer: string; userAgent: string
     60,
   );
   if (!source || source === DIRECT) return null;
-  return { source, medium: tidy(params.get("utm_medium"), 30), campaign: tidy(params.get("utm_campaign"), 40) };
+  return { source, medium: tidy(params.get("utm_medium"), 30), campaign: tidy(params.get("utm_campaign"), 40), content: tidy(params.get("utm_content"), 40) };
 }
 
 /** What the cookie holds, or null when it is absent, broken, or older than the window. */
 export function readChannelCookie(value: string | undefined, nowSeconds: number): Channel | null {
   if (!value) return null;
   const parts = value.split("~");
-  if (parts.length !== 6) return null;
-  const [last, medium, campaign, lastAtRaw, first, firstAtRaw] = parts;
+  // Six parts until 11 October 2026; a seventh, the ad's utm_content, since.
+  if (parts.length !== 6 && parts.length !== 7) return null;
+  const [last, medium, campaign, lastAtRaw, first, firstAtRaw, content = ""] = parts;
   const lastAt = Number(lastAtRaw);
   const firstAt = Number(firstAtRaw);
   if (!last || !Number.isFinite(lastAt) || !Number.isFinite(firstAt)) return null;
@@ -92,6 +100,7 @@ export function readChannelCookie(value: string | undefined, nowSeconds: number)
     last,
     medium: tidy(medium, 30),
     campaign: tidy(campaign, 40),
+    content: tidy(content, 40),
     lastAt,
     first: firstFresh ? first : last,
     firstAt: firstFresh ? firstAt : lastAt,
@@ -104,7 +113,7 @@ export function nextChannelCookie(existing: string | undefined, touch: Touch, no
   const before = readChannelCookie(existing, at);
   const first = before?.first ?? touch.source;
   const firstAt = before?.firstAt ?? at;
-  return [touch.source, touch.medium, touch.campaign, at, first, firstAt].join("~");
+  return [touch.source, touch.medium, touch.campaign, at, first, firstAt, touch.content ?? ""].join("~");
 }
 
 /**
@@ -118,14 +127,15 @@ export function channelForSale(page: CameFrom, remembered: Channel | null): {
   first: string;
   medium: string;
   campaign: string;
+  content: string;
 } {
   if (page.source) {
-    return { channel: page.source, first: remembered?.first || page.source, medium: page.medium, campaign: page.campaign };
+    return { channel: page.source, first: remembered?.first || page.source, medium: page.medium, campaign: page.campaign, content: page.content ?? "" };
   }
   if (remembered) {
-    return { channel: remembered.last, first: remembered.first || remembered.last, medium: remembered.medium, campaign: remembered.campaign };
+    return { channel: remembered.last, first: remembered.first || remembered.last, medium: remembered.medium, campaign: remembered.campaign, content: remembered.content };
   }
-  return { channel: DIRECT, first: DIRECT, medium: page.medium, campaign: page.campaign };
+  return { channel: DIRECT, first: DIRECT, medium: page.medium, campaign: page.campaign, content: page.content ?? "" };
 }
 
 /** The Stripe metadata a checkout and its subscription carry for the channel. */
@@ -133,6 +143,7 @@ export function channelMetadata(sale: ReturnType<typeof channelForSale>): Record
   const meta: Record<string, string> = { channel: sale.channel, channel_first: sale.first };
   if (sale.medium) meta.channel_medium = sale.medium;
   if (sale.campaign) meta.channel_campaign = sale.campaign;
+  if (sale.content) meta.channel_content = sale.content;
   return meta;
 }
 

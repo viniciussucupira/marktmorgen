@@ -45,7 +45,7 @@ async function main(): Promise<void> {
   is("cleaned as the sales report keeps it", [embedPlace("My Blog!"), embedPlace(""), embedPlace(null), embedPlace("A".repeat(50)).length], ["my-blog", "website", "website", 30]);
   is("read back from the card's own address", [placeFrom("newsletter"), placeFrom(["podcast", "x"]), placeFrom(undefined)], ["newsletter", "podcast", "website"]);
   is("tags join an address that already has a question mark", tagged("/@k/p/x?a=1", "blog"), "/@k/p/x?a=1&utm_source=blog&utm_medium=buy-button");
-  is("and a sale made from the card is reported under that place", cameFrom("https://marktmorgen.com/embed/k/p?utm_source=blog&utm_medium=buy-button", "marktmorgen.com"), { source: "blog", medium: "buy-button", campaign: "" });
+  is("and a sale made from the card is reported under that place", cameFrom("https://marktmorgen.com/embed/k/p?utm_source=blog&utm_medium=buy-button", "marktmorgen.com"), { source: "blog", medium: "buy-button", campaign: "", content: "" });
 
   part("Who may frame what");
   is("the card page is drawn per visit, with its nonce", [isDynamicPage("/embed/kitchen/abc123"), isEmbedPage("/embed/kitchen/abc123"), isStorePage("/embed/kitchen/abc123")], [true, true, false]);

@@ -217,6 +217,23 @@ export default function PrivacyPage() {
           choice is kept on the visitor&apos;s device for that store, and a link
           at the bottom of its pages changes it.
         </p>
+        <p id="ads-server">
+          <strong className="text-black">
+            Purchases sent from our server, when a creator sets it up.
+          </strong>{" "}
+          A creator who has a Meta or TikTok pixel can also give us an access
+          token from their own ad account. Then, when a buyer&apos;s browser has
+          sent a purchase to that pixel &mdash; which it does only where the
+          pixels were allowed to run, as above &mdash; it asks us to send the
+          same purchase from our server, and we do, once: the order&apos;s id,
+          time, amount, currency and product, the page, the buyer&apos;s email
+          address hashed with SHA-256, the network address and browser of that
+          request, and the platform&apos;s own cookies from that browser. It
+          goes to that platform on the creator&apos;s behalf and under its own
+          privacy policy. A buyer whose pixels did not run is never sent. We
+          keep the token sealed, the platform&apos;s last answer for the
+          creator to see, and for three days that the order was sent.
+        </p>
         <p>
           <strong className="text-black">Booking a call.</strong> When someone
           books a paid call, we use the time they picked, their time zone and
@@ -558,8 +575,18 @@ export default function PrivacyPage() {
           item they saw &mdash; a product, a link or a part of the page &mdash;
           where it stood, and the item they clicked, if any, and we add one to
           that day&apos;s count of it. Each page decides at random to send this
-          for one visitor in eight, and for nobody else. No cookie is set and
-          nothing about the visitor is sent or kept.
+          for one visitor in eight, and for nobody else. On a sales page it can
+          also say how far into the page&apos;s video they got, and, where the
+          creator turned the question on, which of five answers they tapped
+          when asked what was stopping them from buying. No cookie is set and
+          nothing about the visitor is sent or kept; the device remembers only
+          that the question was asked, so it is not asked again.
+        </p>
+        <p id="search">
+          <strong className="text-black">Searching a store.</strong> When a
+          search of a store finds nothing, we count the words searched for on
+          that day, so the creator sees what visitors looked for and could not
+          find. Only the words are kept, not who searched.
         </p>
         <p id="heard">
           <strong className="text-black">

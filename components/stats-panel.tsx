@@ -13,6 +13,8 @@ import { NumbersNotes } from "@/components/numbers-notes";
 import { AdSpendEditor } from "@/components/ad-spend-editor";
 import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
 import { toast } from "@/components/toast";
+import { insightsFrom } from "@/lib/insights";
+import { WeeklyTeamPicker } from "@/components/weekly-team-picker";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -270,6 +272,7 @@ export function StatsPanel({
   spends: spendsGiven = [],
   askHeard = true,
   canSetHeard = false,
+  weeklyTeam = null,
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -279,6 +282,8 @@ export function StatsPanel({
   askHeard?: boolean;
   /** Whether this person may switch that question on or off. */
   canSetHeard?: boolean;
+  /** For whoever runs the team: members who see the numbers, and those who get the weekly email too. */
+  weeklyTeam?: { members: string[]; chosen: string[] } | null;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [notes, setNotes] = useState(notesGiven);
@@ -365,8 +370,15 @@ export function StatsPanel({
       return { id: product.id, title: product.title, views: row.views, checkouts: row.checkouts, sales: sold.sales, cents: sold.cents };
     })
     .sort((a, b) => b.cents - a.cents || b.sales - a.sales || b.checkouts - a.checkouts);
+  // Refunds by product are read for 90 days, so they are shown beside that window only.
+  const withProductRefunds = range === "d90" && Object.keys(data.refundsByProduct ?? {}).length > 0;
   const shownProducts = products.filter((p) => p.views > 0 || p.checkouts || p.sales).length ? products.filter((p) => p.views > 0 || p.checkouts || p.sales) : products;
   const withRenewalColumn = data.revenueBySource.some((row) => row.renewals > 0);
+  // Refunds over the 90 days, by the channel of the sale given back (lib/stats.ts, readRefunds).
+  const refunds90 = new Map((data.refunds?.d90 ?? []).map((row) => [row.source || "direct", row]));
+  const withRefundColumn = refunds90.size > 0;
+  // The few things worth acting on, in words (lib/insights.ts).
+  const insights = range === "all" ? [] : insightsFrom(data, range, spends);
   // Notes by day, for the marks under the chart.
   const notesOn = new Map<string, string[]>();
   for (const note of notes) notesOn.set(note.day, [...(notesOn.get(note.day) ?? []), note.text]);
@@ -389,6 +401,9 @@ export function StatsPanel({
   ]
     .filter((name) => name !== "direct" && name !== "unrecorded")
     .map((value) => ({ value, label: channelName(value) }));
+  // Which ad sold, and money by the buyer's country, for the window.
+  const ads = range === "all" ? [] : data.ads?.[range] ?? [];
+  const moneyCountries = range === "all" ? [] : data.salesCountries?.[range] ?? [];
   // What buyers said when asked where they heard of the store.
   const heard = range === "all" ? [] : data.heard?.[range] ?? [];
   // The store page item by item, once enough visits were measured to say anything.
@@ -468,6 +483,26 @@ export function StatsPanel({
           </div>
         ))}
       </dl>
+
+      {range !== "all" && insights.length ? (
+        <div className="mt-5 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" role="region" aria-labelledby="numbers-insights">
+          <p id="numbers-insights" className="text-sm font-bold text-ink">
+            Worth knowing
+          </p>
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {insights.map((item) => (
+              <li key={item.text} className="flex gap-2">
+                <span
+                  aria-hidden="true"
+                  className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${item.tone === "good" ? "bg-mint-deep" : item.tone === "bad" ? "bg-danger" : "bg-violet-brand"}`}
+                />
+                <span className="text-ink">{item.text}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-ink-soft">Read from the numbers below by fixed rules, only when they are big enough to mean something.</p>
+        </div>
+      ) : null}
 
       {range !== "all" ? (
         <div className="mt-6">
@@ -558,11 +593,21 @@ export function StatsPanel({
                 <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th>
                 <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
                 {withRenewalColumn ? (
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Memberships renewed and later plan payments, by the channel the subscription was sold through">
+                    Renewals
+                  </th>
+                ) : null}
+                {withRefundColumn ? (
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Refunds given in these 90 days, under the channel of the sale they gave back">
+                    Refunded
+                  </th>
+                ) : null}
+                {withRenewalColumn || withRefundColumn ? (
                   <>
-                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Memberships renewed and later plan payments, by the channel the subscription was sold through">
-                      Renewals
-                    </th>
                     <th scope="col" className="py-1 pl-3 text-right font-semibold">Total</th>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="The total for each sale: what one buyer from the channel came to, renewals in and refunds out">
+                      Per buyer
+                    </th>
                   </>
                 ) : null}
               </tr>
@@ -575,11 +620,20 @@ export function StatsPanel({
                   </th>
                   <td className="py-1 pl-3 text-right tabular-nums">{count(row.sales)}</td>
                   <td className="py-1 pl-3 text-right tabular-nums">{money(row.cents)}</td>
-                  {withRenewalColumn ? (
-                    <>
-                      <td className="py-1 pl-3 text-right tabular-nums">{row.renewals ? money(row.renewalCents) : "—"}</td>
-                      <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{money(row.cents + row.renewalCents)}</td>
-                    </>
+                  {withRenewalColumn ? <td className="py-1 pl-3 text-right tabular-nums">{row.renewals ? money(row.renewalCents) : "—"}</td> : null}
+                  {withRefundColumn ? (
+                    <td className="py-1 pl-3 text-right tabular-nums">{refunds90.get(row.source)?.cents ? `−${money(refunds90.get(row.source)!.cents)}` : "—"}</td>
+                  ) : null}
+                  {withRenewalColumn || withRefundColumn ? (
+                    (() => {
+                      const total = row.cents + row.renewalCents - (refunds90.get(row.source)?.cents ?? 0);
+                      return (
+                        <>
+                          <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{money(total)}</td>
+                          <td className="py-1 pl-3 text-right tabular-nums">{row.sales > 0 ? money(Math.round(total / row.sales)) : "—"}</td>
+                        </>
+                      );
+                    })()
                   ) : null}
                 </tr>
               ))}
@@ -592,6 +646,10 @@ export function StatsPanel({
             typing your address is still counted under Instagram. Where the law asks visitors first (the EU, the UK,
             Switzerland and Brazil), or a browser asks not to be followed, only the page&apos;s tags count.
             {withRenewalColumn ? " A renewal counts under the channel its membership or plan was sold through." : ""}
+            {withRefundColumn ? " A refund counts under the channel of the sale it gave back, on the day it was given." : ""}
+            {refunds90.get("unrecorded")?.cents
+              ? ` Refunds of renewals, or of sales from before the last 180 days, are not under any channel: ${money(refunds90.get("unrecorded")!.cents)} in these 90 days.`
+              : ""}
           </p>
         </div>
       ) : null}
@@ -743,12 +801,82 @@ export function StatsPanel({
         </div>
       ) : null}
 
+      {ads.length && salesHere ? (
+        <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-ads">
+          <table className="w-full text-left text-sm">
+            <caption id="numbers-ads" className="text-left text-sm font-bold text-ink">
+              Which ad sold
+            </caption>
+            <thead>
+              <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                <th scope="col" className="py-1 font-semibold">Ad (utm_content)</th>
+                <th scope="col" className="py-1 pl-3 font-semibold">Campaign</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ads.slice(0, 15).map((row) => (
+                <tr key={row.content} className="border-b border-line/60">
+                  <th scope="row" className="py-1 pr-3 font-medium text-ink">
+                    {row.content}
+                    <span className="ml-1.5 text-xs font-normal text-ink-soft">{channelName(row.source)}</span>
+                  </th>
+                  <td className="py-1 pl-3 text-ink-soft">{row.campaign || "—"}</td>
+                  <td className="py-1 pl-3 text-right tabular-nums">{count(row.sales)}</td>
+                  <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{money(row.cents)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-xs text-ink-soft">
+            An ad appears here when its link carries <span className="font-mono">utm_content=</span> with the ad&apos;s name, as Meta,
+            TikTok and Google can add for you. Remembered for 30 days like the channel, from October 11, 2026.
+          </p>
+        </div>
+      ) : null}
+
       {range !== "all" ? <HeardTable rows={heard} money={money} ask={askHeard} canSet={canSetHeard} /> : null}
+
+      {range !== "all" && (data.searchMisses?.[range] ?? []).length ? (
+        <div className="mt-6">
+          <p className="text-sm font-bold text-ink">Searched for in your store, and not found</p>
+          <ul className="mt-2 divide-y divide-line text-sm">
+            {(data.searchMisses?.[range] ?? []).slice(0, 15).map((row) => (
+              <li key={row.name} className="flex items-baseline justify-between gap-3 py-1.5">
+                <span className="min-w-0 truncate text-ink [overflow-wrap:anywhere]">{`“${row.name}”`}</span>
+                <span className="shrink-0 tabular-nums text-ink-soft">{`${count(row.visits)} ${row.visits === 1 ? "search" : "searches"}`}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-ink-soft">
+            What visitors typed in your store&apos;s search and found nothing for: a product to make, or a word your titles are missing. Only the words are kept.
+          </p>
+        </div>
+      ) : null}
 
       {countries.length || devices.length ? (
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
           {countries.length ? <Breakdown title="Where in the world" rows={countries} label={countryName} /> : null}
           {devices.length ? <Breakdown title="On what" rows={devices} label={(name) => DEVICE_NAMES[name] ?? name} /> : null}
+        </div>
+      ) : null}
+
+      {moneyCountries.length && salesHere ? (
+        <div className="mt-6">
+          <p className="text-sm font-bold text-ink">Sales by the buyer&apos;s country</p>
+          <ul className="mt-2 divide-y divide-line text-sm">
+            {moneyCountries.slice(0, 10).map((row) => (
+              <li key={row.country} className="flex items-baseline justify-between gap-3 py-1.5">
+                <span className="min-w-0 truncate text-ink">{countryName(row.country)}</span>
+                <span className="shrink-0 tabular-nums text-ink-soft">{`${count(row.sales)} ${row.sales === 1 ? "sale" : "sales"} · ${money(row.cents)}`}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-ink-soft">
+            The country on the buyer&apos;s payment, as your Stripe account has it; a sale whose payment gave none is not in this list.
+            Set beside where your visitors are, it shows where people come and do not buy, which is where a fair price by country can help.
+          </p>
         </div>
       ) : null}
 
@@ -857,6 +985,11 @@ export function StatsPanel({
                 <th scope="col" className="whitespace-nowrap py-1.5 pl-3 text-right font-semibold" title="Sales for every 100 times its page was opened">
                   Bought
                 </th>
+                {withProductRefunds ? (
+                  <th scope="col" className="whitespace-nowrap py-1.5 pl-3 text-right font-semibold" title="Refunds given in the last 90 days">
+                    Refunded
+                  </th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -872,6 +1005,11 @@ export function StatsPanel({
                   <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere ? money(product.cents) : "—"}</td>
                   <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere ? rate(product.sales, product.checkouts) : "—"}</td>
                   <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere && product.views > 0 && product.views >= product.sales ? rate(product.sales, product.views) : "—"}</td>
+                  {withProductRefunds ? (
+                    <td className="py-1.5 pl-3 text-right tabular-nums">
+                      {data.refundsByProduct?.[product.id] ? `${data.refundsByProduct[product.id].refunds} · ${money(data.refundsByProduct[product.id].cents)}` : "—"}
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -953,6 +1091,7 @@ export function StatsPanel({
               : "The sales file has one row per paid checkout or one-click extra, with the buyer's email and name, and reads up to 5,000 of each from your Stripe account. "}
           Visits go back as far as they are kept, 400 days.
         </p>
+        {weeklyTeam ? <WeeklyTeamPicker members={weeklyTeam.members} chosen={weeklyTeam.chosen} /> : null}
       </div>
 
       <p className="mt-6 text-xs leading-relaxed text-ink-soft">

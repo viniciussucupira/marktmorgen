@@ -205,7 +205,10 @@ export default function DevelopersPage() {
         ],
         "countries": [{ "country": "US", "views": 388 }],
         "devices": [{ "device": "mobile", "views": 521 }],
-        "previous": { "visitors": 335, "page_views": 540, "checkouts": 24, "sales": 7, "revenue": 20300 }
+        "previous": { "visitors": 335, "page_views": 540, "checkouts": 24, "sales": 7, "revenue": 20300 },
+        "refunded": 2900,
+        "sales_by_country": [{ "country": "US", "sales": 5, "revenue": 14500 }],
+        "ads": [{ "ad": "reel-b", "channel": "instagram", "campaign": "launch", "sales": 3, "revenue": 8700 }]
       },
       "last_30_days": { "...": "the same fields" },
       "last_90_days": { "...": "the same fields" }

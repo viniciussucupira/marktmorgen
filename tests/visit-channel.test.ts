@@ -55,13 +55,14 @@ globalThis.fetch = (async (input: string | URL | Request) => {
 
 async function main(): Promise<void> {
   part("A visit, named");
-  is("a tagged link", touch(`https://${HOST}/@jenny?utm_source=Newsletter&utm_medium=email&utm_campaign=spring`), {
+  is("a tagged link", touch(`https://${HOST}/@jenny?utm_source=Newsletter&utm_medium=email&utm_campaign=spring&utm_content=Reel-B`), {
     source: "newsletter",
     medium: "email",
     campaign: "spring",
+    content: "reel-b",
   });
-  is("a site that sent the visitor", touch(`https://${HOST}/@jenny`, "https://www.youtube.com/watch?v=1"), { source: "youtube", medium: "", campaign: "" });
-  is("Instagram's own browser, which sends no referrer", touch(`https://${HOST}/@jenny`, "", INSTAGRAM_APP), { source: "instagram", medium: "", campaign: "" });
+  is("a site that sent the visitor", touch(`https://${HOST}/@jenny`, "https://www.youtube.com/watch?v=1"), { source: "youtube", medium: "", campaign: "", content: "" });
+  is("Instagram's own browser, which sends no referrer", touch(`https://${HOST}/@jenny`, "", INSTAGRAM_APP), { source: "instagram", medium: "", campaign: "", content: "" });
   is("typed in, or a bookmark: no channel", touch(`https://${HOST}/@jenny`), null);
   is("from the store's own pages: no channel", touch(`https://${HOST}/@jenny/p/x`, `https://${HOST}/@jenny`), null);
   is("a robot: no channel", touch(`https://${HOST}/@jenny?utm_source=x`, "", "Googlebot/2.1"), null);
@@ -81,9 +82,9 @@ async function main(): Promise<void> {
 
   part("What a sale is credited to");
   const remembered = readChannelCookie(second, nowS);
-  is("the page's own tags win", channelForSale({ source: "qr", medium: "print", campaign: "" }, remembered), { channel: "qr", first: "tiktok", medium: "print", campaign: "" });
-  is("then the remembered channel", channelForSale({ source: "", medium: "", campaign: "" }, remembered), { channel: "newsletter", first: "tiktok", medium: "email", campaign: "spring" });
-  is("then direct", channelForSale({ source: "", medium: "", campaign: "" }, null), { channel: "direct", first: "direct", medium: "", campaign: "" });
+  is("the page's own tags win", channelForSale({ source: "qr", medium: "print", campaign: "" }, remembered), { channel: "qr", first: "tiktok", medium: "print", campaign: "", content: "" });
+  is("then the remembered channel", channelForSale({ source: "", medium: "", campaign: "" }, remembered), { channel: "newsletter", first: "tiktok", medium: "email", campaign: "spring", content: "" });
+  is("then direct", channelForSale({ source: "", medium: "", campaign: "" }, null), { channel: "direct", first: "direct", medium: "", campaign: "", content: "" });
   is("written to Stripe without empty fields", channelMetadata(channelForSale({ source: "", medium: "", campaign: "" }, null)), { channel: "direct", channel_first: "direct" });
   const checkoutRequest = new NextRequest(`https://${HOST}/api/store/checkout`, {
     method: "POST",

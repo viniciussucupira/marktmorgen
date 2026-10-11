@@ -27,13 +27,13 @@ const HOST = "marktmorgen.com";
 
 test("the tags on the page the buyer bought from", () => {
   const from = cameFrom(`https://${HOST}/@jenny?utm_source=newsletter&utm_medium=email&utm_campaign=spring`, HOST);
-  assert.deepEqual(from, { source: "newsletter", medium: "email", campaign: "spring" });
+  assert.deepEqual(from, { source: "newsletter", medium: "email", campaign: "spring", content: "" });
   assert.equal(hasSource(from), true);
 });
 
 test("an untagged page is direct, and writes nothing", () => {
   const from = cameFrom(`https://${HOST}/@jenny`, HOST);
-  assert.deepEqual(from, { source: "", medium: "", campaign: "" });
+  assert.deepEqual(from, { source: "", medium: "", campaign: "", content: "" });
   assert.equal(hasSource(from), false, "an untagged sale carries no empty fields to Stripe");
 });
 

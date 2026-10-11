@@ -8,6 +8,10 @@ import { storeOf } from "@/lib/usage-billing";
 import { standingOf } from "@/lib/plan-standing";
 import { SITE_URL } from "@/lib/site-url";
 import { claimWeek, readNumbers, weeklyMessage, weeklyOff, weeklyToken } from "@/lib/stats-report";
+import { readSpends } from "@/lib/ad-spend";
+import { weeklyMemberToken, weeklyTeam } from "@/lib/stats-report";
+import { readTeam } from "@/lib/team";
+import { can } from "@/lib/team-roles";
 
 /**
  * The weekly email to each creator whose store had visitors (lib/stats-report.ts).
@@ -60,7 +64,8 @@ export async function GET(request: NextRequest) {
       const data = await readNumbers(store).catch(() => null);
       const token = weeklyToken(store.handle);
       const stopUrl = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&t=${encodeURIComponent(token)}`;
-      const message = data && token ? weeklyMessage(store, data, stopUrl) : null;
+      const spends = await readSpends(store.statsId).catch(() => []);
+      const message = data && token ? weeklyMessage(store, data, stopUrl, spends) : null;
       if (!message) {
         out.quiet += 1;
         continue;
@@ -74,6 +79,19 @@ export async function GET(request: NextRequest) {
       }).catch(() => false);
       if (ok) out.sent += 1;
       else out.failed += 1;
+      // The same email to the team members the owner chose, while they are on
+      // the team in a role that sees the numbers, each with their own stop link.
+      const chosen = await weeklyTeam(store.handle).catch(() => []);
+      if (chosen.length && store.sid) {
+        const team = await readTeam(store.sid).catch(() => null);
+        for (const email of chosen) {
+          const member = team?.members.find((m) => m.email.toLowerCase() === email);
+          if (!member || !can(member.role, "stats")) continue;
+          const own = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&e=${encodeURIComponent(email)}&t=${encodeURIComponent(weeklyMemberToken(store.handle, email))}`;
+          const text = message.text.replace(stopUrl, own).replace("You get this every Monday while your store has visitors.", `You get this because the owner of @${store.handle} added you.`);
+          await sendEmail({ from: NIMBUS_FROM, to: email, subject: message.subject, text, headers: { "List-Unsubscribe": `<${own}>` } }).catch(() => false);
+        }
+      }
     }
     console.log(`weekly: ${JSON.stringify(out)}`);
     return Response.json({ ok: true, ...out }, { headers: { "Cache-Control": "no-store" } });

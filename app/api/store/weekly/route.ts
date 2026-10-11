@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { normaliseHandle } from "@/lib/store";
-import { setWeeklyOff, weeklyTokenOk } from "@/lib/stats-report";
+import { leaveWeeklyTeam, setWeeklyOff, weeklyMemberTokenOk, weeklyTokenOk } from "@/lib/stats-report";
 
 /**
  * Stops — or starts again — a store's weekly email, from the link at the foot
@@ -22,7 +22,24 @@ function read(request: NextRequest): { handle: string; token: string } | null {
   return handle && weeklyTokenOk(handle, token) ? { handle, token } : null;
 }
 
+/** A team member's own copy (lib/stats-report.ts, weeklyTeam): the store, their address and a token signed for both. */
+function readMember(request: NextRequest): { handle: string; email: string; token: string } | null {
+  const params = request.nextUrl.searchParams;
+  const handle = normaliseHandle((params.get("h") ?? "").slice(0, 40));
+  const email = (params.get("e") ?? "").slice(0, 200).toLowerCase();
+  const token = (params.get("t") ?? "").slice(0, 64);
+  return handle && email && weeklyMemberTokenOk(handle, email, token) ? { handle, email, token } : null;
+}
+
 export async function GET(request: NextRequest) {
+  const member = readMember(request);
+  if (member) {
+    const action = `/api/store/weekly?h=${encodeURIComponent(member.handle)}&e=${encodeURIComponent(member.email)}&t=${encodeURIComponent(member.token)}`;
+    return page(
+      "Weekly email",
+      `<h1>Your copy of the weekly email</h1><p>You get the weekly email of @${esc(member.handle)} because its owner added you. This stops your copy only.</p><form method="post" action="${esc(action)}"><button>Stop my copy</button></form>`,
+    );
+  }
   const asked = read(request);
   if (!asked) return page("Link not recognized", "<p>This link is not one we recognize. Your weekly email can also be stopped by replying to it.</p>", 400);
   const action = `/api/store/weekly?h=${encodeURIComponent(asked.handle)}&t=${encodeURIComponent(asked.token)}`;
@@ -33,6 +50,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const member = readMember(request);
+  if (member) {
+    await leaveWeeklyTeam(member.handle, member.email);
+    return page("Stopped", `<h1>Stopped</h1><p>You will not get the weekly email of @${esc(member.handle)} anymore. The owner can add you again.</p>`);
+  }
   const asked = read(request);
   if (!asked) return page("Link not recognized", "<p>This link is not one we recognize.</p>", 400);
   const form = await request.formData().catch(() => null);

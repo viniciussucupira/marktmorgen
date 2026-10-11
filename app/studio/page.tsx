@@ -44,6 +44,9 @@ import { StatsPanel } from "@/components/stats-panel";
 import { readNotes } from "@/lib/stats-notes";
 import { readSpends } from "@/lib/ad-spend";
 import { heardOff } from "@/lib/heard";
+import { weeklyTeam } from "@/lib/stats-report";
+import { serverSetup } from "@/lib/ad-events";
+import { ServerEventsEditor } from "@/components/server-events-editor";
 import { CalendarEditor } from "@/components/calendar-editor";
 import { WebhookEditor } from "@/components/webhook-editor";
 import { calendarBusy, calendarView, ensureFeedToken, overlaps, slotRooms } from "@/lib/calendar-sync";
@@ -1022,6 +1025,14 @@ export default async function StudioPage({
                   spends={adSpends}
                   askHeard={!heardIsOff}
                   canSetHeard={may("settings")}
+                  weeklyTeam={
+                    team && store
+                      ? {
+                          members: team.members.filter((m) => can(m.role, "stats")).map((m) => m.email.toLowerCase()),
+                          chosen: await weeklyTeam(store.handle).catch(() => []),
+                        }
+                      : null
+                  }
                 />
               </div>
             ) : null}
@@ -1318,6 +1329,12 @@ export default async function StudioPage({
                 })()}
 
                 <PixelEditor pixels={store.pixels} />
+                {store.pixels.meta || store.pixels.tiktok ? (
+                  <ServerEventsEditor
+                    setup={await serverSetup(store.statsId).catch(() => ({ on: { meta: false, tiktok: false }, testCode: "", last: null }))}
+                    pixels={{ meta: Boolean(store.pixels.meta), tiktok: Boolean(store.pixels.tiktok) }}
+                  />
+                ) : null}
 
                 {await (async () => {
                   // The free, published products, by name: what can be offered to a leaving visitor.

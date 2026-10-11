@@ -15,9 +15,11 @@ export async function GET(request: NextRequest) {
     // While a second version of the whole page is tested, each visitor reads
     // one of two pages, so how far down "the page" is read is not a number
     // that means anything: none is given until the test ends.
-    if (page.variant) return Response.json({ ok: true, shares: {}, visitors: 0 }, { headers: { "Cache-Control": "private, no-store" } });
+    // What stops visitors, and how far a video is watched, are about the product, not one of two pages: said either way.
+    const extra = { whyNot: depth.whyNot, videos: depth.videos, asking: store.askWhyNot };
+    if (page.variant) return Response.json({ ok: true, shares: {}, visitors: 0, ...extra }, { headers: { "Cache-Control": "private, no-store" } });
     const result = reachShares(page.blocks.map((b) => b.id), depth.stopped, depth.visitors);
-    return Response.json({ ok: true, ...result }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json({ ok: true, ...result, ...extra }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("reading how far a page is read failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

@@ -608,7 +608,8 @@ export function readVideo(raw: string): Video | null {
 /** The only frame addresses a page ever gets, one per player, built from the id alone. */
 export function embedUrl(video: Video): string {
   if (video.provider === "youtube") {
-    return `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0&modestbranding=1`;
+    // enablejsapi lets the page hear where the player is, for how far the video is watched (components/page-depth.tsx).
+    return `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`;
   }
   if (video.provider === "vimeo") {
     return `https://player.vimeo.com/video/${video.id}?dnt=1&autoplay=1${video.hash ? `&h=${video.hash}` : ""}`;

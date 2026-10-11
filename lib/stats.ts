@@ -211,6 +211,20 @@ export async function countHeard(statsId: string, answer: string, cents: number,
   ]);
 }
 
+/**
+ * A search of the store that found nothing (added 11 October 2026): the words
+ * searched for, counted on the day's record, so the creator sees what people
+ * came looking for and could not buy — an idea for the next product, or a
+ * word missing from a title. Only the words, lower case, at most 40
+ * characters; nothing about who searched. One command, for a search, which
+ * one connection may make 30 times in ten minutes.
+ */
+export async function countSearchMiss(statsId: string, words: string[], now = Date.now()): Promise<void> {
+  const term = words.join(" ").slice(0, 40).trim();
+  if (!term || !isRedisConfigured()) return;
+  await redisPipeline([["HINCRBY", countsKey(statsId, dayKey(now)), `q:${term}`, 1]]).catch(() => {});
+}
+
 /** The store page's views and the checkouts started from one day to another, both counted: one read a day, at most 90. */
 export async function daysCounts(statsId: string, from: string, to: string): Promise<{ views: number; checkouts: number }> {
   const out = { views: 0, checkouts: 0 };
@@ -321,6 +335,8 @@ export type WindowStats = {
   reach: Record<string, number>;
   /** Buyers' answers to "where did you hear about us?" (lib/heard.ts), and the money of the sales each was given for. */
   heard: Record<string, { buyers: number; cents: number }>;
+  /** Searches of the store that found nothing, by the words searched for (countSearchMiss). */
+  searchMisses: Ranked;
 };
 
 export type Windows = { d7: WindowStats; d30: WindowStats; d90: WindowStats };
@@ -360,6 +376,7 @@ class Tally {
   freeBySource = new Map<string, number>();
   reach: Record<string, number> = {};
   heard: Record<string, { buyers: number; cents: number }> = {};
+  searchMisses = new Map<string, number>();
 
   add(field: string, count: number) {
     if (field === "v") this.views += count;
@@ -377,6 +394,7 @@ class Tally {
     else if (field.startsWith("sr:")) this.reach[field.slice(3)] = (this.reach[field.slice(3)] ?? 0) + count;
     else if (field.startsWith("h:")) (this.heard[field.slice(2)] ??= { buyers: 0, cents: 0 }).buyers += count;
     else if (field.startsWith("hc:")) (this.heard[field.slice(3)] ??= { buyers: 0, cents: 0 }).cents += count;
+    else if (field.startsWith("q:")) this.searchMisses.set(field.slice(2), (this.searchMisses.get(field.slice(2)) ?? 0) + count);
   }
 
   window(visitors: number): WindowStats {
@@ -396,6 +414,7 @@ class Tally {
       freeBySource: ranked(this.freeBySource),
       reach: this.reach,
       heard: this.heard,
+      searchMisses: ranked(this.searchMisses),
     };
   }
 }
@@ -555,7 +574,7 @@ async function readLife(store: Store, now: number): Promise<(WindowStats & { sin
           // Countries and devices are kept by the day only: copied into the
           // all-time record they would start it on whatever day it was filled.
           for (const [field, count] of day) {
-            if (field.startsWith("k:") || field.startsWith("d:") || field.startsWith("sr:") || field.startsWith("h:") || field.startsWith("hc:")) continue;
+            if (field.startsWith("k:") || field.startsWith("d:") || field.startsWith("sr:") || field.startsWith("h:") || field.startsWith("hc:") || field.startsWith("q:")) continue;
             tally.set(field, (tally.get(field) ?? 0) + count);
           }
           visitors += Number(replies[dates.length + i]) || 0;
@@ -652,6 +671,14 @@ export type SalesStats = {
    * not reach all of, because a part of it compared with a whole says nothing.
    */
   previous?: { d7: SalesWindow | null; d30: SalesWindow | null; d90: SalesWindow | null };
+  /** Money by the ad each sale came from (utm_content), for each window. */
+  byContentIn?: Record<"d7" | "d30" | "d90", { content: string; source: string; campaign: string; cents: number; sales: number }[]>;
+  /** Money by the buyer's country, for each window. */
+  byCountryIn?: Record<"d7" | "d30" | "d90", { country: string; cents: number; sales: number }[]>;
+  /** Refunds made in each window, by the channel of the sale refunded; "" is direct, UNRECORDED a payment not among the sales read. */
+  refundsIn?: Record<"d7" | "d30" | "d90", { source: string; refunds: number; cents: number }[]>;
+  /** Refunds by product over the 90 days. */
+  refundsByProduct?: Record<string, { refunds: number; cents: number }>;
 };
 
 /** Payments after the first, and what they came to, in the store's currency. */
@@ -709,10 +736,16 @@ export type Sale = {
   campaign: string;
   /** The channel of the buyer's first visit from somewhere, where it was remembered; else `source`. */
   first: string;
+  /** The ad it came from: utm_content on the page or remembered (added 11 October 2026); empty when none. */
+  content: string;
+  /** The buyer's country as Stripe has it, two capital letters, or "" when Stripe did not collect one. */
+  country: string;
+  /** The payment Stripe made for it, which a refund names. */
+  paymentIntent: string;
 };
 
 /** The channel a checkout's metadata credits, "" for direct (lib/visit-channel.ts). */
-function saleChannel(meta: Record<string, string>): { source: string; medium: string; campaign: string; first: string } {
+function saleChannel(meta: Record<string, string>): { source: string; medium: string; campaign: string; first: string; content: string } {
   const named = (value: string | undefined) => (value && value !== "direct" ? value : "");
   const source = meta.utm_source || named(meta.channel);
   return {
@@ -720,6 +753,7 @@ function saleChannel(meta: Record<string, string>): { source: string; medium: st
     medium: meta.utm_medium || meta.channel_medium || "",
     campaign: meta.utm_campaign || meta.channel_campaign || "",
     first: named(meta.channel_first) || source,
+    content: meta.utm_content || meta.channel_content || "",
   };
 }
 
@@ -761,6 +795,8 @@ export async function readPaidSales(store: Store, since: number, pages: number):
     const meta = row.metadata ?? {};
     if (!handles.has(meta.store ?? "")) return;
     if (row.status !== "complete" || row.payment_status !== "paid") return;
+    const details = (raw.customer_details ?? {}) as { address?: { country?: unknown } | null };
+    const country = typeof details.address?.country === "string" && /^[A-Z]{2}$/.test(details.address.country) ? details.address.country : "";
     sales.push({
       created: typeof row.created === "number" ? row.created * 1000 : Date.now(),
       product: meta.product ?? "",
@@ -769,6 +805,8 @@ export async function readPaidSales(store: Store, since: number, pages: number):
       row: raw,
       upsell: false,
       ...saleChannel(meta),
+      country,
+      paymentIntent: typeof raw.payment_intent === "string" ? raw.payment_intent : "",
     });
   });
   // Products taken in one click after paying are charges of their own.
@@ -789,6 +827,9 @@ export async function readPaidSales(store: Store, since: number, pages: number):
       medium: "",
       campaign: "",
       first: "",
+      content: "",
+      country: "",
+      paymentIntent: typeof pi.id === "string" ? pi.id : "",
     });
   });
   sales.sort((a, b) => b.created - a.created);
@@ -871,6 +912,37 @@ async function readRenewals(store: Store, since: number, now: number, pages: num
   return { ...renewalsFrom(store, invoices, now, store.currency), partial };
 }
 
+/** One refund as Stripe lists it: when, how much, in what, and the payment it gave back. */
+export type RefundRow = { created: number; cents: number; currency: string; paymentIntent: string };
+
+/** The refunds made on the creator's account since `since` (seconds) that went through; at most `pages` pages of a hundred. */
+async function readRefunds(store: Store, since: number, pages: number): Promise<RefundRow[]> {
+  const out: RefundRow[] = [];
+  let after = "";
+  for (let page = 0; page < pages; page += 1) {
+    const list = (await onAccount(
+      "GET",
+      store.stripeAccountId as string,
+      `/refunds?limit=100&created[gte]=${since}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
+    )) as { data?: unknown; has_more?: unknown };
+    const rows = Array.isArray(list.data) ? (list.data as Record<string, unknown>[]) : [];
+    for (const row of rows) {
+      if (row.status !== "succeeded" && row.status !== "pending") continue;
+      out.push({
+        created: typeof row.created === "number" ? row.created * 1000 : 0,
+        cents: typeof row.amount === "number" ? row.amount : 0,
+        currency: currencyOf(row),
+        paymentIntent: typeof row.payment_intent === "string" ? row.payment_intent : "",
+      });
+    }
+    if (list.has_more !== true || rows.length === 0) break;
+    const last = rows[rows.length - 1];
+    after = typeof last.id === "string" ? last.id : "";
+    if (!after) break;
+  }
+  return out;
+}
+
 /** Sales in the last STATS_DAYS days, by day, by product, and for each window. */
 export async function readSales(store: Store, now = Date.now()): Promise<SalesStats | null> {
   if (!store.stripeAccountId) return null;
@@ -880,11 +952,15 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   // as they did when only they were read.
   const sinceBefore = Math.floor(now / 1000) - 2 * STATS_DAYS * 86400;
   // Read beside the sales; a store whose renewals cannot be read still sees its sales.
-  const [{ sales: read, partial: readPartial }, renewals] = await Promise.all([
+  const [{ sales: read, partial: readPartial }, renewals, refundRows] = await Promise.all([
     readPaidSales(store, sinceBefore, 20),
     readRenewals(store, since, now, 10).catch((error) => {
       console.error("reading renewals failed", error);
       return undefined;
+    }),
+    readRefunds(store, since, 5).catch((error) => {
+      console.error("reading refunds failed", error);
+      return null;
     }),
   ]);
   const cut7 = dayKey(now - 6 * 86400_000);
@@ -959,6 +1035,59 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
       source: sale.first,
     })),
   );
+  // Which ad, and which country, each window's money came from.
+  const contentIn = (cut: string) => {
+    const by = new Map<string, { content: string; source: string; campaign: string; cents: number; sales: number }>();
+    for (const sale of own) {
+      if (!sale.content || dayKey(sale.created) < cut) continue;
+      const row = by.get(sale.content) ?? { content: sale.content, source: sale.source || "direct", campaign: sale.campaign, cents: 0, sales: 0 };
+      row.cents += sale.cents;
+      row.sales += 1;
+      by.set(sale.content, row);
+    }
+    return [...by.values()].sort((a, b) => b.cents - a.cents || b.sales - a.sales || a.content.localeCompare(b.content));
+  };
+  const countryIn = (cut: string) => {
+    const by = new Map<string, { country: string; cents: number; sales: number }>();
+    for (const sale of own) {
+      if (!sale.country || dayKey(sale.created) < cut) continue;
+      const row = by.get(sale.country) ?? { country: sale.country, cents: 0, sales: 0 };
+      row.cents += sale.cents;
+      row.sales += 1;
+      by.set(sale.country, row);
+    }
+    return [...by.values()].sort((a, b) => b.cents - a.cents || b.sales - a.sales || a.country.localeCompare(b.country));
+  };
+  out.byContentIn = { d7: contentIn(cut7), d30: contentIn(cut30), d90: contentIn("") };
+  out.byCountryIn = { d7: countryIn(cut7), d30: countryIn(cut30), d90: countryIn("") };
+  if (refundRows) {
+    // A refund is credited to the channel and product of the sale it gave back,
+    // found by the payment it names among every sale read, the 180 days.
+    const byPayment = new Map(read.filter((sale) => sale.paymentIntent).map((sale) => [sale.paymentIntent, sale]));
+    const refundsFrom = (cut: string) => {
+      const by = new Map<string, { source: string; refunds: number; cents: number }>();
+      for (const refund of refundRows) {
+        if (dayKey(refund.created) < cut || refund.currency !== store.currency) continue;
+        const sale = byPayment.get(refund.paymentIntent);
+        const source = sale ? sale.source : UNRECORDED;
+        const row = by.get(source) ?? { source, refunds: 0, cents: 0 };
+        row.refunds += 1;
+        row.cents += refund.cents;
+        by.set(source, row);
+      }
+      return [...by.values()].sort((a, b) => b.cents - a.cents || a.source.localeCompare(b.source));
+    };
+    out.refundsIn = { d7: refundsFrom(cut7), d30: refundsFrom(cut30), d90: refundsFrom(cut90) };
+    out.refundsByProduct = {};
+    for (const refund of refundRows) {
+      if (refund.currency !== store.currency) continue;
+      const sale = byPayment.get(refund.paymentIntent);
+      if (!sale?.product) continue;
+      const row = (out.refundsByProduct[sale.product] ??= { refunds: 0, cents: 0 });
+      row.refunds += 1;
+      row.cents += refund.cents;
+    }
+  }
   out.previous = {
     d7: stretch(dayKey(now - 13 * 86400_000), cut7),
     d30: stretch(dayKey(now - 59 * 86400_000), cut30),
@@ -1086,6 +1215,16 @@ export type StatsData = {
   previous: Record<"d7" | "d30" | "d90", { visitors: number; views: number; checkouts: number; sales: number | null; cents: number | null }>;
   /** Buyers' answers to "where did you hear about us?" for the window, the most first (lib/heard.ts). */
   heard: Record<"d7" | "d30" | "d90", { answer: string; buyers: number; cents: number }[]>;
+  /** What visitors searched the store for and found nothing, for the window, the most first. */
+  searchMisses: Record<"d7" | "d30" | "d90", Ranked>;
+  /** Money by the ad it came from (utm_content), for the window. */
+  ads: Record<"d7" | "d30" | "d90", { content: string; source: string; campaign: string; sales: number; cents: number }[]>;
+  /** Money by the buyer's country, for the window, as Stripe has the country. */
+  salesCountries: Record<"d7" | "d30" | "d90", { country: string; sales: number; cents: number }[]>;
+  /** Refunds made in the window, by the channel of the sale refunded; null when they could not be read. */
+  refunds: Record<"d7" | "d30" | "d90", { source: string; refunds: number; cents: number }[]> | null;
+  /** Refunds over the last 90 days, by product. */
+  refundsByProduct: Record<string, { refunds: number; cents: number }>;
 };
 
 export type ReachItem = { item: string; kind: "product" | "link" | "part"; title: string; position: number; reached: number; clicks: number };
@@ -1135,6 +1274,7 @@ const EMPTY_WINDOW: WindowStats = {
   freeBySource: [],
   reach: {},
   heard: {},
+  searchMisses: [],
 };
 
 export type ChannelRow = { source: string; visits: number; checkouts: number; free: number; sales: number; cents: number };
@@ -1301,6 +1441,11 @@ export function studioStats(
           .sort((a, b) => b.buyers - a.buyers || b.cents - a.cents || a.answer.localeCompare(b.answer)),
       ]),
     ) as StatsData["heard"],
+    searchMisses: { d7: w.d7.searchMisses ?? [], d30: w.d30.searchMisses ?? [], d90: w.d90.searchMisses ?? [] },
+    ads: sales?.byContentIn ?? { d7: [], d30: [], d90: [] },
+    salesCountries: sales?.byCountryIn ?? { d7: [], d30: [], d90: [] },
+    refunds: sales?.refundsIn ?? null,
+    refundsByProduct: sales?.refundsByProduct ?? {},
     reach: {
       d7: reachItems(store, w.d7.reach ?? {}, titles),
       d30: reachItems(store, w.d30.reach ?? {}, titles),

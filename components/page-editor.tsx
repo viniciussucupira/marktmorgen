@@ -1,5 +1,9 @@
 "use client";
 
+import { PageAnswers } from "@/components/page-answers";
+import type { WhyNot } from "@/lib/why-not-rules";
+import type { VideoReach } from "@/lib/page-depth";
+
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadPresigned } from "@vercel/blob/client";
@@ -262,12 +266,15 @@ export function PageEditor({
   const [showFrom, setShowFrom] = useState(initial.showFrom);
   // How far down the saved page visitors read (lib/page-depth.ts), shown on each block.
   const [reach, setReach] = useState<{ shares: Record<string, number>; visitors: number } | null>(null);
+  // What stopped measured visitors, how far the video was watched, and whether the page asks (components/page-answers.tsx).
+  const [answers, setAnswers] = useState<{ whyNot: Partial<Record<WhyNot, number>>; videos: Record<string, VideoReach>; asking: boolean } | null>(null);
   useEffect(() => {
     let live = true;
     fetch(`/api/store/depth?id=${encodeURIComponent(product.id)}`, { cache: "no-store" })
       .then((r) => r.json())
-      .then((data: { ok?: boolean; shares?: Record<string, number>; visitors?: number }) => {
+      .then((data: { ok?: boolean; shares?: Record<string, number>; visitors?: number; whyNot?: Partial<Record<WhyNot, number>>; videos?: Record<string, VideoReach>; asking?: boolean }) => {
         if (live && data.ok && data.shares) setReach({ shares: data.shares, visitors: data.visitors ?? 0 });
+        if (live && data.ok) setAnswers({ whyNot: data.whyNot ?? {}, videos: data.videos ?? {}, asking: data.asking === true });
       })
       .catch(() => {});
     return () => {
@@ -1732,6 +1739,22 @@ export function PageEditor({
               onQuestions={addQuestions}
               traffic={traffic}
               asked={asked}
+            />
+          ) : null}
+
+          {answers && !product.free ? (
+            <PageAnswers
+              whyNot={answers.whyNot}
+              videos={answers.videos}
+              asking={answers.asking}
+              canSet
+              reachOf={(block) =>
+                reach && reach.visitors >= MIN_DEPTH_VISITORS && reach.shares[block] !== undefined ? Math.round((reach.shares[block] / 100) * reach.visitors) : null
+              }
+              blockName={(block) => {
+                const at = drafts.findIndex((d) => d.block.id === block);
+                return at >= 0 ? `${at + 1}. ${kindLabel(drafts[at].block.kind)}` : "A block since removed";
+              }}
             />
           ) : null}
 
