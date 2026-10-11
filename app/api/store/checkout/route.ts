@@ -27,6 +27,7 @@ import { AB_COOKIE, count as countTest, readBucket, readCounts, versionFor, winn
 import { readPage } from "@/lib/sales-page-store";
 import { readCountry } from "@/lib/fair-price";
 import { pageShown, runningTest } from "@/lib/sales-page";
+import { noteCheckoutTrouble } from "@/lib/checkout-trouble";
 
 /** The checkout this browser last opened for a limited product. */
 const HOLD_COOKIE = "nl_stock_hold";
@@ -256,6 +257,8 @@ export async function POST(request: NextRequest) {
     return new Response(null, { status: 303, headers });
   } catch (error) {
     console.error("checkout failed", error);
+    // A checkout Stripe would not open: counted, and the creator told (lib/checkout-trouble.ts).
+    after(() => noteCheckoutTrouble(store, error).catch(() => {}));
     return away(`/@${store.handle}?status=error`);
   }
 }

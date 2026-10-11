@@ -234,6 +234,47 @@ export default function PrivacyPage() {
           keep the token sealed, the platform&apos;s last answer for the
           creator to see, and for three days that the order was sent.
         </p>
+        <p id="audience">
+          <strong className="text-black">
+            Buyers&apos; addresses for an ad audience, when a creator downloads
+            them.
+          </strong>{" "}
+          A creator can download a file of the email addresses of their buyers
+          who agreed to hear from them and have not left their list, to upload
+          to Meta or TikTok themselves: to stop showing ads to people who
+          already bought, or to find people like them. It holds the address and
+          nothing else. We make the file when it is asked for and send it
+          nowhere; the creator decides whether to upload it, and the platform
+          then handles it under its own terms.
+        </p>
+        <p>
+          <strong className="text-black">A checkout that did not open.</strong>{" "}
+          When Stripe refuses to open a store&apos;s payment page, we count it
+          by the day and keep Stripe&apos;s reason, for 35 days, so the creator
+          can see it and is emailed once that day. Nothing about the buyer who
+          pressed buy is kept.
+        </p>
+        <p>
+          <strong className="text-black">Why a member cancels.</strong> When a
+          member cancels on the page a store&apos;s emails link to, Stripe asks
+          why, and keeps their answer and any words they add on the
+          creator&apos;s own Stripe account. We read them from there to show
+          the creator the reasons added up and the latest words, without the
+          member&apos;s name or address beside them, and keep that reading for
+          ten minutes.
+        </p>
+        <p>
+          <strong className="text-black">
+            Numbers to Slack or Discord, a goal, and the month&apos;s email.
+          </strong>{" "}
+          A creator can give us a Slack or Discord webhook address; we keep it
+          sealed and post there the week&apos;s and the month&apos;s totals,
+          channels and notes &mdash; counts and amounts, never a buyer&apos;s
+          name or address. A goal the creator sets for the month is kept as one
+          figure. On the 1st of each month the store&apos;s creator is emailed
+          the month&apos;s numbers, with the same link to stop it as the weekly
+          email.
+        </p>
         <p>
           <strong className="text-black">Booking a call.</strong> When someone
           books a paid call, we use the time they picked, their time zone and
@@ -1279,7 +1320,9 @@ export default function PrivacyPage() {
           pixel or asks us to send purchases to Meta or TikTok from our
           server: the creator decides it, the platform receives it under its
           own terms, and the rules for when anything is sent at all are the
-          ones in section 1, under ad measurement.
+          ones in section 1, under ad measurement. So too when a creator
+          downloads their buyers&apos; addresses for an ad audience and uploads
+          them: that use is the creator&apos;s, under their own privacy notice.
         </p>
         <p>
           In practice this means a request about your data as a buyer — a copy

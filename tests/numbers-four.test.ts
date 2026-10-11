@@ -271,7 +271,7 @@ async function main(): Promise<void> {
   part("Who stays");
   const s = Math.floor(NOW / 1000);
   const month = 30.4375 * 86400;
-  const sub = (over: Partial<Sub>): Sub => ({ id: "sub", status: "active", product: "club", amount: 900, currency: "usd", interval: "month", count: 1, start: s - 200 * 86400, ended: 0, trialEnd: 0, channel: "instagram", ...over });
+  const sub = (over: Partial<Sub>): Sub => ({ id: "sub", status: "active", product: "club", amount: 900, currency: "usd", interval: "month", count: 1, start: s - 200 * 86400, ended: 0, trialEnd: 0, channel: "instagram", canceledAt: 0, cancelCause: "", feedback: "", comment: "", ...over });
   const startOfMonth = (back: number) => {
     const d = new Date(NOW);
     return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - back, 2) / 1000);

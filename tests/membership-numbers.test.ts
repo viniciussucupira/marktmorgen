@@ -24,6 +24,10 @@ const sub = (over: Partial<Sub>): Sub => ({
   ended: 0,
   trialEnd: 0,
   channel: "direct",
+  canceledAt: 0,
+  cancelCause: "",
+  feedback: "",
+  comment: "",
   ...over,
 });
 

@@ -19,6 +19,7 @@ import { formatMoney } from "@/lib/money";
 import { insightsFrom } from "@/lib/insights";
 import type { AdSpend } from "@/lib/ad-spend-rules";
 import { SITE_URL } from "@/lib/site-url";
+import { goalProgress, moneyByDay, monthTitle } from "@/lib/sales-goal-rules";
 
 type Window = "d7" | "d30" | "d90";
 const WINDOWS: Window[] = ["d7", "d30", "d90"];
@@ -216,7 +217,7 @@ const CHANNEL_WORDS: Record<string, string> = {
 const channelWord = (source: string) => CHANNEL_WORDS[source] ?? source;
 
 /** The week's email, in words. Null when the store had no visitors in the week: nothing to say. */
-export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, spends: AdSpend[] = []): { subject: string; text: string } | null {
+export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, spends: AdSpend[] = [], goal = 0): { subject: string; text: string } | null {
   const week = data.totals.d7;
   if (week.visitors === 0) return null;
   const known = data.sales === "ok";
@@ -246,6 +247,8 @@ export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, sp
   } else if (data.sales === "none") {
     lines.push("Sales: connect Stripe in your studio to see them here.");
   }
+  const line = known ? goalLine(data, goal, money) : "";
+  if (line) lines.push(line);
 
   const channels = (data.channels?.d7 ?? []).slice(0, 3);
   if (channels.length) {
@@ -264,6 +267,113 @@ export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, sp
 
   lines.push("", `Everything, day by day and channel by channel, is in your studio: ${SITE_URL}/studio`);
   lines.push("", `You get this every Monday while your store has visitors. To stop it: ${stopUrl}`);
+  return { subject: subject.slice(0, 180), text: lines.join("\n") };
+}
+
+/** "October goal: $1,240 of $3,000 (41%) …", or "" with no goal. */
+function goalLine(data: StatsData, goal: number, money: (cents: number) => string): string {
+  const today = data.days[data.days.length - 1]?.date ?? "";
+  const progress = goalProgress(goal, moneyByDay(data.channelDays), today);
+  if (!progress) return "";
+  const name = monthTitle(progress.month).split(" ")[0];
+  const share = `${Math.floor(progress.share * 100)}%`;
+  if (progress.reachedOn) {
+    return `${name} goal: reached on ${name} ${Number(progress.reachedOn.slice(8))}, ${money(progress.done)} of ${money(progress.goal)} (${share}).`;
+  }
+  const left = progress.days - progress.day;
+  return `${name} goal: ${money(progress.done)} of ${money(progress.goal)} (${share})${left > 0 ? `, ${money(progress.perDay)} a day needed for the ${left} ${left === 1 ? "day" : "days"} left` : ""}.`;
+}
+
+// ---- The monthly email ------------------------------------------------------------
+
+const monthSentKey = (month: string, handle: string) => `nl:monthly:sent:${month}:${handle}`;
+
+/** The month before the one `now` is in, "2026-09". */
+export function lastMonthOf(now = Date.now()): string {
+  const d = new Date(now);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1)).toISOString().slice(0, 7);
+}
+
+/** Claims a month's email for a store; false when it was already claimed. */
+export async function claimMonth(handle: string, month: string): Promise<boolean> {
+  if (!isRedisConfigured()) return false;
+  const [ok] = await redisPipeline([["SET", monthSentKey(month, handle), "1", "NX", "EX", 40 * 86400]]);
+  return ok !== null;
+}
+
+/**
+ * The month's email (added 11 October 2026), sent on the 1st for the month
+ * just ended, as Kissmetrics and Baremetrics send theirs: the month's
+ * visitors, sales and money set beside the month before, the channels the
+ * money came from, its best day, and the goal if there was one. Read from the
+ * same 90 days the studio reads, so the month before is there in full. Null
+ * when the month had no visitors and no money.
+ */
+export function monthlyMessage(store: Store, data: StatsData, month: string, stopUrl: string, goal = 0): { subject: string; text: string } | null {
+  const known = data.sales === "ok";
+  const money = (cents: number) => formatMoney(cents, data.currency ?? "usd");
+  const byDay = moneyByDay(data.channelDays);
+  const [y, m] = month.split("-").map(Number);
+  const before = new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7);
+  const sum = (which: string) => {
+    const days = data.days.filter((d) => d.date.startsWith(which));
+    return {
+      visitors: days.reduce((n, d) => n + d.visitors, 0),
+      checkouts: days.reduce((n, d) => n + d.checkouts, 0),
+      sales: days.reduce((n, d) => n + d.sales, 0),
+      cents: Object.entries(byDay).reduce((n, [day, cents]) => (day.startsWith(which) ? n + cents : n), 0),
+    };
+  };
+  const now = sum(month);
+  if (now.visitors === 0 && now.cents === 0) return null;
+  // The month before only when the days read start at its first day or earlier.
+  const then = data.days[0] && data.days[0].date <= `${before}-01` ? sum(before) : null;
+  const against = (a: number, b: number | undefined) => {
+    if (!b) return "";
+    const value = ((a - b) / b) * 100;
+    if (Math.abs(value) < 0.5) return " (the same as the month before)";
+    const shown = Math.abs(value) < 10 ? Math.abs(value).toFixed(1) : String(Math.round(Math.abs(value)));
+    return ` (${value > 0 ? "up" : "down"} ${shown}% on the month before)`;
+  };
+  const title = monthTitle(month);
+  const lines = [`Here is ${store.name} in ${title}.`, ""];
+  lines.push(`Visitors: ${now.visitors.toLocaleString("en-US")}${against(now.visitors, then?.visitors)}`);
+  lines.push(`Checkouts started: ${now.checkouts.toLocaleString("en-US")}${against(now.checkouts, then?.checkouts)}`);
+  if (known) {
+    lines.push(`Sales: ${now.sales.toLocaleString("en-US")}`);
+    lines.push(`Money from sales and renewals: ${money(now.cents)} before Stripe's fee${against(now.cents, then?.cents)}`);
+    const channels = Object.entries(data.channelDays ?? {})
+      .map(([channel, days]) => ({ channel, cents: Object.entries(days).reduce((n, [day, c]) => (day.startsWith(month) ? n + c : n), 0) }))
+      .filter((row) => row.cents > 0)
+      .sort((a, b) => b.cents - a.cents)
+      .slice(0, 3);
+    if (channels.length) {
+      lines.push("", "Where the money came from:");
+      for (const c of channels) lines.push(`- ${channelWord(c.channel)}: ${money(c.cents)}`);
+    }
+    const best = Object.entries(byDay)
+      .filter(([day]) => day.startsWith(month))
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+    if (best && best[1] > 0) {
+      const [by, bm, bd] = best[0].split("-").map(Number);
+      const name = new Date(Date.UTC(by, bm - 1, bd)).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" });
+      lines.push("", `Best day: ${name}, ${money(best[1])}. Worth noting what you did that day.`);
+    }
+    if (goal > 0) {
+      const share = Math.floor((now.cents / goal) * 100);
+      lines.push(
+        "",
+        now.cents >= goal
+          ? `Your goal of ${money(goal)} was reached: ${share}%.`
+          : `Your goal was ${money(goal)}: ${money(now.cents)} came in, ${share}% of it.`,
+      );
+    }
+  } else if (data.sales === "none") {
+    lines.push("Sales: connect Stripe in your studio to see them here.");
+  }
+  lines.push("", `Everything, day by day, is in your studio: ${SITE_URL}/studio`);
+  lines.push("", `You get this on the 1st of each month while your store has visitors. To stop it, the weekly one and the busy-day one: ${stopUrl}`);
+  const subject = known ? `${store.name} in ${title}: ${money(now.cents)} from ${now.sales.toLocaleString("en-US")} ${now.sales === 1 ? "sale" : "sales"}` : `${store.name} in ${title}`;
   return { subject: subject.slice(0, 180), text: lines.join("\n") };
 }
 

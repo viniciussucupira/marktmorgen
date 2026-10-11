@@ -12,6 +12,8 @@ import { readSpends } from "@/lib/ad-spend";
 import { weeklyMemberToken, weeklyTeam } from "@/lib/stats-report";
 import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
+import { readSalesGoal } from "@/lib/sales-goal";
+import { chatAddress, forChat, postToChat } from "@/lib/chat-summary";
 
 /**
  * The weekly email to each creator whose store had visitors (lib/stats-report.ts).
@@ -23,8 +25,11 @@ import { can } from "@/lib/team-roles";
  * paid or in its trial — are written to: what the email costs is then a
  * fraction of a cent inside a plan that pays for it.
  *
- * A store whose creator pressed "Stop" is left alone, and a store that had no
- * visitors in the week is not written to at all.
+ * A store whose creator pressed "Stop" is not emailed, and a store that had no
+ * visitors in the week is not written to at all. Where the creator chose a
+ * Slack or Discord channel (lib/chat-summary.ts), the same summary is posted
+ * there too — and still is after "Stop", which stops emails, not the channel
+ * the creator set up apart.
  */
 export const maxDuration = 60;
 const MAX_PER_RUN = 25;
@@ -55,7 +60,9 @@ export async function GET(request: NextRequest) {
         out.unpaid += 1;
         continue;
       }
-      if (await weeklyOff(store.handle)) {
+      const emailOff = await weeklyOff(store.handle);
+      const chat = await chatAddress(store.handle).catch(() => null);
+      if (emailOff && !chat) {
         out.stopped += 1;
         continue;
       }
@@ -65,9 +72,15 @@ export async function GET(request: NextRequest) {
       const token = weeklyToken(store.handle);
       const stopUrl = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&t=${encodeURIComponent(token)}`;
       const spends = await readSpends(store.statsId).catch(() => []);
-      const message = data && token ? weeklyMessage(store, data, stopUrl, spends) : null;
+      const goal = await readSalesGoal(store.statsId).catch(() => 0);
+      const message = data && token ? weeklyMessage(store, data, stopUrl, spends, goal) : null;
       if (!message) {
         out.quiet += 1;
+        continue;
+      }
+      if (chat) await postToChat(chat, `${message.subject}\n\n${forChat(message.text)}`).catch(() => false);
+      if (emailOff) {
+        out.stopped += 1;
         continue;
       }
       const ok = await sendEmail({

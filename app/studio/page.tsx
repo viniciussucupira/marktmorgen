@@ -46,6 +46,9 @@ import { readSpends } from "@/lib/ad-spend";
 import { heardOff } from "@/lib/heard";
 import { weeklyTeam } from "@/lib/stats-report";
 import { serverSetup } from "@/lib/ad-events";
+import { readTrouble } from "@/lib/checkout-trouble";
+import { readSalesGoal } from "@/lib/sales-goal";
+import { chatSetup } from "@/lib/chat-summary";
 import { ServerEventsEditor } from "@/components/server-events-editor";
 import { CalendarEditor } from "@/components/calendar-editor";
 import { WebhookEditor } from "@/components/webhook-editor";
@@ -718,7 +721,7 @@ export default async function StudioPage({
   if (current && paidList && paidList.length) after(() => catchUpBookings(current, paidList, SITE_URL));
   // Visits from Redis and sales from the creator's Stripe, read side by side,
   // with the creator's own notes on the chart and what they spent on ads.
-  const [visits, salesRead, statsNotes, adSpends, heardIsOff] = current && may("stats")
+  const [visits, salesRead, statsNotes, adSpends, heardIsOff, trouble] = current && may("stats")
     ? await Promise.all([
         readStats(current).catch(() => null),
         current.stripeAccountId
@@ -730,8 +733,9 @@ export default async function StudioPage({
         readNotes(current.statsId).catch(() => []),
         readSpends(current.statsId).catch(() => []),
         heardOff(current.handle).catch(() => false),
+        readTrouble(current.statsId).catch(() => ({ week: 0, last: null })),
       ])
-    : [null, null, [], [], false];
+    : [null, null, [], [], false, { week: 0, last: null }];
   const numbers =
     current && visits && salesRead
       ? studioStats(
@@ -1018,6 +1022,16 @@ export default async function StudioPage({
 
             {numbers ? (
               <div id="numbers" className="scroll-mt-32">
+                {trouble.week > 0 && trouble.last ? (
+                  <div className="notice notice-warn mt-8" role="status">
+                    <p className="font-bold text-ink">
+                      {`Stripe would not open a checkout ${trouble.week === 1 ? "once" : `${trouble.week} times`} in the last 7 days`}
+                    </p>
+                    <p className="mt-1 text-sm text-ink-soft">
+                      {`Those buyers could not pay. The last time, ${new Date(trouble.last.at).toLocaleString("en-US", { month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" })}, Stripe said: “${trouble.last.message}” If it mentions your account, open your Stripe dashboard; if it mentions a price, save the product again.`}
+                    </p>
+                  </div>
+                ) : null}
                 <StatsPanel
                   data={numbers}
                   canExport={may("export")}
@@ -1033,6 +1047,8 @@ export default async function StudioPage({
                         }
                       : null
                   }
+                  goal={await readSalesGoal(store.statsId).catch(() => 0)}
+                  chat={may("settings") ? await chatSetup(store.handle).catch(() => null) : undefined}
                 />
               </div>
             ) : null}

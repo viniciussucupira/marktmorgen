@@ -181,6 +181,25 @@ export default function TermsPage() {
           switch them off for a store that misuses them.
         </p>
         <p>
+          <strong className="text-black">
+            Your buyers&apos; addresses for ad audiences.
+          </strong>{" "}
+          The file of buyers for ad audiences holds the addresses of buyers who
+          agreed to hear from you and have not left your list. Uploading it to
+          an ad platform is your decision and yours to answer for: do it only
+          where your buyers&apos; permission and your own privacy notice cover
+          that use, which in some places means having asked for it in so many
+          words, and follow that platform&apos;s terms for customer lists. We
+          do not send the file anywhere ourselves.
+        </p>
+        <p>
+          <strong className="text-black">Slack and Discord.</strong> When you
+          give us a Slack or Discord webhook address, you ask us to post your
+          store&apos;s weekly and monthly numbers there. Anyone who can read
+          that channel reads them, so choose it as you would choose who gets
+          the email; what that service does with them is between you and it.
+        </p>
+        <p>
           <strong className="text-black">Questions your store asks.</strong>{" "}
           If you leave on the question after paying (&ldquo;where did you hear
           about us?&rdquo;), or turn on the question on your sales pages

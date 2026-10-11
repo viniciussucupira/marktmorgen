@@ -658,7 +658,7 @@ export type SalesStats = {
    * this store's subscriptions. A first payment is a checkout and is in the
    * sales above, so it is never counted twice. Absent on a reading from before.
    */
-  renewals?: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean; bySource?: RenewalsBySource };
+  renewals?: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean; bySource?: RenewalsBySource; bySourceDay?: ChannelDays };
   /** What each channel brought in, credited to the buyer's FIRST visit from somewhere (lib/visit-channel.ts). */
   firstBySource?: { source: string; currency: string; cents: number; sales: number }[];
   /** Money by campaign — one post, when its link was made for it — for each window, in the store's currency. */
@@ -679,7 +679,17 @@ export type SalesStats = {
   refundsIn?: Record<"d7" | "d30" | "d90", { source: string; refunds: number; cents: number }[]>;
   /** Refunds by product over the 90 days. */
   refundsByProduct?: Record<string, { refunds: number; cents: number }>;
+  /**
+   * The money each channel brought on each of the 90 days, first sales and
+   * renewals together, in the store's currency (added 11 October 2026): what
+   * says on which day a channel's ads had paid for themselves
+   * (lib/ad-spend-rules.ts, paybackOf). Days with nothing are left out.
+   */
+  channelDays?: ChannelDays;
 };
+
+/** Channel → day → money, in the smallest unit; "direct" for none named. */
+export type ChannelDays = Record<string, Record<string, number>>;
 
 /** Payments after the first, and what they came to, in the store's currency. */
 export type Renewals = { payments: number; cents: number };
@@ -857,13 +867,14 @@ export function renewalsFrom(
   invoices: Record<string, unknown>[],
   now: number,
   currency: string,
-): { d7: Renewals; d30: Renewals; d90: Renewals; bySource: RenewalsBySource } {
+): { d7: Renewals; d30: Renewals; d90: Renewals; bySource: RenewalsBySource; bySourceDay: ChannelDays } {
   const handles = saleHandles(store);
   const cut7 = dayKey(now - 6 * 86400_000);
   const cut30 = dayKey(now - 29 * 86400_000);
   const zero = (): Renewals => ({ payments: 0, cents: 0 });
   const out = { d7: zero(), d30: zero(), d90: zero() };
   const by = new Map<string, Renewals>();
+  const bySourceDay: ChannelDays = {};
   for (const invoice of invoices) {
     if (invoice.status !== "paid" || invoice.billing_reason !== "subscription_cycle") continue;
     const meta = invoiceMeta(invoice);
@@ -886,9 +897,11 @@ export function renewalsFrom(
     row.payments += 1;
     row.cents += cents;
     by.set(source, row);
+    const days = (bySourceDay[source || "direct"] ??= {});
+    days[day] = (days[day] ?? 0) + cents;
   }
   const bySource = [...by.entries()].map(([source, r]) => ({ source, ...r })).sort((a, b) => b.cents - a.cents || a.source.localeCompare(b.source));
-  return { ...out, bySource };
+  return { ...out, bySource, bySourceDay };
 }
 
 async function readRenewals(store: Store, since: number, now: number, pages: number): Promise<SalesStats["renewals"]> {
@@ -1088,6 +1101,17 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
       row.cents += refund.cents;
     }
   }
+  // Each channel's money by the day, renewals included.
+  const channelDays: ChannelDays = {};
+  const addDay = (channel: string, day: string, cents: number) => {
+    const days = (channelDays[channel] ??= {});
+    days[day] = (days[day] ?? 0) + cents;
+  };
+  for (const sale of own) addDay(sale.source || "direct", dayKey(sale.created), sale.cents);
+  for (const [channel, days] of Object.entries(renewals?.bySourceDay ?? {})) {
+    for (const [day, cents] of Object.entries(days)) if (day >= cut90) addDay(channel, day, cents);
+  }
+  out.channelDays = channelDays;
   out.previous = {
     d7: stretch(dayKey(now - 13 * 86400_000), cut7),
     d30: stretch(dayKey(now - 59 * 86400_000), cut30),
@@ -1225,6 +1249,8 @@ export type StatsData = {
   refunds: Record<"d7" | "d30" | "d90", { source: string; refunds: number; cents: number }[]> | null;
   /** Refunds over the last 90 days, by product. */
   refundsByProduct: Record<string, { refunds: number; cents: number }>;
+  /** Each channel's money by the day over the 90 days, renewals included (SalesStats.channelDays). */
+  channelDays?: ChannelDays;
 };
 
 export type ReachItem = { item: string; kind: "product" | "link" | "part"; title: string; position: number; reached: number; clicks: number };
@@ -1424,7 +1450,10 @@ export function studioStats(
     firstBySource: (sales?.firstBySource ?? [])
       .filter((row) => row.currency === store.currency)
       .map(({ source, cents, sales: n }) => ({ source, cents, sales: n })),
-    renewals: sales?.renewals ?? null,
+    // The days of renewals by channel are in channelDays already; not sent twice.
+    renewals: sales?.renewals
+      ? { d7: sales.renewals.d7, d30: sales.renewals.d30, d90: sales.renewals.d90, partial: sales.renewals.partial }
+      : null,
     previous: Object.fromEntries(
       (["d7", "d30", "d90"] as const).map((k) => {
         const visits = stats.previous?.[k] ?? { visitors: 0, views: 0, checkouts: 0 };
@@ -1446,6 +1475,7 @@ export function studioStats(
     salesCountries: sales?.byCountryIn ?? { d7: [], d30: [], d90: [] },
     refunds: sales?.refundsIn ?? null,
     refundsByProduct: sales?.refundsByProduct ?? {},
+    channelDays: sales?.channelDays ?? {},
     reach: {
       d7: reachItems(store, w.d7.reach ?? {}, titles),
       d30: reachItems(store, w.d30.reach ?? {}, titles),

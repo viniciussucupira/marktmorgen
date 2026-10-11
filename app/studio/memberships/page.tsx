@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
-import { STAY_AGES, membershipNumbers } from "@/lib/membership-numbers";
+import { LEAVE_NAMES, STAY_AGES, membershipNumbers } from "@/lib/membership-numbers";
 import { channelName } from "@/lib/channel-names";
 import { readListings } from "@/lib/catalog";
 import { formatMoney } from "@/lib/money";
@@ -138,6 +138,81 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                 )}
               </section>
 
+              {numbers.forecast ? (
+                <section aria-labelledby="ahead-title" className="card mt-8 p-6 sm:p-8">
+                  <h2 id="ahead-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">The next three months, if the pace holds</h2>
+                  <p className="mt-1 max-w-2xl text-sm text-ink-soft">
+                    {`Over the last 90 days your memberships gained ${money(numbers.forecast.gained)} of monthly revenue a month and lost ${percent(numbers.forecast.lost)} of paying members a month. Carried forward unchanged, that is:`}
+                  </p>
+                  <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+                    {numbers.forecast.months.map((value, i) => (
+                      <div key={i} className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">{`In ${i + 1} ${i === 0 ? "month" : "months"}`}</dt>
+                        <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{money(value)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className="mt-3 text-xs text-ink-soft">
+                    An estimate, not a promise: a launch, a price change or a quiet month changes it. Free trials still running are not
+                    in it until they pay.
+                  </p>
+                </section>
+              ) : null}
+
+              {numbers.leaving && (numbers.leaving.canceled > 0 || numbers.leaving.paymentFailed > 0) ? (
+                <section aria-labelledby="leave-title" className="card mt-8 p-6 sm:p-8">
+                  <h2 id="leave-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Why members leave</h2>
+                  <p className="mt-1 max-w-2xl text-sm text-ink-soft">
+                    {`When a member cancels, Stripe asks them why. In the last 12 months ${numbers.leaving.canceled} ${numbers.leaving.canceled === 1 ? "member" : "members"} canceled and ${numbers.leaving.answered} picked a reason.`}
+                    {numbers.leaving.paymentFailed
+                      ? ` ${numbers.leaving.paymentFailed} more ${numbers.leaving.paymentFailed === 1 ? "membership" : "memberships"} ended because a payment never went through, which is not a choice and is not counted here.`
+                      : ""}
+                  </p>
+                  {numbers.leaving.reasons.length ? (
+                    <div className="mt-4 overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="text-xs uppercase tracking-[0.08em] text-ink-mute">
+                            <th scope="col" className="py-2 pr-4 font-semibold">What they picked</th>
+                            <th scope="col" className="py-2 pr-3 text-right font-semibold">Members</th>
+                            <th scope="col" className="py-2 text-right font-semibold">Monthly revenue lost</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-line">
+                          {numbers.leaving.reasons.map((row) => (
+                            <tr key={row.reason}>
+                              <th scope="row" className="py-2.5 pr-4 font-semibold text-ink">{LEAVE_NAMES[row.reason]}</th>
+                              <td className="py-2.5 pr-3 text-right tabular-nums">{row.members}</td>
+                              <td className="py-2.5 text-right tabular-nums">{money(row.mrr)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : null}
+                  {numbers.leaving.comments.length ? (
+                    <>
+                      <h3 className="mt-6 text-base font-semibold text-ink">In their words, the latest first</h3>
+                      <ul className="mt-3 space-y-3">
+                        {numbers.leaving.comments.map((c, i) => (
+                          <li key={i} className="rounded-xl bg-paper p-4 text-sm ring-1 ring-line">
+                            <p className="text-ink">{`“${c.text}”`}</p>
+                            <p className="mt-1 text-xs text-ink-mute">
+                              {new Date(c.at * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                              {c.reason ? ` · ${LEAVE_NAMES[c.reason]}` : ""}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
+                  <p className="mt-3 text-xs text-ink-soft">
+                    Shown without the member&apos;s name or address. A reason only appears when the member cancels on the page your
+                    members&apos; emails link to; one canceled by you in Stripe has none.
+                  </p>
+                </section>
+              ) : null}
+
               {numbers.cohorts && numbers.cohorts.length ? (
                 <section aria-labelledby="stay-title" className="card mt-8 p-6 sm:p-8">
                   <h2 id="stay-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Who stays</h2>
@@ -223,6 +298,7 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                   <li>Monthly recurring revenue: every paying membership at its list price, before discounts and tax, as a month — a yearly one counts a twelfth. Members in a free trial are not in it until they pay.</li>
                   <li>Churn: of the memberships that were paying 30 days ago, the share that has ended since.</li>
                   <li>Trials that became paying: of the free trials that ended in the last 90 days, those still running a day after.</li>
+                  <li>The next three months: each month keeps the share of paying members the last 90 days kept, and gains the monthly revenue the last 90 days gained. It needs at least five members who were paying 90 days ago.</li>
                   {numbers.elsewhere ? <li>{`${numbers.elsewhere} running ${numbers.elsewhere === 1 ? "membership is" : "memberships are"} in a currency other than your store's, and ${numbers.elsewhere === 1 ? "is" : "are"} not in the sums.`}</li> : null}
                   {!numbers.complete ? <li>Your Stripe account holds more memberships than one reading takes, so the oldest are not counted.</li> : null}
                 </ul>
