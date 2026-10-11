@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { AllTimeSales, Ranked, RangeKey, StatsData } from "@/lib/stats";
 import { StoreField } from "@/components/studio-store-pin";
@@ -150,6 +150,60 @@ function Breakdown({
   );
 }
 
+type LiveNow = { visitors: number; sources: { source: string; visitors: number }[] };
+
+/**
+ * Who is on the store right now: asked every half minute while the page is
+ * open and in view, and not at all from a tab in the background.
+ */
+function RightNow() {
+  const [live, setLive] = useState<LiveNow | null>(null);
+  useEffect(() => {
+    let stopped = false;
+    const ask = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const response = await fetch("/api/store/live", { cache: "no-store" });
+        const body = (await response.json().catch(() => ({}))) as { ok?: boolean } & Partial<LiveNow>;
+        if (!stopped && body.ok) setLive({ visitors: body.visitors ?? 0, sources: body.sources ?? [] });
+      } catch {
+        // A missed reading is simply the next one's to make.
+      }
+    };
+    void ask();
+    const timer = window.setInterval(() => void ask(), 30_000);
+    const seen = () => void ask();
+    document.addEventListener("visibilitychange", seen);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", seen);
+    };
+  }, []);
+  if (!live) return null;
+  return (
+    <div className="mt-6 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" aria-live="polite">
+      <p className="flex items-center gap-2 text-sm font-bold text-ink">
+        <span className={`inline-block h-2 w-2 rounded-full ${live.visitors ? "bg-emerald-500" : "bg-line"}`} aria-hidden="true" />
+        {live.visitors === 0
+          ? "Nobody has opened your store in the last 5 minutes"
+          : `${count(live.visitors)} ${live.visitors === 1 ? "person has" : "people have"} opened your store in the last 5 minutes`}
+      </p>
+      {live.visitors > 0 && live.sources.length > 0 ? (
+        <ul className="mt-2 space-y-1 text-sm">
+          {live.sources.map((s) => (
+            <li key={s.source} className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 truncate text-ink">{`From ${s.source === "direct" ? "a direct visit or an app that hides it" : SOURCE_NAMES[s.source] ?? s.source}`}</span>
+              <span className="shrink-0 tabular-nums text-ink-soft">{count(s.visitors)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <p className="mt-2 text-xs text-ink-soft">Your store page, each person once, updated every half minute. Nothing about who.</p>
+    </div>
+  );
+}
+
 /** A store's visits, checkouts and sales, for the last week, month, quarter or all time. */
 export function StatsPanel({ data, canExport = true }: { data: StatsData; canExport?: boolean }) {
   const [range, setRange] = useState<RangeKey>("d7");
@@ -235,6 +289,7 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
   // Each channel for the range chosen; "all" has none, because sales are read for 90 days.
   const channels = range === "all" ? [] : data.channels?.[range] ?? [];
   const withFreeColumn = channels.some((row) => row.free > 0);
+  const posts = range === "all" ? [] : data.posts?.[range] ?? [];
   // Page views by country and device, kept by the day: none for "all".
   const countries = data.countries?.[range] ?? [];
   const devices = data.devices?.[range] ?? [];
@@ -356,6 +411,8 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
         the first one alone. Only the last ninety days, because that is as far
         back as the sales reading goes, and it says so.
       */}
+      <RightNow />
+
       {range !== "all" && totals.visitors > 0 ? (
         <Funnel visitors={totals.visitors} checkouts={totals.checkouts} sales={totals.sales} salesHere={salesHere} />
       ) : null}
@@ -424,7 +481,7 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
                   Checkouts
                 </th>
                 {withFreeColumn ? (
-                  <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Addresses asked for by a free product">
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Addresses left: for a free product, in your sign-up box or on a waitlist">
                     Signups
                   </th>
                 ) : null}
@@ -432,6 +489,9 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
                 <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
                 <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Sales for every 100 visits from the channel">
                   Converts
+                </th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Revenue divided by visits: what one visit from the channel was worth">
+                  Per visit
                 </th>
               </tr>
             </thead>
@@ -447,6 +507,7 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
                   <td className="py-1 pl-3 text-right tabular-nums">{salesHere ? count(row.sales) : "—"}</td>
                   <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{salesHere ? money(row.cents) : "—"}</td>
                   <td className="py-1 pl-3 text-right tabular-nums">{salesHere && row.visits >= row.sales ? rate(row.sales, row.visits) : "—"}</td>
+                  <td className="py-1 pl-3 text-right tabular-nums">{salesHere && row.visits > 0 && row.visits >= row.sales ? money(Math.round(row.cents / row.visits)) : "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -455,6 +516,41 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
             Visits are counted under where each visit came from; checkouts, signups and sales under the channel the buyer is
             credited to, so a buyer who first came from Instagram and returned later still counts there. Checkouts and
             signups by channel are counted from October 11, 2026.
+          </p>
+        </div>
+      ) : null}
+
+      {posts.length ? (
+        <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-posts">
+          <table className="w-full text-left text-sm">
+            <caption id="numbers-posts" className="text-left text-sm font-bold text-ink">
+              Which post made you money
+            </caption>
+            <thead>
+              <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                <th scope="col" className="py-1 font-semibold">Post or campaign</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Visits</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {posts.slice(0, 15).map((row) => (
+                <tr key={row.campaign} className="border-b border-line/60">
+                  <th scope="row" className="py-1 pr-3 font-medium text-ink">
+                    {row.campaign}
+                    {row.source ? <span className="ml-1.5 text-xs font-normal text-ink-soft">{channelName(row.source)}</span> : null}
+                  </th>
+                  <td className="py-1 pl-3 text-right tabular-nums">{count(row.visits)}</td>
+                  <td className="py-1 pl-3 text-right tabular-nums">{salesHere ? count(row.sales) : "—"}</td>
+                  <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{salesHere ? money(row.cents) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-xs text-ink-soft">
+            A post appears here when its link carries its name: make one under Share, &ldquo;A link for one post,&rdquo; or add{" "}
+            <span className="font-mono">utm_campaign=</span> to any link you share.
           </p>
         </div>
       ) : null}

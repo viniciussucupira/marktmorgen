@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { countHit } from "@/lib/visit";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
@@ -45,6 +47,8 @@ export async function POST(request: NextRequest) {
   if (honeypot.trim()) return away("sent");
   try {
     const result = await joinWaitlist({ store, product, email, consent, ip: clientAddress(request), origin: linkOrigin(request, store) });
+    // Counted under the channel the visitor came from (lib/visit-channel.ts).
+    if (result === "sent") after(() => countHit(request, store, { kind: "signup" }));
     return away(result);
   } catch (error) {
     console.error("joining a waitlist failed", error);

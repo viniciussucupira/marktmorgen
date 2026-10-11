@@ -10,7 +10,9 @@
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Store } from "@/lib/store";
-import { type Ranked, type StatsData, readSales, readStats, studioStats } from "@/lib/stats";
+import { type Ranked, type StatsData, readSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
+import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { standingOf } from "@/lib/plan-standing";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { deriveKey } from "@/lib/secret-box";
 import { formatMoney } from "@/lib/money";
@@ -177,4 +179,72 @@ export function weeklyMessage(store: Store, data: StatsData, stopUrl: string): {
   lines.push("", `Everything, day by day and channel by channel, is in your studio: ${SITE_URL}/studio`);
   lines.push("", `You get this every Monday while your store has visitors. To stop it: ${stopUrl}`);
   return { subject: subject.slice(0, 180), text: lines.join("\n") };
+}
+
+// ---- The busy-day alert ------------------------------------------------------------
+
+/** The fewest store-page views in a day that can make a busy day. */
+export const BUSY_FLOOR = 64;
+/** How many times a usual day's views make a busy one. */
+export const BUSY_TIMES = 3;
+
+const busyKey = (handle: string, day: string) => `nl:busy:${day}:${handle}`;
+
+/**
+ * Whether today's views make a busy day: at least BUSY_FLOOR, at least
+ * BUSY_TIMES a usual day of the last two weeks, and more than any one of them.
+ * Pure, so the rule is held by a test.
+ */
+export function isBusy(today: number, before: number[]): { busy: boolean; times: number } {
+  const usual = before.length ? before.reduce((a, b) => a + b, 0) / before.length : 0;
+  const most = before.length ? Math.max(...before) : 0;
+  const busy = today >= BUSY_FLOOR && today >= BUSY_TIMES * usual && today > most;
+  return { busy, times: usual >= 5 ? Math.floor(today / usual) : 0 };
+}
+
+/**
+ * The email when a store is busier than usual (added 11 October 2026): a post
+ * is bringing people now, which is the moment to answer comments, pin the
+ * post or post again — and the one the creator would otherwise learn about
+ * the next week.
+ *
+ * Asked only when today's views reach 64, 128, 256 and so on (lib/visit.ts),
+ * so it costs a visit nothing: the few reads it makes happen a handful of
+ * times a day at most. Once a day per store, only for a store with a plan
+ * running, and never for one whose creator stopped the numbers emails.
+ */
+export async function maybeBusyAlert(store: Store, today: number, now = Date.now()): Promise<boolean> {
+  if (today < BUSY_FLOOR || (today & (today - 1)) !== 0) return false;
+  if (!isRedisConfigured() || !isSenderConfigured()) return false;
+  const standing = standingOf(store);
+  if (standing !== "paid" && standing !== "trial") return false;
+  if (await weeklyOff(store.handle)) return false;
+  const verdict = isBusy(today, await viewsBefore(store, 14, now));
+  if (!verdict.busy) return false;
+  const day = new Date(now).toISOString().slice(0, 10);
+  const [claimed] = await redisPipeline([["SET", busyKey(store.handle, day), "1", "NX", "EX", 2 * 86400]]);
+  if (claimed === null) return false;
+
+  const top = (await sourcesToday(store, now)).filter((s) => s.name !== "direct")[0];
+  const token = weeklyToken(store.handle);
+  const stopUrl = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&t=${encodeURIComponent(token)}`;
+  const lines = [
+    `${store.name} is having a busy day: ${today.toLocaleString("en-US")} visits to your store page so far today${
+      verdict.times >= 2 ? `, about ${verdict.times} times a usual day` : ", more than any day in the last two weeks"
+    }.`,
+    "",
+    top ? `Most of them came from ${CHANNEL_WORDS[top.name] ?? top.name}.` : "",
+    "While people are arriving is a good moment to answer comments, pin the post that is working, or share it again.",
+    "",
+    `See who is on your store right now and where they came from: ${SITE_URL}/studio`,
+    "",
+    `This comes at most once a day, on a day that is clearly busier than usual. To stop these emails and the weekly one: ${stopUrl}`,
+  ].filter((line, i, all) => line !== "" || all[i - 1] !== "");
+  return sendEmail({
+    from: NIMBUS_FROM,
+    to: store.email,
+    subject: `${store.name} is busy today: ${today.toLocaleString("en-US")} visits so far`.slice(0, 180),
+    text: lines.join("\n"),
+    headers: { "List-Unsubscribe": `<${stopUrl}>` },
+  }).catch(() => false);
 }

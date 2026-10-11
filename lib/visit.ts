@@ -11,6 +11,7 @@ import { recordVisit } from "@/lib/traffic";
 import { countryOf, deviceOf } from "@/lib/source-rules";
 import { channelOfRequest } from "@/lib/visit-channel";
 import { requestHost } from "@/lib/request-origin";
+import { maybeBusyAlert } from "@/lib/stats-report";
 
 export function clientIp(request: NextRequest): string {
   return (
@@ -39,15 +40,19 @@ export async function countHit(
   try {
     if (await isOwner(request, store)) return;
     const userAgent = request.headers.get("user-agent") ?? "";
-    await recordHit(store, {
+    const today = await recordHit(store, {
       ...hit,
       ip: clientIp(request),
       userAgent,
       // A view says where and on what (lib/stats.ts); a checkout says which
       // channel it came from, read the way the sale itself is credited.
       ...(hit.kind === "view" ? { country: countryOf(request.headers.get("x-vercel-ip-country")), device: deviceOf(userAgent) } : {}),
-      ...(hit.kind === "checkout" ? { channel: channelOfRequest(request, store.handle, requestHost(request)).channel } : {}),
+      ...(hit.kind === "checkout" || hit.kind === "signup"
+        ? { channel: channelOfRequest(request, store.handle, requestHost(request)).channel }
+        : {}),
     });
+    // Asked only at 64, 128, 256… views in a day, so a visit costs nothing more.
+    if (today) await maybeBusyAlert(store, today);
   } catch (error) {
     console.error("counting a visit failed", error);
   }

@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { countHit } from "@/lib/visit";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
@@ -36,7 +38,10 @@ export async function POST(request: NextRequest) {
   // A field no person can see: whatever filled it in is told it worked, and nothing is sent.
   if (honeypot.trim()) return away("sent");
   try {
-    return away(await askToJoin({ store, email, ip: clientAddress(request), origin: linkOrigin(request, store) }));
+    const result = await askToJoin({ store, email, ip: clientAddress(request), origin: linkOrigin(request, store) });
+    // Counted under the channel the visitor came from (lib/visit-channel.ts).
+    if (result === "sent") after(() => countHit(request, store, { kind: "signup" }));
+    return away(result);
   } catch (error) {
     console.error("joining a store's list failed", error);
     return away("error");

@@ -20,6 +20,43 @@ export function taggedFor(url: string, place: SharePlace): string {
   return `${url}${join}utm_source=${place}&utm_medium=${medium}`;
 }
 
+/** Where a post can go, for a link made for that one post (postLink). */
+export const POST_PLACES: { place: string; label: string }[] = [
+  { place: "instagram", label: "Instagram" },
+  { place: "tiktok", label: "TikTok" },
+  { place: "youtube", label: "YouTube" },
+  { place: "x", label: "X" },
+  { place: "threads", label: "Threads" },
+  { place: "facebook", label: "Facebook" },
+  { place: "linkedin", label: "LinkedIn" },
+  { place: "pinterest", label: "Pinterest" },
+  { place: "newsletter", label: "Newsletter" },
+  { place: "podcast", label: "Podcast" },
+];
+
+/** A post's name as it is counted: what lib/came-from.ts keeps of a campaign tag. */
+export function postName(raw: string): string {
+  return raw
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
+/**
+ * The address tagged for one post (added 11 October 2026): where it goes, and
+ * the post's own name as its campaign, so the studio can say which post — not
+ * only which network — brought the visits and the money.
+ */
+export function postLink(url: string, place: string, name: string): string {
+  const join = url.includes("?") ? "&" : "?";
+  const where = POST_PLACES.some((p) => p.place === place) ? place : "other";
+  const campaign = postName(name);
+  return `${url}${join}utm_source=${where}&utm_medium=post${campaign ? `&utm_campaign=${campaign}` : ""}`;
+}
+
 /** Where each network's own page to post from opens, with the words in. */
 export function shareLinks(url: string, text: string): { place: Exclude<SharePlace, "qr" | "device">; label: string; href: string }[] {
   const e = encodeURIComponent;

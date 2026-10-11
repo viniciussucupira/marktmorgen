@@ -1,0 +1,19 @@
+import type { NextRequest } from "next/server";
+import { jsonAccess } from "@/lib/studio-route";
+import { readLive } from "@/lib/stats";
+
+/**
+ * Who opened the store in the last few minutes (lib/stats.ts readLive), for
+ * the studio's numbers, which ask every half minute while they are open.
+ */
+export async function GET(request: NextRequest) {
+  const access = await jsonAccess(request, "stats");
+  if (access instanceof Response) return access;
+  try {
+    const live = await readLive(access.store);
+    return Response.json({ ok: true, ...live }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) {
+    console.error("reading who is on a store failed", error);
+    return Response.json({ ok: false, error: "server_error" }, { status: 502 });
+  }
+}

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const action = `/api/store/weekly?h=${encodeURIComponent(asked.handle)}&t=${encodeURIComponent(asked.token)}`;
   return page(
     "Weekly email",
-    `<h1>Your weekly numbers</h1><p>Every Monday we email the week of your store, @${esc(asked.handle)}, while it has visitors.</p><form method="post" action="${esc(action)}"><input type="hidden" name="do" value="off"><button>Stop the weekly email</button></form>`,
+    `<h1>Emails about your numbers</h1><p>Every Monday we email the week of your store, @${esc(asked.handle)}, while it has visitors, and on a day that is clearly busier than usual we tell you while it is happening.</p><form method="post" action="${esc(action)}"><input type="hidden" name="do" value="off"><button>Stop these emails</button></form>`,
   );
 }
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   return off
     ? page(
         "Weekly email stopped",
-        `<h1>Stopped</h1><p>You will not get the weekly email for @${esc(asked.handle)} anymore. Your numbers are always in your studio.</p><form method="post" action="${esc(action)}"><input type="hidden" name="do" value="on"><button>Start it again</button></form>`,
+        `<h1>Stopped</h1><p>You will not get the weekly email or busy-day alerts for @${esc(asked.handle)} anymore. Your numbers are always in your studio.</p><form method="post" action="${esc(action)}"><input type="hidden" name="do" value="on"><button>Start it again</button></form>`,
       )
-    : page("Weekly email on", `<h1>On again</h1><p>The weekly email for @${esc(asked.handle)} will come every Monday while your store has visitors.</p>`);
+    : page("Emails on", `<h1>On again</h1><p>The weekly email for @${esc(asked.handle)} will come every Monday while your store has visitors, and busy-day alerts when they happen.</p>`);
 }
