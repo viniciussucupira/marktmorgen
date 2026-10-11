@@ -13,7 +13,7 @@
  *   - It is a price, not a percentage: the creator types what the first
  *     payments cost, always less than the regular price and never below what
  *     Stripe will charge. The regular price is what the member pays after.
- *   - One offer at a time. Not beside a free trial (a trial is the creator's
+ *   - One offer at a time. Not beside a yearly price (lib/yearly-price.ts), nor a free trial (a trial is the creator's
  *     other way to start a member off), not on a membership with a set number
  *     of payments or with several prices, and not on plans members switch
  *     between, where a fixed amount off could follow them to a cheaper plan.
@@ -52,9 +52,11 @@ export type IntroCandidate = {
   recurring: { interval: Interval; trialDays: number; payments: number } | null;
   options: unknown[];
   pwyw: unknown;
+  /** A yearly price beside the monthly one (lib/yearly-price.ts): one offer at a time. */
+  yearly?: unknown;
 };
 
-export type IntroProblem = "membership" | "trial" | "payments" | "options" | "pwyw" | "tiers" | "price" | "count";
+export type IntroProblem = "membership" | "trial" | "payments" | "options" | "pwyw" | "tiers" | "yearly" | "price" | "count";
 
 /**
  * Why this introductory price cannot go on this product, or null when it can.
@@ -69,6 +71,7 @@ export function introProblem(product: IntroCandidate, intro: Intro, minCents: nu
   if (product.options.length > 0) return "options";
   if (product.pwyw) return "pwyw";
   if (tiers.includes(product.id)) return "tiers";
+  if (product.yearly) return "yearly";
   if (intro.cents < minCents || intro.cents >= product.priceCents) return "price";
   if (intro.count < 1 || intro.count > (recurring.interval === "month" ? MAX_INTRO_COUNT : 1)) return "count";
   return null;

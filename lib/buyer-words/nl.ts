@@ -219,6 +219,10 @@ export const nl: BuyerWords = {
   moreFrom: (store) => `Meer van ${store}`,
   alsoBought: (title) => `Kopers van ${title} kochten ook`,
   boughtBoth: (n) => `${n} kopers kochten allebei`,
+  billMonthly: "Maandelijks",
+  billYearly: "Jaarlijks",
+  yearSave: (amount) => `Je bespaart ${amount}`,
+  yearlyFact: (price, save) => `Of ${price} ${every("year")}, je bespaart ${save}`,
 
   reviews: "Beoordelingen",
   verifiedReviews: (count, written) => `${written} ${plural(count, "geverifieerde beoordeling", "geverifieerde beoordelingen")}`,

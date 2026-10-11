@@ -2274,7 +2274,12 @@ a.chip {
    and the third), and one rule below shows it. A payment plan picked says
    what is charged today instead: plan-on with no box, pt-… with boxes.
 */
-.bump-t, .plan-bump-t, .plan-on { display: none; }
+.bump-t, .plan-bump-t, .plan-on, .year-on { display: none; }
+form:has(input[name="billing"][value="year"]:checked) .bump-off:has(~ .year-on) { display: none; }
+form:has(input[name="billing"][value="year"]:checked) .year-on { display: inline; }
+.year-on-block { display: none; }
+form:has(input[name="billing"][value="year"]:checked) .year-on-block { display: block; }
+form:has(input[name="billing"][value="year"]:checked) .year-off { display: none; }
 form:has(input[data-bump]:checked) .bump-off { display: none; }
 form:has(input[name="pay"][value="plan"]:checked) .bump-off { display: none; }
 form:has(input[name="pay"][value="plan"]:checked):not(:has(input[data-bump]:checked)) .plan-on { display: inline; }

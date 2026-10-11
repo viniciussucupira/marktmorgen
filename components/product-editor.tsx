@@ -111,6 +111,15 @@ const MESSAGES: Record<string, string> = {
   intro_tiers: "Members can switch to and from this plan, and a fixed amount off could follow them to a cheaper one. Take it out of the plans members switch between first.",
   intro_price: "Type an introductory price below the regular price, and at least the least your currency can charge.",
   intro_count: "A monthly membership's introductory price lasts 1 to 12 months; any other only the first payment.",
+  intro_yearly: "A membership starts with one offer: an introductory price or a yearly price. Empty one of them.",
+  yearly_membership: "A yearly price goes beside a monthly membership. Pick Monthly first.",
+  yearly_month: "A yearly price goes beside a monthly membership.",
+  yearly_payments: "A yearly price is for a membership that runs until it is canceled. Empty \u201cEnds after\u201d, or the yearly price.",
+  yearly_options: "This membership has several prices, so one yearly price cannot fit them all. Take the options off first.",
+  yearly_pwyw: "A membership charges a set price, so its buyers cannot choose it.",
+  yearly_tiers: "Members can switch between this plan and others, at one price each. Take it out of the plans members switch between first.",
+  yearly_intro: "A membership starts with one offer: an introductory price or a yearly price. Empty one of them.",
+  yearly_price: "Type a yearly price below twelve monthly payments, so paying yearly saves something, and at least the least your currency can charge.",
   free: "Something free is given once, for an email address, so it cannot be a membership or have several prices. Take those off first.",
   unknown: "That is no longer on your store.",
   preorders: "Buyers have pre-ordered this and are waiting for it. Put it on sale, which hands it to them, or refund their pre-orders in your Stripe dashboard first.",
@@ -140,6 +149,8 @@ type Draft = {
   introPrice: string;
   /** How many payments cost that, as typed: "1" to "12" on a monthly membership. */
   introCount: string;
+  /** What a year costs, for a monthly membership paid yearly (lib/yearly-price.ts). "" is none. */
+  yearlyPrice: string;
   /** Whether the buyer chooses the price, from `price` up. */
   pwyw: boolean;
   /** The amount suggested to a buyer who chooses. */
@@ -157,6 +168,7 @@ const EMPTY: Draft = {
   payments: "",
   introPrice: "",
   introCount: "1",
+  yearlyPrice: "",
   pwyw: false,
   suggested: "",
   about: "",
@@ -173,6 +185,7 @@ function payloadOf(draft: Draft): Record<string, unknown> {
     payments: draft.every ? draft.payments.trim() : "",
     // Always sent from here, so taking it off, or the membership away, clears it.
     intro: draft.every && draft.introPrice.trim() ? { price: draft.introPrice.trim(), count: draft.every === "month" ? Number(draft.introCount) || 1 : 1 } : null,
+    yearly: draft.every === "month" && draft.yearlyPrice.trim() ? { price: draft.yearlyPrice.trim() } : null,
     pwyw: draft.pwyw && !draft.every ? draft.suggested.trim() || draft.price.trim() : null,
     about: draft.about,
   };
@@ -588,6 +601,37 @@ function ProductForm({
                 Less than the regular price. Stripe takes the difference off the first payments by itself, and the regular price starts after. Your page, its button and the checkout say both prices. Not beside a free trial or a set number of payments, and a come-back offer replaces it.
               </p>
             </div>
+            {draft.every === "month" ? (
+              <div className="sm:col-span-2">
+                <label htmlFor={`product-yearly-${id}`} className="field-label">
+                  Or pay yearly <span className="font-normal text-ink-soft">(optional)</span>
+                </label>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <div className="card flex w-40 items-center pl-4 transition focus-within:border-violet-brand">
+                    <span className="whitespace-nowrap text-ink-soft">{prefix}</span>
+                    <input
+                      id={`product-yearly-${id}`}
+                      type="text"
+                      inputMode={currency === "jpy" ? "numeric" : "decimal"}
+                      value={draft.yearlyPrice}
+                      onChange={(event) => setDraft({ ...draft, yearlyPrice: event.target.value })}
+                      placeholder="None"
+                      aria-describedby={`product-yearly-hint-${id}`}
+                      className="w-full rounded-r-2xl bg-transparent px-2 py-3 text-ink outline-none placeholder:text-ink-soft/50"
+                    />
+                  </div>
+                  <span className="text-sm text-ink-soft">a year</span>
+                </div>
+                <p id={`product-yearly-hint-${id}`} className="mt-1 text-sm text-ink-soft">
+                  {(() => {
+                    const monthly = readMoney(draft.price, currency);
+                    const year = draft.yearlyPrice.trim() ? readMoney(draft.yearlyPrice, currency) : null;
+                    const saves = monthly !== null && year !== null && year < monthly * 12 ? formatMoney(monthly * 12 - year, currency) : null;
+                    return `Buyers pick Monthly or Yearly before paying${saves ? `, and Yearly says it saves ${saves} against twelve monthly payments` : ", and Yearly says what it saves against twelve monthly payments"}. Less than twelve monthly payments. Not beside an introductory price or a set number of payments.`;
+                  })()}
+                </p>
+              </div>
+            ) : null}
             {/^\d+$/.test(draft.trial.trim()) || /^\d+$/.test(draft.payments.trim()) || draft.introPrice.trim() ? (
               <p className="rounded-xl bg-sand px-3 py-2 text-sm text-ink sm:col-span-2">
                 {(() => {
@@ -1324,6 +1368,7 @@ function badges(product: Product): string[] {
     if (product.recurring.trialDays) out.push(`${product.recurring.trialDays}-day trial`);
     if (product.recurring.payments) out.push(`${product.recurring.payments} ${intervalAdjective(product.recurring.interval)} payments`);
     if (product.intro) out.push(product.intro.count > 1 ? `Introductory price, ${product.intro.count} months` : "Introductory price");
+    if (product.yearly) out.push("Or yearly");
   }
   if (product.pwyw) out.push("Pay what you want");
   if (product.options.length) out.push(`${product.options.length} prices`);
@@ -1666,6 +1711,7 @@ export function ProductEditor({
       payments: product.recurring?.payments ? String(product.recurring.payments) : "",
       introPrice: product.intro ? moneyField(product.intro.cents, currency) : "",
       introCount: String(product.intro?.count ?? 1),
+      yearlyPrice: product.yearly ? moneyField(product.yearly.cents, currency) : "",
       pwyw: product.pwyw !== null,
       suggested: product.pwyw ? moneyField(product.pwyw.suggestedCents, currency) : "",
       about: "",

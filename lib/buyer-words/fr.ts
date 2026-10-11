@@ -227,6 +227,10 @@ export const fr: BuyerWords = {
   moreFrom: (store) => `Plus de ${store}`,
   alsoBought: (title) => `Les acheteurs de ${title} ont aussi acheté`,
   boughtBoth: (n) => `${n}${S}acheteurs ont acheté les deux`,
+  billMonthly: "Mensuel",
+  billYearly: "Annuel",
+  yearSave: (amount) => `Économisez ${amount}`,
+  yearlyFact: (price, save) => `Ou ${price} ${every("year")}, soit ${save} d'économie`,
 
   reviews: "Avis",
   verifiedReviews: (count, written) => `${written}${S}${plural(count, "avis vérifié", "avis vérifiés")}`,

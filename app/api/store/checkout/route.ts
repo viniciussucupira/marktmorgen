@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
   // For a bundle the buyer builds: the products they ticked (lib/bundle-rules.ts).
   let picked: string[] = [];
   let plan = false;
+  let yearly = false;
   let news = false;
   // Bought for somebody else (lib/gifts.ts): who, from whom, and a message.
   let giftTo = "";
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest) {
     bumps = form.getAll("bump").filter((value): value is string => typeof value === "string" && /^(yes|[a-z0-9]{6,40})$/.test(value)).slice(0, 4);
     // Paying in instalments only when the buyer picked it.
     plan = form.get("pay") === "plan";
+    yearly = form.get("billing") === "year";
     // Only a box the buyer ticked, and only on a store that can write to them.
     news = form.get("news") === "yes";
     const read = (name: string, max: number) => {
@@ -187,6 +189,7 @@ export async function POST(request: NextRequest) {
         held: holding,
         upsellKey: upsell?.fingerprint,
         plan: inPlan,
+        yearly,
         buyerKey: buyer?.fingerprint,
         // Kept only where the box was offered: the creator writes to their
         // list here, or sends this product's buyers to their email platform.

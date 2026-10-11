@@ -44,6 +44,7 @@ import { type ProductOption, parseOptions } from "@/lib/product-option";
 import { MAX_LINK_LENGTH } from "@/lib/product-link";
 import { type Recurring, parseRecurring } from "@/lib/product-recurring";
 import { type Intro, parseIntro } from "@/lib/intro-price";
+import { type Yearly, parseYearly } from "@/lib/yearly-price";
 import { type CallSetup, parseSetup } from "@/lib/call-setup";
 import { COURSE_ID_PATTERN } from "@/lib/course";
 import { type Bump, type Plan, bumpTargets, canBeBumped, isOneOff, parseBump, parseBumps, parsePlan, parseStock } from "@/lib/product-extras";
@@ -224,6 +225,8 @@ export type Product = {
    * the membership can have one (activeIntro).
    */
   intro?: Intro | null;
+  /** A monthly membership's yearly price beside it (lib/yearly-price.ts). Absent or null is none. */
+  yearly?: Yearly | null;
   /**
    * Whether the creator wrote a note for after paying (lib/thanks-note.ts),
    * kept in its own record and read only by the thank-you page and the
@@ -381,6 +384,7 @@ export function parseProduct(entry: unknown): Product | null {
     bundle: parseBundleItems(value.bundle),
     pick: parsePick(value.pick),
     intro: parseIntro(value.intro),
+    yearly: parseYearly(value.yearly),
     note: value.note === true,
     hidden: value.hidden === true,
   };
@@ -425,6 +429,7 @@ export function listingOf(product: Listing): Listing {
     bundle: product.bundle,
     pick: product.pick ?? null,
     intro: product.intro ?? null,
+    yearly: product.yearly ?? null,
     note: product.note ?? false,
     hidden: product.hidden,
   };

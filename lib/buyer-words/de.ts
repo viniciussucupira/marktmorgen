@@ -222,6 +222,10 @@ export const de: BuyerWords = {
   moreFrom: (store) => `Mehr von ${store}`,
   alsoBought: (title) => `Käufer von ${title} kauften auch`,
   boughtBoth: (n) => `${n} Käufer haben beides gekauft`,
+  billMonthly: "Monatlich",
+  billYearly: "Jährlich",
+  yearSave: (amount) => `Sie sparen ${amount}`,
+  yearlyFact: (price, save) => `Oder ${price} ${every("year")}, Sie sparen ${save}`,
 
   reviews: "Bewertungen",
   verifiedReviews: (count, written) => `${written} ${plural(count, "verifizierte Bewertung", "verifizierte Bewertungen")}`,
