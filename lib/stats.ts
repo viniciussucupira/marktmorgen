@@ -33,6 +33,8 @@ import { listingFinder, productIds, recordListings } from "@/lib/catalog";
 import { plainAmount } from "@/lib/money";
 import { revenueBySource } from "@/lib/came-from";
 import { bumpsFromMeta } from "@/lib/bundle-rules";
+import { reachRows } from "@/lib/page-read";
+import { PAGE_PARTS } from "@/lib/store-order";
 
 /** Days kept, a little over a year, so a year-on-year look is possible. */
 const TTL_SECONDS = 400 * 86400;
@@ -110,7 +112,10 @@ export async function recordHit(
       .slice(0, 24);
     const visitors = visitorsKey(store.statsId, day);
     firstAt = commands.length;
-    both("v");
+    // The day's views, and not the all-time record's: since 11 October 2026
+    // all-time views are the sum of its sources, which every view adds one to
+    // (readLife), so the command is saved on every view (tests/traffic-cost.ts).
+    commands.push(["HINCRBY", counts, "v", 1]);
     both(`r:${hit.source || "direct"}`);
     if (hit.medium) both(`m:${hit.medium}`);
     if (hit.campaign) both(`g:${hit.campaign}`);
@@ -178,6 +183,17 @@ export async function recordHit(
   if (follow.length) await redisPipeline(follow);
   // The store page's views so far today, for the busy-day alert (lib/stats-report.ts).
   return hit.kind === "view" ? Number(results[firstAt]) || null : null;
+}
+
+/**
+ * One measured visit of the store's own page (lib/page-read.ts): the furthest
+ * item seen and the one clicked, on the day's record, which the day's first
+ * view has already given its expiry. One command, and only for the visitors
+ * the page chose to measure.
+ */
+export async function countReach(statsId: string, field: string, now = Date.now()): Promise<void> {
+  if (!isRedisConfigured() || !field.startsWith("sr:")) return;
+  await redisPipeline([["HINCRBY", countsKey(statsId, dayKey(now)), field, 1]]).catch(() => {});
 }
 
 /** The store page's views on each of the `days` days before today, oldest first: one read a day. */
@@ -267,14 +283,21 @@ export type WindowStats = {
   /** Checkouts started, and free products' addresses asked for, by channel (lib/visit-channel.ts). */
   checkoutsBySource: Ranked;
   freeBySource: Ranked;
+  /** Measured visits of the store's page, by furthest item and item clicked (lib/page-read.ts); the field without "sr:". */
+  reach: Record<string, number>;
 };
 
 export type Windows = { d7: WindowStats; d30: WindowStats; d90: WindowStats };
+
+/** The same stretch of days just before a window: what it is compared with (added 11 October 2026). */
+export type PreviousWindow = { visitors: number; views: number; checkouts: number };
 
 export type Stats = {
   /** The last STATS_DAYS days, oldest first. */
   days: DayStats[];
   windows: Windows;
+  /** The 7, 30 and 90 days before each window, for "up 20% on the 30 days before". */
+  previous: { d7: PreviousWindow; d30: PreviousWindow; d90: PreviousWindow };
   /** Everything since `since`, or null when it could not be read. */
   life: (WindowStats & { since: string }) | null;
 };
@@ -299,6 +322,7 @@ class Tally {
   devices = new Map<string, number>();
   checkoutsBySource = new Map<string, number>();
   freeBySource = new Map<string, number>();
+  reach: Record<string, number> = {};
 
   add(field: string, count: number) {
     if (field === "v") this.views += count;
@@ -313,6 +337,7 @@ class Tally {
     else if (field.startsWith("d:")) this.devices.set(field.slice(2), (this.devices.get(field.slice(2)) ?? 0) + count);
     else if (field.startsWith("cs:")) this.checkoutsBySource.set(field.slice(3), (this.checkoutsBySource.get(field.slice(3)) ?? 0) + count);
     else if (field.startsWith("fs:")) this.freeBySource.set(field.slice(3), (this.freeBySource.get(field.slice(3)) ?? 0) + count);
+    else if (field.startsWith("sr:")) this.reach[field.slice(3)] = (this.reach[field.slice(3)] ?? 0) + count;
   }
 
   window(visitors: number): WindowStats {
@@ -330,6 +355,7 @@ class Tally {
       devices: ranked(this.devices),
       checkoutsBySource: ranked(this.checkoutsBySource),
       freeBySource: ranked(this.freeBySource),
+      reach: this.reach,
     };
   }
 }
@@ -354,12 +380,19 @@ export async function readStats(store: Store, now = Date.now()): Promise<Stats |
   const statsId = store.statsId;
   const dates = lastDays(now, STATS_DAYS);
 
+  // The 90 days before these, for the comparison: only their views and
+  // checkouts, and their people over the whole stretch (one command).
+  const older = lastDays(now - STATS_DAYS * 86400_000, STATS_DAYS);
   const commands: (string | number)[][] = [
     ...dates.map((d) => ["HGETALL", countsKey(statsId, d)]),
     ...dates.map((d) => ["PFCOUNT", visitorsKey(statsId, d)]),
     ["PFCOUNT", ...dates.slice(-7).map((d) => visitorsKey(statsId, d))],
     ["PFCOUNT", ...dates.slice(-30).map((d) => visitorsKey(statsId, d))],
     ["PFCOUNT", ...dates.map((d) => visitorsKey(statsId, d))],
+    ["PFCOUNT", ...dates.slice(-14, -7).map((d) => visitorsKey(statsId, d))],
+    ["PFCOUNT", ...dates.slice(-60, -30).map((d) => visitorsKey(statsId, d))],
+    ["PFCOUNT", ...older.map((d) => visitorsKey(statsId, d))],
+    ...older.map((d) => ["HMGET", countsKey(statsId, d), "v", "c"]),
   ];
   const results = await redisPipeline(commands);
 
@@ -384,11 +417,25 @@ export async function readStats(store: Store, now = Date.now()): Promise<Stats |
     d30: tallies.d30.window(Number(results[base + 1]) || 0),
     d90: tallies.d90.window(Number(results[base + 2]) || 0),
   };
+  // The stretch before each window: days 8 to 14 ago, 31 to 60, and 91 to 180.
+  const sum = (list: DayStats[]) => list.reduce((t, d) => ({ views: t.views + d.views, checkouts: t.checkouts + d.checkouts }), { views: 0, checkouts: 0 });
+  const olderTotals = { views: 0, checkouts: 0 };
+  older.forEach((_, i) => {
+    const reply = results[base + 6 + i];
+    if (!Array.isArray(reply)) return;
+    olderTotals.views += Number(reply[0]) || 0;
+    olderTotals.checkouts += Number(reply[1]) || 0;
+  });
+  const previous = {
+    d7: { visitors: Number(results[base + 3]) || 0, ...sum(days.slice(-14, -7)) },
+    d30: { visitors: Number(results[base + 4]) || 0, ...sum(days.slice(-60, -30)) },
+    d90: { visitors: Number(results[base + 5]) || 0, ...olderTotals },
+  };
   const life = await readLife(store, now).catch((error) => {
     console.error("reading all-time counts failed", error);
     return null;
   });
-  return { days, windows, life };
+  return { days, windows, previous, life };
 }
 
 /**
@@ -424,7 +471,7 @@ export async function campaignViews(
 }
 
 /** Fields the all-time record keeps for itself rather than as counts. */
-const LIFE_OWN = new Set(["started", "since", "filled", "u"]);
+const LIFE_OWN = new Set(["started", "since", "filled", "u", "v", "vgap"]);
 /** Beyond this many fields, the smallest sources and tags are let go. */
 const LIFE_MAX_FIELDS = 2000;
 const LIFE_KEEP_PER_KIND = 300;
@@ -468,7 +515,7 @@ async function readLife(store: Store, now: number): Promise<(WindowStats & { sin
           // Countries and devices are kept by the day only: copied into the
           // all-time record they would start it on whatever day it was filled.
           for (const [field, count] of day) {
-            if (field.startsWith("k:") || field.startsWith("d:")) continue;
+            if (field.startsWith("k:") || field.startsWith("d:") || field.startsWith("sr:")) continue;
             tally.set(field, (tally.get(field) ?? 0) + count);
           }
           visitors += Number(replies[dates.length + i]) || 0;
@@ -488,20 +535,39 @@ async function readLife(store: Store, now: number): Promise<(WindowStats & { sin
     }
   }
 
+  // All-time views are the sum of the all-time sources, since every view adds
+  // one to exactly one of them (recordHit), plus "vgap": the views whose
+  // sources were let go below, and, once, whatever a record from before
+  // 11 October 2026 counted in "v" beyond its sources.
+  const sumOfSources = () => [...fields.entries()].reduce((n, [f, c]) => (f.startsWith("r:") ? n + c : n), 0);
+  if (!fields.has("vgap")) {
+    const gap = Math.max(0, (fields.get("v") ?? 0) - sumOfSources());
+    await redisPipeline([["HSETNX", life, "vgap", gap]]);
+    fields.set("vgap", gap);
+  }
+
   // A record that has gathered too many one-off sources lets the smallest go.
   if (fields.size > LIFE_MAX_FIELDS) {
     const drop: string[] = [];
+    let droppedViews = 0;
     for (const prefix of ["r:", "m:", "g:", "cs:", "fs:"]) {
       const kind = [...fields.entries()].filter(([f]) => f.startsWith(prefix)).sort((a, b) => b[1] - a[1]);
-      drop.push(...kind.slice(LIFE_KEEP_PER_KIND).map(([f]) => f));
+      for (const [f, c] of kind.slice(LIFE_KEEP_PER_KIND)) {
+        drop.push(f);
+        if (prefix === "r:") droppedViews += c;
+      }
     }
-    if (drop.length) await redisPipeline([["HDEL", life, ...drop]]);
+    if (drop.length) {
+      await redisPipeline([["HDEL", life, ...drop], ...(droppedViews ? [["HINCRBY", life, "vgap", droppedViews]] : [])]);
+      for (const f of drop) fields.delete(f);
+      fields.set("vgap", (fields.get("vgap") ?? 0) + droppedViews);
+    }
   }
 
   const tally = new Tally();
   for (const [field, count] of fields) if (!LIFE_OWN.has(field)) tally.add(field, count);
   const since = text("since") || text("started") || dayKey(now);
-  return { ...tally.window(fields.get("u") ?? 0), since };
+  return { ...tally.window(fields.get("u") ?? 0), views: sumOfSources() + (fields.get("vgap") ?? 0), since };
 }
 
 // ---- Sales, from the creator's Stripe -----------------------------------------
@@ -540,6 +606,12 @@ export type SalesStats = {
   byCampaignIn?: Record<"d7" | "d30" | "d90", { campaign: string; source: string; cents: number; sales: number }[]>;
   /** bySource for each window, so a channel's sales sit beside its visits for the same days. */
   bySourceIn?: Record<"d7" | "d30" | "d90", { source: string; currency: string; cents: number; sales: number }[]>;
+  /**
+   * Sales in the stretch just before each window (added 11 October 2026):
+   * days 8 to 14 ago, 31 to 60, 91 to 180. Null for a stretch the reading did
+   * not reach all of, because a part of it compared with a whole says nothing.
+   */
+  previous?: { d7: SalesWindow | null; d30: SalesWindow | null; d90: SalesWindow | null };
 };
 
 /** Payments after the first, and what they came to, in the store's currency. */
@@ -763,9 +835,13 @@ async function readRenewals(store: Store, since: number, now: number, pages: num
 export async function readSales(store: Store, now = Date.now()): Promise<SalesStats | null> {
   if (!store.stripeAccountId) return null;
   const since = Math.floor(now / 1000) - STATS_DAYS * 86400;
+  // Twice as far back for the sales, so each window can be set beside the
+  // stretch before it; twice the pages, so the 90 days themselves reach as far
+  // as they did when only they were read.
+  const sinceBefore = Math.floor(now / 1000) - 2 * STATS_DAYS * 86400;
   // Read beside the sales; a store whose renewals cannot be read still sees its sales.
-  const [{ sales, partial }, renewals] = await Promise.all([
-    readPaidSales(store, since, 10),
+  const [{ sales: read, partial: readPartial }, renewals] = await Promise.all([
+    readPaidSales(store, sinceBefore, 20),
     readRenewals(store, since, now, 10).catch((error) => {
       console.error("reading renewals failed", error);
       return undefined;
@@ -773,6 +849,23 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   ]);
   const cut7 = dayKey(now - 6 * 86400_000);
   const cut30 = dayKey(now - 29 * 86400_000);
+  const cut90 = dayKey(now - (STATS_DAYS - 1) * 86400_000);
+  // The 90 days are the days the visits are read for, today and the 89 before.
+  const sales = read.filter((sale) => dayKey(sale.created) >= cut90);
+  // Partial for the 90 days only when the reading stopped inside them.
+  const oldestRead = read.length ? dayKey(read[read.length - 1].created) : "";
+  const partial = readPartial && oldestRead >= cut90;
+  const stretch = (from: string, to: string): SalesWindow | null => {
+    if (readPartial && oldestRead >= from) return null;
+    const out = { sales: 0, cents: 0 };
+    for (const sale of read) {
+      const day = dayKey(sale.created);
+      if (day < from || day >= to || sale.currency !== store.currency) continue;
+      out.sales += 1;
+      out.cents += sale.cents;
+    }
+    return out;
+  };
   const zero = () => ({ sales: 0, cents: 0 });
   const out: SalesStats = { byDay: {}, byProduct: {}, totals: { d7: zero(), d30: zero(), d90: zero() }, partial, elsewhere: 0, bySource: [], ...(renewals ? { renewals } : {}) };
   for (const sale of sales) {
@@ -826,6 +919,11 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
       source: sale.first,
     })),
   );
+  out.previous = {
+    d7: stretch(dayKey(now - 13 * 86400_000), cut7),
+    d30: stretch(dayKey(now - 59 * 86400_000), cut30),
+    d90: stretch(dayKey(now - (2 * STATS_DAYS - 1) * 86400_000), cut90),
+  };
   return out;
 }
 
@@ -934,7 +1032,50 @@ export type StatsData = {
   devices: Record<RangeKey, Ranked>;
   /** Memberships renewed and later plan payments, by window (SalesStats.renewals); null when they could not be read. */
   renewals: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean } | null;
+  /**
+   * The store's own page item by item, for the window (lib/page-read.ts): of
+   * the visitors measured, how many got as far as each item and how many
+   * clicked it, in the order of the page. Measured on one visitor in eight.
+   */
+  reach: Record<"d7" | "d30" | "d90", { visitors: number; rows: ReachItem[] }>;
+  /**
+   * The stretch of days just before each window, to set the window beside:
+   * the 7 days before the last 7, and so on. Sales and money are null where
+   * they were not read, or not read in full.
+   */
+  previous: Record<"d7" | "d30" | "d90", { visitors: number; views: number; checkouts: number; sales: number | null; cents: number | null }>;
 };
+
+export type ReachItem = { item: string; kind: "product" | "link" | "part"; title: string; position: number; reached: number; clicks: number };
+
+/** The products the store page's measured items name, so their titles can be read with the others (studioStats). */
+export function reachProducts(stats: Stats): string[] {
+  const ids = new Set<string>();
+  for (const field of Object.keys(stats.windows.d90.reach ?? {})) {
+    for (const part of field.split(/[.>]/)) if (part.startsWith("p:")) ids.add(part.slice(2));
+  }
+  return [...ids];
+}
+
+/** One window's store page, item by item, with each item's name. */
+export function reachItems(store: Store, fields: Record<string, number>, titles: Map<string, string>): { visitors: number; rows: ReachItem[] } {
+  const { visitors, rows } = reachRows(fields);
+  const parts = new Map<string, string>(PAGE_PARTS.map((p) => [p.id, p.label]));
+  return {
+    visitors,
+    rows: rows.map((row) => {
+      const id = row.item.slice(2);
+      const kind = row.item.startsWith("p:") ? "product" : row.item.startsWith("l:") ? "link" : "part";
+      const title =
+        kind === "product"
+          ? titles.get(id) ?? "A product no longer in your store"
+          : kind === "link"
+            ? store.links.find((link) => link.id === id)?.title ?? "A link no longer on your page"
+            : parts.get(id) ?? id;
+      return { ...row, kind, title };
+    }),
+  };
+}
 
 const EMPTY_WINDOW: WindowStats = {
   visitors: 0,
@@ -950,6 +1091,7 @@ const EMPTY_WINDOW: WindowStats = {
   devices: [],
   checkoutsBySource: [],
   freeBySource: [],
+  reach: {},
 };
 
 export type ChannelRow = { source: string; visits: number; checkouts: number; free: number; sales: number; cents: number };
@@ -1058,6 +1200,7 @@ export function studioStats(
   const per = <T,>(pick: (key: RangeKey) => T) => Object.fromEntries(keys.map((k) => [k, pick(k)])) as Record<RangeKey, T>;
   const ownCurrency = (rows: { source: string; currency: string; cents: number; sales: number }[] | undefined) =>
     rows?.filter((r) => r.currency === store.currency);
+  const titles = new Map(listings.map((l) => [l.id, l.title]));
   return {
     days,
     totals: per((k) => ({ visitors: w[k].visitors, views: w[k].views, checkouts: w[k].checkouts, ...salesOf(k) })),
@@ -1099,6 +1242,18 @@ export function studioStats(
       .filter((row) => row.currency === store.currency)
       .map(({ source, cents, sales: n }) => ({ source, cents, sales: n })),
     renewals: sales?.renewals ?? null,
+    previous: Object.fromEntries(
+      (["d7", "d30", "d90"] as const).map((k) => {
+        const visits = stats.previous?.[k] ?? { visitors: 0, views: 0, checkouts: 0 };
+        const sold = sales?.previous?.[k] ?? null;
+        return [k, { ...visits, sales: sold ? sold.sales : null, cents: sold ? sold.cents : null }];
+      }),
+    ) as StatsData["previous"],
+    reach: {
+      d7: reachItems(store, w.d7.reach ?? {}, titles),
+      d30: reachItems(store, w.d30.reach ?? {}, titles),
+      d90: reachItems(store, w.d90.reach ?? {}, titles),
+    },
   };
 }
 

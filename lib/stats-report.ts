@@ -30,6 +30,8 @@ export type SummaryWindow = {
   channels: { channel: string; visits: number; checkouts: number; signups: number; sales: number | null; revenue: number | null }[];
   countries: { country: string; views: number }[];
   devices: { device: string; views: number }[];
+  /** The same number of days just before, to compare with; sales and revenue null where they were not read in full. */
+  previous: { visitors: number; page_views: number; checkouts: number; sales: number | null; revenue: number | null };
 };
 
 export type Summary = {
@@ -80,6 +82,16 @@ export function summaryOf(data: StatsData): Summary {
       })),
       countries: ranked(data.countries?.[w] ?? [], "country"),
       devices: ranked(data.devices?.[w] ?? [], "device"),
+      previous: (() => {
+        const p = data.previous?.[w];
+        return {
+          visitors: p?.visitors ?? 0,
+          page_views: p?.views ?? 0,
+          checkouts: p?.checkouts ?? 0,
+          sales: known && p ? p.sales : null,
+          revenue: known && p ? p.cents : null,
+        };
+      })(),
     };
   }
   return { currency: data.currency, sales: data.sales, days };
@@ -141,6 +153,13 @@ const CHANNEL_WORDS: Record<string, string> = {
   pinterest: "Pinterest",
   threads: "Threads",
   reddit: "Reddit",
+  chatgpt: "ChatGPT",
+  perplexity: "Perplexity",
+  claude: "Claude",
+  gemini: "Gemini",
+  copilot: "Copilot",
+  deepseek: "DeepSeek",
+  grok: "Grok",
 };
 const channelWord = (source: string) => CHANNEL_WORDS[source] ?? source;
 
@@ -155,12 +174,21 @@ export function weeklyMessage(store: Store, data: StatsData, stopUrl: string): {
     ? `${store.name}: ${people} and ${money(week.cents)} in sales this week`
     : `${store.name}: ${people} this week`;
 
+  const before = data.previous?.d7;
+  // "(up 23% on the week before)", or nothing when there is nothing honest to say.
+  const against = (now: number, then: number | null | undefined) => {
+    if (then === null || then === undefined || then === 0) return "";
+    const value = ((now - then) / then) * 100;
+    if (Math.abs(value) < 0.5) return " (the same as the week before)";
+    const shown = Math.abs(value) < 10 ? Math.abs(value).toFixed(1) : String(Math.round(Math.abs(value)));
+    return ` (${value > 0 ? "up" : "down"} ${shown}% on the week before)`;
+  };
   const lines: string[] = [];
   lines.push(`Here is ${store.name} over the last 7 days.`, "");
-  lines.push(`Visitors: ${week.visitors.toLocaleString("en-US")}`);
-  lines.push(`Checkouts started: ${week.checkouts.toLocaleString("en-US")}`);
+  lines.push(`Visitors: ${week.visitors.toLocaleString("en-US")}${against(week.visitors, before?.visitors)}`);
+  lines.push(`Checkouts started: ${week.checkouts.toLocaleString("en-US")}${against(week.checkouts, before?.checkouts)}`);
   if (known) {
-    lines.push(`Sales: ${week.sales.toLocaleString("en-US")}, ${money(week.cents)} before Stripe's fee`);
+    lines.push(`Sales: ${week.sales.toLocaleString("en-US")}, ${money(week.cents)} before Stripe's fee${against(week.cents, before?.cents)}`);
     const renewals = data.renewals?.d7;
     if (renewals && renewals.payments > 0) lines.push(`Renewals: ${renewals.payments.toLocaleString("en-US")}, ${money(renewals.cents)}`);
   } else if (data.sales === "none") {

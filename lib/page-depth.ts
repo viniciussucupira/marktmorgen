@@ -8,13 +8,13 @@
  * block knows which block to rewrite, or which to move up.
  *
  * What is kept, and what is not: when a visitor leaves the page, it sends the
- * id of the furthest block they saw (components/page-depth.tsx). One hash per
- * product counts, for each block id, how many visitors stopped there, plus
- * how many were counted at all. No cookie, no address, nothing about who.
+ * id of the furthest block they saw (components/page-depth.tsx) — one visitor
+ * in eight, since 11 October 2026 (lib/page-read.ts). One hash per product
+ * counts, for each block id, how many visitors stopped there. No cookie, no address, nothing about who.
  * A block's share is everybody who stopped at it or further down, worked out
  * from the page as it is now; a removed block's count is simply not shown.
  *
- *   nl:depth:<statsId>:<productId>   hash: _n (visitors), <blockId> (stopped there)
+ *   nl:depth:<statsId>:<productId>   hash: <blockId> (stopped there); _n (visitors) until 11 October 2026
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { BLOCK_ID_PATTERN } from "@/lib/sales-page";
@@ -22,15 +22,22 @@ import { BLOCK_ID_PATTERN } from "@/lib/sales-page";
 const key = (statsId: string, productId: string) => `nl:depth:${statsId}:${productId}`;
 const KEEP_SECONDS = 400 * 86_400;
 
-/** Counts one visitor who read down to this block. */
+/**
+ * Counts one visitor who read down to this block: one command (lib/page-read.ts
+ * says why that matters). The record's expiry is written only when a block is
+ * counted for the first time, so a page counted on keeps its record for a
+ * little over a year after its newest block first appeared; how many visitors
+ * were counted is the sum of the blocks, so it needs no command of its own.
+ */
 export async function countDepth(statsId: string | null, productId: string, blockId: string): Promise<void> {
   if (!statsId || !isRedisConfigured() || !BLOCK_ID_PATTERN.test(blockId)) return;
   const k = key(statsId, productId);
-  await redisPipeline([
-    ["HINCRBY", k, "_n", 1],
-    ["HINCRBY", k, blockId, 1],
-    ["EXPIRE", k, KEEP_SECONDS],
-  ]).catch(() => {});
+  try {
+    const [count] = await redisPipeline([["HINCRBY", k, blockId, 1]]);
+    if (Number(count) === 1) await redisPipeline([["EXPIRE", k, KEEP_SECONDS]]);
+  } catch {
+    // A measure that fails is a visitor not counted, nothing more.
+  }
 }
 
 /** For each block of the page, in order, the share (0–100) of visitors who reached it; and how many were counted. */
@@ -52,6 +59,13 @@ export async function readDepth(statsId: string | null, productId: string): Prom
   if (Array.isArray(raw)) for (let i = 0; i + 1 < raw.length; i += 2) pairs[String(raw[i])] = String(raw[i + 1]);
   else if (raw && typeof raw === "object") Object.assign(pairs, raw);
   const stopped: Record<string, number> = {};
-  for (const [field, value] of Object.entries(pairs)) if (field !== "_n" && Number(value) > 0) stopped[field] = Number(value);
-  return { visitors: Number(pairs._n) || 0, stopped };
+  let visitors = 0;
+  for (const [field, value] of Object.entries(pairs)) {
+    if (field === "_n" || !(Number(value) > 0)) continue;
+    stopped[field] = Number(value);
+    visitors += Number(value);
+  }
+  // Every visitor counted stopped at exactly one block, so the blocks add up
+  // to the visitors; "_n", written until 11 October 2026, said the same.
+  return { visitors, stopped };
 }

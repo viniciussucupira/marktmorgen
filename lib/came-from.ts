@@ -27,6 +27,8 @@
  */
 
 /** The tags, as they are counted. Matches how lib/stats.ts cleans them. */
+import { sourceAlias } from "@/lib/source-rules";
+
 export type CameFrom = { source: string; medium: string; campaign: string };
 
 export const NO_SOURCE: CameFrom = { source: "", medium: "", campaign: "" };
@@ -55,7 +57,8 @@ export function cameFrom(referer: string | null, ownHost: string): CameFrom {
   }
   if (ownHost && url.hostname.toLowerCase() !== ownHost.toLowerCase()) return NO_SOURCE;
   return {
-    source: tidy(url.searchParams.get("utm_source")),
+    // The same word the visit was counted under (lib/source-rules.ts): ChatGPT's own tag is "chatgpt".
+    source: sourceAlias(tidy(url.searchParams.get("utm_source"))),
     medium: tidy(url.searchParams.get("utm_medium")),
     campaign: tidy(url.searchParams.get("utm_campaign"), 40),
   };

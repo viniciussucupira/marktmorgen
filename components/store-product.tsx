@@ -1157,7 +1157,7 @@ export function ProductCard({
 
   if (style === "preview" && picture) {
     return (
-      <li id={`p-${product.id}`} className="st-card scroll-mt-6 overflow-hidden">
+      <li id={`p-${product.id}`} data-item={`p:${product.id}`} className="st-card scroll-mt-6 overflow-hidden">
         <Link prefetch={false} href={href} className="st-cover-link" tabIndex={-1} aria-label={image?.alt ? undefined : product.title}>
           {picture}
         </Link>
@@ -1172,7 +1172,7 @@ export function ProductCard({
 
   if (style === "callout" && picture) {
     return (
-      <li id={`p-${product.id}`} className="st-card scroll-mt-6 p-5 sm:p-6">
+      <li id={`p-${product.id}`} data-item={`p:${product.id}`} className="st-card scroll-mt-6 p-5 sm:p-6">
         <div className="flex gap-4 sm:gap-5">
           <Link prefetch={false} href={href} className="st-callout-link shrink-0" tabIndex={-1} aria-label={image?.alt ? undefined : product.title}>
             {picture}
@@ -1204,7 +1204,7 @@ export function ProductCard({
   }
 
   return (
-    <li id={`p-${product.id}`} className="st-card scroll-mt-6 p-5 sm:p-6">
+    <li id={`p-${product.id}`} data-item={`p:${product.id}`} className="st-card scroll-mt-6 p-5 sm:p-6">
       {picture ? (
         <div className="flex items-start gap-3">
           <Link prefetch={false} href={href} className="shrink-0" tabIndex={-1} aria-label={image?.alt ? undefined : product.title}>

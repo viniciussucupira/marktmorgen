@@ -3,7 +3,6 @@ import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { classifySource, cleanTag } from "@/lib/stats";
 import { countAffiliateClick, countHit, countVisit } from "@/lib/visit";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
-import { countDepth } from "@/lib/page-depth";
 import { productIdFor } from "@/lib/catalog";
 
 const MAX_BODY_BYTES = 1_500;
@@ -65,11 +64,6 @@ export async function POST(request: NextRequest) {
   } else if (kind === "l") {
     const id = read("id", 40);
     if (store.links.some((link) => link.id === id)) await countHit(request, store, { kind: "link", id });
-  } else if (kind === "d") {
-    // How far down a product's sales page a visitor read (lib/page-depth.ts):
-    // only for a product of this store, which its index says without a read.
-    const product = read("p", 40);
-    if (productIdFor(store, product) === product) await countDepth(store.statsId, product, read("b", 12));
   } else if (kind === "a") {
     // A visit through an affiliate's link: counted for them, once a day.
     await countAffiliateClick(request, store, read("c", 20).toLowerCase());
