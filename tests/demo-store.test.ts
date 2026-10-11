@@ -29,7 +29,7 @@ import { join } from "node:path";
 import { offersCart } from "@/lib/cart-checkout";
 import { readThanksNote } from "@/lib/thanks-note-store";
 import { planFor } from "@/lib/product-extras";
-import { DEMO_EXTRAS, DEMO_PRODUCT, DEMO_STORE, type SeedDeps, ensureDemoStore, imageSize, seedFingerprint } from "@/lib/demo-seed";
+import { DEMO_CALL, DEMO_EXTRAS, DEMO_PRODUCT, DEMO_STORE, type SeedDeps, ensureDemoStore, imageSize, seedFingerprint } from "@/lib/demo-seed";
 import { DEMO_CONNECTED_ACCOUNT } from "@/lib/demo-account";
 import { getDemoFile } from "@/lib/demo-file";
 import { HOUSE_HANDLE, HOUSE_OWNER, isHouseStore, takesReviews } from "@/lib/house-store";
@@ -149,8 +149,10 @@ async function main(): Promise<void> {
   is("it is the house's", isHouseStore(store), true);
   is("on the demo's own account, on the $29 plan, with no subscription written down", [store.stripeAccountId, store.stripeChargesEnabled, store.subscriptionActive, store.tier, store.subscriptionId], [DEMO_CONNECTED_ACCOUNT, true, true, "creator", null]);
   is("it can sell", canSell(store), true);
-  is("the planner, with the two prices, and the two other products after it", [productIds(store).length, listing.options.map((o) => [o.label, o.priceCents])], [3, [["1 week", 2700], ["5 weeks", 3900]]]);
-  const others = (await readListings(store, productIds(store))).filter((p) => p.id !== listing.id);
+  is("the planner, with the two prices, the two other products and the call after it", [productIds(store).length, listing.options.map((o) => [o.label, o.priceCents])], [4, [["1 week", 2700], ["5 weeks", 3900]]]);
+  const rest = (await readListings(store, productIds(store))).filter((p) => p.id !== listing.id);
+  const others = rest.filter((p) => !p.call);
+  const call = rest.find((p) => p.call) ?? null;
   const folderOf = await storeFolder(HOUSE_OWNER);
   is(
     "each of the others is for sale at its price, with its own real PDF, its picture and its long description",
@@ -190,7 +192,18 @@ async function main(): Promise<void> {
     listing.image ? imageSrcSet(listing.image) : "",
     listing.image ? `${imageUrl(listing.image.small!)} 800w, ${imageUrl(listing.image)} 1200w` : "none",
   );
-  is("four files and the two sizes of three pictures were put; the photo and the six sizes fetched", [puts.length, fetched.length], [10, 7]);
+  is("four files and the two sizes of four pictures were put; the photo and the eight sizes fetched", [puts.length, fetched.length], [12, 9]);
+
+  is(
+    "the call is for sale at its price, with its picture, its long description and no file to hand over",
+    [call?.title, call?.priceCents, call?.file ?? null, Boolean(call?.image?.small), call?.about, call ? canSellProduct(store, call) : false],
+    [DEMO_CALL.title, Number(DEMO_CALL.price) * 100, null, true, true, true],
+  );
+  is(
+    "its hours, its length and the service its meetings are made on",
+    [call?.call?.kind, call?.call?.minutes, call?.call?.tz, call?.call?.seats, call?.call?.meet, call?.call?.weekly.map((day) => day.length)],
+    ["weekly", 30, DEMO_CALL.setup.tz, 1, "zoom", [0, 1, 1, 1, 1, 1, 0]],
+  );
 
   part("Asked again, it does only what is missing");
   const [putsBefore, fetchedBefore] = [puts.length, fetched.length];
@@ -205,7 +218,7 @@ async function main(): Promise<void> {
   const after = await ensureDemoStore(deps);
   is("after a deployment that changed the code it is gone through again", [after.ok, after.pending, after.ran], [true, [], true]);
   is("without putting or fetching what is already there", [puts.length, fetched.length], [putsBefore, fetchedBefore]);
-  is("and without a second product, option or link", [productIds((await theProduct()).store).length, (await theProduct()).listing.options.length, (await theProduct()).store.links.length], [3, 2, 1]);
+  is("and without a second product, option or link", [productIds((await theProduct()).store).length, (await theProduct()).listing.options.length, (await theProduct()).store.links.length], [4, 2, 1]);
 
   // The store's photo is gone and the place it is fetched from is down.
   ({ store } = await theProduct());
