@@ -311,7 +311,7 @@ export type Account = {
  * Connect accepts in place of checking its signature; what it says is still
  * checked: that Google issued it, for us, recently, about a verified address.
  */
-function googleAccount(idToken: unknown): Account | null {
+export function googleAccount(idToken: unknown): Account | null {
   if (typeof idToken !== "string") return null;
   const parts = idToken.split(".");
   if (parts.length !== 3) return null;

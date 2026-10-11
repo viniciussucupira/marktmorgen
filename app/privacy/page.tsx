@@ -200,6 +200,27 @@ export default function PrivacyPage() {
           remains is the store&apos;s count for the month. The address itself
           is not stored, and no cookie is set.
         </p>
+        <p>
+          <strong className="text-black">A store&apos;s own people are not counted.</strong>{" "}
+          Visits by the store&apos;s owner or a member of its team while signed
+          in are left out of its counts. A creator can also mark a browser they
+          use, signed in or not, so its visits are left out: that browser keeps
+          a cookie named <code>nl_nc</code> for 400 days, holding for each store
+          marked only twelve characters of a one-way hash of the store, and
+          nothing about the person.
+        </p>
+        <p>
+          <strong className="text-black">Google searches that found a store.</strong>{" "}
+          For stores at marktmorgen.com, we read from Google Search Console,
+          for our own site, which searches showed each store&apos;s pages, how
+          many times, how often they were clicked and where the store stood,
+          and show these totals to that store&apos;s creator. They are
+          Google&apos;s figures about searches, added up by Google and with rare
+          searches left out by it; they say nothing about who searched, and
+          nothing about a store&apos;s visitors is sent to Google for them. We
+          keep each store&apos;s latest reading for a day, and the access to
+          our Search Console sealed.
+        </p>
         <p id="ads">
           <strong className="text-black">
             Ad measurement a creator switches on.

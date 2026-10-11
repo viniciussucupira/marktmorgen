@@ -261,6 +261,66 @@ export async function sourcesToday(store: Store, now = Date.now()): Promise<Rank
   return tally.window(0).sources;
 }
 
+/**
+ * Today so far (added 11 October 2026), as Plausible's "Last 24 hours": the
+ * studio's numbers start at seven days, and on the day of a launch or a post
+ * that is taking off, today is the only day that matters. Visitors, page
+ * views, checkouts started and the channels, from today's own counts (two
+ * commands), and today's paid sales from the creator's Stripe, read at most
+ * every two minutes. The day is UTC, like every other day in the numbers.
+ */
+export type Today = {
+  date: string;
+  visitors: number;
+  views: number;
+  checkouts: number;
+  sources: { source: string; visits: number }[];
+  /** Null when Stripe is not connected or did not answer. */
+  sales: { sales: number; cents: number } | null;
+};
+const todaySalesKey = (statsId: string, day: string) => `nl:stats:${statsId}:today:${day}`;
+const TODAY_SALES_SECONDS = 120;
+
+export async function readToday(store: Store, now = Date.now()): Promise<Today> {
+  const date = dayKey(now);
+  const empty: Today = { date, visitors: 0, views: 0, checkouts: 0, sources: [], sales: null };
+  if (!store.statsId || !isRedisConfigured()) return empty;
+  const statsId = store.statsId;
+  const [raw, people, cached] = await redisPipeline([
+    ["HGETALL", countsKey(statsId, date)],
+    ["PFCOUNT", visitorsKey(statsId, date)],
+    ["GET", todaySalesKey(statsId, date)],
+  ]);
+  const tally = new Tally();
+  for (const [field, count] of pairs(raw)) tally.add(field, count);
+  const window = tally.window(Number(people) || 0);
+  let sales: Today["sales"] = null;
+  if (typeof cached === "string") {
+    try {
+      sales = JSON.parse(cached) as Today["sales"];
+    } catch {
+      sales = null;
+    }
+  } else if (store.stripeAccountId) {
+    const start = Math.floor(Date.parse(`${date}T00:00:00Z`) / 1000);
+    sales = await readPaidSales(store, start, 1)
+      .then(({ sales: rows }) => {
+        const own = rows.filter((sale) => sale.currency === store.currency && dayKey(sale.created) === date);
+        return { sales: own.length, cents: own.reduce((n, sale) => n + sale.cents, 0) };
+      })
+      .catch(() => null);
+    if (sales) await redisPipeline([["SET", todaySalesKey(statsId, date), JSON.stringify(sales), "EX", TODAY_SALES_SECONDS]]);
+  }
+  return {
+    date,
+    visitors: window.visitors,
+    views: window.views,
+    checkouts: window.checkouts,
+    sources: window.sources.slice(0, 5).map((r) => ({ source: r.name, visits: r.visits })),
+    sales,
+  };
+}
+
 export type Live = {
   /** People who opened the store's page in the last LIVE_MINUTES minutes, each once. */
   visitors: number;

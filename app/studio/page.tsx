@@ -52,6 +52,9 @@ import { serverSetup } from "@/lib/ad-events";
 import { readTrouble } from "@/lib/checkout-trouble";
 import { readSalesGoal } from "@/lib/sales-goal";
 import { chatSetup } from "@/lib/chat-summary";
+import { NO_COUNT_COOKIE, isMarkedDevice } from "@/lib/no-count";
+import { isOperator, searchConsoleStatus, storeSearches } from "@/lib/search-console";
+import { GoogleSearches } from "@/components/google-searches";
 import { ServerEventsEditor } from "@/components/server-events-editor";
 import { CalendarEditor } from "@/components/calendar-editor";
 import { WebhookEditor } from "@/components/webhook-editor";
@@ -1113,6 +1116,12 @@ export default async function StudioPage({
                   }
                   goal={(await readSalesGoal(store.statsId, store.currency).catch(() => ({ cents: 0 }))).cents}
                   chat={may("settings") ? await chatSetup(store.statsId).catch(() => null) : undefined}
+                  deviceMarked={isMarkedDevice((await cookies()).get(NO_COUNT_COOKIE)?.value, store.sid)}
+                />
+                <GoogleSearches
+                  searches={await storeSearches(store).catch(() => null)}
+                  operator={isOperator(email) ? await searchConsoleStatus().catch(() => ({ connected: false, account: "" })) : null}
+                  result={typeof params.gsc === "string" ? params.gsc : ""}
                 />
               </div>
             ) : null}

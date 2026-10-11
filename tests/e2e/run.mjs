@@ -514,6 +514,16 @@ try {
     if (process.env.E2E_SHOTS) {
       await numbers.screenshot({ path: join(process.env.E2E_SHOTS, "numbers-six.png") });
     }
+    await studio.getByText("Today so far").waitFor({ timeout: 40_000 });
+    is("today so far is shown beside who is on the store now", await studio.getByText("Today so far").count(), 1);
+    const before = await studio.locator("#numbers").getByRole("button", { name: "Don't count this device" }).count();
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/no-count") && r.ok(), { timeout: 30_000 }),
+      studio.getByRole("button", { name: "Don't count this device" }).click(),
+    ]);
+    is("this device can be marked not to be counted", [before, await studio.getByRole("button", { name: "Count this device again" }).count()], [1, 1]);
+    const marked = (await wide.cookies(LOCAL)).some((c) => c.name === "nl_nc" && /^[0-9a-f]{12}$/.test(c.value));
+    is("and carries only a hash of the store", marked, true);
     await open(studio, `${LOCAL}/studio/memberships`);
     is("the memberships page still opens", await studio.getByRole("heading", { name: "How your memberships are doing" }).count(), 1);
     if (process.env.E2E_SHOTS) await studio.screenshot({ path: join(process.env.E2E_SHOTS, "memberships.png"), fullPage: true });
