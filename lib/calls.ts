@@ -40,6 +40,7 @@
 import { saleHandles } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { isHouseStore } from "@/lib/house-store";
 import { HOLD_SECONDS, checkoutClosesAt, onAccount } from "@/lib/stripe-account";
 import { applyTax, applyTaxDocuments, openKeepingTheSale } from "@/lib/tax";
 import { askForCallReminder, recoveryOn, refusedRecovery, withoutCallReminder } from "@/lib/recovery-setting";
@@ -502,6 +503,19 @@ async function dropLock(callsId: string): Promise<void> {
   await redisPipeline([["DEL", lockKey(callsId)]]).catch(() => {});
 }
 
+/**
+ * Whether this store's bookings write to anybody.
+ *
+ * Every store does, but the demo store (lib/house-store.ts), whose checkout
+ * takes any address and charges nothing: a confirmation from it would be a
+ * way to send mail to anybody who was typed into it, and its own owner is an
+ * address nobody reads. Its buyers are given the time and the meeting link on
+ * the page instead, which is where a booking shows them anyway.
+ */
+function writesAboutBookings(store: Store): boolean {
+  return isSenderConfigured() && !isHouseStore(store);
+}
+
 export type HoldResult =
   | { ok: true; url: string; session: string }
   | { ok: false; reason: "taken" | "invalid" | "unavailable" | "error" };
@@ -859,7 +873,7 @@ export async function moveBooking(input: {
   const moves = from.moves + 1;
   try {
     await unplanReminders(callsId, store.handle, session, from.start);
-    await planReminders(callsId, store.handle, session, start);
+    if (writesAboutBookings(store)) await planReminders(callsId, store.handle, session, start);
   } catch (error) {
     console.error("planning reminders after a move failed", error);
   }
@@ -894,7 +908,7 @@ async function tellMoved(input: {
   buyerTz: string;
   origin: string;
 }): Promise<void> {
-  if (!isSenderConfigured()) return;
+  if (!writesAboutBookings(input.store)) return;
   const { store, product, session, from, start, end, moves, email, origin } = input;
   const setup = product.call;
   const buyerTz = isTimeZone(input.buyerTz) ? input.buyerTz : setup.tz;
@@ -1067,9 +1081,12 @@ export async function confirmBooking(input: {
 
   const entry: Entry = { s: start, e: end, until: 0, session, p: product.id };
   await redisPipeline([["HSET", busyKey(store.callsId), session, JSON.stringify(entry)]]);
-  await planReminders(store.callsId, store.handle, session, start).catch((error) =>
-    console.error("planning call reminders failed", error),
-  );
+  // Reminders are emails too, so the demo plans none (writesAboutBookings).
+  if (writesAboutBookings(store)) {
+    await planReminders(store.callsId, store.handle, session, start).catch((error) =>
+      console.error("planning call reminders failed", error),
+    );
+  }
   await emitEvent(store, "call.booked", session, {
     checkout_session: session,
     product: { id: product.id, title: product.title },
@@ -1101,7 +1118,7 @@ export async function confirmBooking(input: {
     console.error("making a booking's meeting failed", error);
     return null;
   });
-  if (!isSenderConfigured()) return;
+  if (!writesAboutBookings(store)) return;
 
   const setup = product.call;
   const buyerTz = isTimeZone(input.buyerTz) ? input.buyerTz : setup.tz;
@@ -1226,7 +1243,7 @@ export async function tellNewLink(input: {
   people: PaidCall[];
   origin: string;
 }): Promise<number> {
-  if (!isSenderConfigured()) return 0;
+  if (!writesAboutBookings(input.store)) return 0;
   const { store, product, meeting, previous, people, origin } = input;
   const setup = product.call;
   const name = meeting.provider === "google" ? "Google Meet" : "Zoom";
