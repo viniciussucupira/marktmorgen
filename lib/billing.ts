@@ -844,6 +844,104 @@ export async function addToNextInvoice(input: {
   return made.id;
 }
 
+/**
+ * The API version the charges below are read at: the one where a paid
+ * invoice names the payment it was paid with (`payment_intent`), which
+ * versions from 2025 moved elsewhere. Pinned so a refund always finds it.
+ */
+const CHARGE_VERSION = "2024-06-20";
+
+export type ChargeResult =
+  | { ok: true; invoiceId: string; paymentIntent: string }
+  | { ok: false; reason: "card" | "declined" | "error" };
+
+/**
+ * Charges a creator now, on the card their plan is paid with, for something
+ * they asked for and were told the price of first (AI captions,
+ * lib/auto-captions.ts). Its own invoice, with one line, paid at once: a
+ * thing that costs us money is paid for before it is done, so nothing is
+ * ever owed on a card that later fails. A declined card leaves nothing
+ * behind: the invoice is voided.
+ */
+export async function chargeNow(input: {
+  customerId: string;
+  subscriptionId: string;
+  cents: number;
+  description: string;
+  mark: string;
+  idempotencyKey: string;
+}): Promise<ChargeResult> {
+  if (!CUSTOMER_PATTERN.test(input.customerId) || !SUBSCRIPTION_PATTERN.test(input.subscriptionId)) return { ok: false, reason: "card" };
+  if (!Number.isInteger(input.cents) || input.cents < 50) return { ok: false, reason: "error" };
+  const at = { version: CHARGE_VERSION };
+  let invoiceId = "";
+  try {
+    const sub = await onPlatform("GET", `/subscriptions/${encodeURIComponent(input.subscriptionId)}`, undefined, at);
+    let method = typeof sub.default_payment_method === "string" ? sub.default_payment_method : "";
+    if (!method) {
+      const customer = await onPlatform("GET", `/customers/${encodeURIComponent(input.customerId)}`, undefined, at);
+      const settings = customer.invoice_settings as { default_payment_method?: unknown } | null | undefined;
+      method = typeof settings?.default_payment_method === "string" ? settings.default_payment_method : "";
+    }
+    if (!method) return { ok: false, reason: "card" };
+    const invoice = await onPlatform(
+      "POST",
+      "/invoices",
+      new URLSearchParams({
+        customer: input.customerId,
+        collection_method: "charge_automatically",
+        auto_advance: "false",
+        pending_invoice_items_behavior: "exclude",
+        default_payment_method: method,
+        currency: "usd",
+        description: input.description.slice(0, 350),
+        "metadata[mark]": input.mark,
+      }),
+      { ...at, idempotencyKey: `${input.idempotencyKey}:invoice` },
+    );
+    invoiceId = typeof invoice.id === "string" ? invoice.id : "";
+    if (!invoiceId) return { ok: false, reason: "error" };
+    await onPlatform(
+      "POST",
+      "/invoiceitems",
+      new URLSearchParams({
+        customer: input.customerId,
+        invoice: invoiceId,
+        amount: String(input.cents),
+        currency: "usd",
+        description: input.description.slice(0, 350),
+        "metadata[mark]": input.mark,
+      }),
+      { ...at, idempotencyKey: `${input.idempotencyKey}:item` },
+    );
+    await onPlatform("POST", `/invoices/${encodeURIComponent(invoiceId)}/finalize`, new URLSearchParams(), { ...at, idempotencyKey: `${input.idempotencyKey}:finalize` });
+    const paid = await onPlatform("POST", `/invoices/${encodeURIComponent(invoiceId)}/pay`, new URLSearchParams(), { ...at, idempotencyKey: `${input.idempotencyKey}:pay` });
+    const intent = typeof paid.payment_intent === "string" ? paid.payment_intent : "";
+    if (paid.status !== "paid" || !intent) throw new BillingError(402, "not_paid", "The invoice was not paid.");
+    return { ok: true, invoiceId, paymentIntent: intent };
+  } catch (error) {
+    const declined = error instanceof BillingError && (error.status === 402 || error.code === "card_declined" || error.code === "not_paid");
+    if (!declined) console.error("charging a creator now failed", error);
+    // Nothing is left owed: an invoice that was not paid is voided.
+    if (invoiceId) await onPlatform("POST", `/invoices/${encodeURIComponent(invoiceId)}/void`, new URLSearchParams(), at).catch(() => null);
+    return { ok: false, reason: declined ? "declined" : "error" };
+  }
+}
+
+/** Gives back all of a charge made by chargeNow, or `cents` of it. True when Stripe took the refund. */
+export async function refundCharge(paymentIntent: string, cents: number | null, idempotencyKey: string): Promise<boolean> {
+  if (!/^pi_[A-Za-z0-9]{8,64}$/.test(paymentIntent)) return false;
+  try {
+    const body = new URLSearchParams({ payment_intent: paymentIntent, reason: "requested_by_customer" });
+    if (cents !== null) body.set("amount", String(cents));
+    await onPlatform("POST", "/refunds", body, { version: CHARGE_VERSION, idempotencyKey });
+    return true;
+  } catch (error) {
+    console.error("refunding a charge failed", error);
+    return false;
+  }
+}
+
 /** Whether a line with this mark was added to this customer since `sinceSeconds`, billed yet or not. */
 export async function findInvoiceLine(customerId: string, mark: string, sinceSeconds: number): Promise<boolean> {
   if (!CUSTOMER_PATTERN.test(customerId)) return false;

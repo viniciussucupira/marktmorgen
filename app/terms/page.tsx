@@ -1,3 +1,4 @@
+import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
@@ -360,6 +361,19 @@ export default function TermsPage() {
           free trial, and {SETUP_VIDEO_HOURS} hours a month before a plan is
           started and after one has ended. Nothing is charged for those
           hours, and everything else in a course stays open.
+        </p>
+        <p>
+          Captions written by AI for a lesson&apos;s video are bought when you
+          ask for them, not billed by use: {dollars(CENTS_PER_MINUTE)} for each
+          minute of the video, the minutes rounded up, for each language
+          asked, and never less than {dollars(MIN_CENTS)} for one request. The
+          price is shown before you confirm and is charged at once to the card
+          your plan is paid with, on an invoice of its own. If the captions in
+          a language are not delivered within {GIVE_UP_HOURS} hours, what was
+          paid for that language is refunded automatically. They are written
+          by a machine from what is said in the video and may contain
+          mistakes; you are responsible for reviewing them before your
+          students rely on them.
         </p>
         <p>
           A visit is one person opening your store on one day, however many

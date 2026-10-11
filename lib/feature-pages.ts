@@ -4,6 +4,7 @@
 // or says plainly that it cannot be done. When a feature changes, its page
 // changes the same day: the help centre and these pages are read against the
 // code, not against a plan.
+import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MAX_AUTO_MINUTES, dollars } from "@/lib/auto-captions-rules";
 import { isDomainsConfigured } from "@/lib/domains";
 import { PLAN_PRICES, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { AI_MONTHLY } from "@/lib/ai-rules";
@@ -222,6 +223,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "video", title: "A player students control", body: "Students can pick a size and a playback speed, watch full screen or in a small window, and the video goes on from where they stopped on that device." },
           { icon: "phone", title: "Video that stays upright", body: "Up to 5 GB a lesson. A video filmed upright on a phone plays upright, in a frame of its own shape." },
           { icon: "type", title: "Captions in up to 12 languages", body: "Upload a .vtt or .srt file for a language and the player shows a captions button. Bold, italics and where a caption sits are kept; a file that is not captions is refused instead of shown as nothing." },
+          { icon: "sparkle", title: "Captions written by AI", body: `One press writes a lesson's captions from what is said in it, in the language spoken and, if you like, translated into up to two more. ${dollars(CENTS_PER_MINUTE)} a minute of video for each language, shown before you press and charged then to the card your plan is paid with; anything not delivered within ${GIVE_UP_HOURS} hours is refunded.` },
           { icon: "lock", title: "A video address that expires", body: "The player on a lesson page is signed for a few hours. Without that signature, the video and its files are refused." },
           { icon: "eye", title: "Free preview lessons", body: "Any lesson can be watched from your store before buying, so the buyer knows what they are paying for." },
           { icon: "calendar", title: "Modules that open over time", body: "A module can open a set number of days after each student joins, and the student gets an email the day it does." },
@@ -254,7 +256,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           "Video is covered for 400 hours watched a month across your store, counted by the player as your students watch. Past that it is $0.03 for each hour watched, on your next invoice; a student is never cut off, and your studio shows the hours as they are watched.",
           "Without a paid plan, lesson videos pause past the store's hours until the plan is paid or the month turns: 400 hours a month in the free trial, and 10 hours a month before a plan starts and after one ends.",
           "Video is kept up to 1080p: a 4K file plays at 1080p.",
-          "Captions are not written for you: no speech is listened to. You upload a .vtt or .srt file for each language, up to 1 MB each. There are no transcripts.",
+          `Captions written by AI are machine transcription: read them before you rely on them, and replace a language with your own file whenever you like. They are for videos of up to ${MAX_AUTO_MINUTES / 60} hours, need a paid plan, and come as captions in the player, not as a separate transcript.`,
           "A signed address stops a link from being passed around. It does not stop a student from recording their own screen; nothing does.",
         ],
       },

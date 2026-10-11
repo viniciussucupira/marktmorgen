@@ -624,6 +624,27 @@ function tracksFrom(flat: unknown): CaptionTrack[] {
   return out.sort((a, b) => a.label.localeCompare(b.label, "en"));
 }
 
+/**
+ * One request to the video service about this library, for the captions it
+ * writes itself (lib/auto-captions.ts). `status` 0 when it was not reached,
+ * or nothing here is set up.
+ */
+export async function askStream(method: string, path: string, body?: unknown): Promise<{ status: number; data: unknown }> {
+  const config = streamConfig();
+  if (!config) return { status: 0, data: null };
+  return ask(config, method, path, body);
+}
+
+/** Writes down languages the service now has captions in for a video, so the studio and the lesson list them. */
+export async function noteCaptionLanguages(id: string, langs: string[]): Promise<void> {
+  const known = langs.flatMap((lang) => {
+    const label = captionLabel(lang);
+    return label ? [lang, label] : [];
+  });
+  if (!known.length || !isRedisConfigured() || !STREAM_ID_PATTERN.test(id)) return;
+  await redisPipeline([["HSET", captionsKey(id), ...known]]);
+}
+
 /** The languages each of these videos has captions in, by its path. Videos with none are left out. */
 export async function streamCaptions(pathnames: string[]): Promise<Record<string, CaptionTrack[]>> {
   const wanted = pathnames.flatMap((path) => {

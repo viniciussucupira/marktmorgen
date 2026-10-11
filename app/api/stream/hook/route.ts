@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { clientAddress, limited, withinLimit } from "@/lib/request-guard";
 import { believed, heard, isStreamConfigured, streamConfig } from "@/lib/stream";
+import { syncAutoCaptions } from "@/lib/auto-captions";
 
 /** An announcement is three short fields. Anything bigger is not one. */
 const MAX_BODY_BYTES = 4_000;
@@ -51,7 +52,11 @@ export async function POST(request: NextRequest) {
     return Response.json({ ok: false }, { status: 400 });
   }
   try {
-    return Response.json({ ok: true, result: await heard(parsed) });
+    const result = await heard(parsed);
+    // Captions the service was asked to write are listed the moment it says so (lib/auto-captions.ts).
+    const guid = (parsed as { VideoGuid?: unknown } | null)?.VideoGuid;
+    if (result === "looked" && typeof guid === "string") await syncAutoCaptions(guid.toLowerCase());
+    return Response.json({ ok: true, result });
   } catch (error) {
     // Answered as a failure, so the service sends it again.
     console.error("acting on a video announcement failed", error);

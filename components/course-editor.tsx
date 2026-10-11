@@ -28,6 +28,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { AiAssist, AiOn } from "@/components/ai-assist";
 import { type StreamState, isStreamPath } from "@/lib/stream-rules";
 import { CAPTION_LANGUAGES, type CaptionTrack, MAX_CAPTION_BYTES, MAX_CAPTION_TRACKS } from "@/lib/captions";
+import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MAX_AUTO_LANGUAGES, MAX_AUTO_MINUTES, MIN_CENTS, autoCaptionCents, dollars } from "@/lib/auto-captions-rules";
 import { TusError, tusUpload } from "@/lib/tus-upload";
 
 type Outline = { modules: { title: string; lessons: string[] }[] };
@@ -58,6 +59,16 @@ const MESSAGES: Record<string, string> = {
   caption_not_ready: "The video has to finish uploading before captions can be added.",
   caption_language: "Choose a language from the list.",
   caption_unknown: "That video is not there anymore. Reload the page.",
+  auto_not_ready: "The video has to finish uploading and being prepared before captions can be written.",
+  auto_language: "Choose languages this video has no captions in yet, the one spoken first, three at most.",
+  auto_long: `Captions are written for videos of up to ${MAX_AUTO_MINUTES / 60} hours.`,
+  auto_busy: "Captions for this video are already being written. They appear here when they are done.",
+  auto_plan: "Captions written by AI are charged to the card your plan is paid with, so they need a plan first.",
+  auto_card: "There is no card on your plan to charge. Add one under Plan and billing, then try again.",
+  auto_declined: "Your card was declined, so nothing was charged and nothing is being written.",
+  auto_unavailable: "The video service could not take this just now. Nothing was charged; try again in a moment.",
+  auto_unknown: "That video is not there anymore. Reload the page.",
+  forbidden: "Your role on this store does not include charging the plan's card. Ask the owner to do this.",
   server_error: "Something went wrong on our side. Try again in a moment.",
 };
 
@@ -74,10 +85,18 @@ const Streams = createContext<{
   /** The languages each of those videos has captions in. */
   captions: Record<string, CaptionTrack[]>;
   captioned: (path: string, tracks: CaptionTrack[]) => void;
+  /** The languages captions are being written in by AI, by video (lib/auto-captions.ts). */
+  writing: Record<string, string[]>;
+  wrote: (path: string, langs: string[]) => void;
+  /** Whether this person may have captions written by AI, charged to the plan's card; and the store's language. */
+  auto: { can: boolean; spoken: string };
 }>({
   states: {},
   learned: () => {},
   captions: {},
+  writing: {},
+  wrote: () => {},
+  auto: { can: false, spoken: "en" },
   captioned: () => {},
 });
 
@@ -141,6 +160,8 @@ export function CourseEditor({
   ai = { on: false, left: 0 },
   streams = {},
   captions = {},
+  writing = {},
+  auto = { can: false, spoken: "en" },
 }: {
   productId: string;
   initial: Course;
@@ -149,6 +170,10 @@ export function CourseEditor({
   streams?: Record<string, StreamState>;
   /** The languages each of those videos had captions in when the page was drawn. */
   captions?: Record<string, CaptionTrack[]>;
+  /** The languages captions were being written in by AI, by video, when the page was drawn. */
+  writing?: Record<string, string[]>;
+  /** Whether this person may have captions written by AI, and the store's language to start from. */
+  auto?: { can: boolean; spoken: string };
   /** The course's name, for the writing help. */
   title?: string;
   /** Whether the writing help is on, and what is left of the month (lib/ai.ts). */
@@ -167,6 +192,8 @@ export function CourseEditor({
   const learned = (path: string, state: StreamState) => setStreamStates((known) => ({ ...known, [path]: state }));
   const [captionTracks, setCaptionTracks] = useState<Record<string, CaptionTrack[]>>(captions);
   const captioned = (path: string, tracks: CaptionTrack[]) => setCaptionTracks((known) => ({ ...known, [path]: tracks }));
+  const [writingNow, setWritingNow] = useState<Record<string, string[]>>(writing);
+  const wrote = (path: string, langs: string[]) => setWritingNow((known) => ({ ...known, [path]: langs }));
 
   async function run(payload: Record<string, unknown>): Promise<Answer> {
     setBusy(true);
@@ -181,7 +208,7 @@ export function CourseEditor({
   const lessons = course.modules.reduce((n, m) => n + m.lessons.length, 0);
 
   return (
-    <Streams.Provider value={{ states: streamStates, learned, captions: captionTracks, captioned }}>
+    <Streams.Provider value={{ states: streamStates, learned, captions: captionTracks, captioned, writing: writingNow, wrote, auto }}>
     <div className="mt-8 space-y-6">
       {error ? (
         <p className="notice notice-error" role="alert">{error}</p>
@@ -815,9 +842,16 @@ function Captions({
         </ul>
       ) : (
         <p className="mt-1 text-sm text-ink-mute">
-          None yet. Upload a .vtt or .srt file and the player shows a captions button. Captions are not written for you.
+          None yet. Have them written by AI below, or upload a .vtt or .srt file, and the player shows a captions button.
         </p>
       )}
+      {(streams.writing[pathname] ?? []).length ? (
+        <p className="mt-2 text-sm text-ink" role="status" data-captions-writing>
+          {`Being written by AI: ${(streams.writing[pathname] ?? []).map((code) => CAPTION_LANGUAGES.find((l) => l.code === code)?.label ?? code).join(", ")}. Most lessons take a few minutes; they appear here when they are done.`}
+        </p>
+      ) : streams.auto.can ? (
+        <AutoCaptions lessonId={lessonId} pathname={pathname} have={tracks.map((t) => t.lang)} busy={busy || working} onError={onError} />
+      ) : null}
       <div className="mt-2 flex flex-wrap items-end gap-3">
         <label htmlFor={selectId} className="block">
           <span className="sr-only">Captions language</span>
@@ -842,6 +876,121 @@ function Captions({
           />
         </label>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Captions written by AI (lib/auto-captions.ts): the language spoken in the
+ * video, up to two more to translate into, and the price, read from the
+ * video's length, before anything is charged.
+ */
+function AutoCaptions({
+  lessonId,
+  pathname,
+  have,
+  busy,
+  onError,
+}: {
+  lessonId: string;
+  pathname: string;
+  have: string[];
+  busy: boolean;
+  onError: (message: string | null) => void;
+}) {
+  const streams = useContext(Streams);
+  const free = CAPTION_LANGUAGES.filter((l) => !have.includes(l.code));
+  const [open, setOpen] = useState(false);
+  const [spoken, setSpoken] = useState(free.some((l) => l.code === streams.auto.spoken) ? streams.auto.spoken : free[0]?.code ?? "en");
+  const [also, setAlso] = useState<string[]>([]);
+  const [minutes, setMinutes] = useState<number | null>(null);
+  const [working, setWorking] = useState(false);
+
+  async function call(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const response = await fetch("/api/store/stream/captions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lessonId, ...payload }),
+    });
+    return (await response.json().catch(() => ({ ok: false, error: "server_error" }))) as Record<string, unknown>;
+  }
+
+  async function show() {
+    onError(null);
+    setWorking(true);
+    const data: Record<string, unknown> = await call({ action: "quote" }).catch(() => ({ ok: false, error: "server_error" }));
+    setWorking(false);
+    if (data.ok && typeof data.minutes === "number") {
+      setMinutes(data.minutes);
+      setOpen(true);
+    } else onError(MESSAGES[String(data.error ?? "")] ?? MESSAGES.server_error);
+  }
+
+  async function order() {
+    onError(null);
+    setWorking(true);
+    const data: Record<string, unknown> = await call({ action: "auto", spoken, also: also.filter((code) => code !== spoken) }).catch(() => ({ ok: false, error: "server_error" }));
+    setWorking(false);
+    if (data.ok && Array.isArray(data.writing)) {
+      streams.wrote(pathname, (data.writing as unknown[]).filter((code): code is string => typeof code === "string"));
+      setOpen(false);
+      toast(`Charged ${dollars(Number(data.cents) || 0)}. The captions are being written.`);
+    } else onError(MESSAGES[String(data.error ?? "")] ?? MESSAGES.server_error);
+  }
+
+  const languages = [spoken, ...also.filter((code) => code !== spoken)];
+  const cents = minutes === null ? 0 : autoCaptionCents(minutes * 60, languages.length);
+  if (!free.length) return null;
+  return (
+    <div className="mt-3 rounded-[var(--r-sm)] bg-sand p-3" data-auto-captions>
+      {!open ? (
+        <button type="button" className="btn btn-secondary btn-sm" disabled={busy || working} aria-busy={working} onClick={() => void show()}>
+          Write captions with AI
+        </button>
+      ) : (
+        <div className="space-y-3">
+          <label className="block">
+            <span className="text-sm text-ink-soft">Language spoken in the video</span>
+            <select className="field mt-1" value={spoken} disabled={busy || working} onChange={(e) => setSpoken(e.target.value)}>
+              {free.map((language) => (
+                <option key={language.code} value={language.code}>{language.label}</option>
+              ))}
+            </select>
+          </label>
+          <fieldset>
+            <legend className="text-sm text-ink-soft">{`Also translated into (up to ${MAX_AUTO_LANGUAGES - 1}, optional)`}</legend>
+            <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3">
+              {free
+                .filter((language) => language.code !== spoken)
+                .map((language) => {
+                  const checked = also.includes(language.code);
+                  return (
+                    <label key={language.code} className="flex items-center gap-2 text-sm text-ink">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={busy || working || (!checked && also.filter((code) => code !== spoken).length >= MAX_AUTO_LANGUAGES - 1)}
+                        onChange={(e) => setAlso((now) => (e.target.checked ? [...now, language.code] : now.filter((code) => code !== language.code)))}
+                      />
+                      <span>{language.label}</span>
+                    </label>
+                  );
+                })}
+            </div>
+          </fieldset>
+          <p className="text-sm text-ink" data-auto-price>
+            {`${minutes} ${minutes === 1 ? "minute" : "minutes"} of video × ${languages.length} ${languages.length === 1 ? "language" : "languages"} × ${dollars(CENTS_PER_MINUTE)} = ${dollars(cents)}${cents === MIN_CENTS && (minutes ?? 0) * languages.length * CENTS_PER_MINUTE < MIN_CENTS ? ` (the least one order is)` : ""}, charged now to the card your plan is paid with. Anything not delivered within ${GIVE_UP_HOURS} hours is refunded.`}
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" className="btn btn-primary btn-sm" disabled={busy || working} aria-busy={working} onClick={() => void order()}>
+              {`Write them for ${dollars(cents)}`}
+            </button>
+            <button type="button" className={`${small} font-bold`} onClick={() => setOpen(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
