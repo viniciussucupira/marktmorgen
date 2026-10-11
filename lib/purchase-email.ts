@@ -216,13 +216,15 @@ export function confirmationFor(
   const endsAfter = product.recurring ? wholeNumber(meta.ends_after) : 0;
   // And its introductory price, when it had one (lib/intro-price.ts): what the first payments cost, and the price after.
   const intro = product.recurring ? introOf(meta) : null;
+  // A monthly membership may have been paid yearly (lib/yearly-price.ts): said as it was bought.
+  const every = product.recurring ? (meta.every === "year" ? "year" : product.recurring.interval) : "month";
 
   const words = ordersWords(store.language);
   const said = speaking(store, currency);
   /** "A and B", "A, B and C" said the language's way. */
   const listed = (titles: string[]) => titles.reduce((all, one) => words.and(all, one));
 
-  const paid = paidLine(store, product, amount, currency, plan, trialDays, endsAfter, intro);
+  const paid = paidLine(store, product, amount, currency, plan, trialDays, endsAfter, intro, every);
   const lines: string[] = [
     words.confirmIntro(name),
     "",
@@ -266,7 +268,7 @@ export function confirmationFor(
       const firstOn = said.date((created + trialDays * 86400) * 1000);
       lines.push("", words.trialCharge(said.money(firstCents), tax, trialDays, firstOn));
     }
-    const schedule = words.renews(product.recurring.interval, endsAfter);
+    const schedule = words.renews(every, endsAfter);
     lines.push(
       "",
       canManage(store)
@@ -328,6 +330,7 @@ function paidLine(
   trialDays: number,
   endsAfter: number,
   intro: { cents: number; count: number; regular: number } | null = null,
+  every: "day" | "week" | "month" | "year" = product.recurring?.interval ?? "month",
 ): string {
   const words = ordersWords(store.language);
   const { w, money } = speaking(store, currency);
@@ -338,8 +341,8 @@ function paidLine(
     return w.introThen(money(intro.cents), intro.count, product.recurring.interval, `${money(intro.regular)} ${w.every(product.recurring.interval)}`);
   }
   if (product.recurring) {
-    const every = `${money(amount)} ${w.every(product.recurring.interval)}`;
-    return endsAfter > 0 ? words.paymentsInAll(every, endsAfter) : every;
+    const line = `${money(amount)} ${w.every(every)}`;
+    return endsAfter > 0 ? words.paymentsInAll(line, endsAfter) : line;
   }
   return money(amount);
 }

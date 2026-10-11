@@ -240,6 +240,10 @@ export const en = {
   moreFrom: (store: string) => `More from ${store}`,
   alsoBought: (title: string) => `Buyers of ${title} also bought`,
   boughtBoth: (n: number) => `${n} buyers bought both`,
+  billMonthly: "Monthly",
+  billYearly: "Yearly",
+  yearSave: (amount: string) => `Save ${amount}`,
+  yearlyFact: (price: string, save: string) => `Or ${price} ${en.every("year")}, which saves ${save}`,
 
   // ---- Reviews ----------------------------------------------------------------------------
   reviews: "Reviews",

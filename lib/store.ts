@@ -73,6 +73,7 @@ import { type PwywProblem, pwywProblem } from "@/lib/pay-what-you-want";
 import { type CheckoutField } from "@/lib/checkout-fields";
 import { type Currency, DEFAULT_CURRENCY, currencyRule, parseCurrency, priceBounds, priceInRange, readMoney } from "@/lib/money";
 import { type Intro, type IntroProblem, introProblem } from "@/lib/intro-price";
+import { type Yearly, type YearlyProblem, yearlyProblem } from "@/lib/yearly-price";
 import { type KeySetup, canHaveKeys } from "@/lib/key-setup";
 import { type BundleProblem, bundleProblem, isBundle, pickProblem } from "@/lib/bundle-rules";
 import { offerableAfterPaying } from "@/lib/bundles";
@@ -3261,6 +3262,21 @@ export async function setProductIntro(email: string, id: string, intro: Intro | 
     const problem = introProblem(product, intro, priceBounds(store.currency).min, store.tiers);
     if (problem) return { ok: false, reason: `intro_${problem}` };
     return { ...product, intro: { cents: intro.cents, count: intro.count } };
+  });
+  return done.ok ? { ok: true, store: done.store, product: done.product } : done;
+}
+
+export type YearlyResult =
+  | { ok: true; store: Store; product: Product }
+  | { ok: false; reason: "none" | "unknown" | `yearly_${YearlyProblem}` };
+
+/** Gives a monthly membership a yearly price beside it (lib/yearly-price.ts), changes it, or takes it off (null). */
+export async function setProductYearly(email: string, id: string, yearly: Yearly | null): Promise<YearlyResult> {
+  const done = await onProduct<`yearly_${YearlyProblem}`>(email, id, (product, store) => {
+    if (yearly === null) return { ...product, yearly: null };
+    const problem = yearlyProblem(product, yearly, priceBounds(store.currency).min, store.tiers);
+    if (problem) return { ok: false, reason: `yearly_${problem}` };
+    return { ...product, yearly: { cents: yearly.cents } };
   });
   return done.ok ? { ok: true, store: done.store, product: done.product } : done;
 }

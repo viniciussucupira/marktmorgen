@@ -13,6 +13,7 @@ import { fairOff } from "@/lib/fair-price";
 import { fairCoupon } from "@/lib/fair-coupon";
 import { introCoupon } from "@/lib/intro-coupon";
 import { activeIntro } from "@/lib/intro-price";
+import { activeYearly } from "@/lib/yearly-price";
 import { GIFT_ID } from "@/lib/gift-rules";
 import { GROUP_ID, canGroup, payable, peopleWords } from "@/lib/group-rules";
 import { commissionRate } from "@/lib/affiliate-setting";
@@ -169,6 +170,8 @@ export async function createCheckout(
     upsellKey?: string;
     /** The buyer chose to pay in the creator's payment plan. */
     plan?: boolean;
+    /** A monthly membership paid yearly instead, where it offers that (lib/yearly-price.ts). */
+    yearly?: boolean;
     /**
      * The utm tags on the page this checkout was opened from
      * (lib/came-from.ts). Written onto the Stripe session so the creator can
@@ -458,6 +461,14 @@ export async function createCheckout(
     // The subscription is created on the creator's own account, like every
     // other charge here, so the member is their customer and not ours.
     body.set("line_items[0][price_data][recurring][interval]", membership.interval);
+    // Paid yearly, where the creator offers it: the year's price, once a year (lib/yearly-price.ts).
+    const yearlyNow = extras.yearly ? activeYearly(product, store.tiers) : null;
+    if (yearlyNow) {
+      body.set("line_items[0][price_data][unit_amount]", String(yearlyNow.cents));
+      body.set("line_items[0][price_data][recurring][interval]", "year");
+      body.set("metadata[every]", "year");
+      body.set("subscription_data[metadata][every]", "year");
+    }
     body.set("subscription_data[metadata][store]", store.handle);
     body.set("subscription_data[metadata][product]", product.id);
     if (chosen) body.set("subscription_data[metadata][option]", chosen.id);

@@ -24,6 +24,7 @@ import { speech } from "@/lib/buyer-words";
 import { type Listing, type Store, isFree } from "@/lib/store";
 import { membershipPrice } from "@/lib/product-recurring";
 import { activeIntro, introLineEnglish } from "@/lib/intro-price";
+import { activeYearly, yearlySaving } from "@/lib/yearly-price";
 import { activePlan, planWords } from "@/lib/product-extras";
 import { activePwyw } from "@/lib/pay-what-you-want";
 import { CELL_NO, CELL_YES, type SalesPage } from "@/lib/sales-page";
@@ -86,7 +87,10 @@ export function priceWords(product: Listing, currency: string, tiers: readonly s
     // An introductory price is said first (lib/intro-price.ts), as on the page.
     const intro = activeIntro(product, tiers);
     const regular = membershipPrice(product.recurring, money(product.priceCents));
-    return `${intro ? introLineEnglish(money(intro.cents), intro.count, product.recurring.interval, regular) : regular}.`;
+    // Or paid yearly, where it may be (lib/yearly-price.ts).
+    const yearly = activeYearly(product, tiers);
+    const orYearly = yearly ? ` Or ${money(yearly.cents)} a year, which saves ${money(yearlySaving(product.priceCents, yearly))}.` : "";
+    return `${intro ? introLineEnglish(money(intro.cents), intro.count, product.recurring.interval, regular) : regular}.${orYearly}`;
   }
   const pwyw = activePwyw(product);
   if (pwyw) return `The buyer chooses the price, from ${money(product.priceCents)} up.`;

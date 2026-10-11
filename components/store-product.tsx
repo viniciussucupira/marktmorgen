@@ -1,6 +1,7 @@
 import { packageSaving } from "@/lib/call-package-rules";
 import { saleClock, saleOff, salePrice } from "@/lib/store-sale";
 import { activeIntro } from "@/lib/intro-price";
+import { activeYearly, yearlySaving } from "@/lib/yearly-price";
 import { fairOff } from "@/lib/fair-price";
 import { endsLine, membershipLine, planLine, speech, worthLine } from "@/lib/buyer-words";
 import Link from "next/link";
@@ -188,6 +189,9 @@ export function ProductFacts({
     const price = money(fromPriceCents(product));
     facts.push(`${options.length > 1 ? w.fromCapital : ""}${membershipLine(store, product.recurring, price, intro)}`.replace(/^(\p{Ll})/u, (c) => c.toUpperCase()));
   }
+  // And a yearly price beside the monthly one (lib/yearly-price.ts), with what it saves.
+  const yearlyFact = activeYearly(product, store.tiers);
+  if (yearlyFact) facts.push(w.yearlyFact(money(yearlyFact.cents), money(yearlySaving(product.priceCents, yearlyFact))));
   if (pwyw) {
     facts.push(w.pwywFact(money(product.priceCents), money(pwyw.suggestedCents)));
   }
@@ -567,6 +571,8 @@ export function BuyBox({
   const trial = product.recurring && product.recurring.trialDays > 0 ? product.recurring.trialDays : 0;
   // A membership's introductory price (lib/intro-price.ts): what the button and the line under it say.
   const intro = activeIntro(product, store.tiers);
+  // Or a yearly price beside the monthly one (lib/yearly-price.ts): picked here, before paying.
+  const yearly = activeYearly(product, store.tiers);
   // A store-wide sale on this product right now (lib/store-sale.ts): its price everywhere below.
   const off = offNow(store, product);
 
@@ -763,6 +769,28 @@ export function BuyBox({
           </div>
         </fieldset>
       ) : null}
+      {yearly && product.recurring ? (
+        <fieldset className="mb-4">
+          <legend className="sr-only">{w.howToPayFor(product.title)}</legend>
+          <div className="space-y-2">
+            <label htmlFor={`bm-${place}${product.id}`} className="st-option">
+              <span className="flex items-center gap-3">
+                <input id={`bm-${place}${product.id}`} type="radio" name="billing" value="month" defaultChecked className="h-4 w-4" />
+                <span className="font-bold">{w.billMonthly}</span>
+              </span>
+              <span className="font-semibold tabular-nums">{`${money(product.priceCents)} ${w.every("month")}`}</span>
+            </label>
+            <label htmlFor={`by-${place}${product.id}`} className="st-option">
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <input id={`by-${place}${product.id}`} type="radio" name="billing" value="year" className="h-4 w-4" />
+                <span className="font-bold">{w.billYearly}</span>
+                <span className="st-pick">{w.yearSave(money(yearlySaving(product.priceCents, yearly)))}</span>
+              </span>
+              <span className="font-semibold tabular-nums">{`${money(yearly.cents)} ${w.every("year")}`}</span>
+            </label>
+          </div>
+        </fieldset>
+      ) : null}
       {extras.map((extra, slot) => (
         /*
           Never ticked for the buyer. The form sends which product the box
@@ -817,6 +845,8 @@ export function BuyBox({
           checkout"), so it is right with scripts turned off too.
         */}
         {plan ? <span className="plan-on">{w.startPlanToday(money(plan.amountCents))}</span> : null}
+        {/* Paid yearly: the button says the year's price (app/globals.css, "Boxes at checkout"). A trial says the trial either way. */}
+        {yearly && !trial ? <span className="year-on">{w.subscribeFor(money(yearly.cents), w.every("year"))}</span> : null}
         {combinations(extras.length).map((picked) => {
           const chosen = extras.filter((_, slot) => picked.includes(slot));
           const added = chosen.reduce((sum, extra) => sum + salePrice(extra.bump.priceCents, off), 0);
@@ -844,9 +874,13 @@ export function BuyBox({
         </p>
       ) : null}
       {trial && product.recurring ? (
-        <p className="st-muted mt-2 text-center text-xs">
+        <p className={`st-muted mt-2 text-center text-xs ${yearly ? "year-off" : ""}`}>
           {w.trialNote(trial, membershipLine(store, { ...product.recurring, trialDays: 0 }, money(fromPriceCents(product))), product.recurring.payments === 0)}
         </p>
+      ) : null}
+      {trial && yearly ? (
+        // Paid yearly, what follows the trial is the year's price (app/globals.css, "Boxes at checkout").
+        <p className="year-on-block st-muted mt-2 text-center text-xs">{w.trialNote(trial, `${money(yearly.cents)} ${w.every("year")}`, true)}</p>
       ) : null}
       {intro && product.recurring ? (
         <p className="st-muted mt-2 text-center text-xs">
@@ -935,7 +969,7 @@ export function pageAction(
     return { action: { kind: "none", text: selling ? w.notOnSale : w.cannotTakePayments }, label: "" };
   }
   const trial = product.recurring && product.recurring.trialDays > 0 ? product.recurring.trialDays : 0;
-  if (sellableOptions(product).length > 0 || activePlan(product) || activeBumps(related, product).length > 0) {
+  if (sellableOptions(product).length > 0 || activePlan(product) || activeBumps(related, product).length > 0 || activeYearly(product, store.tiers)) {
     return { action: { kind: "link", href: "#buy" }, label: trial ? w.startTrial(trial) : w.chooseAndBuy };
   }
   return {

@@ -38,6 +38,7 @@ type TierLike = {
   options: unknown[];
   pwyw?: unknown;
   intro?: unknown;
+  yearly?: unknown;
   hidden?: boolean;
 };
 
@@ -54,7 +55,9 @@ export function canTier(product: TierLike): boolean {
     product.options.length === 0 &&
     !product.pwyw &&
     // A fixed amount off its first payments could follow a member to a cheaper plan (lib/intro-price.ts).
-    !product.intro
+    !product.intro &&
+    // Nor a yearly price beside the monthly one: a switch moves a member to one price (lib/yearly-price.ts).
+    !product.yearly
   );
 }
 

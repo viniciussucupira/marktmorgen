@@ -558,6 +558,8 @@ export default async function ThanksPage({ params, searchParams }: Params) {
   const ended = order.state === "paid" && order.membership === "ended";
   // The creator's own note after paying, read only for a product that has one (lib/thanks-note.ts).
   const thanksNote = order.state === "paid" && order.product.note ? await readThanksNote(store.statsId, order.product.id).catch(() => null) : null;
+  // How often a membership charges as it was bought: a monthly one may have been paid yearly (lib/yearly-price.ts).
+  const paidEvery = order.state === "paid" && order.product.recurring ? (((order.record.metadata ?? {}) as Record<string, string>).every === "year" ? "year" : order.product.recurring.interval) : "month";
   // A membership's introductory price, as its checkout carried it (lib/intro-price.ts).
   const introPaid = order.state === "paid" && order.product.recurring ? introOf((order.record.metadata ?? {}) as Record<string, string>) : null;
 
@@ -717,9 +719,9 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                               money(introPaid.cents, order.currency),
                               introPaid.count,
                               order.product.recurring.interval,
-                              t.priceEvery(money(introPaid.regular, order.currency), speech(store).w.every(order.product.recurring.interval)),
+                              t.priceEvery(money(introPaid.regular, order.currency), speech(store).w.every(paidEvery)),
                             )
-                          : t.priceEvery(money(order.amount, order.currency), speech(store).w.every(order.product.recurring.interval))
+                          : t.priceEvery(money(order.amount, order.currency), speech(store).w.every(paidEvery))
                         : order.plan
                           ? t.priceToday(money(order.amount, order.currency))
                           : money(order.amount, order.currency),
@@ -755,8 +757,8 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                   {canManage(store) ? (
                     <>
                       {order.endsAfter > 0
-                        ? t.renewsForSelf(speech(store).w.every(order.product.recurring.interval), order.endsAfter)
-                        : t.renewsUntilSelf(speech(store).w.every(order.product.recurring.interval))}
+                        ? t.renewsForSelf(speech(store).w.every(paidEvery), order.endsAfter)
+                        : t.renewsUntilSelf(speech(store).w.every(paidEvery))}
                       <Link href={`/@${store.handle}/manage`} className="font-semibold underline underline-offset-4">
                         {t.manageMembership}
                       </Link>
@@ -764,8 +766,8 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     </>
                   ) : (
                     order.endsAfter > 0
-                      ? t.renewsForReply(speech(store).w.every(order.product.recurring.interval), order.endsAfter, store.name)
-                      : t.renewsUntilReply(speech(store).w.every(order.product.recurring.interval), store.name)
+                      ? t.renewsForReply(speech(store).w.every(paidEvery), order.endsAfter, store.name)
+                      : t.renewsUntilReply(speech(store).w.every(paidEvery), store.name)
                   )}
                 </p>
               ) : null}

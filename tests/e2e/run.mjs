@@ -2101,6 +2101,42 @@ try {
   }
 
   await keepSmall();
+  part("A monthly membership, or paid yearly for less");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    await studio.getByRole("button", { name: "Add something to sell" }).click();
+    await studio.getByLabel("What you are selling").fill("Recipe Club");
+    await studio.getByLabel("Price", { exact: true }).fill("20");
+    await studio.getByLabel("How often it charges").selectOption("month");
+    await studio.getByLabel(/^Or pay yearly/).fill("200");
+    is("the studio says what paying yearly saves", (await words(studio.locator("[id^=product-yearly-hint-]").first())).includes("saves $40"), true);
+    await studio.getByRole("button", { name: "Add it" }).click();
+    await studio.locator("li", { hasText: "Recipe Club" }).filter({ hasText: "Or yearly" }).first().waitFor({ timeout: 30_000 });
+    const club = await studio.evaluate(() => {
+      const link = [...document.querySelectorAll("a[href*='/p/']")].find((a) => a.closest("li")?.textContent?.includes("Recipe Club"));
+      return link ? link.getAttribute("href").split("/p/")[1].split(/[?#]/)[0].split("-").pop() : "";
+    });
+    await studio.evaluate(async (id) => fetch("/api/store/product", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "link", id, link: "https://example.com/recipe-club" }) }), club);
+
+    await open(page, `${LOCAL}/@localshop/p/${club}`);
+    const box = page.locator("#buy");
+    const buy = box.locator("form[data-checkout] button[type=submit]").first();
+    is("the buyer picks monthly or yearly, with what yearly saves, monthly first", [
+      (await words(box)).includes("Monthly $20 a month"),
+      (await words(box)).includes("Yearly Save $40 $200 a year"),
+      await box.locator("input[name=billing][value=month]").isChecked(),
+      await words(buy),
+    ], [true, true, true, "Subscribe — $20 a month"]);
+    await box.locator("input[name=billing][value=year]").check();
+    is("and the button says the year's price once yearly is picked", await words(buy), "Subscribe — $200 a year");
+    await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), buy.click()]);
+    const paid = services.checkouts().at(-1);
+    is("Stripe charges the year, said on the order", [paid.mode, paid.amount_total, paid.metadata.every], ["subscription", 20000, "year"]);
+    is("and the page after paying says a year", (await words(page.locator("main"))).includes("for $200 a year."), true);
+    await studio.evaluate(async (id) => fetch("/api/store/product", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "remove", id }) }), club);
+  }
+
+  await keepSmall();
   part("What the buyers of a product also bought");
   {
     // The store shows what was bought, as its creator can choose under Look.

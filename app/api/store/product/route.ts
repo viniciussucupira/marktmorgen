@@ -15,12 +15,14 @@ import {
   setProductHidden,
   setProductIntro,
   setProductLink,
+  setProductYearly,
   storeForEmail,
   type Product,
 } from "@/lib/store";
 import { MAX_LINK_LENGTH, readLink } from "@/lib/product-link";
 import { readRecurring } from "@/lib/product-recurring";
 import { type Intro, introProblem } from "@/lib/intro-price";
+import { type Yearly, yearlyProblem } from "@/lib/yearly-price";
 import { priceBounds, readMoney } from "@/lib/money";
 import { MAX_ABOUT_LENGTH, cleanAbout, dropAbout, readAbout, writeAbout } from "@/lib/product-about";
 import { jsonAccess } from "@/lib/studio-route";
@@ -159,35 +161,54 @@ export async function POST(request: NextRequest) {
     return Response.json({ ok: false, error: "invalid" }, { status: 400 });
   }
 
-  // A membership's introductory price (lib/intro-price.ts), only written when
-  // it was sent, so an older screen never wipes it. Checked before anything is
-  // saved, against the product as this save will leave it, so a product is
-  // never saved with half of what the creator asked for.
+  // A membership's introductory price (lib/intro-price.ts) and its yearly
+  // price (lib/yearly-price.ts), each only written when it was sent, so an
+  // older screen never wipes it. Checked before anything is saved, against the
+  // product as this save will leave it — both together, since only one of the
+  // two may be offered — so a product is never saved with half of what the
+  // creator asked for.
   let intro: Intro | null | undefined;
-  if ((action === "add" || action === "edit") && "intro" in body) {
-    const raw = body.intro && typeof body.intro === "object" ? (body.intro as Record<string, unknown>) : null;
-    const typed = raw ? text(raw.price, 20).trim() : "";
-    if (!typed) intro = null;
-    else {
-      const store = guarded.store;
-      const cents = readMoney(typed, store.currency);
-      const count = Number(raw?.count ?? 1);
-      if (cents === null || !recurring) return Response.json({ ok: false, error: recurring ? "intro_price" : "intro_membership" }, { status: 400 });
-      intro = { cents, count: Number.isInteger(count) ? count : 0 };
-      const current = action === "edit" ? await readListing(store, id) : null;
-      const problem = introProblem(
-        {
-          id: current?.id ?? "",
-          priceCents: readMoney(price, store.currency) ?? 0,
-          recurring,
-          options: current?.options ?? [],
-          pwyw: suggested,
-        },
-        intro,
-        priceBounds(store.currency).min,
-        store.tiers,
-      );
+  let yearly: Yearly | null | undefined;
+  if ((action === "add" || action === "edit") && ("intro" in body || "yearly" in body)) {
+    const store = guarded.store;
+    const typedOf = (raw: unknown) => (raw && typeof raw === "object" ? text((raw as Record<string, unknown>).price, 20).trim() : "");
+    if ("intro" in body) {
+      const typed = typedOf(body.intro);
+      if (!typed) intro = null;
+      else {
+        const cents = readMoney(typed, store.currency);
+        const count = Number((body.intro as Record<string, unknown>).count ?? 1);
+        if (cents === null || !recurring) return Response.json({ ok: false, error: recurring ? "intro_price" : "intro_membership" }, { status: 400 });
+        intro = { cents, count: Number.isInteger(count) ? count : 0 };
+      }
+    }
+    if ("yearly" in body) {
+      const typed = typedOf(body.yearly);
+      if (!typed) yearly = null;
+      else {
+        const cents = readMoney(typed, store.currency);
+        if (cents === null || !recurring) return Response.json({ ok: false, error: recurring ? "yearly_price" : "yearly_membership" }, { status: 400 });
+        yearly = { cents };
+      }
+    }
+    const current = action === "edit" ? await readListing(store, id) : null;
+    const after = {
+      id: current?.id ?? "",
+      priceCents: readMoney(price, store.currency) ?? 0,
+      recurring,
+      options: current?.options ?? [],
+      pwyw: suggested,
+      intro: intro === undefined ? (current?.intro ?? null) : intro,
+      yearly: yearly === undefined ? (current?.yearly ?? null) : yearly,
+    };
+    const min = priceBounds(store.currency).min;
+    if (after.intro) {
+      const problem = introProblem(after, after.intro, min, store.tiers);
       if (problem) return Response.json({ ok: false, error: `intro_${problem}` }, { status: 400 });
+    }
+    if (after.yearly) {
+      const problem = yearlyProblem(after, after.yearly, min, store.tiers);
+      if (problem) return Response.json({ ok: false, error: `yearly_${problem}` }, { status: 400 });
     }
   }
 
@@ -199,8 +220,20 @@ export async function POST(request: NextRequest) {
           ? await addProduct(ref, title, summary, price, recurring, suggested)
           : await editProduct(ref, id, title, summary, price, recurring, suggested);
       result = done.ok ? { ok: true, product: done.product } : done;
-      if (done.ok && intro !== undefined && (intro !== null || done.product.intro)) {
-        const priced = await setProductIntro(ref, done.product.id, intro);
+      // What is taken off goes first, so the one put on in its place is never refused for the other.
+      const steps: (() => Promise<{ ok: true; product: Product } | { ok: false; reason: string }>)[] = [];
+      if (done.ok) {
+        const productId = done.product.id;
+        const introStep = intro !== undefined && (intro !== null || done.product.intro) ? () => setProductIntro(ref, productId, intro ?? null) : null;
+        const yearlyStep = yearly !== undefined && (yearly !== null || done.product.yearly) ? () => setProductYearly(ref, productId, yearly ?? null) : null;
+        if (introStep && intro === null) steps.push(introStep);
+        if (yearlyStep && yearly === null) steps.push(yearlyStep);
+        if (introStep && intro !== null) steps.push(introStep);
+        if (yearlyStep && yearly !== null) steps.push(yearlyStep);
+      }
+      for (const step of steps) {
+        if (!result.ok) break;
+        const priced = await step();
         result = priced.ok ? { ok: true, product: priced.product } : { ok: false, reason: priced.reason };
       }
       if (result.ok && result.product && about !== null) {
