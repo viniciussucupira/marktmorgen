@@ -126,6 +126,14 @@ export async function startServices(port) {
             ? JSON.stringify({ bios: ["Weeknight dinners for busy parents.", "Cook once, eat all week."], products: [{ title: "Sunday Meal Planner", summary: "A week of dinners planned on one page.", kind: "download", price: "12" }, { title: "Monthly Menu Club", summary: "A new menu every month.", kind: "membership", price: "7" }], faq: [{ q: "How do I get the planner?", a: "As a download right after paying." }] })
           : system.startsWith("You write the short introduction at the top of a creator's media kit")
             ? JSON.stringify({ pitches: ["I cook weeknight dinners for busy families, and they cook along.", "Recipes for home cooks who plan the week ahead."] })
+          : /emails that go out by themselves, one after another/.test(system)
+            ? JSON.stringify({
+                emails: [
+                  { waitDays: 0, subject: "Welcome to the kitchen", body: "Hello, and thank you for joining.\n\nI write about weeknight dinners.\n\nAna" },
+                  { waitDays: 2, subject: "One trick for busy nights", body: "Cook the grains on Sunday.\n\nA free guide: https://elsewhere.example/guide\n\nAna" },
+                  { waitDays: 3, subject: "What I made for you", body: "Everything I sell is here.\n\nAna" },
+                ],
+              })
           : system.startsWith("You write a short quiz")
             ? JSON.stringify({
                 questions: [

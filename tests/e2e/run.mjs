@@ -2305,6 +2305,29 @@ try {
   }
 
   await keepSmall();
+  part("A sequence's emails written with AI, with only the store's links");
+  {
+    await open(studio, `${LOCAL}/studio/email?store=${fresh}`);
+    await studio.getByRole("button", { name: "New sequence" }).click();
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Save the sequence" }) });
+    await form.getByText("Write the emails with AI").click();
+    await form.locator("details select").first().selectOption("3");
+    await form.getByRole("button", { name: "Write a draft" }).click();
+    const said = form.locator("details").getByRole("status").or(form.locator("details").getByRole("alert"));
+    await said.first().waitFor({ timeout: 30_000 });
+    const saidWords = await words(said.first());
+    if (!saidWords.startsWith("The emails are in the sequence below.")) console.log(`        the studio said: ${saidWords}`);
+    is("the emails are written into the sequence", saidWords.startsWith("The emails are in the sequence below."), true);
+    const subjects = await form.locator("ol > li input[maxlength='150']").evaluateAll((all) => all.map((input) => input.value));
+    const bodies = await form.locator("ol > li textarea").evaluateAll((all) => all.map((box) => box.value));
+    is("each with its subject, in place of the empty one", subjects, ["Welcome to the kitchen", "One trick for busy nights", "What I made for you"]);
+    is("and no link that is not the store's", bodies.some((body) => body.includes("elsewhere.example")), false);
+    const waits = await form.locator("ol > li input[inputmode='numeric']").evaluateAll((all) => all.map((input) => input.value));
+    is("at the pace asked: at once, then 2 and 3 days after", waits, ["0", "2", "3"]);
+    await form.getByRole("button", { name: "Close" }).click();
+  }
+
+  await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);
