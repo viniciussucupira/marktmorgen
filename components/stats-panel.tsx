@@ -13,6 +13,8 @@ import { NumbersNotes } from "@/components/numbers-notes";
 import { AdSpendEditor } from "@/components/ad-spend-editor";
 import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
 import { toast } from "@/components/toast";
+import { insightsFrom } from "@/lib/insights";
+import { WeeklyTeamPicker } from "@/components/weekly-team-picker";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -270,6 +272,7 @@ export function StatsPanel({
   spends: spendsGiven = [],
   askHeard = true,
   canSetHeard = false,
+  weeklyTeam = null,
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -279,6 +282,8 @@ export function StatsPanel({
   askHeard?: boolean;
   /** Whether this person may switch that question on or off. */
   canSetHeard?: boolean;
+  /** For whoever runs the team: members who see the numbers, and those who get the weekly email too. */
+  weeklyTeam?: { members: string[]; chosen: string[] } | null;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [notes, setNotes] = useState(notesGiven);
@@ -372,6 +377,8 @@ export function StatsPanel({
   // Refunds over the 90 days, by the channel of the sale given back (lib/stats.ts, readRefunds).
   const refunds90 = new Map((data.refunds?.d90 ?? []).map((row) => [row.source || "direct", row]));
   const withRefundColumn = refunds90.size > 0;
+  // The few things worth acting on, in words (lib/insights.ts).
+  const insights = range === "all" ? [] : insightsFrom(data, range, spends);
   // Notes by day, for the marks under the chart.
   const notesOn = new Map<string, string[]>();
   for (const note of notes) notesOn.set(note.day, [...(notesOn.get(note.day) ?? []), note.text]);
@@ -476,6 +483,26 @@ export function StatsPanel({
           </div>
         ))}
       </dl>
+
+      {range !== "all" && insights.length ? (
+        <div className="mt-5 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" role="region" aria-labelledby="numbers-insights">
+          <p id="numbers-insights" className="text-sm font-bold text-ink">
+            Worth knowing
+          </p>
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {insights.map((item) => (
+              <li key={item.text} className="flex gap-2">
+                <span
+                  aria-hidden="true"
+                  className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${item.tone === "good" ? "bg-mint-deep" : item.tone === "bad" ? "bg-danger" : "bg-violet-brand"}`}
+                />
+                <span className="text-ink">{item.text}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-ink-soft">Read from the numbers below by fixed rules, only when they are big enough to mean something.</p>
+        </div>
+      ) : null}
 
       {range !== "all" ? (
         <div className="mt-6">
@@ -811,6 +838,23 @@ export function StatsPanel({
 
       {range !== "all" ? <HeardTable rows={heard} money={money} ask={askHeard} canSet={canSetHeard} /> : null}
 
+      {range !== "all" && (data.searchMisses?.[range] ?? []).length ? (
+        <div className="mt-6">
+          <p className="text-sm font-bold text-ink">Searched for in your store, and not found</p>
+          <ul className="mt-2 divide-y divide-line text-sm">
+            {(data.searchMisses?.[range] ?? []).slice(0, 15).map((row) => (
+              <li key={row.name} className="flex items-baseline justify-between gap-3 py-1.5">
+                <span className="min-w-0 truncate text-ink [overflow-wrap:anywhere]">{`“${row.name}”`}</span>
+                <span className="shrink-0 tabular-nums text-ink-soft">{`${count(row.visits)} ${row.visits === 1 ? "search" : "searches"}`}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-ink-soft">
+            What visitors typed in your store&apos;s search and found nothing for: a product to make, or a word your titles are missing. Only the words are kept.
+          </p>
+        </div>
+      ) : null}
+
       {countries.length || devices.length ? (
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
           {countries.length ? <Breakdown title="Where in the world" rows={countries} label={countryName} /> : null}
@@ -1047,6 +1091,7 @@ export function StatsPanel({
               : "The sales file has one row per paid checkout or one-click extra, with the buyer's email and name, and reads up to 5,000 of each from your Stripe account. "}
           Visits go back as far as they are kept, 400 days.
         </p>
+        {weeklyTeam ? <WeeklyTeamPicker members={weeklyTeam.members} chosen={weeklyTeam.chosen} /> : null}
       </div>
 
       <p className="mt-6 text-xs leading-relaxed text-ink-soft">

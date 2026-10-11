@@ -57,6 +57,8 @@ import { canRecover, sellsDeliverables } from "@/lib/buyer-orders";
 import { StoreTracking } from "@/components/store-tracking";
 import { StoreReach } from "@/components/store-reach";
 import { STORE_SCOPE, readToken } from "@/lib/page-read";
+import { countSearchMiss } from "@/lib/stats";
+import { isBot } from "@/lib/source-rules";
 import { ExitOfferSlot } from "@/components/exit-offer-slot";
 import { stockLeft } from "@/lib/stock";
 import { outOfKeys } from "@/lib/licence-keys";
@@ -210,6 +212,11 @@ export default async function StorePage({ params, searchParams }: Params) {
       : false;
   const searching = searchAllowed ? wantedSearch : "";
   const results = searching ? await searchStore(store, searching) : null;
+  // A search that found nothing is counted, by its words only (lib/stats.ts, countSearchMiss).
+  if (results && results.total === 0 && store.statsId && !isBot((await headers()).get("user-agent") ?? "")) {
+    const statsId = store.statsId;
+    after(() => countSearchMiss(statsId, searchWords(searching)));
+  }
   const { listings, related, page, pages } = results ? { listings: results.listings, related: results.related, page: 1, pages: 1 } : await readPage(store, asking);
   const known = [...listings, ...related];
   // What the store lists: drafts are left off (lib/catalog.ts).

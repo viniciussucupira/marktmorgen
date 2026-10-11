@@ -7,6 +7,7 @@ import { ALSO_BOUGHT_COUNT, AlsoBought, MoreFrom, moreFrom } from "@/components/
 import { ExitOfferSlot } from "@/components/exit-offer-slot";
 import { PageDepth } from "@/components/page-depth";
 import { readToken } from "@/lib/page-read";
+import { whyNotWords } from "@/lib/buyer-words/why-not";
 import { previewable } from "@/lib/pdf-preview";
 import { after } from "next/server";
 import { SHOWN_FROM, readSoldCounts, refreshSoldCounts, stale } from "@/lib/sold-count";
@@ -650,7 +651,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
       </div>
       {free ? buySection : null}
       <PageSections blocks={rest} ctx={ctx} style={page.style} reviewsFor={reviewsPart} />
-      <PageDepth token={readToken(store.statsId, product.id)} product={product.id} />
+      <PageDepth token={readToken(store.statsId, product.id)} product={product.id} ask={store.askWhyNot && !free ? whyNotWords(store.language) : null} />
       {free ? null : buySection}
       {payments}
       {!placed && anyReviews ? <section className="sp-section">{reviewsPart(w.reviews)}</section> : null}

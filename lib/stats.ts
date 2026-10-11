@@ -211,6 +211,20 @@ export async function countHeard(statsId: string, answer: string, cents: number,
   ]);
 }
 
+/**
+ * A search of the store that found nothing (added 11 October 2026): the words
+ * searched for, counted on the day's record, so the creator sees what people
+ * came looking for and could not buy — an idea for the next product, or a
+ * word missing from a title. Only the words, lower case, at most 40
+ * characters; nothing about who searched. One command, for a search, which
+ * one connection may make 30 times in ten minutes.
+ */
+export async function countSearchMiss(statsId: string, words: string[], now = Date.now()): Promise<void> {
+  const term = words.join(" ").slice(0, 40).trim();
+  if (!term || !isRedisConfigured()) return;
+  await redisPipeline([["HINCRBY", countsKey(statsId, dayKey(now)), `q:${term}`, 1]]).catch(() => {});
+}
+
 /** The store page's views and the checkouts started from one day to another, both counted: one read a day, at most 90. */
 export async function daysCounts(statsId: string, from: string, to: string): Promise<{ views: number; checkouts: number }> {
   const out = { views: 0, checkouts: 0 };
@@ -321,6 +335,8 @@ export type WindowStats = {
   reach: Record<string, number>;
   /** Buyers' answers to "where did you hear about us?" (lib/heard.ts), and the money of the sales each was given for. */
   heard: Record<string, { buyers: number; cents: number }>;
+  /** Searches of the store that found nothing, by the words searched for (countSearchMiss). */
+  searchMisses: Ranked;
 };
 
 export type Windows = { d7: WindowStats; d30: WindowStats; d90: WindowStats };
@@ -360,6 +376,7 @@ class Tally {
   freeBySource = new Map<string, number>();
   reach: Record<string, number> = {};
   heard: Record<string, { buyers: number; cents: number }> = {};
+  searchMisses = new Map<string, number>();
 
   add(field: string, count: number) {
     if (field === "v") this.views += count;
@@ -377,6 +394,7 @@ class Tally {
     else if (field.startsWith("sr:")) this.reach[field.slice(3)] = (this.reach[field.slice(3)] ?? 0) + count;
     else if (field.startsWith("h:")) (this.heard[field.slice(2)] ??= { buyers: 0, cents: 0 }).buyers += count;
     else if (field.startsWith("hc:")) (this.heard[field.slice(3)] ??= { buyers: 0, cents: 0 }).cents += count;
+    else if (field.startsWith("q:")) this.searchMisses.set(field.slice(2), (this.searchMisses.get(field.slice(2)) ?? 0) + count);
   }
 
   window(visitors: number): WindowStats {
@@ -396,6 +414,7 @@ class Tally {
       freeBySource: ranked(this.freeBySource),
       reach: this.reach,
       heard: this.heard,
+      searchMisses: ranked(this.searchMisses),
     };
   }
 }
@@ -555,7 +574,7 @@ async function readLife(store: Store, now: number): Promise<(WindowStats & { sin
           // Countries and devices are kept by the day only: copied into the
           // all-time record they would start it on whatever day it was filled.
           for (const [field, count] of day) {
-            if (field.startsWith("k:") || field.startsWith("d:") || field.startsWith("sr:") || field.startsWith("h:") || field.startsWith("hc:")) continue;
+            if (field.startsWith("k:") || field.startsWith("d:") || field.startsWith("sr:") || field.startsWith("h:") || field.startsWith("hc:") || field.startsWith("q:")) continue;
             tally.set(field, (tally.get(field) ?? 0) + count);
           }
           visitors += Number(replies[dates.length + i]) || 0;
@@ -1196,6 +1215,8 @@ export type StatsData = {
   previous: Record<"d7" | "d30" | "d90", { visitors: number; views: number; checkouts: number; sales: number | null; cents: number | null }>;
   /** Buyers' answers to "where did you hear about us?" for the window, the most first (lib/heard.ts). */
   heard: Record<"d7" | "d30" | "d90", { answer: string; buyers: number; cents: number }[]>;
+  /** What visitors searched the store for and found nothing, for the window, the most first. */
+  searchMisses: Record<"d7" | "d30" | "d90", Ranked>;
   /** Money by the ad it came from (utm_content), for the window. */
   ads: Record<"d7" | "d30" | "d90", { content: string; source: string; campaign: string; sales: number; cents: number }[]>;
   /** Money by the buyer's country, for the window, as Stripe has the country. */
@@ -1253,6 +1274,7 @@ const EMPTY_WINDOW: WindowStats = {
   freeBySource: [],
   reach: {},
   heard: {},
+  searchMisses: [],
 };
 
 export type ChannelRow = { source: string; visits: number; checkouts: number; free: number; sales: number; cents: number };
@@ -1419,6 +1441,7 @@ export function studioStats(
           .sort((a, b) => b.buyers - a.buyers || b.cents - a.cents || a.answer.localeCompare(b.answer)),
       ]),
     ) as StatsData["heard"],
+    searchMisses: { d7: w.d7.searchMisses ?? [], d30: w.d30.searchMisses ?? [], d90: w.d90.searchMisses ?? [] },
     ads: sales?.byContentIn ?? { d7: [], d30: [], d90: [] },
     salesCountries: sales?.byCountryIn ?? { d7: [], d30: [], d90: [] },
     refunds: sales?.refundsIn ?? null,

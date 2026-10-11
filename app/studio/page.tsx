@@ -44,6 +44,7 @@ import { StatsPanel } from "@/components/stats-panel";
 import { readNotes } from "@/lib/stats-notes";
 import { readSpends } from "@/lib/ad-spend";
 import { heardOff } from "@/lib/heard";
+import { weeklyTeam } from "@/lib/stats-report";
 import { serverSetup } from "@/lib/ad-events";
 import { ServerEventsEditor } from "@/components/server-events-editor";
 import { CalendarEditor } from "@/components/calendar-editor";
@@ -1024,6 +1025,14 @@ export default async function StudioPage({
                   spends={adSpends}
                   askHeard={!heardIsOff}
                   canSetHeard={may("settings")}
+                  weeklyTeam={
+                    team && store
+                      ? {
+                          members: team.members.filter((m) => can(m.role, "stats")).map((m) => m.email.toLowerCase()),
+                          chosen: await weeklyTeam(store.handle).catch(() => []),
+                        }
+                      : null
+                  }
                 />
               </div>
             ) : null}

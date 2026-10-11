@@ -594,6 +594,12 @@ export type Store = {
    */
   phoneSales: boolean;
   /**
+   * Whether a sales page asks a visitor about to go without buying what is
+   * stopping them (components/page-depth.tsx, added 11 October 2026). Off
+   * until the creator turns it on, because it is something their visitors see.
+   */
+  askWhyNot: boolean;
+  /**
    * Whether the creator brought past buyers over from another platform
    * (lib/imported-purchases.ts). Set once, by the first such import, so the
    * list of purchases knows to look for them without reading anything.
@@ -843,6 +849,7 @@ function parseStore(raw: unknown): Store | null {
       // Stores written before either existed send nothing anywhere.
       emailSync: parseEmailSyncRef(value.emailSync),
       phoneSales: value.phoneSales === true,
+      askWhyNot: value.askWhyNot === true,
       // Stores written before imports existed brought nobody over.
       pastBuyers: value.pastBuyers === true,
       // Stores written before PayPal selling existed sell through Stripe only.
@@ -1023,6 +1030,7 @@ async function freshStore(fields: {
     language: DEFAULT_LANGUAGE,
     emailSync: null,
     phoneSales: false,
+    askWhyNot: false,
     pastBuyers: false,
     paypalSeller: null,
   };
@@ -2321,6 +2329,10 @@ export async function setEmailSyncRef(email: string, ref: EmailSyncRef | null): 
 }
 
 /** Keeps the store's note of whether a device wants each sale (lib/phone-alerts.ts). */
+export async function setAskWhyNot(email: string, on: boolean): Promise<Store | null> {
+  return patchStore(email, (store) => (store.askWhyNot === on ? null : { askWhyNot: on }));
+}
+
 export async function setPhoneSales(email: string, on: boolean): Promise<Store | null> {
   return patchStore(email, (store) => (store.phoneSales === on ? null : { phoneSales: on }));
 }

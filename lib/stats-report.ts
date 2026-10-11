@@ -16,6 +16,8 @@ import { standingOf } from "@/lib/plan-standing";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { deriveKey } from "@/lib/secret-box";
 import { formatMoney } from "@/lib/money";
+import { insightsFrom } from "@/lib/insights";
+import type { AdSpend } from "@/lib/ad-spend-rules";
 import { SITE_URL } from "@/lib/site-url";
 
 type Window = "d7" | "d30" | "d90";
@@ -141,6 +143,48 @@ export async function setWeeklyOff(handle: string, off: boolean): Promise<void> 
   await redisPipeline([[off ? "SADD" : "SREM", OFF, handle]]);
 }
 
+// ---- The weekly email to the team (added 11 October 2026) ---------------------
+
+/**
+ * Team members the owner chose to send the weekly email to as well
+ * (Fathom and Umami send their reports to a team the same way). Each is
+ * checked against the team when the email goes, so somebody removed from the
+ * team, or whose role no longer sees the numbers, gets nothing; and each has
+ * their own stop link, which stops only their copy.
+ */
+const teamKey = (handle: string) => `nl:weekly:to:${handle}`;
+export const MAX_WEEKLY_TEAM = 5;
+
+export async function weeklyTeam(handle: string): Promise<string[]> {
+  if (!isRedisConfigured()) return [];
+  const [members] = await redisPipeline([["SMEMBERS", teamKey(handle)]]);
+  return Array.isArray(members) ? (members as unknown[]).map(String).sort() : [];
+}
+
+export async function setWeeklyTeam(handle: string, emails: string[]): Promise<void> {
+  if (!isRedisConfigured()) return;
+  const clean = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))].slice(0, MAX_WEEKLY_TEAM);
+  await redisPipeline([["DEL", teamKey(handle)], ...(clean.length ? [["SADD", teamKey(handle), ...clean]] : [])]);
+}
+
+export async function leaveWeeklyTeam(handle: string, email: string): Promise<void> {
+  if (!isRedisConfigured()) return;
+  await redisPipeline([["SREM", teamKey(handle), email.trim().toLowerCase()]]);
+}
+
+/** A team member's own stop link token: the store and their address, signed. */
+export function weeklyMemberToken(handle: string, email: string): string {
+  const key = deriveKey("weekly-report");
+  if (!key) return "";
+  return createHmac("sha256", key).update(`weekly|${handle}|${email.trim().toLowerCase()}`).digest("base64url").slice(0, 32);
+}
+
+export function weeklyMemberTokenOk(handle: string, email: string, token: string): boolean {
+  const want = weeklyMemberToken(handle, email);
+  if (!want || token.length !== want.length) return false;
+  return timingSafeEqual(Buffer.from(want), Buffer.from(token));
+}
+
 /** Claims this week's email for a store; false when it was already claimed, so nobody gets two. */
 export async function claimWeek(handle: string, now = Date.now()): Promise<boolean> {
   if (!isRedisConfigured()) return false;
@@ -172,7 +216,7 @@ const CHANNEL_WORDS: Record<string, string> = {
 const channelWord = (source: string) => CHANNEL_WORDS[source] ?? source;
 
 /** The week's email, in words. Null when the store had no visitors in the week: nothing to say. */
-export function weeklyMessage(store: Store, data: StatsData, stopUrl: string): { subject: string; text: string } | null {
+export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, spends: AdSpend[] = []): { subject: string; text: string } | null {
   const week = data.totals.d7;
   if (week.visitors === 0) return null;
   const known = data.sales === "ok";
@@ -210,6 +254,12 @@ export function weeklyMessage(store: Store, data: StatsData, stopUrl: string): {
       const sold = known && c.sales > 0 ? `, ${c.sales} ${c.sales === 1 ? "sale" : "sales"} (${money(c.cents)})` : "";
       lines.push(`- ${channelWord(c.source)}: ${c.visits.toLocaleString("en-US")} ${c.visits === 1 ? "visit" : "visits"}${sold}`);
     }
+  }
+
+  const worth = insightsFrom(data, "d7", spends, 3);
+  if (worth.length) {
+    lines.push("", "Worth knowing:");
+    for (const item of worth) lines.push(`- ${item.text}`);
   }
 
   lines.push("", `Everything, day by day and channel by channel, is in your studio: ${SITE_URL}/studio`);
