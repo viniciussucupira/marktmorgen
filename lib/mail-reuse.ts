@@ -24,13 +24,20 @@
  * and are still on the list, once each. All this file decides is which
  * sequence the email joins and how long after the one before it.
  *
- * What it refuses, and says so: an email that left out the owners of a
- * product. A sequence cannot leave anyone out, and "you have not bought this
- * yet" sent to somebody who has is worse than not sending it.
+ * An email written to only some of those people — the ones who have not
+ * bought yet, or who do not own another product — keeps that narrowing as
+ * the condition of its email in the sequence (lib/flow-rules.ts), read just
+ * before it goes, so "you have not bought this yet" never reaches somebody
+ * who has. (Until conditions existed, such an email was refused.)
+ *
+ * What it still refuses, and says so: an email narrowed two ways at once —
+ * to buyers of one product who do not own another, say. An email in a
+ * sequence carries one condition.
  */
 import { MAX_DELAY_HOURS, MAX_FLOW_NAME, MAX_STEPS, type Flow, type FlowResult, readFlows, saveFlow } from "@/lib/flows";
 import { type Broadcast, readBroadcast } from "@/lib/broadcasts";
 import type { Store } from "@/lib/store";
+import type { StepCondition } from "@/lib/flow-rules";
 
 /** How long after joining (or getting the product) the first kept email goes. */
 export const KEEP_FIRST_HOURS = 24;
@@ -41,7 +48,7 @@ export type KeepRefusal =
   | "unknown"
   /** Scheduled, going out, canceled or stopped: there is nothing proven to repeat. */
   | "unsent"
-  /** It left out the owners of a product, which a sequence cannot do. */
+  /** It was narrowed two ways at once, and an email in a sequence carries one condition. */
   | "excludes"
   /** The same subject and text are already in that sequence. */
   | "already"
@@ -76,14 +83,18 @@ export function keepName(productTitle: string | null): string {
 export function planKeep(broadcast: Broadcast | null, listId: string | null, flows: Flow[], productTitle: string | null): KeepPlan {
   if (!broadcast || !listId || broadcast.listId !== listId) return { ok: false, reason: "unknown" };
   if (broadcast.status !== "sent") return { ok: false, reason: "unsent" };
-  if (broadcast.notProductId) return { ok: false, reason: "excludes" };
-  // Written only to the people who have not bought: everybody who joins
-  // includes the ones who join by buying, and a sequence cannot tell them apart.
-  if (broadcast.who === "leads") return { ok: false, reason: "excludes" };
-  // Buyers who also hold one product is a narrowing a sequence has no trigger for.
-  if (broadcast.who === "buyers" && broadcast.productId) return { ok: false, reason: "excludes" };
+  // Whatever narrowed the email beyond what starts the sequence becomes its
+  // condition: not owning a product, not having bought yet (everybody who
+  // joins includes the ones who join by buying), or, for the buyers of one
+  // product, having paid.
+  const narrowing: StepCondition[] = [];
+  if (broadcast.notProductId) narrowing.push({ if: "lacks", productId: broadcast.notProductId });
+  if (broadcast.who === "leads") narrowing.push({ if: "lead" });
+  if (broadcast.who === "buyers" && broadcast.productId) narrowing.push({ if: "buyer" });
+  if (narrowing.length > 1) return { ok: false, reason: "excludes" };
+  const when = narrowing[0];
 
-  const trigger: Flow["trigger"] = broadcast.who === "buyers" ? "bought" : broadcast.productId ? "product" : "joined";
+  const trigger: Flow["trigger"] = broadcast.who === "buyers" && !broadcast.productId ? "bought" : broadcast.productId ? "product" : "joined";
   const productId = broadcast.productId;
   const subject = subjectOf(broadcast.subject);
   const body = bodyOf(broadcast.body);
@@ -109,7 +120,7 @@ export function planKeep(broadcast: Broadcast | null, listId: string | null, flo
       // earlier is switched on again, and the studio says so.
       active: true,
       kept: true,
-      steps: [...(home?.steps ?? []), { delayHours: waitHours, subject, body }],
+      steps: [...(home?.steps ?? []), { delayHours: waitHours, subject, body, ...(when ? { when, otherwise: "skip" } : {}) }],
     },
   };
 }

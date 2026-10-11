@@ -5,7 +5,9 @@
  * Each person goes through a sequence once. Every step is checked again just
  * before it is sent — the person must still be on the list, the sequence
  * still switched on, the step still there — so an unsubscribe, a pause or an
- * edit takes effect on the next email, not the one after.
+ * edit takes effect on the next email, not the one after. A sequence can end
+ * early for somebody once they buy, and an email can go only to some of the
+ * people in it (lib/flow-rules.ts); both are read at that same moment.
  *
  *   nl:mail:flows:<listId>              the store's sequences (JSON)
  *   nl:mail:flowq                       steps due, scored by when
@@ -19,13 +21,23 @@ import { MAX_MAIL_BODY, MAX_SUBJECT, monthlyAllowance, sendTo } from "@/lib/mail
 import type { Store } from "@/lib/store";
 import { hasProduct, idsOfKind } from "@/lib/catalog";
 import { stepCampaign } from "@/lib/mail-links";
+import { type FlowGoal, type Otherwise, type StepCondition, goalClash, holds, readCondition, readGoal, reached } from "@/lib/flow-rules";
 
 export const MAX_FLOWS = 10;
 export const MAX_STEPS = 10;
 export const MAX_DELAY_HOURS = 365 * 24;
 export const MAX_FLOW_NAME = 80;
 
-export type FlowStep = { id: string; delayHours: number; subject: string; body: string };
+export type FlowStep = {
+  id: string;
+  delayHours: number;
+  subject: string;
+  body: string;
+  /** Sent only to those this holds for (lib/flow-rules.ts); absent for everyone. */
+  when?: StepCondition;
+  /** For those it does not hold for: skip to the next email, or leave the sequence. */
+  otherwise?: Otherwise;
+};
 export type Flow = {
   id: string;
   name: string;
@@ -51,6 +63,8 @@ export type Flow = {
    * how it is sent, and stays through an edit.
    */
   starter?: "welcome" | "bought";
+  /** Ends for anyone who gets this product, or has bought anything (lib/flow-rules.ts). */
+  goal?: FlowGoal;
 };
 
 const QUEUE = "nl:mail:flowq";
@@ -69,14 +83,21 @@ export const FLOW_ID = /^[0-9a-f]{16}$/;
 
 const newId = () => randomBytes(8).toString("hex");
 
-function cleanStep(raw: unknown): FlowStep | null {
+function cleanStep(raw: unknown, known: (productId: string) => boolean): FlowStep | null {
   if (!raw || typeof raw !== "object") return null;
   const value = raw as Record<string, unknown>;
   const delay = Number(value.delayHours);
   const subject = typeof value.subject === "string" ? value.subject.replace(/\s+/g, " ").trim().slice(0, MAX_SUBJECT) : "";
   const body = typeof value.body === "string" ? value.body.replace(/\r\n?/g, "\n").trim().slice(0, MAX_MAIL_BODY) : "";
   if (!Number.isInteger(delay) || delay < 0 || delay > MAX_DELAY_HOURS || !subject || !body) return null;
-  return { id: typeof value.id === "string" && FLOW_ID.test(value.id) ? value.id : newId(), delayHours: delay, subject, body };
+  const when = readCondition(value.when, known);
+  if (when === "bad") return null;
+  const step: FlowStep = { id: typeof value.id === "string" && FLOW_ID.test(value.id) ? value.id : newId(), delayHours: delay, subject, body };
+  if (when) {
+    step.when = when;
+    step.otherwise = value.otherwise === "end" ? "end" : "skip";
+  }
+  return step;
 }
 
 export async function readFlows(listId: string | null): Promise<Flow[]> {
@@ -99,7 +120,7 @@ const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw =
 
 export type FlowResult =
   | { ok: true; flows: Flow[] }
-  | { ok: false; reason: "name" | "trigger" | "product" | "steps" | "step" | "too_many" | "unknown" | "setup" | "plan" };
+  | { ok: false; reason: "name" | "trigger" | "product" | "steps" | "step" | "goal" | "too_many" | "unknown" | "setup" | "plan" };
 
 /** Adds a sequence, or replaces one with the same id. Checked whole every time. */
 export async function saveFlow(store: Store, raw: Record<string, unknown>): Promise<FlowResult> {
@@ -113,12 +134,17 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   if (trigger === "product" && !(productId && hasProduct(store, productId))) return { ok: false, reason: "product" };
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
   if (rawSteps.length === 0 || rawSteps.length > MAX_STEPS) return { ok: false, reason: "steps" };
+  const known = (id: string) => hasProduct(store, id);
   const steps: FlowStep[] = [];
   for (const s of rawSteps) {
-    const step = cleanStep(s);
+    const step = cleanStep(s, known);
     if (!step) return { ok: false, reason: "step" };
     steps.push(step);
   }
+  const goal = readGoal(raw.goal, known);
+  if (goal === "bad") return { ok: false, reason: "goal" };
+  const startsPaid = Boolean(productId) && idsOfKind(store, "paid").includes(productId as string);
+  if (goalClash(trigger, productId, goal, startsPaid)) return { ok: false, reason: "goal" };
   const flows = await readFlows(store.listId);
   const id = typeof raw.id === "string" && FLOW_ID.test(raw.id) ? raw.id : null;
   const at = id ? flows.findIndex((f) => f.id === id) : -1;
@@ -136,6 +162,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
     createdAt: at >= 0 ? flows[at].createdAt : Math.floor(Date.now() / 1000),
     ...(raw.kept === true || (at >= 0 && flows[at].kept === true) ? { kept: true } : {}),
     ...(starter ? { starter } : {}),
+    ...(goal ? { goal } : {}),
   };
   const next = [...flows];
   if (at >= 0) next[at] = flow;
@@ -153,16 +180,25 @@ export async function removeFlow(store: Store, id: string): Promise<FlowResult> 
   return { ok: true, flows: next };
 }
 
-/** How many have started each sequence and how many of its emails went out. */
-export async function flowStats(flows: Flow[]): Promise<Map<string, { started: number; sent: number }>> {
-  const out = new Map<string, { started: number; sent: number }>();
+export type FlowCounts = {
+  started: number;
+  sent: number;
+  /** Left it at its end: bought, or got the product it ends on. */
+  reached: number;
+  /** Emails not sent to somebody because a condition did not hold for them. */
+  skipped: number;
+};
+
+/** How many have started each sequence, how many of its emails went out, and how many ended it or skipped one. */
+export async function flowStats(flows: Flow[]): Promise<Map<string, FlowCounts>> {
+  const out = new Map<string, FlowCounts>();
   if (!flows.length || !isRedisConfigured()) return out;
   const rows = await redisPipeline(flows.map((f) => ["HGETALL", statsKey(f.id)]));
   flows.forEach((f, i) => {
     const raw = rows[i];
     const map = new Map<string, number>();
     if (Array.isArray(raw)) for (let j = 0; j + 1 < raw.length; j += 2) map.set(String(raw[j]), Number(raw[j + 1]) || 0);
-    out.set(f.id, { started: map.get("started") ?? 0, sent: map.get("sent") ?? 0 });
+    out.set(f.id, { started: map.get("started") ?? 0, sent: map.get("sent") ?? 0, reached: map.get("reached") ?? 0, skipped: map.get("skipped") ?? 0 });
   });
   return out;
 }
@@ -281,11 +317,38 @@ export async function sendDueSteps(
     }
     const [rows] = await redisPipeline([["HMGET", leadsKey(listId), ...emails]]);
     const found = Array.isArray(rows) ? rows : [];
-    const still = emails.filter((_, i) => {
+    const following = flow.steps[index + 1];
+    // Who is still on the list, and of them, who has reached the sequence's
+    // end and who this email is not for (lib/flow-rules.ts) — read from the
+    // same rows, so a condition costs no read of its own.
+    const paid = flow.goal || step.when ? new Set(idsOfKind(store, "paid")) : new Set<string>();
+    const still: string[] = [];
+    const onward: string[] = [];
+    let done = 0;
+    let left = 0;
+    emails.forEach((email, i) => {
       const contact = parseContact(found[i]);
-      return contact !== null && mailable(contact);
+      if (!contact || !mailable(contact)) {
+        counts.dropped += 1;
+        return;
+      }
+      if (flow.goal && reached(flow.goal, contact, paid)) {
+        done += 1;
+        return;
+      }
+      if (step.when && !holds(step.when, contact, paid)) {
+        if (step.otherwise === "end" || !following) left += 1;
+        else onward.push(email);
+        return;
+      }
+      still.push(email);
     });
-    counts.dropped += emails.length - still.length;
+    // Skipped: on to the next email, its wait counted from now, as if this
+    // one had gone.
+    const moved: (string | number)[][] = onward.map((email) => ["ZADD", QUEUE, now + (following?.delayHours ?? 0) * 3600, `${listId}|${handle}|${flowId}|${index + 1}|${email}`]);
+    if (done) moved.push(["HINCRBY", statsKey(flow.id), "reached", done]);
+    if (left + onward.length) moved.push(["HINCRBY", statsKey(flow.id), "skipped", left + onward.length]);
+    if (moved.length) await redisPipeline(moved);
     if (!still.length) return;
 
     const key = `fl:${flow.id}:${step.id}:${createHash("sha256").update([...still].sort().join(",")).digest("hex").slice(0, 32)}`;
@@ -302,7 +365,6 @@ export async function sendDueSteps(
     if (!result.done.length) return;
     counts.sent += result.done.length;
     const commands: (string | number)[][] = [["HINCRBY", statsKey(flow.id), "sent", result.done.length]];
-    const following = flow.steps[index + 1];
     if (following) {
       const at = now + following.delayHours * 3600;
       for (const email of result.done) commands.push(["ZADD", QUEUE, at, `${listId}|${handle}|${flowId}|${index + 1}|${email}`]);

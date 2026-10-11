@@ -17,7 +17,9 @@
  *     for that affiliate (lib/affiliates.ts), once;
  *   - a settled one not yet told to the creator's phone or email platform
  *     is told now (lib/sale-events.ts), once, on a store that connected
- *     either.
+ *     either;
+ *   - a settled one not yet put on the creator's list is put there, with
+ *     what it bought, and its sequences started (lib/buyer-list.ts), once.
  *
  * A store that hands out license keys also has its refunds read, and the
  * key of every sale refunded in full is revoked (lib/licence-keys.ts), so
@@ -45,13 +47,15 @@ import { isSettled } from "@/lib/instant-pay";
 import { CONFIRM_WITHIN_SECONDS, type SessionRecord, canConfirm, confirmPurchase, confirmationKey } from "@/lib/purchase-email";
 import { remindAbandoned } from "@/lib/checkout-recovery";
 import { recoveryOn } from "@/lib/recovery-setting";
-import { type Store, storesAfter } from "@/lib/store";
-import { sellsThings } from "@/lib/catalog";
+import { type Store, saleHandles, storesAfter } from "@/lib/store";
+import { listingsNamed, sellsThings } from "@/lib/catalog";
 import { affiliatesOn, listPartners, noteSession } from "@/lib/affiliates";
 import { affiliateForCodes, codeOwners } from "@/lib/affiliate-codes";
 import { revokeRefunded, storeHasKeys } from "@/lib/licence-keys";
 import { markRefundedReviews, storeHasReviews } from "@/lib/review-proof";
 import { listensToSales, noteSales } from "@/lib/sale-events";
+import { listOrder, listedAlready } from "@/lib/buyer-list";
+import { deliveredIds } from "@/lib/bundle-rules";
 
 const CURSOR_KEY = "nl:sweep:cursor";
 /** At most this many pages of a hundred checkouts are read per store per pass. */
@@ -65,6 +69,8 @@ export type SweepCounts = {
   revoked: number;
   /** Reviews marked refunded. */
   unrated: number;
+  /** Paid orders put on the creator's list here, their buyer never having reached the thanks page. */
+  listed: number;
 };
 
 /** Whether a store has anything this pass could send about. */
@@ -73,7 +79,8 @@ function worthAsking(store: Store): boolean {
     (canConfirm(store) && sellsThings(store)) ||
     (Boolean(store.stripeAccountId) && affiliatesOn(store)) ||
     storeHasKeys(store) ||
-    listensToSales(store)
+    listensToSales(store) ||
+    (Boolean(store.stripeAccountId) && Boolean(store.listId) && sellsThings(store))
   );
 }
 
@@ -176,6 +183,31 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
       if (outcome === "failed") counts.failed += 1;
     }
 
+    // A buyer who never reached the thanks page is put on the list all the
+    // same, with what they bought, and their sequences start (lib/buyer-list.ts).
+    if (store.listId && paid.length && Date.now() < deadline) {
+      const handles = saleHandles(store);
+      const ordinary = paid.filter((row) => {
+        const meta = row.metadata ?? {};
+        return handles.has(meta.store ?? "") && meta.kind !== "tip" && deliveredIds(meta).length > 0;
+      });
+      const listed = await listedAlready(ordinary.map((row) => row.id as string));
+      for (let i = 0; i < ordinary.length && Date.now() < deadline; i += 1) {
+        if (listed[i]) continue;
+        const row = ordinary[i];
+        const email = typeof row.customer_details?.email === "string" ? row.customer_details.email : typeof row.customer_email === "string" ? row.customer_email : "";
+        if (!email) continue;
+        const products = await listingsNamed(store, row.metadata);
+        if ((await listOrder(store, {
+          sessionId: row.id as string,
+          email,
+          news: row.metadata?.news === "yes",
+          created: typeof row.created === "number" ? row.created : Math.floor(Date.now() / 1000),
+          products: products.map((p) => ({ id: p.id, title: p.title })),
+        })) === "done") counts.listed += 1;
+      }
+    }
+
     if (reminding) {
       for (const row of rows) {
         if (Date.now() >= deadline) break;
@@ -201,7 +233,7 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
  * starts the next one at the store after the last it finished.
  */
 export async function sweepCheckouts(deadline: number): Promise<SweepCounts> {
-  const counts: SweepCounts = { stores: 0, confirmed: 0, reminded: 0, failed: 0, revoked: 0, unrated: 0 };
+  const counts: SweepCounts = { stores: 0, confirmed: 0, reminded: 0, failed: 0, revoked: 0, unrated: 0, listed: 0 };
   if (!isRedisConfigured() || !platformKey()) return counts;
 
   const [saved] = await redisPipeline([["GET", CURSOR_KEY]]);
