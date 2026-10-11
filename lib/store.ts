@@ -31,6 +31,7 @@
  * person who owns them. Every function below that takes a store's key calls
  * it `email` for the first kind and works the same for the second.
  */
+import { type ShipProblem, type Shipping, shipProblem } from "@/lib/shipping";
 import { type CartDeal, NO_DEAL, parseCartDeal } from "@/lib/cart-rules";
 import { type Video, parseVideo } from "@/lib/sales-page";
 import { type FaqItem, parseFaq } from "@/lib/store-faq";
@@ -1863,7 +1864,7 @@ export async function setProductCall(
         if (isBundle(product)) return { ok: false, reason: "bundle" };
         if (product.recurring) return { ok: false, reason: "recurring" };
         if (product.options.length > 0) return { ok: false, reason: "options" };
-        if (product.file || product.link) return { ok: false, reason: "delivery" };
+        if (product.file || product.link || product.shipping) return { ok: false, reason: "delivery" };
         if (product.course || product.podcast) return { ok: false, reason: "course" };
         if (product.pwyw) return { ok: false, reason: "pwyw" };
       }
@@ -1899,6 +1900,8 @@ export async function setProductCourse(
       if (product.file || product.link) return { ok: false, reason: "delivery" };
       if (product.call) return { ok: false, reason: "call" };
       if (product.podcast) return { ok: false, reason: "call" };
+      // A physical product delivers what is shipped (lib/shipping.ts).
+      if (product.shipping) return { ok: false, reason: "delivery" };
     } else if (product.course && product.course.lessons > 0) {
       return { ok: false, reason: "not_empty" };
     }
@@ -1925,6 +1928,7 @@ export async function setProductPodcast(email: string, id: string, podcast: Podc
       if (product.file || product.link) return { ok: false, reason: "delivery" };
       if (product.call) return { ok: false, reason: "call" };
       if (product.course) return { ok: false, reason: "course" };
+      if (product.shipping) return { ok: false, reason: "delivery" };
     } else if (product.podcast && product.podcast.episodes > 0) {
       return { ok: false, reason: "not_empty" };
     }
@@ -2061,7 +2065,8 @@ export async function setProductExtras(
       if (change.plan !== undefined) {
         let plan = change.plan;
         if (plan !== null) {
-          if (!isOneOff(product) || product.pwyw) return { ok: false, reason: "kind" };
+          // A physical product is paid in full (lib/shipping.ts).
+          if (!isOneOff(product) || product.pwyw || product.shipping) return { ok: false, reason: "kind" };
           if (product.options.length > 0) {
             // Several prices: a payment for each, kept only for prices the
             // product has, every one the buyer can pick covered in full.
@@ -2342,7 +2347,7 @@ export type ProductResult =
   | { ok: true; store: Store; product: Product }
   | {
       ok: false;
-      reason: "none" | "title" | "price" | "free" | "too_many" | "unknown" | "call" | "course" | "pwyw" | "bundle";
+      reason: "none" | "title" | "price" | "free" | "too_many" | "unknown" | "call" | "course" | "pwyw" | "bundle" | "shipped";
       limit?: number;
       /** When the choose-your-price setting was refused: why. */
       pwyw?: PwywProblem;
@@ -2482,7 +2487,7 @@ export async function editProduct(
   // Written only when the product is changed, so the store's own list id is
   // what a free product gets (below) whatever the price turned out to be.
   let freeNow = false;
-  const result = await onProduct<"free" | "call" | "course" | "pwyw" | "title" | "price" | "bundle">(
+  const result = await onProduct<"free" | "call" | "course" | "pwyw" | "title" | "price" | "bundle" | "shipped">(
     email,
     id,
     (product, store) => {
@@ -2510,6 +2515,8 @@ export async function editProduct(
       // A bundle is one sale of several things at one price: never free, never
       // charged again and again, never priced by its buyer (lib/bundle-rules.ts).
       if (isBundle(product) && (fields.priceCents === 0 || recurring || pwywCents !== null)) return { ok: false, reason: "bundle" };
+      // A physical product is sold once, at a price (lib/shipping.ts): shipped by the creator.
+      if (product.shipping && (fields.priceCents === 0 || recurring || pwywCents !== null)) return { ok: false, reason: "shipped" };
       const next: Product = {
         ...product,
         title: fields.title,
@@ -2600,7 +2607,7 @@ export async function moveProduct(
 
 export type FileResult =
   | { ok: true; store: Store; removed: ProductFile | null }
-  | { ok: false; reason: "none" | "unknown" | "invalid" | "call" | "course" | "bundle" };
+  | { ok: false; reason: "none" | "unknown" | "invalid" | "call" | "course" | "bundle" | "shipped" };
 
 /** What is handed over when something is paid for. One or the other. */
 export type Delivery = { file: ProductFile | null; link: string | null };
@@ -2646,7 +2653,7 @@ async function changeDelivery(
   id: string,
   giving: boolean,
   change: (current: Delivery) => Delivery,
-): Promise<{ ok: true; store: Store; previous: Delivery } | { ok: false; reason: "none" | "unknown" | "call" | "course" | "bundle" }> {
+): Promise<{ ok: true; store: Store; previous: Delivery } | { ok: false; reason: "none" | "unknown" | "call" | "course" | "bundle" | "shipped" }> {
   const result = await withStore(email, async (store, save) => {
     const owner = productIdFor(store, id);
     const product = owner ? await readProduct(store, owner) : null;
@@ -2656,6 +2663,8 @@ async function changeDelivery(
     if (giving && product.id === id && product.call) return { ok: false as const, reason: "call" as const };
     if (giving && product.id === id && (product.course || product.podcast)) return { ok: false as const, reason: "course" as const };
     if (giving && product.id === id && isBundle(product)) return { ok: false as const, reason: "bundle" as const };
+    // A physical product delivers what the creator ships (lib/shipping.ts).
+    if (giving && product.id === id && product.shipping) return { ok: false as const, reason: "shipped" as const };
     const done = rewriteDelivery(product, id, change);
     if (!done) return { ok: false as const, reason: "unknown" as const };
     const next = await save(store, { put: [done.product] });
@@ -2887,6 +2896,8 @@ export async function addOption(
     // Several prices on something given away would put a price on it.
     if (isFree(product)) return { ok: false, reason: "free" };
     if (product.call) return { ok: false, reason: "call" };
+    // A physical product is shipped at one price (lib/shipping.ts).
+    if (product.shipping) return { ok: false, reason: "call" };
     // A course or a private podcast may be sold at several prices (7 October
     // 2026): each option opens the same lessons or feed, and a file or link
     // on one is what that one adds. A membership course stays at one price,
@@ -3291,6 +3302,27 @@ export async function setProductYearly(email: string, id: string, yearly: Yearly
     const problem = yearlyProblem(product, yearly, priceBounds(store.currency).min, store.tiers);
     if (problem) return { ok: false, reason: `yearly_${problem}` };
     return { ...product, yearly: { cents: yearly.cents } };
+  });
+  return done.ok ? { ok: true, store: done.store, product: done.product } : done;
+}
+
+export type ShippingResult =
+  | { ok: true; store: Store; product: Product }
+  | { ok: false; reason: "none" | "unknown" | `ship_${ShipProblem}` | "ship_price" };
+
+/**
+ * Makes a product a physical one the creator ships (lib/shipping.ts), changes
+ * where to and what shipping costs, or makes it an ordinary product again
+ * (null). Checked under the store's lock against the product as it is.
+ */
+export async function setProductShipping(email: string, id: string, shipping: Shipping | null): Promise<ShippingResult> {
+  const done = await onProduct<`ship_${ShipProblem}` | "ship_price">(email, id, (product, store) => {
+    if (shipping === null) return { ...product, shipping: null };
+    const problem = shipProblem(product);
+    if (problem) return { ok: false, reason: `ship_${problem}` };
+    // Free, or at least what Stripe charges in the store's currency.
+    if (shipping.cents > 0 && shipping.cents < currencyRule(store.currency).minCharge) return { ok: false, reason: "ship_price" };
+    return { ...product, shipping: { cents: shipping.cents, region: shipping.region, countries: [...shipping.countries], note: shipping.note } };
   });
   return done.ok ? { ok: true, store: done.store, product: done.product } : done;
 }

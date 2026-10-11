@@ -15,6 +15,7 @@
  * nothing twice), and a question the page could not answer, with the product
  * and the day, for the creator to read. Never who asked.
  */
+import { SHIP_REGIONS, activeShipping } from "@/lib/shipping";
 import { createHash } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { answerModel, askModel, isAiConfigured, jsonIn } from "@/lib/ai";
@@ -65,13 +66,19 @@ export async function answersUsed(store: Store, now = Date.now()): Promise<numbe
 }
 
 /** How a product is handed over, in a sentence that is true of every store here. */
-export function deliveryWords(product: Listing): string {
+export function deliveryWords(product: Listing, currency = "usd"): string {
   if (isFree(product)) return "It is free: the visitor leaves their email address, confirms it from their inbox, and gets it by email.";
   if (product.call) return "It is a call: the buyer picks a time on the store's calendar before paying, and gets a calendar invite and reminders by email.";
   if (product.recurring) return "It is a membership: the buyer pays on a schedule and can cancel at any time from a link on the store. Access lasts while the membership runs.";
   if (product.course) return "It is a course: after paying, the buyer opens it on its own page, lesson by lesson, and can come back to it at any time with the email they paid with.";
   if (product.bundle && product.pick) return `It is a bundle the buyer builds: they choose any ${product.pick} of the ${product.bundle.length} products in it before paying, and get exactly those.`;
   if (product.bundle) return "It is a bundle: after paying, the buyer gets each product inside it.";
+  // A physical product the creator ships (lib/shipping.ts): where to, and what shipping costs.
+  const shipping = activeShipping(product);
+  if (shipping) {
+    const where = shipping.region === "custom" ? shipping.countries.join(", ") : SHIP_REGIONS[shipping.region].label;
+    return `It is a physical product the creator ships themselves, to: ${where}. Shipping is ${shipping.cents > 0 ? `${formatMoney(shipping.cents, currency)} per order` : "free"}, added on the payment page.${shipping.note ? ` ${shipping.note}.` : ""} The buyer gives the address on the payment page and gets an email when it ships.`;
+  }
   if (product.file || product.options.some((o) => o.file)) return "It is a download: after paying, the buyer downloads the file from the page they land on, and the link comes by email too.";
   return "After paying, the buyer gets the link on the page they land on, and by email.";
 }
@@ -113,7 +120,7 @@ export function factsFor(store: Store, product: Listing, about: string, page: Sa
     `Store: ${store.name}`,
     `Product: ${product.title}`,
     `Price: ${priceWords(product, store.currency, store.tiers)}`,
-    `How it is delivered: ${deliveryWords(product)}`,
+    `How it is delivered: ${deliveryWords(product, store.currency)}`,
   ];
   if (!isFree(product)) {
     parts.push(`How it is paid for: on a secure payment page${store.stripeAccountId ? " run by Stripe" : ""}, into ${store.name}'s own account. Nothing is charged until the buyer confirms there.`);

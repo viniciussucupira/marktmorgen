@@ -100,8 +100,8 @@ const STATUS: Record<string, number> = {
  * with a word the caller has never seen would be worse than "unknown".
  */
 function asProductReason(
-  reason: "none" | "unknown" | "invalid" | "call" | "course" | "bundle",
-): "none" | "unknown" | "call" | "course" | "bundle" {
+  reason: "none" | "unknown" | "invalid" | "call" | "course" | "bundle" | "shipped",
+): "none" | "unknown" | "call" | "course" | "bundle" | "shipped" {
   return reason === "invalid" ? "unknown" : reason;
 }
 

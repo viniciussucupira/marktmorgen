@@ -182,6 +182,10 @@ export async function startServices(port) {
           metadata,
           // The phone, as Stripe's own phone box would have taken it, only where it was asked for.
           customer_details: body.get("phone_number_collection[enabled]") === "true" ? { email: "buyer@example.com", phone: "+15125550142" } : { email: "buyer@example.com" },
+          // The address Stripe's own page would have taken, where one was asked for (lib/shipping.ts).
+          ...(body.get("shipping_address_collection[allowed_countries][0]")
+            ? { collected_information: { shipping_details: { name: "Ana Souza", address: { line1: "1 Main St", line2: null, city: "Austin", state: "TX", postal_code: "78701", country: "US" } } }, shipping_cost: { amount_total: Number(body.get("shipping_options[0][shipping_rate_data][fixed_amount][amount]") ?? 0) } }
+            : {}),
           customer_email: null,
           // What a real checkout would take off, kept for the test to read.
           discount_coupon: body.get("discounts[0][coupon]"),

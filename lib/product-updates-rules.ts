@@ -12,6 +12,7 @@ export const MAX_UPDATE_RECIPIENTS = 5_000;
 export const MAX_UPDATE_NOTE = 1_500;
 
 /** Whether a product's buyers can be told of an update: one bought once that hands something over. */
-export function canTellBuyers(product: Pick<Listing, "priceCents" | "recurring" | "call">): boolean {
-  return product.priceCents > 0 && product.recurring === null && product.call === null;
+export function canTellBuyers(product: Pick<Listing, "priceCents" | "recurring" | "call" | "shipping">): boolean {
+  // Not something shipped: there is no new version to get from the orders page (lib/shipping.ts).
+  return product.priceCents > 0 && product.recurring === null && product.call === null && !product.shipping;
 }

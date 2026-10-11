@@ -35,6 +35,7 @@
  * store record replaced, in one write. Until that write lands the old record
  * is the store, complete, and doing it again writes the same records.
  */
+import { type Shipping, parseShipping } from "@/lib/shipping";
 import { idInSegment } from "@/lib/product-slug";
 import { type CallPackage, parseCallPackage } from "@/lib/call-package-rules";
 import { type PodcastRef, parsePodcastRef } from "@/lib/podcast-rules";
@@ -234,6 +235,11 @@ export type Product = {
    */
   note?: boolean;
   /**
+   * A physical product the creator ships (lib/shipping.ts): where to, what
+   * shipping costs and when it ships. Absent or null is not shipped.
+   */
+  shipping?: Shipping | null;
+  /**
    * A draft: kept in the studio and left off the store, its own page and its
    * checkout until the creator publishes it. What an import makes starts
    * here. A hidden product can still be part of a bundle.
@@ -386,6 +392,7 @@ export function parseProduct(entry: unknown): Product | null {
     intro: parseIntro(value.intro),
     yearly: parseYearly(value.yearly),
     note: value.note === true,
+    shipping: parseShipping(value.shipping),
     hidden: value.hidden === true,
   };
 }
@@ -431,6 +438,7 @@ export function listingOf(product: Listing): Listing {
     intro: product.intro ?? null,
     yearly: product.yearly ?? null,
     note: product.note ?? false,
+    shipping: product.shipping ?? null,
     hidden: product.hidden,
   };
 }

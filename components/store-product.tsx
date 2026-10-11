@@ -9,6 +9,8 @@ import { isFree, syncTakesBuyer, type Listing, type Store } from "@/lib/store";
 import { canSellProduct, fromPriceCents, sellableOptions } from "@/lib/store-checkout";
 import { canGiveProduct } from "@/lib/free";
 import { activeBumps, activePlan, planFor } from "@/lib/product-extras";
+import { activeShipping, shipsToWords } from "@/lib/shipping";
+import { shippingWords } from "@/lib/buyer-words/shipping";
 import { activePwyw } from "@/lib/pay-what-you-want";
 import { imageUrl, IMAGE_SIZES, imageSrcSet } from "@/lib/product-image";
 import type { PageAction } from "@/components/sales-blocks";
@@ -573,6 +575,9 @@ export function BuyBox({
     return each ? planLine(store, each) : null;
   };
   const pwyw = activePwyw(product);
+  // Shipped by the creator (lib/shipping.ts): said under the button.
+  const shipping = activeShipping(product);
+  const sw = shippingWords(store.language);
   const trial = product.recurring && product.recurring.trialDays > 0 ? product.recurring.trialDays : 0;
   // A membership's introductory price (lib/intro-price.ts): what the button and the line under it say.
   const intro = activeIntro(product, store.tiers);
@@ -876,6 +881,18 @@ export function BuyBox({
           );
         })}
       </button>
+      {shipping ? (
+        /* A product the creator ships (lib/shipping.ts): what shipping costs and where it goes, before anybody pays. */
+        <p className="st-muted mt-2 text-center text-xs" data-shipping="">
+          {[
+            shipping.cents > 0 ? sw.cost(money(shipping.cents)) : sw.free,
+            sw.shipsTo(shipsToWords(shipping, speech(store).lang.locale, sw)),
+            shipping.note,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      ) : null}
       {pwyw ? (
         <p className="st-muted mt-2 text-center text-xs">
           {w.pwywNote(money(product.priceCents), money(pwyw.suggestedCents))}

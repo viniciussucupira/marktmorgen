@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
     const facts = [
       `Store: ${store.name}`,
       store.bio ? `About it: ${store.bio}` : "",
-      products.length ? `What it sells:\n${products.map((p) => `- ${p.title}: ${priceWords(p, store.currency, store.tiers)} ${deliveryWords(p)}`).join("\n")}` : "",
+      products.length ? `What it sells:\n${products.map((p) => `- ${p.title}: ${priceWords(p, store.currency, store.tiers)} ${deliveryWords(p, store.currency)}`).join("\n")}` : "",
       `How buyers pay: on a secure payment page${store.stripeAccountId ? " run by Stripe" : ""}, into ${store.name}'s own account.`,
       store.answers.facts ? `What ${store.name} wants buyers to know:\n${store.answers.facts}` : "",
     ]

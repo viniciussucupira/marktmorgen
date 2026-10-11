@@ -1,3 +1,4 @@
+import { MarkShipped } from "@/components/mark-shipped";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import { lowestPriceCents } from "@/lib/product-option";
 import { SaleEditor } from "@/components/sale-editor";
@@ -2299,6 +2300,9 @@ export default async function StudioPage({
                               { day: "numeric", month: "long", year: "numeric" },
                             )}
                           </p>
+                          {sale.shipTo !== undefined && sale.shipTo !== null ? (
+                            <MarkShipped session={sale.reference} to={sale.shipTo} shipped={sale.shipped ?? null} />
+                          ) : null}
                           {sale.answers.length > 0 ? (
                             <dl className="mt-3 space-y-2 rounded-xl bg-white px-4 py-3 text-sm">
                               {sale.answers.map((answer) => (
