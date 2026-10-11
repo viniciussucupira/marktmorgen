@@ -214,12 +214,12 @@ export async function sendServerPurchase(store: Store, sessionId: unknown, buyer
       try {
         const response =
           platform === "meta"
-            ? await fetch(`https://graph.facebook.com/${META_GRAPH_VERSION}/${store.pixels.meta}/events`, {
+            ? // The token as the access_token query parameter, where Meta's guide to the Conversions API says it goes.
+              await fetch(`https://graph.facebook.com/${META_GRAPH_VERSION}/${store.pixels.meta}/events?access_token=${encodeURIComponent(opened.value)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   data: [metaEvent(order, buyer)],
-                  access_token: opened.value,
                   ...(stored.testCode ? { test_event_code: stored.testCode } : {}),
                 }),
                 signal: AbortSignal.timeout(8_000),
