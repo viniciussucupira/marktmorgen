@@ -2420,6 +2420,50 @@ try {
     await post("/api/store/product", { action: "remove", id: book });
   }
 
+  part("A cover made in the studio");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "Sourdough at Home", summary: "A starter, a loaf and a schedule that works", price: "19" });
+    const loaf = made.product?.id ?? "";
+    await open(studio, `${LOCAL}/studio`);
+    await studio.locator("button[aria-expanded]", { hasText: "Sourdough at Home" }).first().click();
+    await studio.getByRole("button", { name: "Make a cover" }).first().click();
+    const maker = studio.locator("section", { has: studio.getByRole("heading", { name: "Make a cover" }) }).first();
+    await maker.waitFor({ timeout: 15_000 });
+    is("it starts from the product's own words", [await maker.getByLabel("Title on the cover").inputValue(), await maker.getByLabel("Line under the title").inputValue()], ["Sourdough at Home", "A starter, a loaf and a schedule that works"]);
+    await maker.getByLabel("Small line above the title").fill("Ebook");
+    // Each design drawn: many colors on its canvas, not an empty frame.
+    let drawn = [];
+    for (let i = 0; i < 40; i += 1) {
+      drawn = await maker.locator("canvas[data-design]").evaluateAll((canvases) =>
+        canvases.map((canvas) => {
+          const data = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+          const seen = new Set();
+          for (let p = 0; p < data.length; p += 400) seen.add(`${data[p]},${data[p + 1]},${data[p + 2]}`);
+          return seen.size;
+        }),
+      );
+      if (drawn.length === 6 && drawn.every((count) => count > 20)) break;
+      await new Promise((wait) => setTimeout(wait, 250));
+    }
+    is("six designs, each drawn", [drawn.length, drawn.every((count) => count > 20)], [6, true]);
+    await maker.getByText("Glow", { exact: true }).click();
+    if (process.env.E2E_SHOTS) await maker.screenshot({ path: join(process.env.E2E_SHOTS, "cover-maker.png") });
+    // The cover goes through the picture's own door: the first thing asked is for a place in this store's picture folder.
+    let asked = null;
+    await studio.route("**/api/store/image/upload", async (route) => {
+      asked = route.request().postDataJSON();
+      await route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "stopped here by the test" }) });
+    });
+    await maker.getByRole("button", { name: "Use this cover" }).click();
+    for (let i = 0; i < 60 && !asked; i += 1) await new Promise((wait) => setTimeout(wait, 250));
+    await studio.unroute("**/api/store/image/upload");
+    const pathname = String(asked?.payload?.pathname ?? asked?.pathname ?? JSON.stringify(asked ?? ""));
+    is("made full size, shrunk, and sent as a picture of this store", [/images\/[0-9a-f]+\/[0-9a-f]{32}\.(webp|jpg)/.test(pathname), pathname.includes(loaf) || JSON.stringify(asked).includes(loaf)], [true, true]);
+    await post("/api/store/product", { action: "remove", id: loaf });
+  }
+
   await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);

@@ -17,6 +17,9 @@ import {
 } from "@/lib/product-image";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { shrink } from "@/components/shrink-image";
+import { CoverMaker, type CoverLook } from "@/components/cover-maker";
+import { coverLabel } from "@/lib/cover-maker";
+import type { LanguageCode } from "@/lib/store-language";
 
 export { shrink };
 
@@ -79,7 +82,16 @@ function StyleSketch({ style }: { style: DisplayStyle }) {
 }
 
 /** A product's picture, the words that describe it, and its card style. */
-export function ProductImageEditor({ product, folder }: { product: Product; folder: string }) {
+export function ProductImageEditor({
+  product,
+  folder,
+  cover = null,
+}: {
+  product: Product;
+  folder: string;
+  /** The store's color, letters, name and language, for a cover made here (components/cover-maker.tsx); null hides the maker. */
+  cover?: (CoverLook & { language: LanguageCode }) | null;
+}) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const image = product.image;
@@ -87,6 +99,7 @@ export function ProductImageEditor({ product, folder }: { product: Product; fold
   const [busy, setBusy] = useState<"upload" | "remove" | "alt" | "display" | null>(null);
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [making, setMaking] = useState(false);
 
   async function post(payload: Record<string, unknown>): Promise<string | null> {
     try {
@@ -102,7 +115,8 @@ export function ProductImageEditor({ product, folder }: { product: Product; fold
     }
   }
 
-  async function choose(file: File | undefined) {
+  /** Sends a picture: one the creator picked, or a cover made here (with the words it shows as its description). */
+  async function choose(file: File | undefined, describe: string | null = null) {
     if (!file || busy) return;
     setError(null);
     if (file.size > MAX_SOURCE_BYTES) {
@@ -147,12 +161,17 @@ export function ProductImageEditor({ product, folder }: { product: Product; fold
           small = null;
         }
       }
-      const problem = await post({ action: "attach", path, width: shrunk.width, height: shrunk.height, alt, ...(small ? { small } : {}) });
+      const described = describe ?? alt;
+      const problem = await post({ action: "attach", path, width: shrunk.width, height: shrunk.height, alt: described, ...(small ? { small } : {}) });
       if (problem) {
         setError(problem);
         return;
       }
-      toast(image ? "Picture replaced." : "Picture added.");
+      if (describe !== null) {
+        setAlt(describe);
+        setMaking(false);
+      }
+      toast(describe !== null ? "Cover added." : image ? "Picture replaced." : "Picture added.");
       router.refresh();
     } catch {
       setError(MESSAGES.server_error);
@@ -244,6 +263,11 @@ export function ProductImageEditor({ product, folder }: { product: Product; fold
           <button type="button" onClick={() => input.current?.click()} className="btn btn-secondary btn-sm">
             {image ? "Replace the picture" : "Add a picture"}
           </button>
+          {cover && !making ? (
+            <button type="button" onClick={() => setMaking(true)} className="btn btn-secondary btn-sm">
+              Make a cover
+            </button>
+          ) : null}
           {image ? (
             <button
               type="button"
@@ -257,6 +281,16 @@ export function ProductImageEditor({ product, folder }: { product: Product; fold
           ) : null}
         </div>
       )}
+
+      {cover && making ? (
+        <CoverMaker
+          look={cover}
+          defaults={{ title: product.title, label: coverLabel(product, cover.language), sub: product.summary }}
+          busy={busy === "upload"}
+          onUse={(file, words) => choose(file, words)}
+          onClose={() => setMaking(false)}
+        />
+      ) : null}
 
       {image ? (
         <>
