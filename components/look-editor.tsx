@@ -458,7 +458,7 @@ export function LookEditor({
                   Show &ldquo;Bought 120 times&rdquo; on products that have sold at least ten times
                 </span>
                 <span className="field-hint mt-1 block">
-                  Counted from the sales on your own Stripe account, read again every few hours. Nothing can be typed in or rounded up, and a product with fewer than ten sales shows nothing.
+                  Counted from the sales on your own Stripe account, read again every few hours. Nothing can be typed in or rounded up, and a product with fewer than ten sales shows nothing. Each product&apos;s page also shows what its buyers also bought, &ldquo;5 buyers bought both&rdquo;, from three buyers of both up.
                 </span>
               </span>
             </label>

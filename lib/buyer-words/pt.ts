@@ -218,6 +218,8 @@ export const pt: BuyerWords = {
   everythingFrom: (store) => `Tudo de ${store}`,
   getTitle: (title) => `Obter ${title}`,
   moreFrom: (store) => `Mais de ${store}`,
+  alsoBought: (title) => `Quem comprou ${title} também comprou`,
+  boughtBoth: (n) => `${n} compradores compraram ambos`,
 
   reviews: "Avaliações",
   verifiedReviews: (count, written) => `${written} ${plural(count, "avaliação verificada", "avaliações verificadas")}`,

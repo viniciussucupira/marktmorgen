@@ -212,6 +212,8 @@ export async function startServices(port) {
     writing: () => [...writing],
     /** What was written to the file store, by its path. */
     blobs: () => new Map(blobs),
+    /** The database itself, for a test to read or set what only time or many buyers would make. */
+    redis: (commands) => redis.pipeline(commands),
     close: () => new Promise((closed) => server.close(closed)),
   };
 }
