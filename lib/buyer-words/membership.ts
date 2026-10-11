@@ -100,6 +100,33 @@ const en = {
     "Stripe could not list your memberships just now. The button below opens them all on Stripe's own page, where you can cancel.",
   changeCard: "Change card or see receipts",
   openMembership: "Open my membership",
+  pause: {
+    button: "Pause instead",
+    choose: "Pause for",
+    months: (n: number) => (n === 1 ? "1 month" : `${n} months`),
+    confirm: "Pause my membership",
+    note: (date: string) =>
+      `What you have paid for stays open until ${date}. Then nothing is charged and the membership is closed while it is paused; it starts again by itself, with a payment, on the day the pause ends.`,
+    pausedUntil: (date: string) => `Paused until ${date}`,
+    startsPause: (date: string, until: string) => `Pauses on ${date}, back on ${until}`,
+    resume: "Resume now",
+    resumeNote: "Resuming takes a payment today, and the membership is open again at once.",
+    emailSubject: (title: string) => `Your ${title} membership is paused`,
+    emailBody: (title: string, store: string, from: string, until: string) =>
+      `${title}: what you have paid for stays open until ${from}. From then until ${until}, nothing is charged and the membership is paused. On ${until} it starts again by itself, with the usual payment.\n\nTo come back sooner, or to cancel, open your membership from ${store}'s page.`,
+  },
+  pauseNotices: {
+    paused: { title: "Your membership is paused", body: "An email with the dates is on its way to your inbox." },
+    resumed: { title: "Your membership is on again", body: "The payment went through, and everything it includes is open to you again." },
+    cannot: {
+      title: "That membership cannot be paused right now",
+      body: "Nothing was changed. A membership can be paused once a year, when it is paid monthly and running normally.",
+    },
+    declined: {
+      title: "The card was not charged, so the membership is still paused",
+      body: "Update your card with the button below, then press Resume now again.",
+    },
+  } as Record<string, Notice>,
   cancelNote:
     "If you cancel, the membership stays on until the end of the period you have already paid for, and nothing more is charged.",
 
@@ -330,6 +357,33 @@ const es: MembershipWords = {
     "Stripe no pudo mostrar tus membresías en este momento. El botón de abajo las abre todas en la propia página de Stripe, donde puedes cancelar.",
   changeCard: "Cambiar tarjeta o ver recibos",
   openMembership: "Abrir mi membresía",
+  pause: {
+    button: "Pausar en su lugar",
+    choose: "Pausar durante",
+    months: (n) => (n === 1 ? "1 mes" : `${n} meses`),
+    confirm: "Pausar mi membresía",
+    note: (date) =>
+      `Lo que ya pagaste sigue abierto hasta el ${date}. Después no se cobra nada y la membresía queda cerrada mientras está en pausa; vuelve sola, con un pago, el día en que termina la pausa.`,
+    pausedUntil: (date) => `En pausa hasta el ${date}`,
+    startsPause: (date, until) => `Se pausa el ${date} y vuelve el ${until}`,
+    resume: "Reanudar ahora",
+    resumeNote: "Al reanudar se cobra un pago hoy, y la membresía vuelve a abrirse al instante.",
+    emailSubject: (title) => `Tu membresía ${title} está en pausa`,
+    emailBody: (title, store, from, until) =>
+      `${title}: lo que ya pagaste sigue abierto hasta el ${from}. Desde ese día hasta el ${until} no se cobra nada y la membresía está en pausa. El ${until} vuelve sola, con el pago de siempre.\n\nPara volver antes, o para cancelar, abre tu membresía desde la página de ${store}.`,
+  },
+  pauseNotices: {
+    paused: { title: "Tu membresía está en pausa", body: "Te llega un correo con las fechas." },
+    resumed: { title: "Tu membresía está activa de nuevo", body: "El pago se hizo, y todo lo que incluye vuelve a estar abierto para ti." },
+    cannot: {
+      title: "Esa membresía no se puede pausar ahora",
+      body: "No se cambió nada. Una membresía se puede pausar una vez al año, si se paga cada mes y funciona con normalidad.",
+    },
+    declined: {
+      title: "No se cobró la tarjeta, así que la membresía sigue en pausa",
+      body: "Actualiza tu tarjeta con el botón de abajo y vuelve a pulsar Reanudar ahora.",
+    },
+  } as Record<string, Notice>,
   cancelNote: "Si cancelas, la membresía sigue activa hasta el final del periodo que ya pagaste, y no se cobra nada más.",
 
   switchProblems: {
@@ -554,6 +608,33 @@ const fr: MembershipWords = {
     "Stripe n'a pas pu afficher vos abonnements pour le moment. Le bouton ci-dessous les ouvre tous sur la page de Stripe, où vous pouvez annuler.",
   changeCard: "Changer de carte ou voir les reçus",
   openMembership: "Ouvrir mon abonnement",
+  pause: {
+    button: "Mettre en pause plutôt",
+    choose: "Mettre en pause pour",
+    months: (n) => `${n} mois`,
+    confirm: "Mettre mon abonnement en pause",
+    note: (date) =>
+      `Ce que vous avez payé reste ouvert jusqu'au ${date}. Ensuite, rien n'est débité et l'abonnement est fermé pendant la pause${S}; il reprend tout seul, avec un paiement, le jour où elle se termine.`,
+    pausedUntil: (date) => `En pause jusqu'au ${date}`,
+    startsPause: (date, until) => `En pause à partir du ${date}, de retour le ${until}`,
+    resume: "Reprendre maintenant",
+    resumeNote: "Reprendre prélève un paiement aujourd'hui, et l'abonnement est rouvert aussitôt.",
+    emailSubject: (title) => `Votre abonnement ${title} est en pause`,
+    emailBody: (title, store, from, until) =>
+      `${title}${S}: ce que vous avez payé reste ouvert jusqu'au ${from}. De ce jour au ${until}, rien n'est débité et l'abonnement est en pause. Le ${until}, il reprend tout seul, avec le paiement habituel.\n\nPour revenir plus tôt, ou pour annuler, ouvrez votre abonnement depuis la page de ${store}.`,
+  },
+  pauseNotices: {
+    paused: { title: "Votre abonnement est en pause", body: "Un e-mail avec les dates arrive dans votre boîte." },
+    resumed: { title: "Votre abonnement a repris", body: "Le paiement est passé, et tout ce qu'il comprend vous est de nouveau ouvert." },
+    cannot: {
+      title: "Cet abonnement ne peut pas être mis en pause pour l'instant",
+      body: "Rien n'a été modifié. Un abonnement peut être mis en pause une fois par an, s'il est payé chaque mois et fonctionne normalement.",
+    },
+    declined: {
+      title: "La carte n'a pas été débitée, l'abonnement reste donc en pause",
+      body: "Mettez à jour votre carte avec le bouton ci-dessous, puis appuyez de nouveau sur Reprendre maintenant.",
+    },
+  } as Record<string, Notice>,
   cancelNote: "Si vous annulez, l'abonnement reste actif jusqu'à la fin de la période déjà payée, et plus rien n'est débité.",
 
   switchProblems: {
@@ -779,6 +860,33 @@ const de: MembershipWords = {
     "Stripe konnte Ihre Mitgliedschaften gerade nicht auflisten. Die Schaltfläche unten öffnet sie alle auf der Seite von Stripe, wo Sie kündigen können.",
   changeCard: "Karte ändern oder Quittungen ansehen",
   openMembership: "Meine Mitgliedschaft öffnen",
+  pause: {
+    button: "Stattdessen pausieren",
+    choose: "Pausieren für",
+    months: (n) => (n === 1 ? "1 Monat" : `${n} Monate`),
+    confirm: "Meine Mitgliedschaft pausieren",
+    note: (date) =>
+      `Was Sie bezahlt haben, bleibt bis zum ${date} offen. Danach wird nichts abgebucht und die Mitgliedschaft ist während der Pause geschlossen; sie beginnt am Tag, an dem die Pause endet, von selbst wieder, mit einer Zahlung.`,
+    pausedUntil: (date) => `Pausiert bis ${date}`,
+    startsPause: (date, until) => `Pausiert ab ${date}, zurück am ${until}`,
+    resume: "Jetzt fortsetzen",
+    resumeNote: "Beim Fortsetzen wird heute eine Zahlung abgebucht, und die Mitgliedschaft ist sofort wieder offen.",
+    emailSubject: (title) => `Ihre Mitgliedschaft ${title} ist pausiert`,
+    emailBody: (title, store, from, until) =>
+      `${title}: Was Sie bezahlt haben, bleibt bis zum ${from} offen. Von da an bis zum ${until} wird nichts abgebucht und die Mitgliedschaft ist pausiert. Am ${until} beginnt sie von selbst wieder, mit der üblichen Zahlung.\n\nUm früher zurückzukommen oder zu kündigen, öffnen Sie Ihre Mitgliedschaft über die Seite von ${store}.`,
+  },
+  pauseNotices: {
+    paused: { title: "Ihre Mitgliedschaft ist pausiert", body: "Eine E-Mail mit den Daten ist unterwegs." },
+    resumed: { title: "Ihre Mitgliedschaft läuft wieder", body: "Die Zahlung ist durchgegangen, und alles, was dazugehört, ist wieder für Sie offen." },
+    cannot: {
+      title: "Diese Mitgliedschaft kann gerade nicht pausiert werden",
+      body: "Es wurde nichts geändert. Eine Mitgliedschaft kann einmal im Jahr pausiert werden, wenn sie monatlich bezahlt wird und normal läuft.",
+    },
+    declined: {
+      title: "Die Karte wurde nicht belastet, daher bleibt die Mitgliedschaft pausiert",
+      body: "Aktualisieren Sie Ihre Karte über die Schaltfläche unten und drücken Sie dann erneut auf Jetzt fortsetzen.",
+    },
+  } as Record<string, Notice>,
   cancelNote:
     "Wenn Sie kündigen, läuft die Mitgliedschaft bis zum Ende des bereits bezahlten Zeitraums weiter, und es wird nichts mehr berechnet.",
 
@@ -1019,6 +1127,33 @@ const it: MembershipWords = {
     "Stripe non è riuscito a elencare i tuoi abbonamenti in questo momento. Il pulsante qui sotto li apre tutti sulla pagina di Stripe, dove puoi annullarli.",
   changeCard: "Cambia carta o vedi le ricevute",
   openMembership: "Apri il mio abbonamento",
+  pause: {
+    button: "Metti in pausa invece",
+    choose: "Metti in pausa per",
+    months: (n) => (n === 1 ? "1 mese" : `${n} mesi`),
+    confirm: "Metti in pausa il mio abbonamento",
+    note: (date) =>
+      `Ciò che hai già pagato resta aperto fino al ${date}. Poi non viene addebitato nulla e l'abbonamento resta chiuso durante la pausa; riparte da solo, con un pagamento, il giorno in cui la pausa finisce.`,
+    pausedUntil: (date) => `In pausa fino al ${date}`,
+    startsPause: (date, until) => `In pausa dal ${date}, di nuovo attivo il ${until}`,
+    resume: "Riprendi ora",
+    resumeNote: "Riprendendo, oggi viene addebitato un pagamento e l'abbonamento si riapre subito.",
+    emailSubject: (title) => `Il tuo abbonamento ${title} è in pausa`,
+    emailBody: (title, store, from, until) =>
+      `${title}: ciò che hai già pagato resta aperto fino al ${from}. Da quel giorno al ${until} non viene addebitato nulla e l'abbonamento è in pausa. Il ${until} riparte da solo, con il pagamento di sempre.\n\nPer tornare prima, o per annullare, apri il tuo abbonamento dalla pagina di ${store}.`,
+  },
+  pauseNotices: {
+    paused: { title: "Il tuo abbonamento è in pausa", body: "Ti arriva un'email con le date." },
+    resumed: { title: "Il tuo abbonamento è di nuovo attivo", body: "Il pagamento è andato a buon fine, e tutto ciò che include è di nuovo aperto per te." },
+    cannot: {
+      title: "Questo abbonamento non può essere messo in pausa ora",
+      body: "Non è stato cambiato nulla. Un abbonamento si può mettere in pausa una volta l'anno, se è pagato ogni mese e funziona normalmente.",
+    },
+    declined: {
+      title: "La carta non è stata addebitata, quindi l'abbonamento resta in pausa",
+      body: "Aggiorna la carta con il pulsante qui sotto, poi premi di nuovo Riprendi ora.",
+    },
+  } as Record<string, Notice>,
   cancelNote: "Se annulli, l'abbonamento resta attivo fino alla fine del periodo che hai già pagato, e non ti viene addebitato altro.",
 
   switchProblems: {
@@ -1243,6 +1378,33 @@ const nl: MembershipWords = {
     "Stripe kon je lidmaatschappen nu niet tonen. De knop hieronder opent ze allemaal op de pagina van Stripe zelf, waar je kunt opzeggen.",
   changeCard: "Kaart wijzigen of ontvangstbewijzen bekijken",
   openMembership: "Mijn lidmaatschap openen",
+  pause: {
+    button: "Liever pauzeren",
+    choose: "Pauzeren voor",
+    months: (n) => (n === 1 ? "1 maand" : `${n} maanden`),
+    confirm: "Mijn lidmaatschap pauzeren",
+    note: (date) =>
+      `Wat je hebt betaald, blijft open tot ${date}. Daarna wordt er niets afgeschreven en is het lidmaatschap dicht zolang het gepauzeerd is; het start vanzelf weer, met een betaling, op de dag dat de pauze eindigt.`,
+    pausedUntil: (date) => `Gepauzeerd tot ${date}`,
+    startsPause: (date, until) => `Pauzeert op ${date}, terug op ${until}`,
+    resume: "Nu hervatten",
+    resumeNote: "Hervatten schrijft vandaag een betaling af, en het lidmaatschap is meteen weer open.",
+    emailSubject: (title) => `Je lidmaatschap ${title} is gepauzeerd`,
+    emailBody: (title, store, from, until) =>
+      `${title}: wat je hebt betaald, blijft open tot ${from}. Van dan tot ${until} wordt er niets afgeschreven en is het lidmaatschap gepauzeerd. Op ${until} start het vanzelf weer, met de gewone betaling.\n\nOm eerder terug te komen, of om op te zeggen, open je je lidmaatschap via de pagina van ${store}.`,
+  },
+  pauseNotices: {
+    paused: { title: "Je lidmaatschap is gepauzeerd", body: "Er is een e-mail met de data onderweg." },
+    resumed: { title: "Je lidmaatschap loopt weer", body: "De betaling is gelukt, en alles wat erbij hoort is weer open voor je." },
+    cannot: {
+      title: "Dat lidmaatschap kan nu niet worden gepauzeerd",
+      body: "Er is niets veranderd. Een lidmaatschap kan één keer per jaar worden gepauzeerd, als het per maand wordt betaald en gewoon loopt.",
+    },
+    declined: {
+      title: "De kaart is niet belast, dus het lidmaatschap blijft gepauzeerd",
+      body: "Werk je kaart bij met de knop hieronder en druk dan opnieuw op Nu hervatten.",
+    },
+  } as Record<string, Notice>,
   cancelNote: "Als je opzegt, loopt het lidmaatschap door tot het einde van de periode die je al hebt betaald, en wordt er niets meer afgeschreven.",
 
   switchProblems: {
@@ -1465,6 +1627,33 @@ const pt: MembershipWords = {
     "A Stripe não conseguiu listar as suas subscrições neste momento. O botão abaixo abre-as todas na própria página da Stripe, onde pode cancelar.",
   changeCard: "Alterar cartão ou ver recibos",
   openMembership: "Abrir a minha subscrição",
+  pause: {
+    button: "Pausar em vez disso",
+    choose: "Pausar durante",
+    months: (n) => (n === 1 ? "1 mês" : `${n} meses`),
+    confirm: "Pausar a minha subscrição",
+    note: (date) =>
+      `O que já pagou continua disponível até ${date}. Depois disso nada é cobrado e a subscrição fica fechada durante a pausa; recomeça sozinha, com um pagamento, no dia em que a pausa termina.`,
+    pausedUntil: (date) => `Em pausa até ${date}`,
+    startsPause: (date, until) => `Entra em pausa a ${date} e regressa a ${until}`,
+    resume: "Retomar agora",
+    resumeNote: "Ao retomar, é cobrado um pagamento hoje e a subscrição volta a abrir de imediato.",
+    emailSubject: (title) => `A sua subscrição ${title} está em pausa`,
+    emailBody: (title, store, from, until) =>
+      `${title}: o que já pagou continua disponível até ${from}. Desse dia até ${until}, nada é cobrado e a subscrição está em pausa. A ${until}, recomeça sozinha, com o pagamento habitual.\n\nPara voltar mais cedo, ou para cancelar, abra a sua subscrição a partir da página de ${store}.`,
+  },
+  pauseNotices: {
+    paused: { title: "A sua subscrição está em pausa", body: "Vai receber um e-mail com as datas." },
+    resumed: { title: "A sua subscrição voltou a estar ativa", body: "O pagamento foi efetuado, e tudo o que inclui está de novo disponível para si." },
+    cannot: {
+      title: "Essa subscrição não pode ser pausada agora",
+      body: "Nada foi alterado. Uma subscrição pode ser pausada uma vez por ano, se for paga todos os meses e estiver a funcionar normalmente.",
+    },
+    declined: {
+      title: "O cartão não foi cobrado, por isso a subscrição continua em pausa",
+      body: "Atualize o seu cartão com o botão abaixo e carregue novamente em Retomar agora.",
+    },
+  } as Record<string, Notice>,
   cancelNote: "Se cancelar, a subscrição mantém-se ativa até ao fim do período que já pagou, e não é cobrado mais nada.",
 
   switchProblems: {

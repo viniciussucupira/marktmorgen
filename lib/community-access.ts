@@ -52,7 +52,7 @@ import { communityWords } from "@/lib/buyer-words/community";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
-import { isLive } from "@/lib/membership-access";
+import { isLiveSub } from "@/lib/membership-access";
 import { purchaseRefunded, refundedInFull } from "@/lib/refunds";
 import { leadsKey, parseContact } from "@/lib/contacts";
 import { type Learner, TOKEN_PATTERN, emailKey, learnerFrom, storeKey } from "@/lib/learn";
@@ -134,7 +134,7 @@ export async function paidForAny(store: Store, email: string, ids: Set<string>):
       if (session.mode === "subscription" && meta.kind !== "plan") {
         const sub = session.subscription as { status?: unknown } | null;
         // The same rule as every other door a membership opens (lib/membership-access.ts).
-        if (!sub || typeof sub !== "object" || !isLive(sub.status)) continue;
+        if (!sub || typeof sub !== "object" || !isLiveSub(sub)) continue;
       }
       return true;
     }

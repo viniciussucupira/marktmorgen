@@ -2537,6 +2537,43 @@ try {
     is("nobody but a signed-in affiliate can ask", signedOut, 401);
   }
 
+  part("A member pauses instead of cancelling, and comes back");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const saved = await studio.evaluate(async () => (await fetch("/api/store/pause", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ months: 2 }) })).json());
+    is("the creator lets members pause for up to 2 months", saved.ok, true);
+    await open(page, `${LOCAL}/@localshop/manage`);
+    await page.fill("#manage-email", "pause.member@example.com");
+    await Promise.all([page.waitForURL(/status=sent/), page.getByRole("button", { name: "Email me a link to my membership" }).click()]);
+    let mail = null;
+    for (let i = 0; i < 40 && !mail; i += 1) {
+      mail = services.emails().find((email) => [email.to].flat().includes("pause.member@example.com") && /token=/.test(String(email.text))) ?? null;
+      if (!mail) await new Promise((wait) => setTimeout(wait, 250));
+    }
+    await open(page, local(String(mail?.text ?? "").match(/https?:\/\/\S+\/manage\?token=[0-9a-f]{64}/)?.[0] ?? ""));
+    const offer = page.locator("[data-pause]");
+    await offer.locator("summary").click();
+    is("beside Cancel, a pause of up to the months the creator allows, saying what it does", [
+      await offer.locator("select option").count(),
+      (await words(offer)).includes("What you have paid for stays open until"),
+    ], [2, true]);
+    await offer.locator("select").selectOption("2");
+    await Promise.all([page.waitForURL(/status=paused/), offer.getByRole("button", { name: "Pause my membership" }).click()]);
+    const sent = services.subscriptionUpdates().at(-1);
+    is("Stripe skips the payments of the pause and resumes by itself", [sent?.["pause_collection[behavior]"], Number(sent?.["pause_collection[resumes_at]"]) > Number(sent?.["metadata[pause_from]"])], ["void", true]);
+    is("the page says it is paused, from when and until when", [(await words(page.locator("main"))).includes("Your membership is paused"), /^Pauses on .+, back on .+/.test(await words(page.locator("[data-paused] .st-note")))], [true, true]);
+    let note = null;
+    for (let i = 0; i < 40 && !note; i += 1) {
+      note = services.emails().find((email) => [email.to].flat().includes("pause.member@example.com") && /membership is paused$/.test(String(email.subject))) ?? null;
+      if (!note) await new Promise((wait) => setTimeout(wait, 250));
+    }
+    is("and the member is emailed the dates", Boolean(note), true);
+    if (process.env.E2E_SHOTS) await page.locator("main").screenshot({ path: join(process.env.E2E_SHOTS, "member-pause.png") });
+    await Promise.all([page.waitForURL(/status=resumed/), page.locator("[data-paused]").getByRole("button", { name: "Resume now" }).click()]);
+    is("before the pause starts, coming back only takes it off", [(await words(page.locator("main"))).includes("Your membership is on again"), services.subscriptionUpdates().at(-1)?.pause_collection, services.subscriptionUpdates().at(-1)?.billing_cycle_anchor], [true, "", undefined]);
+    await studio.evaluate(async () => fetch("/api/store/pause", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ months: 0 }) }));
+  }
+
   await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);

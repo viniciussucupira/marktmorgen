@@ -36,7 +36,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { earnedCourses } from "@/lib/community-points";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
-import { isLive } from "@/lib/membership-access";
+import { isLiveSub } from "@/lib/membership-access";
 import { purchaseRefunded } from "@/lib/refunds";
 import { folderFromPathname, recordDelivery } from "@/lib/delivery";
 import { playerFor } from "@/lib/stream";
@@ -231,7 +231,7 @@ async function paidAtStripe(store: Store, email: string): Promise<Ledger> {
         if (product.id === meta.product && product.recurring && session.mode === "subscription" && meta.kind !== "plan") {
           const sub = session.subscription as { status?: unknown } | null;
           // The same rule as every other door a membership opens (lib/membership-access.ts).
-          if (!sub || typeof sub !== "object" || !isLive(sub.status)) {
+          if (!sub || typeof sub !== "object" || !isLiveSub(sub)) {
             ended.add(product.id);
             continue;
           }

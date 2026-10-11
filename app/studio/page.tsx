@@ -65,6 +65,7 @@ import { ApiKeyEditor } from "@/components/api-key-editor";
 import { listKeys } from "@/lib/api-keys";
 import { INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { SaveOfferEditor } from "@/components/save-offer-editor";
+import { PauseEditor } from "@/components/pause-editor";
 import { WinBackEditor } from "@/components/winback-editor";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { AiOn } from "@/components/ai-assist";
@@ -1363,6 +1364,7 @@ export default async function StudioPage({
                 {sellsMemberships(store) ? (
                   <>
                     <SaveOfferEditor save={store.save} connected={Boolean(current?.stripeAccountId)} />
+                    <PauseEditor months={store.pause} />
                     <WinBackEditor
                       winback={store.winback}
                       connected={Boolean(current?.stripeAccountId)}
