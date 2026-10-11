@@ -447,7 +447,17 @@ export type SalesStats = {
    * reason above. "direct" is every sale that carried no tag.
    */
   bySource: { source: string; currency: string; cents: number; sales: number }[];
+  /**
+   * The payments after the first (added 11 October 2026): memberships renewed
+   * and the later payments of payment plans, read from the paid invoices of
+   * this store's subscriptions. A first payment is a checkout and is in the
+   * sales above, so it is never counted twice. Absent on a reading from before.
+   */
+  renewals?: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean };
 };
+
+/** Payments after the first, and what they came to, in the store's currency. */
+export type Renewals = { payments: number; cents: number };
 
 export type AllTimeSales = {
   totals: SalesWindow;
@@ -563,15 +573,81 @@ export async function readPaidSales(store: Store, since: number, pages: number):
   return { sales, partial };
 }
 
+/** The metadata of the subscription an invoice is for, where either of Stripe's API versions keeps it. */
+function invoiceMeta(invoice: Record<string, unknown>): Record<string, string> {
+  const older = (invoice.subscription_details as { metadata?: unknown } | null | undefined)?.metadata;
+  const parent = invoice.parent as { subscription_details?: { metadata?: unknown } | null } | null | undefined;
+  const newer = parent?.subscription_details?.metadata;
+  const meta = (newer && typeof newer === "object" ? newer : older && typeof older === "object" ? older : {}) as Record<string, unknown>;
+  return Object.fromEntries(Object.entries(meta).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+}
+
+/**
+ * The payments after the first of this store's memberships and payment plans
+ * since `since` (seconds): paid invoices Stripe made because a period came
+ * round (billing_reason "subscription_cycle"), on subscriptions this store
+ * opened. At most `pages` pages of a hundred. Pure on what it is handed, so a
+ * test can give it invoices.
+ */
+export function renewalsFrom(store: Store, invoices: Record<string, unknown>[], now: number, currency: string): { d7: Renewals; d30: Renewals; d90: Renewals } {
+  const handles = saleHandles(store);
+  const cut7 = dayKey(now - 6 * 86400_000);
+  const cut30 = dayKey(now - 29 * 86400_000);
+  const zero = (): Renewals => ({ payments: 0, cents: 0 });
+  const out = { d7: zero(), d30: zero(), d90: zero() };
+  for (const invoice of invoices) {
+    if (invoice.status !== "paid" || invoice.billing_reason !== "subscription_cycle") continue;
+    if (!handles.has(invoiceMeta(invoice).store ?? "")) continue;
+    if (currencyOf(invoice) !== currency) continue;
+    const cents = typeof invoice.amount_paid === "number" ? invoice.amount_paid : 0;
+    if (cents <= 0) continue;
+    const day = dayKey((typeof invoice.created === "number" ? invoice.created : 0) * 1000);
+    const windows: ("d7" | "d30" | "d90")[] = ["d90", ...(day >= cut30 ? (["d30"] as const) : []), ...(day >= cut7 ? (["d7"] as const) : [])];
+    for (const w of windows) {
+      out[w].payments += 1;
+      out[w].cents += cents;
+    }
+  }
+  return out;
+}
+
+async function readRenewals(store: Store, since: number, now: number, pages: number): Promise<SalesStats["renewals"]> {
+  const invoices: Record<string, unknown>[] = [];
+  let after = "";
+  let partial = false;
+  for (let page = 0; page < pages; page += 1) {
+    const list = (await onAccount(
+      "GET",
+      store.stripeAccountId as string,
+      `/invoices?limit=100&status=paid&created[gte]=${since}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
+    )) as { data?: unknown; has_more?: unknown };
+    const rows = Array.isArray(list.data) ? (list.data as Record<string, unknown>[]) : [];
+    invoices.push(...rows);
+    if (list.has_more !== true || rows.length === 0) break;
+    const last = rows[rows.length - 1];
+    after = typeof last.id === "string" ? last.id : "";
+    if (!after) break;
+    if (page === pages - 1) partial = true;
+  }
+  return { ...renewalsFrom(store, invoices, now, store.currency), partial };
+}
+
 /** Sales in the last STATS_DAYS days, by day, by product, and for each window. */
 export async function readSales(store: Store, now = Date.now()): Promise<SalesStats | null> {
   if (!store.stripeAccountId) return null;
   const since = Math.floor(now / 1000) - STATS_DAYS * 86400;
-  const { sales, partial } = await readPaidSales(store, since, 10);
+  // Read beside the sales; a store whose renewals cannot be read still sees its sales.
+  const [{ sales, partial }, renewals] = await Promise.all([
+    readPaidSales(store, since, 10),
+    readRenewals(store, since, now, 10).catch((error) => {
+      console.error("reading renewals failed", error);
+      return undefined;
+    }),
+  ]);
   const cut7 = dayKey(now - 6 * 86400_000);
   const cut30 = dayKey(now - 29 * 86400_000);
   const zero = () => ({ sales: 0, cents: 0 });
-  const out: SalesStats = { byDay: {}, byProduct: {}, totals: { d7: zero(), d30: zero(), d90: zero() }, partial, elsewhere: 0, bySource: [] };
+  const out: SalesStats = { byDay: {}, byProduct: {}, totals: { d7: zero(), d30: zero(), d90: zero() }, partial, elsewhere: 0, bySource: [], ...(renewals ? { renewals } : {}) };
   for (const sale of sales) {
     if (sale.currency !== store.currency) {
       out.elsewhere += 1;
@@ -684,6 +760,8 @@ export type StatsData = {
    * decide where to spend their week on the first one alone.
    */
   revenueBySource: { source: string; cents: number; sales: number }[];
+  /** Memberships renewed and later plan payments, by window (SalesStats.renewals); null when they could not be read. */
+  renewals: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean } | null;
 };
 
 const EMPTY_WINDOW: WindowStats = { visitors: 0, views: 0, checkouts: 0, sources: [], mediums: [], campaigns: [], checkoutsByProduct: {}, viewsByProduct: {}, linkClicks: {} };
@@ -746,6 +824,7 @@ export function studioStats(
     revenueBySource: (sales?.bySource ?? [])
       .filter((row) => row.currency === store.currency)
       .map(({ source, cents, sales: n }) => ({ source, cents, sales: n })),
+    renewals: sales?.renewals ?? null,
   };
 }
 
