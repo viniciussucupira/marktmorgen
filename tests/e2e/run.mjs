@@ -477,6 +477,51 @@ try {
   is("a change there shows on the store", await sectionsOn(page), [["Cookbooks", 2], ["Planning", 1], ["Quick lists", 1], ["Courses", 1]]);
 
   await keepSmall();
+  part("The numbers: a goal, the call on ads, buyers for ads, Slack and Discord");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const numbers = studio.locator("#numbers");
+    await numbers.getByRole("button", { name: "Set a goal for the month" }).click();
+    await numbers.locator('input[placeholder="3000"]').fill("3000");
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/goal") && r.ok(), { timeout: 30_000 }),
+      numbers.getByRole("button", { name: "Save", exact: true }).first().click(),
+    ]);
+    const goalText = await numbers.locator("text=/of \\$3,000/").first().innerText();
+    is("a goal is set from the studio and shown with how far along the month is", /of \$3,000, \d+%/.test(goalText), true);
+    is("with its bar", await numbers.getByRole("progressbar").count(), 1);
+    const today = new Date().toISOString().slice(0, 10);
+    const added = await studio.evaluate(async (day) => {
+      const r = await fetch("/api/store/spend", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add", channel: "instagram", campaign: "", cents: 5000, from: day, to: day }) });
+      return r.ok;
+    }, today);
+    is("an ad's cost is added", added, true);
+    await open(studio, `${LOCAL}/studio`);
+    // textContent, not innerText: the headings are drawn in capitals.
+    const heads = (await studio.locator("#numbers table th[scope=col]").allTextContents()).map((t) => t.trim());
+    is("each channel with ad spend gets a call and the days it took to pay back", [heads.includes("Call"), heads.includes("Paid back")], [true, true]);
+    const row = await studio.locator("#numbers tr", { has: studio.locator('th:text-is("Instagram")') }).first().innerText();
+    is("$50 that brought nothing is called cut, and is not paid back", [/Cut/.test(row), /Not yet, 0%/.test(row)], [true, true]);
+    is("the buyers' file for ad audiences is offered", await studio.getByRole("button", { name: "Download buyers for ads" }).count(), 1);
+    const file = await studio.evaluate(async () => {
+      const r = await fetch("/api/store/audience");
+      return [r.status, (await r.text()).split("\r\n")[0]];
+    });
+    is("and comes as a list of addresses", file, [200, "email"]);
+    is("the box for Slack or Discord is there", await studio.getByText("Post the numbers to Slack or Discord").count(), 1);
+    const refused = await studio.evaluate(async () => (await fetch("/api/store/chat-summary", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: "https://example.com/hook" }) })).status);
+    is("and an address of neither is refused", refused, 400);
+    if (process.env.E2E_SHOTS) {
+      await numbers.screenshot({ path: join(process.env.E2E_SHOTS, "numbers-six.png") });
+    }
+    await open(studio, `${LOCAL}/studio/memberships`);
+    is("the memberships page still opens", await studio.getByRole("heading", { name: "How your memberships are doing" }).count(), 1);
+    if (process.env.E2E_SHOTS) await studio.screenshot({ path: join(process.env.E2E_SHOTS, "memberships.png"), fullPage: true });
+    // Back where the next part expects the studio to be.
+    await open(studio, `${LOCAL}/studio`);
+  }
+
+  await keepSmall();
   part("Boxes at checkout, set up in the studio");
   await studio.locator("button[aria-expanded]", { hasText: "Weeknight Dinners" }).first().click();
   is("the two boxes, each on its own line", [await studio.getByText("Offers Pantry Checklist for $5 at checkout").isVisible(), await studio.getByText("Offers Sunday Baking for $15 at checkout").isVisible()], [true, true]);
