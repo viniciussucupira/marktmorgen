@@ -131,6 +131,19 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
     { label: "Checkouts started", value: count(totals.checkouts), note: "Pressed buy, book or get it free" },
     { label: "Sales", value: salesHere ? count(totals.sales) : "—", note: salesNote },
     { label: "Revenue", value: salesHere ? money(totals.cents) : "—", note: "Before Stripe's fee" },
+    // Memberships renewed and later plan payments: money the sales above leave out (lib/stats.ts).
+    // Shown once there is any in the last 90 days, so a store without memberships sees no empty tile.
+    ...(data.renewals && data.renewals.d90.payments > 0
+      ? [
+          range === "all"
+            ? { label: "Renewals", value: "—", note: "Shown for up to 90 days; all of them are in your Stripe" }
+            : {
+                label: "Renewals",
+                value: money(data.renewals[range].cents),
+                note: `${count(data.renewals[range].payments)} ${data.renewals[range].payments === 1 ? "payment" : "payments"} after the first: memberships renewed and plan payments`,
+              },
+        ]
+      : []),
     { label: "Conversion", value: salesHere ? rate(totals.sales, totals.visitors) : "—", note: "Sales for every 100 visitors" },
     {
       label: "Per visitor",
@@ -439,8 +452,11 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
       <p className="mt-6 text-xs leading-relaxed text-ink-soft">
         Counted without cookies, and your own visits while logged in are not counted. A visitor is one person on one
         device on one day. Days run midnight to midnight UTC. Sales are read from your own Stripe account: new
-        purchases and new members, before Stripe&apos;s fee and any refund; renewals are in your Stripe dashboard.
+        purchases and new members, before Stripe&apos;s fee and any refund. Renewals are the payments after the first of
+        memberships and payment plans, from the paid invoices of your store&apos;s subscriptions over the last 90 days;
+        all of them are in your Stripe dashboard.
         {data.partial ? " These 90 days had more sales than one reading covers (1,000 checkouts), so the oldest are left out of these totals." : ""}
+        {data.renewals?.partial ? " They also had more invoices than one reading covers (1,000), so the oldest renewals are left out." : ""}
       </p>
     </section>
   );

@@ -819,7 +819,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do yet",
         items: [
-          "Renewals are not in the revenue figure; they are in your Stripe dashboard.",
+          "Renewals — memberships renewed and later plan payments — are shown apart from revenue, for up to the last 90 days; all of them are in your Stripe dashboard.",
           "All time starts at the first visit still on record; daily visits are kept for about thirteen months.",
           "A test compares two versions of one product's page, or two headlines, by checkouts opened: not prices, and not more than two at once.",
         ],

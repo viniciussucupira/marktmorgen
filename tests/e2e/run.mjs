@@ -2353,6 +2353,15 @@ try {
   }
 
   await keepSmall();
+  part("Renewals in the studio's numbers, apart from new sales");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const tile = studio.locator("dl div", { hasText: "Renewals" }).first();
+    await tile.waitFor({ timeout: 30_000 });
+    is("the payments after the first are shown apart, with what they came to", [(await words(tile)).includes("$20"), (await words(tile)).includes("1 payment after the first")], [true, true]);
+  }
+
+  await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);
