@@ -139,6 +139,7 @@ import {
   hasProduct,
 } from "@/lib/catalog";
 import { type Announcement, type StoreSection, parseAnnouncement, parseSections, sectionsWithout } from "@/lib/store-sections";
+import { type SitePage, parseSitePages } from "@/lib/site-page-rules";
 import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rules";
 import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
 import { DEFAULT_LANGUAGE, type LanguageCode, parseLanguage } from "@/lib/store-language";
@@ -551,6 +552,12 @@ export type Store = {
    * they existed, which is one unbroken list as it always was.
    */
   sections: StoreSection[];
+  /**
+   * The store's own pages — About, Start here, Work with me — beside its
+   * products (lib/site-page-rules.ts). Empty on every store written before
+   * they existed.
+   */
+  sitePages: SitePage[];
   /** One line of the creator's own news across the top of the store page, or null. */
   announcement: Announcement | null;
   /**
@@ -840,6 +847,7 @@ function parseStore(raw: unknown): Store | null {
       posts: typeof value.posts === "number" && Number.isInteger(value.posts) && value.posts > 0 ? Math.min(value.posts, 10_000) : 0,
       exitOffer: typeof value.exitOffer === "string" && /^[A-Za-z0-9_-]{1,40}$/.test(value.exitOffer) ? value.exitOffer : null,
       sections: parseSections(value.sections),
+      sitePages: parseSitePages(value.sitePages),
       announcement: parseAnnouncement(value.announcement),
       answers: parseAnswers(value.answers),
       fair: parseFair(value.fair),
@@ -1023,6 +1031,7 @@ async function freshStore(fields: {
     order: [...USUAL_ORDER],
     exitOffer: null,
     sections: [],
+    sitePages: [],
     announcement: null,
     answers: { ...NO_ANSWERS },
     fair: { ...DEFAULT_FAIR },
@@ -2596,6 +2605,8 @@ export async function removeProduct(
       ...store,
       sections: sectionsWithout(store.sections, productIds(store), id),
       announcement: store.announcement?.product === id ? { ...store.announcement, product: null } : store.announcement,
+      // A page of the store's own whose buttons led to it leads to the store now (lib/site-page-rules.ts).
+      sitePages: store.sitePages.map((page) => (page.target === id ? { ...page, target: "" } : page)),
     };
     const next = await save(tidied, { drop: [id], put });
     return { ok: true as const, store: next, product };
@@ -3469,6 +3480,21 @@ export async function setPayPalSeller(email: string, merchant: string | null): P
 export type ExitOfferResult = { ok: true; store: Store } | { ok: false; reason: "none" | "unknown" | "not_free" };
 
 export type SectionsResult = { ok: true; store: Store } | { ok: false; reason: "none" | "unknown" };
+
+/**
+ * Sets the store's own pages: all of them, in the order sent (lib/site-page-rules.ts).
+ * A page whose buttons lead to a product the store no longer has is refused
+ * by name. The store is given the id its pages' blocks are kept under, if it
+ * has none yet.
+ */
+export async function setSitePages(email: string, raw: unknown): Promise<SectionsResult> {
+  const result = await withStore<SectionsResult>(email, async (store, save) => {
+    const sitePages = parseSitePages(raw);
+    if (sitePages.some((page) => page.target && !hasProduct(store, page.target))) return { ok: false, reason: "unknown" };
+    return { ok: true, store: await save({ ...store, sitePages, statsId: store.statsId ?? newListId() }) };
+  });
+  return result ?? { ok: false, reason: "none" };
+}
 
 /**
  * Sets the store page's sections: all of them at once, in the order sent.

@@ -10,6 +10,7 @@ import { ZOOM_ARRIVAL_COOKIE, ZOOM_ARRIVAL_SECONDS, arrivedForZoom } from "@/lib
 import { CODE_COOKIE_SECONDS, codeCookieName, readLinkCode } from "@/lib/code-link";
 import { AB_COOKIE, AB_COOKIE_SECONDS, readBucket } from "@/lib/headline-test-rules";
 import { CHANNEL_COOKIE_SECONDS, channelCookieName, nextChannelCookie, touchFrom } from "@/lib/visit-channel";
+import { isOwnPagePath } from "@/lib/site-page-rules";
 
 /**
  * A creator's own domain, served as their store.
@@ -288,6 +289,8 @@ export async function proxy(request: NextRequest) {
     const policy = withPolicy(pathname, headers);
     return answer(NextResponse.next({ request: { headers } }), policy);
   }
+  // One of the store's own pages, chef.com/about (lib/site-page-rules.ts).
+  if (isOwnPagePath(pathname)) return rewrite(`/@${handle}${pathname}`);
   // The store's own long address works here too; another store's does not.
   const own = pathname.match(/^\/@([^/]+)(\/.*)?$/);
   if (own && decodeURIComponent(own[1]).toLowerCase() === handle) {

@@ -223,6 +223,7 @@ export function PageEditor({
   asked = [],
   pagesToCopy = [],
   featurable = [],
+  site,
 }: {
   product: EditorProduct;
   /** The store's own picture folder (lib/product-image.ts), where a page's pictures go. */
@@ -255,6 +256,13 @@ export function PageEditor({
   pagesToCopy?: { id: string; title: string }[];
   /** The store's other products a page can show as a card (lib/featured-cards.ts). */
   featurable?: { id: string; card: FeaturedCard }[];
+  /**
+   * Editing one of the store's own pages rather than a product's
+   * (lib/site-page-rules.ts): only the blocks such a page offers, saved to
+   * its own place, and none of what belongs to a product — tests, a buy box,
+   * a draft written from the product, what visitors to it did.
+   */
+  site?: { id: string; kinds: readonly BlockKind[] };
 }) {
   const router = useRouter();
   const [drafts, setDrafts] = useState<Draft[]>(() => toDrafts(initial));
@@ -268,7 +276,10 @@ export function PageEditor({
   const [reach, setReach] = useState<{ shares: Record<string, number>; visitors: number } | null>(null);
   // What stopped measured visitors, how far the video was watched, and whether the page asks (components/page-answers.tsx).
   const [answers, setAnswers] = useState<{ whyNot: Partial<Record<WhyNot, number>>; videos: Record<string, VideoReach>; asking: boolean } | null>(null);
+  // The key the page's blocks and earlier versions are kept under.
+  const pageKey = site ? `site-${site.id}` : product.id;
   useEffect(() => {
+    if (site) return;
     let live = true;
     fetch(`/api/store/depth?id=${encodeURIComponent(product.id)}`, { cache: "no-store" })
       .then((r) => r.json())
@@ -280,7 +291,7 @@ export function PageEditor({
     return () => {
       live = false;
     };
-  }, [product.id]);
+  }, [product.id, site]);
   // A second headline, tested against the hero's (lib/headline-test.ts).
   const [testing, setTesting] = useState(initial.test !== null);
   const [testHeadline, setTestHeadline] = useState(initial.test?.headline ?? "");
@@ -401,7 +412,7 @@ export function PageEditor({
   const [error, setError] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   // Which template the empty page would start from, and the block being dragged.
-  const templates = PAGE_TEMPLATES.filter((t) => t.free === product.free);
+  const templates = site ? [] : PAGE_TEMPLATES.filter((t) => t.free === product.free);
   const [dragged, setDragged] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
   // The time, for saying a countdown's moment has passed; read off the clock every half minute, never while drawing.
@@ -454,7 +465,7 @@ export function PageEditor({
   useLeaveGuard(dirty && !busy);
   const hasHero = drafts[0]?.block.kind === "hero";
   const hasReviews = drafts.some((d) => d.block.kind === "reviews");
-  const addable = BLOCK_KINDS.filter((k) => (k.kind === "hero" ? !hasHero : k.kind === "reviews" ? !hasReviews : true));
+  const addable = BLOCK_KINDS.filter((k) => (site ? site.kinds.includes(k.kind) : true) && (k.kind === "hero" ? !hasHero : k.kind === "reviews" ? !hasReviews : true));
 
   function change(index: number, patch: Partial<PageBlock>) {
     setDrafts((all) => all.map((d, i) => (i === index ? { ...d, block: { ...d.block, ...patch } as PageBlock } : d)));
@@ -621,7 +632,7 @@ export function PageEditor({
   async function loadVersions() {
     setVersionNote(null);
     try {
-      const response = await fetch(`/api/store/page-versions?id=${encodeURIComponent(product.id)}`, { cache: "no-store" });
+      const response = await fetch(`/api/store/page-versions?id=${encodeURIComponent(pageKey)}`, { cache: "no-store" });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; versions?: { index: number; at: number; blocks: number; headline: string }[] };
       if (!data.ok || !data.versions) throw new Error("unread");
       setVersions(data.versions);
@@ -633,7 +644,7 @@ export function PageEditor({
   async function bringBack(index: number) {
     setVersionNote(null);
     try {
-      const response = await fetch(`/api/store/page-versions?id=${encodeURIComponent(product.id)}&n=${index}`, { cache: "no-store" });
+      const response = await fetch(`/api/store/page-versions?id=${encodeURIComponent(pageKey)}&n=${index}`, { cache: "no-store" });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; at?: number; page?: SalesPage; dropped?: number };
       if (!data.ok || !data.page) throw new Error("unread");
       const page = data.page;
@@ -752,10 +763,10 @@ export function PageEditor({
       return;
     }
     try {
-      const response = await fetch("/api/store/page", {
+      const response = await fetch(site ? "/api/store/site-page" : "/api/store/page", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: product.id, page }),
+        body: JSON.stringify(site ? { action: "save", id: site.id, page } : { id: product.id, page }),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; page?: SalesPage };
       if (data.ok) {
@@ -867,14 +878,14 @@ export function PageEditor({
                         <p className="font-display mt-4 text-[2.1rem] font-semibold leading-[1.08] tracking-[-0.025em]">{product.title}</p>
                       </header>
                     )}
-                    {product.free ? buyPreview : null}
+                    {product.free && !site ? buyPreview : null}
                     <PageSections
                       blocks={preview.rest}
                       ctx={ctx}
                       style={style}
                       reviewsFor={(heading) => reviewsPart(heading) ?? <p className="st-note text-sm">Buyers&apos; reviews appear here once somebody who paid writes one.</p>}
                     />
-                    {product.free ? null : buyPreview}
+                    {product.free || site ? null : buyPreview}
                     {!preview.placed && summary ? <section className="sp-section">{reviewsPart("Reviews")}</section> : null}
                   </>
                 )}
@@ -941,7 +952,7 @@ export function PageEditor({
                   );
                 })}
               </div>
-              {!product.picture ? <p className="mt-1 text-xs text-ink-soft">Give the product a picture in the studio and it can go here.</p> : null}
+              {!product.picture && !site ? <p className="mt-1 text-xs text-ink-soft">Give the product a picture in the studio and it can go here.</p> : null}
             </fieldset>
             <fieldset>
               <legend className="field-label">Layout</legend>
@@ -1022,6 +1033,7 @@ export function PageEditor({
               A second headline, tested against this one (lib/headline-test.ts).
               Only words: the price and what is sold are the same for everyone.
             */}
+            {site ? null : (
             <div className="rounded-2xl bg-paper p-4 ring-1 ring-line">
               <label className={`flex min-h-11 items-start gap-3 text-sm font-semibold text-ink ${other ? "cursor-not-allowed" : "cursor-pointer"}`}>
                 <input type="checkbox" checked={testing && !other} disabled={other !== null} onChange={(e) => setTesting(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-violet-brand" />
@@ -1051,6 +1063,7 @@ export function PageEditor({
                 </div>
               ) : null}
             </div>
+            )}
           </div>
         );
       }
@@ -1221,6 +1234,7 @@ export function PageEditor({
             <PicturesEditor
               base={base}
               productId={product.id}
+              pageId={site?.id}
               folder={folder}
               items={block.items}
               room={Math.min(MAX_PICTURES, MAX_PAGE_PICTURES - elsewhere - onlyInOther)}
@@ -1273,6 +1287,7 @@ export function PageEditor({
             <PicturesEditor
               base={base}
               productId={product.id}
+              pageId={site?.id}
               folder={folder}
               items={block.picture ? [block.picture] : []}
               room={Math.max(0, Math.min(1, MAX_PAGE_PICTURES - elsewhere - onlyInOther))}
@@ -1534,19 +1549,21 @@ export function PageEditor({
     }
   };
 
-  const kind = product.free ? "Landing page" : "Sales page";
+  const kind = site ? "Page" : product.free ? "Landing page" : "Sales page";
 
   return (
     <section aria-labelledby="page-title" className="card min-w-0 p-5 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 id="page-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
-            {`${kind} for ${product.title}`}
+            {site ? product.title : `${kind} for ${product.title}`}
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
             {initial.blocks.length
-              ? `${initial.blocks.length} ${initial.blocks.length === 1 ? "block" : "blocks"} live on its page.`
-              : "No blocks yet: the product's page shows its picture, description and buy box, as it always has."}
+              ? `${initial.blocks.length} ${initial.blocks.length === 1 ? "block" : "blocks"} ${site ? "on this page" : "live on its page"}.`
+              : site
+                ? "No blocks yet: until it has some, the page is not shown."
+                : "No blocks yet: the product's page shows its picture, description and buy box, as it always has."}
           </p>
         </div>
         <span className={`tag ${initial.blocks.length && !hiddenNow ? "tag-live" : ""}`}>
@@ -1614,7 +1631,7 @@ export function PageEditor({
       {shareUrl && sharing ? (
         <section id="share-panel" aria-label={`Share ${product.title}`} className="mt-4 rounded-2xl bg-paper p-4 ring-1 ring-line sm:p-5">
           <SharePanel url={shareUrl} title={product.title} />
-          <AiPosts productId={product.id} url={shareUrl} page={pageToSend} />
+          {site ? null : <AiPosts productId={product.id} url={shareUrl} page={pageToSend} />}
         </section>
       ) : null}
 
@@ -1649,12 +1666,16 @@ export function PageEditor({
             <div className="mt-6 rounded-2xl bg-paper p-5 ring-1 ring-line sm:p-6">
               <p className="font-semibold text-ink">Start the page</p>
               <p className="mt-1 text-sm text-ink-soft">
-                {`Begin from what ${product.title} already says — its title, summary and description, a button and a place for reviews — or add blocks one by one below.`}
+                {site
+                  ? "Add blocks one by one below: a headline at the top, then text, pictures, a video, questions, your products and a button."
+                  : `Begin from what ${product.title} already says — its title, summary and description, a button and a place for reviews — or add blocks one by one below.`}
               </p>
-              <button type="button" onClick={startFromDescription} className="btn btn-primary mt-4">
-                <Icon name="sparkle" size={17} />
-                Start from the description
-              </button>
+              {site ? null : (
+                <button type="button" onClick={startFromDescription} className="btn btn-primary mt-4">
+                  <Icon name="sparkle" size={17} />
+                  Start from the description
+                </button>
+              )}
               {templates.length > 0 ? (
                 <div className="mt-6 border-t border-line pt-5">
                   <p className="field-label">Or start from a template</p>
@@ -1715,7 +1736,7 @@ export function PageEditor({
             </div>
           ) : null}
 
-          {drafts.length > 0 ? (
+          {drafts.length > 0 && !site ? (
             <PageCoach
               productId={product.id}
               productTitle={product.title}
@@ -1764,6 +1785,7 @@ export function PageEditor({
             the blocks in this editor only: nothing is saved until Save, and
             leaving without saving keeps the page as it was.
           */}
+          {site ? null : (
           <div className="mt-6">
             <AiAssist<DraftCopy>
               title="Write the whole page with AI"
@@ -1792,8 +1814,9 @@ export function PageEditor({
               done="Drafted. Read each block, change what is not yours, then press Save."
             />
           </div>
+          )}
 
-          {drafts.length > 0 ? (
+          {drafts.length > 0 && !site ? (
             <div className="mt-3">
               <TranslatePage
                 productId={product.id}
@@ -1815,7 +1838,7 @@ export function PageEditor({
             </div>
           ) : null}
 
-          {draftsA.length > 0 ? (
+          {draftsA.length > 0 && !site ? (
             <section aria-labelledby="page-test-title" className="mt-6 rounded-2xl bg-paper p-4 ring-1 ring-line sm:p-5">
               <p id="page-test-title" className="flex items-center gap-2 text-sm font-semibold text-ink">
                 <Icon name="chart" size={17} />
@@ -2004,13 +2027,15 @@ export function PageEditor({
                           </p>
                         </div>
                       ) : null}
-                      <BlockRewrite
-                        key={block.id}
-                        productId={product.id}
-                        block={block}
-                        page={pageToSend}
-                        onChange={(next) => setDrafts((all) => all.map((d, i) => (i === index ? { ...d, block: next } : d)))}
-                      />
+                      {site ? null : (
+                        <BlockRewrite
+                          key={block.id}
+                          productId={product.id}
+                          block={block}
+                          page={pageToSend}
+                          onChange={(next) => setDrafts((all) => all.map((d, i) => (i === index ? { ...d, block: next } : d)))}
+                        />
+                      )}
                     </div>
                   ) : null}
                   </div>
@@ -2140,9 +2165,11 @@ export function PageEditor({
                 <textarea id="seo-description" className="field" rows={2} maxLength={MAX_SEO_DESCRIPTION} value={seoDescription} placeholder={product.summary || "One or two sentences on what it is."} onChange={(e) => setSeoDescription(e.target.value)} />,
                 counter(seoDescription, MAX_SEO_DESCRIPTION),
               )}
-              <p className="text-xs text-ink-soft">
-                The picture a shared link unfolds into is made from the product&apos;s picture, its title, price and — once buyers review it — its stars.
-              </p>
+              {site ? null : (
+                <p className="text-xs text-ink-soft">
+                  The picture a shared link unfolds into is made from the product&apos;s picture, its title, price and — once buyers review it — its stars.
+                </p>
+              )}
             </div>
           </details>
         </div>
@@ -2182,9 +2209,13 @@ export function PageEditor({
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-ink">Visitors see this page</span>
             <span className="mt-0.5 block text-xs text-ink-soft">
-              {hidden
-                ? "Off: visitors see the product's plain page while you work on this one. Save as often as you like; switch it on and save when it is ready, or have it show by itself at a moment you choose."
-                : "On: once you save, this is the product's page. Switch it off to keep working on it out of sight."}
+              {site
+                ? hidden
+                  ? "Off: the page is not shown, and not in your store's menu, while you work on it. Save as often as you like; switch it on and save when it is ready, or have it show by itself at a moment you choose."
+                  : "On: once you save, visitors see it at its address, and in your store's menu if it is there."
+                : hidden
+                  ? "Off: visitors see the product's plain page while you work on this one. Save as often as you like; switch it on and save when it is ready, or have it show by itself at a moment you choose."
+                  : "On: once you save, this is the product's page. Switch it off to keep working on it out of sight."}
             </span>
           </span>
         </label>
@@ -2237,7 +2268,7 @@ export function PageEditor({
             Undo changes
           </button>
         ) : null}
-        {initial.blocks.length > 0 && !dirty ? (
+        {initial.blocks.length > 0 && !dirty && !site ? (
           confirmClear ? (
             <span className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
               Back to the plain page?
@@ -2592,6 +2623,7 @@ const PAGE_PICTURE_SIDE = 1400;
 function PicturesEditor({
   base,
   productId,
+  pageId,
   folder,
   items,
   room,
@@ -2599,6 +2631,8 @@ function PicturesEditor({
 }: {
   base: string;
   productId: string;
+  /** On one of the store's own pages (lib/site-page-rules.ts): the picture is that page's. */
+  pageId?: string;
   folder: string;
   items: Picture[];
   /** How many pictures this block may hold, given what the rest of the page holds. */
@@ -2621,7 +2655,7 @@ function PicturesEditor({
       const response = await fetch("/api/store/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "alt", product: productId, path: picture.path }),
+        body: JSON.stringify(pageId ? { kind: "alt", page: pageId, path: picture.path } : { kind: "alt", product: productId, path: picture.path }),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; value?: string; error?: string };
       if (data.ok && data.value) set(i, { alt: data.value });
@@ -2658,7 +2692,7 @@ function PicturesEditor({
           await uploadPresigned(path, shrunk.blob, {
             access: "private",
             handleUploadUrl: "/api/store/image/upload",
-            clientPayload: JSON.stringify({ productId }),
+            clientPayload: JSON.stringify(pageId ? { pageId } : { productId }),
             contentType: shrunk.blob.type,
           });
           added.push({ path, width: shrunk.width, height: shrunk.height, alt: "", caption: "" });

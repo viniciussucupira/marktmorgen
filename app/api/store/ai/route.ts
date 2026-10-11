@@ -164,7 +164,9 @@ export async function POST(request: NextRequest) {
   }
   if (body.kind === "alt") {
     // A picture of this store's own, described for someone who cannot see it (lib/ai.ts, describePicture).
-    const product = await readListing(store, text(body.product, 40));
+    // A product's picture, or one on a page of the store's own (lib/site-page-rules.ts), named by its title.
+    const sitePage = store.sitePages.find((page) => page.id === text(body.page, 12)) ?? null;
+    const product = sitePage ? { title: sitePage.title } : await readListing(store, text(body.product, 40));
     if (!product) return fail("unknown", 404);
     const path = text(body.path, 200);
     const folder = await imageFolder(guarded.ref);
