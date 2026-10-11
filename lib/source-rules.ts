@@ -25,10 +25,21 @@ const KNOWN: [RegExp, string][] = [
   [/(^|\.)snapchat\.com$/, "snapchat"],
   [/(^|\.)reddit\.com$/, "reddit"],
   [/(^|\.)(linktr\.ee|linktree\.com)$/, "linktree"],
+  // The AI assistants (added 11 October 2026): somebody who asked ChatGPT or
+  // Perplexity for a course and was handed the store's address. Before Google,
+  // whose rule would otherwise take Gemini's address as a search.
+  [/(^|\.)(chatgpt\.com|chat\.openai\.com|openai\.com)$/, "chatgpt"],
+  [/(^|\.)perplexity\.ai$/, "perplexity"],
+  [/(^|\.)claude\.ai$/, "claude"],
+  [/(^|\.)(gemini\.google\.com|bard\.google\.com)$/, "gemini"],
+  [/(^|\.)(copilot\.microsoft\.com|copilot\.cloud\.microsoft)$/, "copilot"],
+  [/(^|\.)chat\.deepseek\.com$/, "deepseek"],
+  [/(^|\.)grok\.com$/, "grok"],
+  // Webmail before Google, whose rule would otherwise take Gmail for a search.
+  [/(^|\.)(mail\.google\.com|outlook\.live\.com|mail\.yahoo\.com)$/, "email"],
   [/(^|\.)google\.[a-z.]+$/, "google"],
   [/(^|\.)bing\.com$/, "bing"],
   [/(^|\.)duckduckgo\.com$/, "duckduckgo"],
-  [/(^|\.)(mail\.google\.com|outlook\.live\.com|mail\.yahoo\.com)$/, "email"],
 ];
 
 /** The names of the in-app browsers that send no referrer at all. */
@@ -43,6 +54,30 @@ const IN_APP: [RegExp, string][] = [
 ];
 
 /**
+ * Tags the assistants put on the links they hand out themselves — ChatGPT adds
+ * utm_source=chatgpt.com — counted under the same word as a visit they sent
+ * without one, so one assistant is one row.
+ */
+const TAG_ALIASES: Record<string, string> = {
+  "chatgpt.com": "chatgpt",
+  "chat.openai.com": "chatgpt",
+  openai: "chatgpt",
+  "perplexity.ai": "perplexity",
+  "claude.ai": "claude",
+  "gemini.google.com": "gemini",
+  "copilot.microsoft.com": "copilot",
+  "grok.com": "grok",
+};
+
+/** The AI assistants a visit can come from, by the word it is counted under. */
+export const AI_SOURCES = new Set(["chatgpt", "perplexity", "claude", "gemini", "copilot", "deepseek", "grok"]);
+
+/** A utm_source as it is counted: the assistants' own tags under their usual word. */
+export function sourceAlias(tag: string): string {
+  return TAG_ALIASES[tag] ?? tag;
+}
+
+/**
  * Where a visit came from, in a word.
  *
  * A campaign tag the creator put on their own link wins, then the site that
@@ -52,7 +87,7 @@ const IN_APP: [RegExp, string][] = [
  */
 export function classifySource(input: { referrer: string; utm: string; userAgent: string; ownHost: string }): string {
   const utm = input.utm.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 30);
-  if (utm) return utm;
+  if (utm) return sourceAlias(utm);
   let host = "";
   try {
     host = input.referrer ? new URL(input.referrer).hostname.toLowerCase() : "";

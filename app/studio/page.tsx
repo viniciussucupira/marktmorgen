@@ -39,8 +39,11 @@ import { SocialsEditor } from "@/components/socials-editor";
 import { IntroEditor } from "@/components/intro-editor";
 import { LookEditor } from "@/components/look-editor";
 import { type PaidCall, catchUpBookings, paidCalls } from "@/lib/calls";
-import { productsInStats, readSales, readStats, studioStats } from "@/lib/stats";
+import { productsInStats, reachProducts, readSales, readStats, studioStats } from "@/lib/stats";
 import { StatsPanel } from "@/components/stats-panel";
+import { readNotes } from "@/lib/stats-notes";
+import { readSpends } from "@/lib/ad-spend";
+import { heardOff } from "@/lib/heard";
 import { CalendarEditor } from "@/components/calendar-editor";
 import { WebhookEditor } from "@/components/webhook-editor";
 import { calendarBusy, calendarView, ensureFeedToken, overlaps, slotRooms } from "@/lib/calendar-sync";
@@ -710,8 +713,9 @@ export default async function StudioPage({
   // A buyer who paid and never came back from Stripe still gets their email,
   // and so does the creator, the next time the creator looks.
   if (current && paidList && paidList.length) after(() => catchUpBookings(current, paidList, SITE_URL));
-  // Visits from Redis and sales from the creator's Stripe, read side by side.
-  const [visits, salesRead] = current && may("stats")
+  // Visits from Redis and sales from the creator's Stripe, read side by side,
+  // with the creator's own notes on the chart and what they spent on ads.
+  const [visits, salesRead, statsNotes, adSpends, heardIsOff] = current && may("stats")
     ? await Promise.all([
         readStats(current).catch(() => null),
         current.stripeAccountId
@@ -720,8 +724,11 @@ export default async function StudioPage({
               () => ({ state: "error" as const, value: null }),
             )
           : Promise.resolve({ state: "none" as const, value: null }),
+        readNotes(current.statsId).catch(() => []),
+        readSpends(current.statsId).catch(() => []),
+        heardOff(current.handle).catch(() => false),
       ])
-    : [null, null];
+    : [null, null, [], [], false];
   const numbers =
     current && visits && salesRead
       ? studioStats(
@@ -729,7 +736,7 @@ export default async function StudioPage({
           visits,
           salesRead.value,
           salesRead.state,
-          await readListings(current, productsInStats(current, visits, salesRead.value)),
+          await readListings(current, [...new Set([...productsInStats(current, visits, salesRead.value), ...reachProducts(visits)])]),
         )
       : null;
   // The list of products: all of a short one, a page of a long one, found by
@@ -1008,7 +1015,14 @@ export default async function StudioPage({
 
             {numbers ? (
               <div id="numbers" className="scroll-mt-32">
-                <StatsPanel data={numbers} canExport={may("export")} />
+                <StatsPanel
+                  data={numbers}
+                  canExport={may("export")}
+                  notes={statsNotes}
+                  spends={adSpends}
+                  askHeard={!heardIsOff}
+                  canSetHeard={may("settings")}
+                />
               </div>
             ) : null}
 

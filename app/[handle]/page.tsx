@@ -55,6 +55,8 @@ import { photoUrl } from "@/lib/photo-limits";
 import { canManage } from "@/lib/membership-manage";
 import { canRecover, sellsDeliverables } from "@/lib/buyer-orders";
 import { StoreTracking } from "@/components/store-tracking";
+import { StoreReach } from "@/components/store-reach";
+import { STORE_SCOPE, readToken } from "@/lib/page-read";
 import { ExitOfferSlot } from "@/components/exit-offer-slot";
 import { stockLeft } from "@/lib/stock";
 import { outOfKeys } from "@/lib/licence-keys";
@@ -356,7 +358,13 @@ export default async function StorePage({ params, searchParams }: Params) {
             A part with nothing to show is not drawn at all, wherever it stands.
           */}
           {drawnOrder(store.order, searching !== "").filter((part) => shown[part]).map((part, i) => (
-            <div key={part} data-part={part} className={i === 0 ? "st-part st-part-first" : "st-part"}>
+            <div
+              key={part}
+              data-part={part}
+              // A part that is one thing on the page is one item of it (components/store-reach.tsx); the products and the links are an item each.
+              data-item={part === "products" || part === "links" ? undefined : `s:${part}`}
+              className={i === 0 ? "st-part st-part-first" : "st-part"}
+            >
               {part === "products" ? (
                 <>
                   {saleRunning(store.sale, saleClock()) ? (
@@ -522,7 +530,7 @@ export default async function StorePage({ params, searchParams }: Params) {
                 if (audio) {
                   // Music or a podcast played here (lib/audio-embed.ts); the way to the service is still a counted link.
                   return (
-                    <li key={link.id} className={`st-card st-link-audio${link.spotlight ? " st-spotlight" : ""}`}>
+                    <li key={link.id} data-item={`l:${link.id}`} className={`st-card st-link-audio${link.spotlight ? " st-spotlight" : ""}`}>
                       <p className="px-5 pb-3 pt-4 text-center font-bold sm:px-6">{link.title}</p>
                       <div className="px-3 sm:px-4">
                         <AudioEmbed audio={audio} title={link.title} lang={store.language} />
@@ -538,7 +546,7 @@ export default async function StorePage({ params, searchParams }: Params) {
                     if (video) {
                       // Played here, on the store page; the way to its own site is still counted.
                       return (
-                        <li key={link.id} className={`st-card st-link-video${link.spotlight ? " st-spotlight" : ""}`}>
+                        <li key={link.id} data-item={`l:${link.id}`} className={`st-card st-link-video${link.spotlight ? " st-spotlight" : ""}`}>
                           <p className="px-5 pb-3 pt-4 text-center font-bold sm:px-6">{link.title}</p>
                           <VideoEmbed video={video} title={link.title} poster={null} lang={store.language} />
                           <p className="px-5 py-3 text-center text-sm sm:px-6">
@@ -550,7 +558,7 @@ export default async function StorePage({ params, searchParams }: Params) {
                       );
                     }
                     return (
-                      <li key={link.id}>
+                      <li key={link.id} data-item={`l:${link.id}`}>
                         <a
                           href={link.url}
                           data-link={link.id}
@@ -687,6 +695,8 @@ export default async function StorePage({ params, searchParams }: Params) {
               </Link>
             ) : null}
             <StoreTracking store={store} countVisit />
+            {/* Which items of the page are reached and clicked, on its first page and outside a search only (lib/page-read.ts). */}
+            {page === 1 && !searching ? <StoreReach token={readToken(store.statsId, STORE_SCOPE)} /> : null}
             {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}
             <ExitOfferSlot store={store} />
           </div>

@@ -5,35 +5,14 @@ import { useEffect, useState } from "react";
 import type { AllTimeSales, Ranked, RangeKey, StatsData } from "@/lib/stats";
 import { StoreField } from "@/components/studio-store-pin";
 import { formatMoney } from "@/lib/money";
-
-const SOURCE_NAMES: Record<string, string> = {
-  instagram: "Instagram",
-  tiktok: "TikTok",
-  youtube: "YouTube",
-  facebook: "Facebook",
-  x: "X",
-  threads: "Threads",
-  linkedin: "LinkedIn",
-  pinterest: "Pinterest",
-  snapchat: "Snapchat",
-  reddit: "Reddit",
-  linktree: "Linktree",
-  google: "Google",
-  bing: "Bing",
-  duckduckgo: "DuckDuckGo",
-  email: "Email",
-  whatsapp: "WhatsApp",
-  qr: "QR code",
-  device: "Shared from a phone",
-  direct: "Direct, or an app that hides it",
-};
-
-/** A channel's name where money is concerned: "direct" there means nothing the store could name. */
-function channelName(source: string): string {
-  if (source === "direct") return "Direct or unknown";
-  if (source === "unrecorded") return "Sold before channels were recorded";
-  return SOURCE_NAMES[source] ?? source;
-}
+import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
+import type { StatsNote } from "@/lib/stats-notes";
+import { type AdSpend, spendBy } from "@/lib/ad-spend-rules";
+import { READ_MIN_VISITORS, READ_SAMPLE } from "@/lib/page-read-sample";
+import { NumbersNotes } from "@/components/numbers-notes";
+import { AdSpendEditor } from "@/components/ad-spend-editor";
+import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
+import { toast } from "@/components/toast";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -86,6 +65,20 @@ const RANGES: { key: RangeKey; label: string }[] = [
 
 
 const count = (n: number) => n.toLocaleString("en-US");
+
+/**
+ * How a figure moved against the same stretch just before: "↑ 23%", "↓ 8%",
+ * or nothing to say. A stretch with none of it before says so rather than
+ * claiming an infinite rise.
+ */
+function change(now: number, before: number | null | undefined, span: string): { text: string; tone: "up" | "down" | "flat" } | null {
+  if (before === null || before === undefined) return null;
+  if (before === 0) return now > 0 ? { text: `None in the ${span} before`, tone: "flat" } : null;
+  const value = ((now - before) / before) * 100;
+  if (Math.abs(value) < 0.5) return { text: `Same as the ${span} before`, tone: "flat" };
+  const shown = Math.abs(value) < 10 ? Math.abs(value).toFixed(1) : String(Math.round(Math.abs(value)));
+  return { text: `${value > 0 ? "↑" : "↓"} ${shown}% on the ${span} before`, tone: value > 0 ? "up" : "down" };
+}
 
 function rate(part: number, whole: number): string {
   if (!whole) return "—";
@@ -150,6 +143,71 @@ function Breakdown({
   );
 }
 
+/**
+ * What buyers answered when asked, after paying, where they heard of the
+ * store (lib/heard.ts): the channels no link can see — a friend, a message, a
+ * podcast. With the switch for the question itself.
+ */
+function HeardTable({
+  rows,
+  money,
+  ask,
+  canSet,
+}: {
+  rows: { answer: string; buyers: number; cents: number }[];
+  money: (cents: number) => string;
+  ask: boolean;
+  canSet: boolean;
+}) {
+  const [asking, setAsking] = useState(ask);
+  const [busy, setBusy] = useState(false);
+  const total = rows.reduce((n, r) => n + r.buyers, 0);
+  async function toggle() {
+    setBusy(true);
+    try {
+      const response = await fetch("/api/store/heard-ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ask: !asking }) });
+      const body = (await response.json().catch(() => ({}))) as { ok?: boolean; ask?: boolean };
+      if (body.ok && typeof body.ask === "boolean") {
+        setAsking(body.ask);
+        toast(body.ask ? "Buyers are asked again." : "Buyers are no longer asked.");
+      } else toast("That did not save. Try again.");
+    } catch {
+      toast("That did not save. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="mt-6">
+      <p className="text-sm font-bold text-ink">Where buyers say they heard of you</p>
+      {rows.length ? (
+        <ul className="mt-2 divide-y divide-line text-sm">
+          {rows.map((row) => (
+            <li key={row.answer} className="flex items-baseline justify-between gap-3 py-1.5">
+              <span className="min-w-0 truncate text-ink">{isHeardAnswer(row.answer) ? HEARD_NAMES[row.answer] : row.answer}</span>
+              <span className="shrink-0 tabular-nums text-ink-soft">
+                {`${count(row.buyers)} ${row.buyers === 1 ? "buyer" : "buyers"} · ${Math.round((row.buyers / Math.max(1, total)) * 100)}%${row.cents ? ` · ${money(row.cents)}` : ""}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-xs text-ink-soft">{asking ? "No answers in these days yet." : "Buyers are not being asked."}</p>
+      )}
+      <p className="mt-2 text-xs text-ink-soft">
+        {asking
+          ? "After paying, buyers are asked this one question, which they can skip. It finds what no link can: a friend who told them, a message, a podcast. Only the answer and the sale's amount are kept, nothing about the buyer. "
+          : "When it is on, buyers are asked this one question after paying, and can skip it. "}
+        {canSet ? (
+          <button type="button" className="font-semibold text-violet-deep underline underline-offset-4" disabled={busy} onClick={() => void toggle()}>
+            {asking ? "Stop asking" : "Ask buyers"}
+          </button>
+        ) : null}
+      </p>
+    </div>
+  );
+}
+
 type LiveNow = { visitors: number; sources: { source: string; visitors: number }[] };
 
 /**
@@ -205,8 +263,26 @@ function RightNow() {
 }
 
 /** A store's visits, checkouts and sales, for the last week, month, quarter or all time. */
-export function StatsPanel({ data, canExport = true }: { data: StatsData; canExport?: boolean }) {
+export function StatsPanel({
+  data,
+  canExport = true,
+  notes: notesGiven = [],
+  spends: spendsGiven = [],
+  askHeard = true,
+  canSetHeard = false,
+}: {
+  data: StatsData;
+  canExport?: boolean;
+  notes?: StatsNote[];
+  spends?: AdSpend[];
+  /** Whether buyers are asked where they heard of the store (lib/heard.ts). */
+  askHeard?: boolean;
+  /** Whether this person may switch that question on or off. */
+  canSetHeard?: boolean;
+}) {
   const [range, setRange] = useState<RangeKey>("d7");
+  const [notes, setNotes] = useState(notesGiven);
+  const [spends, setSpends] = useState(spendsGiven);
   const [all, setAll] = useState<{ state: "idle" | "loading" | "error" } | { state: "ok"; sales: AllTimeSales }>({ state: "idle" });
   const salesKnown = data.sales === "ok";
 
@@ -249,12 +325,17 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
         : "Reading Stripe…"
       : "Paid, from your Stripe";
 
-  const tiles: { label: string; value: string; note?: string }[] = [
-    { label: "Visitors", value: count(totals.visitors), note: "People, each counted once a day" },
-    { label: "Page views", value: count(totals.views), note: "Every time your store was opened" },
-    { label: "Checkouts started", value: count(totals.checkouts), note: "Pressed buy, book or get it free" },
-    { label: "Sales", value: salesHere ? count(totals.sales) : "—", note: salesNote },
-    { label: "Revenue", value: salesHere ? money(totals.cents) : "—", note: "Before Stripe's fee" },
+  // The same stretch just before the one chosen, to set each figure beside.
+  const before = range === "all" ? null : data.previous?.[range] ?? null;
+  const span = range === "d7" ? "7 days" : range === "d30" ? "30 days" : "90 days";
+  const moved = (now: number, then: number | null | undefined) => (before ? change(now, then, span) : null);
+
+  const tiles: { label: string; value: string; note?: string; moved?: ReturnType<typeof change> }[] = [
+    { label: "Visitors", value: count(totals.visitors), note: "People, each counted once a day", moved: moved(totals.visitors, before?.visitors) },
+    { label: "Page views", value: count(totals.views), note: "Every time your store was opened", moved: moved(totals.views, before?.views) },
+    { label: "Checkouts started", value: count(totals.checkouts), note: "Pressed buy, book or get it free", moved: moved(totals.checkouts, before?.checkouts) },
+    { label: "Sales", value: salesHere ? count(totals.sales) : "—", note: salesNote, moved: salesHere ? moved(totals.sales, before?.sales) : null },
+    { label: "Revenue", value: salesHere ? money(totals.cents) : "—", note: "Before Stripe's fee", moved: salesHere ? moved(totals.cents, before?.cents) : null },
     // Memberships renewed and later plan payments: money the sales above leave out (lib/stats.ts).
     // Shown once there is any in the last 90 days, so a store without memberships sees no empty tile.
     ...(data.renewals && data.renewals.d90.payments > 0
@@ -286,8 +367,32 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
     .sort((a, b) => b.cents - a.cents || b.sales - a.sales || b.checkouts - a.checkouts);
   const shownProducts = products.filter((p) => p.views > 0 || p.checkouts || p.sales).length ? products.filter((p) => p.views > 0 || p.checkouts || p.sales) : products;
   const withRenewalColumn = data.revenueBySource.some((row) => row.renewals > 0);
+  // Notes by day, for the marks under the chart.
+  const notesOn = new Map<string, string[]>();
+  for (const note of notes) notesOn.set(note.day, [...(notesOn.get(note.day) ?? []), note.text]);
+  // What was spent on ads inside the days shown (lib/ad-spend-rules.ts); none for "all".
+  const spent = range === "all" || !days.length ? null : spendBy(spends, days[0].date, days[days.length - 1].date);
+  const withSpend = Boolean(spent && spent.total > 0);
   // Each channel for the range chosen; "all" has none, because sales are read for 90 days.
-  const channels = range === "all" ? [] : data.channels?.[range] ?? [];
+  // A channel money was spent on is shown even when it brought nobody: that is the row that most needs reading.
+  const channelsCounted = range === "all" ? [] : data.channels?.[range] ?? [];
+  const channels = [
+    ...channelsCounted,
+    ...[...(spent?.channels.keys() ?? [])]
+      .filter((name) => !channelsCounted.some((row) => row.source === name))
+      .map((source) => ({ source, visits: 0, checkouts: 0, free: 0, sales: 0, cents: 0 })),
+  ];
+  const withPostSpend = Boolean(spent && spent.campaigns.size > 0);
+  // The channels offered when adding what was spent: the ones the store already counts, then the usual ones.
+  const spendChannels = [
+    ...new Set([...(data.channels?.d90 ?? []).map((row) => row.source), "instagram", "tiktok", "youtube", "facebook", "pinterest", "x", "google", "newsletter", "podcast"]),
+  ]
+    .filter((name) => name !== "direct" && name !== "unrecorded")
+    .map((value) => ({ value, label: channelName(value) }));
+  // What buyers said when asked where they heard of the store.
+  const heard = range === "all" ? [] : data.heard?.[range] ?? [];
+  // The store page item by item, once enough visits were measured to say anything.
+  const reach = range === "all" ? null : data.reach?.[range] ?? null;
   const withFreeColumn = channels.some((row) => row.free > 0);
   const posts = range === "all" ? [] : data.posts?.[range] ?? [];
   // Page views by country and device, kept by the day: none for "all".
@@ -350,6 +455,15 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
           <div key={tile.label} className="rounded-[12px] bg-paper px-4 py-3 ring-1 ring-line">
             <dt className="text-xs font-semibold uppercase tracking-wide text-ink-mute">{tile.label}</dt>
             <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{tile.value}</dd>
+            {tile.moved ? (
+              <dd
+                className={`mt-0.5 text-xs font-semibold tabular-nums ${
+                  tile.moved.tone === "up" ? "text-mint-deep" : tile.moved.tone === "down" ? "text-danger" : "text-ink-soft"
+                }`}
+              >
+                {tile.moved.text}
+              </dd>
+            ) : null}
             {tile.note ? <dd className="mt-0.5 text-xs text-ink-soft">{tile.note}</dd> : null}
           </div>
         ))}
@@ -360,7 +474,11 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
           <p className="text-sm font-bold text-ink">Visitors a day</p>
           <div className={`mt-3 flex h-28 items-end ${days.length > 30 ? "gap-px" : "gap-[3px]"}`} aria-hidden="true">
             {days.map((day) => (
-              <div key={day.date} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={`${shortDate(day.date)}: ${day.visitors} visitors, ${day.sales} sales`}>
+              <div
+                key={day.date}
+                className="flex h-full min-w-0 flex-1 flex-col justify-end"
+                title={`${shortDate(day.date)}: ${day.visitors} visitors, ${day.sales} sales${(notesOn.get(day.date) ?? []).map((t) => `\n${t}`).join("")}`}
+              >
                 <div
                   className="w-full rounded-t-[3px] bg-violet-brand/80"
                   style={{ height: `${Math.max(day.visitors ? 4 : 1, (day.visitors / peak) * 100)}%`, opacity: day.visitors ? 1 : 0.25 }}
@@ -368,6 +486,16 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
               </div>
             ))}
           </div>
+          {/* Days with a note (components/numbers-notes.tsx): a mark under the day's bar, the words in the list below. */}
+          {days.some((day) => notesOn.has(day.date)) ? (
+            <div className={`mt-0.5 flex ${days.length > 30 ? "gap-px" : "gap-[3px]"}`} aria-hidden="true">
+              {days.map((day) => (
+                <div key={day.date} className="flex min-w-0 flex-1 justify-center" title={(notesOn.get(day.date) ?? []).join("\n")}>
+                  {notesOn.has(day.date) ? <span className="block h-1.5 w-1.5 rounded-full bg-amber-brand" /> : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
           <div className="mt-1 flex justify-between text-xs text-ink-mute" aria-hidden="true">
             <span>{shortDate(days[0].date)}</span>
             <span>{shortDate(days[days.length - 1].date)}</span>
@@ -397,6 +525,7 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
               </table>
             </div>
           </details>
+          <NumbersNotes notes={notes} onChange={setNotes} from={days[0].date} to={days[days.length - 1].date} today={data.days[data.days.length - 1]?.date ?? days[days.length - 1].date} />
         </div>
       ) : null}
 
@@ -493,6 +622,19 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
                 <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Revenue divided by visits: what one visit from the channel was worth">
                   Per visit
                 </th>
+                {withSpend ? (
+                  <>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="What you typed in as spent on ads there, for these days">
+                      Ad spend
+                    </th>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Revenue less ad spend, before Stripe's fee">
+                      Left
+                    </th>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Revenue for every unit of currency spent on ads there">
+                      Back per 1
+                    </th>
+                  </>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -508,6 +650,21 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
                   <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{salesHere ? money(row.cents) : "—"}</td>
                   <td className="py-1 pl-3 text-right tabular-nums">{salesHere && row.visits >= row.sales ? rate(row.sales, row.visits) : "—"}</td>
                   <td className="py-1 pl-3 text-right tabular-nums">{salesHere && row.visits > 0 && row.visits >= row.sales ? money(Math.round(row.cents / row.visits)) : "—"}</td>
+                  {withSpend ? (
+                    (() => {
+                      const cost = spent?.channels.get(row.source) ?? 0;
+                      const left = row.cents - cost;
+                      return (
+                        <>
+                          <td className="py-1 pl-3 text-right tabular-nums">{cost ? money(cost) : "—"}</td>
+                          <td className={`py-1 pl-3 text-right font-semibold tabular-nums ${cost && salesHere && left < 0 ? "text-danger" : "text-ink"}`}>
+                            {cost && salesHere ? money(left) : "—"}
+                          </td>
+                          <td className="py-1 pl-3 text-right tabular-nums">{cost && salesHere ? (row.cents / cost).toFixed(2) : "—"}</td>
+                        </>
+                      );
+                    })()
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -516,8 +673,20 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
             Visits are counted under where each visit came from; checkouts, signups and sales under the channel the buyer is
             credited to, so a buyer who first came from Instagram and returned later still counts there. Checkouts and
             signups by channel are counted from October 11, 2026.
+            {withSpend
+              ? " Left is the channel's revenue less what you spent on ads there in these days, before Stripe's fee; renewals that came later are not in it."
+              : ""}
           </p>
         </div>
+      ) : null}
+      {range !== "all" ? (
+        <AdSpendEditor
+          spends={spends}
+          onChange={setSpends}
+          channels={spendChannels}
+          currency={data.currency ?? "usd"}
+          today={data.days[data.days.length - 1]?.date ?? ""}
+        />
       ) : null}
 
       {posts.length ? (
@@ -532,6 +701,12 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
                 <th scope="col" className="py-1 pl-3 text-right font-semibold">Visits</th>
                 <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th>
                 <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
+                {withPostSpend ? (
+                  <>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold">Ad spend</th>
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold">Left</th>
+                  </>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -544,6 +719,19 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
                   <td className="py-1 pl-3 text-right tabular-nums">{count(row.visits)}</td>
                   <td className="py-1 pl-3 text-right tabular-nums">{salesHere ? count(row.sales) : "—"}</td>
                   <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{salesHere ? money(row.cents) : "—"}</td>
+                  {withPostSpend ? (
+                    (() => {
+                      const cost = spent?.campaigns.get(row.campaign) ?? 0;
+                      return (
+                        <>
+                          <td className="py-1 pl-3 text-right tabular-nums">{cost ? money(cost) : "—"}</td>
+                          <td className={`py-1 pl-3 text-right font-semibold tabular-nums ${cost && salesHere && row.cents < cost ? "text-danger" : "text-ink"}`}>
+                            {cost && salesHere ? money(row.cents - cost) : "—"}
+                          </td>
+                        </>
+                      );
+                    })()
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -554,6 +742,8 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
           </p>
         </div>
       ) : null}
+
+      {range !== "all" ? <HeardTable rows={heard} money={money} ask={askHeard} canSet={canSetHeard} /> : null}
 
       {countries.length || devices.length ? (
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
@@ -599,6 +789,50 @@ export function StatsPanel({ data, canExport = true }: { data: StatsData; canExp
           Tag links with <span className="font-mono">utm_medium</span> and <span className="font-mono">utm_campaign</span> too (say
           <span className="font-mono"> ?utm_source=instagram&amp;utm_medium=story&amp;utm_campaign=launch</span>) and each gets a list of its own here.
         </p>
+      ) : null}
+
+      {reach && reach.visitors > 0 ? (
+        reach.visitors >= READ_MIN_VISITORS ? (
+          <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-reach">
+            <table className="w-full text-left text-sm">
+              <caption id="numbers-reach" className="text-left text-sm font-bold text-ink">
+                Your store page, item by item
+              </caption>
+              <thead>
+                <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                  <th scope="col" className="py-1 font-semibold">Item, top first</th>
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Of the visitors measured, the share who got at least as far down as it">
+                    Reached it
+                  </th>
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Of those who reached it, the share who clicked it">
+                    Clicked it
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {reach.rows.slice(0, 40).map((row) => (
+                  <tr key={row.item} className="border-b border-line/60">
+                    <th scope="row" className="max-w-[12rem] truncate py-1 pr-3 font-medium text-ink sm:max-w-[22rem]">
+                      {row.title}
+                      <span className="ml-1.5 text-xs font-normal text-ink-soft">{row.kind === "product" ? "product" : row.kind === "link" ? "link" : "part"}</span>
+                    </th>
+                    <td className="py-1 pl-3 text-right tabular-nums">{rate(row.reached, reach.visitors)}</td>
+                    <td className="py-1 pl-3 text-right tabular-nums">{row.kind === "part" ? "—" : rate(row.clicks, row.reached)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-2 text-xs text-ink-soft">
+              {`Measured on one visitor in ${READ_SAMPLE}, chosen at random: ${count(reach.visitors)} so far for these days. `}
+              An item low on the page that is clicked by most of the few who reach it is worth moving up. Measured from
+              October 11, 2026, with nothing about who.
+            </p>
+          </div>
+        ) : (
+          <p className="mt-6 text-xs text-ink-soft">
+            {`How far down your store page people go, and what they click there, is shown once ${READ_MIN_VISITORS} visits are measured (one visitor in ${READ_SAMPLE} is): ${count(reach.visitors)} so far for these days.`}
+          </p>
+        )
       ) : null}
 
       {data.products.length ? (
