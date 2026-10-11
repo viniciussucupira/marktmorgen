@@ -107,7 +107,7 @@ export function RecoveryEditor({
         </li>
         <li className="flex gap-2">
           <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-brand" />
-          <span>Not sent for calls and live sessions: their checkout holds a time, which goes back on sale when it closes.</span>
+          <span>For calls and live sessions, the time the buyer picked goes back on sale when the checkout closes, so their reminder leads to the times still open, and is sent only while there is one.</span>
         </li>
       </ul>
 

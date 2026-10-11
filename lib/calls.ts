@@ -42,6 +42,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { HOLD_SECONDS, checkoutClosesAt, onAccount } from "@/lib/stripe-account";
 import { applyTax, applyTaxDocuments, openKeepingTheSale } from "@/lib/tax";
+import { askForCallReminder, recoveryOn, refusedRecovery, withoutCallReminder } from "@/lib/recovery-setting";
 import { inTheCurrencyShown, isSettled, onlyInstantMethods } from "@/lib/instant-pay";
 import { refundedInFull } from "@/lib/refunds";
 import { type Answer, applyCheckoutFields, readAnswers } from "@/lib/checkout-fields";
@@ -641,7 +642,25 @@ export async function holdAndCheckout(input: {
     // (docs.stripe.com/payments/checkout/no-cost-orders). A creator's own
     // account may default to an older one, so that checkout names its version.
     const account = store.stripeAccountId;
-    const session = await openKeepingTheSale(body, () => onAccount("POST", account, "/checkout/sessions", body, pkg ? NO_COST_VERSION : undefined));
+    // A store with reminders on: Stripe asks the buyer whether they want to
+    // hear from the creator, and a buyer who said yes and left gets one email
+    // leading back to the times still open (lib/checkout-recovery.ts). The
+    // checkout keeps its own closing time, which the hold is counted from.
+    let asking = !pkg && recoveryOn(store) && store.recovery.asks;
+    if (asking) askForCallReminder(body);
+    const open = () => onAccount("POST", account, "/checkout/sessions", body, pkg ? NO_COST_VERSION : undefined);
+    const session = await openKeepingTheSale(body, async () => {
+      try {
+        return await open();
+      } catch (error) {
+        if (!asking || !refusedRecovery(error)) throw error;
+        // Stripe decides which accounts it asks for consent for: refused, the call still sells.
+        console.error("call checkout refused the reminder fields; opened without them", error);
+        withoutCallReminder(body);
+        asking = false;
+        return open();
+      }
+    });
     if (typeof session.url !== "string" || !session.url || typeof session.id !== "string") {
       return { ok: false, reason: "error" };
     }

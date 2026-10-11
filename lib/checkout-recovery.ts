@@ -62,6 +62,9 @@ import { cartAskIds } from "@/lib/checkout-ask-cart";
 import type { Listing } from "@/lib/store";
 import { membershipLine, speech } from "@/lib/buyer-words";
 import { givingWords } from "@/lib/buyer-words/giving";
+import { type CallListing, slotsForProduct } from "@/lib/calls";
+import { isTimeZone, readableTime, zoneName } from "@/lib/call-setup";
+import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 
 /** A checkout that closed longer ago than this is left alone. */
 export const REMIND_WITHIN_SECONDS = 6 * 60 * 60;
@@ -199,7 +202,7 @@ export async function remindAbandoned(
   if (session.consent?.promotions !== "opt_in") return "skip";
   const meta = session.metadata ?? {};
   const handles = saleHandles(store);
-  if (!handles.has(meta.store ?? "") || meta.kind === "call") return "skip";
+  if (!handles.has(meta.store ?? "")) return "skip";
   const closed = typeof session.expires_at === "number" ? session.expires_at : 0;
   if (!closed || nowSeconds - closed > REMIND_WITHIN_SECONDS || closed > nowSeconds) return "skip";
   const typed = session.customer_details?.email;
@@ -207,6 +210,23 @@ export async function remindAbandoned(
   if (!email) return "skip";
 
   const created = typeof session.created === "number" ? session.created : closed - RECOVERY_OPEN_SECONDS;
+  // A call (lib/calls.ts): its time was held only while the checkout was
+  // open, so the reminder leads back to the times still open, never to a
+  // time that may have gone. Not for a session from a package: nothing was
+  // to be paid, and its own link books another.
+  if (meta.kind === "call") {
+    if (meta.package) return "skip";
+    const start = Number(meta.start);
+    const product = meta.product ? await readListing(store, meta.product) : null;
+    if (!Number.isSafeInteger(start) || start <= 0) return "skip";
+    if (!product || !product.call || product.hidden || !canSellProduct(store, product)) return "skip";
+    if (!(await hasOpenTime(store, product as CallListing))) return "skip";
+    return deliver(store, { kind: "call", product, start, tz: meta.tz ?? "" }, email, {
+      claim: id,
+      since: created,
+      why: givingWords(store.language).recoverWhyCheckout(store.name),
+    });
+  }
   // A cart (lib/cart-checkout.ts): one reminder of what is in it that can still be bought.
   if (meta.cart === "yes") {
     const items = await cartItems(store, [meta.product, ...BUMP_KEYS.map((key) => meta[key])]);
@@ -229,6 +249,18 @@ export async function remindAbandoned(
     since: created,
     why: givingWords(store.language).recoverWhyCheckout(store.name),
   });
+}
+
+/** Whether a call has a time or a session anybody could book now. Unreadable is no. */
+async function hasOpenTime(store: Store, product: CallListing): Promise<boolean> {
+  const offer = await slotsForProduct(store, product);
+  if (!offer) return false;
+  return offer.sessions.length > 0 || offer.days.some((day) => day.starts.length > 0);
+}
+
+/** Where a call's reminder leads: its page of open times on the store. */
+export function bookLink(store: Store, productId: string): string {
+  return `${storeBase(store)}/book/${encodeURIComponent(productId)}`;
 }
 
 /**
@@ -272,7 +304,7 @@ export async function remindAsked(
  */
 async function deliver(
   store: Store,
-  about: { kind: "product"; product: Listing } | { kind: "cart"; items: Listing[] },
+  about: { kind: "product"; product: Listing } | { kind: "cart"; items: Listing[] } | { kind: "call"; product: Listing; start: number; tz: string },
   email: string,
   how: { claim: string; since: number; why: string; subject?: string; lead?: string; only?: string },
 ): Promise<RemindOutcome> {
@@ -328,6 +360,14 @@ async function deliver(
       "",
       ...foot,
     ].join("\n");
+  } else if (about.kind === "call") {
+    // The time the buyer picked, in the time zone they picked it in, so they know which checkout this was.
+    const product = about.product;
+    const tz = isTimeZone(about.tz) ? about.tz : (product.call?.tz ?? "UTC");
+    const locale = LANGUAGES[parseLanguage(store.language)].locale;
+    const when = `${readableTime(about.start, tz, locale)} (${zoneName(about.start, tz, locale)})`;
+    subject = g.callSubject(product.title);
+    text = [g.callLead(product.title, when, name), "", g.callHere, bookLink(store, product.id), "", g.recoverPrice(money(product.priceCents)), "", ...foot].join("\n");
   } else {
   const product = about.product;
   // The price as the store page says it: the floor of a price the buyer

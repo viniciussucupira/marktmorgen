@@ -437,7 +437,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "Does a buyer who leaves the checkout get a reminder?",
         a: [
           "If you switch it on, and only if they agreed. Stripe's checkout asks the buyer whether they want to hear from you; a buyer who said yes and left without paying gets one email about an hour later with a link back to the product. One per checkout, at most one per buyer and product in a week, and none to anyone who has paid for it since.",
-          "It is off until you switch it on, needs your postal address, and needs a Stripe account in the United States, because Stripe asks for that consent only on checkouts of US businesses. While it is on, a checkout left open closes after an hour instead of Stripe's usual day. It is not sent for calls or live sessions.",
+          "It is off until you switch it on, needs your postal address, and needs a Stripe account in the United States, because Stripe asks for that consent only on checkouts of US businesses. While it is on, a checkout left open closes after an hour instead of Stripe's usual day. For a call or a live session, the time the buyer picked goes back on sale when its checkout closes, so the reminder names that time, says it was not kept, and leads to the times still open; it is not sent when none is left.",
         ],
       },
       {

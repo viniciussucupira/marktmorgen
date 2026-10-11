@@ -86,6 +86,21 @@ export function withoutRecovery(body: URLSearchParams): void {
   body.delete("expires_at");
 }
 
+/**
+ * The same two fields for a call's checkout, which keeps its own closing
+ * time: the time it holds is counted from it (lib/calls.ts, holdAndCheckout).
+ */
+export function askForCallReminder(body: URLSearchParams): void {
+  body.set("consent_collection[promotions]", "auto");
+  body.set("after_expiration[recovery][enabled]", "true");
+}
+
+/** And without them, leaving that closing time where it is. */
+export function withoutCallReminder(body: URLSearchParams): void {
+  body.delete("consent_collection[promotions]");
+  body.delete("after_expiration[recovery][enabled]");
+}
+
 /** Whether Stripe's refusal is about the fields above. */
 export function refusedRecovery(error: unknown): boolean {
   return (
