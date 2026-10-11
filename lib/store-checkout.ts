@@ -102,7 +102,7 @@ export function canSell(store: Store): boolean {
 export function sellableOptions(product: Listing): ProductOption[] {
   // A course or a private podcast is its own delivery: every option opens it,
   // and a file or link on one is something extra that option includes.
-  const opens = Boolean(product.course || product.podcast);
+  const opens = Boolean(product.course || product.podcast || product.shipping);
   return product.options.filter((option) => optionDelivers(option, opens));
 }
 

@@ -314,7 +314,7 @@ export function parsePlan(raw: unknown): Plan | null {
 
 /** The options a plan has to cover: the ones a buyer is offered (lib/store-checkout.ts, sellableOptions). */
 function offeredOptions(product: Listing): ProductOption[] {
-  const opens = Boolean(product.course || product.podcast);
+  const opens = Boolean(product.course || product.podcast || product.shipping);
   return product.options.filter((option) => optionDelivers(option, opens));
 }
 

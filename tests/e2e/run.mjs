@@ -2395,11 +2395,15 @@ try {
     await studio.getByText("Shipped by you: $6.00 shipping · The United States and Canada").or(studio.getByText("Shipped by you: $6 shipping · The United States and Canada")).first().waitFor({ timeout: 30_000 });
     is("set up in the studio, and said back", await studio.getByText(/^Shipped by you: \$6/).count() > 0, true);
 
+    // Two versions of it, each shipped the same way.
+    await post("/api/store/option", { action: "add", id: book, label: "Unsigned", price: "35" });
+    await post("/api/store/option", { action: "add", id: book, label: "Signed", price: "45" });
     await open(page, `${LOCAL}/@localshop/p/${book}`);
     is("its page says what shipping costs, where it goes and when", await words(page.locator("#buy [data-shipping]").first()), "+ $6 shipping · Ships to: United States and Canada · Ships within 3 business days");
+    await page.locator("#buy").getByLabel(/Signed/).first().check();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
     const paid = services.checkouts().at(-1);
-    is("Stripe asks for the address and adds the shipping", [paid.metadata.ship, paid.shipping_cost?.amount_total], ["yes", 600]);
+    is("Stripe asks for the address and adds the shipping, for the version picked", [paid.metadata.ship, paid.shipping_cost?.amount_total, paid.amount_total, paid.metadata.title], ["yes", 600, 4500, "The Supper Book (Signed)"]);
     is("the page after paying says where it is going and who sends it", [(await words(page.locator("[data-ship-to]"))).includes("1 Main St"), (await words(page.locator("[data-ship-to]"))).includes("ships it and emails you when it is on its way")], [true, true]);
 
     await open(studio, `${LOCAL}/studio`);
@@ -2409,7 +2413,7 @@ try {
     await studio.getByText(/^Marked as shipped on/).first().waitFor({ timeout: 30_000 });
     let mail = null;
     for (let i = 0; i < 40 && !mail; i += 1) {
-      mail = services.emails().find((email) => String(email.subject ?? "") === "The Supper Book is on its way") ?? null;
+      mail = services.emails().find((email) => String(email.subject ?? "") === "The Supper Book (Signed) is on its way") ?? null;
       if (!mail) await new Promise((wait) => setTimeout(wait, 250));
     }
     is("marked as shipped, and the buyer told with the tracking link", String(mail?.text ?? "").includes("https://tools.usps.com/go/TrackConfirmAction?tLabels=9400"), true);

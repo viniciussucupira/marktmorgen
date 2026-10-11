@@ -72,11 +72,15 @@ async function main(): Promise<void> {
   const shipping = parseShipping({ cents: 600, region: "na", note: "Ships within 3 business days" })!;
   const refused = await setProductShipping(OWNER, pdf.product.id, shipping);
   is("not on a product that already hands something over", refused.ok ? "saved" : refused.reason, "ship_delivery");
-  is("the rules, said", [shipProblem({ priceCents: 0, recurring: null, call: null, options: [], pwyw: null, plan: null, file: null, link: null, course: null, bundle: null }), shipProblem({ priceCents: 100, recurring: null, call: null, options: [{}], pwyw: null, plan: null, file: null, link: null, course: null, bundle: null })], ["free", "options"]);
+  is("the rules, said", [shipProblem({ priceCents: 0, recurring: null, call: null, options: [], pwyw: null, plan: null, file: null, link: null, course: null, bundle: null }), shipProblem({ priceCents: 100, recurring: null, call: null, options: [{ file: { pathname: "x" } }], pwyw: null, plan: null, file: null, link: null, course: null, bundle: null })], ["free", "delivery"]);
   const saved = await setProductShipping(OWNER, book.product.id, shipping);
   is("saved on a product with nothing else", saved.ok ? saved.product.shipping : null, shipping);
   is("then no link can be put on it", (await setProductLink(OWNER, book.product.id, "https://example.com/x")).ok ? "attached" : "refused", "refused");
-  is("and no price options", (await addOption(OWNER, book.product.id, "Signed", "45")).ok ? "added" : "refused", "refused");
+  const signed = await addOption(OWNER, book.product.id, "Signed", "45");
+  await addOption(OWNER, book.product.id, "Unsigned", "35");
+  is("its prices are versions of the same thing, each shipped", signed.ok, true);
+  const withOptions = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
+  is("and nothing can be attached to one of them either", (await setProductLink(OWNER, withOptions.options[0].id, "https://example.com/x")).ok ? "attached" : "refused", "refused");
 
   part("Its checkout");
   const load = async () => {
@@ -85,18 +89,21 @@ async function main(): Promise<void> {
   };
   let { store, product } = await load();
   is("it can be sold", [activeShipping(product) !== null, canSellProduct(store, product)], [true, true]);
-  await createCheckout(store, product, "https://marktmorgen.com", "", {});
+  await createCheckout(store, product, "https://marktmorgen.com", product.options[0].id, {});
   let sent = checkouts.at(-1)!;
+  is("the version picked, at its price", [sent.get("line_items[0][price_data][unit_amount]"), sent.get("line_items[0][price_data][product_data][name]"), sent.get("metadata[option]")], ["4500", "The Supper Book (Signed)", product.options[0].id]);
+  await createCheckout(store, product, "https://marktmorgen.com", product.options[1].id, {});
+  sent = checkouts.at(-1)!;
   is("Stripe asks for an address in one of its countries", [sent.get("shipping_address_collection[allowed_countries][0]"), sent.get("shipping_address_collection[allowed_countries][1]")], ["US", "CA"]);
   is("and adds the shipping as its own line", [sent.get("shipping_options[0][shipping_rate_data][fixed_amount][amount]"), sent.get("shipping_options[0][shipping_rate_data][display_name]"), sent.get("line_items[0][price_data][unit_amount]")], ["600", "Shipping · Ships within 3 business days", "3500"]);
   is("the order says it is shipped", sent.get("metadata[ship]"), "yes");
   await setTax(OWNER, { enabled: true, included: false, ids: false, invoices: false } as never);
   ({ store, product } = await load());
-  await createCheckout(store, product, "https://marktmorgen.com", "", {});
+  await createCheckout(store, product, "https://marktmorgen.com", product.options[1].id, {});
   sent = checkouts.at(-1)!;
   is("with tax on: shipping taxed as shipping, the book as goods", [sent.get("shipping_options[0][shipping_rate_data][tax_code]"), sent.get("line_items[0][price_data][product_data][tax_code]"), sent.get("shipping_options[0][shipping_rate_data][tax_behavior]")], ["txcd_92010001", "txcd_99999999", "exclusive"]);
   let gift = "sent";
-  await createCheckout(store, product, "https://marktmorgen.com", "", { gift: "g".repeat(16) }).catch(() => (gift = "refused"));
+  await createCheckout(store, product, "https://marktmorgen.com", product.options[1].id, { gift: "g".repeat(16) }).catch(() => (gift = "refused"));
   is("never as a gift", gift, "refused");
 
   part("Where it is going");

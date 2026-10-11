@@ -736,7 +736,9 @@ function OptionsBlock({
   const [busy, setBusy] = useState(false);
   // A course or private podcast is its own delivery: every price opens it,
   // and a file or link on one is something extra that price includes.
-  const opens = Boolean(product.course || product.podcast);
+  const opens = Boolean(product.course || product.podcast || product.shipping);
+  // Shipped by the creator (lib/shipping.ts): each price is a size or a version of the same thing, with nothing to attach.
+  const shipped = Boolean(product.shipping);
   const [error, setError] = useState<string | null>(null);
 
   async function run(payload: Record<string, unknown>, done: () => void, confirmation?: string) {
@@ -902,7 +904,9 @@ function OptionsBlock({
 
       {product.options.length === 0 ? (
         <p className="mt-1 text-sm text-ink-soft">
-          {opens
+          {shipped
+            ? "Right now this sells at the one price above. Add sizes or versions — S, M, L, or signed and unsigned — each at its own price, and the buyer picks one before paying. Every one ships the same way."
+            : opens
             ? "Right now this sells at the one price above. Add a second and the buyer picks — the course alone, or with a live Q&A — and every price opens it. A file or link on a price is what that one adds."
             : "Right now this sells at the one price above. Add a second and the buyer picks — one week or five, personal or commercial — and each one hands over its own file."}
         </p>
@@ -1017,6 +1021,7 @@ function OptionsBlock({
                   )}
                 </div>
 
+                {shipped ? null : (
                 <FileBlock
                   target={option}
                   busy={fileBusyId === option.id}
@@ -1032,6 +1037,7 @@ function OptionsBlock({
                   onUnlink={() => onUnlink(option.id)}
                   membership={product.recurring !== null}
                 />
+                )}
 
                 {removingId === option.id ? (
                   <div className="mt-2 rounded-2xl border-2 border-pink-brand/30 bg-white p-3">
@@ -2067,6 +2073,19 @@ export function ProductEditor({
                 {product.call || product.course || product.shipping ? null : <BundleToggle product={product} />}
                 {/* A physical product the creator ships (lib/shipping.ts), on one that hands over nothing else. */}
                 <ShippingEditor product={product} />
+                {/* Shipped at several prices: sizes or versions, each shipped the same way. */}
+                {product.shipping ? (
+                  <OptionsBlock
+                    product={product}
+                    fileBusyId={fileBusyId}
+                    percent={percent}
+                    fileError={fileError}
+                    onPick={upload}
+                    onDetach={detach}
+                    onLink={linkTo}
+                    onUnlink={unlink}
+                  />
+                ) : null}
 
                 {product.call || product.course || product.bundle || product.shipping ? null : (
                 <>
