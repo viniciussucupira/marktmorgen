@@ -80,8 +80,8 @@ export async function generateMetadata({ params, searchParams }: Params): Promis
  *
  * Everything on the sheet is read from the record kept when it was issued
  * (lib/certificate.ts): nothing in the address can change a word of it, so
- * the page itself is the check. It prints on one landscape page, and the
- * browser's own print dialog saves it as a PDF. The words around what was
+ * the page itself is the check. It prints on one landscape page, and comes
+ * as a PDF file too (./pdf/route.ts, lib/certificate-pdf.ts). The words around what was
  * recorded are the store's language (lib/buyer-words/courses.ts).
  */
 export default async function CertificatePage({ params, searchParams }: Params) {
@@ -129,7 +129,8 @@ export default async function CertificatePage({ params, searchParams }: Params) 
               <CertificateActions
                 url={url}
                 linkedIn={{ add: linkedInAddUrl(certificate, url), share: linkedInShareUrl(url) }}
-                words={{ print: w.printOrSave, copy: w.copyLink, copied: w.linkCopied, prompt: w.copyThisLink, addToLinkedIn: w.addToLinkedIn, shareOnLinkedIn: w.shareOnLinkedIn }}
+                pdf={`/@${store.handle}/certificate/${certificate.id}/pdf`}
+                words={{ print: w.printOrSave, copy: w.copyLink, copied: w.linkCopied, prompt: w.copyThisLink, addToLinkedIn: w.addToLinkedIn, shareOnLinkedIn: w.shareOnLinkedIn, downloadPdf: w.downloadPdf }}
               />
             </div>
           )}

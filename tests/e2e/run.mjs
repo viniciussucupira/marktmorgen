@@ -2265,9 +2265,20 @@ try {
       const { writeFileSync } = await import("node:fs");
       writeFileSync(`${process.env.E2E_SHOTS}/certificate-card.png`, Buffer.from(await picture.arrayBuffer()));
     }
+    const pdfHref = await page.locator("a[data-pdf]").getAttribute("href");
+    const pdf = await fetch(`${LOCAL}${pdfHref}`);
+    const pdfBytes = Buffer.from(await pdf.arrayBuffer());
+    is("and comes as a PDF file to download, drawn from the same record", [pdf.status, pdf.headers.get("content-type"), pdfBytes.subarray(0, 5).toString(), /attachment;/.test(pdf.headers.get("content-disposition") ?? ""), /Knife-Skills-Ana-Souza\.pdf/.test(pdf.headers.get("content-disposition") ?? "")], [200, "application/pdf", "%PDF-", true, true]);
+    if (process.env.E2E_SHOTS) {
+      const { writeFileSync } = await import("node:fs");
+      writeFileSync(`${process.env.E2E_SHOTS}/certificate.pdf`, pdfBytes);
+    }
+    await services.redis([["SET", `nl:cert:${cert}`, JSON.stringify({ ...record, name: "王小明" })]]);
+    const elsewhere = await fetch(`${LOCAL}${pdfHref}`, { redirect: "manual" });
+    is("a name in a script the file's letters do not cover is sent to the page, which prints it", [elsewhere.status, (elsewhere.headers.get("location") ?? "").endsWith(`/@localshop/certificate/${cert}`)], [303, true]);
     await services.redis([["SET", `nl:cert:${cert}`, JSON.stringify({ ...record, withdrawnAt: Math.floor(Date.now() / 1000) })]]);
     await open(page, `${LOCAL}/@localshop/certificate/${cert}`);
-    is("withdrawn, it is offered nowhere", await page.getByRole("link", { name: "Add to LinkedIn profile" }).count(), 0);
+    is("withdrawn, it is offered nowhere, and has no file", [await page.getByRole("link", { name: "Add to LinkedIn profile" }).count(), (await fetch(`${LOCAL}${pdfHref}`)).status], [0, 404]);
   }
 
   await keepSmall();

@@ -3,6 +3,15 @@ import { withBotId } from "botid/next/config";
 import { staticPolicy } from "./lib/csp";
 
 const nextConfig: NextConfig = {
+  /**
+   * The letters a certificate's PDF is drawn with (lib/certificate-pdf.ts),
+   * read from disk by the one route that needs them, so only its function
+   * carries them.
+   */
+  outputFileTracingIncludes: {
+    "/\\[handle\\]/certificate/\\[id\\]/pdf": ["./lib/fonts/**/*"],
+    "/**/certificate/**": ["./lib/fonts/**/*"],
+  },
   experimental: {
     /**
      * Put the stylesheet inside the HTML instead of in a separate file.

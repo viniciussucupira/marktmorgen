@@ -249,7 +249,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do yet",
         items: [
-          "Certificates are pages printed or saved as a PDF from the student's browser; no PDF file is made.",
+          "The certificate's PDF file is drawn in Latin, Greek and Cyrillic letters; a name in another script is printed from the certificate's page instead.",
           "No live lessons inside the course itself. Hold them as live events in your community, or put a link in a lesson to where you hold them.",
           "Video is covered for 400 hours watched a month across your store, counted by the player as your students watch. Past that it is $0.03 for each hour watched, on your next invoice; a student is never cut off, and your studio shows the hours as they are watched.",
           "Without a paid plan, lesson videos pause past the store's hours until the plan is paid or the month turns: 400 hours a month in the free trial, and 10 hours a month before a plan starts and after one ends.",
@@ -1361,7 +1361,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do yet",
         items: [
-          "The certificate is a page that the student prints or saves as a PDF from their browser. No PDF file is made for them.",
+          "The certificate is a page of its own and a PDF file the student downloads. The file is drawn in Latin, Greek and Cyrillic letters; a name in another script is printed from the page instead.",
           "Questions are multiple choice, with one right answer or several. No written answers.",
           "One quiz per lesson, up to 20 questions.",
           "A student who used all their tries asks you for more by replying to their purchase email.",
