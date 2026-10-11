@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { readUnsubToken } from "@/lib/contacts";
 import { STOP_TOKEN, readStopToken } from "@/lib/checkout-recovery";
 import { COMMUNITY_UNSUB, readCommunityUnsub } from "@/lib/community-mail";
+import { UPDATE_STOP, readUpdateStop } from "@/lib/product-updates";
+import { updatesWords } from "@/lib/buyer-words/updates";
 import { readConfig } from "@/lib/community";
 import { type Store, storeForPage } from "@/lib/store";
 import { REVIEW_STOP, readReviewStop } from "@/lib/review-requests";
@@ -36,6 +38,11 @@ async function storeOf(query: Query): Promise<Store | null> {
     const found = COMMUNITY_UNSUB.test(community) ? await readCommunityUnsub(community) : null;
     return found ? storeForPage(found.handle) : null;
   }
+  const update = param(query, "u");
+  if (update) {
+    const found = UPDATE_STOP.test(update) ? await readUpdateStop(update) : null;
+    return found?.handle ? storeForPage(found.handle) : null;
+  }
   const token = param(query, "t");
   const found = token ? await readUnsubToken(token) : null;
   const store = found?.handle ? await storeForPage(found.handle) : null;
@@ -61,6 +68,8 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
   if (reminder) return <StopReminders token={reminder} done={query.done === "1"} />;
   const review = param(query, "v");
   if (review) return <StopReviewRequests token={review} done={query.done === "1"} />;
+  const update = param(query, "u");
+  if (update) return <StopUpdates token={update} done={query.done === "1"} />;
   const community = param(query, "c");
   if (community) return <StopAnnouncements token={community} done={query.done === "1"} />;
   const token = param(query, "t");
@@ -197,6 +206,42 @@ async function StopReviewRequests({ token, done }: { token: string; done: boolea
             <form action={`/api/mail/unsubscribe?v=${token}`} method="post" className="mt-6">
               <input type="hidden" name="from" value="page" />
               <button type="submit" className="btn btn-primary btn-block">{a.stopReviews}</button>
+            </form>
+          </>
+        )}
+        <p className="mt-6 text-sm text-ink-mute">{a.onBehalfStore}</p>
+      </div>
+    </main>
+  );
+}
+
+/** The same one button, for a store's emails telling its buyers of an update. */
+async function StopUpdates({ token, done }: { token: string; done: boolean }) {
+  const found = UPDATE_STOP.test(token) ? await readUpdateStop(token) : null;
+  const store = found?.handle ? await storeForPage(found.handle) : null;
+  const who = found?.storeName || "";
+  const a = wordsFor(store);
+  const u = updatesWords(store?.language);
+  return (
+    <main id="content" lang={localeOf(store)} className="min-h-screen bg-paper px-4 py-20 text-ink">
+      <div className="card mx-auto max-w-md p-7 sm:p-9">
+        {!found ? (
+          <>
+            <h1 className="t-h3">{a.unknownLink}</h1>
+            <p className="mt-3 text-ink-soft">{a.unknownOtherBody}</p>
+          </>
+        ) : done || found.stopped ? (
+          <>
+            <h1 className="t-h3">{u.doneTitle}</h1>
+            <p className="mt-3 text-ink-soft">{u.done(found.email, who)}</p>
+          </>
+        ) : (
+          <>
+            <h1 className="t-h3">{u.ask(who)}</h1>
+            <p className="mt-3 text-ink-soft">{u.forEmail(found.email)}</p>
+            <form action={`/api/mail/unsubscribe?u=${token}`} method="post" className="mt-6">
+              <input type="hidden" name="from" value="page" />
+              <button type="submit" className="btn btn-primary btn-block">{u.button}</button>
             </form>
           </>
         )}

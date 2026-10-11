@@ -2362,6 +2362,22 @@ try {
   }
 
   await keepSmall();
+  part("Telling a product's buyers it was updated");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    await studio.locator("button[aria-expanded]", { hasText: "Weeknight Dinners" }).first().click();
+    await studio.getByRole("button", { name: "Tell buyers about an update" }).first().click();
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Email every buyer" }) });
+    await form.getByLabel("What changed (optional)").fill("Ten new recipes.");
+    await form.getByRole("button", { name: "Email every buyer" }).click();
+    const said = form.getByRole("alert");
+    await said.waitFor({ timeout: 30_000 });
+    is("on a store without Pro, it says where it is, and sends nothing", await words(said), "Emails to your buyers are on Pro, with your store's email set up under Email.");
+    await open(page, `${LOCAL}/unsubscribe?u=${"0".repeat(40)}`);
+    is("a stop link nobody was given is said to be unknown", await page.locator("h1").count(), 1);
+  }
+
+  await keepSmall();
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);

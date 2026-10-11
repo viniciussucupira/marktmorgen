@@ -91,6 +91,18 @@ export default function PrivacyPage() {
           in the creator&apos;s booking email.
         </p>
         <p>
+          <strong className="text-black">An update to something you bought.</strong>{" "}
+          A creator on Pro can tell the buyers of one of their products, at
+          most once a week, that it was updated and where to get the new
+          version. The addresses are read from the creator&apos;s own Stripe
+          account when they press send, kept with us only until the email has
+          gone out, and not shown to the creator or added to any list. Nobody
+          who left that creator&apos;s list is written to. Each email has a
+          link that stops these emails from that store; it is kept, tied to
+          the address and the store, for 400 days, and pressing it keeps a
+          one-way hash of the address for that store for good.
+        </p>
+        <p>
           <strong className="text-black">A reminder after an unpaid checkout.</strong>{" "}
           Only on stores whose creator switched it on, and only for a buyer who
           agreed on Stripe&apos;s own checkout page to hear from that creator,
