@@ -53,6 +53,19 @@ export const TEST_CARD = "4242 4242 4242 4242";
  */
 export const DEMO_STUDIO_ADMIN = "viniciussucupira084@gmail.com";
 
+/**
+ * What the demo store's booking pages say in place of the email they would
+ * mention on a creator's store. A booking on the demo writes to nobody
+ * (lib/calls.ts, writesAboutBookings), so a page there that promised a
+ * confirmation, a reminder or a reply would promise what never comes. In
+ * English, like everything the demo says about itself (components/demo-notes.tsx).
+ */
+export const DEMO_BOOKED_NOTE =
+  "Join at that time with the link above, or add it to your calendar from here. This is the demo store, so no email is sent: this page is where your booking lives. Keep its address to come back to it or to move it.";
+export const DEMO_MOVED_NOTE =
+  "The new time and its link are here. This is the demo store, so no email is sent. The old time is free again for somebody else.";
+export const DEMO_STAYS_NOTE = "Your booking stays as it is. This is the demo store, so there is nobody to write to about it.";
+
 export function isHouseAddress(email: string): boolean {
   return email.trim().toLowerCase() === HOUSE_OWNER;
 }

@@ -1,4 +1,5 @@
 import { PackageOffer } from "@/components/store-product";
+import { DEMO_MOVED_NOTE, DEMO_STAYS_NOTE, isHouseStore } from "@/lib/house-store";
 import { boughtByToken, packageState } from "@/lib/call-packages";
 import { isSoon } from "@/lib/waitlist";
 import type { Metadata } from "next";
@@ -329,7 +330,7 @@ async function MovePage({
               </a>
             </div>
             <p className="st-muted mt-5 text-sm">
-              {b.movedNote(store.name)}
+              {isHouseStore(store) ? DEMO_MOVED_NOTE : b.movedNote(store.name)}
               {isVideoRoom(room) ? ` ${b.videoRoomNote}` : ""}
               {canMove(setup, booking.start, booking.moves) ? b.moveAgain(leftMoves) : ""}
             </p>
@@ -343,7 +344,7 @@ async function MovePage({
                   ? b.moveNotices.late.title
                   : b.noOtherSession}
             </p>
-            <p className="mt-1 text-sm">{b.staysAsIs(store.name)}</p>
+            <p className="mt-1 text-sm">{isHouseStore(store) ? DEMO_STAYS_NOTE : b.staysAsIs(store.name)}</p>
           </div>
         ) : (
           <>

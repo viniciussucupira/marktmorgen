@@ -44,7 +44,7 @@ import { type SaleKey, activeKeys, keyForSale } from "@/lib/licence-keys";
 import { renewPath } from "@/lib/membership-access";
 import { LicenceKeyBox } from "@/components/licence-key-box";
 import { reviewable } from "@/lib/review-proof";
-import { isHouseStore, takesReviews } from "@/lib/house-store";
+import { DEMO_BOOKED_NOTE, isHouseStore, takesReviews } from "@/lib/house-store";
 import { type Review, readReview, reviewId } from "@/lib/reviews";
 import { REVIEW_NOTICES, ReviewForm } from "@/components/review-form";
 import { type SaleRecord, noteSale } from "@/lib/sale-events";
@@ -796,13 +796,18 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                       {t.addToCalendar}
                     </a>
                   </div>
-                  <p className="st-muted mt-5 text-sm">
-                    {booked.room
-                      ? t.joinWithLink
-                      : t.willSendLink(store.name)}
-                    {isVideoRoom(booked.room) ? ` ${videoRoomNote(store.language)}` : ""}
-                    {order.email ? ` ${t.confirmationOnWay(order.email, reminderWords(store, booked.start), store.name)}` : ""}
-                  </p>
+                  {isHouseStore(store) && booked.room ? (
+                    // The demo writes to nobody, so it promises no email (lib/house-store.ts).
+                    <p className="st-muted mt-5 text-sm">{DEMO_BOOKED_NOTE}</p>
+                  ) : (
+                    <p className="st-muted mt-5 text-sm">
+                      {booked.room
+                        ? t.joinWithLink
+                        : t.willSendLink(store.name)}
+                      {isVideoRoom(booked.room) ? ` ${videoRoomNote(store.language)}` : ""}
+                      {order.email ? ` ${t.confirmationOnWay(order.email, reminderWords(store, booked.start), store.name)}` : ""}
+                    </p>
+                  )}
                   {sessionId && canMove(booked.setup, booked.start, booked.moves) ? (
                     <p className="st-muted mt-3 text-sm">
                       {t.needAnotherTime}
