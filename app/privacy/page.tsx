@@ -1251,7 +1251,11 @@ export default function PrivacyPage() {
           or chooses Jitsi Meet for their calls and events, that is the
           creator&apos;s choice, and the data sent or
           used there is governed by the creator&apos;s account and that
-          service&apos;s own terms.
+          service&apos;s own terms. The same is true when a creator adds an ad
+          pixel or asks us to send purchases to Meta or TikTok from our
+          server: the creator decides it, the platform receives it under its
+          own terms, and the rules for when anything is sent at all are the
+          ones in section 1, under ad measurement.
         </p>
         <p>
           In practice this means a request about your data as a buyer — a copy

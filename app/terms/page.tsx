@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 9, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 11, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -157,6 +157,37 @@ export default function TermsPage() {
           the Services send only those who did. A meeting made on your Google
           or Zoom account is yours: it stays there if you disconnect, and
           what that service does with it is between you and them.
+        </p>
+        <p>
+          <strong className="text-black">
+            Ad pixels, and purchases sent to ad platforms.
+          </strong>{" "}
+          When you add a Meta, Google, TikTok or Pinterest pixel to your store,
+          or give us an access token so that purchases are also sent to Meta or
+          TikTok from our server, you are instructing us to send that data to
+          that platform on your behalf, and you are responsible for doing so
+          lawfully. That means telling your visitors and buyers about it in your
+          own privacy notice, giving any notice or opt-out link the law where
+          you or they are requires, and following that platform&apos;s own
+          terms for its business tools, which you accept with that platform.
+          The Services do their part: where the law asks for consent first
+          (the European Economic Area, the United Kingdom, Switzerland and
+          Brazil, and any country we cannot tell) nothing is sent unless the
+          visitor agrees; a browser that sends Global Privacy Control is never
+          sent; a link at the foot of your pages changes the choice; and an
+          email address is sent only hashed. Do not use these tools for a
+          store aimed at children, or to send anything that reveals a
+          person&apos;s health, beliefs or other sensitive matters. We may
+          switch them off for a store that misuses them.
+        </p>
+        <p>
+          <strong className="text-black">Questions your store asks.</strong>{" "}
+          If you leave on the question after paying (&ldquo;where did you hear
+          about us?&rdquo;), or turn on the question on your sales pages
+          (&ldquo;is anything stopping you from buying?&rdquo;), the answers are
+          counted for your numbers and kept with nothing that identifies the
+          person who gave them. Use them to improve your store, not to contact
+          or single out anyone.
         </p>
         <p>
           <strong className="text-black">
