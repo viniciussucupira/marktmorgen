@@ -38,6 +38,21 @@ export const HOUSE_HANDLE = "harborkitchen";
 /** Stripe's own test card, as the demo's pages print it. */
 export const TEST_CARD = "4242 4242 4242 4242";
 
+/**
+ * Who opens the demo store's studio.
+ *
+ * Nobody signs in as the demo's owner, and its Zoom and Google Calendar
+ * connections are made in the studio, the way every creator's are. So one
+ * address is on its team as an Admin (lib/demo-seed.ts, lib/team.ts). It is
+ * written here rather than left to a setting, so the demo is the same
+ * wherever this code runs; DEMO_STUDIO_ADMIN replaces it where one is set.
+ *
+ * An Admin can reach the store's settings and products. They cannot change
+ * what the demo is: it is built from lib/demo-seed.ts on every deployment
+ * that changes it, and anything edited by hand is put back.
+ */
+export const DEMO_STUDIO_ADMIN = "viniciussucupira084@gmail.com";
+
 export function isHouseAddress(email: string): boolean {
   return email.trim().toLowerCase() === HOUSE_OWNER;
 }
