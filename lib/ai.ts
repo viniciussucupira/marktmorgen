@@ -229,7 +229,7 @@ const block = (value: unknown, max: number) =>
  * (a whole page translated, lib/page-translate.ts) — taken before the model
  * is asked and given back if it does not answer.
  */
-async function counted<T>(store: Store, now: number, run: () => Promise<T | null>, jobs = 1): Promise<AiResult<T>> {
+export async function counted<T>(store: Store, now: number, run: () => Promise<T | null>, jobs = 1): Promise<AiResult<T>> {
   if (!isAiConfigured() || !store.statsId || !isRedisConfigured()) return { ok: false, reason: "off" };
   const key = monthKey(store, new Date(now));
   const [used] = await redisPipeline([

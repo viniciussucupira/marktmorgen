@@ -490,6 +490,8 @@ export type Store = {
    * Off for every store until its creator turns it on, with a postal address.
    */
   nudge: Nudge;
+  /** Whether the weekly email opens with a few sentences written by AI from the week's numbers (lib/numbers-ask.ts). Off until turned on. */
+  weeklyAi: boolean;
   /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
@@ -855,6 +857,7 @@ function parseStore(raw: unknown): Store | null {
       dunning: parseDunning(value.dunning),
       leaving: parseLeave(value.leaving),
       nudge: parseNudge(value.nudge),
+      weeklyAi: value.weeklyAi === true,
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
       tiers: parseTiers(value.tiers),
@@ -1046,6 +1049,7 @@ async function freshStore(fields: {
     dunning: { ...DEFAULT_DUNNING },
     leaving: { ...NO_LEAVE, reasons: [...NO_LEAVE.reasons] },
     nudge: { ...NO_NUDGE },
+    weeklyAi: false,
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
     tiers: [],
@@ -2217,6 +2221,12 @@ export async function setLeaving(email: string, raw: unknown): Promise<{ ok: tru
   const leaving = parseLeave({ ...value, own });
   if (own.filter((o) => typeof o.text === "string" && o.text.trim()).length !== leaving.own.length) return { ok: false, reason: "leaving" };
   const next = await patchStore(email, () => ({ leaving }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/** Whether the weekly email opens with a summary written by AI (lib/numbers-ask.ts). */
+export async function setWeeklyAi(email: string, on: unknown): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" }> {
+  const next = await patchStore(email, () => ({ weeklyAi: on === true }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 

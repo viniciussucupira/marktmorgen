@@ -8,6 +8,8 @@ import { storeOf } from "@/lib/usage-billing";
 import { standingOf } from "@/lib/plan-standing";
 import { SITE_URL } from "@/lib/site-url";
 import { claimWeek, readNumbers, weeklyMessage, weeklyOff, weeklyToken } from "@/lib/stats-report";
+import { weeklySummary } from "@/lib/numbers-ask";
+import { isAiConfigured } from "@/lib/ai";
 import { readSpends } from "@/lib/ad-spend";
 import { weeklyMemberToken, weeklyTeam } from "@/lib/stats-report";
 import { readTeam } from "@/lib/team";
@@ -77,6 +79,11 @@ export async function GET(request: NextRequest) {
       if (!message) {
         out.quiet += 1;
         continue;
+      }
+      // A few sentences written from the same numbers, first, where the creator turned it on (lib/numbers-ask.ts).
+      if (store.weeklyAi && data && isAiConfigured()) {
+        const lead = await weeklySummary(store, data).catch(() => null);
+        if (lead) message.text = `In short: ${lead}\n\n${message.text}`;
       }
       if (chat) await postToChat(chat, `${message.subject}\n\n${forChat(message.text)}`).catch(() => false);
       if (emailOff) {

@@ -1123,6 +1123,8 @@ export default async function StudioPage({
                   spends={adSpends}
                   askHeard={!heardIsOff}
                   canSetHeard={may("settings")}
+                  canAsk={isAiConfigured()}
+                  weeklyAi={may("settings") && isAiConfigured() && store ? store.weeklyAi : undefined}
                   weeklyTeam={
                     team && store
                       ? {
