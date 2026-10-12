@@ -14,6 +14,15 @@
  * Ads are called by lib/ad-spend-rules.ts: spend more at SCALE_AT back for
  * each 1 spent, cut below 1.
  *
+ * Each sentence can carry the step it points at (added 12 October 2026), as
+ * Triple Whale, Cometly and FullStory pair a finding with an action: a
+ * button that opens the right screen already set — the page's headline test
+ * for a product opened and not bought, the checkout reminders when
+ * checkouts go unpaid, the composer for the list when visits drop — or the
+ * part of the numbers that shows it. And, where money is at stake, the
+ * arithmetic of it, from the measured numbers only, said as arithmetic and
+ * never as a promise of what doing it would bring.
+ *
  * Pure: the studio's panel and the weekly email both call it on StatsData.
  */
 import type { StatsData } from "@/lib/stats";
@@ -23,7 +32,25 @@ import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
 import { formatMoney } from "@/lib/money";
 import { recordsFrom } from "@/lib/records";
 
-export type Insight = { text: string; tone: "good" | "bad" | "info" };
+/** Where a sentence leads: a screen of the studio, already set, or a part of the numbers panel by its id there. */
+export type InsightAction = { label: string; href: string } | { label: string; section: "funnel" | "channels" | "posts" | "ads" | "products" | "reach" };
+export type Insight = {
+  text: string;
+  tone: "good" | "bad" | "info";
+  action?: InsightAction;
+  /** The money at stake, as the arithmetic of measured numbers; never a promise. */
+  math?: string;
+};
+
+/** What the studio knows that the numbers do not: where its screens are and how the store is set. */
+export type InsightContext = {
+  /** The store's own address, to open it as a buyer. */
+  storeUrl?: string;
+  /** Whether a reminder goes to buyers who leave a checkout (lib/checkout-recovery.ts). */
+  reminders?: boolean;
+  /** Whether this person may change settings, edit pages and write to the list: an action they cannot take is not offered. */
+  may?: { settings?: boolean; page?: boolean; draft?: boolean };
+};
 
 type Window = "d7" | "d30" | "d90";
 const SPAN: Record<Window, string> = { d7: "7 days", d30: "30 days", d90: "90 days" };
@@ -36,13 +63,16 @@ const pct = (part: number, whole: number) => {
 const n = (value: number) => value.toLocaleString("en-US");
 
 /** Up to `max` sentences for one window, the ones that matter most first. */
-export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] = [], max = 4): Insight[] {
+export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] = [], max = 4, context: InsightContext = {}): Insight[] {
   const out: Insight[] = [];
   const money = (cents: number) => formatMoney(cents, data.currency ?? "usd");
   const known = data.sales === "ok";
   const now = data.totals[window];
   const before = data.previous?.[window];
   const span = SPAN[window];
+  const may = context.may ?? {};
+  // The average order in these days, the one figure the arithmetic below is made with.
+  const average = known && now.sales > 0 ? Math.round(now.cents / now.sales) : 0;
 
   // 1. Ads that cost more than they brought, in these days.
   if (known && spends.length && data.days.length) {
@@ -52,11 +82,12 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
       const brought = data.channels?.[window]?.find((row) => row.source === channel)?.cents ?? 0;
       const call = verdictFor(brought, cost);
       if (call === "cut") {
-        out.push({ text: `Ads on ${channelName(channel)} cost ${money(cost)} in the last ${span} and brought ${money(brought)} in sales: worth cutting, or changing.`, tone: "bad" });
+        out.push({ text: `Ads on ${channelName(channel)} cost ${money(cost)} in the last ${span} and brought ${money(brought)} in sales: worth cutting, or changing.`, tone: "bad", action: { label: "See your ads", section: "ads" }, math: `${money(cost)} spent − ${money(brought)} brought = ${money(cost - brought)} more out than in.` });
       } else if (call === "scale") {
         out.push({
           text: `Ads on ${channelName(channel)} cost ${money(cost)} in the last ${span} and brought ${money(brought)} in sales, ${(brought / cost).toFixed(1)} back for each 1 spent: worth spending more there.`,
           tone: "good",
+          action: { label: "See your ads", section: "ads" },
         });
       }
     }
@@ -81,6 +112,10 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
       out.push({
         text: `${change > 0 ? "More" : "Fewer"} people visited: ${n(now.visitors)} in the last ${span}, ${change > 0 ? "up" : "down"} ${pct(Math.abs(change), 1)} on the ${span} before.`,
         tone: change > 0 ? "good" : "bad",
+        action:
+          change < 0 && may.draft
+            ? { label: "Write to your list", href: "/studio/email?who=all" }
+            : { label: "See where they came from", section: "channels" },
       });
     }
   }
@@ -93,6 +128,20 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
       out.push({
         text: `${nowRate > thenRate ? "More" : "Fewer"} of your visitors bought: ${pct(now.sales, now.visitors)} of them, against ${pct(before.sales, before.visitors)} in the ${span} before.`,
         tone: nowRate > thenRate ? "good" : "bad",
+        ...(nowRate < thenRate
+          ? {
+              action: { label: "See where they stop", section: "funnel" as const },
+              math:
+                average > 0
+                  ? (() => {
+                      const would = Math.round(now.visitors * thenRate);
+                      return would > now.sales
+                        ? `At the rate before, ${n(now.visitors)} visitors × ${pct(before.sales, before.visitors)} = ${n(would)} sales, ${n(would - now.sales)} more than were made: ${money((would - now.sales) * average)} at your average order of ${money(average)}.`
+                        : undefined;
+                    })()
+                  : undefined,
+            }
+          : {}),
       });
     }
   }
@@ -102,6 +151,13 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
     out.push({
       text: `Of ${n(now.checkouts)} checkouts started, ${n(now.sales)} ${now.sales === 1 ? "was" : "were"} paid. Open a product as a buyer and go as far as the payment page to see what they see.`,
       tone: "bad",
+      action:
+        context.reminders === false && may.settings
+          ? { label: "Turn on checkout reminders", href: "/studio#checkout-reminders" }
+          : context.storeUrl
+            ? { label: "Open your store as a buyer", href: context.storeUrl }
+            : { label: "See where they stop", section: "funnel" },
+      math: average > 0 ? `${n(now.checkouts - now.sales)} checkouts not paid × your average order of ${money(average)} = ${money((now.checkouts - now.sales) * average)} left at the payment page.` : undefined,
     });
   }
 
@@ -113,6 +169,7 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
     out.push({
       text: `${channelName(idle.source)} brought ${n(idle.visits)} visits and no sale; ${channelName(selling.source)} turned ${pct(selling.sales, selling.visits)} of its visits into sales.`,
       tone: "info",
+      action: { label: "Compare your channels", section: "channels" },
     });
   }
 
@@ -120,17 +177,31 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
   const total = channels.reduce((sum, row) => sum + row.cents, 0);
   const top = [...channels].sort((a, b) => b.cents - a.cents)[0];
   if (known && top && top.source !== "direct" && total > 0 && top.sales >= 3 && top.cents / total >= 0.5) {
-    out.push({ text: `${channelName(top.source)} brought ${pct(top.cents, total)} of your money in the last ${span}: ${money(top.cents)} from ${n(top.sales)} sales.`, tone: "good" });
+    out.push({ text: `${channelName(top.source)} brought ${pct(top.cents, total)} of your money in the last ${span}: ${money(top.cents)} from ${n(top.sales)} sales.`, tone: "good", action: { label: "See the posts behind it", section: "posts" } });
   }
 
   // 7. A product opened often and not bought.
   const unsold = data.products
     .map((p) => p[window])
-    .map((row, i) => ({ row, title: data.products[i].title }))
+    .map((row, i) => ({ row, title: data.products[i].title, id: data.products[i].id }))
     .filter(({ row }) => row.views >= 50 && row.sales === 0)
     .sort((a, b) => b.row.views - a.row.views)[0];
   if (known && unsold) {
-    out.push({ text: `“${unsold.title}” was opened ${n(unsold.row.views)} times and not bought: its page is the one to look at.`, tone: "bad" });
+    // The store's own rate of page views turning into sales, across all its products, in these days.
+    const views = data.products.reduce((sum, p) => sum + p[window].views, 0);
+    const sold = data.products.reduce((sum, p) => sum + p[window].sales, 0);
+    const would = views > 0 ? Math.floor((unsold.row.views * sold) / views) : 0;
+    out.push({
+      text: `“${unsold.title}” was opened ${n(unsold.row.views)} times and not bought: its page is the one to look at.`,
+      tone: "bad",
+      action: may.page
+        ? { label: "Test a second headline", href: `/studio/pages?product=${encodeURIComponent(unsold.id)}&test=headline` }
+        : { label: "See your products", section: "products" },
+      math:
+        would > 0 && average > 0
+          ? `At your store's rate of ${pct(sold, views)} of product views becoming sales, ${n(unsold.row.views)} views come to ${n(would)} ${would === 1 ? "sale" : "sales"}: ${money(would * average)} at your average order. Arithmetic, not a forecast.`
+          : undefined,
+    });
   }
 
   // 8. An item low on the store page that those who reach it click.
@@ -142,6 +213,7 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
       out.push({
         text: `“${buried.title}” is clicked by ${pct(buried.clicks, buried.reached)} of those who reach it, but only ${pct(buried.reached, reach.visitors)} of visitors get that far down: worth moving up.`,
         tone: "info",
+        action: may.page ? { label: "Reorder your products", href: "/studio#products" } : { label: "See how far they read", section: "reach" },
       });
     }
   }
@@ -162,7 +234,7 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
   for (const row of refunds) {
     const sold = channels.find((c) => c.source === (row.source || "direct"))?.cents ?? 0;
     if (row.refunds >= 2 && sold > 0 && row.cents / sold >= 0.2 && row.source !== "unrecorded") {
-      out.push({ text: `${pct(row.cents, sold)} of what ${channelName(row.source || "direct")} sold was refunded in the last ${span}.`, tone: "bad" });
+      out.push({ text: `${pct(row.cents, sold)} of what ${channelName(row.source || "direct")} sold was refunded in the last ${span}.`, tone: "bad", action: { label: "Compare your channels", section: "channels" }, math: `${money(row.cents)} refunded of ${money(sold)} sold.` });
       break;
     }
   }

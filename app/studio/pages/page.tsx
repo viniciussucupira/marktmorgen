@@ -185,6 +185,7 @@ export default async function StudioPagesPage({ searchParams }: Params) {
               // page as the server kept it (components/page-editor.tsx, send),
               // rather than starting it over and losing what was typed meanwhile.
               key={selected.id}
+              startTest={query.test === "headline"}
               product={{
                 id: selected.id,
                 title: selected.title,

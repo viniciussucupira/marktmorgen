@@ -239,6 +239,8 @@ export function EmailStudio(props: {
   segments?: Segment[];
   /** The products that are courses (lib/catalog.ts, "course"). */
   courses?: string[];
+  /** Who a new email goes to, when opened from "Worth knowing" (lib/insights.ts). */
+  preset?: { who: Who };
 }) {
   const ready = props.mail !== null;
   // The draft open in the composer; a new key starts the composer afresh.
@@ -260,6 +262,7 @@ export function EmailStudio(props: {
                 onDone={() => setOpen(null)}
                 currency={props.currency}
                 segments={props.segments ?? []}
+                preset={open ? undefined : props.preset}
               />
             </AiOn>
             <Drafts drafts={props.drafts} products={props.products} open={open} onOpen={setOpen} />
@@ -453,6 +456,7 @@ function Compose(props: {
   onDone: () => void;
   currency: string;
   segments: Segment[];
+  preset?: { who: Who };
 }) {
   const router = useRouter();
   const [subject, setSubject] = useState(props.draft?.subject ?? "");
@@ -462,7 +466,7 @@ function Compose(props: {
   const [productId, setProductId] = useState(props.draft?.productId ?? "");
   const [notProductId, setNotProductId] = useState("");
   // Everybody, only people who have bought something, or only those who have not yet.
-  const [who, setWho] = useState<Who>(props.draft?.who ?? "all");
+  const [who, setWho] = useState<Who>(props.draft?.who ?? props.preset?.who ?? "all");
   const [draftId, setDraftId] = useState(props.draft?.id ?? "");
   const [later, setLater] = useState(false);
   const [at, setAt] = useState("");
