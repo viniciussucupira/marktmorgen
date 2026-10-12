@@ -12,6 +12,11 @@ import { MAX_FUNNEL_STEPS } from "@/lib/funnel";
 import { imageUrl } from "@/lib/product-image";
 import { FunnelEditor } from "@/components/funnel-editor";
 import { offerableAfterPaying } from "@/lib/bundles";
+import { PageFunnelEditor, type SavedFunnel, type StepChoice } from "@/components/page-funnel-editor";
+import { readFunnelCounts, readPageFunnels, stepStates } from "@/lib/page-funnel-store";
+import { pageOut } from "@/lib/site-page-rules";
+import { canUseDomain } from "@/lib/domains";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: "Funnels — Marktmorgen",
@@ -83,6 +88,38 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
     .filter((p) => p.image)
     .map((p) => ({ id: p.id, title: p.title, src: imageUrl(p.image!) }));
 
+  // Funnels of pages (lib/page-funnel.ts): every saved one, each step as the
+  // store stands and how many people reached it, and what can be a step — the
+  // store's own pages and every product bought from its own page.
+  const calls = new Set(idsOfKind(store, "call"));
+  const drafts = new Set(idsOfKind(store, "hidden"));
+  const free = new Set(idsOfKind(store, "free"));
+  const choices: StepChoice[] = [
+    ...store.sitePages.map((page) => ({ kind: "page" as const, id: page.id, title: page.title, note: pageOut(page) ? "" : "kept back" })),
+    ...[...cards.values()]
+      .filter((p) => !calls.has(p.id))
+      .map((p) => ({ kind: "product" as const, id: p.id, title: p.title, note: drafts.has(p.id) ? "draft" : free.has(p.id) ? "free" : "" })),
+  ];
+  const savedFunnels: SavedFunnel[] = await Promise.all(
+    (await readPageFunnels(store.statsId).catch(() => [])).map(async (funnel) => {
+      const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCounts(store.statsId, funnel)]);
+      return {
+        funnel,
+        steps: states.map((state, i) => ({
+          title: state.title,
+          open: state.open,
+          why: state.why,
+          free: state.free,
+          product: state.step.kind === "product",
+          seen: counts[i]?.seen ?? 0,
+          done: counts[i]?.done ?? 0,
+        })),
+      };
+    }),
+  );
+  const funnelBase =
+    store.domain?.liveAt && canUseDomain(store) ? `https://${store.domain.name}/go/` : `${SITE_URL}/@${store.handle}/go/`;
+
   return (
     <div className="min-h-screen bg-paper text-ink">
       <StudioHeader
@@ -96,7 +133,16 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
 
       <main id="content" className="container-page pb-20 pt-10 sm:pt-14">
         <p className="eyebrow">Funnels</p>
-        <h1 className="t-h2 mt-3">Offers after they pay</h1>
+        <h1 className="t-h2 mt-3">Funnels</h1>
+        <p className="mt-3 max-w-2xl text-ink-soft">
+          Pages walked in order from one address, and the offers a buyer meets right after paying.
+        </p>
+
+        <div className="mt-8">
+          <PageFunnelEditor saved={savedFunnels} choices={choices} base={funnelBase} />
+        </div>
+
+        <h2 className="mt-14 text-xl font-semibold tracking-[-0.02em] text-ink">Offers after they pay</h2>
         <p className="mt-3 max-w-2xl text-ink-soft">
           {`Right after paying, the buyer sees one offer at a time on their thank-you page, up to ${MAX_FUNNEL_STEPS} per product. Each offer has a yes and a no thanks, and you choose where each one leads: another offer, a cheaper one after a no, or the end. Yes charges the card they just used, in one press, on your own Stripe account.`}
         </p>

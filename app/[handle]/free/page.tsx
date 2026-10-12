@@ -14,6 +14,9 @@ import { pricePill, productPath } from "@/components/store-product";
 import { speech } from "@/lib/buyer-words";
 import { givingWords } from "@/lib/buyer-words/giving";
 import { pageShown } from "@/lib/sales-page";
+import { funnelMark } from "@/lib/page-funnel";
+import { funnelHere } from "@/lib/page-funnel-store";
+import { funnelWords } from "@/lib/buyer-words/funnel";
 
 type Params = {
   params: Promise<{ handle: string }>;
@@ -98,8 +101,11 @@ export default async function FreePage({ params, searchParams }: Params) {
     : null;
   const asked = await readListing(store, productId) ?? null;
   const stillFree = claimed !== null && claimed.priceCents === 0;
+  // Signed up from a step of a funnel of pages (lib/page-funnel.ts): the way on
+  // to its next step, in place of the one paid product the page names.
+  const here = !token && status === "sent" && asked ? await funnelHere(store, funnelMark(query.f), "product", asked.id).catch(() => null) : null;
   // After signing up, the paid product the free one's page names, if any.
-  const next = await nextProduct(store, token ? (stillFree ? claimed : null) : status === "sent" ? asked : null);
+  const next = here?.next ? null : await nextProduct(store, token ? (stillFree ? claimed : null) : status === "sent" ? asked : null);
   const said = speech(store);
   const g = givingWords(store.language);
   const notice = g.freeNotices[status] ?? g.freeNotices.error;
@@ -197,6 +203,14 @@ export default async function FreePage({ params, searchParams }: Params) {
             />
           </div>
         </div>
+        {here?.next ? (
+          <section aria-labelledby="funnel-next" className="st-card mt-6 p-6 sm:p-7">
+            <p id="funnel-next" className="st-label">{funnelWords(store.language).nextLabel}</p>
+            <Link href={here.next} className="btn st-btn btn-lg mt-3">
+              {funnelWords(store.language).next}
+            </Link>
+          </section>
+        ) : null}
         {next ? <NextUp store={store} product={next} /> : null}
       </main>
     </div>

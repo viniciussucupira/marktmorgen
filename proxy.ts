@@ -34,7 +34,7 @@ import { isOwnPagePath } from "@/lib/site-page-rules";
 const DOMAIN_HEADER = "x-nimbus-domain";
 /** The path and query a visitor asked for on a creator's domain, before it was rewritten. */
 const PATH_HEADER = "x-nimbus-path";
-const STORE_PATHS = /^\/(media-kit|tip|thanks|free|manage|orders|course|book|community|p|affiliates|renew|certificate|review|waitlist|podcast|left|group|blog|join|contact)(\/|$)/;
+const STORE_PATHS = /^\/(media-kit|tip|thanks|free|manage|orders|course|book|community|p|affiliates|renew|certificate|review|waitlist|podcast|left|group|blog|join|contact|discord|go)(\/|$)/;
 
 /**
  * A visitor who followed an affiliate's link (?via=<code>) keeps the code and

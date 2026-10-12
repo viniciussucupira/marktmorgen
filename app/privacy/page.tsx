@@ -20,7 +20,7 @@ export default function PrivacyPage() {
   // Named only while the files creators sell are kept there (lib/vault.ts).
   const cloudflare = isVaultConfigured();
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 11, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="October 12, 2026">
       <p>
         Marktmorgen (“Marktmorgen,” “we,” “us,” or “our”) is operated by
         Solrenning, an independent software studio. This Privacy Policy
@@ -199,6 +199,19 @@ export default function PrivacyPage() {
           addresses, holds nothing else, and is deleted two days later; what
           remains is the store&apos;s count for the month. The address itself
           is not stored, and no cookie is set.
+        </p>
+        <p>
+          <strong className="text-black">Funnels of pages.</strong>{" "}
+          When a creator puts pages in order as a funnel, each step that is
+          opened tells us so, and so does a sign-up or a payment made on a
+          step. To count each person once a step we make a one-way fingerprint
+          of the funnel, the store, the visitor&apos;s network address and
+          browser, and add it to a counter that keeps only an estimate of how
+          many different fingerprints it has seen. The fingerprint and the
+          address are not stored, and no cookie is set. The counts begin
+          again whenever the funnel&apos;s steps change, and each is deleted
+          400 days after the last person counted in it. The creator sees
+          totals, never a person.
         </p>
         <p>
           <strong className="text-black">A store&apos;s own people are not counted.</strong>{" "}

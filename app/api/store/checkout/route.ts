@@ -28,6 +28,8 @@ import { readPage } from "@/lib/sales-page-store";
 import { readCountry } from "@/lib/fair-price";
 import { pageShown, runningTest } from "@/lib/sales-page";
 import { noteCheckoutTrouble } from "@/lib/checkout-trouble";
+import { markFromReferer } from "@/lib/page-funnel";
+import { funnelHere } from "@/lib/page-funnel-store";
 
 /** The checkout this browser last opened for a limited product. */
 const HOLD_COOKIE = "nl_stock_hold";
@@ -168,6 +170,11 @@ export async function POST(request: NextRequest) {
     group = { id: started.group.id, people: started.group.people };
   }
 
+  // Opened from a step of a funnel of pages: carried to the thank-you page,
+  // only for a funnel that is on and has this product as a step.
+  const mark = markFromReferer(request.headers.get("referer"), new URL(origin).hostname);
+  const funnel = mark ? ((await funnelHere(store, mark, "product", product.id).catch(() => null))?.funnel.id ?? null) : null;
+
   try {
     // A buyer who went back from Stripe's page hands back the unit they held
     // before holding another.
@@ -218,6 +225,9 @@ export async function POST(request: NextRequest) {
         // Where the buyer's connection is, for a fair price for that country
         // (lib/fair-price.ts), the same header the page read to show it.
         country: readCountry(request.headers.get("x-vercel-ip-country")),
+        // A funnel of pages this product is a step of, read off the page the
+        // button was pressed on like the tags above (lib/page-funnel.ts).
+        funnel: funnel ?? undefined,
       }),
     );
     if (!held.ok) return away(`/@${store.handle}?status=${held.reason}`);

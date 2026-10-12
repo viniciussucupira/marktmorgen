@@ -29,6 +29,10 @@ import { confirmStock } from "@/lib/stock";
 import { finishPlan } from "@/lib/plans";
 import { cookies, headers } from "next/headers";
 import { clientAddress, withinLimit } from "@/lib/request-guard";
+import { isStorePeople } from "@/lib/visit";
+import { funnelMark } from "@/lib/page-funnel";
+import { countFunnelDone, funnelHere, funnelVisitor } from "@/lib/page-funnel-store";
+import { funnelWords } from "@/lib/buyer-words/funnel";
 import { UPSELL_COOKIE, funnelView, settleUpsells } from "@/lib/upsell";
 import { imageUrl } from "@/lib/product-image";
 import { buyersJoin, noteSession } from "@/lib/affiliates";
@@ -685,6 +689,21 @@ export default async function ThanksPage({ params, searchParams }: Params) {
       : null;
   const hours = order.state === "paid" ? Math.floor(order.secondsLeft / 3600) : 0;
 
+  // Bought from a step of a funnel of pages (lib/page-funnel.ts): once what was
+  // bought is handed over and every offer after paying is answered, the way on
+  // to the next step. The purchase is counted for that step, once per person.
+  const funnelMarkPaid = order.state === "paid" && sessionId && !ended ? funnelMark(((order.record.metadata ?? {}) as Record<string, string>).funnel) : "";
+  const funnelHereNow = funnelMarkPaid && order.state === "paid" ? await funnelHere(store, funnelMarkPaid, "product", order.product.id).catch(() => null) : null;
+  if (funnelHereNow && store.statsId) {
+    const asker = { cookies: await cookies(), headers: await headers() };
+    const statsId = store.statsId;
+    after(async () => {
+      if (await isStorePeople(asker, store)) return;
+      await countFunnelDone(statsId, funnelHereNow.funnel, funnelHereNow.index, funnelVisitor(statsId, funnelHereNow.funnel.id, clientAddress(asker), asker.headers.get("user-agent") ?? ""));
+    });
+  }
+  const funnelNext = funnelHereNow?.next && !offer ? funnelHereNow.next : null;
+
   return (
     <div
       lang={lang}
@@ -1182,6 +1201,16 @@ export default async function ThanksPage({ params, searchParams }: Params) {
             />
           </div>
         </div>
+
+        {funnelNext ? (
+          <section aria-labelledby="funnel-next" className="st-card mt-6 p-7 sm:p-10">
+            <p id="funnel-next" className="st-label">{funnelWords(store.language).nextLabel}</p>
+            <Link href={funnelNext} className="btn st-btn btn-lg mt-3">
+              {funnelWords(store.language).next}
+            </Link>
+            <p className="st-muted mt-4 text-sm">{funnelWords(store.language).keptAbove}</p>
+          </section>
+        ) : null}
 
         {/* The creator's own note after paying (lib/thanks-note.ts). */}
         {thanksNote ? <ThanksNoteView note={thanksNote} heading={t.noteFrom(store.name)} lang={store.language} /> : null}

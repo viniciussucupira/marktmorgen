@@ -73,6 +73,7 @@ export const RESERVED_SLUGS = new Set([
   "discord",
   "course",
   "free",
+  "go",
   "group",
   "join",
   "left",

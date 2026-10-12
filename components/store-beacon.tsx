@@ -58,3 +58,19 @@ export function StoreBeacon({ handle, front = true, product = "" }: { handle: st
   }, [handle, front, product]);
   return null;
 }
+
+/**
+ * Tells a funnel of pages that one of its steps was opened (lib/page-funnel.ts):
+ * which funnel, from the mark in the address, and which page or product this
+ * is. The server works out the step, counts each person once, and never the
+ * store's own people.
+ */
+export function FunnelBeacon({ handle, funnel, kind, id }: { handle: string; funnel: string; kind: "page" | "product"; id: string }) {
+  useEffect(() => {
+    const key = `${handle}|${location.href}|funnel`;
+    if (sent.has(key)) return;
+    sent.add(key);
+    beacon({ h: handle, k: "f", f: funnel, t: kind === "page" ? "g" : "p", id });
+  }, [handle, funnel, kind, id]);
+  return null;
+}

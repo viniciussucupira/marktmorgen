@@ -529,6 +529,8 @@ try {
       studio.waitForResponse((r) => r.url().endsWith("/api/store/no-count") && r.ok(), { timeout: 30_000 }),
       studio.getByRole("button", { name: "Don't count this device" }).click(),
     ]);
+    // The answer arrives before the button is drawn again with its new words.
+    await studio.getByRole("button", { name: "Count this device again" }).waitFor({ timeout: 15_000 }).catch(() => {});
     is("this device can be marked not to be counted", [before, await studio.getByRole("button", { name: "Count this device again" }).count()], [1, 1]);
     const marked = (await wide.cookies(LOCAL)).some((c) => c.name === "nl_nc" && /^[0-9a-f]{12}$/.test(c.value));
     is("and carries only a hash of the store", marked, true);
@@ -2517,6 +2519,51 @@ try {
     is("and in the menu at the top of the store", await page.locator("[data-store-pages] a", { hasText: "About" }).count(), 1);
     await open(page, `${LOCAL}/@freshshop/no-such-page`);
     is("an address that is no page is not found", (await page.locator("main[data-site-page]").count()), 0);
+  }
+
+  await keepSmall();
+  part("A funnel of pages: made in the studio, walked from its address, through paying");
+  {
+    await open(studio, `${LOCAL}/studio/funnels`);
+    await studio.getByRole("button", { name: "New funnel" }).click();
+    await studio.locator("#pf-name").fill("Launch");
+    await studio.locator("#pf-step-0").selectOption({ value: `product:${ids["Pantry Checklist"]}` });
+    await studio.getByRole("button", { name: /Add a step/ }).click();
+    await studio.locator("#pf-step-1").selectOption({ value: `product:${ids["Sunday Baking"]}` });
+    is("its address made from its name", await studio.locator("#pf-slug").inputValue(), "launch");
+    await studio.getByRole("button", { name: "Make the funnel" }).click();
+    await studio.getByText("Funnel made.").first().waitFor({ timeout: 30_000 });
+    await studio.locator("section[aria-labelledby='page-funnels-title'] li", { hasText: "Launch" }).first().waitFor({ timeout: 30_000 });
+    is("listed with its address and its two steps", [
+      (await words(studio.locator("section[aria-labelledby='page-funnels-title']"))).includes("/@localshop/go/launch"),
+      await studio.locator("section[aria-labelledby='page-funnels-title'] ol > li").count(),
+    ], [true, 2]);
+
+    await open(page, `${LOCAL}/@localshop/go/launch?utm_source=newsletter`);
+    const entered = new URL(page.url());
+    const mark = entered.searchParams.get("f") ?? "";
+    is("the address opens the first step, with the funnel's mark and the link's tags", [entered.pathname.includes(ids["Pantry Checklist"]), /^[a-z0-9]{10}$/.test(mark), entered.searchParams.get("utm_source")], [true, true, "newsletter"]);
+    const skip = page.getByRole("link", { name: "No thanks, continue" });
+    is("a paid step says how to go on without buying", [await skip.count(), (await skip.getAttribute("href"))?.includes(ids["Sunday Baking"]) && (await skip.getAttribute("href"))?.endsWith(`f=${mark}`)], [1, true]);
+    await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[action='/api/store/checkout'] button[type=submit]").first().click()]);
+    await page.waitForLoadState("networkidle");
+    is("the checkout carries the funnel, from the page it was opened on", services.checkouts().at(-1).metadata.funnel, mark);
+    const next = page.getByRole("link", { name: "Continue" });
+    is("after paying, what was bought first, then the way on", [
+      (await words(page.locator("main"))).includes("You bought Pantry Checklist"),
+      await page.locator("#funnel-next").count(),
+      (await next.getAttribute("href"))?.includes(ids["Sunday Baking"]),
+    ], [true, 1, true]);
+    await Promise.all([page.waitForURL(new RegExp(ids["Sunday Baking"]), { timeout: 60_000 }), next.click()]);
+    await page.waitForLoadState("networkidle");
+    is("the last step, with nothing after it to skip to", [new URL(page.url()).searchParams.get("f"), await page.getByRole("link", { name: "No thanks, continue" }).count()], [mark, 0]);
+
+    await open(studio, `${LOCAL}/studio/funnels`);
+    const counted = await words(studio.locator("section[aria-labelledby='page-funnels-title'] ol").first());
+    // Who opened each step is counted by the page in a browser that is not a
+    // robot's (tests/page-funnel.test.ts holds it): this one calls itself
+    // headless, so only the payment, counted by the thank-you page, shows here.
+    is("counted step by step: the payment at the first step", [/opened it · 1 paid/.test(counted), (counted.match(/opened it/g) ?? []).length], [true, 2]);
   }
 
   await keepSmall();

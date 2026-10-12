@@ -56,6 +56,10 @@ import { pageFacts } from "@/lib/page-facts";
 import { LANGUAGES } from "@/lib/store-language";
 import { RatingLine, ReviewsSection } from "@/components/review-list";
 import { StoreTracking } from "@/components/store-tracking";
+import { FunnelBeacon } from "@/components/store-beacon";
+import { funnelMark } from "@/lib/page-funnel";
+import { funnelHere } from "@/lib/page-funnel-store";
+import { funnelWords } from "@/lib/buyer-words/funnel";
 import { isResting } from "@/lib/traffic";
 import { StoreResting } from "@/components/store-resting";
 import { JsonLd } from "@/components/structured-data";
@@ -299,6 +303,17 @@ export default async function ProductPage({ params, searchParams }: Params) {
   const remindable = selling && !soon && !isFree(product) && askable(store, product);
   // Asked of the store, as on the store page (lib/house-store.ts).
   const rehearsal = selling && sellsInTestMode(store);
+  // Opened as a step of a funnel of pages (lib/page-funnel.ts): counted for it,
+  // and a paid step says how to go on without buying.
+  const here = await funnelHere(store, funnelMark(query.f), "product", product.id).catch(() => null);
+  const skip =
+    here?.next && !isFree(product) ? (
+      <p className="mt-4 text-center text-sm">
+        <Link prefetch={false} href={here.next} className="st-footer-link inline-flex min-h-11 items-center font-semibold">
+          {funnelWords(store.language).skip}
+        </Link>
+      </p>
+    ) : null;
   const [about, stock, noKeys, savedPage, summary, related, inside, soldCounts] = await Promise.all([
     product.about ? readAbout(store.statsId, product.id) : Promise.resolve(""),
     stockLeft(store, product).catch(() => null),
@@ -453,6 +468,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
           </Link>
         </p>
       ) : null}
+      {skip}
     </>
   );
 
@@ -493,6 +509,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
         {w.everythingFrom(store.name)}
       </Link>
       <StoreTracking store={store} presence product={product.id} />
+      {here ? <FunnelBeacon handle={store.handle} funnel={here.funnel.id} kind="product" id={product.id} /> : null}
       {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}
     </div>
   );
