@@ -59,6 +59,13 @@ export default async function StudioBundlesPage({ searchParams }: Params) {
   const ordered = (target?.bundle ?? []).map((id) => inside.find((p) => p.id === id)).filter((p): p is Listing => Boolean(p));
   const gone = (target?.bundle?.length ?? 0) - ordered.length;
   const ready = target?.bundle ? deliverableItems(target, inside) : [];
+  // A new bundle started from what buyers get next (lib/next-bought.ts): its products already in it.
+  const preset =
+    creating && typeof query.items === "string"
+      ? (await readListings(store, query.items.split(",").filter((id) => /^[A-Za-z0-9_-]{2,40}$/.test(id)).slice(0, MAX_BUNDLE_ITEMS))).filter(
+          (p) => whyNotInBundle(p) === null,
+        )
+      : [];
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -156,7 +163,7 @@ export default async function StudioBundlesPage({ searchParams }: Params) {
                   key={`${mode}:${target?.id ?? "new"}`}
                   mode={mode}
                   owner={target ? { id: target.id, title: target.title, priceCents: target.priceCents, pick: target.pick ?? null } : null}
-                  initial={ordered.map(picked)}
+                  initial={mode === "create" ? preset.map(picked) : ordered.map(picked)}
                   currency={store.currency}
                 />
               )}

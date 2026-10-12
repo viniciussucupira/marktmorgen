@@ -25,6 +25,7 @@
  */
 import { saleHandles } from "@/lib/store";
 import { type Together, parseTogether, togetherFrom } from "@/lib/also-bought";
+import { keepPaths, pathsFrom } from "@/lib/next-bought";
 import { createHash } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
@@ -1323,6 +1324,8 @@ export async function readAllTimeSales(store: Store): Promise<AllTimeSales | nul
   }
   if (sales.length) out.since = dayKey(sales[sales.length - 1].created);
   out.together = togetherFrom(sales);
+  // What each product's buyers bought later, and how long after (lib/next-bought.ts), kept a week for the studio.
+  await keepPaths(store.statsId, pathsFrom(sales)).catch(() => {});
   if (store.statsId && isRedisConfigured()) {
     await redisPipeline([["SET", allSalesKey(store.statsId), JSON.stringify(out), "EX", ALL_SALES_SECONDS]]).catch(() => {});
   }
