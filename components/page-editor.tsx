@@ -300,7 +300,8 @@ export function PageEditor({
   // Brought here to start a headline test: to the box, with the cursor in it.
   useEffect(() => {
     if (!startTest) return;
-    const box = document.getElementById("headline-test");
+    // The hero opens with the page; the box is drawn inside it a moment later.
+    const box = document.getElementById("headline-test") ?? document.querySelector<HTMLElement>("[aria-labelledby=page-test-title]");
     box?.scrollIntoView({ behavior: "smooth", block: "center" });
     box?.querySelector<HTMLInputElement>("input[type=text], textarea")?.focus({ preventScroll: true });
   }, [startTest]);
@@ -310,7 +311,8 @@ export function PageEditor({
   // variant): the version not being edited right now, and whether B is the one being edited.
   const [other, setOther] = useState<Draft[] | null>(() => (initial.variant ? toDrafts({ ...initial, blocks: initial.variant.blocks }) : null));
   const [onB, setOnB] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
+  // Brought here to test a headline (lib/insights.ts): the hero, where the test is, open.
+  const [open, setOpen] = useState<string | null>(startTest && !site && initial.blocks[0]?.kind === "hero" ? initial.blocks[0].id : null);
   const [view, setView] = useState<"build" | "preview">("build");
   const [sharing, setSharing] = useState(false);
   // Whether the screen is wide enough to draw the page beside its blocks; only

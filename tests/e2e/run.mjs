@@ -942,6 +942,11 @@ try {
   await keepSmall();
   part("Sharing a page and the store");
   {
+    // The step "Test a second headline" leads to (lib/insights.ts): the page's editor with the test switched on.
+    await open(studio, `${LOCAL}/studio/pages?product=${ids["Knife Skills"]}&test=headline`);
+    const test = studio.locator("#headline-test");
+    await test.waitFor({ timeout: 30_000 }).catch(() => {});
+    is("a headline test opens ready to write", [await test.count(), (await test.count()) ? await test.locator("input[type=checkbox]").first().isChecked() : false], [1, true]);
     await open(studio, `${LOCAL}/studio/pages?product=${ids["Knife Skills"]}`);
     await studio.getByRole("button", { name: "Share", exact: true }).click();
     const panel = studio.getByRole("region", { name: "Share Knife Skills" });

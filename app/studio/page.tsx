@@ -806,15 +806,10 @@ export default async function StudioPage({
         readTrouble(current.statsId).catch(() => ({ week: 0, last: null })),
       ])
     : [null, null, [], [], false, { week: 0, last: null }];
+  const statListings = current && visits && salesRead ? await readListings(current, [...new Set([...productsInStats(current, visits, salesRead.value), ...reachProducts(visits)])]) : [];
   const counted =
     current && visits && salesRead
-      ? studioStats(
-          current,
-          visits,
-          salesRead.value,
-          salesRead.state,
-          await readListings(current, [...new Set([...productsInStats(current, visits, salesRead.value), ...reachProducts(visits)])]),
-        )
+      ? studioStats(current, visits, salesRead.value, salesRead.state, statListings)
       : null;
   // The biggest buyers carry their addresses, so only whoever may read orders
   // with the buyer's address sees them (lib/team-roles.ts, "orders").
@@ -1128,6 +1123,7 @@ export default async function StudioPage({
                     storeUrl: current ? storeBase(current) : undefined,
                     reminders: current ? current.recovery.enabled : undefined,
                     may: { settings: may("settings"), page: may("page"), draft: may("draft") },
+                    pages: statListings.filter((l) => l.page).map((l) => l.id),
                   }}
                   weeklyAi={may("settings") && isAiConfigured() && store ? store.weeklyAi : undefined}
                   weeklyTeam={
