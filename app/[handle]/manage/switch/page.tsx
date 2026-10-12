@@ -38,6 +38,8 @@ export default async function SwitchPage({ params, searchParams }: Params) {
   const token = read("token");
   const sub = read("sub");
   const to = read("to");
+  // Reached from the page that asked why before cancelling (lib/leave-rules.ts).
+  const fromLeave = read("from") === "leave";
   const result = await previewSwitch(store, token, sub, to);
   const back = `/@${store.handle}/manage${token ? `?token=${encodeURIComponent(token)}` : ""}`;
   const m = membershipWords(store.language);
@@ -95,6 +97,7 @@ export default async function SwitchPage({ params, searchParams }: Params) {
                 <input type="hidden" name="sub" value={result.preview.sub} />
                 <input type="hidden" name="to" value={result.preview.to.id} />
                 <input type="hidden" name="at" value={String(result.preview.at)} />
+                {fromLeave ? <input type="hidden" name="from" value="leave" /> : null}
                 <button type="submit" className="btn st-btn btn-lg btn-block">
                   {result.preview.due > 0 && !result.preview.trialing ? m.switchAndPay(money(result.preview.due, result.preview.currency)) : m.switchNow}
                 </button>

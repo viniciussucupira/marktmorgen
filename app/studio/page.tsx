@@ -83,6 +83,7 @@ import { INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { SaveOfferEditor } from "@/components/save-offer-editor";
 import { PauseEditor } from "@/components/pause-editor";
 import { DunningEditor } from "@/components/dunning-editor";
+import { LeaveEditor } from "@/components/leave-editor";
 import { WinBackEditor } from "@/components/winback-editor";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { AiOn } from "@/components/ai-assist";
@@ -1497,6 +1498,7 @@ export default async function StudioPage({
                 {sellsMemberships(store) ? (
                   <>
                     <DunningEditor dunning={store.dunning} connected={Boolean(current?.stripeAccountId)} />
+                    <LeaveEditor leaving={store.leaving} pause={store.pause} tiers={store.tiers.length} />
                     <SaveOfferEditor save={store.save} connected={Boolean(current?.stripeAccountId)} />
                     <PauseEditor months={store.pause} />
                     <WinBackEditor

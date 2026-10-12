@@ -39,6 +39,7 @@ export async function startServices(port) {
   let counter = 0;
   const blobs = new Map();
   const subscriptionUpdates = [];
+  const portalConfigs = [];
   // Discord: one server, its roles, and who the bot put in it (lib/discord.ts).
   const discordCalls = [];
   const discordMembers = new Set();
@@ -295,6 +296,14 @@ export async function startServices(port) {
       if (req.method === "GET" && path === "/v1/subscriptions" && url.searchParams.get("customer") === "cus_PauseMember01") {
         return json(res, 200, { object: "list", has_more: false, data: [pauseSub] });
       }
+      // Stripe's own page for a member, as a cancel opens it (lib/membership-manage.ts).
+      if (req.method === "POST" && path === "/v1/billing_portal/configurations") {
+        portalConfigs.push(Object.fromEntries(new URLSearchParams(await read(req))));
+        return json(res, 200, { id: `bpc_LocalPortal${String(portalConfigs.length).padStart(4, "0")}`, object: "billing_portal.configuration" });
+      }
+      if (req.method === "POST" && path === "/v1/billing_portal/sessions") {
+        return json(res, 200, { id: "bps_LocalPortal0001", object: "billing_portal.session", url: "https://billing.stripe.com/p/session/test_local" });
+      }
       if (req.method === "POST" && path === "/v1/subscriptions/sub_PauseMember0001") {
         const body = new URLSearchParams(await read(req));
         subscriptionUpdates.push(Object.fromEntries(body));
@@ -357,6 +366,7 @@ export async function startServices(port) {
     unknown: () => [...unknown],
     writing: () => [...writing],
     subscriptionUpdates: () => [...subscriptionUpdates],
+    portalConfigs: () => [...portalConfigs],
     /** What Discord was asked, and its ids. */
     discord: () => ({ calls: [...discordCalls], members: new Set(discordMembers), ids: DISCORD }),
     /** What was written to the file store, by its path. */

@@ -159,7 +159,12 @@ export default async function ManagePage({ params, searchParams }: Params) {
                           {nowSeconds >= one.pause.from ? <p className="st-muted mt-1 text-xs">{m.pause.resumeNote}</p> : null}
                         </div>
                       ) : null}
-                      {one.endsAt === null ? (
+                      {one.endsAt === null && store.leaving.on ? (
+                        // The store asks why first (lib/leave-rules.ts); the page it opens has the way out on it.
+                        <Link prefetch={false} href={`/@${store.handle}/manage/leave?token=${token}&sub=${one.id}`} className="btn btn-secondary btn-sm">
+                          {m.cancel}
+                        </Link>
+                      ) : one.endsAt === null ? (
                         <form action="/api/store/manage/cancel" method="post">
                           <input type="hidden" name="handle" value={store.handle} />
                           <input type="hidden" name="token" value={token} />

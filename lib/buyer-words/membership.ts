@@ -130,6 +130,35 @@ const en = {
   cancelNote:
     "If you cancel, the membership stays on until the end of the period you have already paid for, and nothing more is charged.",
 
+  // ---- Asking why before a member cancels (added 12 October 2026) --------------------------
+  leaveTitle: "Before you go",
+  leaveHead: (title: string) => `Cancel ${title}?`,
+  leaveHeadPlain: "Cancel your membership?",
+  leaveIntro: (store: string) =>
+    `If you tell ${store} why, there may be a better way for you below. Answering is up to you: you can cancel right away.`,
+  leaveAsk: "Why are you leaving?",
+  leaveReasons: {
+    too_expensive: "It costs too much",
+    unused: "I don't use it enough",
+    missing_features: "Something I need is missing",
+    switched_service: "I moved to something else",
+    too_complex: "It's too hard to use",
+    low_quality: "The quality isn't good enough",
+    customer_service: "I wasn't helped when I asked",
+    other: "Another reason",
+  } as Record<string, string>,
+  leaveContinue: "Continue",
+  leaveThanks: "Thank you for saying why.",
+  leaveCheaper: "A plan that costs less:",
+  leavePause: "Or keep your place and pause instead:",
+  leavePauseOnly: "Keep your place and pause instead:",
+  leaveContact: (store: string) => `${store} would like to know. Write to them, and they can put it right:`,
+  leaveWrite: (store: string) => `Write to ${store}`,
+  leaveStill: "Still want to leave?",
+  leaveCancel: "Cancel my membership",
+  leaveConfirm: "Stripe's page opens, where you confirm it.",
+  leaveGone: "This membership cannot be canceled from here: it has ended, or it is already set to end.",
+
   // ---- Switching to another plan ------------------------------------------------------
   switchProblems: {
     expired: { title: "This link has expired", body: "A link to your membership works for one hour. Ask for a new one on your membership page." },
@@ -418,6 +447,34 @@ const es: MembershipWords = {
   } as Record<string, Notice>,
   cancelNote: "Si cancelas, la membresía sigue activa hasta el final del periodo que ya pagaste, y no se cobra nada más.",
 
+  leaveTitle: "Antes de irte",
+  leaveHead: (title) => `¿Cancelar ${title}?`,
+  leaveHeadPlain: "¿Cancelar tu membresía?",
+  leaveIntro: (store) =>
+    `Si le cuentas a ${store} por qué, puede que haya una opción mejor para ti más abajo. Responder es opcional: puedes cancelar ahora mismo.`,
+  leaveAsk: "¿Por qué te vas?",
+  leaveReasons: {
+    too_expensive: "Cuesta demasiado",
+    unused: "No lo uso lo suficiente",
+    missing_features: "Falta algo que necesito",
+    switched_service: "Me cambié a otra cosa",
+    too_complex: "Es demasiado difícil de usar",
+    low_quality: "La calidad no es suficiente",
+    customer_service: "No me ayudaron cuando lo pedí",
+    other: "Otro motivo",
+  },
+  leaveContinue: "Continuar",
+  leaveThanks: "Gracias por contarnos el motivo.",
+  leaveCheaper: "Un plan que cuesta menos:",
+  leavePause: "O conserva tu lugar y haz una pausa:",
+  leavePauseOnly: "Conserva tu lugar y haz una pausa:",
+  leaveContact: (store) => `A ${store} le gustaría saberlo. Escríbele, y podrá solucionarlo:`,
+  leaveWrite: (store) => `Escribir a ${store}`,
+  leaveStill: "¿Aún quieres irte?",
+  leaveCancel: "Cancelar mi membresía",
+  leaveConfirm: "Se abre la página de Stripe, donde lo confirmas.",
+  leaveGone: "Esta membresía no se puede cancelar desde aquí: ya terminó o ya está programada para terminar.",
+
   switchProblems: {
     expired: { title: "Este enlace ha expirado", body: "Un enlace a tu membresía funciona durante una hora. Pide uno nuevo en la página de tu membresía." },
     gone: {
@@ -698,6 +755,34 @@ const fr: MembershipWords = {
     },
   } as Record<string, Notice>,
   cancelNote: "Si vous annulez, l'abonnement reste actif jusqu'à la fin de la période déjà payée, et plus rien n'est débité.",
+
+  leaveTitle: "Avant de partir",
+  leaveHead: (title) => `Annuler ${title}${S}?`,
+  leaveHeadPlain: `Annuler votre abonnement${S}?`,
+  leaveIntro: (store) =>
+    `Si vous dites à ${store} pourquoi, il existe peut-être une meilleure solution pour vous ci-dessous. Répondre est facultatif${S}: vous pouvez annuler tout de suite.`,
+  leaveAsk: `Pourquoi partez-vous${S}?`,
+  leaveReasons: {
+    too_expensive: "C'est trop cher",
+    unused: "Je ne m'en sers pas assez",
+    missing_features: "Il manque quelque chose dont j'ai besoin",
+    switched_service: "J'utilise autre chose maintenant",
+    too_complex: "C'est trop difficile à utiliser",
+    low_quality: "La qualité n'est pas suffisante",
+    customer_service: "Je n'ai pas eu d'aide quand j'en ai demandé",
+    other: "Une autre raison",
+  },
+  leaveContinue: "Continuer",
+  leaveThanks: "Merci d'avoir donné la raison.",
+  leaveCheaper: `Une formule moins chère${S}:`,
+  leavePause: `Ou gardez votre place et faites une pause${S}:`,
+  leavePauseOnly: `Gardez votre place et faites une pause${S}:`,
+  leaveContact: (store) => `${store} aimerait le savoir. Écrivez-lui, et le problème pourra être réglé${S}:`,
+  leaveWrite: (store) => `Écrire à ${store}`,
+  leaveStill: `Vous voulez toujours partir${S}?`,
+  leaveCancel: "Annuler mon abonnement",
+  leaveConfirm: "La page de Stripe s'ouvre, et vous y confirmez.",
+  leaveGone: `Cet abonnement ne peut pas être annulé ici${S}: il est terminé, ou sa fin est déjà prévue.`,
 
   switchProblems: {
     expired: { title: "Ce lien a expiré", body: "Un lien vers votre abonnement fonctionne pendant une heure. Demandez-en un nouveau sur la page de votre abonnement." },
@@ -981,6 +1066,34 @@ const de: MembershipWords = {
   } as Record<string, Notice>,
   cancelNote:
     "Wenn Sie kündigen, läuft die Mitgliedschaft bis zum Ende des bereits bezahlten Zeitraums weiter, und es wird nichts mehr berechnet.",
+
+  leaveTitle: "Bevor Sie gehen",
+  leaveHead: (title) => `${title} kündigen?`,
+  leaveHeadPlain: "Ihre Mitgliedschaft kündigen?",
+  leaveIntro: (store) =>
+    `Wenn Sie ${store} sagen, warum, gibt es unten vielleicht einen besseren Weg für Sie. Antworten ist freiwillig: Sie können sofort kündigen.`,
+  leaveAsk: "Warum gehen Sie?",
+  leaveReasons: {
+    too_expensive: "Es kostet zu viel",
+    unused: "Ich nutze es zu wenig",
+    missing_features: "Mir fehlt etwas, das ich brauche",
+    switched_service: "Ich bin zu etwas anderem gewechselt",
+    too_complex: "Es ist zu schwer zu benutzen",
+    low_quality: "Die Qualität reicht nicht",
+    customer_service: "Mir wurde nicht geholfen, als ich gefragt habe",
+    other: "Ein anderer Grund",
+  },
+  leaveContinue: "Weiter",
+  leaveThanks: "Danke, dass Sie den Grund nennen.",
+  leaveCheaper: "Ein günstigerer Plan:",
+  leavePause: "Oder behalten Sie Ihren Platz und pausieren Sie stattdessen:",
+  leavePauseOnly: "Behalten Sie Ihren Platz und pausieren Sie stattdessen:",
+  leaveContact: (store) => `${store} möchte es wissen. Schreiben Sie, damit es behoben werden kann:`,
+  leaveWrite: (store) => `An ${store} schreiben`,
+  leaveStill: "Möchten Sie trotzdem gehen?",
+  leaveCancel: "Meine Mitgliedschaft kündigen",
+  leaveConfirm: "Die Seite von Stripe öffnet sich, dort bestätigen Sie es.",
+  leaveGone: "Diese Mitgliedschaft kann hier nicht gekündigt werden: Sie ist beendet oder endet bereits zu einem festen Datum.",
 
   switchProblems: {
     expired: {
@@ -1278,6 +1391,34 @@ const it: MembershipWords = {
   } as Record<string, Notice>,
   cancelNote: "Se annulli, l'abbonamento resta attivo fino alla fine del periodo che hai già pagato, e non ti viene addebitato altro.",
 
+  leaveTitle: "Prima di andare",
+  leaveHead: (title) => `Annullare ${title}?`,
+  leaveHeadPlain: "Annullare il tuo abbonamento?",
+  leaveIntro: (store) =>
+    `Se dici a ${store} perché, qui sotto potrebbe esserci una soluzione migliore per te. Rispondere è facoltativo: puoi annullare subito.`,
+  leaveAsk: "Perché te ne vai?",
+  leaveReasons: {
+    too_expensive: "Costa troppo",
+    unused: "Non lo uso abbastanza",
+    missing_features: "Manca qualcosa che mi serve",
+    switched_service: "Ora uso qualcos'altro",
+    too_complex: "È troppo difficile da usare",
+    low_quality: "La qualità non è sufficiente",
+    customer_service: "Non ho ricevuto aiuto quando l'ho chiesto",
+    other: "Un altro motivo",
+  },
+  leaveContinue: "Continua",
+  leaveThanks: "Grazie per aver detto il motivo.",
+  leaveCheaper: "Un piano che costa meno:",
+  leavePause: "Oppure tieni il tuo posto e metti in pausa:",
+  leavePauseOnly: "Tieni il tuo posto e metti in pausa:",
+  leaveContact: (store) => `${store} vorrebbe saperlo. Scrivigli, e potrà rimediare:`,
+  leaveWrite: (store) => `Scrivi a ${store}`,
+  leaveStill: "Vuoi ancora andartene?",
+  leaveCancel: "Annulla il mio abbonamento",
+  leaveConfirm: "Si apre la pagina di Stripe, dove confermi.",
+  leaveGone: "Questo abbonamento non può essere annullato da qui: è terminato, o la sua fine è già fissata.",
+
   switchProblems: {
     expired: { title: "Questo link è scaduto", body: "Un link al tuo abbonamento funziona per un'ora. Chiedine uno nuovo dalla pagina del tuo abbonamento." },
     gone: {
@@ -1559,6 +1700,34 @@ const nl: MembershipWords = {
   } as Record<string, Notice>,
   cancelNote: "Als je opzegt, loopt het lidmaatschap door tot het einde van de periode die je al hebt betaald, en wordt er niets meer afgeschreven.",
 
+  leaveTitle: "Voordat je gaat",
+  leaveHead: (title) => `${title} opzeggen?`,
+  leaveHeadPlain: "Je lidmaatschap opzeggen?",
+  leaveIntro: (store) =>
+    `Als je ${store} vertelt waarom, staat er hieronder misschien een betere oplossing voor je. Antwoorden hoeft niet: je kunt meteen opzeggen.`,
+  leaveAsk: "Waarom ga je weg?",
+  leaveReasons: {
+    too_expensive: "Het kost te veel",
+    unused: "Ik gebruik het te weinig",
+    missing_features: "Er mist iets wat ik nodig heb",
+    switched_service: "Ik ben overgestapt op iets anders",
+    too_complex: "Het is te moeilijk in gebruik",
+    low_quality: "De kwaliteit is niet goed genoeg",
+    customer_service: "Ik werd niet geholpen toen ik het vroeg",
+    other: "Een andere reden",
+  },
+  leaveContinue: "Verder",
+  leaveThanks: "Bedankt dat je de reden geeft.",
+  leaveCheaper: "Een abonnement dat minder kost:",
+  leavePause: "Of houd je plek en pauzeer in plaats daarvan:",
+  leavePauseOnly: "Houd je plek en pauzeer in plaats daarvan:",
+  leaveContact: (store) => `${store} wil het graag weten. Schrijf ze, dan kunnen ze het oplossen:`,
+  leaveWrite: (store) => `Schrijf ${store}`,
+  leaveStill: "Wil je toch weg?",
+  leaveCancel: "Mijn lidmaatschap opzeggen",
+  leaveConfirm: "De pagina van Stripe opent, waar je het bevestigt.",
+  leaveGone: "Dit lidmaatschap kan hier niet worden opgezegd: het is beëindigd, of het einde staat al vast.",
+
   switchProblems: {
     expired: { title: "Deze link is verlopen", body: "Een link naar je lidmaatschap werkt een uur. Vraag een nieuwe aan op de pagina van je lidmaatschap." },
     gone: {
@@ -1837,6 +2006,34 @@ const pt: MembershipWords = {
     },
   } as Record<string, Notice>,
   cancelNote: "Se cancelar, a subscrição mantém-se ativa até ao fim do período que já pagou, e não é cobrado mais nada.",
+
+  leaveTitle: "Antes de sair",
+  leaveHead: (title) => `Cancelar ${title}?`,
+  leaveHeadPlain: "Cancelar a sua subscrição?",
+  leaveIntro: (store) =>
+    `Se disser a ${store} porquê, pode haver uma opção melhor para si mais abaixo. Responder é opcional: pode cancelar já.`,
+  leaveAsk: "Porque está a sair?",
+  leaveReasons: {
+    too_expensive: "Custa demasiado",
+    unused: "Não o uso o suficiente",
+    missing_features: "Falta algo de que preciso",
+    switched_service: "Mudei para outra coisa",
+    too_complex: "É demasiado difícil de usar",
+    low_quality: "A qualidade não é suficiente",
+    customer_service: "Não tive ajuda quando pedi",
+    other: "Outro motivo",
+  },
+  leaveContinue: "Continuar",
+  leaveThanks: "Agradecemos que tenha dito o motivo.",
+  leaveCheaper: "Um plano que custa menos:",
+  leavePause: "Ou mantenha o seu lugar e faça uma pausa:",
+  leavePauseOnly: "Mantenha o seu lugar e faça uma pausa:",
+  leaveContact: (store) => `${store} gostaria de saber. Escreva-lhe, e o problema pode ser resolvido:`,
+  leaveWrite: (store) => `Escrever a ${store}`,
+  leaveStill: "Ainda quer sair?",
+  leaveCancel: "Cancelar a minha subscrição",
+  leaveConfirm: "Abre-se a página da Stripe, onde confirma.",
+  leaveGone: "Esta subscrição não pode ser cancelada aqui: já terminou, ou o fim já está marcado.",
 
   switchProblems: {
     expired: { title: "Esta ligação expirou", body: "Uma ligação para a sua subscrição funciona durante uma hora. Peça uma nova na página da sua subscrição." },
