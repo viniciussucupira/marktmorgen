@@ -278,6 +278,12 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I sell content with resale or private label rights?",
+        a: [
+          "Yes, when the license you bought lets you sell it the way you sell it here, and when what you sell gives the buyer something to use, not only the right to sell it again. Keep the license: we may ask for it, and a product whose license cannot be shown is taken down. A product may not promise fast or easy money, which is also a rule of Stripe's, since your payments run through it.",
+        ],
+      },
+      {
         q: "Can I give something away for an email address?",
         a: [
           "Yes. Set a product's price to 0 and it becomes free: a visitor types their email, we send them a link to it, and when they use that link their address joins your list. Because the link has to be opened from their own inbox, every address on the list is real \u2014 no typos, and nobody signed up by someone else.",
