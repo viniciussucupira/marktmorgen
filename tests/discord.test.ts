@@ -1,0 +1,175 @@
+/**
+ * Discord access (lib/discord-access.ts, added 11 October 2026). What is
+ * checked:
+ *
+ *   - the rules: roles cleaned and capped, only roles the bot can give
+ *     offered, what to add and take worked out from what was given;
+ *   - Discord's page is asked only for what each side needs;
+ *   - a buyer who holds a product is put in the server with its roles, and
+ *     one who holds nothing is not;
+ *   - one Discord account per address: a second one takes the roles over;
+ *   - checking again keeps what is held, adds what a product gives since,
+ *     and takes everything back once nothing is held, removing the person
+ *     from the server only when the creator asked for it;
+ *   - Stripe that cannot be asked takes nothing from anybody;
+ *   - a trip to Discord's page is used once, and people are due every few hours.
+ */
+import { addProduct, claimHandle, ensureStatsId, ensureStoreId, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
+import { emailKey, storeKey } from "@/lib/learn";
+import { CHECK_HOURS, MAX_PRODUCT_ROLES, assignable, cleanRoles, rolesDiff, rolesFor } from "@/lib/discord-rules";
+import { authorizeUrl } from "@/lib/discord";
+import { checkMember, joinServer } from "@/lib/discord-access";
+import { accountOf, dueMembers, readMember, saveServer, setProductRoles, startTrip, takeTrip } from "@/lib/discord-store";
+import { store as redis } from "./redis-stub";
+import { done, is, part } from "./check";
+
+const SERVER = "100000000000000001";
+const R1 = "200000000000000001";
+const R2 = "200000000000000002";
+const ANA = "300000000000000001";
+const ANA_TWO = "300000000000000002";
+
+let stripe: "active" | "canceled" | "down" = "active";
+let handle = "";
+let productId = "";
+const discord: string[] = [];
+const members = new Set<string>();
+
+globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+  const url = new URL(String(input));
+  const method = init?.method ?? "GET";
+  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+  if (url.hostname === "discord.com") {
+    const path = url.pathname.replace("/api/v10", "");
+    discord.push(`${method} ${path}`);
+    const member = path.match(/^\/guilds\/\d+\/members\/(\d+)$/);
+    if (member && method === "PUT") {
+      const fresh = !members.has(member[1]);
+      members.add(member[1]);
+      return new Response(fresh ? "{}" : null, { status: fresh ? 201 : 204 });
+    }
+    if (member && method === "DELETE") {
+      members.delete(member[1]);
+      return new Response(null, { status: 204 });
+    }
+    if (/^\/guilds\/\d+\/members\/\d+\/roles\/\d+$/.test(path)) return new Response(null, { status: 204 });
+    return json({ message: "no stand-in" }, 404);
+  }
+  // The creator's Stripe account: one membership, bought by Ana.
+  const path = url.pathname.replace(/^\/v1/, "");
+  if (stripe === "down") return json({ error: { message: "down" } }, 500);
+  if (path === "/checkout/sessions" && url.searchParams.get("customer_details[email]") === "ana@example.com") {
+    return json({
+      object: "list",
+      data: [
+        {
+          id: "cs_test_ana",
+          status: "complete",
+          payment_status: "paid",
+          mode: "subscription",
+          customer: "cus_Ana0000001",
+          metadata: { store: handle, product: productId },
+          subscription: { id: "sub_Ana0000001", status: stripe },
+          payment_intent: null,
+        },
+      ],
+      has_more: false,
+    });
+  }
+  return json({ object: "list", data: [], has_more: false });
+}) as typeof fetch;
+
+async function main(): Promise<void> {
+  redis.clear();
+  process.env.STRIPE_SECRET_KEY = "sk_test_discord_only_a_stand_in";
+  process.env.DISCORD_CLIENT_ID = "400000000000000001";
+  process.env.DISCORD_CLIENT_SECRET = "secret";
+  process.env.DISCORD_BOT_TOKEN = "bot";
+
+  part("The rules");
+  is("roles are ids, once each, three at most", cleanRoles([R1, R1, "x", R2, "200000000000000003", "200000000000000004"]), [R1, R2, "200000000000000003"].slice(0, MAX_PRODUCT_ROLES));
+  const roles = [
+    { id: SERVER, name: "@everyone", color: 0, position: 0, managed: false },
+    { id: R1, name: "Members", color: 0, position: 2, managed: false },
+    { id: R2, name: "Moderators", color: 0, position: 9, managed: false },
+    { id: "200000000000000005", name: "Some bot", color: 0, position: 1, managed: true },
+  ];
+  is("only roles the bot can give: below its own, not everyone's, not an app's", assignable(roles, SERVER, 5).map((r) => r.name), ["Members"]);
+  is("what to add and what to take", rolesDiff([R1], [R2]), { add: [R2], take: [R1] });
+  is("the roles of what is held", rolesFor(["a", "b"], new Map([["a", [R1]], ["b", [R1, R2]]])), [R1, R2]);
+
+  part("Discord's page asks each side only for what it needs");
+  const install = new URL(authorizeUrl("install", "s", "https://marktmorgen.com/api/discord/callback"));
+  const join = new URL(authorizeUrl("join", "s", "https://marktmorgen.com/api/discord/callback"));
+  is("the creator adds a bot that manages roles, invites and removes people, and nothing else", [install.searchParams.get("scope"), install.searchParams.get("permissions")], ["identify bot", "268435459"]);
+  is("the buyer lets it see who they are and put them in a server", join.searchParams.get("scope"), "identify guilds.join");
+
+  const OWNER = "owner@example.com";
+  await claimHandle(OWNER, "clubhouse", "Clubhouse", "");
+  await ensureStatsId(OWNER);
+  await ensureStoreId(OWNER);
+  await setStripeAccount(OWNER, "acct_1TestClubhouse1", true);
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  const made = await addProduct(OWNER, "The Club", "", "20", null);
+  if (!made.ok) throw new Error("no product");
+  productId = made.product.id;
+  let store = (await storeForEmail(OWNER))!;
+  handle = store.handle;
+  const room = storeKey(store);
+  await saveServer(room, { id: SERVER, name: "The Club", at: 1, kick: false });
+  await setProductRoles(room, productId, [R1]);
+
+  part("Joining");
+  const nobody = await joinServer({ store, email: "bo@example.com", accessToken: "t", user: { id: "300000000000000009", name: "Bo" } });
+  is("somebody who holds nothing is not let in", nobody.ok ? "in" : nobody.reason, "none");
+  is("and Discord is not asked to", discord.filter((c) => c.startsWith("PUT")).length, 0);
+  const ana = await joinServer({ store, email: "ana@example.com", accessToken: "t", user: { id: ANA, name: "Ana" } });
+  is("a member is put in the server with the product's roles", ana.ok && [ana.added, ana.roles], [true, 1]);
+  is("and kept, with what was given", (await readMember(room, ANA))?.r, [R1]);
+  discord.length = 0;
+  const again = await joinServer({ store, email: "ana@example.com", accessToken: "t", user: { id: ANA_TWO, name: "Ana's other" } });
+  is("a second Discord account for the same address takes the roles over", [again.ok, discord.includes(`DELETE /guilds/${SERVER}/members/${ANA}/roles/${R1}`), await readMember(room, ANA), await accountOf(room, "ana@example.com")], [true, true, null, ANA_TWO]);
+
+  part("Checking again");
+  is("not due before its time", (await dueMembers(Date.now())).length, 0);
+  is("due after it", (await dueMembers(Date.now() + CHECK_HOURS * 3_600_000 + 1000)).map((d) => d.userId), [ANA_TWO]);
+  is("still a member: kept", await checkMember(store.sid, ANA_TWO), "kept");
+  await setProductRoles(room, productId, [R1, R2]);
+  discord.length = 0;
+  is("a role the product gives since is added", [await checkMember(store.sid, ANA_TWO), discord], ["changed", [`PUT /guilds/${SERVER}/members/${ANA_TWO}/roles/${R2}`]]);
+
+  stripe = "down";
+  await redisFlushCache();
+  discord.length = 0;
+  is("Stripe cannot be asked: nothing is taken", [await checkMember(store.sid, ANA_TWO), discord], ["later", []]);
+
+  stripe = "canceled";
+  await redisFlushCache();
+  discord.length = 0;
+  is("the membership ended: every role given is taken back", [await checkMember(store.sid, ANA_TWO), discord.sort()], ["ended", [`DELETE /guilds/${SERVER}/members/${ANA_TWO}/roles/${R1}`, `DELETE /guilds/${SERVER}/members/${ANA_TWO}/roles/${R2}`]]);
+  is("they stay in the server, and are forgotten", [members.has(ANA_TWO), await readMember(room, ANA_TWO)], [true, null]);
+
+  part("Taken out of the server when the creator asks for it");
+  stripe = "active";
+  await redisFlushCache();
+  store = (await storeForEmail(OWNER))!;
+  await joinServer({ store, email: "ana@example.com", accessToken: "t", user: { id: ANA_TWO, name: "Ana" } });
+  await saveServer(room, { id: SERVER, name: "The Club", at: 1, kick: true });
+  stripe = "canceled";
+  await redisFlushCache();
+  is("ended, and removed", [await checkMember(store.sid, ANA_TWO), members.has(ANA_TWO)], ["ended", false]);
+
+  part("A trip to Discord's page");
+  const state = await startTrip({ k: "join", sid: store.sid, email: "ana@example.com", redirect: "r", back: "/" });
+  is("is read once", [(await takeTrip(state))?.k, await takeTrip(state)], ["join", null]);
+
+  done();
+}
+
+/** The five minutes Stripe's answer is kept, gone: the next check asks again. */
+async function redisFlushCache(): Promise<void> {
+  const store = (await storeForEmail("owner@example.com"))!;
+  await redis.pipeline([["DEL", `nl:dc:ok:${storeKey(store)}:${emailKey("ana@example.com")}:${productId}`]]);
+}
+
+main();

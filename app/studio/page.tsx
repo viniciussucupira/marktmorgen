@@ -1,3 +1,4 @@
+import { isDiscordConfigured } from "@/lib/discord";
 import { firstSaleAt } from "@/lib/yearly-offer";
 import { breakRunning, pauseOf } from "@/lib/plan-pause";
 import { PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS, PAUSE_EVERY_DAYS } from "@/lib/plan-pause-rules";
@@ -994,6 +995,10 @@ export default async function StudioPage({
                   : []),
                 ...(may("settings")
                   ? [{ href: studioPath(store, "", "integrations"), title: "Email platforms", text: "Mailchimp, Kit, beehiiv or MailerLite, kept fed.", icon: "plug" as const }]
+                  : []),
+                // Only once the deployment has Discord's keys (lib/discord.ts).
+                ...(may("settings") && isDiscordConfigured()
+                  ? [{ href: studioPath(store, "", "discord"), title: "Discord", text: "Your own server, opened by what people buy, with roles taken back when access ends.", icon: "chat" as const }]
                   : []),
                 // Only once the deployment has the Google or Zoom app's keys (lib/meet-providers.ts).
                 ...(may("settings") && meetOn && (meet?.providers ?? offeredProviders(store, arrivedZoom)).length > 0

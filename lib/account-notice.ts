@@ -39,7 +39,8 @@ export type AccountChange =
   | { kind: "phone-added"; label: string }
   | { kind: "meeting-connected"; name: string; account: string }
   | { kind: "meeting-disconnected"; name: string; account: string; byProvider?: boolean }
-  | { kind: "meeting-broken"; name: string };
+  | { kind: "meeting-broken"; name: string }
+  | { kind: "discord-connected"; server: string };
 
 const SUPPORT = "support@marktmorgen.com";
 
@@ -109,6 +110,11 @@ function describe(change: AccountChange): { subject: string; line: string } {
       return {
         subject: `${change.name} was disconnected from your store`,
         line: `Your store no longer sends anybody to ${change.name}, and the API key saved for it was deleted.`,
+      };
+    case "discord-connected":
+      return {
+        subject: "A Discord server was connected to your store",
+        line: `The Discord server ${change.server} was connected to your store. Buyers of the products you choose can join it, and get the roles you picked while they hold what they bought.`,
       };
     case "meeting-connected":
       return {

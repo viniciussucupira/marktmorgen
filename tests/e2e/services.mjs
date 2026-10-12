@@ -39,6 +39,15 @@ export async function startServices(port) {
   let counter = 0;
   const blobs = new Map();
   const subscriptionUpdates = [];
+  // Discord: one server, its roles, and who the bot put in it (lib/discord.ts).
+  const discordCalls = [];
+  const discordMembers = new Set();
+  const DISCORD = { server: "910000000000000001", bot: "920000000000000001", botRole: "930000000000000001", members: "930000000000000002", buyer: "940000000000000001" };
+  const discordRoles = [
+    { id: DISCORD.server, name: "@everyone", color: 0, position: 0, managed: false },
+    { id: DISCORD.botRole, name: "Marktmorgen", color: 0, position: 5, managed: true },
+    { id: DISCORD.members, name: "Members", color: 3447003, position: 2, managed: false },
+  ];
   let pauseSub = {
     id: "sub_PauseMember0001",
     object: "subscription",
@@ -96,6 +105,49 @@ export async function startServices(port) {
           return json(res, 200, {});
         }
         return json(res, 404, { error: { code: "not_found", message: "no such file here" } });
+      }
+      // Discord's own page agrees at once and sends the person back; its API answers for one server.
+      if (path === "/discord/oauth2/authorize") {
+        const back = new URL(url.searchParams.get("redirect_uri") ?? "");
+        const install = (url.searchParams.get("scope") ?? "").split(" ").includes("bot");
+        back.searchParams.set("code", install ? "code-install" : "code-join");
+        back.searchParams.set("state", url.searchParams.get("state") ?? "");
+        if (install) back.searchParams.set("guild_id", DISCORD.server);
+        res.writeHead(302, { Location: back.toString() });
+        return res.end();
+      }
+      if (path.startsWith("/discord/api/v10/")) {
+        const api = path.slice("/discord/api/v10".length);
+        const method = req.method ?? "GET";
+        const body = method === "GET" || method === "DELETE" ? "" : await read(req);
+        discordCalls.push(`${method} ${api}`);
+        const bearer = String(req.headers.authorization ?? "").startsWith("Bearer ");
+        if (method === "POST" && api === "/oauth2/token") {
+          const code = new URLSearchParams(body).get("code");
+          return json(res, 200, code === "code-install" ? { access_token: "a-install", guild: { id: DISCORD.server, name: "Fresh Kitchen Club" } } : { access_token: "a-join" });
+        }
+        if (method === "GET" && api === "/users/@me") return json(res, 200, bearer ? { id: DISCORD.buyer, username: "buyer", global_name: "Buyer" } : { id: DISCORD.bot, username: "Marktmorgen" });
+        if (method === "GET" && api === `/guilds/${DISCORD.server}`) return json(res, 200, { id: DISCORD.server, name: "Fresh Kitchen Club" });
+        if (method === "GET" && api === `/guilds/${DISCORD.server}/roles`) return json(res, 200, discordRoles);
+        if (method === "GET" && api === `/guilds/${DISCORD.server}/members/${DISCORD.bot}`) return json(res, 200, { roles: [DISCORD.botRole] });
+        if (method === "POST" && api === `/guilds/${DISCORD.server}/roles`) {
+          const role = { id: `9300000000000000${10 + discordRoles.length}`, name: JSON.parse(body).name, color: 0, position: 1, managed: false };
+          discordRoles.push(role);
+          return json(res, 200, role);
+        }
+        const member = api.match(/^\/guilds\/\d+\/members\/(\d+)$/);
+        if (member && method === "PUT") {
+          const fresh = !discordMembers.has(member[1]);
+          discordMembers.add(member[1]);
+          if (fresh) return json(res, 201, { user: { id: member[1] } });
+          res.writeHead(204);
+          return res.end();
+        }
+        if (/^\/guilds\/\d+\/members\/\d+(\/roles\/\d+)?$/.test(api) || /^\/users\/@me\/guilds\/\d+$/.test(api)) {
+          res.writeHead(204);
+          return res.end();
+        }
+        return json(res, 404, { message: "Unknown", code: 0 });
       }
       if (req.method === "POST" && path === "/pipeline") {
         const results = [];
@@ -304,6 +356,8 @@ export async function startServices(port) {
     unknown: () => [...unknown],
     writing: () => [...writing],
     subscriptionUpdates: () => [...subscriptionUpdates],
+    /** What Discord was asked, and its ids. */
+    discord: () => ({ calls: [...discordCalls], members: new Set(discordMembers), ids: DISCORD }),
     /** What was written to the file store, by its path. */
     blobs: () => new Map(blobs),
     /** The database itself, for a test to read or set what only time or many buyers would make. */

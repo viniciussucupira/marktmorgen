@@ -75,6 +75,11 @@ const env = {
   RESEND_API_BASE: FAKE,
   ANTHROPIC_API_KEY: "sk-ant-local_only_a_stand_in_0000",
   ANTHROPIC_API_BASE: FAKE,
+  // Discord: the application's keys, and its page and API answered by the stand-in.
+  DISCORD_API_BASE: FAKE,
+  DISCORD_CLIENT_ID: "950000000000000001",
+  DISCORD_CLIENT_SECRET: "local_only_a_stand_in",
+  DISCORD_BOT_TOKEN: "local_only_a_stand_in",
   // The file store: what the server writes goes to the stand-in (services.mjs).
   VERCEL_BLOB_API_URL: `${FAKE}/blob-api`,
   BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_localstore_standinsecret0000",
@@ -2478,6 +2483,46 @@ try {
     is("and in the menu at the top of the store", await page.locator("[data-store-pages] a", { hasText: "About" }).count(), 1);
     await open(page, `${LOCAL}/@freshshop/no-such-page`);
     is("an address that is no page is not found", (await page.locator("main[data-site-page]").count()), 0);
+  }
+
+  await keepSmall();
+  part("Discord: a server connected in the studio, a product giving a role, a buyer let in");
+  {
+    // Discord's page is another site: a form's redirect to it is followed here by hand, as a browser would.
+    const follow = async (who, path, form) => {
+      const answer = await who.request.post(`${LOCAL}${path}`, { form, maxRedirects: 0, headers: { Origin: LOCAL } });
+      return answer.headers().location ?? "";
+    };
+    await open(studio, `${LOCAL}/studio/discord`);
+    is("the studio offers to connect a server", await studio.getByRole("button", { name: "Connect a Discord server" }).count(), 1);
+    const toDiscord = await follow(studio, "/api/store/discord/connect", {});
+    is("the creator is sent to Discord's page to add the bot, with roles and nothing more", [new URL(toDiscord).searchParams.get("scope"), new URL(toDiscord).searchParams.get("permissions")], ["identify bot", "268435459"]);
+    await open(studio, toDiscord);
+    await studio.getByText("Fresh Kitchen Club").first().waitFor({ timeout: 30_000 });
+    is("and comes back with the server connected", [studio.url().includes("discord=connected"), await studio.getByText("Connected", { exact: true }).count()], [true, 1]);
+    // Something the buyer bought for themselves, paid once: not a gift, not places for several.
+    const bought = services.checkouts().find((c) => c.customer_details?.email === "buyer@example.com" && c.mode === "payment" && c.metadata?.product && !c.metadata.gift && !c.metadata.group && !c.metadata.preorder && !c.metadata.bumps);
+    const title = Object.entries(ids).find(([, id]) => id === bought?.metadata?.product)?.[0] ?? "";
+    const planner = studio.locator("li", { has: studio.locator("legend", { hasText: title }) }).first();
+    await planner.getByRole("checkbox", { name: "Members" }).check();
+    await planner.getByRole("button", { name: "Save" }).click();
+    await planner.getByText("Gives 1 role.").waitFor({ timeout: 30_000 });
+    is("the product gives the role the bot can give, and only those are offered", [await planner.getByText("Gives 1 role.").count(), await planner.getByRole("checkbox", { name: "Marktmorgen" }).count()], [1, 0]);
+
+    await open(page, `${LOCAL}/@localshop/thanks?session_id=${bought?.id ?? ""}`);
+    is("the buyer is offered the way in after paying", await page.getByRole("button", { name: "Join the Discord" }).count(), 1);
+    const toJoin = await follow(page, "/api/store/discord/join", { handle: "localshop", session_id: bought?.id ?? "" });
+    is("and is sent to Discord's page, asked only who they are and to be put in a server", new URL(toJoin).searchParams.get("scope"), "identify guilds.join");
+    await open(page, toJoin);
+    await page.locator("[data-discord-status]").waitFor({ timeout: 30_000 });
+    const { calls, ids: d } = services.discord();
+    is("they are in, with the product's role", [await page.locator("[data-discord-status]").getAttribute("data-discord-status"), calls.includes(`PUT /guilds/${d.server}/members/${d.buyer}`)], ["joined", true]);
+    is("with the way to open the server", await page.getByRole("link", { name: "Open Discord" }).getAttribute("href"), `https://discord.com/channels/${d.server}`);
+    const stranger = await follow(page, "/api/store/discord/join", { handle: "localshop", session_id: "cs_test_nobody" });
+    is("an order that is not paid opens nothing", stranger.endsWith("/@localshop/discord?status=none"), true);
+    await open(studio, `${LOCAL}/studio/discord`);
+    is("the studio lists who joined", (await words(studio.locator("table"))).includes("buyer@example.com"), true);
+    await studio.evaluate(async () => fetch("/api/store/discord", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "disconnect" }) }));
   }
 
   await keepSmall();
