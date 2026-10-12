@@ -132,7 +132,7 @@ export default async function StudioAffiliatesPage({ searchParams }: Params) {
           setting={store.affiliates}
           products={[...titles]
             .filter(([id]) => paid.has(id))
-            .map(([id, title]) => ({ id, title, credited: !recurring.has(id) }))}
+            .map(([id, title]) => ({ id, title, credited: !recurring.has(id) || store.affiliates.recurring > 0, recurring: recurring.has(id) }))}
           rows={(book?.rows ?? []).map((row) => ({
             ...row,
             link: affiliateLink(store, row.affiliate.code),
@@ -152,6 +152,7 @@ export default async function StudioAffiliatesPage({ searchParams }: Params) {
           }))}
           payouts={book?.payouts ?? []}
           refundsChecked={book?.refundsChecked ?? true}
+          invoicesChecked={book?.invoicesChecked ?? true}
           today={new Date().toISOString().slice(0, 10)}
           currency={store.currency}
           elsewhere={book?.elsewhere ?? 0}

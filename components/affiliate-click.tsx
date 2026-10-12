@@ -25,6 +25,17 @@ function writeChoice(handle: string, value: "yes" | "no") {
   }
 }
 
+/**
+ * Whether this visit came from a paid search ad: the click ids Google and
+ * Microsoft add to an ad's link, or a link tagged as paid search. Read only
+ * to tell the creator (lib/affiliate-setting.ts, paidSearch); kept nowhere.
+ */
+function fromPaidSearch(search: string): boolean {
+  const params = new URLSearchParams(search);
+  if (["gclid", "gbraid", "wbraid", "msclkid"].some((name) => params.has(name))) return true;
+  return ["cpc", "ppc", "paidsearch", "paid-search", "sem"].includes((params.get("utm_medium") ?? "").toLowerCase());
+}
+
 /** Asks the server to remember the link, now that the visitor said yes. */
 function remember(handle: string, code: string) {
   fetch("/api/store/via", {
@@ -64,7 +75,7 @@ export function AffiliateClick({
     const key = `${handle}|${found}|${location.pathname}`;
     if (!sent.has(key)) {
       sent.add(key);
-      const body = JSON.stringify({ h: handle, k: "a", c: found });
+      const body = JSON.stringify({ h: handle, k: "a", c: found, ...(fromPaidSearch(location.search) ? { p: "1" } : {}) });
       let beaconed = false;
       try {
         beaconed = Boolean(navigator.sendBeacon && navigator.sendBeacon("/api/store/hit", new Blob([body], { type: "text/plain" })));

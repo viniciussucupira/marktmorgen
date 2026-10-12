@@ -299,7 +299,8 @@ test("the creator can see which of the four routes brought each sale", () => {
 
 test("and see the four counted, which is the number that argues for itself", () => {
   const studio = readFileSync(join(process.cwd(), "components/affiliate-studio.tsx"), "utf8");
-  const at = studio.indexOf('["click", "code", "buyer", "partner"] as const');
+  // Membership payments and monthly bonuses (added 12 October 2026) are counted beside the four.
+  const at = studio.indexOf('["click", "code", "buyer", "recurring", "bonus", "partner"] as const');
   assert.ok(at > 0, "the four routes should be counted above the book");
   const block = studio.slice(at, at + 900);
   assert.match(block, /l\.how === how && l\.commission > 0/, "counting what actually earned, not what was written down");

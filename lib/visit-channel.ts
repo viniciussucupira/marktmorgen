@@ -30,7 +30,7 @@
  *
  * Pure, so the proxy, the checkout and the tests share one reading of it.
  */
-import { classifySource, isBot } from "@/lib/source-rules";
+import { classifySource, isBot, sourceTag } from "@/lib/source-rules";
 import { type CameFrom, cameFrom } from "@/lib/came-from";
 
 /**
@@ -82,7 +82,7 @@ export function touchFrom(input: { url: URL; referrer: string; userAgent: string
   if (isBot(input.userAgent)) return null;
   const params = input.url.searchParams;
   const source = tidy(
-    classifySource({ referrer: input.referrer, utm: params.get("utm_source") ?? "", userAgent: input.userAgent, ownHost: input.ownHost }),
+    classifySource({ referrer: input.referrer, utm: sourceTag(params), userAgent: input.userAgent, ownHost: input.ownHost }),
     60,
   );
   if (!source || source === DIRECT) return null;

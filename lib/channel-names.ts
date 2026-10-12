@@ -28,6 +28,7 @@ export const SOURCE_NAMES: Record<string, string> = {
   deepseek: "DeepSeek",
   grok: "Grok",
   qr: "QR code",
+  affiliates: "Affiliates",
   device: "Shared from a phone",
   direct: "Direct, or an app that hides it",
 };

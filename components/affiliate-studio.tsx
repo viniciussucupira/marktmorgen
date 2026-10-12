@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { StoreCurrency, useStoreCurrency } from "@/components/store-currency";
-import { type Currency, fieldPrefix, formatMoney, moneyField } from "@/lib/money";
+import { type Currency, fieldPrefix, formatMoney, moneyField, readMoney } from "@/lib/money";
 import {
   type AffiliateSetting,
   type AttributionRule,
@@ -17,6 +17,10 @@ import {
   MAX_PAYDAY,
   MIN_COMMISSION,
   MIN_COOKIE_DAYS,
+  MAX_BONUSES,
+  MAX_BONUS_SALES,
+  RECURRING_ALWAYS,
+  RECURRING_OPTIONS,
   commissionRate,
   ordinal,
 } from "@/lib/affiliate-setting";
@@ -27,7 +31,7 @@ import {
   SHARE_PROBLEMS,
   creatorKeeps,
 } from "@/lib/partner-share";
-import type { Affiliate, AffiliateStatus, Credit, LineStatus, Payout } from "@/lib/affiliates";
+import type { Affiliate, AffiliateStatus, Credit, HoldFlag, LineStatus, Payout } from "@/lib/affiliates";
 import { StoreField } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 
@@ -48,6 +52,8 @@ const MESSAGES: Record<string, string> = {
   promo: "That discount code is no longer on your Stripe account. Reload the page.",
   payday: `Pick a day from the 1st to the ${MAX_PAYDAY}th, or no fixed day.`,
   hold: `Type a whole number of days from 0 to ${MAX_HOLD_DAYS}.`,
+  recurring: "Pick how long a membership earns.",
+  bonus: `A bonus needs a number of sales from 1 to ${MAX_BONUS_SALES} and an amount from 1 to 10,000, each number of sales once.`,
   amount: "Type the amount you paid, like 25 or 25.50.",
   date: "Pick the day you paid it.",
   nothing: "Nobody is owed anything right now, so there was nothing to write down.",
@@ -82,6 +88,10 @@ type Row = {
   waiting: number;
   /** What a batch can pay today: owed, less what is still waiting. */
   payable: number;
+  /** Held for the creator to look at, and why (lib/affiliates.ts holdFlags). */
+  held: number;
+  flags: HoldFlag[];
+  paidClicks: number;
   link: string;
 };
 
@@ -115,6 +125,8 @@ const CREDIT_WORDS: Record<Credit, string> = {
   code: "Their code",
   buyer: "A buyer who was already theirs",
   partner: "Partner share",
+  recurring: "A membership or plan payment",
+  bonus: "A monthly goal reached",
 };
 
 /** An amount in the currency it was paid in (lib/money.ts). */
@@ -174,6 +186,7 @@ export function AffiliateStudio({
   lines,
   payouts,
   refundsChecked,
+  invoicesChecked = true,
   today,
   currency = "usd",
   elsewhere = 0,
@@ -184,11 +197,13 @@ export function AffiliateStudio({
 }: {
   handle: string;
   setting: AffiliateSetting;
-  products: { id: string; title: string; credited: boolean }[];
+  products: { id: string; title: string; credited: boolean; recurring?: boolean }[];
   rows: Row[];
   lines: LineView[];
   payouts: Payout[];
   refundsChecked: boolean;
+  /** False when the invoices of memberships and plans could not all be read. */
+  invoicesChecked?: boolean;
   today: string;
   /** The store's currency: what the totals and new payouts are in. */
   currency?: Currency;
@@ -475,6 +490,12 @@ export function AffiliateStudio({
 
         <section aria-labelledby="sales-title" className="card p-6 sm:p-8">
           <h2 id="sales-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sales through affiliates</h2>
+          {!invoicesChecked ? (
+            <p className="notice notice-warn mt-3 text-sm" role="status">
+              Stripe could not be asked about every membership and plan payment just now, so some may be missing below. They
+              appear the next time this page opens.
+            </p>
+          ) : null}
           {!refundsChecked ? (
             <p className="notice notice-warn mt-3 text-sm">
               Stripe could not be asked about every refund just now, so a recently refunded sale may still show as earning.
@@ -490,7 +511,7 @@ export function AffiliateStudio({
           */}
           {lines.length ? (
             <ul className="mt-3 flex flex-wrap gap-2 text-xs">
-              {(["click", "code", "buyer", "partner"] as const)
+              {(["click", "code", "buyer", "recurring", "bonus", "partner"] as const)
                 .map((how) => ({ how, rows: lines.filter((l) => l.how === how && l.commission > 0) }))
                 .filter(({ rows }) => rows.length)
                 .map(({ how, rows }) => (
@@ -515,7 +536,9 @@ export function AffiliateStudio({
                   <span className="min-w-0">
                     <span className="block font-semibold text-ink">{line.title}</span>
                     <span className="block text-xs text-ink-soft [overflow-wrap:anywhere]">
-                      {`${day(line.at)} · ${who.get(line.aff)?.email ?? "A removed affiliate"} · ${money(line.base, line.currency)} before tax · ${line.rate}% · ${CREDIT_WORDS[line.how]}`}
+                      {line.how === "bonus"
+                        ? `${day(line.at)} · ${who.get(line.aff)?.email ?? "A removed affiliate"} · ${CREDIT_WORDS.bonus}`
+                        : `${day(line.at)} · ${who.get(line.aff)?.email ?? "A removed affiliate"} · ${money(line.base, line.currency)} before tax · ${line.rate}% · ${CREDIT_WORDS[line.how]}`}
                       {line.refunded ? ` · ${money(line.refunded, line.currency)} refunded` : ""}
                     </span>
                   </span>
@@ -574,7 +597,7 @@ function Terms({
 }: {
   handle: string;
   setting: AffiliateSetting;
-  products: { id: string; title: string; credited: boolean }[];
+  products: { id: string; title: string; credited: boolean; recurring?: boolean }[];
   busy: boolean;
   onSave: (payload: Record<string, unknown>, confirmation: string) => Promise<boolean>;
   error: React.ReactNode;
@@ -590,12 +613,19 @@ function Terms({
   const [numbers, setNumbers] = useState(setting.numbers);
   const [kit, setKit] = useState(setting.kit);
   const [lifetime, setLifetime] = useState(setting.lifetime);
+  const [recurringMonths, setRecurringMonths] = useState(String(setting.recurring));
+  const [paidSearch, setPaidSearch] = useState(setting.paidSearch);
+  const storeCurrency = useStoreCurrency();
+  const [bonuses, setBonuses] = useState<{ sales: string; amount: string }[]>(
+    setting.bonuses.map((b) => ({ sales: String(b.sales), amount: moneyField(b.cents, storeCurrency) })),
+  );
   const [rates, setRates] = useState<Record<string, string>>(
     Object.fromEntries(Object.entries(setting.rates).map(([id, n]) => [id, String(n)])),
   );
   const [showRates, setShowRates] = useState(Object.keys(setting.rates).length > 0);
   const credited = products.filter((p) => p.credited);
-  const left = products.filter((p) => !p.credited);
+  // Memberships and payment plans, whatever is chosen for them now.
+  const left = products.filter((p) => p.recurring || !p.credited);
 
   return (
     <section aria-labelledby="terms-title" className="card p-6 sm:p-8">
@@ -618,6 +648,12 @@ function Terms({
               hold: Number(hold.trim()),
               buyers,
               lifetime,
+              recurring: Number(recurringMonths),
+              paidSearch,
+              // An unreadable amount goes as 0, which the server refuses with the reason.
+              bonuses: bonuses
+                .filter((b) => b.sales.trim() || b.amount.trim())
+                .map((b) => ({ sales: Number(b.sales.trim()), cents: readMoney(b.amount.trim(), storeCurrency) ?? 0 })),
               directory,
               numbers: directory && numbers,
               kit,
@@ -916,11 +952,101 @@ function Terms({
             ) : null}
           </div>
         ) : null}
-        {left.length ? (
-          <p className="mt-3 text-xs text-ink-soft">
-            {`Memberships and payment plans are not credited to affiliates: ${left.map((p) => p.title).join(", ")}.`}
+        {/*
+          Memberships and payment plans (lib/affiliate-setting.ts recurring):
+          each paid invoice is read from Stripe when the book opens, so nothing
+          more is kept, and a membership keeps the months it was sold with.
+        */}
+        <label className="mt-5 block" htmlFor="aff-recurring">
+          <span className="field-label">Memberships and payment plans</span>
+          <select id="aff-recurring" value={recurringMonths} onChange={(e) => setRecurringMonths(e.target.value)} className="field">
+            {RECURRING_OPTIONS.map((months) => (
+              <option key={months} value={String(months)}>
+                {months === 0
+                  ? "Not credited to affiliates"
+                  : months === 1
+                    ? "Earn on the first payment"
+                    : months === RECURRING_ALWAYS
+                      ? "Earn on every payment, for as long as the member pays"
+                      : `Earn on every payment in the first ${months} months`}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-ink-soft">
+            {recurringMonths === "0"
+              ? left.length
+                ? `Not credited now: ${left.map((p) => p.title).join(", ")}.`
+                : "Nothing you sell is a membership or a payment plan yet."
+              : "A membership sold through an affiliate's link earns their share of each payment within that time, read from your Stripe account as it is paid, and a payment plan earns on each of its payments. A refunded payment earns nothing. A membership keeps the terms it was sold with if you change this later."}
+          </span>
+        </label>
+
+        {/* A bonus for each goal reached in a calendar month (lib/affiliates.ts bonusLines). */}
+        <fieldset className="mt-5">
+          <legend className="field-label">Monthly bonuses (optional)</legend>
+          <ul className="space-y-2">
+            {bonuses.map((b, i) => (
+              <li key={i} className="flex flex-wrap items-end gap-2">
+                <label className="block" htmlFor={`bonus-sales-${i}`}>
+                  <span className="text-xs text-ink-soft">Sales in a month</span>
+                  <input
+                    id={`bonus-sales-${i}`}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={MAX_BONUS_SALES}
+                    step={1}
+                    value={b.sales}
+                    onChange={(e) => setBonuses((all) => all.map((x, j) => (j === i ? { ...x, sales: e.target.value } : x)))}
+                    className="field w-28"
+                    placeholder="10"
+                  />
+                </label>
+                <label className="block" htmlFor={`bonus-amount-${i}`}>
+                  <span className="text-xs text-ink-soft">{`Bonus (${fieldPrefix(storeCurrency) || storeCurrency.toUpperCase()})`}</span>
+                  <input
+                    id={`bonus-amount-${i}`}
+                    inputMode="decimal"
+                    value={b.amount}
+                    onChange={(e) => setBonuses((all) => all.map((x, j) => (j === i ? { ...x, amount: e.target.value } : x)))}
+                    className="field w-32"
+                    placeholder="50"
+                  />
+                </label>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setBonuses((all) => all.filter((_, j) => j !== i))}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+          {bonuses.length < MAX_BONUSES ? (
+            <button type="button" className="btn btn-secondary btn-sm mt-2" onClick={() => setBonuses((all) => [...all, { sales: "", amount: "" }])}>
+              Add a bonus
+            </button>
+          ) : null}
+          <p className="mt-1 text-xs text-ink-soft">
+            An affiliate whose link brings that many sales that earn in one calendar month gets the bonus once for that month, on
+            top of their share. Each goal you add is paid once it is reached. A refund that takes the month back under the goal
+            takes the bonus back too.
           </p>
-        ) : null}
+        </fieldset>
+
+        <label className="mt-5 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3">
+          <input
+            type="checkbox"
+            checked={paidSearch}
+            onChange={(e) => setPaidSearch(e.target.checked)}
+            className="h-5 w-5 shrink-0 accent-[var(--violet)]"
+          />
+          <span className="text-sm">
+            <span className="block font-semibold text-ink">Affiliates may run paid search ads on your name</span>
+            <span className="block text-ink-soft">
+              Off: when an affiliate&rsquo;s link is reached from a paid search ad (Google or Microsoft), what they are owed is
+              held out of every payment until you look and release it, so nobody is paid for buyers who were already searching
+              for you. Your affiliate page says so before anyone applies.
+            </span>
+          </span>
+        </label>
 
         {error}
         <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -957,7 +1083,7 @@ function Member({
   /** Which of those codes this affiliate has, by Stripe's promotion code id. */
   codeOf: Record<string, string>;
   /** The store's paid products, for choosing what a partner shares in. */
-  products: { id: string; title: string; credited: boolean }[];
+  products: { id: string; title: string; credited: boolean; recurring?: boolean }[];
   /** The programme's own terms, so the screen can say what the creator keeps. */
   setting: AffiliateSetting;
 }) {
@@ -1000,6 +1126,30 @@ function Member({
           </div>
         ))}
       </dl>
+
+      {/*
+        Held for the creator to look at (lib/affiliates.ts holdFlags): left out
+        of every payment, the batch file and PayPal, until released here.
+      */}
+      {row.flags.length ? (
+        <div className="notice notice-warn mt-3 text-sm" role="status" data-held="">
+          <p className="font-semibold text-ink">{`${money(row.held, currency)} held for you to look at`}</p>
+          <ul className="mt-1 list-disc pl-5 text-ink-soft">
+            {row.flags.includes("paid-search") ? (
+              <li>{`${row.paidClicks.toLocaleString("en-US")} ${row.paidClicks === 1 ? "click" : "clicks"} on their link came from a paid search ad, which your program does not allow.`}</li>
+            ) : null}
+            {row.flags.includes("same-address") ? <li>Another affiliate in your program has the same inbox or payout address, written the same or another way.</li> : null}
+          </ul>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm mt-2"
+            disabled={busy !== null}
+            onClick={() => act(where, { action: "release", id: affiliate.id }, "Released. What they are owed is payable again.")}
+          >
+            Release what is held
+          </button>
+        </div>
+      ) : null}
 
       {/* A share for this affiliate alone (lib/affiliate-setting.ts commissionRate). */}
       <div className="mt-3 text-sm text-ink-soft">
@@ -1319,7 +1469,7 @@ function PartnerInvite({
   act,
   error,
 }: {
-  products: { id: string; title: string; credited: boolean }[];
+  products: { id: string; title: string; credited: boolean; recurring?: boolean }[];
   setting: AffiliateSetting;
   busy: string | null;
   act: (where: string, payload: Record<string, unknown>, confirmation: string) => Promise<boolean>;

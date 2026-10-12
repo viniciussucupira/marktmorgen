@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { StoreFullError, setAffiliateSetting, storeForEmail, storeForId } from "@/lib/store";
 import { readMoney } from "@/lib/money";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { MAX_COMMISSION, MIN_COMMISSION, commissionRate, parseAffiliateSetting } from "@/lib/affiliate-setting";
+import { MAX_COMMISSION, MIN_COMMISSION, commissionRate, parseAffiliateSetting, readBonuses } from "@/lib/affiliate-setting";
 import { parsePartnerShare, shareProblem } from "@/lib/partner-share";
 import { readListings } from "@/lib/catalog";
 import { answerInvite, waitingOne } from "@/lib/partner-invites";
@@ -14,6 +14,7 @@ import {
   invitePartner,
   listPartners,
   readAffiliate,
+  releaseHold,
   removePayout,
   setAffiliateRate,
   setPartnerShare,
@@ -69,6 +70,8 @@ export async function POST(request: NextRequest) {
       if (body.rule !== undefined && body.rule !== setting.rule) return fail("rule");
       if (Number(body.payday) !== setting.payday) return fail("payday");
       if (Number(body.hold) !== setting.hold) return fail("hold");
+      if (body.recurring !== undefined && Number(body.recurring) !== setting.recurring) return fail("recurring");
+      if (readBonuses(body.bonuses) === null) return fail("bonus");
       const asked = body.rates && typeof body.rates === "object" ? Object.keys(body.rates as object).length : 0;
       if (asked !== Object.keys(setting.rates).length) return fail("rate");
       const result = await setAffiliateSetting(guarded.ref, setting);
@@ -80,6 +83,11 @@ export async function POST(request: NextRequest) {
     if (!store) return fail("none");
     if (!store.statsId) return fail("unknown");
 
+    // The creator looked at what was held (lib/affiliates.ts holdFlags) and lets it through.
+    if (action === "release") {
+      const done = await releaseHold(store, text(body.id, 20));
+      return done ? Response.json({ ok: true }) : fail("unknown");
+    }
     if (action === "approve" || action === "decline" || action === "remove" || action === "restore") {
       const done = await decide(store, text(body.id, 20), action);
       return done ? Response.json({ ok: true }) : fail("unknown");
