@@ -9,7 +9,7 @@
  * the server, give and take back roles, and, when the creator asked for it,
  * take a person out. It never reads a message.
  *
- *   DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET   the application
+ *   DISCORD_CLIENT_SECRET   the application's secret (its id is public, written below)
  *   DISCORD_BOT_TOKEN                          its bot
  *
  * Off — every page that offers it says nothing about it — until all three
@@ -24,7 +24,13 @@ const API = LOCAL ? `${LOCAL}/discord/api/v10` : "https://discord.com/api/v10";
 const AUTHORIZE = LOCAL ? `${LOCAL}/discord/oauth2/authorize` : "https://discord.com/oauth2/authorize";
 const TIMEOUT_MS = 8_000;
 
-const clientId = () => (process.env.DISCORD_CLIENT_ID ?? "").trim();
+/**
+ * The application's id is public: Discord shows it in every address of its
+ * consent page. So it is written here, and only the two secrets live in the
+ * deployment's settings. A different one there takes over.
+ */
+const MARKTMORGEN_APP = "1559060286475083856";
+const clientId = () => (process.env.DISCORD_CLIENT_ID ?? "").trim() || MARKTMORGEN_APP;
 const clientSecret = () => (process.env.DISCORD_CLIENT_SECRET ?? "").trim();
 const botToken = () => (process.env.DISCORD_BOT_TOKEN ?? "").trim();
 
