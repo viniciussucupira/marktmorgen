@@ -48,7 +48,8 @@ function Funnel({
     if (!before || part === null || part === undefined || !whole) return null;
     const was = part / whole;
     const tone = Math.abs(now - was) < 0.0005 ? "flat" : now > was ? "up" : "down";
-    return { text: `${rate(part, whole)} in the ${span} before`, tone };
+    // "↓ from 67%" reads as where it came from; a bare "↓ 67%" read as a fall of 67 percent.
+    return { text: tone === "flat" ? `same as the ${span} before` : `from ${rate(part, whole)} in the ${span} before`, tone };
   };
   const steps = [
     { label: "Visitors", value: visitors, note: "", then: null },
