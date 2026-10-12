@@ -14,7 +14,7 @@
  */
 import { readAction } from "@/lib/flow-rules";
 import { enroll, flowStats, readFlows, saveFlow, sendDueSteps } from "@/lib/flows";
-import { leadsKey, parseContact, upsertContact, importContactRows } from "@/lib/contacts";
+import { changeLabels, leadsKey, parseContact, upsertContact, importContactRows } from "@/lib/contacts";
 import { addProduct, claimHandle, ensureListId, ensureStatsId, setMailSettings, setStripeAccount, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
 import { redisPipeline } from "@/lib/redis";
 import { store as redis } from "./redis-stub";
@@ -148,7 +148,23 @@ async function main(): Promise<void> {
 
   part("Counted");
   const stats = await flowStats(await readFlows(list));
-  is("the actions done, beside the emails sent", [stats.get(welcomeId)?.acted, stats.get(welcomeId)?.sent, stats.get(offerId)?.started], [4, 6, 3]);
+  // One label given (Ana; Cleo had no room) and two new starts (Ana had started the offer already).
+  is("the actions that changed something, beside the emails sent", [stats.get(welcomeId)?.acted, stats.get(welcomeId)?.sent, stats.get(offerId)?.started], [3, 6, 3]);
+
+  part("A label never written over a newer change");
+  const key = leadsKey(list);
+  let first = true;
+  const result = await changeLabels(list, ["ana@example.com"], (tags) => {
+    // An unsubscribe lands between reading the contact and writing the label.
+    if (first) {
+      first = false;
+      const row = parseContact(redis.run(["HGET", key, "ana@example.com"]))!;
+      redis.run(["HSET", key, "ana@example.com", JSON.stringify({ ...row, unsub: true, unsubAt: "2026-10-12T00:00:00.000Z" })]);
+    }
+    return [...tags, "late"];
+  });
+  const after = parseContact(redis.run(["HGET", key, "ana@example.com"]));
+  is("the unsubscribe stays, and the label is written over the contact as it now is", [result.changed, after?.unsub, after?.tags.includes("late")], [["ana@example.com"], true, true]);
 
   done();
 }

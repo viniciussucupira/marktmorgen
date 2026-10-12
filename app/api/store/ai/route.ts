@@ -1,3 +1,4 @@
+import { cleanTag } from "@/lib/flow-rules";
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { readFileWhole } from "@/lib/file-store";
@@ -283,7 +284,9 @@ export async function POST(request: NextRequest) {
   if (body.kind === "sequence") {
     // What the store sells is read here, from its own records: names, prices
     // and links the page never sends. Drafts and free things are not sold.
-    const trigger = body.trigger === "product" || body.trigger === "bought" ? body.trigger : "joined";
+    const trigger = body.trigger === "product" || body.trigger === "bought" || body.trigger === "tagged" ? body.trigger : "joined";
+    // The label a sequence that starts with one is written for (lib/flow-rules.ts).
+    const tag = trigger === "tagged" ? cleanTag(body.tag) : "";
     const hidden = new Set(idsOfKind(store, "hidden"));
     const paid = new Set(idsOfKind(store, "paid"));
     const ids = productIds(store).filter((id) => !hidden.has(id) && paid.has(id)).slice(0, MAX_SEQUENCE_PRODUCTS);
@@ -301,6 +304,7 @@ export async function POST(request: NextRequest) {
     return answer(
       writeSequence(store, {
         trigger,
+        ...(tag ? { tag } : {}),
         product: followed,
         products: listings.filter((p) => !followed || p.id !== text(body.productId, 40)).map(facts),
         storeLink: base,

@@ -39,7 +39,7 @@ import {
   reached,
   sameLabel,
 } from "@/lib/flow-rules";
-import { type Contact, readTags } from "@/lib/contacts";
+import { changeLabels, readTags } from "@/lib/contacts";
 import { usedLinkIn } from "@/lib/mail-clicks";
 
 export const MAX_FLOWS = 10;
@@ -222,7 +222,7 @@ export type FlowCounts = {
   reached: number;
   /** Emails not sent to somebody because a condition did not hold for them. */
   skipped: number;
-  /** Steps that acted for somebody: a label given or taken off, another sequence started. */
+  /** What steps that act changed: a label given or taken off, a start on another sequence. */
   acted: number;
 };
 
@@ -286,10 +286,12 @@ export async function enroll(store: Store, email: string, event: { joined: boole
  * Starts these sequences for these people, each person once per sequence:
  * the start is claimed before anything is lined up, so a sequence that
  * starts another, or a label given twice, never starts anybody a second time.
+ * Says how many starts were new.
  */
-async function startFlows(store: Store, flows: Flow[], addresses: string[]): Promise<void> {
-  if (!store.listId || !addresses.length) return;
+async function startFlows(store: Store, flows: Flow[], addresses: string[]): Promise<number> {
+  if (!store.listId || !addresses.length) return 0;
   const now = Math.floor(Date.now() / 1000);
+  let started = 0;
   for (const flow of flows) {
     if (!flow.steps.length) continue;
     const claims = await redisPipeline(addresses.map((address) => ["SET", enrolledKey(flow.id, address), "1", "NX", "EX", 400 * 86_400]));
@@ -299,54 +301,45 @@ async function startFlows(store: Store, flows: Flow[], addresses: string[]): Pro
       ...fresh.map((address) => ["ZADD", QUEUE, now + flow.steps[0].delayHours * 3600, `${store.listId}|${store.handle}|${flow.id}|0|${address}`]),
       ["HINCRBY", statsKey(flow.id), "started", fresh.length],
     ]);
+    started += fresh.length;
   }
+  return started;
 }
 
 /**
  * Carries out a step that acts (lib/flow-rules.ts, FlowAction) for these
- * people, read from their rows a moment ago. A label is given only to
- * somebody with room for one more (a contact keeps ten), and giving it starts
- * every sequence that starts with that label. Says how many it was carried
- * out for.
+ * people. A label is written only over the contact as it still is
+ * (lib/contacts.ts, changeLabels), never over an unsubscribe or a purchase
+ * noted in the same moment, and given only to somebody with room for one
+ * more (a contact keeps ten). Everyone the step labels, whether they had the
+ * label already or not, is started on every sequence that starts with it:
+ * a run that stopped after writing the label and is tried again starts them
+ * all the same, and nobody is started twice. Says how many it did something
+ * for.
  */
-async function act(store: Store, flows: Flow[], action: FlowAction, emails: string[], contacts: Map<string, Contact | null>): Promise<number> {
+async function act(store: Store, flows: Flow[], action: FlowAction, emails: string[]): Promise<number> {
   const listId = store.listId;
   if (!listId || !emails.length) return 0;
   if (action.do === "start") {
     const target = flows.find((f) => f.id === action.flowId && f.active && f.steps.length > 0);
-    if (!target) return 0;
-    await startFlows(store, [target], emails);
-    return emails.length;
+    return target ? startFlows(store, [target], emails) : 0;
   }
-  const writes: (string | number)[][] = [];
-  const given: string[] = [];
-  let done = 0;
-  for (const email of emails) {
-    const contact = contacts.get(email);
-    if (!contact) continue;
-    const has = contact.tags.some((t) => sameLabel(t, action.tag));
-    if (action.do === "untag") {
-      if (has) writes.push(["HSET", leadsKey(listId), email, JSON.stringify({ ...contact, tags: contact.tags.filter((t) => !sameLabel(t, action.tag)) })]);
-      done += 1;
-      continue;
-    }
-    if (has) {
-      done += 1;
-      continue;
-    }
-    const tags = readTags([...contact.tags, action.tag]);
+  if (action.do === "untag") {
+    const { changed } = await changeLabels(listId, emails, (tags) =>
+      tags.some((t) => sameLabel(t, action.tag)) ? tags.filter((t) => !sameLabel(t, action.tag)) : "same",
+    );
+    return changed.length;
+  }
+  const { changed, same } = await changeLabels(listId, emails, (tags) => {
+    if (tags.some((t) => sameLabel(t, action.tag))) return "same";
+    const next = readTags([...tags, action.tag]);
     // Ten labels already: this one has no room, and nothing is taken off to make it.
-    if (!tags.some((t) => sameLabel(t, action.tag))) continue;
-    writes.push(["HSET", leadsKey(listId), email, JSON.stringify({ ...contact, tags })]);
-    given.push(email);
-    done += 1;
-  }
-  if (writes.length) await redisPipeline(writes);
-  if (given.length) {
-    const starting = flows.filter((f) => f.active && f.steps.length > 0 && f.trigger === "tagged" && f.tag && sameLabel(f.tag, action.tag));
-    if (starting.length) await startFlows(store, starting, given);
-  }
-  return done;
+    return next.some((t) => sameLabel(t, action.tag)) ? next : "skip";
+  });
+  const labeled = [...changed, ...same];
+  const starting = flows.filter((f) => f.active && f.steps.length > 0 && f.trigger === "tagged" && f.tag && sameLabel(f.tag, action.tag));
+  if (labeled.length && starting.length) await startFlows(store, starting, labeled);
+  return changed.length;
 }
 
 /**
@@ -467,8 +460,7 @@ export async function sendDueSteps(
     // A step that acts instead of writing: done for everyone it is for, then
     // on to the next step, its wait counted from now.
     if (step.action) {
-      const rowsByEmail = new Map(emails.map((email, i) => [email, parseContact(found[i])]));
-      const acted = await act(store, flowsFor.get(listId) ?? [], step.action, still, rowsByEmail);
+      const acted = await act(store, flowsFor.get(listId) ?? [], step.action, still);
       const after: (string | number)[][] = acted ? [["HINCRBY", statsKey(flow.id), "acted", acted]] : [];
       if (following) {
         const at = now + following.delayHours * 3600;

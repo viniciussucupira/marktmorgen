@@ -833,10 +833,12 @@ export async function writeEmail(
   });
 }
 
-const MOMENTS: Record<"joined" | "product" | "bought", string> = {
+const MOMENTS: Record<"joined" | "product" | "bought" | "tagged", string> = {
   joined: "a welcome sequence for somebody who has just joined the creator's email list: who the creator is and what they make, something useful, then what they sell and where",
   product: "the emails somebody gets in the days after they got one product: how to make the most of it, then, only where it fits, what else the creator sells",
   bought: "the emails after somebody's first purchase from the creator: a thank you and where their orders are, something useful, then, only where it fits, what else the creator sells",
+  // Somebody another of the creator's sequences has just marked with a label (lib/flow-rules.ts).
+  tagged: "the emails somebody gets after another of the creator's sequences marked them with a label, named below: they already know the creator and are already on the list, so no introduction; written for what that label says about them",
 };
 
 /**
@@ -847,7 +849,9 @@ const MOMENTS: Record<"joined" | "product" | "bought", string> = {
 export async function writeSequence(
   store: Store,
   input: {
-    trigger: "joined" | "product" | "bought";
+    trigger: "joined" | "product" | "bought" | "tagged";
+    /** The label a "tagged" sequence starts with. */
+    tag?: string;
     /** The product a "product" sequence follows. */
     product: { title: string; summary: string; price: string; link: string } | null;
     /** What else the store sells, in its own order. */
@@ -879,6 +883,7 @@ export async function writeSequence(
       `Store: ${line(store.name, 80)} ${line(input.storeLink, 300)}`,
       `Orders page (where a buyer finds what they bought): ${line(input.ordersLink, 300)}`,
       input.product ? `The product this sequence follows:\n${listed(input.product)}` : "",
+      input.trigger === "tagged" && input.tag ? `The label that starts this sequence: "${line(input.tag, 40)}"` : "",
       input.products.length ? `What the store sells:\n${input.products.map(listed).join("\n")}` : "The store sells nothing yet.",
       notes ? `What the creator wants these emails to say:\n${notes}` : "",
     ]
