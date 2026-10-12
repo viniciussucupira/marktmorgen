@@ -2803,6 +2803,66 @@ try {
   }
 
   await keepSmall();
+  part("Members moved from another platform: a link of their own, first charged on the day it would have renewed");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "Harbor Circle", price: "15", every: "month" });
+    const circle = made.product?.id ?? "";
+    await post("/api/store/product", { action: "link", id: circle, link: "https://example.com/harbor-circle" });
+    await open(studio, `${LOCAL}/studio/import?what=members`);
+    const renews = new Date(Date.now() + 20 * 86_400_000).toISOString().slice(0, 10);
+    const csv = `Email,Membership,Next Charge Date,Tier\r\nmover@example.com,Harbor Circle,${renews},\r\nnobody@example.com,Harbor Circle,04/05/2026,\r\n`;
+    await studio.locator("#file-members").setInputFiles({ name: "patrons.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
+    is("the columns are found by the names other platforms give them", [
+      await studio.locator("#map-members-email option:checked").innerText(),
+      await studio.locator("#map-members-renews option:checked").innerText(),
+      await studio.locator("#map-members-option option:checked").innerText(),
+    ], ["Email", "Next Charge Date", "Tier"]);
+    await studio.getByRole("button", { name: "Import 2 rows" }).click();
+    is("nothing starts until the old renewals are promised to stop", await studio.getByRole("alert").filter({ hasText: "stop these memberships renewing" }).count(), 1);
+    await studio.locator("#import-stopped").check();
+    await studio.getByRole("button", { name: "Import 2 rows" }).click();
+    // This import's own card, once it is over (the column beside it lists earlier imports, finished long ago).
+    const card = studio.locator("section [aria-live=polite]").filter({ hasText: "invited to move" }).filter({ hasText: "Finished" });
+    await card.first().waitFor({ timeout: 120_000 });
+    is("one member invited, and the date that reads two ways not guessed", [
+      await card.first().locator("dt", { hasText: "invited to move" }).locator("xpath=following-sibling::dd").innerText(),
+      await card.first().locator("dt", { hasText: "could not be read" }).locator("xpath=following-sibling::dd").innerText(),
+    ], ["1", "1"]);
+    let invite = null;
+    for (let i = 0; i < 60 && !invite; i += 1) {
+      invite = services.emails().find((email) => [].concat(email.to).includes("mover@example.com")) ?? null;
+      if (!invite) await new Promise((wait) => setTimeout(wait, 500));
+    }
+    is("the member is emailed their own link", /\/move\/[A-Za-z0-9_-]+\?k=[0-9a-f]{40}/.test(String(invite?.text ?? "")), true);
+    const link = String(invite?.text ?? "").match(/https?:\/\/\S+\/move\/\S+/)?.[0] ?? "";
+    await open(page, local(link));
+    is("their page says nothing is charged today, and when the first payment is", [
+      await page.locator("[data-move]").getAttribute("data-move"),
+      (await words(page.locator("main"))).includes("Nothing is charged today. Your first payment here, $15, is taken on"),
+      (await words(page.locator("main"))).includes("This link is for mover@example.com."),
+    ], ["open", true, true]);
+    await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.getByRole("button", { name: "Keep my membership" }).click()]);
+    const kept = services.checkouts().at(-1);
+    const due = Math.floor(Date.parse(`${renews}T12:00:00Z`) / 1000);
+    is("Stripe takes the card now and first charges it on the renewal date, for their address", [kept.trial_end, kept.metadata.moved, kept.customer_details.email, kept.amount_total], [String(due), "yes", "mover@example.com", 0]);
+    is("the page after says the membership moved, and that nothing was charged", [
+      (await words(page.locator("main"))).includes("Membership moved"),
+      (await words(page.locator("main"))).includes("Nothing was charged today"),
+    ], [true, true]);
+    let receipt = null;
+    for (let i = 0; i < 60 && !receipt; i += 1) {
+      receipt = services.emails().find((email) => [].concat(email.to).includes("mover@example.com") && String(email.text ?? "").includes("Harbor Circle") && String(email.text ?? "").includes("first payment here of $15")) ?? null;
+      if (!receipt) await new Promise((wait) => setTimeout(wait, 500));
+    }
+    is("and the confirmation email says when the first payment is taken", String(receipt?.text ?? "").includes("Nothing was charged today. Your first payment here of $15"), true);
+    await open(page, `${LOCAL}/@localshop/move/${circle}?k=${"f".repeat(40)}`);
+    is("a made-up link opens nothing", await page.locator("[data-move]").getAttribute("data-move"), "closed");
+    await post("/api/store/product", { action: "remove", id: circle });
+  }
+
+  await keepSmall();
   part("A phone number asked at checkout, in Stripe's own box");
   {
     await open(studio, `${LOCAL}/studio`);

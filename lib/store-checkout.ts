@@ -7,6 +7,7 @@
  * and leaves Marktmorgen with nothing to hold, skim or lose. The 0% on the home
  * page is this file.
  */
+import { firstCharge } from "@/lib/move-rules";
 import { currentMeta } from "@/lib/tier-rules";
 import { saleOff } from "@/lib/store-sale";
 import { fairOff } from "@/lib/fair-price";
@@ -239,6 +240,12 @@ export async function createCheckout(
      * after it, and one link that hands out the places.
      */
     group?: { id: string; people: number };
+    /**
+     * A member moving their membership from another platform (lib/move-members.ts):
+     * nothing is charged until `firstChargeAt`, the day it would have renewed
+     * there (null: it is due now, and charged now), and no free trial on top.
+     */
+    moved?: { firstChargeAt: number | null };
     /**
      * A pre-order (lib/preorders.ts): paid at once, with nothing added at
      * checkout and no offer after it, and handed over the day it comes out.
@@ -536,9 +543,19 @@ export async function createCheckout(
     body.set("subscription_data[metadata][product]", product.id);
     if (chosen) body.set("subscription_data[metadata][option]", chosen.id);
     if (extras.coupon) body.set("subscription_data[metadata][winback]", "yes");
+    // A member moving from another platform has paid there up to the day
+    // it would renew: the card is taken now and first charged on that day.
+    if (extras.moved) {
+      body.set("metadata[moved]", "yes");
+      body.set("subscription_data[metadata][moved]", "yes");
+      if (extras.moved.firstChargeAt) {
+        body.set("subscription_data[trial_end]", String(extras.moved.firstChargeAt));
+        body.set("metadata[first_charge]", String(extras.moved.firstChargeAt));
+      }
+    }
     // Days free before the first payment. The card is taken now, as the store
     // page says, and nothing is charged until the trial is over.
-    if (membership.trialDays > 0 && !extras.noTrial) {
+    else if (membership.trialDays > 0 && !extras.noTrial) {
       body.set("subscription_data[trial_period_days]", String(membership.trialDays));
       body.set("metadata[trial_days]", String(membership.trialDays));
     }
@@ -742,6 +759,12 @@ export type Order =
       clicks: boolean;
       /** For a membership: the days free before the first payment, 0 for none. */
       trialDays: number;
+      /**
+       * For a membership moved from another platform (lib/move-members.ts):
+       * when its first payment here is taken, in seconds; 0 when it was
+       * charged at checkout, or was not moved.
+       */
+      firstChargeAt: number;
       /** For a membership that ends by itself: after how many payments. */
       endsAfter: number;
       /** What the buyer answered at checkout. */
@@ -923,6 +946,7 @@ export async function readOrder(
     news: metadata?.news === "yes",
     clicks: metadata?.news === "yes" && metadata?.clicks === "yes",
     trialDays: Number.isInteger(Number(metadata?.trial_days)) ? Math.max(0, Number(metadata?.trial_days)) : 0,
+    firstChargeAt: firstCharge(metadata),
     endsAfter: Number.isInteger(Number(metadata?.ends_after)) ? Math.max(0, Number(metadata?.ends_after)) : 0,
     answers: readAnswers(session),
     record: session,

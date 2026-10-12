@@ -33,6 +33,7 @@ import { PREORDER_WORDS } from "@/lib/buyer-words/preorder";
 import { PICK_WORDS } from "@/lib/buyer-words/pick";
 import { CART_WORDS } from "@/lib/buyer-words/cart";
 import { DISCORD_WORDS } from "@/lib/buyer-words/discord";
+import { MOVE_WORDS } from "@/lib/buyer-words/move";
 import { addProduct, claimHandle, ensureStatsId, setLanguage, setProductLink, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
 import { createCheckout } from "@/lib/store-checkout";
@@ -177,6 +178,7 @@ async function main(): Promise<void> {
     ["bundles buyers build", (code) => PICK_WORDS[code]],
     ["cart", (code) => CART_WORDS[code]],
     ["discord", (code) => DISCORD_WORDS[code]],
+    ["moving a membership", (code) => MOVE_WORDS[code]],
   ];
   for (const [area, wordsOf] of AREAS) {
     const englishWords = wordsOf("en");

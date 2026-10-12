@@ -40,7 +40,7 @@ export const maxDuration = 60;
 /** How long one step from the page may work. */
 const STEP_MS = 8_000;
 
-const KINDS = new Set<ImportKind>(["contacts", "products", "purchases"]);
+const KINDS = new Set<ImportKind>(["contacts", "products", "purchases", "members"]);
 
 /** What the page is told about an import: nothing it does not show. */
 function view(job: ImportJob) {
@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
         consentColumn: body.consentColumn === true,
         tags: Array.isArray(body.tags) ? body.tags.filter((t): t is string => typeof t === "string").slice(0, 10) : [],
         email: body.email === true,
+        stopped: body.stopped === true,
       });
       if (!started.ok) return refuse(started.reason, started.reason === "busy" ? 409 : 400, { limit: started.limit });
       return Response.json({ ok: true, import: view(started.job) });

@@ -59,6 +59,7 @@ import { recordEnrollment } from "@/lib/learn";
 import { type HandOverDeps, confirmPreorder, resendPreorder } from "@/lib/preorders";
 import { speechFor } from "@/lib/buyer-words";
 import { ordersWords } from "@/lib/buyer-words/orders";
+import { firstCharge } from "@/lib/move-rules";
 import { type SaleKey, activeKeys, keyForSale } from "@/lib/licence-keys";
 import { purchaseRefunded } from "@/lib/refunds";
 import { scheduleReviewAsk } from "@/lib/review-ask";
@@ -215,6 +216,8 @@ export function confirmationFor(
   // payments travel on the checkout (lib/store-checkout.ts), and are read the
   // way the thanks page reads them, so the email and the page say the same.
   const trialDays = product.recurring ? wholeNumber(meta.trial_days) : 0;
+  // A membership moved from another platform: first charged on the day it would have renewed there.
+  const firstChargeAt = product.recurring ? firstCharge(meta) : 0;
   const endsAfter = product.recurring ? wholeNumber(meta.ends_after) : 0;
   // And its introductory price, when it had one (lib/intro-price.ts): what the first payments cost, and the price after.
   const intro = product.recurring ? introOf(meta) : null;
@@ -226,7 +229,10 @@ export function confirmationFor(
   /** "A and B", "A, B and C" said the language's way. */
   const listed = (titles: string[]) => titles.reduce((all, one) => words.and(all, one));
 
-  const paid = paidLine(store, product, amount, currency, plan, trialDays, endsAfter, intro, every);
+  const paid =
+    firstChargeAt && amount === 0
+      ? words.movedToday(speaking(store, currency).money(0))
+      : paidLine(store, product, amount, currency, plan, trialDays, endsAfter, intro, every);
   const lines: string[] = [
     words.confirmIntro(name),
     "",
@@ -269,7 +275,10 @@ export function confirmationFor(
   }
 
   if (product.recurring) {
-    if (trialDays > 0) {
+    if (firstChargeAt) {
+      const firstCents = option ? option.priceCents : product.priceCents;
+      lines.push("", words.movedCharge(said.money(firstCents), store.tax.enabled && !store.tax.included, said.date(firstChargeAt * 1000)));
+    } else if (trialDays > 0) {
       const firstCents = option ? option.priceCents : product.priceCents;
       const tax = store.tax.enabled && !store.tax.included;
       const firstOn = said.date((created + trialDays * 86400) * 1000);

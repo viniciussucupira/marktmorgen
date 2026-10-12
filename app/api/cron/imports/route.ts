@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { cronAllowed } from "@/lib/request-guard";
 import { withCutoff } from "@/lib/fetch-timeout";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { advanceImports } from "@/lib/imports";
+import { advanceImports, sendMoveReminders } from "@/lib/imports";
 
 export const maxDuration = 60;
 
@@ -13,6 +13,8 @@ export const maxDuration = 60;
  * and then left (lib/imports.ts), a chunk at a time, for fifty of its sixty
  * seconds. The studio's page does the same while it is open, and each
  * import's own lock keeps the two from working on one import at once.
+ * What time is left goes to the one reminder each moved member is owed
+ * (lib/move-members.ts).
  */
 export async function GET(request: NextRequest) {
   // Every request to Redis, Stripe and the rest is given up by 57 s
@@ -34,8 +36,10 @@ async function run(request: NextRequest): Promise<Response> {
   if (got === null) return Response.json({ ok: true, busy: true });
   const started = Date.now();
   try {
-    const counts = await advanceImports(started + 50_000);
-    return Response.json({ ok: true, ...counts }, { headers: { "Cache-Control": "no-store" } });
+    const counts = await advanceImports(started + 40_000);
+    // Then the one reminder to members moved from another platform who have not kept theirs yet.
+    const reminded = await sendMoveReminders(started + 50_000);
+    return Response.json({ ok: true, ...counts, reminded }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("the import job failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

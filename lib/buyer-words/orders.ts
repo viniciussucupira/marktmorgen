@@ -185,6 +185,9 @@ const en = {
   keyIssued: (label: string, key: string) => `${label}: ${key}`,
   keyOnItsWay: (label: string, store: string) =>
     `${label}: on its way. ${store}'s keys ran out just as you paid; it is emailed to you the moment they add more.`,
+  movedToday: (zero: string) => `${zero} today: your membership moved here.`,
+  movedCharge: (price: string, hasTax: boolean, date: string) =>
+    `Nothing was charged today. Your first payment here of ${price}${hasTax ? " plus any sales tax" : ""} is taken on ${date}, from the card you gave. Cancel before then and you are not charged at all.`,
   trialCharge: (price: string, hasTax: boolean, days: number, date: string) =>
     `Nothing was charged today. Your first payment of ${price}${hasTax ? " plus any sales tax" : ""} is taken when the ${days}-day trial ends, on ${date}, from the card you gave. Cancel before then and you are not charged at all.`,
   /** How a membership renews: for a set number of payments, or until cancelled (payments 0). */
@@ -399,6 +402,9 @@ const es: OrdersWords = {
   keyIssued: (label, key) => `${label}: ${key}`,
   keyOnItsWay: (label, store) =>
     `${label}: en camino. A ${store} se le acabaron las claves justo cuando pagaste; te llegará por email en cuanto añada más.`,
+  movedToday: (zero) => `${zero} hoy: tu membresía se trasladó aquí.`,
+  movedCharge: (price, hasTax, date) =>
+    `Hoy no se cobró nada. Tu primer pago aquí de ${price}${hasTax ? " más los impuestos sobre las ventas que correspondan" : ""} se cobra el ${date}, a la tarjeta que indicaste. Cancela antes y no se te cobrará nada.`,
   trialCharge: (price, hasTax, days, date) =>
     `Hoy no se cobró nada. Tu primer pago de ${price}${hasTax ? " más los impuestos sobre las ventas que correspondan" : ""} se cobra cuando termine la prueba de ${days} ${plural(days, "día", "días")}, el ${date}, a la tarjeta que indicaste. Cancela antes y no se te cobrará nada.`,
   renews: (interval, payments) =>
@@ -601,6 +607,9 @@ const fr: OrdersWords = {
   keyIssued: (label, key) => `${label}${S}: ${key}`,
   keyOnItsWay: (label, store) =>
     `${label}${S}: en route. ${store} n'avait plus de clés au moment de votre paiement${S}; elle vous sera envoyée par e-mail dès que de nouvelles clés seront ajoutées.`,
+  movedToday: (zero) => `${zero} aujourd'hui. Votre abonnement a été transféré ici.`,
+  movedCharge: (price, hasTax, date) =>
+    `Rien n'a été débité aujourd'hui. Votre premier paiement ici, de ${price}${hasTax ? ", plus les éventuelles taxes de vente," : ""} est prélevé le ${date}, sur la carte que vous avez indiquée. Annulez avant cette date et rien ne vous sera débité.`,
   trialCharge: (price, hasTax, days, date) =>
     `Rien n'a été débité aujourd'hui. Votre premier paiement de ${price}${hasTax ? ", plus les éventuelles taxes de vente," : ""} est prélevé à la fin de l'essai de ${days}${S}${pluralFr(days, "jour", "jours")}, le ${date}, sur la carte que vous avez indiquée. Annulez avant cette date et rien ne vous sera débité.`,
   renews: (interval, payments) =>
@@ -804,6 +813,9 @@ const de: OrdersWords = {
   keyIssued: (label, key) => `${label}: ${key}`,
   keyOnItsWay: (label, store) =>
     `${label}: unterwegs. ${store} hatte genau bei Ihrer Zahlung keine Schlüssel mehr; Ihr Schlüssel wird Ihnen per E-Mail geschickt, sobald neue hinzugefügt werden.`,
+  movedToday: (zero) => `${zero} heute. Ihre Mitgliedschaft ist hierher umgezogen.`,
+  movedCharge: (price, hasTax, date) =>
+    `Heute wurde nichts berechnet. Ihre erste Zahlung hier von ${price}${hasTax ? " zuzüglich eventuell anfallender Umsatzsteuer" : ""} wird am ${date} von der angegebenen Karte abgebucht. Kündigen Sie vorher, wird Ihnen gar nichts berechnet.`,
   trialCharge: (price, hasTax, days, date) =>
     `Heute wurde nichts berechnet. Ihre erste Zahlung von ${price}${hasTax ? " zuzüglich eventuell anfallender Umsatzsteuer" : ""} wird am Ende des ${days}-tägigen Testzeitraums, am ${date}, von der angegebenen Karte abgebucht. Kündigen Sie vorher, wird Ihnen gar nichts berechnet.`,
   renews: (interval, payments) =>
@@ -1011,6 +1023,9 @@ const it: OrdersWords = {
   keyIssued: (label, key) => `${label}: ${key}`,
   keyOnItsWay: (label, store) =>
     `${label}: in arrivo. Le chiavi di ${store} si sono esaurite proprio mentre pagavi; ti verrà inviata via email appena ne verranno aggiunte altre.`,
+  movedToday: (zero) => `${zero} oggi. Il tuo abbonamento è stato trasferito qui.`,
+  movedCharge: (price, hasTax, date) =>
+    `Oggi non ti è stato addebitato nulla. Il tuo primo pagamento qui di ${price}${hasTax ? " più le eventuali imposte sulle vendite" : ""} viene addebitato ${itOn(date)}, sulla carta che hai indicato. Se annulli prima, non ti viene addebitato nulla.`,
   trialCharge: (price, hasTax, days, date) =>
     `Oggi non ti è stato addebitato nulla. Il tuo primo pagamento di ${price}${hasTax ? " più le eventuali imposte sulle vendite" : ""} viene addebitato alla fine della prova di ${days} ${plural(days, "giorno", "giorni")}, ${itOn(date)}, sulla carta che hai indicato. Se annulli prima, non ti viene addebitato nulla.`,
   renews: (interval, payments) =>
@@ -1213,6 +1228,9 @@ const nl: OrdersWords = {
   keyIssued: (label, key) => `${label}: ${key}`,
   keyOnItsWay: (label, store) =>
     `${label}: onderweg. De sleutels van ${store} waren op net toen je betaalde; je sleutel wordt je gemaild zodra er nieuwe zijn toegevoegd.`,
+  movedToday: (zero) => `${zero} vandaag. Je lidmaatschap is hierheen verhuisd.`,
+  movedCharge: (price, hasTax, date) =>
+    `Vandaag is er niets afgeschreven. Je eerste betaling hier van ${price}${hasTax ? " plus eventuele omzetbelasting" : ""} wordt op ${date} afgeschreven van de kaart die je hebt opgegeven. Zeg je daarvoor op, dan betaal je helemaal niets.`,
   trialCharge: (price, hasTax, days, date) =>
     `Vandaag is er niets afgeschreven. Je eerste betaling van ${price}${hasTax ? " plus eventuele omzetbelasting" : ""} wordt afgeschreven als de proefperiode van ${days} ${plural(days, "dag", "dagen")} afloopt, op ${date}, van de kaart die je hebt opgegeven. Zeg je daarvoor op, dan betaal je helemaal niets.`,
   renews: (interval, payments) =>
@@ -1416,6 +1434,9 @@ const pt: OrdersWords = {
   keyIssued: (label, key) => `${label}: ${key}`,
   keyOnItsWay: (label, store) =>
     `${label}: a caminho. As chaves de ${store} esgotaram-se no momento em que pagou; a sua ser-lhe-á enviada por email assim que forem adicionadas mais.`,
+  movedToday: (zero) => `${zero} hoje. A sua subscrição foi transferida para aqui.`,
+  movedCharge: (price, hasTax, date) =>
+    `Hoje não foi cobrado nada. O seu primeiro pagamento aqui, de ${price}${hasTax ? " mais os impostos sobre vendas aplicáveis" : ""}, é cobrado a ${date}, no cartão que indicou. Se cancelar antes disso, não paga nada.`,
   trialCharge: (price, hasTax, days, date) =>
     `Hoje não foi cobrado nada. O seu primeiro pagamento de ${price}${hasTax ? " mais os impostos sobre vendas aplicáveis" : ""} é cobrado quando terminar o período de teste de ${days} ${plural(days, "dia", "dias")}, a ${date}, no cartão que indicou. Se cancelar antes disso, não paga nada.`,
   renews: (interval, payments) =>

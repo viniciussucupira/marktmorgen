@@ -1,0 +1,266 @@
+/**
+ * Members moved from another platform (lib/move-rules.ts says what it is):
+ * the invitation each one is given by an import (lib/imports.ts, "members"),
+ * the email that carries their link, the one reminder, and the checkout the
+ * link opens.
+ *
+ *   nl:mv:<statsId>          address hash:product -> { e, p, o, r, job, at, t, kept }
+ *   nl:mv:link:<token>       who a link is for: { s, f }, until LINK_DAYS after the renewal date
+ *   nl:mv:due                reminders waiting: "<store id>|<field>", by when each goes
+ *
+ * Nothing here gives anybody anything: an invitation is an offer to keep a
+ * membership by paying for it, from the renewal date on. A member who keeps
+ * it holds an ordinary membership on the creator's Stripe account, and every
+ * door reads that, as it reads any other.
+ */
+import { randomBytes } from "node:crypto";
+import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
+import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import type { Listing, Product, Store } from "@/lib/store";
+import { readListing, readProduct } from "@/lib/catalog";
+import { addressHash } from "@/lib/imported-purchases";
+import { canSellProduct, createCheckout } from "@/lib/store-checkout";
+import { withStockHold } from "@/lib/stock";
+import { onAccount } from "@/lib/stripe-account";
+import { storeBase } from "@/lib/purchase-email";
+import { membershipLine, speech } from "@/lib/buyer-words";
+import { moveWords } from "@/lib/buyer-words/move";
+import { activeIntro } from "@/lib/intro-price";
+import { firstChargeAt, linkSeconds, reminderAt } from "@/lib/move-rules";
+
+const invitesKey = (statsId: string) => `nl:mv:${statsId}`;
+const linkKey = (token: string) => `nl:mv:link:${token}`;
+const DUE_KEY = "nl:mv:due";
+const TOKEN_PATTERN = /^[0-9a-f]{40}$/;
+const FIELD_PATTERN = /^[0-9a-f]{32}:[A-Za-z0-9_-]{1,64}$/;
+const LIVE = new Set(["active", "trialing", "past_due"]);
+
+/** One member invited to keep their membership here. */
+export type Invite = {
+  /** The address in the creator's file, as it is written to. */
+  e: string;
+  /** The membership, and the price option they had, if it has several. */
+  p: string;
+  o: string;
+  /** The day it would have renewed on the old platform, noon UTC, in seconds. */
+  r: number;
+  /** The import that brought it, and when. */
+  job: string;
+  at: number;
+  /** The token of their link. */
+  t: string;
+  /** When they kept it here, in seconds; 0 until then. */
+  kept: number;
+};
+
+export const inviteField = (email: string, productId: string) => `${addressHash(email)}:${productId}`;
+
+function parseInvite(raw: unknown): Invite | null {
+  if (typeof raw !== "string") return null;
+  try {
+    const v = JSON.parse(raw) as Partial<Invite>;
+    if (typeof v.e !== "string" || typeof v.p !== "string" || typeof v.r !== "number" || typeof v.t !== "string") return null;
+    return { e: v.e, p: v.p, o: typeof v.o === "string" ? v.o : "", r: v.r, job: typeof v.job === "string" ? v.job : "", at: Number(v.at) || 0, t: v.t, kept: Number(v.kept) || 0 };
+  } catch {
+    return null;
+  }
+}
+
+export async function readInvite(statsId: string, field: string): Promise<Invite | null> {
+  if (!FIELD_PATTERN.test(field) || !isRedisConfigured()) return null;
+  const [raw] = await redisPipeline([["HGET", invitesKey(statsId), field]]);
+  return parseInvite(raw);
+}
+
+/**
+ * Invites many members in one round trip: each one's record, link and
+ * reminder. Returns, for each, the field it is kept under when it is new, or
+ * null when that address was already invited to that membership.
+ */
+export async function inviteMembers(
+  store: Store,
+  job: string,
+  rows: { email: string; productId: string; option: string; renews: number }[],
+  now = Date.now(),
+): Promise<(string | null)[]> {
+  const statsId = store.statsId;
+  if (!rows.length || !statsId || !store.sid || !isRedisConfigured()) return rows.map(() => null);
+  const at = Math.floor(now / 1000);
+  const made = rows.map((row) => ({ row, field: inviteField(row.email, row.productId), token: randomBytes(20).toString("hex") }));
+  const answers = await redisPipeline(
+    made.map(({ row, field, token }) => [
+      "HSETNX",
+      invitesKey(statsId),
+      field,
+      JSON.stringify({ e: normaliseEmail(row.email), p: row.productId, o: row.option, r: row.renews, job, at, t: token, kept: 0 } satisfies Invite),
+    ]),
+  );
+  const fresh = made.filter((_, i) => Number(answers[i]) === 1);
+  if (fresh.length) {
+    const reminders = fresh.flatMap(({ row, field }) => {
+      const when = reminderAt(row.renews, now);
+      return when ? [when, `${store.sid}|${field}`] : [];
+    });
+    await redisPipeline([
+      ...fresh.map(({ row, field, token }) => ["SET", linkKey(token), JSON.stringify({ s: statsId, f: field }), "EX", linkSeconds(row.renews, now)]),
+      ...(reminders.length ? [["ZADD", DUE_KEY, ...reminders]] : []),
+    ]);
+  }
+  return made.map(({ field }, i) => (Number(answers[i]) === 1 ? field : null));
+}
+
+/** How many members a store invited, and how many kept their membership here. */
+export async function moveCounts(store: Store): Promise<{ invited: number; kept: number }> {
+  if (!store.statsId || !isRedisConfigured()) return { invited: 0, kept: 0 };
+  const [all] = await redisPipeline([["HVALS", invitesKey(store.statsId)]]);
+  const invites = (Array.isArray(all) ? all : []).map(parseInvite).filter((i): i is Invite => i !== null);
+  return { invited: invites.length, kept: invites.filter((i) => i.kept > 0).length };
+}
+
+/** Marks an invitation kept: the member paid, or their membership was found live. */
+export async function noteKept(store: Store, email: string, productId: string, now = Date.now()): Promise<void> {
+  if (!store.statsId || !store.sid || !isRedisConfigured()) return;
+  const field = inviteField(email, productId);
+  const invite = await readInvite(store.statsId, field);
+  if (!invite || invite.kept) return;
+  await redisPipeline([
+    ["HSET", invitesKey(store.statsId), field, JSON.stringify({ ...invite, kept: Math.floor(now / 1000) })],
+    ["ZREM", DUE_KEY, `${store.sid}|${field}`],
+  ]);
+}
+
+/** What a member's page and emails say about the payments: the first one here, and the price as it goes on. */
+export function priceWords(store: Store, product: Listing, optionId: string): { amount: string; line: string } | null {
+  if (!product.recurring) return null;
+  const option = product.options.find((o) => o.id === optionId) ?? null;
+  if (product.options.length && !option) return null;
+  const say = speech(store);
+  const regular = option ? option.priceCents : product.priceCents;
+  const intro = option ? null : activeIntro(product, store.tiers);
+  return {
+    amount: say.money(intro ? intro.cents : regular),
+    line: membershipLine(store, { ...product.recurring, trialDays: 0 }, say.money(regular), intro),
+  };
+}
+
+/** The email that carries a member's link, or null when there is nothing it could say truly. */
+export async function inviteEmail(store: Store, field: string, now = Date.now()): Promise<{ to: string; subject: string; text: string } | null> {
+  if (!store.statsId) return null;
+  const invite = await readInvite(store.statsId, field);
+  if (!invite || invite.kept) return null;
+  const product = await readListing(store, invite.p);
+  if (!product?.recurring || !canSellProduct(store, product)) return null;
+  const price = priceWords(store, product, invite.o);
+  if (!price) return null;
+  const m = moveWords(store.language);
+  const say = speech(store);
+  const first = firstChargeAt(invite.r, now);
+  const link = `${storeBase(store)}/move/${encodeURIComponent(product.id)}?k=${invite.t}`;
+  const until = say.date((Math.floor(now / 1000) + linkSeconds(invite.r, now)) * 1000);
+  const text = [
+    first ? m.inviteDeferred(store.name, product.title, price.amount, say.date(invite.r * 1000)) : m.inviteNow(store.name, product.title, price.amount),
+    "",
+    link,
+    "",
+    m.linkNote(until),
+    "",
+    first && reminderAt(invite.r, now) ? m.whyReminder(store.name, say.date(invite.r * 1000)) : m.whyOnce(store.name),
+    m.sentBy(store.name),
+  ].join("\n");
+  return { to: invite.e, subject: m.inviteSubject(product.title, store.name).slice(0, 200), text };
+}
+
+/** The one reminder, for a member who has not kept it yet. */
+export async function reminderEmail(store: Store, field: string, now = Date.now()): Promise<{ to: string; subject: string; text: string } | null> {
+  if (!store.statsId) return null;
+  const invite = await readInvite(store.statsId, field);
+  if (!invite || invite.kept) return null;
+  const first = firstChargeAt(invite.r, now);
+  if (!first) return null;
+  const product = await readListing(store, invite.p);
+  if (!product?.recurring || !canSellProduct(store, product)) return null;
+  const price = priceWords(store, product, invite.o);
+  if (!price) return null;
+  const m = moveWords(store.language);
+  const say = speech(store);
+  const text = [
+    m.reminderBody(store.name, product.title, price.amount, say.date(invite.r * 1000)),
+    "",
+    `${storeBase(store)}/move/${encodeURIComponent(product.id)}?k=${invite.t}`,
+    "",
+    m.reminderLast,
+    m.sentBy(store.name),
+  ].join("\n");
+  return { to: invite.e, subject: m.reminderSubject(product.title).slice(0, 200), text };
+}
+
+/** Whether this address has a live membership to this product on the creator's account now. */
+export async function keptAlready(store: Store, email: string, productId: string): Promise<boolean> {
+  const account = store.stripeAccountId;
+  if (!account || !EMAIL_PATTERN.test(email)) return false;
+  const customers = await onAccount("GET", account, `/customers?${new URLSearchParams({ email, limit: "10" })}`);
+  for (const customer of (Array.isArray(customers.data) ? customers.data : []) as { id?: unknown }[]) {
+    if (typeof customer.id !== "string") continue;
+    const subs = await onAccount("GET", account, `/subscriptions?customer=${customer.id}&status=all&limit=100`);
+    const list = (Array.isArray(subs.data) ? subs.data : []) as { status?: unknown; metadata?: Record<string, string> | null }[];
+    if (list.some((s) => LIVE.has(String(s.status)) && s.metadata?.product === productId)) return true;
+  }
+  return false;
+}
+
+/** Reminders due now, taken off the line: "<store id>|<field>". A reminder not sent is put back by the caller. */
+export async function dueReminders(now = Date.now(), limit = 50): Promise<{ sid: string; field: string }[]> {
+  if (!isRedisConfigured()) return [];
+  const [due] = await redisPipeline([["ZRANGEBYSCORE", DUE_KEY, 0, Math.floor(now / 1000), "LIMIT", 0, limit]]);
+  const entries = (Array.isArray(due) ? due : []).map(String);
+  if (entries.length) await redisPipeline([["ZREM", DUE_KEY, ...entries]]);
+  return entries.flatMap((entry) => {
+    const [sid, field] = [entry.slice(0, entry.indexOf("|")), entry.slice(entry.indexOf("|") + 1)];
+    return sid && FIELD_PATTERN.test(field) ? [{ sid, field }] : [];
+  });
+}
+
+/** Puts a reminder back in line, to be tried again in an hour. */
+export async function remindLater(sid: string, field: string, now = Date.now()): Promise<void> {
+  await redisPipeline([["ZADD", DUE_KEY, Math.floor(now / 1000) + 3_600, `${sid}|${field}`]]);
+}
+
+/** Who a member's link is for, on this store and membership, while it works. */
+export async function readMove(store: Store, productId: string, token: string): Promise<(Invite & { field: string }) | null> {
+  if (!TOKEN_PATTERN.test(token) || !store.statsId || !isRedisConfigured()) return null;
+  const [raw] = await redisPipeline([["GET", linkKey(token)]]);
+  if (typeof raw !== "string") return null;
+  try {
+    const link = JSON.parse(raw) as { s?: unknown; f?: unknown };
+    if (link.s !== store.statsId || typeof link.f !== "string") return null;
+    const invite = await readInvite(store.statsId, link.f);
+    if (!invite || invite.p !== productId || invite.t !== token) return null;
+    return { ...invite, field: link.f };
+  } catch {
+    return null;
+  }
+}
+
+export type MoveOpen = { ok: true; url: string } | { ok: false; reason: "expired" | "unavailable" | "refused" };
+
+/** The checkout a member's link opens: this membership, this address, first charged on the renewal date. */
+export async function openMove(store: Store, productId: string, token: string, origin: string, now = Date.now()): Promise<MoveOpen> {
+  const invite = await readMove(store, productId, token);
+  if (!invite) return { ok: false, reason: "expired" };
+  const product: Product | null = await readProduct(store, productId);
+  if (!product?.recurring || !canSellProduct(store, product)) return { ok: false, reason: "unavailable" };
+  // The option they had. One the creator has since taken away is not swapped
+  // for another at a price the email never named.
+  const option = product.options.length ? product.options.find((o) => o.id === invite.o)?.id : undefined;
+  if (product.options.length && !option) return { ok: false, reason: "unavailable" };
+  try {
+    const held = await withStockHold(store, product, (holding) =>
+      createCheckout(store, product, origin, option, { email: invite.e, noTrial: true, held: holding, moved: { firstChargeAt: firstChargeAt(invite.r, now) } }),
+    );
+    if (!held.ok) return { ok: false, reason: "unavailable" };
+    return { ok: true, url: held.value.url };
+  } catch (error) {
+    console.error("opening a moved member's checkout failed", store.handle, error);
+    return { ok: false, reason: "refused" };
+  }
+}

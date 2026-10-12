@@ -17,6 +17,7 @@ import { type Listing, ensureStoreId, normaliseHandle, storeForPage, storeRef } 
 import { formatMoney, toMajor } from "@/lib/money";
 import { linkHost } from "@/lib/product-link";
 import { DOWNLOAD_WINDOW_SECONDS, type Order, readOrder } from "@/lib/store-checkout";
+import { noteKept } from "@/lib/move-members";
 import { lookStyle } from "@/lib/store-look";
 import { canManage } from "@/lib/membership-manage";
 import { canMove, confirmBooking, moveLink } from "@/lib/calls";
@@ -145,6 +146,12 @@ export default async function ThanksPage({ params, searchParams }: Params) {
     ? await withinLimit("thanks-view", `${clientAddress({ headers: await headers() })}|${store.handle}`, VIEWS_PER_TEN_MINUTES, 600)
     : true;
   const order: Order | { state: "slow" } = allowed ? await readOrder(store, sessionId) : { state: "slow" };
+
+  // A member moved from another platform kept their membership: the studio's count says so (lib/move-members.ts).
+  if (order.state === "paid" && order.product.recurring && (order.record.metadata as Record<string, string> | null)?.moved === "yes") {
+    const paidBy = (order.record.customer_details as { email?: unknown } | null)?.email;
+    if (typeof paidBy === "string") after(() => noteKept(store, paidBy, order.product.id).catch((error) => console.error("noting a kept membership failed", error)));
+  }
 
   // A package of calls (lib/call-packages.ts): written down once, with the
   // link that books its sessions, shown here and emailed.
@@ -715,14 +722,14 @@ export default async function ThanksPage({ params, searchParams }: Params) {
           {order.state === "paid" ? (
             <>
               <p className="st-price text-sm">
-                {order.product.recurring && order.trialDays > 0 ? t.trialStarted : t.paid}
+                {order.product.recurring && order.firstChargeAt > 0 ? t.movedStarted : order.product.recurring && order.trialDays > 0 ? t.trialStarted : t.paid}
               </p>
               <h1 className="font-display mt-5 text-3xl font-semibold leading-tight sm:text-4xl">
                 {booked ? t.youAreBooked : t.thankYou}
               </h1>
               <p className="st-muted mt-4 text-lg">
                 {order.product.recurring
-                  ? order.trialDays > 0
+                  ? order.trialDays > 0 && !order.firstChargeAt
                     ? t.startedTrialOf
                     : t.subscribedTo
                   : booked
@@ -740,7 +747,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                   </span>
                 ))}
                 {t.fromStore(store.name)}
-                {order.product.recurring && order.trialDays > 0
+                {order.product.recurring && (order.trialDays > 0 || order.firstChargeAt > 0)
                   ? t.nothingChargedToday
                   : booked && order.record.metadata && (order.record.metadata as Record<string, string>).package
                     ? t.oneSessionOfPackage
@@ -760,7 +767,18 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     )}
                 {t.sentenceEnd}
               </p>
-              {order.product.recurring && order.trialDays > 0 && !ended ? (
+              {order.product.recurring && order.firstChargeAt > 0 && !ended ? (
+                <p
+                  className="mt-3 rounded-2xl px-4 py-3 text-sm"
+                  style={{ background: "var(--st-accent-soft)", color: "var(--st-text)" }}
+                >
+                  {t.movedNote(
+                    money(order.option ? order.option.priceCents : order.product.priceCents, order.currency),
+                    store.tax.enabled && !store.tax.included,
+                    longDate(order.firstChargeAt),
+                  )}
+                </p>
+              ) : order.product.recurring && order.trialDays > 0 && !ended ? (
                 <p
                   className="mt-3 rounded-2xl px-4 py-3 text-sm"
                   style={{ background: "var(--st-accent-soft)", color: "var(--st-text)" }}

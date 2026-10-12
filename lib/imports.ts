@@ -7,6 +7,11 @@
  *              who unsubscribed here (lib/contacts.ts). Up to 50,000 rows.
  *   products   drafts in the store, each checked the way the product editor
  *              checks it, hidden until the creator publishes it. Up to 500.
+ *   members    members of a membership elsewhere, each emailed their own link
+ *              to keep it here, first charged on the day it would have
+ *              renewed there (lib/move-members.ts). Nobody is given a
+ *              membership: keeping it is a checkout. Up to 20,000 rows, and
+ *              the emails count with the past buyers' in the same thirty days.
  *   purchases  past buyers given what they bought before, with no payment
  *              and no receipt here, marked for what they are
  *              (lib/imported-purchases.ts). Up to 20,000 rows, and, only if
@@ -72,11 +77,14 @@ import { releaseDay, reserveDay } from "@/lib/mail";
 import { healthTags, noteSent, pausedFor, rampBack, rampRoom, startRamp } from "@/lib/mail-health";
 import { isPaidUp } from "@/lib/billing";
 import { storeBase } from "@/lib/purchase-email";
+import { canSell, canSellProduct } from "@/lib/store-checkout";
+import { inviteEmail, inviteMembers, keptAlready, noteKept, dueReminders, remindLater, reminderEmail, readInvite } from "@/lib/move-members";
+import { MAX_AHEAD_DAYS, MAX_MOVED_MEMBERS, readRenewal } from "@/lib/move-rules";
 
-export type ImportKind = "contacts" | "products" | "purchases";
+export type ImportKind = "contacts" | "products" | "purchases" | "members";
 
 /** The most rows one import may bring, by kind. */
-export const IMPORT_LIMITS: Record<ImportKind, number> = { contacts: 50_000, products: 500, purchases: 20_000 };
+export const IMPORT_LIMITS: Record<ImportKind, number> = { contacts: 50_000, products: 500, purchases: 20_000, members: MAX_MOVED_MEMBERS };
 /** Rows one upload request may carry. */
 export const BATCH_ROWS = 1_000;
 /** The most an upload request may weigh. */
@@ -89,6 +97,7 @@ export const COLUMNS: Record<ImportKind, string[]> = {
   contacts: ["email", "name", "tags", "consent"],
   products: ["title", "price", "description", "type", "link"],
   purchases: ["email", "product"],
+  members: ["email", "product", "renews", "option"],
 };
 
 /** How long a cell may be as it arrives; one longer is kept to this plus one, to be refused. */
@@ -96,10 +105,11 @@ const CELL_CAPS: Record<ImportKind, number[]> = {
   contacts: [MAX_EMAIL_LENGTH, MAX_CONTACT_NAME, 400, 40],
   products: [MAX_TITLE_LENGTH, 30, MAX_ABOUT_LENGTH * 2, 20, 2_000],
   purchases: [MAX_EMAIL_LENGTH, 200],
+  members: [MAX_EMAIL_LENGTH, 200, 60, 120],
 };
 
 /** Rows applied in one step, by kind: small enough that a step is a few seconds at most. */
-const CHUNK: Record<ImportKind, number> = { contacts: 1_000, products: 50, purchases: 250 };
+const CHUNK: Record<ImportKind, number> = { contacts: 1_000, products: 50, purchases: 250, members: 250 };
 /** Buyers emailed in one step. */
 const MAIL_CHUNK = 100;
 /**
@@ -170,7 +180,7 @@ export type ImportJob = {
     consentColumn: boolean;
     /** Contacts: labels given to everyone this file brings. */
     tags: string[];
-    /** Purchases: one email to each buyer given something. */
+    /** Purchases: one email to each buyer given something. Members: always, their link. */
     email: boolean;
   };
   finishedAt: number;
@@ -224,7 +234,7 @@ export async function storeImports(store: Store): Promise<ImportJob[]> {
   return raws.map(parseJob).filter((job): job is ImportJob => job !== null && job.sid === store.sid);
 }
 
-export type StartProblem = "busy" | "too_many" | "consent" | "email" | "list" | "store" | "unavailable";
+export type StartProblem = "busy" | "too_many" | "consent" | "email" | "list" | "store" | "unavailable" | "stripe" | "stopped";
 
 /**
  * Begins an import: the browser has read the file and says how many rows it
@@ -235,7 +245,7 @@ export async function startImport(
   store: Store,
   by: string,
   kind: ImportKind,
-  input: { expected: number; file: string; agreed?: boolean; consentColumn?: boolean; tags?: string[]; email?: boolean },
+  input: { expected: number; file: string; agreed?: boolean; consentColumn?: boolean; tags?: string[]; email?: boolean; stopped?: boolean },
 ): Promise<{ ok: true; job: ImportJob } | { ok: false; reason: StartProblem; limit?: number }> {
   if (!isRedisConfigured()) return { ok: false, reason: "unavailable" };
   if (!store.sid) return { ok: false, reason: "store" };
@@ -251,9 +261,15 @@ export async function startImport(
   // The one email to past buyers is sent from the store's name by our sender:
   // only for a store in good standing, where email can go out at all.
   if (kind === "purchases" && input.email === true && (!isSenderConfigured() || !isPaidUp(store))) return { ok: false, reason: "email" };
+  // Members are always emailed their link, and keeping it is a checkout on
+  // the creator's Stripe account: both have to be possible before anyone is invited.
+  if (kind === "members" && (!isSenderConfigured() || !isPaidUp(store))) return { ok: false, reason: "email" };
+  if (kind === "members" && !canSell(store)) return { ok: false, reason: "stripe" };
+  // And only once the creator says they will stop the old renewals, so nobody pays twice.
+  if (kind === "members" && input.stopped !== true) return { ok: false, reason: "stopped" };
   const ref = storeRef(store);
   if (kind === "contacts" && !store.listId && !(await ensureListId(ref))?.listId) return { ok: false, reason: "list" };
-  if ((kind === "purchases" || kind === "products") && !store.statsId) await ensureStatsId(ref);
+  if ((kind === "purchases" || kind === "products" || kind === "members") && !store.statsId) await ensureStatsId(ref);
 
   const id = randomBytes(12).toString("hex");
   const [claimed] = await redisPipeline([["SET", busyKey(store.sid), id, "NX", "EX", KEEP_SECONDS]]);
@@ -284,7 +300,7 @@ export async function startImport(
       agreed: kind === "contacts" && input.agreed === true,
       consentColumn: kind === "contacts" && input.consentColumn === true,
       tags: kind === "contacts" ? readTags(input.tags ?? []) : [],
-      email: kind === "purchases" && input.email === true,
+      email: (kind === "purchases" && input.email === true) || kind === "members",
     },
     finishedAt: 0,
   };
@@ -667,6 +683,105 @@ async function purchasesStep(job: ImportJob, store: Store, rows: string[][]): Pr
   await note(job, problems, "errors");
 }
 
+async function membersStep(job: ImportJob, store: Store, rows: string[][], now = Date.now()): Promise<void> {
+  const problems: Problem[] = [];
+  const skipped: Problem[] = [];
+  const listings = await readAllListings(store);
+  const byId = new Map(listings.map((p) => [p.id, p]));
+  const byTitle = new Map<string, typeof listings>();
+  for (const p of listings) {
+    const key = p.title.replace(/\s+/g, " ").trim().toLowerCase();
+    byTitle.set(key, [...(byTitle.get(key) ?? []), p]);
+  }
+  const today = Math.floor(now / 1000);
+  const valid: { line: number; email: string; productId: string; option: string; renews: number }[] = [];
+  for (const [lineText, rawEmail, rawProduct, rawRenews, rawOption] of rows) {
+    const line = Number(lineText);
+    const email = normaliseEmail(rawEmail);
+    if (!isEmail(email)) {
+      problems.push({ line, column: "email", problem: email ? "Not an email address" : "No email address", value: rawEmail });
+      continue;
+    }
+    const asked = rawProduct.replace(/\s+/g, " ").trim();
+    const named = byId.get(asked) ? [byId.get(asked)!] : byTitle.get(asked.toLowerCase()) ?? [];
+    if (named.length === 0) {
+      problems.push({ line, column: "product", problem: "No membership in your store has this name or id", value: rawProduct });
+      continue;
+    }
+    if (named.length > 1) {
+      problems.push({ line, column: "product", problem: `${named.length} products have this name: use the product's id instead`, value: rawProduct });
+      continue;
+    }
+    const product = named[0];
+    if (!product.recurring) {
+      problems.push({ line, column: "product", problem: "Not a membership: past buyers of other products are brought over under Your past buyers", value: rawProduct });
+      continue;
+    }
+    if (product.recurring.payments > 0) {
+      problems.push({ line, column: "product", problem: "This membership ends after a set number of payments, and how many each member has left is not known, so it cannot be moved", value: rawProduct });
+      continue;
+    }
+    if (!canSellProduct(store, product)) {
+      problems.push({ line, column: "product", problem: "Not on sale in your store now: publish it first", value: rawProduct });
+      continue;
+    }
+    let option = "";
+    const askedOption = rawOption.replace(/\s+/g, " ").trim();
+    if (product.options.length) {
+      const found = product.options.find((o) => o.id === askedOption || o.label.replace(/\s+/g, " ").trim().toLowerCase() === askedOption.toLowerCase());
+      if (!found) {
+        problems.push({ line, column: "option", problem: askedOption ? "This membership has no price with this name" : "This membership has several prices: say which one in the price column", value: rawOption });
+        continue;
+      }
+      option = found.id;
+    } else if (askedOption && askedOption.toLowerCase() !== product.title.replace(/\s+/g, " ").trim().toLowerCase()) {
+      problems.push({ line, column: "option", problem: "This membership has one price: leave the price column out, or empty", value: rawOption });
+      continue;
+    }
+    const renews = readRenewal(rawRenews);
+    if (!renews.ok) {
+      problems.push({
+        line,
+        column: "renews",
+        problem:
+          renews.reason === "empty"
+            ? "No renewal date: the day the membership would next renew is needed"
+            : renews.reason === "ambiguous"
+              ? "This date can be read two ways: write it with the year first, like 2026-11-03"
+              : "Not a date that can be read: write it like 2026-11-03",
+        value: rawRenews,
+      });
+      continue;
+    }
+    if (renews.at > today + MAX_AHEAD_DAYS * 86_400) {
+      problems.push({ line, column: "renews", problem: `More than ${MAX_AHEAD_DAYS} days away`, value: rawRenews });
+      continue;
+    }
+    if (renews.at < today - 31 * 86_400) {
+      problems.push({ line, column: "renews", problem: "Passed more than a month ago, so this membership has most likely ended", value: rawRenews });
+      continue;
+    }
+    valid.push({ line, email, productId: product.id, option, renews: renews.at });
+  }
+  const seen = await firstSeen(job, valid.map((v) => ({ key: `m:${v.email}|${v.productId}`, line: v.line })));
+  const fresh = valid.filter((v, i) => {
+    if (seen[i] === null) return true;
+    skipped.push({ line: v.line, column: "email", problem: `The same member and membership as row ${seen[i]}`, value: v.email });
+    return false;
+  });
+  const fields = await inviteMembers(store, job.id, fresh, now);
+  const toMail: string[] = [];
+  fields.forEach((field) => {
+    if (field) {
+      job.counts.added += 1;
+      toMail.push(field);
+    } else job.counts.already += 1;
+  });
+  if (toMail.length) await redisPipeline([["SADD", mailKey(job.id), ...toMail], ["EXPIRE", mailKey(job.id), KEEP_SECONDS]]);
+  await note(job, skipped, "skipped");
+  await note(job, problems, "errors");
+}
+
 const escapeHtml = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 function displayName(name: string): string {
@@ -726,11 +841,12 @@ async function mailStep(job: ImportJob, store: Store): Promise<"more" | "done" |
   const tags = healthTags(store, false);
   const messages = [];
   for (const email of emails) {
-    const letter = await movedEmail(store, job, email);
+    // For members, what waits is the invitation's field; the address is in it.
+    const letter = job.kind === "members" ? await inviteEmail(store, email) : await movedEmail(store, job, email);
     if (!letter) continue;
     messages.push({
       from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
-      to: email,
+      to: (letter as { to?: string }).to ?? email,
       subject: letter.subject,
       text: letter.text,
       html: `<div style="font-family:system-ui,sans-serif;line-height:1.5">${letter.text
@@ -841,6 +957,7 @@ export async function runImport(id: string, deadline: number): Promise<ImportJob
           const current = (await storeForId(job.sid)) ?? store;
           if (job.kind === "contacts") await contactsStep(job, current, rows);
           else if (job.kind === "products") await productsStep(job, current, rows);
+          else if (job.kind === "members") await membersStep(job, current, rows);
           else await purchasesStep(job, current, rows);
           job.done += rows.length;
         }
@@ -910,4 +1027,74 @@ export async function reportCsv(job: ImportJob): Promise<string> {
   const missing = job.counts.errors + job.counts.skipped - (lines.length - 1);
   if (missing > 0) lines.push(csvLine(["", "", `And ${missing.toLocaleString("en-US")} more rows like these, not listed`, ""]));
   return `\uFEFF${lines.join("\r\n")}\r\n`;
+}
+
+
+/**
+ * The one reminder to members who have not kept their membership yet,
+ * a few days before it renews (lib/move-rules.ts, REMIND_DAYS_BEFORE): asked
+ * of the creator's Stripe account first, so somebody who already kept it
+ * hears nothing. Sent under the same limits as the first emails: the
+ * company's day, the store's thirty days, and nothing to a store whose
+ * moved addresses have bounced too often.
+ */
+export async function sendMoveReminders(deadline: number, now = Date.now()): Promise<{ sent: number; kept: number }> {
+  const counts = { sent: 0, kept: 0 };
+  if (!isRedisConfigured() || !isSenderConfigured()) return counts;
+  for (const { sid, field } of await dueReminders(now)) {
+    if (Date.now() >= deadline) {
+      await remindLater(sid, field, now - 3_600 * 1000);
+      continue;
+    }
+    try {
+      const store = await storeForId(sid);
+      if (!store?.statsId || !isPaidUp(store) || (await pausedFor(sid))) continue;
+      const invite = await readInvite(store.statsId, field);
+      if (!invite || invite.kept) continue;
+      if (await keptAlready(store, invite.e, invite.p)) {
+        await noteKept(store, invite.e, invite.p, now);
+        counts.kept += 1;
+        continue;
+      }
+      const letter = await reminderEmail(store, field, now);
+      if (!letter) continue;
+      if (!(await reserveDay(1))) {
+        await remindLater(sid, field, now);
+        continue;
+      }
+      if ((await reserveMoved(sid, 1)) < 1) {
+        await releaseDay(1);
+        continue;
+      }
+      const sent = await sendBatch(
+        [
+          {
+            from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
+            to: letter.to,
+            subject: letter.subject,
+            text: letter.text,
+            html: `<div style="font-family:system-ui,sans-serif;line-height:1.5">${letter.text
+              .split("\n\n")
+              .map((para) => `<p>${escapeHtml(para).replace(/\n/g, "<br>")}</p>`)
+              .join("")}</div>`,
+            replyTo: store.email,
+            tags: healthTags(store, false),
+          },
+        ],
+        `nimbus-move-remind:${store.statsId}:${field}`,
+      );
+      if (sent === "sent") {
+        await noteSent(sid, 1);
+        counts.sent += 1;
+      } else if (sent === "retry") {
+        await redisPipeline([["DECRBY", movedKey(sid), 1]]);
+        await releaseDay(1);
+        await remindLater(sid, field, now);
+      }
+    } catch (error) {
+      console.error("sending a moved member's reminder failed", error);
+      await remindLater(sid, field, now);
+    }
+  }
+  return counts;
 }

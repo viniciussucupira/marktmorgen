@@ -630,6 +630,29 @@ export default function PrivacyPage() {
           the other platform. A store may send up to 20,000 of these in 30
           days, and for that we keep only a count.
         </p>
+        <p id="moved-members">
+          <strong className="text-black">
+            Members moved from another platform.
+          </strong>{" "}
+          A creator can also bring the members of a membership they ran
+          elsewhere: for each, we receive the email address, the membership,
+          the date it would next renew there and, for a membership with
+          several prices, which one. Nobody is given a membership because of
+          it. For each member we keep that address, membership, price and
+          date, the import that brought them, a random link of their own, and
+          whether they kept the membership here, until the store is deleted;
+          the link stops working 30 days after the renewal date. Each member
+          gets one email from the store&apos;s name, through our email
+          provider, with that link, and one reminder a few days before the
+          date if they have not kept it by then. Before the reminder we ask
+          the creator&apos;s Stripe account whether that address already holds
+          the membership, so somebody who kept it is not written to. We send
+          these on the creator&apos;s instruction and on their word that these
+          people are their members, which we cannot check against the other
+          platform; they count within the same 20,000 in 30 days. Keeping the
+          membership is a checkout on the creator&apos;s own Stripe account,
+          like any purchase in their store.
+        </p>
         <p id="code-links">
           <strong className="text-black">
             Discount codes in a link.
@@ -1517,8 +1540,8 @@ export default function PrivacyPage() {
           makes room after 500 are kept; the record of each event email, for
           30 days. What an import from another platform sends us is deleted 14
           days after it began, except the contacts it added to a list, kept as
-          the list is, and what past buyers were given, kept for as long as the
-          store exists. A Google Calendar or Zoom connection is kept until the
+          the list is, what past buyers were given and the members invited to
+          move, kept for as long as the store exists. A Google Calendar or Zoom connection is kept until the
           creator disconnects it or removes our app, each meeting&apos;s record
           until 60 days after the meeting, and a connection&apos;s problem log
           for 30 days.

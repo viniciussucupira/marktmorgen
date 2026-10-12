@@ -13,6 +13,7 @@ import { isSenderConfigured } from "@/lib/email";
 import { listCounts } from "@/lib/contacts";
 import { productCount } from "@/lib/catalog";
 import { MAX_PRODUCTS } from "@/lib/store";
+import { moveCounts } from "@/lib/move-members";
 
 export const metadata: Metadata = {
   title: "Moving from another platform — Marktmorgen",
@@ -39,6 +40,12 @@ const TABS: { kind: ImportKind; title: string; text: string; icon: IconName }[] 
     title: "Your past buyers",
     text: `Up to ${IMPORT_LIMITS.purchases.toLocaleString("en-US")} rows: they keep their courses and files.`,
     icon: "users",
+  },
+  {
+    kind: "members",
+    title: "Your members",
+    text: `Up to ${IMPORT_LIMITS.members.toLocaleString("en-US")}: each keeps their membership here, first paying on its renewal date.`,
+    icon: "repeat",
   },
 ];
 
@@ -74,8 +81,12 @@ export default async function StudioImportPage({ searchParams }: Params) {
   }
   const { view: access } = found;
   const { store } = access;
-  const kind: ImportKind = query.what === "products" || query.what === "purchases" ? query.what : "contacts";
-  const [jobs, counts] = await Promise.all([storeImports(store).catch(() => []), listCounts(store.listId).catch(() => null)]);
+  const kind: ImportKind = query.what === "products" || query.what === "purchases" || query.what === "members" ? query.what : "contacts";
+  const [jobs, counts, moved] = await Promise.all([
+    storeImports(store).catch(() => []),
+    listCounts(store.listId).catch(() => null),
+    kind === "members" ? moveCounts(store).catch(() => null) : Promise.resolve(null),
+  ]);
   const running = jobs.find((job) => job.state === "receiving" || job.state === "queued" || job.state === "running" || job.state === "mailing") ?? null;
   const past = jobs.filter((job) => job.id !== running?.id);
   const tab = TABS.find((t) => t.kind === kind)!;
@@ -83,6 +94,9 @@ export default async function StudioImportPage({ searchParams }: Params) {
     contacts: counts ? `Your list has ${counts.mailable.toLocaleString("en-US")} people you may email now.` : "",
     products: `Your store has ${productCount(store).toLocaleString("en-US")} of ${MAX_PRODUCTS.toLocaleString("en-US")} products.`,
     purchases: "Products are matched by their name or their id in your store, so bring your products over first.",
+    members: moved && moved.invited
+      ? `${moved.invited.toLocaleString("en-US")} ${moved.invited === 1 ? "member" : "members"} invited so far, and ${moved.kept.toLocaleString("en-US")} kept their membership here.`
+      : "Make the membership in your store first, at the same price, then bring its members.",
   };
 
   return (
@@ -99,12 +113,12 @@ export default async function StudioImportPage({ searchParams }: Params) {
           <p className="eyebrow">Moving from another platform</p>
           <h1 className="t-h2 mt-3">Bring your store with you</h1>
           <p className="mt-3 max-w-2xl text-ink-soft">
-            Export a spreadsheet from Stan, Gumroad, Kajabi, Mailchimp or anywhere else, choose it here, and say which column is
+            Export a spreadsheet from Stan, Gumroad, Kajabi, Patreon, Mailchimp or anywhere else, choose it here, and say which column is
             which. Every row is checked the way the studio checks what you type, and any row that could not be brought in is
             listed in a file you can download, with the reason.
           </p>
 
-          <nav aria-label="What to import" className="mt-8 grid gap-3 sm:grid-cols-3">
+          <nav aria-label="What to import" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {TABS.map((t) => {
               const on = t.kind === kind;
               return (
