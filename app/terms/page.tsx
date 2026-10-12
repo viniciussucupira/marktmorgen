@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 11, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 12, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -583,7 +583,8 @@ export default function TermsPage() {
           . In summary: your first payment to us is refunded in full on request
           within {REFUND_DAYS} days of it, for any reason or none; a yearly
           plan is refunded at any time for the months not yet started, the
-          months used being charged at the monthly price; and you may cancel
+          months used being charged at the monthly price and the card
+          processing fee Stripe charged on that payment being kept; and you may cancel
           at any time, keeping access to the end of the period already paid for.
         </p>
         <p>

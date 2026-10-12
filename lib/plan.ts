@@ -22,14 +22,115 @@ export const TIERS: readonly Tier[] = ["creator", "pro", "scale"];
 /** How often it is billed. */
 export type Cycle = "month" | "year";
 
-/** Every price we charge, in cents. Never below what Stan charges for the same. */
-export const PLAN_PRICES: Record<Tier, Record<Cycle, number>> = {
+/**
+ * The prices on sale today, in cents: a subscription and nothing taken from a
+ * sale. They stay until COMMISSION_LIVE below is switched on.
+ */
+export const PRICES_WITHOUT_COMMISSION: Record<Tier, Record<Cycle, number>> = {
   creator: { month: 2900, year: 30000 },
   pro: { month: 9900, year: 94800 },
   // What Kajabi charges for its middle plan, monthly and yearly, read from its
   // pricing page on October 6, 2026. See SCALE_MONTHLY_EMAILS for why it exists.
   scale: { month: 24900, year: 238800 },
 };
+
+/**
+ * The prices decided on October 12, 2026, in cents, which go with a share of
+ * each sale (COMMISSION_BPS). The rule they were set by is the owner's: the
+ * most profit there can be, and no account that can ever cost more than it
+ * brings in. No floor taken from what another store charges.
+ *
+ * How they were found. A thousand creators were drawn with monthly sales
+ * spread the way creator income is (lognormal, median $20, a long tail, and
+ * three in ten who have not sold yet), each willing to pay up to a base amount
+ * plus a share of what they sell, with five guesses at how large a share they
+ * tolerate, weighted. Each creator takes whichever plan costs them least, or
+ * none if every plan costs more than they will pay. The menu that leaves the
+ * most after every card fee and what each account costs to run was found by
+ * search, one, two, three and four plans, and then held against twelve
+ * variations of those guesses. Three plans is the most: a fourth added 0.01%.
+ *
+ * Store's $26 is set by the second half of the rule, not by the search. The
+ * search alone put Store at $22, and $22 loses money on one account: a store
+ * that pays one month, reaches every limit in it, cancels, and leaves all a
+ * paid plan may keep here until its closing day (lib/plan-closing-rules.ts).
+ * That is $14.45 of worst month and $10.27 of files kept for the 67 days
+ * after, $24.72 in all, against $21.06 that $22 leaves after the card fee.
+ * $26 leaves $24.95, the lowest whole price that pays for it. With Store
+ * held there, the search puts the rest at 5.75% / $144 + 2.75% / $348; these
+ * round figures earn $1 less in a thousand creators.
+ *
+ * Who is on which, since a creator takes the cheapest: Store below about
+ * $4,100 of sales a month (26 + 5.75% meets 149 + 2.75% there), Studio from
+ * there to about $7,270 (where 149 + 2.75% reaches 349), Scale above it.
+ *
+ * What moving each figure does, everything else held, on the expected profit
+ * (the model's own run, a thousand creators, $29,426 a month at these):
+ * Store at $27 loses 1.4%, at $28 3%, at $30 7%, as creators with small sales
+ * leave; below $26 is the loss above, whatever it would earn. Store's share
+ * at 4.75% loses 0.6% and at 6.75% loses 0.6%, and above it a growing store
+ * also leaves for Studio sooner. Studio's $149 moved by $20, or its 2.75% by
+ * half a point, loses under 0.1%, because the creators it would lose land on
+ * one of the other two. Scale at $299 loses 0.26% and at $399 0.13%, and a
+ * share taken on Scale loses 0.5% at half a point and 1.1% at one, because
+ * Scale is for the creator a share would drive away. The prices on sale today
+ * earn 4.9% less than these; $22 would earn 2.3% more and lose on the store
+ * above, which is the trade the rule makes.
+ *
+ * Every other account, paid by the month or the year, refunded, paused or
+ * closed, is added up against these in tests/plan-margin.test.ts. A store
+ * with no sales pays only the subscription, so that is the account that pays
+ * least, and every sale only adds to it. The yearly prices are ten months for
+ * twelve.
+ */
+export const PRICES_WITH_COMMISSION: Record<Tier, Record<Cycle, number>> = {
+  creator: { month: 2600, year: 26000 },
+  pro: { month: 14900, year: 149000 },
+  scale: { month: 34900, year: 349000 },
+};
+
+/** The share of each sale that goes with PRICES_WITH_COMMISSION, in basis points. */
+export const COMMISSION_BPS: Record<Tier, number> = { creator: 575, pro: 275, scale: 0 };
+
+/**
+ * Whether the share of each sale is charged, and with it the prices above.
+ *
+ * Off, and it stays off until three things are true, because a price on the
+ * site that the checkout cannot bill is a price we would be advertising
+ * without charging, and a share we cannot take is a store that pays less
+ * than the plan it was sold:
+ *
+ *   1. Stripe has said in writing that this platform may take an application
+ *      fee on a creator's own charges, from the company that will run it.
+ *      The share is taken out of the sale itself, on the creator's account,
+ *      so it is never a bill somebody can fail to pay.
+ *   2. Every checkout that charges on a creator's account sets that fee, and
+ *      a refund gives back the fee's share of what was refunded.
+ *   3. No page says any more that nothing is taken from a sale, and a store
+ *      that subscribed before keeps the price it chose with no share taken.
+ *
+ * tests/plan-margin.test.ts refuses the switch while any of these is
+ * missing that code can see.
+ */
+export const COMMISSION_LIVE = false;
+
+/** Every price we charge, in cents: the set that is on sale. */
+export const PLAN_PRICES: Record<Tier, Record<Cycle, number>> = COMMISSION_LIVE ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
+
+/** The share of a sale a plan takes now, in basis points: none while COMMISSION_LIVE is off. */
+export function commissionBps(tier: Tier): number {
+  return COMMISSION_LIVE ? COMMISSION_BPS[tier] : 0;
+}
+
+/**
+ * What a plan takes from a sale of this many cents, before tax: rounded down,
+ * so a creator is never charged a fraction of a cent that was not theirs to
+ * give. Zero for a refund, a negative amount, or anything that is not money.
+ */
+export function commissionCents(tier: Tier, saleCents: number): number {
+  if (!Number.isFinite(saleCents) || saleCents <= 0) return 0;
+  return Math.floor((Math.floor(saleCents) * commissionBps(tier)) / 10_000);
+}
 
 /** The monthly subscription, in cents: the price the site leads with. */
 export const PRICE_CENTS = PLAN_PRICES.creator.month;
