@@ -272,6 +272,38 @@ const en = {
   notTriedAgain: "The card on file won't be tried again, so this payment stays unpaid until it is paid from the link above.",
   receiptsPlan: (url: string) => `To see your receipts, or change the card: ${url}`,
   cancelInstead: (url: string) => `To cancel instead, or see your receipts: ${url}`,
+  // ---- Reminders, and a card about to stop working (added 12 October 2026) ----
+  reminderSubject: (store: string) => `Reminder: your payment to ${store} still hasn't gone through`,
+  reminderLead: "A short reminder, in case the first email was missed.",
+  /** "Visa ending in 4242". */
+  cardName: (brand: string, last4: string) => `${brand} ending in ${last4}`,
+  cardSubject: (store: string) => `Your card for ${store} expires before your next payment`,
+  cardFor: (card: string, title: string, date: string) =>
+    `The card you pay for ${title} with, ${card}, expires before your next payment, on ${date}.`,
+  cardTo: (card: string, store: string, date: string) =>
+    `The card you pay ${store} with, ${card}, expires before your next payment, on ${date}.`,
+  cardHere: "Add your new card here, so that payment goes through:",
+  cardHow: "It takes a minute on Stripe's secure page. Nothing is charged now, and the new card is used for these payments from then on.",
+  cardBank: "If your bank has already sent you a new card, Stripe may pick it up on its own; adding it here makes sure.",
+  cardTitle: "Update your card",
+  cardHead: (title: string) => `Update the card for ${title}`,
+  cardHeadStore: (store: string) => `Update the card you pay ${store} with`,
+  cardIntro: "Nothing is charged now. The card you add is used for these payments from then on.",
+  cardPayNow: "Your latest payment didn't go through, so it is charged to the new card straight away.",
+  cardButton: "Add a new card",
+  cardNote: "On Stripe's own secure page. The store never sees your card number.",
+  cardEnded: "This membership has ended, so there is no card to update.",
+  cardNotices: {
+    updated: { title: "Your card is updated", body: "Your next payments use the new card." },
+    paid: { title: "Your card is updated and your payment went through", body: "Your next payments use the new card too." },
+    declined: {
+      title: "Your new card is saved, but the payment was declined",
+      body: "Your next payments use the new card. Stripe tries the one that failed again, or you can pay it from the link in the email about it.",
+    },
+    canceled: { title: "Nothing was changed", body: "You left Stripe's page before saving a card. Press the button to try again." },
+    expired: { title: "This link has expired", body: "Ask for a link to your membership on its page; from there you can change your card." },
+    error: { title: "Something went wrong on our side", body: "Nothing was changed. Try again in a moment." },
+  } as Record<string, Notice>,
 };
 
 export type MembershipWords = typeof en;
@@ -520,6 +552,36 @@ const es: MembershipWords = {
     "No se volverá a intentar el cobro en la tarjeta registrada, así que este pago seguirá pendiente hasta que se pague desde el enlace de arriba.",
   receiptsPlan: (url) => `Para ver tus recibos o cambiar la tarjeta: ${url}`,
   cancelInstead: (url) => `Si prefieres cancelar, o ver tus recibos: ${url}`,
+  reminderSubject: (store) => `Recordatorio: tu pago a ${store} aún no se ha completado`,
+  reminderLead: "Un breve recordatorio, por si no viste el primer correo.",
+  cardName: (brand, last4) => `${brand} terminada en ${last4}`,
+  cardSubject: (store) => `Tu tarjeta para ${store} caduca antes de tu próximo pago`,
+  cardFor: (card, title, date) =>
+    `La tarjeta con la que pagas ${title}, ${card}, caduca antes de tu próximo pago, el ${date}.`,
+  cardTo: (card, store, date) =>
+    `La tarjeta con la que pagas a ${store}, ${card}, caduca antes de tu próximo pago, el ${date}.`,
+  cardHere: "Añade tu nueva tarjeta aquí, para que ese pago se complete:",
+  cardHow: "Lleva un minuto en la página segura de Stripe. No se cobra nada ahora, y la nueva tarjeta se usa para estos pagos a partir de entonces.",
+  cardBank: "Si tu banco ya te ha enviado una tarjeta nueva, puede que Stripe la reciba por su cuenta; añadirla aquí lo asegura.",
+  cardTitle: "Actualiza tu tarjeta",
+  cardHead: (title) => `Actualiza la tarjeta de ${title}`,
+  cardHeadStore: (store) => `Actualiza la tarjeta con la que pagas a ${store}`,
+  cardIntro: "No se cobra nada ahora. La tarjeta que añadas se usa para estos pagos a partir de entonces.",
+  cardPayNow: "Tu último pago no se completó, así que se cobra en la nueva tarjeta en ese mismo momento.",
+  cardButton: "Añadir una tarjeta nueva",
+  cardNote: "En la propia página segura de Stripe. La tienda nunca ve el número de tu tarjeta.",
+  cardEnded: "Esta membresía ha terminado, así que no hay tarjeta que actualizar.",
+  cardNotices: {
+    updated: { title: "Tu tarjeta está actualizada", body: "Tus próximos pagos usan la nueva tarjeta." },
+    paid: { title: "Tu tarjeta está actualizada y tu pago se completó", body: "Tus próximos pagos también usan la nueva tarjeta." },
+    declined: {
+      title: "Tu nueva tarjeta está guardada, pero el pago fue rechazado",
+      body: "Tus próximos pagos usan la nueva tarjeta. Stripe vuelve a intentar el que falló, o puedes pagarlo desde el enlace del correo que te avisó.",
+    },
+    canceled: { title: "No se ha cambiado nada", body: "Saliste de la página de Stripe antes de guardar una tarjeta. Pulsa el botón para intentarlo de nuevo." },
+    expired: { title: "Este enlace ha caducado", body: "Pide un enlace a tu membresía en su página; desde allí puedes cambiar tu tarjeta." },
+    error: { title: "Algo salió mal por nuestra parte", body: "No se ha cambiado nada. Inténtalo de nuevo en un momento." },
+  },
 };
 
 const fr: MembershipWords = {
@@ -776,6 +838,36 @@ const fr: MembershipWords = {
     "Aucune nouvelle tentative ne sera faite sur la carte enregistrée, donc ce paiement reste impayé tant qu'il n'est pas réglé depuis le lien ci-dessus.",
   receiptsPlan: (url) => `Pour voir vos reçus, ou changer de carte${S}: ${url}`,
   cancelInstead: (url) => `Pour annuler plutôt, ou voir vos reçus${S}: ${url}`,
+  reminderSubject: (store) => `Rappel${S}: votre paiement à ${store} n'a toujours pas abouti`,
+  reminderLead: "Un court rappel, au cas où le premier e-mail vous aurait échappé.",
+  cardName: (brand, last4) => `${brand} se terminant par ${last4}`,
+  cardSubject: (store) => `Votre carte pour ${store} expire avant votre prochain paiement`,
+  cardFor: (card, title, date) =>
+    `La carte avec laquelle vous payez ${title}, ${card}, expire avant votre prochain paiement, le ${date}.`,
+  cardTo: (card, store, date) =>
+    `La carte avec laquelle vous payez ${store}, ${card}, expire avant votre prochain paiement, le ${date}.`,
+  cardHere: `Ajoutez votre nouvelle carte ici, pour que ce paiement aboutisse${S}:`,
+  cardHow: "Cela prend une minute sur la page sécurisée de Stripe. Rien n'est débité maintenant, et la nouvelle carte sert pour ces paiements à partir de là.",
+  cardBank: `Si votre banque vous a déjà envoyé une nouvelle carte, Stripe peut la recevoir de lui-même${S}; l'ajouter ici vous en assure.`,
+  cardTitle: "Mettez à jour votre carte",
+  cardHead: (title) => `Mettez à jour la carte pour ${title}`,
+  cardHeadStore: (store) => `Mettez à jour la carte avec laquelle vous payez ${store}`,
+  cardIntro: "Rien n'est débité maintenant. La carte que vous ajoutez sert pour ces paiements à partir de là.",
+  cardPayNow: "Votre dernier paiement n'a pas abouti, il est donc débité tout de suite sur la nouvelle carte.",
+  cardButton: "Ajouter une nouvelle carte",
+  cardNote: "Sur la page sécurisée de Stripe. La boutique ne voit jamais le numéro de votre carte.",
+  cardEnded: "Cet abonnement est terminé, il n'y a donc pas de carte à mettre à jour.",
+  cardNotices: {
+    updated: { title: "Votre carte est à jour", body: "Vos prochains paiements utilisent la nouvelle carte." },
+    paid: { title: "Votre carte est à jour et votre paiement a abouti", body: "Vos prochains paiements utilisent aussi la nouvelle carte." },
+    declined: {
+      title: "Votre nouvelle carte est enregistrée, mais le paiement a été refusé",
+      body: "Vos prochains paiements utilisent la nouvelle carte. Stripe retente celui qui a échoué, ou vous pouvez le payer depuis le lien de l'e-mail qui vous en a parlé.",
+    },
+    canceled: { title: "Rien n'a été modifié", body: "Vous avez quitté la page de Stripe avant d'enregistrer une carte. Appuyez sur le bouton pour réessayer." },
+    expired: { title: "Ce lien a expiré", body: `Demandez un lien vers votre abonnement sur sa page${S}; de là, vous pouvez changer de carte.` },
+    error: { title: "Un problème est survenu de notre côté", body: "Rien n'a été modifié. Réessayez dans un instant." },
+  },
 };
 
 const de: MembershipWords = {
@@ -1038,6 +1130,36 @@ const de: MembershipWords = {
     "Es wird kein weiterer Versuch unternommen, die hinterlegte Karte zu belasten, daher bleibt diese Zahlung offen, bis sie über den Link oben bezahlt wird.",
   receiptsPlan: (url) => `Um Ihre Quittungen zu sehen oder die Karte zu ändern: ${url}`,
   cancelInstead: (url) => `Um stattdessen zu kündigen oder Ihre Quittungen zu sehen: ${url}`,
+  reminderSubject: (store) => `Erinnerung: Ihre Zahlung an ${store} ist noch nicht durchgegangen`,
+  reminderLead: "Eine kurze Erinnerung, falls Sie die erste E-Mail übersehen haben.",
+  cardName: (brand, last4) => `${brand} mit Endziffern ${last4}`,
+  cardSubject: (store) => `Ihre Karte für ${store} läuft vor Ihrer nächsten Zahlung ab`,
+  cardFor: (card, title, date) =>
+    `Die Karte, mit der Sie ${title} bezahlen (${card}), läuft vor Ihrer nächsten Zahlung am ${date} ab.`,
+  cardTo: (card, store, date) =>
+    `Die Karte, mit der Sie ${store} bezahlen (${card}), läuft vor Ihrer nächsten Zahlung am ${date} ab.`,
+  cardHere: "Fügen Sie Ihre neue Karte hier hinzu, damit diese Zahlung durchgeht:",
+  cardHow: "Das dauert eine Minute auf der sicheren Seite von Stripe. Jetzt wird nichts abgebucht, und die neue Karte wird ab dann für diese Zahlungen verwendet.",
+  cardBank: "Wenn Ihre Bank Ihnen schon eine neue Karte geschickt hat, übernimmt Stripe sie vielleicht von selbst; sie hier hinzuzufügen, stellt es sicher.",
+  cardTitle: "Karte aktualisieren",
+  cardHead: (title) => `Die Karte für ${title} aktualisieren`,
+  cardHeadStore: (store) => `Die Karte aktualisieren, mit der Sie ${store} bezahlen`,
+  cardIntro: "Jetzt wird nichts abgebucht. Die Karte, die Sie hinzufügen, wird ab dann für diese Zahlungen verwendet.",
+  cardPayNow: "Ihre letzte Zahlung ist nicht durchgegangen, deshalb wird sie sofort von der neuen Karte abgebucht.",
+  cardButton: "Neue Karte hinzufügen",
+  cardNote: "Auf der eigenen sicheren Seite von Stripe. Der Shop sieht Ihre Kartennummer nie.",
+  cardEnded: "Diese Mitgliedschaft ist beendet, deshalb gibt es keine Karte zu aktualisieren.",
+  cardNotices: {
+    updated: { title: "Ihre Karte ist aktualisiert", body: "Ihre nächsten Zahlungen laufen über die neue Karte." },
+    paid: { title: "Ihre Karte ist aktualisiert und Ihre Zahlung ist durchgegangen", body: "Auch Ihre nächsten Zahlungen laufen über die neue Karte." },
+    declined: {
+      title: "Ihre neue Karte ist gespeichert, aber die Zahlung wurde abgelehnt",
+      body: "Ihre nächsten Zahlungen laufen über die neue Karte. Stripe versucht die fehlgeschlagene erneut, oder Sie bezahlen sie über den Link in der E-Mail dazu.",
+    },
+    canceled: { title: "Es wurde nichts geändert", body: "Sie haben die Seite von Stripe verlassen, bevor eine Karte gespeichert war. Drücken Sie den Knopf, um es erneut zu versuchen." },
+    expired: { title: "Dieser Link ist abgelaufen", body: "Fordern Sie auf der Seite Ihrer Mitgliedschaft einen Link an; von dort können Sie Ihre Karte ändern." },
+    error: { title: "Bei uns ist etwas schiefgegangen", body: "Es wurde nichts geändert. Versuchen Sie es gleich noch einmal." },
+  },
 };
 
 /** Italian elides "il" and "al" before the 8th and the 11th: "l'8 ottobre", "all'11 ottobre". */
@@ -1295,6 +1417,36 @@ const it: MembershipWords = {
     "L'addebito sulla carta registrata non verrà ritentato, quindi questo pagamento resta in sospeso finché non viene saldato dal link qui sopra.",
   receiptsPlan: (url) => `Per vedere le tue ricevute o cambiare la carta: ${url}`,
   cancelInstead: (url) => `Se preferisci annullare, o vedere le tue ricevute: ${url}`,
+  reminderSubject: (store) => `Promemoria: il tuo pagamento a ${store} non è ancora andato a buon fine`,
+  reminderLead: "Un breve promemoria, nel caso ti fosse sfuggita la prima email.",
+  cardName: (brand, last4) => `${brand} che termina con ${last4}`,
+  cardSubject: (store) => `La tua carta per ${store} scade prima del prossimo pagamento`,
+  cardFor: (card, title, date) =>
+    `La carta con cui paghi ${title}, ${card}, scade prima del tuo prossimo pagamento, ${il(date)}.`,
+  cardTo: (card, store, date) =>
+    `La carta con cui paghi ${store}, ${card}, scade prima del tuo prossimo pagamento, ${il(date)}.`,
+  cardHere: "Aggiungi qui la tua nuova carta, così quel pagamento va a buon fine:",
+  cardHow: "Basta un minuto sulla pagina sicura di Stripe. Ora non viene addebitato nulla, e da quel momento la nuova carta viene usata per questi pagamenti.",
+  cardBank: "Se la tua banca ti ha già inviato una nuova carta, Stripe potrebbe riceverla da sé; aggiungerla qui ti dà la certezza.",
+  cardTitle: "Aggiorna la tua carta",
+  cardHead: (title) => `Aggiorna la carta per ${title}`,
+  cardHeadStore: (store) => `Aggiorna la carta con cui paghi ${store}`,
+  cardIntro: "Ora non viene addebitato nulla. La carta che aggiungi viene usata per questi pagamenti da quel momento.",
+  cardPayNow: "Il tuo ultimo pagamento non è andato a buon fine, quindi viene addebitato subito sulla nuova carta.",
+  cardButton: "Aggiungi una nuova carta",
+  cardNote: "Sulla pagina sicura di Stripe. Il negozio non vede mai il numero della tua carta.",
+  cardEnded: "Questo abbonamento è terminato, quindi non c'è nessuna carta da aggiornare.",
+  cardNotices: {
+    updated: { title: "La tua carta è aggiornata", body: "I tuoi prossimi pagamenti usano la nuova carta." },
+    paid: { title: "La tua carta è aggiornata e il pagamento è andato a buon fine", body: "Anche i tuoi prossimi pagamenti usano la nuova carta." },
+    declined: {
+      title: "La tua nuova carta è salvata, ma il pagamento è stato rifiutato",
+      body: "I tuoi prossimi pagamenti usano la nuova carta. Stripe riprova quello non riuscito, oppure puoi pagarlo dal link nell'email che te lo segnalava.",
+    },
+    canceled: { title: "Non è cambiato nulla", body: "Hai lasciato la pagina di Stripe prima di salvare una carta. Premi il pulsante per riprovare." },
+    expired: { title: "Questo link è scaduto", body: "Chiedi un link al tuo abbonamento dalla sua pagina; da lì puoi cambiare la carta." },
+    error: { title: "Qualcosa è andato storto da parte nostra", body: "Non è cambiato nulla. Riprova tra un momento." },
+  },
 };
 
 const nl: MembershipWords = {
@@ -1544,6 +1696,36 @@ const nl: MembershipWords = {
     "Er wordt niet opnieuw geprobeerd de opgeslagen kaart te belasten, dus deze betaling blijft openstaan tot ze via de link hierboven is betaald.",
   receiptsPlan: (url) => `Om je ontvangstbewijzen te bekijken of de kaart te wijzigen: ${url}`,
   cancelInstead: (url) => `Om in plaats daarvan op te zeggen, of je ontvangstbewijzen te bekijken: ${url}`,
+  reminderSubject: (store) => `Herinnering: je betaling aan ${store} is nog steeds niet gelukt`,
+  reminderLead: "Een korte herinnering, voor het geval je de eerste e-mail hebt gemist.",
+  cardName: (brand, last4) => `${brand} eindigend op ${last4}`,
+  cardSubject: (store) => `Je kaart voor ${store} verloopt vóór je volgende betaling`,
+  cardFor: (card, title, date) =>
+    `De kaart waarmee je ${title} betaalt, ${card}, verloopt vóór je volgende betaling, op ${date}.`,
+  cardTo: (card, store, date) =>
+    `De kaart waarmee je ${store} betaalt, ${card}, verloopt vóór je volgende betaling, op ${date}.`,
+  cardHere: "Voeg je nieuwe kaart hier toe, zodat die betaling lukt:",
+  cardHow: "Het duurt een minuut op de beveiligde pagina van Stripe. Er wordt nu niets afgeschreven, en de nieuwe kaart wordt vanaf dan voor deze betalingen gebruikt.",
+  cardBank: "Als je bank je al een nieuwe kaart heeft gestuurd, neemt Stripe die misschien zelf over; hem hier toevoegen maakt het zeker.",
+  cardTitle: "Werk je kaart bij",
+  cardHead: (title) => `Werk de kaart voor ${title} bij`,
+  cardHeadStore: (store) => `Werk de kaart bij waarmee je ${store} betaalt`,
+  cardIntro: "Er wordt nu niets afgeschreven. De kaart die je toevoegt, wordt vanaf dan voor deze betalingen gebruikt.",
+  cardPayNow: "Je laatste betaling is niet gelukt, dus die wordt meteen van de nieuwe kaart afgeschreven.",
+  cardButton: "Nieuwe kaart toevoegen",
+  cardNote: "Op de eigen beveiligde pagina van Stripe. De winkel ziet je kaartnummer nooit.",
+  cardEnded: "Dit lidmaatschap is beëindigd, dus er is geen kaart om bij te werken.",
+  cardNotices: {
+    updated: { title: "Je kaart is bijgewerkt", body: "Je volgende betalingen gaan via de nieuwe kaart." },
+    paid: { title: "Je kaart is bijgewerkt en je betaling is gelukt", body: "Ook je volgende betalingen gaan via de nieuwe kaart." },
+    declined: {
+      title: "Je nieuwe kaart is opgeslagen, maar de betaling is geweigerd",
+      body: "Je volgende betalingen gaan via de nieuwe kaart. Stripe probeert de mislukte opnieuw, of je betaalt hem via de link in de e-mail erover.",
+    },
+    canceled: { title: "Er is niets gewijzigd", body: "Je hebt de pagina van Stripe verlaten voordat er een kaart was opgeslagen. Druk op de knop om het opnieuw te proberen." },
+    expired: { title: "Deze link is verlopen", body: "Vraag op de pagina van je lidmaatschap een link aan; van daaruit kun je je kaart wijzigen." },
+    error: { title: "Er ging aan onze kant iets mis", body: "Er is niets gewijzigd. Probeer het zo opnieuw." },
+  },
 };
 
 const pt: MembershipWords = {
@@ -1793,6 +1975,36 @@ const pt: MembershipWords = {
     "A cobrança no cartão registado não será tentada novamente, por isso este pagamento fica por pagar até ser pago a partir da ligação acima.",
   receiptsPlan: (url) => `Para ver os seus recibos ou alterar o cartão: ${url}`,
   cancelInstead: (url) => `Para cancelar, em alternativa, ou ver os seus recibos: ${url}`,
+  reminderSubject: (store) => `Lembrete: o seu pagamento a ${store} ainda não foi concluído`,
+  reminderLead: "Um breve lembrete, caso o primeiro email lhe tenha escapado.",
+  cardName: (brand, last4) => `${brand} terminado em ${last4}`,
+  cardSubject: (store) => `O seu cartão para ${store} expira antes do próximo pagamento`,
+  cardFor: (card, title, date) =>
+    `O cartão com que paga ${title}, ${card}, expira antes do seu próximo pagamento, a ${date}.`,
+  cardTo: (card, store, date) =>
+    `O cartão com que paga a ${store}, ${card}, expira antes do seu próximo pagamento, a ${date}.`,
+  cardHere: "Adicione aqui o seu novo cartão, para que esse pagamento seja concluído:",
+  cardHow: "Demora um minuto na página segura da Stripe. Nada é cobrado agora, e o novo cartão passa a ser usado nestes pagamentos a partir daí.",
+  cardBank: "Se o seu banco já lhe enviou um cartão novo, a Stripe pode recebê-lo por si só; adicioná-lo aqui dá-lhe a certeza.",
+  cardTitle: "Atualize o seu cartão",
+  cardHead: (title) => `Atualize o cartão de ${title}`,
+  cardHeadStore: (store) => `Atualize o cartão com que paga a ${store}`,
+  cardIntro: "Nada é cobrado agora. O cartão que adicionar passa a ser usado nestes pagamentos a partir daí.",
+  cardPayNow: "O seu último pagamento não foi concluído, por isso é cobrado de imediato no novo cartão.",
+  cardButton: "Adicionar um cartão novo",
+  cardNote: "Na própria página segura da Stripe. A loja nunca vê o número do seu cartão.",
+  cardEnded: "Esta subscrição terminou, por isso não há cartão para atualizar.",
+  cardNotices: {
+    updated: { title: "O seu cartão está atualizado", body: "Os seus próximos pagamentos usam o novo cartão." },
+    paid: { title: "O seu cartão está atualizado e o pagamento foi concluído", body: "Os seus próximos pagamentos também usam o novo cartão." },
+    declined: {
+      title: "O seu novo cartão está guardado, mas o pagamento foi recusado",
+      body: "Os seus próximos pagamentos usam o novo cartão. A Stripe volta a tentar o que falhou, ou pode pagá-lo a partir do link no email sobre ele.",
+    },
+    canceled: { title: "Nada foi alterado", body: "Saiu da página da Stripe antes de guardar um cartão. Prima o botão para tentar de novo." },
+    expired: { title: "Este link expirou", body: "Peça um link para a sua subscrição na página dela; a partir daí pode alterar o seu cartão." },
+    error: { title: "Algo correu mal do nosso lado", body: "Nada foi alterado. Tente de novo dentro de momentos." },
+  },
 };
 
 export const MEMBERSHIP_WORDS: Record<LanguageCode, MembershipWords> = { en, es, fr, de, it, nl, pt };

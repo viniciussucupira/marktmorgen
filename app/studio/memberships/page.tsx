@@ -9,6 +9,7 @@ import { LEAVE_NAMES, STAY_AGES, membershipNumbers } from "@/lib/membership-numb
 import { channelName } from "@/lib/channel-names";
 import { readListings } from "@/lib/catalog";
 import { formatMoney } from "@/lib/money";
+import { recoveryReport } from "@/lib/payment-recovery-report";
 
 export const metadata: Metadata = {
   title: "Membership numbers — Marktmorgen",
@@ -42,6 +43,13 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
     console.error("reading membership numbers failed", error);
     return null;
   });
+  const recovery = numbers
+    ? await recoveryReport(store, query.fresh === "1").catch((error) => {
+        console.error("reading recovered payments failed", error);
+        return null;
+      })
+    : null;
+  const reminders = store.dunning.reminders;
   const titles = numbers ? new Map((await readListings(store, numbers.byProduct.map((p) => p.product))).map((p) => [p.id, p.title])) : new Map();
   const money = (cents: number) => formatMoney(cents, numbers?.currency ?? store.currency);
   const when = numbers
@@ -104,7 +112,9 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
               {numbers.atRisk > 0 ? (
                 <p className="notice notice-warn mt-6">
                   {`${numbers.atRisk} paying ${numbers.atRisk === 1 ? "member's" : "members'"} latest payment failed and Stripe is retrying it: ${money(numbers.atRiskMrr)} a month. `}
-                  Each is emailed once with a link that pays it.
+                  {reminders === 1
+                    ? "Each is emailed once with a link that pays it."
+                    : `Each is emailed up to ${reminders} times with a link that pays it, while it is still unpaid.`}
                 </p>
               ) : null}
 
@@ -137,6 +147,35 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                   </div>
                 )}
               </section>
+
+              {recovery ? (
+                <section aria-labelledby="recovered-title" className="card mt-8 p-6 sm:p-8" data-recovered>
+                  <h2 id="recovered-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Payments that failed and came back</h2>
+                  <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">Recovered, last 30 days</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{money(recovery.cents)}</dd>
+                      <dd className="text-sm text-ink-soft">{`${recovery.recovered} ${recovery.recovered === 1 ? "payment" : "payments"} paid after failing`}</dd>
+                    </div>
+                    <div className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">After an email</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{money(recovery.afterEmailCents)}</dd>
+                      <dd className="text-sm text-ink-soft">{`${recovery.afterEmail} paid once the member was told`}</dd>
+                    </div>
+                    <div className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">Emails this month</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{String(recovery.month.failed + recovery.month.cards)}</dd>
+                      <dd className="text-sm text-ink-soft">{`${recovery.month.failed} about failed payments, ${recovery.month.cards} before a card expired`}</dd>
+                    </div>
+                  </dl>
+                  <p className="mt-3 text-xs text-ink-soft">
+                    A renewal counts when it was paid in the last 30 days after Stripe had tried the card more than once, or after
+                    the member was emailed that it failed. Read from your own Stripe account, in your store&apos;s currency.
+                    {recovery.complete ? "" : " Your account holds more paid invoices than one reading takes, so the oldest of the 30 days may be missing."}
+                    {" How many emails go, and the card notice, are set under \u201cWhen a member\u2019s payment fails\u201d in your studio\u2019s settings."}
+                  </p>
+                </section>
+              ) : null}
 
               {numbers.forecast ? (
                 <section aria-labelledby="ahead-title" className="card mt-8 p-6 sm:p-8">

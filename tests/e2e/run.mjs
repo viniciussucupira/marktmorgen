@@ -552,6 +552,7 @@ try {
     ], [true, true, true, true]);
     is("their words, without a name or an address", [/Love it, but money is tight this month\./.test(members), /@example\.com/.test(members)], [true, false]);
     is("and the next three months, said as an estimate", [/The next three months, if the pace holds/.test(members), /An estimate, not a promise/.test(members)], [true, true]);
+    is("what came back after failing: the renewal paid on Stripe's third try", [/Payments that failed and came back/.test(members), /\$20(\.00)?\s*1 payment paid after failing/.test(members)], [true, true]);
     if (process.env.E2E_SHOTS) await studio.screenshot({ path: join(process.env.E2E_SHOTS, "memberships.png"), fullPage: true });
 
     // A buyer's page (lib/buyer-profile.ts): opened from the latest buyers, read
@@ -2046,6 +2047,7 @@ try {
       ["the studio's imports", "/studio/import", 1200],
       ["the studio's integrations", "/studio/integrations", 1200],
       ["the studio's memberships", "/studio/memberships", 1200],
+      ["a card link that no longer works", `/@localshop/manage/card?t=${"0".repeat(64)}`, 0],
       ["the studio's community", "/studio/community", 1200],
       ["the studio's calls", "/studio/meetings", 1200],
       ["the studio's outreach", "/studio/outreach", 1200],
@@ -2245,6 +2247,27 @@ try {
     const paid = services.checkouts().at(-1);
     is("Stripe charges the year, said on the order", [paid.mode, paid.amount_total, paid.metadata.every], ["subscription", 20000, "year"]);
     is("and the page after paying says a year", (await words(page.locator("main"))).includes("for $200 a year."), true);
+
+    // With a membership on sale, the studio says what members are told when a
+    // payment fails (lib/dunning-rules.ts).
+    await open(studio, `${LOCAL}/studio`);
+    const editor = studio.locator("[data-dunning-editor]");
+    is("the setting is in the studio: one email and the card notice, until the creator chooses", [
+      await editor.count(),
+      await editor.locator("#dunning-reminders").inputValue(),
+      await editor.locator("#dunning-card").isChecked(),
+    ], [1, "1", true]);
+    await editor.locator("#dunning-reminders").selectOption("3");
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/dunning") && r.ok(), { timeout: 30_000 }),
+      editor.getByRole("button", { name: "Save" }).click(),
+    ]);
+    await open(studio, `${LOCAL}/studio`);
+    is("three emails, kept", await studio.locator("#dunning-reminders").inputValue(), "3");
+    if (process.env.E2E_SHOTS) await studio.locator("[data-dunning-editor]").screenshot({ path: join(process.env.E2E_SHOTS, "dunning-editor.png") });
+    const refused = await studio.evaluate(async () => (await fetch("/api/store/dunning", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reminders: 9, cardNotice: true }) })).status);
+    is("a number not offered is refused", refused, 400);
+    await studio.evaluate(async () => fetch("/api/store/dunning", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reminders: 1, cardNotice: true }) }));
     await studio.evaluate(async (id) => fetch("/api/store/product", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "remove", id }) }), club);
   }
 
@@ -2997,6 +3020,17 @@ try {
     await Promise.all([page.waitForURL(/status=resumed/), page.locator("[data-paused]").getByRole("button", { name: "Resume now" }).click()]);
     is("before the pause starts, coming back only takes it off", [(await words(page.locator("main"))).includes("Your membership is on again"), services.subscriptionUpdates().at(-1)?.pause_collection, services.subscriptionUpdates().at(-1)?.billing_cycle_anchor], [true, "", undefined]);
     await studio.evaluate(async () => fetch("/api/store/pause", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ months: 0 }) }));
+  }
+
+  part("A card link that no longer works");
+  {
+    await open(page, `${LOCAL}/@localshop/manage/card?t=${"0".repeat(64)}`);
+    is("a card link that no longer works says so, and offers the way in", [
+      (await words(page.locator("main"))).includes("This link has expired"),
+      await page.getByRole("button", { name: "Add a new card" }).count(),
+      await page.getByRole("link", { name: "Manage or cancel your membership" }).count(),
+    ], [true, 0, 1]);
+    if (process.env.E2E_SHOTS) await page.screenshot({ path: join(process.env.E2E_SHOTS, "card-expired.png"), fullPage: true });
   }
 
   await keepSmall();

@@ -278,12 +278,13 @@ export async function startServices(port) {
       // Everything else Stripe is asked for while a page is drawn is a list with nothing on it.
       // The connected account, as a reminder's switch reads its country (lib/checkout-recovery.ts).
       if (req.method === "GET" && path === "/v1/account") return json(res, 200, { id: "acct_1LocalHarbor0001", object: "account", country: "IE" });
-      // A membership of the local store renewed yesterday, on the creator's own account, as Stripe lists paid invoices.
+      // A membership of the local store renewed yesterday, on the creator's own account, as Stripe lists paid invoices:
+      // paid on Stripe's third try, so "Payments that failed and came back" counts it (lib/payment-recovery-report.ts).
       if (req.method === "GET" && path === "/v1/invoices" && req.headers["stripe-account"] && new URL(req.url, "http://x").searchParams.get("status") === "paid") {
         return json(res, 200, {
           object: "list",
           has_more: false,
-          data: [{ id: "in_local_renewal_0001", object: "invoice", status: "paid", billing_reason: "subscription_cycle", amount_paid: 2000, currency: "usd", created: Math.floor(Date.now() / 1000) - 86_400, subscription_details: { metadata: { store: "localshop", product: "club" } } }],
+          data: [{ id: "in_local_renewal_0001", object: "invoice", status: "paid", billing_reason: "subscription_cycle", amount_paid: 2000, currency: "usd", created: Math.floor(Date.now() / 1000) - 86_400, attempt_count: 3, status_transitions: { paid_at: Math.floor(Date.now() / 1000) - 86_400 }, subscription_details: { metadata: { store: "localshop", product: "club" } } }],
         });
       }
       // One member of the local store, on the creator's own account, who pauses and comes back (lib/membership-pause.ts).
