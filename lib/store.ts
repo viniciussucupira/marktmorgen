@@ -61,6 +61,7 @@ import { type TaxSetting, NO_TAX, parseTax } from "@/lib/tax";
 import { type RecoverySetting, NO_RECOVERY, parseRecovery } from "@/lib/recovery-setting";
 import { type SaveOffer, NO_SAVE, parseSaveOffer } from "@/lib/save-offer";
 import { parsePauseMonths } from "@/lib/membership-pause-rules";
+import { type Dunning, DEFAULT_DUNNING, parseDunning } from "@/lib/dunning-rules";
 import { type WinBack, NO_WINBACK, parseWinBack } from "@/lib/winback";
 import { type StoreSale, NO_SALE, parseSale } from "@/lib/store-sale";
 import { parseTiers } from "@/lib/tier-rules";
@@ -463,6 +464,12 @@ export type Store = {
    */
   pause: number;
   /**
+   * What members are told when a payment fails, and before their card stops
+   * working (lib/dunning-rules.ts): one email per failed payment and the card
+   * notice, for every store until its creator chooses otherwise.
+   */
+  dunning: Dunning;
+  /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
    */
@@ -822,6 +829,7 @@ function parseStore(raw: unknown): Store | null {
       // does until its creator sets one.
       save: parseSaveOffer(value.save),
       pause: parsePauseMonths(value.pause),
+      dunning: parseDunning(value.dunning),
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
       tiers: parseTiers(value.tiers),
@@ -1009,6 +1017,7 @@ async function freshStore(fields: {
     recovery: { ...NO_RECOVERY },
     save: { ...NO_SAVE },
     pause: 0,
+    dunning: { ...DEFAULT_DUNNING },
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
     tiers: [],
@@ -2152,6 +2161,15 @@ export async function setPauseMonths(email: string, months: unknown): Promise<{ 
   const pause = parsePauseMonths(months);
   if (pause !== months) return { ok: false, reason: "months" };
   const next = await patchStore(email, () => ({ pause }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/** Saves what members are told when a payment fails (lib/dunning-rules.ts). */
+export async function setDunning(email: string, raw: unknown): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" | "dunning" }> {
+  const dunning = parseDunning(raw);
+  const asked = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  if (dunning.reminders !== asked.reminders || dunning.cardNotice !== asked.cardNotice) return { ok: false, reason: "dunning" };
+  const next = await patchStore(email, () => ({ dunning }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 

@@ -82,6 +82,7 @@ import { listKeys } from "@/lib/api-keys";
 import { INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { SaveOfferEditor } from "@/components/save-offer-editor";
 import { PauseEditor } from "@/components/pause-editor";
+import { DunningEditor } from "@/components/dunning-editor";
 import { WinBackEditor } from "@/components/winback-editor";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { AiOn } from "@/components/ai-assist";
@@ -1495,6 +1496,7 @@ export default async function StudioPage({
                     that can never do anything. */}
                 {sellsMemberships(store) ? (
                   <>
+                    <DunningEditor dunning={store.dunning} connected={Boolean(current?.stripeAccountId)} />
                     <SaveOfferEditor save={store.save} connected={Boolean(current?.stripeAccountId)} />
                     <PauseEditor months={store.pause} />
                     <WinBackEditor
