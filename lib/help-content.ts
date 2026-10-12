@@ -262,8 +262,8 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "What happens to my files if my plan ends?",
         a: [
           "Your store stays: its page, your products and their prices, your lessons' text and quizzes, your contacts and your orders. Your buyers go on downloading what they bought. A store that keeps 5 GB or less of files and lesson videos is not touched at all, and cannot add past that until a plan is started again.",
-          "A store that keeps more than 5 GB has a date. 60 days after your plan ended, what it keeps is removed: the files your products hand over, your lessons' videos and downloads, and your podcast's episodes. From that day your buyers can no longer download those files or watch those videos.",
-          "We email you when the plan ends, 30 days before that day and 7 days before it, each time with the date, and nothing is removed sooner than a week after the last of those emails. Your studio shows the date too.",
+          "A store that keeps more than 5 GB has a date. 30 days after your plan ended, what it keeps is removed: the files your products hand over, your lessons' videos and downloads, and your podcast's episodes. From that day your buyers can no longer download those files or watch those videos.",
+          "We email you when the plan ends, 14 days before that day and 7 days before it, each time with the date, and nothing is removed sooner than a week after the last of those emails. Your studio shows the date too.",
           "Two things stop it, either one: start a plan again, or delete enough for your store to keep 5 GB or less. If the day passes, you can put a file back on each product and a video back on each lesson once a plan is started again.",
         ],
       },

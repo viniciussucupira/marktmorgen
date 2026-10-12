@@ -50,32 +50,33 @@ export const PRICES_WITHOUT_COMMISSION: Record<Tier, Record<Cycle, number>> = {
  * search, one, two, three and four plans, and then held against twelve
  * variations of those guesses. Three plans is the most: a fourth added 0.01%.
  *
- * Store's $26 is set by the second half of the rule, not by the search. The
- * search alone put Store at $22, and $22 loses money on one account: a store
- * that pays one month, reaches every limit in it, cancels, and leaves all a
- * paid plan may keep here until its closing day (lib/plan-closing-rules.ts).
- * That is $14.45 of worst month and $10.27 of files kept for the 67 days
- * after, $24.72 in all, against $21.06 that $22 leaves after the card fee.
- * $26 leaves $24.95, the lowest whole price that pays for it. With Store
- * held there, the search puts the rest at 5.75% / $144 + 2.75% / $348; these
- * round figures earn $1 less in a thousand creators.
+ * The search put the three plans at $22 + 6.35% / $144 + 2.79% / $356;
+ * these round figures earn $4 less in a thousand creators, and more than it
+ * does when the guesses are made pessimistic, which is the case worth being
+ * right in.
+ *
+ * And the other half of the rule held $22 to a cost, not the price to a
+ * floor. A store that pays one month, reaches every limit in it, cancels and
+ * leaves all a paid plan may keep here until its closing day cost more than
+ * $22 leaves while that day was sixty days off ($24.72 against $21.06). The
+ * day was brought to thirty (lib/plan-closing-rules.ts), which makes that
+ * store $20.12, rather than the price raised to $26, which would have cost
+ * 2.3% of the profit on every creator to pay for one that hardly exists.
  *
  * Who is on which, since a creator takes the cheapest: Store below about
- * $4,100 of sales a month (26 + 5.75% meets 149 + 2.75% there), Studio from
+ * $3,630 of sales a month (22 + 6.25% meets 149 + 2.75% there), Studio from
  * there to about $7,270 (where 149 + 2.75% reaches 349), Scale above it.
  *
  * What moving each figure does, everything else held, on the expected profit
- * (the model's own run, a thousand creators, $29,426 a month at these):
- * Store at $27 loses 1.4%, at $28 3%, at $30 7%, as creators with small sales
- * leave; below $26 is the loss above, whatever it would earn. Store's share
- * at 4.75% loses 0.6% and at 6.75% loses 0.6%, and above it a growing store
- * also leaves for Studio sooner. Studio's $149 moved by $20, or its 2.75% by
- * half a point, loses under 0.1%, because the creators it would lose land on
- * one of the other two. Scale at $299 loses 0.26% and at $399 0.13%, and a
- * share taken on Scale loses 0.5% at half a point and 1.1% at one, because
- * Scale is for the creator a share would drive away. The prices on sale today
- * earn 4.9% less than these; $22 would earn 2.3% more and lose on the store
- * above, which is the trade the rule makes.
+ * (the model's own run, a thousand creators, $30,100 a month at these):
+ * Store at $20 loses 1.3% and at $24 loses 0.5% — below, every account pays
+ * less; above, creators with small sales leave. Store's share at 5.25% loses
+ * 0.8% and at 7.25% loses 0.3%, and above it a growing store also leaves for
+ * Studio sooner. Studio's $149 moved by $20, or its 2.75% by half a point,
+ * loses under 0.1%, because the creators it would lose land on one of the
+ * other two. Scale at $299 loses 0.25% and at $399 0.1%, and a share taken on
+ * Scale loses 0.5% at half a point and 1.1% at one, because Scale is for the
+ * creator a share would drive away. The prices on sale today earn 7% less.
  *
  * Every other account, paid by the month or the year, refunded, paused or
  * closed, is added up against these in tests/plan-margin.test.ts. A store
@@ -84,13 +85,13 @@ export const PRICES_WITHOUT_COMMISSION: Record<Tier, Record<Cycle, number>> = {
  * twelve.
  */
 export const PRICES_WITH_COMMISSION: Record<Tier, Record<Cycle, number>> = {
-  creator: { month: 2600, year: 26000 },
+  creator: { month: 2200, year: 22000 },
   pro: { month: 14900, year: 149000 },
   scale: { month: 34900, year: 349000 },
 };
 
 /** The share of each sale that goes with PRICES_WITH_COMMISSION, in basis points. */
-export const COMMISSION_BPS: Record<Tier, number> = { creator: 575, pro: 275, scale: 0 };
+export const COMMISSION_BPS: Record<Tier, number> = { creator: 625, pro: 275, scale: 0 };
 
 /**
  * Whether the share of each sale is charged, and with it the prices above.

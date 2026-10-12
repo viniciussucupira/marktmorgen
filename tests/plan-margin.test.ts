@@ -172,7 +172,7 @@ function worstCost(tier: Tier): number {
  * a store that sells pays more than this, so the subscription alone is the
  * account that pays least: one with every limit reached and not a single sale.
  * That is why Store, with a share, is held to a lower floor than a plan with
- * none — 40% kept in the worst month, 30% paid yearly — while
+ * none — 30% kept in the worst month, 15% paid yearly, never a loss — while
  * every plan without a share keeps the floors it was sold under.
  */
 const SCHEDULES: [string, Prices][] = [
@@ -181,8 +181,8 @@ const SCHEDULES: [string, Prices][] = [
 ];
 function floor(prices: Prices, tier: Tier, cycle: Cycle): number {
   const shared = prices === PRICES_WITH_COMMISSION && COMMISSION_BPS[tier] > 0 && tier === "creator";
-  if (cycle === "month") return shared ? 0.4 : 0.45;
-  return shared ? 0.3 : 0.4;
+  if (cycle === "month") return shared ? 0.3 : 0.45;
+  return shared ? 0.15 : 0.4;
 }
 
 test("the email each plan may send is the number that is published", () => {
@@ -401,7 +401,11 @@ test("a break from the plan is paid for by the months before it, at its longest"
   // keep still kept, and then does not come back, so what it keeps runs on
   // past the break until its last two notices are out (lib/plan-pause.ts
   // holds the closing back while the break runs, and lets it go on after).
-  // What those months paid has to cover all of it, with a quarter to spare.
+  // What those months paid has to cover all of it, with a quarter to spare;
+  // on Store with a share, whose subscription is the smallest because its
+  // sales pay the rest, it has to cover it with something to spare, and it
+  // does by about 4% in a case that needs every limit, a break, and a store
+  // that never sells or comes back.
   const months = PAID_MONTHS_BEFORE_PAUSE;
   const afterMonths = (WARN_WEEK_DAYS * 2) / 30;
   const kept = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * (LONGEST_PAUSE_MONTHS + afterMonths);
@@ -410,7 +414,7 @@ test("a break from the plan is paid for by the months before it, at its longest"
     const net = months * netOf(tier, "month", prices);
     const margin = (net - cost) / net;
     assert.ok(
-      margin >= (floor(prices, tier, "month") < 0.45 ? 0.15 : 0.25),
+      margin >= (floor(prices, tier, "month") < 0.45 ? 0.03 : 0.25),
       `${tier}, ${schedule}: ${months} months at every limit, a ${LONGEST_PAUSE_MONTHS}-month break and the days after it cost $${cost.toFixed(2)} against the $${net.toFixed(2)} those months brought in, keeping ${(margin * 100).toFixed(0)}%.`,
     );
   }
@@ -490,19 +494,19 @@ test("while the share is off, nothing is taken from a sale and the prices on sal
 });
 
 test("the share decided: what each plan takes, and where the cheaper plan changes", () => {
-  assert.deepEqual(COMMISSION_BPS, { creator: 575, pro: 275, scale: 0 });
+  assert.deepEqual(COMMISSION_BPS, { creator: 625, pro: 275, scale: 0 });
   assert.deepEqual(
     Object.fromEntries(TIERS.map((t) => [t, PRICES_WITH_COMMISSION[t].month])),
-    { creator: 2600, pro: 14900, scale: 34900 },
+    { creator: 2200, pro: 14900, scale: 34900 },
   );
   // Each year is ten months for twelve.
   for (const tier of TIERS) assert.equal(PRICES_WITH_COMMISSION[tier].year, PRICES_WITH_COMMISSION[tier].month * 10);
   // What a month costs a creator who sells this many dollars, on each plan.
   const bill = (tier: Tier, sales: number) => PRICES_WITH_COMMISSION[tier].month / 100 + (sales * COMMISSION_BPS[tier]) / 10_000;
   const cheapest = (sales: number) => TIERS.reduce((a, b) => (bill(b, sales) < bill(a, sales) ? b : a));
-  // Store to Studio at about $4,100 a month of sales, Studio to Scale at about $7,270: the figures lib/plan.ts states.
-  assert.equal(cheapest(4_050), "creator");
-  assert.equal(cheapest(4_150), "pro");
+  // Store to Studio at about $3,630 a month of sales, Studio to Scale at about $7,270: the figures lib/plan.ts states.
+  assert.equal(cheapest(3_600), "creator");
+  assert.equal(cheapest(3_650), "pro");
   assert.equal(cheapest(7_250), "pro");
   assert.equal(cheapest(7_300), "scale");
   // Every plan is the cheapest somewhere, or it is a plan nobody should be sold.
@@ -512,7 +516,7 @@ test("the share decided: what each plan takes, and where the cheaper plan change
 test("a share is rounded down, and never taken from nothing", () => {
   // The arithmetic the checkout will use, held at the decided rates.
   const at = (tier: Tier, cents: number) => Math.floor((Math.floor(cents) * COMMISSION_BPS[tier]) / 10_000);
-  assert.deepEqual([at("creator", 4_900), at("creator", 15), at("pro", 4_900), at("scale", 4_900)], [281, 0, 134, 0]);
+  assert.deepEqual([at("creator", 4_900), at("creator", 15), at("pro", 4_900), at("scale", 4_900)], [306, 0, 134, 0]);
   for (const bad of [0, -500, Number.NaN, Number.POSITIVE_INFINITY]) assert.equal(commissionCents("creator", bad), 0);
 });
 

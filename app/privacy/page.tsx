@@ -1475,7 +1475,7 @@ export default function PrivacyPage() {
           The files a creator sells, their lessons&apos; videos and their
           podcast&apos;s episodes are kept until the creator removes them.
           Where a store&apos;s plan has ended and the store keeps more than a
-          store with no plan may, they are deleted 60 days after the plan
+          store with no plan may, they are deleted 30 days after the plan
           ended, after three emails to the store&apos;s owner (Terms of
           Service, section 8).
         </p>

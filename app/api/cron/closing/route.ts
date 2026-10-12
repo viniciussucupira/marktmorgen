@@ -12,7 +12,7 @@ export const maxDuration = 60;
  * ended, and at what it still keeps (lib/plan-closing.ts).
  *
  * A store that keeps no more than a store with no plan may is left as it
- * is. One that keeps more is written to when its plan ends, a month before
+ * is. One that keeps more is written to when its plan ends, two weeks before
  * the day and a week before it; on the day, and never sooner than a week
  * after the last of those, what it keeps is removed, once Stripe itself has
  * said that day that the store has no plan.
