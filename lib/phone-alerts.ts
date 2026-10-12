@@ -32,6 +32,10 @@
  *   report     a member reported a post or a comment (told once for each
  *              post or comment, however many members report it).
  *   affiliate  somebody confirmed an application to the affiliate programme.
+ *   alert      the store's numbers went off course: visits or sales from them
+ *              fell, refunds piled up, the month's goal is off pace or reached
+ *              (lib/store-alerts.ts). A device kept before this event existed
+ *              hears of these only once its person switches them on.
  *   live       a live event in the community starts in fifteen minutes
  *              (lib/community-event-mail.ts): its title, its time, how many
  *              said they are coming. A device kept before this event existed
@@ -62,7 +66,7 @@ import { type Permission, type Role, can } from "@/lib/team-roles";
 import { memberStores, readTeam } from "@/lib/team";
 import { type PushFetchHooks, type Subscription, readSubscription, sendPush, vapidKeys, vapidKeysFor } from "@/lib/web-push";
 
-export const PHONE_EVENTS = ["sale", "booking", "report", "affiliate", "live", "comment"] as const;
+export const PHONE_EVENTS = ["sale", "booking", "report", "affiliate", "live", "comment", "alert"] as const;
 export type PhoneEvent = (typeof PHONE_EVENTS)[number];
 
 /** Devices one person may have on one store. */
@@ -85,6 +89,7 @@ const EVENT_NEEDS: Record<PhoneEvent, Permission[]> = {
   affiliate: ["settings"],
   live: ["community"],
   comment: ["products"],
+  alert: ["stats"],
 };
 
 /** The events a role may be told about, in the studio's order. */

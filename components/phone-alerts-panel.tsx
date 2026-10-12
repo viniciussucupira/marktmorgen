@@ -18,6 +18,7 @@ const EVENTS: { key: PhoneEvent; label: string; hint: string }[] = [
   { key: "affiliate", label: "Affiliate applications", hint: "Someone applied to promote your store" },
   { key: "live", label: "Live events", hint: "A community live event starts in 15 minutes" },
   { key: "comment", label: "Course comments", hint: "A student commented under a lesson" },
+  { key: "alert", label: "Alerts", hint: "Visits or sales from them fell, refunds piled up, or the month's goal is off pace or reached" },
 ];
 
 const MESSAGES: Record<string, string> = {

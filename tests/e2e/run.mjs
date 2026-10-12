@@ -544,6 +544,12 @@ try {
     is("the box for Slack or Discord is there", await studio.getByText("Post the numbers to Slack or Discord").count(), 1);
     const refused = await studio.evaluate(async () => (await fetch("/api/store/chat-summary", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: "https://example.com/hook" }) })).status);
     is("and an address of neither is refused", refused, 400);
+    // Each sale and each alert in the chat too (lib/sale-events.ts, lib/store-alerts.ts): a setting of its own.
+    const chatSales = await studio.evaluate(async () => {
+      const post = (on) => fetch("/api/store/chat-summary", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sales: on }) }).then((r) => r.json());
+      return [(await post(true)).sales, (await post(false)).sales];
+    });
+    is("each sale and each alert can be posted to the chat too, and stopped", chatSales, [true, false]);
     if (process.env.E2E_SHOTS) {
       await numbers.screenshot({ path: join(process.env.E2E_SHOTS, "numbers-six.png") });
     }

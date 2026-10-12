@@ -11,8 +11,25 @@ const ANSWERS: Record<string, string> = {
 };
 
 /** Where the weekly and monthly numbers are posted (lib/chat-summary.ts), for whoever may change settings. */
-export function ChatSummaryEditor({ kind: given }: { kind: ChatKind | null }) {
+export function ChatSummaryEditor({ kind: given, sales: salesGiven = false }: { kind: ChatKind | null; sales?: boolean }) {
   const [kind, setKind] = useState(given);
+  const [sales, setSales] = useState(salesGiven);
+
+  async function saveSales(on: boolean) {
+    setBusy(true);
+    try {
+      const response = await fetch("/api/store/chat-summary", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sales: on }) });
+      const answer = (await response.json().catch(() => ({}))) as { ok?: boolean; sales?: boolean };
+      if (answer.ok) {
+        setSales(answer.sales === true);
+        toast(answer.sales ? "Each sale and each alert will be posted too." : "Only the week's and the month's numbers are posted now.");
+      } else toast("That did not save. Try again in a moment.");
+    } catch {
+      toast("That did not save. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -71,6 +88,18 @@ export function ChatSummaryEditor({ kind: given }: { kind: ChatKind | null }) {
           </button>
         ) : null}
       </form>
+      {kind ? (
+        <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-3 text-sm">
+          <input type="checkbox" className="h-5 w-5 shrink-0 accent-[var(--violet)]" checked={sales} disabled={busy} onChange={(e) => void saveSales(e.target.checked)} />
+          <span>
+            <span className="block font-semibold text-ink">Also post each sale, and each alert</span>
+            <span className="block text-xs text-ink-soft">
+              One line per sale: the amount, what was bought and the channel it came from, never who bought it. And a line when
+              visits or sales from them fall, refunds pile up, or the month&apos;s goal is off pace or reached.
+            </span>
+          </span>
+        </label>
+      ) : null}
     </div>
   );
 }

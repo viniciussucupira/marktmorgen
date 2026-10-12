@@ -505,6 +505,8 @@ export type Store = {
    * came from (lib/attribution-rules.ts): 7, 30, 60 or 90; 30 until changed.
    */
   attributionDays: AttributionDays;
+  /** Whether each sale, and each alert (lib/store-alerts.ts), is posted to the store's Slack or Discord channel (lib/chat-summary.ts). Off until turned on. */
+  chatSales: boolean;
   /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
@@ -873,6 +875,7 @@ function parseStore(raw: unknown): Store | null {
       weeklyAi: value.weeklyAi === true,
       adsServer: parseAdsServer(value.adsServer),
       attributionDays: parseAttributionDays(value.attributionDays),
+      chatSales: value.chatSales === true,
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
       tiers: parseTiers(value.tiers),
@@ -1067,6 +1070,7 @@ async function freshStore(fields: {
     weeklyAi: false,
     adsServer: [],
     attributionDays: DEFAULT_ATTRIBUTION_DAYS,
+    chatSales: false,
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
     tiers: [],
@@ -2239,6 +2243,11 @@ export async function setLeaving(email: string, raw: unknown): Promise<{ ok: tru
   if (own.filter((o) => typeof o.text === "string" && o.text.trim()).length !== leaving.own.length) return { ok: false, reason: "leaving" };
   const next = await patchStore(email, () => ({ leaving }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/** Whether each sale and each alert is posted to the store's chat (lib/chat-summary.ts). */
+export async function setChatSales(email: string, on: unknown): Promise<Store | null> {
+  return patchStore(email, () => ({ chatSales: on === true }));
 }
 
 /** How long after a visit a sale is still credited to it (lib/attribution-rules.ts). */
