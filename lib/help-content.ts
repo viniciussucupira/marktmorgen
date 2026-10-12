@@ -208,7 +208,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "What about refunds on the Marktmorgen subscription itself?",
         a: [
-          `Ask within ${REFUND_DAYS} days of a charge and we refund that charge in full, for any reason or none — renewals and yearly payments included, each with its own ${REFUND_DAYS} days. You can cancel at any time and keep access until the end of the period you already paid for. The refund policy page has the exact wording.`,
+          `Your first payment to us is refunded in full if you ask within ${REFUND_DAYS} days of it, for any reason or none. A yearly plan is refunded at any time for the months you have not started, with the months you used charged at the monthly price. You can cancel at any time and keep access until the end of the period you already paid for; a renewal is not refunded, except where the law requires it. The refund policy page has the exact wording.`,
         ],
       },
       {

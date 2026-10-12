@@ -192,7 +192,7 @@ const TRUST: { icon: IconName; title: string; body: string; href: string; link: 
   { icon: "mail", title: "How to reach us", body: "By email. A person reads every message and answers in writing, in English.", href: "mailto:support@marktmorgen.com", link: "Write to us" },
   { icon: "bank", title: "Where the money is", body: "Every sale is processed by Stripe on the creator's own account. We never hold a balance of yours.", href: "/platform/your-stripe", link: "How the money moves" },
   { icon: "shield", title: "What we keep about you", body: "What the service needs to run, listed in plain words, with who processes it for us. Nothing is sold.", href: "/privacy", link: "Privacy policy" },
-  { icon: "receipt", title: "The rules, in writing", body: `The terms of the service, and a full refund of any charge from us you ask for within ${REFUND_DAYS} days.`, href: "/terms", link: "Terms and refunds" },
+  { icon: "receipt", title: "The rules, in writing", body: `The terms of the service, a full refund of your first payment to us if you ask within ${REFUND_DAYS} days, and the months of a yearly plan you have not started refunded at any time.`, href: "/terms", link: "Terms and refunds" },
   { icon: "door", title: "Leaving is free", body: "Your Stripe account, customers and payouts were always yours, and your list downloads as a file at any time.", href: "/proof/promises", link: "What we never do" },
 ];
 

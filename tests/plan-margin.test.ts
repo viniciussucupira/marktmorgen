@@ -373,3 +373,44 @@ test("a break from the plan is paid for by the months before it, at its longest"
     );
   }
 });
+
+/**
+ * The most one customer can ever cost us, with the Refund Policy of
+ * 12 October 2026: the first payment is refunded in full within REFUND_DAYS;
+ * a yearly plan is refunded for the months not started, the months used
+ * kept at the monthly price; a renewal is not refunded. Stripe keeps its
+ * processing fee on a refund and never returns the fee for a dispute.
+ */
+const STRIPE_FEE = (grossCents: number) => (grossCents / 100) * 0.029 + 0.3;
+
+test("the one exposure is the first monthly payment refunded in full: bounded, once per account, and said in writing", () => {
+  // A customer pays the smallest plan, runs every brake to its limit, and asks the month back.
+  const gross = PLAN_PRICES.creator.month;
+  const exposure = worstCost("creator") + STRIPE_FEE(gross);
+  assert.ok(exposure < 16, `the first-month guarantee can cost at most $${exposure.toFixed(2)} on one account; it was meant to stay under $16`);
+  const policy = readFileSync(join(process.cwd(), "app/refunds/page.tsx"), "utf8");
+  assert.match(policy, /first payment on your account/, "the guarantee must say it is for the first payment, or every month is free for anyone who asks");
+  assert.match(policy, /are not refunded, except where\s+applicable consumer law requires it/, "renewals must be said to be final");
+  for (const page of ["lib/help-content.ts", "components/home-parts.tsx", "app/terms/page.tsx", "app/mission/page.tsx", "app/page.tsx"]) {
+    const text = readFileSync(join(process.cwd(), page), "utf8");
+    assert.ok(!/renewals included|Renewals and yearly payments too|every charge is refunded/i.test(text), `${page} still promises refunds on every charge`);
+  }
+});
+
+for (const tier of TIERS) {
+  test(`${tier}: a yearly plan refunded after one month still pays for that month's worst case`, () => {
+    // Kept: one month at the monthly price. Stripe's fee on the whole year is already gone.
+    const yearNet = PLAN_PRICES[tier].year / 100 - STRIPE_FEE(PLAN_PRICES[tier].year);
+    const refunded = PLAN_PRICES[tier].year / 100 - PLAN_PRICES[tier].month / 100;
+    const kept = yearNet - refunded;
+    assert.ok(
+      kept > worstCost(tier),
+      `${tier}: a yearly plan refunded after its first month keeps $${kept.toFixed(2)} against a worst month of $${worstCost(tier).toFixed(2)}`,
+    );
+  });
+}
+
+test("a yearly first payment asks the card's bank to authenticate, so a fraud dispute lands on the bank", () => {
+  const billing = readFileSync(join(process.cwd(), "lib/billing.ts"), "utf8");
+  assert.match(billing, /cycle === "year"\) body\.set\("payment_method_options\[card\]\[request_three_d_secure\]", "any"\)/);
+});

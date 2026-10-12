@@ -298,7 +298,7 @@ export default function Home() {
                 icon: "receipt" as IconName,
                 figure: `${REFUND_DAYS} days`,
                 title: "To change your mind",
-                body: "Any charge back in full on request, renewals included. Cancelling is two clicks in your studio.",
+                body: "Your first payment back in full on request. Cancelling is two clicks in your studio, any time.",
               },
               {
                 icon: "download" as IconName,
