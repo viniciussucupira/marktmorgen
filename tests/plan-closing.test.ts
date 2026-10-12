@@ -238,8 +238,8 @@ async function main(): Promise<void> {
 
   part("The days");
   const E = Date.UTC(2026, 9, 1, 12, 0, 0);
-  is("what a store keeps past its room is removed sixty days after its plan ended", [CLOSING_DAYS, removalDay(E) - E], [60, 60 * DAY]);
-  is("with a notice when the plan ends, one thirty days before and one seven days before", [WARN_MONTH_DAYS, WARN_WEEK_DAYS, noticeFor(E, E), noticeFor(E, E + (M - 1) * DAY), noticeFor(E, E + M * DAY), noticeFor(E, E + (W - 1) * DAY), noticeFor(E, E + W * DAY), noticeFor(E, E + (C + 110) * DAY)], [30, 7, "ended", "ended", "month", "month", "week", "week"]);
+  is("what a store keeps past its room is removed thirty days after its plan ended", [CLOSING_DAYS, removalDay(E) - E], [30, 30 * DAY]);
+  is("with a notice when the plan ends, one fourteen days before and one seven days before", [WARN_MONTH_DAYS, WARN_WEEK_DAYS, noticeFor(E, E), noticeFor(E, E + (M - 1) * DAY), noticeFor(E, E + M * DAY), noticeFor(E, E + (W - 1) * DAY), noticeFor(E, E + W * DAY), noticeFor(E, E + (C + 110) * DAY)], [14, 7, "ended", "ended", "month", "month", "week", "week"]);
 
   part("A store whose plan runs is not in line");
   const ana = await storeWith("ana");
@@ -318,7 +318,7 @@ async function main(): Promise<void> {
   is("it gives the room, what the store keeps, and the day", [one.text.includes(`may keep ${storageWords(SETUP_STORAGE_BYTES)} of files`), one.text.includes("Yours keeps\n11 GB."), one.text.includes(`On ${dateWords(A + C * DAY)}, ${CLOSING_DAYS} days after your plan ended`)], [true, true, true]);
   is("the two ways out", [one.text.includes("start a plan again, and everything stays exactly as it is"), one.text.includes(`until your store keeps ${storageWords(SETUP_STORAGE_BYTES)} or less`)], [true, true]);
   is("what goes and what stays", [one.text.includes("your buyers can no\nlonger download those files or watch those videos"), one.text.includes("What stays: your store and its page, your products and their prices"), one.text.includes("your contacts and your orders")], [true, true, true]);
-  is("and that two more notices come first, the last at least a week before", one.text.includes("We will write to you again 30 days before that day and 7 days before it. Nothing is removed without a notice at least a week old."), true);
+  is("and that two more notices come first, the last at least a week before", one.text.includes("We will write to you again 14 days before that day and 7 days before it. Nothing is removed without a notice at least a week old."), true);
   is("the same day again, nobody is written to twice", [(await closeOne(ana.email, A + 3 * 60_000, hands)).state, sent.length], ["waiting", 1]);
 
   part("A store that fits is measured once a week, not once a day");
@@ -330,10 +330,10 @@ async function main(): Promise<void> {
   is("a store that keeps more is measured every day it is looked at", [(await closeOne(ana.email, A + DAY, hands)).state, (await closeOne(ana.email, A + 2 * DAY, hands)).state, measured.filter((folder) => folder === ana.folder).length], ["waiting", "waiting", 2]);
 
   part("The notices before the day");
-  is("nothing more is said until a month before the day", [(await closeOne(ana.email, A + (M - 1) * DAY, hands)).state, sent.length], ["waiting", 1]);
-  is("thirty days before, the second", [await closeOne(ana.email, A + M * DAY, hands), sent.length], [{ key: ana.email, state: "told", note: "month" }, 2]);
+  is("nothing more is said until two weeks before the day", [(await closeOne(ana.email, A + (M - 1) * DAY, hands)).state, sent.length], ["waiting", 1]);
+  is("fourteen days before, the second", [await closeOne(ana.email, A + M * DAY, hands), sent.length], [{ key: ana.email, state: "told", note: "month" }, 2]);
   const two = mailTo(ana.email)[1];
-  is("with the days left and the same day named", [two.subject, two.text.includes(`On ${dateWords(A + C * DAY)}`), two.text.includes("We will write to you once more, 7 days before that day.")], ["30 days until the files Ana Studio keeps are removed", true, true]);
+  is("with the days left and the same day named", [two.subject, two.text.includes(`On ${dateWords(A + C * DAY)}`), two.text.includes("We will write to you once more, 7 days before that day.")], ["14 days until the files Ana Studio keeps are removed", true, true]);
   is("once", [(await closeOne(ana.email, A + (M + 1) * DAY, hands)).state, (await closeOne(ana.email, A + (W - 1) * DAY, hands)).state, sent.length], ["waiting", "waiting", 2]);
   is("seven days before, the last", [await closeOne(ana.email, A + W * DAY, hands), sent.length], [{ key: ana.email, state: "told", note: "week" }, 3]);
   const three = mailTo(ana.email)[2];
@@ -357,7 +357,7 @@ async function main(): Promise<void> {
   await endPlan(eve.email);
   const V = await endedAt(eve.email);
   for (const day of [0, M, W]) await closeOne(eve.email, V + day * DAY, hands);
-  is("told three times, like anybody", mailTo(eve.email).map((m) => m.subject.slice(0, 7)), ["Eve Stu", "30 days", "7 days "]);
+  is("told three times, like anybody", mailTo(eve.email).map((m) => m.subject.slice(0, 7)), ["Eve Stu", "14 days", "7 days "]);
   running.set("eve", { id: "sub_eve0002", status: "active", created: 1_790_000_000, customer: { id: "cus_eve0001", email: eve.email }, metadata: { store: "eve" }, items: { data: [{ price: { unit_amount: 9900, recurring: { interval: "month" } } }] } });
   const repaired = await closeOne(eve.email, V + C * DAY, hands);
   const eveNow = (await storeForEmail(eve.email))!;
@@ -483,7 +483,7 @@ async function main(): Promise<void> {
   await endPlan(hal.email);
   const H2 = await endedAt(hal.email);
   is("ended again, it is in line under the new day", [H2 > H1, await inLine(hal.email)], [true, H2]);
-  is("and every notice is still to come, the first one first", [(await closeOne(hal.email, H2 + 60_000, hands)).note, mailTo(hal.email).map((m) => m.subject.slice(0, 7))], ["ended", ["Hal Stu", "30 days", "Hal Stu"]]);
+  is("and every notice is still to come, the first one first", [(await closeOne(hal.email, H2 + 60_000, hands)).note, mailTo(hal.email).map((m) => m.subject.slice(0, 7))], ["ended", ["Hal Stu", "14 days", "Hal Stu"]]);
   is("with the day counted from the second ending", mailTo(hal.email)[2].text.includes(`On ${dateWords(H2 + C * DAY)}`), true);
 
   part("With no way to write to a creator, nothing moves");

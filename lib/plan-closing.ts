@@ -117,7 +117,7 @@ export async function closingOf(store: Store, now = Date.now()): Promise<{ ended
   return { endedAt, day: Math.max(removalDay(endedAt), (state.week ?? now) + WARN_WEEK_DAYS * DAY_MS) };
 }
 
-/** Which notice is the one for today: the first, the one a month before, or the last. */
+/** Which notice is the one for today: the first, the one two weeks before, or the last. */
 export function noticeFor(endedAt: number, now: number): "ended" | "month" | "week" {
   const day = removalDay(endedAt);
   if (now >= day - WARN_WEEK_DAYS * DAY_MS) return "week";

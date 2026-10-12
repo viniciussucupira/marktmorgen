@@ -94,13 +94,13 @@ async function main(): Promise<void> {
   part("Who owes a share, and how much");
   const paying = { shared: true, subscriptionActive: true, trialEnds: 0, tier: "creator" as const };
   is("off, nobody owes anything", shareBps(paying, NOW, false), 0);
-  is("Store, Studio and Scale", [shareBps(paying, NOW, ON), shareBps({ ...paying, tier: "pro" }, NOW, ON), shareBps({ ...paying, tier: "scale" }, NOW, ON)], [575, 275, 0]);
+  is("Store, Studio and Scale", [shareBps(paying, NOW, ON), shareBps({ ...paying, tier: "pro" }, NOW, ON), shareBps({ ...paying, tier: "scale" }, NOW, ON)], [625, 275, 0]);
   is("nothing in the free trial, nothing before the share, nothing once a plan ends", [
     shareBps({ ...paying, trialEnds: NOW + 60 }, NOW, ON),
     shareBps({ ...paying, shared: false }, NOW, ON),
     shareBps({ ...paying, subscriptionActive: false }, NOW, ON),
   ], [0, 0, 0]);
-  is("a membership sold in the trial still carries the plan's rate, settled per payment", planShareBps({ ...paying, trialEnds: NOW + 60 }, ON), 575);
+  is("a membership sold in the trial still carries the plan's rate, settled per payment", planShareBps({ ...paying, trialEnds: NOW + 60 }, ON), 625);
 
   part("The fee set on a checkout");
   const body = new URLSearchParams({
@@ -122,7 +122,7 @@ async function main(): Promise<void> {
     applyShare(once, paying, { recurring: false, least: 8_000 }, NOW, ON),
     once.get("payment_intent_data[application_fee_amount]"),
     once.get("payment_intent_data[metadata][share_bps]"),
-  ], [460, "460", "575"]);
+  ], [500, "500", "625"]);
   const member = new URLSearchParams();
   is("a membership: the plan's percentage, which Stripe works out on each payment", [
     applyShare(member, { ...paying, tier: "pro" }, { recurring: true, least: 0 }, NOW, ON),
@@ -131,12 +131,12 @@ async function main(): Promise<void> {
   const none = new URLSearchParams();
   is("off, nothing is written at all", [applyShare(none, paying, { recurring: false, least: 8_000 }, NOW, false), [...none.keys()]], [0, []]);
   const offer = new URLSearchParams();
-  is("an offer after checkout: its exact amount", [applyShareToPayment(offer, paying, 2_900, NOW, ON), offer.get("application_fee_amount"), offer.get("metadata[share_base]")], [166, "166", "2900"]);
+  is("an offer after checkout: its exact amount", [applyShareToPayment(offer, paying, 2_900, NOW, ON), offer.get("application_fee_amount"), offer.get("metadata[share_base]")], [181, "181", "2900"]);
 
   part("What is owed on a payment");
-  is("half refunded, half the share", owedOn({ bps: 575, base: 8_000, amount: 8_400, refunded: 4_200, lostDispute: false }), 230);
-  is("a dispute lost, nothing", owedOn({ bps: 575, base: 8_000, amount: 8_400, refunded: 0, lostDispute: true }), 0);
-  is("given back is only ever what was taken above it", [toGiveBack({ amount: 575, refunded: 0 }, 460), toGiveBack({ amount: 460, refunded: 0 }, 575)], [115, 0]);
+  is("half refunded, half the share", owedOn({ bps: 625, base: 8_000, amount: 8_400, refunded: 4_200, lostDispute: false }), 250);
+  is("a dispute lost, nothing", owedOn({ bps: 625, base: 8_000, amount: 8_400, refunded: 0, lostDispute: true }), 0);
+  is("given back is only ever what was taken above it", [toGiveBack({ amount: 625, refunded: 0 }, 500), toGiveBack({ amount: 500, refunded: 0 }, 625)], [125, 0]);
 
   part("The daily job");
   const OWNER = "maker@example.com";
@@ -147,26 +147,26 @@ async function main(): Promise<void> {
   const ref = storeRef(store);
   is("a store that pays a share is in the list the job reads", (await redisPipeline([["SISMEMBER", SHARING_INDEX, ref]]))[0], 1);
   const A = "acct_1TestShare00001";
-  // A: $100 listed, a 20% code typed, $4 of tax: the fee was set on the least ($80, 460) — exact.
-  fees.set("fee_A", { id: "fee_A", account: A, charge: "ch_A", amount: 460, amount_refunded: 0, created: NOW - 3600 });
-  charges.set("ch_A", { id: "ch_A", amount: 8_400, amount_refunded: 0, disputed: false, payment_intent: { id: "pi_A", metadata: { share_bps: "575" } } });
+  // A: $100 listed, a 20% code typed, $4 of tax: the fee was set on the least ($80, 500) — exact.
+  fees.set("fee_A", { id: "fee_A", account: A, charge: "ch_A", amount: 500, amount_refunded: 0, created: NOW - 3600 });
+  charges.set("ch_A", { id: "ch_A", amount: 8_400, amount_refunded: 0, disputed: false, payment_intent: { id: "pi_A", metadata: { share_bps: "625" } } });
   sessions.set("pi_A", { amount_total: 8_400, total_details: { amount_tax: 400, amount_shipping: 0 } });
   // B: the box could have taken 50%, nobody typed a code; tax included in the price: the fee was set on $50, paid $100 of which $10 tax.
-  fees.set("fee_B", { id: "fee_B", account: A, charge: "ch_B", amount: 287, amount_refunded: 0, created: NOW - 3600 });
-  charges.set("ch_B", { id: "ch_B", amount: 10_000, amount_refunded: 0, disputed: false, payment_intent: { id: "pi_B", metadata: { share_bps: "575" } } });
+  fees.set("fee_B", { id: "fee_B", account: A, charge: "ch_B", amount: 312, amount_refunded: 0, created: NOW - 3600 });
+  charges.set("ch_B", { id: "ch_B", amount: 10_000, amount_refunded: 0, disputed: false, payment_intent: { id: "pi_B", metadata: { share_bps: "625" } } });
   sessions.set("pi_B", { amount_total: 10_000, total_details: { amount_tax: 1_000, amount_shipping: 0 } });
   // C: a $40 offer after checkout, refunded in full.
-  fees.set("fee_C", { id: "fee_C", account: A, charge: "ch_C", amount: 230, amount_refunded: 0, created: NOW - 3600 });
-  charges.set("ch_C", { id: "ch_C", amount: 4_000, amount_refunded: 4_000, disputed: false, payment_intent: { id: "pi_C", metadata: { share_bps: "575", share_base: "4000" } } });
+  fees.set("fee_C", { id: "fee_C", account: A, charge: "ch_C", amount: 250, amount_refunded: 0, created: NOW - 3600 });
+  charges.set("ch_C", { id: "ch_C", amount: 4_000, amount_refunded: 4_000, disputed: false, payment_intent: { id: "pi_C", metadata: { share_bps: "625", share_base: "4000" } } });
   // D: a membership's payment made while the store was still in its trial.
-  fees.set("fee_D", { id: "fee_D", account: A, charge: "ch_D", amount: 115, amount_refunded: 0, created: NOW - 3600 });
-  charges.set("ch_D", { id: "ch_D", amount: 2_000, amount_refunded: 0, disputed: false, invoice: { created: NOW - 20 * 86_400, total_excluding_tax: 2_000, subscription_details: { metadata: { store: "maker", share_bps: "575" } } } });
+  fees.set("fee_D", { id: "fee_D", account: A, charge: "ch_D", amount: 125, amount_refunded: 0, created: NOW - 3600 });
+  charges.set("ch_D", { id: "ch_D", amount: 2_000, amount_refunded: 0, disputed: false, invoice: { created: NOW - 20 * 86_400, total_excluding_tax: 2_000, subscription_details: { metadata: { store: "maker", share_bps: "625" } } } });
   // E: a $60 sale whose dispute was lost.
-  fees.set("fee_E", { id: "fee_E", account: A, charge: "ch_E", amount: 345, amount_refunded: 0, created: NOW - 3600 });
-  charges.set("ch_E", { id: "ch_E", amount: 6_000, amount_refunded: 0, disputed: true, dispute: { status: "lost" }, payment_intent: { id: "pi_E", metadata: { share_bps: "575", share_base: "6000" } } });
+  fees.set("fee_E", { id: "fee_E", account: A, charge: "ch_E", amount: 375, amount_refunded: 0, created: NOW - 3600 });
+  charges.set("ch_E", { id: "ch_E", amount: 6_000, amount_refunded: 0, disputed: true, dispute: { status: "lost" }, payment_intent: { id: "pi_E", metadata: { share_bps: "625", share_base: "6000" } } });
   // F: an old sale, refunded in half yesterday, found through the refund itself.
-  fees.set("fee_F", { id: "fee_F", account: A, charge: "ch_F", amount: 575, amount_refunded: 0, created: NOW - 40 * 86_400 });
-  charges.set("ch_F", { id: "ch_F", amount: 10_000, amount_refunded: 5_000, disputed: false, payment_intent: { id: "pi_F", metadata: { share_bps: "575", share_base: "10000" } } });
+  fees.set("fee_F", { id: "fee_F", account: A, charge: "ch_F", amount: 625, amount_refunded: 0, created: NOW - 40 * 86_400 });
+  charges.set("ch_F", { id: "ch_F", amount: 10_000, amount_refunded: 5_000, disputed: false, payment_intent: { id: "pi_F", metadata: { share_bps: "625", share_base: "10000" } } });
   events.push({ id: "evt_F", type: "charge.refunded", data: { object: { id: "ch_F", application_fee: "fee_F" } } });
   // The store's plan was Studio when its memberships were sold; it is Store now.
   await redisPipeline([["HSET", "nl:share:applied", ref, "275"]]);
@@ -175,12 +175,12 @@ async function main(): Promise<void> {
   const first = await settleShares(Date.now() + 60_000, NOW, ON);
   const backOf = (id: string) => gaveBack.filter((g) => g.fee === id).reduce((sum, g) => sum + g.amount, 0);
   is("A: the fee was exactly the share of what was paid, so nothing comes back", backOf("fee_A"), 0);
-  is("B: the share of $90 of goods is 517; the fee was 287 on the least, so nothing comes back and nothing is raised", backOf("fee_B"), 0);
-  is("C: refunded in full, the whole fee back", backOf("fee_C"), 230);
-  is("D: paid inside the trial, the whole fee back", backOf("fee_D"), 115);
-  is("E: a dispute lost, the whole fee back", backOf("fee_E"), 345);
-  is("F: half refunded, half the share back", backOf("fee_F"), 288);
-  is("the live membership moved to the plan's percentage, the canceled one left alone", updated, [{ id: "sub_M1", percent: "5.75" }]);
+  is("B: the share of $90 of goods is 562; the fee was 312 on the least, so nothing comes back and nothing is raised", backOf("fee_B"), 0);
+  is("C: refunded in full, the whole fee back", backOf("fee_C"), 250);
+  is("D: paid inside the trial, the whole fee back", backOf("fee_D"), 125);
+  is("E: a dispute lost, the whole fee back", backOf("fee_E"), 375);
+  is("F: half refunded, half the share back", backOf("fee_F"), 313);
+  is("the live membership moved to the plan's percentage, the canceled one left alone", updated, [{ id: "sub_M1", percent: "6.25" }]);
   is("counted", [first.failed, first.complete, first.memberships], [0, true, 1]);
 
   const before = gaveBack.length;
