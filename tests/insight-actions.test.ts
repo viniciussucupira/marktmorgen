@@ -30,13 +30,14 @@ const data = {
   ],
   reach: { d7: { visitors: 0, rows: [] } },
 } as unknown as StatsData;
-const owner: InsightContext = { storeUrl: "https://marktmorgen.com/@bakery", reminders: false, may: { settings: true, page: true, draft: true } };
+const owner: InsightContext = { storeUrl: "https://marktmorgen.com/@bakery", reminders: false, may: { settings: true, page: true, draft: true }, pages: ["pknife0001"] };
 const said = (context = owner, d = data) => insightsFrom(d, "d7", [], 10, context);
 const find = (list: ReturnType<typeof said>, start: string) => list.find((i) => i.text.startsWith(start));
 
 part("A product opened and not bought");
 const unsold = find(said(), "“Knife Skills” was opened 100 times");
 is("opens its page with a headline test", unsold?.action, { label: "Test a second headline", href: "/studio/pages?product=pknife0001&test=headline" });
+is("without a sales page yet: build one", find(said({ ...owner, pages: [] }), "“Knife Skills”")?.action, { label: "Build a sales page for it", href: "/studio/pages?product=pknife0001" });
 is("its money as arithmetic of the store's own rate", unsold?.math, "At your store's rate of 1.0% of product views becoming sales, 100 views come to 1 sale: $50 at your average order. Arithmetic, not a forecast.");
 
 part("Checkouts not paid");

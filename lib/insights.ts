@@ -50,6 +50,8 @@ export type InsightContext = {
   reminders?: boolean;
   /** Whether this person may change settings, edit pages and write to the list: an action they cannot take is not offered. */
   may?: { settings?: boolean; page?: boolean; draft?: boolean };
+  /** The products that have a sales page, where a headline can be tested; the others are offered one. */
+  pages?: string[];
 };
 
 type Window = "d7" | "d30" | "d90";
@@ -194,9 +196,11 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
     out.push({
       text: `“${unsold.title}” was opened ${n(unsold.row.views)} times and not bought: its page is the one to look at.`,
       tone: "bad",
-      action: may.page
-        ? { label: "Test a second headline", href: `/studio/pages?product=${encodeURIComponent(unsold.id)}&test=headline` }
-        : { label: "See your products", section: "products" },
+      action: !may.page
+        ? { label: "See your products", section: "products" }
+        : context.pages?.includes(unsold.id)
+          ? { label: "Test a second headline", href: `/studio/pages?product=${encodeURIComponent(unsold.id)}&test=headline` }
+          : { label: "Build a sales page for it", href: `/studio/pages?product=${encodeURIComponent(unsold.id)}` },
       math:
         would > 0 && average > 0
           ? `At your store's rate of ${pct(sold, views)} of product views becoming sales, ${n(unsold.row.views)} views come to ${n(would)} ${would === 1 ? "sale" : "sales"}: ${money(would * average)} at your average order. Arithmetic, not a forecast.`
