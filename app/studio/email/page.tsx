@@ -19,6 +19,7 @@ import { EmailStudio } from "@/components/email-studio";
 import { listDrafts } from "@/lib/mail-drafts";
 import { can } from "@/lib/team-roles";
 import { trialOffered } from "@/lib/billing";
+import { listSegments } from "@/lib/segments";
 
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
@@ -179,6 +180,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
               productId: b.productId,
               who: b.who,
               notProductId: b.notProductId,
+              narrow: b.narrow,
               tagged: b.tagged,
               money: broadcastMoney(revenue, b.id),
               visits: visits?.[b.id] ?? null,
@@ -189,6 +191,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             flows={flows.map((f) => ({ ...f, stats: stats.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0 }, money: flowMoney(revenue, f.id) }))}
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
             ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
+            segments={await listSegments(store.listId).catch(() => [])}
           />
           </>
         )}

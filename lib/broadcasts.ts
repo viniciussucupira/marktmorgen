@@ -23,6 +23,7 @@ import { broadcastCampaign, isOwnLink, variantCampaign } from "@/lib/mail-links"
 import { type Counted, type SubjectTest, MIN_TEST_REACH, chooseSubject, newTest, parseTest, partAt, splitFor } from "@/lib/mail-test";
 import { campaignViews, readPaidSales } from "@/lib/stats";
 import { moneyByCampaign } from "@/lib/mail-revenue";
+import { type Narrow, isNarrowed, keepFor, readNarrow } from "@/lib/segments";
 
 export type BroadcastStatus = "scheduled" | "sending" | "sent" | "waiting" | "cancelled" | "failed";
 
@@ -46,6 +47,12 @@ export type Broadcast = {
    * above when they are set: "buyers, leaving out whoever has the course".
    */
   who: Who;
+  /**
+   * Spent at least, first found the store through, has not bought in these
+   * days (lib/segments.ts): worked out from the store's sales when the email
+   * starts. Null for none, which is every email made before 12 October 2026.
+   */
+  narrow: Narrow | null;
   status: BroadcastStatus;
   createdAt: number;
   sendAt: number;
@@ -92,6 +99,7 @@ function parse(raw: unknown): Broadcast | null {
       notProductId: typeof value.notProductId === "string" ? value.notProductId : null,
       tagged: value.tagged === true,
       who: WHO.includes(value.who) ? value.who : "all",
+      narrow: isNarrowed(value.narrow) ? readNarrow(value.narrow) : null,
       test: parseTest(value.test),
     };
   } catch {
@@ -152,7 +160,7 @@ export function linksToStore(body: string, store: Pick<Store, "handle" | "domain
 /** Writes a broadcast down to go now or later. What it may contain is checked here. */
 export async function createBroadcast(
   store: Store,
-  input: { subject: unknown; body: unknown; productId: unknown; notProductId: unknown; sendAt: unknown; who?: unknown; test?: unknown },
+  input: { subject: unknown; body: unknown; productId: unknown; notProductId: unknown; sendAt: unknown; who?: unknown; test?: unknown; narrow?: unknown },
 ): Promise<CreateResult> {
   if (monthlyAllowance(store) === 0) return { ok: false, reason: "plan" };
   if (!store.mail || !store.listId) return { ok: false, reason: "setup" };
@@ -167,6 +175,8 @@ export async function createBroadcast(
   // "Only the people who got X, who have not got X" is nobody, every time.
   if (notProductId && notProductId === productId) return { ok: false, reason: "empty" };
   const who: Who = WHO.includes(input.who as Who) ? (input.who as Who) : "all";
+  const asNarrowed = readNarrow(input.narrow);
+  const narrow = isNarrowed(asNarrowed) ? asNarrowed : null;
   const now = Math.floor(Date.now() / 1000);
   let sendAt = now;
   if (input.sendAt !== undefined && input.sendAt !== null && input.sendAt !== "") {
@@ -175,7 +185,7 @@ export async function createBroadcast(
     sendAt = Math.max(at, now);
   }
   // Checked now for a send that starts now; a scheduled one is checked again when it starts.
-  const reach = (await audience(store.listId, productId ?? undefined, notProductId ?? undefined, whoOf(store, who))).length;
+  const reach = (await audience(store.listId, productId ?? undefined, notProductId ?? undefined, whoOf(store, who), await keepFor(store, narrow))).length;
   if (reach === 0) return { ok: false, reason: "empty" };
   // A second subject line, when one was asked for. Refused here, with the
   // reason, whenever it could not be a real test: the creator finds out while
@@ -198,6 +208,7 @@ export async function createBroadcast(
     productId,
     notProductId,
     who,
+    narrow,
     status: "scheduled",
     createdAt: now,
     sendAt,
@@ -265,7 +276,7 @@ export async function advanceBroadcast(
     }
 
     if (!b.listed) {
-      const to = await audience(b.listId, b.productId ?? undefined, b.notProductId ?? undefined, whoOf(store, b.who));
+      const to = await audience(b.listId, b.productId ?? undefined, b.notProductId ?? undefined, whoOf(store, b.who), await keepFor(store, b.narrow));
       let test = b.test;
       if (test) {
         if (to.length < MIN_TEST_REACH) {

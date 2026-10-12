@@ -13,6 +13,7 @@ import { MAX_MAIL_BODY, MAX_SUBJECT, fromLine, monthlyAllowance, render, reserve
 import { sendBatch } from "@/lib/email";
 import { healthId, startRamp } from "@/lib/mail-health";
 import { advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
+import { buyerLedger, isNarrowed, keeps, ledgerChannels, readNarrow, removeSegment, saveSegment } from "@/lib/segments";
 import { removeFlow, saveFlow } from "@/lib/flows";
 import { removeDraft, saveDraft } from "@/lib/mail-drafts";
 import { copyOf, keepSending } from "@/lib/mail-reuse";
@@ -23,7 +24,7 @@ import type { Permission } from "@/lib/team-roles";
 export const maxDuration = 60;
 
 /** Refusals of "keep sending" that have words of their own in the studio. */
-const KEEP_REFUSALS = new Set(["unsent", "excludes", "already", "full"]);
+const KEEP_REFUSALS = new Set(["unsent", "excludes", "money", "already", "full"]);
 
 /**
  * Which part of a role each action needs (lib/team-roles.ts): writing and
@@ -33,6 +34,9 @@ const MAIL_PERMISSIONS: Record<string, Permission> = {
   settings: "settings",
   import: "send",
   count: "draft",
+  // A saved group is a name over the choices the composer has (lib/segments.ts).
+  "segment-save": "draft",
+  "segment-remove": "draft",
   test: "draft",
   "draft-save": "draft",
   "draft-remove": "draft",
@@ -53,7 +57,10 @@ const MAIL_PERMISSIONS: Record<string, Permission> = {
  *
  *   { action: "settings", fromName, address }
  *   { action: "import", text, confirm: true }
- *   { action: "count", productId, notProductId, who }   who: "all" | "buyers" | "leads"
+ *   { action: "count", productId, notProductId, who, narrow? }   who: "all" | "buyers" | "leads";
+ *                            narrow: { minSpent, channel, quietDays } (lib/segments.ts); answers the
+ *                            channels the store's buyers first came from too, when it reads them
+ *   { action: "segment-save", name, who, productId, notProductId, narrow }  /  { action: "segment-remove", id }
  *   { action: "test", subject, body }
  *   { action: "draft-save", id?, subject, body, productId }  /  { action: "draft-remove", id }
  *   { action: "broadcast", subject, body, productId, notProductId, who, sendAt, draftId? }
@@ -117,7 +124,34 @@ export async function POST(request: NextRequest) {
       const productId = text(body.productId, 40) || undefined;
       const notProductId = text(body.notProductId, 40) || undefined;
       const who = WHO.includes(body.who as Who) ? (body.who as Who) : "all";
-      return Response.json({ ok: true, count: (await audience(store.listId, productId, notProductId, whoOf(store, who))).length });
+      const narrow = readNarrow(body.narrow);
+      // The store's sales are read only when an email narrows by them, or
+      // when the composer opens the choices that do (lib/segments.ts).
+      if (!isNarrowed(narrow) && body.channels !== true) {
+        return Response.json({ ok: true, count: (await audience(store.listId, productId, notProductId, whoOf(store, who))).length });
+      }
+      const ledger = await buyerLedger(store).catch((error) => {
+        console.error("reading a store's buyers for an email failed", error);
+        return null;
+      });
+      if (!ledger) return Response.json({ ok: false, error: "stripe" }, { status: 502 });
+      const keep = isNarrowed(narrow) ? keeps(narrow, ledger) : undefined;
+      return Response.json({
+        ok: true,
+        count: (await audience(store.listId, productId, notProductId, whoOf(store, who), keep)).length,
+        channels: ledgerChannels(ledger),
+        partial: ledger.partial,
+      });
+    }
+
+    if (action === "segment-save") {
+      const saved = await saveSegment(store, body);
+      if (!saved.ok) return Response.json({ ok: false, error: `segment_${saved.reason}` }, { status: 400 });
+      return Response.json({ ok: true, segments: saved.segments });
+    }
+
+    if (action === "segment-remove") {
+      return Response.json({ ok: true, segments: await removeSegment(store, body.id) });
     }
 
     if (action === "test") {
@@ -165,6 +199,7 @@ export async function POST(request: NextRequest) {
         productId: text(body.productId, 40),
         notProductId: text(body.notProductId, 40),
         who: text(body.who, 10),
+        narrow: body.narrow,
         sendAt: typeof body.sendAt === "number" ? body.sendAt : undefined,
         // A second subject line to try against the first; what it may be is
         // decided where the email is written down (lib/mail-test.ts).

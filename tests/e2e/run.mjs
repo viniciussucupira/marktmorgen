@@ -2428,6 +2428,28 @@ try {
   }
 
   await keepSmall();
+  part("Choosing who gets an email by what they spent, and saving it as a group");
+  {
+    // lib/segments.ts: the three choices read the store's sales; a group keeps them under a name.
+    await open(studio, `${LOCAL}/studio/email?store=${fresh}`);
+    await studio.getByText("More ways to choose: what they spent, where they came from, when they last bought").click();
+    await studio.getByText(/Nobody has bought yet|Where they were when they first bought/).first().waitFor({ timeout: 30_000 });
+    await studio.getByLabel("Spent with you at least").fill("1");
+    await studio.getByRole("status").filter({ hasText: /^0 people$/ }).first().waitFor({ timeout: 30_000 });
+    is("only buyers can match: on a store nobody has bought from, nobody", await studio.getByRole("status").filter({ hasText: /^0 people$/ }).count() > 0, true);
+    await studio.getByLabel("Save who this goes to as a group").fill("Best customers");
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/mail") && r.request().postData()?.includes("segment-save") && r.ok(), { timeout: 30_000 }),
+      studio.getByRole("button", { name: "Save group" }).click(),
+    ]);
+    await open(studio, `${LOCAL}/studio/email?store=${fresh}`);
+    const groups = await studio.getByLabel("Saved groups").locator("option").allTextContents();
+    is("the group is there the next time, to choose again", groups.includes("Best customers"), true);
+    await studio.getByLabel("Saved groups").selectOption({ label: "Best customers" });
+    is("and choosing it fills in what was saved", await studio.getByLabel("Spent with you at least").inputValue(), "1.00");
+  }
+
+  await keepSmall();
   part("A sequence's emails written with AI, with only the store's links");
   {
     await open(studio, `${LOCAL}/studio/email?store=${fresh}`);

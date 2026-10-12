@@ -624,6 +624,8 @@ export async function audience(
   productId?: string,
   notProductId?: string,
   who?: { kind: Who; paid: ReadonlySet<string> },
+  /** What spending, channel and quiet days narrow it to (lib/segments.ts); undefined for no narrowing. */
+  keep?: (email: string) => boolean,
 ): Promise<string[]> {
   const out: string[] = [];
   await forEachContact(listId, (email, contact) => {
@@ -631,6 +633,7 @@ export async function audience(
     if (productId && !contact.ids.includes(productId)) return;
     if (notProductId && contact.ids.includes(notProductId)) return;
     if (who && who.kind !== "all" && isBuyer(contact, who.paid) !== (who.kind === "buyers")) return;
+    if (keep && !keep(email)) return;
     out.push(email);
   });
   return out;
