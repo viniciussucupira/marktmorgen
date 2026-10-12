@@ -257,6 +257,37 @@ export async function startServices(port) {
         };
         return json(res, 200, pauseSub);
       }
+      // The local store's memberships, as the membership numbers read them (lib/membership-numbers.ts):
+      // seven paying, two who canceled on Stripe's page and said why, one ended by a payment that failed.
+      if (req.method === "GET" && path === "/v1/subscriptions" && url.searchParams.get("status") === "all" && !url.searchParams.get("customer") && req.headers["stripe-account"]) {
+        const now = Math.floor(Date.now() / 1000);
+        const day = 86_400;
+        const member = (id, over = {}) => ({
+          id,
+          object: "subscription",
+          status: "active",
+          currency: "usd",
+          start_date: now - 120 * day,
+          ended_at: null,
+          trial_end: null,
+          canceled_at: null,
+          cancellation_details: { reason: null, feedback: null, comment: null },
+          metadata: { store: "localshop", product: "club", channel: "instagram" },
+          items: { data: [{ quantity: 1, price: { unit_amount: 2000, recurring: { interval: "month", interval_count: 1 } } }] },
+          ...over,
+        });
+        return json(res, 200, {
+          object: "list",
+          has_more: false,
+          data: [
+            ...[1, 2, 3, 4, 5, 6].map((n) => member(`sub_LocalMember000${n}`)),
+            member("sub_LocalMember0007", { start_date: now - 20 * day }),
+            member("sub_LocalMember0008", { status: "canceled", canceled_at: now - 10 * day, ended_at: now - 3 * day, cancellation_details: { reason: "cancellation_requested", feedback: "too_expensive", comment: "Love it, but money is tight this month." } }),
+            member("sub_LocalMember0009", { status: "canceled", canceled_at: now - 5 * day, ended_at: now - 2 * day, cancellation_details: { reason: "cancellation_requested", feedback: "unused", comment: null } }),
+            member("sub_LocalMember0010", { status: "canceled", canceled_at: now - 8 * day, ended_at: now - 8 * day, cancellation_details: { reason: "payment_failed", feedback: null, comment: null } }),
+          ],
+        });
+      }
       if (req.method === "GET" && path.startsWith("/v1/")) return json(res, 200, { object: "list", data: [], has_more: false });
       unknown.push(`${req.method} ${path}`);
       return json(res, 404, { error: { type: "invalid_request_error", message: `no stand-in for ${req.method} ${path}` } });

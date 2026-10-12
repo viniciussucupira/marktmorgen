@@ -526,6 +526,15 @@ try {
     is("and carries only a hash of the store", marked, true);
     await open(studio, `${LOCAL}/studio/memberships`);
     is("the memberships page still opens", await studio.getByRole("heading", { name: "How your memberships are doing" }).count(), 1);
+    const members = await studio.locator("main").innerText();
+    is("why members leave: the two who chose to, each reason, and the failed payment said apart", [
+      /2 members canceled and 2 picked a reason/.test(members),
+      /It costs too much/.test(members),
+      /I don't use it enough/.test(members),
+      /1 more membership ended because a payment never went through/.test(members),
+    ], [true, true, true, true]);
+    is("their words, without a name or an address", [/Love it, but money is tight this month\./.test(members), /@example\.com/.test(members)], [true, false]);
+    is("and the next three months, said as an estimate", [/The next three months, if the pace holds/.test(members), /An estimate, not a promise/.test(members)], [true, true]);
     if (process.env.E2E_SHOTS) await studio.screenshot({ path: join(process.env.E2E_SHOTS, "memberships.png"), fullPage: true });
     // Back where the next part expects the studio to be.
     await open(studio, `${LOCAL}/studio`);
