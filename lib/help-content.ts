@@ -170,6 +170,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           "Yes. Every sale in your studio has a link to its buyer's page, and the Buyers page finds anyone by the email address they paid with. Their page shows what they bought and paid, what was refunded, what came later \u2014 extras taken in one click and membership payments \u2014 where they first found your store and where their latest purchase came from, their memberships, how far they are in each course, the calls they have coming up, whether they are on your list and which sequences they were started on.",
           "It is read from your own Stripe account each time you open it, so it is never out of date, and we keep no second copy of anyone's payments. You and your team can leave notes on it; the buyer never sees them.",
           "The owner, Admins and Support see it: the same people who see orders with the buyer's address. Sales from before October 11, 2026 have no channel written on them, and a sale paid with PayPal shows what was bought, with the amount in your PayPal account.",
+          "Your numbers in the studio also show who bought in the last 7, 30 or 90 days: how many people, what an order comes to on average, how many had bought from you before and how many bought more than once. The owner, Admins and Support also see the biggest buyers of the last 90 days there, each opening their own page.",
         ],
       },
       {

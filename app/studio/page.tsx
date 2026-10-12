@@ -801,7 +801,7 @@ export default async function StudioPage({
         readTrouble(current.statsId).catch(() => ({ week: 0, last: null })),
       ])
     : [null, null, [], [], false, { week: 0, last: null }];
-  const numbers =
+  const counted =
     current && visits && salesRead
       ? studioStats(
           current,
@@ -811,6 +811,9 @@ export default async function StudioPage({
           await readListings(current, [...new Set([...productsInStats(current, visits, salesRead.value), ...reachProducts(visits)])]),
         )
       : null;
+  // The biggest buyers carry their addresses, so only whoever may read orders
+  // with the buyer's address sees them (lib/team-roles.ts, "orders").
+  const numbers = counted && may("orders") ? { ...counted, topBuyers: salesRead?.value?.buyers?.top ?? [] } : counted;
   // The list of products: all of a short one, a page of a long one, found by
   // name when the creator searched (lib/catalog.ts reads only that page in full).
   const shelf = store ? await studioShelf(store, params) : null;
