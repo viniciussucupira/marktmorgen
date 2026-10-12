@@ -31,6 +31,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
 import { type Store, saleHandles } from "@/lib/store";
+import { type Invoice, type Movements, movementsFrom, pricesFrom } from "@/lib/mrr-movements";
 import { LEAVE_NAMES, LEAVE_REASONS, type LeaveReason, isLeaveReason, isOwnReasonId } from "@/lib/leave-rules";
 
 const MAX_PAGES = 20;
@@ -69,6 +70,8 @@ export type Sub = {
   feedbackText?: string;
   /** What the member wrote, if anything, at most COMMENT_LENGTH characters. */
   comment: string;
+  /** The Stripe customer it belongs to: one member, whatever memberships they hold (lib/mrr-movements.ts). */
+  customer?: string;
 };
 
 /**
@@ -244,6 +247,8 @@ export type Numbers = {
   leaving?: Leaving;
   /** The next three months at the pace of the last 90 days; null with too few members to read a pace from. */
   forecast?: Forecast | null;
+  /** Recurring revenue month by month, by what moved it (lib/mrr-movements.ts); absent on a reading from before. */
+  movements?: Movements;
 };
 
 const LIVE = new Set(["active", "trialing", "past_due"]);
@@ -390,6 +395,7 @@ export function channelsFrom(subs: Sub[], now: number): ChannelStay[] {
 
 type Raw = {
   id?: unknown;
+  customer?: unknown;
   status?: unknown;
   metadata?: Record<string, string> | null;
   currency?: unknown;
@@ -444,6 +450,7 @@ export function readSub(raw: Raw, handles: Set<string>): Sub | null {
     canceledAt: meta.ends_after ? 0 : num(raw.canceled_at),
     cancelCause: !meta.ends_after && typeof raw.cancellation_details?.reason === "string" ? raw.cancellation_details.reason : "",
     ...feedbackOf(raw),
+    customer: typeof raw.customer === "string" ? raw.customer : raw.customer && typeof raw.customer === "object" && typeof (raw.customer as { id?: unknown }).id === "string" ? (raw.customer as { id: string }).id : "",
     comment: typeof raw.cancellation_details?.comment === "string" ? raw.cancellation_details.comment.replace(/\s+/g, " ").trim().slice(0, COMMENT_LENGTH) : "",
   };
 }
@@ -484,6 +491,27 @@ export async function membershipNumbers(store: Store, fresh = false, now = Date.
     after = last.id;
   }
   const numbers = numbersFrom(subs, store.currency, Math.floor(now / 1000), complete);
+  // What moved recurring revenue each month: the invoices of the last thirteen
+  // months say what each membership was charged at, and from when.
+  try {
+    const invoices: Invoice[] = [];
+    let page = "";
+    const since = Math.floor(now / 1000) - 400 * DAY;
+    for (let n = 0; n < MAX_PAGES; n += 1) {
+      const query = new URLSearchParams({ limit: "100", "created[gte]": String(since) });
+      if (page) query.set("starting_after", page);
+      const listed = await onAccount("GET", store.stripeAccountId, `/invoices?${query}`);
+      const rows = (Array.isArray(listed.data) ? listed.data : []) as (Invoice & { id?: unknown })[];
+      invoices.push(...rows);
+      const last = rows[rows.length - 1];
+      if (listed.has_more !== true || !last || typeof last.id !== "string") break;
+      page = last.id;
+    }
+    const byId = new Map(subs.map((s) => [s.id, s]));
+    numbers.movements = movementsFrom(subs, pricesFrom(invoices, byId), store.currency, Math.floor(now / 1000));
+  } catch (error) {
+    console.error("reading invoices for recurring revenue movements failed", store.handle, error);
+  }
   if (isRedisConfigured()) await redisPipeline([["SET", cacheKey(store), JSON.stringify(numbers), "EX", CACHE_SECONDS]]);
   return numbers;
 }

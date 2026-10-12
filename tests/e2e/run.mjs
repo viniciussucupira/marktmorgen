@@ -553,6 +553,12 @@ try {
     const leaveSection = await words(studio.locator("section", { hasText: "Why members leave" }));
     is("their words, without a name or an address", [/Love it, but money is tight this month\./.test(leaveSection), /@example\.com/.test(leaveSection)], [true, false]);
     is("and the next three months, said as an estimate", [/The next three months, if the pace holds/.test(members), /An estimate, not a promise/.test(members)], [true, true]);
+    const moves = studio.locator("[data-mrr-movements]");
+    is("recurring revenue month by month, the latest month ending on the revenue above", [
+      await moves.count(),
+      await moves.locator("svg path").count() > 0,
+      (await words(moves.locator("tbody tr").first())).endsWith("$140"),
+    ], [1, true, true]);
     const health = studio.locator("[data-member-health]");
     is("each running member scored, the reasons beside them, addresses for the owner", [
       await health.count(),
