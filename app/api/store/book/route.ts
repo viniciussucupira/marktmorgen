@@ -1,4 +1,5 @@
 import { channelOfRequest } from "@/lib/visit-channel";
+import { adsCheckout } from "@/lib/ad-events";
 import { holdSession, prepareSession } from "@/lib/call-packages";
 import { isSoon } from "@/lib/waitlist";
 import { type NextRequest, after } from "next/server";
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
     origin: linkOrigin(request, store),
     via,
     fromPackage: prepared && prepared.ok ? prepared.fromPackage : null,
-    channel: channelOfRequest(request, store.handle, new URL(origin).hostname),
+    channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname), ...(await adsCheckout(request, store)) },
   });
   if (!result.ok) return back(result.reason);
   // The session counts against the package from now; if another tab took the

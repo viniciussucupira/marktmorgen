@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Pixels } from "@/lib/pixels";
+import { ADS_COOKIE_SECONDS, adsCookieName, nextAdsCookie } from "@/lib/ad-consent";
 
 /**
  * The creator's own ad pixels, on their store's pages.
@@ -34,7 +35,8 @@ type PixelWindow = Window & {
 export type PixelEvent =
   /** `value` is in the currency's own units (27.5 dollars, 2700 yen); `currency` is its ISO code. */
   | { type: "purchase"; id: string; value: number; currency?: string; productId: string; title: string }
-  | { type: "lead"; productId: string }
+  /** `id`, when the route that took the sign-up sent the same lead from the server (lib/ad-events.ts), so it is counted once. */
+  | { type: "lead"; productId: string; id?: string }
   | null;
 
 // Each pixel starts once per page, however often the page redraws.
@@ -57,6 +59,26 @@ function writeChoice(handle: string, value: "yes" | "no" | null) {
     else localStorage.removeItem(consentKey(handle));
   } catch {
     // A browser that keeps nothing asks again next time; nothing breaks.
+  }
+}
+
+/**
+ * The same yes, where the server can read it (lib/ad-consent.ts): kept while
+ * the pixels may run, with the ad click this visit came from, and deleted the
+ * moment they may not.
+ */
+function writeAdsCookie(handle: string, on: boolean) {
+  try {
+    const name = adsCookieName(handle);
+    const secure = location.protocol === "https:" ? "; Secure" : "";
+    if (!on) {
+      document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+      return;
+    }
+    const existing = document.cookie.split("; ").find((c) => c.startsWith(`${name}=`))?.slice(name.length + 1);
+    document.cookie = `${name}=${nextAdsCookie(existing, location.search, Date.now() / 1000)}; Path=/; Max-Age=${ADS_COOKIE_SECONDS}; SameSite=Lax${secure}`;
+  } catch {
+    // A browser that keeps no cookies is sent from the thanks page only, as before.
   }
 }
 
@@ -167,12 +189,14 @@ function track(w: PixelWindow, pixels: Pixels, event: Exclude<PixelEvent, null> 
     if (pixels.google && w.gtag) w.gtag("event", "purchase", { ...money, transaction_id: event.id, items: [{ item_id: event.productId, item_name: event.title }] });
     // The order's id as the event's, so TikTok counts this and the server's (lib/ad-events.ts) as one.
     if (pixels.tiktok && ttq) ttq.track("CompletePayment", { ...money, contents: [{ content_id: event.productId, content_name: event.title }], content_type: "product" }, { event_id: event.id });
-    if (pixels.pinterest && w.pintrk) w.pintrk("track", "checkout", { ...money, order_id: event.id, order_quantity: 1 });
+    if (pixels.pinterest && w.pintrk) w.pintrk("track", "checkout", { ...money, order_id: event.id, order_quantity: 1, event_id: event.id });
   } else if (event.type === "lead") {
-    if (pixels.meta && w.fbq) w.fbq("track", "Lead", { content_ids: [event.productId] });
+    // The lead's id as the event's, where the server sent it too, so each platform counts one.
+    const same = event.id ? { eventID: event.id } : undefined;
+    if (pixels.meta && w.fbq) w.fbq("track", "Lead", { content_ids: [event.productId] }, ...(same ? [same] : []));
     if (pixels.google && w.gtag) w.gtag("event", "generate_lead");
-    if (pixels.tiktok && ttq) ttq.track("SubmitForm");
-    if (pixels.pinterest && w.pintrk) w.pintrk("track", "lead");
+    if (pixels.tiktok && ttq) ttq.track("SubmitForm", {}, ...(event.id ? [{ event_id: event.id }] : []));
+    if (pixels.pinterest && w.pintrk) w.pintrk("track", "lead", event.id ? { event_id: event.id } : {});
   } else {
     if (pixels.meta && w.fbq) w.fbq("track", "InitiateCheckout");
     if (pixels.google && w.gtag) w.gtag("event", "begin_checkout");
@@ -211,6 +235,10 @@ export function StorePixels({
   }, [handle, askFirst]);
 
   useEffect(() => {
+    if (state === "on" || state === "off") writeAdsCookie(handle, state === "on");
+  }, [state, handle]);
+
+  useEffect(() => {
     if (state !== "on") return;
     const w = window as PixelWindow;
     const start = (kind: string, id: string | null, run: (w: PixelWindow, id: string) => void) => {
@@ -225,16 +253,15 @@ export function StorePixels({
 
     if (event?.type === "purchase" && once(`nl_px_sent:${event.id}`)) {
       track(w, pixels, event);
-      // The same purchase from our server too, where the creator set it up
-      // (lib/ad-events.ts): asked only here, where the pixels were allowed to run.
-      if (pixels.meta || pixels.tiktok) {
-        fetch("/api/store/ads-event", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ h: handle, s: event.id }),
-          keepalive: true,
-        }).catch(() => {});
-      }
+      // The same purchase from our server now, where the creator set it up
+      // (lib/ad-events.ts), rather than at the server's next pass over the
+      // store's checkouts: asked only here, where the pixels were allowed to run.
+      fetch("/api/store/ads-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ h: handle, s: event.id }),
+        keepalive: true,
+      }).catch(() => {});
     }
     if (event?.type === "lead" && !started.has(`lead:${event.productId}`)) {
       started.add(`lead:${event.productId}`);
@@ -275,7 +302,7 @@ export function StorePixels({
       >
         <p className="font-bold">{`${storeName} measures its ads`}</p>
         <p className="st-muted mt-1 text-sm leading-relaxed">
-          {`With your permission, this page loads ad measurement from ${names}, which sets cookies so ${storeName} can tell which of its ads bring people here. If you say no, nothing loads and the page works just the same.`}{" "}
+          {`With your permission, this page loads ad measurement from ${names}, which sets cookies, and ${storeName} tells them about your sign-ups and purchases, so it can tell which of its ads bring people here. If you say no, nothing loads, nothing is sent, and the page works just the same.`}{" "}
           <Link href="/privacy#ads" className="st-footer-link font-semibold">
             More about this
           </Link>

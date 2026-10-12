@@ -29,7 +29,9 @@ import {
   ensureStatsId,
   imageFolder,
   isFree,
+  setAdsServer,
   setSubscription,
+  storeRef,
   storeFolder,
   type Listing,
   type Store,
@@ -49,7 +51,8 @@ import { readNotes } from "@/lib/stats-notes";
 import { readSpends } from "@/lib/ad-spend";
 import { heardOff } from "@/lib/heard";
 import { weeklyTeam } from "@/lib/stats-report";
-import { serverSetup } from "@/lib/ad-events";
+import { NO_SETUP, SERVER_PLATFORMS, serverSetup } from "@/lib/ad-events";
+import { hasPixels } from "@/lib/pixels";
 import { readTrouble } from "@/lib/checkout-trouble";
 import { readSalesGoal } from "@/lib/sales-goal";
 import { chatSetup } from "@/lib/chat-summary";
@@ -1438,10 +1441,22 @@ export default async function StudioPage({
                 })()}
 
                 <PixelEditor pixels={store.pixels} />
-                {store.pixels.meta || store.pixels.tiktok ? (
+                {hasPixels(store.pixels) ? (
                   <ServerEventsEditor
-                    setup={await serverSetup(store.statsId).catch(() => ({ on: { meta: false, tiktok: false }, testCode: "", last: null }))}
-                    pixels={{ meta: Boolean(store.pixels.meta), tiktok: Boolean(store.pixels.tiktok) }}
+                    setup={await (async () => {
+                      const setup = await serverSetup(store.statsId).catch(() => NO_SETUP);
+                      // A token saved before the store kept its own list of platforms is written there now, once.
+                      const on = SERVER_PLATFORMS.filter((p) => setup.on[p]);
+                      if (on.join() !== store.adsServer.join()) await setAdsServer(storeRef(store), on).catch(() => null);
+                      return setup;
+                    })()}
+                    pixels={{
+                      meta: Boolean(store.pixels.meta),
+                      tiktok: Boolean(store.pixels.tiktok),
+                      google: Boolean(store.pixels.google),
+                      pinterest: Boolean(store.pixels.pinterest),
+                    }}
+                    googleId={store.pixels.google ?? ""}
                   />
                 ) : null}
 

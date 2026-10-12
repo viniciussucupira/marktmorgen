@@ -7,6 +7,7 @@ import { StoreTracking } from "@/components/store-tracking";
 import { JOIN_TOKEN, readJoinToken } from "@/lib/store-join";
 import { speech } from "@/lib/buyer-words";
 import { joinWords } from "@/lib/buyer-words/join";
+import { leadIdOf } from "@/lib/ad-consent";
 
 type Params = {
   params: Promise<{ handle: string }>;
@@ -99,7 +100,7 @@ export default async function JoinPage({ params, searchParams }: Params) {
               {said.w.backTo(store.name)}
             </Link>
             {/* A confirmed sign-up is a lead for the store's own ad pixels, once (components/store-pixels.tsx). */}
-            <StoreTracking store={store} presence event={status === "joined" ? { type: "lead", productId: "email-list" } : null} />
+            <StoreTracking store={store} presence event={status === "joined" ? { type: "lead", productId: "email-list", id: leadIdOf(query.e) } : null} />
           </div>
         </div>
       </main>

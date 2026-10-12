@@ -164,8 +164,8 @@ export default function TermsPage() {
             Ad pixels, and purchases sent to ad platforms.
           </strong>{" "}
           When you add a Meta, Google, TikTok or Pinterest pixel to your store,
-          or give us an access token so that purchases are also sent to Meta or
-          TikTok from our server, you are instructing us to send that data to
+          or give us an access token so that purchases, membership payments and
+          sign-ups are also sent to that platform from our server, you are instructing us to send that data to
           that platform on your behalf, and you are responsible for doing so
           lawfully. That means telling your visitors and buyers about it in your
           own privacy notice, giving any notice or opt-out link the law where

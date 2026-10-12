@@ -147,6 +147,7 @@ import { type SitePage, parseSitePages } from "@/lib/site-page-rules";
 import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rules";
 import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
 import { DEFAULT_LANGUAGE, type LanguageCode, parseLanguage } from "@/lib/store-language";
+import { type AdsServerPlatform, parseAdsServer } from "@/lib/ad-consent";
 
 // What the rest of the site has always imported from here.
 export { MAX_PRODUCTS, MAX_SUMMARY_LENGTH, MAX_TITLE_LENGTH, StoreFullError };
@@ -492,6 +493,12 @@ export type Store = {
   nudge: Nudge;
   /** Whether the weekly email opens with a few sentences written by AI from the week's numbers (lib/numbers-ask.ts). Off until turned on. */
   weeklyAi: boolean;
+  /**
+   * The ad platforms this store sends conversions to from the server, each
+   * with an access token kept sealed apart (lib/ad-events.ts). Only which
+   * ones, never a token, so a checkout knows without asking Redis.
+   */
+  adsServer: AdsServerPlatform[];
   /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
@@ -858,6 +865,7 @@ function parseStore(raw: unknown): Store | null {
       leaving: parseLeave(value.leaving),
       nudge: parseNudge(value.nudge),
       weeklyAi: value.weeklyAi === true,
+      adsServer: parseAdsServer(value.adsServer),
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
       tiers: parseTiers(value.tiers),
@@ -1050,6 +1058,7 @@ async function freshStore(fields: {
     leaving: { ...NO_LEAVE, reasons: [...NO_LEAVE.reasons] },
     nudge: { ...NO_NUDGE },
     weeklyAi: false,
+    adsServer: [],
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
     tiers: [],
@@ -2222,6 +2231,11 @@ export async function setLeaving(email: string, raw: unknown): Promise<{ ok: tru
   if (own.filter((o) => typeof o.text === "string" && o.text.trim()).length !== leaving.own.length) return { ok: false, reason: "leaving" };
   const next = await patchStore(email, () => ({ leaving }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/** Which ad platforms get conversions from the server (lib/ad-events.ts): set when a token is saved or removed. */
+export async function setAdsServer(email: string, platforms: unknown): Promise<Store | null> {
+  return patchStore(email, () => ({ adsServer: parseAdsServer(platforms) }));
 }
 
 /** Whether the weekly email opens with a summary written by AI (lib/numbers-ask.ts). */

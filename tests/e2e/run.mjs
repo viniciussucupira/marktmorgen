@@ -77,6 +77,8 @@ const env = {
   RESEND_API_BASE: FAKE,
   ANTHROPIC_API_KEY: "sk-ant-local_only_a_stand_in_0000",
   ANTHROPIC_API_BASE: FAKE,
+  // The ad platforms conversions are sent to from the server (lib/ad-events.ts).
+  ADS_API_BASE: FAKE,
   // Discord: the application's keys, and its page and API answered by the stand-in.
   DISCORD_API_BASE: FAKE,
   DISCORD_CLIENT_ID: "950000000000000001",
@@ -1121,6 +1123,70 @@ try {
     await open(page, `${LOCAL}/@localshop/p/${product}`);
     is("version B kept: it is the page for everybody, and the test is over", [await words(page.locator("h1")), await studio.evaluate((id) => fetch(`/api/store/ab?id=${id}`).then((r) => r.status), product)], [second, 404]);
     await studio.evaluate(async (id) => fetch("/api/store/page", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, page: null }) }), product);
+  }
+
+  part("Sales sent to the creator's ad platforms from the server");
+  {
+    // The platforms' own scripts cannot be fetched from here: each is answered with an empty one.
+    await page.context().route(/^https:\/\/(connect\.facebook\.net|www\.googletagmanager\.com)\//, (route) => route.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
+    await studio.evaluate(() => fetch("/api/store/pixels", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pixels: { meta: "123456789012345", google: "AW-123456789" } }) }));
+    await open(studio, `${LOCAL}/studio`);
+    const server = studio.locator("#server-events");
+    is("under the pixels, a token for each platform the store has", [
+      await server.getByRole("heading", { name: "Send conversions from our server too" }).count(),
+      await server.getByLabel("Meta access token").count(),
+      (await words(server)).includes("Put your Google Analytics tag ID (it starts with G-)"),
+    ], [1, 1, true]);
+    await server.getByLabel("Meta access token").fill("EAAB" + "e".repeat(60));
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/ads-server") && r.ok(), { timeout: 30_000 }),
+      server.getByRole("button", { name: "Save token" }).first().click(),
+    ]);
+    await server.getByText("On: a token is saved").waitFor({ timeout: 30_000 });
+    is("saved, and never shown again", [await server.getByText("On: a token is saved").count(), await server.getByLabel("Meta access token").inputValue()], [1, ""]);
+
+    // A visitor from an ad says yes on the store, and buys.
+    const product = ids["Weeknight Dinners"];
+    await open(page, `${LOCAL}/@localshop/p/${product}?fbclid=IwAR0e2etest`);
+    await page.getByRole("button", { name: "Allow", exact: true }).click();
+    await page.getByRole("button", { name: "Turn off ad measurement" }).waitFor();
+    const yes = (await page.context().cookies()).find((c) => c.name === "nl_ads_localshop");
+    is("the yes is kept where the server can read it, with the ad click", /^y&fbclid=IwAR0e2etest&at=\d+$/.test(yes?.value ?? ""), true);
+    await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
+    const bought = services.checkouts().at(-1);
+    is("the checkout carries it to Stripe", /^[0-9a-f]{24}$/.test(bought.metadata?.ads ?? ""), true);
+    const sent = async () => {
+      for (let i = 0; i < 40; i += 1) {
+        const found = services.adEvents().find((e) => e.host === "graph.facebook.com" && e.body.data?.[0]?.event_id === bought.id);
+        if (found) return found;
+        await page.waitForTimeout(250);
+      }
+      return null;
+    };
+    const meta = await sent();
+    // The stand-in's buyer has paid this store earlier in this run, so is a returning customer.
+    is("the purchase reaches Meta from the server, with the order's id, the click and a returning customer", [
+      meta?.path,
+      meta?.body.data[0].event_name,
+      meta?.body.data[0].action_source,
+      /^fb\.1\.\d+\.IwAR0e2etest$/.test(meta?.body.data[0].user_data.fbc ?? ""),
+      meta?.body.data[0].custom_data.customer_type,
+      meta?.query.access_token === "EAAB" + "e".repeat(60),
+    ], ["/v25.0/123456789012345/events", "Purchase", "website", true, "returning", true]);
+    is("once, and not to Google, whose tag here is an Ads one", services.adEvents().filter((e) => e.body.data?.[0]?.event_id === bought.id || JSON.stringify(e.body).includes(bought.id)).length, 1);
+    await open(studio, `${LOCAL}/studio`);
+    is("the studio shows Meta's answer", (await words(studio.locator("[data-server-last]"))).includes("Meta: Received"), true);
+
+    // Saying no takes the yes away at once.
+    await open(page, `${LOCAL}/@localshop`);
+    await Promise.all([page.waitForEvent("load"), page.getByRole("button", { name: "Turn off ad measurement" }).click()]);
+    await page.getByRole("button", { name: "Ad measurement settings" }).waitFor();
+    is("turned off, the cookie is gone", (await page.context().cookies()).some((c) => c.name === "nl_ads_localshop"), false);
+
+    // As it was, for the parts after this one.
+    await studio.evaluate(() => fetch("/api/store/ads-server", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ platform: "meta", token: "" }) }));
+    await studio.evaluate(() => fetch("/api/store/pixels", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pixels: {} }) }));
+    await page.context().unroute(/^https:\/\/(connect\.facebook\.net|www\.googletagmanager\.com)\//);
   }
 
   await keepSmall();

@@ -17,6 +17,7 @@ import { pageShown } from "@/lib/sales-page";
 import { funnelMark } from "@/lib/page-funnel";
 import { funnelHere } from "@/lib/page-funnel-store";
 import { funnelWords } from "@/lib/buyer-words/funnel";
+import { leadIdOf } from "@/lib/ad-consent";
 
 type Params = {
   params: Promise<{ handle: string }>;
@@ -199,7 +200,7 @@ export default async function FreePage({ params, searchParams }: Params) {
             <StoreTracking
               store={store}
               presence
-              event={status === "sent" && asked ? { type: "lead", productId: asked.id } : null}
+              event={status === "sent" && asked ? { type: "lead", productId: asked.id, id: leadIdOf(query.e) } : null}
             />
           </div>
         </div>

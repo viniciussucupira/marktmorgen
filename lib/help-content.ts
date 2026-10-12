@@ -500,6 +500,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can sales be sent to my ad platforms from the server?",
+        a: [
+          "Yes. Under your pixels in the studio, paste a token from each platform: a Conversions API access token from Meta Events Manager, an Events API access token from TikTok Events Manager, a Measurement Protocol API secret from Google Analytics (your Google field needs the Analytics tag ID, starting with G-), or a Conversions API token and your ad account ID from Pinterest Ads Manager. Each is sealed and never shown again.",
+          "Then each purchase is sent from our server the moment Stripe confirms the payment, even when the buyer closes the tab before your thanks page or blocks the pixel, with the same order id as the pixel so it counts once, and marked as a new or returning customer. Each later payment of a membership goes as a purchase of its own, and sign-ups for something free, a waitlist or your list go as leads (not to Google, which could count them twice). Google receives purchases in your Analytics property, on the buyer's own visit; they reach Google Ads when the property is linked and the purchase is imported as a conversion.",
+          "Only for visitors who allowed ad measurement on your store: never where they said no, and never without a yes where the law asks first. The studio shows each platform's last answer, and a Meta test code lets you watch events arrive under Test events.",
+        ],
+      },
+      {
         q: "Can I sell a course?",
         a: [
           "Yes. Turn any paid product into a course from your studio and add modules and lessons. A lesson can have a video of up to 5 GB, text, up to five downloads and a link, and any lesson can be a free preview on your store. Upright phone videos stay upright.",

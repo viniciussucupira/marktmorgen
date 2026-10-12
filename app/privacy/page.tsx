@@ -249,24 +249,36 @@ export default function PrivacyPage() {
           unless they agree; everywhere else the
           pixels load unless the browser sends Global Privacy Control. The
           choice is kept on the visitor&apos;s device for that store, and a link
-          at the bottom of its pages changes it.
+          at the bottom of its pages changes it. While ad measurement is
+          allowed, that store also keeps a cookie of its own saying so, with the
+          ad click id the visitor last arrived with (Meta&apos;s fbclid,
+          TikTok&apos;s ttclid or Pinterest&apos;s epik), for 30 days; it is
+          deleted the moment the choice is no.
         </p>
         <p id="ads-server">
           <strong className="text-black">
-            Purchases sent from our server, when a creator sets it up.
+            Conversions sent from our server, when a creator sets it up.
           </strong>{" "}
-          A creator who has a Meta or TikTok pixel can also give us an access
-          token from their own ad account. Then, when a buyer&apos;s browser has
-          sent a purchase to that pixel &mdash; which it does only where the
-          pixels were allowed to run, as above &mdash; it asks us to send the
-          same purchase from our server, and we do, once: the order&apos;s id,
-          time, amount, currency and product, the page, the buyer&apos;s email
-          address hashed with SHA-256, the network address and browser of that
-          request, and the platform&apos;s own cookies from that browser. It
-          goes to that platform on the creator&apos;s behalf and under its own
-          privacy policy. A buyer whose pixels did not run is never sent. We
-          keep the token sealed, the platform&apos;s last answer for the
-          creator to see, and for three days that the order was sent.
+          A creator who has a Meta, TikTok, Google Analytics or Pinterest pixel
+          can also give us an access token from their own account with that
+          platform. Then, for a visitor who allowed ad measurement on that
+          store, as above, we send the platform from our server: each purchase
+          once Stripe confirms the payment, each later payment of a membership
+          bought that way, and each sign-up for something free, a waitlist or
+          the creator&apos;s list (sign-ups are not sent to Google). With each
+          we send its id, time, amount, currency and products, whether the
+          buyer had paid that creator before, the page, the email address
+          hashed with SHA-256, the network address and browser of the request
+          that opened the checkout or sent the sign-up (not with a later
+          membership payment), and the platform&apos;s own cookies and ad click
+          id from that browser. It goes to that platform on the creator&apos;s
+          behalf and under its own privacy policy. A visitor who did not allow
+          ad measurement is never sent. We keep the token sealed; for four days,
+          the request that opened a checkout; for 400 days, the cookies and ad
+          click id a membership&apos;s later payments are sent with, never an
+          address or browser; for three days (40 for a membership payment) that
+          each was sent; and the platform&apos;s last answer for the creator to
+          see.
         </p>
         <p id="audience">
           <strong className="text-black">
@@ -1438,7 +1450,7 @@ export default function PrivacyPage() {
           creator&apos;s choice, and the data sent or
           used there is governed by the creator&apos;s account and that
           service&apos;s own terms. The same is true when a creator adds an ad
-          pixel or asks us to send purchases to Meta or TikTok from our
+          pixel or asks us to send conversions to an ad platform from our
           server: the creator decides it, the platform receives it under its
           own terms, and the rules for when anything is sent at all are the
           ones in section 1, under ad measurement. So too when a creator

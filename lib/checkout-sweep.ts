@@ -19,7 +19,10 @@
  *     is told now (lib/sale-events.ts), once, on a store that connected
  *     either;
  *   - a settled one not yet put on the creator's list is put there, with
- *     what it bought, and its sequences started (lib/buyer-list.ts), once.
+ *     what it bought, and its sequences started (lib/buyer-list.ts), once;
+ *   - a settled one whose buyer allowed ad measurement is sent to the
+ *     creator's ad platforms (lib/ad-events.ts), once, and so is each
+ *     renewal of a membership bought that way.
  *
  * A store that hands out license keys also has its refunds read, and the
  * key of every sale refunded in full is revoked (lib/licence-keys.ts), so
@@ -60,6 +63,7 @@ import { listOrder, listedAlready } from "@/lib/buyer-list";
 import { rememberBuyers } from "@/lib/buyer-library";
 import { isHouseStore } from "@/lib/house-store";
 import { deliveredIds } from "@/lib/bundle-rules";
+import { sendPaidOrders, sendRenewals, sendsFromServer } from "@/lib/ad-events";
 
 const CURSOR_KEY = "nl:sweep:cursor";
 /** At most this many pages of a hundred checkouts are read per store per pass. */
@@ -84,7 +88,8 @@ function worthAsking(store: Store): boolean {
     (Boolean(store.stripeAccountId) && affiliatesOn(store)) ||
     storeHasKeys(store) ||
     listensToSales(store) ||
-    (Boolean(store.stripeAccountId) && Boolean(store.listId) && sellsThings(store))
+    (Boolean(store.stripeAccountId) && Boolean(store.listId) && sellsThings(store)) ||
+    (Boolean(store.stripeAccountId) && sendsFromServer(store))
   );
 }
 
@@ -138,6 +143,12 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
     }
   }
   if (!worthAsking(store)) return;
+  // A membership's renewals, sent to the creator's ad platforms as purchases
+  // of their own (lib/ad-events.ts): one read of the day's invoices, only on
+  // a store that sends from the server.
+  if (store.stripeAccountId && sendsFromServer(store)) {
+    await sendRenewals(store, Date.now(), deadline).catch((error) => console.error("sending renewals to ad platforms failed", store.handle, error));
+  }
   const now = Math.floor(Date.now() / 1000);
   const since = now - CONFIRM_WITHIN_SECONDS;
   const reminding = recoveryOn(store);
@@ -181,6 +192,11 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
     // A sale paid from a page running a test counts for the version its buyer was shown, once (lib/headline-test.ts).
     if (paid.some((row) => row.metadata?.ab)) {
       await noteTestSales(store.statsId, store.currency, paid).catch((error) => console.error("counting a tested page's sales failed", store.handle, error));
+    }
+    // The creator's ad platforms, sent each sale whose buyer allowed ad
+    // measurement, whether or not the buyer came back from Stripe (lib/ad-events.ts).
+    if (sendsFromServer(store) && paid.some((row) => row.metadata?.ads)) {
+      await sendPaidOrders(store, paid, Date.now(), deadline).catch((error) => console.error("sending sales to ad platforms failed", store.handle, error));
     }
     // The creator's phone and email platform, told of each sale once.
     if (listensToSales(store)) {
