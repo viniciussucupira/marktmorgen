@@ -837,6 +837,22 @@ export default function PrivacyPage() {
           are sent to Anthropic to write it, never the file. A student who
           wants their work deleted asks the creator.
         </p>
+        <p id="discord">
+          <strong className="text-black">Discord access.</strong> When a
+          creator connects their Discord server, a buyer of a product that
+          gives roles there can press &ldquo;Join the Discord&rdquo; and agree
+          on Discord&apos;s own page. Discord then tells us their Discord
+          account&apos;s id and name, and lets us put them in that one server.
+          We keep, with the creator&apos;s records, that id and name, the
+          address that bought, which of the creator&apos;s products it held
+          and which roles it was given, and check every few hours, against
+          the creator&apos;s Stripe account, whether it still holds them. We
+          do not keep the permission Discord gave beyond that moment, never
+          read or send messages there, and never see the buyer&apos;s Discord
+          password or email. Once the address holds none of those products,
+          the roles are taken back and the record is deleted; it is all
+          deleted when the creator disconnects the server.
+        </p>
         <p id="stamping">
           <strong className="text-black">Stamped PDFs.</strong> When a creator
           switches on stamping for a product, every page of the PDF a buyer
@@ -1314,7 +1330,10 @@ export default function PrivacyPage() {
             the address the email is for. Where a store answers questions on
             its product pages, it also receives the question a visitor typed
             and what that product&apos;s page already says in public, and
-            nothing about who asked;
+            nothing about who asked. When a creator asks for a draft reply to
+            a student&apos;s assignment, it receives the assignment and what
+            the student wrote for it, never the student&apos;s name, address
+            or file;
           </li>
           <li>
             <strong className="text-black">Unsplash</strong>, which serves the
@@ -1361,8 +1380,8 @@ export default function PrivacyPage() {
           people who apply to their affiliate program, their students&apos;
           quiz answers, handed-in work and certificates, and their buyers&apos; reviews: the
           creator is the controller, and we handle that data on their behalf.
-          When a creator connects an email platform, Google Calendar or Zoom,
-          or chooses Jitsi Meet for their calls and events, that is the
+          When a creator connects an email platform, Google Calendar, Zoom or
+          a Discord server, or chooses Jitsi Meet for their calls and events, that is the
           creator&apos;s choice, and the data sent or
           used there is governed by the creator&apos;s account and that
           service&apos;s own terms. The same is true when a creator adds an ad

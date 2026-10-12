@@ -204,7 +204,17 @@ export async function holdsProducts(store: Store, ids: string[], email: string, 
   return ticketFor(store, ids, email, cacheKey, version);
 }
 
-async function ticketFor(store: Store, ids: string[], email: string, cacheKey: string, version: number | string): Promise<boolean> {
+/**
+ * The same question, for a door that takes something away when the answer
+ * is no (lib/discord-access.ts): Stripe that cannot be asked is not a no.
+ * Throws instead, so nothing is taken from anybody on a failed request.
+ */
+export async function holdsProductsOrThrow(store: Store, ids: string[], email: string, cacheKey: string, version: string): Promise<boolean> {
+  if (!isRedisConfigured()) throw new Error("the database is not set up");
+  return ticketFor(store, ids, email, cacheKey, version, true);
+}
+
+async function ticketFor(store: Store, ids: string[], email: string, cacheKey: string, version: number | string, strict = false): Promise<boolean> {
   // Which products let in, and whether each is free, is in the store record.
   const products = ids.flatMap((pid) => {
     const item = itemFor(store, pid);
@@ -229,7 +239,9 @@ async function ticketFor(store: Store, ids: string[], email: string, cacheKey: s
       (await paidForAny(store, email, paid));
   } catch (error) {
     // Stripe could not be asked. Nobody is let in on a guess, and the answer
-    // is not kept, so the next page asks again.
+    // is not kept, so the next page asks again. A door that would take
+    // something away on a no is told it could not be asked.
+    if (strict) throw error;
     console.error("checking community access failed", error);
     return false;
   }

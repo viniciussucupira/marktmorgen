@@ -1,3 +1,6 @@
+import { isDiscordConfigured } from "@/lib/discord";
+import { discordFor } from "@/lib/discord-store";
+import { discordWords } from "@/lib/buyer-words/discord";
 import { recordPackage } from "@/lib/call-packages";
 import { readGift } from "@/lib/gifts";
 import { ThanksNoteView } from "@/components/thanks-note-view";
@@ -123,6 +126,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
   const longDate = (seconds: number) =>
     new Date(seconds * 1000).toLocaleDateString(locale, { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
   const o = ordersWords(store.language);
+  const dw = discordWords(store.language);
 
   const query = await searchParams;
   // Paid with PayPal (lib/paypal-sales.ts): a page of its own.
@@ -544,6 +548,22 @@ export default async function ThanksPage({ params, searchParams }: Params) {
     ].some(
       (id) => community.access.includes(id),
     );
+
+  // A purchase that gives roles in the creator's Discord server says so, with
+  // the way in (lib/discord-rules.ts); which roles is read again on the way back.
+  const discordProducts =
+    order.state === "paid" && order.membership !== "ended" && !order.gift && !order.group && isDiscordConfigured()
+      ? await discordFor(store).catch(() => null)
+      : null;
+  const opensDiscord = Boolean(
+    discordProducts &&
+      [
+        order.state === "paid" ? order.product.id : "",
+        ...(order.state === "paid" ? order.bumps.map((added) => added.product.id) : []),
+        ...bundled.map((p) => p.id),
+        ...(funnel?.taken ?? []).flatMap((added) => [added.product.id, ...(added.items?.items ?? []).map((p) => p.id)]),
+      ].some((id) => discordProducts.has(id)),
+  );
 
   // A membership that has ended hands nothing over, here or anywhere else.
   const ended = order.state === "paid" && order.membership === "ended";
@@ -1030,6 +1050,18 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                   <Link href={`/@${store.handle}/community`} className="btn st-btn mt-3">
                     {t.goCommunity}
                   </Link>
+                </div>
+              ) : null}
+              {opensDiscord ? (
+                <div className="mt-6 rounded-2xl px-5 py-4" style={{ border: "1px solid var(--st-line)" }}>
+                  <p className="st-label">{t.alsoYours}</p>
+                  <p className="mt-1 font-semibold">Discord</p>
+                  <p className="st-muted mt-1 text-sm">{dw.thanksNote(store.name)}</p>
+                  <form action="/api/store/discord/join" method="post">
+                    <input type="hidden" name="handle" value={store.handle} />
+                    <input type="hidden" name="session_id" value={sessionId ?? ""} />
+                    <button type="submit" className="btn st-btn mt-3">{dw.joinButton}</button>
+                  </form>
                 </div>
               ) : null}
               {upsellNote ? (

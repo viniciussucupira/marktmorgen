@@ -56,6 +56,10 @@
     {
       "path": "/api/cron/monthly",
       "schedule": "25 * 1,2 * *"
+    },
+    {
+      "path": "/api/cron/discord",
+      "schedule": "17,47 * * * *"
     }
   ]
 }

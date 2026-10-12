@@ -1,3 +1,6 @@
+import { isDiscordConfigured } from "@/lib/discord";
+import { discordFor } from "@/lib/discord-store";
+import { discordWords } from "@/lib/buyer-words/discord";
 import { SITE_URL } from "@/lib/site-url";
 import { isHouseStore } from "@/lib/house-store";
 import { feedToken } from "@/lib/podcast-access";
@@ -173,6 +176,18 @@ export default async function OrdersPage({ params, searchParams }: Params) {
   const notice = token && !email ? NOTICES.expired : failed ? NOTICES.error : NOTICES[status] ?? null;
   const on = (seconds: number) => said.date(seconds * 1000);
 
+  // A purchase that gives roles in the creator's Discord server: one way in for all of them (lib/discord-rules.ts).
+  const discordProducts = email && purchases && isDiscordConfigured() ? await discordFor(store).catch(() => null) : null;
+  const opensDiscord = Boolean(
+    discordProducts &&
+      purchases?.some(
+        (p) =>
+          !p.ended &&
+          [p.productId, ...p.added.map((a) => a.id), ...(p.items?.lines ?? []).map((line) => line.productId)].some((id) => discordProducts.has(id)),
+      ),
+  );
+  const dw = discordWords(store.language);
+
   // A private podcast opens as this address's own feed (lib/podcast-access.ts).
   const feeds = new Map<string, string>();
   if (email && purchases) {
@@ -346,6 +361,17 @@ export default async function OrdersPage({ params, searchParams }: Params) {
               ) : (
                 <>
                   <p className="st-muted mt-4 leading-relaxed">{words.everythingSold(store.name)}</p>
+                  {opensDiscord ? (
+                    <div className="mt-7 rounded-2xl p-5" style={{ border: "1px solid var(--st-line)" }}>
+                      <p className="font-semibold">Discord</p>
+                      <p className="st-muted mt-1 text-sm">{dw.ordersNote}</p>
+                      <form action="/api/store/discord/join" method="post">
+                        <input type="hidden" name="handle" value={store.handle} />
+                        <input type="hidden" name="token" value={token} />
+                        <button type="submit" className="btn st-btn btn-block mt-3">{dw.joinButton}</button>
+                      </form>
+                    </div>
+                  ) : null}
                   <ul className="mt-7 space-y-4">
                     {purchases.map((purchase) => (
                       <li key={purchase.reference} className="rounded-2xl p-5" style={{ border: "1px solid var(--st-line)" }}>
