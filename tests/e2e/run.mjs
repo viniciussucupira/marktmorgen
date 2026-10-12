@@ -511,6 +511,13 @@ try {
     const row = await studio.locator("#numbers tr", { has: studio.locator('th:text-is("Instagram")') }).first().innerText();
     is("$50 that brought nothing is called cut, and is not paid back", [/Cut/.test(row), /Not yet, 0%/.test(row)], [true, true]);
     is("the buyers' file for ad audiences is offered", await studio.getByRole("button", { name: "Download buyers for ads" }).count(), 1);
+    // Who bought (lib/stats.ts, buyersFrom): the counts, and for the owner the biggest buyers, each opening their page.
+    const buyersText = await studio.locator("#numbers").innerText();
+    is("who bought: the counts, and the biggest buyers for the owner", [
+      /Your buyers/.test(buyersText),
+      /average order/i.test(buyersText),
+      (await studio.locator('#numbers a[href*="/studio/people"]', { hasText: "buyer@example.com" }).count()) > 0,
+    ], [true, true, true]);
     const file = await studio.evaluate(async () => {
       const r = await fetch("/api/store/audience");
       return [r.status, (await r.text()).split("\r\n")[0]];

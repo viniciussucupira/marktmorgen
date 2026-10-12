@@ -746,7 +746,80 @@ export type SalesStats = {
    * (lib/ad-spend-rules.ts, paybackOf). Days with nothing are left out.
    */
   channelDays?: ChannelDays;
+  /** Who bought, for each window, and the biggest buyers of the 90 days (buyersFrom; added 12 October 2026). */
+  buyers?: BuyerNumbers;
 };
+
+/**
+ * Buyers in one window (added 12 October 2026), in the store's currency:
+ * how many people bought, how many orders they placed and what those came
+ * to, how many had bought before the window began (in the 180 days of
+ * sales read), and how many bought more than once inside it. A support
+ * payment ("Support my work") is not an order and is left out.
+ */
+export type BuyersWindow = { buyers: number; orders: number; cents: number; returning: number; repeat: number };
+/** One of the biggest buyers: what they spent in the 90 days, and the latest sale that opens their page (lib/buyer-profile.ts). */
+export type TopBuyer = { email: string; cents: number; orders: number; last: number; reference: string };
+export type BuyerNumbers = { d7: BuyersWindow; d30: BuyersWindow; d90: BuyersWindow; top: TopBuyer[] };
+
+/** How many of the biggest buyers are kept. */
+export const TOP_BUYERS = 10;
+
+/** The address a sale was paid with: the checkout's, or a one-click payment's receipt; "" when none. */
+function buyerOf(sale: Sale): string {
+  const details = sale.row.customer_details as { email?: unknown } | null | undefined;
+  const raw = sale.upsell ? sale.row.receipt_email : details?.email;
+  return typeof raw === "string" ? raw.trim().toLowerCase() : "";
+}
+
+/**
+ * Who bought, worked out from the sales read (pure, so a test can hand it
+ * sales). `sales` are every sale read, the 180 days; only the store's
+ * currency counts. An extra taken in one click after a checkout adds to its
+ * buyer's money and is not an order of its own.
+ */
+export function buyersFrom(sales: Sale[], currency: string, now: number): BuyerNumbers {
+  const cuts = { d7: dayKey(now - 6 * 86400_000), d30: dayKey(now - 29 * 86400_000), d90: dayKey(now - (STATS_DAYS - 1) * 86400_000) };
+  const own = sales.filter((sale) => sale.currency === currency && (sale.row.metadata as Record<string, string> | null | undefined)?.kind !== "tip");
+  // When each address first bought, as far back as the reading goes.
+  const first = new Map<string, number>();
+  for (const sale of own) {
+    const who = buyerOf(sale);
+    if (who && (!first.has(who) || sale.created < (first.get(who) as number))) first.set(who, sale.created);
+  }
+  const window = (cut: string): { stats: BuyersWindow; people: Map<string, TopBuyer> } => {
+    const people = new Map<string, TopBuyer>();
+    const stats: BuyersWindow = { buyers: 0, orders: 0, cents: 0, returning: 0, repeat: 0 };
+    for (const sale of own) {
+      if (dayKey(sale.created) < cut) continue;
+      stats.cents += sale.cents;
+      if (!sale.upsell) stats.orders += 1;
+      const who = buyerOf(sale);
+      if (!who) continue;
+      const row = people.get(who) ?? { email: who, cents: 0, orders: 0, last: 0, reference: "" };
+      row.cents += sale.cents;
+      if (!sale.upsell) row.orders += 1;
+      if (sale.created > row.last) {
+        row.last = sale.created;
+        row.reference = typeof sale.row.id === "string" ? sale.row.id : row.reference;
+      }
+      people.set(who, row);
+    }
+    const startsAt = Date.parse(`${cut}T00:00:00Z`);
+    stats.buyers = people.size;
+    for (const [who, row] of people) {
+      if ((first.get(who) ?? Infinity) < startsAt) stats.returning += 1;
+      if (row.orders > 1) stats.repeat += 1;
+    }
+    return { stats, people };
+  };
+  const d90 = window(cuts.d90);
+  const top = [...d90.people.values()]
+    .filter((row) => row.reference)
+    .sort((a, b) => b.cents - a.cents || b.orders - a.orders || b.last - a.last)
+    .slice(0, TOP_BUYERS);
+  return { d7: window(cuts.d7).stats, d30: window(cuts.d30).stats, d90: d90.stats, top };
+}
 
 /** Channel → day → money, in the smallest unit; "direct" for none named. */
 export type ChannelDays = Record<string, Record<string, number>>;
@@ -1172,6 +1245,7 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
     for (const [day, cents] of Object.entries(days)) if (day >= cut90) addDay(channel, day, cents);
   }
   out.channelDays = channelDays;
+  out.buyers = buyersFrom(read, store.currency, now);
   out.previous = {
     d7: stretch(dayKey(now - 13 * 86400_000), cut7),
     d30: stretch(dayKey(now - 59 * 86400_000), cut30),
@@ -1311,6 +1385,14 @@ export type StatsData = {
   refundsByProduct: Record<string, { refunds: number; cents: number }>;
   /** Each channel's money by the day over the 90 days, renewals included (SalesStats.channelDays). */
   channelDays?: ChannelDays;
+  /** Who bought, for each window (SalesStats.buyers): counts and money only, no address. */
+  buyers?: Record<"d7" | "d30" | "d90", BuyersWindow> | null;
+  /**
+   * The biggest buyers of the 90 days, with their addresses: added by the
+   * studio page only for whoever may read orders (lib/team-roles.ts), never
+   * by studioStats, so no file, email or API made from it has them.
+   */
+  topBuyers?: TopBuyer[];
 };
 
 export type ReachItem = { item: string; kind: "product" | "link" | "part"; title: string; position: number; reached: number; clicks: number };
@@ -1536,6 +1618,7 @@ export function studioStats(
     refunds: sales?.refundsIn ?? null,
     refundsByProduct: sales?.refundsByProduct ?? {},
     channelDays: sales?.channelDays ?? {},
+    buyers: sales?.buyers ? { d7: sales.buyers.d7, d30: sales.buyers.d30, d90: sales.buyers.d90 } : null,
     reach: {
       d7: reachItems(store, w.d7.reach ?? {}, titles),
       d30: reachItems(store, w.d30.reach ?? {}, titles),

@@ -20,6 +20,7 @@ import { ChatSummaryEditor } from "@/components/chat-summary-editor";
 import { moneyByDay } from "@/lib/sales-goal-rules";
 import type { ChatKind } from "@/lib/chat-summary";
 import { NoCountToggle } from "@/components/no-count-toggle";
+import { BuyerNumbers } from "@/components/buyer-numbers";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -737,6 +738,10 @@ export function StatsPanel({
               : ""}
           </p>
         </div>
+      ) : null}
+
+      {range !== "all" && data.buyers ? (
+        <BuyerNumbers windows={data.buyers} range={range} span={span} currency={data.currency ?? "usd"} top={data.topBuyers} />
       ) : null}
 
       {channels.length ? (
