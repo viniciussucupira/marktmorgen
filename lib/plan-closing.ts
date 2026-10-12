@@ -441,7 +441,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
       const own = await readSubscription(store.subscriptionId);
       if (own.state === "unknown") return { key, state: "held", note: "Stripe could not be asked" };
       if (own.state === "active") {
-        await setSubscription(key, { active: true, tier: own.tier, cycle: own.cycle, trialEnds: own.trialing ? own.until : 0 });
+        await setSubscription(key, { active: true, tier: own.tier, cycle: own.cycle, trialEnds: own.trialing ? own.until : 0, shared: own.shared });
         await redisPipeline([["DEL", stateKey(key)]]);
         return { key, state: "running", note: "Stripe says the plan runs" };
       }
@@ -453,7 +453,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   }
   if (live) {
     // Our note was wrong, or the plan was started again a moment ago: put right.
-    await setSubscription(key, { customerId: live.customerId, subscriptionId: live.subscriptionId, active: true, tier: live.tier, cycle: live.cycle, trialEnds: live.trialEnds });
+    await setSubscription(key, { customerId: live.customerId, subscriptionId: live.subscriptionId, active: true, tier: live.tier, cycle: live.cycle, trialEnds: live.trialEnds, shared: live.shared });
     await redisPipeline([["DEL", stateKey(key)]]);
     return { key, state: "running", note: "Stripe says the plan runs" };
   }

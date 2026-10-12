@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
           tier: result.state.tier,
           cycle: result.state.cycle,
           trialEnds: result.state.trialing ? result.state.until : 0,
+          shared: result.state.shared,
         });
       }
       const moved = result.state.state === "active" && result.state.tier !== store.tier ? `tier-${result.state.tier}` : cycle;

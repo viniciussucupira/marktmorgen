@@ -105,9 +105,13 @@ export const COMMISSION_BPS: Record<Tier, number> = { creator: 575, pro: 275, sc
  *      The share is taken out of the sale itself, on the creator's account,
  *      so it is never a bill somebody can fail to pay.
  *   2. Every checkout that charges on a creator's account sets that fee, and
- *      a refund gives back the fee's share of what was refunded.
- *   3. No page says any more that nothing is taken from a sale, and a store
- *      that subscribed before keeps the price it chose with no share taken.
+ *      a refund gives back the fee's share of what was refunded. Built on
+ *      October 12, 2026 (lib/platform-share.ts, lib/share-settle.ts), and
+ *      to be run against Stripe's test mode on that company's platform
+ *      before it is relied on (SHARE_PROVED_IN_TEST_MODE there).
+ *   3. No page says any more that nothing is taken from a sale. A store that
+ *      subscribed before keeps the price it chose with no share taken
+ *      (Store.shared), which is built.
  *
  * tests/plan-margin.test.ts refuses the switch while any of these is
  * missing that code can see.
@@ -116,6 +120,16 @@ export const COMMISSION_LIVE = false;
 
 /** Every price we charge, in cents: the set that is on sale. */
 export const PLAN_PRICES: Record<Tier, Record<Cycle, number>> = COMMISSION_LIVE ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
+
+/**
+ * Whether a subscription to us is at the prices that go with a share of each
+ * sale, read from what it charges. A store that subscribed before the share
+ * keeps the price it chose and pays no share, which is this telling the two
+ * apart: every price in the one set differs from its place in the other.
+ */
+export function isSharedPrice(tier: Tier, cycle: Cycle, amountCents: number): boolean {
+  return amountCents > 0 && amountCents === PRICES_WITH_COMMISSION[tier][cycle] && amountCents !== PRICES_WITHOUT_COMMISSION[tier][cycle];
+}
 
 /** The share of a sale a plan takes now, in basis points: none while COMMISSION_LIVE is off. */
 export function commissionBps(tier: Tier): number {

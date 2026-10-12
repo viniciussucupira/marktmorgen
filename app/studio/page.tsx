@@ -629,14 +629,14 @@ export default async function StudioPage({
       : Boolean(store?.subscriptionActive);
   const plan =
     live?.state === "active"
-      ? { tier: live.tier, cycle: live.cycle, trialEnds: live.trialing ? live.until : 0 }
+      ? { tier: live.tier, cycle: live.cycle, trialEnds: live.trialing ? live.until : 0, shared: live.shared }
       : null;
   if (
     store &&
     live &&
     live.state !== "unknown" &&
     (paid !== store.subscriptionActive ||
-      (plan && (plan.tier !== store.tier || plan.cycle !== store.cycle || plan.trialEnds !== store.trialEnds)))
+      (plan && (plan.tier !== store.tier || plan.cycle !== store.cycle || plan.trialEnds !== store.trialEnds || plan.shared !== store.shared)))
   ) {
     await setSubscription(ref, { active: paid, ...(plan ?? {}) });
   }

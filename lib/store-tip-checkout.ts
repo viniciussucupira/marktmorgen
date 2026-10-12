@@ -19,6 +19,7 @@ import { inTheCurrencyShown, isSettled, onlyInstantMethods } from "@/lib/instant
 import { isHouseStore } from "@/lib/house-store";
 import { tipsWords } from "@/lib/buyer-words/tips";
 import { MAX_TIP_MESSAGE, tipInRange } from "@/lib/store-tips";
+import { applyShare } from "@/lib/platform-share";
 
 /** What the creator's list of sales calls it, in the studio's English. */
 export const TIP_TITLE = "Support";
@@ -69,6 +70,9 @@ export async function createTipCheckout(
   });
   onlyInstantMethods(body);
   inTheCurrencyShown(body);
+  // The share, when the store's plan has one (lib/platform-share.ts): a tip is
+  // money paid through the store like any sale, and nothing comes off it.
+  applyShare(body, store, { recurring: false, least: amount });
   // The demo store's test account cannot be renamed, so its page carries the store's name (lib/house-store.ts).
   let named = isHouseStore(store);
   if (named) body.set(DISPLAY_NAME, store.name);

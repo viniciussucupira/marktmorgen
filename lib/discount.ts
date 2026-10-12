@@ -30,6 +30,7 @@
  */
 import { StripeError, onAccount } from "@/lib/stripe-account";
 import { type Currency, formatMoney, rangeWords } from "@/lib/money";
+import type { MayComeOff } from "@/lib/platform-share";
 
 /** Pinned, so the shape we send is the shape this version expects. */
 const API_VERSION = "2025-09-30.clover";
@@ -325,5 +326,37 @@ export async function livePromotionId(account: string, code: string): Promise<st
   } catch (error) {
     console.error("looking up a code from a link failed", error);
     return null;
+  }
+}
+
+/**
+ * What the codes on this creator's account may take off a checkout in this
+ * currency, for the share of the sale (lib/platform-share.ts): the fee set on
+ * a checkout must never be more than the buyer pays, and the box on Stripe's
+ * page takes any live code on the account, including one the creator made in
+ * their own Stripe dashboard. Read fresh on every checkout that needs it, so
+ * a code made a minute ago is counted. Anything that cannot be read in full
+ * reads as unknown, which sets no fee at all.
+ */
+export async function codesMayTakeOff(account: string | null, currency: string): Promise<MayComeOff[]> {
+  if (!account) return [{ kind: "unknown" }];
+  try {
+    const page = await onAccount("GET", account, "/promotion_codes?limit=100&active=true&expand[]=data.promotion.coupon", undefined, API_VERSION);
+    if (page.has_more === true || !Array.isArray(page.data)) return [{ kind: "unknown" }];
+    let percent = 0;
+    let cents = 0;
+    for (const row of page.data as Record<string, unknown>[]) {
+      const off = readOff(row);
+      if (!off) return [{ kind: "unknown" }];
+      if (off.kind === "percent") percent = Math.max(percent, off.percent);
+      else if (off.currency.toLowerCase() === currency.toLowerCase()) cents = Math.max(cents, off.cents);
+    }
+    const out: MayComeOff[] = [];
+    if (percent > 0) out.push({ kind: "percent", percent });
+    if (cents > 0) out.push({ kind: "cents", cents });
+    return out;
+  } catch (error) {
+    console.error("reading what a store's codes take off failed", error);
+    return [{ kind: "unknown" }];
   }
 }

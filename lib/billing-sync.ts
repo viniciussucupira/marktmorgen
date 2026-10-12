@@ -64,10 +64,10 @@ export type SyncCounts = {
 export async function recordState(store: Store, state: SubscriptionState): Promise<boolean> {
   if (state.state === "unknown") return false;
   const active = state.state === "active";
-  const plan = active ? { tier: state.tier, cycle: state.cycle, trialEnds: state.trialing ? state.until : 0 } : null;
+  const plan = active ? { tier: state.tier, cycle: state.cycle, trialEnds: state.trialing ? state.until : 0, shared: state.shared } : null;
   if (
     active === store.subscriptionActive &&
-    (!plan || (plan.tier === store.tier && plan.cycle === store.cycle && plan.trialEnds === store.trialEnds))
+    (!plan || (plan.tier === store.tier && plan.cycle === store.cycle && plan.trialEnds === store.trialEnds && plan.shared === store.shared))
   ) {
     return false;
   }

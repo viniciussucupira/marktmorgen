@@ -21,6 +21,7 @@ import {
   PLAN_PRICES,
   PRICE_CENTS,
   TRIAL_DAYS,
+  isSharedPrice,
 } from "@/lib/plan";
 import { inTheCurrencyShown } from "@/lib/instant-pay";
 import { normaliseEmail } from "@/lib/auth";
@@ -71,7 +72,7 @@ export class BillingError extends Error {
   }
 }
 
-async function onPlatform(
+export async function onPlatform(
   method: "GET" | "POST" | "DELETE",
   path: string,
   body?: URLSearchParams,
@@ -350,6 +351,8 @@ export type StartedSubscription = {
   tier: Tier;
   cycle: Cycle;
   trialEnds: number;
+  /** Whether the plan is at the prices that go with a share of each sale. */
+  shared: boolean;
 };
 
 /**
@@ -395,6 +398,7 @@ export async function readStartedSubscription(
     tier: state.state === "active" ? state.tier : "creator",
     cycle: state.state === "active" ? state.cycle : "month",
     trialEnds: state.state === "active" && state.trialing ? state.until : 0,
+    shared: state.state === "active" && state.shared,
   };
 }
 
@@ -411,6 +415,8 @@ export type SubscriptionState =
       cycle: Cycle;
       /** What each renewal charges, in cents, as Stripe has it. */
       amountCents: number;
+      /** Whether that is a price that goes with a share of each sale (lib/plan.ts isSharedPrice). */
+      shared: boolean;
       /** A change of plan is waiting on a payment the bank has not let through. */
       changePending: boolean;
     }
@@ -479,13 +485,13 @@ function periodEnd(subscription: Record<string, unknown>, trialing: boolean): nu
  * price when there is one, and the amount and interval otherwise, so a
  * subscription begun before prices had names is still read right.
  */
-export function planOf(subscription: Record<string, unknown>): { tier: Tier; cycle: Cycle; amountCents: number } {
+export function planOf(subscription: Record<string, unknown>): { tier: Tier; cycle: Cycle; amountCents: number; shared: boolean } {
   const items = subscription.items as { data?: { price?: Record<string, unknown> }[] } | undefined;
   const price = items?.data?.[0]?.price ?? {};
   const recurring = price.recurring as { interval?: unknown } | null | undefined;
   const amountCents = typeof price.unit_amount === "number" ? price.unit_amount : 0;
   const named = planFromLookupKey(price.lookup_key);
-  if (named) return { ...named, amountCents };
+  if (named) return { ...named, amountCents, shared: isSharedPrice(named.tier, named.cycle, amountCents) };
   const cycle: Cycle = recurring?.interval === "year" ? "year" : "month";
   const meta = subscription.metadata as Record<string, string> | null | undefined;
   // An unnamed price is read by what it charges: at or above a plan's price
@@ -493,7 +499,7 @@ export function planOf(subscription: Record<string, unknown>): { tier: Tier; cyc
   const paysFor = (plan: Tier) => amountCents > 0 && amountCents >= PLAN_PRICES[plan][cycle];
   const tier: Tier =
     meta?.tier === "scale" || paysFor("scale") ? "scale" : meta?.tier === "pro" || paysFor("pro") ? "pro" : "creator";
-  return { tier, cycle, amountCents };
+  return { tier, cycle, amountCents, shared: isSharedPrice(tier, cycle, amountCents) };
 }
 
 /** One reading of a subscription, used for what Stripe sends back either way. */
@@ -797,6 +803,7 @@ export function startedFrom(subscription: Record<string, unknown>): StartedSubsc
     tier: state.tier,
     cycle: state.cycle,
     trialEnds: state.trialing ? state.until : 0,
+    shared: state.shared,
   };
 }
 

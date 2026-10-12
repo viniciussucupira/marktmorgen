@@ -32,6 +32,8 @@ import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 import { speechFor, wordsIn } from "@/lib/buyer-words";
 import { bookingWords } from "@/lib/buyer-words/booking";
 import type { Listing, Store } from "@/lib/store";
+import { applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
+import { codesMayTakeOff } from "@/lib/discount";
 
 export const PACKAGE_TOKEN = /^[0-9a-f]{48}$/;
 const SESSION_ID = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
@@ -150,6 +152,9 @@ export async function packageCheckout(
   const account = store.stripeAccountId;
   const body = packageCheckoutBody(store, product, pkg, origin);
   for (const [key, value] of Object.entries(channel)) body.set(`metadata[${key}]`, value);
+  // The share of the sale, when the store's plan has one (lib/platform-share.ts).
+  const mayComeOff = store.hasDiscounts && shareBps(store) > 0 ? await codesMayTakeOff(store.stripeAccountId, store.currency) : [];
+  applyShare(body, store, { recurring: false, least: leastPaid(linesTotal(body).cents, mayComeOff) });
   const made = await openKeepingTheSale(body, () => onAccount("POST", account, "/checkout/sessions", body));
   if (typeof made.url !== "string" || typeof made.id !== "string") throw new Error("Stripe returned no checkout");
   return { url: made.url, id: made.id };

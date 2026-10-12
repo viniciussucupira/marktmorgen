@@ -65,6 +65,7 @@ import type { ProductFile } from "@/lib/product-file";
 import type { ProductImage } from "@/lib/product-image";
 import { bundleFromMeta, bundleMeta, deliverableItems, deliveredIds } from "@/lib/bundle-rules";
 import { type BundleContents, contentsOf, offerableAfterPaying } from "@/lib/bundles";
+import { applyShareToPayment } from "@/lib/platform-share";
 
 export const UPSELL_COOKIE = "nl_upsell";
 export const UPSELL_WINDOW_SECONDS = 60 * 60;
@@ -339,6 +340,9 @@ export async function takeUpsell(input: {
     body.set("metadata[via]", via);
     body.set("metadata[via_rate]", String(rate));
   }
+  // The share, when the store's plan has one (lib/platform-share.ts): the
+  // amount is known exactly, since nothing comes off an offer.
+  applyShareToPayment(body, store, step.priceCents);
 
   try {
     // One key per offer of each order: however this request is repeated,

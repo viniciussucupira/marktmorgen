@@ -67,6 +67,7 @@ import { type WinBack, NO_WINBACK, parseWinBack } from "@/lib/winback";
 import { type StoreSale, NO_SALE, parseSale } from "@/lib/store-sale";
 import { parseTiers } from "@/lib/tier-rules";
 import { ENDED_INDEX } from "@/lib/plan-standing";
+import { SHARING_INDEX } from "@/lib/platform-share";
 import { type Cycle, type Tier, parseCycle, parseTier } from "@/lib/plan";
 import { COMMUNITY_ID } from "@/lib/community-text";
 import { type Bump, MAX_BUMPS, type Plan, bumpTargets, canBeBumped, isOneOff, uncoveredOption } from "@/lib/product-extras";
@@ -380,6 +381,13 @@ export type Store = {
   cycle: Cycle;
   /** When the free trial ends, in seconds; 0 when not in one. A snapshot too. */
   trialEnds: number;
+  /**
+   * Whether the plan is at the prices that go with a share of each sale
+   * (lib/plan.ts isSharedPrice), as Stripe last said. False for a store that
+   * subscribed before them, which keeps its price and pays no share
+   * (lib/platform-share.ts).
+   */
+  shared: boolean;
   /**
    * When this store's plan was first seen to be over, as a date; empty while
    * a plan runs, and for a store that never started one. What a store may
@@ -799,6 +807,8 @@ function parseStore(raw: unknown): Store | null {
       tier: parseTier(value.tier) ?? "creator",
       cycle: parseCycle(value.cycle) ?? "month",
       trialEnds: typeof value.trialEnds === "number" && value.trialEnds > 0 ? value.trialEnds : 0,
+      // Every store from before there was a share pays none.
+      shared: value.shared === true,
       // Stores written before this was kept have none: read as never ended.
       planEndedAt: typeof value.planEndedAt === "string" && !Number.isNaN(Date.parse(value.planEndedAt)) ? value.planEndedAt : "",
       mail: parseMail(value.mail),
@@ -1008,6 +1018,7 @@ async function freshStore(fields: {
     tier: "creator",
     cycle: "month",
     trialEnds: 0,
+    shared: false,
     planEndedAt: "",
     mail: null,
     domain: null,
@@ -1496,6 +1507,7 @@ export async function deleteStore(email: string): Promise<DeleteResult> {
       ["DEL", storeIdKey(store.sid)],
       ["SREM", await accountKey(store.email), store.sid],
       ["ZREM", ENDED_INDEX, storeRef(store)],
+      ["SREM", SHARING_INDEX, storeRef(store)],
     ]);
     return { ok: true, store };
   });
@@ -1616,6 +1628,7 @@ export async function setSubscription(
     tier?: Tier;
     cycle?: Cycle;
     trialEnds?: number;
+    shared?: boolean;
   },
 ): Promise<Store | null> {
   const result = await withStore<Store | null>(email, async (store, save) => {
@@ -1648,6 +1661,7 @@ export async function setSubscription(
       tier: fields.tier ?? store.tier,
       cycle: fields.cycle ?? store.cycle,
       trialEnds: fields.trialEnds ?? store.trialEnds,
+      shared: fields.shared ?? store.shared,
       planEndedAt,
     });
     // Kept in line by the day its plan ended, for the daily job that looks
@@ -1658,6 +1672,14 @@ export async function setSubscription(
       await redisPipeline([
         planEndedAt ? ["ZADD", ENDED_INDEX, Date.parse(planEndedAt), storeRef(saved)] : ["ZREM", ENDED_INDEX, storeRef(saved)],
       ]).catch((error) => console.error("could not keep the line of ended plans", error));
+    }
+    // The stores whose sales pay a share, for the daily job that keeps what
+    // was taken to what is owed (lib/share-settle.ts). Only when it changes.
+    const sharing = saved.shared && saved.subscriptionActive;
+    if (sharing !== (store.shared && store.subscriptionActive)) {
+      await redisPipeline([[sharing ? "SADD" : "SREM", SHARING_INDEX, storeRef(saved)]]).catch((error) =>
+        console.error("could not keep the list of stores that pay a share", error),
+      );
     }
     return saved;
   });
