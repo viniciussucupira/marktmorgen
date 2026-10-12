@@ -792,7 +792,14 @@ export default function PrivacyPage() {
           was paid before tax and in all, the share it earns, and whether it was
           credited by a click, by a discount code or by the buyer already
           belonging to that affiliate &mdash; and never the buyer&apos;s name or
-          email address. A creator may give one of their own discount codes to
+          email address. Where a creator credits memberships and payment plans,
+          the affiliate, the share and the terms ride on the subscription in the
+          creator&apos;s own Stripe account, and each payment is read from there
+          when the program&apos;s records are opened, not kept by us. When a
+          click on an affiliate&apos;s link came from a paid search ad (the
+          address carries Google&apos;s or Microsoft&apos;s ad click id, or is
+          tagged as paid search), we add one to that affiliate&apos;s count of
+          such clicks, and nothing about the visitor. A creator may give one of their own discount codes to
           one affiliate, and then a purchase that used that code counts for them
           with no cookie involved; what we keep for that is which code belongs
           to which affiliate, and nothing about whoever typed it. A creator may

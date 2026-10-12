@@ -85,6 +85,18 @@ export function sourceAlias(tag: string): string {
  * Instagram and TikTok send no referrer, and that is where most of a
  * creator's visitors are. What is left is "direct".
  */
+/**
+ * The tag a visit is counted under from its own address: utm_source, or, on
+ * a link with an affiliate's ?via= code and no utm_source of its own,
+ * "affiliates" (added 12 October 2026), so the program is a channel in the
+ * numbers like any other, visits and money alike.
+ */
+export function sourceTag(params: URLSearchParams): string {
+  const utm = params.get("utm_source") ?? "";
+  if (utm.trim()) return utm.slice(0, 60);
+  return /^[a-z0-9]{3,20}$/i.test(params.get("via") ?? "") ? "affiliates" : "";
+}
+
 export function classifySource(input: { referrer: string; utm: string; userAgent: string; ownHost: string }): string {
   const utm = input.utm.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 30);
   if (utm) return sourceAlias(utm);

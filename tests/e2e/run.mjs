@@ -3208,6 +3208,25 @@ try {
     await row.getByRole("link", { name: "See the program and apply" }).click();
     await page.waitForURL(/\/@localshop\/affiliates/);
     is("its program page asks for honest promotion before anyone applies", (await words(page.locator("main"))).includes("Wherever you share your link, say that you earn from it"), true);
+    // Memberships that keep paying, a monthly bonus, and no paid search on the store's name (lib/affiliate-setting.ts).
+    await open(studio, `${LOCAL}/studio/affiliates`);
+    const program = studio.locator("section[aria-labelledby=terms-title]");
+    await program.getByLabel("Memberships and payment plans").selectOption("12");
+    await program.getByRole("button", { name: "Add a bonus" }).click();
+    await program.getByLabel("Sales in a month").fill("10");
+    await program.getByLabel(/^Bonus \(/).fill("50");
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/affiliates") && r.request().method() === "POST" && r.ok(), { timeout: 30_000 }),
+      program.getByRole("button", { name: "Save", exact: true }).click(),
+    ]);
+    await open(page, `${LOCAL}/@localshop/affiliates`);
+    const offered = await words(page.locator("main"));
+    is("the program page states the new terms before anyone applies", [
+      offered.includes("on purchases made through your link"),
+      offered.includes("A membership earns on each of its payments in its first 12 months"),
+      offered.includes("A bonus of $50 for any calendar month in which 10 sales through your link earn"),
+      offered.includes("Paid search ads on Local Shop's name are not allowed") || /Paid search ads on .+ name are not allowed/.test(offered),
+    ], [true, true, true, true]);
     await post("/api/store/affiliates", { ...terms, directory: false });
     await open(page, `${LOCAL}/affiliate-programs`);
     is("unchecked, it leaves the page at once", await page.locator("[data-program=localshop]").count(), 0);

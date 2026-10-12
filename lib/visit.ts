@@ -101,7 +101,7 @@ export async function countVisit(request: NextRequest, store: Store): Promise<vo
  * Counts a click on an affiliate's link, unless it is the creator's own or a
  * robot's (lib/affiliates.ts does the rest). Never throws, like countHit.
  */
-export async function countAffiliateClick(request: NextRequest, store: Store, code: string): Promise<void> {
+export async function countAffiliateClick(request: NextRequest, store: Store, code: string, paid = false): Promise<void> {
   try {
     const userAgent = request.headers.get("user-agent") ?? "";
     if (isBot(userAgent) || (await isOwner(request, store))) return;
@@ -109,6 +109,7 @@ export async function countAffiliateClick(request: NextRequest, store: Store, co
       ip: clientIp(request),
       userAgent,
       session: request.cookies.get(affiliateCookieName(store.handle))?.value,
+      paid,
     });
   } catch (error) {
     console.error("counting an affiliate click failed", error);

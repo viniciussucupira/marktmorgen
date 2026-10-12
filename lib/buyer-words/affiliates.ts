@@ -168,6 +168,23 @@ const en = {
   noProgram: (store: string) => `${store} has no affiliate program right now`,
   termShare: (percent: number, hasDifferent: boolean) =>
     `${percent}% of what a buyer pays before tax, on one-time purchases made through your link (memberships and payment plans do not earn)${hasDifferent ? "; some products differ, below" : ""}.`,
+  /** Where memberships and plans earn (lib/affiliate-setting.ts recurring): "on purchases", with no exception. */
+  termShareAll: (percent: number, hasDifferent: boolean) =>
+    `${percent}% of what a buyer pays before tax, on purchases made through your link${hasDifferent ? "; some products differ, below" : ""}.`,
+  /** `months`: 1, a number, or 1200 for as long as the member pays. */
+  termRecurring: (months: number) =>
+    months === 1
+      ? "A membership earns on its first payment, and a payment plan on each of its payments."
+      : months >= 1200
+        ? "A membership earns on each of its payments for as long as the member keeps paying, and a payment plan on each of its payments."
+        : `A membership earns on each of its payments in its first ${months} months, and a payment plan on each of its payments.`,
+  termBonus: (sales: number, amount: string) =>
+    `A bonus of ${amount} for any calendar month in which ${sales} ${plural(sales, "sale", "sales")} through your link earn.`,
+  termNoPaidSearch: (store: string) =>
+    `Paid search ads on ${store}'s name are not allowed: what you are owed is held until ${store} looks at a click that came from one.`,
+  heldNote: (amount: string, store: string) => `${amount} of what you are owed is held until ${store} looks at it, and is not payable yet.`,
+  bonusTitle: (sales: number, month: string) => `Bonus: ${sales} ${plural(sales, "sale", "sales")} in ${month}`,
+  bonusLine: (date: string) => `${date} · bonus`,
   termRefunds: "A refunded sale earns nothing, a partly refunded one earns only on what was kept, and your own purchases never earn.",
   kit: {
     head: "Posts to share, drafted for you",
@@ -430,6 +447,21 @@ const es: AffiliatesWords = {
   noProgram: (store) => `${store} no tiene programa de afiliados por ahora`,
   termShare: (percent, hasDifferent) =>
     `${percent}${S}% de lo que paga un comprador antes de impuestos, en compras únicas hechas a través de tu enlace (las membresías y los pagos a plazos no generan nada)${hasDifferent ? "; algunos productos son distintos, abajo" : ""}.`,
+  termShareAll: (percent, hasDifferent) =>
+    `${percent}${S}% de lo que paga un comprador antes de impuestos, en compras hechas a través de tu enlace${hasDifferent ? "; algunos productos son distintos, abajo" : ""}.`,
+  termRecurring: (months) =>
+    months === 1
+      ? "Una membresía genera comisión en su primer pago, y un pago a plazos en cada uno de sus pagos."
+      : months >= 1200
+        ? "Una membresía genera comisión en cada uno de sus pagos mientras el miembro siga pagando, y un pago a plazos en cada uno de sus pagos."
+        : `Una membresía genera comisión en cada uno de sus pagos durante sus primeros ${months} meses, y un pago a plazos en cada uno de sus pagos.`,
+  termBonus: (sales, amount) =>
+    `Un bono de ${amount} en cada mes natural en el que ${sales} ${plural(sales, "venta", "ventas")} a través de tu enlace ${plural(sales, "genere", "generen")} comisión.`,
+  termNoPaidSearch: (store) =>
+    `No se permiten anuncios de búsqueda pagados con el nombre de ${store}: lo que se te debe queda retenido hasta que ${store} revise un clic que venga de uno.`,
+  heldNote: (amount, store) => `${amount} de lo que se te debe está retenido hasta que ${store} lo revise, y todavía no se puede pagar.`,
+  bonusTitle: (sales, month) => `Bono: ${sales} ${plural(sales, "venta", "ventas")} en ${month}`,
+  bonusLine: (date) => `${date} · bono`,
   termRefunds:
     "Una venta reembolsada no genera nada, una reembolsada en parte genera solo sobre lo que se conservó, y tus propias compras nunca generan nada.",
   kit: {
@@ -674,6 +706,21 @@ const fr: AffiliatesWords = {
   noProgram: (store) => `${store} n'a pas de programme d'affiliation pour le moment`,
   termShare: (percent, hasDifferent) =>
     `${percent}${S}% de ce qu'un acheteur paie hors taxes, sur les achats uniques effectués via votre lien (les abonnements et les paiements échelonnés ne rapportent rien)${hasDifferent ? `${S}; certains produits diffèrent, voir ci-dessous` : ""}.`,
+  termShareAll: (percent, hasDifferent) =>
+    `${percent}${S}% de ce qu'un acheteur paie hors taxes, sur les achats effectués via votre lien${hasDifferent ? `${S}; certains produits diffèrent, voir ci-dessous` : ""}.`,
+  termRecurring: (months) =>
+    months === 1
+      ? "Un abonnement rapporte sur son premier paiement, et un paiement échelonné sur chacun de ses paiements."
+      : months >= 1200
+        ? "Un abonnement rapporte sur chacun de ses paiements tant que le membre continue de payer, et un paiement échelonné sur chacun de ses paiements."
+        : `Un abonnement rapporte sur chacun de ses paiements pendant ses ${months} premiers mois, et un paiement échelonné sur chacun de ses paiements.`,
+  termBonus: (sales, amount) =>
+    `Une prime de ${amount} pour chaque mois civil où ${sales} ${pluralFr(sales, "vente", "ventes")} via votre lien ${pluralFr(sales, "rapporte", "rapportent")} une commission.`,
+  termNoPaidSearch: (store) =>
+    `Les annonces payantes sur les moteurs de recherche au nom de ${store} ne sont pas autorisées${S}: ce qui vous est dû est retenu jusqu'à ce que ${store} examine un clic venu de l'une d'elles.`,
+  heldNote: (amount, store) => `${amount} de ce qui vous est dû est retenu jusqu'à ce que ${store} l'examine, et n'est pas encore payable.`,
+  bonusTitle: (sales, month) => `Prime${S}: ${sales} ${pluralFr(sales, "vente", "ventes")} en ${month}`,
+  bonusLine: (date) => `${date} · prime`,
   termRefunds:
     "Une vente remboursée ne rapporte rien, une vente partiellement remboursée ne rapporte que sur ce qui a été conservé, et vos propres achats ne rapportent jamais rien.",
   kit: {
@@ -924,6 +971,21 @@ const de: AffiliatesWords = {
   noProgram: (store) => `${store} hat derzeit kein Partnerprogramm`,
   termShare: (percent, hasDifferent) =>
     `${percent}${S}% dessen, was ein Käufer vor Steuern zahlt, bei Einmalkäufen über Ihren Link (Mitgliedschaften und Ratenzahlungen bringen nichts ein)${hasDifferent ? "; einige Produkte weichen ab, siehe unten" : ""}.`,
+  termShareAll: (percent, hasDifferent) =>
+    `${percent}${S}% dessen, was ein Käufer vor Steuern zahlt, bei Käufen über Ihren Link${hasDifferent ? "; einige Produkte weichen ab, siehe unten" : ""}.`,
+  termRecurring: (months) =>
+    months === 1
+      ? "Eine Mitgliedschaft bringt bei ihrer ersten Zahlung Provision ein, eine Ratenzahlung bei jeder ihrer Raten."
+      : months >= 1200
+        ? "Eine Mitgliedschaft bringt bei jeder ihrer Zahlungen Provision ein, solange das Mitglied weiter zahlt, eine Ratenzahlung bei jeder ihrer Raten."
+        : `Eine Mitgliedschaft bringt bei jeder ihrer Zahlungen in den ersten ${months} Monaten Provision ein, eine Ratenzahlung bei jeder ihrer Raten.`,
+  termBonus: (sales, amount) =>
+    `Ein Bonus von ${amount} für jeden Kalendermonat, in dem ${sales} ${plural(sales, "Verkauf", "Verkäufe")} über Ihren Link Provision ${plural(sales, "einbringt", "einbringen")}.`,
+  termNoPaidSearch: (store) =>
+    `Bezahlte Suchanzeigen auf den Namen ${store} sind nicht erlaubt: Was Ihnen zusteht, wird zurückgehalten, bis ${store} sich einen Klick ansieht, der von einer solchen Anzeige kam.`,
+  heldNote: (amount, store) => `${amount} von dem, was Ihnen zusteht, wird zurückgehalten, bis ${store} es sich ansieht, und ist noch nicht auszahlbar.`,
+  bonusTitle: (sales, month) => `Bonus: ${sales} ${plural(sales, "Verkauf", "Verkäufe")} im ${month}`,
+  bonusLine: (date) => `${date} · Bonus`,
   termRefunds:
     "Ein erstatteter Verkauf bringt nichts ein, ein teilweise erstatteter nur auf das, was behalten wurde, und Ihre eigenen Käufe bringen nie etwas ein.",
   kit: {
@@ -1178,6 +1240,21 @@ const it: AffiliatesWords = {
   noProgram: (store) => `${store} non ha un programma di affiliazione al momento`,
   termShare: (percent, hasDifferent) =>
     `${percent}${S}% di quanto un acquirente paga al netto delle tasse, sugli acquisti singoli fatti tramite il tuo link (abbonamenti e pagamenti rateali non fanno guadagnare)${hasDifferent ? "; alcuni prodotti fanno eccezione, qui sotto" : ""}.`,
+  termShareAll: (percent, hasDifferent) =>
+    `${percent}${S}% di quanto un acquirente paga al netto delle tasse, sugli acquisti fatti tramite il tuo link${hasDifferent ? "; alcuni prodotti fanno eccezione, qui sotto" : ""}.`,
+  termRecurring: (months) =>
+    months === 1
+      ? "Un abbonamento fa guadagnare sul suo primo pagamento, e un pagamento rateale su ciascuna delle sue rate."
+      : months >= 1200
+        ? "Un abbonamento fa guadagnare su ciascuno dei suoi pagamenti finché il membro continua a pagare, e un pagamento rateale su ciascuna delle sue rate."
+        : `Un abbonamento fa guadagnare su ciascuno dei suoi pagamenti nei primi ${months} mesi, e un pagamento rateale su ciascuna delle sue rate.`,
+  termBonus: (sales, amount) =>
+    `Un premio di ${amount} per ogni mese di calendario in cui ${sales} ${plural(sales, "vendita", "vendite")} tramite il tuo link ${plural(sales, "fa", "fanno")} guadagnare.`,
+  termNoPaidSearch: (store) =>
+    `Non sono ammessi annunci a pagamento nei motori di ricerca sul nome di ${store}: quanto ti spetta resta trattenuto finché ${store} non esamina un clic arrivato da uno di essi.`,
+  heldNote: (amount, store) => `${amount} di quanto ti spetta è trattenuto finché ${store} non lo esamina, e non è ancora pagabile.`,
+  bonusTitle: (sales, month) => `Premio: ${sales} ${plural(sales, "vendita", "vendite")} a ${month}`,
+  bonusLine: (date) => `${date} · premio`,
   termRefunds:
     "Una vendita rimborsata non fa guadagnare nulla, una rimborsata in parte fa guadagnare solo su quanto è stato trattenuto, e i tuoi acquisti non fanno mai guadagnare.",
   kit: {
@@ -1426,6 +1503,21 @@ const nl: AffiliatesWords = {
   noProgram: (store) => `${store} heeft op dit moment geen partnerprogramma`,
   termShare: (percent, hasDifferent) =>
     `${percent}${S}% van wat een koper vóór belasting betaalt, bij eenmalige aankopen via je link (lidmaatschappen en betalingen in termijnen leveren niets op)${hasDifferent ? "; sommige producten wijken af, zie hieronder" : ""}.`,
+  termShareAll: (percent, hasDifferent) =>
+    `${percent}${S}% van wat een koper vóór belasting betaalt, bij aankopen via je link${hasDifferent ? "; sommige producten wijken af, zie hieronder" : ""}.`,
+  termRecurring: (months) =>
+    months === 1
+      ? "Een lidmaatschap levert iets op bij de eerste betaling, en een betaling in termijnen bij elke termijn."
+      : months >= 1200
+        ? "Een lidmaatschap levert iets op bij elke betaling zolang het lid blijft betalen, en een betaling in termijnen bij elke termijn."
+        : `Een lidmaatschap levert iets op bij elke betaling in de eerste ${months} maanden, en een betaling in termijnen bij elke termijn.`,
+  termBonus: (sales, amount) =>
+    `Een premie van ${amount} voor elke kalendermaand waarin ${sales} ${plural(sales, "verkoop", "verkopen")} via je link iets ${plural(sales, "oplevert", "opleveren")}.`,
+  termNoPaidSearch: (store) =>
+    `Betaalde zoekadvertenties op de naam van ${store} zijn niet toegestaan: wat je toekomt wordt vastgehouden tot ${store} een klik bekijkt die van zo'n advertentie kwam.`,
+  heldNote: (amount, store) => `${amount} van wat je toekomt wordt vastgehouden tot ${store} ernaar kijkt, en is nog niet uit te betalen.`,
+  bonusTitle: (sales, month) => `Premie: ${sales} ${plural(sales, "verkoop", "verkopen")} in ${month}`,
+  bonusLine: (date) => `${date} · premie`,
   termRefunds:
     "Een terugbetaalde verkoop levert niets op, een gedeeltelijk terugbetaalde alleen over wat is behouden, en je eigen aankopen leveren nooit iets op.",
   kit: {
@@ -1682,6 +1774,21 @@ const pt: AffiliatesWords = {
   noProgram: (store) => `${store} não tem programa de afiliados neste momento`,
   termShare: (percent, hasDifferent) =>
     `${percent}${S}% do que um comprador paga antes de impostos, em compras únicas feitas através da sua ligação (subscrições e pagamentos em prestações não geram nada)${hasDifferent ? "; alguns produtos são diferentes, abaixo" : ""}.`,
+  termShareAll: (percent, hasDifferent) =>
+    `${percent}${S}% do que um comprador paga antes de impostos, em compras feitas através da sua ligação${hasDifferent ? "; alguns produtos são diferentes, abaixo" : ""}.`,
+  termRecurring: (months) =>
+    months === 1
+      ? "Uma subscrição gera comissão no primeiro pagamento, e um pagamento em prestações em cada uma das suas prestações."
+      : months >= 1200
+        ? "Uma subscrição gera comissão em cada um dos seus pagamentos enquanto o membro continuar a pagar, e um pagamento em prestações em cada uma das suas prestações."
+        : `Uma subscrição gera comissão em cada um dos seus pagamentos nos primeiros ${months} meses, e um pagamento em prestações em cada uma das suas prestações.`,
+  termBonus: (sales, amount) =>
+    `Um bónus de ${amount} em cada mês do calendário em que ${sales} ${plural(sales, "venda", "vendas")} através da sua ligação ${plural(sales, "gere", "gerem")} comissão.`,
+  termNoPaidSearch: (store) =>
+    `Não são permitidos anúncios pagos em motores de pesquisa com o nome ${deLoja(store)}: o que lhe é devido fica retido até que ${store} analise um clique vindo de um deles.`,
+  heldNote: (amount, store) => `${amount} do que lhe é devido está retido até que ${store} o analise, e ainda não pode ser pago.`,
+  bonusTitle: (sales, month) => `Bónus: ${sales} ${plural(sales, "venda", "vendas")} em ${month}`,
+  bonusLine: (date) => `${date} · bónus`,
   termRefunds:
     "Uma venda reembolsada não gera nada, uma parcialmente reembolsada gera apenas sobre o que foi mantido, e as suas próprias compras nunca geram nada.",
   kit: {

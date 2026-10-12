@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { sourceTag } from "@/lib/source-rules";
 
 // One count per page load, however many times React runs the effect.
 const sent = new Set<string>();
@@ -34,7 +35,7 @@ export function StoreBeacon({ handle, front = true, product = "" }: { handle: st
       if (front) {
         const query = new URLSearchParams(location.search);
         const tag = (name: string) => (query.get(name) ?? "").slice(0, 60);
-        beacon({ h: handle, k: "v", r: document.referrer.slice(0, 500), u: tag("utm_source"), m: tag("utm_medium"), g: tag("utm_campaign") });
+        beacon({ h: handle, k: "v", r: document.referrer.slice(0, 500), u: sourceTag(query), m: tag("utm_medium"), g: tag("utm_campaign") });
       } else {
         // Any other page of the store: only that somebody came (lib/traffic.ts),
         // and on a product's own page, which product: what its sales are measured against.

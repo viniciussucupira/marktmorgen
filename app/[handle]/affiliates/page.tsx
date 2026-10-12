@@ -63,6 +63,14 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
   const day = (seconds: number) =>
     new Date(seconds * 1000).toLocaleDateString(lang.locale, { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
   const num = (n: number) => n.toLocaleString(lang.locale);
+  // A bonus line's own words, from its reference "bonus:<affiliate>:<YYYY-MM>:<sales>" (lib/affiliates.ts bonusLines).
+  const bonusTitle = (ref: string) => {
+    const [, , month = "", sales = "0"] = ref.split(":");
+    const name = /^\d{4}-\d{2}$/.test(month)
+      ? new Date(`${month}-01T00:00:00Z`).toLocaleDateString(lang.locale, { month: "long", year: "numeric", timeZone: "UTC" })
+      : month;
+    return a.bonusTitle(Number(sales) || 0, name);
+  };
   const promise = (terms: typeof store.affiliates) => a.payoutPromise(store.name, terms.payday, terms.hold);
   const attribution = (terms: typeof store.affiliates) => a.attribution(terms.days, terms.rule === "first", terms.lifetime);
 
@@ -325,6 +333,11 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                         {a.waitingNote(money(row.waiting, book.currency))}
                       </p>
                     ) : null}
+                    {row.held > 0 ? (
+                      <p className="mt-1" data-held="">
+                        {a.heldNote(money(row.held, book.currency), store.name)}
+                      </p>
+                    ) : null}
                   </div>
                   {!book.refundsChecked ? (
                     <p className="st-note mt-4 text-sm" role="status">
@@ -340,9 +353,11 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                       {book.lines.slice(0, 50).map((line) => (
                         <li key={line.ref} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3" style={{ borderColor: "var(--st-line)" }}>
                           <span className="min-w-0">
-                            <span className="block font-semibold">{line.title || a.aProduct}</span>
+                            <span className="block font-semibold">{line.how === "bonus" ? bonusTitle(line.ref) : line.title || a.aProduct}</span>
                             <span className="st-muted block text-xs">
-                              {a.saleLine(day(line.at), money(line.base, line.currency), line.rate, line.status === "earned" ? "" : a.lineStatus[line.status] ?? line.status)}
+                              {line.how === "bonus"
+                                ? a.bonusLine(day(line.at))
+                                : a.saleLine(day(line.at), money(line.base, line.currency), line.rate, line.status === "earned" ? "" : a.lineStatus[line.status] ?? line.status)}
                             </span>
                           </span>
                           <span className="font-semibold tabular-nums">{money(line.commission, line.currency)}</span>
@@ -444,7 +459,10 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                 <>
                   <ul className="mt-6 space-y-3">
                     {[
-                      a.termShare(terms.percent, different.length > 0),
+                      terms.recurring > 0 ? a.termShareAll(terms.percent, different.length > 0) : a.termShare(terms.percent, different.length > 0),
+                      ...(terms.recurring > 0 ? [a.termRecurring(terms.recurring)] : []),
+                      ...terms.bonuses.map((b) => a.termBonus(b.sales, money(b.cents, store.currency))),
+                      ...(terms.paidSearch ? [] : [a.termNoPaidSearch(store.name)]),
                       attribution(terms),
                       a.termRefunds,
                       a.termDisclose,

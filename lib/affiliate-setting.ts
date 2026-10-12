@@ -118,7 +118,42 @@ export type AffiliateSetting = {
    * changes who gets paid and that is theirs to decide.
    */
   lifetime: boolean;
+  /**
+   * Memberships and payment plans (added 12 October 2026): 0, not credited,
+   * as every program before this was; otherwise each paid invoice of a
+   * membership sold through a link earns while it falls within this many
+   * months of the membership's start (1 is its first payment only,
+   * RECURRING_ALWAYS for as long as the member pays), and a payment plan
+   * earns on each of its payments. Worked out from the invoices on the
+   * creator's own Stripe account when the book is read (lib/affiliates.ts).
+   */
+  recurring: number;
+  /**
+   * A bonus for each goal an affiliate reaches in a calendar month: so many
+   * sales that earn, and the amount, in the store's currency. Up to three,
+   * each paid once a month it is reached, and gone again if refunds take the
+   * month back under it.
+   */
+  bonuses: AffiliateBonus[];
+  /**
+   * Whether affiliates may run paid search ads on the store's name. Off: a
+   * click that came from one (Google's gclid, Microsoft's msclkid, or a link
+   * tagged cpc) holds that affiliate's commission until the creator looks.
+   */
+  paidSearch: boolean;
 };
+
+export type AffiliateBonus = { sales: number; cents: number };
+
+/** As long as the member keeps paying. */
+export const RECURRING_ALWAYS = 1200;
+/** The choices a creator has for memberships, in months; 0 is "not credited". */
+export const RECURRING_OPTIONS = [0, 1, 3, 6, 12, 24, RECURRING_ALWAYS] as const;
+export const MAX_BONUSES = 3;
+export const MAX_BONUS_SALES = 1000;
+/** In the currency's smallest unit: 1 to 10,000 in it. */
+export const MIN_BONUS_CENTS = 100;
+export const MAX_BONUS_CENTS = 1_000_000;
 
 /** The published limits. */
 export const MIN_COMMISSION = 1;
@@ -173,7 +208,27 @@ export const NO_AFFILIATES: AffiliateSetting = {
   numbers: false,
   kit: true,
   lifetime: false,
+  recurring: 0,
+  bonuses: [],
+  paidSearch: false,
 };
+
+/** The goals as given, each whole and in range, the fewest sales first; null when any is not. */
+export function readBonuses(raw: unknown): AffiliateBonus[] | null {
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw) || raw.length > MAX_BONUSES) return null;
+  const out: AffiliateBonus[] = [];
+  for (const item of raw) {
+    const value = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+    const sales = Number(value.sales);
+    const cents = Number(value.cents);
+    if (!Number.isInteger(sales) || sales < 1 || sales > MAX_BONUS_SALES) return null;
+    if (!Number.isInteger(cents) || cents < MIN_BONUS_CENTS || cents > MAX_BONUS_CENTS) return null;
+    if (out.some((b) => b.sales === sales)) return null;
+    out.push({ sales, cents });
+  }
+  return out.sort((a, b) => a.sales - b.sales);
+}
 
 const whole = (value: unknown, min: number, max: number): number | null => {
   const n = typeof value === "string" && value.trim() ? Number(value.trim()) : value;
@@ -213,6 +268,11 @@ export function parseAffiliateSetting(raw: unknown): AffiliateSetting {
     kit: value.kit !== false,
     // Likewise: a programme already running is not quietly re-pointed.
     lifetime: value.lifetime === true,
+    // Every programme before these existed credited no membership, paid no
+    // bonus and held nothing for paid search: missing means the same.
+    recurring: (RECURRING_OPTIONS as readonly number[]).includes(Number(value.recurring)) ? Number(value.recurring) : 0,
+    bonuses: readBonuses(value.bonuses) ?? [],
+    paidSearch: value.paidSearch === true,
   };
 }
 

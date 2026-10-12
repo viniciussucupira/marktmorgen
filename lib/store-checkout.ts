@@ -507,7 +507,7 @@ export async function createCheckout(
 
   // Sent by an affiliate: who, and the share as it is today, kept with the
   // charge so a later change of terms never changes what this sale earned.
-  // Only a single payment is credited, not a membership or a payment plan.
+  // A membership or a payment plan is credited below, on its subscription.
   //
   // The order is what earns, not the front product. A bump that made it into
   // the charge is here by now, so this is the first point at which the whole
@@ -528,6 +528,19 @@ export async function createCheckout(
       body.set(`metadata[${a.key}_cents]`, String(a.bump.priceCents));
       body.set(`metadata[${a.key}_rate]`, String(addedRates[at]));
     });
+  }
+
+  // A membership or a payment plan, where the creator credits them
+  // (lib/affiliate-setting.ts, recurring): the affiliate, the share and how
+  // many months it lasts ride on the subscription, so each of its invoices
+  // can be credited as it is paid, on the terms of the day it was sold.
+  if (extras.via && recurring && store.affiliates.recurring > 0 && extras.via.rate > 0) {
+    body.set("metadata[via]", extras.via.aff);
+    body.set("metadata[via_rate]", String(extras.via.rate));
+    body.set("subscription_data[metadata][via]", extras.via.aff);
+    body.set("subscription_data[metadata][via_rate]", String(extras.via.rate));
+    body.set("subscription_data[metadata][via_months]", String(store.affiliates.recurring));
+    body.set("subscription_data[metadata][via_at]", String(Math.floor(Date.now() / 1000)));
   }
 
   if (membership) {

@@ -25,7 +25,16 @@
  *     still counted, and each sale is written once;
  *   - what it earns is worked out when it is shown, against the refunds on
  *     the creator's Stripe account, so a refunded sale earns nothing and a
- *     partly refunded one earns on what was kept.
+ *     partly refunded one earns on what was kept;
+ *   - a membership or a payment plan, where the creator credits them (added
+ *     12 October 2026, lib/affiliate-setting.ts recurring), carries the
+ *     affiliate on its subscription, and each of its paid invoices is read
+ *     from the creator's Stripe account when the book is: a membership's
+ *     while it is within the months agreed when it was sold, a plan's every
+ *     one. Nothing is written for them here;
+ *   - a bonus for each goal reached in a calendar month is worked out from
+ *     the same lines, so a refund that takes the month back under the goal
+ *     takes the bonus back too.
  *
  * What stops it being gamed:
  *
@@ -36,6 +45,13 @@
  *   - a click counts once per visitor per day, clicks from one connection are
  *     capped per hour, and the creator's own clicks and known robots are not
  *     counted;
+ *   - two affiliates paid at the same address, or signing up with the same
+ *     inbox written two ways (a "+" tag, Gmail's dots), and an affiliate
+ *     whose link was reached from a paid search ad where the creator does
+ *     not allow those, have what they are owed held, out of every payment,
+ *     until the creator looks and releases it;
+ *   - a purchase paid from the affiliate's inbox written another way is
+ *     their own purchase all the same;
  *   - applying needs the address to be real — the application only exists
  *     once its emailed link is opened — and is capped per hour, per
  *     connection and per address.
@@ -50,6 +66,7 @@
  *   nl:aff:<id>:emails   hash  address -> affiliate id
  *   nl:aff:<id>:codes    hash  code -> affiliate id
  *   nl:aff:<id>:clicks   hash  affiliate id -> clicks counted
+ *   nl:aff:<id>:paid     hash  affiliate id -> clicks counted that came from a paid search ad
  *   nl:aff:<id>:sales    hash  Stripe reference -> the sale
  *   nl:aff:<id>:payouts  hash  payout id -> what the creator says they paid
  */
@@ -68,8 +85,10 @@ import {
   MIN_COMMISSION,
   commissionOn,
   commissionRate,
+  RECURRING_ALWAYS,
   readViaCookie,
 } from "@/lib/affiliate-setting";
+import { readListings } from "@/lib/catalog";
 import { affiliateForCodes, codeOwners } from "@/lib/affiliate-codes";
 import { type PartnerShare, parsePartnerShare, shareOn } from "@/lib/partner-share";
 import { bondFor, rememberBuyer } from "@/lib/affiliate-bond";
@@ -107,6 +126,7 @@ const peopleKey = (id: string) => `nl:aff:${id}:people`;
 const emailsKey = (id: string) => `nl:aff:${id}:emails`;
 const codesKey = (id: string) => `nl:aff:${id}:codes`;
 const clicksKey = (id: string) => `nl:aff:${id}:clicks`;
+const paidClicksKey = (id: string) => `nl:aff:${id}:paid`;
 const salesKey = (id: string) => `nl:aff:${id}:sales`;
 const payoutsKey = (id: string) => `nl:aff:${id}:payouts`;
 /** A partner's share of one sale, keyed "<sale reference>:<partner id>". */
@@ -146,6 +166,12 @@ export type Affiliate = {
    * the two add up, and the cap counts them together.
    */
   share: PartnerShare | null;
+  /**
+   * What the creator looked at and let through (releaseHold): the paid-search
+   * clicks there were then, and the affiliates they shared an address with
+   * then. Somebody new sharing it holds it again. Null for anybody never held.
+   */
+  cleared: { paid: number; with: string[] } | null;
 };
 
 /**
@@ -157,9 +183,12 @@ export type Affiliate = {
  *   "buyer"  they had been credited to that affiliate before, and the creator
  *            asked for their buyers to stay theirs (lib/affiliate-bond.ts);
  *   "partner" nobody brought this buyer to them: they hold a standing share
- *            of the product itself (lib/partner-share.ts).
+ *            of the product itself (lib/partner-share.ts);
+ *   "recurring" a payment of a membership or payment plan sold through their
+ *            link, read from its invoice;
+ *   "bonus"  a goal reached in a month, not a sale at all.
  */
-export type Credit = "click" | "code" | "buyer" | "partner";
+export type Credit = "click" | "code" | "buyer" | "partner" | "recurring" | "bonus";
 
 /** A sale that came through an affiliate's link. */
 export type Referral = {
@@ -267,6 +296,15 @@ function parseAffiliate(raw: unknown): Affiliate | null {
           : null,
       paypal: typeof value.paypal === "string" && EMAIL_PATTERN.test(value.paypal) ? value.paypal : "",
       share: parsePartnerShare(value.share),
+      cleared:
+        value.cleared && typeof value.cleared === "object"
+          ? {
+              paid: Math.max(0, Number((value.cleared as { paid?: unknown }).paid) || 0),
+              with: (Array.isArray((value.cleared as { with?: unknown }).with) ? ((value.cleared as { with: unknown[] }).with) : [])
+                .filter((id): id is string => typeof id === "string" && AFFILIATE_ID_PATTERN.test(id))
+                .slice(0, 50),
+            }
+          : null,
     };
   } catch {
     return null;
@@ -759,6 +797,7 @@ export async function openAffiliateLink(store: Store, token: string): Promise<Op
         rate: null,
         paypal: "",
         share: invited ? grant.p ?? null : null,
+        cleared: null,
       };
       await writeAffiliate(store, affiliate);
       created = true;
@@ -871,7 +910,7 @@ export async function joinAsBuyer(store: Store, sessionId: string): Promise<Join
     } else {
       const code = await claimCode(store, email, id);
       const now = Date.now();
-      affiliate = { id, email, code, status: "approved", appliedAt: now, decidedAt: now, note: "Joined after buying", rate: null, paypal: "", share: null };
+      affiliate = { id, email, code, status: "approved", appliedAt: now, decidedAt: now, note: "Joined after buying", rate: null, paypal: "", share: null, cleared: null };
       await writeAffiliate(store, affiliate);
       created = true;
     }
@@ -992,7 +1031,7 @@ async function approvedByCode(store: Store, code: string): Promise<Affiliate | n
 export async function recordClick(
   store: Store,
   code: string,
-  visitor: { ip: string; userAgent: string; session: string | undefined },
+  visitor: { ip: string; userAgent: string; session: string | undefined; paid?: boolean },
 ): Promise<boolean> {
   const affiliate = await approvedByCode(store, code);
   if (!affiliate) return false;
@@ -1005,7 +1044,11 @@ export async function recordClick(
     ["SET", seenKey(`${statsId}|${affiliate.id}|${visitor.ip}|${visitor.userAgent}|${day}`), "1", "NX", "EX", 2 * 86_400],
   ]);
   if (fresh === null) return false;
-  await redisPipeline([["HINCRBY", clicksKey(statsId), affiliate.id, 1]]);
+  await redisPipeline([
+    ["HINCRBY", clicksKey(statsId), affiliate.id, 1],
+    // Reached from a paid search ad (lib/affiliate-setting.ts paidSearch): counted apart, so it can be held.
+    ...(visitor.paid ? [["HINCRBY", paidClicksKey(statsId), affiliate.id, 1]] : []),
+  ]);
   return true;
 }
 
@@ -1118,7 +1161,23 @@ export async function notePartners(
 async function isSelf(store: Store, aff: string, buyer: string): Promise<boolean> {
   if (!buyer) return false;
   const affiliate = await readAffiliate(store, aff);
-  return Boolean(affiliate) && normaliseEmail(affiliate!.email) === normaliseEmail(buyer);
+  return Boolean(affiliate) && canonicalEmail(affiliate!.email) === canonicalEmail(buyer);
+}
+
+/**
+ * One inbox however it is written: lower case, without a "+" tag, and for
+ * Gmail without its dots, which Gmail itself ignores. Two addresses that
+ * come out the same here reach the same person.
+ */
+export function canonicalEmail(raw: string): string {
+  const email = normaliseEmail(raw);
+  const at = email.lastIndexOf("@");
+  if (at < 1) return email;
+  let name = email.slice(0, at).split("+")[0];
+  let domain = email.slice(at + 1);
+  if (domain === "googlemail.com") domain = "gmail.com";
+  if (domain === "gmail.com") name = name.replace(/\./g, "");
+  return `${name}@${domain}`;
 }
 
 type SessionLike = {
@@ -1340,7 +1399,19 @@ export type Row = {
    * when refunds landed after a payout, exactly as `owed` is.
    */
   payable: number;
+  /**
+   * Of what is owed, the part held for the creator to look at (`flags` says
+   * why): left out of `payable`, and so of every payment, until they release
+   * it. 0 for anybody not held.
+   */
+  held: number;
+  /** Why it is held: a click from a paid search ad, or an address another affiliate shares. */
+  flags: HoldFlag[];
+  /** Clicks that came from a paid search ad. */
+  paidClicks: number;
 };
+
+export type HoldFlag = "paid-search" | "same-address";
 
 export type Book = {
   rows: Row[];
@@ -1357,6 +1428,8 @@ export type Book = {
   elsewhere: number;
   /** False when Stripe could not be asked about refunds, or not all of them. */
   refundsChecked: boolean;
+  /** False when the invoices of memberships and plans could not all be read. */
+  invoicesChecked: boolean;
 };
 
 /**
@@ -1408,19 +1481,23 @@ export function settleLine(referral: Referral, refunded: number): Line {
  * with what each earns after refunds, and what the creator says they paid.
  */
 export async function readBook(store: Store, only?: string): Promise<Book> {
-  if (!store.statsId || !isRedisConfigured()) return { rows: [], lines: [], payouts: [], refundsChecked: true, currency: store.currency, elsewhere: 0 };
+  if (!store.statsId || !isRedisConfigured()) return { rows: [], lines: [], payouts: [], refundsChecked: true, invoicesChecked: true, currency: store.currency, elsewhere: 0 };
   const statsId = store.statsId;
-  const [people, clicks, sales, payouts, shares] = await redisPipeline([
+  const [people, clicks, sales, payouts, shares, paidClicks] = await redisPipeline([
     ["HGETALL", peopleKey(statsId)],
     ["HGETALL", clicksKey(statsId)],
     ["HGETALL", salesKey(statsId)],
     ["HGETALL", payoutsKey(statsId)],
     ["HGETALL", sharesKey(statsId)],
+    ["HGETALL", paidClicksKey(statsId)],
   ]);
-  const affiliates = pairs(people)
+  // Everybody, for the checks that compare one affiliate with the others.
+  const everyone = pairs(people)
     .map(([, raw]) => parseAffiliate(raw))
-    .filter((a): a is Affiliate => a !== null && (!only || a.id === only));
+    .filter((a): a is Affiliate => a !== null);
+  const affiliates = everyone.filter((a) => !only || a.id === only);
   const clickCount = new Map(pairs(clicks).map(([id, n]) => [id, Number(n) || 0]));
+  const paidCount = new Map(pairs(paidClicks).map(([id, n]) => [id, Number(n) || 0]));
   const referrals = pairs(sales)
     .map(([, raw]) => parseReferral(raw))
     .filter((r): r is Referral => r !== null && (!only || r.aff === only));
@@ -1450,7 +1527,20 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
     .filter((p): p is Payout => p !== null && (!only || p.aff === only))
     .sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.at - a.at);
 
-  const everything = [...referrals, ...partnerLines];
+  // Each payment of a membership or plan sold through a link, read from its invoice.
+  let invoicesChecked = true;
+  let recurringLines: Referral[] = [];
+  if (store.stripeAccountId && everyone.length) {
+    try {
+      const read = await recurringReferrals(store, everyone, Math.min(...everyone.map((a) => Math.floor(a.appliedAt / 1000))) - 86_400);
+      recurringLines = read.lines.filter((r) => !only || r.aff === only);
+      invoicesChecked = read.complete;
+    } catch (error) {
+      console.error("reading invoices for the affiliate book failed", error);
+      invoicesChecked = false;
+    }
+  }
+  const everything = [...referrals, ...partnerLines, ...recurringLines];
   let refunds = new Map<string, number>();
   let refundsChecked = true;
   if (everything.length) {
@@ -1464,7 +1554,10 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
       refundsChecked = false;
     }
   }
-  const lines = everything.map((r) => settleLine(r, r.pi ? refunds.get(r.pi) ?? 0 : 0)).sort((a, b) => b.at - a.at);
+  const settled = everything.map((r) => settleLine(r, r.pi ? refunds.get(r.pi) ?? 0 : 0));
+  // A goal reached in a month adds its bonus, worked out from the sales as they stand after refunds.
+  const lines = [...settled, ...bonusLines(store, settled)].sort((a, b) => b.at - a.at);
+  const flagsOf = holdFlags(store, everyone, paidCount);
 
   // A sale made less than the creator's wait ago is not payable yet, so their
   // refund window can pass before the money leaves them. `hold` is 0 for a
@@ -1477,10 +1570,12 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
       const out = paid.filter((p) => p.aff === affiliate.id && p.currency === store.currency).reduce((sum, p) => sum + p.cents, 0);
       const waiting = own.filter((l) => l.at > until).reduce((sum, l) => sum + l.commission, 0);
       const owed = earned - out;
+      const flags = flagsOf.get(affiliate.id) ?? [];
+      const payable = owed <= 0 ? owed : Math.max(0, Math.min(owed, earned - waiting - out));
       return {
         affiliate,
         clicks: clickCount.get(affiliate.id) ?? 0,
-        sales: own.filter((l) => l.commission > 0).length,
+        sales: own.filter((l) => l.commission > 0 && l.how !== "bonus").length,
         earned,
         paid: out,
         owed,
@@ -1490,13 +1585,187 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
         // has already paid past what cleared simply has nothing to pay today.
         // Owing nothing, or being owed money back after a refund, is `owed`'s
         // to say, and is carried through unchanged.
-        payable: owed <= 0 ? owed : Math.max(0, Math.min(owed, earned - waiting - out)),
+        // Held for the creator to look at: nothing of it goes into a payment until they release it.
+        payable: flags.length && payable > 0 ? 0 : payable,
+        held: flags.length ? Math.max(0, owed) : 0,
+        flags,
+        paidClicks: paidCount.get(affiliate.id) ?? 0,
       };
     })
     .sort((a, b) => b.owed - a.owed || b.affiliate.appliedAt - a.affiliate.appliedAt);
   const elsewhere =
     lines.filter((l) => l.currency !== store.currency).length + paid.filter((p) => p.currency !== store.currency).length;
-  return { rows, lines, payouts: paid, refundsChecked, currency: store.currency, elsewhere };
+  return { rows, lines, payouts: paid, refundsChecked, invoicesChecked, currency: store.currency, elsewhere };
+}
+
+/** How many invoice pages of a hundred are read when the book is opened. */
+const INVOICE_PAGES = 10;
+const AFF_SUB_STRIPE_VERSION = "2026-08-26.dahlia";
+
+type InvoiceLike = {
+  id?: unknown;
+  status?: unknown;
+  amount_paid?: unknown;
+  currency?: unknown;
+  customer_email?: unknown;
+  created?: unknown;
+  status_transitions?: { paid_at?: unknown } | null;
+  total_taxes?: { amount?: unknown }[] | null;
+  parent?: { subscription_details?: { metadata?: Record<string, string> | null } | null } | null;
+  payments?: { data?: { payment?: { payment_intent?: unknown } | null }[] } | null;
+};
+
+/** Whether a payment made at `paidAt` falls within `months` of `from`, both in seconds. */
+export function withinMonths(from: number, paidAt: number, months: number): boolean {
+  if (months >= RECURRING_ALWAYS) return true;
+  const start = new Date(from * 1000);
+  const end = Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + months, start.getUTCDate(), start.getUTCHours(), start.getUTCMinutes(), start.getUTCSeconds()) / 1000;
+  return paidAt < end;
+}
+
+/**
+ * The paid invoices of this store's memberships and payment plans that were
+ * sold through an affiliate's link, as Referrals: read from the creator's
+ * Stripe account, pinned to one API version so their shape is known, and
+ * never written down. A membership's payment counts while it falls within
+ * the months agreed when it was sold; a plan's every payment counts.
+ */
+async function recurringReferrals(store: Store, everyone: Affiliate[], since: number): Promise<{ lines: Referral[]; complete: boolean }> {
+  const handles = saleHandles(store);
+  const byId = new Map(everyone.map((a) => [a.id, a]));
+  const found: { invoice: InvoiceLike; meta: Record<string, string> }[] = [];
+  let after = "";
+  let complete = false;
+  for (let page = 0; page < INVOICE_PAGES; page += 1) {
+    const query = new URLSearchParams({ limit: "100", status: "paid", "created[gte]": String(Math.max(0, since)) });
+    query.append("expand[]", "data.payments");
+    if (after) query.set("starting_after", after);
+    const listed = (await onAccount("GET", store.stripeAccountId as string, `/invoices?${query}`, undefined, AFF_SUB_STRIPE_VERSION)) as { data?: unknown; has_more?: unknown };
+    const rows = (Array.isArray(listed.data) ? listed.data : []) as InvoiceLike[];
+    for (const invoice of rows) {
+      const meta = invoice.parent?.subscription_details?.metadata ?? {};
+      if (!meta.via || !AFFILIATE_ID_PATTERN.test(meta.via) || !handles.has(meta.store ?? "")) continue;
+      found.push({ invoice, meta });
+    }
+    const last = rows[rows.length - 1];
+    if (listed.has_more !== true || !last || typeof last.id !== "string") {
+      complete = true;
+      break;
+    }
+    after = last.id;
+  }
+  const ids = [...new Set(found.map((f) => f.meta.product).filter((id): id is string => Boolean(id)))];
+  const titles = new Map((ids.length ? await readListings(store, ids).catch(() => []) : []).map((p) => [p.id, p.title]));
+  const lines: Referral[] = [];
+  for (const { invoice, meta } of found) {
+    const total = typeof invoice.amount_paid === "number" ? invoice.amount_paid : 0;
+    if (typeof invoice.id !== "string" || invoice.status !== "paid" || total <= 0) continue;
+    const paidAt = Number(invoice.status_transitions?.paid_at) || Number(invoice.created) || 0;
+    const plan = meta.kind === "plan";
+    const months = Number(meta.via_months) || 0;
+    const soldAt = Number(meta.via_at) || 0;
+    if (!plan && (months < 1 || !soldAt || !withinMonths(soldAt, paidAt, months))) continue;
+    const tax = (invoice.total_taxes ?? []).reduce((sum, t) => sum + (typeof t?.amount === "number" ? t.amount : 0), 0);
+    const pi = invoice.payments?.data?.map((p) => p.payment?.payment_intent).find((x): x is string => typeof x === "string") ?? "";
+    const affiliate = byId.get(meta.via);
+    const buyer = typeof invoice.customer_email === "string" ? invoice.customer_email : "";
+    lines.push({
+      ref: invoice.id,
+      pi,
+      aff: meta.via,
+      at: paidAt,
+      product: meta.product ?? "",
+      title: (titles.get(meta.product ?? "") ?? "").slice(0, 200),
+      base: Math.max(0, total - tax),
+      total,
+      currency: readCurrencyCode(invoice.currency),
+      rate: Number(meta.via_rate) || 0,
+      self: Boolean(affiliate && buyer) && canonicalEmail(affiliate!.email) === canonicalEmail(buyer),
+      how: "recurring",
+    });
+  }
+  return { lines, complete };
+}
+
+/**
+ * Each goal an affiliate reaches in a calendar month (UTC): its bonus once,
+ * dated at the sale that reached it. Counted from the sales that earn after
+ * refunds, in the store's currency, not partner shares; a refund that takes
+ * the month back under the goal takes the bonus away with it.
+ */
+export function bonusLines(store: Pick<Store, "affiliates" | "currency">, lines: Line[]): Line[] {
+  // A store record made before bonuses existed has none.
+  const goals = store.affiliates.bonuses ?? [];
+  if (!goals.length) return [];
+  const months = new Map<string, Line[]>();
+  for (const line of lines) {
+    if (line.commission <= 0 || line.how === "partner" || line.how === "bonus" || line.currency !== store.currency) continue;
+    const key = `${line.aff}|${new Date(line.at * 1000).toISOString().slice(0, 7)}`;
+    months.set(key, [...(months.get(key) ?? []), line]);
+  }
+  const out: Line[] = [];
+  for (const [key, sold] of months) {
+    const [aff, month] = key.split("|");
+    const inOrder = [...sold].sort((a, b) => a.at - b.at);
+    for (const goal of goals) {
+      if (inOrder.length < goal.sales) continue;
+      out.push({
+        ref: `bonus:${aff}:${month}:${goal.sales}`,
+        pi: "",
+        aff,
+        at: inOrder[goal.sales - 1].at,
+        product: "",
+        title: `Bonus: ${goal.sales} ${goal.sales === 1 ? "sale" : "sales"} in ${new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", { timeZone: "UTC", month: "long", year: "numeric" })}`,
+        base: 0,
+        total: 0,
+        currency: store.currency,
+        rate: 0,
+        self: false,
+        how: "bonus",
+        refunded: 0,
+        commission: goal.cents,
+        status: "earned",
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Why each affiliate's commission is held, if it is: a click from a paid
+ * search ad the creator does not allow, since they last released it; or a
+ * payout address, or an inbox written another way, that another affiliate
+ * also has, unless the creator cleared it.
+ */
+export function holdFlags(store: Pick<Store, "affiliates">, everyone: Affiliate[], paidCount: Map<string, number>): Map<string, HoldFlag[]> {
+  const out = new Map<string, HoldFlag[]>();
+  for (const a of everyone) {
+    const flags: HoldFlag[] = [];
+    if (!store.affiliates.paidSearch && (paidCount.get(a.id) ?? 0) > (a.cleared?.paid ?? 0)) flags.push("paid-search");
+    if (sharersOf(a, everyone).some((id) => !(a.cleared?.with ?? []).includes(id))) flags.push("same-address");
+    if (flags.length) out.set(a.id, flags);
+  }
+  return out;
+}
+
+/** The other affiliates, approved or waiting, with this one's inbox or payout address, written any way. */
+function sharersOf(a: Affiliate, everyone: Affiliate[]): string[] {
+  const mine = new Set([canonicalEmail(a.email), canonicalEmail(payAddress(a))]);
+  return everyone
+    .filter((b) => b.id !== a.id && (b.status === "approved" || b.status === "pending"))
+    .filter((b) => mine.has(canonicalEmail(b.email)) || mine.has(canonicalEmail(payAddress(b))))
+    .map((b) => b.id);
+}
+
+/** The creator looked and lets what is held through: the paid-search clicks so far, and a shared address. */
+export async function releaseHold(store: Store, id: string): Promise<Affiliate | null> {
+  if (!store.statsId || !AFFILIATE_ID_PATTERN.test(id)) return null;
+  const affiliate = await readAffiliate(store, id);
+  if (!affiliate) return null;
+  const [paid] = await redisPipeline([["HGET", paidClicksKey(store.statsId), id]]);
+  const next: Affiliate = { ...affiliate, cleared: { paid: Number(paid) || 0, with: sharersOf(affiliate, await listAffiliates(store)) } };
+  await writeAffiliate(store, next);
+  return next;
 }
 
 const csvCell = (value: string | number) => {

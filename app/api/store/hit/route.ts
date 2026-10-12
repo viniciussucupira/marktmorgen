@@ -84,7 +84,8 @@ export async function POST(request: NextRequest) {
     }
   } else if (kind === "a") {
     // A visit through an affiliate's link: counted for them, once a day.
-    await countAffiliateClick(request, store, read("c", 20).toLowerCase());
+    // `p`: the link was reached from a paid search ad (components/affiliate-click.tsx), counted apart.
+    await countAffiliateClick(request, store, read("c", 20).toLowerCase(), read("p", 2) === "1");
   }
   return done();
 }
