@@ -229,6 +229,8 @@ export async function createCheckout(
      * so its thank-you page can lead on to the next step.
      */
     funnel?: string;
+    /** The page test and version the buyer was shown (lib/headline-test.ts abMeta), so a paid sale counts for it. */
+    ab?: string;
     /**
      * Bought for somebody else (lib/gifts.ts): paid at once, with nothing
      * added at checkout and no offer after it, and handed to the recipient.
@@ -499,6 +501,7 @@ export async function createCheckout(
   }
   if (extras.buyerKey && !extras.gift) body.set("metadata[buyer_key]", extras.buyerKey);
   if (extras.funnel && !extras.gift && !extras.group) body.set("metadata[funnel]", extras.funnel);
+  if (extras.ab && /^[a-z0-9]{4,12}:(a|b)$/.test(extras.ab)) body.set("metadata[ab]", extras.ab);
   if (extras.news) body.set("metadata[news]", "yes");
   if (extras.news && extras.clicks) body.set("metadata[clicks]", "yes");
 

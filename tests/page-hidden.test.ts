@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   part("Everything that reads the page goes by it");
   is("the product page", readFileSync("app/[handle]/p/[product]/page.tsx", "utf8").includes("livePage(page, saleClock())"), true);
   is("the answer box", readFileSync("app/api/store/ask/route.ts", "utf8").includes("pageShown(page) ? page : null"), true);
-  is("a page test's counting", readFileSync("app/api/store/checkout/route.ts", "utf8").includes("if (!test || !pageShown(page)) return;"), true);
+  is("a page test's counting", readFileSync("app/api/store/checkout/route.ts", "utf8").includes("if (page && test && pageShown(page))"), true);
   is("the page after a free sign-up", readFileSync("app/[handle]/free/page.tsx", "utf8").includes("page?.next && pageShown(page)"), true);
   done();
 }

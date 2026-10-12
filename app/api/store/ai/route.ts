@@ -6,7 +6,7 @@ import { READ_PDF_PAGES } from "@/lib/ai-rules";
 import { firstPages } from "@/lib/pdf-preview";
 import { MAX_STAMP_BYTES, readableFile } from "@/lib/product-file";
 import { withinLimit } from "@/lib/request-guard";
-import { describePicture, fillBlock, reviewPage, rewriteBlock, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct, writeQuiz, writeSequence, writeFeedback } from "@/lib/ai";
+import { describePicture, fillBlock, reviewPage, rewriteBlock, writeTestHeadline, replyToReview, translatePage, writeBio, writeKitPitch, writeStoreFaq, writeStoreSetup, writeBlogPost, writeEmail, writePosts, writeOutline, writePage, writeProduct, writeQuiz, writeSequence, writeFeedback } from "@/lib/ai";
 import { readTaskFor, submissionOf } from "@/lib/assignment";
 import { SOCIALS, type SocialNetwork, isSocialNetwork } from "@/lib/store-socials";
 import { isRewriteStyle } from "@/lib/block-rewrite-rules";
@@ -152,6 +152,16 @@ export async function POST(request: NextRequest) {
     const about = product.about ? await readAbout(store.statsId, product.id) : "";
     return answer(
       rewriteBlock(store, { block, style: body.style, facts: factsFor(store, product, about, page), language: LANGUAGES[store.language].english }),
+    );
+  }
+  if (body.kind === "headline") {
+    // A second headline to test against the hero's (lib/ai.ts, writeTestHeadline); nothing is saved here.
+    const product = await readListing(store, text(body.product, 40));
+    if (!product) return fail("unknown", 404);
+    const page = parsePage(body.page);
+    const about = product.about ? await readAbout(store.statsId, product.id) : "";
+    return answer(
+      writeTestHeadline(store, { headline: text(body.headline, 200), sub: text(body.sub, 400), facts: factsFor(store, product, about, page), language: LANGUAGES[store.language].english }),
     );
   }
   if (body.kind === "fill") {

@@ -1080,8 +1080,9 @@ try {
     is("and only one test runs at a time: no second headline beside it", await studio.getByRole("button", { name: /^1\. Hero/ }).click().then(() => studio.getByRole("checkbox", { name: /^Test a second headline/ }).isDisabled()), true);
     await studio.getByRole("button", { name: "Save the page" }).click();
     await studio.getByText(/^Page saved/).first().waitFor({ timeout: 30_000 });
-    await studio.getByText("Version A: seen 0 times, 0 checkouts (0%).").waitFor({ timeout: 30_000 });
-    is("saved, with nothing counted yet", await studio.getByText("Version B: seen 0 times, 0 checkouts (0%).").count(), 1);
+    // A product sold for money: each version is read by the money it brings (lib/headline-test-rules.ts).
+    await studio.getByText("Version A: seen 0 times, 0 sales paid, $0 in all, $0 per visitor.").waitFor({ timeout: 30_000 });
+    is("saved, with nothing counted yet", await studio.getByText("Version B: seen 0 times, 0 sales paid, $0 in all, $0 per visitor.").count(), 1);
 
     // Visitors, each kept in a group by the cookie the store's pages set.
     const seen = {};
@@ -1107,6 +1108,7 @@ try {
     };
     const counted = await counts();
     is("each view is counted for its version, and the checkout for B", [counted?.va >= 1, counted?.vb >= 2, counted?.ca, counted?.cb], [true, true, 0, 1]);
+    is("and the checkout carries the version to Stripe, so the paid sale counts for B", /^[a-z0-9]{4,12}:b$/.test(services.checkouts().at(-1)?.metadata?.ab ?? ""), true);
     is("how far down the page is read is not given while two pages are read", await studio.evaluate((id) => fetch(`/api/store/depth?id=${id}`).then((r) => r.json()).then((d) => d.visitors), product), 0);
 
     await open(studio, `${LOCAL}/studio/pages?product=${product}`);

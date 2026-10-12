@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const test = runningTest(page);
     if (!test) return Response.json({ ok: false, error: "none" }, { status: 404 });
     const counts = await readCounts(store.statsId, id, test);
-    return Response.json({ ok: true, counts }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json({ ok: true, counts, currency: store.currency }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("reading a page test failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

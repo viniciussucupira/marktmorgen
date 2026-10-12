@@ -23,7 +23,7 @@ import { bundleReady, chosenItems, deliverableItems, picks } from "@/lib/bundle-
 import { cameFrom } from "@/lib/came-from";
 import { channelOfRequest } from "@/lib/visit-channel";
 import { codeCookieName, readLinkCode } from "@/lib/code-link";
-import { AB_COOKIE, count as countTest, readBucket, readCounts, versionFor, winner } from "@/lib/headline-test";
+import { AB_COOKIE, abMeta, count as countTest, readBucket, readCounts, versionFor, winner } from "@/lib/headline-test";
 import { readPage } from "@/lib/sales-page-store";
 import { readCountry } from "@/lib/fair-price";
 import { pageShown, runningTest } from "@/lib/sales-page";
@@ -194,6 +194,25 @@ export async function POST(request: NextRequest) {
     // A course opens right away in the browser that paid for it.
     // So does a course in a bundle.
     const buyer = !gift && !group && !preorder && (product.course || product.bundle) ? newBuyerKey() : null;
+    // A checkout opened from a page running a test — a second headline or a
+    // second version of the whole page — is counted for the version this
+    // visitor was shown, and carries it to Stripe, so a paid sale counts for
+    // it too (lib/headline-test.ts). Read only for a product with a page, and
+    // only for a visitor with a group.
+    const bucket = readBucket(request.cookies.get(AB_COOKIE)?.value);
+    let abTest = "";
+    let ab: string | undefined;
+    if (product.page && bucket !== null && !gift && !group) {
+      const page = await readPage(store.statsId, product.id).catch(() => null);
+      const test = page ? runningTest(page) : null;
+      if (page && test && pageShown(page)) {
+        const counts = await readCounts(store.statsId, product.id, test).catch(() => null);
+        if (counts && !winner(counts, product.priceCents > 0 ? "money" : "checkouts")) {
+          abTest = test;
+          ab = abMeta(test, versionFor(bucket, test));
+        }
+      }
+    }
     const held = await withStockHold(store, product, (holding) =>
       createCheckout(store, product, linkOrigin(request, store), optionId, {
         bumps,
@@ -228,6 +247,7 @@ export async function POST(request: NextRequest) {
         // A funnel of pages this product is a step of, read off the page the
         // button was pressed on like the tags above (lib/page-funnel.ts).
         funnel: funnel ?? undefined,
+        ab,
       }),
     );
     if (!held.ok) return away(`/@${store.handle}?status=${held.reason}`);
@@ -238,21 +258,7 @@ export async function POST(request: NextRequest) {
     if (ends && store.stripeAccountId) await rememberPlan(store.stripeAccountId, held.value.id);
     // Counted once the buyer is on their way, so the count never slows them.
     after(() => countHit(request, store, { kind: "checkout", id: product.id }));
-    // A checkout opened from a page running a test — a second headline or a
-    // second version of the whole page — counts for the
-    // version this visitor was shown (lib/headline-test.ts). Read only for a
-    // product with a page, and only for a visitor with a group.
-    const bucket = readBucket(request.cookies.get(AB_COOKIE)?.value);
-    if (product.page && bucket !== null) {
-      after(async () => {
-        const page = await readPage(store.statsId, product.id);
-        const test = runningTest(page);
-        if (!test || !pageShown(page)) return;
-        const counts = await readCounts(store.statsId, product.id, test);
-        if (winner(counts)) return;
-        await countTest(store.statsId, product.id, test, "c", versionFor(bucket, test));
-      });
-    }
+    if (abTest && bucket !== null) after(() => countTest(store.statsId, product.id, abTest, "c", versionFor(bucket, abTest)));
     const headers = new Headers({ Location: held.value.url, "Cache-Control": "no-store" });
     const secure = origin.startsWith("https://") ? "; Secure" : "";
     if (product.stock !== null) {
