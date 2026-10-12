@@ -22,8 +22,15 @@ import { type BlockContext, HeroView, PageSections } from "@/components/sales-bl
 import { PictureViewer } from "@/components/picture-viewer";
 import { StoreTracking } from "@/components/store-tracking";
 import { StorePagesNav } from "@/components/store-pages-nav";
+import { FunnelBeacon } from "@/components/store-beacon";
+import { funnelMark } from "@/lib/page-funnel";
+import { funnelHere } from "@/lib/page-funnel-store";
+import { funnelWords } from "@/lib/buyer-words/funnel";
 
-type Params = { params: Promise<{ handle: string; slug: string }> };
+type Params = {
+  params: Promise<{ handle: string; slug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 /**
  * One of a store's own pages (lib/site-page-rules.ts): /@chef/about, and
@@ -41,7 +48,7 @@ const load = cache(async (raw: string, slug: string): Promise<{ store: Store; pa
   return blocks.blocks.length ? { store, page, blocks } : null;
 });
 
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
+export async function generateMetadata({ params }: Pick<Params, "params">): Promise<Metadata> {
   const { handle, slug } = await params;
   const found = await load(handle, slug);
   if (!found) return { title: "Not found — Marktmorgen" };
@@ -60,8 +67,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-export default async function StoreOwnPage({ params }: Params) {
+export default async function StoreOwnPage({ params, searchParams }: Params) {
   const { handle, slug } = await params;
+  const query = searchParams ? await searchParams : {};
   const found = await load(handle, slug);
   if (!found) notFound();
   const { store, page, blocks } = found;
@@ -73,7 +81,13 @@ export default async function StoreOwnPage({ params }: Params) {
   const bw = blockWords(store.language);
   // Where its buttons lead: the product the creator chose for it, while it is published, or the store.
   const target = page.target ? await readListing(store, page.target).catch(() => null) : null;
-  const leadsTo = target && !target.hidden ? { href: productPath(store, target), label: bw.toProduct } : { href: `/@${store.handle}`, label: bw.toStore };
+  // Opened as a step of a funnel of pages (lib/page-funnel.ts): its buttons lead to the next step instead.
+  const here = await funnelHere(store, funnelMark(query.f), "page", page.id).catch(() => null);
+  const leadsTo = here?.next
+    ? { href: here.next, label: funnelWords(store.language).next }
+    : target && !target.hidden
+      ? { href: productPath(store, target), label: bw.toProduct }
+      : { href: `/@${store.handle}`, label: bw.toStore };
   const ctx: BlockContext = {
     storeName: store.name,
     productTitle: page.title,
@@ -122,6 +136,7 @@ export default async function StoreOwnPage({ params }: Params) {
             {w.everythingFrom(store.name)}
           </Link>
           <StoreTracking store={store} presence />
+          {here ? <FunnelBeacon handle={store.handle} funnel={here.funnel.id} kind="page" id={page.id} /> : null}
         </div>
       </main>
     </div>

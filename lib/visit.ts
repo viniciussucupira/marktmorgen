@@ -23,6 +23,14 @@ export function clientIp(request: NextRequest): string {
   );
 }
 
+/** What is read off a request to know who is asking: a route's request, or a page's cookies and headers. */
+type Asker = { cookies: { get(name: string): { value: string } | undefined }; headers: { get(name: string): string | null } };
+
+/** Whether this is the store's own people (isOwner, below), for a page that counts something itself. Never throws. */
+export async function isStorePeople(request: Asker, store: Store): Promise<boolean> {
+  return isOwner(request, store).catch(() => false);
+}
+
 /**
  * Whether a visit is the store's own people looking at it (widened on 11
  * October 2026, as Fathom's "Remove Unwanted Visits" and Plausible's "exclude
@@ -32,7 +40,7 @@ export function clientIp(request: NextRequest): string {
  * share that buys look worse than it is. A buyer carries none of these, so
  * their visit costs nothing more to read.
  */
-async function isOwner(request: NextRequest, store: Store): Promise<boolean> {
+async function isOwner(request: Asker, store: Store): Promise<boolean> {
   if (isMarkedDevice(request.cookies.get(NO_COUNT_COOKIE)?.value, store.sid)) return true;
   const session = request.cookies.get(SESSION_COOKIE)?.value;
   if (!session) return false;

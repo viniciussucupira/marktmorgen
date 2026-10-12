@@ -1,7 +1,10 @@
 import type { NextRequest } from "next/server";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { classifySource, cleanTag } from "@/lib/stats";
-import { countAffiliateClick, countHit, countVisit } from "@/lib/visit";
+import { countAffiliateClick, countHit, countVisit, isStorePeople } from "@/lib/visit";
+import { isBot } from "@/lib/source-rules";
+import { funnelMark, stepIndex } from "@/lib/page-funnel";
+import { countFunnelStep, funnelVisitor, readPageFunnel } from "@/lib/page-funnel-store";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { productIdFor } from "@/lib/catalog";
 
@@ -41,9 +44,13 @@ export async function POST(request: NextRequest) {
   if (!store) return done();
   // A page sends one of these per visit and per click; a script sending
   // thousands would only inflate the creator's numbers, so it stops counting.
-  if (!(await withinLimit("hit", `${clientAddress(request)}|${store.handle}`, 120, 600))) return done();
-
+  // A funnel's steps have an allowance of their own, so a person browsing the
+  // store at length never crowds out the steps they walk afterwards: one
+  // person walks twenty at most.
   const kind = read("k", 2);
+  const allowance = kind === "f" ? (["hit-funnel", 60] as const) : (["hit", 120] as const);
+  if (!(await withinLimit(allowance[0], `${clientAddress(request)}|${store.handle}`, allowance[1], 600))) return done();
+
   if (kind === "v") {
     const source = classifySource({
       referrer: read("r", 500),
@@ -64,6 +71,17 @@ export async function POST(request: NextRequest) {
   } else if (kind === "l") {
     const id = read("id", 40);
     if (store.links.some((link) => link.id === id)) await countHit(request, store, { kind: "link", id });
+  } else if (kind === "f") {
+    // A step of a funnel of pages was opened (lib/page-funnel.ts): one person
+    // once for that step, never the store's own people, and only for a page
+    // or product that is one of the funnel's steps.
+    const funnel = await readPageFunnel(store.statsId, funnelMark(read("f", 10))).catch(() => null);
+    const step = read("t", 1) === "g" ? "page" : "product";
+    const index = funnel?.on ? stepIndex(funnel, step, read("id", 40)) : -1;
+    const userAgent = request.headers.get("user-agent") ?? "";
+    if (funnel && index >= 0 && store.statsId && !isBot(userAgent) && !(await isStorePeople(request, store))) {
+      await countFunnelStep(store.statsId, funnel, index, funnelVisitor(store.statsId, funnel.id, clientAddress(request), userAgent));
+    }
   } else if (kind === "a") {
     // A visit through an affiliate's link: counted for them, once a day.
     await countAffiliateClick(request, store, read("c", 20).toLowerCase());

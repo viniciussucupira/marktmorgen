@@ -223,6 +223,11 @@ export async function createCheckout(
     /** No free trial: somebody coming back has had theirs. */
     noTrial?: boolean;
     /**
+     * The funnel of pages this checkout was opened in (lib/page-funnel.ts),
+     * so its thank-you page can lead on to the next step.
+     */
+    funnel?: string;
+    /**
      * Bought for somebody else (lib/gifts.ts): paid at once, with nothing
      * added at checkout and no offer after it, and handed to the recipient.
      */
@@ -475,6 +480,7 @@ export async function createCheckout(
     body.set("payment_intent_data[metadata][preorder]", "yes");
   }
   if (extras.buyerKey && !extras.gift) body.set("metadata[buyer_key]", extras.buyerKey);
+  if (extras.funnel && !extras.gift && !extras.group) body.set("metadata[funnel]", extras.funnel);
   if (extras.news) body.set("metadata[news]", "yes");
   if (extras.news && extras.clicks) body.set("metadata[clicks]", "yes");
 

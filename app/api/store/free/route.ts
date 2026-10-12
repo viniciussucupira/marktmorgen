@@ -2,7 +2,9 @@ import { type NextRequest, after } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { requestCopy } from "@/lib/free";
-import { countHit } from "@/lib/visit";
+import { countHit, isStorePeople } from "@/lib/visit";
+import { markFromReferer } from "@/lib/page-funnel";
+import { countFunnelDone, funnelHere, funnelVisitor } from "@/lib/page-funnel-store";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
 import { readListing } from "@/lib/catalog";
 
@@ -68,7 +70,11 @@ export async function POST(request: NextRequest) {
   // Switched off after notices about its content (lib/takedown.ts): nothing is handed out.
   if (store.suspended) return away(`/@${store.handle}`);
 
-  const page = `/@${store.handle}/free?product=${encodeURIComponent(product.id)}`;
+  // Asked for from a step of a funnel of pages (lib/page-funnel.ts): the page
+  // after the form leads on to the next step, and the sign-up is counted for it.
+  const mark = markFromReferer(request.headers.get("referer"), new URL(origin).hostname);
+  const here = mark ? await funnelHere(store, mark, "product", product.id).catch(() => null) : null;
+  const page = `/@${store.handle}/free?product=${encodeURIComponent(product.id)}${here ? `&f=${here.funnel.id}` : ""}`;
 
   // A field no person can see. Whatever filled it in is told it worked, so it
   // learns nothing, and no email goes anywhere.
@@ -82,6 +88,13 @@ export async function POST(request: NextRequest) {
   try {
     const result = await requestCopy({ store, product, email, consent, clicks, ip, origin: linkOrigin(request, store) });
     if (result === "sent") after(() => countHit(request, store, { kind: "checkout", id: product.id, free: true }));
+    if (result === "sent" && here && store.statsId) {
+      const statsId = store.statsId;
+      after(async () => {
+        if (await isStorePeople(request, store)) return;
+        await countFunnelDone(statsId, here.funnel, here.index, funnelVisitor(statsId, here.funnel.id, ip, request.headers.get("user-agent") ?? ""));
+      });
+    }
     return away(`${page}&status=${result}`);
   } catch (error) {
     console.error("sending a free copy failed", error);
