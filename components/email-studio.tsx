@@ -16,6 +16,9 @@ import { StoreField } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { formatMoney } from "@/lib/money";
 import { MIN_TEST_REACH, TEST_HOURS, TEST_SHARES, type SubjectTest, type TestBy } from "@/lib/mail-test";
+import { type Currency, plainAmount, readMoney } from "@/lib/money";
+import { channelName } from "@/lib/channel-names";
+import { type Narrow, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -54,6 +57,13 @@ const MESSAGES: Record<string, string> = {
   keep_excludes:
     "This email was narrowed two ways at once, and an email in a sequence keeps one condition. Write it again instead, and choose who it goes to.",
   goal: "That ending would stop the sequence before its first email. Choose another, or none.",
+  keep_money:
+    "This email was sent to people chosen by what they spent, where they came from or when they last bought, and a sequence cannot choose that way. Write it again instead.",
+  stripe: "Your Stripe account could not be read just now, so spending, channels and last purchases cannot be counted. Try again in a moment.",
+  segment_name: "Give the group a name.",
+  segment_empty: "Choose who the group is first: a kind of reader, a product, someone to leave out, or one of the three ways below.",
+  segment_product: "That product is not in your store anymore.",
+  segment_full: "A store keeps 20 saved groups at most. Remove one first.",
   keep_already: "This email is already going to new people by itself. It is under Sequences.",
   keep_full: "That sequence already holds 10 emails. Remove one under Sequences first.",
   too_many_flows: "A store keeps 10 sequences at most. Remove one under Sequences first.",
@@ -92,6 +102,8 @@ type BroadcastRow = {
   who: Who;
   /** Left out the people who own this product. */
   notProductId: string | null;
+  /** Narrowed by spending, first channel or quiet days (lib/segments.ts); null for none. */
+  narrow?: Narrow | null;
   /** Whether its links carry its tag, so its sales can be counted at all (lib/mail-links.ts). */
   tagged: boolean;
   /** What it sold, from the creator's own Stripe account; null when nothing is counted for it. */
@@ -140,7 +152,19 @@ function keptWords(b: Pick<BroadcastRow, "who" | "productId" | "notProductId">, 
 }
 
 /** Whether a sent email can be kept sending: narrowed at most one way beyond what starts its sequence. */
-function keepable(b: Pick<BroadcastRow, "who" | "productId" | "notProductId">): boolean {
+/** How an email was narrowed by money, in one line (lib/segments.ts). */
+function narrowWords(narrow: Narrow, currency: string): string {
+  const parts = [
+    narrow.minSpent ? `spent at least ${formatMoney(narrow.minSpent, currency)}` : "",
+    narrow.channel ? `first came through ${channelName(narrow.channel)}` : "",
+    narrow.quietDays ? `had not bought in ${narrow.quietDays} days` : "",
+  ].filter(Boolean);
+  return `Only those who ${parts.join(", ")}.`;
+}
+
+function keepable(b: Pick<BroadcastRow, "who" | "productId" | "notProductId" | "narrow">): boolean {
+  // Chosen by spending, a channel or quiet days: a sequence cannot choose that way (lib/mail-reuse.ts).
+  if (b.narrow) return false;
   return [Boolean(b.notProductId), b.who === "leads", b.who === "buyers" && Boolean(b.productId)].filter(Boolean).length < 2;
 }
 
@@ -210,6 +234,8 @@ export function EmailStudio(props: {
   links?: Record<string, string>;
   /** Whether the writing help is on, and what is left of the month (lib/ai.ts). */
   ai?: { on: boolean; left: number };
+  /** The store's saved groups (lib/segments.ts). */
+  segments?: Segment[];
 }) {
   const ready = props.mail !== null;
   // The draft open in the composer; a new key starts the composer afresh.
@@ -229,6 +255,8 @@ export function EmailStudio(props: {
                 canSend={props.canSend}
                 draft={open}
                 onDone={() => setOpen(null)}
+                currency={props.currency}
+                segments={props.segments ?? []}
               />
             </AiOn>
             <Drafts drafts={props.drafts} products={props.products} open={open} onOpen={setOpen} />
@@ -420,6 +448,8 @@ function Compose(props: {
   /** A draft opened into the composer, or null for a new email. */
   draft: DraftRow | null;
   onDone: () => void;
+  currency: string;
+  segments: Segment[];
 }) {
   const router = useRouter();
   const [subject, setSubject] = useState(props.draft?.subject ?? "");
@@ -440,6 +470,18 @@ function Compose(props: {
   const [hours, setHours] = useState<number>(TEST_HOURS[1]);
   const [by, setBy] = useState<TestBy>("visits");
   const [reach, setReach] = useState<number>(props.counts.mailable);
+  // Spent at least, first found the store through, has not bought in these
+  // days (lib/segments.ts), and the groups saved under a name.
+  const [spentText, setSpentText] = useState("");
+  const [channel, setChannel] = useState("");
+  const [quietDays, setQuietDays] = useState(0);
+  const [more, setMore] = useState(false);
+  const [channels, setChannels] = useState<string[] | null>(null);
+  const [partial, setPartial] = useState(false);
+  const [segments, setSegments] = useState<Segment[]>(props.segments);
+  const [groupName, setGroupName] = useState("");
+  const minSpent = spentText.trim() ? readMoney(spentText, props.currency as Currency) ?? 0 : 0;
+  const narrow: Narrow = { minSpent, channel, quietDays };
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -449,13 +491,44 @@ function Compose(props: {
 
   useEffect(() => {
     let live = true;
-    call({ action: "count", productId, notProductId, who }).then((a) => {
-      if (live && a.ok) setReach(Number(a.count) || 0);
+    call({ action: "count", productId, notProductId, who, narrow: { minSpent, channel, quietDays }, channels: more && channels === null }).then((a) => {
+      if (!live) return;
+      if (a.ok) {
+        setReach(Number(a.count) || 0);
+        if (Array.isArray(a.channels)) setChannels(a.channels.filter((c): c is string => typeof c === "string"));
+        if (typeof a.partial === "boolean") setPartial(a.partial);
+      } else if (a.error === "stripe") setError(message(a));
     });
     return () => {
       live = false;
     };
-  }, [productId, notProductId, who]);
+    // `channels` is asked for once, when the choices are first opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId, notProductId, who, minSpent, channel, quietDays, more]);
+
+  async function group(payload: Record<string, unknown>, done: string) {
+    setBusy(true);
+    setError(null);
+    const a = await call(payload);
+    setBusy(false);
+    if (!a.ok) {
+      setError(message(a));
+      return;
+    }
+    if (Array.isArray(a.segments)) setSegments(a.segments as Segment[]);
+    toast(done);
+  }
+
+  function pick(segment: Segment) {
+    setWho(segment.who);
+    setProductId(segment.productId);
+    setNotProductId(segment.notProductId);
+    setSpentText(segment.minSpent ? plainAmount(segment.minSpent, props.currency) : "");
+    setChannel(segment.channel);
+    setQuietDays(segment.quietDays);
+    setGroupName(segment.name);
+    if (segment.minSpent || segment.channel || segment.quietDays) setMore(true);
+  }
 
   async function send(payload: Record<string, unknown>, success: string) {
     setBusy(true);
@@ -612,6 +685,24 @@ function Compose(props: {
         <p className="text-sm text-ink-soft">
           Blank lines make paragraphs, lines starting with &quot;- &quot; make a list, web addresses become links, and a picture you add shows where its line is. Why they are getting it, the unsubscribe link and your postal address are added at the bottom.
         </p>
+        {segments.length ? (
+          <label className="block">
+            <span className="field-label">Saved groups</span>
+            <select
+              className="field mt-2"
+              value=""
+              onChange={(e) => {
+                const found = segments.find((s) => s.id === e.target.value);
+                if (found) pick(found);
+              }}
+            >
+              <option value="">Choose a group you saved</option>
+              {segments.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <label className="block">
           <span className="field-label">Send to</span>
           <select
@@ -664,7 +755,84 @@ function Compose(props: {
               : "Everyone chosen above gets it."}
           </span>
         </label>
+        {/*
+          And three ways no list can choose by itself: what they spent, where
+          they first found the store, and how long since they last bought.
+          Read from the creator's own Stripe account when the email goes out
+          (lib/segments.ts); nothing is recorded about anybody to do it.
+        */}
+        <details className="rounded-[12px] bg-paper px-4 py-3 ring-1 ring-line" open={more} onToggle={(e) => setMore((e.currentTarget as HTMLDetailsElement).open)}>
+          <summary className="cursor-pointer text-sm font-semibold text-ink">More ways to choose: what they spent, where they came from, when they last bought</summary>
+          <div className="mt-3 space-y-4">
+            <label className="block">
+              <span className="field-label">Spent with you at least</span>
+              <input
+                className="field mt-2"
+                inputMode="decimal"
+                placeholder={`For example: ${plainAmount(10000, props.currency)}`}
+                value={spentText}
+                onChange={(e) => setSpentText(e.target.value)}
+              />
+              <span className="field-hint mt-1 block">
+                {spentText.trim() && !minSpent ? "Type an amount without a currency sign, like 100 or 99.50." : `In ${props.currency.toUpperCase()}, everything they paid you, extras included. Empty for any amount.`}
+              </span>
+            </label>
+            <label className="block">
+              <span className="field-label">First found you through</span>
+              <select className="field mt-2" value={channel} onChange={(e) => setChannel(e.target.value)}>
+                <option value="">Anywhere</option>
+                {(channels ?? (channel ? [channel] : [])).map((c) => (
+                  <option key={c} value={c}>{channelName(c)}</option>
+                ))}
+              </select>
+              <span className="field-hint mt-1 block">
+                {channels === null ? "Reading where your buyers came from…" : channels.length ? "Where they were when they first bought." : "Nobody has bought yet, so there is no channel to choose."}
+              </span>
+            </label>
+            <label className="block">
+              <span className="field-label">Has not bought in the last</span>
+              <select className="field mt-2" value={quietDays} onChange={(e) => setQuietDays(Number(e.target.value))}>
+                <option value={0}>Any time</option>
+                {QUIET_DAYS.map((d) => (
+                  <option key={d} value={d}>{`${d} days, but has bought before`}</option>
+                ))}
+              </select>
+            </label>
+            <p className="text-xs text-ink-soft">
+              Only buyers can match these three. They are read from your own Stripe account when the email goes out, in your
+              store&apos;s currency; support for your work, sales in another currency and sales paid with PayPal are not counted.
+              {partial ? " Your Stripe account holds more sales than one reading takes, so the oldest are not counted." : ""}
+            </p>
+          </div>
+        </details>
         <p className="text-sm font-semibold text-ink" role="status">{`${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="min-w-0 flex-1">
+            <span className="field-label">Save who this goes to as a group</span>
+            <input className="field mt-2" maxLength={60} placeholder="Best customers" value={groupName} onChange={(e) => setGroupName(e.target.value)} />
+          </label>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            disabled={busy || !groupName.trim()}
+            onClick={() => void group({ action: "segment-save", name: groupName, who, productId, notProductId, narrow }, "Group saved.")}
+          >
+            Save group
+          </button>
+          {segments.some((s) => s.name.toLowerCase() === groupName.trim().toLowerCase()) ? (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              disabled={busy}
+              onClick={() => {
+                const found = segments.find((s) => s.name.toLowerCase() === groupName.trim().toLowerCase());
+                if (found) void group({ action: "segment-remove", id: found.id }, "Group removed.");
+              }}
+            >
+              Remove group
+            </button>
+          ) : null}
+        </div>
         {props.canSend ? (
         <fieldset>
           <legend className="field-label">When</legend>
@@ -718,6 +886,7 @@ function Compose(props: {
                       productId,
                       notProductId,
                       who,
+                      narrow,
                       sendAt,
                       draftId: draftId || undefined,
                       test: testing ? { subjectB, share, hours, by } : undefined,
@@ -957,6 +1126,7 @@ function History({
                 </>
               )}
             </p>
+            {b.narrow ? <p className="mt-1 text-sm text-ink-soft">{narrowWords(b.narrow, currency)}</p> : null}
             {b.note ? <p className="mt-1 text-sm text-ink-soft">{b.note}</p> : null}
             {b.test ? <TestLine test={b.test} status={b.status} /> : null}
             {/* Said only for an email whose links were tagged: for an older

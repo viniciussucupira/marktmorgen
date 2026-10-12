@@ -50,6 +50,8 @@ export type KeepRefusal =
   | "unsent"
   /** It was narrowed two ways at once, and an email in a sequence carries one condition. */
   | "excludes"
+  /** It was narrowed by spending, a channel or quiet days, which a sequence's step cannot read for each person (lib/segments.ts). */
+  | "money"
   /** The same subject and text are already in that sequence. */
   | "already"
   /** That sequence has all the emails one may hold. */
@@ -88,6 +90,9 @@ export function planKeep(broadcast: Broadcast | null, listId: string | null, flo
   // joins includes the ones who join by buying), or, for the buyers of one
   // product, having paid.
   const narrowing: StepCondition[] = [];
+  // Spending, a channel and quiet days are read from the store's sales when
+  // an email starts, which a sequence's step cannot do for each person.
+  if (broadcast.narrow) return { ok: false, reason: "money" };
   if (broadcast.notProductId) narrowing.push({ if: "lacks", productId: broadcast.notProductId });
   if (broadcast.who === "leads") narrowing.push({ if: "lead" });
   if (broadcast.who === "buyers" && broadcast.productId) narrowing.push({ if: "buyer" });

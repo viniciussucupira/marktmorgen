@@ -25,6 +25,7 @@ function sent(over: Partial<Broadcast> = {}): Broadcast {
     productId: null,
     notProductId: null,
     who: "all",
+    narrow: null,
     status: "sent",
     createdAt: 1,
     sendAt: 1,
