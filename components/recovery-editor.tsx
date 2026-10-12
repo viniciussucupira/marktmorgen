@@ -60,7 +60,7 @@ export function RecoveryEditor({
   }
 
   return (
-    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="recovery-title">
+    <section id="checkout-reminders" className="card mt-8 scroll-mt-32 p-6 sm:p-8" aria-labelledby="recovery-title">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="recovery-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
           Abandoned checkout reminder

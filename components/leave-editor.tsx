@@ -66,9 +66,9 @@ export function LeaveEditor({ leaving, pause, tiers }: { leaving: LeaveSetting; 
   ];
 
   return (
-    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="leave-title" data-leave-editor>
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="leave-question-title" data-leave-editor>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="leave-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
+        <h2 id="leave-question-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
           Ask why before members cancel
         </h2>
         <span className={`tag ${leaving.on ? "tag-live" : ""}`}>{leaving.on ? "On" : "Off"}</span>

@@ -1,3 +1,4 @@
+import { WHO, type Who } from "@/lib/contacts";
 import type { Metadata } from "next";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { productLink } from "@/lib/checkout-recovery";
@@ -193,6 +194,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
             ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
             segments={await listSegments(store.listId).catch(() => [])}
+            preset={typeof query.who === "string" && (WHO as readonly string[]).includes(query.who) ? { who: query.who as Who } : undefined}
             courses={idsOfKind(store, "course")}
           />
           </>

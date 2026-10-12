@@ -542,6 +542,11 @@ try {
     ], [true, true, false]);
     await asking.getByRole("button", { name: /Show these numbers, last 30 days/ }).click();
     is("and opens the panel at those days", await studio.getByRole("group", { name: "Period" }).locator("button[aria-pressed=true]").innerText(), "30 days");
+    // "Worth knowing", where it speaks, carries a step for each sentence it can (lib/insights.ts).
+    const worth = studio.locator("[role=region][aria-labelledby=numbers-insights]");
+    if (await worth.count()) {
+      is("each sentence of \u201cWorth knowing\u201d has a step beside it", (await worth.locator("li").count()) <= (await worth.locator("[data-insight-action]").count()) + 1, true);
+    }
     await studio.getByText("Today so far").waitFor({ timeout: 40_000 });
     is("today so far is shown beside who is on the store now", await studio.getByText("Today so far").count(), 1);
     const before = await studio.locator("#numbers").getByRole("button", { name: "Don't count this device" }).count();

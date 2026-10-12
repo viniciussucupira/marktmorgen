@@ -13,7 +13,7 @@ import { NumbersNotes } from "@/components/numbers-notes";
 import { AdSpendEditor } from "@/components/ad-spend-editor";
 import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
 import { toast } from "@/components/toast";
-import { insightsFrom } from "@/lib/insights";
+import { type InsightContext, insightsFrom } from "@/lib/insights";
 import { WeeklyTeamPicker } from "@/components/weekly-team-picker";
 import { SalesGoalCard } from "@/components/sales-goal-card";
 import { ChatSummaryEditor } from "@/components/chat-summary-editor";
@@ -22,6 +22,7 @@ import type { ChatKind } from "@/lib/chat-summary";
 import { NoCountToggle } from "@/components/no-count-toggle";
 import { BuyerNumbers } from "@/components/buyer-numbers";
 import { NumbersAsk } from "@/components/numbers-ask";
+import { useStudioStore } from "@/components/studio-store-pin";
 import { WeeklyAiToggle } from "@/components/weekly-ai-toggle";
 
 /**
@@ -346,6 +347,7 @@ export function StatsPanel({
   deviceMarked = null,
   canAsk = false,
   weeklyAi,
+  insightContext,
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -367,6 +369,8 @@ export function StatsPanel({
   canAsk?: boolean;
   /** For whoever may change settings, with writing help configured: whether the weekly email opens with an AI summary; undefined for anybody else. */
   weeklyAi?: boolean;
+  /** What "Worth knowing" needs to offer its steps (lib/insights.ts): the store's address, its reminders, what this person may do. */
+  insightContext?: InsightContext;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [notes, setNotes] = useState(notesGiven);
@@ -461,7 +465,14 @@ export function StatsPanel({
   const refunds90 = new Map((data.refunds?.d90 ?? []).map((row) => [row.source || "direct", row]));
   const withRefundColumn = refunds90.size > 0;
   // The few things worth acting on, in words (lib/insights.ts).
-  const insights = range === "all" ? [] : insightsFrom(data, range, spends);
+  const insights = range === "all" ? [] : insightsFrom(data, range, spends, 4, insightContext);
+  const sid = useStudioStore();
+  // A studio screen for the store being looked at, when the person runs several.
+  const studioHref = (href: string) => {
+    if (!sid || !href.startsWith("/studio")) return href;
+    const [path, hash = ""] = href.split("#");
+    return `${path}${path.includes("?") ? "&" : "?"}store=${encodeURIComponent(sid)}${hash ? `#${hash}` : ""}`;
+  };
   // Notes by day, for the marks under the chart.
   const notesOn = new Map<string, string[]>();
   for (const note of notes) notesOn.set(note.day, [...(notesOn.get(note.day) ?? []), note.text]);
@@ -593,11 +604,38 @@ export function StatsPanel({
                   aria-hidden="true"
                   className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${item.tone === "good" ? "bg-mint-deep" : item.tone === "bad" ? "bg-danger" : "bg-violet-brand"}`}
                 />
-                <span className="text-ink">{item.text}</span>
+                <span className="min-w-0">
+                  <span className="text-ink">{item.text}</span>
+                  {item.math ? <span className="mt-0.5 block text-xs text-ink-soft" data-insight-math>{item.math}</span> : null}
+                  {item.action ? (
+                    "href" in item.action ? (
+                      <a
+                        href={studioHref(item.action.href)}
+                        {...(item.action.href.startsWith("/") ? {} : { target: "_blank", rel: "noopener" })}
+                        className="inline-flex min-h-11 items-center text-sm font-semibold text-violet-deep underline underline-offset-4"
+                        data-insight-action
+                      >
+                        {item.action.label}
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        className="inline-flex min-h-11 items-center text-sm font-semibold text-violet-deep underline underline-offset-4"
+                        data-insight-action
+                        onClick={() => document.getElementById(`numbers-${(item.action as { section: string }).section}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                      >
+                        {item.action.label}
+                      </button>
+                    )
+                  ) : null}
+                </span>
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-xs text-ink-soft">Read from the numbers below by fixed rules, only when they are big enough to mean something.</p>
+          <p className="mt-2 text-xs text-ink-soft">
+            Read from the numbers below by fixed rules, only when they are big enough to mean something. Where money is at stake, the
+            arithmetic beside it is made from those numbers alone: a sum, not a promise of what a change would bring.
+          </p>
         </div>
       ) : null}
 

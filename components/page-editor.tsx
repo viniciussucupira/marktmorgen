@@ -224,7 +224,10 @@ export function PageEditor({
   pagesToCopy = [],
   featurable = [],
   site,
+  startTest = false,
 }: {
+  /** Opened from "Worth knowing" to test a second headline (lib/insights.ts): the test is switched on, ready to write. */
+  startTest?: boolean;
   product: EditorProduct;
   /** The store's own picture folder (lib/product-image.ts), where a page's pictures go. */
   folder: string;
@@ -293,7 +296,14 @@ export function PageEditor({
     };
   }, [product.id, site]);
   // A second headline, tested against the hero's (lib/headline-test.ts).
-  const [testing, setTesting] = useState(initial.test !== null);
+  const [testing, setTesting] = useState(initial.test !== null || (startTest && !initial.variant && !site));
+  // Brought here to start a headline test: to the box, with the cursor in it.
+  useEffect(() => {
+    if (!startTest) return;
+    const box = document.getElementById("headline-test");
+    box?.scrollIntoView({ behavior: "smooth", block: "center" });
+    box?.querySelector<HTMLInputElement>("input[type=text], textarea")?.focus({ preventScroll: true });
+  }, [startTest]);
   const [testHeadline, setTestHeadline] = useState(initial.test?.headline ?? "");
   const [testSub, setTestSub] = useState(initial.test?.sub ?? "");
   // A second version of the whole page, tested against the first (lib/sales-page.ts,
@@ -1034,7 +1044,7 @@ export function PageEditor({
               Only words: the price and what is sold are the same for everyone.
             */}
             {site ? null : (
-            <div className="rounded-2xl bg-paper p-4 ring-1 ring-line">
+            <div id="headline-test" className="scroll-mt-32 rounded-2xl bg-paper p-4 ring-1 ring-line">
               <label className={`flex min-h-11 items-start gap-3 text-sm font-semibold text-ink ${other ? "cursor-not-allowed" : "cursor-pointer"}`}>
                 <input type="checkbox" checked={testing && !other} disabled={other !== null} onChange={(e) => setTesting(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-violet-brand" />
                 <span>

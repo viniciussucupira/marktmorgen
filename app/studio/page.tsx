@@ -1124,6 +1124,11 @@ export default async function StudioPage({
                   askHeard={!heardIsOff}
                   canSetHeard={may("settings")}
                   canAsk={isAiConfigured()}
+                  insightContext={{
+                    storeUrl: current ? storeBase(current) : undefined,
+                    reminders: current ? current.recovery.enabled : undefined,
+                    may: { settings: may("settings"), page: may("page"), draft: may("draft") },
+                  }}
                   weeklyAi={may("settings") && isAiConfigured() && store ? store.weeklyAi : undefined}
                   weeklyTeam={
                     team && store
