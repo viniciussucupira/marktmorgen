@@ -11,6 +11,7 @@ import { AI_MONTHLY } from "@/lib/ai-rules";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { EXPECTATION, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
 import type { TopicPage } from "@/lib/site-pages";
+import { PLAN_AT, feeWords } from "@/lib/fee-words";
 
 /** Whether stores can be put on their own domain on this deployment. */
 const DOMAINS = isDomainsConfigured();
@@ -114,9 +115,9 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           { q: "Can I change my store address later?", a: "Yes, from your studio, whenever you want. The addresses your store holds keep working and send people to the current one, up to ten at once. An address you let go of stops working, and after 30 days anyone may take it." },
           { q: "Is the page up before I connect Stripe?", a: "Yes. The page, the editor and your address are free and stay free; without a plan, the page is shown for 500 visits a month. Taking a card needs two things: Stripe has cleared your account, and your plan or its 14-day trial is running. Until then the page says plainly that it cannot take a payment." },
-          { q: "Can I use my own domain?", a: DOMAINS ? "Yes, on the $99 Pro plan. You add one record where you bought the domain, and the certificate is made for you. Your marktmorgen.com address keeps working as well." : "Not yet. It is planned for the Pro plan, and this page will say so on the day it works." },
+          { q: "Can I use my own domain?", a: DOMAINS ? `Yes, on the ${PLAN_AT.pro} Pro plan. You add one record where you bought the domain, and the certificate is made for you. Your marktmorgen.com address keeps working as well.` : "Not yet. It is planned for the Pro plan, and this page will say so on the day it works." },
           { q: "How do I see what the page looks like before I save?", a: "The studio shows the page with your photo, theme, color and letters as you change them, before anything is saved." },
-          { q: "Is there a limit on how many people can visit?", a: "Your plan covers a number of visits a month: 3,000 on the $29 plan, 10,000 on the $99 plan and 50,000 on the $249 plan. A visit is one person opening your store on one day, however many pages they look at, and you are never counted. Past your plan's figure it is $0.50 for each thousand visits, on your next invoice, and your store is never taken down for being busy. Your studio shows the count as it grows." },
+          { q: "Is there a limit on how many people can visit?", a: `Your plan covers a number of visits a month: 3,000 on the ${PLAN_AT.creator} plan, 10,000 on the ${PLAN_AT.pro} plan and 50,000 on the ${PLAN_AT.scale} plan. A visit is one person opening your store on one day, however many pages they look at, and you are never counted. Past your plan's figure it is $0.50 for each thousand visits, on your next invoice, and your store is never taken down for being busy. Your studio shows the count as it grows.` },
           { q: "Can one account run more than one store?", a: "Yes, up to five, each with its own address, products, Stripe account and plan. You switch between them at the top of your studio." }
         ],
       },
@@ -149,7 +150,7 @@ export const FEATURE_PAGES: TopicPage[] = [
       },
       {
         kind: "lead",
-        text: "Stan's own help center lists pricing tiers among its most requested features and says there is no native way to offer them under one product — read on September 18, 2026. Here they are on the $29 plan.",
+        text: `Stan's own help center lists pricing tiers among its most requested features and says there is no native way to offer them under one product — read on September 18, 2026. Here they are on the ${PLAN_AT.creator} plan.`,
       },
       {
         kind: "uses",
@@ -344,7 +345,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about memberships",
         items: [
-          { q: "What does Marktmorgen take from a renewal?", a: "Nothing. 0% of every payment, the first and every one after it. Stripe charges its own card fee on your account." },
+          { q: "What does Marktmorgen take from a renewal?", a: feeWords().fromARenewal },
           { q: "What happens if my own Marktmorgen plan lapses?", a: "Your page stops selling, but members can still cancel on their own. Nobody is ever trapped in a charge they want to stop." },
           { q: "Do discount codes work on memberships?", a: "Yes, on the first charge. A code comes off the payment it is typed into, not every renewal after it." },
         ],
@@ -437,7 +438,7 @@ export const FEATURE_PAGES: TopicPage[] = [
     section: "platform",
     eyebrow: "Checkout tools",
     title: "Earn more from every buyer,",
-    highlight: "on the $29 plan",
+    highlight: `on the ${PLAN_AT.creator} plan`,
     intro:
       "Discount codes, a product added at checkout, one-click offers after paying, payment plans, pay what you want, questions at checkout, limited quantities and sales tax. On Stan, the first four are on the $99 plan.",
     badge: WORKING,
@@ -545,7 +546,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "features",
         title: "What that means in practice",
         items: [
-          { icon: "percent", title: "0% of your sales", body: "Our only income is your plan. Stripe charges its own card fee on your account, line by line." },
+          { icon: "percent", title: feeWords().cardTitle, body: feeWords().cardBody },
           { icon: "receipt", title: "You are the seller", body: "The sale is yours, in your name. Refunds and disputes are handled in your own Stripe dashboard." },
           { icon: "door", title: "Nothing to take with you", body: "Customers, members and payouts were always on your account. Leaving costs you nothing to move." },
         ],
@@ -563,7 +564,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about your Stripe account",
         items: [
-          { q: "What do I pay Marktmorgen?", a: "Your plan — $29 a month, or $99 on Pro — and nothing from your sales. The first 14 days are free, and you cancel in two clicks from your studio." },
+          { q: "What do I pay Marktmorgen?", a: feeWords().whatYouPay },
           { q: "Who handles refunds and disputes?", a: "You do, in your own Stripe dashboard, with the same tools any business has. A refund is a refund you issue, not a request you file with us." },
           { q: "Can I charge in euros or pounds?", a: "Yes. Each store charges in one currency, which you choose in your studio from 15. The ways to pay are the ones you switch on in Stripe." },
           { q: "What happens to my money if Marktmorgen closes?", a: "Nothing. It was never here. Your Stripe account, your customers and your payouts carry on without us." },
@@ -716,10 +717,10 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about email",
         items: [
-          { q: "Why is email on Pro and not on the $29 plan?", a: "Because every email sent costs us money, and the $29 plan is priced to cover a store, not a mailing list. Stan puts email on its $99 plan as well — read on its pricing page on September 20, 2026." },
+          { q: `Why is email on Pro and not on the ${PLAN_AT.creator} plan?`, a: `Because every email sent costs us money, and the ${PLAN_AT.creator} plan is priced to cover a store, not a mailing list. Stan puts email on its $99 plan as well — read on its pricing page on September 20, 2026.` },
           { q: "Can I import the list I already have?", a: "Yes, on every plan, from a CSV file of up to 50,000 rows, as long as those people agreed to hear from you. You confirm that each time, a consent column in the file narrows it further, and anyone who unsubscribed here stays unsubscribed. Nobody is emailed because of the import." },
           { q: `What if my list needs more than ${PRO_EMAILS} emails a month?`, a: `Move up to Scale from your studio: the same plan with up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, at $${PLAN_PRICES.scale.month / 100} a month or $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} a year. You are charged the difference for the rest of the period you already paid for, and you can go back to Pro whenever you like. Without it, an email that passes the month's number waits and goes out by itself when the month turns.` },
-          { q: "Can I email people on the $29 plan at all?", a: "Your list downloads as a CSV on every plan, and on the $29 plan your store can send the people who agree straight to your own Mailchimp, Kit, beehiiv or MailerLite. Writing to them from Marktmorgen is what Pro adds." },
+          { q: `Can I email people on the ${PLAN_AT.creator} plan at all?`, a: `Your list downloads as a CSV on every plan, and on the ${PLAN_AT.creator} plan your store can send the people who agree straight to your own Mailchimp, Kit, beehiiv or MailerLite. Writing to them from Marktmorgen is what Pro adds.` },
         ],
       },
     ],
@@ -807,7 +808,7 @@ export const FEATURE_PAGES: TopicPage[] = [
       },
       {
         kind: "features",
-        title: "Your ad pixels, on the $29 plan",
+        title: `Your ad pixels, on the ${PLAN_AT.creator} plan`,
         intro: "Stan puts advertising pixels on its $99 plan, according to its pricing page, read on September 20, 2026.",
         items: [
           { icon: "target", title: "Meta, Google, TikTok and Pinterest", body: "Paste the pixel's ID. Your pages report every view, every checkout started, every lead and every purchase with its amount." },
@@ -967,7 +968,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { q: "Can members see each other's email addresses?", a: "No. Other members see only the name someone chose, and the directory lists only those who asked to be listed. You see members' addresses in your studio, because they are your buyers." },
           { q: "What happens after a refund?", a: "A payment you refund in full on your Stripe account stops opening the community, within five minutes." },
           { q: "Can buyers I bring over from another platform get in?", a: "Yes. A buyer you import for a product that opens the community is let in, like anyone who bought it here." },
-          { q: "Does Stan have this?", a: "Yes. Stan has a community, and its help center, read on September 27, 2026, adds webinars to it as a product members sign up for, with Zoom or Google Meet links made automatically. Ours holds live events members RSVP to, in a private video room, at your own link or in a Google Meet made on your Google Calendar, with no Zoom link made for you yet. Ours is on the $29 plan; emailing announcements needs Pro." },
+          { q: "Does Stan have this?", a: `Yes. Stan has a community, and its help center, read on September 27, 2026, adds webinars to it as a product members sign up for, with Zoom or Google Meet links made automatically. Ours holds live events members RSVP to, in a private video room, at your own link or in a Google Meet made on your Google Calendar, with no Zoom link made for you yet. Ours is on the ${PLAN_AT.creator} plan; emailing announcements needs Pro.` },
         ],
       },
     ],
@@ -1040,7 +1041,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about live events",
         items: [
-          { q: "Which plan is it on?", a: "Every plan, the $29 one included, with the community. The reminders and the emails about a move or a cancellation are sent on every plan and are not counted in Pro's monthly emails." },
+          { q: "Which plan is it on?", a: `Every plan, the ${PLAN_AT.creator} one included, with the community. The reminders and the emails about a move or a cancellation are sent on every plan and are not counted in Pro's monthly emails.` },
           { q: "Can someone who is not a member get the link?", a: "Not from us. Emails, calendar files and the feed point to the event's page, and the page shows the way in only from 15 minutes before, only to a member who may come, checked again on every visit. A member whose membership lapsed, or who was refunded or taken out, loses it with the rest of the community." },
           { q: "How does this compare with Stan?", a: "Stan adds webinars to its community as a product members sign up for on its landing page, with Zoom or Google Meet links made automatically, according to its help center, read on September 27, 2026. Ours are events members RSVP to, with reminders, a cap, a room in the page or a Google Meet made on your Google Calendar, and replays, with no Zoom link made for you yet." },
         ],
@@ -1074,7 +1075,7 @@ export const FEATURE_PAGES: TopicPage[] = [
       },
       {
         kind: "lead",
-        text: "On Stan, funnels of up to 20 pages are on the $99 plan. Here, a funnel of up to 20 pages is on the $29 plan, made of pages you already have — your own pages, landing pages that ask for an email, sales pages built from blocks — with a box at checkout and up to five offers after paying.",
+        text: `On Stan, funnels of up to 20 pages are on the $99 plan. Here, a funnel of up to 20 pages is on the ${PLAN_AT.creator} plan, made of pages you already have — your own pages, landing pages that ask for an email, sales pages built from blocks — with a box at checkout and up to five offers after paying.`,
       },
       {
         kind: "features",
@@ -1112,7 +1113,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           { q: "Can a buyer be charged without meaning to?", a: "No. An offer is charged only when the buyer presses to take it, in the browser that paid, within the hour, and once. If the bank asks them to confirm, they confirm it." },
           { q: "Where do I see what was taken?", a: "In your numbers and your sales export, marked as taken after paying, and in your own Stripe dashboard." },
-          { q: "Does Marktmorgen take anything from an offer?", a: "No. 0%, as on every other sale. Stripe charges its own card fee on your account." },
+          { q: "Does Marktmorgen take anything from an offer?", a: feeWords().fromAnOffer },
           { q: "Does a funnel change any price?", a: "No. A product step is that product's own page, with its own price and checkout, the same as anyone opening it from your store sees." },
         ],
       },
@@ -1214,7 +1215,7 @@ export const FEATURE_PAGES: TopicPage[] = [
       {
         kind: "note",
         title: "Paid from your PayPal, not from money we hold",
-        body: "Stan pays affiliates out of your sale, on its $99 plan, after holding it for 7 business days. We never hold your money: your sale lands in full in your Stripe account at once, and your affiliates are paid from your own PayPal, in one press or by itself on your payday, on the $29 plan. It needs a PayPal Business account with PayPal's Payouts switched on, and PayPal charges you its own fee on each payment."
+        body: `Stan pays affiliates out of your sale, on its $99 plan, after holding it for 7 business days. We never hold your money: your sale lands in full in your Stripe account at once, and your affiliates are paid from your own PayPal, in one press or by itself on your payday, on the ${PLAN_AT.creator} plan. It needs a PayPal Business account with PayPal's Payouts switched on, and PayPal charges you its own fee on each payment.`
       },
       {
         kind: "features",
@@ -1250,7 +1251,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about affiliates",
         items: [
-          { q: "Does Marktmorgen take a cut of affiliate sales?", a: "No. 0% of every sale, as on any other. The full amount lands in your Stripe account, and the affiliate's share is yours to pay." },
+          { q: "Does Marktmorgen take a cut of affiliate sales?", a: feeWords().fromAffiliateSale },
           { q: "How is a sale tied to an affiliate?", a: "Their link is your store's address with their code on the end. Following it leaves a cookie on your store's own address with the code and the time of the click, and a purchase inside your window is credited to them. Visitors in the European Economic Area, the United Kingdom, Switzerland and Brazil, whose rules require consent first, are asked in one line on the page, and the cookie is set when they allow it." },
           { q: "What does someone need to join?", a: "An email address they can open. They apply on your store's affiliate page, confirm with the link we email, and you approve them in your studio. If you let buyers join without applying, a buyer presses Get my link on the thanks page or follows the link in their purchase email, and joins with the address they paid with. Anyone you declined or removed stays out." },
         ],
@@ -1682,7 +1683,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about sales pages",
         items: [
-          { q: "Which plan is it on?", a: "Every plan, the $29 one included. On Stan, by its help center read on September 28, 2026, each product has a checkout page with a description and a video that can be made a private landing page on every plan, and funnels of several pages are on its $99 plan." },
+          { q: "Which plan is it on?", a: `Every plan, the ${PLAN_AT.creator} one included. On Stan, by its help center read on September 28, 2026, each product has a checkout page with a description and a video that can be made a private landing page on every plan, and funnels of several pages are on its $99 plan.` },
           { q: "Who on my team can edit them?", a: "You, an Admin and an Editor. Support cannot." },
           { q: "Can I put a testimonial I collected on the page?", a: "Yes, in the Said elsewhere block, if it was said in public: their words as they said them, who said them, and the address of the post, video or comment, shown as a link so visitors can check it. The Reviews block shows only reviews written by people who paid, with their stars, and nothing you type can appear as one." },
         ],
@@ -1806,7 +1807,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           "You cannot edit or delete a buyer's review, or add one of your own. Only its buyer can change or delete it; deleting the whole product deletes its reviews.",
           "Booked calls and free products are not reviewed.",
-          "The email that asks for reviews needs Pro, as email to your list does. On the $29 plan, buyers review from their thank-you page and their list of purchases.",
+          `The email that asks for reviews needs Pro, as email to your list does. On the ${PLAN_AT.creator} plan, buyers review from their thank-you page and their list of purchases.`,
           "One photo per review, no videos, and no reviews imported from another platform.",
           "Up to 2,000 reviews per product.",
         ],
@@ -1874,7 +1875,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about currencies and ways to pay",
         items: [
-          { q: "Does Marktmorgen take a cut of Klarna or other methods?", a: "No. 0%, as on every sale. Stripe charges its own fee for each method on your account, published on its pricing page." },
+          { q: "Does Marktmorgen take a cut of Klarna or other methods?", a: feeWords().fromAMethod },
           { q: "What does Stan offer?", a: "Stan offers Stripe and PayPal, and one currency per store chosen from ten, according to its help center, read on September 28, 2026. We offer 15, so we are ahead on currencies, and behind on PayPal." },
           { q: "Who can change the currency?", a: "You and an Admin. You are emailed whenever it changes." },
         ],
@@ -1888,7 +1889,7 @@ export const FEATURE_PAGES: TopicPage[] = [
     title: "Your list, sent straight to",
     highlight: "the email tool you use",
     intro:
-      "Connect Mailchimp, Kit, beehiiv or MailerLite, and the people who agree to hear from you are added there as they come in: free sign-ups once they confirm, buyers once they have paid, with the tags you choose. On the $29 plan, with no Zapier in between.",
+      `Connect Mailchimp, Kit, beehiiv or MailerLite, and the people who agree to hear from you are added there as they come in: free sign-ups once they confirm, buyers once they have paid, with the tags you choose. On the ${PLAN_AT.creator} plan, with no Zapier in between.`,
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "creator",
@@ -1907,7 +1908,7 @@ export const FEATURE_PAGES: TopicPage[] = [
       },
       {
         kind: "lead",
-        text: "Stan's help center, read on September 28, 2026, connects Mailchimp and other email tools through Zapier. Here all four are built in, on the $29 plan.",
+        text: `Stan's help center, read on September 28, 2026, connects Mailchimp and other email tools through Zapier. Here all four are built in, on the ${PLAN_AT.creator} plan.`,
       },
       {
         kind: "features",
@@ -2141,7 +2142,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about phone notifications",
         items: [
-          { q: "Which plan is it on?", a: "Every plan, the $29 one included." },
+          { q: "Which plan is it on?", a: `Every plan, the ${PLAN_AT.creator} one included.` },
           { q: "Does a new device get notifications without me knowing?", a: "No. You are emailed each time notifications are turned on for a new device." },
         ],
       },
@@ -2535,7 +2536,7 @@ export const CREATOR_PAGES: TopicPage[] = [
         items: [
           { icon: "file", title: "Files up to 5 GB", body: "ZIP, PNG, SVG, video and more. Anything heavier is sold as a link to where you keep it.", href: "/platform/instant-delivery" },
           { icon: "list", title: "Limited editions that are real", body: "The count shown is the true one, and the last copy is never sold twice.", href: "/platform/checkout" },
-          { icon: "target", title: "Pixels for your ads", body: "Meta, Google, TikTok and Pinterest, with each purchase and its amount, on the $29 plan.", href: "/platform/insights" },
+          { icon: "target", title: "Pixels for your ads", body: `Meta, Google, TikTok and Pinterest, with each purchase and its amount, on the ${PLAN_AT.creator} plan.`, href: "/platform/insights" },
           { icon: "globe", title: "Your own domain", body: "shop.yourstudio.com on Pro, with the certificate made for you.", href: "/platform/domain" },
           { icon: "key", title: "License keys", body: "A unique key with each sale, for plugins and apps, checked by your software through a public address.", href: "/platform/license-keys" },
           { icon: "file", title: "Stamped PDFs", body: "The buyer's email on every page of a guide or a color book, so anyone thinking of sharing it thinks twice.", href: "/platform/pdf-stamping" },

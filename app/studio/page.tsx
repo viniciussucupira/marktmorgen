@@ -160,6 +160,7 @@ import { LeaveTeam } from "@/components/team-manager";
 import { productSegment } from "@/lib/product-slug";
 import { SharePanel } from "@/components/share-panel";
 import { storeBase } from "@/lib/purchase-email";
+import { feeWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {
   title: "Your account — Marktmorgen",
@@ -2086,9 +2087,7 @@ export default async function StudioPage({
                   What you pay us
                 </p>
                 <p className="mt-2 text-ink-soft">
-                  A plan, and 0% of what you sell, because what you sell never
-                  passes through us. The subscription is the same whether you
-                  sell three files or three thousand. Two things are charged by
+                  {feeWords().studioPay} Two things are charged by
                   use, and only if you reach them: visits to your store past
                   the visits your plan covers, and lesson video watched past
                   its hours. Both are shown above as they are counted.

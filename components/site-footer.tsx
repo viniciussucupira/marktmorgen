@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import MoreFromUs from "@/components/MoreFromUs";
+import { feeWords } from "@/lib/fee-words";
 
 const SUPPORT_EMAIL = "support@marktmorgen.com";
 const SUPPORT = `mailto:${SUPPORT_EMAIL}`;
@@ -186,7 +187,7 @@ export function SiteFooter({ variant = "full" }: { variant?: "full" | "slim" }) 
           <div className="space-y-1.5 sm:max-w-md sm:text-right">
             <p className="flex items-center gap-2 sm:justify-end">
               <span className="h-1.5 w-1.5 rounded-full bg-mint-brand" aria-hidden="true" />
-              0% of your sales
+              {feeWords().short}
             </p>
             <p>
               Photographs from Unsplash, used for illustration. The people in them are not Marktmorgen

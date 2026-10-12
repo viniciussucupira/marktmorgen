@@ -10,6 +10,7 @@
 import { PLAN_PRICES, PLAN_NAMES, TIERS, TRIAL_DAYS, type Tier } from "@/lib/plan";
 import { SITE_URL } from "@/lib/site-url";
 import type { BlogPost } from "@/lib/blog";
+import { feeWords } from "@/lib/fee-words";
 
 /**
  * One block of structured data.
@@ -36,7 +37,7 @@ const ORGANIZATION = {
   url: SITE_URL,
   logo: `${SITE_URL}/icons/icon-512.png`,
   description:
-    "A link-in-bio store for creators who sell files, courses, memberships and calls. Buyers pay into the creator's own Stripe account and Marktmorgen takes 0% of the sale.",
+    "A link-in-bio store for creators who sell files, courses, memberships and calls. Buyers pay into the creator's own Stripe account and " + feeWords().takesOfCreator,
 };
 
 /** The company and the site itself, on every page. */
@@ -89,7 +90,7 @@ export function HomeData({ questions }: { questions: { q: string; a: string }[] 
             operatingSystem: "Web",
             url: SITE_URL,
             publisher: { "@id": `${SITE_URL}/#organization` },
-            description: `A store page for creators, with a ${TRIAL_DAYS}-day free trial. Sales are direct charges on the creator's own Stripe account; Marktmorgen takes 0% of them.`,
+            description: `A store page for creators, with a ${TRIAL_DAYS}-day free trial. Sales are direct charges on the creator's own Stripe account. ${feeWords().takesOfCreator}`,
             offers: TIERS.map(offer),
           },
           {

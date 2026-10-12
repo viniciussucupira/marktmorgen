@@ -14,6 +14,7 @@ import { ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_IN
 import { ROOM_GRANT_MINUTES } from "@/lib/chat-pace";
 import { STORAGE_BRAKE_BYTES, storageWords } from "@/lib/storage-quota";
 import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
+import { feeWords, planPriceWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Marktmorgen",
@@ -84,8 +85,7 @@ export default function TermsPage() {
           memberships and calls, and can run a community for their buyers and
           an affiliate program. The buyer pays into the creator&apos;s own connected Stripe
           account, and the file is delivered as soon as the payment clears.
-          Marktmorgen takes 0% of a creator&apos;s sales; what we charge a
-          creator is a subscription for the store itself.
+          {feeWords().termsCharge}
         </p>
         <p>
           Creator stores are open. Taking a store address, building the page and
@@ -122,7 +122,7 @@ export default function TermsPage() {
         <p>
           <strong className="text-black">The money is never ours.</strong>{" "}
           Payments are made into your own Stripe account through Stripe direct
-          charges. We never hold, route, or take a cut of your sales revenue.
+          charges. {feeWords().termsMoney}
           Payouts follow the schedule and settings of your own Stripe account,
           and your relationship with Stripe is governed by your agreement with
           Stripe, not by these Terms.
@@ -479,9 +479,9 @@ export default function TermsPage() {
           price will not apply to a period you have already paid for.
         </p>
         <p>
-          There are three plans. Marktmorgen, at $29 a month or $300 a year,
-          includes everything you need to sell. Marktmorgen Pro, at $99 a month or $948
-          a year, adds email to your list{domains ? " and your store on a domain you own" : ""},
+          There are three plans. Marktmorgen, at {planPriceWords("creator")} or {planPriceWords("creator", "year")},
+          includes everything you need to sell. Marktmorgen Pro, at {planPriceWords("pro")} or{" "}
+          {planPriceWords("pro", "year")}, adds email to your list{domains ? " and your store on a domain you own" : ""},
           with up to {PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month,
           counted together for one-off emails, sequences, community
           announcements and the emails that ask buyers for a review; during
@@ -489,7 +489,7 @@ export default function TermsPage() {
           trial a store may send up to {TRIAL_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, and the full
           number opens with the first payment. Emails not sent in a month do
           not carry over, and emails beyond a month&apos;s allowance wait for
-          the next month. Marktmorgen Scale, at $249 a month or $2,388 a year,
+          the next month. Marktmorgen Scale, at {planPriceWords("scale")} or {planPriceWords("scale", "year")},
           is Marktmorgen Pro with up to{" "}
           {SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, counted
           the same way.

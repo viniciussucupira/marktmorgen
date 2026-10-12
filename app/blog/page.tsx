@@ -11,6 +11,7 @@ import {
   postsSorted,
 } from "@/lib/blog";
 import { PRICE_CENTS, TRIAL_DAYS } from "@/lib/plan";
+import { feeWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {
   title: "The Marktmorgen Journal — selling digital products without the guesswork",
@@ -106,8 +107,7 @@ export default function BlogIndexPage() {
               <h2 className="t-h2 balance">Reading about it is useful. Having a store is better.</h2>
               <p className="mt-4 max-w-xl text-ink-soft">
                 The store address, the page and the editor cost nothing. Selling takes the {`$${PRICE_CENTS / 100}`} plan,
-                free for the first {TRIAL_DAYS} days. Your buyer pays into your own Stripe account, and we take 0% of the
-                sale.
+                free for the first {TRIAL_DAYS} days. {feeWords().blogCta}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-4 lg:justify-end">

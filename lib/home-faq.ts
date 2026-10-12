@@ -8,17 +8,18 @@
 import { PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import { PLANS_ON_SALE } from "@/lib/opening";
+import { feeWords } from "@/lib/fee-words";
 
 export const HOME_QUESTIONS = [
   {
     q: "Can I sign up and start selling today?",
     a: !PLANS_ON_SALE
-      ? `You can sign up today, and selling starts when Marktmorgen opens. It is still being built, so its plans are not on sale yet and we take no card. What you can do now costs nothing: take your store address, connect your own Stripe account, put up what you sell and set your page up. When plans open, the $${PRICE_CENTS / 100} subscription switches on your checkout, its first ${TRIAL_DAYS} days are free, and every charge is covered by a ${REFUND_DAYS}-day money-back guarantee.`
-      : `Yes. You take your store address, connect your own Stripe account and put up what you sell; a buyer can pay for it on your account, with nothing taken on top. The address, the page, the editor and connecting Stripe cost nothing. The $${PRICE_CENTS / 100} subscription switches on your checkout — selling, and giving things away for an email address — and its first ${TRIAL_DAYS} days are free. Your card is taken when the trial starts and first charged when it ends, so you can make a sale before you decide, and canceling inside the trial means it is never charged. The trial is for your first store; a second store is paid from day one. After that, every charge is covered by a ${REFUND_DAYS}-day money-back guarantee: ask inside ${REFUND_DAYS} days of any charge, for any reason or none, and it comes back in full.`,
+      ? `You can sign up today, and selling starts when Marktmorgen opens. It is still being built, so its plans are not on sale yet and we take no card. What you can do now costs nothing: take your store address, connect your own Stripe account, put up what you sell and set your page up. When plans open, the $${PRICE_CENTS / 100} subscription switches on your checkout, its first ${TRIAL_DAYS} days are free, and your first payment is covered by a ${REFUND_DAYS}-day money-back guarantee.`
+      : `Yes. You take your store address, connect your own Stripe account and put up what you sell; a buyer can pay for it on your account, ${feeWords().onTop}. The address, the page, the editor and connecting Stripe cost nothing. The $${PRICE_CENTS / 100} subscription switches on your checkout — selling, and giving things away for an email address — and its first ${TRIAL_DAYS} days are free. Your card is taken when the trial starts and first charged when it ends, so you can make a sale before you decide, and canceling inside the trial means it is never charged. The trial is for your first store; a second store is paid from day one. After that, your first payment is covered by a ${REFUND_DAYS}-day money-back guarantee: ask inside ${REFUND_DAYS} days of it, for any reason or none, and it comes back in full.`,
   },
   {
     q: "Who holds the money from my sales?",
-    a: "You do. Payments go to your own Stripe account through direct charges, so payouts follow your Stripe settings and we never sit between you and your buyer's money. We charge a monthly subscription and take 0% of your sales.",
+    a: feeWords().whoHoldsLong,
   },
   {
     q: "What happens to my payments and customer data if I leave?",

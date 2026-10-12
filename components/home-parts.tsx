@@ -22,6 +22,7 @@ import {
   SCALE_MONTHLY_EMAILS,
   TIERS,
 } from "@/lib/plan";
+import { feeWords } from "@/lib/fee-words";
 
 /*
  * Reveals every element with .reveal as it scrolls into view, once.
@@ -532,7 +533,7 @@ function PlanTerms({ tier, yearly }: { tier: Tier; yearly: boolean }) {
       `Ask within ${REFUND_DAYS} days of your first payment and it comes back in full, for any reason or none. A yearly plan is refunded for the months you have not started, at any time, less Stripe's card fee.`,
     ],
     ["Cancelling", "Two clicks in your studio, any time. Inside the trial, the card is never charged."],
-    ["Fees", "0% of your sales. Stripe charges its own processing fee, on your own account."],
+    ["Fees", feeWords().feesRow],
   ];
   return (
     <dl className="mt-6 divide-y divide-line border-t border-line text-[0.8125rem] leading-relaxed">

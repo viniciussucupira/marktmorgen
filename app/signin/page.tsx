@@ -10,6 +10,7 @@ import { PLAN_NAMES, TRIAL_DAYS, parseTier, priceWords } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { formatMoney } from "@/lib/money";
 import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
+import { feeWords } from "@/lib/fee-words";
 
 /** Somebody who came back to a store they have: by Log in, or sent here to log in again. */
 const RETURNING_STATUSES = new Set(["reauth", "out", "out-everywhere"]);
@@ -155,7 +156,7 @@ export default async function SignInPage({
             {[
               { icon: "mail" as const, text: "No password. A link sent to your email logs you in." },
               { icon: "bank" as const, text: "Your buyers pay into your own Stripe account." },
-              { icon: "percent" as const, text: "Marktmorgen takes 0% of your sales." },
+              { icon: "percent" as const, text: feeWords().takes },
             ].map((item) => (
               <li key={item.text} className="flex gap-3">
                 <span className="icon-tile icon-tile-sm">
