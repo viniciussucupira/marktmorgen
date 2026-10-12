@@ -21,6 +21,7 @@ import {
 import { deleteFile, headFile } from "@/lib/file-store";
 import { plain, serveFile } from "@/lib/serve-file";
 import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { noteIfFinished } from "@/lib/course-finish";
 
 /** Hand-ins one student may make in an hour. */
 const HAND_INS_PER_HOUR = 20;
@@ -97,6 +98,8 @@ export async function POST(request: NextRequest) {
       if (taken) await releaseBytes(room, taken).catch(() => {});
       throw error;
     });
+    // Work that needs no reading is done at once, and may finish the course (lib/course-finish.ts).
+    if (done.state === "approved") await noteIfFinished(store, product.id, course.id, email);
     // The file it replaced is no longer anybody's work.
     if (done.replaced) {
       await deleteFile(done.replaced.path).catch((error: unknown) => console.error("could not delete a replaced assignment file", error));

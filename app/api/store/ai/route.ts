@@ -283,14 +283,14 @@ export async function POST(request: NextRequest) {
   if (body.kind === "sequence") {
     // What the store sells is read here, from its own records: names, prices
     // and links the page never sends. Drafts and free things are not sold.
-    const trigger = body.trigger === "product" || body.trigger === "bought" ? body.trigger : "joined";
+    const trigger = body.trigger === "product" || body.trigger === "bought" || body.trigger === "finished" ? body.trigger : "joined";
     const hidden = new Set(idsOfKind(store, "hidden"));
     const paid = new Set(idsOfKind(store, "paid"));
     const ids = productIds(store).filter((id) => !hidden.has(id) && paid.has(id)).slice(0, MAX_SEQUENCE_PRODUCTS);
     const listings = await readListings(store, ids);
     const facts = (p: (typeof listings)[number]) => ({ title: p.title, summary: p.summary, price: priceWords(p, store.currency, store.tiers), link: productLink(store, p.id) });
     let followed: ReturnType<typeof facts> | null = null;
-    if (trigger === "product") {
+    if (trigger === "product" || trigger === "finished") {
       const chosen = await readListing(store, text(body.productId, 40));
       if (!chosen) return fail("unknown", 404);
       followed = facts(chosen);

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { productLink } from "@/lib/checkout-recovery";
-import { readTitles } from "@/lib/catalog";
+import { idsOfKind, readTitles } from "@/lib/catalog";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { studioPath, studioView } from "@/lib/studio-route";
@@ -193,6 +193,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
             ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
             segments={await listSegments(store.listId).catch(() => [])}
+            courses={idsOfKind(store, "course")}
           />
           </>
         )}

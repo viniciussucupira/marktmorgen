@@ -40,6 +40,7 @@ import { communityOf, courseChanged, unindexCourse } from "@/lib/community-index
 import { LockBusyError, withLock } from "@/lib/redis-lock";
 import { claimUpload, dropStream } from "@/lib/stream";
 import { type StreamState, isStreamPath } from "@/lib/stream-rules";
+import { noteIfFinished } from "@/lib/course-finish";
 
 const OPS = new Set([
   "outline",
@@ -178,6 +179,8 @@ export async function POST(request: NextRequest) {
       const to = await studentEmail(courseId, who);
       const result = await review({ courseId, lessonId: found.lesson.id, who, email: to ?? "", verdict, feedback });
       if (!result.ok) return Response.json({ ok: false, error: result.reason === "unknown" ? "gone" : "reviewed" }, { status: 409 });
+      // Approved work may be the last lesson of the course (lib/course-finish.ts).
+      if (verdict === "approved" && to) await noteIfFinished(store, product.id, courseId, to);
       const told = to
         ? await tellStudentOfReview({
             store,

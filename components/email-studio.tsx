@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { MailPictureButton } from "@/components/mail-picture-button";
 import type { Flow, FlowCounts, FlowStep } from "@/lib/flows";
-import { type FlowAction, MAX_CONDITION_TAG, type StepCondition, type StepIf } from "@/lib/flow-rules";
+import { type FlowAction, MAX_CONDITION_TAG, type StepCondition, type StepIf, isCourseIf } from "@/lib/flow-rules";
 import type { MailSettings } from "@/lib/store";
 import { StoreField } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
@@ -237,6 +237,8 @@ export function EmailStudio(props: {
   ai?: { on: boolean; left: number };
   /** The store's saved groups (lib/segments.ts). */
   segments?: Segment[];
+  /** The products that are courses (lib/catalog.ts, "course"). */
+  courses?: string[];
 }) {
   const ready = props.mail !== null;
   // The draft open in the composer; a new key starts the composer afresh.
@@ -264,7 +266,7 @@ export function EmailStudio(props: {
             <History broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
-                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} />
+                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} />
               </AiOn>
             ) : null}
           </>
@@ -1206,7 +1208,7 @@ type StepDraft = {
 type FlowDraft = {
   id?: string;
   name: string;
-  trigger: "joined" | "product" | "bought" | "tagged";
+  trigger: "joined" | "product" | "bought" | "tagged" | "finished";
   productId: string;
   /** The label that starts it, for "tagged". */
   triggerTag: string;
@@ -1228,6 +1230,10 @@ const STEP_IF_WORDS: { value: StepIf | ""; label: string }[] = [
   { value: "untagged", label: "Only those without a label" },
   { value: "clicked", label: "Only those who used a link in the email before" },
   { value: "unclicked", label: "Only those who did not use a link in the email before" },
+  { value: "unstarted", label: "Only those who have not opened a course" },
+  { value: "started", label: "Only those who have opened a course" },
+  { value: "unfinished", label: "Only those who have not finished a course" },
+  { value: "finished", label: "Only those who have finished a course" },
 ];
 
 function blankStep(wait: string, unit: "hours" | "days", firstProduct: string): StepDraft {
@@ -1278,6 +1284,7 @@ function stepToDraft(s: FlowStep, firstProduct: string): StepDraft {
 /** The condition a step draft stands for, as the server reads it. */
 function conditionOf(s: StepDraft): StepCondition | null {
   if (s.when === "has" || s.when === "lacks") return { if: s.when, productId: s.whenProduct };
+  if (isCourseIf(s.when)) return { if: s.when, productId: s.whenProduct };
   if (s.when === "tag" || s.when === "untagged") return { if: s.when, tag: s.whenTag };
   if (s.when === "buyer" || s.when === "lead" || s.when === "clicked" || s.when === "unclicked") return { if: s.when };
   return null;
@@ -1288,8 +1295,11 @@ function conditionWords(step: FlowStep, products: { id: string; title: string }[
   const when = step.when;
   if (!when) return "";
   const title = (id: string) => products.find((p) => p.id === id)?.title ?? "a product no longer in your store";
+  const courseWords: Record<string, string> = { started: "have opened", unstarted: "have not opened", finished: "have finished", unfinished: "have not finished" };
   const who =
-    "productId" in when
+    "productId" in when && isCourseIf(when.if)
+      ? `who ${courseWords[when.if]} ${title(when.productId)}`
+      : "productId" in when
       ? `who ${when.if === "has" ? "have" : "do not have"} ${title(when.productId)}`
       : "tag" in when
         ? `${when.if === "tag" ? "labeled" : "not labeled"} “${when.tag}”`
@@ -1342,10 +1352,13 @@ function Flows({
   products,
   currency,
   sells,
+  courses = [],
 }: {
   flows: FlowRow[];
   products: { id: string; title: string }[];
   currency: string;
+  /** The products that are courses, for "finishes a course" and the conditions on one. */
+  courses?: string[];
   /** Whether the store sells anything for money, so a first purchase can happen at all. */
   sells: boolean;
 }) {
@@ -1362,6 +1375,8 @@ function Flows({
       ? "Starts when someone joins your list"
       : f.trigger === "tagged"
         ? `Starts when a sequence gives someone the label “${f.tag ?? ""}”`
+      : f.trigger === "finished"
+        ? `Starts when someone who agreed to hear from you finishes ${products.find((p) => p.id === f.productId)?.title ?? "a course"}`
       : f.trigger === "bought"
         ? "Starts the first time someone who agreed to hear from you buys anything"
         : `Starts when someone who agreed to hear from you gets ${products.find((p) => p.id === f.productId)?.title ?? "a product"}`;
@@ -1376,7 +1391,7 @@ function Flows({
         id: draft.id,
         name: draft.name,
         trigger: draft.trigger,
-        productId: draft.trigger === "product" ? draft.productId : null,
+        productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : null,
         tag: draft.trigger === "tagged" ? draft.triggerTag : null,
         active: draft.active,
         steps: draft.steps.map((s) => {
@@ -1539,9 +1554,12 @@ function Flows({
               onChange={(e) =>
                 setDraft((current) => {
                   if (!current) return current;
-                  const trigger = e.target.value === "product" ? "product" : e.target.value === "bought" ? "bought" : e.target.value === "tagged" ? "tagged" : "joined";
+                  const trigger =
+                    e.target.value === "product" ? "product" : e.target.value === "bought" ? "bought" : e.target.value === "tagged" ? "tagged" : e.target.value === "finished" ? "finished" : "joined";
+                  // Finishing is only for a course: the first course, when the product chosen is not one.
+                  const productId = trigger === "finished" && !courses.includes(current.productId) ? (courses[0] ?? current.productId) : current.productId;
                   // A sequence that starts with a purchase cannot end at one.
-                  return { ...current, trigger, goal: trigger === "bought" && current.goal === "any" ? "" : current.goal };
+                  return { ...current, trigger, productId, goal: trigger === "bought" && current.goal === "any" ? "" : current.goal };
                 })
               }
             >
@@ -1549,6 +1567,7 @@ function Flows({
               <option value="bought">Someone who agreed to hear from you buys anything, the first time</option>
               {products.length ? <option value="product">Someone who agreed to hear from you gets a product</option> : null}
               <option value="tagged">A sequence gives someone a label</option>
+              {courses.length ? <option value="finished">Someone who agreed to hear from you finishes a course</option> : null}
             </select>
           </label>
           {draft.trigger === "tagged" ? (
@@ -1563,6 +1582,21 @@ function Flows({
               />
               <span className="mt-2 block text-sm text-ink-soft">
                 Given by a step of another sequence. A label an import brought does not start anything.
+              </span>
+            </label>
+          ) : null}
+          {draft.trigger === "finished" ? (
+            <label className="block">
+              <span className="field-label">Which course</span>
+              <select className="field mt-2" value={draft.productId} onChange={(e) => setDraft({ ...draft, productId: e.target.value })}>
+                {products
+                  .filter((p) => courses.includes(p.id))
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>{p.title}</option>
+                  ))}
+              </select>
+              <span className="mt-2 block text-sm text-ink-soft">
+                When the last lesson is marked done, by a button, a quiz passed or work approved. Each student starts it once.
               </span>
             </label>
           ) : null}
@@ -1621,7 +1655,7 @@ function Flows({
                 </select>
               </label>
             }
-            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" ? draft.productId : "", count: draftCount })}
+            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : "", count: draftCount })}
             onResult={(written) =>
               setDraft((current) => {
                 if (!current) return current;
@@ -1740,11 +1774,16 @@ function Flows({
                     <select
                       className="field mt-1"
                       value={s.when}
-                      onChange={(e) => setStep(i, { when: STEP_IF_WORDS.find((w) => w.value === e.target.value)?.value ?? "" })}
+                      onChange={(e) => {
+                        const when = STEP_IF_WORDS.find((w) => w.value === e.target.value)?.value ?? "";
+                        // A condition on a course names a course: the first, when the product chosen is not one.
+                        setStep(i, isCourseIf(when) && !courses.includes(s.whenProduct) ? { when, whenProduct: courses[0] ?? s.whenProduct } : { when });
+                      }}
                     >
                       {STEP_IF_WORDS.filter(
                         (w) =>
                           (products.length || (w.value !== "has" && w.value !== "lacks")) &&
+                          (courses.length > 0 || !isCourseIf(w.value)) &&
                           ((i > 0 && draft.steps[i - 1].kind === "email") || (w.value !== "clicked" && w.value !== "unclicked")),
                       ).map((w) => (
                         <option key={w.value} value={w.value}>{w.label}</option>
@@ -1758,6 +1797,18 @@ function Flows({
                         {products.map((p) => (
                           <option key={p.id} value={p.id}>{p.title}</option>
                         ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  {isCourseIf(s.when) ? (
+                    <label className="block min-w-0 flex-1">
+                      <span className="text-sm text-ink-soft">Course</span>
+                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(i, { whenProduct: e.target.value })}>
+                        {products
+                          .filter((p) => courses.includes(p.id))
+                          .map((p) => (
+                            <option key={p.id} value={p.id}>{p.title}</option>
+                          ))}
                       </select>
                     </label>
                   ) : null}

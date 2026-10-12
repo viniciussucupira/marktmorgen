@@ -8,6 +8,7 @@ import { courseAccess, emailKey, markLesson } from "@/lib/learn";
 import { heldBack, passedQuizzes } from "@/lib/quiz";
 import { limited } from "@/lib/request-guard";
 import { readCourseListing } from "@/lib/catalog";
+import { noteIfFinished } from "@/lib/course-finish";
 
 /** "Mark as done", and on to the next lesson. A plain form, no script needed. */
 export async function POST(request: NextRequest) {
@@ -56,6 +57,8 @@ export async function POST(request: NextRequest) {
       return new Response(null, { status: 303, headers: { Location: `${base}/${lessonId}#quiz`, "Cache-Control": "no-store" } });
     }
     await markLesson(product.course.id, access.learner.email, lessonId, done);
+    // The last lesson done starts what finishing the course starts (lib/course-finish.ts).
+    if (done) await noteIfFinished(store, product.id, product.course.id, access.learner.email);
   }
   const target = done && ITEM_ID_PATTERN.test(next) ? next : lessonId;
   return new Response(null, { status: 303, headers: { Location: `${base}/${target}`, "Cache-Control": "no-store" } });
