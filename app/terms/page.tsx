@@ -226,9 +226,19 @@ export default function TermsPage() {
           <strong className="text-black">What you may not sell.</strong>{" "}
           Anything unlawful; anything that infringes someone else&apos;s rights;
           sexual content; anything that misleads your buyer about what they are
-          paying for; and anything that falls under the list of restricted
+          paying for; anything that promises fast or easy money, or income for
+          little effort; and anything that falls under the list of restricted
           businesses published by Stripe, since your payments run through
           Stripe.
+        </p>
+        <p>
+          <strong className="text-black">Content sold with resale rights.</strong>{" "}
+          You may sell content you did not make yourself, such as material
+          sold with private label or resale rights, only under a license that
+          lets you sell it the way you sell it here, and only when your product
+          gives the buyer something to use beyond the right to sell it on. You
+          keep that license and show it to us on request, and we may remove a
+          product whose license you cannot show.
         </p>
         <p>
           We may remove a product or suspend a store that breaks this section.
