@@ -45,7 +45,7 @@ import { opened, watchedIn } from "@/lib/watch";
 import type { ProductFile } from "@/lib/product-file";
 import type { Listing, Store } from "@/lib/store";
 import { readKind, readListing } from "@/lib/catalog";
-import { type Course, type CourseModule, lessonsInOrder, opensAt } from "@/lib/course";
+import { type Course, type CourseModule, lessonsInOrder, opensAt, readCourse } from "@/lib/course";
 import { deliveredIds } from "@/lib/bundle-rules";
 import { importedFrom, importedRead } from "@/lib/imported-purchases";
 
@@ -426,6 +426,35 @@ export async function doneLessons(courseId: string, email: string): Promise<Set<
 
 export async function markLesson(courseId: string, email: string, lessonId: string, done: boolean): Promise<void> {
   await redisPipeline([[done ? "SADD" : "SREM", doneKey(courseId, email), lessonId]]);
+}
+
+/**
+ * Where each of these addresses is in the course a product is: whether they
+ * opened it, and whether every lesson it has now is marked done. For a
+ * sequence's condition on a course (lib/flow-rules.ts): the course is read
+ * once, and the whole batch in one round trip. Empty for a product that is
+ * not a course.
+ */
+export async function courseProgress(store: Store, productId: string, emails: string[]): Promise<Map<string, { started: boolean; finished: boolean }>> {
+  const out = new Map<string, { started: boolean; finished: boolean }>();
+  if (!emails.length || !isRedisConfigured()) return out;
+  const listing = await readListing(store, productId);
+  const course = listing?.course ? await readCourse(listing.course.id) : null;
+  if (!course) return out;
+  const lessons = lessonsInOrder(course).map(({ lesson }) => lesson.id);
+  const rows = await redisPipeline([
+    ["HMGET", studentsKey(course.id), ...emails.map(emailKey)],
+    ...emails.map((email) => ["SMEMBERS", doneKey(course.id, email)]),
+  ]);
+  const seen = Array.isArray(rows[0]) ? (rows[0] as unknown[]) : [];
+  emails.forEach((email, i) => {
+    const done = new Set(Array.isArray(rows[i + 1]) ? (rows[i + 1] as string[]) : []);
+    out.set(email, {
+      started: typeof seen[i] === "string" && Boolean(seen[i]),
+      finished: lessons.length > 0 && lessons.every((id) => done.has(id)),
+    });
+  });
+  return out;
 }
 
 export type Student = {

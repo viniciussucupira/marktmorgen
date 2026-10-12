@@ -833,10 +833,11 @@ export async function writeEmail(
   });
 }
 
-const MOMENTS: Record<"joined" | "product" | "bought", string> = {
+const MOMENTS: Record<"joined" | "product" | "bought" | "finished", string> = {
   joined: "a welcome sequence for somebody who has just joined the creator's email list: who the creator is and what they make, something useful, then what they sell and where",
   product: "the emails somebody gets in the days after they got one product: how to make the most of it, then, only where it fits, what else the creator sells",
   bought: "the emails after somebody's first purchase from the creator: a thank you and where their orders are, something useful, then, only where it fits, what else the creator sells",
+  finished: "the emails somebody gets once they have finished one of the creator's courses, every lesson done: congratulations on what they did, how to keep using it, then, only where it fits, what to take next from what the creator sells",
 };
 
 /**
@@ -847,8 +848,8 @@ const MOMENTS: Record<"joined" | "product" | "bought", string> = {
 export async function writeSequence(
   store: Store,
   input: {
-    trigger: "joined" | "product" | "bought";
-    /** The product a "product" sequence follows. */
+    trigger: "joined" | "product" | "bought" | "finished";
+    /** The product a "product" or "finished" sequence follows. */
     product: { title: string; summary: string; price: string; link: string } | null;
     /** What else the store sells, in its own order. */
     products: { title: string; summary: string; price: string; link: string }[];
