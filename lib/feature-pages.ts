@@ -411,7 +411,6 @@ export const FEATURE_PAGES: TopicPage[] = [
           "Your calendars are read for busy times, and only calls set to Google Meet are written to your connected Google Calendar. Other bookings reach your calendar as a feed you subscribe to, and a new busy time can take about ten minutes to close a slot.",
           "Buyers move a booking themselves, but canceling is a reply to their confirmation email, which reaches you; a refund is made from your Stripe dashboard.",
           "Zoom links are not made for you yet. Connecting Zoom opens to every store once Zoom approves our app; until then, for Zoom, you type your own link. Stan creates Zoom links automatically.",
-          "Google has not finished reviewing our app yet, so connecting Google Calendar shows a \u201cGoogle hasn't verified this app\u201d screen: click Advanced, then continue.",
           "On a free personal Google account, Google ends meetings of three or more people after 60 minutes.",
           "Jitsi Meet is a free service run by a third party, not by us. Nobody needs an account to join, but the first person to open a room may be asked to sign in to Jitsi to start it, and the others wait until then.",
           "The call or the session itself happens on that service. Nothing is streamed or recorded here.",
