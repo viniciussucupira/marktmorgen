@@ -11,6 +11,9 @@ import { readListings } from "@/lib/catalog";
 import { formatMoney } from "@/lib/money";
 import { recoveryReport } from "@/lib/payment-recovery-report";
 import { leaveMonth } from "@/lib/leave-flow";
+import { memberHealth } from "@/lib/member-health";
+import { AWAY_POINTS, BAND_NAMES, HEALTH_WORDS } from "@/lib/member-health-rules";
+import { can } from "@/lib/team-roles";
 
 export const metadata: Metadata = {
   title: "Membership numbers — Marktmorgen",
@@ -51,6 +54,14 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
       })
     : null;
   const reminders = store.dunning.reminders;
+  // Each running member's score (lib/member-health.ts); addresses only for a role that may see buyers.
+  const health = numbers
+    ? await memberHealth(store, query.fresh === "1").catch((error) => {
+        console.error("scoring members failed", error);
+        return null;
+      })
+    : null;
+  const seesBuyers = can(access.role, "orders");
   // This month on the store's own cancel page (lib/leave-flow.ts), when it asks.
   const asked = numbers && store.leaving.on ? await leaveMonth(store.statsId).catch(() => null) : null;
   // One of the reasons the store's own page offers, or one the creator wrote (lib/leave-rules.ts).
@@ -153,6 +164,66 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                   </div>
                 )}
               </section>
+
+              {health && health.members.length ? (
+                <section aria-labelledby="health-title" className="card mt-8 p-6 sm:p-8" data-member-health>
+                  <h2 id="health-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">How each member is doing</h2>
+                  <p className="mt-1 max-w-2xl text-sm text-ink-soft">
+                    A score of 0 to 100 for every running member, from rules you can read below: how they are paying, and when
+                    they last opened the course or came into the community their membership includes.
+                  </p>
+                  <dl className="mt-4 grid gap-4 sm:grid-cols-4">
+                    {(["well", "slipping", "risk"] as const).map((band) => (
+                      <div key={band} className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">{BAND_NAMES[band]}</dt>
+                        <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{String(health.counts[band])}</dd>
+                        <dd className="text-sm text-ink-soft">{band === "well" ? "70 to 100" : band === "slipping" ? "40 to 69" : "under 40"}</dd>
+                      </div>
+                    ))}
+                    <div className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">Revenue at risk</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{money(health.atRisk)}</dd>
+                      <dd className="text-sm text-ink-soft">a month, from members under 40</dd>
+                    </div>
+                  </dl>
+                  <div className="mt-5 overflow-x-auto" tabIndex={0} role="region" aria-label="Members, the lowest score first">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="text-xs uppercase tracking-[0.08em] text-ink-mute">
+                          <th scope="col" className="py-2 pr-4 font-semibold">{seesBuyers ? "Member" : "Membership"}</th>
+                          <th scope="col" className="py-2 pr-3 text-right font-semibold">Score</th>
+                          <th scope="col" className="py-2 pr-3 font-semibold">Why</th>
+                          <th scope="col" className="py-2 text-right font-semibold">Monthly</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-line">
+                        {health.members.slice(0, 25).map((row) => (
+                          <tr key={row.sub}>
+                            <th scope="row" className="py-2.5 pr-4 font-semibold text-ink [overflow-wrap:anywhere]">
+                              {seesBuyers ? row.email : null}
+                              <span className={`block text-xs font-normal text-ink-soft ${seesBuyers ? "" : "text-sm text-ink"}`}>{row.title || "A membership you have since removed"}</span>
+                            </th>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">
+                              <span className={`tag ${row.band === "well" ? "tag-live" : ""}`}>{row.score}</span>
+                            </td>
+                            <td className="py-2.5 pr-3 text-ink-soft">
+                              {row.factors.length ? row.factors.map((f) => `${HEALTH_WORDS[f.reason]} (\u2212${f.points})`).join(" · ") : "Nothing taken off"}
+                            </td>
+                            <td className="py-2.5 text-right tabular-nums">{money(row.monthly)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {health.members.length > 25 ? <p className="mt-2 text-xs text-ink-soft">{`The 25 lowest of ${health.members.length} running members.`}</p> : null}
+                  <ul className="mt-4 space-y-1 text-xs leading-relaxed text-ink-soft">
+                    <li>Every member starts at 100. A failed payment Stripe is retrying takes off 40, a membership already canceled and running out what was paid for takes off 40, and a pause takes off 15.</li>
+                    <li>{`Being away takes off up to ${AWAY_POINTS}, shared between the course and the community the membership includes: all of a place's share for never opening it after the first week, 90% for 30 days or more away, 40% for 14 to 29 days. While paused, being away is not counted.`}</li>
+                    <li>A membership with neither a course nor a community has nothing here that says how much it is used, so its score is about paying alone. It is a rule, not a prediction.</li>
+                    {health.complete ? null : <li>Your Stripe account holds more memberships than one reading takes, so the oldest are not scored.</li>}
+                  </ul>
+                </section>
+              ) : null}
 
               {recovery ? (
                 <section aria-labelledby="recovered-title" className="card mt-8 p-6 sm:p-8" data-recovered>

@@ -330,6 +330,23 @@ export function memberKey(email: string): string {
   return emailKey(email);
 }
 
+/**
+ * When each of these addresses last came into the community (seconds, kept
+ * to the hour), 0 for one who never came in or was taken out. One command for
+ * them all, for the member scores in the studio (lib/member-health.ts).
+ */
+export async function lastSeenIn(id: string, emails: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (!emails.length || !isRedisConfigured()) return out;
+  const [raw] = await redisPipeline([["HMGET", membersKey(id), ...emails.map(memberKey)]]);
+  const rows = Array.isArray(raw) ? raw : [];
+  emails.forEach((email, i) => {
+    const member = parseMember(rows[i]);
+    out.set(email, member && !member.removed ? member.seen || member.at || 0 : 0);
+  });
+  return out;
+}
+
 export async function readMember(id: string, key: string): Promise<Member | null> {
   const [raw] = await redisPipeline([["HGET", membersKey(id), key]]);
   return parseMember(raw);
