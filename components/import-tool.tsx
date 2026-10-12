@@ -7,6 +7,7 @@ import { toast } from "@/components/toast";
 import { useStudioStore } from "@/components/studio-store-pin";
 import { type ParsedCsv, guessColumn, parseCsv, readConsent } from "@/lib/csv";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { type DateOrder, datesInFile, letteredDate, readRenewal } from "@/lib/move-rules";
 
 export type ImportKind = "contacts" | "products" | "purchases" | "members";
 
@@ -65,7 +66,7 @@ const FIELDS: Record<ImportKind, Field[]> = {
       label: "Renews on",
       required: true,
       names: ["next charge date", "next billing date", "next payment date", "next payment", "next charge", "renews on", "renewal date", "renews", "current period end", "next bill date"],
-      hint: "The day it would next renew where it is now, like 2026-11-03. The first payment here is taken that day.",
+      hint: "The day it would next renew where it is now, like Nov 3, 2026. The first payment here is taken that day.",
     },
     { key: "option", label: "Price", required: false, names: ["tier", "price option", "option", "level"], hint: "Only for a membership with several prices: the price's name, as in your store here." },
   ],
@@ -89,6 +90,7 @@ const MESSAGES: Record<string, string> = {
   members_email: "Moving members needs your store's plan to be active: each member is emailed their own link.",
   stripe: "Members keep their membership by paying on your own Stripe account. Connect Stripe first.",
   stopped: "Check the box to confirm you will stop these memberships renewing where they are now.",
+  date_order: "Choose how this file writes dates, from the list above the first rows.",
   list: "Your store's list could not be set up. Try again in a moment.",
   store: "Open the studio once, then come back here.",
   rows: "Part of the file could not be sent. Try again.",
@@ -231,6 +233,7 @@ export function ImportTool({
   const [tags, setTags] = useState("");
   const [email, setEmail] = useState(false);
   const [stopped, setStopped] = useState(false);
+  const [chosenOrder, setDateOrder] = useState<DateOrder | "">("");
   const [job, setJob] = useState<ImportView | null>(active && active.kind === kind ? active : null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -295,6 +298,7 @@ export function ImportTool({
       setError(`That file has more than ${LIMITS[kind].toLocaleString("en-US")} rows, the most one import takes. Split it and bring it in parts.`);
       return;
     }
+    setDateOrder("");
     const guessed: Record<string, number> = {};
     for (const field of fields) guessed[field.key] = guessColumn(read.header, field.names);
     // Kajabi and others keep first and last names apart: joined here.
@@ -323,6 +327,12 @@ export function ImportTool({
   }, [parsed, mapping, lastName, fields]);
 
   const missing = fields.filter((f) => f.required && (mapping[f.key] ?? -1) < 0);
+  // Members: whether some dates could be read two ways, and an example of one,
+  // so the creator chooses once, from a list, how the whole file writes them.
+  const dates = useMemo(() => (kind === "members" && (mapping.renews ?? -1) >= 0 ? datesInFile(rows.map((row) => row[3])) : null), [kind, mapping, rows]);
+  const twoWaysSample = useMemo(() => (dates?.twoWays ? rows.map((row) => row[3]).find((v) => { const r = readRenewal(v); return !r.ok && r.reason === "ambiguous"; }) ?? "" : ""), [dates, rows]);
+  // What the creator chose, or else what the file's other dates prove.
+  const dateOrder: DateOrder | "" = chosenOrder || dates?.proves || "";
   const consentPreview =
     kind === "contacts" && (mapping.consent ?? -1) >= 0
       ? rows.reduce((n, row) => n + (readConsent(row[4]) === "yes" ? 1 : 0), 0)
@@ -343,6 +353,10 @@ export function ImportTool({
       setError(MESSAGES.stopped);
       return;
     }
+    if (kind === "members" && dates?.twoWays && !dateOrder) {
+      setError(MESSAGES.date_order);
+      return;
+    }
     setBusy(true);
     let current: ImportView | null = null;
     // Only a file still being sent is let go of when something fails; once
@@ -359,6 +373,7 @@ export function ImportTool({
         tags: kind === "contacts" ? tags.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
         email: kind === "purchases" ? email : undefined,
         stopped: kind === "members" ? stopped : undefined,
+        dateOrder: kind === "members" ? dateOrder : undefined,
       });
       if (!begun.ok || !begun.import) {
         setError((kind === "members" && begun.error === "email" ? MESSAGES.members_email : MESSAGES[begun.error ?? ""]) ?? MESSAGES.server_error);
@@ -519,11 +534,23 @@ export function ImportTool({
                   <tbody>
                     {rows.slice(0, 4).map((row) => (
                       <tr key={row[0]} className="border-t border-line">
-                        {row.map((cell, i) => (
-                          <td key={i} className={`max-w-[14rem] truncate px-4 py-2 ${i === 0 ? "tabular-nums text-ink-mute" : "text-ink"}`}>
-                            {cell || <span className="text-ink-mute">—</span>}
-                          </td>
-                        ))}
+                        {row.map((cell, i) => {
+                          // A renewal date is shown as it will be read, with the month in letters, to be checked.
+                          const read = kind === "members" && i === 3 && cell ? readRenewal(cell, dateOrder) : null;
+                          return (
+                            <td key={i} className={`max-w-[14rem] truncate px-4 py-2 ${i === 0 ? "tabular-nums text-ink-mute" : "text-ink"}`}>
+                              {read ? (
+                                read.ok ? (
+                                  <span><span className="font-semibold">{letteredDate(read.at)}</span><span className="text-ink-mute">{` (${cell})`}</span></span>
+                                ) : (
+                                  <span className="text-danger">{`${cell}: ${read.reason === "ambiguous" ? "choose how dates are written" : "cannot be read"}`}</span>
+                                )
+                              ) : (
+                                cell || <span className="text-ink-mute">—</span>
+                              )}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                   </tbody>
@@ -560,6 +587,36 @@ export function ImportTool({
                 </p>
               ) : kind === "members" ? (
                 <div className="space-y-3 rounded-2xl bg-white p-4 ring-1 ring-line">
+                  {dates?.twoWays ? (
+                    <label className="block" htmlFor="import-date-order">
+                      <span className="field-label">How this file writes dates</span>
+                      <select
+                        id="import-date-order"
+                        className="field"
+                        value={dateOrder}
+                        onChange={(e) => setDateOrder(e.target.value === "mdy" || e.target.value === "dmy" ? e.target.value : "")}
+                        aria-invalid={!dateOrder ? true : undefined}
+                      >
+                        <option value="">Choose one</option>
+                        {(["mdy", "dmy"] as const).map((order) => {
+                          const read = readRenewal(twoWaysSample, order);
+                          return (
+                            <option key={order} value={order}>
+                              {`${order === "mdy" ? "Month first" : "Day first"}: ${twoWaysSample} is ${read.ok ? letteredDate(read.at) : "not a date"}`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <span className="field-hint">
+                        {`Some dates in the file, like ${twoWaysSample}, could be read two ways. Choose once for the whole file; the first rows below show each date with its month in letters, to check.${dates.proves ? " Other dates in the file already show which it is, so it is chosen for you." : ""}`}
+                      </span>
+                    </label>
+                  ) : null}
+                  {dates?.mixed ? (
+                    <p className="notice notice-warn text-sm">
+                      This file writes dates in two ways. The rows that do not fit the order chosen are listed in the report, not guessed.
+                    </p>
+                  ) : null}
                   <p className="text-sm text-ink-soft">
                     {`Each member gets one email from ${storeName}'s name with their own link to keep their membership here, on your Stripe account. Nothing is charged until the date in the file, the day it would have renewed where it is now, so nobody pays twice for the same weeks; a date less than two days away is charged when they keep it. A member who has not kept it gets one reminder three days before that date. Nobody gets the membership without keeping it.`}
                   </p>

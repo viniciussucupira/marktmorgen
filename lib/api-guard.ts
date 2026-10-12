@@ -31,6 +31,25 @@ export function apiOk(body: unknown): Response {
 
 /** The store this request may read, or the response that refuses it. */
 export async function apiStore(request: Request): Promise<Store | Response> {
+  const found = await apiKeyed(request);
+  return found instanceof Response ? found : found.store;
+}
+
+/**
+ * The store this request may change, and the key it came with, or the
+ * response that refuses it: a key made to read only is refused here, with
+ * the way to make one that writes.
+ */
+export async function apiWriter(request: Request): Promise<{ store: Store; keyId: string } | Response> {
+  const found = await apiKeyed(request);
+  if (found instanceof Response) return found;
+  if (!found.write) {
+    return apiError(403, "read_only", "This key reads only. Make a key that can also write, in your studio under API keys.");
+  }
+  return { store: found.store, keyId: found.keyId };
+}
+
+async function apiKeyed(request: Request): Promise<{ store: Store; keyId: string; write: boolean } | Response> {
   const presented = keyFromHeader(request.headers.get("authorization"));
   const unauthorized = () =>
     apiError(401, "unauthorized", "Send your API key as: Authorization: Bearer nl_live_…", {
@@ -46,5 +65,22 @@ export async function apiStore(request: Request): Promise<Store | Response> {
   }
   const store = await storeForId(found.sid);
   if (!store) return unauthorized();
-  return store;
+  return { store, keyId: found.id, write: found.write };
+}
+
+/** Most a write request's body may weigh. */
+const MAX_BODY_BYTES = 4_000;
+
+/** A write request's JSON body, or the response that refuses it. */
+export async function readApiBody(request: Request): Promise<Record<string, unknown> | Response> {
+  const bad = () => apiError(400, "invalid", "Send a JSON object as the body, with Content-Type: application/json.");
+  if (Number(request.headers.get("content-length") ?? "0") > MAX_BODY_BYTES) return apiError(413, "too_large", `The body may be up to ${MAX_BODY_BYTES} bytes.`);
+  try {
+    const text = await request.text();
+    if (text.length > MAX_BODY_BYTES) return apiError(413, "too_large", `The body may be up to ${MAX_BODY_BYTES} bytes.`);
+    const parsed: unknown = JSON.parse(text);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : bad();
+  } catch {
+    return bad();
+  }
 }

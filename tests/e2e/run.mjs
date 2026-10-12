@@ -2825,6 +2825,17 @@ try {
       await studio.locator("#map-members-renews option:checked").innerText(),
       await studio.locator("#map-members-option option:checked").innerText(),
     ], ["Email", "Next Charge Date", "Tier"]);
+    is("each date is shown with its month in letters, and one that reads two ways says so", [
+      (await words(studio.locator("table"))).includes(new Date(`${renews}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })),
+      (await words(studio.locator("table"))).includes("04/05/2026: choose how dates are written"),
+    ], [true, true]);
+    await studio.locator("#import-stopped").check();
+    await studio.getByRole("button", { name: "Import 2 rows" }).click();
+    is("nothing starts until the file's way of writing dates is chosen from the list", await studio.getByRole("alert").filter({ hasText: "Choose how this file writes dates" }).count(), 1);
+    is("the list says what each choice makes of the date", await studio.locator("#import-date-order option").allInnerTexts(), ["Choose one", "Month first: 04/05/2026 is Apr 5, 2026", "Day first: 04/05/2026 is May 4, 2026"]);
+    await studio.locator("#import-date-order").selectOption("dmy");
+    is("and the date is shown again as it will be read", (await words(studio.locator("table"))).includes("May 4, 2026 (04/05/2026)"), true);
+    await studio.locator("#import-stopped").uncheck();
     await studio.getByRole("button", { name: "Import 2 rows" }).click();
     is("nothing starts until the old renewals are promised to stop", await studio.getByRole("alert").filter({ hasText: "stop these memberships renewing" }).count(), 1);
     await studio.locator("#import-stopped").check();
@@ -2832,7 +2843,7 @@ try {
     // This import's own card, once it is over (the column beside it lists earlier imports, finished long ago).
     const card = studio.locator("section [aria-live=polite]").filter({ hasText: "invited to move" }).filter({ hasText: "Finished" });
     await card.first().waitFor({ timeout: 120_000 });
-    is("one member invited, and the date that reads two ways not guessed", [
+    is("one member invited, and the May date, long past, not invited", [
       await card.first().locator("dt", { hasText: "invited to move" }).locator("xpath=following-sibling::dd").innerText(),
       await card.first().locator("dt", { hasText: "could not be read" }).locator("xpath=following-sibling::dd").innerText(),
     ], ["1", "1"]);
@@ -2866,6 +2877,46 @@ try {
     await open(page, `${LOCAL}/@localshop/move/${circle}?k=${"f".repeat(40)}`);
     is("a made-up link opens nothing", await page.locator("[data-move]").getAttribute("data-move"), "closed");
     await post("/api/store/product", { action: "remove", id: circle });
+  }
+
+  await keepSmall();
+  part("A key that writes: list, labels and a product given from a creator's own tool");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "Larder Labels", price: "7" });
+    const checklist = made.product?.id ?? "";
+    await post("/api/store/product", { action: "link", id: checklist, link: "https://example.com/larder" });
+    await open(studio, `${LOCAL}/studio#api`);
+    const panel = studio.locator("#api");
+    await panel.getByLabel("What will use it").fill("Reader");
+    await panel.getByRole("button", { name: "Make a key" }).click();
+    const readKey = await panel.locator("#api-key").inputValue();
+    await panel.getByRole("button", { name: "I have kept it" }).click();
+    await panel.getByLabel("What will use it").fill("Zapier");
+    await panel.locator("#api-key-write").check();
+    await panel.getByRole("button", { name: "Make a key" }).click();
+    const writeKey = await panel.locator("#api-key").inputValue();
+    await panel.getByRole("button", { name: "I have kept it" }).click();
+    is("the studio says which key writes", [
+      (await words(panel.locator("li", { hasText: "Zapier" }))).includes("Reads and writes"),
+      (await words(panel.locator("li", { hasText: "Reader" }))).includes("Reads only"),
+    ], [true, true]);
+    const api = async (method, path, key, data) => {
+      const response = await page.request.fetch(`${LOCAL}/api/v1/${path}`, { method, headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, data });
+      return [response.status(), await response.json()];
+    };
+    is("a key made to read cannot write", (await api("POST", "leads", readKey, { email: "zap@example.com", agreed: true }))[1].error, "read_only");
+    is("nobody is added without the caller's word that they agreed", (await api("POST", "leads", writeKey, { email: "zap@example.com" }))[1].error, "consent");
+    is("added to the list", (await api("POST", "leads", writeKey, { email: "zap@example.com", tags: ["webinar"], agreed: true }))[1].data, { email: "zap@example.com", status: "added" });
+    is("and labeled", (await api("POST", "leads/labels", writeKey, { email: "zap@example.com", add: ["vip"] }))[1].data.labels, ["webinar", "vip"]);
+    const given = await api("POST", "access", writeKey, { email: "zap@example.com", product: "Larder Labels", notify: true });
+    is("a product given by its name, with the one email asked for", [given[0], given[1].data.status, given[1].data.emailed], [200, "given", true]);
+    const mail = services.emails().find((email) => [].concat(email.to).includes("zap@example.com") && String(email.subject).startsWith("Larder Labels"));
+    is("the email says it was given and nothing was charged", String(mail?.text ?? "").includes("has given you Larder Labels. Nothing was charged."), true);
+    is("taken back again by the API that gave it", (await api("DELETE", "access", writeKey, { email: "zap@example.com", product: checklist }))[1].data.status, "taken_back");
+    is("and a second time there is nothing to take", (await api("DELETE", "access", writeKey, { email: "zap@example.com", product: checklist }))[0], 404);
+    await post("/api/store/product", { action: "remove", id: checklist });
   }
 
   await keepSmall();

@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
         tags: Array.isArray(body.tags) ? body.tags.filter((t): t is string => typeof t === "string").slice(0, 10) : [],
         email: body.email === true,
         stopped: body.stopped === true,
+        dateOrder: text(body.dateOrder, 3),
       });
       if (!started.ok) return refuse(started.reason, started.reason === "busy" ? 409 : 400, { limit: started.limit });
       return Response.json({ ok: true, import: view(started.job) });

@@ -4,11 +4,12 @@ import { LegalPage, LegalSection } from "@/components/legal-page";
 import { API_PAGE } from "@/lib/api-read";
 import { API_RATE } from "@/lib/api-guard";
 import { MAX_KEYS } from "@/lib/api-key-rules";
+import { ADDS_PER_DAY, GIVES_PER_DAY } from "@/lib/api-write";
 
 export const metadata: Metadata = {
   title: "Developers — Marktmorgen",
   description:
-    "The Marktmorgen API: read your list, members, course students, affiliates, bookings and numbers from your own tools, with keys you make in your studio. On every plan.",
+    "The Marktmorgen API: read your list, members, course students, affiliates, bookings and numbers from your own tools, and add people to your list, label them and give them products, with keys you make in your studio. On every plan.",
 };
 
 /**
@@ -27,10 +28,10 @@ function Code({ children }: { children: string }) {
   );
 }
 
-function Endpoint({ path, children }: { path: string; children: React.ReactNode }) {
+function Endpoint({ path, method = "GET", children }: { path: string; method?: "GET" | "POST" | "DELETE"; children: React.ReactNode }) {
   return (
     <p>
-      <code className="rounded-md bg-lilac px-2 py-1 font-mono text-[0.875rem] font-semibold text-violet-ink">{`GET ${path}`}</code>{" "}
+      <code className="rounded-md bg-lilac px-2 py-1 font-mono text-[0.875rem] font-semibold text-violet-ink">{`${method} ${path}`}</code>{" "}
       {children}
     </p>
   );
@@ -40,11 +41,11 @@ const BASE = "https://marktmorgen.com/api/v1";
 
 export default function DevelopersPage() {
   return (
-    <LegalPage title="Developers" eyebrow="For your own tools" effective={null} legalNav={false} lastUpdated="October 2, 2026">
+    <LegalPage title="Developers" eyebrow="For your own tools" effective={null} legalNav={false} lastUpdated="October 12, 2026">
       <p>
         Read your store from your own tools: your list, your community&apos;s members, a course&apos;s students, your
-        affiliates and your bookings. Every plan has it. The API reads and changes nothing; to be told when something
-        happens instead, use{" "}
+        affiliates and your bookings; and, with a key made to write, add people to your list, label them, and give or
+        take back products. Every plan has it. To be told when something happens instead, use{" "}
         <Link href="/help#can-i-connect-zapier-make-or-my-own-server" className="text-black underline underline-offset-2 hover:no-underline">
           webhooks
         </Link>
@@ -54,6 +55,12 @@ export default function DevelopersPage() {
       <LegalSection title="Keys">
         <p>
           {`Make a key in your studio, under API keys. It is shown once, when you make it, and never again: we keep only a fingerprint of it. A store can have ${MAX_KEYS} keys; each shows when it was last used, and revoking one refuses the very next request made with it.`}
+        </p>
+        <p>
+          A key reads, and changes nothing, unless you check &quot;It can also write&quot; when you make it. That choice is
+          the key&apos;s for good: a key made to read stays one that reads, and every key made before writing existed
+          reads only. A key that reads only gets 403 <code className="font-mono">read_only</code> from the addresses that
+          write. Only the store&apos;s owner and Admins can make a key that writes.
         </p>
         <p>Send it on every request:</p>
         <Code>{`curl ${BASE}/store \\
@@ -296,6 +303,57 @@ export default function DevelopersPage() {
     }
   ]
 }`}</Code>
+      </LegalSection>
+
+      <LegalSection title="Writing: your list">
+        <Endpoint method="POST" path="/api/v1/leads">
+          Puts somebody on your list, as someone who agreed to hear from you. Send{" "}
+          <code className="font-mono">agreed: true</code>, your word that they did: nobody is added without it, and
+          nobody who unsubscribed from your list is ever added back, whatever is sent. Somebody new starts the sequences
+          that start when somebody joins your list; a label they come with starts the sequences that label starts.
+        </Endpoint>
+        <Code>{`curl -X POST ${BASE}/leads \\
+  -H "Authorization: Bearer nl_live_…" \\
+  -H "Content-Type: application/json" \\
+  -d '{"email": "dana@example.com", "name": "Dana Ortiz", "tags": ["webinar"], "agreed": true}'
+
+200  {"data": {"email": "dana@example.com", "status": "added"}}
+200  {"data": {"email": "dana@example.com", "status": "already"}}
+400  {"error": "consent", "message": "Send agreed: true, …"}
+409  {"error": "unsubscribed", "message": "This person unsubscribed from your list, so they are not added back."}`}</Code>
+        <Endpoint method="POST" path="/api/v1/leads/labels">
+          Adds and takes away labels of somebody already on your list. A label added starts the sequences it starts in
+          your studio.
+        </Endpoint>
+        <Code>{`{"email": "dana@example.com", "add": ["vip"], "remove": ["webinar"]}
+
+200  {"data": {"email": "dana@example.com", "labels": ["vip"]}}
+404  {"error": "not_on_list", "message": "Nobody with this address is on your list."}`}</Code>
+        <p>{`A store may add ${ADDS_PER_DAY.toLocaleString("en-US")} new people a day through the API; past that, 429 daily_limit until the next day.`}</p>
+      </LegalSection>
+
+      <LegalSection title="Writing: giving a product">
+        <Endpoint method="POST" path="/api/v1/access">
+          Gives a product to an address with no payment, as an import of past buyers does: a file, a link, a course, a
+          podcast or a bundle, by its id or its exact name. They open it from your store&apos;s list of purchases with
+          that address, where it shows as given by your store, not as a sale; it is not counted in your numbers, sent to
+          webhooks or credited to an affiliate. Send <code className="font-mono">notify: true</code> and they get one email
+          from your store&apos;s name saying so, in your store&apos;s language, while your plan is running.
+        </Endpoint>
+        <Code>{`{"email": "dana@example.com", "product": "k3j9x2p1ab", "notify": true}
+
+200  {"data": {"email": "dana@example.com", "product": "k3j9x2p1ab", "status": "given", "emailed": true}}
+200  {"data": {"email": "dana@example.com", "product": "k3j9x2p1ab", "status": "already", "emailed": false}}
+409  {"error": "cannot_give", "message": "Memberships, calls and products with several prices cannot be given this way."}`}</Code>
+        <Endpoint method="DELETE" path="/api/v1/access">
+          Takes back a product the API gave, with the same body. Only what the API gave: a sale, an import, a gift or a
+          purchase paid with PayPal is not the API&apos;s to take, and gets 404{" "}
+          <code className="font-mono">not_given_here</code>.
+        </Endpoint>
+        <Code>{`{"email": "dana@example.com", "product": "k3j9x2p1ab"}
+
+200  {"data": {"email": "dana@example.com", "product": "k3j9x2p1ab", "status": "taken_back"}}`}</Code>
+        <p>{`A store may give ${GIVES_PER_DAY.toLocaleString("en-US")} products a day through the API. A body is JSON of up to 4,000 bytes.`}</p>
       </LegalSection>
 
       <LegalSection title="Sales and refunds">

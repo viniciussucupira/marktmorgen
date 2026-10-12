@@ -79,7 +79,7 @@ import { isPaidUp } from "@/lib/billing";
 import { storeBase } from "@/lib/purchase-email";
 import { canSell, canSellProduct } from "@/lib/store-checkout";
 import { inviteEmail, inviteMembers, keptAlready, noteKept, dueReminders, remindLater, reminderEmail, readInvite } from "@/lib/move-members";
-import { MAX_AHEAD_DAYS, MAX_MOVED_MEMBERS, readRenewal } from "@/lib/move-rules";
+import { type DateOrder, MAX_AHEAD_DAYS, MAX_MOVED_MEMBERS, readRenewal } from "@/lib/move-rules";
 
 export type ImportKind = "contacts" | "products" | "purchases" | "members";
 
@@ -121,7 +121,7 @@ export const MOVED_EMAILS_PER_30_DAYS = 20_000;
 const movedKey = (sid: string) => `nl:imports:moved:${sid}`;
 
 /** Takes up to `n` from the store's thirty days; answers how many it may send now. */
-async function reserveMoved(sid: string, n: number): Promise<number> {
+export async function reserveMoved(sid: string, n: number): Promise<number> {
   const [, total] = await redisPipeline([
     ["SET", movedKey(sid), "0", "NX", "EX", 30 * 86_400],
     ["INCRBY", movedKey(sid), n],
@@ -182,6 +182,11 @@ export type ImportJob = {
     tags: string[];
     /** Purchases: one email to each buyer given something. Members: always, their link. */
     email: boolean;
+    /**
+     * Members: how the file writes a date that is all numbers, as the creator
+     * chose it from a list for the whole file; "" when they did not need to.
+     */
+    dateOrder?: DateOrder | "";
   };
   finishedAt: number;
 };
@@ -245,7 +250,7 @@ export async function startImport(
   store: Store,
   by: string,
   kind: ImportKind,
-  input: { expected: number; file: string; agreed?: boolean; consentColumn?: boolean; tags?: string[]; email?: boolean; stopped?: boolean },
+  input: { expected: number; file: string; agreed?: boolean; consentColumn?: boolean; tags?: string[]; email?: boolean; stopped?: boolean; dateOrder?: string },
 ): Promise<{ ok: true; job: ImportJob } | { ok: false; reason: StartProblem; limit?: number }> {
   if (!isRedisConfigured()) return { ok: false, reason: "unavailable" };
   if (!store.sid) return { ok: false, reason: "store" };
@@ -301,6 +306,7 @@ export async function startImport(
       consentColumn: kind === "contacts" && input.consentColumn === true,
       tags: kind === "contacts" ? readTags(input.tags ?? []) : [],
       email: (kind === "purchases" && input.email === true) || kind === "members",
+      dateOrder: kind === "members" && (input.dateOrder === "mdy" || input.dateOrder === "dmy") ? input.dateOrder : "",
     },
     finishedAt: 0,
   };
@@ -738,7 +744,7 @@ async function membersStep(job: ImportJob, store: Store, rows: string[][], now =
       problems.push({ line, column: "option", problem: "This membership has one price: leave the price column out, or empty", value: rawOption });
       continue;
     }
-    const renews = readRenewal(rawRenews);
+    const renews = readRenewal(rawRenews, job.options.dateOrder ?? "");
     if (!renews.ok) {
       problems.push({
         line,
@@ -747,8 +753,10 @@ async function membersStep(job: ImportJob, store: Store, rows: string[][], now =
           renews.reason === "empty"
             ? "No renewal date: the day the membership would next renew is needed"
             : renews.reason === "ambiguous"
-              ? "This date can be read two ways: write it with the year first, like 2026-11-03"
-              : "Not a date that can be read: write it like 2026-11-03",
+              ? "This date can be read two ways: choose how your file writes dates, or write the month in letters, like Nov 3, 2026"
+              : renews.reason === "order"
+                ? "This date does not fit how you said the file writes dates: write the month in letters, like Nov 3, 2026"
+                : "Not a date that can be read: write the month in letters, like Nov 3, 2026",
         value: rawRenews,
       });
       continue;

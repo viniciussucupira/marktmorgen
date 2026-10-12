@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { MAX_KEY_NAME, listKeys, makeKey, revokeKey } from "@/lib/api-keys";
+import { can } from "@/lib/team-roles";
 
 /**
  * Making and revoking the keys a creator's own tools read the store with.
@@ -10,17 +11,21 @@ import { MAX_KEY_NAME, listKeys, makeKey, revokeKey } from "@/lib/api-keys";
  *
  * The same permission as taking the list away as a file ("export",
  * lib/team-roles.ts): the owner and an Admin. A key reads the same things an
- * export does, so it is handed out by the same people.
+ * export does, so it is handed out by the same people. A key that may also
+ * write (`write: true`) gives products and adds people to the list, as an
+ * import does, so it also needs the permission to import.
  */
 export async function POST(request: NextRequest) {
   const guarded = await guardStoreWrite(request, "export");
   if (!guarded.ok) return guarded.response;
-  const { store, body } = guarded;
+  const { store, body, role } = guarded;
   const action = text(body.action, 10);
 
   try {
     if (action === "make") {
-      const made = await makeKey(store.sid, text(body.name, MAX_KEY_NAME * 2));
+      const write = body.write === true;
+      if (write && !can(role, "import")) return Response.json({ ok: false, error: "role" }, { status: 403 });
+      const made = await makeKey(store.sid, text(body.name, MAX_KEY_NAME * 2), Date.now(), write);
       if (!made.ok) return Response.json({ ok: false, error: made.reason }, { status: made.reason === "unavailable" ? 503 : 400 });
       return Response.json(
         { ok: true, key: made.key, made: made.made, keys: await listKeys(store.sid) },

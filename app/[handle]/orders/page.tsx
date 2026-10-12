@@ -394,6 +394,8 @@ export default async function OrdersPage({ params, searchParams }: Params) {
                               ? words.placeFor(purchase.paidAt ? on(purchase.paidAt) : "")
                               : purchase.paidWith === "paypal"
                               ? words.boughtWithPayPal(on(purchase.paidAt))
+                              : purchase.givenByStore
+                              ? words.givenByStore(store.name, purchase.paidAt ? on(purchase.paidAt) : "")
                               : purchase.kind === "imported"
                               ? words.broughtOver(purchase.paidAt ? on(purchase.paidAt) : "")
                               : purchase.paidAt

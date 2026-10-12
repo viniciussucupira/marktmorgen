@@ -14,6 +14,7 @@ const MESSAGES: Record<string, string> = {
   unknown: "That key is already gone. Reload the page.",
   unavailable: "Keys cannot be made right now. Nothing was changed.",
   signed_out: "Your session ended. Log in again.",
+  role: "Only the store's owner and Admins can make a key that writes.",
   server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
 };
 
@@ -33,6 +34,7 @@ function when(seconds: number): string {
 export function ApiKeyEditor({ keys: first }: { keys: ApiKey[] }) {
   const [keys, setKeys] = useState<ApiKey[]>(first);
   const [name, setName] = useState("");
+  const [write, setWrite] = useState(false);
   const [made, setMade] = useState<{ key: string; name: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -67,10 +69,11 @@ export function ApiKeyEditor({ keys: first }: { keys: ApiKey[] }) {
 
   async function make(event: React.FormEvent) {
     event.preventDefault();
-    const data = await send({ action: "make", name }, "make");
+    const data = await send({ action: "make", name, write }, "make");
     if (data?.key) {
       setMade({ key: data.key, name: name.trim() });
       setName("");
+      setWrite(false);
       setCopied(false);
     }
   }
@@ -106,7 +109,8 @@ export function ApiKeyEditor({ keys: first }: { keys: ApiKey[] }) {
       </div>
       <p className="mt-2 text-ink-soft">
         Let your own tools read your store: your list, your members, your students, your affiliates and your bookings.
-        A key reads and changes nothing.{" "}
+        A key reads and changes nothing, unless you make it one that can also write: add people to your list, change
+        their labels, and give or take back products.{" "}
         <Link href="/developers" className="font-semibold text-ink underline underline-offset-4">
           What each address returns
         </Link>
@@ -142,7 +146,7 @@ export function ApiKeyEditor({ keys: first }: { keys: ApiKey[] }) {
                   <span className="block font-semibold text-ink">{key.name}</span>
                   <span className="mt-1 block text-sm text-ink-soft">
                     <span className="font-mono">{`nl_live_${key.hint}…`}</span>
-                    {` · Made ${when(key.madeAt)} · ${key.usedAt ? `Last used ${when(key.usedAt)}` : "Never used"}`}
+                    {` · ${key.write ? "Reads and writes" : "Reads only"} · Made ${when(key.madeAt)} · ${key.usedAt ? `Last used ${when(key.usedAt)}` : "Never used"}`}
                   </span>
                 </span>
                 {revoking === key.id ? (
@@ -167,7 +171,8 @@ export function ApiKeyEditor({ keys: first }: { keys: ApiKey[] }) {
       {full ? (
         <p className="mt-5 text-sm text-ink-soft">{`You have ${MAX_KEYS} keys, the most a store can have. Revoke one to make another.`}</p>
       ) : (
-        <form onSubmit={make} className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-end">
+        <form onSubmit={make} className="mt-5 flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <label className="block min-w-0 flex-1" htmlFor="api-key-name">
             <span className="field-label">What will use it</span>
             <input
@@ -183,6 +188,17 @@ export function ApiKeyEditor({ keys: first }: { keys: ApiKey[] }) {
           <button type="submit" disabled={busy !== null} aria-busy={busy === "make"} className="btn btn-primary shrink-0">
             {busy === "make" ? "Making…" : "Make a key"}
           </button>
+          </div>
+          <label htmlFor="api-key-write" className="flex cursor-pointer items-start gap-3 text-sm">
+            <input id="api-key-write" type="checkbox" checked={write} onChange={(e) => setWrite(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0" />
+            <span>
+              <span className="font-semibold text-ink">It can also write.</span>{" "}
+              <span className="text-ink-soft">
+                Add people who agreed to hear from you to your list, change their labels, and give or take back products,
+                as an import does. Chosen now, for good: a key made to read stays one that reads.
+              </span>
+            </span>
+          </label>
         </form>
       )}
 
