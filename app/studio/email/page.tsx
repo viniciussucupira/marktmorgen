@@ -94,6 +94,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             </div>
             <ul className="mt-4 space-y-2 text-ink-soft">
               <li>One-off emails to everyone on your list, or only to those who got one product.</li>
+              <li>Readers chosen by what they spent with you, where they first found you or when they last bought, saved as groups to use again.</li>
               <li>Emails scheduled for the day and time you choose.</li>
               <li>Sequences that go out by themselves, hours or days after someone joins or buys.</li>
               <li>{`Up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, sent from your name, with replies coming to you.`}</li>
