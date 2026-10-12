@@ -183,6 +183,14 @@ export async function startServices(port) {
             ? JSON.stringify({ items: [{ q: "How do the files arrive?", a: "As a download right after paying, and by email." }, { q: "How do I pay?", a: "With a card on a secure payment page." }] })
           : system.startsWith("Put the user's question into plain English")
             ? "What file can I sell, and how big?"
+          : system.startsWith("You answer a creator's question about their own online store's numbers")
+            ? (() => {
+                // An answer that names one figure from the numbers it was handed, and one made up (lib/numbers-ask.ts drops it).
+                const prompt = String(body.messages?.[0]?.content ?? "");
+                const numbers = JSON.parse(prompt.slice(prompt.indexOf("{")));
+                const visitors = numbers.last_30_days?.visitors ?? 0;
+                return JSON.stringify({ answer: `You had ${visitors} visitors in the last 30 days.`, used: [{ label: "Visitors", value: String(visitors) }, { label: "Made up", value: "$123,456.00" }], window: "d30", section: "channels" });
+              })()
           : system.startsWith("You answer a creator's question about using Marktmorgen")
             ? JSON.stringify({ answer: "Up to 5 GB, in the formats the help center lists.", used: [1] })
           : system.startsWith("You draft the first version of a creator's store")

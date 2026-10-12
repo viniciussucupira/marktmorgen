@@ -529,6 +529,19 @@ try {
     if (process.env.E2E_SHOTS) {
       await numbers.screenshot({ path: join(process.env.E2E_SHOTS, "numbers-six.png") });
     }
+    // Asking the numbers (lib/numbers-ask.ts): an answer from them, only figures they hold, and the way to them.
+    const asking = studio.locator("[data-numbers-ask]");
+    await asking.locator("#numbers-question").fill("How many visitors this month?");
+    await asking.getByRole("button", { name: "Ask", exact: true }).click();
+    await asking.locator("[data-numbers-answer]").waitFor({ timeout: 30_000 });
+    const chips = await words(asking.locator("[data-numbers-answer] dl"));
+    is("asked in plain words, answered with the figure it rests on, a made-up one left out", [
+      /You had \d+ visitors in the last 30 days\./.test(await words(asking.locator("[data-numbers-answer] p").first())),
+      /Visitors \d+/.test(chips),
+      chips.includes("123,456"),
+    ], [true, true, false]);
+    await asking.getByRole("button", { name: /Show these numbers, last 30 days/ }).click();
+    is("and opens the panel at those days", await studio.getByRole("group", { name: "Period" }).locator("button[aria-pressed=true]").innerText(), "30 days");
     await studio.getByText("Today so far").waitFor({ timeout: 40_000 });
     is("today so far is shown beside who is on the store now", await studio.getByText("Today so far").count(), 1);
     const before = await studio.locator("#numbers").getByRole("button", { name: "Don't count this device" }).count();

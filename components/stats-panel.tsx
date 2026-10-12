@@ -21,6 +21,8 @@ import { moneyByDay } from "@/lib/sales-goal-rules";
 import type { ChatKind } from "@/lib/chat-summary";
 import { NoCountToggle } from "@/components/no-count-toggle";
 import { BuyerNumbers } from "@/components/buyer-numbers";
+import { NumbersAsk } from "@/components/numbers-ask";
+import { WeeklyAiToggle } from "@/components/weekly-ai-toggle";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -342,6 +344,8 @@ export function StatsPanel({
   goal = 0,
   chat,
   deviceMarked = null,
+  canAsk = false,
+  weeklyAi,
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -359,6 +363,10 @@ export function StatsPanel({
   chat?: ChatKind | null;
   /** Whether this browser is marked not to be counted on the store (lib/no-count.ts); null to leave the switch out. */
   deviceMarked?: boolean | null;
+  /** Whether "Ask your numbers" is offered (lib/numbers-ask.ts): writing help configured. */
+  canAsk?: boolean;
+  /** For whoever may change settings, with writing help configured: whether the weekly email opens with an AI summary; undefined for anybody else. */
+  weeklyAi?: boolean;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [notes, setNotes] = useState(notesGiven);
@@ -558,6 +566,16 @@ export function StatsPanel({
           </div>
         ))}
       </dl>
+
+      {canAsk && !empty ? (
+        <NumbersAsk
+          onShow={(chosen, section) => {
+            choose(chosen);
+            // After the panel is drawn for that window: to the part that shows the figures.
+            setTimeout(() => document.getElementById(`numbers-${section || "title"}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+          }}
+        />
+      ) : null}
 
       {salesKnown && data.days.length ? (
         <SalesGoalCard goal={goal} byDay={moneyByDay(data.channelDays)} today={data.days[data.days.length - 1].date} currency={data.currency ?? "usd"} />
@@ -1219,6 +1237,7 @@ export function StatsPanel({
           Visits go back as far as they are kept, 400 days.
         </p>
         {weeklyTeam ? <WeeklyTeamPicker members={weeklyTeam.members} chosen={weeklyTeam.chosen} /> : null}
+        {weeklyAi !== undefined ? <WeeklyAiToggle on={weeklyAi} /> : null}
         {chat !== undefined ? <ChatSummaryEditor kind={chat} /> : null}
       </div>
 
