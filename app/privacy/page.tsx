@@ -512,8 +512,9 @@ export default function PrivacyPage() {
           by email, and says nothing about who you are. Which of a
           creator&apos;s automatic emails reach you is decided by what their
           list already holds about you — what you got or bought from them, and
-          any labels their import brought — and never by whether you open an
-          email.
+          any labels their import brought or their automatic emails gave you
+          (a step can give a label, take one off, or start another of their
+          automatic emails) — and never by whether you open an email.
         </p>
         <p id="links">
           <strong className="text-black">Which links you use, only if you allow it.</strong>{" "}

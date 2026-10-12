@@ -1,6 +1,9 @@
 /**
  * Automatic sequences: emails that go out by themselves, a set time after
- * somebody joins the list or gets one of the creator's products.
+ * somebody joins the list, gets one of the creator's products, or is given a
+ * label by another sequence. A step can also act instead of writing: give a
+ * label, take one off, or start another sequence (lib/flow-rules.ts,
+ * FlowAction), which is how one sequence hands somebody to the next.
  *
  * Each person goes through a sequence once. Every step is checked again just
  * before it is sent — the person must still be on the list, the sequence
@@ -21,7 +24,22 @@ import { MAX_MAIL_BODY, MAX_SUBJECT, monthlyAllowance, sendTo } from "@/lib/mail
 import type { Store } from "@/lib/store";
 import { hasProduct, idsOfKind } from "@/lib/catalog";
 import { stepCampaign } from "@/lib/mail-links";
-import { type FlowGoal, type Otherwise, type StepCondition, goalClash, holds, readCondition, readGoal, readsEmailBefore, reached } from "@/lib/flow-rules";
+import {
+  type FlowAction,
+  type FlowGoal,
+  type Otherwise,
+  type StepCondition,
+  cleanTag,
+  goalClash,
+  holds,
+  readAction,
+  readCondition,
+  readGoal,
+  readsEmailBefore,
+  reached,
+  sameLabel,
+} from "@/lib/flow-rules";
+import { type Contact, readTags } from "@/lib/contacts";
 import { usedLinkIn } from "@/lib/mail-clicks";
 
 export const MAX_FLOWS = 10;
@@ -32,8 +50,11 @@ export const MAX_FLOW_NAME = 80;
 export type FlowStep = {
   id: string;
   delayHours: number;
+  /** An email's subject and words; both empty on a step that acts instead (`action`). */
   subject: string;
   body: string;
+  /** Instead of an email: a label given or taken off, or another sequence started. */
+  action?: FlowAction;
   /** Sent only to those this holds for (lib/flow-rules.ts); absent for everyone. */
   when?: StepCondition;
   /** For those it does not hold for: skip to the next email, or leave the sequence. */
@@ -44,10 +65,13 @@ export type Flow = {
   name: string;
   /**
    * "joined": agreed to hear from the creator; "product": got or bought one
-   * product; "bought": paid for anything at all, the first time they do.
+   * product; "bought": paid for anything at all, the first time they do;
+   * "tagged": a step of a sequence gave them the label `tag`.
    */
-  trigger: "joined" | "product" | "bought";
+  trigger: "joined" | "product" | "bought" | "tagged";
   productId: string | null;
+  /** The label that starts it, for "tagged". */
+  tag?: string;
   steps: FlowStep[];
   active: boolean;
   createdAt: number;
@@ -84,16 +108,19 @@ export const FLOW_ID = /^[0-9a-f]{16}$/;
 
 const newId = () => randomBytes(8).toString("hex");
 
-function cleanStep(raw: unknown, known: (productId: string) => boolean): FlowStep | null {
+function cleanStep(raw: unknown, known: (productId: string) => boolean, isFlow: (flowId: string) => boolean): FlowStep | null {
   if (!raw || typeof raw !== "object") return null;
   const value = raw as Record<string, unknown>;
   const delay = Number(value.delayHours);
-  const subject = typeof value.subject === "string" ? value.subject.replace(/\s+/g, " ").trim().slice(0, MAX_SUBJECT) : "";
-  const body = typeof value.body === "string" ? value.body.replace(/\r\n?/g, "\n").trim().slice(0, MAX_MAIL_BODY) : "";
-  if (!Number.isInteger(delay) || delay < 0 || delay > MAX_DELAY_HOURS || !subject || !body) return null;
+  const action = readAction(value.action, isFlow);
+  if (action === "bad") return null;
+  // A step that acts writes nothing: whatever words came with it are not kept.
+  const subject = action ? "" : typeof value.subject === "string" ? value.subject.replace(/\s+/g, " ").trim().slice(0, MAX_SUBJECT) : "";
+  const body = action ? "" : typeof value.body === "string" ? value.body.replace(/\r\n?/g, "\n").trim().slice(0, MAX_MAIL_BODY) : "";
+  if (!Number.isInteger(delay) || delay < 0 || delay > MAX_DELAY_HOURS || (!action && (!subject || !body))) return null;
   const when = readCondition(value.when, known);
   if (when === "bad") return null;
-  const step: FlowStep = { id: typeof value.id === "string" && FLOW_ID.test(value.id) ? value.id : newId(), delayHours: delay, subject, body };
+  const step: FlowStep = { id: typeof value.id === "string" && FLOW_ID.test(value.id) ? value.id : newId(), delayHours: delay, subject, body, ...(action ? { action } : {}) };
   if (when) {
     step.when = when;
     step.otherwise = value.otherwise === "end" ? "end" : "skip";
@@ -121,7 +148,7 @@ const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw =
 
 export type FlowResult =
   | { ok: true; flows: Flow[] }
-  | { ok: false; reason: "name" | "trigger" | "product" | "steps" | "step" | "goal" | "too_many" | "unknown" | "setup" | "plan" };
+  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "steps" | "step" | "goal" | "too_many" | "unknown" | "setup" | "plan" };
 
 /** Adds a sequence, or replaces one with the same id. Checked whole every time. */
 export async function saveFlow(store: Store, raw: Record<string, unknown>): Promise<FlowResult> {
@@ -129,26 +156,31 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   if (!store.listId || !store.mail) return { ok: false, reason: "setup" };
   const name = typeof raw.name === "string" ? raw.name.replace(/\s+/g, " ").trim().slice(0, MAX_FLOW_NAME) : "";
   if (!name) return { ok: false, reason: "name" };
-  const trigger = raw.trigger === "joined" || raw.trigger === "product" || raw.trigger === "bought" ? raw.trigger : null;
+  const trigger = raw.trigger === "joined" || raw.trigger === "product" || raw.trigger === "bought" || raw.trigger === "tagged" ? raw.trigger : null;
   if (!trigger) return { ok: false, reason: "trigger" };
   const productId = trigger === "product" && typeof raw.productId === "string" ? raw.productId : null;
   if (trigger === "product" && !(productId && hasProduct(store, productId))) return { ok: false, reason: "product" };
+  const tag = trigger === "tagged" ? cleanTag(raw.tag) : "";
+  if (trigger === "tagged" && !tag) return { ok: false, reason: "tag" };
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
   if (rawSteps.length === 0 || rawSteps.length > MAX_STEPS) return { ok: false, reason: "steps" };
   const known = (id: string) => hasProduct(store, id);
+  const flows = await readFlows(store.listId);
+  const id = typeof raw.id === "string" && FLOW_ID.test(raw.id) ? raw.id : null;
+  // Another of the store's sequences, never this one: starting itself would do nothing.
+  const isFlow = (flowId: string) => flowId !== id && flows.some((f) => f.id === flowId);
   const steps: FlowStep[] = [];
   for (const s of rawSteps) {
-    const step = cleanStep(s, known);
-    // A condition on the email before cannot be on the first email.
-    if (!step || (steps.length === 0 && readsEmailBefore(step.when))) return { ok: false, reason: "step" };
+    const step = cleanStep(s, known, isFlow);
+    // A condition on the email before needs an email before it.
+    const before = steps.at(-1);
+    if (!step || (readsEmailBefore(step.when) && (!before || before.action))) return { ok: false, reason: "step" };
     steps.push(step);
   }
   const goal = readGoal(raw.goal, known);
   if (goal === "bad") return { ok: false, reason: "goal" };
   const startsPaid = Boolean(productId) && idsOfKind(store, "paid").includes(productId as string);
   if (goalClash(trigger, productId, goal, startsPaid)) return { ok: false, reason: "goal" };
-  const flows = await readFlows(store.listId);
-  const id = typeof raw.id === "string" && FLOW_ID.test(raw.id) ? raw.id : null;
   const at = id ? flows.findIndex((f) => f.id === id) : -1;
   if (id && at < 0) return { ok: false, reason: "unknown" };
   if (!id && flows.length >= MAX_FLOWS) return { ok: false, reason: "too_many" };
@@ -159,6 +191,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
     name,
     trigger,
     productId,
+    ...(tag ? { tag } : {}),
     steps,
     active: raw.active === true,
     createdAt: at >= 0 ? flows[at].createdAt : Math.floor(Date.now() / 1000),
@@ -189,6 +222,8 @@ export type FlowCounts = {
   reached: number;
   /** Emails not sent to somebody because a condition did not hold for them. */
   skipped: number;
+  /** Steps that acted for somebody: a label given or taken off, another sequence started. */
+  acted: number;
 };
 
 /** How many have started each sequence, how many of its emails went out, and how many ended it or skipped one. */
@@ -200,7 +235,7 @@ export async function flowStats(flows: Flow[]): Promise<Map<string, FlowCounts>>
     const raw = rows[i];
     const map = new Map<string, number>();
     if (Array.isArray(raw)) for (let j = 0; j + 1 < raw.length; j += 2) map.set(String(raw[j]), Number(raw[j + 1]) || 0);
-    out.set(f.id, { started: map.get("started") ?? 0, sent: map.get("sent") ?? 0, reached: map.get("reached") ?? 0, skipped: map.get("skipped") ?? 0 });
+    out.set(f.id, { started: map.get("started") ?? 0, sent: map.get("sent") ?? 0, reached: map.get("reached") ?? 0, skipped: map.get("skipped") ?? 0, acted: map.get("acted") ?? 0 });
   });
   return out;
 }
@@ -221,7 +256,7 @@ export async function flowsStartedFor(flows: Flow[], email: string): Promise<str
  * Starts whichever sequences this event begins, for this person. Never
  * throws: the list must never cost anyone what they asked for.
  */
-export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string }): Promise<void> {
+export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string }): Promise<void> {
   try {
     if (!store.listId || monthlyAllowance(store) === 0) return;
     // Whether what they just got is sold for money: the store's own index
@@ -233,25 +268,85 @@ export async function enroll(store: Store, email: string, event: { joined: boole
         f.steps.length > 0 &&
         ((f.trigger === "joined" && event.joined) ||
           (f.trigger === "product" && event.productId && f.productId === event.productId) ||
-          (f.trigger === "bought" && paid)),
+          (f.trigger === "bought" && paid) ||
+          (f.trigger === "tagged" && event.tag && f.tag && sameLabel(f.tag, event.tag))),
     );
     if (!flows.length) return;
     const address = normaliseEmail(email);
     // Only someone who may be written to starts one; their one start is not
     // spent on a moment they could not have received it.
     if (!(await isMailable(store.listId, address))) return;
-    const now = Math.floor(Date.now() / 1000);
-    for (const flow of flows) {
-      const [claimed] = await redisPipeline([["SET", enrolledKey(flow.id, address), "1", "NX", "EX", 400 * 86_400]]);
-      if (claimed === null) continue;
-      await redisPipeline([
-        ["ZADD", QUEUE, now + flow.steps[0].delayHours * 3600, `${store.listId}|${store.handle}|${flow.id}|0|${address}`],
-        ["HINCRBY", statsKey(flow.id), "started", 1],
-      ]);
-    }
+    await startFlows(store, flows, [address]);
   } catch (error) {
     console.error("starting a sequence failed", error);
   }
+}
+
+/**
+ * Starts these sequences for these people, each person once per sequence:
+ * the start is claimed before anything is lined up, so a sequence that
+ * starts another, or a label given twice, never starts anybody a second time.
+ */
+async function startFlows(store: Store, flows: Flow[], addresses: string[]): Promise<void> {
+  if (!store.listId || !addresses.length) return;
+  const now = Math.floor(Date.now() / 1000);
+  for (const flow of flows) {
+    if (!flow.steps.length) continue;
+    const claims = await redisPipeline(addresses.map((address) => ["SET", enrolledKey(flow.id, address), "1", "NX", "EX", 400 * 86_400]));
+    const fresh = addresses.filter((_, i) => claims[i] !== null);
+    if (!fresh.length) continue;
+    await redisPipeline([
+      ...fresh.map((address) => ["ZADD", QUEUE, now + flow.steps[0].delayHours * 3600, `${store.listId}|${store.handle}|${flow.id}|0|${address}`]),
+      ["HINCRBY", statsKey(flow.id), "started", fresh.length],
+    ]);
+  }
+}
+
+/**
+ * Carries out a step that acts (lib/flow-rules.ts, FlowAction) for these
+ * people, read from their rows a moment ago. A label is given only to
+ * somebody with room for one more (a contact keeps ten), and giving it starts
+ * every sequence that starts with that label. Says how many it was carried
+ * out for.
+ */
+async function act(store: Store, flows: Flow[], action: FlowAction, emails: string[], contacts: Map<string, Contact | null>): Promise<number> {
+  const listId = store.listId;
+  if (!listId || !emails.length) return 0;
+  if (action.do === "start") {
+    const target = flows.find((f) => f.id === action.flowId && f.active && f.steps.length > 0);
+    if (!target) return 0;
+    await startFlows(store, [target], emails);
+    return emails.length;
+  }
+  const writes: (string | number)[][] = [];
+  const given: string[] = [];
+  let done = 0;
+  for (const email of emails) {
+    const contact = contacts.get(email);
+    if (!contact) continue;
+    const has = contact.tags.some((t) => sameLabel(t, action.tag));
+    if (action.do === "untag") {
+      if (has) writes.push(["HSET", leadsKey(listId), email, JSON.stringify({ ...contact, tags: contact.tags.filter((t) => !sameLabel(t, action.tag)) })]);
+      done += 1;
+      continue;
+    }
+    if (has) {
+      done += 1;
+      continue;
+    }
+    const tags = readTags([...contact.tags, action.tag]);
+    // Ten labels already: this one has no room, and nothing is taken off to make it.
+    if (!tags.some((t) => sameLabel(t, action.tag))) continue;
+    writes.push(["HSET", leadsKey(listId), email, JSON.stringify({ ...contact, tags })]);
+    given.push(email);
+    done += 1;
+  }
+  if (writes.length) await redisPipeline(writes);
+  if (given.length) {
+    const starting = flows.filter((f) => f.active && f.steps.length > 0 && f.trigger === "tagged" && f.tag && sameLabel(f.tag, action.tag));
+    if (starting.length) await startFlows(store, starting, given);
+  }
+  return done;
 }
 
 /**
@@ -368,6 +463,20 @@ export async function sendDueSteps(
     if (left + onward.length) moved.push(["HINCRBY", statsKey(flow.id), "skipped", left + onward.length]);
     if (moved.length) await redisPipeline(moved);
     if (!still.length) return;
+
+    // A step that acts instead of writing: done for everyone it is for, then
+    // on to the next step, its wait counted from now.
+    if (step.action) {
+      const rowsByEmail = new Map(emails.map((email, i) => [email, parseContact(found[i])]));
+      const acted = await act(store, flowsFor.get(listId) ?? [], step.action, still, rowsByEmail);
+      const after: (string | number)[][] = acted ? [["HINCRBY", statsKey(flow.id), "acted", acted]] : [];
+      if (following) {
+        const at = now + following.delayHours * 3600;
+        for (const email of still) after.push(["ZADD", QUEUE, at, `${listId}|${handle}|${flowId}|${index + 1}|${email}`]);
+      }
+      if (after.length) await redisPipeline(after);
+      return;
+    }
 
     const key = `fl:${flow.id}:${step.id}:${createHash("sha256").update([...still].sort().join(",")).digest("hex").slice(0, 32)}`;
     const result = await sendTo(store, still, step.subject, step.body, key, { medium: "sequence", campaign: stepCampaign(flow.id, step.id) });

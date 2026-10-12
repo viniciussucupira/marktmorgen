@@ -137,7 +137,7 @@ async function main(): Promise<void> {
   await run();
   is("the last: nobody — Ana left, Cleo now has the course", to("Last call"), []);
   const stats = (await flowStats(await readFlows(list))).get(flow!.id);
-  is("counted: who started, what went, who left by buying, what was skipped", stats, { started: 3, sent: 4, reached: 2, skipped: 2 });
+  is("counted: who started, what went, who left by buying, what was skipped", stats, { started: 3, sent: 4, reached: 2, skipped: 2, acted: 0 });
 
   part("A paid order on the list, once");
   const order = { sessionId: "cs_test_thanks0000001", email: "dee@example.com", news: true, created: Math.floor(Date.now() / 1000), products: [{ id: course.product.id, title: "Weeknight Course" }, { id: extra.product.id, title: "Spice Chart" }] };

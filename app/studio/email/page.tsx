@@ -186,7 +186,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             }))}
             currency={store.currency}
             sells={sellsSomething(store)}
-            flows={flows.map((f) => ({ ...f, stats: stats.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0 }, money: flowMoney(revenue, f.id) }))}
+            flows={flows.map((f) => ({ ...f, stats: stats.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0, acted: 0 }, money: flowMoney(revenue, f.id) }))}
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
             ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
           />

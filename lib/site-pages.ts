@@ -482,7 +482,7 @@ export const PAGES: TopicPage[] = [
         title: "Marketing",
         head: ["", "Stan", "Marktmorgen"],
         rows: [
-          ["Email broadcasts and flows", "Yes, on the $99 plan only", `Yes, on the $99 Pro plan: one-off emails, emails scheduled for later and sequences that send themselves, up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} a month, only to people who agreed`],
+          ["Email broadcasts and flows", "Yes, on the $99 plan only", `Yes, on the $99 Pro plan: one-off emails, emails scheduled for later and sequences that send themselves, with steps that give or take off a label and start another sequence, up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} a month, only to people who agreed`],
           ["Abandoned-checkout email", "Yes \u2014 a flow with an abandoned-cart trigger, on the $99 plan", "One reminder per checkout, on the $29 plan, only to buyers who asked for it: on Stripe's page where Stripe offers its box (accounts in the United States), or on the page a buyer returns to after leaving the checkout, in every country. Off until you switch it on. Not for calls or live sessions"],
           ["Instagram auto-DM", "Yes, on the $29 plan", "Not available"],
           ["Funnels up to 20 pages", "Yes, on the $99 plan, since June 2026 \u2014 landing pages, checkout and upsells", "Yes, on the $29 plan: up to 20 of your own pages and products' pages in order from one address, counted step by step, with a box at checkout and up to five one-click offers after paying, each with a path for yes and for no. The thank-you page is the store's own, with a button to the next step"],
