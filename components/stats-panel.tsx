@@ -24,6 +24,7 @@ import { BuyerNumbers } from "@/components/buyer-numbers";
 import { NumbersAsk } from "@/components/numbers-ask";
 import { useStudioStore } from "@/components/studio-store-pin";
 import { WeeklyAiToggle } from "@/components/weekly-ai-toggle";
+import { AttributionTable } from "@/components/attribution-table";
 
 /**
  * The store's funnel for the range: people, then the ones who started a
@@ -341,6 +342,7 @@ export function StatsPanel({
   spends: spendsGiven = [],
   askHeard = true,
   canSetHeard = false,
+  canSetAttribution = false,
   weeklyTeam = null,
   goal = 0,
   chat,
@@ -357,6 +359,8 @@ export function StatsPanel({
   askHeard?: boolean;
   /** Whether this person may switch that question on or off. */
   canSetHeard?: boolean;
+  /** Whether this person may choose how long after a visit a sale is credited to it (lib/attribution-rules.ts). */
+  canSetAttribution?: boolean;
   /** For whoever runs the team: members who see the numbers, and those who get the weekly email too. */
   weeklyTeam?: { members: string[]; chosen: string[] } | null;
   /** The month's goal (lib/sales-goal-rules.ts), 0 for none. */
@@ -507,9 +511,8 @@ export function StatsPanel({
   // Page views by country and device, kept by the day: none for "all".
   const countries = data.countries?.[range] ?? [];
   const devices = data.devices?.[range] ?? [];
-  // Where buyers first found the store, shown when it says something the table
-  // above does not: some buyer first came from somewhere other than where they bought.
-  const firstFound = (data.firstBySource ?? []).filter((row) => row.source !== "direct");
+  // Each channel's money by the last visit, the first and what buyers said, for the window.
+  const attribution = range === "all" ? null : data.attribution?.[range] ?? null;
   const sources = data.sources[range];
   const mediums = data.mediums[range];
   const campaigns = data.campaigns[range];
@@ -783,7 +786,7 @@ export function StatsPanel({
           </table>
           <p className="mt-2 text-xs text-ink-soft">
             Read from your own Stripe account, so it is the money that actually arrived. A sale counts under the tags on the
-            page it was bought from; without tags, under the last place the buyer came from in the 30 days before — a link
+            page it was bought from; without tags, under the last place the buyer came from in the {data.attributionDays ?? 30} days before — a link
             you shared, a site, or the Instagram or TikTok app — so somebody who found you on Instagram and came back later by
             typing your address is still counted under Instagram. Where the law asks visitors first (the EU, the UK,
             Switzerland and Brazil), or a browser asks not to be followed, only the page&apos;s tags count.
@@ -1046,22 +1049,15 @@ export function StatsPanel({
         </div>
       ) : null}
 
-      {firstFound.length ? (
-        <div className="mt-6">
-          <p className="text-sm font-bold text-ink">Where buyers first found you, last 90 days</p>
-          <ul className="mt-2 divide-y divide-line text-sm">
-            {firstFound.slice(0, 8).map((row) => (
-              <li key={row.source} className="flex items-baseline justify-between gap-3 py-1.5">
-                <span className="min-w-0 truncate text-ink">{channelName(row.source)}</span>
-                <span className="shrink-0 tabular-nums text-ink-soft">{`${count(row.sales)} ${row.sales === 1 ? "sale" : "sales"} · ${money(row.cents)}`}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-xs text-ink-soft">
-            The same sales, credited to the first place each buyer came from in the 90 days before, rather than to the visit
-            they bought on: where people discover you, beside where they decide.
-          </p>
-        </div>
+      {attribution && salesHere ? (
+        <AttributionTable
+          table={attribution}
+          days={data.attributionDays ?? 30}
+          canSet={canSetAttribution}
+          span={span}
+          money={money}
+          count={count}
+        />
       ) : null}
 
       {sources.length ? (

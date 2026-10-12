@@ -513,6 +513,22 @@ try {
     const row = await studio.locator("#numbers tr", { has: studio.locator('th:text-is("Instagram")') }).first().innerText();
     is("$50 that brought nothing is called cut, and is not paid back", [/Cut/.test(row), /Not yet, 0%/.test(row)], [true, true]);
     is("the buyers' file for ad audiences is offered", await studio.getByRole("button", { name: "Download buyers for ads" }).count(), 1);
+    // The same money three ways (lib/attribution-rules.ts), and the window the creator chooses.
+    const three = studio.locator("#numbers [data-attribution]");
+    is("each channel's money by its last visit, its first and what buyers said, side by side", [
+      (await three.locator("caption").textContent())?.startsWith("Where the money came from, three ways"),
+      (await three.locator("th[scope=col]").allTextContents()).map((t) => t.trim()),
+    ], [true, ["Channel", "Last visit", "First visit", "Buyers said"]]);
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/attribution") && r.ok(), { timeout: 30_000 }),
+      three.getByRole("combobox").selectOption("60"),
+    ]);
+    await open(studio, `${LOCAL}/studio`);
+    is("the window is saved, and the note under the money says it", [
+      await studio.locator("#numbers [data-attribution]").getByRole("combobox").inputValue(),
+      (await studio.locator("#numbers").innerText()).includes("in the 60 days before"),
+    ], ["60", true]);
+    await studio.evaluate(() => fetch("/api/store/attribution", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ days: 30 }) }));
     // Who bought (lib/stats.ts, buyersFrom): the counts, and for the owner the biggest buyers, each opening their page.
     const buyersText = await studio.locator("#numbers").innerText();
     is("who bought: the counts, and the biggest buyers for the owner", [

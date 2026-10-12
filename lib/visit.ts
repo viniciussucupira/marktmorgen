@@ -72,7 +72,7 @@ export async function countHit(
       // channel it came from, read the way the sale itself is credited.
       ...(hit.kind === "view" ? { country: countryOf(request.headers.get("x-vercel-ip-country")), device: deviceOf(userAgent) } : {}),
       ...(hit.kind === "checkout" || hit.kind === "signup"
-        ? { channel: channelOfRequest(request, store.handle, requestHost(request)).channel }
+        ? { channel: channelOfRequest(request, store.handle, requestHost(request), Date.now() / 1000, store.attributionDays).channel }
         : {}),
     });
     // Asked only at 64, 128, 256… views in a day, so a visit costs nothing more.

@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       cameFrom: cameFrom(request.headers.get("referer"), new URL(origin).hostname),
         // The channel this sale is credited to: the page's own tags, else the
         // one remembered for this visitor (lib/visit-channel.ts), else direct.
-        channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname), ...(await adsCheckout(request, store)) },
+        channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays), ...(await adsCheckout(request, store)) },
       via,
     });
     for (const product of products) after(() => countHit(request, store, { kind: "checkout", id: product.id }));

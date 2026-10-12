@@ -1121,6 +1121,7 @@ export default async function StudioPage({
                   spends={adSpends}
                   askHeard={!heardIsOff}
                   canSetHeard={may("settings")}
+                  canSetAttribution={may("settings")}
                   canAsk={isAiConfigured()}
                   insightContext={{
                     storeUrl: current ? storeBase(current) : undefined,
