@@ -103,6 +103,7 @@ import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { LONGEST_PAUSE_MONTHS, PAID_MONTHS_BEFORE_PAUSE } from "@/lib/plan-pause-rules";
 import { SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
 import { visitCost } from "./traffic-cost";
+import { SHARE_PROVED_IN_TEST_MODE } from "@/lib/platform-share";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -535,10 +536,12 @@ function notYetReady(): string[] {
   for (const file of charging) {
     const text = read(file);
     assert.match(text, /onAccount\(\s*"POST"[\s\S]{0,160}?"\/(checkout\/sessions|payment_intents)"/, `${file} no longer opens a charge; update this list`);
-    if (!/commissionCents|commissionBps/.test(text)) missing.push(`${file} opens a charge with no share set on it`);
+    if (!/applyShare(ToPayment)?\(/.test(text)) missing.push(`${file} opens a charge with no share set on it`);
   }
-  // 2. A refund gives back the share of what was refunded.
-  if (!/application_fees\/[^"`]*refunds/.test(read("lib/refunds.ts") + read("lib/webhooks.ts"))) missing.push("a refund does not give back the share");
+  // 2. A refund gives back the share of what was refunded, every day, and so does a discount.
+  if (!/application_fees\/\$\{[^}]+\}\/refunds/.test(read("lib/share-settle.ts"))) missing.push("a refund does not give back the share");
+  const crons = (JSON.parse(read("vercel.json")) as { crons: { path: string }[] }).crons;
+  if (!crons.some((c) => c.path === "/api/cron/shares")) missing.push("the job that gives back what is not owed is not scheduled");
   // 3. No page still says nothing is taken from a sale.
   const said = /take[s]? no cut|No cut of your sales|take a cut of your sales|0% of every sale|0% of your sales|0%, as on every sale|0% transaction fees|We take nothing/i;
   for (const file of [
@@ -555,7 +558,9 @@ function notYetReady(): string[] {
     if (said.test(read(file))) missing.push(`${file} still says nothing is taken from a sale`);
   }
   // 4. A store that subscribed before keeps its price, with no share.
-  if (!/commissionSince/.test(read("lib/store.ts"))) missing.push("a store that subscribed before has nothing marking it as kept on its price");
+  if (!/\n  shared: boolean;/.test(read("lib/store.ts"))) missing.push("a store that subscribed before has nothing marking it as kept on its price");
+  // 5. And it has all been seen to work against Stripe's test mode (lib/platform-share.ts).
+  if (!SHARE_PROVED_IN_TEST_MODE) missing.push("the share has not been run against Stripe's test mode on the platform that will take it");
   return missing;
 }
 
@@ -567,5 +572,10 @@ test("the share cannot be switched on before the checkout, the refunds and the p
     // Off: the list is what switching it on will take. It is checked to find
     // something, so a scan that silently stopped matching cannot pass as "ready".
     assert.ok(missing.some((m) => m.includes("still says nothing is taken")), `the page scan found nothing: ${missing.join("; ")}`);
+    // What code can do ahead of the switch is done, and stays done: every
+    // charge sets the share, the job that gives back is scheduled, and a
+    // store that subscribed before is kept on its price.
+    const built = missing.filter((m) => /opens a charge|does not give back|not scheduled|kept on its price/.test(m));
+    assert.deepEqual(built, [], "built ahead of the switch, and must stay built");
   }
 });

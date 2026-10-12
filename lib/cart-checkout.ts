@@ -32,6 +32,8 @@ import { type CameFrom, hasSource } from "@/lib/came-from";
 import { isHouseStore } from "@/lib/house-store";
 import { MAX_CART, dealOff } from "@/lib/cart-rules";
 import { applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
+import { applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
+import { codesMayTakeOff } from "@/lib/discount";
 
 const DISPLAY_NAME = "branding_settings[display_name]";
 
@@ -144,7 +146,13 @@ export async function createCartCheckout(
     if (extras.cameFrom.campaign) body.set("metadata[utm_campaign]", extras.cameFrom.campaign);
   }
   // One discount at a time, as everywhere here: a code box only when nothing was taken off already.
-  if (!discounted && store.hasDiscounts) body.set("allow_promotion_codes", "true");
+  const box = !discounted && store.hasDiscounts;
+  if (box) body.set("allow_promotion_codes", "true");
+  // The share of the sale, when the store's plan has one (lib/platform-share.ts):
+  // the lines are already at the price the store set, and a code typed in the
+  // box may take off as much as the largest the store has.
+  const mayComeOff = box && shareBps(store) > 0 ? await codesMayTakeOff(store.stripeAccountId, store.currency) : [];
+  applyShare(body, store, { recurring: false, least: leastPaid(linesTotal(body).cents, mayComeOff) });
 
   applyTax(store, body);
   applyTaxDocuments(store, body, false);

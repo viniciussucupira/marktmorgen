@@ -540,7 +540,7 @@ async function ensureStore(pending: string[]): Promise<Store | null> {
   // subscriptions and the studio both ask Stripe only about a store that
   // names one (lib/billing-sync.ts), so neither ever takes this back.
   if (!store.subscriptionActive || store.tier !== "creator" || store.subscriptionId !== null) {
-    const done = await setSubscription(REF, { active: true, tier: "creator", cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0 });
+    const done = await setSubscription(REF, { active: true, tier: "creator", cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0, shared: false });
     if (done) store = done;
     else pending.push(refused("plan", "refused"));
   }

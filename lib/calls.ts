@@ -78,6 +78,8 @@ import { callMeeting, callMoved, linkUpdates } from "@/lib/meet-links";
 import type { MeetRecord } from "@/lib/meet-records";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 import { type BookingWords, bookingWords } from "@/lib/buyer-words/booking";
+import { applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
+import { codesMayTakeOff } from "@/lib/discount";
 
 /** How far back Stripe is read for paid bookings. Longer than any horizon. */
 const LOOKBACK_DAYS = 120;
@@ -655,6 +657,12 @@ export async function holdAndCheckout(input: {
 
     const pkg = input.fromPackage ?? null;
     const body = callCheckoutBody({ store, product, start, end, buyerTz, origin, via: input.via ?? null, fromPackage: pkg, channel: input.channel });
+    // The share of the sale, when the store's plan has one (lib/platform-share.ts).
+    // A session from a package pays nothing here: its share was taken on the package.
+    if (!pkg) {
+      const mayComeOff = store.hasDiscounts && shareBps(store) > 0 ? await codesMayTakeOff(store.stripeAccountId, store.currency) : [];
+      applyShare(body, store, { recurring: false, least: leastPaid(linesTotal(body).cents, mayComeOff) });
+    }
 
     // A session from a package is a checkout with nothing to pay, which Stripe
     // takes only at API version 2023-08-16 or later

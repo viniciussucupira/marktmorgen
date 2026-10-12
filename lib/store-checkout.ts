@@ -31,7 +31,7 @@ import {
   optionDelivers,
 } from "@/lib/product-option";
 import { isPaidUp } from "@/lib/billing";
-import { livePromotionId } from "@/lib/discount";
+import { codesMayTakeOff, livePromotionId } from "@/lib/discount";
 import { StripeError, checkoutClosesAt, onAccount, platformKey } from "@/lib/stripe-account";
 import { type Bump, MAX_BUMPS, activeBumps, bumpTargets, planFor } from "@/lib/product-extras";
 import { planLine } from "@/lib/buyer-words";
@@ -50,6 +50,7 @@ import { BUMP_KEYS, type BumpKey, MIN_BUNDLE_ITEMS, bumpsFromMeta, bundleFromMet
 import { type BundleContents, contentsOf } from "@/lib/bundles";
 import { isHouseStore } from "@/lib/house-store";
 import { preorderProblem } from "@/lib/preorder-rules";
+import { type MayComeOff, applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
 
 /**
  * How long a paid link keeps working.
@@ -437,9 +438,14 @@ export async function createCheckout(
   // A membership's introductory price (lib/intro-price.ts), unless a
   // come-back offer replaces it: one discount at a time, as everywhere here.
   const intro = membership && !extras.coupon ? activeIntro(product, store.tiers) : null;
+  // What may come off this checkout, for the share of the sale
+  // (lib/platform-share.ts): the fee set below is the share of the least the
+  // buyer can pay, and whatever is above what they did pay is given back.
+  const mayComeOff: MayComeOff[] = [];
   if (extras.coupon && !pwyw) {
     body.set("discounts[0][coupon]", extras.coupon);
     body.set("metadata[winback]", "yes");
+    mayComeOff.push(extras.coupon === store.winback.coupon ? { kind: "percent", percent: store.winback.percent } : { kind: "unknown" });
   } else if (intro) {
     body.set("discounts[0][coupon]", await introCoupon(store.stripeAccountId, store.currency, product.priceCents - intro.cents, intro.count));
     // What the order says it was: the thanks page and the email read these (lib/purchase-email.ts).
@@ -450,10 +456,15 @@ export async function createCheckout(
   } else if (fairOffNow > saleOffNow) {
     body.set("discounts[0][coupon]", await fairCoupon(store.stripeAccountId, fairOffNow));
     body.set("metadata[fair]", `${extras.country}:${fairOffNow}`);
+    mayComeOff.push({ kind: "percent", percent: fairOffNow });
   } else if (saleOffNow > 0) {
     body.set("discounts[0][coupon]", store.sale.coupon);
     body.set("metadata[sale]", String(saleOffNow));
+    mayComeOff.push({ kind: "percent", percent: saleOffNow });
   } else if (store.hasDiscounts && !pwyw) {
+    // A code from a link, or one typed in Stripe's box: either may be the
+    // largest the store has.
+    if (!recurring && shareBps(store) > 0) mayComeOff.push(...(await codesMayTakeOff(store.stripeAccountId, store.currency)));
     // A code from a link goes on by itself; Stripe takes either an applied
     // discount or the box, never both, so it is one or the other.
     const promotion = extras.code ? await livePromotionId(store.stripeAccountId, extras.code) : null;
@@ -597,6 +608,10 @@ export async function createCheckout(
   // its creator's own Stripe account, which is theirs to name.
   let named = isHouseStore(store);
   if (named) body.set(DISPLAY_NAME, store.name);
+
+  // The share of the sale, when the store's plan has one. A choose-your-price
+  // line is still at its floor here, which is the least it can be.
+  applyShare(body, store, { recurring, least: leastPaid(linesTotal(body).cents, mayComeOff) });
 
   const open = async (fresh: boolean) => {
     if (pwyw) {
