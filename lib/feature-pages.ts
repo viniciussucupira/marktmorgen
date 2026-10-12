@@ -229,6 +229,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "eye", title: "Free preview lessons", body: "Any lesson can be watched from your store before buying, so the buyer knows what they are paying for." },
           { icon: "calendar", title: "Modules that open over time", body: "A module can open a set number of days after each student joins, and the student gets an email the day it does." },
           { icon: "key", title: "No password to make", body: "The course opens right away in the browser that paid. On any other device, a link is emailed to the address they paid with." },
+          { icon: "list", title: "Lessons from a folder of videos", body: "Choose up to 50 videos at once in a module and each becomes a lesson of its own, named after its file and in the order of the file names: \u201c02 - First loaf.mp4\u201d becomes the lesson \u201cFirst loaf.\u201d A video that does not upload takes its lesson away again, and you are told which file and why." },
           { icon: "sparkle", title: "An outline drafted with AI", body: "Say what the course covers and who it is for, and up to 8 modules of up to 8 lesson titles come back for you to look at. Nothing is added until you press Add, and every title can be changed." },
           { icon: "chat", title: "Questions under each lesson", body: "Students ask and answer under every lesson, under a name they choose; their email address is never shown, and only the course's students and you read them. You answer as the creator from the lesson or your studio, and the student gets an email with your words. Hide or delete any comment, or switch comments off for a course." },
           { icon: "chart", title: "Each student's progress", body: "Your studio shows who opened the course and how many lessons each one marked done." },
@@ -2188,7 +2189,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "What it does not do",
         intro: "Said here so nobody signs up expecting it.",
         items: [
-          "Files, pictures and course lessons are not imported. Add a product's file or lessons from its row in the studio, then import the buyers who should have it.",
+          "Files, pictures and course lessons are not imported from the other platform. Add a product's file from its row in the studio, and a course's videos as lessons, up to 50 at once, then import the buyers who should have it.",
           "Memberships and calls cannot be given to past buyers, and neither can a product with several prices. A subscription on another platform stays there: members join again here.",
           "Buyers brought over get no license key here; the key they had on the old platform is still theirs.",
           "Buyers brought over are not sales: they are not in your numbers, not sent to webhooks, not credited to affiliates, and cannot write a review.",
