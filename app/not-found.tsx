@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteNav } from "@/components/site-nav";
+import { feeWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {
   title: "Not here — Marktmorgen",
@@ -39,7 +40,7 @@ export default function NotFound() {
           <ul className="mt-14 grid gap-4 sm:grid-cols-3">
             {[
               { href: "/help", icon: "info" as const, title: "Help center", body: "Answers about the product as it is today." },
-              { href: "/#pricing", icon: "tag" as const, title: "Pricing", body: "Two plans to start on, and 0% of your sales on every plan." },
+              { href: "/#pricing", icon: "tag" as const, title: "Pricing", body: feeWords().pricingCard },
               { href: "/signin", icon: "store" as const, title: "Your store", body: "Log in with a link sent to your email." },
             ].map((item) => (
               <li key={item.href}>

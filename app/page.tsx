@@ -12,10 +12,11 @@ import { HOME_QUESTIONS } from "@/lib/home-faq";
 import { PLAN_PRICES, PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 import { isDomainsConfigured } from "@/lib/domains";
 import { PLANS_ON_SALE } from "@/lib/opening";
+import { feeWords } from "@/lib/fee-words";
 
 const HOME_TITLE = "Marktmorgen — the link-in-bio store that pays into your own Stripe";
 const HOME_DESCRIPTION =
-  "A fast store page for creators who sell files, courses, calls and memberships. Buyers pay into your own Stripe account, every handover is checked against Stripe's own record of the payment, and Marktmorgen takes 0% of your sales. Stripe's processing fee applies.";
+  "A fast store page for creators who sell files, courses, calls and memberships. Buyers pay into your own Stripe account, every handover is checked against Stripe's own record of the payment, and " + feeWords().takes + " Stripe's processing fee applies.";
 
 export const metadata: Metadata = {
   title: HOME_TITLE,
@@ -239,8 +240,8 @@ export default function Home() {
               {/*
                 The three chips are gone with the rest of the clutter.
 
-                They repeated the sentence directly above them — 0% of your
-                sales is in that paragraph, the trial is in the line below —
+                They repeated the sentence directly above them — what we take
+                from a sale is in that paragraph, the trial is in the line below —
                 and three pills under a paragraph that already says the same
                 thing is the house style of a page with nothing to show. The
                 band under this screen states all three as measurements with
@@ -611,7 +612,7 @@ export default function Home() {
                   plan cards and in the Refund Policy.
                 */
                 { icon: "receipt" as IconName, text: `${REFUND_DAYS}-day money-back guarantee` },
-                { icon: "percent" as IconName, text: "0% of your sales" },
+                { icon: "percent" as IconName, text: feeWords().short },
                 { icon: "lock" as IconName, text: "Payments by Stripe" },
               ].map((f) => (
                 <li key={f.text} className="flex items-center gap-2">

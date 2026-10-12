@@ -7,6 +7,7 @@
  * site. Where a post states a fact about someone else, it names where it came
  * from so a reader can check it.
  */
+import { feeWords } from "@/lib/fee-words";
 
 export type BlogBlock =
   | { type: "p"; text: string }
@@ -607,11 +608,11 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h2", text: "The one thing we do differently" },
       {
         type: "p",
-        text: "The money. On Marktmorgen, the buyer pays into your own Stripe account. We never hold your balance and we take 0% of your sales — not 0% with an asterisk that points at a cut somewhere else. What we charge is the subscription, and that is the whole of what we charge.",
+        text: feeWords().blogMoney,
       },
       {
         type: "p",
-        text: "Stan also advertises 0% transaction fees on their home page, and charges a subscription. On that point we are the same, and we would rather say so than pretend otherwise. Where we differ is whose payment account the sale lands in, which decides who controls payouts, receipts and refunds.",
+        text: feeWords().blogStan,
       },
       { type: "h2", text: "Where Stan is ahead of us today" },
       {

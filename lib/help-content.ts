@@ -12,6 +12,7 @@ import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { formatMoney } from "@/lib/money";
 import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { EXPECTATION, MAX_PAGES_READ, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
+import { PLAN_AT, feeWords, planPriceWords, yearSavingWords } from "@/lib/fee-words";
 
 /** An anchor for one answer, from its question. */
 export function answerId(q: string): string {
@@ -66,13 +67,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "What does it cost to start?",
         a: [
           "Nothing to sign up. Your store address, your page, the editor and connecting Stripe are free and stay free. Without a plan, your page is shown for 500 visits a month.",
-          `What the subscription switches on is your checkout: your page taking a card, and handing out what you give away for an email address. It is $29 a month, or $300 a year, which is $48 less than paying monthly. Pro, which adds email to your list${isDomainsConfigured() ? " and your own domain" : ""}, is $99 a month or $948 a year. Scale, which is Pro for a list that sends up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, is $249 a month or $2,388 a year. The first 14 days are free on any plan, monthly or yearly. Stripe takes your card details when the trial starts and first charges the card when the 14 days end; we email you a week before that charge, and if you cancel before it, from your studio, it is never charged. So you can put a product up and make a sale before you decide whether it is worth paying for.`,
+          `What the subscription switches on is your checkout: your page taking a card, and handing out what you give away for an email address. It is ${planPriceWords("creator")}, or ${planPriceWords("creator", "year")}, which is ${yearSavingWords("creator")} less than paying monthly. Pro, which adds email to your list${isDomainsConfigured() ? " and your own domain" : ""}, is ${planPriceWords("pro")} or ${planPriceWords("pro", "year")}. Scale, which is Pro for a list that sends up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, is ${planPriceWords("scale")} or ${planPriceWords("scale", "year")}. The first 14 days are free on any plan, monthly or yearly. Stripe takes your card details when the trial starts and first charges the card when the 14 days end; we email you a week before that charge, and if you cancel before it, from your studio, it is never charged. So you can put a product up and make a sale before you decide whether it is worth paying for.`,
         ],
       },
       {
         q: "What will it cost?",
         a: [
-          "One subscription — $29 a month, or $99 a month on Pro, less if you pay yearly — and 0% of your sales. The card fee your payment processor charges is paid to them, on your own account, and we never take a cut on top of it.",
+          feeWords().costLine,
           "Two things are charged by use, and only if you reach them, both added to your next invoice. Lesson video watched past 400 hours in a month is $0.03 for each hour. Visits to your store past what your plan covers are $0.50 for each thousand. Your studio shows both as they are counted, and neither ever takes your store down or cuts a student off. Downloads are never charged for.",
           "The price is published on the home page. If it ever changes, existing subscribers are told before it applies to them.",
         ],
@@ -81,7 +82,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "Can I switch between monthly and yearly, or between the plans?",
         a: [
           "Yes to both, from your studio, whenever you like. Monthly to yearly charges the year that day, less what is left of the month you already paid for. Yearly to monthly keeps what is left of your year as credit on your account, and that credit pays your months until it runs out.",
-          "Moving up to Pro charges that day the difference for what is left of the period you already paid for; going back to the $29 plan keeps what is left of Pro as credit on your account. Inside the trial, no switch charges anything.",
+          `Moving up to Pro charges that day the difference for what is left of the period you already paid for; going back to the ${PLAN_AT.creator} plan keeps what is left of Pro as credit on your account. Inside the trial, no switch charges anything.`,
           "On a yearly plan we email you about a month before it renews, with the date, the amount and the link to cancel.",
         ],
       },
@@ -154,7 +155,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "What does Marktmorgen take from a sale?",
         a: [
-          "Nothing. 0% of your sales, with no asterisk. Our only income is the subscription.",
+          feeWords().fromASale,
           "Stripe charges its own processing fee on each payment, published on Stripe's own pricing page, and that is taken on your account by Stripe.",
         ],
       },
@@ -176,7 +177,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can I give someone a discount code?",
         a: [
-          "Yes, and it is on the $29 plan. On Stan, discount codes are on the $99 Creator Pro plan, according to its help center, read on September 28, 2026.",
+          `Yes, and it is on the ${PLAN_AT.creator} plan. On Stan, discount codes are on the $99 Creator Pro plan, according to its help center, read on September 28, 2026.`,
           "You pick the word, say whether it takes a percentage or an amount off, and cap how many times it can be used if you want to. The buyer types it at checkout and Stripe works out the new total.",
           "Or share it as a link: add ?code= and the word to your store's address or any product's page, like marktmorgen.com/@yourname?code=SPRING. Whoever opens it has the code applied at checkout without typing it, for a week. If the code has ended, is used up or does not fit that order, the checkout opens with the box as usual.",
           "The code is a coupon on your own Stripe account, not a record of ours. So the count of how many times it has been used is Stripe's count, a code you switch off in your own dashboard is off here too, and if you ever leave, your codes leave with you.",
@@ -294,7 +295,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can I sell a private podcast?",
         a: [
-          "Yes, on the $29 plan. Under a paid product in your studio, choose \u201cSell this as a private podcast,\u201d then put out episodes as MP3 or M4A files. It can be sold once or as a membership, and goes on sale with its first episode.",
+          `Yes, on the ${PLAN_AT.creator} plan. Under a paid product in your studio, choose \u201cSell this as a private podcast,\u201d then put out episodes as MP3 or M4A files. It can be sold once or as a membership, and goes on sale with its first episode.`,
           "Each buyer gets a feed of their own, from the thanks page, their confirmation email or their list of purchases, and adds it to Apple Podcasts, Overcast, Pocket Casts or most other apps in one tap; new episodes arrive there like any show's, within about four hours of going out. Spotify does not take private feeds. Every time an episode is fetched, we check that the buyer still has the podcast, so a refund or a membership that ends stops every episode from playing within minutes; the list of episodes in their app empties within about four hours. Podcast directories and search engines are told to keep out.",
           "A podcast app checks its feed about once an hour whether or not anybody is listening, so each subscriber counts as one visit to your store on a day their app checks, however often it does.",
         ],
@@ -302,7 +303,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can I run a sale, like Black Friday?",
         a: [
-          "Yes, on the $29 plan. In your studio, under \u201cA sale across the store,\u201d pick a percentage, when it starts and ends (at most 31 days), and whether it covers every product it can or only some. While it runs, your store and each product's page show the old price crossed out, the new one and when it ends, and Stripe takes it off at checkout with no code to type.",
+          `Yes, on the ${PLAN_AT.creator} plan. In your studio, under \u201cA sale across the store,\u201d pick a percentage, when it starts and ends (at most 31 days), and whether it covers every product it can or only some. While it runs, your store and each product's page show the old price crossed out, the new one and when it ends, and Stripe takes it off at checkout with no code to type.`,
           "It ends by itself at the time you set: the prices go back, and the discount stops working at Stripe too. It covers products bought once at one price. Memberships, calls, products with price options or a price the buyer chooses keep their price, and on a product with a payment plan the sale price is for paying in full, as its page says.",
         ],
       },
@@ -380,7 +381,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can I sell a membership?",
         a: [
-          "Yes. Any product can charge on a schedule instead of once: daily, weekly, monthly or yearly. The subscription is created on your own Stripe account, like every other charge here, so the member is your customer, in your dashboard, and we take 0% of the renewals too.",
+          "Yes. Any product can charge on a schedule instead of once: daily, weekly, monthly or yearly. The subscription is created on your own Stripe account, like every other charge here, so the member is your customer, in your dashboard, and " + feeWords().renewals,
           "Members cancel on their own. Under every membership on your page there is a link: the member types the email they pay with, we send them a link, and it opens Stripe's own page for their membership, where they cancel it themselves. It ends at the end of the period they have paid for, and nobody has to write to you or wait for you. They can change their card and see their receipts there too.",
           "A membership can start with a free trial of 1 to 90 days: the card is taken when they join, nothing is charged until the trial ends, and your page and the buyer's confirmation say so. It can also run for a set number of payments, 2 to 36, and then end by itself; the member can still cancel before that.",
           "A monthly membership can have a yearly price beside it, below twelve monthly payments. Buyers pick Monthly or Yearly in the buy box before paying, Yearly shows what it saves, and the subscription is made at that price, once a year; the thank-you page and the confirmation say \u201ca year\u201d. It is not offered beside an introductory price, on a membership with a set number of payments or several prices, or on memberships members switch between.",
@@ -486,7 +487,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can I add my Meta, Google, TikTok or Pinterest pixel?",
         a: [
-          "Yes, on the $29 plan. Paste the pixel ID in your studio and your store's pages tell that platform about every page view, every checkout started, every lead from a free product, and every purchase with its amount, so your ads can learn who buys.",
+          `Yes, on the ${PLAN_AT.creator} plan. Paste the pixel ID in your studio and your store's pages tell that platform about every page view, every checkout started, every lead from a free product, and every purchase with its amount, so your ads can learn who buys.`,
           "Those platforms set cookies, so visitors in the European Economic Area, the UK, Switzerland and Brazil, and anyone whose country we cannot tell, are asked first, in plain words, and nothing loads unless they say yes. Everywhere else the pixels load unless the visitor's browser sends Global Privacy Control. The ads and what they measure are yours: say in your own privacy notice that you use them.",
         ],
       },

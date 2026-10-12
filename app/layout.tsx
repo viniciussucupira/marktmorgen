@@ -6,6 +6,7 @@ import { Toaster } from "@/components/toast";
 import { SITE_URL } from "@/lib/site-url";
 import { SITE_OG_IMAGE } from "@/lib/site-og";
 import { REVEAL_ON, REVEAL_WATCH } from "@/lib/reveal-scripts";
+import { feeWords } from "@/lib/fee-words";
 
 /* Two faces, both served from our own domain so the page never waits on
    fonts.googleapis.com: Geist for everything a person reads or clicks, and an
@@ -41,7 +42,7 @@ const STORE_FONTS = [editorial, elegant, friendly, bold].map((f) => f.variable).
 const SITE_TITLE =
   "Marktmorgen — the link-in-bio store that pays into your own Stripe";
 const SITE_DESCRIPTION =
-  "A storefront for creators selling digital products, courses, memberships and booked sessions. Payments are processed through your own Stripe account, and Marktmorgen takes 0% of your sales.";
+  "A storefront for creators selling digital products, courses, memberships and booked sessions. Payments are processed through your own Stripe account, and " + feeWords().takes;
 
 export const viewport: Viewport = {
   /*

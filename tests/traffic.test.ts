@@ -423,7 +423,7 @@ async function main(): Promise<void> {
   const home = read("components/home-parts.tsx");
   is("the price list says it beside the plan", [/VISITS_INCLUDED\.creator/.test(home), /VISITS_INCLUDED\.pro/.test(home), /VISIT_CENTS_PER_THOUSAND_OVER/.test(home)], [true, true, true]);
   const feature = read("lib/feature-pages.ts");
-  is("so does the page about the store page, and it says what a page without a plan is shown for", [feature.includes(`${countWords(VISITS_INCLUDED.creator)} on the $29 plan, ${countWords(VISITS_INCLUDED.pro)} on the $99 plan and ${countWords(VISITS_INCLUDED.scale)} on the $249 plan`), feature.includes(`${price} for each thousand visits`), feature.includes(`shown for ${countWords(SETUP_VISITS)} visits a month`), help.includes(`shown for ${countWords(SETUP_VISITS)} visits a month`)], [true, true, true, true]);
+  is("so does the page about the store page, and it says what a page without a plan is shown for", [feature.includes(`${countWords(VISITS_INCLUDED.creator)} on the \${PLAN_AT.creator} plan, ${countWords(VISITS_INCLUDED.pro)} on the \${PLAN_AT.pro} plan and ${countWords(VISITS_INCLUDED.scale)} on the \${PLAN_AT.scale} plan`), feature.includes(`${price} for each thousand visits`), feature.includes(`shown for ${countWords(SETUP_VISITS)} visits a month`), help.includes(`shown for ${countWords(SETUP_VISITS)} visits a month`)], [true, true, true, true]);
   const privacy = read("app/privacy/page.tsx");
   is("the privacy policy says what is kept of a visitor for the count, and for how long", [/keep its first sixteen\s+characters/.test(privacy), /deleted two days later/.test(privacy), /made with a secret key of our own/.test(privacy)], [true, true, true]);
   const studio = read("app/studio/page.tsx");

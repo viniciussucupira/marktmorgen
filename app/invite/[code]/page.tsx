@@ -11,10 +11,11 @@ import { inviterFor } from "@/lib/creator-invites";
 import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE_DAYS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
 import { formatMoney } from "@/lib/money";
 import { TRIAL_DAYS, priceWords } from "@/lib/plan";
+import { feeWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {
   title: "You're invited — Marktmorgen",
-  description: "A creator invited you to Marktmorgen: sell digital products, courses, memberships and calls from one link, with 0% of your sales taken.",
+  description: "A creator invited you to Marktmorgen: sell digital products, courses, memberships and calls from one link, " + feeWords().inviteMeta + ".",
   robots: { index: false, follow: false },
 };
 
@@ -47,7 +48,7 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
             </h1>
             <p className="t-lead mt-6 max-w-2xl text-white/80">
               Sell digital products, courses, memberships and calls from one link. Your buyers pay into your own Stripe account,
-              and we take 0% of your sales, on every plan.
+              {feeWords().inviteLead}
             </p>
           </div>
         </section>
@@ -62,7 +63,7 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
                 title: `${bonus} of credit`,
                 text: `On your plan ${INVITE_HOLD_DAYS} days after your first payment, when its refund window has closed. It pays your next bill.`,
               },
-              { icon: "percent" as const, title: "0% of your sales", text: "Only Stripe's card fee, paid to Stripe." },
+              { icon: "percent" as const, title: feeWords().inviteCardTitle, text: feeWords().inviteCardText },
             ].map((item) => (
               <li key={item.title} className="card p-5">
                 <span className="icon-tile icon-tile-sm">

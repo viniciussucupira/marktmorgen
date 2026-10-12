@@ -1,11 +1,10 @@
 /**
  * The one way Marktmorgen makes money.
  *
- * A subscription on our own Stripe account, monthly or yearly, and nothing
- * else. This is
- * the other half of the promise the home page makes: 0% of the creator's
- * sales, because the creator's sales never touch us, and a single price that
- * is the same whether they sell three files or three thousand.
+ * A subscription on our own Stripe account, monthly or yearly. While the
+ * share of each sale is off (lib/plan.ts COMMISSION_LIVE) it is the whole of
+ * what we charge; once it is on, the share is taken from each sale on the
+ * creator's own account (lib/platform-share.ts), never through this file.
  *
  * Note which account each call runs on. Everything here is the PLATFORM
  * account — no Stripe-Account header anywhere in this file. The creator's own
@@ -31,6 +30,7 @@ import {
   SUBSCRIPTION_PATTERN,
   type Store,
 } from "@/lib/store";
+import { feeWords } from "@/lib/fee-words";
 
 /**
  * The price and the trial come from lib/plan.ts and are passed straight
@@ -133,7 +133,7 @@ const PRODUCT_IDS: Record<Tier, string> = {
   scale: "nimbus_labs_scale",
 };
 const PRODUCT_DESCRIPTIONS: Record<Tier, string> = {
-  creator: "One store, 0% of your sales.",
+  creator: feeWords().storeProduct,
   pro: "Everything in Marktmorgen, and what costs us money to run for you.",
   scale: "Everything in Marktmorgen Pro, with three times the email to your list.",
 };
