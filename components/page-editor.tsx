@@ -302,7 +302,8 @@ export function PageEditor({
     if (!startTest) return;
     // The hero opens with the page; the box is drawn inside it a moment later.
     const box = document.getElementById("headline-test") ?? document.querySelector<HTMLElement>("[aria-labelledby=page-test-title]");
-    box?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // At once, not smoothly: this is where the page opens, and a smooth scroll waits for a tab in the background.
+    box?.scrollIntoView({ behavior: "instant", block: "center" });
     box?.querySelector<HTMLInputElement>("input[type=text], textarea")?.focus({ preventScroll: true });
   }, [startTest]);
   const [testHeadline, setTestHeadline] = useState(initial.test?.headline ?? "");
