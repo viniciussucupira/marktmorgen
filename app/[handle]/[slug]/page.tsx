@@ -131,6 +131,14 @@ export default async function StoreOwnPage({ params, searchParams }: Params) {
           )}
           <PageSections blocks={rest} ctx={ctx} style={blocks.style} reviewsFor={() => null} />
         </div>
+        {/* A step of a funnel always has its way on, whether or not the page has a button of its own. */}
+        {here?.next ? (
+          <div className="mt-8 text-center">
+            <Link href={here.next} className="btn st-btn btn-lg">
+              {funnelWords(store.language).next}
+            </Link>
+          </div>
+        ) : null}
         <div className="mt-10 text-center">
           <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
             {w.everythingFrom(store.name)}

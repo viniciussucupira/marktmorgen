@@ -449,6 +449,44 @@ async function casWrite(key: string, writes: { email: string; value: string; was
 }
 
 /**
+ * Changes the labels of these contacts as `change` decides for each, read
+ * the moment before: a new list of labels, "same" when they already are as
+ * they should be, or "skip" when the change cannot be made. Each is written
+ * only if the contact still holds what was read (casWrite), so an
+ * unsubscribe or a purchase noted in the same moment is never written over;
+ * one that changed is read again and decided again, three times at most.
+ */
+export async function changeLabels(
+  listId: string,
+  emails: string[],
+  change: (tags: string[]) => string[] | "same" | "skip",
+): Promise<{ changed: string[]; same: string[] }> {
+  const key = leadsKey(listId);
+  const changed: string[] = [];
+  const same: string[] = [];
+  let pending = [...new Set(emails)];
+  for (let round = 0; round < 3 && pending.length; round += 1) {
+    const [rows] = await redisPipeline([["HMGET", key, ...pending]]);
+    const writes: { email: string; value: string; was: string }[] = [];
+    pending.forEach((email, i) => {
+      const raw = Array.isArray(rows) ? rows[i] : null;
+      const contact = parseContact(raw);
+      if (!contact || typeof raw !== "string") return;
+      const next = change(contact.tags);
+      if (next === "same") same.push(email);
+      else if (next !== "skip") writes.push({ email, value: JSON.stringify({ ...contact, tags: next }), was: sha1(raw) });
+    });
+    if (!writes.length) break;
+    const written = await casWrite(key, writes);
+    pending = writes.filter((_, i) => !written[i]).map((w) => w.email);
+    writes.forEach((w, i) => {
+      if (written[i]) changed.push(w.email);
+    });
+  }
+  return { changed, same };
+}
+
+/**
  * The token for each address's unsubscribe link, made once and kept. Read at
  * the moment of sending, so anyone who left since the send began is not in
  * the answer and is not written to.

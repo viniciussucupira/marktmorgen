@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
       const slug = text(body.slug, 60);
       if (!title) return refuse("title");
       const problem = slugProblem(slug, pages, found.id);
-      if (problem) return refuse(problem);
+      // A page keeps an address it already has, even one reserved since; only a new one is refused.
+      if (problem && !(problem === "reserved" && slug === found.slug)) return refuse(problem);
       const next = pages.map((page) => (page.id === found.id ? { ...page, title, slug, nav: body.nav !== false, target: text(body.target, 40) } : page));
       const saved = await setSitePages(ref, next);
       return saved.ok ? Response.json({ ok: true, pages: saved.store.sitePages }) : refuse(saved.reason);

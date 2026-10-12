@@ -186,6 +186,13 @@ async function main(): Promise<void> {
   is("gone, and a second removal finds nothing", [await dropPageFunnel(statsId, funnel.id), await dropPageFunnel(statsId, funnel.id)], [true, false]);
   is("and its address leads to the store", await go("/@chef/go/launch"), [307, "https://marktmorgen.com/@chef"]);
 
+  part("An address reserved later");
+  const { parseSitePages, slugProblem } = await import("@/lib/site-page-rules");
+  is("a page that already had an address now reserved is kept, and a new page there is refused", [
+    parseSitePages([{ id: "abcdefghij", slug: "go", title: "Go", nav: true, target: "", from: 0 }]).length,
+    slugProblem("go", []),
+  ], [1, "reserved"]);
+
   part("The words a visitor reads");
   is("every language says all of them", Object.values(FUNNEL_WORDS).every((w) => Object.keys(w).join() === Object.keys(funnelWords("en")).join() && Object.values(w).every((v) => typeof v === "string" && v.length > 0)), true);
   is("a store in German says it in German", funnelWords("de").skip, "Nein danke, weiter");

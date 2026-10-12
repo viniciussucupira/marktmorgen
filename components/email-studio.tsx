@@ -1429,8 +1429,12 @@ function Flows({
 
   // The sequences a step can start: any other of the store's.
   const otherFlows = flows.filter((f) => f.id !== draft?.id);
+  // A condition on the email before is cleared wherever no email is right
+  // before it any more, so what the form shows is always what is saved.
+  const settle = (steps: StepDraft[]): StepDraft[] =>
+    steps.map((x, j) => ((x.when === "clicked" || x.when === "unclicked") && (j === 0 || steps[j - 1].kind !== "email") ? { ...x, when: "" } : x));
   const setStep = (i: number, change: Partial<StepDraft>) =>
-    draft && setDraft({ ...draft, steps: draft.steps.map((s, j) => (j === i ? { ...s, ...change } : s)) });
+    draft && setDraft({ ...draft, steps: settle(draft.steps.map((s, j) => (j === i ? { ...s, ...change } : s))) });
 
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="flows-title">
@@ -1511,7 +1515,19 @@ function Flows({
               </p>
               {f.money ? <p className="mt-1 text-sm font-semibold text-ink">{soldWords(f.money, currency)}</p> : null}
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
-                <button type="button" className="text-ink-soft underline underline-offset-4 hover:text-violet-deep" onClick={() => setDraft(toDraft(f, products))}>
+                <button
+                  type="button"
+                  className="text-ink-soft underline underline-offset-4 hover:text-violet-deep"
+                  onClick={() => {
+                    const opened = toDraft(f, products);
+                    // A step that starts a sequence since removed is shown as needing a new choice, not as one it is not.
+                    const others = flows.filter((o) => o.id !== f.id);
+                    setDraft({
+                      ...opened,
+                      steps: opened.steps.map((x) => (x.kind === "start" && !others.some((o) => o.id === x.actionFlow) ? { ...x, actionFlow: "" } : x)),
+                    });
+                  }}
+                >
                   Edit
                 </button>
                 <button
@@ -1655,7 +1671,7 @@ function Flows({
                 </select>
               </label>
             }
-            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : "", count: draftCount })}
+            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : "", tag: draft.trigger === "tagged" ? draft.triggerTag : "", count: draftCount })}
             onResult={(written) =>
               setDraft((current) => {
                 if (!current) return current;
@@ -1667,7 +1683,8 @@ function Flows({
                   body: w.body,
                 }));
                 // Emails still empty are replaced; the creator's own are kept, and these follow them.
-                const kept = current.steps.filter((x) => x.subject.trim() || x.body.trim());
+                // A step that acts has no words of its own, and is kept too.
+                const kept = current.steps.filter((x) => x.kind !== "email" || x.subject.trim() || x.body.trim());
                 return { ...current, steps: [...kept, ...steps].slice(0, 10) };
               })
             }
@@ -1733,7 +1750,8 @@ function Flows({
                 ) : s.kind === "start" ? (
                   <label className="mt-3 block">
                     <span className="text-sm text-ink-soft">The sequence to start</span>
-                    <select className="field mt-1" value={s.actionFlow} onChange={(e) => setStep(i, { actionFlow: e.target.value })}>
+                    <select className="field mt-1" value={s.actionFlow} onChange={(e) => setStep(i, { actionFlow: e.target.value })} required>
+                      {s.actionFlow ? null : <option value="">A sequence that was removed: choose another</option>}
                       {otherFlows.map((f) => (
                         <option key={f.id} value={f.id}>{f.name}</option>
                       ))}
@@ -1842,11 +1860,7 @@ function Flows({
                       setDraft({
                         ...draft,
                         // The email that becomes the first has no email before it to read.
-                        steps: draft.steps
-                          .filter((_, j) => j !== i)
-                          .map((x, j, all) =>
-                            (x.when === "clicked" || x.when === "unclicked") && (j === 0 || all[j - 1].kind !== "email") ? { ...x, when: "" } : x,
-                          ),
+                        steps: settle(draft.steps.filter((_, j) => j !== i)),
                       })
                     }
                   >

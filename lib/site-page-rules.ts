@@ -197,7 +197,10 @@ export function parseSitePages(raw: unknown): SitePage[] {
     const id = typeof value.id === "string" && SITE_PAGE_ID.test(value.id) ? value.id : "";
     const slug = typeof value.slug === "string" ? value.slug : "";
     const title = oneLine(value.title, MAX_SITE_TITLE);
-    if (!id || !title || slugProblem(slug, out) !== null || out.some((page) => page.id === id)) continue;
+    // An address reserved after a page already had it stays the page's: the
+    // list only refuses a new page there (slugProblem, in the studio).
+    const issue = slugProblem(slug, out);
+    if (!id || !title || (issue !== null && issue !== "reserved") || out.some((page) => page.id === id)) continue;
     const target = typeof value.target === "string" && /^[A-Za-z0-9_-]{1,40}$/.test(value.target) ? value.target : "";
     const from = typeof value.from === "number" && Number.isInteger(value.from) && value.from >= -1 ? value.from : -1;
     out.push({ id, slug, title, nav: value.nav !== false, target, from });
