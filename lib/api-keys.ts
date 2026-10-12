@@ -18,7 +18,10 @@
  *   - It belongs to the store by its permanent id, not its address or its
  *     owner's email, so renaming the store or changing the sign-in address
  *     neither breaks a key nor hands it to somebody else.
- *   - It reads, and does nothing else. Nothing in v1 changes anything.
+ *   - It reads, and does nothing else, unless the creator chose, when making
+ *     it, that it may also write (lib/api-write.ts): add people to the list,
+ *     change their labels, give and take back products. That choice is the
+ *     key's for good; every key made before it existed reads only.
  *   - Revoking it works at once: the very next request with it is refused.
  *   - At most MAX_KEYS a store, each named by the creator, each showing when
  *     it was last used, so an old one nobody remembers can be seen and cut.
@@ -56,6 +59,7 @@ function parseStored(raw: unknown): Stored | null {
       hint: typeof v.hint === "string" ? v.hint : "",
       madeAt: typeof v.madeAt === "number" ? v.madeAt : 0,
       usedAt: typeof v.usedAt === "number" ? v.usedAt : 0,
+      write: v.write === true,
     };
   } catch {
     return null;
@@ -73,7 +77,7 @@ export async function listKeys(sid: string): Promise<ApiKey[]> {
   const out: ApiKey[] = [];
   for (let i = 0; i + 1 < flat.length; i += 2) {
     const stored = parseStored(flat[i + 1]);
-    if (stored) out.push({ id: stored.id, name: stored.name, hint: stored.hint, madeAt: stored.madeAt, usedAt: stored.usedAt });
+    if (stored) out.push({ id: stored.id, name: stored.name, hint: stored.hint, madeAt: stored.madeAt, usedAt: stored.usedAt, write: stored.write });
   }
   return out.sort((a, b) => b.madeAt - a.madeAt);
 }
@@ -83,7 +87,7 @@ export type MakeResult = { ok: true; key: string; made: ApiKey } | { ok: false; 
 /**
  * Makes a key and returns it — the only time it is ever seen whole.
  */
-export async function makeKey(sid: string, rawName: unknown, now = Date.now()): Promise<MakeResult> {
+export async function makeKey(sid: string, rawName: unknown, now = Date.now(), write = false): Promise<MakeResult> {
   if (!SID_PATTERN.test(sid) || !isRedisConfigured()) return { ok: false, reason: "unavailable" };
   const name = clean(rawName);
   if (!name) return { ok: false, reason: "name" };
@@ -93,7 +97,7 @@ export async function makeKey(sid: string, rawName: unknown, now = Date.now()): 
   const key = `${KEY_PREFIX}${randomBytes(20).toString("hex")}`;
   const id = randomBytes(6).toString("hex");
   const hash = hashOf(key);
-  const stored: Stored = { id, hash, name, hint: key.slice(KEY_PREFIX.length, KEY_PREFIX.length + 6), madeAt: Math.floor(now / 1000), usedAt: 0 };
+  const stored: Stored = { id, hash, name, hint: key.slice(KEY_PREFIX.length, KEY_PREFIX.length + 6), madeAt: Math.floor(now / 1000), usedAt: 0, write };
   const [, , after] = await redisPipeline([
     ["SET", lookupKey(hash), JSON.stringify({ sid, id })],
     ["HSET", listKey(sid), id, JSON.stringify(stored)],
@@ -106,7 +110,7 @@ export async function makeKey(sid: string, rawName: unknown, now = Date.now()): 
     await redisPipeline([["DEL", lookupKey(hash)], ["HDEL", listKey(sid), id]]);
     return { ok: false, reason: "full" };
   }
-  return { ok: true, key, made: { id, name, hint: stored.hint, madeAt: stored.madeAt, usedAt: 0 } };
+  return { ok: true, key, made: { id, name, hint: stored.hint, madeAt: stored.madeAt, usedAt: 0, write } };
 }
 
 /** Takes a key away. The next request with it is refused. */
@@ -130,7 +134,7 @@ const TOUCH_SECONDS = 60;
  * Checked against both records, so a key whose lookup survived a revocation
  * that was cut short still opens nothing.
  */
-export async function resolveKey(presented: string, now = Date.now()): Promise<{ sid: string; id: string } | null> {
+export async function resolveKey(presented: string, now = Date.now()): Promise<{ sid: string; id: string; write: boolean } | null> {
   if (!KEY_PATTERN.test(presented) || !isRedisConfigured()) return null;
   const hash = hashOf(presented);
   const [raw] = await redisPipeline([["GET", lookupKey(hash)]]);
@@ -152,7 +156,7 @@ export async function resolveKey(presented: string, now = Date.now()): Promise<{
   if (seconds - stored.usedAt >= TOUCH_SECONDS) {
     await redisPipeline([["HSET", listKey(sid), id, JSON.stringify({ ...stored, usedAt: seconds })]]).catch(() => {});
   }
-  return { sid, id };
+  return { sid, id, write: stored.write };
 }
 
 /** Reads the key from an Authorization header: "Bearer nl_live_…". */

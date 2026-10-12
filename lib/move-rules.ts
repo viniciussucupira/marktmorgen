@@ -32,7 +32,35 @@ export const REMIND_DAYS_BEFORE = 3;
 /** A member's link works until this long after their renewal date, and never less than this long after it was sent. */
 export const LINK_DAYS = 30;
 
-const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+/**
+ * Months as the stores' seven languages write them, without accents: a
+ * file exported in any of them is read, by the whole word or its first
+ * letters ("nov", "dez", "okt", "giu").
+ */
+const MONTH_NAMES: string[][] = [
+  ["january", "enero", "janvier", "januar", "janner", "gennaio", "januari", "janeiro"],
+  ["february", "febrero", "fevrier", "februar", "febbraio", "februari", "fevereiro"],
+  ["march", "marzo", "mars", "marz", "maart", "mrt", "marco"],
+  ["april", "abril", "avril", "aprile"],
+  ["may", "mayo", "mai", "maggio", "mei", "maio"],
+  ["june", "junio", "juin", "juni", "giugno", "junho"],
+  ["july", "julio", "juillet", "juli", "luglio", "julho"],
+  ["august", "agosto", "aout", "augustus"],
+  ["september", "septiembre", "setiembre", "septembre", "settembre", "setembro"],
+  ["october", "octubre", "octobre", "oktober", "ottobre", "outubro"],
+  ["november", "noviembre", "novembre", "novembro"],
+  ["december", "diciembre", "decembre", "dezember", "dicembre", "dezembro"],
+];
+
+/** The month a word names, 1 to 12, or 0 when it names none, or could name two. */
+function monthOf(word: string): number {
+  if (word.length < 3) return 0;
+  const found = new Set<number>();
+  MONTH_NAMES.forEach((names, i) => {
+    if (names.some((name) => name.startsWith(word))) found.add(i + 1);
+  });
+  return found.size === 1 ? [...found][0] : 0;
+}
 
 function at(year: number, month: number, day: number): number | null {
   if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return null;
@@ -43,56 +71,111 @@ function at(year: number, month: number, day: number): number | null {
   return Math.floor(ms / 1000);
 }
 
-export type ReadDate = { ok: true; at: number } | { ok: false; reason: "empty" | "unreadable" | "ambiguous" };
+/** How a file writes a date that is all numbers: the month first (11/03/2026 is Nov 3) or the day first (Mar 11). */
+export type DateOrder = "mdy" | "dmy";
+
+export type ReadDate = { ok: true; at: number } | { ok: false; reason: "empty" | "unreadable" | "ambiguous" | "order" };
+
+/** A time after the date, as exports add one: " 14:20", " 2:20 PM", "T14:20:00Z". */
+const TIME = /(?:[ T]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:\s?[ap]\.?m\.?)?(?:\s?(?:z|utc|gmt|[+-]\d{2}:?\d{2}))?)$/i;
 
 /**
  * A renewal date as another platform exports it, as noon UTC that day, in
- * seconds: "2026-11-03", "2026-11-03 14:20:00", "2026-11-03T14:20:00Z",
- * "2026/11/03", "Nov 3, 2026", "3 November 2026", and "11/03/2026" or
- * "03/11/2026" when the numbers can only be read one way. "04/05/2026" could
- * be April or May, so it is refused, and the report asks for the year first.
+ * seconds. Read:
+ *
+ *   - the year first: "2026-11-03", "2026/11/03", with or without a time;
+ *   - the month in letters, in any of the seven languages, whole or cut
+ *     short: "Nov 3, 2026", "3 November 2026", "3-Nov-26", "3. November
+ *     2026", "3 de novembro de 2026";
+ *   - all numbers with the year last: "11/23/2026" and "23/11/2026" can only
+ *     be read one way. "04/05/2026" could be April or May: it is read only
+ *     by `order`, which the creator chooses for the whole file, and refused
+ *     when none was chosen. A date that does not fit the order chosen is
+ *     refused too, since the file then writes dates two ways.
  */
-export function readRenewal(raw: string): ReadDate {
+export function readRenewal(raw: string, order: DateOrder | "" = ""): ReadDate {
   const text = raw.trim().replace(/\s+/g, " ");
   if (!text) return { ok: false, reason: "empty" };
-  let m = text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[ T]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:\s?(?:Z|UTC|[+-]\d{2}:?\d{2}))?)?$/i);
-  if (m) {
-    const when = at(Number(m[1]), Number(m[2]), Number(m[3]));
-    return when ? { ok: true, at: when } : { ok: false, reason: "unreadable" };
-  }
-  m = text.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})(?: \d{1,2}:\d{2}(?::\d{2})?(?: ?[AP]M)?)?$/i);
+  const date = text.replace(TIME, "").trim();
+  const when = (year: number, month: number, day: number): ReadDate => {
+    const found = at(year, month, day);
+    return found ? { ok: true, at: found } : { ok: false, reason: "unreadable" };
+  };
+
+  let m = date.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (m) return when(Number(m[1]), Number(m[2]), Number(m[3]));
+
+  m = date.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})$/);
   if (m) {
     const a = Number(m[1]);
     const b = Number(m[2]);
-    const year = Number(m[3]);
-    if (a > 12 && b <= 12) {
-      const when = at(year, b, a);
-      return when ? { ok: true, at: when } : { ok: false, reason: "unreadable" };
+    const year = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+    if (order) {
+      const [month, day] = order === "mdy" ? [a, b] : [b, a];
+      return month > 12 ? { ok: false, reason: "order" } : when(year, month, day);
     }
-    if (b > 12 && a <= 12) {
-      const when = at(year, a, b);
-      return when ? { ok: true, at: when } : { ok: false, reason: "unreadable" };
-    }
-    if (a === b) {
-      const when = at(year, a, b);
-      return when ? { ok: true, at: when } : { ok: false, reason: "unreadable" };
-    }
+    if (a > 12 && b <= 12) return when(year, b, a);
+    if (b > 12 && a <= 12) return when(year, a, b);
+    if (a === b) return when(year, a, b);
     return { ok: false, reason: a <= 12 && b <= 12 ? "ambiguous" : "unreadable" };
   }
-  const month = (word: string) => MONTHS.indexOf(word.slice(0, 3).toLowerCase()) + 1;
-  // "Nov 3, 2026", "November 3 2026"
-  m = text.match(/^([A-Za-z]{3,9})\.? (\d{1,2})(?:st|nd|rd|th)?,? (\d{4})$/);
-  if (m && month(m[1]) > 0) {
-    const when = at(Number(m[3]), month(m[1]), Number(m[2]));
-    return when ? { ok: true, at: when } : { ok: false, reason: "unreadable" };
+
+  // The month in letters: the words and numbers, whatever stands between them.
+  const words = date
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\b(?:de|del|of|the)\b/g, " ")
+    .replace(/(\d+)(?:st|nd|rd|th|er|o|a|º|ª)(?![a-z])/g, "$1")
+    .split(/[\s,./-]+/)
+    .filter(Boolean);
+  if (words.length !== 3) return { ok: false, reason: "unreadable" };
+  const lettered = words.filter((w) => /^[a-z]+$/.test(w));
+  const numbers = words.filter((w) => /^\d+$/.test(w));
+  if (lettered.length !== 1 || numbers.length !== 2) return { ok: false, reason: "unreadable" };
+  const month = monthOf(lettered[0]);
+  if (!month) return { ok: false, reason: "unreadable" };
+  // The year is the number of four digits, or, in "3-Nov-26", the last.
+  const four = numbers.filter((n) => n.length === 4);
+  let year: number;
+  let day: number;
+  if (four.length === 1) {
+    year = Number(four[0]);
+    day = Number(numbers.find((n) => n !== four[0]) ?? numbers[0]);
+  } else if (four.length === 0 && words[2] === numbers[1] && numbers[1].length === 2) {
+    year = 2000 + Number(numbers[1]);
+    day = Number(numbers[0]);
+  } else {
+    return { ok: false, reason: "unreadable" };
   }
-  // "3 Nov 2026", "3 November, 2026"
-  m = text.match(/^(\d{1,2}) ([A-Za-z]{3,9})\.?,? (\d{4})$/);
-  if (m && month(m[2]) > 0) {
-    const when = at(Number(m[3]), month(m[2]), Number(m[1]));
-    return when ? { ok: true, at: when } : { ok: false, reason: "unreadable" };
+  if (String(day).length > 2) return { ok: false, reason: "unreadable" };
+  return when(year, month, day);
+}
+
+/**
+ * What a file's dates say about their order, read before anything is sent:
+ * whether any could be read two ways, and which order the others prove,
+ * when they prove one ("23/11/2026" proves the day comes first). Both orders
+ * proved means the file writes dates two ways.
+ */
+export function datesInFile(values: string[]): { twoWays: boolean; proves: DateOrder | null; mixed: boolean } {
+  let twoWays = false;
+  const proved = new Set<DateOrder>();
+  for (const value of values) {
+    const read = readRenewal(value);
+    if (!read.ok && read.reason === "ambiguous") twoWays = true;
+    const m = value.trim().replace(TIME, "").trim().match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})$/);
+    if (m && read.ok) {
+      if (Number(m[1]) > 12) proved.add("dmy");
+      if (Number(m[2]) > 12) proved.add("mdy");
+    }
   }
-  return { ok: false, reason: "unreadable" };
+  return { twoWays, proves: proved.size === 1 ? [...proved][0] : null, mixed: proved.size > 1 };
+}
+
+/** A date read from a file, with the month in letters, as the studio shows it back to be checked: "Nov 3, 2026". */
+export function letteredDate(seconds: number): string {
+  return new Date(seconds * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
 
 /**

@@ -130,6 +130,8 @@ export type Purchase = {
   place?: boolean;
   /** Paid for with PayPal, into the creator's own PayPal account (lib/paypal-sales.ts). */
   paidWith?: "paypal";
+  /** Given by the creator's own tools, through the API (lib/api-write.ts): no payment, and not brought over either. */
+  givenByStore?: boolean;
   /** A private podcast opens as a feed of the buyer's own (lib/podcast-access.ts). */
   podcastProduct?: string | null;
   /** A package of calls: where its sessions are booked, and how many are left (lib/call-packages.ts). */
@@ -457,6 +459,7 @@ export async function purchasesFor(store: Store, email: string): Promise<Purchas
         giftFrom: await giftFrom(given.job),
         ...(isGroupJob(given.job) ? { place: true } : {}),
         ...(given.job.startsWith("paypal:") ? { paidWith: "paypal" as const } : {}),
+        ...(given.job.startsWith("api:") ? { givenByStore: true } : {}),
         ...(given.job.startsWith("pre:") ? { preorder: { day: null, given: true } } : {}),
         podcastProduct,
         title: product.title,

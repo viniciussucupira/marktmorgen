@@ -1,5 +1,6 @@
-import { apiError, apiOk, apiStore } from "@/lib/api-guard";
+import { apiError, apiOk, apiStore, apiWriter, readApiBody } from "@/lib/api-guard";
 import { leads } from "@/lib/api-read";
+import { WRITE_ERRORS, addLead } from "@/lib/api-write";
 
 /**
  * GET /api/v1/leads?cursor=&agreed=true — the creator's list: the same rows as
@@ -15,5 +16,25 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("api: leads failed", error);
     return apiError(502, "unavailable", "The list could not be read just now. Try again in a moment.");
+  }
+}
+
+/**
+ * POST /api/v1/leads — puts somebody who agreed to hear from the creator on
+ * the list (lib/api-write.ts): `{ "email", "name", "tags", "agreed": true }`.
+ * A key that may write only.
+ */
+export async function POST(request: Request) {
+  const writer = await apiWriter(request);
+  if (writer instanceof Response) return writer;
+  const body = await readApiBody(request);
+  if (body instanceof Response) return body;
+  try {
+    const done = await addLead(writer.store, body);
+    if (!done.ok) return apiError(WRITE_ERRORS[done.error][0], done.error, WRITE_ERRORS[done.error][1]);
+    return apiOk({ data: done.value });
+  } catch (error) {
+    console.error("api: adding a lead failed", error);
+    return apiError(502, "unavailable", "The list could not be changed just now. Nothing was changed; try again in a moment.");
   }
 }

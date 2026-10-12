@@ -16,7 +16,7 @@
  *   - one reminder, never to somebody who already kept it.
  */
 import { addProduct, claimHandle, ensureStatsId, setProductLink, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
-import { MIN_DEFER_SECONDS, firstChargeAt, readRenewal, reminderAt } from "@/lib/move-rules";
+import { MIN_DEFER_SECONDS, datesInFile, firstChargeAt, letteredDate, readRenewal, reminderAt } from "@/lib/move-rules";
 import { addRows, finishUpload, runImport, sendMoveReminders, startImport } from "@/lib/imports";
 import { moveCounts, openMove, readMove } from "@/lib/move-members";
 import { store as redis } from "./redis-stub";
@@ -71,6 +71,26 @@ async function main(): Promise<void> {
     { ok: true, at: Math.floor(Date.UTC(2026, 10, 11, 12) / 1000) },
   ]);
   is("one that could be April or May is not guessed", readRenewal("04/05/2026"), { ok: false, reason: "ambiguous" });
+  is("but read as the creator chose for the file", [readRenewal("04/05/2026", "mdy"), readRenewal("04/05/2026", "dmy")], [
+    { ok: true, at: Math.floor(Date.UTC(2026, 3, 5, 12) / 1000) },
+    { ok: true, at: Math.floor(Date.UTC(2026, 4, 4, 12) / 1000) },
+  ]);
+  is("and one that does not fit that choice is refused, not swapped", readRenewal("23/11/2026", "mdy"), { ok: false, reason: "order" });
+  is("the month in letters, in the stores' seven languages, whole or cut short", [
+    readRenewal("3-Nov-26"),
+    readRenewal("3. November 2026"),
+    readRenewal("3 de novembro de 2026"),
+    readRenewal("3 noviembre 2026"),
+    readRenewal("3 novembre 2026"),
+    readRenewal("3 nov. 2026"),
+  ], Array(6).fill({ ok: true, at: nov3 }));
+  is("and in other months", [readRenewal("1er mars 2026"), readRenewal("3 dez 2026"), readRenewal("3 okt 2026"), readRenewal("3 giu 2026")].map((r) => (r.ok ? letteredDate(r.at) : r.reason)), ["Mar 1, 2026", "Dec 3, 2026", "Oct 3, 2026", "Jun 3, 2026"]);
+  is("letters that could start two months are not guessed", readRenewal("3 jui 2026"), { ok: false, reason: "unreadable" });
+  is("a file's other dates say which way it writes them", [datesInFile(["04/05/2026", "23/11/2026"]), datesInFile(["04/05/2026"]), datesInFile(["23/11/2026", "11/23/2026"])], [
+    { twoWays: true, proves: "dmy", mixed: false },
+    { twoWays: true, proves: null, mixed: false },
+    { twoWays: false, proves: null, mixed: true },
+  ]);
   is("a day that does not exist, and no date at all", [readRenewal("2026-02-30"), readRenewal("next month"), readRenewal("  ")], [
     { ok: false, reason: "unreadable" },
     { ok: false, reason: "unreadable" },

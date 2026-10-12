@@ -1355,7 +1355,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "What it does not do",
         items: [
           "There is no Marktmorgen app in Zapier's directory. In Zapier, use its Webhooks by Zapier trigger, Catch Hook.",
-          "Webhooks only send. To read your store from your own tools, use an API key: the API reads your list, members, a course's students, your affiliates and your bookings, and changes nothing. The developers page lists every address.",
+          "Webhooks only send. To read your store from your own tools, use an API key: the API reads your list, members, a course's students, your affiliates and your bookings. A key made to write also adds people who agreed to your list, changes their labels and gives or takes back products, for Zapier, Make or your own server. The developers page lists every address.",
           "Up to five addresses per store, https only, and redirects are not followed.",
         ],
       },

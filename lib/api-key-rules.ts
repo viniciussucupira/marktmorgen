@@ -16,4 +16,11 @@ export type ApiKey = {
   madeAt: number;
   /** Seconds; 0 when never used. */
   usedAt: number;
+  /**
+   * Whether it may also change the store (added 12 October 2026): add people
+   * to the list, change their labels, give and take back products. Chosen
+   * when the key is made and never changed after, so a key made to read
+   * stays one that reads.
+   */
+  write: boolean;
 };

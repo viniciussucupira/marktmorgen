@@ -653,6 +653,22 @@ export default function PrivacyPage() {
           membership is a checkout on the creator&apos;s own Stripe account,
           like any purchase in their store.
         </p>
+        <p id="api-writes">
+          <strong className="text-black">
+            A creator&apos;s own tools, through the API.
+          </strong>{" "}
+          A creator can give their own tools a key that may also write. With
+          it, a tool can put somebody on the creator&apos;s list, on the
+          creator&apos;s word in that request that the person agreed to hear
+          from them, kept as an imported contact is; change that
+          person&apos;s labels; and give or take back a product, kept as a past
+          buyer&apos;s is, marked as given through the API. Nobody who
+          unsubscribed is added back. When the tool asks, the person gets one
+          email from the store&apos;s name, through our email provider, saying
+          what they were given, within the same 20,000 in 30 days as the
+          emails above. We keep how many of these a store made each day, for a
+          day, to hold them to their limits.
+        </p>
         <p id="code-links">
           <strong className="text-black">
             Discount codes in a link.

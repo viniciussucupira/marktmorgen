@@ -143,3 +143,18 @@ export async function grantImported(
   );
   return answers.map((a) => Number(a) === 1);
 }
+
+/**
+ * Takes back one product an address was given, only when it was given by
+ * `prefix`'s kind of grant ("api:" for the creator's own tools): never an
+ * import, a gift, a place or a PayPal purchase. Says whether it took it.
+ */
+export async function takeGiven(statsId: string, email: string, productId: string, prefix: string): Promise<boolean> {
+  if (!isRedisConfigured()) return false;
+  const key = importedKey(statsId, email);
+  const [raw] = await redisPipeline([["HGET", key, productId]]);
+  const given = parse(productId, raw);
+  if (!given || !given.job.startsWith(prefix)) return false;
+  const [gone] = await redisPipeline([["HDEL", key, productId]]);
+  return Number(gone) === 1;
+}
