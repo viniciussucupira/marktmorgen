@@ -145,12 +145,30 @@ async function main(): Promise<void> {
   const made = await makeKey((await ensureStoreId(OWNER))!.sid, "Claude");
   if (!made.ok) throw new Error("no key made");
   const tools = (await answer({ jsonrpc: "2.0", id: 5, method: "tools/list" }, made.key)).result?.tools as { name: string; annotations: { readOnlyHint: boolean } }[];
-  is("with the key: three tools, all reading", tools.map((t) => [t.name, t.annotations.readOnlyHint]), [["get_numbers", true], ["list_products", true], ["get_store", true]]);
-  is("none of them hands out a buyer's address", tools.some((t) => /lead|member|student|buyer|subscriber|affiliate/.test(t.name)), false);
-  const call = async (name: string) => {
-    const got = (await answer({ jsonrpc: "2.0", id: 6, method: "tools/call", params: { name, arguments: {} } }, made.key)).result as { content: { text: string }[]; isError: boolean };
-    return { error: got.isError, data: JSON.parse(got.content[0].text) as Record<string, unknown> };
+  is("with the key: eleven tools, all reading", tools.map((t) => [t.name, t.annotations.readOnlyHint]), [
+    ["get_numbers", true],
+    ["list_products", true],
+    ["get_revenue_by_channel", true],
+    ["get_funnel", true],
+    ["get_product_numbers", true],
+    ["get_buyers", true],
+    ["get_worth_knowing", true],
+    ["get_memberships", true],
+    ["get_emails", true],
+    ["get_affiliates", true],
+    ["get_store", true],
+  ]);
+  const call = async (name: string, args: Record<string, unknown> = {}) => {
+    const got = (await answer({ jsonrpc: "2.0", id: 6, method: "tools/call", params: { name, arguments: args } }, made.key)).result as { content: { text: string }[]; isError: boolean };
+    return { error: got.isError, data: JSON.parse(got.content[0].text) as Record<string, unknown>, text: got.content[0].text };
   };
+  // Every tool, read: none answers with an address, the store owner's included.
+  const everything = await Promise.all(tools.map((t) => call(t.name)));
+  is("each answers, and none of them hands out anybody's address", [everything.every((r) => !r.error), everything.some((r) => /@/.test(r.text))], [true, false]);
+  const channels = await call("get_revenue_by_channel", { days: 7 });
+  is("revenue by channel for the days asked for", [channels.data.window, (channels.data.channels as { channel: string }[])[0]?.channel], ["last_7_days", "tiktok"]);
+  const funnel = await call("get_funnel", { days: 90 });
+  is("the funnel, with the days before", [funnel.data.window, typeof funnel.data.visitors, "the_same_days_before" in funnel.data], ["last_90_days", "number", true]);
   const own = await call("get_store");
   is("it reads its own store", [own.error, own.data.handle], [false, "harbor"]);
   const numbers = await call("get_numbers");
