@@ -62,3 +62,18 @@ test("after the switch, nothing says nothing is taken, and the share is named", 
   assert.match(live.gumroad.hundred, /Ours is \$190/);
   assert.match(live.termsCharge, /6\.25% on Store, 2\.75% on Studio, none on Scale/);
 });
+
+test("the Gumroad post's sums: today's as published, and worked again for the share", async () => {
+  const { gumroadSums } = await import("@/lib/fee-words");
+  const today = gumroadSums(false);
+  assert.equal(today.five, "Gumroad leaves you $113.60. Your own Stripe with a $29 monthly plan leaves you $100.60. Gumroad wins by $13, and at that volume you should be using it.");
+  assert.equal(today.evenTitle, "Nine sales of $27");
+  assert.equal(today.even, "Gumroad leaves you $204.48. Your own Stripe leaves you $204.28. This is the crossing point, give or take a sale.");
+  assert.equal(today.hundred, "Gumroad leaves you $2,272. Your own Stripe leaves you $2,563. The difference is $291, in one month.");
+  assert.equal(today.fiveHundred, "Gumroad leaves you $11,360. Your own Stripe leaves you $12,931. The difference is $1,571, in one month, and it comes back every month.");
+  const live = gumroadSums(true);
+  assert.equal(live.evenTitle, "Fourteen sales of $27");
+  // Five hundred sales of $27 is $13,500: Scale, with no share, is the plan such a store picks.
+  assert.equal(live.fiveHundred, "Gumroad leaves you $11,360. Your own Stripe leaves you $12,611. The difference is $1,251, in one month, and it comes back every month.");
+  assert.ok(!Object.values(live).some((s) => SAYS_NOTHING.test(s)));
+});

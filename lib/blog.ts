@@ -7,7 +7,7 @@
  * site. Where a post states a fact about someone else, it names where it came
  * from so a reader can check it.
  */
-import { feeWords } from "@/lib/fee-words";
+import { PLAN_AT, feeWords, gumroadSums } from "@/lib/fee-words";
 
 export type BlogBlock =
   | { type: "p"; text: string }
@@ -125,30 +125,30 @@ export const BLOG_POSTS: BlogPost[] = [
         items: [
           {
             title: "Five sales of $27 in a month",
-            text: "Gumroad leaves you $113.60. Your own Stripe with a $29 monthly plan leaves you $100.60. Gumroad wins by $13, and at that volume you should be using it.",
+            text: gumroadSums().five,
           },
           {
-            title: "Nine sales of $27",
-            text: "Gumroad leaves you $204.48. Your own Stripe leaves you $204.28. This is the crossing point, give or take a sale.",
+            title: gumroadSums().evenTitle,
+            text: gumroadSums().even,
           },
           {
             title: "A hundred sales of $27",
-            text: "Gumroad leaves you $2,272. Your own Stripe leaves you $2,563. The difference is $291, in one month.",
+            text: gumroadSums().hundred,
           },
           {
             title: "Five hundred sales of $27",
-            text: "Gumroad leaves you $11,360. Your own Stripe leaves you $12,931. The difference is $1,571, in one month, and it comes back every month.",
+            text: gumroadSums().fiveHundred,
           },
         ],
       },
       {
         type: "p",
-        text: "The gap widens for no clever reason. A percentage grows with you and a fixed price does not. $3.20 a sale is nothing at five sales and a salary at five hundred.",
+        text: gumroadSums().gap,
       },
       { type: "h2", text: "Which one you should actually be on" },
       {
         type: "p",
-        text: "If you sell a handful of files a month, stay on Gumroad. A percentage of a small number is smaller than $29, and the tax work they do is real work you would otherwise do badly or not at all. We are not going to pretend otherwise to win a sale that would leave you worse off.",
+        text: gumroadSums().stay,
       },
       {
         type: "p",
@@ -156,7 +156,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "p",
-        text: "Move when the cut becomes a number you notice, and when being your own merchant reads as ownership rather than exposure. For a $27 file that is somewhere around nine sales a month, and it is different for everybody.",
+        text: gumroadSums().move,
       },
       {
         type: "note",
@@ -632,7 +632,7 @@ export const BLOG_POSTS: BlogPost[] = [
           "Price options on a single product, with the right file delivered for the tier that was paid for.",
           "Reviews only buyers can write, checked against the payment. Stan's help center says reviews there are added by the creator.",
           "A team with roles, each person signing in with their own email. Stan's help center says the only way to give someone admin access to a store there is to share your login.",
-          "Sales pages, landing pages, discount codes, payment plans and offers after payment on the $29 plan (Stan's help center puts discount codes, payment plans and upsells on their $99 Creator Pro plan), and a store in any of 15 currencies.",
+          `Sales pages, landing pages, discount codes, payment plans and offers after payment on the ${PLAN_AT.creator} plan (Stan's help center puts discount codes, payment plans and upsells on their $99 Creator Pro plan), and a store in any of 15 currencies.`,
           "Bundles that hand over each of your products as if bought on its own. Stan's help center lists bundles among the files you can sell as one download.",
           "Moving in from a spreadsheet: up to 50,000 contacts, 500 products and 20,000 past buyers per file, where Stan's help center sets a limit of 5,000 imported contacts per store in all, and buyers are given access one at a time.",
           "A live demo store anyone can buy from with a test card, before signing up for anything.",
