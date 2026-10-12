@@ -138,7 +138,10 @@ async function stripeRequest(
  * Every country where Stripe opens accounts for businesses in general — the
  * list it publishes as "Stripe-supported countries" — except the ones it
  * offers only by invitation or in preview, and except Brazil, which this
- * company does not sell into. The six most creators choose come first; the
+ * company does not sell into — and where, by Stripe's own rule, a platform
+ * based outside Brazil may not take an application fee at all, so a store
+ * there could not pay the share of each sale its plan is priced with
+ * (lib/platform-share.ts; tests/platform-share.test.ts holds this). The six most creators choose come first; the
  * rest follow in alphabetical order.
  *
  * One list, used both to draw the menu and to check what comes back, so the

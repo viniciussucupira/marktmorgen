@@ -54,6 +54,17 @@ import type { Store } from "@/lib/store";
  *      share of a refund made from the creator's own dashboard, and all of it
  *      after a dispute is lost; and moving a store's memberships to a new
  *      percentage when its plan changes.
+ *   5. A fee on a charge in euros, pounds and Canadian dollars: that the
+ *      fee is reported in the charge's currency, which settleShares needs
+ *      (it leaves alone a fee in any other), and that it reaches the
+ *      platform converted to dollars without a bank account abroad.
+ *
+ * Read from Stripe's own pages on October 12, 2026 ("Collect application
+ * fees", "Create direct charges"): the fee must be less than the charge,
+ * which the least-paid rule above keeps; it is not given back by itself
+ * when a payment is refunded, which settleShares does; and no fee may be
+ * taken from a Brazilian account, where no store can be opened
+ * (lib/stripe-connect.ts COUNTRIES).
  */
 export const SHARE_PROVED_IN_TEST_MODE = false;
 

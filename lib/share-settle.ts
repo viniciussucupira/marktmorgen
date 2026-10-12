@@ -44,7 +44,7 @@ const READ_UNTIL = "nl:share:read-until";
 
 export type SettleCounts = { fees: number; gaveBack: number; cents: number; stores: number; memberships: number; failed: number; complete: boolean };
 
-type Fee = { id: string; account: string; charge: string; amount: number; refunded: number };
+type Fee = { id: string; account: string; charge: string; amount: number; refunded: number; currency?: string };
 
 const str = (value: unknown) => (typeof value === "string" && value ? value : "");
 const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
@@ -54,7 +54,7 @@ function readFee(raw: Record<string, unknown>): Fee | null {
   const account = typeof raw.account === "string" ? raw.account : str((raw.account as { id?: unknown } | null)?.id);
   const charge = typeof raw.charge === "string" ? raw.charge : str((raw.charge as { id?: unknown } | null)?.id);
   if (!/^fee_[A-Za-z0-9]+$/.test(id) || !/^acct_[A-Za-z0-9]+$/.test(account) || !/^(ch|py)_[A-Za-z0-9]+$/.test(charge)) return null;
-  return { id, account, charge, amount: num(raw.amount), refunded: num(raw.amount_refunded) };
+  return { id, account, charge, amount: num(raw.amount), refunded: num(raw.amount_refunded), currency: str(raw.currency).toLowerCase() || undefined };
 }
 
 /** What was paid for the goods on a payment made through a checkout: after discounts, without tax or shipping. */
@@ -77,6 +77,13 @@ export async function owedOnFee(fee: Fee, nowSeconds: number, live = COMMISSION_
     undefined,
     READ_VERSION,
   );
+  // Everything below is worked out in the charge's own currency. A fee Stripe
+  // reports in another one cannot be compared with it here, so it is left
+  // as it is rather than given back by a sum in two currencies.
+  if (fee.currency && str(charge.currency) && fee.currency !== str(charge.currency).toLowerCase()) {
+    console.error(`the share ${fee.id} is in ${fee.currency} and its charge in ${str(charge.currency)}; left for a person`);
+    return null;
+  }
   const amount = num(charge.amount);
   const refunded = num(charge.amount_refunded);
   const dispute = charge.dispute as { status?: unknown } | string | null;

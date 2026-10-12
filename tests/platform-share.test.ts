@@ -29,6 +29,7 @@ import {
 import { settleShares } from "@/lib/share-settle";
 import { claimHandle, setStripeAccount, setSubscription, storeForEmail, storeRef } from "@/lib/store";
 import { redisPipeline } from "@/lib/redis";
+import { COUNTRIES } from "@/lib/stripe-connect";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -101,6 +102,12 @@ async function main(): Promise<void> {
     shareBps({ ...paying, subscriptionActive: false }, NOW, ON),
   ], [0, 0, 0]);
   is("a membership sold in the trial still carries the plan's rate, settled per payment", planShareBps({ ...paying, trialEnds: NOW + 60 }, ON), 625);
+
+  part("Where a store can be");
+  // Stripe: "platforms based outside of Brazil with Brazilian connected
+  // accounts can't collect application fees through Stripe" (Collect
+  // application fees, read October 12, 2026). No such store can be opened.
+  is("no creator can open an account in Brazil, where no share could be taken", COUNTRIES.some((c) => c.code === "br"), false);
 
   part("The fee set on a checkout");
   const body = new URLSearchParams({
