@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
+import { countLeave } from "@/lib/leave-flow";
 import { MANAGE_TOKEN_PATTERN } from "@/lib/membership-manage";
 import { pauseMembership, resumeMembership } from "@/lib/membership-pause";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
   let subscription = "";
   let action = "";
   let months = 0;
+  let fromLeave = false;
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
     const read = (name: string) => {
@@ -34,6 +36,7 @@ export async function POST(request: NextRequest) {
     subscription = read("subscription").slice(0, 80);
     action = read("action").slice(0, 10);
     months = Number(read("months").slice(0, 2));
+    fromLeave = read("from") === "leave";
   } catch {
     return new Response("Bad request", { status: 400 });
   }
@@ -58,5 +61,7 @@ export async function POST(request: NextRequest) {
     return back(result.ok ? "resumed" : result.reason === "declined" ? "resume-declined" : result.reason === "cannot" ? "cannot-pause" : result.reason);
   }
   const result = await pauseMembership(store, token, subscription, months);
+  // Paused instead of leaving, from the page that asked why (lib/leave-flow.ts).
+  if (result.ok && fromLeave && store.leaving.on) await countLeave(store.statsId, "paused");
   return back(result.ok ? "paused" : result.reason === "cannot" ? "cannot-pause" : result.reason);
 }

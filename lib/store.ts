@@ -62,6 +62,7 @@ import { type RecoverySetting, NO_RECOVERY, parseRecovery } from "@/lib/recovery
 import { type SaveOffer, NO_SAVE, parseSaveOffer } from "@/lib/save-offer";
 import { parsePauseMonths } from "@/lib/membership-pause-rules";
 import { type Dunning, DEFAULT_DUNNING, parseDunning } from "@/lib/dunning-rules";
+import { type LeaveSetting, NO_LEAVE, parseLeave } from "@/lib/leave-rules";
 import { type WinBack, NO_WINBACK, parseWinBack } from "@/lib/winback";
 import { type StoreSale, NO_SALE, parseSale } from "@/lib/store-sale";
 import { parseTiers } from "@/lib/tier-rules";
@@ -470,6 +471,12 @@ export type Store = {
    */
   dunning: Dunning;
   /**
+   * Whether the store's own page asks a member why before they cancel, and
+   * answers with a pause, a cheaper plan or a way to write (lib/leave-rules.ts).
+   * Off for every store until its creator turns it on.
+   */
+  leaving: LeaveSetting;
+  /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
    */
@@ -830,6 +837,7 @@ function parseStore(raw: unknown): Store | null {
       save: parseSaveOffer(value.save),
       pause: parsePauseMonths(value.pause),
       dunning: parseDunning(value.dunning),
+      leaving: parseLeave(value.leaving),
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
       tiers: parseTiers(value.tiers),
@@ -1018,6 +1026,7 @@ async function freshStore(fields: {
     save: { ...NO_SAVE },
     pause: 0,
     dunning: { ...DEFAULT_DUNNING },
+    leaving: { ...NO_LEAVE, reasons: [...NO_LEAVE.reasons] },
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
     tiers: [],
@@ -2161,6 +2170,23 @@ export async function setPauseMonths(email: string, months: unknown): Promise<{ 
   const pause = parsePauseMonths(months);
   if (pause !== months) return { ok: false, reason: "months" };
   const next = await patchStore(email, () => ({ pause }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/**
+ * Saves the question asked before a member cancels (lib/leave-rules.ts). A
+ * reason of the creator's own keeps its id while its words stay, so its
+ * answers keep adding up; a new one is given an id here.
+ */
+export async function setLeaving(email: string, raw: unknown): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" | "leaving" }> {
+  const value = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const own = (Array.isArray(value.own) ? value.own : []).map((item) => {
+    const o = item && typeof item === "object" ? (item as { id?: unknown; text?: unknown }) : {};
+    return { id: typeof o.id === "string" && o.id ? o.id : `own_${crypto.randomUUID().replace(/-/g, "").slice(0, 6)}`, text: o.text };
+  });
+  const leaving = parseLeave({ ...value, own });
+  if (own.filter((o) => typeof o.text === "string" && o.text.trim()).length !== leaving.own.length) return { ok: false, reason: "leaving" };
+  const next = await patchStore(email, () => ({ leaving }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 

@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
   let handle = "";
   let token = "";
   let subscription = "";
+  let why = "";
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
     const read = (name: string) => {
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
     handle = normaliseHandle(read("handle"));
     token = read("token").slice(0, 80);
     subscription = read("subscription").slice(0, 80);
+    // The reason given on the page before, if any (lib/leave-rules.ts).
+    why = read("why").slice(0, 40);
   } catch {
     return new Response("Bad request", { status: 400 });
   }
@@ -56,7 +59,7 @@ export async function POST(request: NextRequest) {
   if (!MANAGE_TOKEN_PATTERN.test(token)) return back("expired");
   if (!(await withinLimit("manage-open", `${clientAddress(request)}|${store.handle}`, 20, 600))) return back("limited");
 
-  const result = await openCancel(store, token, subscription, linkOrigin(request, store));
+  const result = await openCancel(store, token, subscription, linkOrigin(request, store), why);
   if (!result.ok) return back(result.reason);
   return new Response(null, {
     status: 303,

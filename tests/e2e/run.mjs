@@ -2265,6 +2265,8 @@ try {
     await open(studio, `${LOCAL}/studio`);
     is("three emails, kept", await studio.locator("#dunning-reminders").inputValue(), "3");
     if (process.env.E2E_SHOTS) await studio.locator("[data-dunning-editor]").screenshot({ path: join(process.env.E2E_SHOTS, "dunning-editor.png") });
+    is("and beside it, the question asked before members cancel, off until turned on", [await studio.locator("[data-leave-editor]").count(), await studio.locator("#leave-on").isChecked()], [1, false]);
+    if (process.env.E2E_SHOTS) await studio.locator("[data-leave-editor]").screenshot({ path: join(process.env.E2E_SHOTS, "leave-editor.png") });
     const refused = await studio.evaluate(async () => (await fetch("/api/store/dunning", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reminders: 9, cardNotice: true }) })).status);
     is("a number not offered is refused", refused, 400);
     await studio.evaluate(async () => fetch("/api/store/dunning", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reminders: 1, cardNotice: true }) }));
@@ -3050,6 +3052,61 @@ try {
     await Promise.all([page.waitForURL(/status=resumed/), page.locator("[data-paused]").getByRole("button", { name: "Resume now" }).click()]);
     is("before the pause starts, coming back only takes it off", [(await words(page.locator("main"))).includes("Your membership is on again"), services.subscriptionUpdates().at(-1)?.pause_collection, services.subscriptionUpdates().at(-1)?.billing_cycle_anchor], [true, "", undefined]);
     await studio.evaluate(async () => fetch("/api/store/pause", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ months: 0 }) }));
+  }
+
+  part("Asked why before cancelling, and answered");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const saved = await studio.evaluate(async () =>
+      (await fetch("/api/store/leaving", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ on: true, reasons: ["too_expensive", "unused", "missing_features", "switched_service", "too_complex", "low_quality", "customer_service", "other"], own: [{ text: "The live calls don't fit my time zone" }] }) })).json(),
+    );
+    is("the creator turns it on, with a reason of their own", [saved.ok, saved.leaving?.own?.length], [true, 1]);
+    await open(page, `${LOCAL}/@localshop/manage`);
+    await page.fill("#manage-email", "pause.member@example.com");
+    const asked = services.emails().length;
+    await Promise.all([page.waitForURL(/status=sent/), page.getByRole("button", { name: "Email me a link to my membership" }).click()]);
+    let mail = null;
+    for (let i = 0; i < 40 && !mail; i += 1) {
+      mail = services.emails().slice(asked).find((email) => [email.to].flat().includes("pause.member@example.com") && /token=/.test(String(email.text))) ?? null;
+      if (!mail) await new Promise((wait) => setTimeout(wait, 250));
+    }
+    await open(page, local(String(mail?.text ?? "").match(/https?:\/\/\S+\/manage\?token=[0-9a-f]{64}/)?.[0] ?? ""));
+    await Promise.all([page.waitForURL(/\/manage\/leave\?/), page.getByRole("link", { name: "Cancel", exact: true }).first().click()]);
+    is("Cancel opens the store's page that asks why, with the way out on it from the start", [
+      await page.locator("input[name=why]").count(),
+      await page.getByText("The live calls don't fit my time zone").count(),
+      await page.getByRole("button", { name: "Cancel my membership" }).count(),
+    ], [9, 1, 1]);
+    await page.getByLabel("Something I need is missing").check();
+    await Promise.all([page.waitForURL(/why=missing_features/), page.getByRole("button", { name: "Continue" }).click()]);
+    is("something missing is answered with a way to write to the creator", (await words(page.locator("[data-leave-answer]"))).includes("Harbor Kitchen Local would like to know."), true);
+    if (process.env.E2E_SHOTS) await page.screenshot({ path: join(process.env.E2E_SHOTS, "leave-answer.png"), fullPage: true });
+    {
+      // The same page, checked against the accessibility rules.
+      const audit = await browser.newContext({ viewport: { width: 430, height: 900 }, bypassCSP: true });
+      const reader = await audit.newPage();
+      await reader.goto(page.url(), { waitUntil: "networkidle", timeout: 120_000 });
+      await reader.addScriptTag({ path: axePath });
+      const found = await reader.evaluate(async () => {
+        const result = await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] } });
+        return result.violations.map((v) => `${v.id}: ${v.nodes[0]?.target.join(" ")}`);
+      });
+      await audit.close();
+      is("no accessibility errors on it", found, []);
+    }
+    const before = services.subscriptionUpdates().length;
+    // Stripe's page is not reachable from here: where the button sends the member is read from the answer.
+    const [sent] = await Promise.all([
+      page.waitForResponse((r) => r.url().endsWith("/api/store/manage/cancel"), { timeout: 30_000 }),
+      page.getByRole("button", { name: "Cancel my membership" }).click(),
+    ]);
+    const written = services.subscriptionUpdates().slice(before).at(-1);
+    is("pressing it opens Stripe's page, with the reason written on the membership and not asked again", [
+      /^https:\/\/billing\.stripe\.com\//.test(sent.headers().location ?? ""),
+      written?.["metadata[leave_reason]"],
+      services.portalConfigs().at(-1)?.["features[subscription_cancel][cancellation_reason][enabled]"],
+    ], [true, "missing_features", "false"]);
+    await studio.evaluate(async () => fetch("/api/store/leaving", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ on: false }) }));
   }
 
   part("A card link that no longer works");

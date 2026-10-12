@@ -5,11 +5,12 @@ import { redirect } from "next/navigation";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
-import { LEAVE_NAMES, STAY_AGES, membershipNumbers } from "@/lib/membership-numbers";
+import { LEAVE_NAMES, STAY_AGES, isLeaveReason, membershipNumbers } from "@/lib/membership-numbers";
 import { channelName } from "@/lib/channel-names";
 import { readListings } from "@/lib/catalog";
 import { formatMoney } from "@/lib/money";
 import { recoveryReport } from "@/lib/payment-recovery-report";
+import { leaveMonth } from "@/lib/leave-flow";
 
 export const metadata: Metadata = {
   title: "Membership numbers — Marktmorgen",
@@ -50,6 +51,11 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
       })
     : null;
   const reminders = store.dunning.reminders;
+  // This month on the store's own cancel page (lib/leave-flow.ts), when it asks.
+  const asked = numbers && store.leaving.on ? await leaveMonth(store.statsId).catch(() => null) : null;
+  // One of the reasons the store's own page offers, or one the creator wrote (lib/leave-rules.ts).
+  const reasonName = (reason: string) =>
+    isLeaveReason(reason) ? LEAVE_NAMES[reason] : numbers?.leaving?.own[reason] ? `“${numbers.leaving.own[reason]}”` : "A reason you have since removed";
   const titles = numbers ? new Map((await readListings(store, numbers.byProduct.map((p) => p.product))).map((p) => [p.id, p.title])) : new Map();
   const money = (cents: number) => formatMoney(cents, numbers?.currency ?? store.currency);
   const when = numbers
@@ -198,15 +204,23 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                 </section>
               ) : null}
 
-              {numbers.leaving && (numbers.leaving.canceled > 0 || numbers.leaving.paymentFailed > 0) ? (
+              {numbers.leaving && (numbers.leaving.canceled > 0 || numbers.leaving.paymentFailed > 0 || (asked && asked.said > 0)) ? (
                 <section aria-labelledby="leave-title" className="card mt-8 p-6 sm:p-8">
                   <h2 id="leave-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Why members leave</h2>
                   <p className="mt-1 max-w-2xl text-sm text-ink-soft">
-                    {`When a member cancels, Stripe asks them why. In the last 12 months ${numbers.leaving.canceled} ${numbers.leaving.canceled === 1 ? "member" : "members"} canceled and ${numbers.leaving.answered} picked a reason.`}
+                    {store.leaving.on
+                      ? "When a member presses Cancel, your store's own page asks them why first. "
+                      : "When a member cancels, Stripe asks them why. "}
+                    {`In the last 12 months ${numbers.leaving.canceled} ${numbers.leaving.canceled === 1 ? "member" : "members"} canceled and ${numbers.leaving.answered} picked a reason.`}
                     {numbers.leaving.paymentFailed
                       ? ` ${numbers.leaving.paymentFailed} more ${numbers.leaving.paymentFailed === 1 ? "membership" : "memberships"} ended because a payment never went through, which is not a choice and is not counted here.`
                       : ""}
                   </p>
+                  {asked && asked.said > 0 ? (
+                    <p className="mt-3 max-w-2xl text-sm text-ink" data-leave-month>
+                      {`This month on your cancel page: ${asked.said} said why, ${asked.paused} paused instead, ${asked.switched} switched to a cheaper plan, and ${asked.left} went on to Stripe's page to cancel.`}
+                    </p>
+                  ) : null}
                   {numbers.leaving.reasons.length ? (
                     <div className="mt-4 overflow-x-auto">
                       <table className="w-full text-left text-sm">
@@ -220,7 +234,7 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                         <tbody className="divide-y divide-line">
                           {numbers.leaving.reasons.map((row) => (
                             <tr key={row.reason}>
-                              <th scope="row" className="py-2.5 pr-4 font-semibold text-ink">{LEAVE_NAMES[row.reason]}</th>
+                              <th scope="row" className="py-2.5 pr-4 font-semibold text-ink">{reasonName(row.reason)}</th>
                               <td className="py-2.5 pr-3 text-right tabular-nums">{row.members}</td>
                               <td className="py-2.5 text-right tabular-nums">{money(row.mrr)}</td>
                             </tr>
@@ -238,7 +252,7 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                             <p className="text-ink">{`“${c.text}”`}</p>
                             <p className="mt-1 text-xs text-ink-mute">
                               {new Date(c.at * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}
-                              {c.reason ? ` · ${LEAVE_NAMES[c.reason]}` : ""}
+                              {c.reason ? ` · ${reasonName(c.reason)}` : ""}
                             </p>
                           </li>
                         ))}

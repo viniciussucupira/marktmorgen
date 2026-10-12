@@ -33,6 +33,8 @@ import { productOfSub } from "@/lib/tier-rules";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 import { membershipWords } from "@/lib/buyer-words/membership";
 import { type PauseSub, cannotPause, pauseOf, periodEndOf } from "@/lib/membership-pause-rules";
+import { isOwnReasonId, offers } from "@/lib/leave-rules";
+import { countLeave } from "@/lib/leave-flow";
 
 /** How long the emailed link keeps working. */
 export const MANAGE_LINK_SECONDS = 60 * 60;
@@ -250,9 +252,11 @@ export async function linkIsLive(token: string): Promise<boolean> {
 }
 
 /** The portal set-up on this account, made the first time a member needs it. */
-async function portalConfiguration(store: Store, origin: string, fresh = false): Promise<string> {
+async function portalConfiguration(store: Store, origin: string, fresh = false, askWhy = true): Promise<string> {
   const account = store.stripeAccountId as string;
-  const key = configKey(account, store.language);
+  // A member who already said why on the store's own page is not asked again
+  // on Stripe's (lib/leave-rules.ts): a set-up of its own, without the question.
+  const key = askWhy ? configKey(account, store.language) : `${configKey(account, store.language)}:quiet`;
   if (!fresh) {
     const [cached] = await redisPipeline([["GET", key]]);
     if (typeof cached === "string" && CONFIG_PATTERN.test(cached)) return cached;
@@ -263,12 +267,16 @@ async function portalConfiguration(store: Store, origin: string, fresh = false):
     default_return_url: `${origin}/@${store.handle}`,
     "features[subscription_cancel][enabled]": "true",
     "features[subscription_cancel][mode]": "at_period_end",
-    "features[subscription_cancel][cancellation_reason][enabled]": "true",
-    "features[subscription_cancel][cancellation_reason][options][0]": "too_expensive",
-    "features[subscription_cancel][cancellation_reason][options][1]": "unused",
-    "features[subscription_cancel][cancellation_reason][options][2]": "missing_features",
-    "features[subscription_cancel][cancellation_reason][options][3]": "switched_service",
-    "features[subscription_cancel][cancellation_reason][options][4]": "other",
+    "features[subscription_cancel][cancellation_reason][enabled]": askWhy ? "true" : "false",
+    ...(askWhy
+      ? {
+          "features[subscription_cancel][cancellation_reason][options][0]": "too_expensive",
+          "features[subscription_cancel][cancellation_reason][options][1]": "unused",
+          "features[subscription_cancel][cancellation_reason][options][2]": "missing_features",
+          "features[subscription_cancel][cancellation_reason][options][3]": "switched_service",
+          "features[subscription_cancel][cancellation_reason][options][4]": "other",
+        }
+      : {}),
     "features[payment_method_update][enabled]": "true",
     "features[invoice_history][enabled]": "true",
     "metadata[made_by]": "nimbus-labs",
@@ -485,7 +493,7 @@ export async function membershipsFor(store: Store, token: string): Promise<Membe
  * whichever thing the member did — took the offer, or cancelled — in Stripe's
  * own words, so nothing written here can describe it wrongly.
  */
-export async function openCancel(store: Store, token: string, subscription: string, origin: string): Promise<OpenResult> {
+export async function openCancel(store: Store, token: string, subscription: string, origin: string, why = ""): Promise<OpenResult> {
   if (!SUB_PATTERN.test(subscription)) return { ok: false, reason: "error" };
   const grant = await grantOf(store, token);
   if (!grant) return { ok: false, reason: "expired" };
@@ -518,9 +526,27 @@ export async function openCancel(store: Store, token: string, subscription: stri
       withOffer = claimed !== null;
     }
 
+    // The reason given on the store's own page (lib/leave-rules.ts), written
+    // on the membership so "Why members leave" counts it once it is canceled
+    // (lib/membership-numbers.ts), and not asked again on Stripe's page.
+    const said = store.leaving.on && why && offers(store.leaving, why) ? why : "";
+    if (said) {
+      await onAccount(
+        "POST",
+        grant.a,
+        `/subscriptions/${subscription}`,
+        new URLSearchParams({
+          "metadata[leave_reason]": said,
+          "metadata[leave_at]": String(Math.floor(Date.now() / 1000)),
+          "metadata[leave_text]": isOwnReasonId(said) ? (store.leaving.own.find((o) => o.id === said)?.text ?? "") : "",
+        }),
+      );
+    }
+    if (store.leaving.on) await countLeave(store.statsId, "left");
+
     const body = new URLSearchParams({
       customer: grant.c,
-      configuration: await portalConfiguration(store, origin),
+      configuration: await portalConfiguration(store, origin, false, !said),
       return_url: `${origin}/@${store.handle}/manage?token=${token}`,
       locale: stripeLocale(store),
       "flow_data[type]": "subscription_cancel",
@@ -542,7 +568,7 @@ export async function openCancel(store: Store, token: string, subscription: stri
       // again and the offer is left out, once. The mark is kept, so a coupon
       // that no longer exists is not tried again on this membership.
       if (!(error instanceof StripeError) || (error.status !== 400 && error.status !== 404)) throw error;
-      body.set("configuration", await portalConfiguration(store, origin, true));
+      body.set("configuration", await portalConfiguration(store, origin, true, !said));
       body.delete("flow_data[subscription_cancel][retention][type]");
       body.delete("flow_data[subscription_cancel][retention][coupon_offer][coupon]");
       made = await onAccount("POST", grant.a, "/billing_portal/sessions", body);

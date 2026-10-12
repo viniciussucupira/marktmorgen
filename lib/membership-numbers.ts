@@ -31,6 +31,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
 import { type Store, saleHandles } from "@/lib/store";
+import { LEAVE_NAMES, LEAVE_REASONS, type LeaveReason, isLeaveReason, isOwnReasonId } from "@/lib/leave-rules";
 
 const MAX_PAGES = 20;
 const CACHE_SECONDS = 10 * 60;
@@ -58,8 +59,14 @@ export type Sub = {
   canceledAt: number;
   /** Stripe's own reason: "cancellation_requested", "payment_failed" or "payment_disputed"; "" for none. */
   cancelCause: string;
-  /** The answer the member picked in the portal ("too_expensive", "unused"…), "" for none. */
+  /**
+   * The answer the member picked ("too_expensive", "unused"…, or one of the
+   * creator's own, "own_…"), "" for none: on the store's own page when it
+   * asked (lib/leave-rules.ts), otherwise in Stripe's portal.
+   */
   feedback: string;
+  /** The words of the creator's own reason, as the member read them; "" for any other. */
+  feedbackText?: string;
   /** What the member wrote, if anything, at most COMMENT_LENGTH characters. */
   comment: string;
 };
@@ -67,24 +74,14 @@ export type Sub = {
 /**
  * Why members leave (added 11 October 2026). The Stripe page where a member
  * cancels (lib/membership-manage.ts) asks them why, from a short list, with
- * room for a sentence; Stripe keeps the answer on the membership. Baremetrics
+ * room for a sentence; Stripe keeps the answer on the membership. Or, with
+ * the store's own question on (lib/leave-rules.ts), the answer given there,
+ * written on the membership as it is opened for cancelling. Baremetrics
  * sells reading those answers as Cancellation Insights. Here they are summed
  * over the last year and the latest sentences shown as written, without the
  * member's name or address beside them.
  */
-export const LEAVE_REASONS = ["too_expensive", "unused", "missing_features", "switched_service", "too_complex", "low_quality", "customer_service", "other"] as const;
-export type LeaveReason = (typeof LEAVE_REASONS)[number];
-export const LEAVE_NAMES: Record<LeaveReason, string> = {
-  too_expensive: "It costs too much",
-  unused: "I don't use it enough",
-  missing_features: "Something I need is missing",
-  switched_service: "I moved to something else",
-  too_complex: "It's too hard to use",
-  low_quality: "The quality isn't good enough",
-  customer_service: "I wasn't helped when I asked",
-  other: "Another reason",
-};
-export const isLeaveReason = (value: string): value is LeaveReason => (LEAVE_REASONS as readonly string[]).includes(value);
+export { LEAVE_NAMES, LEAVE_REASONS, type LeaveReason, isLeaveReason };
 const COMMENT_LENGTH = 400;
 const MAX_COMMENTS = 10;
 
@@ -94,18 +91,20 @@ export type Leaving = {
   /** Of them, how many picked a reason. */
   answered: number;
   /** The reasons picked, most first. */
-  reasons: { reason: LeaveReason; members: number; mrr: number }[];
+  reasons: { reason: string; members: number; mrr: number }[];
   /** Memberships ended by a payment that never went through, in the last year. */
   paymentFailed: number;
   /** The latest sentences members wrote, newest first. */
-  comments: { at: number; reason: LeaveReason | ""; text: string }[];
+  comments: { at: number; reason: string; text: string }[];
+  /** The words of the creator's own reasons among the answers, by id. */
+  own: Record<string, string>;
 };
 
 /** Why members left in the last year. Pure. */
 export function leavingFrom(subs: Sub[], currency: string, now: number): Leaving {
   const since = now - 365 * DAY;
-  const by = new Map<LeaveReason, { members: number; mrr: number }>();
-  const out: Leaving = { canceled: 0, answered: 0, reasons: [], paymentFailed: 0, comments: [] };
+  const by = new Map<string, { members: number; mrr: number }>();
+  const out: Leaving = { canceled: 0, answered: 0, reasons: [], paymentFailed: 0, comments: [], own: {} };
   for (const sub of subs) {
     const at = sub.canceledAt || (sub.cancelCause ? sub.ended : 0);
     if (!at || at < since || at > now) continue;
@@ -114,7 +113,8 @@ export function leavingFrom(subs: Sub[], currency: string, now: number): Leaving
       continue;
     }
     out.canceled += 1;
-    const reason = isLeaveReason(sub.feedback) ? sub.feedback : "";
+    const reason = isLeaveReason(sub.feedback) || isOwnReasonId(sub.feedback) ? sub.feedback : "";
+    if (isOwnReasonId(reason) && sub.feedbackText) out.own[reason] = sub.feedbackText;
     if (reason) {
       out.answered += 1;
       const row = by.get(reason) ?? { members: 0, mrr: 0 };
@@ -403,6 +403,23 @@ type Raw = {
 
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
 
+/**
+ * The reason a member gave. The store's own question writes its answer on the
+ * membership as Stripe's page is opened (leave_reason, leave_at); it counts
+ * when the membership was canceled within two days of it, so an answer given
+ * by somebody who then stayed is not pinned on a later cancellation.
+ */
+function feedbackOf(raw: Raw): { feedback: string; feedbackText: string } {
+  const meta = raw.metadata ?? {};
+  const asked = meta.leave_reason ?? "";
+  const at = Number(meta.leave_at) || 0;
+  const canceled = num(raw.canceled_at);
+  if ((isLeaveReason(asked) || isOwnReasonId(asked)) && at && canceled && canceled >= at && canceled - at <= 2 * DAY) {
+    return { feedback: asked, feedbackText: isOwnReasonId(asked) ? (meta.leave_text ?? "").slice(0, 80) : "" };
+  }
+  return { feedback: typeof raw.cancellation_details?.feedback === "string" ? raw.cancellation_details.feedback : "", feedbackText: "" };
+}
+
 /** A membership as Stripe holds it, when it is one of this store's (not a plan). */
 export function readSub(raw: Raw, handles: Set<string>): Sub | null {
   const meta = raw.metadata ?? {};
@@ -426,7 +443,7 @@ export function readSub(raw: Raw, handles: Set<string>): Sub | null {
     // bought; that is not somebody leaving.
     canceledAt: meta.ends_after ? 0 : num(raw.canceled_at),
     cancelCause: !meta.ends_after && typeof raw.cancellation_details?.reason === "string" ? raw.cancellation_details.reason : "",
-    feedback: typeof raw.cancellation_details?.feedback === "string" ? raw.cancellation_details.feedback : "",
+    ...feedbackOf(raw),
     comment: typeof raw.cancellation_details?.comment === "string" ? raw.cancellation_details.comment.replace(/\s+/g, " ").trim().slice(0, COMMENT_LENGTH) : "",
   };
 }

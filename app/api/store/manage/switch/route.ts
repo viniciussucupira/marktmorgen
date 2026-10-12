@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { countLeave } from "@/lib/leave-flow";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { MANAGE_TOKEN_PATTERN } from "@/lib/membership-manage";
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
   let subscription = "";
   let target = "";
   let at = NaN;
+  let fromLeave = false;
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
     const read = (name: string) => {
@@ -35,6 +37,7 @@ export async function POST(request: NextRequest) {
     token = read("token").slice(0, 80);
     subscription = read("sub").slice(0, 80);
     target = read("to").slice(0, 40);
+    fromLeave = read("from") === "leave";
     at = /^\d{9,11}$/.test(read("at")) ? Number(read("at")) : NaN;
   } catch {
     return new Response("Bad request", { status: 400 });
@@ -57,5 +60,7 @@ export async function POST(request: NextRequest) {
   if (!(await withinLimit("tier-switch", `${clientAddress(request)}|${store.handle}`, 10, 600))) return back("limited");
 
   const result = await switchTier(store, token, subscription, target, at);
+  // Switched instead of leaving, from the page that asked why (lib/leave-flow.ts).
+  if (result.ok && fromLeave && store.leaving.on) await countLeave(store.statsId, "switched");
   return back(result.ok ? "switched" : result.reason === "gone" || result.reason === "tier" ? "cannot-switch" : result.reason);
 }
