@@ -211,3 +211,41 @@ export function yearlyRow(live = COMMISSION_LIVE): string {
 export function yearSavingWords(tier: Tier): string {
   return dollars(PLAN_PRICES[tier].month * 12 - PLAN_PRICES[tier].year);
 }
+
+/**
+ * The worked sums of the post on what selling on Gumroad costs (lib/blog.ts):
+ * a $27 file at four sizes, on Gumroad and on a store paid into your own
+ * Stripe, worked out here from the plans rather than typed, so they follow
+ * the switch. Gumroad: 10% + $0.50 a sale, with card processing of about
+ * $1.08 on top. Here: the card fee, the plan a creator of that size would
+ * choose, and its share of each sale.
+ */
+export function gumroadSums(live = COMMISSION_LIVE) {
+  const card = 1.08;
+  const gumroad = (n: number) => n * (27 - 3.2 - card);
+  const tiers: Tier[] = ["creator", "pro", "scale"];
+  const p = live ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
+  const share = (tier: Tier) => (live ? Math.floor((2700 * COMMISSION_BPS[tier]) / 10_000) / 100 : 0);
+  const ours = (n: number) => Math.max(...tiers.map((t) => n * (27 - card - share(t)) - p[t].month / 100));
+  const money = (x: number) => `$${x.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(Math.round(x * 100) / 100) && x >= 1000 ? 0 : 2, maximumFractionDigits: 2 })}`;
+  const whole = (x: number) => `$${Math.round(x).toLocaleString("en-US")}`;
+  // Where the monthly price is paid back by what is kept per sale over Gumroad.
+  const even = Math.round(p.creator.month / 100 / (3.2 - share("creator")));
+  const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+  const evenWord = words[even] ?? String(even);
+  const title = evenWord.charAt(0).toUpperCase() + evenWord.slice(1);
+  const plan = `${dollars(p.creator.month)} monthly plan${live ? ` and ${percent(COMMISSION_BPS.creator)} of each sale` : ""}`;
+  const big = (n: number) => (ours(n) - gumroad(n));
+  return {
+    five: `Gumroad leaves you ${money(gumroad(5))}. Your own Stripe with a ${plan} leaves you ${money(ours(5))}. Gumroad wins by ${whole(gumroad(5) - ours(5))}, and at that volume you should be using it.`,
+    evenTitle: `${title} sales of $27`,
+    even: `Gumroad leaves you ${money(gumroad(even))}. Your own Stripe leaves you ${money(ours(even))}. This is the crossing point, give or take a sale.`,
+    hundred: `Gumroad leaves you ${whole(gumroad(100))}. Your own Stripe leaves you ${whole(ours(100))}. The difference is ${whole(big(100))}, in one month.`,
+    fiveHundred: `Gumroad leaves you ${whole(gumroad(500))}. Your own Stripe leaves you ${whole(ours(500))}. The difference is ${whole(big(500))}, in one month, and it comes back every month.`,
+    gap: live
+      ? `The gap widens because ours shrinks as you grow and theirs does not: Gumroad takes $3.20 of every sale at any size, and our share is ${percent(COMMISSION_BPS.creator)} on the first plan, ${percent(COMMISSION_BPS.pro)} on the next, and nothing on Scale.`
+      : "The gap widens for no clever reason. A percentage grows with you and a fixed price does not. $3.20 a sale is nothing at five sales and a salary at five hundred.",
+    stay: `If you sell a handful of files a month, stay on Gumroad. A percentage of a small number is smaller than ${live ? "our plan and its share" : dollars(p.creator.month)}, and the tax work they do is real work you would otherwise do badly or not at all. We are not going to pretend otherwise to win a sale that would leave you worse off.`,
+    move: `Move when the cut becomes a number you notice, and when being your own merchant reads as ownership rather than exposure. For a $27 file that is somewhere around ${evenWord} sales a month, and it is different for everybody.`,
+  };
+}

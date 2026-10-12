@@ -549,11 +549,10 @@ function notYetReady(): string[] {
   // 3. No page says that nothing is taken from a sale once something is. Every
   // such sentence lives in lib/fee-words.ts, in a version for each side of
   // the switch, and tests/fee-words.test.ts holds that no other file says it
-  // and that the version for after the switch never does. What that cannot
-  // see is the worked arithmetic of the blog's posts, which compares the old
-  // price with Gumroad's cut: those are rewritten by hand on the day.
+  // and that the version for after the switch never does; the blog's worked
+  // sums against Gumroad are worked out there too (gumroadSums).
   const blog = read("lib/blog.ts");
-  if (/\$29 monthly plan|smaller than \$29/.test(blog)) missing.push("lib/blog.ts still works its sums at the price without a share");
+  if (/Your own Stripe with a \$29|smaller than \$29|on the \$29 plan/.test(blog)) missing.push("lib/blog.ts still works its sums at the price without a share");
   // 4. A store that subscribed before keeps its price, with no share.
   if (!/\n  shared: boolean;/.test(read("lib/store.ts"))) missing.push("a store that subscribed before has nothing marking it as kept on its price");
   // 5. And it has all been seen to work against Stripe's test mode (lib/platform-share.ts).
@@ -568,7 +567,8 @@ test("the share cannot be switched on before the checkout, the refunds and the p
   } else {
     // Off: the list is what switching it on will take. It is checked to find
     // something, so a scan that silently stopped matching cannot pass as "ready".
-    assert.ok(missing.some((m) => m.includes("works its sums")), `the blog scan found nothing: ${missing.join("; ")}`);
+    // Off, the one thing left is what code cannot see: the run against Stripe's test mode.
+    assert.deepEqual(missing, ["the share has not been run against Stripe's test mode on the platform that will take it"]);
     // What code can do ahead of the switch is done, and stays done: every
     // charge sets the share, the job that gives back is scheduled, and a
     // store that subscribed before is kept on its price.
