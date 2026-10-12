@@ -2452,6 +2452,46 @@ try {
   }
 
   await keepSmall();
+  part("What buyers get next, offered after paying in one press");
+  {
+    // The studio reads every sale again in the background; then four buyers'
+    // worth of later purchases is put where that reading keeps them, as months would.
+    await open(studio, `${LOCAL}/studio`);
+    let key = "";
+    for (let i = 0; i < 60 && !key; i += 1) {
+      const [scan] = await services.redis([["SCAN", "0", "MATCH", "nl:next:*", "COUNT", "1000"]]);
+      key = (scan?.[1] ?? []).find((k) => !k.includes(":lock:")) ?? "";
+      if (!key) await new Promise((wait) => setTimeout(wait, 250));
+    }
+    const first = ids["Meal Planner"];
+    const later = ids["Sunday Baking"];
+    await services.redis([["SET", key, JSON.stringify({ at: Date.now(), starts: { [first]: 5 }, next: { [first]: [{ id: later, buyers: 4, days: 12 }] } })]]);
+    await open(studio, `${LOCAL}/studio`);
+    const paths = studio.locator("#buyer-paths");
+    const row = paths.locator("[data-path]").first();
+    is("each product, what its buyers bought later, how many and how long after", [
+      await words(paths.locator("h2")),
+      (await words(row)).includes("Meal Planner"),
+      (await words(row)).includes("Sunday Baking"),
+      (await words(row)).includes("4 buyers, usually 12 days later"),
+      (await words(paths)).includes("Most often bought first: Meal Planner (5 buyers)"),
+    ], ["What buyers get next", true, true, true, true]);
+    is("and a bundle of the two, started with both in it", (await row.getByRole("link", { name: "Bundle them" }).getAttribute("href"))?.includes(`items=${first},${later}`), true);
+    const offerButton = row.getByRole("button", { name: /^Offer it after paying, for / });
+    const offerable = (await offerButton.count()) === 1;
+    if (offerable) {
+      await Promise.all([studio.waitForResponse((r) => r.url().endsWith("/api/store/next-offer") && r.ok(), { timeout: 30_000 }), offerButton.click()]);
+      await open(studio, `${LOCAL}/studio/funnels?product=${first}`);
+      is("one press: offered in one click after paying, at its own price", (await words(studio.locator("main"))).includes("Sunday Baking"), true);
+      await studio.evaluate(async (id) => fetch("/api/store/funnel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, funnel: null }) }), first);
+    } else {
+      is("where offers after paying exist, it leads to them", (await row.getByRole("link", { name: "Add it to the offers after paying" }).count()) === 1, true);
+    }
+    await open(studio, `${LOCAL}/studio/bundles?new=1&items=${first},${later}`);
+    is("the bundle starts with both", [(await words(studio.locator("main"))).includes("Meal Planner"), (await words(studio.locator("main"))).includes("Sunday Baking")], [true, true]);
+  }
+
+  await keepSmall();
   part("A payment plan at each of several prices");
   {
     await open(studio, `${LOCAL}/studio`);

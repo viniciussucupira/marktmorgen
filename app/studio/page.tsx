@@ -36,7 +36,7 @@ import {
   type Listing,
   type Store,
 } from "@/lib/store";
-import { KIND, productCount, readKind, readListings, sellsAny, studioShelf } from "@/lib/catalog";
+import { KIND, idsOfKind, productCount, readKind, readListings, sellsAny, studioShelf } from "@/lib/catalog";
 import { HandleForm } from "@/components/handle-form";
 import { RenameForm } from "@/components/rename-form";
 import { OldAddresses } from "@/components/old-addresses";
@@ -45,13 +45,17 @@ import { SocialsEditor } from "@/components/socials-editor";
 import { IntroEditor } from "@/components/intro-editor";
 import { LookEditor } from "@/components/look-editor";
 import { type PaidCall, catchUpBookings, paidCalls } from "@/lib/calls";
-import { productsInStats, reachProducts, readSales, readStats, studioStats } from "@/lib/stats";
+import { productsInStats, reachProducts, readAllTimeSales, readSales, readStats, studioStats } from "@/lib/stats";
 import { StatsPanel } from "@/components/stats-panel";
 import { readNotes } from "@/lib/stats-notes";
 import { readSpends } from "@/lib/ad-spend";
 import { heardOff } from "@/lib/heard";
 import { weeklyTeam } from "@/lib/stats-report";
 import { NO_SETUP, SERVER_PLATFORMS, serverSetup } from "@/lib/ad-events";
+import { claimPathsRead, laterWords, pathsStale, readPaths } from "@/lib/next-bought";
+import { BuyerPaths } from "@/components/buyer-paths";
+import { canBeBumped, isOneOff } from "@/lib/product-extras";
+import { whyNotInBundle } from "@/lib/bundle-rules";
 import { hasPixels } from "@/lib/pixels";
 import { readTrouble } from "@/lib/checkout-trouble";
 import { readSalesGoal } from "@/lib/sales-goal";
@@ -1142,6 +1146,37 @@ export default async function StudioPage({
                   chat={may("settings") ? await chatSetup(store.statsId).catch(() => null) : undefined}
                   deviceMarked={isMarkedDevice((await cookies()).get(NO_COUNT_COOKIE)?.value, store.sid)}
                 />
+                {await (async () => {
+                  // What buyers get next (lib/next-bought.ts): read from the week's
+                  // record, and read again in the background after six hours.
+                  if (!store.stripeAccountId) return null;
+                  const paths = await readPaths(store.statsId).catch(() => null);
+                  if (pathsStale(paths) && (await claimPathsRead(store.statsId).catch(() => false))) {
+                    after(() => readAllTimeSales(store).then(() => undefined).catch(() => undefined));
+                  }
+                  if (!paths) return null;
+                  const pairs = Object.entries(paths.next)
+                    .flatMap(([from, steps]) => steps.map((step) => ({ from, ...step })))
+                    .sort((a, b) => b.buyers - a.buyers || a.days - b.days)
+                    .slice(0, 12);
+                  const firstOnes = Object.entries(paths.starts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+                  const ids = [...new Set([...pairs.flatMap((p) => [p.from, p.id]), ...firstOnes.map(([id]) => id)])];
+                  const listed = new Map((ids.length ? await readListings(store, ids).catch(() => []) : []).map((p) => [p.id, p]));
+                  const withOffers = new Set(idsOfKind(store, "funnel"));
+                  const rows = pairs
+                    .map((p) => ({ p, a: listed.get(p.from), b: listed.get(p.id) }))
+                    .filter((x): x is { p: (typeof pairs)[number]; a: Listing; b: Listing } => Boolean(x.a && x.b))
+                    .map(({ p, a, b }) => ({
+                      from: { id: a.id, title: a.title },
+                      to: { id: b.id, title: b.title, price: formatMoney(b.priceCents, store.currency) },
+                      buyers: p.buyers,
+                      when: laterWords(p.days),
+                      offer: isOneOff(a) && canBeBumped(b) ? (withOffers.has(a.id) ? ("change" as const) : ("offer" as const)) : null,
+                      bundle: whyNotInBundle(a) === null && whyNotInBundle(b) === null,
+                    }));
+                  const starts = firstOnes.flatMap(([id, buyers]) => (listed.get(id) && buyers >= 3 ? [{ title: listed.get(id)!.title, buyers }] : []));
+                  return <BuyerPaths rows={rows} starts={starts} canEdit={may("products")} />;
+                })()}
                 <GoogleSearches
                   searches={await storeSearches(store).catch(() => null)}
                   operator={isOperator(email) ? await searchConsoleStatus().catch(() => ({ connected: false, account: "" })) : null}
