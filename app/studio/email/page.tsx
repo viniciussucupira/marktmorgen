@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { productLink } from "@/lib/checkout-recovery";
-import { readTitles } from "@/lib/catalog";
+import { idsOfKind, readTitles } from "@/lib/catalog";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { studioPath, studioView } from "@/lib/studio-route";
@@ -94,6 +94,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             </div>
             <ul className="mt-4 space-y-2 text-ink-soft">
               <li>One-off emails to everyone on your list, or only to those who got one product.</li>
+              <li>Readers chosen by what they spent with you, where they first found you or when they last bought, saved as groups to use again.</li>
               <li>Emails scheduled for the day and time you choose.</li>
               <li>Sequences that go out by themselves, hours or days after someone joins or buys.</li>
               <li>{`Up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, sent from your name, with replies coming to you.`}</li>
@@ -192,6 +193,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
             ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
             segments={await listSegments(store.listId).catch(() => [])}
+            courses={idsOfKind(store, "course")}
           />
           </>
         )}

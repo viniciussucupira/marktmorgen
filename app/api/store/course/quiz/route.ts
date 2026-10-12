@@ -8,6 +8,7 @@ import { courseAccess, emailKey, markLesson } from "@/lib/learn";
 import { heldBack, passedQuizzes, readAnswers, readQuizFor, submitQuiz } from "@/lib/quiz";
 import { limited } from "@/lib/request-guard";
 import { readCourseListing } from "@/lib/catalog";
+import { noteIfFinished } from "@/lib/course-finish";
 
 /**
  * "Check my answers": marks one try at a lesson's quiz and goes back to the
@@ -50,6 +51,9 @@ export async function POST(request: NextRequest) {
   if (!quiz || !found.lesson.quiz) return away(`${base}/${lessonId}`);
 
   const result = await submitQuiz(course.id, lessonId, who, quiz, readAnswers(quiz, form));
-  if (result.ok && result.grade.passed) await markLesson(course.id, access.learner.email, lessonId, true);
+  if (result.ok && result.grade.passed) {
+    await markLesson(course.id, access.learner.email, lessonId, true);
+    await noteIfFinished(store, product.id, course.id, access.learner.email);
+  }
   return away(`${base}/${lessonId}?quiz=marked#quiz`);
 }

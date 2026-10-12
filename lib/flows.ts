@@ -32,6 +32,7 @@ import {
   cleanTag,
   goalClash,
   holds,
+  isCourseIf,
   readAction,
   readCondition,
   readGoal,
@@ -41,6 +42,7 @@ import {
 } from "@/lib/flow-rules";
 import { changeLabels, readTags } from "@/lib/contacts";
 import { usedLinkIn } from "@/lib/mail-clicks";
+import { courseProgress } from "@/lib/learn";
 
 export const MAX_FLOWS = 10;
 export const MAX_STEPS = 10;
@@ -66,9 +68,11 @@ export type Flow = {
   /**
    * "joined": agreed to hear from the creator; "product": got or bought one
    * product; "bought": paid for anything at all, the first time they do;
-   * "tagged": a step of a sequence gave them the label `tag`.
+   * "tagged": a step of a sequence gave them the label `tag`; "finished":
+   * did every lesson of the course `productId` is (added 12 October 2026,
+   * lib/course-finish.ts).
    */
-  trigger: "joined" | "product" | "bought" | "tagged";
+  trigger: "joined" | "product" | "bought" | "tagged" | "finished";
   productId: string | null;
   /** The label that starts it, for "tagged". */
   tag?: string;
@@ -108,7 +112,7 @@ export const FLOW_ID = /^[0-9a-f]{16}$/;
 
 const newId = () => randomBytes(8).toString("hex");
 
-function cleanStep(raw: unknown, known: (productId: string) => boolean, isFlow: (flowId: string) => boolean): FlowStep | null {
+function cleanStep(raw: unknown, known: (productId: string) => boolean, isFlow: (flowId: string) => boolean, isCourse: (productId: string) => boolean): FlowStep | null {
   if (!raw || typeof raw !== "object") return null;
   const value = raw as Record<string, unknown>;
   const delay = Number(value.delayHours);
@@ -118,7 +122,7 @@ function cleanStep(raw: unknown, known: (productId: string) => boolean, isFlow: 
   const subject = action ? "" : typeof value.subject === "string" ? value.subject.replace(/\s+/g, " ").trim().slice(0, MAX_SUBJECT) : "";
   const body = action ? "" : typeof value.body === "string" ? value.body.replace(/\r\n?/g, "\n").trim().slice(0, MAX_MAIL_BODY) : "";
   if (!Number.isInteger(delay) || delay < 0 || delay > MAX_DELAY_HOURS || (!action && (!subject || !body))) return null;
-  const when = readCondition(value.when, known);
+  const when = readCondition(value.when, known, isCourse);
   if (when === "bad") return null;
   const step: FlowStep = { id: typeof value.id === "string" && FLOW_ID.test(value.id) ? value.id : newId(), delayHours: delay, subject, body, ...(action ? { action } : {}) };
   if (when) {
@@ -156,10 +160,15 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   if (!store.listId || !store.mail) return { ok: false, reason: "setup" };
   const name = typeof raw.name === "string" ? raw.name.replace(/\s+/g, " ").trim().slice(0, MAX_FLOW_NAME) : "";
   if (!name) return { ok: false, reason: "name" };
-  const trigger = raw.trigger === "joined" || raw.trigger === "product" || raw.trigger === "bought" || raw.trigger === "tagged" ? raw.trigger : null;
+  const trigger =
+    raw.trigger === "joined" || raw.trigger === "product" || raw.trigger === "bought" || raw.trigger === "tagged" || raw.trigger === "finished" ? raw.trigger : null;
   if (!trigger) return { ok: false, reason: "trigger" };
-  const productId = trigger === "product" && typeof raw.productId === "string" ? raw.productId : null;
+  const courses = new Set(idsOfKind(store, "course"));
+  const isCourse = (id: string) => courses.has(id);
+  const productId = (trigger === "product" || trigger === "finished") && typeof raw.productId === "string" ? raw.productId : null;
   if (trigger === "product" && !(productId && hasProduct(store, productId))) return { ok: false, reason: "product" };
+  // Finishing is something only a course can be done to.
+  if (trigger === "finished" && !(productId && hasProduct(store, productId) && isCourse(productId))) return { ok: false, reason: "product" };
   const tag = trigger === "tagged" ? cleanTag(raw.tag) : "";
   if (trigger === "tagged" && !tag) return { ok: false, reason: "tag" };
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
@@ -171,7 +180,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   const isFlow = (flowId: string) => flowId !== id && flows.some((f) => f.id === flowId);
   const steps: FlowStep[] = [];
   for (const s of rawSteps) {
-    const step = cleanStep(s, known, isFlow);
+    const step = cleanStep(s, known, isFlow, isCourse);
     // A condition on the email before needs an email before it.
     const before = steps.at(-1);
     if (!step || (readsEmailBefore(step.when) && (!before || before.action))) return { ok: false, reason: "step" };
@@ -256,7 +265,7 @@ export async function flowsStartedFor(flows: Flow[], email: string): Promise<str
  * Starts whichever sequences this event begins, for this person. Never
  * throws: the list must never cost anyone what they asked for.
  */
-export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string }): Promise<void> {
+export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string }): Promise<void> {
   try {
     if (!store.listId || monthlyAllowance(store) === 0) return;
     // Whether what they just got is sold for money: the store's own index
@@ -269,7 +278,8 @@ export async function enroll(store: Store, email: string, event: { joined: boole
         ((f.trigger === "joined" && event.joined) ||
           (f.trigger === "product" && event.productId && f.productId === event.productId) ||
           (f.trigger === "bought" && paid) ||
-          (f.trigger === "tagged" && event.tag && f.tag && sameLabel(f.tag, event.tag))),
+          (f.trigger === "tagged" && event.tag && f.tag && sameLabel(f.tag, event.tag)) ||
+          (f.trigger === "finished" && event.finished && f.productId === event.finished)),
     );
     if (!flows.length) return;
     const address = normaliseEmail(email);
@@ -428,6 +438,9 @@ export async function sendDueSteps(
     // somebody who allowed it to be seen (lib/mail-clicks.ts).
     const before = flow.steps[index - 1];
     const used = readsEmailBefore(step.when) && before ? await usedLinkIn(listId, stepCampaign(flow.id, before.id), emails) : new Set<string>();
+    // Where each is in a course, for a condition on one: two reads for the
+    // whole batch, whatever its size (lib/learn.ts).
+    const progress = step.when && isCourseIf(step.when.if) && "productId" in step.when ? await courseProgress(store, step.when.productId, emails) : null;
     const still: string[] = [];
     const onward: string[] = [];
     let done = 0;
@@ -442,7 +455,7 @@ export async function sendDueSteps(
         done += 1;
         return;
       }
-      if (step.when && !holds(step.when, { ...contact, used: used.has(email) }, paid)) {
+      if (step.when && !holds(step.when, { ...contact, used: used.has(email), course: progress?.get(email) }, paid)) {
         if (step.otherwise === "end" || !following) left += 1;
         else onward.push(email);
         return;
