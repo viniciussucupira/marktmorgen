@@ -5,6 +5,7 @@ import { deleteStore } from "@/lib/store";
 import { dropTeam } from "@/lib/team";
 import { forgetStoreSync } from "@/lib/email-sync";
 import { forgetStorePhones } from "@/lib/phone-alerts";
+import { forgetPersonNotes } from "@/lib/buyer-profile";
 import { endLapsed, findStoreSubscriptions, isBillingConfigured } from "@/lib/billing";
 
 /**
@@ -57,8 +58,9 @@ export async function POST(request: NextRequest) {
       }
       await dropTeam(result.store);
       // Nothing of a deleted store is kept that could still reach anyone: the
-      // sealed key to its email platform, and its phones' push addresses.
-      await Promise.all([forgetStoreSync(result.store.statsId), forgetStorePhones(result.store.statsId)]).catch((error: unknown) =>
+      // sealed key to its email platform, its phones' push addresses, and the
+      // notes its team wrote about buyers (lib/buyer-profile.ts).
+      await Promise.all([forgetStoreSync(result.store.statsId), forgetStorePhones(result.store.statsId), forgetPersonNotes(result.store.statsId)]).catch((error: unknown) =>
         console.error("forgetting a deleted store's integrations failed", error),
       );
       // Back to the owner's first store, and the switcher forgets this one.
