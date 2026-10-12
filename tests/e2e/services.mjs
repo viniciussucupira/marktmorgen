@@ -336,6 +336,8 @@ export async function startServices(port) {
           cancellation_details: { reason: null, feedback: null, comment: null },
           metadata: { store: "localshop", product: "club", channel: "instagram" },
           items: { data: [{ quantity: 1, price: { unit_amount: 2000, recurring: { interval: "month", interval_count: 1 } } }] },
+          // As the member scores read it, with the address (lib/member-health.ts).
+          customer: { id: `cus_${id.slice(-4)}`, object: "customer", email: `member${id.slice(-4)}@example.com` },
           ...over,
         });
         return json(res, 200, {

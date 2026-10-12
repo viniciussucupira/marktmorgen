@@ -418,6 +418,29 @@ export async function studentDates(courseId: string, email: string): Promise<{ s
   }
 }
 
+/**
+ * When each of these students last opened a course (seconds), 0 for one who
+ * never did. One command for them all, for the member scores in the studio
+ * (lib/member-health.ts).
+ */
+export async function lastSeenMany(courseId: string, emails: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (!emails.length || !isRedisConfigured()) return out;
+  const [raw] = await redisPipeline([["HMGET", studentsKey(courseId), ...emails.map(emailKey)]]);
+  const rows = Array.isArray(raw) ? raw : [];
+  emails.forEach((email, i) => {
+    let seen = 0;
+    if (typeof rows[i] === "string") {
+      try {
+        const row = JSON.parse(rows[i] as string) as Partial<StudentRow>;
+        seen = Number(row.l) || Number(row.s) || 0;
+      } catch {}
+    }
+    out.set(email, seen);
+  });
+  return out;
+}
+
 export async function doneLessons(courseId: string, email: string): Promise<Set<string>> {
   if (!isRedisConfigured()) return new Set();
   const [raw] = await redisPipeline([["SMEMBERS", doneKey(courseId, email)]]);

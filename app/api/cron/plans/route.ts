@@ -8,6 +8,7 @@ import { syncSubscriptions } from "@/lib/billing-sync";
 import { moveAllStores } from "@/lib/store";
 import { pruneResearch } from "@/lib/creator-research-store";
 import { recoverFailedPayments } from "@/lib/payment-recovery";
+import { sendMemberNudges } from "@/lib/member-nudge";
 import { settleInvites } from "@/lib/creator-invite-credit";
 import { sendWinBacks } from "@/lib/winback-send";
 import { ensureDemoStore } from "@/lib/demo-seed";
@@ -97,6 +98,14 @@ async function run(request: NextRequest): Promise<Response> {
     } catch (error) {
       console.error("sending come-back offers failed", error);
     }
+    // Running members who stopped coming, where the creator turned it on:
+    // one email back in, once per period (lib/member-nudge.ts).
+    let nudged = null;
+    try {
+      nudged = await sendMemberNudges(deadline);
+    } catch (error) {
+      console.error("sending emails to members who stopped coming failed", error);
+    }
     // Invited creators' payments, past their refund window, become credit on
     // the plan of whoever invited them (lib/creator-invite-credit.ts).
     let invites = null;
@@ -122,7 +131,7 @@ async function run(request: NextRequest): Promise<Response> {
     });
     if (demo && demo.pending.length) console.error("the demo store is missing something", demo.pending);
     const ok = plans !== null && (billing !== null || !isBillingConfigured());
-    return Response.json({ ok, ...(plans ?? {}), billing, recovered, comeBack, invites, catalogs, demo }, { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
+    return Response.json({ ok, ...(plans ?? {}), billing, recovered, comeBack, nudged, invites, catalogs, demo }, { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
   } finally {
     await redisPipeline([["DEL", "nl:plans:lock"]]).catch(() => {});
   }

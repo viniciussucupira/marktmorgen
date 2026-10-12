@@ -63,6 +63,7 @@ import { type SaveOffer, NO_SAVE, parseSaveOffer } from "@/lib/save-offer";
 import { parsePauseMonths } from "@/lib/membership-pause-rules";
 import { type Dunning, DEFAULT_DUNNING, parseDunning } from "@/lib/dunning-rules";
 import { type LeaveSetting, NO_LEAVE, parseLeave } from "@/lib/leave-rules";
+import { NO_NUDGE, type Nudge, parseNudge } from "@/lib/member-health-rules";
 import { type WinBack, NO_WINBACK, parseWinBack } from "@/lib/winback";
 import { type StoreSale, NO_SALE, parseSale } from "@/lib/store-sale";
 import { parseTiers } from "@/lib/tier-rules";
@@ -485,6 +486,11 @@ export type Store = {
    */
   leaving: LeaveSetting;
   /**
+   * The come-back email to members who stopped coming (lib/member-health-rules.ts).
+   * Off for every store until its creator turns it on, with a postal address.
+   */
+  nudge: Nudge;
+  /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
    */
@@ -848,6 +854,7 @@ function parseStore(raw: unknown): Store | null {
       pause: parsePauseMonths(value.pause),
       dunning: parseDunning(value.dunning),
       leaving: parseLeave(value.leaving),
+      nudge: parseNudge(value.nudge),
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
       tiers: parseTiers(value.tiers),
@@ -1038,6 +1045,7 @@ async function freshStore(fields: {
     pause: 0,
     dunning: { ...DEFAULT_DUNNING },
     leaving: { ...NO_LEAVE, reasons: [...NO_LEAVE.reasons] },
+    nudge: { ...NO_NUDGE },
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
     tiers: [],
@@ -2209,6 +2217,15 @@ export async function setLeaving(email: string, raw: unknown): Promise<{ ok: tru
   const leaving = parseLeave({ ...value, own });
   if (own.filter((o) => typeof o.text === "string" && o.text.trim()).length !== leaving.own.length) return { ok: false, reason: "leaving" };
   const next = await patchStore(email, () => ({ leaving }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/** Saves the come-back email to members who stopped coming (lib/member-health-rules.ts). */
+export async function setNudge(email: string, raw: unknown): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" | "address" }> {
+  const nudge = parseNudge(raw);
+  const asked = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  if (asked.on === true && !nudge.on) return { ok: false, reason: "address" };
+  const next = await patchStore(email, () => ({ nudge }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 

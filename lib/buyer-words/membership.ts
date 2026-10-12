@@ -159,6 +159,14 @@ const en = {
   leaveConfirm: "Stripe's page opens, where you confirm it.",
   leaveGone: "This membership cannot be canceled from here: it has ended, or it is already set to end.",
 
+  // ---- The come-back email to a member who stopped coming (added 12 October 2026) ---------
+  nudgeSubject: (title: string) => `${title} is still here for you`,
+  nudgeLead: (title: string) =>
+    `It has been a while since you last came back to ${title}. Everything that comes with it is still there for you, and you can pick up where you left off.`,
+  nudgeCourse: "Open the course:",
+  nudgeCommunity: "Come into the community:",
+  nudgeReply: (store: string) => `If something is in the way, reply to this email and it reaches ${store}.`,
+
   // ---- Switching to another plan ------------------------------------------------------
   switchProblems: {
     expired: { title: "This link has expired", body: "A link to your membership works for one hour. Ask for a new one on your membership page." },
@@ -475,6 +483,13 @@ const es: MembershipWords = {
   leaveConfirm: "Se abre la página de Stripe, donde lo confirmas.",
   leaveGone: "Esta membresía no se puede cancelar desde aquí: ya terminó o ya está programada para terminar.",
 
+  nudgeSubject: (title) => `${title} sigue aquí para ti`,
+  nudgeLead: (title) =>
+    `Hace un tiempo que no vuelves a ${title}. Todo lo que incluye sigue ahí para ti, y puedes retomarlo donde lo dejaste.`,
+  nudgeCourse: "Abre el curso:",
+  nudgeCommunity: "Entra en la comunidad:",
+  nudgeReply: (store) => `Si algo te lo impide, responde a este correo y le llegará a ${store}.`,
+
   switchProblems: {
     expired: { title: "Este enlace ha expirado", body: "Un enlace a tu membresía funciona durante una hora. Pide uno nuevo en la página de tu membresía." },
     gone: {
@@ -783,6 +798,13 @@ const fr: MembershipWords = {
   leaveCancel: "Annuler mon abonnement",
   leaveConfirm: "La page de Stripe s'ouvre, et vous y confirmez.",
   leaveGone: `Cet abonnement ne peut pas être annulé ici${S}: il est terminé, ou sa fin est déjà prévue.`,
+
+  nudgeSubject: (title) => `${title} est toujours là pour vous`,
+  nudgeLead: (title) =>
+    `Cela fait un moment que vous n'avez pas ouvert ${title}. Tout ce qui en fait partie est toujours là pour vous, et vous pouvez reprendre là où vous en étiez.`,
+  nudgeCourse: `Ouvrir la formation${S}:`,
+  nudgeCommunity: `Entrer dans la communauté${S}:`,
+  nudgeReply: (store) => `Si quelque chose vous en empêche, répondez à cet e-mail et ${store} le recevra.`,
 
   switchProblems: {
     expired: { title: "Ce lien a expiré", body: "Un lien vers votre abonnement fonctionne pendant une heure. Demandez-en un nouveau sur la page de votre abonnement." },
@@ -1094,6 +1116,13 @@ const de: MembershipWords = {
   leaveCancel: "Meine Mitgliedschaft kündigen",
   leaveConfirm: "Die Seite von Stripe öffnet sich, dort bestätigen Sie es.",
   leaveGone: "Diese Mitgliedschaft kann hier nicht gekündigt werden: Sie ist beendet oder endet bereits zu einem festen Datum.",
+
+  nudgeSubject: (title) => `${title} ist weiter für Sie da`,
+  nudgeLead: (title) =>
+    `Sie waren eine Weile nicht mehr bei ${title}. Alles, was dazugehört, ist weiter für Sie da, und Sie können dort weitermachen, wo Sie aufgehört haben.`,
+  nudgeCourse: "Zum Kurs:",
+  nudgeCommunity: "Zur Community:",
+  nudgeReply: (store) => `Wenn Ihnen etwas im Weg steht, antworten Sie auf diese E-Mail, sie erreicht ${store}.`,
 
   switchProblems: {
     expired: {
@@ -1419,6 +1448,13 @@ const it: MembershipWords = {
   leaveConfirm: "Si apre la pagina di Stripe, dove confermi.",
   leaveGone: "Questo abbonamento non può essere annullato da qui: è terminato, o la sua fine è già fissata.",
 
+  nudgeSubject: (title) => `${title} è ancora qui per te`,
+  nudgeLead: (title) =>
+    `È passato un po' di tempo dalla tua ultima visita a ${title}. Tutto ciò che include è ancora lì per te, e puoi riprendere da dove avevi lasciato.`,
+  nudgeCourse: "Apri il corso:",
+  nudgeCommunity: "Entra nella community:",
+  nudgeReply: (store) => `Se qualcosa te lo impedisce, rispondi a questa email e arriverà a ${store}.`,
+
   switchProblems: {
     expired: { title: "Questo link è scaduto", body: "Un link al tuo abbonamento funziona per un'ora. Chiedine uno nuovo dalla pagina del tuo abbonamento." },
     gone: {
@@ -1728,6 +1764,13 @@ const nl: MembershipWords = {
   leaveConfirm: "De pagina van Stripe opent, waar je het bevestigt.",
   leaveGone: "Dit lidmaatschap kan hier niet worden opgezegd: het is beëindigd, of het einde staat al vast.",
 
+  nudgeSubject: (title) => `${title} is er nog steeds voor je`,
+  nudgeLead: (title) =>
+    `Het is een tijd geleden dat je terugkwam bij ${title}. Alles wat erbij hoort, is er nog voor je, en je kunt verdergaan waar je was gebleven.`,
+  nudgeCourse: "Open de cursus:",
+  nudgeCommunity: "Kom naar de community:",
+  nudgeReply: (store) => `Als er iets in de weg zit, beantwoord deze e-mail en het komt bij ${store}.`,
+
   switchProblems: {
     expired: { title: "Deze link is verlopen", body: "Een link naar je lidmaatschap werkt een uur. Vraag een nieuwe aan op de pagina van je lidmaatschap." },
     gone: {
@@ -2034,6 +2077,13 @@ const pt: MembershipWords = {
   leaveCancel: "Cancelar a minha subscrição",
   leaveConfirm: "Abre-se a página da Stripe, onde confirma.",
   leaveGone: "Esta subscrição não pode ser cancelada aqui: já terminou, ou o fim já está marcado.",
+
+  nudgeSubject: (title) => `${title} continua aqui para si`,
+  nudgeLead: (title) =>
+    `Já passou algum tempo desde a última vez que voltou a ${title}. Tudo o que inclui continua lá para si, e pode retomar onde parou.`,
+  nudgeCourse: "Abrir o curso:",
+  nudgeCommunity: "Entrar na comunidade:",
+  nudgeReply: (store) => `Se algo está a impedir, responda a este email e chega a ${store}.`,
 
   switchProblems: {
     expired: { title: "Esta ligação expirou", body: "Uma ligação para a sua subscrição funciona durante uma hora. Peça uma nova na página da sua subscrição." },

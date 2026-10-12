@@ -550,8 +550,16 @@ try {
       /I don't use it enough/.test(members),
       /1 more membership ended because a payment never went through/.test(members),
     ], [true, true, true, true]);
-    is("their words, without a name or an address", [/Love it, but money is tight this month\./.test(members), /@example\.com/.test(members)], [true, false]);
+    const leaveSection = await words(studio.locator("section", { hasText: "Why members leave" }));
+    is("their words, without a name or an address", [/Love it, but money is tight this month\./.test(leaveSection), /@example\.com/.test(leaveSection)], [true, false]);
     is("and the next three months, said as an estimate", [/The next three months, if the pace holds/.test(members), /An estimate, not a promise/.test(members)], [true, true]);
+    const health = studio.locator("[data-member-health]");
+    is("each running member scored, the reasons beside them, addresses for the owner", [
+      await health.count(),
+      /doing well 7 70 to 100/i.test(await words(health)),
+      (await words(health)).includes("member0001@example.com"),
+      await health.locator("tbody tr").count(),
+    ], [1, true, true, 7]);
     is("what came back after failing: the renewal paid on Stripe's third try", [/Payments that failed and came back/.test(members), /\$20(\.00)?\s*1 payment paid after failing/.test(members)], [true, true]);
     if (process.env.E2E_SHOTS) await studio.screenshot({ path: join(process.env.E2E_SHOTS, "memberships.png"), fullPage: true });
 
@@ -2265,6 +2273,9 @@ try {
     await open(studio, `${LOCAL}/studio`);
     is("three emails, kept", await studio.locator("#dunning-reminders").inputValue(), "3");
     if (process.env.E2E_SHOTS) await studio.locator("[data-dunning-editor]").screenshot({ path: join(process.env.E2E_SHOTS, "dunning-editor.png") });
+    is("and the email to members who stopped coming, off until turned on with an address", [await studio.locator("[data-nudge-editor]").count(), await studio.locator("#nudge-on").isChecked()], [1, false]);
+    const nudgeRefused = await studio.evaluate(async () => (await fetch("/api/store/nudge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ on: true, address: "" }) })).status);
+    is("never on without a postal address", nudgeRefused, 400);
     is("and beside it, the question asked before members cancel, off until turned on", [await studio.locator("[data-leave-editor]").count(), await studio.locator("#leave-on").isChecked()], [1, false]);
     if (process.env.E2E_SHOTS) await studio.locator("[data-leave-editor]").screenshot({ path: join(process.env.E2E_SHOTS, "leave-editor.png") });
     const refused = await studio.evaluate(async () => (await fetch("/api/store/dunning", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reminders: 9, cardNotice: true }) })).status);
