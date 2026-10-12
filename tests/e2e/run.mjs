@@ -2760,6 +2760,36 @@ try {
   }
 
   await keepSmall();
+  part("Lessons from many videos at once: each named after its file, none left empty when one cannot go");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/product", { action: "add", title: "Sourdough Weekends", price: "49" });
+    const course = made.product?.id ?? "";
+    await post("/api/store/course", { action: "enable", id: course });
+    await post("/api/store/course", { action: "edit", id: course, op: "module-add", title: "The first loaf" });
+    await open(studio, `${LOCAL}/studio/course/${course}`);
+    const input = studio.getByLabel("Add lessons from videos to module 1");
+    is("each module offers it, saying what happens", (await words(studio.locator("section", { has: input }))).includes("Each becomes a lesson at the end of this module, named after its file, in the order of the file names."), true);
+    // The video service answers that it cannot take videos just now: the first lesson is made, then taken away again.
+    await studio.route("**/api/store/stream", (route) => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ ok: false, error: "video_unavailable" }) }));
+    const clip = (name, mimeType = "video/mp4") => ({ name, mimeType, buffer: Buffer.from("not really a video") });
+    await input.setInputFiles([clip("02 - Shaping.mp4"), clip("01_Mixing.mp4"), clip("notes.txt", "text/plain")]);
+    const report = studio.getByRole("alert").filter({ hasText: "None of these became a lesson" });
+    await report.waitFor({ timeout: 60_000 });
+    const lines = await report.locator("li").allInnerTexts();
+    is("the files are told apart, in the order of their names, each with its reason", lines, [
+      "notes.txt · This type does not play in every browser. Upload it as an MP4, a MOV or a WebM.",
+      "01_Mixing.mp4 · Videos cannot be taken in just now. Try again in a few minutes.",
+      "02 - Shaping.mp4 · Not sent, because the video before it could not go.",
+    ]);
+    await studio.unroute("**/api/store/stream");
+    await open(studio, `${LOCAL}/studio/course/${course}`);
+    is("and no empty lesson is left behind", await studio.getByRole("button", { name: "Edit lesson" }).count(), 0);
+    await post("/api/store/product", { action: "remove", id: course });
+  }
+
+  await keepSmall();
   part("A phone number asked at checkout, in Stripe's own box");
   {
     await open(studio, `${LOCAL}/studio`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadReason, uploadSoldFile } from "@/lib/sold-file-upload";
 import { toast } from "@/components/toast";
@@ -14,8 +14,10 @@ import {
   MAX_DRIP_DAYS,
   MAX_ITEM_TITLE,
   MAX_LESSON_FILES,
+  MAX_LESSONS,
   VIDEO_TYPES,
 } from "@/lib/course";
+import { MAX_VIDEOS_AT_ONCE, type Skipped, lessonTitleFromFile, planVideos } from "@/lib/course-videos";
 import {
   ACCEPT_ATTRIBUTE,
   MAX_FILE_BYTES,
@@ -132,6 +134,51 @@ async function openDoor(lessonId: string, file: File): Promise<{ door: Door } | 
   }
 }
 
+/** The video service turned the upload away before it began: why, in MESSAGES' words. */
+class VideoRefused extends Error {
+  constructor(readonly code: string) {
+    super(code);
+  }
+}
+
+/**
+ * Sends one lesson's video where it is kept: to the video service when it is
+ * set up, in pieces, so a dropped line costs only the piece on its way
+ * (lib/tus-upload.ts), or else to the file store as it always has gone.
+ * Returns where it is, for the course to be told; throws when it could not go.
+ */
+async function putVideo(lessonId: string, chosen: File, folder: string, onProgress: (percent: number) => void): Promise<string> {
+  const opened = await openDoor(lessonId, chosen);
+  if ("error" in opened) throw new VideoRefused(opened.error);
+  if ("door" in opened) {
+    const { door } = opened;
+    await tusUpload(
+      chosen,
+      {
+        endpoint: door.endpoint,
+        headers: {
+          AuthorizationSignature: door.signature,
+          AuthorizationExpire: String(door.expires),
+          LibraryId: door.library,
+          VideoId: door.id,
+        },
+        metadata: { filetype: chosen.type, title: safeFileName(chosen.name) },
+      },
+      { onProgress },
+    );
+    return door.pathname;
+  }
+  return uploadSoldFile(chosen, { folder, ownerId: lessonId }, onProgress);
+}
+
+/** What went wrong with an upload, as a key of MESSAGES. */
+function uploadProblem(thrown: unknown): string {
+  if (thrown instanceof VideoRefused) return MESSAGES[thrown.code] ? thrown.code : "server_error";
+  if (thrown instanceof TusError) return thrown.reason === "refused" ? "invalid" : "upload_stopped";
+  const reason = uploadReason(thrown);
+  return MESSAGES[reason] ? reason : "server_error";
+}
+
 async function post(payload: Record<string, unknown>): Promise<Answer> {
   try {
     const response = await fetch("/api/store/course", {
@@ -227,6 +274,7 @@ export function CourseEditor({
           folder={folder}
           openLesson={openLesson}
           setOpenLesson={setOpenLesson}
+          room={MAX_LESSONS - lessons}
           run={run}
           onCourse={setCourse}
           onError={setError}
@@ -342,6 +390,7 @@ function ModuleCard({
   folder,
   openLesson,
   setOpenLesson,
+  room,
   run,
   onCourse,
   onError,
@@ -354,6 +403,8 @@ function ModuleCard({
   folder: string;
   openLesson: string | null;
   setOpenLesson: (id: string | null) => void;
+  /** Lessons the course still has room for. */
+  room: number;
   run: (payload: Record<string, unknown>) => Promise<Answer>;
   onCourse: (course: Course) => void;
   onError: (message: string | null) => void;
@@ -487,7 +538,192 @@ function ModuleCard({
         />
         <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-primary">Add lesson</button>
       </form>
+      <VideosToLessons unit={unit} index={index} productId={productId} folder={folder} room={room} busy={busy} onCourse={onCourse} onError={onError} />
     </section>
+  );
+}
+
+/** Why a chosen video did not become a lesson, before anything was sent. */
+const SKIPPED_WORDS: Record<Skipped["reason"], string> = {
+  type: "This type does not play in every browser. Upload it as an MP4, a MOV or a WebM.",
+  too_big: `It is over ${maxFileLabel()}, which is the most one file can be.`,
+  room: `There was no room left: a course holds ${MAX_LESSONS} lessons, and ${MAX_VIDEOS_AT_ONCE} videos are taken at a time.`,
+};
+
+/** An upload that went wrong this way stops the rest: the next one would go wrong the same way. */
+const STOPS_THE_REST = new Set(["slow_down", "video_unavailable", "storage_full", "signed_out", "unavailable", "not_course", "too_many", "unknown", "forbidden"]);
+
+const pause = (ms: number) => new Promise((done) => setTimeout(done, ms));
+
+/** Asks the course to change, once more after a moment while another change to it is still saving. */
+async function postPatiently(payload: Record<string, unknown>): Promise<Answer> {
+  for (let attempt = 0; ; attempt += 1) {
+    const answer = await post(payload);
+    if (answer.ok || answer.error !== "busy" || attempt >= 3) return answer;
+    await pause(1_200);
+  }
+}
+
+/**
+ * A module's videos, chosen all at once, made into one lesson each
+ * (lib/course-videos.ts): named after the file, in the order of the file
+ * names, each lesson made just before its video goes up and taken away
+ * again when its video could not go.
+ */
+function VideosToLessons({
+  unit,
+  index,
+  productId,
+  folder,
+  room,
+  busy,
+  onCourse,
+  onError,
+}: {
+  unit: CourseModule;
+  index: number;
+  productId: string;
+  folder: string;
+  room: number;
+  busy: boolean;
+  onCourse: (course: Course) => void;
+  onError: (message: string | null) => void;
+}) {
+  const streams = useContext(Streams);
+  const [working, setWorking] = useState<{ at: number; of: number; name: string; percent: number } | null>(null);
+  const [report, setReport] = useState<{ made: number; missed: { name: string; why: string }[] } | null>(null);
+  const stopping = useRef(false);
+  const [stopAsked, setStopAsked] = useState(false);
+
+  // Closing the tab stops the upload under way, so the browser asks first.
+  useEffect(() => {
+    if (!working) return;
+    const hold = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", hold);
+    return () => window.removeEventListener("beforeunload", hold);
+  }, [working]);
+
+  async function makeLessons(chosen: File[]) {
+    onError(null);
+    setReport(null);
+    stopping.current = false;
+    setStopAsked(false);
+    const { take, skipped } = planVideos(chosen, room, MAX_FILE_BYTES);
+    const missed = skipped.map((s) => ({ name: s.name, why: SKIPPED_WORDS[s.reason] }));
+    let made = 0;
+    // The lessons this module had, so the one each request adds is the one not among them.
+    const known = new Set(unit.lessons.map((lesson) => lesson.id));
+    for (let i = 0; i < take.length; i += 1) {
+      const file = take[i];
+      const rest = (why: string) => take.slice(i).forEach((f) => missed.push({ name: f.name, why }));
+      if (stopping.current) {
+        rest("Not sent: you stopped before it.");
+        break;
+      }
+      setWorking({ at: i + 1, of: take.length, name: file.name, percent: 0 });
+      const added = await postPatiently({ id: productId, action: "edit", op: "lesson-add", moduleId: unit.id, title: lessonTitleFromFile(file.name) });
+      const lesson = added.ok && added.course ? added.course.modules.find((m) => m.id === unit.id)?.lessons.find((l) => !known.has(l.id)) : undefined;
+      if (!added.ok || !added.course || !lesson) {
+        const code = added.error && MESSAGES[added.error] ? added.error : "server_error";
+        if (STOPS_THE_REST.has(code)) {
+          rest(MESSAGES[code]);
+          break;
+        }
+        missed.push({ name: file.name, why: MESSAGES[code] });
+        continue;
+      }
+      known.add(lesson.id);
+      onCourse(added.course);
+      let problem: string | null = null;
+      try {
+        const pathname = await putVideo(lesson.id, file, folder, (percent) => setWorking({ at: i + 1, of: take.length, name: file.name, percent }));
+        const placed = await postPatiently({ id: productId, action: "media", lessonId: lesson.id, kind: "video", pathname, name: file.name });
+        if (placed.ok && placed.course) {
+          onCourse(placed.course);
+          if (isStreamPath(pathname)) streams.learned(pathname, placed.stream ?? "working");
+          made += 1;
+        } else {
+          problem = placed.error && MESSAGES[placed.error] ? placed.error : "server_error";
+        }
+      } catch (thrown) {
+        problem = uploadProblem(thrown);
+      }
+      if (problem) {
+        // Its lesson goes again, so no empty lesson is left behind.
+        const removed = await postPatiently({ id: productId, action: "edit", op: "lesson-remove", lessonId: lesson.id });
+        if (removed.ok && removed.course) onCourse(removed.course);
+        missed.push({ name: file.name, why: MESSAGES[problem] });
+        if (STOPS_THE_REST.has(problem)) {
+          take.slice(i + 1).forEach((f) => missed.push({ name: f.name, why: "Not sent, because the video before it could not go." }));
+          break;
+        }
+      }
+    }
+    setWorking(null);
+    setReport({ made, missed });
+    if (made) toast(`${made} ${made === 1 ? "lesson" : "lessons"} made from your videos.`);
+  }
+
+  const inputId = `videos-${unit.id}`;
+  const hintId = `${inputId}-hint`;
+  const off = busy || working !== null || room <= 0;
+  return (
+    <div className="mt-4 border-t border-line pt-4">
+      <label htmlFor={inputId} className={`btn btn-secondary btn-sm ${off ? "pointer-events-none opacity-50" : "cursor-pointer"}`}>
+        Add lessons from videos
+      </label>
+      <input
+        id={inputId}
+        type="file"
+        multiple
+        accept={VIDEO_TYPES.join(",")}
+        className="sr-only"
+        aria-describedby={hintId}
+        aria-label={`Add lessons from videos to module ${index + 1}`}
+        disabled={off}
+        onChange={(e) => {
+          const chosen = Array.from(e.target.files ?? []);
+          e.target.value = "";
+          if (chosen.length) void makeLessons(chosen);
+        }}
+      />
+      <p id={hintId} className="mt-2 text-sm text-ink-mute">
+        {room <= 0
+          ? `The course holds as many lessons as it can: ${MAX_LESSONS}.`
+          : `Choose up to ${Math.min(MAX_VIDEOS_AT_ONCE, room)} videos at once. Each becomes a lesson at the end of this module, named after its file, in the order of the file names.`}
+      </p>
+      {working ? (
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="text-sm text-ink-soft" role="status">
+            {`Video ${working.at} of ${working.of}: ${working.name} · ${Math.round(working.percent)}%. Keep this page open.`}
+          </p>
+          <button
+            type="button"
+            className={`${small} font-bold`}
+            disabled={stopAsked}
+            onClick={() => {
+              stopping.current = true;
+              setStopAsked(true);
+            }}
+          >
+            {stopAsked ? "Stopping after this video…" : "Stop after this video"}
+          </button>
+        </div>
+      ) : null}
+      {report && report.missed.length ? (
+        <div className="notice notice-error mt-3" role="alert">
+          <p>{report.made ? `${report.made} became lessons. These did not:` : "None of these became a lesson:"}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {report.missed.map((m, n) => (
+              <li key={`${m.name}-${n}`}>
+                <span className="break-all font-semibold">{m.name}</span>
+                {` · ${m.why}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -538,43 +774,18 @@ function LessonEditor({
     if (kind === "video" && !VIDEO_TYPES.includes(chosen.type)) return onError(MESSAGES.video_type);
     setUploading({ kind, percent: 0 });
     try {
-      if (kind === "video") {
-        // To the video service when it is set up (lib/stream.ts): the file
-        // goes there in pieces, and a dropped line costs only the piece that
-        // was on its way (lib/tus-upload.ts).
-        const opened = await openDoor(lesson.id, chosen);
-        if ("error" in opened) return onError(MESSAGES[opened.error] ?? MESSAGES.server_error);
-        if ("door" in opened) {
-          const { door } = opened;
-          await tusUpload(
-            chosen,
-            {
-              endpoint: door.endpoint,
-              headers: {
-                AuthorizationSignature: door.signature,
-                AuthorizationExpire: String(door.expires),
-                LibraryId: door.library,
-                VideoId: door.id,
-              },
-              metadata: { filetype: chosen.type, title: safeFileName(chosen.name) },
-            },
-            { onProgress: (percent) => setUploading({ kind, percent }) },
-          );
-          const answer = await run({ action: "media", lessonId: lesson.id, kind, pathname: door.pathname, name: chosen.name });
-          if (answer.ok && answer.course) {
-            onCourse(answer.course);
-            streams.learned(door.pathname, answer.stream ?? "working");
-            toast("Video uploaded.");
-          }
-          return;
+      const progress = (percent: number) => setUploading({ kind, percent });
+      const pathname = kind === "video" ? await putVideo(lesson.id, chosen, folder, progress) : await uploadSoldFile(chosen, { folder, ownerId: lesson.id }, progress);
+      const answer = await run({ action: "media", lessonId: lesson.id, kind, pathname, name: chosen.name });
+      if (answer.ok && answer.course) {
+        onCourse(answer.course);
+        if (isStreamPath(pathname)) {
+          streams.learned(pathname, answer.stream ?? "working");
+          toast("Video uploaded.");
         }
       }
-      const pathname = await uploadSoldFile(chosen, { folder, ownerId: lesson.id }, (percent) => setUploading({ kind, percent }));
-      const answer = await run({ action: "media", lessonId: lesson.id, kind, pathname, name: chosen.name });
-      if (answer.ok && answer.course) onCourse(answer.course);
     } catch (thrown) {
-      if (thrown instanceof TusError) onError(thrown.reason === "refused" ? MESSAGES.invalid : MESSAGES.upload_stopped);
-      else onError(MESSAGES[uploadReason(thrown)] ?? MESSAGES.server_error);
+      onError(MESSAGES[uploadProblem(thrown)]);
     } finally {
       setUploading(null);
     }
