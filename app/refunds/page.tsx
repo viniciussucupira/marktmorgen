@@ -5,7 +5,7 @@ import { REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 export const metadata: Metadata = {
   title: "Refund Policy — Marktmorgen",
   description:
-    `Cancel anytime. Your first payment refunded in full on request within ${REFUND_DAYS} days; a yearly plan refunded for the months not yet started.`,
+    `Cancel anytime. Your first payment refunded in full on request within ${REFUND_DAYS} days; a yearly plan refunded for the months not yet started, less Stripe's card fee.`,
 };
 
 export default function RefundsPage() {
@@ -67,10 +67,12 @@ export default function RefundsPage() {
         <p>
           A yearly plan can be refunded at any time, not only in its first{" "}
           {REFUND_DAYS} days. We keep the months that have started, each at
-          the monthly price of that plan, and refund the rest of what you paid.
+          the monthly price of that plan, and the card processing fee Stripe
+          charged on the yearly payment, which Stripe does not give back to us
+          when a payment is refunded; the rest of what you paid comes back.
           So a yearly plan refunded in its second month costs you two months at
-          the monthly price, and the other ten months come back. Its paid
-          features close from the day of the refund.
+          the monthly price and that fee, and the other ten months come back.
+          Its paid features close from the day of the refund.
         </p>
         <p>
           If the yearly payment was your first payment to us and you ask within{" "}

@@ -77,7 +77,21 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PLAN_PRICES, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TIERS, monthlyEmails, type Cycle, type Tier } from "@/lib/plan";
+import {
+  COMMISSION_BPS,
+  COMMISSION_LIVE,
+  PLAN_PRICES,
+  PRICES_WITH_COMMISSION,
+  PRICES_WITHOUT_COMMISSION,
+  PRO_MONTHLY_EMAILS,
+  SCALE_MONTHLY_EMAILS,
+  TIERS,
+  commissionBps,
+  commissionCents,
+  monthlyEmails,
+  type Cycle,
+  type Tier,
+} from "@/lib/plan";
 import { FREE_PAUSE_ABOVE_BYTES } from "@/lib/delivery";
 import { STORAGE_BRAKE_BYTES } from "@/lib/storage-quota";
 import { AI_MONTHLY } from "@/lib/ai-rules";
@@ -113,8 +127,9 @@ const TRANSACTIONAL: Record<Tier, number> = { creator: 2_000, pro: 5_000, scale:
  * What reaches us for one month of a plan, after Stripe takes its cut: one
  * monthly charge, or a twelfth of the yearly one.
  */
-function netOf(tier: Tier, cycle: Cycle = "month"): number {
-  const gross = PLAN_PRICES[tier][cycle] / 100;
+type Prices = Record<Tier, Record<Cycle, number>>;
+function netOf(tier: Tier, cycle: Cycle = "month", prices: Prices = PLAN_PRICES): number {
+  const gross = prices[tier][cycle] / 100;
   const kept = gross - (gross * 0.029 + 0.3);
   return cycle === "year" ? kept / 12 : kept;
 }
@@ -146,14 +161,37 @@ function worstCost(tier: Tier): number {
   return storage + free + video + visitsCost(tier) + email + drafts + receipts;
 }
 
+/**
+ * The two sets of prices: the one on sale, and the one decided on October 12,
+ * 2026, which goes with a share of each sale (lib/plan.ts COMMISSION_LIVE).
+ * Both are held to every sum here, so the decided set is proved before it is
+ * switched on rather than after.
+ *
+ * Every figure below counts only the subscription. With a share of each sale,
+ * a store that sells pays more than this, so the subscription alone is the
+ * account that pays least: one with every limit reached and not a single sale.
+ * That is why Store, with a share, is held to a lower floor than a plan with
+ * none — 40% kept in the worst month, 30% paid yearly — while
+ * every plan without a share keeps the floors it was sold under.
+ */
+const SCHEDULES: [string, Prices][] = [
+  ["on sale", PRICES_WITHOUT_COMMISSION],
+  ["with a share of each sale", PRICES_WITH_COMMISSION],
+];
+function floor(prices: Prices, tier: Tier, cycle: Cycle): number {
+  const shared = prices === PRICES_WITH_COMMISSION && COMMISSION_BPS[tier] > 0 && tier === "creator";
+  if (cycle === "month") return shared ? 0.4 : 0.45;
+  return shared ? 0.3 : 0.4;
+}
+
 test("the email each plan may send is the number that is published", () => {
   assert.deepEqual(TIERS.map(monthlyEmails), [0, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS]);
 });
 
-for (const tier of TIERS) {
-  test(`${tier}: every brake at its limit at once still turns a profit`, () => {
+for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
+  test(`${tier}, ${schedule}: every brake at its limit at once still turns a profit`, () => {
     const cost = worstCost(tier);
-    const net = netOf(tier);
+    const net = netOf(tier, "month", prices);
     assert.ok(
       cost < net,
       `${tier} costs $${cost.toFixed(2)} at its worst and brings in $${net.toFixed(2)}. ` +
@@ -161,19 +199,19 @@ for (const tier of TIERS) {
     );
   });
 
-  test(`${tier}: the margin left in that worst case is a real one`, () => {
+  test(`${tier}, ${schedule}: the margin left in that worst case is a real one`, () => {
     const cost = worstCost(tier);
-    const net = netOf(tier);
+    const net = netOf(tier, "month", prices);
     const margin = (net - cost) / net;
     assert.ok(
-      margin >= 0.45,
+      margin >= floor(prices, tier, "month"),
       `${tier} keeps ${(margin * 100).toFixed(0)}% in its worst case. Scraping past zero is not ` +
         "the goal: the brakes exist so the floor is comfortable, not survivable.",
     );
   });
 
-  test(`${tier}: no single brake is big enough to swallow the plan by itself`, () => {
-    const net = netOf(tier);
+  test(`${tier}, ${schedule}: no single brake is big enough to swallow the plan by itself`, () => {
+    const net = netOf(tier, "month", prices);
     const lines: [string, number][] = [
       ["storage", (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB],
       ["free downloads", (FREE_PAUSE_ABOVE_BYTES / GB) * FILE_DELIVERY_PER_GB],
@@ -192,28 +230,31 @@ for (const tier of TIERS) {
   });
 }
 
-for (const tier of TIERS) {
-  test(`${tier}: paid by the year, the worst month still leaves a real margin`, () => {
+for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
+  test(`${tier}, ${schedule}: paid by the year, the worst month still leaves a real margin`, () => {
     // A year paid at once is a discount, so each of its months brings in
     // less, against the same worst case. The floor is lower than the monthly
     // one and still far from scraping by; the plans that were on sale before
     // this was first added up sit at 44%, and none may go under 40%.
     const cost = worstCost(tier);
-    const net = netOf(tier, "year");
+    const net = netOf(tier, "year", prices);
     const margin = (net - cost) / net;
     assert.ok(
-      margin >= 0.4,
+      margin >= floor(prices, tier, "year"),
       `${tier}, yearly: costs $${cost.toFixed(2)} in its worst month against $${net.toFixed(2)} a month, ` +
         `which keeps ${(margin * 100).toFixed(0)}%.`,
     );
   });
 }
 
-test("Scale keeps more than Pro does in its own worst month, monthly and yearly", () => {
+test("Scale keeps more than Pro does in its own worst month, monthly and yearly, where neither takes a share", () => {
   // The dearest plan is the one a heavy sender is on, so it is the last one
-  // that may be allowed to be the thinnest.
+  // that may be allowed to be the thinnest. With a share of each sale the
+  // comparison is not like for like — Studio is paid a share on top of what
+  // is counted here and Scale is not — so it holds for the prices without.
   for (const cycle of ["month", "year"] as const) {
-    const kept = (tier: Tier) => (netOf(tier, cycle) - worstCost(tier)) / netOf(tier, cycle);
+    const prices = PRICES_WITHOUT_COMMISSION;
+    const kept = (tier: Tier) => (netOf(tier, cycle, prices) - worstCost(tier)) / netOf(tier, cycle, prices);
     assert.ok(kept("scale") >= kept("pro"), `${cycle}: Scale keeps ${(kept("scale") * 100).toFixed(1)}% and Pro ${(kept("pro") * 100).toFixed(1)}%`);
   }
 });
@@ -302,12 +343,12 @@ test("a store whose plan ended stops costing more than a store with no plan, on 
   // of its plan in it, cancels, and leaves all a paid plan may keep here
   // until its day. That one month has to have paid for all of it.
   const kept = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * months;
-  for (const tier of TIERS) {
+  for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
     const cost = worstCost(tier) + kept;
-    const net = netOf(tier);
+    const net = netOf(tier, "month", prices);
     assert.ok(
       cost < net,
-      `${tier}: one month at every limit, and then everything kept to its day, costs $${cost.toFixed(2)} against the $${net.toFixed(2)} that month brought in. ` +
+      `${tier}, ${schedule}: one month at every limit, and then everything kept to its day, costs $${cost.toFixed(2)} against the $${net.toFixed(2)} that month brought in. ` +
         "The days a store has after its plan ends are paid for by its last month, or by nobody.",
     );
   }
@@ -363,13 +404,13 @@ test("a break from the plan is paid for by the months before it, at its longest"
   const months = PAID_MONTHS_BEFORE_PAUSE;
   const afterMonths = (WARN_WEEK_DAYS * 2) / 30;
   const kept = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * (LONGEST_PAUSE_MONTHS + afterMonths);
-  for (const tier of TIERS) {
+  for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
     const cost = months * worstCost(tier) + kept;
-    const net = months * netOf(tier);
+    const net = months * netOf(tier, "month", prices);
     const margin = (net - cost) / net;
     assert.ok(
-      margin >= 0.25,
-      `${tier}: ${months} months at every limit, a ${LONGEST_PAUSE_MONTHS}-month break and the days after it cost $${cost.toFixed(2)} against the $${net.toFixed(2)} those months brought in, keeping ${(margin * 100).toFixed(0)}%.`,
+      margin >= (floor(prices, tier, "month") < 0.45 ? 0.15 : 0.25),
+      `${tier}, ${schedule}: ${months} months at every limit, a ${LONGEST_PAUSE_MONTHS}-month break and the days after it cost $${cost.toFixed(2)} against the $${net.toFixed(2)} those months brought in, keeping ${(margin * 100).toFixed(0)}%.`,
     );
   }
 });
@@ -383,11 +424,24 @@ test("a break from the plan is paid for by the months before it, at its longest"
  */
 const STRIPE_FEE = (grossCents: number) => (grossCents / 100) * 0.029 + 0.3;
 
-test("the one exposure is the first monthly payment refunded in full: bounded, once per account, and said in writing", () => {
-  // A customer pays the smallest plan, runs every brake to its limit, and asks the month back.
-  const gross = PLAN_PRICES.creator.month;
-  const exposure = worstCost("creator") + STRIPE_FEE(gross);
-  assert.ok(exposure < 16, `the first-month guarantee can cost at most $${exposure.toFixed(2)} on one account; it was meant to stay under $16`);
+/**
+ * What a store's files cost after its plan ends, until its closing day: all a
+ * paid plan may keep, for CLOSING_DAYS and the week a late notice adds. Every
+ * way a plan can end — cancelled, refunded, unpaid — ends in this, and until
+ * October 12, 2026 none of the refund sums below counted it.
+ */
+const KEPT_TO_CLOSING = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30);
+
+test("the one exposure is the first payment refunded in full: bounded, once per account, and said in writing", () => {
+  // A customer pays, runs every brake to its limit, asks the payment back,
+  // and leaves everything a paid plan may keep until the closing day. This is
+  // the guarantee's whole price, taken once per account (lib/plan.ts REFUND_DAYS).
+  for (const [schedule, prices] of SCHEDULES) {
+    const month = worstCost("creator") + STRIPE_FEE(prices.creator.month) + KEPT_TO_CLOSING;
+    const year = worstCost("creator") + STRIPE_FEE(prices.creator.year) + KEPT_TO_CLOSING;
+    assert.ok(month < 27, `${schedule}: a first month given back can cost $${month.toFixed(2)} on one account`);
+    assert.ok(year < 35, `${schedule}: a first year given back can cost $${year.toFixed(2)} on one account`);
+  }
   const policy = readFileSync(join(process.cwd(), "app/refunds/page.tsx"), "utf8");
   assert.match(policy, /first payment on your account/, "the guarantee must say it is for the first payment, or every month is free for anyone who asks");
   assert.match(policy, /are not refunded, except where\s+applicable consumer law requires it/, "renewals must be said to be final");
@@ -397,20 +451,121 @@ test("the one exposure is the first monthly payment refunded in full: bounded, o
   }
 });
 
-for (const tier of TIERS) {
-  test(`${tier}: a yearly plan refunded after one month still pays for that month's worst case`, () => {
-    // Kept: one month at the monthly price. Stripe's fee on the whole year is already gone.
-    const yearNet = PLAN_PRICES[tier].year / 100 - STRIPE_FEE(PLAN_PRICES[tier].year);
-    const refunded = PLAN_PRICES[tier].year / 100 - PLAN_PRICES[tier].month / 100;
+for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
+  test(`${tier}, ${schedule}: a yearly plan refunded in its first month, past the guarantee, still pays for that month and the days to closing`, () => {
+    // A yearly plan that was not the first payment (a second store, or one
+    // bought after a monthly one) can be refunded at any time. Kept: the month
+    // started, at the monthly price, and Stripe's card fee on the year, which
+    // the Refund Policy says is kept because Stripe does not give it back.
+    const yearNet = prices[tier].year / 100 - STRIPE_FEE(prices[tier].year);
+    const refunded = prices[tier].year / 100 - prices[tier].month / 100 - STRIPE_FEE(prices[tier].year);
     const kept = yearNet - refunded;
-    assert.ok(
-      kept > worstCost(tier),
-      `${tier}: a yearly plan refunded after its first month keeps $${kept.toFixed(2)} against a worst month of $${worstCost(tier).toFixed(2)}`,
-    );
+    const cost = worstCost(tier) + KEPT_TO_CLOSING;
+    assert.ok(kept > cost, `${tier}, ${schedule}: keeps $${kept.toFixed(2)} against $${cost.toFixed(2)}`);
   });
 }
+
+test("a refunded year keeps Stripe's card fee, and every page that summarises it says so", () => {
+  const policy = readFileSync(join(process.cwd(), "app/refunds/page.tsx"), "utf8");
+  assert.match(policy, /card processing fee Stripe\s+charged on the yearly payment/);
+  for (const page of ["app/terms/page.tsx", "lib/help-content.ts", "app/mission/page.tsx", "components/home-parts.tsx"]) {
+    const text = readFileSync(join(process.cwd(), page), "utf8");
+    assert.match(text, /card\s+(processing\s+)?fee/i, `${page} summarises the yearly refund without the card fee`);
+  }
+});
 
 test("a yearly first payment asks the card's bank to authenticate, so a fraud dispute lands on the bank", () => {
   const billing = readFileSync(join(process.cwd(), "lib/billing.ts"), "utf8");
   assert.match(billing, /cycle === "year"\) body\.set\("payment_method_options\[card\]\[request_three_d_secure\]", "any"\)/);
+});
+
+test("while the share is off, nothing is taken from a sale and the prices on sale are today's", () => {
+  if (COMMISSION_LIVE) return;
+  assert.deepEqual(PLAN_PRICES, PRICES_WITHOUT_COMMISSION);
+  for (const tier of TIERS) {
+    assert.equal(commissionBps(tier), 0);
+    assert.equal(commissionCents(tier, 100_000), 0);
+  }
+});
+
+test("the share decided: what each plan takes, and where the cheaper plan changes", () => {
+  assert.deepEqual(COMMISSION_BPS, { creator: 575, pro: 275, scale: 0 });
+  assert.deepEqual(
+    Object.fromEntries(TIERS.map((t) => [t, PRICES_WITH_COMMISSION[t].month])),
+    { creator: 2600, pro: 14900, scale: 34900 },
+  );
+  // Each year is ten months for twelve.
+  for (const tier of TIERS) assert.equal(PRICES_WITH_COMMISSION[tier].year, PRICES_WITH_COMMISSION[tier].month * 10);
+  // What a month costs a creator who sells this many dollars, on each plan.
+  const bill = (tier: Tier, sales: number) => PRICES_WITH_COMMISSION[tier].month / 100 + (sales * COMMISSION_BPS[tier]) / 10_000;
+  const cheapest = (sales: number) => TIERS.reduce((a, b) => (bill(b, sales) < bill(a, sales) ? b : a));
+  // Store to Studio at about $4,100 a month of sales, Studio to Scale at about $7,270: the figures lib/plan.ts states.
+  assert.equal(cheapest(4_050), "creator");
+  assert.equal(cheapest(4_150), "pro");
+  assert.equal(cheapest(7_250), "pro");
+  assert.equal(cheapest(7_300), "scale");
+  // Every plan is the cheapest somewhere, or it is a plan nobody should be sold.
+  assert.deepEqual([...new Set([0, 1_000, 5_000, 50_000].map(cheapest))], ["creator", "pro", "scale"]);
+});
+
+test("a share is rounded down, and never taken from nothing", () => {
+  // The arithmetic the checkout will use, held at the decided rates.
+  const at = (tier: Tier, cents: number) => Math.floor((Math.floor(cents) * COMMISSION_BPS[tier]) / 10_000);
+  assert.deepEqual([at("creator", 4_900), at("creator", 15), at("pro", 4_900), at("scale", 4_900)], [281, 0, 134, 0]);
+  for (const bad of [0, -500, Number.NaN, Number.POSITIVE_INFINITY]) assert.equal(commissionCents("creator", bad), 0);
+});
+
+/**
+ * What has to be true before the share is switched on, as far as code can
+ * see it (lib/plan.ts COMMISSION_LIVE says why each one). Stripe's written
+ * yes cannot be seen from here; the rest can.
+ */
+function notYetReady(): string[] {
+  const missing: string[] = [];
+  const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
+  // 1. Every place that opens a charge on a creator's account sets the fee.
+  const charging = [
+    "lib/store-checkout.ts",
+    "lib/cart-checkout.ts",
+    "lib/calls.ts",
+    "lib/call-packages.ts",
+    "lib/store-tip-checkout.ts",
+    "lib/upsell.ts",
+  ];
+  for (const file of charging) {
+    const text = read(file);
+    assert.match(text, /onAccount\(\s*"POST"[\s\S]{0,160}?"\/(checkout\/sessions|payment_intents)"/, `${file} no longer opens a charge; update this list`);
+    if (!/commissionCents|commissionBps/.test(text)) missing.push(`${file} opens a charge with no share set on it`);
+  }
+  // 2. A refund gives back the share of what was refunded.
+  if (!/application_fees\/[^"`]*refunds/.test(read("lib/refunds.ts") + read("lib/webhooks.ts"))) missing.push("a refund does not give back the share");
+  // 3. No page still says nothing is taken from a sale.
+  const said = /take[s]? no cut|No cut of your sales|take a cut of your sales|0% of every sale|0% of your sales|0%, as on every sale|0% transaction fees|We take nothing/i;
+  for (const file of [
+    "app/mission/page.tsx",
+    "app/terms/page.tsx",
+    "components/product-editor.tsx",
+    "lib/feature-pages.ts",
+    "lib/blog.ts",
+    "lib/help-content.ts",
+    "lib/site-pages.ts",
+    "components/home-parts.tsx",
+    "app/page.tsx",
+  ]) {
+    if (said.test(read(file))) missing.push(`${file} still says nothing is taken from a sale`);
+  }
+  // 4. A store that subscribed before keeps its price, with no share.
+  if (!/commissionSince/.test(read("lib/store.ts"))) missing.push("a store that subscribed before has nothing marking it as kept on its price");
+  return missing;
+}
+
+test("the share cannot be switched on before the checkout, the refunds and the pages are ready for it", () => {
+  const missing = notYetReady();
+  if (COMMISSION_LIVE) {
+    assert.deepEqual(missing, [], "switched on with these still missing");
+  } else {
+    // Off: the list is what switching it on will take. It is checked to find
+    // something, so a scan that silently stopped matching cannot pass as "ready".
+    assert.ok(missing.some((m) => m.includes("still says nothing is taken")), `the page scan found nothing: ${missing.join("; ")}`);
+  }
 });
