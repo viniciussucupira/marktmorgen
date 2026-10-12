@@ -2484,7 +2484,7 @@ try {
     const bodies = () => form.locator("ol > li textarea");
     await subjects().nth(0).fill("The doors open");
     await bodies().nth(0).fill("Hello,\n\nThe course is open.");
-    await form.getByRole("button", { name: "Add an email" }).click();
+    await form.getByRole("button", { name: "Add a step" }).click();
     await subjects().nth(1).fill("Still thinking about it?");
     await bodies().nth(1).fill("Hello,\n\nIt closes Friday.");
     const second = form.locator("ol > li").nth(1);
@@ -2508,6 +2508,60 @@ try {
     await form.getByRole("button", { name: "Close" }).click();
     await row.getByRole("button", { name: "Remove" }).click();
     await row.waitFor({ state: "detached", timeout: 30_000 });
+  }
+
+  await keepSmall();
+  part("Steps that act: a label given, and a sequence that starts with it");
+  {
+    await open(studio, `${LOCAL}/studio/email?store=${fresh}`);
+    // The sequence a label starts, first, so the other can start it too.
+    await studio.getByRole("button", { name: "New sequence" }).click();
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Save the sequence" }) });
+    await form.getByLabel("Name, for you").fill("The offer");
+    await form.getByLabel("Starts when").selectOption("tagged");
+    await form.getByLabel("Which label").fill("interested");
+    await form.locator("ol > li input[maxlength='150']").nth(0).fill("The course is open");
+    await form.locator("ol > li textarea").nth(0).fill("Hello,\n\nThirty dinners.");
+    await form.getByRole("button", { name: "Save the sequence" }).click();
+    const offerRow = studio.locator("li", { hasText: "The offer" }).first();
+    await offerRow.waitFor({ timeout: 30_000 });
+    is("a sequence that starts with a label says so", (await words(offerRow)).includes("Starts when a sequence gives someone the label “interested”"), true);
+
+    await studio.getByRole("button", { name: "New sequence" }).click();
+    await form.getByLabel("Name, for you").fill("Welcome that hands on");
+    await form.locator("ol > li input[maxlength='150']").nth(0).fill("Welcome");
+    await form.locator("ol > li textarea").nth(0).fill("Hello.");
+    await form.getByRole("button", { name: "Add a step" }).click();
+    const second = form.locator("ol > li").nth(1);
+    await second.locator("[data-step-kind]").selectOption("tag");
+    is("a step that acts asks for its label, not for an email", [await second.locator("textarea").count(), await second.getByLabel("The label to give").count()], [0, 1]);
+    await second.getByLabel("The label to give").fill("interested");
+    await second.getByLabel("Do it for").selectOption("lead");
+    await form.getByRole("button", { name: "Add a step" }).click();
+    const third = form.locator("ol > li").nth(2);
+    await third.locator("[data-step-kind]").selectOption("start");
+    is("and another sequence can be started", await third.getByLabel("The sequence to start").locator("option").allTextContents(), ["The offer"]);
+    await form.getByRole("button", { name: "Save the sequence" }).click();
+    const row = studio.locator("li", { hasText: "Welcome that hands on" }).first();
+    await row.waitFor({ timeout: 30_000 });
+    const listed = await words(row.locator("[data-flow-steps]"));
+    is("the list says what each step does, and for whom", [
+      (await words(row)).includes("1 email and 2 actions"),
+      listed.includes("Step 2: Gives the label “interested”. Only for those who have not bought anything yet; the others skip it."),
+      listed.includes("Step 3: Starts the sequence “The offer”."),
+    ], [true, true, true]);
+    await row.getByRole("button", { name: "Edit" }).click();
+    is("and it opens again as saved", [
+      await form.locator("ol > li").nth(1).locator("[data-step-kind]").inputValue(),
+      await form.locator("ol > li").nth(1).getByLabel("The label to give").inputValue(),
+      await form.locator("ol > li").nth(2).locator("[data-step-kind]").inputValue(),
+    ], ["tag", "interested", "start"]);
+    await form.getByRole("button", { name: "Close" }).click();
+    for (const name of ["Welcome that hands on", "The offer"]) {
+      const gone = studio.locator("li", { hasText: name }).first();
+      await gone.getByRole("button", { name: "Remove" }).click();
+      await gone.waitFor({ state: "detached", timeout: 30_000 });
+    }
   }
 
   await keepSmall();

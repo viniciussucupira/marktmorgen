@@ -129,8 +129,46 @@ export function readGoal(raw: unknown, known: (productId: string) => boolean): F
  * product sold for money (`startsPaid`), cannot end at "has bought anything",
  * nor one about a product at getting that same product.
  */
-export function goalClash(trigger: "joined" | "product" | "bought", productId: string | null, goal: FlowGoal | null, startsPaid: boolean): boolean {
+export function goalClash(trigger: "joined" | "product" | "bought" | "tagged", productId: string | null, goal: FlowGoal | null, startsPaid: boolean): boolean {
   if (!goal) return false;
   if ("any" in goal) return trigger === "bought" || (trigger === "product" && startsPaid);
   return trigger === "product" && goal.productId === productId;
 }
+
+/**
+ * A step that does something instead of sending an email (added 12 October
+ * 2026): gives somebody a label, takes one off, or starts them on another
+ * sequence. With a condition before it, this is how a creator writes "if they
+ * used the link, mark them as interested and start the offer sequence" —
+ * what ClickFunnels and Kit sell as automations, in the sequences a creator
+ * already has.
+ *
+ * Nothing here can loop: each person goes through a sequence once, so a label
+ * that starts a sequence, or a sequence that starts another, runs at most
+ * once for them.
+ */
+export type FlowAction = { do: "tag" | "untag"; tag: string } | { do: "start"; flowId: string };
+
+/** An action as sent from the studio, cleaned; null for an email. `isFlow` says whether a sequence is the store's. */
+export function readAction(raw: unknown, isFlow: (flowId: string) => boolean): FlowAction | null | "bad" {
+  if (raw === null || raw === undefined || raw === "") return null;
+  if (typeof raw !== "object") return "bad";
+  const value = raw as Record<string, unknown>;
+  if (value.do === "tag" || value.do === "untag") {
+    const tag = cleanTag(value.tag);
+    return tag ? { do: value.do, tag } : "bad";
+  }
+  if (value.do === "start") {
+    const flowId = typeof value.flowId === "string" ? value.flowId : "";
+    return flowId && isFlow(flowId) ? { do: "start", flowId } : "bad";
+  }
+  return "bad";
+}
+
+/** A label as a condition, a trigger or an action names it. */
+export function cleanTag(raw: unknown): string {
+  return typeof raw === "string" ? raw.replace(/\s+/g, " ").trim().slice(0, MAX_CONDITION_TAG) : "";
+}
+
+/** Whether two labels are the same label: as a person reads them, not by case or spaces. */
+export const sameLabel = (a: string, b: string) => sameTag(a, b);
