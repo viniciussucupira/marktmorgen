@@ -211,10 +211,17 @@ export const TRIAL_DAYS = 14;
  * shorter than that asks a creator to decide before they can know, which is
  * how a refund policy ends up being a formality rather than a promise.
  *
- * It covers every charge, not only the first: a renewal, a plan change, a
- * switch from monthly to yearly. The yearly plans are why it has to. Three
- * hundred dollars taken in one payment is the charge most worth standing
- * behind, and the one a creator is most likely to regret in week three.
+ * It covers the first payment on an account, in full (changed 12 October
+ * 2026; until then every charge). A month given back after it was used is a
+ * month we served for nothing, up to the plan's whole worst case plus the
+ * card fee Stripe keeps: a bounded cost, taken once, so somebody can try a
+ * paid plan for real. On every charge it was a way to use every month free
+ * by asking, with no bound at all. A yearly plan is refunded at any time for
+ * the months not started, the months used kept at the monthly price, which
+ * always covers that month's worst case (tests/plan-margin.test.ts); so
+ * three hundred dollars taken in one payment is still the charge most worth
+ * standing behind, and a creator who regrets it in week three loses one
+ * month, not twelve.
  *
  * Every public sentence about refunds reads this number, including the
  * Refund Policy and the Terms, and INVITE_HOLD_DAYS is derived from it so

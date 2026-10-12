@@ -5,12 +5,12 @@ import { REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 export const metadata: Metadata = {
   title: "Refund Policy — Marktmorgen",
   description:
-    `Cancel anytime. Every charge refunded in full on request within ${REFUND_DAYS} days of it.`,
+    `Cancel anytime. Your first payment refunded in full on request within ${REFUND_DAYS} days; a yearly plan refunded for the months not yet started.`,
 };
 
 export default function RefundsPage() {
   return (
-    <LegalPage title="Refund Policy" lastUpdated="October 6, 2026">
+    <LegalPage title="Refund Policy" lastUpdated="October 12, 2026">
       <p>
         This Refund Policy applies to what you pay Marktmorgen, a product of
         Solrenning, an independent software studio, for the creator store at
@@ -21,7 +21,7 @@ export default function RefundsPage() {
       <p>
         It does not cover something you bought from a creator&apos;s store.
         That money went straight into that creator&apos;s own Stripe account
-        and never passed through us, so the refund is theirs to give. Section 6
+        and never passed through us, so the refund is theirs to give. Section 7
         says what to do.
       </p>
 
@@ -37,22 +37,17 @@ export default function RefundsPage() {
           To cancel, open your studio and choose &ldquo;Cancel the
           subscription&rdquo; under &ldquo;What you pay us,&rdquo; then
           &ldquo;Yes, cancel it.&rdquo; You can also
-          ask us by email, as described in section 3.
+          ask us by email, as described in section 4.
         </p>
       </LegalSection>
 
-      <LegalSection id="guarantee" title={`2. ${REFUND_DAYS}-day money-back guarantee`}>
+      <LegalSection id="guarantee" title={`2. ${REFUND_DAYS}-day money-back guarantee on your first payment`}>
         <p>
-          If you request a refund within thirty ({REFUND_DAYS}) days of a
-          charge, we will refund that charge in full. No reason is required
-          and none will be asked for.
-        </p>
-        <p>
-          This applies to every charge, not only your first: the initial
-          subscription payment, later renewal charges on any plan, monthly
-          or yearly, and a charge made when you switch plans or switch between
-          monthly and yearly billing. Each charge has its own {REFUND_DAYS}{" "}
-          days, counted from the day that charge was made.
+          If you request a refund within thirty ({REFUND_DAYS}) days of the
+          first payment on your account, we will refund that payment in full.
+          No reason is required and none will be asked for. The first payment
+          is the first charge we make to you, on any plan, monthly or yearly,
+          for any of your stores.
         </p>
         <p>
           It is separate from, and comes after, the free trial. The first{" "}
@@ -68,8 +63,22 @@ export default function RefundsPage() {
           never ours to return.
         </p>
       </LegalSection>
-
-      <LegalSection title="3. How to request a cancellation or refund">
+      <LegalSection id="yearly" title="3. Yearly plans: the months you have not started">
+        <p>
+          A yearly plan can be refunded at any time, not only in its first{" "}
+          {REFUND_DAYS} days. We keep the months that have started, each at
+          the monthly price of that plan, and refund the rest of what you paid.
+          So a yearly plan refunded in its second month costs you two months at
+          the monthly price, and the other ten months come back. Its paid
+          features close from the day of the refund.
+        </p>
+        <p>
+          If the yearly payment was your first payment to us and you ask within{" "}
+          {REFUND_DAYS} days of it, section 2 applies instead and the whole
+          payment comes back.
+        </p>
+      </LegalSection>
+      <LegalSection title="4. How to request a cancellation or refund">
         <p>
           Email{" "}
           <a
@@ -93,23 +102,31 @@ export default function RefundsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title={`4. After ${REFUND_DAYS} days`}>
+      <LegalSection title="5. Renewals and later charges">
         <p>
-          Refunds are not available for requests made more than {REFUND_DAYS}{" "}
-          days after a charge, except where applicable consumer law requires
-          them. You may still cancel at any time to stop future charges, and
-          the charge after this one has a fresh {REFUND_DAYS} days of its own.
+          A monthly renewal, a charge made when you switch plans and any
+          charge after your first payment are not refunded, except where
+          applicable consumer law requires it. You may cancel at any time to
+          stop future charges and keep access until the end of the period you
+          have already paid for. The months of a yearly plan that have not
+          started are always refunded, as section 3 says.
+        </p>
+        <p>
+          Why the guarantee is on the first payment: a refund gives back the
+          whole month after it has been used, including what that month cost us
+          to serve. We offer that once, so you can try the paid plan for real;
+          offering it on every month would make every month free for anyone who
+          asked, and the plans would have to cost everyone else more.
         </p>
       </LegalSection>
-
-      <LegalSection title="5. Chargebacks">
+      <LegalSection title="6. Chargebacks">
         <p>
           If you have a billing issue, please contact us first so we can help.
           Unwarranted chargebacks may result in account suspension.
         </p>
       </LegalSection>
 
-      <LegalSection title="6. If you bought from a creator’s store">
+      <LegalSection title="7. If you bought from a creator’s store">
         <p>
           Write to the creator you bought from: reply to the confirmation email
           the store sent you after you paid, and your reply reaches them. Their
@@ -130,7 +147,7 @@ export default function RefundsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Changes">
+      <LegalSection title="8. Changes">
         <p>
           We may update this Refund Policy. The &ldquo;Last updated&rdquo; date at
           the top of this page will change when we do. The policy in effect at the
@@ -138,7 +155,7 @@ export default function RefundsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Contact">
+      <LegalSection title="9. Contact">
         <p>
           Marktmorgen
           <br />

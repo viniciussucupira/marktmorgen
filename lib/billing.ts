@@ -295,6 +295,12 @@ export async function createBillingCheckout(
   if (trialOffered(store)) {
     body.set("subscription_data[trial_period_days]", String(TRIAL_DAYS));
   }
+  // A year is paid at once, and a yearly first payment is refundable in full
+  // for thirty days: the one charge a stolen card would go for. The card's
+  // bank is asked to authenticate it (3D Secure), which moves a fraud dispute
+  // onto the bank rather than onto us. A month is left to Stripe's own
+  // judgement, so the usual sign-up keeps its one-page checkout.
+  if (cycle === "year") body.set("payment_method_options[card][request_three_d_secure]", "any");
   inTheCurrencyShown(body);
 
   let price: string | null = null;
