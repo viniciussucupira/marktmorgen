@@ -14,6 +14,7 @@ import { leaveMonth } from "@/lib/leave-flow";
 import { memberHealth } from "@/lib/member-health";
 import { AWAY_POINTS, BAND_NAMES, HEALTH_WORDS } from "@/lib/member-health-rules";
 import { can } from "@/lib/team-roles";
+import { MrrChart } from "@/components/mrr-chart";
 
 export const metadata: Metadata = {
   title: "Membership numbers — Marktmorgen",
@@ -125,6 +126,70 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                   </div>
                 ))}
               </dl>
+
+              {numbers.movements && numbers.movements.months.length ? (
+                <section aria-labelledby="moves-title" className="card mt-8 p-6 sm:p-8" data-mrr-movements>
+                  <h2 id="moves-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Recurring revenue, month by month</h2>
+                  <p className="mt-1 max-w-2xl text-sm text-ink-soft">
+                    What it was at the end of each month, and what moved it: members who joined, who came back, who moved to a
+                    dearer or cheaper plan, and who left.
+                  </p>
+                  <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">A year at this rate</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{money(numbers.movements.arr)}</dd>
+                      <dd className="text-sm text-ink-soft">annual recurring revenue</dd>
+                    </div>
+                    <div className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">Per paying member</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{money(numbers.movements.arpu)}</dd>
+                      <dd className="text-sm text-ink-soft">a month, on average</dd>
+                    </div>
+                    <div className="rounded-xl bg-paper p-4 ring-1 ring-line">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-mute">Kept from a year ago</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{numbers.movements.nrr === null ? "—" : percent(numbers.movements.nrr)}</dd>
+                      <dd className="text-sm text-ink-soft">
+                        {numbers.movements.nrr === null ? "nobody was paying a year ago" : "of what members paying then brought, brought now"}
+                      </dd>
+                    </div>
+                  </dl>
+                  <MrrChart months={numbers.movements.months} money={money} />
+                  <div className="mt-2 overflow-x-auto" tabIndex={0} role="region" aria-label="Recurring revenue month by month, as a table">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="text-xs uppercase tracking-[0.08em] text-ink-mute">
+                          <th scope="col" className="py-2 pr-4 font-semibold">Month</th>
+                          <th scope="col" className="py-2 pr-3 text-right font-semibold">New</th>
+                          <th scope="col" className="py-2 pr-3 text-right font-semibold">Came back</th>
+                          <th scope="col" className="py-2 pr-3 text-right font-semibold">Moved up</th>
+                          <th scope="col" className="py-2 pr-3 text-right font-semibold">Moved down</th>
+                          <th scope="col" className="py-2 pr-3 text-right font-semibold">Left</th>
+                          <th scope="col" className="py-2 text-right font-semibold">At the end</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-line">
+                        {[...numbers.movements.months].reverse().map((m) => (
+                          <tr key={m.month}>
+                            <th scope="row" className="whitespace-nowrap py-2.5 pr-4 font-semibold text-ink">{monthName(m.month)}</th>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">{m.new ? `+${money(m.new)}` : "—"}</td>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">{m.reactivated ? `+${money(m.reactivated)}` : "—"}</td>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">{m.expansion ? `+${money(m.expansion)}` : "—"}</td>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">{m.contraction ? `\u2212${money(m.contraction)}` : "—"}</td>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">{m.canceled ? `\u2212${money(m.canceled)}` : "—"}</td>
+                            <td className="py-2.5 text-right font-semibold tabular-nums text-ink">{money(m.end)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 text-xs text-ink-soft">
+                    Counted per member, so a move to another plan is a move up or down, not somebody leaving. At list price, before
+                    discounts and tax, like the monthly recurring revenue above; free trials count once they end. When a price
+                    changed is read from your invoices of the last 13 months on your own Stripe account. The current month runs to
+                    today.
+                  </p>
+                </section>
+              ) : null}
 
               {numbers.atRisk > 0 ? (
                 <p className="notice notice-warn mt-6">
