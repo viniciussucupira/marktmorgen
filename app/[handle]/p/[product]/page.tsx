@@ -119,11 +119,12 @@ async function pageOf(store: Store, product: Listing): Promise<SalesPage> {
  * group sees their own version, and the view is counted after the page is
  * sent. A visitor with no group sees the first and is not counted.
  */
-async function shownVersion(store: Store, productId: string, page: SalesPage): Promise<SalesPage> {
+async function shownVersion(store: Store, productId: string, page: SalesPage, sold: boolean): Promise<SalesPage> {
   const test = runningTest(page);
   if (!test) return page;
   const counts = await readCounts(store.statsId, productId, test).catch(() => null);
-  const won = counts ? winner(counts) : null;
+  // A product sold for money is decided by the money each version brings (lib/headline-test-rules.ts).
+  const won = counts ? winner(counts, sold ? "money" : "checkouts") : null;
   const bucket = readBucket((await cookies()).get(AB_COOKIE)?.value);
   const version = won ?? (bucket !== null ? versionFor(bucket, test) : "a");
   if (!won && bucket !== null) after(() => countTest(store.statsId, productId, test, "v", version));
@@ -329,7 +330,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
   ]);
   // The version of a page test this visitor reads (lib/headline-test.ts),
   // before anything is drawn from the page, so all of it is one version.
-  const page = await shownVersion(store, product.id, savedPage);
+  const page = await shownVersion(store, product.id, savedPage, product.priceCents > 0);
   if (store.look.sold && stale(soldCounts)) after(() => refreshSoldCounts(store, readAllTimeSales).then(() => undefined));
   const soldCount = soldCounts?.byProduct[product.id];
   const sold = soldCount && soldCount >= SHOWN_FROM ? w.bought(num(soldCount)) : null;

@@ -27,7 +27,14 @@
  *     it, everybody sees the winner until the creator keeps it or ends the
  *     test. Nothing is written to decide it: it is worked out on each read.
  *
- *   nl:ab:<statsId>:<productId>:<testId>   hash: va vb ca cb
+ * Paid sales (added 12 October 2026): a checkout opened from a page running a
+ * test carries the test and the version in its metadata (ab: "<test>:<a|b>"),
+ * and the five-minute job that reads each store's settled checkouts
+ * (lib/checkout-sweep.ts) adds each paid one to its version, once: the sale,
+ * the money and its square. Nothing is read from Stripe on a page view.
+ *
+ *   nl:ab:<statsId>:<productId>:<testId>   hash: va vb ca cb sa sb ra rb qa qb t0
+ *   nl:ab:paid:<checkout id>               counted, 40 days
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Counts, Version } from "@/lib/headline-test-rules";
@@ -44,7 +51,7 @@ export async function readCounts(statsId: string | null, productId: string, test
   if (Array.isArray(raw)) for (let i = 0; i + 1 < raw.length; i += 2) pairs[String(raw[i])] = String(raw[i + 1]);
   else if (raw && typeof raw === "object") Object.assign(pairs, raw);
   const n = (k: string) => (Number.isFinite(Number(pairs[k])) ? Number(pairs[k]) : 0);
-  return { va: n("va"), vb: n("vb"), ca: n("ca"), cb: n("cb") };
+  return { va: n("va"), vb: n("vb"), ca: n("ca"), cb: n("cb"), sa: n("sa"), sb: n("sb"), ra: n("ra"), rb: n("rb"), qa: n("qa"), qb: n("qb"), t0: n("t0") };
 }
 
 /** Counts one view or one checkout of a version. Best effort: a test is never worth a failed page. */
@@ -53,6 +60,46 @@ export async function count(statsId: string | null, productId: string, testId: s
   const k = key(statsId, productId, testId);
   await redisPipeline([
     ["HINCRBY", k, `${what}${version}`, 1],
+    // When the test was first seen, for how long it has left (daysLeft).
+    ...(what === "v" ? [["HSETNX", k, "t0", Date.now()]] : []),
     ["EXPIRE", k, 400 * 86_400],
   ]).catch(() => {});
+}
+
+const AB_META = /^([a-z0-9]{4,12}):(a|b)$/;
+
+/** What a checkout's metadata says about the test it was opened from: `${test}:${version}`. */
+export function abMeta(testId: string, version: Version): string {
+  return `${testId}:${version}`;
+}
+
+type PaidRow = { id?: unknown; amount_total?: unknown; currency?: unknown; metadata?: Record<string, string> | null };
+
+/**
+ * Adds each paid checkout opened from a test to its version, once: one sale,
+ * its money, and that money's square. Only sales in the store's currency, and
+ * with money paid: a free order through a discount is not a sale here.
+ */
+export async function noteTestSales(statsId: string | null, currency: string, paid: PaidRow[]): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  // In the store's currency only: money in two currencies does not add up, and a sale without its money would skew the version it counts for.
+  const rows = paid.filter(
+    (row) => typeof row.id === "string" && AB_META.test(row.metadata?.ab ?? "") && typeof row.metadata?.product === "string" && row.currency === currency && typeof row.amount_total === "number" && row.amount_total > 0,
+  );
+  let noted = 0;
+  for (const row of rows) {
+    const [, test, version] = (row.metadata?.ab ?? "").match(AB_META) as RegExpMatchArray;
+    const [claimed] = await redisPipeline([["SET", `nl:ab:paid:${row.id as string}`, "1", "NX", "EX", 40 * 86_400]]);
+    if (claimed === null) continue;
+    const cents = Math.round(row.amount_total as number);
+    const k = key(statsId, row.metadata?.product as string, test);
+    await redisPipeline([
+      ["HINCRBY", k, `s${version}`, 1],
+      ["HINCRBY", k, `r${version}`, cents],
+      ["HINCRBY", k, `q${version}`, cents * cents],
+      ["EXPIRE", k, 400 * 86_400],
+    ]);
+    noted += 1;
+  }
+  return noted;
 }

@@ -36,7 +36,10 @@ import { type DraftedQuestion, MAX_QUIZ_SOURCE, readDrafted, shuffleAnswers } fr
 import { type DraftedStep, readDraftedSteps } from "@/lib/sequence-draft";
 import { MAX_CHOICE_LENGTH, MAX_EXPLANATION_LENGTH, MAX_QUESTIONS, MAX_QUESTION_LENGTH } from "@/lib/quiz";
 import { MAX_ANSWER_TEXT, MAX_FEEDBACK, MAX_TASK_PROMPT } from "@/lib/assignment-rules";
-import { FILLABLE, REWRITABLE, REWRITE_STYLES, type RewriteStyle, addsNumbers, blockText } from "@/lib/block-rewrite-rules";
+import { FILLABLE, REWRITABLE, REWRITE_STYLES, type RewriteStyle, addsNumbers, blockText, numbersIn } from "@/lib/block-rewrite-rules";
+
+/** The longest a tested headline may be, as the page keeps it (lib/sales-page.ts, MAX_HEADLINE). */
+const MAX_HEADLINE_WORDS = 120;
 
 const API = /^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.ANTHROPIC_API_BASE ?? "")
   ? `${process.env.ANTHROPIC_API_BASE}/v1/messages`
@@ -1231,6 +1234,38 @@ export async function rewriteBlock(
     if (addsNumbers(before, merged, input.facts)) return null;
     if (merged.kind === "cta") merged.label = merged.label.replace(/\s*\b(?:for|at|only)?\s*[$€£¥]\s*\d[\d.,]*/gi, "").trim();
     return merged;
+  });
+}
+
+/**
+ * A second headline to test against the hero's own (lib/headline-test.ts):
+ * the same promise said another way, from the page and the product only,
+ * with no number the page does not already state. One of the month's jobs.
+ */
+export async function writeTestHeadline(
+  store: Store,
+  input: { headline: string; sub: string; facts: string; language: string },
+  now = Date.now(),
+): Promise<AiResult<{ headline: string; sub: string }>> {
+  const headline = line(input.headline, MAX_HEADLINE_WORDS);
+  if (!headline) return { ok: false, reason: "notes" };
+  return counted(store, now, async () => {
+    const system = [
+      "You write a second headline for a creator's sales page, to be tested against the one it has: half the visitors will see each.",
+      honesty(input.language),
+      `Write in ${input.language}, the language the page is written in.`,
+      "Make it clearly different from the current one, so the test can tell them apart: lead with another benefit, another angle or another reader the facts name, rather than swapping a few words. Under 12 words. Then one line under it, under 25 words.",
+      "Use no number, amount, duration, result or promise that is not in the page given.",
+      'Return only a JSON object: {"headline": string, "sub": string}.',
+    ].join("\n\n");
+    const prompt = [`The page, for context:\n${input.facts}`, `\nThe current headline: ${headline}`, `The line under it: ${line(input.sub, 300)}`].join("\n");
+    const reply = await ask(system, prompt, 400);
+    const json = reply ? jsonIn(reply) : null;
+    const next = { headline: line(json?.headline, MAX_HEADLINE_WORDS), sub: line(json?.sub, 300) };
+    if (!next.headline || next.headline.toLowerCase() === headline.toLowerCase()) return null;
+    const known = new Set([...numbersIn(input.facts), ...numbersIn(`${headline} ${input.sub}`)]);
+    if ([...numbersIn(`${next.headline} ${next.sub}`)].some((n) => !known.has(n))) return null;
+    return next;
   });
 }
 

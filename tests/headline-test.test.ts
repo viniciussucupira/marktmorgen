@@ -39,7 +39,8 @@ async function main(): Promise<void> {
   await count("stats1", "prod1", "t1", "v", "a");
   await count("stats1", "prod1", "t1", "v", "a");
   await count("stats1", "prod1", "t1", "c", "b");
-  is("adds up per version", await readCounts("stats1", "prod1", "t1"), { va: 2, vb: 0, ca: 0, cb: 1 });
+  const added = await readCounts("stats1", "prod1", "t1");
+  is("adds up per version, and keeps when it was first seen", [{ va: added.va, vb: added.vb, ca: added.ca, cb: added.cb }, (added.t0 ?? 0) > 0], [{ va: 2, vb: 0, ca: 0, cb: 1 }, true]);
   done();
 }
 

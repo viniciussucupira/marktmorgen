@@ -21,7 +21,8 @@ import { SharePanel } from "@/components/share-panel";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { BlockRewrite } from "@/components/block-rewrite";
 import { type CourseOutline, insideFromCourse } from "@/lib/course-outline-items";
-import { MIN_VIEWS, type Counts, rate, winner } from "@/lib/headline-test-rules";
+import { MIN_SALES, MIN_VIEWS, WIN_CHANCE, type Counts, chanceBBetter, daysLeft, perVisitor, rate, winner } from "@/lib/headline-test-rules";
+import { formatMoney } from "@/lib/money";
 import { type BlockContext, type FeaturedCard, HeroView, PageSections } from "@/components/sales-blocks";
 import { RatingLine, ReviewsSection } from "@/components/review-list";
 import { type StoreLook, lookStyle } from "@/lib/store-look";
@@ -308,6 +309,33 @@ export function PageEditor({
   }, [startTest]);
   const [testHeadline, setTestHeadline] = useState(initial.test?.headline ?? "");
   const [testSub, setTestSub] = useState(initial.test?.sub ?? "");
+  // A second headline written by the writing help (lib/ai.ts, writeTestHeadline): one of the month's jobs.
+  const aiOn = useContext(AiOn);
+  const [writingTest, setWritingTest] = useState(false);
+  const [testNote, setTestNote] = useState<string | null>(null);
+  async function writeTest(hero: { headline: string; sub: string }) {
+    if (writingTest) return;
+    setWritingTest(true);
+    setTestNote(null);
+    try {
+      const response = await fetch("/api/store/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "headline", product: product.id, headline: hero.headline, sub: hero.sub, page: pageToSend() }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; value?: { headline: string; sub: string }; error?: string };
+      if (data.ok && data.value) {
+        setTestHeadline(data.value.headline);
+        setTestSub(data.value.sub);
+      } else {
+        setTestNote(data.error === "used" ? "This month's writing help is used up. It starts again on the 1st." : data.error === "notes" ? "Write the hero's own headline first." : "No headline came back, and nothing was counted. Try again.");
+      }
+    } catch {
+      setTestNote("No headline came back, and nothing was counted. Try again.");
+    } finally {
+      setWritingTest(false);
+    }
+  }
   // A second version of the whole page, tested against the first (lib/sales-page.ts,
   // variant): the version not being edited right now, and whether B is the one being edited.
   const [other, setOther] = useState<Draft[] | null>(() => (initial.variant ? toDrafts({ ...initial, blocks: initial.variant.blocks }) : null));
@@ -1055,7 +1083,9 @@ export function PageEditor({
                   <span className="block font-normal text-ink-soft">
                     {other
                       ? "A second version of the whole page is being tested, and a page runs one test at a time. Write a different headline in version B instead."
-                      : `Half your visitors see this one, half see the second. Once each has been seen ${MIN_VIEWS} times and one brings clearly more people to the checkout, your page shows that one to everybody by itself. Only the words change: never the price.`}
+                      : product.free
+                        ? `Half your visitors see this one, half see the second. Once each has been seen ${MIN_VIEWS} times and one brings clearly more sign-ups, your page shows that one to everybody by itself. Only the words change.`
+                        : `Half your visitors see this one, half see the second. Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more money per visitor, your page shows that one to everybody by itself. Only the words change: never the price.`}
                   </span>
                 </span>
               </label>
@@ -1072,7 +1102,17 @@ export function PageEditor({
                     "Its line under it (optional)",
                     <textarea id={`${base}-ts`} className="field" rows={2} maxLength={MAX_SUBHEADLINE} value={testSub} onChange={(e) => setTestSub(e.target.value)} />,
                   )}
-                  <TestResults productId={product.id} running={initial.test !== null} what="headline" />
+                  {aiOn.on ? (
+                    <div>
+                      <button type="button" className="btn btn-secondary btn-sm" disabled={writingTest} aria-busy={writingTest} onClick={() => void writeTest({ headline: block.headline, sub: block.sub })} data-write-test>
+                        {writingTest ? "Writing…" : "Write a second headline with AI"}
+                      </button>
+                      <p className="mt-1 text-xs text-ink-soft">
+                        {testNote ?? "From your page and product only, said another way, with no number your page does not state. One of your month's AI jobs; read it before you save."}
+                      </p>
+                    </div>
+                  ) : null}
+                  <TestResults productId={product.id} running={initial.test !== null} what="headline" sold={!product.free} />
                 </div>
               ) : null}
             </div>
@@ -1860,7 +1900,7 @@ export function PageEditor({
               {other === null ? (
                 <>
                   <p className="mt-1 text-xs text-ink-soft">
-                    {`Make version B from this page and change anything in it: blocks, their order, words, pictures, video. Half your visitors see each version. Once each has been seen ${MIN_VIEWS} times and one brings clearly more people to the checkout, your page shows that one to everybody by itself. The price and what is sold stay the same for everyone.`}
+                    {`Make version B from this page and change anything in it: blocks, their order, words, pictures, video. Half your visitors see each version. ${product.free ? `Once each has been seen ${MIN_VIEWS} times and one brings clearly more sign-ups` : `Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more money per visitor`}, your page shows that one to everybody by itself. The price and what is sold stay the same for everyone.`}
                   </p>
                   <button type="button" onClick={startPageTest} className="btn btn-secondary btn-sm mt-3">
                     Make version B
@@ -1885,7 +1925,7 @@ export function PageEditor({
                     {`You are editing version ${onB ? "B" : "A"}: the blocks below and the preview are ${onB ? "B's" : "A's"}. Changing either version after a save starts the count again, so a result is never about a page visitors did not see.`}
                   </p>
                   <div className="mt-3">
-                    <TestResults productId={product.id} running={initial.variant !== null} what="page" />
+                    <TestResults productId={product.id} running={initial.variant !== null} what="page" sold={!product.free} />
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" onClick={() => endPageTest("a")} className="btn btn-secondary btn-sm">
@@ -2572,18 +2612,25 @@ function times(n: number, word: string): string {
 }
 
 /**
- * How the saved headline test is going, read from the counts (lib/headline-test.ts).
+ * How the saved headline test is going, read from the counts (lib/headline-test.ts):
+ * for a product sold for money, the sales and the money each version brought
+ * per visitor, the chance one brings more, and how long it has left at the
+ * traffic it has had; for a free one, the checkouts (sign-ups) each opened.
  * Shown only once a test is saved: a test being typed has nothing to show yet.
  */
-function TestResults({ productId, running, what }: { productId: string; running: boolean; what: "headline" | "page" }) {
+function TestResults({ productId, running, what, sold }: { productId: string; running: boolean; what: "headline" | "page"; sold: boolean }) {
   const [counts, setCounts] = useState<Counts | null>(null);
+  const [currency, setCurrency] = useState("usd");
   useEffect(() => {
     if (!running) return;
     let live = true;
     fetch(`/api/store/ab?id=${encodeURIComponent(productId)}`, { cache: "no-store" })
       .then((r) => r.json())
-      .then((data: { ok?: boolean; counts?: Counts }) => {
-        if (live && data.ok && data.counts) setCounts(data.counts);
+      .then((data: { ok?: boolean; counts?: Counts; currency?: string }) => {
+        if (live && data.ok && data.counts) {
+          setCounts(data.counts);
+          if (data.currency) setCurrency(data.currency);
+        }
       })
       .catch(() => {});
     return () => {
@@ -2592,13 +2639,29 @@ function TestResults({ productId, running, what }: { productId: string; running:
   }, [productId, running]);
   if (!running) return <p className="text-xs text-ink-soft">Save the page and the test starts with the next visitor.</p>;
   if (!counts) return null;
-  const won = winner(counts);
+  const measure = sold ? "money" : "checkouts";
+  const won = winner(counts, measure);
   const page = what === "page";
   const [a, b] = page ? ["Version A", "Version B"] : ["First headline", "Second headline"];
+  const money = (cents: number) => formatMoney(Math.round(cents), currency);
+  const line = (name: string, views: number, checkouts: number, sales: number, cents: number) =>
+    sold
+      ? `${name}: seen ${times(views, "time")}, ${times(sales, "sale")} paid, ${money(cents)} in all, ${money(perVisitor(cents, views))} per visitor.`
+      : `${name}: seen ${times(views, "time")}, ${times(checkouts, "sign-up")} (${rate(checkouts, views)}%).`;
+  const chance = sold ? chanceBBetter(counts) : null;
+  const days = won ? null : daysLeft(counts, measure);
+  const enough = sold ? `${MIN_VIEWS} views and ${MIN_SALES} paid sales` : `${MIN_VIEWS} views`;
   return (
-    <div className="text-sm text-ink">
-      <p>{`${a}: seen ${times(counts.va, "time")}, ${times(counts.ca, "checkout")} (${rate(counts.ca, counts.va)}%).`}</p>
-      <p>{`${b}: seen ${times(counts.vb, "time")}, ${times(counts.cb, "checkout")} (${rate(counts.cb, counts.vb)}%).`}</p>
+    <div className="text-sm text-ink" data-test-results>
+      <p>{line(a, counts.va, counts.ca, counts.sa ?? 0, counts.ra ?? 0)}</p>
+      <p>{line(b, counts.vb, counts.cb, counts.sb ?? 0, counts.rb ?? 0)}</p>
+      {chance !== null && !won ? (
+        <p className="mt-1">
+          {chance >= 0.5
+            ? `${b === "Second headline" ? "The second headline" : "Version B"} has a ${Math.round(chance * 100)}% chance of bringing more money per visitor.`
+            : `${a === "First headline" ? "The first headline" : "Version A"} has a ${Math.round((1 - chance) * 100)}% chance of bringing more money per visitor.`}
+        </p>
+      ) : null}
       <p className="mt-1 font-semibold">
         {won === "b"
           ? page
@@ -2608,10 +2671,21 @@ function TestResults({ productId, running, what }: { productId: string; running:
             ? page
               ? "Version A wins. Your page now shows it to everybody. Keep version A and save, or change version B and save to test again."
               : "The first headline wins. Your page now shows it to everybody. Switch the test off, or try another second headline."
-            : `Still running: no clear winner yet. Each needs at least ${MIN_VIEWS} views and a real difference.`}
+            : `Still running: no clear winner yet. Each needs at least ${enough}, and a ${Math.round(WIN_CHANCE * 1000) / 10}% chance of ${sold ? "bringing more money per visitor" : "bringing more sign-ups"}.`}
       </p>
+      {!won ? (
+        <p className="mt-1 text-xs text-ink-soft">
+          {days === null
+            ? sold
+              ? "How long it has left can be said once something has sold."
+              : "How long it has left can be said after its first day."
+            : days === 0
+              ? "Both have what they need: it ends as soon as one is clearly ahead."
+              : `At the traffic it has had, at least ${days === 1 ? "1 more day" : `${days} more days`} before a winner can be called${days > 60 ? ": your page may not get enough visitors for this test, and a bigger change between the versions shows sooner" : ""}.`}
+        </p>
+      ) : null}
       <p className="mt-1 text-xs text-ink-soft">
-        {`Visitors asked for consent before a cookie, as in the EU and UK, see ${page ? "version A" : "the first headline"} and are not counted.`}
+        {`${sold ? "Sales are read from your own Stripe account a few minutes after they are paid, at what the buyer paid. " : ""}Visitors asked for consent before a cookie, as in the EU and UK, see ${page ? "version A" : "the first headline"} and are not counted.`}
       </p>
     </div>
   );

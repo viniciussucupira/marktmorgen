@@ -37,6 +37,7 @@
  * second email.
  */
 import { noteFirstSale } from "@/lib/yearly-offer";
+import { noteTestSales } from "@/lib/headline-test";
 import { revokeRefundedGifts } from "@/lib/gifts";
 import { revokeRefundedPreorders } from "@/lib/preorders";
 import { revokeRefundedGroups } from "@/lib/group-buy";
@@ -176,6 +177,10 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
     // demo's account, which canConfirm leaves out.
     if (paid.length && canConfirm(store)) {
       await noteFirstSale(store, paid).catch((error) => console.error("noting a first sale failed", store.handle, error));
+    }
+    // A sale paid from a page running a test counts for the version its buyer was shown, once (lib/headline-test.ts).
+    if (paid.some((row) => row.metadata?.ab)) {
+      await noteTestSales(store.statsId, store.currency, paid).catch((error) => console.error("counting a tested page's sales failed", store.handle, error));
     }
     // The creator's phone and email platform, told of each sale once.
     if (listensToSales(store)) {
