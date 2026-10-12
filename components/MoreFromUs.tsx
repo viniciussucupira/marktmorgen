@@ -7,14 +7,7 @@ const products = [
     "Hazelsong",
     "https://hazelsong.com/",
     "Collect customer testimonials for your business."
-  ],
-  [
-    "Fluentsmith",
-    "https://www.fluentsmith.com/",
-    "Polish your professional emails and messages."
-  ],
-  ["Tactword","https://tactword.com/","Help your team write clear customer replies."],
-  ["Hireword","https://hireword.com/","Polish resumes, cover letters, and job-search messages."]
+  ]
 ];
 
 export default function MoreFromUs() {

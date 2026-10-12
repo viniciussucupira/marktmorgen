@@ -3,7 +3,7 @@ import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 
 const title = "Our products — Solrenning";
-const description = "Meet Hireword, Tactword, Fluentsmith, Hazelsong, and the Marktmorgen creator store. Find the right tool for your writing or business.";
+const description = "Meet Hazelsong and the Marktmorgen creator store. Find the right tool for your business.";
 export const metadata: Metadata = {
   title, description,
   alternates: { canonical: "/products" },
@@ -12,15 +12,6 @@ export const metadata: Metadata = {
 };
 
 const groups = [
-  {
-    title: "Find the right words",
-    description: "Choose a writing tool for the work in front of you.",
-    products: [
-      { name: "Hireword", initials: "Hw", category: "For your next job", href: "https://hireword.com/", domain: "hireword.com", color: "#1749a3", background: "#edf3ff", description: "Rewrite resumes, cover letters, and recruiter messages in clear, natural English.", action: "Explore Hireword" },
-      { name: "Tactword", initials: "T", category: "For customer-facing teams", href: "https://tactword.com/", domain: "tactword.com", color: "#116558", background: "#eaf7f2", description: "Help support and sales teams write clearer customer replies, with shared style notes and team access.", action: "Explore Tactword" },
-      { name: "Fluentsmith", initials: "F", category: "For everyday work writing", href: "https://www.fluentsmith.com/", domain: "fluentsmith.com", color: "#744027", background: "#fff1e6", description: "Polish emails and messages, choosing the tone that fits what you want to say.", action: "Explore Fluentsmith" },
-    ],
-  },
   {
     title: "Build your business",
     description: "Sell what you create and share what your customers say.",
@@ -40,20 +31,16 @@ export default function ProductsPage() {
           <div className="container-page py-14 sm:py-20">
             <p className="eyebrow">The Solrenning family</p>
             <h1 className="t-h1 mt-4 max-w-3xl">Different tools.<br /><span className="serif font-normal text-violet-deep">One independent studio.</span></h1>
-            <p className="t-lead mt-6 max-w-2xl text-ink-soft">Tools for clearer writing, selling your work, and sharing customer experiences. Find the one that fits what you need today.</p>
-            <p className="mt-5 max-w-2xl text-sm leading-6 text-ink-soft">Solrenning is an independent software studio. Marktmorgen, the creator store, is one of its five products.</p>
-            <nav aria-label="Product categories" className="mt-7 flex flex-wrap gap-3">
-              <a href="#writing" className="btn btn-secondary">Writing tools</a>
-              <a href="#business" className="btn btn-secondary">Business tools</a>
-            </nav>
+            <p className="t-lead mt-6 max-w-2xl text-ink-soft">Tools for selling your work and sharing what your customers say. Find the one that fits what you need today.</p>
+            <p className="mt-5 max-w-2xl text-sm leading-6 text-ink-soft">Solrenning is an independent software studio. Marktmorgen, the creator store, is one of its two products.</p>
           </div>
         </section>
         <div className="container-page space-y-14 py-12 sm:py-16">
           {groups.map((group, index) => (
-            <section key={group.title} id={index === 0 ? "writing" : "business"} className="scroll-mt-28" aria-labelledby={`group-${index}`}>
+            <section key={group.title} id="business" className="scroll-mt-28" aria-labelledby={`group-${index}`}>
               <h2 id={`group-${index}`} className="text-2xl font-semibold tracking-tight">{group.title}</h2>
               <p className="mt-2 text-ink-soft">{group.description}</p>
-              <div className={`mt-6 grid gap-5 md:grid-cols-2 ${index === 0 ? "xl:grid-cols-3" : ""}`}>
+              <div className="mt-6 grid gap-5 md:grid-cols-2">
                 {group.products.map(product => (
                   <article key={product.name} className="flex flex-col rounded-3xl border border-line bg-white p-6 sm:p-7">
                     <div aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-semibold" style={{ color: product.color, background: product.background }}>{product.initials}</div>
