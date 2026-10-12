@@ -80,6 +80,7 @@ export const RESERVED_SLUGS = new Set([
   "manage",
   "manifest.webmanifest",
   "media-kit",
+  "move",
   "orders",
   "p",
   "podcast",

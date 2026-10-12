@@ -2154,12 +2154,12 @@ export const FEATURE_PAGES: TopicPage[] = [
     title: "Bring your store",
     highlight: "with you",
     intro:
-      "Three spreadsheets, from Stan, Gumroad, Kajabi, Mailchimp or anywhere else: your list, your products and the people who already bought from you. You say which column is which, and every row that is not brought in is listed with the reason.",
+      "Four spreadsheets, from Stan, Gumroad, Kajabi, Patreon, Mailchimp or anywhere else: your list, your products, the people who already bought from you and your members. You say which column is which, and every row that is not brought in is listed with the reason.",
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "creator",
     group: "grow",
-    menu: { label: "Moving from another platform", description: "Your list, products and past buyers, from a spreadsheet.", icon: "door" },
+    menu: { label: "Moving from another platform", description: "Your list, products, past buyers and members, from a spreadsheet.", icon: "door" },
     related: ["email", "community", "courses", "bundles"],
     blocks: [
       {
@@ -2167,18 +2167,19 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "How a move works",
         items: [
           { title: "Export from where you are", body: "A CSV file from your old platform or email tool. The studio reads it in your browser first and shows you the rows." },
-          { title: "Match the columns", body: "Email, name, labels and consent for a list; title, price, description and link for products; email and product for buyers. The studio guesses, and you check." },
+          { title: "Match the columns", body: "Email, name, labels and consent for a list; title, price, description and link for products; email and product for buyers; email, membership and renewal date for members. The studio guesses, and you check." },
           { title: "See what came in", body: "What was added, what was already there and what was left out, and a spreadsheet of every row that was not brought in, with its row number and why." },
         ],
       },
       {
         kind: "features",
-        title: "Three imports",
+        title: "Four imports",
         items: [
           { icon: "mail", title: "Your list, up to 50,000 a file", body: "Only people who agreed to hear from you: you confirm it each time, and a consent column in the file narrows it further. Nobody who unsubscribed here is added back, and nobody is emailed because of the import.", href: "/platform/email" },
           { icon: "tag", title: "Labels that come along", body: "The labels in your file, and one you add to everyone in it, go with each contact, next to their name." },
           { icon: "store", title: "Products, up to 500 a file, as drafts", body: "Title, price in your store's currency, description with the HTML of another platform turned into plain text, free or paid, and a link when the product is a link. Each waits in your studio until you publish it." },
           { icon: "users", title: "Past buyers, up to 20,000 a file", body: "Each gets what they bought (the file, the link, the course or each product of a bundle) on your store's list of purchases, marked as brought over from another platform. No payment is taken and no receipt is sent." },
+          { icon: "repeat", title: "Members, up to 20,000 a file", body: "Each member gets one email with their own link to keep their membership here, on your Stripe account. Their card is first charged on the day the membership would have renewed where it was, the date in your file, so nobody pays twice for the same weeks; one reminder goes three days before that date to those who have not kept it. You stop the renewals on the other platform yourself, and the studio asks you to confirm you will." },
           { icon: "chat", title: "Into your community", body: "A buyer brought over for a product that opens your community is let in, like anyone who bought it here.", href: "/platform/community" },
           { icon: "gift", title: "One email, if you choose", body: "Check it, and each buyer gets one email from your store's name saying what moved and how to open it. Up to 20,000 buyers per store in 30 days, and nothing else is sent because of it." },
           { icon: "shield", title: "Checked row by row", body: "Every row is checked again on our side, the way the studio checks a product or an address, and importing the same file twice gives nobody anything twice." },
@@ -2190,7 +2191,8 @@ export const FEATURE_PAGES: TopicPage[] = [
         intro: "Said here so nobody signs up expecting it.",
         items: [
           "Files, pictures and course lessons are not imported from the other platform. Add a product's file from its row in the studio, and a course's videos as lessons, up to 50 at once, then import the buyers who should have it.",
-          "Memberships and calls cannot be given to past buyers, and neither can a product with several prices. A subscription on another platform stays there: members join again here.",
+          "Memberships are never given: a member keeps theirs by paying here, from its renewal date, with the link they are emailed, and somebody who does nothing is never charged. Calls and products with several prices cannot be given to past buyers.",
+          "A membership that ends after a set number of payments cannot be moved, because how many each member has left is not known.",
           "Buyers brought over get no license key here; the key they had on the old platform is still theirs.",
           "Buyers brought over are not sales: they are not in your numbers, not sent to webhooks, not credited to affiliates, and cannot write a review.",
           "An import cannot be undone in one step. A student can be taken off a course, and a member out of the community, one at a time.",
@@ -2202,7 +2204,8 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "Questions about moving",
         items: [
           { q: "In what order should I import?", a: "Products first, because the buyers' file names them by their title or their ID here. Then add each product's file or lessons, then your list and your buyers." },
-          { q: "Which plan is it on, and who can run it?", a: "Every plan. You and your Admins can import; Editors and Support cannot. The one email to past buyers is sent only while your plan or its trial is running." },
+          { q: "Which plan is it on, and who can run it?", a: "Every plan. You and your Admins can import; Editors and Support cannot. The one email to past buyers, and the emails to members, are sent only while your plan or its trial is running." },
+          { q: "How do my members move without paying twice?", a: "Make the membership here first, at the same price. Export your members with the date each would next renew, import them under Your members, and stop the renewals where they are now. Each member keeps theirs with their own link: the card is taken then and first charged on that date. A date less than two days away is charged when they keep it, and their page says so before they press." },
           { q: "Is my file kept?", a: "The file itself never reaches us: your browser reads it and sends the columns you matched. Those rows, the report of what was left out and the import's counts are deleted two weeks after the import began, so download the report before then. What the import added (contacts, drafts and purchases) stays." },
           { q: "What does Stan offer here?", a: "According to its help center, read on September 27, 2026, Stan imports up to 5,000 contacts per store in all, and has you send them an email to opt in again; it gives a customer a download, a course or the community one customer at a time, with no way to undo that in bulk. We found no import for products there. Here you confirm your contacts agreed instead of us emailing them, and buyers come in from a file." },
         ],

@@ -122,6 +122,9 @@ const en = {
   sentenceEnd: ".",
   /** The heading of the creator's own note after paying, when they gave it none (lib/thanks-note.ts). */
   noteFrom: (name: string) => `A note from ${name}`,
+  movedStarted: "Membership moved",
+  movedNote: (price: string, withTax: boolean, date: string) =>
+    `Your first payment here of ${price}${withTax ? " plus any sales tax" : ""} is taken on ${date}, from the card you gave. Cancel before then and you are not charged at all.`,
   trialNote: (price: string, withTax: boolean, days: number, date: string) =>
     `Your first payment of ${price}${withTax ? " plus any sales tax" : ""} is taken when the ${days}-day trial ends, on ${date}, from the card you gave. Cancel before then and you are not charged at all.`,
   planNote: (payments: number, isWeekly: boolean, store: string) =>
@@ -322,6 +325,9 @@ const es: ThanksWords = {
   priceToday: (price) => `${price} hoy`,
   sentenceEnd: ".",
   noteFrom: (name) => `Una nota de ${name}`,
+  movedStarted: "Membresía trasladada",
+  movedNote: (price, withTax, date) =>
+    `Tu primer pago aquí de ${price}${withTax ? " más los impuestos que correspondan" : ""} se cobra el ${date}, en la tarjeta que indicaste. Cancela antes y no se te cobra nada.`,
   trialNote: (price, withTax, days, date) =>
     `Tu primer pago de ${price}${withTax ? " más los impuestos que correspondan" : ""} se cobra al terminar la prueba de ${days} días, el ${date}, en la tarjeta que indicaste. Cancela antes y no se te cobra nada.`,
   planNote: (payments, isWeekly, store) =>
@@ -514,6 +520,9 @@ const fr: ThanksWords = {
   priceToday: (price) => `${price} aujourd'hui`,
   sentenceEnd: ".",
   noteFrom: (name) => `Un mot de ${name}`,
+  movedStarted: "Abonnement transféré",
+  movedNote: (price, withTax, date) =>
+    `Votre premier paiement ici, de ${price}${withTax ? " plus les taxes éventuelles" : ""}, est prélevé le ${date}, sur la carte indiquée. Annulez avant et rien ne vous est débité.`,
   trialNote: (price, withTax, days, date) =>
     `Votre premier paiement de ${price}${withTax ? " plus les taxes éventuelles" : ""} est prélevé à la fin de l'essai de ${days}${S}jours, le ${date}, sur la carte indiquée. Annulez avant et rien ne vous est débité.`,
   planNote: (payments, isWeekly, store) =>
@@ -709,6 +718,9 @@ const de: ThanksWords = {
   priceToday: (price) => `${price} heute`,
   sentenceEnd: ".",
   noteFrom: (name) => `Eine Nachricht von ${name}`,
+  movedStarted: "Mitgliedschaft umgezogen",
+  movedNote: (price, withTax, date) =>
+    `Ihre erste Zahlung hier von ${price}${withTax ? " zuzüglich etwaiger Steuern" : ""} wird am ${date} von der angegebenen Karte abgebucht. Kündigen Sie vorher, wird Ihnen gar nichts berechnet.`,
   trialNote: (price, withTax, days, date) =>
     `Ihre erste Zahlung von ${price}${withTax ? " zuzüglich etwaiger Steuern" : ""} wird am Ende der ${days}-tägigen Testphase am ${date} von der angegebenen Karte abgebucht. Kündigen Sie vorher, wird Ihnen gar nichts berechnet.`,
   planNote: (payments, isWeekly, store) =>
@@ -903,6 +915,9 @@ const it: ThanksWords = {
   priceToday: (price) => `${price} oggi`,
   sentenceEnd: ".",
   noteFrom: (name) => `Un messaggio da ${name}`,
+  movedStarted: "Abbonamento trasferito",
+  movedNote: (price, withTax, date) =>
+    `Il tuo primo pagamento qui di ${price}${withTax ? " più le eventuali imposte" : ""} viene addebitato il ${date}, sulla carta che hai indicato. Annulla prima e non ti viene addebitato nulla.`,
   trialNote: (price, withTax, days, date) =>
     `Il tuo primo pagamento di ${price}${withTax ? " più le eventuali imposte" : ""} viene addebitato alla fine della prova di ${days} giorni, il ${date}, sulla carta che hai indicato. Annulla prima e non ti viene addebitato nulla.`,
   planNote: (payments, isWeekly, store) =>
@@ -1097,6 +1112,9 @@ const nl: ThanksWords = {
   priceToday: (price) => `${price} vandaag`,
   sentenceEnd: ".",
   noteFrom: (name) => `Een bericht van ${name}`,
+  movedStarted: "Lidmaatschap verhuisd",
+  movedNote: (price, withTax, date) =>
+    `Je eerste betaling hier van ${price}${withTax ? " plus eventuele btw" : ""} wordt op ${date} afgeschreven van de kaart die je opgaf. Zeg je vóór die tijd op, dan betaal je helemaal niets.`,
   trialNote: (price, withTax, days, date) =>
     `Je eerste betaling van ${price}${withTax ? " plus eventuele btw" : ""} wordt afgeschreven als de proefperiode van ${days} dagen eindigt, op ${date}, van de kaart die je opgaf. Zeg je vóór die tijd op, dan betaal je helemaal niets.`,
   planNote: (payments, isWeekly, store) =>
@@ -1291,6 +1309,9 @@ const pt: ThanksWords = {
   priceToday: (price) => `${price} hoje`,
   sentenceEnd: ".",
   noteFrom: (name) => `Uma nota de ${name}`,
+  movedStarted: "Subscrição transferida",
+  movedNote: (price, withTax, date) =>
+    `O seu primeiro pagamento aqui, de ${price}${withTax ? " mais os impostos aplicáveis" : ""}, é cobrado a ${date}, no cartão que indicou. Cancele antes e não lhe é cobrado nada.`,
   trialNote: (price, withTax, days, date) =>
     `O seu primeiro pagamento de ${price}${withTax ? " mais os impostos aplicáveis" : ""} é cobrado quando terminar o período experimental de ${days} dias, a ${date}, no cartão que indicou. Cancele antes e não lhe é cobrado nada.`,
   planNote: (payments, isWeekly, store) =>

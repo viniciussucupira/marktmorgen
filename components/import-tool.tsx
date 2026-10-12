@@ -8,7 +8,7 @@ import { useStudioStore } from "@/components/studio-store-pin";
 import { type ParsedCsv, guessColumn, parseCsv, readConsent } from "@/lib/csv";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 
-export type ImportKind = "contacts" | "products" | "purchases";
+export type ImportKind = "contacts" | "products" | "purchases" | "members";
 
 /** An import as the server reports it (app/api/store/import). */
 export type ImportView = {
@@ -57,14 +57,27 @@ const FIELDS: Record<ImportKind, Field[]> = {
     { key: "email", label: "Email", required: true, names: ["email", "customer email", "buyer email", "purchaser email", "email address"] },
     { key: "product", label: "Product", required: true, names: ["product", "product name", "product id", "item", "course", "title"], hint: "Its name or its id, as in your store here." },
   ],
+  members: [
+    { key: "email", label: "Email", required: true, names: ["email", "member email", "patron email", "customer email", "subscriber email", "email address"] },
+    { key: "product", label: "Membership", required: true, names: ["membership", "membership name", "product", "product name", "product id", "offer"], hint: "Its name or its id, as in your store here." },
+    {
+      key: "renews",
+      label: "Renews on",
+      required: true,
+      names: ["next charge date", "next billing date", "next payment date", "next payment", "next charge", "renews on", "renewal date", "renews", "current period end", "next bill date"],
+      hint: "The day it would next renew where it is now, like 2026-11-03. The first payment here is taken that day.",
+    },
+    { key: "option", label: "Price", required: false, names: ["tier", "price option", "option", "level"], hint: "Only for a membership with several prices: the price's name, as in your store here." },
+  ],
 };
 
-const LIMITS: Record<ImportKind, number> = { contacts: 50_000, products: 500, purchases: 20_000 };
+const LIMITS: Record<ImportKind, number> = { contacts: 50_000, products: 500, purchases: 20_000, members: 20_000 };
 
 const EXAMPLES: Record<ImportKind, string> = {
   contacts: "email,name,tags,consent\r\nada@example.com,Ada Lovelace,\"vip, buyers\",yes\r\n",
   products: "title,price,description,type,link\r\nThe starter guide,19,A short guide to getting started.,paid,https://example.com/guide\r\nFree checklist,0,One page to print.,free,https://example.com/checklist\r\n",
   purchases: "email,product\r\nada@example.com,The starter guide\r\n",
+  members: "email,membership,renews on,price\r\nada@example.com,The Inner Circle,2026-11-03,\r\n",
 };
 
 const MESSAGES: Record<string, string> = {
@@ -73,6 +86,9 @@ const MESSAGES: Record<string, string> = {
   too_many: "That is more rows than this import takes. Split the file and bring it in parts.",
   consent: "Check the box to confirm these people agreed to receive your emails. Nobody is added without it.",
   email: "Emailing buyers needs your store's plan to be active. Uncheck the box, or start your plan first.",
+  members_email: "Moving members needs your store's plan to be active: each member is emailed their own link.",
+  stripe: "Members keep their membership by paying on your own Stripe account. Connect Stripe first.",
+  stopped: "Check the box to confirm you will stop these memberships renewing where they are now.",
   list: "Your store's list could not be set up. Try again in a moment.",
   store: "Open the studio once, then come back here.",
   rows: "Part of the file could not be sent. Try again.",
@@ -89,6 +105,7 @@ const WORDS: Record<ImportKind, { added: string; already: string; noun: string }
   contacts: { added: "added to your list", already: "already on it", noun: "contacts" },
   products: { added: "made as drafts", already: "already there", noun: "products" },
   purchases: { added: "given to buyers", already: "already had it", noun: "rows" },
+  members: { added: "invited to move", already: "already invited", noun: "members" },
 };
 
 const running = (state: ImportView["state"]) => state === "receiving" || state === "queued" || state === "running" || state === "mailing";
@@ -115,7 +132,7 @@ export function ImportProgress({
     job.state === "receiving"
       ? `Sending the file: ${job.total.toLocaleString("en-US")} of ${job.expected.toLocaleString("en-US")} rows`
       : job.state === "mailing"
-        ? `Emailing buyers: ${job.counts.mailed.toLocaleString("en-US")} sent`
+        ? `Emailing ${job.kind === "members" ? "members" : "buyers"}: ${job.counts.mailed.toLocaleString("en-US")} sent`
         : running(job.state)
           ? `Bringing it in: ${job.done.toLocaleString("en-US")} of ${job.total.toLocaleString("en-US")} rows`
           : job.state === "done"
@@ -162,7 +179,7 @@ export function ImportProgress({
       </dl>
       {job.email && (job.counts.mailed || job.counts.unmailed || job.state === "mailing") ? (
         <p className="mt-2 text-xs text-ink-soft">
-          {`${job.counts.mailed.toLocaleString("en-US")} buyers emailed${job.counts.unmailed ? `, ${job.counts.unmailed.toLocaleString("en-US")} could not be` : ""}.`}
+          {`${job.counts.mailed.toLocaleString("en-US")} ${job.kind === "members" ? "members" : "buyers"} emailed${job.counts.unmailed ? `, ${job.counts.unmailed.toLocaleString("en-US")} could not be` : ""}.`}
         </p>
       ) : null}
       <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
@@ -213,6 +230,7 @@ export function ImportTool({
   const [agreed, setAgreed] = useState(false);
   const [tags, setTags] = useState("");
   const [email, setEmail] = useState(false);
+  const [stopped, setStopped] = useState(false);
   const [job, setJob] = useState<ImportView | null>(active && active.kind === kind ? active : null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -321,6 +339,10 @@ export function ImportTool({
       setError(MESSAGES.consent);
       return;
     }
+    if (kind === "members" && !stopped) {
+      setError(MESSAGES.stopped);
+      return;
+    }
     setBusy(true);
     let current: ImportView | null = null;
     // Only a file still being sent is let go of when something fails; once
@@ -336,9 +358,10 @@ export function ImportTool({
         consentColumn: kind === "contacts" ? (mapping.consent ?? -1) >= 0 : undefined,
         tags: kind === "contacts" ? tags.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
         email: kind === "purchases" ? email : undefined,
+        stopped: kind === "members" ? stopped : undefined,
       });
       if (!begun.ok || !begun.import) {
-        setError(MESSAGES[begun.error ?? ""] ?? MESSAGES.server_error);
+        setError((kind === "members" && begun.error === "email" ? MESSAGES.members_email : MESSAGES[begun.error ?? ""]) ?? MESSAGES.server_error);
         return;
       }
       current = begun.import;
@@ -535,6 +558,22 @@ export function ImportTool({
                   Each row becomes a draft: kept in your studio and not on your store until you publish it. Prices are read in your
                   store&apos;s currency. A file for a product is added afterward, from its row in the studio.
                 </p>
+              ) : kind === "members" ? (
+                <div className="space-y-3 rounded-2xl bg-white p-4 ring-1 ring-line">
+                  <p className="text-sm text-ink-soft">
+                    {`Each member gets one email from ${storeName}'s name with their own link to keep their membership here, on your Stripe account. Nothing is charged until the date in the file, the day it would have renewed where it is now, so nobody pays twice for the same weeks; a date less than two days away is charged when they keep it. A member who has not kept it gets one reminder three days before that date. Nobody gets the membership without keeping it.`}
+                  </p>
+                  {!canEmail ? <p className="notice notice-warn text-sm">{MESSAGES.members_email}</p> : null}
+                  <label htmlFor="import-stopped" className="flex cursor-pointer items-start gap-3">
+                    <input id="import-stopped" type="checkbox" checked={stopped} onChange={(e) => setStopped(e.target.checked)} className="mt-1 h-5 w-5 shrink-0" />
+                    <span className="text-sm text-ink">
+                      <strong>I will stop these memberships renewing where they are now, before their renewal dates.</strong>{" "}
+                      <span className="text-ink-soft">
+                        Otherwise a member who keeps theirs here would be charged in both places. Only you can do this, on the other platform.
+                      </span>
+                    </span>
+                  </label>
+                </div>
               ) : (
                 <div className="space-y-3 rounded-2xl bg-white p-4 ring-1 ring-line">
                   <p className="text-sm text-ink-soft">

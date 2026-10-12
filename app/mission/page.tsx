@@ -106,6 +106,7 @@ const BUILT = [
   "Webhooks: up to five addresses told about sales, members, leads, bookings and refunds, signed, for Zapier, Make or your own server",
   "Course quizzes of up to 20 questions, and certificates of completion with a page anyone can open to check them",
   "Discord access: your own server opened by what people buy, with roles given on joining and taken back by themselves when access ends",
+  "Members moved from another platform, up to 20,000 a file: each is emailed a link of their own to keep their membership here, first charged on the day it would have renewed there, with one reminder before that day",
   "Lessons made from videos, up to 50 at once: each becomes a lesson named after its file, in the order of the file names, and a video that does not upload leaves no empty lesson behind",
   "Course assignments: students hand in writing or a file, and you approve it or ask for another try, with a reply AI can draft and the student gets by email",
   "License keys: one unique key per sale, uploaded or made here, with a public check your software can call",
@@ -172,7 +173,7 @@ const NOT_BUILT = [
   "An app in the App Store or Google Play",
   "Checkbox questions at checkout: short answers, numbers, a choice from a list and a phone number can be asked, a box to tick cannot",
   "Streaming or recording live sessions and events here, rather than on the service whose link you give or on Jitsi Meet",
-  "Importing a course's text, downloads and pictures from another platform (its videos become lessons, up to 50 at once), or giving past buyers a membership or a call",
+  "Importing a course's text, downloads and pictures from another platform (its videos become lessons, up to 50 at once), or giving past buyers a call",
 ];
 
 /* What shipped, and when: read from the site's own history, not written for effect. */

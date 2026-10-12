@@ -201,6 +201,14 @@ export class MemoryRedis {
         const end = to < 0 ? list.length + to : to;
         return list.slice(start, end + 1);
       }
+      case "LLEN":
+        return this.data.has(key) ? this.list(key).length : 0;
+      case "LINDEX": {
+        if (!this.data.has(key)) return null;
+        const list = this.list(key);
+        const at = Number(args[0]);
+        return list[at < 0 ? list.length + at : at] ?? null;
+      }
 
       case "HSET": {
         const hash = this.hash(key);

@@ -214,6 +214,16 @@ export async function startServices(port) {
         emails.push(JSON.parse(await read(req)));
         return json(res, 200, { id: `email_${emails.length}` });
       }
+      // Several at once, as an import's emails go (lib/email.ts, sendBatch): each kept as one.
+      if (req.method === "POST" && path === "/emails/batch") {
+        const batch = JSON.parse(await read(req));
+        const ids = [];
+        for (const one of Array.isArray(batch) ? batch : []) {
+          emails.push(one);
+          ids.push({ id: `email_${emails.length}` });
+        }
+        return json(res, 200, { data: ids });
+      }
       if (req.method === "POST" && path === "/v1/checkout/sessions") {
         const body = new URLSearchParams(await read(req));
         const metadata = {};
@@ -226,6 +236,9 @@ export async function startServices(port) {
         }
         let amount = 0;
         for (const line of lines.values()) amount += (line.unit_amount ?? 0) * (line.quantity ?? 1);
+        // A subscription whose first charge is put off is paid nothing at checkout, as on Stripe.
+        const trialEnd = body.get("subscription_data[trial_end]");
+        if (trialEnd || body.get("subscription_data[trial_period_days]")) amount = 0;
         // A coupon that takes a set amount off, as an introductory price does, is taken off the first payment.
         const applied = coupons.find((c) => c.id && c.id === body.get("discounts[0][coupon]"));
         if (applied?.amount_off) amount = Math.max(0, amount - Number(applied.amount_off));
@@ -244,7 +257,7 @@ export async function startServices(port) {
           payment_intent: `pi_local${String(counter).padStart(16, "0")}`,
           metadata,
           // The phone, as Stripe's own phone box would have taken it, only where it was asked for.
-          customer_details: body.get("phone_number_collection[enabled]") === "true" ? { email: "buyer@example.com", phone: "+15125550142" } : { email: "buyer@example.com" },
+          customer_details: { email: body.get("customer_email") ?? "buyer@example.com", ...(body.get("phone_number_collection[enabled]") === "true" ? { phone: "+15125550142" } : {}) },
           // The address Stripe's own page would have taken, where one was asked for (lib/shipping.ts).
           ...(body.get("shipping_address_collection[allowed_countries][0]")
             ? { collected_information: { shipping_details: { name: "Ana Souza", address: { line1: "1 Main St", line2: null, city: "Austin", state: "TX", postal_code: "78701", country: "US" } } }, shipping_cost: { amount_total: Number(body.get("shipping_options[0][shipping_rate_data][fixed_amount][amount]") ?? 0) } }
@@ -252,6 +265,8 @@ export async function startServices(port) {
           customer_email: null,
           // What a real checkout would take off, kept for the test to read.
           discount_coupon: body.get("discounts[0][coupon]"),
+          // And when its first charge was put off to, for a membership that moved here.
+          trial_end: trialEnd,
           // And the language Stripe's page was asked to speak.
           locale: body.get("locale"),
           subscription: null,
