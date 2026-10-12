@@ -946,7 +946,8 @@ try {
     await open(studio, `${LOCAL}/studio/pages?product=${ids["Knife Skills"]}&test=headline`);
     const test = studio.locator("#headline-test");
     await test.waitFor({ timeout: 30_000 }).catch(() => {});
-    is("a headline test opens ready to write", [await test.count(), (await test.count()) ? await test.locator("input[type=checkbox]").first().isChecked() : false], [1, true]);
+    const seen = (await test.count()) ? await test.evaluate((el) => { const r = el.getBoundingClientRect(); return r.top >= 0 && r.top < window.innerHeight; }) : false;
+    is("a headline test opens ready to write, in sight", [await test.count(), (await test.count()) ? await test.locator("input[type=checkbox]").first().isChecked() : false, seen], [1, true, true]);
     await open(studio, `${LOCAL}/studio/pages?product=${ids["Knife Skills"]}`);
     await studio.getByRole("button", { name: "Share", exact: true }).click();
     const panel = studio.getByRole("region", { name: "Share Knife Skills" });
