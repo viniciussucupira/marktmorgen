@@ -346,6 +346,7 @@ export function StatsPanel({
   weeklyTeam = null,
   goal = 0,
   chat,
+  chatSales = false,
   deviceMarked = null,
   canAsk = false,
   weeklyAi,
@@ -367,6 +368,8 @@ export function StatsPanel({
   goal?: number;
   /** For whoever may change settings: the chat the numbers are posted to (lib/chat-summary.ts); undefined for anybody else. */
   chat?: ChatKind | null;
+  /** Whether each sale and each alert is posted to that chat too (lib/sale-events.ts, lib/store-alerts.ts). */
+  chatSales?: boolean;
   /** Whether this browser is marked not to be counted on the store (lib/no-count.ts); null to leave the switch out. */
   deviceMarked?: boolean | null;
   /** Whether "Ask your numbers" is offered (lib/numbers-ask.ts): writing help configured. */
@@ -1272,7 +1275,7 @@ export function StatsPanel({
         </p>
         {weeklyTeam ? <WeeklyTeamPicker members={weeklyTeam.members} chosen={weeklyTeam.chosen} /> : null}
         {weeklyAi !== undefined ? <WeeklyAiToggle on={weeklyAi} /> : null}
-        {chat !== undefined ? <ChatSummaryEditor kind={chat} /> : null}
+        {chat !== undefined ? <ChatSummaryEditor kind={chat} sales={chatSales} /> : null}
       </div>
 
       {deviceMarked !== null ? <NoCountToggle marked={deviceMarked} /> : null}

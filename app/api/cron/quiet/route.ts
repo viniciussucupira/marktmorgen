@@ -6,10 +6,12 @@ import { visitedFolders } from "@/lib/traffic";
 import { monthKey } from "@/lib/delivery";
 import { storeOf } from "@/lib/usage-billing";
 import { checkQuiet } from "@/lib/quiet-sales";
+import { checkAlerts } from "@/lib/store-alerts";
 
 /**
  * Once a day for each store with visits this month or last, whether its
- * sales have stopped (lib/quiet-sales.ts). Runs every hour and goes on from
+ * sales have stopped (lib/quiet-sales.ts), and whether its numbers went off
+ * course in another way (lib/store-alerts.ts). Runs every hour and goes on from
  * where the day's last run stopped, so each store is reached once a day
  * however many there are, and a run after the last store reads nothing; each
  * store is also marked looked-at for the day before anything is read, so a
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
   const [got] = await redisPipeline([["SET", "nl:quiet:lock", "1", "NX", "EX", 120]]);
   if (got === null) return Response.json({ ok: true, busy: true });
   const started = Date.now();
-  const out = { sent: 0, fine: 0, skipped: 0, seen: 0, failed: 0 };
+  const out = { sent: 0, fine: 0, skipped: 0, seen: 0, failed: 0, alerts: 0 };
   try {
     const now = new Date();
     const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 15));
@@ -43,6 +45,12 @@ export async function GET(request: NextRequest) {
         return "failed" as const;
       });
       out[result] += 1;
+      // And the alerts on its numbers, in the same daily pass (lib/store-alerts.ts).
+      const alerted = await checkAlerts(store).catch((error) => {
+        console.error("checking a store's alerts failed", error);
+        return { said: 0, skipped: true };
+      });
+      out.alerts += alerted.said;
     }
     await redisPipeline([["SET", atKey, at, "EX", 2 * 86400]]);
     console.log(`quiet: ${JSON.stringify(out)}`);

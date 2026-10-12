@@ -21,7 +21,10 @@
  *     (noteOfferSale);
  *   - the email platform gets the buyer, with the product and the one added
  *     at checkout, when the creator's settings take them — and only if the
- *     buyer agreed to hear from the creator, which lib/email-sync.ts decides.
+ *     buyer agreed to hear from the creator, which lib/email-sync.ts decides;
+ *   - the team's Slack or Discord channel gets one line, where the creator
+ *     asked for each sale there: the amount, what was bought and the channel
+ *     it came from, never the buyer.
  */
 import { saleHandles } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -32,6 +35,8 @@ import type { Listing, Store } from "@/lib/store";
 import { readListing, readListings } from "@/lib/catalog";
 import { bumpsFromMeta, bundleFromMeta } from "@/lib/bundle-rules";
 import { formatMoney } from "@/lib/money";
+import { chatAddress, postToChat } from "@/lib/chat-summary";
+import { channelName } from "@/lib/channel-names";
 
 /** How long a told sale is remembered: past the day the job looks back over. */
 const TOLD_SECONDS = 40 * 86400;
@@ -53,7 +58,7 @@ export type SaleRecord = {
 
 /** Whether anything listens for this store's sales. */
 export function listensToSales(store: Store): boolean {
-  return Boolean(store.stripeAccountId) && (store.phoneSales || store.emailSync !== null);
+  return Boolean(store.stripeAccountId) && (store.phoneSales || store.emailSync !== null || store.chatSales);
 }
 
 /** An amount as the checkout charged it: in its own currency, the store's when Stripe did not say. */
@@ -100,6 +105,19 @@ async function tell(store: Store, record: SaleRecord, session: string): Promise<
       },
       { seed: session, at },
     ).catch((error) => console.error("a sale notification failed", error));
+  }
+
+  // The team's Slack or Discord channel, where the creator asked for each sale
+  // there (lib/chat-summary.ts): the amount, what was bought and the channel it
+  // came from, never who bought it.
+  if (store.chatSales) {
+    const url = await chatAddress(store.statsId).catch(() => null);
+    if (url) {
+      const what = meta.kind === "call" ? "New booking" : meta.kind === "tip" ? "New support" : "New sale";
+      const channel = meta.utm_source || (meta.channel && meta.channel !== "direct" ? meta.channel : "");
+      const line = `${what} on ${store.name}: ${money(amount, record.currency, store)}, ${[title, ...bumps.map((added) => added.title)].join(" + ")}${channel ? ` (from ${channelName(channel)})` : ""}`;
+      await postToChat(url, line).catch(() => false);
+    }
   }
 
   const details = record.customer_details ?? {};
@@ -149,10 +167,17 @@ export async function noteSale(store: Store, record: SaleRecord): Promise<number
 
 /** A one-click offer paid after checkout (lib/upsell.ts): a sale of its own, for the phone. */
 export async function noteOfferSale(store: Store, product: Listing, payment: Record<string, unknown>): Promise<void> {
-  if (!store.phoneSales) return;
+  if (!store.phoneSales && !store.chatSales) return;
   const id = typeof payment.id === "string" ? payment.id : "";
   if (!id) return;
   const amount = typeof payment.amount === "number" ? payment.amount : 0;
+  if (store.chatSales && isRedisConfigured()) {
+    // Once, like the phone's: the payment's own mark.
+    const [fresh] = await redisPipeline([["SET", toldKey(id), "1", "NX", "EX", TOLD_SECONDS]]);
+    const url = fresh === null ? null : await chatAddress(store.statsId).catch(() => null);
+    if (url) await postToChat(url, `New sale on ${store.name}: ${money(amount, payment.currency, store)}, ${product.title} (one-click offer)`).catch(() => false);
+  }
+  if (!store.phoneSales) return;
   await alertCreator(
     store,
     "sale",

@@ -1144,6 +1144,7 @@ export default async function StudioPage({
                   }
                   goal={(await readSalesGoal(store.statsId, store.currency).catch(() => ({ cents: 0 }))).cents}
                   chat={may("settings") ? await chatSetup(store.statsId).catch(() => null) : undefined}
+                  chatSales={store.chatSales}
                   deviceMarked={isMarkedDevice((await cookies()).get(NO_COUNT_COOKIE)?.value, store.sid)}
                 />
                 {await (async () => {

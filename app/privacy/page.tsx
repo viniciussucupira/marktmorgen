@@ -316,7 +316,9 @@ export default function PrivacyPage() {
           A creator can give us a Slack or Discord webhook address; we keep it
           sealed and post there the week&apos;s and the month&apos;s totals,
           channels and notes &mdash; counts and amounts, never a buyer&apos;s
-          name or address. A goal the creator sets for the month is kept as one
+          name or address. If the creator asks, each sale is posted there too,
+          as its amount, what was bought and the channel it came from, and so is
+          each alert on the store&apos;s numbers; never who bought it. A goal the creator sets for the month is kept as one
           figure. On the 1st of each month the store&apos;s creator is emailed
           the month&apos;s numbers, with the same link to stop it as the weekly
           email.
