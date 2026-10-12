@@ -884,7 +884,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "Questions about your numbers",
         items: [
           { q: "Do the visit counts set cookies?", a: "No. They set no cookie and keep no personal data, so there is nothing about them to ask a visitor. The ad pixels are different, which is why visitors are asked first where the law says so." },
-          { q: "How do you know which channel a sale came from?", a: "From the tags on the page it was bought from, or, without tags, from the last place the buyer came from in the 30 days before, which a small cookie of your store's remembers. The channel is written on the payment in your own Stripe account, so you can check any sale there. Nothing about the buyer is kept by us, and where the law asks visitors first, or a browser asks not to be followed, no such cookie is set." },
+          { q: "How do you know which channel a sale came from?", a: "From the tags on the page it was bought from, or, without tags, from the last place the buyer came from in the 30 days before (or the 7, 60 or 90 you choose), which a cookie of your store's remembers. Your numbers also set that beside the first place each buyer came from and what buyers said when asked. The channel is written on the payment in your own Stripe account, so you can check any sale there. Nothing about the buyer is kept by us, and where the law asks visitors first, or a browser asks not to be followed, no such cookie is set." },
           { q: "Why do my numbers differ from Stripe's?", a: "Sales here are new purchases and new members before Stripe's fee and any refund. Renewals and refunds are in your Stripe dashboard." },
         ],
       },

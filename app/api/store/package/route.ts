@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       product,
       product.callPackage,
       linkOrigin(request, store),
-      { ...channelOfRequest(request, store.handle, new URL(origin).hostname), ...(await adsCheckout(request, store)) },
+      { ...channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays), ...(await adsCheckout(request, store)) },
     );
     after(() => countHit(request, store, { kind: "checkout", id: product.id }));
     return new Response(null, { status: 303, headers: { Location: made.url, "Cache-Control": "no-store" } });

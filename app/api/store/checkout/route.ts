@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
         // And, with the buyer's yes to ad measurement, where the request that
         // opened it is kept, so the purchase is sent to the creator's ad
         // platforms when it is paid (lib/ad-events.ts).
-        channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname), ...ads },
+        channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays), ...ads },
         // A code that came in a link to this store (lib/code-link.ts), applied
         // by Stripe only if it is one of the creator's live codes.
         code: readLinkCode(request.cookies.get(codeCookieName(store.handle))?.value) || undefined,

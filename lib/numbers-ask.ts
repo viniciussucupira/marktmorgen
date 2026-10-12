@@ -26,7 +26,7 @@ export const MAX_QUESTION = 300;
 export const WINDOWS = ["d7", "d30", "d90"] as const;
 export type AskWindow = (typeof WINDOWS)[number];
 /** The parts of the Numbers panel an answer can open, by their ids there (components/stats-panel.tsx). */
-export const SECTIONS = ["funnel", "channels", "revenue-source", "products", "posts", "ads", "reach", "buyers", "insights"] as const;
+export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights"] as const;
 export type AskSection = (typeof SECTIONS)[number];
 
 export type NumbersAnswer = {
@@ -81,6 +81,22 @@ export function numbersContext(data: StatsData): Record<string, unknown> {
       ...(known && data.renewals ? { renewals: { payments: data.renewals[w].payments, revenue: money(data.renewals[w].cents) } } : {}),
       ...(known && data.buyers ? { buyers: { buyers: data.buyers[w].buyers, orders: data.buyers[w].orders, came_back: data.buyers[w].returning } } : {}),
       searched_for_and_not_found: (data.searchMisses?.[w] ?? []).slice(0, 10).map((r) => ({ words: r.name, times: r.visits })),
+      // The same money three ways (lib/attribution-rules.ts): last visit, first visit, what buyers said.
+      ...(known && data.attribution
+        ? {
+            channels_three_ways: data.attribution[w].rows.slice(0, 15).map((r) => ({
+              channel: r.name,
+              sales_by_last_visit: r.last.sales,
+              revenue_by_last_visit: money(r.last.cents),
+              sales_by_first_visit: r.first.sales,
+              revenue_by_first_visit: money(r.first.cents),
+              buyers_who_said_it: r.said.buyers,
+              revenue_of_buyers_who_said_it: money(r.said.cents),
+            })),
+            sales_with_no_channel: { sales: data.attribution[w].unknown.sales, revenue: money(data.attribution[w].unknown.cents) },
+            what_buyers_of_sales_with_no_channel_said: data.attribution[w].unknownSaid.map((r) => ({ answer: r.name, buyers: r.buyers, revenue: money(r.cents) })),
+          }
+        : {}),
     };
   }
   return out;
@@ -108,7 +124,7 @@ export async function askNumbers(store: Store, question: string, data: StatsData
       "Answer ONLY from the JSON of numbers given. Never estimate, project or invent a number, a cause or a fact that is not in it. If the numbers cannot answer the question, say so plainly in one sentence and say what the numbers do show that comes closest.",
       "Money is already written as the creator reads it: repeat amounts exactly as given. Windows are the last 7, 30 and 90 days; with no window in the question, use the last 30 days.",
       "Write in the language of the question. At most 90 words, plain sentences, no markdown, no headings. Be direct: the answer first, then one short line on what it suggests doing, only if the numbers clearly support it.",
-      `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, products, posts, ads, reach (how far down the store page people get), buyers, insights.`,
+      `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights.`,
     ].join("\n\n");
     const reply = await askModel(system, `The question: ${asked}\n\nThe numbers:\n${context}`, 600, answerModel());
     const json = reply ? jsonIn(reply) : null;

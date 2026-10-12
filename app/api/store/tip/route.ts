@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       store,
       linkOrigin(request, store),
       amount,
-      channelOfRequest(request, store.handle, new URL(origin).hostname),
+      channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays),
     );
     return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });
   } catch (error) {

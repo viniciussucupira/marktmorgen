@@ -32,6 +32,7 @@ import type { Listing, Store } from "@/lib/store";
 import { listingFinder, productIds, recordListings } from "@/lib/catalog";
 import { plainAmount } from "@/lib/money";
 import { revenueBySource } from "@/lib/came-from";
+import { type AttributionTable, attributionTable } from "@/lib/attribution-rules";
 import { bumpsFromMeta } from "@/lib/bundle-rules";
 import { reachRows } from "@/lib/page-read";
 import { PAGE_PARTS } from "@/lib/store-order";
@@ -196,17 +197,24 @@ export async function countReach(statsId: string, field: string, now = Date.now(
   await redisPipeline([["HINCRBY", countsKey(statsId, dayKey(now)), field, 1]]).catch(() => {});
 }
 
+/** One answer's counts: its buyers and their money, and of those, the ones whose sale had no channel. */
+export type Heard = { buyers: number; cents: number; unknownBuyers?: number; unknownCents?: number };
+
 /**
  * One buyer's answer to "where did you hear about us?" (lib/heard.ts), and
  * the money of the sale it was given for, on the day's record. Once per paid
  * order, so the day's expiry is written with it rather than trusted to a view.
  */
-export async function countHeard(statsId: string, answer: string, cents: number, now = Date.now()): Promise<void> {
+export async function countHeard(statsId: string, answer: string, cents: number, now = Date.now(), untracked = false): Promise<void> {
   if (!isRedisConfigured()) return;
   const counts = countsKey(statsId, dayKey(now));
   await redisPipeline([
     ["HINCRBY", counts, `h:${answer}`, 1],
     ...(cents > 0 ? [["HINCRBY", counts, `hc:${answer}`, Math.round(cents)]] : []),
+    // A sale no link credited to any channel: what its buyer said is the only
+    // trace of where it came from (lib/attribution-rules.ts).
+    ...(untracked ? [["HINCRBY", counts, `hu:${answer}`, 1]] : []),
+    ...(untracked && cents > 0 ? [["HINCRBY", counts, `huc:${answer}`, Math.round(cents)]] : []),
     ["EXPIRE", counts, TTL_SECONDS],
   ]);
 }
@@ -394,7 +402,7 @@ export type WindowStats = {
   /** Measured visits of the store's page, by furthest item and item clicked (lib/page-read.ts); the field without "sr:". */
   reach: Record<string, number>;
   /** Buyers' answers to "where did you hear about us?" (lib/heard.ts), and the money of the sales each was given for. */
-  heard: Record<string, { buyers: number; cents: number }>;
+  heard: Record<string, Heard>;
   /** Searches of the store that found nothing, by the words searched for (countSearchMiss). */
   searchMisses: Ranked;
 };
@@ -435,7 +443,7 @@ class Tally {
   checkoutsBySource = new Map<string, number>();
   freeBySource = new Map<string, number>();
   reach: Record<string, number> = {};
-  heard: Record<string, { buyers: number; cents: number }> = {};
+  heard: Record<string, Heard> = {};
   searchMisses = new Map<string, number>();
 
   add(field: string, count: number) {
@@ -454,6 +462,13 @@ class Tally {
     else if (field.startsWith("sr:")) this.reach[field.slice(3)] = (this.reach[field.slice(3)] ?? 0) + count;
     else if (field.startsWith("h:")) (this.heard[field.slice(2)] ??= { buyers: 0, cents: 0 }).buyers += count;
     else if (field.startsWith("hc:")) (this.heard[field.slice(3)] ??= { buyers: 0, cents: 0 }).cents += count;
+    else if (field.startsWith("hu:")) {
+      const h = (this.heard[field.slice(3)] ??= { buyers: 0, cents: 0 });
+      h.unknownBuyers = (h.unknownBuyers ?? 0) + count;
+    } else if (field.startsWith("huc:")) {
+      const h = (this.heard[field.slice(4)] ??= { buyers: 0, cents: 0 });
+      h.unknownCents = (h.unknownCents ?? 0) + count;
+    }
     else if (field.startsWith("q:")) this.searchMisses.set(field.slice(2), (this.searchMisses.get(field.slice(2)) ?? 0) + count);
   }
 
@@ -721,6 +736,12 @@ export type SalesStats = {
   renewals?: { d7: Renewals; d30: Renewals; d90: Renewals; partial: boolean; bySource?: RenewalsBySource; bySourceDay?: ChannelDays };
   /** What each channel brought in, credited to the buyer's FIRST visit from somewhere (lib/visit-channel.ts). */
   firstBySource?: { source: string; currency: string; cents: number; sales: number }[];
+  /**
+   * For each window, the same sales by the last visit and by the first, side
+   * by side (lib/attribution-rules.ts): checkouts only, in the store's
+   * currency, so the two columns add up to the same money.
+   */
+  attributionIn?: Record<"d7" | "d30" | "d90", { last: { source: string; cents: number; sales: number }[]; first: { source: string; cents: number; sales: number }[] }>;
   /** Money by campaign — one post, when its link was made for it — for each window, in the store's currency. */
   byCampaignIn?: Record<"d7" | "d30" | "d90", { campaign: string; source: string; cents: number; sales: number }[]>;
   /** bySource for each window, so a channel's sales sit beside its visits for the same days. */
@@ -1181,6 +1202,15 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
       source: sale.first,
     })),
   );
+  // The same checkouts by the last visit and by the first, for each window.
+  const sideBySide = (cut: string) => {
+    const kept = own.filter((sale) => !sale.upsell && dayKey(sale.created) >= cut);
+    return {
+      last: revenueBySource(kept.map((sale) => ({ cents: sale.cents, currency: sale.currency, source: sale.source }))),
+      first: revenueBySource(kept.map((sale) => ({ cents: sale.cents, currency: sale.currency, source: sale.first }))),
+    };
+  };
+  out.attributionIn = { d7: sideBySide(cut7), d30: sideBySide(cut30), d90: sideBySide("") };
   // Which ad, and which country, each window's money came from.
   const contentIn = (cut: string) => {
     const by = new Map<string, { content: string; source: string; campaign: string; cents: number; sales: number }>();
@@ -1372,7 +1402,11 @@ export type StatsData = {
    */
   previous: Record<"d7" | "d30" | "d90", { visitors: number; views: number; checkouts: number; sales: number | null; cents: number | null }>;
   /** Buyers' answers to "where did you hear about us?" for the window, the most first (lib/heard.ts). */
-  heard: Record<"d7" | "d30" | "d90", { answer: string; buyers: number; cents: number }[]>;
+  heard: Record<"d7" | "d30" | "d90", { answer: string; buyers: number; cents: number; unknownBuyers?: number; unknownCents?: number }[]>;
+  /** Each channel's money three ways, for the window: by the last visit, the first, and what buyers said (lib/attribution-rules.ts). */
+  attribution?: Record<"d7" | "d30" | "d90", AttributionTable>;
+  /** How many days after a visit a sale is credited to it, as the creator chose. */
+  attributionDays?: number;
   /** What visitors searched the store for and found nothing, for the window, the most first. */
   searchMisses: Record<"d7" | "d30" | "d90", Ranked>;
   /** Money by the ad it came from (utm_content), for the window. */
@@ -1612,6 +1646,17 @@ export function studioStats(
           .sort((a, b) => b.buyers - a.buyers || b.cents - a.cents || a.answer.localeCompare(b.answer)),
       ]),
     ) as StatsData["heard"],
+    attribution: Object.fromEntries(
+      (["d7", "d30", "d90"] as const).map((k) => [
+        k,
+        attributionTable(
+          sales?.attributionIn?.[k].last ?? [],
+          sales?.attributionIn?.[k].first ?? [],
+          Object.entries(w[k].heard ?? {}).map(([answer, v]) => ({ answer, ...v })),
+        ),
+      ]),
+    ) as StatsData["attribution"],
+    attributionDays: store.attributionDays,
     searchMisses: { d7: w.d7.searchMisses ?? [], d30: w.d30.searchMisses ?? [], d90: w.d90.searchMisses ?? [] },
     ads: sales?.byContentIn ?? { d7: [], d30: [], d90: [] },
     salesCountries: sales?.byCountryIn ?? { d7: [], d30: [], d90: [] },

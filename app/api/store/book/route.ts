@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     origin: linkOrigin(request, store),
     via,
     fromPackage: prepared && prepared.ok ? prepared.fromPackage : null,
-    channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname), ...(await adsCheckout(request, store)) },
+    channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays), ...(await adsCheckout(request, store)) },
   });
   if (!result.ok) return back(result.reason);
   // The session counts against the package from now; if another tab took the

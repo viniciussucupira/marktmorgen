@@ -148,6 +148,7 @@ import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rul
 import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
 import { DEFAULT_LANGUAGE, type LanguageCode, parseLanguage } from "@/lib/store-language";
 import { type AdsServerPlatform, parseAdsServer } from "@/lib/ad-consent";
+import { ATTRIBUTION_DAYS, type AttributionDays, DEFAULT_ATTRIBUTION_DAYS, parseAttributionDays } from "@/lib/attribution-rules";
 
 // What the rest of the site has always imported from here.
 export { MAX_PRODUCTS, MAX_SUMMARY_LENGTH, MAX_TITLE_LENGTH, StoreFullError };
@@ -499,6 +500,11 @@ export type Store = {
    * ones, never a token, so a checkout knows without asking Redis.
    */
   adsServer: AdsServerPlatform[];
+  /**
+   * How many days after a visit a sale is still credited to where that visit
+   * came from (lib/attribution-rules.ts): 7, 30, 60 or 90; 30 until changed.
+   */
+  attributionDays: AttributionDays;
   /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
@@ -866,6 +872,7 @@ function parseStore(raw: unknown): Store | null {
       nudge: parseNudge(value.nudge),
       weeklyAi: value.weeklyAi === true,
       adsServer: parseAdsServer(value.adsServer),
+      attributionDays: parseAttributionDays(value.attributionDays),
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
       tiers: parseTiers(value.tiers),
@@ -1059,6 +1066,7 @@ async function freshStore(fields: {
     nudge: { ...NO_NUDGE },
     weeklyAi: false,
     adsServer: [],
+    attributionDays: DEFAULT_ATTRIBUTION_DAYS,
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
     tiers: [],
@@ -2230,6 +2238,14 @@ export async function setLeaving(email: string, raw: unknown): Promise<{ ok: tru
   const leaving = parseLeave({ ...value, own });
   if (own.filter((o) => typeof o.text === "string" && o.text.trim()).length !== leaving.own.length) return { ok: false, reason: "leaving" };
   const next = await patchStore(email, () => ({ leaving }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/** How long after a visit a sale is still credited to it (lib/attribution-rules.ts). */
+export async function setAttributionDays(email: string, days: unknown): Promise<{ ok: true; store: Store } | { ok: false; reason: "invalid" | "none" }> {
+  const n = typeof days === "string" ? Number(days) : days;
+  if (!(ATTRIBUTION_DAYS as readonly unknown[]).includes(n)) return { ok: false, reason: "invalid" };
+  const next = await patchStore(email, () => ({ attributionDays: parseAttributionDays(n) }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 

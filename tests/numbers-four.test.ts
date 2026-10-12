@@ -237,7 +237,7 @@ async function main(): Promise<void> {
   is("never for another store's order", await recordHeard(store, "cs_test_heard0000002", "friend"), "invalid");
   is("nor for one that does not exist", await recordHeard(store, "cs_test_heard0000009", "friend"), "invalid");
   const heardData = studioStats(store, (await readStats(store))!, null, "none", []);
-  is("the studio shows the answer and the money of its sale", heardData.heard.d7, [{ answer: "friend", buyers: 1, cents: 4900 }]);
+  is("the studio shows the answer and the money of its sale", heardData.heard.d7, [{ answer: "friend", buyers: 1, cents: 4900, unknownBuyers: 1, unknownCents: 4900 }]);
   await setHeardOff("harbor", true);
   is("a creator who stops asking is not counted for", [await heardOff("harbor"), await recordHeard(store, "cs_test_heard0000001", "tiktok")], [true, "off"]);
   await setHeardOff("harbor", false);

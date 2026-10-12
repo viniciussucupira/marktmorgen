@@ -721,10 +721,11 @@ export default function PrivacyPage() {
           When someone reaches a store&apos;s page from somewhere we can name
           — a link the creator tagged, another site, or the Instagram or
           TikTok app — a cookie named <code>nl_ch_</code> followed by the
-          store&apos;s address keeps, for 30 days, the name of that place and
+          store&apos;s address keeps, for 90 days, the name of that place and
           of the first such place in the last 90 days, with the two dates. If
-          they then buy, those names are written on the payment in the
-          creator&apos;s own Stripe account, so the creator can see which of
+          they then buy within the window the creator chose (7, 30, 60 or 90
+          days after that visit; 30 unless they change it), those names are
+          written on the payment in the creator&apos;s own Stripe account, so the creator can see which of
           their channels brought the sale; renewals of a membership carry them
           too. It holds nothing else, identifies nobody, is sent to no other
           store, and we keep no copy. Visitors in the European Economic Area,
@@ -763,7 +764,10 @@ export default function PrivacyPage() {
           After paying, a buyer may be asked one question, which they can skip:
           where they heard of the store. If they answer, we check that the order
           is a paid order of that store, add one to that day&apos;s count of the
-          answer and the order&apos;s amount to its total, and mark the order as
+          answer and the order&apos;s amount to its total (and, when the
+          order had no channel, to a second count and total of the same
+          answer, so the creator can see what such sales were put down to),
+          and mark the order as
           answered for 30 days so it is counted once. The answer is not kept
           with the order, the buyer or the time, and the creator sees only the
           counts.

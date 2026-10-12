@@ -8,8 +8,8 @@
  * because their built-in browsers send no referrer to a checkout. The visits
  * were counted under the right name (lib/stats.ts) and the money was not.
  *
- * So the store remembers, for thirty days, the channel of the visitor's
- * latest visit that came from somewhere (not typed, not a bookmark) and of
+ * So the store remembers, for thirty days (or the 7, 60 or 90 its creator
+ * chose), the channel of the visitor's latest visit that came from somewhere (not typed, not a bookmark) and of
  * the first one, in a cookie of its own on the store's address. At the
  * checkout the channel goes into the Stripe session's metadata, and into the
  * subscription's, so renewals are counted under it too — the record of the
@@ -33,9 +33,15 @@
 import { classifySource, isBot } from "@/lib/source-rules";
 import { type CameFrom, cameFrom } from "@/lib/came-from";
 
-/** How long after the latest visit from a channel a sale is still credited to it. */
+/**
+ * How long after the latest visit from a channel a sale is still credited to
+ * it, unless the creator chose otherwise (lib/attribution-rules.ts: 7, 30, 60
+ * or 90 days, read at the checkout, where the store is known).
+ */
 export const CHANNEL_DAYS = 30;
-export const CHANNEL_COOKIE_SECONDS = CHANNEL_DAYS * 24 * 60 * 60;
+/** The longest a creator can choose, and so how long the cookie is kept: the proxy that writes it does not read the store. */
+export const MAX_CHANNEL_DAYS = 90;
+export const CHANNEL_COOKIE_SECONDS = MAX_CHANNEL_DAYS * 24 * 60 * 60;
 /** The first channel is forgotten after this long, so "first" never means "years ago". */
 export const FIRST_CHANNEL_DAYS = 90;
 
@@ -83,8 +89,8 @@ export function touchFrom(input: { url: URL; referrer: string; userAgent: string
   return { source, medium: tidy(params.get("utm_medium"), 30), campaign: tidy(params.get("utm_campaign"), 40), content: tidy(params.get("utm_content"), 40) };
 }
 
-/** What the cookie holds, or null when it is absent, broken, or older than the window. */
-export function readChannelCookie(value: string | undefined, nowSeconds: number): Channel | null {
+/** What the cookie holds, or null when it is absent, broken, or older than the window (`days`, the store's). */
+export function readChannelCookie(value: string | undefined, nowSeconds: number, days: number = CHANNEL_DAYS): Channel | null {
   if (!value) return null;
   const parts = value.split("~");
   // Six parts until 11 October 2026; a seventh, the ad's utm_content, since.
@@ -94,7 +100,7 @@ export function readChannelCookie(value: string | undefined, nowSeconds: number)
   const firstAt = Number(firstAtRaw);
   if (!last || !Number.isFinite(lastAt) || !Number.isFinite(firstAt)) return null;
   if (tidy(last, 60) !== last || tidy(first, 60) !== first) return null;
-  if (nowSeconds - lastAt > CHANNEL_COOKIE_SECONDS || lastAt > nowSeconds + 300) return null;
+  if (nowSeconds - lastAt > Math.min(days, MAX_CHANNEL_DAYS) * 86400 || lastAt > nowSeconds + 300) return null;
   const firstFresh = first && nowSeconds - firstAt <= FIRST_CHANNEL_DAYS * 86400;
   return {
     last,
@@ -110,7 +116,8 @@ export function readChannelCookie(value: string | undefined, nowSeconds: number)
 /** The cookie after a visit from `touch`: the latest channel replaced, the first one kept. */
 export function nextChannelCookie(existing: string | undefined, touch: Touch, nowSeconds: number): string {
   const at = Math.floor(nowSeconds);
-  const before = readChannelCookie(existing, at);
+  // Kept as long as any store may credit it, so the first visit outlives a quiet month.
+  const before = readChannelCookie(existing, at, MAX_CHANNEL_DAYS);
   const first = before?.first ?? touch.source;
   const firstAt = before?.firstAt ?? at;
   return [touch.source, touch.medium, touch.campaign, at, first, firstAt, touch.content ?? ""].join("~");
@@ -158,8 +165,10 @@ export function channelOfRequest(
   handle: string,
   ownHost: string,
   nowSeconds = Date.now() / 1000,
+  /** The store's own window (Store.attributionDays). */
+  days: number = CHANNEL_DAYS,
 ): Record<string, string> {
   const page = cameFrom(request.headers.get("referer"), ownHost);
-  const remembered = readChannelCookie(request.cookies.get(channelCookieName(handle))?.value, nowSeconds);
+  const remembered = readChannelCookie(request.cookies.get(channelCookieName(handle))?.value, nowSeconds, days);
   return channelMetadata(channelForSale(page, remembered));
 }

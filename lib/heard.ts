@@ -25,7 +25,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
 import { type Store, saleHandles } from "@/lib/store";
-import { countHeard } from "@/lib/stats";
+import { countHeard, saleChannel } from "@/lib/stats";
 import { isHeardAnswer } from "@/lib/heard-rules";
 
 const OFF = "nl:heard:off";
@@ -69,6 +69,7 @@ export async function recordHeard(store: Store, sessionId: unknown, answer: unkn
   if (claimed === null) return "already";
   const currency = typeof session.currency === "string" ? session.currency.toLowerCase() : "";
   const cents = currency === store.currency && typeof session.amount_total === "number" ? session.amount_total : 0;
-  await countHeard(store.statsId, answer, cents, now);
+  // With no channel on the sale, the answer is the only trace of where it came from (lib/attribution-rules.ts).
+  await countHeard(store.statsId, answer, cents, now, !saleChannel(meta).source);
   return "counted";
 }
