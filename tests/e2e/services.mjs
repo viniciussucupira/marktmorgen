@@ -35,6 +35,7 @@ export async function startServices(port) {
   const emails = [];
   const coupons = [];
   const unknown = [];
+  const adEvents = [];
   const writing = [];
   let counter = 0;
   const blobs = new Map();
@@ -90,6 +91,18 @@ export async function startServices(port) {
         // The one font file the build is given for every Google font (google-fonts-mock.cjs).
         res.writeHead(200, { "Content-Type": "font/woff2" });
         return res.end(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../node_modules/next/dist/next-devtools/server/font/geist-latin.woff2")));
+      }
+      // The ad platforms a creator sends conversions to from the server
+      // (lib/ad-events.ts, ADS_API_BASE): Meta, TikTok, Google Analytics and
+      // Pinterest, each answering as it does when it takes an event.
+      if (req.method === "POST" && path.startsWith("/ads/")) {
+        const [, , host, ...rest] = path.split("/");
+        adEvents.push({ host, path: `/${rest.join("/")}`, query: Object.fromEntries(url.searchParams), headers: req.headers, body: JSON.parse(await read(req)) });
+        if (host === "www.google-analytics.com") {
+          res.statusCode = 204;
+          return res.end();
+        }
+        return json(res, 200, host === "business-api.tiktok.com" ? { code: 0, message: "OK" } : { events_received: 1 });
       }
       // The file store (Vercel Blob), for what the server writes and deletes
       // itself: kept in memory. Reading a private file back goes to the
@@ -389,6 +402,7 @@ export async function startServices(port) {
     checkouts: () => [...sessions.values()],
     coupons: () => [...coupons],
     unknown: () => [...unknown],
+    adEvents: () => [...adEvents],
     writing: () => [...writing],
     subscriptionUpdates: () => [...subscriptionUpdates],
     portalConfigs: () => [...portalConfigs],

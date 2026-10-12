@@ -6,6 +6,7 @@ import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { readListing } from "@/lib/catalog";
 import { joinWaitlist } from "@/lib/waitlist";
+import { allowedBy, newLeadId, sendServerLead, sendsFromServer } from "@/lib/ad-events";
 
 const MAX_BODY_BYTES = 2_000;
 
@@ -41,10 +42,10 @@ export async function POST(request: NextRequest) {
   const store = handle ? await storeForHandle(handle) : null;
   if (!store) return new Response("No such store.", { status: 404 });
   const product = productId ? await readListing(store, productId) : null;
-  const away = (status: string) =>
+  const away = (status: string, lead = "") =>
     new Response(null, {
       status: 303,
-      headers: { Location: `${origin}/@${store.handle}/waitlist?product=${encodeURIComponent(productId)}&status=${status}`, "Cache-Control": "no-store" },
+      headers: { Location: `${origin}/@${store.handle}/waitlist?product=${encodeURIComponent(productId)}&status=${status}${lead ? `&e=${lead}` : ""}`, "Cache-Control": "no-store" },
     });
   if (!product || product.hidden) return new Response(null, { status: 303, headers: { Location: `${origin}/@${store.handle}` } });
   if (honeypot.trim()) return away("sent");
@@ -52,7 +53,10 @@ export async function POST(request: NextRequest) {
     const result = await joinWaitlist({ store, product, email, consent, clicks, ip: clientAddress(request), origin: linkOrigin(request, store) });
     // Counted under the channel the visitor came from (lib/visit-channel.ts).
     if (result === "sent") after(() => countHit(request, store, { kind: "signup" }));
-    return away(result);
+    // The sign-up as a lead to the creator's ad platforms, with the visitor's yes (lib/ad-events.ts).
+    const lead = result === "sent" && sendsFromServer(store) && allowedBy(request, store) ? newLeadId() : "";
+    if (lead) after(() => sendServerLead(store, request, { id: lead, email, product: product.id }).catch((error) => console.error("sending a lead failed", error)));
+    return away(result, lead);
   } catch (error) {
     console.error("joining a waitlist failed", error);
     return away("error");

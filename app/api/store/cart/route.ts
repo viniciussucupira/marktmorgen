@@ -16,6 +16,7 @@ import { formatMoney } from "@/lib/money";
 import { LANGUAGES } from "@/lib/store-language";
 import { cameFrom } from "@/lib/came-from";
 import { channelOfRequest } from "@/lib/visit-channel";
+import { adsCheckout } from "@/lib/ad-events";
 import { affiliateCookieName, attributionFor } from "@/lib/affiliates";
 import { viaCookieName } from "@/lib/affiliate-setting";
 import { countHit } from "@/lib/visit";
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
       cameFrom: cameFrom(request.headers.get("referer"), new URL(origin).hostname),
         // The channel this sale is credited to: the page's own tags, else the
         // one remembered for this visitor (lib/visit-channel.ts), else direct.
-        channel: channelOfRequest(request, store.handle, new URL(origin).hostname),
+        channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname), ...(await adsCheckout(request, store)) },
       via,
     });
     for (const product of products) after(() => countHit(request, store, { kind: "checkout", id: product.id }));

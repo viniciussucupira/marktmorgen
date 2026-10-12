@@ -9,6 +9,7 @@ import { WAIT_TOKEN, readWaitToken } from "@/lib/waitlist";
 import { productPath } from "@/components/store-product";
 import { speech } from "@/lib/buyer-words";
 import { givingWords } from "@/lib/buyer-words/giving";
+import { leadIdOf } from "@/lib/ad-consent";
 
 type Params = {
   params: Promise<{ handle: string }>;
@@ -136,7 +137,7 @@ export default async function WaitlistPage({ params, searchParams }: Params) {
             <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
               {said.w.backTo(store.name)}
             </Link>
-            <StoreTracking store={store} presence event={status === "sent" && product ? { type: "lead", productId: product.id } : null} />
+            <StoreTracking store={store} presence event={status === "sent" && product ? { type: "lead", productId: product.id, id: leadIdOf(query.e) } : null} />
           </div>
         </div>
       </main>

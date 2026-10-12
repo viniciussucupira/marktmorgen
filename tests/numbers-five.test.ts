@@ -25,7 +25,7 @@ import { countSearchMiss, readSales, readStats, studioStats, type StatsData } fr
 import { countDepth, depthField, readDepth } from "@/lib/page-depth";
 import { insightsFrom } from "@/lib/insights";
 import { leaveWeeklyTeam, setWeeklyTeam, weeklyMemberToken, weeklyMemberTokenOk, weeklyTeam, weeklyToken } from "@/lib/stats-report";
-import { claimHandle, ensureStatsId, setPixels, setStripeAccount, storeForEmail } from "@/lib/store";
+import { claimHandle, ensureStatsId, setAdsServer, setPixels, setStripeAccount, storeForEmail } from "@/lib/store";
 import { NO_PIXELS } from "@/lib/pixels";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -86,7 +86,8 @@ async function main(): Promise<void> {
   await setServerToken(statsId, "tiktok", TIKTOK_TOKEN);
   const kept = JSON.stringify(redis.keys().map((k) => redis.run(["GET", k])));
   is("sealed, never as it was given", [kept.includes(META_TOKEN), kept.includes(TIKTOK_TOKEN)], [false, false]);
-  is("the studio is told which are on, never the token", (await serverSetup(statsId)).on, { meta: true, tiktok: true });
+  is("the studio is told which are on, never the token", (await serverSetup(statsId)).on, { meta: true, tiktok: true, google: false, pinterest: false });
+  await setAdsServer(OWNER, ["meta", "tiktok"]);
   const buyer = { ip: "203.0.113.9", userAgent: "Mozilla/5.0 (iPhone)", url: "https://marktmorgen.com/@harbor/thanks", cookies: { _fbp: "fb.1.1.1", _ttp: "ttp1" } };
   sessions = [paid("cs_test_server00000001", 0, 4900), { ...paid("cs_test_server00000002", 0, 900), metadata: { store: "another", product: "x" } }];
   is("nothing goes without a pixel on the store", await sendServerPurchase(store, "cs_test_server00000001", buyer, NOW), "off");
@@ -105,7 +106,7 @@ async function main(): Promise<void> {
     new URL(sentOut[0].url).searchParams.get("access_token") === META_TOKEN && !JSON.stringify(metaSent).includes(META_TOKEN),
   ], ["cs_test_server00000001", [sha256("buyer@example.com")], "fb.1.1.1", 49, true]);
   is("and what it answered is kept for the studio", (await serverSetup(statsId)).last?.meta, "Received");
-  const order = { id: "cs_x", created: 1, cents: 1000, currency: "usd", product: "p", email: null };
+  const order = { kind: "purchase" as const, id: "cs_x", at: 1, cents: 1000, currency: "usd", products: ["p"], email: null, customer: null };
   is("an order with no email sends none", [("em" in metaEvent(order, buyer).user_data), ("email" in tiktokEvent(order, buyer).user)], [false, false]);
   is("TikTok's has the same id", tiktokEvent(order, buyer).event_id, "cs_x");
 

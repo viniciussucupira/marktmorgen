@@ -3,6 +3,7 @@ import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { clientIp } from "@/lib/visit";
 import { sendServerPurchase } from "@/lib/ad-events";
+import { hasPixels } from "@/lib/pixels";
 
 const MAX_BODY_BYTES = 400;
 const done = () => new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
   const handle = normaliseHandle(typeof body.h === "string" ? body.h.slice(0, 40) : "");
   if (!handle) return done();
   const store = await storeForHandle(handle).catch(() => null);
-  if (!store || !(store.pixels.meta || store.pixels.tiktok)) return done();
+  if (!store || !hasPixels(store.pixels)) return done();
   if (!(await withinLimit("ads-event", `${clientAddress(request)}|${store.handle}`, 10, 600))) return done();
   // The page the purchase was on, without its query, which names the order.
   let url = "";
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
   }
   const cookie = (name: string) => request.cookies.get(name)?.value?.slice(0, 300) ?? "";
   const cookies: Record<string, string> = {};
-  for (const name of ["_fbp", "_fbc", "_ttp", "ttclid"]) if (cookie(name)) cookies[name] = cookie(name);
+  for (const name of ["_fbp", "_fbc", "_ttp", "ttclid", "_epik", "_ga"]) if (cookie(name)) cookies[name] = cookie(name);
   await sendServerPurchase(store, body.s, {
     ip: clientIp(request),
     userAgent: (request.headers.get("user-agent") ?? "").slice(0, 500),

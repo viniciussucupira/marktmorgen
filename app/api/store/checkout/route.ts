@@ -22,6 +22,7 @@ import { readListings, readProduct } from "@/lib/catalog";
 import { bundleReady, chosenItems, deliverableItems, picks } from "@/lib/bundle-rules";
 import { cameFrom } from "@/lib/came-from";
 import { channelOfRequest } from "@/lib/visit-channel";
+import { adsCheckout } from "@/lib/ad-events";
 import { codeCookieName, readLinkCode } from "@/lib/code-link";
 import { AB_COOKIE, abMeta, count as countTest, readBucket, readCounts, versionFor, winner } from "@/lib/headline-test";
 import { readPage } from "@/lib/sales-page-store";
@@ -213,6 +214,7 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+    const ads = await adsCheckout(request, store);
     const held = await withStockHold(store, product, (holding) =>
       createCheckout(store, product, linkOrigin(request, store), optionId, {
         bumps,
@@ -237,7 +239,10 @@ export async function POST(request: NextRequest) {
         cameFrom: cameFrom(request.headers.get("referer"), new URL(origin).hostname),
         // The channel this sale is credited to: the page's own tags, else the
         // one remembered for this visitor (lib/visit-channel.ts), else direct.
-        channel: channelOfRequest(request, store.handle, new URL(origin).hostname),
+        // And, with the buyer's yes to ad measurement, where the request that
+        // opened it is kept, so the purchase is sent to the creator's ad
+        // platforms when it is paid (lib/ad-events.ts).
+        channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname), ...ads },
         // A code that came in a link to this store (lib/code-link.ts), applied
         // by Stripe only if it is one of the creator's live codes.
         code: readLinkCode(request.cookies.get(codeCookieName(store.handle))?.value) || undefined,

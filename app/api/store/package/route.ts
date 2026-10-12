@@ -1,4 +1,5 @@
 import { channelOfRequest } from "@/lib/visit-channel";
+import { adsCheckout } from "@/lib/ad-events";
 import { type NextRequest, after } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       product,
       product.callPackage,
       linkOrigin(request, store),
-      channelOfRequest(request, store.handle, new URL(origin).hostname),
+      { ...channelOfRequest(request, store.handle, new URL(origin).hostname), ...(await adsCheckout(request, store)) },
     );
     after(() => countHit(request, store, { kind: "checkout", id: product.id }));
     return new Response(null, { status: 303, headers: { Location: made.url, "Cache-Control": "no-store" } });
