@@ -401,6 +401,23 @@ export async function touchStudent(courseId: string, email: string, startSeconds
   await redisPipeline([["HSET", key, field, JSON.stringify(row)]]);
 }
 
+/**
+ * When one student began a course and last came back to it, in seconds; null
+ * when they never opened it. For the buyer's page in the studio
+ * (lib/buyer-profile.ts): one command.
+ */
+export async function studentDates(courseId: string, email: string): Promise<{ since: number; lastSeen: number } | null> {
+  if (!isRedisConfigured()) return null;
+  const [raw] = await redisPipeline([["HGET", studentsKey(courseId), emailKey(email)]]);
+  if (typeof raw !== "string" || !raw) return null;
+  try {
+    const row = JSON.parse(raw) as Partial<StudentRow>;
+    return { since: Number(row.s) || 0, lastSeen: Number(row.l) || 0 };
+  } catch {
+    return null;
+  }
+}
+
 export async function doneLessons(courseId: string, email: string): Promise<Set<string>> {
   if (!isRedisConfigured()) return new Set();
   const [raw] = await redisPipeline([["SMEMBERS", doneKey(courseId, email)]]);

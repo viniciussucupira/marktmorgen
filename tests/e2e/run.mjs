@@ -61,6 +61,8 @@ const LOCAL = `http://localhost:${APP}`;
 const FAKE = `http://127.0.0.1:${SERVICES}`;
 /** Links in emails and on pages are written for the site's real address; here they are opened on this computer. */
 const local = (url) => url.replace("https://marktmorgen.com", LOCAL);
+/** A buyer's page in the studio, as it was opened from a sale; audited for accessibility with the rest. */
+let buyerPath = "/studio/people";
 
 const env = {
   ...process.env,
@@ -472,6 +474,7 @@ try {
   const headings = card.locator('input[placeholder="For example: Courses"]');
   is("the sections as they were saved", await headings.evaluateAll((all) => all.map((input) => input.value)), ["Recipe books", "Planning", "Courses"]);
   is("the sale is named for what it was", (await studio.locator("body").innerText()).includes("Meal Planner (for 3 people)"), true);
+  is("a sale opens its buyer's page", (await studio.getByRole("link", { name: "See this buyer's page" }).count()) > 0, true);
   await headings.first().fill("Cookbooks");
   await card.locator('button:has-text("Add a section")').click();
   await headings.last().fill("Quick lists");
@@ -541,6 +544,34 @@ try {
     is("their words, without a name or an address", [/Love it, but money is tight this month\./.test(members), /@example\.com/.test(members)], [true, false]);
     is("and the next three months, said as an estimate", [/The next three months, if the pace holds/.test(members), /An estimate, not a promise/.test(members)], [true, true]);
     if (process.env.E2E_SHOTS) await studio.screenshot({ path: join(process.env.E2E_SHOTS, "memberships.png"), fullPage: true });
+
+    // A buyer's page (lib/buyer-profile.ts): opened from the latest buyers, read
+    // from Stripe, with a note that stays; and the search, which carries the
+    // address in a request's body and opens the page by a token.
+    await open(studio, `${LOCAL}/studio/people`);
+    is("the buyers page lists the latest buyer", (await studio.getByRole("link", { name: "buyer@example.com" }).count()) > 0, true);
+    await Promise.all([studio.waitForURL(/\/studio\/people\?.*sale=cs_/, { timeout: 30_000 }), studio.getByRole("link", { name: "buyer@example.com" }).first().click()]);
+    const buyer = await studio.locator("main").innerText();
+    is("their page: who, what they bought, and no address in its link", [
+      /buyer@example\.com/.test(buyer),
+      /What they bought and paid/.test(buyer),
+      /Meal Planner/.test(buyer),
+      /spent with you/i.test(buyer),
+      studio.url().includes("example.com"),
+    ], [true, true, true, true, false]);
+    await studio.getByLabel("Add a note").fill("Asked about the family plan.");
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/person") && r.ok(), { timeout: 30_000 }),
+      studio.getByRole("button", { name: "Save note" }).click(),
+    ]);
+    await studio.reload();
+    is("a note stays on their page", await studio.getByText("Asked about the family plan.").count(), 1);
+    buyerPath = new URL(studio.url()).pathname + new URL(studio.url()).search;
+    if (process.env.E2E_SHOTS) await studio.screenshot({ path: join(process.env.E2E_SHOTS, "buyer.png"), fullPage: true });
+    await open(studio, `${LOCAL}/studio/people`);
+    await studio.getByLabel("A buyer's email address").fill("buyer@example.com");
+    await Promise.all([studio.waitForURL(/\/studio\/people\?.*p=[0-9a-f]{48}/, { timeout: 30_000 }), studio.getByRole("button", { name: "Open their page" }).click()]);
+    is("the search opens the same page, by a token", [await studio.getByText("Asked about the family plan.").count(), studio.url().includes("example.com")], [1, false]);
     // Back where the next part expects the studio to be.
     await open(studio, `${LOCAL}/studio`);
   }
@@ -2010,6 +2041,9 @@ try {
       ["the studio's calls", "/studio/meetings", 1200],
       ["the studio's outreach", "/studio/outreach", 1200],
       ["the studio's phone alerts", "/studio/phone", 1200],
+      ["the studio's buyers", "/studio/people", 1200],
+      ["a buyer's page in the studio", buyerPath, 1200],
+      ["a buyer's page in the studio, on a phone", buyerPath, 430],
       ["the studio, on a phone", "/studio", 430],
       // And the site a creator meets first.
       ["the home page", "/", 0],

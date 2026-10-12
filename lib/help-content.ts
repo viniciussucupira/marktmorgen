@@ -165,6 +165,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I see everything one buyer has bought from me?",
+        a: [
+          "Yes. Every sale in your studio has a link to its buyer's page, and the Buyers page finds anyone by the email address they paid with. Their page shows what they bought and paid, what was refunded, what came later \u2014 extras taken in one click and membership payments \u2014 where they first found your store and where their latest purchase came from, their memberships, how far they are in each course, the calls they have coming up, whether they are on your list and which sequences they were started on.",
+          "It is read from your own Stripe account each time you open it, so it is never out of date, and we keep no second copy of anyone's payments. You and your team can leave notes on it; the buyer never sees them.",
+          "The owner, Admins and Support see it: the same people who see orders with the buyer's address. Sales from before October 11, 2026 have no channel written on them, and a sale paid with PayPal shows what was bought, with the amount in your PayPal account.",
+        ],
+      },
+      {
         q: "Can I give someone a discount code?",
         a: [
           "Yes, and it is on the $29 plan. On Stan, discount codes are on the $99 Creator Pro plan, according to its help center, read on September 28, 2026.",

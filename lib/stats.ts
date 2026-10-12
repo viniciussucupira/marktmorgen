@@ -815,7 +815,7 @@ export type Sale = {
 };
 
 /** The channel a checkout's metadata credits, "" for direct (lib/visit-channel.ts). */
-function saleChannel(meta: Record<string, string>): { source: string; medium: string; campaign: string; first: string; content: string } {
+export function saleChannel(meta: Record<string, string>): { source: string; medium: string; campaign: string; first: string; content: string } {
   const named = (value: string | undefined) => (value && value !== "direct" ? value : "");
   const source = meta.utm_source || named(meta.channel);
   return {

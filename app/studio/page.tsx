@@ -1008,6 +1008,10 @@ export default async function StudioPage({
                 ...(may("stats") && sellsMemberships(store)
                   ? [{ href: studioPath(store, "", "memberships"), title: "Membership numbers", text: "Monthly recurring revenue, churn and trials that became paying.", icon: "chart" as const }]
                   : []),
+                // One page per buyer, read from the creator's own Stripe account (lib/buyer-profile.ts).
+                ...(may("orders")
+                  ? [{ href: studioPath(store, "", "people"), title: "Buyers", text: "One page per buyer: what they paid, where they found you, their courses and your team's notes.", icon: "user" as const }]
+                  : []),
                 // The credit lands on the plan, so whoever may handle the plan (lib/creator-invites.ts).
                 ...(billingReady && may("billing")
                   ? [{ href: studioPath(store, "", "invite"), title: "Invite creators", text: `${INVITE_SHARE_PERCENT}% of every payment they make goes on your plan.`, icon: "percent" as const }]
@@ -2513,6 +2517,16 @@ export default async function StudioPage({
                                 : "Their download link has expired — send them the file yourself if they ask."}{" "}
                             Stripe reference {sale.reference}
                           </p>
+                          {sale.email && store ? (
+                            <p className="mt-2 text-sm">
+                              <Link
+                                href={studioPath(store, `sale=${sale.reference}`, "people")}
+                                className="inline-flex min-h-11 items-center font-semibold text-violet-deep underline underline-offset-4"
+                              >
+                                {sale.isTip ? "See this supporter's page" : "See this buyer's page"}
+                              </Link>
+                            </p>
+                          ) : null}
                           {/* A booked call has its own confirmation, and a one-click extra is part of its checkout's. */}
                           {!sale.isCall && !sale.isTip && sale.email && sale.reference.startsWith("cs_") ? (
                             <p className="mt-2">

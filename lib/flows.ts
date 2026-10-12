@@ -206,6 +206,18 @@ export async function flowStats(flows: Flow[]): Promise<Map<string, FlowCounts>>
 }
 
 /**
+ * The sequences this address was started on, by their ids, of those the
+ * store has now: one EXISTS each, at most MAX_FLOWS. For the buyer's page in
+ * the studio (lib/buyer-profile.ts). A start is remembered for 400 days.
+ */
+export async function flowsStartedFor(flows: Flow[], email: string): Promise<string[]> {
+  if (!flows.length) return [];
+  const address = normaliseEmail(email);
+  const found = await redisPipeline(flows.map((f) => ["EXISTS", enrolledKey(f.id, address)]));
+  return flows.filter((_, i) => Number(found[i]) === 1).map((f) => f.id);
+}
+
+/**
  * Starts whichever sequences this event begins, for this person. Never
  * throws: the list must never cost anyone what they asked for.
  */
