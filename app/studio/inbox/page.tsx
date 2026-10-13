@@ -41,7 +41,8 @@ export default async function StudioInboxPage({ searchParams }: Params) {
   const people = [store.email, ...team.members.filter((m) => can(m.role, "orders")).map((m) => m.email)];
   const aiOn = isAiConfigured();
   const left = aiOn ? await aiLeft(store) : 0;
-  const chatReady = Boolean(store.statsId && store.email && !store.suspended && !isHouseStore(store) && isSenderConfigured());
+  // Why the chat cannot be turned on, when it cannot: the demo store takes no messages, and a store needs its address and our sender.
+  const chatBlock = isHouseStore(store) ? "demo" : store.statsId && store.email && !store.suspended && isSenderConfigured() ? "" : "setup";
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -69,7 +70,7 @@ export default async function StudioInboxPage({ searchParams }: Params) {
               setting={store.inbox}
               ai={{ on: aiOn, left }}
               canSettings={can(view.role, "settings")}
-              chatReady={chatReady}
+              chatBlock={chatBlock}
             />
           </div>
         </main>
