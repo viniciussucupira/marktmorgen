@@ -2952,6 +2952,45 @@ try {
   }
 
   await keepSmall();
+  part("A sequence that starts with a form and acts on the store's own people");
+  {
+    await open(studio, `${LOCAL}/studio/email?store=${fresh}`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const made = await post("/api/store/forms", { form: { name: "Coaching application", fields: [{ id: "q1mail", type: "email", label: "Your email", required: true }], outcomes: [] } });
+    await open(studio, `${LOCAL}/studio/email?store=${fresh}`);
+    await studio.getByRole("button", { name: "New sequence" }).click();
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Save the sequence" }) });
+    await form.getByLabel("Name, for you").fill("Applicants");
+    await form.getByLabel("Starts when").selectOption("form");
+    is("a form that asks for an address can start it", await form.getByLabel("Which form").locator("option").allTextContents(), ["Coaching application"]);
+    await form.locator("ol > li input[maxlength='150']").nth(0).fill("We got your application");
+    await form.locator("ol > li textarea").nth(0).fill("Thank you.");
+    await form.getByRole("button", { name: "Add a step" }).click();
+    const second = form.locator("ol > li").nth(1);
+    await second.locator("[data-step-kind]").selectOption("note");
+    await second.getByLabel("The note").fill("Applied for coaching");
+    await form.getByRole("button", { name: "Add a step" }).click();
+    const third = form.locator("ol > li").nth(2);
+    await third.locator("[data-step-kind]").selectOption("deal");
+    is("a deal goes to one of the board's stages", (await third.getByLabel("The stage").locator("option").allTextContents()).length >= 3, true);
+    await form.getByRole("button", { name: "Add a step" }).click();
+    await form.locator("ol > li").nth(3).locator("[data-step-kind]").selectOption("notify");
+    await form.getByRole("button", { name: "Save the sequence" }).click();
+    const row = studio.locator("li:not([data-mark])", { hasText: "Applicants" }).first();
+    await row.waitFor({ timeout: 30_000 });
+    const listed = await words(row);
+    is("saved, and the list says what starts it and what each step does", [
+      listed.includes("Starts when someone on your list sends the form “Coaching application”"),
+      listed.includes("Writes a note on their page"),
+      listed.includes("Puts their deal in a stage of your deals board"),
+      listed.includes("Emails you who reached it"),
+    ], [true, true, true, true]);
+    await row.getByRole("button", { name: "Remove" }).click();
+    await row.waitFor({ state: "detached", timeout: 30_000 });
+    await post("/api/store/forms", { action: "remove", id: made.form?.id ?? "" });
+  }
+
+  await keepSmall();
   part("Which links a buyer uses, asked apart and only after joining");
   {
     await open(studio, `${LOCAL}/studio?store=${fresh}`);

@@ -3,6 +3,7 @@ import { originFrom, linkOrigin } from "@/lib/request-origin";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { readForm, addResponse } from "@/lib/form-store";
+import { enroll } from "@/lib/flows";
 import { FORM_ID, outcomeOf, readAnswers } from "@/lib/forms";
 import { askToJoin } from "@/lib/store-join";
 import { funnelMark } from "@/lib/page-funnel";
@@ -72,10 +73,12 @@ export async function POST(request: NextRequest) {
     // The list, only when they checked the box: the email that asks them to confirm, never the list itself.
     let joined = false;
     if (def.offerList && one("consent") === "yes" && read.email) {
-      const asked = await askToJoin({ store, email: read.email, ip, origin: linkOrigin(request, store), fromForm: true }).catch(() => "error" as const);
+      const asked = await askToJoin({ store, email: read.email, ip, origin: linkOrigin(request, store), fromForm: true, formId: def.id }).catch(() => "error" as const);
       joined = asked === "sent";
     }
     await addResponse(statsId, def.id, { at: Math.floor(Date.now() / 1000), page: page?.id ?? "", answers: read.answers, outcome: outcome?.id ?? "", joined });
+    // Somebody already on the list: the sequences that start with this form start now (lib/flows.ts checks they may be written to).
+    if (read.email) await enroll(store, read.email, { joined: false, form: def.id });
 
     // A step of a funnel: counted as done there, and the person goes on.
     const here = page && mark ? await funnelHere(store, mark, "page", page.id).catch(() => null) : null;

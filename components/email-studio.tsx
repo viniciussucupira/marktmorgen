@@ -45,8 +45,9 @@ const MESSAGES: Record<string, string> = {
   name: "Give the sequence a name.",
   trigger: "Choose what starts the sequence.",
   steps: "A sequence has between one and ten steps.",
-  step: "Every email needs a subject, some text, and a wait of up to a year. A condition needs its product, or its label, and one on the email before needs an email right before it. A label needs its words, and another sequence has to still be there.",
+  step: "Every email needs a subject, some text, and a wait of up to a year. A condition needs its product, or its label, and one on the email before needs an email right before it. A label needs its words, and another sequence has to still be there. A field needs a value it keeps, a deal a stage, and a note its words.",
   tag: "Write the label that starts the sequence.",
+  form: "Choose one of your forms that asks for an email address.",
   unknown: "That is not there anymore. Reload the page.",
   send: "The email service did not take it just now. Nothing was sent; try again in a moment.",
   signed_out: "Your session ended. Log in again.",
@@ -240,6 +241,8 @@ export function EmailStudio(props: {
   segments?: Segment[];
   /** The products that are courses (lib/catalog.ts, "course"). */
   courses?: string[];
+  /** The store's forms that ask for an address, its own fields and its deal stages, for the sequences (lib/flows.ts). */
+  automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
   /** Who a new email goes to, when opened from "Worth knowing" (lib/insights.ts). */
   preset?: { who: Who };
   /** The store's colour for a button in its emails (lib/store-look.ts), so the designer's preview is what is sent. */
@@ -273,7 +276,7 @@ export function EmailStudio(props: {
             <History broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
-                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} />
+                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} automation={props.automation} />
               </AiOn>
             ) : null}
           </>
@@ -1204,9 +1207,17 @@ function History({
 type StepDraft = {
   id?: string;
   /** An email, or a step that acts instead (lib/flow-rules.ts, FlowAction). */
-  kind: "email" | "tag" | "untag" | "start" | "webhook";
+  kind: "email" | "tag" | "untag" | "start" | "webhook" | "field" | "deal" | "note" | "notify";
   actionTag: string;
   actionFlow: string;
+  /** For a step that sets a field: which, and to what. */
+  actionField: string;
+  actionValue: string;
+  /** For a step that puts the person's deal in a stage: which stage, and a new deal's title. */
+  actionStage: string;
+  actionTitle: string;
+  /** For a step that writes a note on the person's page. */
+  actionText: string;
   wait: string;
   unit: "hours" | "days";
   subject: string;
@@ -1219,10 +1230,12 @@ type StepDraft = {
 type FlowDraft = {
   id?: string;
   name: string;
-  trigger: "joined" | "product" | "bought" | "tagged" | "finished";
+  trigger: "joined" | "product" | "bought" | "tagged" | "finished" | "form";
   productId: string;
   /** The label that starts it, for "tagged". */
   triggerTag: string;
+  /** The form that starts it, for "form". */
+  formId: string;
   active: boolean;
   steps: StepDraft[];
   /** When it ends early: never, once they have bought anything, or once they get one product. */
@@ -1250,7 +1263,7 @@ const STEP_IF_WORDS: { value: StepIf | ""; label: string }[] = [
 ];
 
 function blankStep(wait: string, unit: "hours" | "days", firstProduct: string): StepDraft {
-  return { kind: "email", actionTag: "", actionFlow: "", wait, unit, subject: "", body: "", when: "", whenProduct: firstProduct, whenTag: "", otherwise: "skip" };
+  return { kind: "email", actionTag: "", actionFlow: "", actionField: "", actionValue: "", actionStage: "", actionTitle: "", actionText: "", wait, unit, subject: "", body: "", when: "", whenProduct: firstProduct, whenTag: "", otherwise: "skip" };
 }
 
 /** What a step that acts does, as one line reads it: "gives the label “warm”". */
@@ -1260,6 +1273,10 @@ function actionWords(action: FlowAction, flows: { id: string; name: string }[]):
     return `starts the sequence “${flows.find((f) => f.id === target)?.name ?? "a sequence no longer in your store"}”`;
   }
   if (action.do === "webhook") return "tells your webhooks who reached it";
+  if (action.do === "field") return `sets a field to “${action.value}”`;
+  if (action.do === "deal") return "puts their deal in a stage of your deals board";
+  if (action.do === "note") return "writes a note on their page";
+  if (action.do === "notify") return "emails you who reached it";
   return action.do === "tag" ? `gives the label “${action.tag}”` : `takes off the label “${action.tag}”`;
 }
 
@@ -1276,6 +1293,10 @@ function actionOf(s: StepDraft): FlowAction | null {
   if (s.kind === "tag" || s.kind === "untag") return { do: s.kind, tag: s.actionTag };
   if (s.kind === "start") return { do: "start", flowId: s.actionFlow };
   if (s.kind === "webhook") return { do: "webhook" };
+  if (s.kind === "field") return { do: "field", field: s.actionField, value: s.actionValue };
+  if (s.kind === "deal") return { do: "deal", stage: s.actionStage, title: s.actionTitle };
+  if (s.kind === "note") return { do: "note", text: s.actionText };
+  if (s.kind === "notify") return { do: "notify" };
   return null;
 }
 
@@ -1286,6 +1307,11 @@ function stepToDraft(s: FlowStep, firstProduct: string): StepDraft {
     kind: s.action ? s.action.do : "email",
     actionTag: s.action && "tag" in s.action ? s.action.tag : "",
     actionFlow: s.action && "flowId" in s.action ? s.action.flowId : "",
+    actionField: s.action && "field" in s.action ? s.action.field : "",
+    actionValue: s.action && "value" in s.action ? s.action.value : "",
+    actionStage: s.action && "stage" in s.action ? s.action.stage : "",
+    actionTitle: s.action && "title" in s.action ? s.action.title : "",
+    actionText: s.action && "text" in s.action ? s.action.text : "",
     ...(s.delayHours % 24 === 0 && s.delayHours > 0 ? { wait: String(s.delayHours / 24), unit: "days" as const } : { wait: String(s.delayHours), unit: "hours" as const }),
     subject: s.subject,
     body: s.body,
@@ -1343,6 +1369,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
       trigger: "joined",
       productId: first,
       triggerTag: "",
+      formId: "",
       active: true,
       steps: [blankStep("0", "hours", first)],
       goal: "",
@@ -1355,6 +1382,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
     trigger: flow.trigger,
     productId: flow.productId ?? first,
     triggerTag: flow.tag ?? "",
+    formId: flow.formId ?? "",
     active: flow.active,
     steps: flow.steps.map((s) => stepToDraft(s, first)),
     goal: !flow.goal ? "" : "any" in flow.goal ? "any" : "product",
@@ -1368,10 +1396,12 @@ function Flows({
   currency,
   sells,
   courses = [],
+  automation = { forms: [], fields: [], stages: [] },
 }: {
   flows: FlowRow[];
   products: { id: string; title: string }[];
   currency: string;
+  automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
   /** The products that are courses, for "finishes a course" and the conditions on one. */
   courses?: string[];
   /** Whether the store sells anything for money, so a first purchase can happen at all. */
@@ -1390,6 +1420,8 @@ function Flows({
       ? "Starts when someone joins your list"
       : f.trigger === "tagged"
         ? `Starts when a sequence gives someone the label “${f.tag ?? ""}”`
+      : f.trigger === "form"
+        ? `Starts when someone on your list sends the form “${automation.forms.find((x) => x.id === f.formId)?.name ?? "a form no longer in your store"}”`
       : f.trigger === "finished"
         ? `Starts when someone who agreed to hear from you finishes ${products.find((p) => p.id === f.productId)?.title ?? "a course"}`
       : f.trigger === "bought"
@@ -1408,6 +1440,7 @@ function Flows({
         trigger: draft.trigger,
         productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : null,
         tag: draft.trigger === "tagged" ? draft.triggerTag : null,
+        formId: draft.trigger === "form" ? draft.formId : null,
         active: draft.active,
         steps: draft.steps.map((s) => {
           const when = conditionOf(s);
@@ -1586,11 +1619,12 @@ function Flows({
                 setDraft((current) => {
                   if (!current) return current;
                   const trigger =
-                    e.target.value === "product" ? "product" : e.target.value === "bought" ? "bought" : e.target.value === "tagged" ? "tagged" : e.target.value === "finished" ? "finished" : "joined";
+                    e.target.value === "product" ? "product" : e.target.value === "bought" ? "bought" : e.target.value === "tagged" ? "tagged" : e.target.value === "finished" ? "finished" : e.target.value === "form" ? "form" : "joined";
                   // Finishing is only for a course: the first course, when the product chosen is not one.
                   const productId = trigger === "finished" && !courses.includes(current.productId) ? (courses[0] ?? current.productId) : current.productId;
                   // A sequence that starts with a purchase cannot end at one.
-                  return { ...current, trigger, productId, goal: trigger === "bought" && current.goal === "any" ? "" : current.goal };
+                  const formId = trigger === "form" && !automation.forms.some((x) => x.id === current.formId) ? (automation.forms[0]?.id ?? "") : current.formId;
+                  return { ...current, trigger, productId, formId, goal: trigger === "bought" && current.goal === "any" ? "" : current.goal };
                 })
               }
             >
@@ -1599,8 +1633,22 @@ function Flows({
               {products.length ? <option value="product">Someone who agreed to hear from you gets a product</option> : null}
               <option value="tagged">A sequence gives someone a label</option>
               {courses.length ? <option value="finished">Someone who agreed to hear from you finishes a course</option> : null}
+              {automation.forms.length ? <option value="form">Someone on your list sends a form</option> : null}
             </select>
           </label>
+          {draft.trigger === "form" ? (
+            <label className="block">
+              <span className="field-label">Which form</span>
+              <select className="field mt-2" value={draft.formId} onChange={(e) => setDraft({ ...draft, formId: e.target.value })}>
+                {automation.forms.map((f) => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+              <span className="mt-2 block text-sm text-ink-soft">
+                Only forms that ask for an email address. Someone already on your list starts it when they send the form; someone who checks the box to hear from you starts it once they confirm by email.
+              </span>
+            </label>
+          ) : null}
           {draft.trigger === "tagged" ? (
             <label className="block">
               <span className="field-label">Which label</span>
@@ -1717,8 +1765,14 @@ function Flows({
                       data-step-kind
                       value={s.kind}
                       onChange={(e) => {
-                        const kind = e.target.value === "tag" || e.target.value === "untag" || e.target.value === "start" || e.target.value === "webhook" ? e.target.value : "email";
-                        setStep(i, { kind, actionFlow: s.actionFlow || otherFlows[0]?.id || "" });
+                        const v = e.target.value;
+                        const kind = v === "tag" || v === "untag" || v === "start" || v === "webhook" || v === "field" || v === "deal" || v === "note" || v === "notify" ? v : "email";
+                        setStep(i, {
+                          kind,
+                          actionFlow: s.actionFlow || otherFlows[0]?.id || "",
+                          actionField: s.actionField || automation.fields[0]?.id || "",
+                          actionStage: s.actionStage || automation.stages[0]?.id || "",
+                        });
                       }}
                     >
                       <option value="email">Sends an email</option>
@@ -1726,6 +1780,10 @@ function Flows({
                       <option value="untag">Takes a label off</option>
                       {otherFlows.length ? <option value="start">Starts another sequence</option> : null}
                       <option value="webhook">Tells your webhooks</option>
+                      {automation.fields.length ? <option value="field">Sets a field</option> : null}
+                      {automation.stages.length ? <option value="deal">Puts their deal in a stage</option> : null}
+                      <option value="note">Writes a note on their page</option>
+                      <option value="notify">Emails you who reached it</option>
                     </select>
                   </label>
                 </div>
@@ -1774,6 +1832,70 @@ function Flows({
                     </select>
                     <span className="mt-1 block text-sm text-ink-soft">Each person goes through a sequence once, so nobody is started on it twice.</span>
                   </label>
+                ) : s.kind === "field" ? (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-sm text-ink-soft">The field</span>
+                      <select className="field mt-1" value={s.actionField} onChange={(e) => setStep(i, { actionField: e.target.value, actionValue: "" })}>
+                        {automation.fields.map((f) => (
+                          <option key={f.id} value={f.id}>{f.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {(() => {
+                      const field = automation.fields.find((f) => f.id === s.actionField);
+                      return field?.type === "choice" ? (
+                        <label className="block">
+                          <span className="text-sm text-ink-soft">Set to</span>
+                          <select className="field mt-1" value={s.actionValue} onChange={(e) => setStep(i, { actionValue: e.target.value })}>
+                            <option value="">Choose one</option>
+                            {field.options.map((o) => (
+                              <option key={o} value={o}>{o}</option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : (
+                        <label className="block">
+                          <span className="text-sm text-ink-soft">Set to</span>
+                          <input
+                            className="field mt-1"
+                            type={field?.type === "date" ? "date" : "text"}
+                            inputMode={field?.type === "number" ? "decimal" : undefined}
+                            maxLength={200}
+                            value={s.actionValue}
+                            onChange={(e) => setStep(i, { actionValue: e.target.value })}
+                          />
+                        </label>
+                      );
+                    })()}
+                    <span className="block text-sm text-ink-soft sm:col-span-2">Shown on their page in your studio, and in your list&apos;s file.</span>
+                  </div>
+                ) : s.kind === "deal" ? (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-sm text-ink-soft">The stage</span>
+                      <select className="field mt-1" value={s.actionStage} onChange={(e) => setStep(i, { actionStage: e.target.value })}>
+                        {automation.stages.map((st) => (
+                          <option key={st.id} value={st.id}>{st.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="text-sm text-ink-soft">A new deal&apos;s title (optional)</span>
+                      <input className="field mt-1" maxLength={90} value={s.actionTitle} placeholder={draft.name} onChange={(e) => setStep(i, { actionTitle: e.target.value })} />
+                    </label>
+                    <span className="block text-sm text-ink-soft sm:col-span-2">Their open deal moves to this stage; with none open, a new one is made for them on your deals board.</span>
+                  </div>
+                ) : s.kind === "note" ? (
+                  <label className="mt-3 block">
+                    <span className="text-sm text-ink-soft">The note</span>
+                    <input className="field mt-1" maxLength={300} value={s.actionText} placeholder="Asked about coaching" onChange={(e) => setStep(i, { actionText: e.target.value })} />
+                    <span className="mt-1 block text-sm text-ink-soft">Written on their page in your studio, with the sequence and the step it came from.</span>
+                  </label>
+                ) : s.kind === "notify" ? (
+                  <p className="mt-3 text-sm text-ink-soft">
+                    One email to you for everyone who reaches this step together: who they are, and the link to find them in your studio.
+                  </p>
                 ) : s.kind === "webhook" ? (
                   <p className="mt-3 text-sm text-ink-soft">
                     Each person who reaches this step is sent to your own server as a &ldquo;Sequence step&rdquo; event, once: their email, the sequence and the step. Choose an address that listens for it under Webhooks, in your settings; with none, this step does nothing.

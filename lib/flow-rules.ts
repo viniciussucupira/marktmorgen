@@ -35,6 +35,7 @@
  *
  * Browser-safe.
  */
+import { type CrmField, MAX_DEAL_TITLE, fieldValue } from "@/lib/crm-rules";
 
 export type StepIf = "has" | "lacks" | "buyer" | "lead" | "tag" | "untagged" | "clicked" | "unclicked" | "started" | "unstarted" | "finished" | "unfinished" | "half-a" | "half-b";
 export const STEP_IFS: readonly StepIf[] = ["has", "lacks", "buyer", "lead", "tag", "untagged", "clicked", "unclicked", "started", "unstarted", "finished", "unfinished", "half-a", "half-b"];
@@ -193,7 +194,7 @@ export function readGoal(raw: unknown, known: (productId: string) => boolean): F
  * product sold for money (`startsPaid`), cannot end at "has bought anything",
  * nor one about a product at getting that same product.
  */
-export function goalClash(trigger: "joined" | "product" | "bought" | "tagged" | "finished", productId: string | null, goal: FlowGoal | null, startsPaid: boolean): boolean {
+export function goalClash(trigger: "joined" | "product" | "bought" | "tagged" | "finished" | "form", productId: string | null, goal: FlowGoal | null, startsPaid: boolean): boolean {
   if (!goal) return false;
   // Somebody who finishes a course already has it: "finished" ends where "product" would.
   const aboutProduct = trigger === "product" || trigger === "finished";
@@ -209,14 +210,34 @@ export function goalClash(trigger: "joined" | "product" | "bought" | "tagged" | 
  * what ClickFunnels and Kit sell as automations, in the sequences a creator
  * already has.
  *
+ * And, from 13 October 2026, the rest of what ClickFunnels' workflows do with
+ * a contact, on the store's own people (lib/crm.ts, lib/buyer-profile.ts):
+ * set one of the store's fields to a value, put the person's deal in a stage
+ * of the deals board (made for them when they have no open one), write a
+ * note on their page, or tell the store's owner by email who reached the
+ * step.
+ *
  * Nothing here can loop: each person goes through a sequence once, so a label
  * that starts a sequence, or a sequence that starts another, runs at most
  * once for them.
  */
-export type FlowAction = { do: "tag" | "untag"; tag: string } | { do: "start"; flowId: string } | { do: "webhook" };
+export type FlowAction =
+  | { do: "tag" | "untag"; tag: string }
+  | { do: "start"; flowId: string }
+  | { do: "webhook" }
+  | { do: "field"; field: string; value: string }
+  | { do: "deal"; stage: string; title: string }
+  | { do: "note"; text: string }
+  | { do: "notify" };
+
+/** The longest note a step writes on a person's page. */
+export const MAX_STEP_NOTE = 300;
+
+/** What a step may name besides another sequence: the store's fields and its board's stages. */
+export type ActionContext = { field?: (id: string) => CrmField | undefined; isStage?: (id: string) => boolean };
 
 /** An action as sent from the studio, cleaned; null for an email. `isFlow` says whether a sequence is the store's. */
-export function readAction(raw: unknown, isFlow: (flowId: string) => boolean): FlowAction | null | "bad" {
+export function readAction(raw: unknown, isFlow: (flowId: string) => boolean, ctx: ActionContext = {}): FlowAction | null | "bad" {
   if (raw === null || raw === undefined || raw === "") return null;
   if (typeof raw !== "object") return "bad";
   const value = raw as Record<string, unknown>;
@@ -230,6 +251,22 @@ export function readAction(raw: unknown, isFlow: (flowId: string) => boolean): F
   }
   // Tells the store's own server, through its webhooks (lib/webhooks.ts, "sequence.step"), who reached this step.
   if (value.do === "webhook") return { do: "webhook" };
+  if (value.do === "field") {
+    const field = typeof value.field === "string" ? ctx.field?.(value.field) : undefined;
+    const set = field ? fieldValue(field, value.value) : null;
+    // A value the field keeps, never an empty one: a step that clears is not one a creator asks for.
+    return field && set ? { do: "field", field: field.id, value: set } : "bad";
+  }
+  if (value.do === "deal") {
+    const stage = typeof value.stage === "string" && ctx.isStage?.(value.stage) ? value.stage : "";
+    const title = typeof value.title === "string" ? value.title.replace(/\s+/g, " ").trim().slice(0, MAX_DEAL_TITLE) : "";
+    return stage ? { do: "deal", stage, title } : "bad";
+  }
+  if (value.do === "note") {
+    const text = typeof value.text === "string" ? value.text.replace(/\s+/g, " ").trim().slice(0, MAX_STEP_NOTE) : "";
+    return text ? { do: "note", text } : "bad";
+  }
+  if (value.do === "notify") return { do: "notify" };
   return "bad";
 }
 
