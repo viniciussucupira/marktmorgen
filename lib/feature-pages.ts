@@ -673,6 +673,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "What every email carries",
         items: [
           { icon: "user", title: "Your name, your replies", body: "Emails go out under your name, and replies come to you." },
+          { icon: "layout", title: "Design an email in blocks", body: "Headings, text, lists, buttons, lines across and pictures, laid out block by block with the email shown beside it as it is sent, buttons in your store's colour, or written in its box: both write the same email. Four templates to start from, whose parts to write are marked, and an email still holding one cannot go out." },
           { icon: "camera", title: "Pictures in your emails", body: "Add up to six pictures to an email or a sequence step, where the cursor is, with what each shows for readers who cannot see it. Each is made smaller on your device and kept on this site, so it shows in Gmail, Apple Mail and Outlook alike, and readers without pictures see its description." },
           { icon: "ban", title: "One-click unsubscribe", body: "In every email, and in the header mail apps use. Whoever leaves is never written to again, whatever a later import says." },
           { icon: "pin", title: "Your postal address", body: "In every email, as US law (CAN-SPAM) requires of commercial email, with a line on why the reader is getting it." },

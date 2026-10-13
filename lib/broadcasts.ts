@@ -12,6 +12,7 @@
  *   nl:mail:bcs:<listId>   the store's broadcasts, newest first
  *   nl:mail:queue          broadcasts waiting or under way
  */
+import { hasPlaceholder } from "@/lib/mail-body";
 import { randomBytes, randomInt } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { WHO, type Who, audience } from "@/lib/contacts";
@@ -137,7 +138,7 @@ export function whoOf(store: Store, kind: Who): { kind: Who; paid: ReadonlySet<s
 
 export type CreateResult =
   | { ok: true; broadcast: Broadcast }
-  | { ok: false; reason: "subject" | "body" | "when" | "product" | "empty" | "allowance" | "setup" | "plan" | "test_subject" | "test_small" | "test_links" };
+  | { ok: false; reason: "subject" | "body" | "when" | "product" | "empty" | "allowance" | "setup" | "plan" | "test_subject" | "test_small" | "test_links" | "placeholder" };
 
 const LINK = /https:\/\/[^\s<>"')\]]+/g;
 
@@ -168,6 +169,8 @@ export async function createBroadcast(
   const body = typeof input.body === "string" ? input.body.replace(/\r\n?/g, "\n").trim().slice(0, MAX_MAIL_BODY) : "";
   if (!subject) return { ok: false, reason: "subject" };
   if (!body) return { ok: false, reason: "body" };
+  // A template's part left to write is a direction, never words sent in the creator's name (lib/mail-body.ts).
+  if (hasPlaceholder(subject) || hasPlaceholder(body)) return { ok: false, reason: "placeholder" };
   const productId = typeof input.productId === "string" && input.productId ? input.productId : null;
   if (productId && !hasProduct(store, productId)) return { ok: false, reason: "product" };
   const notProductId = typeof input.notProductId === "string" && input.notProductId ? input.notProductId : null;

@@ -16,6 +16,7 @@
  *   nl:mail:flowq                       steps due, scored by when
  *   nl:mail:enr:<flowId>:<address key>  who has started a sequence
  */
+import { hasPlaceholder } from "@/lib/mail-body";
 import { createHash, randomBytes } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -152,7 +153,7 @@ const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw =
 
 export type FlowResult =
   | { ok: true; flows: Flow[] }
-  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "steps" | "step" | "goal" | "too_many" | "unknown" | "setup" | "plan" };
+  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "steps" | "step" | "goal" | "too_many" | "unknown" | "setup" | "plan" | "placeholder" };
 
 /** Adds a sequence, or replaces one with the same id. Checked whole every time. */
 export async function saveFlow(store: Store, raw: Record<string, unknown>): Promise<FlowResult> {
@@ -186,6 +187,8 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
     if (!step || (readsEmailBefore(step.when) && (!before || before.action))) return { ok: false, reason: "step" };
     steps.push(step);
   }
+  // A template's part left to write is a direction, never words sent in the creator's name (lib/mail-body.ts).
+  if (hasPlaceholder(JSON.stringify(steps))) return { ok: false, reason: "placeholder" };
   const goal = readGoal(raw.goal, known);
   if (goal === "bad") return { ok: false, reason: "goal" };
   const startsPaid = Boolean(productId) && idsOfKind(store, "paid").includes(productId as string);
