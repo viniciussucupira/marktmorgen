@@ -35,6 +35,8 @@ import { membershipWords } from "@/lib/buyer-words/membership";
 import { type PauseSub, cannotPause, pauseOf, periodEndOf } from "@/lib/membership-pause-rules";
 import { isOwnReasonId, offers } from "@/lib/leave-rules";
 import { countLeave } from "@/lib/leave-flow";
+import { canSellProduct } from "@/lib/store-checkout";
+import { type YearlyChoice, type YearlySub, yearlyChoice } from "@/lib/yearly-switch-rules";
 
 /** How long the emailed link keeps working. */
 export const MANAGE_LINK_SECONDS = 60 * 60;
@@ -373,6 +375,8 @@ export type Membership = {
   canPause: boolean;
   /** When the period already paid for ends, in seconds: where a pause would start. */
   periodEnd: number;
+  /** The same membership's yearly price, when this one can move to it (lib/yearly-switch-rules.ts). */
+  yearly: YearlyChoice | null;
 };
 
 const SUB_PATTERN = /^sub_[A-Za-z0-9]{6,64}$/;
@@ -457,7 +461,9 @@ export async function membershipsFor(store: Store, token: string): Promise<Membe
     return [];
   }
   const ids = [...new Set(subs.map((s) => productOfSub(s)).filter(Boolean))];
-  const titles = new Map(ids.length ? (await readListings(store, ids).catch(() => [])).map((p) => [p.id, p.title]) : []);
+  const listings = new Map(ids.length ? (await readListings(store, ids).catch(() => [])).map((p) => [p.id, p]) : []);
+  const titles = new Map([...listings.values()].map((p) => [p.id, p.title]));
+  const nowSeconds = Math.floor(Date.now() / 1000);
   return subs.map((sub) => {
     const price = sub.items?.data?.[0]?.price;
     const product = productOfSub(sub);
@@ -475,6 +481,10 @@ export async function membershipsFor(store: Store, token: string): Promise<Membe
       pause: pauseOf(sub as PauseSub),
       canPause: cannotPause(sub as PauseSub, store.pause) === null,
       periodEnd: periodEndOf(sub as PauseSub),
+      yearly: (() => {
+        const listing = listings.get(product);
+        return listing && canSellProduct(store, listing) ? yearlyChoice(sub as YearlySub, listing, store.tiers, store.currency, nowSeconds) : null;
+      })(),
     };
   });
 }

@@ -55,6 +55,10 @@ const en = {
       title: "Your membership was switched",
       body: "What the new plan includes is open to you now, and a receipt is on its way to your inbox.",
     },
+    yearly: {
+      title: "You now pay yearly",
+      body: "What your membership includes stays the same, and a receipt is on its way to your inbox.",
+    },
     declined: {
       title: "The card was not charged, so nothing changed",
       body: "Your bank declined the payment or asked for a step we could not show here. Update your card with “Change card or see receipts” below, then try the switch again.",
@@ -167,12 +171,32 @@ const en = {
   nudgeCommunity: "Come into the community:",
   nudgeReply: (store: string) => `If something is in the way, reply to this email and it reaches ${store}.`,
 
+  // ---- Paying yearly instead of monthly (added 12 October 2026) ------------------------------
+  payYearly: (yearly: string, saving: string) => `Pay yearly: ${yearly}, saves ${saving}`,
+  yearlyHead: (title: string) => `Pay yearly for ${title}`,
+  yearlySaves: (amount: string) => `Saves ${amount} a year against twelve monthly payments.`,
+  yearlyDueNote: "The year's price, less what is left of the month you already paid, to the card you pay with. Your next payment is in a year.",
+  yearlyTrialNote: "You are in your free trial. Nothing is charged now; the yearly price is charged when the trial ends.",
+  yearlyHolds: (store: string) => `This price holds for 15 minutes. Charged by ${store} on their own Stripe account. What your membership includes stays the same.`,
+  yearlySubject: (title: string) => `You now pay yearly for ${title}`,
+  yearlyNow: (store: string, title: string) => `Your ${title} membership with ${store} is now paid yearly. What it includes stays the same.`,
+  yearlyPaidCharged: (amount: string) => `Charged today: ${amount}, the year less what was left of your last monthly payment.`,
+  yearlyPaidTrial: "You are in your free trial, so nothing was charged. The yearly price is charged when the trial ends.",
+  askSubject: (title: string, saving: string) => `${title}: pay yearly and save ${saving}`,
+  askLead: (store: string, title: string, monthly: string, yearly: string, saving: string) =>
+    `You pay ${monthly} for ${title}. ${store} also offers it yearly: ${yearly}. That is ${saving} less than twelve monthly payments, and what it includes stays the same.`,
+  askSee: "See exactly what you would pay today, before anything is charged:",
+  askWorks: "The link works for 14 days and opens only this change. Nothing changes unless you press the button on that page.",
+  askReply: (store: string) => `Questions? Reply to this email and it reaches ${store}.`,
+
   // ---- Switching to another plan ------------------------------------------------------
   switchProblems: {
     expired: { title: "This link has expired", body: "A link to your membership works for one hour. Ask for a new one on your membership page." },
     gone: { title: "This membership cannot switch", body: "It may be canceled, set to end, waiting on a payment, or no longer yours on this link. Nothing was changed." },
     tier: { title: "That plan is not offered anymore", body: "Go back to your membership page to see the plans you can switch to now. Nothing was changed." },
     error: { title: "Stripe could not work out the price just now", body: "Nothing was changed. Try again in a moment." },
+    yearly: { title: "Paying yearly is not offered on this membership", body: "It may already be paid yearly, carry a discount, be canceled or waiting on a payment, or the yearly price may have changed. Nothing was changed." },
+    yearlyExpired: { title: "This link has expired", body: "The link in the email works for 14 days. Ask for a link to your membership on its page; from there you can pay yearly." },
   } as Record<string, Notice>,
   switchTo: (title: string) => `Switch to ${title}`,
   nowLabel: "Now",
@@ -380,6 +404,10 @@ const es: MembershipWords = {
       title: "Tu membresía se cambió",
       body: "Ya tienes acceso a lo que incluye el nuevo plan, y un recibo va de camino a tu bandeja de entrada.",
     },
+    yearly: {
+      title: "Ahora pagas al año",
+      body: "Lo que incluye tu membresía sigue igual, y un recibo va de camino a tu bandeja de entrada.",
+    },
     declined: {
       title: "No se cobró la tarjeta, así que no cambió nada",
       body: "Tu banco rechazó el pago o pidió un paso que no podíamos mostrar aquí. Actualiza tu tarjeta con “Cambiar tarjeta o ver recibos”, abajo, y vuelve a intentar el cambio.",
@@ -490,6 +518,24 @@ const es: MembershipWords = {
   nudgeCommunity: "Entra en la comunidad:",
   nudgeReply: (store) => `Si algo te lo impide, responde a este correo y le llegará a ${store}.`,
 
+  // ---- Pagar al año en vez de al mes ----------------------------------------------------------
+  payYearly: (yearly, saving) => `Paga al año: ${yearly}, ahorras ${saving}`,
+  yearlyHead: (title) => `Paga al año ${title}`,
+  yearlySaves: (amount) => `Ahorras ${amount} al año frente a doce pagos mensuales.`,
+  yearlyDueNote: "Se cobra a la tarjeta con la que pagas el precio del año, menos lo que queda del mes que ya pagaste. Tu próximo pago será dentro de un año.",
+  yearlyTrialNote: "Estás en tu prueba gratis. No se cobra nada ahora; el precio anual se cobra cuando termine la prueba.",
+  yearlyHolds: (store) => `Este precio se mantiene 15 minutos. Lo cobra ${store} en su propia cuenta de Stripe. Lo que incluye tu membresía sigue igual.`,
+  yearlySubject: (title) => `Ahora pagas al año ${title}`,
+  yearlyNow: (store, title) => `Tu membresía ${title} con ${store} ahora se paga al año. Lo que incluye sigue igual.`,
+  yearlyPaidCharged: (amount) => `Cobrado hoy: ${amount}, el año menos lo que quedaba de tu último pago mensual.`,
+  yearlyPaidTrial: "Estás en tu prueba gratis, así que no se cobró nada. El precio anual se cobra cuando termine la prueba.",
+  askSubject: (title, saving) => `${title}: paga al año y ahorra ${saving}`,
+  askLead: (store, title, monthly, yearly, saving) =>
+    `Pagas ${monthly} por ${title}. ${store} también lo ofrece al año: ${yearly}. Son ${saving} menos que doce pagos mensuales, y lo que incluye sigue igual.`,
+  askSee: "Mira exactamente lo que pagarías hoy, antes de que se cobre nada:",
+  askWorks: "El enlace funciona 14 días y solo abre este cambio. No cambia nada a menos que pulses el botón de esa página.",
+  askReply: (store) => `¿Dudas? Responde a este correo y le llegará a ${store}.`,
+
   switchProblems: {
     expired: { title: "Este enlace ha expirado", body: "Un enlace a tu membresía funciona durante una hora. Pide uno nuevo en la página de tu membresía." },
     gone: {
@@ -498,6 +544,8 @@ const es: MembershipWords = {
     },
     tier: { title: "Ese plan ya no se ofrece", body: "Vuelve a la página de tu membresía para ver los planes a los que puedes cambiar ahora. No se cambió nada." },
     error: { title: "Stripe no pudo calcular el precio en este momento", body: "No se cambió nada. Vuelve a intentarlo en un momento." },
+    yearly: { title: "Esta membresía no ofrece el pago anual", body: "Puede que ya se pague al año, tenga un descuento, esté cancelada o pendiente de un pago, o que el precio anual haya cambiado. No se cambió nada." },
+    yearlyExpired: { title: "Este enlace ha caducado", body: "El enlace del correo funciona 14 días. Pide un enlace a tu membresía en su página; desde allí puedes pagar al año." },
   },
   switchTo: (title) => `Cambiar a ${title}`,
   nowLabel: "Ahora",
@@ -691,6 +739,10 @@ const fr: MembershipWords = {
       title: "Votre abonnement a été modifié",
       body: "Ce que comprend la nouvelle formule vous est accessible dès maintenant, et un reçu arrive dans votre boîte de réception.",
     },
+    yearly: {
+      title: "Vous payez désormais à l'année",
+      body: "Ce que comprend votre abonnement reste identique, et un reçu arrive dans votre boîte de réception.",
+    },
     declined: {
       title: "La carte n'a pas été débitée, donc rien n'a changé",
       body: `Votre banque a refusé le paiement ou demandé une étape que nous ne pouvions pas afficher ici. Mettez à jour votre carte avec «${S}Changer de carte ou voir les reçus${S}» ci-dessous, puis réessayez le changement.`,
@@ -806,6 +858,24 @@ const fr: MembershipWords = {
   nudgeCommunity: `Entrer dans la communauté${S}:`,
   nudgeReply: (store) => `Si quelque chose vous en empêche, répondez à cet e-mail et ${store} le recevra.`,
 
+  // ---- Payer à l'année plutôt qu'au mois ------------------------------------------------------
+  payYearly: (yearly, saving) => `Payer à l'année : ${yearly}, soit ${saving} d'économie`,
+  yearlyHead: (title) => `Payer ${title} à l'année`,
+  yearlySaves: (amount) => `${amount} d'économie par an par rapport à douze paiements mensuels.`,
+  yearlyDueNote: "Le prix de l'année, moins ce qui reste du mois déjà payé, sur la carte avec laquelle vous payez. Votre prochain paiement aura lieu dans un an.",
+  yearlyTrialNote: "Vous êtes dans votre essai gratuit. Rien n'est débité maintenant ; le prix annuel est débité à la fin de l'essai.",
+  yearlyHolds: (store) => `Ce prix est valable 15 minutes. Débité par ${store} sur son propre compte Stripe. Ce que comprend votre abonnement reste identique.`,
+  yearlySubject: (title) => `Vous payez désormais ${title} à l'année`,
+  yearlyNow: (store, title) => `Votre abonnement ${title} chez ${store} est désormais payé à l'année. Ce qu'il comprend reste identique.`,
+  yearlyPaidCharged: (amount) => `Débité aujourd'hui : ${amount}, l'année moins ce qui restait de votre dernier paiement mensuel.`,
+  yearlyPaidTrial: "Vous êtes dans votre essai gratuit, donc rien n'a été débité. Le prix annuel est débité à la fin de l'essai.",
+  askSubject: (title, saving) => `${title} : payez à l'année et économisez ${saving}`,
+  askLead: (store, title, monthly, yearly, saving) =>
+    `Vous payez ${monthly} pour ${title}. ${store} le propose aussi à l'année : ${yearly}. C'est ${saving} de moins que douze paiements mensuels, et ce qu'il comprend reste identique.`,
+  askSee: "Voyez exactement ce que vous paieriez aujourd'hui, avant que rien ne soit débité :",
+  askWorks: "Le lien fonctionne 14 jours et n'ouvre que ce changement. Rien ne change tant que vous n'appuyez pas sur le bouton de cette page.",
+  askReply: (store) => `Des questions ? Répondez à cet e-mail et ${store} le recevra.`,
+
   switchProblems: {
     expired: { title: "Ce lien a expiré", body: "Un lien vers votre abonnement fonctionne pendant une heure. Demandez-en un nouveau sur la page de votre abonnement." },
     gone: {
@@ -817,6 +887,8 @@ const fr: MembershipWords = {
       body: "Revenez à la page de votre abonnement pour voir les formules vers lesquelles vous pouvez passer maintenant. Rien n'a été modifié.",
     },
     error: { title: "Stripe n'a pas pu calculer le prix pour le moment", body: "Rien n'a été modifié. Réessayez dans un instant." },
+    yearly: { title: "Le paiement annuel n'est pas proposé pour cet abonnement", body: "Il est peut-être déjà payé à l'année, bénéficie d'une réduction, est résilié ou en attente d'un paiement, ou le prix annuel a changé. Rien n'a été modifié." },
+    yearlyExpired: { title: "Ce lien a expiré", body: "Le lien de l'e-mail fonctionne 14 jours. Demandez un lien vers votre abonnement sur sa page ; de là, vous pouvez payer à l'année." },
   },
   switchTo: (title) => `Passer à ${title}`,
   nowLabel: "Actuellement",
@@ -1012,6 +1084,10 @@ const de: MembershipWords = {
       title: "Ihre Mitgliedschaft wurde gewechselt",
       body: "Was der neue Tarif umfasst, steht Ihnen jetzt offen, und eine Quittung ist auf dem Weg in Ihren Posteingang.",
     },
+    yearly: {
+      title: "Sie zahlen jetzt jährlich",
+      body: "Was Ihre Mitgliedschaft umfasst, bleibt gleich, und eine Quittung ist auf dem Weg in Ihren Posteingang.",
+    },
     declined: {
       title: "Die Karte wurde nicht belastet, daher hat sich nichts geändert",
       body: "Ihre Bank hat die Zahlung abgelehnt oder einen Schritt verlangt, den wir hier nicht anzeigen konnten. Aktualisieren Sie Ihre Karte unten über „Karte ändern oder Quittungen ansehen“ und versuchen Sie den Wechsel dann erneut.",
@@ -1124,6 +1200,24 @@ const de: MembershipWords = {
   nudgeCommunity: "Zur Community:",
   nudgeReply: (store) => `Wenn Ihnen etwas im Weg steht, antworten Sie auf diese E-Mail, sie erreicht ${store}.`,
 
+  // ---- Jährlich statt monatlich zahlen --------------------------------------------------------
+  payYearly: (yearly, saving) => `Jährlich zahlen: ${yearly}, Sie sparen ${saving}`,
+  yearlyHead: (title) => `${title} jährlich zahlen`,
+  yearlySaves: (amount) => `Sie sparen ${amount} im Jahr gegenüber zwölf Monatszahlungen.`,
+  yearlyDueNote: "Der Jahrespreis, abzüglich dessen, was vom bereits bezahlten Monat übrig ist, von der Karte, mit der Sie zahlen. Ihre nächste Zahlung ist in einem Jahr.",
+  yearlyTrialNote: "Sie sind in Ihrer kostenlosen Testphase. Jetzt wird nichts berechnet; der Jahrespreis wird berechnet, wenn die Testphase endet.",
+  yearlyHolds: (store) => `Dieser Preis gilt 15 Minuten. Berechnet von ${store} über das eigene Stripe-Konto. Was Ihre Mitgliedschaft umfasst, bleibt gleich.`,
+  yearlySubject: (title) => `Sie zahlen ${title} jetzt jährlich`,
+  yearlyNow: (store, title) => `Ihre Mitgliedschaft ${title} bei ${store} wird jetzt jährlich bezahlt. Was sie umfasst, bleibt gleich.`,
+  yearlyPaidCharged: (amount) => `Heute berechnet: ${amount}, das Jahr abzüglich dessen, was von Ihrer letzten Monatszahlung übrig war.`,
+  yearlyPaidTrial: "Sie sind in Ihrer kostenlosen Testphase, daher wurde nichts berechnet. Der Jahrespreis wird berechnet, wenn die Testphase endet.",
+  askSubject: (title, saving) => `${title}: jährlich zahlen und ${saving} sparen`,
+  askLead: (store, title, monthly, yearly, saving) =>
+    `Sie zahlen ${monthly} für ${title}. ${store} bietet es auch jährlich an: ${yearly}. Das sind ${saving} weniger als zwölf Monatszahlungen, und was es umfasst, bleibt gleich.`,
+  askSee: "Sehen Sie genau, was Sie heute zahlen würden, bevor etwas berechnet wird:",
+  askWorks: "Der Link gilt 14 Tage und öffnet nur diese Änderung. Es ändert sich nichts, solange Sie nicht auf den Knopf auf dieser Seite drücken.",
+  askReply: (store) => `Fragen? Antworten Sie auf diese E-Mail, sie erreicht ${store}.`,
+
   switchProblems: {
     expired: {
       title: "Dieser Link ist abgelaufen",
@@ -1138,6 +1232,8 @@ const de: MembershipWords = {
       body: "Gehen Sie zurück zur Seite Ihrer Mitgliedschaft, um die Tarife zu sehen, zu denen Sie jetzt wechseln können. Es wurde nichts geändert.",
     },
     error: { title: "Stripe konnte den Preis gerade nicht berechnen", body: "Es wurde nichts geändert. Versuchen Sie es gleich noch einmal." },
+    yearly: { title: "Für diese Mitgliedschaft gibt es keine jährliche Zahlung", body: "Sie wird vielleicht schon jährlich bezahlt, hat einen Rabatt, ist gekündigt oder wartet auf eine Zahlung, oder der Jahrespreis hat sich geändert. Es wurde nichts geändert." },
+    yearlyExpired: { title: "Dieser Link ist abgelaufen", body: "Der Link in der E-Mail gilt 14 Tage. Fordern Sie auf der Seite Ihrer Mitgliedschaft einen Link an; von dort können Sie jährlich zahlen." },
   },
   switchTo: (title) => `Zu ${title} wechseln`,
   nowLabel: "Jetzt",
@@ -1344,6 +1440,10 @@ const it: MembershipWords = {
       title: "Il tuo abbonamento è stato cambiato",
       body: "Ciò che include il nuovo piano è già accessibile, e una ricevuta sta arrivando nella tua casella di posta.",
     },
+    yearly: {
+      title: "Ora paghi annualmente",
+      body: "Ciò che include il tuo abbonamento resta uguale, e una ricevuta sta arrivando nella tua casella di posta.",
+    },
     declined: {
       title: "La carta non è stata addebitata, quindi non è cambiato nulla",
       body: "La tua banca ha rifiutato il pagamento o ha chiesto un passaggio che non potevamo mostrare qui. Aggiorna la carta con “Cambia carta o vedi le ricevute” qui sotto, poi riprova il cambio.",
@@ -1455,6 +1555,24 @@ const it: MembershipWords = {
   nudgeCommunity: "Entra nella community:",
   nudgeReply: (store) => `Se qualcosa te lo impedisce, rispondi a questa email e arriverà a ${store}.`,
 
+  // ---- Pagare annualmente invece che mensilmente ---------------------------------------------
+  payYearly: (yearly, saving) => `Paga annualmente: ${yearly}, risparmi ${saving}`,
+  yearlyHead: (title) => `Paga ${title} annualmente`,
+  yearlySaves: (amount) => `Risparmi ${amount} all'anno rispetto a dodici pagamenti mensili.`,
+  yearlyDueNote: "Il prezzo dell'anno, meno ciò che resta del mese già pagato, sulla carta con cui paghi. Il prossimo pagamento sarà tra un anno.",
+  yearlyTrialNote: "Sei nella prova gratuita. Ora non viene addebitato nulla; il prezzo annuale viene addebitato alla fine della prova.",
+  yearlyHolds: (store) => `Questo prezzo vale per 15 minuti. Addebitato da ${store} sul proprio account Stripe. Ciò che include il tuo abbonamento resta uguale.`,
+  yearlySubject: (title) => `Ora paghi ${title} annualmente`,
+  yearlyNow: (store, title) => `Il tuo abbonamento ${title} con ${store} ora è pagato annualmente. Ciò che include resta uguale.`,
+  yearlyPaidCharged: (amount) => `Addebitato oggi: ${amount}, l'anno meno ciò che restava del tuo ultimo pagamento mensile.`,
+  yearlyPaidTrial: "Sei nella prova gratuita, quindi non è stato addebitato nulla. Il prezzo annuale viene addebitato alla fine della prova.",
+  askSubject: (title, saving) => `${title}: paga annualmente e risparmia ${saving}`,
+  askLead: (store, title, monthly, yearly, saving) =>
+    `Paghi ${monthly} per ${title}. ${store} lo offre anche annualmente: ${yearly}. Sono ${saving} in meno di dodici pagamenti mensili, e ciò che include resta uguale.`,
+  askSee: "Guarda esattamente quanto pagheresti oggi, prima che venga addebitato qualcosa:",
+  askWorks: "Il link funziona per 14 giorni e apre solo questo cambio. Non cambia nulla finché non premi il pulsante su quella pagina.",
+  askReply: (store) => `Domande? Rispondi a questa email e arriverà a ${store}.`,
+
   switchProblems: {
     expired: { title: "Questo link è scaduto", body: "Un link al tuo abbonamento funziona per un'ora. Chiedine uno nuovo dalla pagina del tuo abbonamento." },
     gone: {
@@ -1466,6 +1584,8 @@ const it: MembershipWords = {
       body: "Torna alla pagina del tuo abbonamento per vedere i piani a cui puoi passare ora. Non è stato modificato nulla.",
     },
     error: { title: "Stripe non è riuscito a calcolare il prezzo in questo momento", body: "Non è stato modificato nulla. Riprova tra un momento." },
+    yearly: { title: "Il pagamento annuale non è offerto per questo abbonamento", body: "Potrebbe essere già pagato annualmente, avere uno sconto, essere annullato o in attesa di un pagamento, oppure il prezzo annuale potrebbe essere cambiato. Non è stato cambiato nulla." },
+    yearlyExpired: { title: "Questo link è scaduto", body: "Il link nell'email funziona per 14 giorni. Chiedi un link al tuo abbonamento sulla sua pagina; da lì puoi pagare annualmente." },
   },
   switchTo: (title) => `Passa a ${title}`,
   nowLabel: "Ora",
@@ -1661,6 +1781,10 @@ const nl: MembershipWords = {
       title: "Je lidmaatschap is gewijzigd",
       body: "Wat het nieuwe abonnement omvat, staat nu voor je open, en er is een ontvangstbewijs onderweg naar je inbox.",
     },
+    yearly: {
+      title: "Je betaalt nu per jaar",
+      body: "Wat je lidmaatschap omvat, blijft hetzelfde, en er is een ontvangstbewijs onderweg naar je inbox.",
+    },
     declined: {
       title: "De kaart is niet belast, dus er is niets veranderd",
       body: "Je bank heeft de betaling geweigerd of vroeg om een stap die we hier niet konden tonen. Werk je kaart bij via “Kaart wijzigen of ontvangstbewijzen bekijken” hieronder en probeer de overstap daarna opnieuw.",
@@ -1771,6 +1895,24 @@ const nl: MembershipWords = {
   nudgeCommunity: "Kom naar de community:",
   nudgeReply: (store) => `Als er iets in de weg zit, beantwoord deze e-mail en het komt bij ${store}.`,
 
+  // ---- Per jaar betalen in plaats van per maand -----------------------------------------------
+  payYearly: (yearly, saving) => `Betaal per jaar: ${yearly}, je bespaart ${saving}`,
+  yearlyHead: (title) => `Betaal ${title} per jaar`,
+  yearlySaves: (amount) => `Je bespaart ${amount} per jaar ten opzichte van twaalf maandbetalingen.`,
+  yearlyDueNote: "De jaarprijs, min wat er over is van de maand die je al betaalde, van de kaart waarmee je betaalt. Je volgende betaling is over een jaar.",
+  yearlyTrialNote: "Je zit in je gratis proefperiode. Er wordt nu niets afgeschreven; de jaarprijs wordt afgeschreven wanneer de proefperiode eindigt.",
+  yearlyHolds: (store) => `Deze prijs geldt 15 minuten. Afgeschreven door ${store} via hun eigen Stripe-account. Wat je lidmaatschap omvat, blijft hetzelfde.`,
+  yearlySubject: (title) => `Je betaalt ${title} nu per jaar`,
+  yearlyNow: (store, title) => `Je lidmaatschap ${title} bij ${store} wordt nu per jaar betaald. Wat het omvat, blijft hetzelfde.`,
+  yearlyPaidCharged: (amount) => `Vandaag afgeschreven: ${amount}, het jaar min wat er over was van je laatste maandbetaling.`,
+  yearlyPaidTrial: "Je zit in je gratis proefperiode, dus er is niets afgeschreven. De jaarprijs wordt afgeschreven wanneer de proefperiode eindigt.",
+  askSubject: (title, saving) => `${title}: betaal per jaar en bespaar ${saving}`,
+  askLead: (store, title, monthly, yearly, saving) =>
+    `Je betaalt ${monthly} voor ${title}. ${store} biedt het ook per jaar aan: ${yearly}. Dat is ${saving} minder dan twaalf maandbetalingen, en wat het omvat, blijft hetzelfde.`,
+  askSee: "Zie precies wat je vandaag zou betalen, voordat er iets wordt afgeschreven:",
+  askWorks: "De link werkt 14 dagen en opent alleen deze wijziging. Er verandert niets tenzij je op de knop op die pagina drukt.",
+  askReply: (store) => `Vragen? Beantwoord deze e-mail en het komt bij ${store}.`,
+
   switchProblems: {
     expired: { title: "Deze link is verlopen", body: "Een link naar je lidmaatschap werkt een uur. Vraag een nieuwe aan op de pagina van je lidmaatschap." },
     gone: {
@@ -1782,6 +1924,8 @@ const nl: MembershipWords = {
       body: "Ga terug naar de pagina van je lidmaatschap om te zien naar welke abonnementen je nu kunt overstappen. Er is niets gewijzigd.",
     },
     error: { title: "Stripe kon de prijs nu niet berekenen", body: "Er is niets gewijzigd. Probeer het zo opnieuw." },
+    yearly: { title: "Per jaar betalen kan niet voor dit lidmaatschap", body: "Misschien wordt het al per jaar betaald, heeft het een korting, is het opgezegd of wacht het op een betaling, of is de jaarprijs veranderd. Er is niets gewijzigd." },
+    yearlyExpired: { title: "Deze link is verlopen", body: "De link in de e-mail werkt 14 dagen. Vraag op de pagina van je lidmaatschap een link aan; van daaruit kun je per jaar betalen." },
   },
   switchTo: (title) => `Overstappen naar ${title}`,
   nowLabel: "Nu",
@@ -1975,6 +2119,10 @@ const pt: MembershipWords = {
       title: "A sua subscrição foi alterada",
       body: "O que o novo plano inclui já está disponível para si, e um recibo está a caminho da sua caixa de entrada.",
     },
+    yearly: {
+      title: "Agora paga anualmente",
+      body: "O que a sua subscrição inclui mantém-se igual, e um recibo está a caminho da sua caixa de entrada.",
+    },
     declined: {
       title: "O cartão não foi cobrado, por isso nada mudou",
       body: "O seu banco recusou o pagamento ou pediu um passo que não podíamos mostrar aqui. Atualize o seu cartão em “Alterar cartão ou ver recibos”, abaixo, e depois tente novamente a mudança.",
@@ -2085,6 +2233,24 @@ const pt: MembershipWords = {
   nudgeCommunity: "Entrar na comunidade:",
   nudgeReply: (store) => `Se algo está a impedir, responda a este email e chega a ${store}.`,
 
+  // ---- Pagar anualmente em vez de mensalmente -------------------------------------------------
+  payYearly: (yearly, saving) => `Pagar anualmente: ${yearly}, poupa ${saving}`,
+  yearlyHead: (title) => `Pagar ${title} anualmente`,
+  yearlySaves: (amount) => `Poupa ${amount} por ano face a doze pagamentos mensais.`,
+  yearlyDueNote: "O preço do ano, menos o que resta do mês que já pagou, no cartão com que paga. O seu próximo pagamento será daqui a um ano.",
+  yearlyTrialNote: "Está no seu período de teste grátis. Nada é cobrado agora; o preço anual é cobrado quando o teste terminar.",
+  yearlyHolds: (store) => `Este preço mantém-se durante 15 minutos. Cobrado por ${store} na sua própria conta Stripe. O que a sua subscrição inclui mantém-se igual.`,
+  yearlySubject: (title) => `Agora paga ${title} anualmente`,
+  yearlyNow: (store, title) => `A sua subscrição ${title} com ${store} passa a ser paga anualmente. O que inclui mantém-se igual.`,
+  yearlyPaidCharged: (amount) => `Cobrado hoje: ${amount}, o ano menos o que restava do seu último pagamento mensal.`,
+  yearlyPaidTrial: "Está no seu período de teste grátis, por isso nada foi cobrado. O preço anual é cobrado quando o teste terminar.",
+  askSubject: (title, saving) => `${title}: pague anualmente e poupe ${saving}`,
+  askLead: (store, title, monthly, yearly, saving) =>
+    `Paga ${monthly} por ${title}. ${store} também o oferece anualmente: ${yearly}. São ${saving} a menos do que doze pagamentos mensais, e o que inclui mantém-se igual.`,
+  askSee: "Veja exatamente quanto pagaria hoje, antes de qualquer cobrança:",
+  askWorks: "A ligação funciona durante 14 dias e abre apenas esta alteração. Nada muda a menos que carregue no botão dessa página.",
+  askReply: (store) => `Dúvidas? Responda a este email e chega a ${store}.`,
+
   switchProblems: {
     expired: { title: "Esta ligação expirou", body: "Uma ligação para a sua subscrição funciona durante uma hora. Peça uma nova na página da sua subscrição." },
     gone: {
@@ -2096,6 +2262,8 @@ const pt: MembershipWords = {
       body: "Volte à página da sua subscrição para ver os planos para os quais pode mudar agora. Nada foi alterado.",
     },
     error: { title: "A Stripe não conseguiu calcular o preço neste momento", body: "Nada foi alterado. Tente novamente daqui a pouco." },
+    yearly: { title: "O pagamento anual não está disponível para esta subscrição", body: "Pode já ser paga anualmente, ter um desconto, estar cancelada ou à espera de um pagamento, ou o preço anual pode ter mudado. Nada foi alterado." },
+    yearlyExpired: { title: "Esta ligação expirou", body: "A ligação do email funciona durante 14 dias. Peça uma ligação para a sua subscrição na respetiva página; a partir daí pode pagar anualmente." },
   },
   switchTo: (title) => `Mudar para ${title}`,
   nowLabel: "Agora",

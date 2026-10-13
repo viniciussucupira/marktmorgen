@@ -50,6 +50,15 @@ export async function startServices(port) {
     { id: DISCORD.botRole, name: "Marktmorgen", color: 0, position: 5, managed: true },
     { id: DISCORD.members, name: "Members", color: 3447003, position: 2, managed: false },
   ];
+  const firstPauseSub = () => ({
+    id: "sub_PauseMember0001",
+    object: "subscription",
+    status: "active",
+    customer: "cus_PauseMember01",
+    metadata: { store: "localshop", product: "club" },
+    pause_collection: null,
+    items: { data: [{ id: "si_PauseMember01", current_period_end: Math.floor(Date.now() / 1000) + 20 * 86_400, price: { unit_amount: 2000, currency: "usd", recurring: { interval: "month", interval_count: 1 } } }] },
+  });
   let pauseSub = {
     id: "sub_PauseMember0001",
     object: "subscription",
@@ -340,9 +349,30 @@ export async function startServices(port) {
       if (req.method === "POST" && path === "/v1/billing_portal/sessions") {
         return json(res, 200, { id: "bps_LocalPortal0001", object: "billing_portal.session", url: "https://billing.stripe.com/p/session/test_local" });
       }
+      // A move to the same membership's yearly price (lib/yearly-switch.ts): the price made
+      // for it, and Stripe's preview, the month's unused part back and the year from now.
+      if (req.method === "POST" && path === "/v1/prices" && req.headers["stripe-account"]) {
+        await read(req);
+        return json(res, 200, { id: "price_LocalYearly0001", object: "price" });
+      }
+      if (req.method === "POST" && path === "/v1/invoices/create_preview" && req.headers["stripe-account"]) {
+        const at = Number(new URLSearchParams(await read(req)).get("subscription_details[proration_date]"));
+        return json(res, 200, {
+          object: "invoice",
+          currency: "usd",
+          starting_balance: 0,
+          lines: { data: [
+            { amount: -667, parent: { subscription_item_details: { proration: true } }, period: { start: at } },
+            { amount: 20000, parent: { subscription_item_details: { proration: false } }, period: { start: at } },
+          ] },
+        });
+      }
       if (req.method === "POST" && path === "/v1/subscriptions/sub_PauseMember0001") {
         const body = new URLSearchParams(await read(req));
         subscriptionUpdates.push(Object.fromEntries(body));
+        if (body.get("items[0][price]")) {
+          return json(res, 200, { ...pauseSub, pending_update: null, latest_invoice: { id: "in_LocalYearly0001", status: "paid", total: 19333, amount_paid: 19333, currency: "usd" } });
+        }
         const metadata = { ...pauseSub.metadata };
         for (const [key, value] of body) {
           const field = key.match(/^metadata\[(.+)\]$/);
@@ -405,6 +435,13 @@ export async function startServices(port) {
     adEvents: () => [...adEvents],
     writing: () => [...writing],
     subscriptionUpdates: () => [...subscriptionUpdates],
+    /** The pause member's membership on another product, and back as it was. */
+    setPauseProduct: (product) => {
+      pauseSub = { ...firstPauseSub(), metadata: { store: "localshop", product } };
+    },
+    resetPauseSub: () => {
+      pauseSub = firstPauseSub();
+    },
     portalConfigs: () => [...portalConfigs],
     /** What Discord was asked, and its ids. */
     discord: () => ({ calls: [...discordCalls], members: new Set(discordMembers), ids: DISCORD }),

@@ -9,6 +9,7 @@ import { moveAllStores } from "@/lib/store";
 import { pruneResearch } from "@/lib/creator-research-store";
 import { recoverFailedPayments } from "@/lib/payment-recovery";
 import { sendMemberNudges } from "@/lib/member-nudge";
+import { sendYearlyAsks } from "@/lib/yearly-ask";
 import { settleInvites } from "@/lib/creator-invite-credit";
 import { sendWinBacks } from "@/lib/winback-send";
 import { ensureDemoStore } from "@/lib/demo-seed";
@@ -106,6 +107,14 @@ async function run(request: NextRequest): Promise<Response> {
     } catch (error) {
       console.error("sending emails to members who stopped coming failed", error);
     }
+    // Monthly members whose membership has a yearly price, where the creator
+    // turned it on: one email offering it, once per membership (lib/yearly-ask.ts).
+    let yearly = null;
+    try {
+      yearly = await sendYearlyAsks(deadline);
+    } catch (error) {
+      console.error("sending the yearly offer failed", error);
+    }
     // Invited creators' payments, past their refund window, become credit on
     // the plan of whoever invited them (lib/creator-invite-credit.ts).
     let invites = null;
@@ -131,7 +140,7 @@ async function run(request: NextRequest): Promise<Response> {
     });
     if (demo && demo.pending.length) console.error("the demo store is missing something", demo.pending);
     const ok = plans !== null && (billing !== null || !isBillingConfigured());
-    return Response.json({ ok, ...(plans ?? {}), billing, recovered, comeBack, nudged, invites, catalogs, demo }, { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
+    return Response.json({ ok, ...(plans ?? {}), billing, recovered, comeBack, nudged, yearly, invites, catalogs, demo }, { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
   } finally {
     await redisPipeline([["DEL", "nl:plans:lock"]]).catch(() => {});
   }

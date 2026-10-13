@@ -93,6 +93,9 @@ import { DunningEditor } from "@/components/dunning-editor";
 import { LeaveEditor } from "@/components/leave-editor";
 import { NudgeEditor } from "@/components/nudge-editor";
 import { nudgesThisMonth } from "@/lib/member-nudge";
+import { YearlyAskEditor } from "@/components/yearly-ask-editor";
+import { yearlyAsksThisMonth } from "@/lib/yearly-ask";
+import { activeYearly } from "@/lib/yearly-price";
 import { WinBackEditor } from "@/components/winback-editor";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { AiOn } from "@/components/ai-assist";
@@ -1561,6 +1564,12 @@ export default async function StudioPage({
                       nudge={store.nudge}
                       suggestedAddress={store.mail?.address || store.winback.address || store.recovery.address || ""}
                       sent={await nudgesThisMonth(store).catch(() => 0)}
+                    />
+                    <YearlyAskEditor
+                      ask={store.yearlyAsk}
+                      suggestedAddress={store.nudge.address || store.mail?.address || store.winback.address || store.recovery.address || ""}
+                      sent={await yearlyAsksThisMonth(store).catch(() => 0)}
+                      offersYearly={(await readKind(store, "recurring").catch(() => [])).some((p) => activeYearly(p, store.tiers) !== null)}
                     />
                     <SaveOfferEditor save={store.save} connected={Boolean(current?.stripeAccountId)} />
                     <PauseEditor months={store.pause} />

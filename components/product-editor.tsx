@@ -641,7 +641,7 @@ function ProductForm({
                     const monthly = readMoney(draft.price, currency);
                     const year = draft.yearlyPrice.trim() ? readMoney(draft.yearlyPrice, currency) : null;
                     const saves = monthly !== null && year !== null && year < monthly * 12 ? formatMoney(monthly * 12 - year, currency) : null;
-                    return `Buyers pick Monthly or Yearly before paying${saves ? `, and Yearly says it saves ${saves} against twelve monthly payments` : ", and Yearly says what it saves against twelve monthly payments"}. Less than twelve monthly payments. Not beside an introductory price or a set number of payments.`;
+                    return `Buyers pick Monthly or Yearly before paying${saves ? `, and Yearly says it saves ${saves} against twelve monthly payments` : ", and Yearly says what it saves against twelve monthly payments"}. Members already paying monthly can switch to it from their membership page. Less than twelve monthly payments. Not beside an introductory price or a set number of payments.`;
                   })()}
                 </p>
               </div>
