@@ -1,5 +1,6 @@
 "use client";
 
+import { reviewFunnel } from "@/lib/funnel-review";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -185,6 +186,7 @@ export function PageFunnelEditor({
 
       <ul className="mt-6 space-y-4">
         {saved.map(({ funnel, steps }) => {
+          const review = reviewFunnel(steps);
           const first = steps.find((s) => s.open)?.seen ?? 0;
           const last = [...steps].reverse().find((s) => s.open);
           return (
@@ -234,6 +236,12 @@ export function PageFunnelEditor({
                 </div>
               </div>
 
+              <details className="mt-4 rounded-xl bg-paper p-4 ring-1 ring-line">
+                <summary className="min-h-11 cursor-pointer font-semibold text-ink">{review.ready ? "Review: all steps available" : "Review: check unavailable steps"}</summary>
+                {review.issues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{review.issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">Every configured step is currently available. This does not verify payment-provider health, delivery or page copy.</p>}
+                {review.observation ? <p className="mt-3 text-sm text-ink-soft">{review.observation}</p> : null}
+                <a className="btn btn-secondary btn-sm mt-3" href={base + funnel.slug} target="_blank" rel="noopener noreferrer">Open as a visitor</a>
+              </details>
               <ol className="mt-4 space-y-2">
                 {steps.map((step, index) => (
                   <li key={`${funnel.id}-${index}`} className="flex items-start gap-3 rounded-[12px] bg-paper px-3 py-2.5 text-sm ring-1 ring-line">
