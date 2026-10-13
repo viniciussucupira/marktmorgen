@@ -22,6 +22,8 @@ import type { ChatKind } from "@/lib/chat-summary";
 import { NoCountToggle } from "@/components/no-count-toggle";
 import { BuyerNumbers } from "@/components/buyer-numbers";
 import { NumbersAsk } from "@/components/numbers-ask";
+import { CustomerVoice } from "@/components/customer-voice";
+import type { VoiceSummary } from "@/lib/customer-voice";
 import { useStudioStore } from "@/components/studio-store-pin";
 import { WeeklyAiToggle } from "@/components/weekly-ai-toggle";
 import { AttributionTable } from "@/components/attribution-table";
@@ -351,6 +353,7 @@ export function StatsPanel({
   canAsk = false,
   weeklyAi,
   insightContext,
+  voice,
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -378,6 +381,8 @@ export function StatsPanel({
   weeklyAi?: boolean;
   /** What "Worth knowing" needs to offer its steps (lib/insights.ts): the store's address, its reminders, what this person may do. */
   insightContext?: InsightContext;
+  /** What customers are saying (lib/customer-voice.ts): the latest summary, null for none yet; undefined to leave it out. */
+  voice?: VoiceSummary | null;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [notes, setNotes] = useState(notesGiven);
@@ -1026,6 +1031,8 @@ export function StatsPanel({
           </p>
         </div>
       ) : null}
+
+      {voice !== undefined && canAsk ? <CustomerVoice initial={voice} /> : null}
 
       {countries.length || devices.length ? (
         <div className="mt-6 grid gap-6 sm:grid-cols-2">

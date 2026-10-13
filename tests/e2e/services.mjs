@@ -213,6 +213,8 @@ export async function startServices(port) {
                 const visitors = numbers.last_30_days?.visitors ?? 0;
                 return JSON.stringify({ answer: `You had ${visitors} visitors in the last 30 days.`, used: [{ label: "Visitors", value: String(visitors) }, { label: "Made up", value: "$123,456.00" }], window: "d30", section: "channels" });
               })()
+          : system.startsWith("You sort what an online store's customers wrote")
+            ? JSON.stringify({ themes: [{ title: "Wants it in another format", ids: [1, 2] }, { title: "Made up from 3 texts", ids: [3, 4] }] })
           : system.startsWith("You answer a creator's question about using Marktmorgen")
             ? JSON.stringify({ answer: "Up to 5 GB, in the formats the help center lists.", used: [1] })
           : system.startsWith("You draft the first version of a creator's store")

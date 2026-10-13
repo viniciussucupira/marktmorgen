@@ -176,12 +176,13 @@ async function main(): Promise<void> {
   customersByEmail.set("hal@example.com", "cus_Hal000001");
   liveSubs.set("cus_Hal000001", [{ status: "trialing", metadata: { store: "harbor", product: club.product.id } }]);
   const sentBefore = emails.length;
-  const early = await sendMoveReminders(Date.now() + 30_000, now + 16 * DAY * 1000);
+  // From the renewal date itself, so the hour the test runs at changes nothing.
+  const early = await sendMoveReminders(Date.now() + 30_000, (in20 - 4 * DAY) * 1000);
   is("nothing before its day", [early.sent, emails.length], [0, sentBefore]);
-  const reminded = await sendMoveReminders(Date.now() + 30_000, now + (17 * DAY + 3_600) * 1000);
+  const reminded = await sendMoveReminders(Date.now() + 30_000, (in20 - 3 * DAY + 3_600) * 1000);
   is("Ada is reminded; Hal, who kept it, is not", [reminded.sent, reminded.kept, emails.slice(sentBefore).map((e) => [e.to].flat()[0])], [1, 1, ["ada@example.com"]]);
   is("the reminder says it is the only one", emails.at(-1)?.text.includes("This is the only reminder."), true);
-  const again = await sendMoveReminders(Date.now() + 30_000, now + 18 * DAY * 1000);
+  const again = await sendMoveReminders(Date.now() + 30_000, (in20 - 2 * DAY) * 1000);
   is("and it is sent once", [again.sent, emails.length], [0, sentBefore + 1]);
   is("the studio counts who was invited and who kept it", await moveCounts(store), { invited: 3, kept: 1 });
 
