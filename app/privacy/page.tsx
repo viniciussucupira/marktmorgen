@@ -307,7 +307,11 @@ export default function PrivacyPage() {
           creator&apos;s own Stripe account. We read them from there to show
           the creator the reasons added up and the latest words, without the
           member&apos;s name or address beside them, and keep that reading for
-          ten minutes.
+          ten minutes. When the creator asks for the month&apos;s summary of
+          what customers say, those words, with any email address, phone
+          number or web address in them taken out, go to Anthropic&apos;s
+          model to be sorted into themes, and the summary is kept for about
+          two months.
         </p>
         <p>
           <strong className="text-black">
@@ -1411,7 +1415,13 @@ export default function PrivacyPage() {
             nothing about who asked. When a creator asks for a draft reply to
             a student&apos;s assignment, it receives the assignment and what
             the student wrote for it, never the student&apos;s name, address
-            or file;
+            or file. When a creator asks for the month&apos;s summary of what
+            their customers say, it receives the words members wrote when
+            cancelling, questions a page could not answer, the words of
+            reviews and the words searched for on the store that found
+            nothing, from the last 90 days, never with a name, and with any
+            email address, phone number or web address in them taken out
+            first;
           </li>
           <li>
             <strong className="text-black">Unsplash</strong>, which serves the

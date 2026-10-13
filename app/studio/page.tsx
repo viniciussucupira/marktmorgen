@@ -94,6 +94,7 @@ import { LeaveEditor } from "@/components/leave-editor";
 import { NudgeEditor } from "@/components/nudge-editor";
 import { nudgesThisMonth } from "@/lib/member-nudge";
 import { YearlyAskEditor } from "@/components/yearly-ask-editor";
+import { readVoice } from "@/lib/customer-voice";
 import { yearlyAsksThisMonth } from "@/lib/yearly-ask";
 import { activeYearly } from "@/lib/yearly-price";
 import { WinBackEditor } from "@/components/winback-editor";
@@ -1130,6 +1131,7 @@ export default async function StudioPage({
                   canSetHeard={may("settings")}
                   canSetAttribution={may("settings")}
                   canAsk={isAiConfigured()}
+                  voice={store ? await readVoice(store).catch(() => null) : undefined}
                   insightContext={{
                     storeUrl: current ? storeBase(current) : undefined,
                     reminders: current ? current.recovery.enabled : undefined,

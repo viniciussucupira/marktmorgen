@@ -566,6 +566,16 @@ try {
     ], [true, true, false]);
     await asking.getByRole("button", { name: /Show these numbers, last 30 days/ }).click();
     is("and opens the panel at those days", await studio.getByRole("group", { name: "Period" }).locator("button[aria-pressed=true]").innerText(), "30 days");
+    // What customers are saying (lib/customer-voice.ts): read once a month, from the store's own lists.
+    const voice = studio.locator("[data-customer-voice]");
+    is("what customers are saying is offered under the numbers", await voice.count(), 1);
+    await voice.getByRole("button", { name: /Sum up what customers said|Read / }).click();
+    await voice.locator("[data-voice-theme], [role=status]").first().waitFor({ timeout: 30_000 });
+    const voiceWords = await words(voice);
+    is("sorted into themes with the customers' own words, or said plainly that there is not enough yet", [
+      /Wants it in another format/.test(voiceWords) || /Not enough yet/.test(voiceWords),
+      /Made up from/.test(voiceWords),
+    ], [true, false]);
     // "Worth knowing", where it speaks, carries a step for each sentence it can (lib/insights.ts).
     const worth = studio.locator("[role=region][aria-labelledby=numbers-insights]");
     if (await worth.count()) {

@@ -87,6 +87,8 @@ export type Sub = {
 export { LEAVE_NAMES, LEAVE_REASONS, type LeaveReason, isLeaveReason };
 const COMMENT_LENGTH = 400;
 const MAX_COMMENTS = 10;
+/** The sentences of the last 90 days kept for the monthly summary of what customers say (lib/customer-voice.ts). */
+const MAX_RECENT_COMMENTS = 60;
 
 export type Leaving = {
   /** Members who asked to cancel in the last year, by their own choice (not a failed payment). */
@@ -99,6 +101,8 @@ export type Leaving = {
   paymentFailed: number;
   /** The latest sentences members wrote, newest first. */
   comments: { at: number; reason: string; text: string }[];
+  /** Every sentence of the last 90 days, newest first, up to 60 (lib/customer-voice.ts). */
+  recent?: { at: number; reason: string; text: string }[];
   /** The words of the creator's own reasons among the answers, by id. */
   own: Record<string, string>;
 };
@@ -130,7 +134,9 @@ export function leavingFrom(subs: Sub[], currency: string, now: number): Leaving
   out.reasons = [...by.entries()]
     .map(([reason, r]) => ({ reason, members: r.members, mrr: Math.round(r.mrr) }))
     .sort((a, b) => b.members - a.members || b.mrr - a.mrr);
-  out.comments = out.comments.sort((a, b) => b.at - a.at).slice(0, MAX_COMMENTS);
+  out.comments = out.comments.sort((a, b) => b.at - a.at);
+  out.recent = out.comments.filter((c) => c.at >= now - 90 * DAY).slice(0, MAX_RECENT_COMMENTS);
+  out.comments = out.comments.slice(0, MAX_COMMENTS);
   return out;
 }
 
