@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { moveTwoStep } from "@/lib/two-step";
 import { originFrom } from "@/lib/request-origin";
 import {
   endAllSessions,
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
       moveMemberships(moved.from, moved.to),
       movePasskeys(moved.from, moved.to),
       moveDevices(moved.from, moved.to),
+      moveTwoStep(moved.from, moved.to),
     ]).catch((error) => console.error("moving what belongs to the account failed", error));
     // Phones follow once the memberships have: an owner's stay the owner's,
     // a team member's become the new address's (lib/phone-alerts.ts).

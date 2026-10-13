@@ -1,0 +1,67 @@
+import type { NextRequest } from "next/server";
+import { SESSION_COOKIE, emailForSession, isFreshSession } from "@/lib/auth";
+import { isRedisConfigured } from "@/lib/redis";
+import { canSeal } from "@/lib/secret-box";
+import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { finishSetup, replaceCodes, startSetup, turnOff } from "@/lib/two-step";
+
+/** Changes one account may ask for in an hour: most of them email the account. */
+const CHANGES_PER_HOUR = 30;
+
+/**
+ * The signed-in person's two-step login (lib/two-step.ts):
+ *
+ *   { action: "start" }            a secret for the app, with its QR address;
+ *                                  needs a login from the last 15 minutes
+ *   { action: "finish", code }     turns it on with a right code from the app;
+ *                                  answers the recovery codes, this once
+ *   { action: "off", code }        turns it off, with a right code
+ *   { action: "codes", code }      ten new recovery codes, with a right code
+ *
+ * It belongs to the person, not to a store, like their passkeys.
+ */
+export async function POST(request: NextRequest) {
+  if (fromAnotherSite(request)) return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+  const session = request.cookies.get(SESSION_COOKIE)?.value ?? "";
+  const email = await emailForSession(session);
+  if (!email) return Response.json({ ok: false, error: "signed_out" }, { status: 401 });
+  if (!isRedisConfigured() || !canSeal()) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
+
+  let body: Record<string, unknown>;
+  try {
+    const parsed: unknown = await (await limited(request, 2_000)).json();
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("shape");
+    body = parsed as Record<string, unknown>;
+  } catch {
+    return Response.json({ ok: false, error: "invalid" }, { status: 400 });
+  }
+  if (!(await withinLimit("two-step-change", email, CHANGES_PER_HOUR, 60 * 60))) {
+    return Response.json({ ok: false, error: "rate_limited" }, { status: 429 });
+  }
+  const code = typeof body.code === "string" ? body.code.slice(0, 40) : "";
+  const refuse = (error: string, status = 400) => Response.json({ ok: false, error }, { status });
+
+  try {
+    if (body.action === "start" || body.action === "finish") {
+      if (!(await isFreshSession(session))) return refuse("reauth", 403);
+      if (body.action === "start") {
+        const started = await startSetup(email, session);
+        return started === "already" ? refuse("already", 409) : Response.json({ ok: true, ...started }, { headers: { "Cache-Control": "no-store" } });
+      }
+      const done = await finishSetup(email, session, code);
+      return typeof done === "string" ? refuse(done) : Response.json({ ok: true, codes: done.codes }, { headers: { "Cache-Control": "no-store" } });
+    }
+    if (body.action === "off") {
+      const done = await turnOff(email, code);
+      return done === "app" || done === "recovery" ? Response.json({ ok: true }) : refuse(done, done === "limited" ? 429 : 400);
+    }
+    if (body.action === "codes") {
+      const done = await replaceCodes(email, code);
+      return typeof done === "object" ? Response.json({ ok: true, codes: done.codes }, { headers: { "Cache-Control": "no-store" } }) : refuse(done, done === "limited" ? 429 : 400);
+    }
+    return refuse("invalid");
+  } catch (error) {
+    console.error("changing two-step login failed", error);
+    return refuse("server_error", 500);
+  }
+}
