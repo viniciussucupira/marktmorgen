@@ -84,6 +84,6 @@ const html = renderToStaticMarkup(createElement(RevenueQuality, { data, range: "
 is("negative result is rendered and is not called profit", [html.includes("-$20"), html.includes("it is not profit"), html.includes("renewals")], [true, true, true]);
 const missing = renderToStaticMarkup(createElement(RevenueQuality, { data: { ...data, cashflowComplete: false }, range: "d7", spends }));
 is("failed reads have a visible explanation", missing.includes("waits for complete figures"), true);
-const cohortHtml = renderToStaticMarkup(createElement(BuyerChannelsPanel, { window: cohorts.d90, currency: "usd", historyPartial: false }));
+const cohortHtml = renderToStaticMarkup(createElement(BuyerChannelsPanel, { window: cohorts.d90, currency: "usd", historyPartial: false, period: { from: "2026-07-16", to: "2026-10-13" } }));
 is("young cohorts show no zero retention claim", [cohortHtml.includes("Not enough time observed"), cohortHtml.includes("1 of 2 observed for 30 days"), /@/.test(cohortHtml)], [true, true, false]);
 done();

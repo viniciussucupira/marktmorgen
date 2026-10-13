@@ -5,6 +5,9 @@ import { channelName } from "@/lib/channel-names";
 import { formatMoney } from "@/lib/money";
 import { spendBy, type AdSpend } from "@/lib/ad-spend-rules";
 
+import { cashflowReport, buyerChannelReport, type ReportPeriod } from "@/lib/channel-reports";
+import { ReportDownload } from "@/components/report-download";
+
 const count = (n: number) => n.toLocaleString("en-US");
 
 export function RevenueQuality({ data, range, spends }: { data: StatsData; range: "d7" | "d30" | "d90"; spends: AdSpend[] }) {
@@ -50,12 +53,13 @@ export function RevenueQuality({ data, range, spends }: { data: StatsData; range
           </tr>)}</tbody>
         </table>
       </div>
+      <ReportDownload csv={cashflowReport(rows, { from: days[0].date, to: days[days.length - 1].date, currency: data.currency })} filename={`marktmorgen-channel-cashflow-${days[0].date}-to-${days[days.length - 1].date}.csv`}>Download channel results</ReportDownload>
       <p className="mt-2 text-xs text-ink-soft">Refunds belong to the days they were recorded, even when the purchase was earlier; pending refunds are included. A channel&apos;s organic sales count too. This does not prove that advertising caused those sales or that increasing its budget would help.</p>
     </section>
   );
 }
 
-export function BuyerChannelsPanel({ window, currency, historyPartial }: { window: BuyerChannelWindow; currency: string; historyPartial: boolean }) {
+export function BuyerChannelsPanel({ window, currency, historyPartial, period }: { window: BuyerChannelWindow; currency: string; historyPartial: boolean; period: Omit<ReportPeriod, "currency"> }) {
   if (!window.rows.length && !window.unidentifiedOrders) return null;
   const share = (part: number, whole: number) => whole ? `${Math.round(part / whole * 100)}%` : "—";
   return (
@@ -81,6 +85,7 @@ export function BuyerChannelsPanel({ window, currency, historyPartial }: { windo
           </tr>)}</tbody>
         </table>
       </div> : null}
+      <ReportDownload csv={buyerChannelReport(window, historyPartial, { ...period, currency })} filename={`marktmorgen-buyer-channels-${period.from}-to-${period.to}.csv`}>Download buyer channels</ReportDownload>
       <p className="mt-2 text-xs text-ink-soft">The history covers up to 180 days, so a first observed purchase may not be somebody&apos;s first ever. Only buyers with a full 30 days of observation enter the 30-day rate. Revenue is before refunds and fees, not predicted lifetime value. No buyer&apos;s identity is included in this table.</p>
       {window.unidentifiedOrders > 0 ? <p className="mt-1 text-xs text-ink-soft">{count(window.unidentifiedOrders)} {window.unidentifiedOrders === 1 ? "order could" : "orders could"} not be linked to a buyer and {window.unidentifiedOrders === 1 ? "is" : "are"} left out.</p> : null}
     </section>
