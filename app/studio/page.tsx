@@ -95,6 +95,7 @@ import { NudgeEditor } from "@/components/nudge-editor";
 import { nudgesThisMonth } from "@/lib/member-nudge";
 import { YearlyAskEditor } from "@/components/yearly-ask-editor";
 import { readVoice } from "@/lib/customer-voice";
+import { readMarks } from "@/lib/auto-marks";
 import { yearlyAsksThisMonth } from "@/lib/yearly-ask";
 import { activeYearly } from "@/lib/yearly-price";
 import { WinBackEditor } from "@/components/winback-editor";
@@ -590,6 +591,12 @@ async function tierCandidates(store: Store): Promise<{ id: string; title: string
   return listings.filter(canTier).map((p) => ({ id: p.id, title: p.title, words: tierWords(store, p) }));
 }
 
+/** The first and last days the numbers' chart can show, in UTC: the 90 days up to today. */
+function chartDays(): [string, string] {
+  const now = Date.now();
+  return [new Date(now - 89 * 86_400_000).toISOString().slice(0, 10), new Date(now).toISOString().slice(0, 10)];
+}
+
 export default async function StudioPage({
   searchParams,
 }: {
@@ -802,7 +809,7 @@ export default async function StudioPage({
   if (current && paidList && paidList.length) after(() => catchUpBookings(current, paidList, SITE_URL));
   // Visits from Redis and sales from the creator's Stripe, read side by side,
   // with the creator's own notes on the chart and what they spent on ads.
-  const [visits, salesRead, statsNotes, adSpends, heardIsOff, trouble] = current && may("stats")
+  const [visits, salesRead, statsNotes, adSpends, heardIsOff, trouble, autoMarks] = current && may("stats")
     ? await Promise.all([
         readStats(current).catch(() => null),
         current.stripeAccountId
@@ -815,8 +822,10 @@ export default async function StudioPage({
         readSpends(current.statsId).catch(() => []),
         heardOff(current.handle).catch(() => false),
         readTrouble(current.statsId).catch(() => ({ week: 0, last: null })),
+        // What the store recorded on its own: emails sent, products added, sales (lib/auto-marks.ts).
+        readMarks(current, ...chartDays()).catch(() => []),
       ])
-    : [null, null, [], [], false, { week: 0, last: null }];
+    : [null, null, [], [], false, { week: 0, last: null }, []];
   const statListings = current && visits && salesRead ? await readListings(current, [...new Set([...productsInStats(current, visits, salesRead.value), ...reachProducts(visits)])]) : [];
   const counted =
     current && visits && salesRead
@@ -1126,6 +1135,7 @@ export default async function StudioPage({
                   data={numbers}
                   canExport={may("export")}
                   notes={statsNotes}
+                  marks={autoMarks}
                   spends={adSpends}
                   askHeard={!heardIsOff}
                   canSetHeard={may("settings")}

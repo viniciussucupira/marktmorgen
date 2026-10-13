@@ -121,3 +121,30 @@ export function endsWords(ends: number, nowSeconds: number): string {
 export function saleClock(): number {
   return Math.floor(Date.now() / 1000);
 }
+
+/** A sale that ran before the one set now, kept for the marks on the numbers (lib/auto-marks.ts). */
+export type PastSale = { name: string; percent: number; starts: number; ends: number };
+export const MAX_PAST_SALES = 20;
+
+export function parsePastSales(raw: unknown): PastSale[] {
+  if (!Array.isArray(raw)) return [];
+  const out: PastSale[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const v = item as Record<string, unknown>;
+    const percent = Number(v.percent);
+    const starts = Math.floor(Number(v.starts));
+    const ends = Math.floor(Number(v.ends));
+    if (!(percent > 0 && percent < 100) || !(starts > 0) || !(ends > starts)) continue;
+    out.push({ name: typeof v.name === "string" ? v.name.replace(/\s+/g, " ").trim().slice(0, MAX_SALE_NAME) : "", percent, starts, ends });
+  }
+  return out.slice(-MAX_PAST_SALES);
+}
+
+/** The past sales once `next` replaces `current` at `now` (seconds): the one replaced is kept if it had begun. Pure. */
+export function withPastSale(past: PastSale[], current: StoreSale, next: StoreSale, now: number): PastSale[] {
+  if (!(current.percent > 0) || current.starts > now || (next.starts === current.starts && next.percent === current.percent)) return past;
+  const ended = { name: current.name, percent: current.percent, starts: current.starts, ends: Math.min(current.ends, now) };
+  if (!(ended.ends > ended.starts)) return past;
+  return [...past.filter((p) => p.starts !== ended.starts), ended].slice(-MAX_PAST_SALES);
+}

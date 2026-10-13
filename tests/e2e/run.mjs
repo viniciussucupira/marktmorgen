@@ -566,6 +566,21 @@ try {
     ], [true, true, false]);
     await asking.getByRole("button", { name: /Show these numbers, last 30 days/ }).click();
     is("and opens the panel at those days", await studio.getByRole("group", { name: "Period" }).locator("button[aria-pressed=true]").innerText(), "30 days");
+    // Any dates (lib/stats.ts, readRange), and when buyers buy (lib/buying-hours.ts).
+    await studio.getByRole("button", { name: "Any dates", exact: true }).click();
+    const anyDates = studio.locator("[data-custom-range]");
+    await anyDates.getByRole("button", { name: "Show these days" }).click();
+    await anyDates.locator("[data-range-result]").waitFor({ timeout: 30_000 });
+    const rangeWords = await words(anyDates.locator("[data-range-result]"));
+    is("any dates are read, set beside the days before", [/Visitors \d/i.test(rangeWords), /Revenue \$/i.test(rangeWords), /14 days/.test(rangeWords), /the days before/.test(rangeWords)], [true, true, true, true]);
+    // Inside the days the boxes allow, but the wrong way round.
+    await anyDates.locator("#range-from").fill(new Date().toISOString().slice(0, 10));
+    await anyDates.locator("#range-to").fill(new Date(Date.now() - 2 * 86_400_000).toISOString().slice(0, 10));
+    await anyDates.getByRole("button", { name: "Show these days" }).click();
+    await anyDates.getByRole("alert").waitFor({ timeout: 15_000 });
+    is("and dates out of order are said plainly", await words(anyDates.getByRole("alert")), "The start date comes after the end date. Swap them.");
+    const hoursBlock = studio.locator("[data-buying-hours]");
+    is("when buyers buy, by day and by hour, in the reader's own time", [await hoursBlock.count(), /in [A-Za-z_/]+ time/.test(await words(hoursBlock))], [1, true]);
     // What customers are saying (lib/customer-voice.ts): read once a month, from the store's own lists.
     const voice = studio.locator("[data-customer-voice]");
     is("what customers are saying is offered under the numbers", await voice.count(), 1);
@@ -1509,14 +1524,14 @@ try {
     is("a heading asks for no address", await studio.locator("#link-url").count(), 0);
     await studio.getByRole("button", { name: "Add it" }).click();
     await studio.getByText("Link added.").first().waitFor({ timeout: 30_000 });
-    const headingRow = studio.locator("li", { hasText: "Watch first" }).filter({ hasText: "Heading" });
+    const headingRow = studio.locator("li:not([data-mark])", { hasText: "Watch first" }).filter({ hasText: "Heading" });
     for (let n = 0; n < 2; n++) {
       await headingRow.getByRole("button", { name: "Move up" }).click();
       await studio.waitForTimeout(1500);
     }
     is("a link may have its own picture; a heading or a video played on the page has none", [
-      await studio.locator("li", { hasText: "Launch week offer" }).getByRole("button", { name: "Add a picture" }).count(),
-      await studio.locator("li", { hasText: "Watch the trailer" }).getByRole("button", { name: "Add a picture" }).count(),
+      await studio.locator("li:not([data-mark])", { hasText: "Launch week offer" }).getByRole("button", { name: "Add a picture" }).count(),
+      await studio.locator("li:not([data-mark])", { hasText: "Watch the trailer" }).getByRole("button", { name: "Add a picture" }).count(),
       await headingRow.getByRole("button", { name: "Add a picture" }).count(),
     ], [1, 0, 0]);
     is("the studio says what each link does", [
@@ -1690,7 +1705,7 @@ try {
   {
     await open(studio, `${LOCAL}/studio/reviews?view=all`);
     // The first review, found by what stays on it while it is answered: its order.
-    const row = studio.locator("li", { hasText: /Order (cs|pi)_/ }).first();
+    const row = studio.locator("li:not([data-mark])", { hasText: /Order (cs|pi)_/ }).first();
     await row.getByRole("button", { name: /^(Reply|Edit your reply)$/ }).click();
     await row.getByRole("button", { name: /Draft (it|another) with AI/ }).click();
     await row.getByText("Drafted. Read it, make it yours, then post it.").waitFor({ timeout: 30_000 });
@@ -1786,7 +1801,7 @@ try {
     is("one typed the European way, sent with Enter, is that amount", services.checkouts().at(-1).amount_total, 750);
     await fan.close();
     await open(studio, `${LOCAL}/studio`);
-    const listed = studio.locator("li", { hasText: "Support from your store page" }).first();
+    const listed = studio.locator("li:not([data-mark])", { hasText: "Support from your store page" }).first();
     is("the creator sees it with the sales, as support with nothing to send", [await listed.count(), (await words(listed)).includes("Given by"), await listed.getByRole("button").count()], [1, true, 0]);
   }
 
@@ -2227,7 +2242,7 @@ try {
     const shown = page.locator("#reviews .rv-photo img");
     is("the photo is shown with its review, named for whoever took it", [await shown.count(), await shown.first().getAttribute("alt")], [1, "Photo from Reader 3"]);
     await open(studio, `${LOCAL}/studio/reviews?view=all`);
-    const row = studio.locator("li", { hasText: "My Sunday mornings smell like bread now." }).first();
+    const row = studio.locator("li:not([data-mark])", { hasText: "My Sunday mornings smell like bread now." }).first();
     is("the studio shows it too", await row.getByRole("img", { name: "The buyer's photo" }).count(), 1);
     await row.getByRole("button", { name: "Take the photo off" }).click();
     await studio.getByText("Photo taken off the review.").first().waitFor({ timeout: 15_000 });
@@ -2324,7 +2339,7 @@ try {
     is("not beside a free trial", await refused.count(), 1);
     await studio.getByLabel(/^Free trial/).fill("");
     await studio.getByRole("button", { name: "Add it" }).click();
-    const row = studio.locator("li", { hasText: "Supper Club" }).filter({ hasText: "Introductory price, 3 months" });
+    const row = studio.locator("li:not([data-mark])", { hasText: "Supper Club" }).filter({ hasText: "Introductory price, 3 months" });
     await row.first().waitFor({ timeout: 30_000 });
     // Its id, from the link to its page in its row of the studio.
     const club = await studio.evaluate(() => {
@@ -2372,7 +2387,7 @@ try {
     await studio.getByLabel(/^Or pay yearly/).fill("200");
     is("the studio says what paying yearly saves", (await words(studio.locator("[id^=product-yearly-hint-]").first())).includes("saves $40"), true);
     await studio.getByRole("button", { name: "Add it" }).click();
-    await studio.locator("li", { hasText: "Recipe Club" }).filter({ hasText: "Or yearly" }).first().waitFor({ timeout: 30_000 });
+    await studio.locator("li:not([data-mark])", { hasText: "Recipe Club" }).filter({ hasText: "Or yearly" }).first().waitFor({ timeout: 30_000 });
     const club = await studio.evaluate(() => {
       const link = [...document.querySelectorAll("a[href*='/p/']")].find((a) => a.closest("li")?.textContent?.includes("Recipe Club"));
       return link ? link.getAttribute("href").split("/p/")[1].split(/[?#]/)[0].split("-").pop() : "";
@@ -2561,7 +2576,7 @@ try {
     await studio.getByLabel("What you are selling").fill("Sourdough Guide");
     await studio.getByLabel("Price", { exact: true }).fill("27");
     await studio.getByRole("button", { name: "Add it" }).click();
-    await studio.locator("li", { hasText: "Sourdough Guide" }).first().waitFor({ timeout: 30_000 });
+    await studio.locator("li:not([data-mark])", { hasText: "Sourdough Guide" }).first().waitFor({ timeout: 30_000 });
     const guide = await studio.evaluate(() => {
       const link = [...document.querySelectorAll("a[href*='/p/']")].find((a) => a.closest("li")?.textContent?.includes("Sourdough Guide"));
       return link ? link.getAttribute("href").split("/p/")[1].split(/[?#]/)[0].split("-").pop() : "";
@@ -2658,7 +2673,7 @@ try {
     const lessonId = (outlined.course?.modules ?? []).flatMap((m) => m.lessons).find((l) => l.title === "Your first starter")?.id ?? "";
     await post("/api/store/course", { action: "body", id: bread, lessonId, text: "Mix equal weights of flour and water. Feed it every day. It is ready when it doubles." });
     await open(studio, `${LOCAL}/studio/course/${bread}`);
-    await studio.locator("li", { hasText: "Your first starter" }).getByRole("button", { name: "Edit lesson" }).first().click();
+    await studio.locator("li:not([data-mark])", { hasText: "Your first starter" }).getByRole("button", { name: "Edit lesson" }).first().click();
     await studio.getByRole("button", { name: "Add a quiz" }).click();
     const quiz = studio.getByRole("form", { name: "Quiz" });
     await quiz.getByText("Draft questions with AI").click();
@@ -2743,7 +2758,7 @@ try {
     await second.getByLabel("Send it to").selectOption("lead");
     await second.getByLabel("Everyone else").selectOption("end");
     await form.getByRole("button", { name: "Save the sequence" }).click();
-    const row = studio.locator("li", { hasText: "Launch with conditions" }).first();
+    const row = studio.locator("li:not([data-mark])", { hasText: "Launch with conditions" }).first();
     await row.waitFor({ timeout: 30_000 });
     is("the list says when it ends and who each email is for", [
       await words(row.locator("[data-flow-goal]")),
@@ -2775,7 +2790,7 @@ try {
     await form.locator("ol > li input[maxlength='150']").nth(0).fill("The course is open");
     await form.locator("ol > li textarea").nth(0).fill("Hello,\n\nThirty dinners.");
     await form.getByRole("button", { name: "Save the sequence" }).click();
-    const offerRow = studio.locator("li", { hasText: "The offer" }).first();
+    const offerRow = studio.locator("li:not([data-mark])", { hasText: "The offer" }).first();
     await offerRow.waitFor({ timeout: 30_000 });
     is("a sequence that starts with a label says so", (await words(offerRow)).includes("Starts when a sequence gives someone the label “interested”"), true);
 
@@ -2794,7 +2809,7 @@ try {
     await third.locator("[data-step-kind]").selectOption("start");
     is("and another sequence can be started", await third.getByLabel("The sequence to start").locator("option").allTextContents(), ["The offer"]);
     await form.getByRole("button", { name: "Save the sequence" }).click();
-    const row = studio.locator("li", { hasText: "Welcome that hands on" }).first();
+    const row = studio.locator("li:not([data-mark])", { hasText: "Welcome that hands on" }).first();
     await row.waitFor({ timeout: 30_000 });
     const listed = await words(row.locator("[data-flow-steps]"));
     is("the list says what each step does, and for whom", [
@@ -2810,7 +2825,7 @@ try {
     ], ["tag", "interested", "start"]);
     await form.getByRole("button", { name: "Close" }).click();
     for (const name of ["Welcome that hands on", "The offer"]) {
-      const gone = studio.locator("li", { hasText: name }).first();
+      const gone = studio.locator("li:not([data-mark])", { hasText: name }).first();
       await gone.getByRole("button", { name: "Remove" }).click();
       await gone.waitFor({ state: "detached", timeout: 30_000 });
     }
@@ -2953,7 +2968,7 @@ try {
     const lessons = (outlined.course?.modules ?? []).flatMap((m) => m.lessons);
     const lessonId = lessons.find((l) => l.title === "Your opening line")?.id ?? "";
     await open(studio, `${LOCAL}/studio/course/${workshop}`);
-    await studio.locator("li", { hasText: "Your opening line" }).getByRole("button", { name: "Edit lesson" }).first().click();
+    await studio.locator("li:not([data-mark])", { hasText: "Your opening line" }).getByRole("button", { name: "Edit lesson" }).first().click();
     await studio.getByRole("button", { name: "Add an assignment" }).click();
     const form = studio.getByRole("form", { name: "Assignment" });
     await form.getByLabel("What the student does").fill("Write the first line of your own sales page, and say who it is for.");
@@ -3349,7 +3364,7 @@ try {
     await open(page, local(link));
     await Promise.all([page.waitForLoadState("networkidle"), page.getByRole("button", { name: "Open my affiliate page" }).click()]);
     await open(studio, `${LOCAL}/studio/affiliates`);
-    await studio.locator("li", { hasText: fan }).getByRole("button", { name: "Approve" }).click();
+    await studio.locator("li:not([data-mark])", { hasText: fan }).getByRole("button", { name: "Approve" }).click();
     await studio.getByText("Affiliate approved.").first().waitFor({ timeout: 30_000 });
     await open(page, `${LOCAL}/@localshop/affiliates`);
     const kit = page.locator("[data-kit]");

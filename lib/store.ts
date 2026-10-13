@@ -66,7 +66,7 @@ import { type LeaveSetting, NO_LEAVE, parseLeave } from "@/lib/leave-rules";
 import { NO_NUDGE, type Nudge, parseNudge } from "@/lib/member-health-rules";
 import { NO_YEARLY_ASK, type YearlyAsk, parseYearlyAsk } from "@/lib/yearly-switch-rules";
 import { type WinBack, NO_WINBACK, parseWinBack } from "@/lib/winback";
-import { type StoreSale, NO_SALE, parseSale } from "@/lib/store-sale";
+import { type PastSale, type StoreSale, NO_SALE, parsePastSales, parseSale, withPastSale } from "@/lib/store-sale";
 import { parseTiers } from "@/lib/tier-rules";
 import { ENDED_INDEX } from "@/lib/plan-standing";
 import { SHARING_INDEX } from "@/lib/platform-share";
@@ -520,6 +520,8 @@ export type Store = {
   winback: WinBack;
   /** A sale across the store, with its start and end (lib/store-sale.ts). None until the creator sets one. */
   sale: StoreSale;
+  /** Sales that ran before the one set now, for the marks on the numbers (lib/auto-marks.ts). */
+  pastSales: PastSale[];
   /** Memberships a member can switch between, 2 to 6 product ids, or none (lib/tier-rules.ts). */
   tiers: string[];
   /** The store's community, once the creator has made one (lib/community.ts). */
@@ -885,6 +887,7 @@ function parseStore(raw: unknown): Store | null {
       chatSales: value.chatSales === true,
       winback: parseWinBack(value.winback),
       sale: parseSale(value.sale),
+      pastSales: parsePastSales(value.pastSales),
       tiers: parseTiers(value.tiers),
       // Stores written before communities existed simply have none.
       community: parseCommunityRef(value.community),
@@ -1081,6 +1084,7 @@ async function freshStore(fields: {
     chatSales: false,
     winback: { ...NO_WINBACK },
     sale: { ...NO_SALE },
+    pastSales: [],
     tiers: [],
     community: null,
     affiliates: parseAffiliateSetting(null),
@@ -2316,7 +2320,10 @@ export async function setStoreSale(
   email: string,
   sale: StoreSale,
 ): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" }> {
-  const next = await patchStore(email, () => ({ sale: parseSale(sale) }));
+  const next = await patchStore(email, (current) => {
+    const parsed = parseSale(sale);
+    return { sale: parsed, pastSales: withPastSale(current.pastSales ?? [], current.sale, parsed, Math.floor(Date.now() / 1000)) };
+  });
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 

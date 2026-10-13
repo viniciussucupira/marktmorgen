@@ -773,6 +773,8 @@ export type SalesStats = {
   buyers?: BuyerNumbers;
   /** Full price beside each kind of discount over the 90 days (lib/discount-impact.ts); null with no discounted sale. */
   discounts?: { rows: DiscountRow[] | null; refundsRead: boolean };
+  /** When buyers bought over the 90 days: checkouts by hour of the week in UTC, Sunday 0:00 first (hoursOfWeek). */
+  hours?: { sales: number[]; cents: number[] };
 };
 
 /**
@@ -1280,6 +1282,7 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   }
   out.channelDays = channelDays;
   out.buyers = buyersFrom(read, store.currency, now);
+  out.hours = hoursOfWeek(own.filter((sale) => !sale.upsell));
   out.discounts = {
     rows: discountImpact(read, new Set((refundRows ?? []).map((r) => r.paymentIntent).filter(Boolean)), store.currency, now, STATS_DAYS),
     refundsRead: refundRows !== null,
@@ -1289,6 +1292,172 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
     d30: stretch(dayKey(now - 59 * 86400_000), cut30),
     d90: stretch(dayKey(now - (2 * STATS_DAYS - 1) * 86400_000), cut90),
   };
+  return out;
+}
+
+/** Checkouts by hour of the week in UTC, Sunday 0:00 first, 168 hours: how many and the money. Pure. */
+export function hoursOfWeek(sales: { created: number; cents: number }[]): { sales: number[]; cents: number[] } {
+  const out = { sales: new Array<number>(168).fill(0), cents: new Array<number>(168).fill(0) };
+  for (const sale of sales) {
+    const at = new Date(sale.created);
+    const hour = at.getUTCDay() * 24 + at.getUTCHours();
+    out.sales[hour] += 1;
+    out.cents[hour] += sale.cents;
+  }
+  return out;
+}
+
+/** Any stretch of days the creator picks, as far back as the days are kept (added 12 October 2026). */
+export type RangeData = {
+  from: string;
+  to: string;
+  currency: string;
+  days: { date: string; visitors: number; views: number; checkouts: number; sales: number; cents: number }[];
+  totals: { visitors: number; views: number; checkouts: number; sales: number; cents: number };
+  /** The same number of days just before, where they are kept; null where they are not. */
+  before: { visitors: number; views: number; checkouts: number; sales: number; cents: number } | null;
+  /** Visits by channel, with the sales credited to it, the biggest first. */
+  channels: { source: string; visits: number; sales: number; cents: number }[];
+  /** Each product's page views, checkouts and sales, the biggest first. */
+  products: { id: string; views: number; checkouts: number; sales: number; cents: number }[];
+  sales: "ok" | "none" | "error";
+  /** More sales than one reading covers: the oldest are missing. */
+  partial: boolean;
+  /** Sales in another currency, left out of the sums. */
+  elsewhere: number;
+};
+
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Whether a stretch can be read: real dates, in order, not in the future, and inside the kept days. Pure. */
+export function rangeProblem(from: string, to: string, now = Date.now()): "dates" | "order" | "future" | "kept" | null {
+  if (!DATE.test(from) || !DATE.test(to) || Number.isNaN(Date.parse(`${from}T00:00:00Z`)) || Number.isNaN(Date.parse(`${to}T00:00:00Z`))) return "dates";
+  if (dayKey(Date.parse(`${from}T00:00:00Z`)) !== from || dayKey(Date.parse(`${to}T00:00:00Z`)) !== to) return "dates";
+  if (from > to) return "order";
+  if (to > dayKey(now)) return "future";
+  if (from < dayKey(now - (KEPT_DAYS - 1) * 86400_000)) return "kept";
+  return null;
+}
+
+const datesBetween = (from: string, to: string) => {
+  const out: string[] = [];
+  for (let at = Date.parse(`${from}T00:00:00Z`); out.length <= KEPT_DAYS; at += 86400_000) {
+    const day = dayKey(at);
+    if (day > to) break;
+    out.push(day);
+  }
+  return out;
+};
+
+/**
+ * A stretch of days the creator picks: the visits from the days kept (one
+ * read a day, and the people over the whole stretch in one command), and
+ * the sales from the creator's own Stripe account, as the 90 days are read.
+ * Beside it, the same number of days just before, where they are kept.
+ */
+export async function readRange(store: Store, from: string, to: string, now = Date.now()): Promise<RangeData | null> {
+  if (!store.statsId || !isRedisConfigured() || rangeProblem(from, to, now)) return null;
+  const statsId = store.statsId;
+  const dates = datesBetween(from, to);
+  const span = dates.length;
+  const beforeFrom = dayKey(Date.parse(`${from}T00:00:00Z`) - span * 86400_000);
+  const beforeTo = dayKey(Date.parse(`${from}T00:00:00Z`) - 86400_000);
+  const beforeKept = !rangeProblem(beforeFrom, beforeTo, now);
+  const beforeDates = beforeKept ? datesBetween(beforeFrom, beforeTo) : [];
+  const results = await redisPipeline([
+    ...dates.map((d) => ["HGETALL", countsKey(statsId, d)]),
+    ...dates.map((d) => ["PFCOUNT", visitorsKey(statsId, d)]),
+    ["PFCOUNT", ...dates.map((d) => visitorsKey(statsId, d))],
+    ...(beforeKept ? [["PFCOUNT", ...beforeDates.map((d) => visitorsKey(statsId, d))], ...beforeDates.map((d) => ["HMGET", countsKey(statsId, d), "v", "c"])] : []),
+  ]);
+  const tally = new Tally();
+  const days: RangeData["days"] = dates.map((date, i) => {
+    let views = 0;
+    let checkouts = 0;
+    for (const [field, n] of pairs(results[i])) {
+      if (field === "v") views = n;
+      else if (field === "c") checkouts = n;
+      tally.add(field, n);
+    }
+    return { date, visitors: Number(results[span + i]) || 0, views, checkouts, sales: 0, cents: 0 };
+  });
+  const window = tally.window(Number(results[2 * span]) || 0);
+  let before: RangeData["before"] = null;
+  if (beforeKept) {
+    const at = 2 * span + 1;
+    before = { visitors: Number(results[at]) || 0, views: 0, checkouts: 0, sales: 0, cents: 0 };
+    beforeDates.forEach((_, i) => {
+      const reply = results[at + 1 + i];
+      if (!Array.isArray(reply)) return;
+      before!.views += Number(reply[0]) || 0;
+      before!.checkouts += Number(reply[1]) || 0;
+    });
+  }
+
+  const out: RangeData = {
+    from,
+    to,
+    currency: store.currency,
+    days,
+    totals: { visitors: window.visitors, views: window.views, checkouts: window.checkouts, sales: 0, cents: 0 },
+    before,
+    channels: [],
+    products: [],
+    sales: store.stripeAccountId ? "ok" : "none",
+    partial: false,
+    elsewhere: 0,
+  };
+  const bySource = new Map<string, { source: string; visits: number; sales: number; cents: number }>();
+  for (const row of window.sources) bySource.set(row.name, { source: row.name, visits: row.visits, sales: 0, cents: 0 });
+  const byProduct = new Map<string, { id: string; views: number; checkouts: number; sales: number; cents: number }>();
+  const productRow = (id: string) => byProduct.get(id) ?? { id, views: 0, checkouts: 0, sales: 0, cents: 0 };
+  for (const [id, n] of Object.entries(window.viewsByProduct)) byProduct.set(id, { ...productRow(id), views: n });
+  for (const [id, n] of Object.entries(window.checkoutsByProduct)) byProduct.set(id, { ...productRow(id), checkouts: n });
+
+  if (store.stripeAccountId) {
+    const start = Date.parse(`${(before ? beforeFrom : from)}T00:00:00Z`);
+    const end = Date.parse(`${to}T00:00:00Z`) + 86400_000;
+    try {
+      const { sales, partial } = await readPaidSales(store, Math.floor(start / 1000), 20);
+      out.partial = partial && sales.length > 0 && sales[sales.length - 1].created > Date.parse(`${from}T00:00:00Z`);
+      const byDay = new Map(days.map((d) => [d.date, d]));
+      for (const sale of sales) {
+        if (sale.created >= end || sale.created < start) continue;
+        if (sale.currency !== store.currency) {
+          if (sale.created >= Date.parse(`${from}T00:00:00Z`)) out.elsewhere += 1;
+          continue;
+        }
+        const day = byDay.get(dayKey(sale.created));
+        if (!day) {
+          if (before) {
+            before.sales += 1;
+            before.cents += sale.cents;
+          }
+          continue;
+        }
+        day.sales += 1;
+        day.cents += sale.cents;
+        out.totals.sales += 1;
+        out.totals.cents += sale.cents;
+        if (!sale.upsell) {
+          const source = sale.source || "direct";
+          const row = bySource.get(source) ?? { source, visits: 0, sales: 0, cents: 0 };
+          row.sales += 1;
+          row.cents += sale.cents;
+          bySource.set(source, row);
+        }
+        if (sale.product) {
+          const row = productRow(sale.product);
+          byProduct.set(sale.product, { ...row, sales: row.sales + 1, cents: row.cents + sale.cents });
+        }
+      }
+    } catch (error) {
+      console.error("reading the sales of a stretch failed", error);
+      out.sales = "error";
+    }
+  }
+  out.channels = [...bySource.values()].sort((a, b) => b.cents - a.cents || b.visits - a.visits || a.source.localeCompare(b.source)).slice(0, 15);
+  out.products = [...byProduct.values()].sort((a, b) => b.cents - a.cents || b.views - a.views || a.id.localeCompare(b.id)).slice(0, 15);
   return out;
 }
 
@@ -1433,6 +1602,8 @@ export type StatsData = {
   buyers?: Record<"d7" | "d30" | "d90", BuyersWindow> | null;
   /** Full price beside each kind of discount over the 90 days (SalesStats.discounts). */
   discounts?: { rows: DiscountRow[] | null; refundsRead: boolean } | null;
+  /** Checkouts by hour of the week in UTC over the 90 days (SalesStats.hours); the browser turns them to its own time. */
+  hours?: { sales: number[]; cents: number[] } | null;
   /**
    * The biggest buyers of the 90 days, with their addresses: added by the
    * studio page only for whoever may read orders (lib/team-roles.ts), never
@@ -1677,6 +1848,7 @@ export function studioStats(
     channelDays: sales?.channelDays ?? {},
     buyers: sales?.buyers ? { d7: sales.buyers.d7, d30: sales.buyers.d30, d90: sales.buyers.d90 } : null,
     discounts: sales?.discounts ?? null,
+    hours: sales?.hours ?? null,
     reach: {
       d7: reachItems(store, w.d7.reach ?? {}, titles),
       d30: reachItems(store, w.d30.reach ?? {}, titles),
