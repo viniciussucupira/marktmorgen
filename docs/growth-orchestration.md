@@ -22,6 +22,10 @@ This is a configuration review, not a live checkout or delivery test. Actual sig
 
 When a review has issues or is incomplete, it offers navigation to products/delivery and the store pages. Only owners receive payment-connection and plan destinations. Links preserve the selected store query before the fragment. These are navigation links; no subscription, payment connection, product or page is changed by clicking them. Destination routes keep their own permission checks.
 
+## Unsaved CRM work
+
+The existing leave guard now covers modified deal, stage and custom-field drafts. Opening an unchanged editor does not activate it. It remains active during a pending save and after a failed save, until the draft is successfully saved or explicitly cancelled. It covers browser reload/close and normal same-origin navigation links under the existing guard rules. It is not autosave or durable draft storage; in-page replacement of a draft and browser Back behavior remain outside this guard.
+
 ## Verification
 
 The new regression file covers date validation, queue membership, descriptive funnel observations, role-filtered plans, route validation, cross-site rejection, pinned-store isolation, multi-store writes and teammate eligibility. Existing CRM and page-funnel regressions must pass too.
