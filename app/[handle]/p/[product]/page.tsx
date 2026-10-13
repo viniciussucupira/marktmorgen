@@ -1,4 +1,6 @@
 import { StickyBuy } from "@/components/sticky-buy";
+import { RecentSales } from "@/components/recent-sales";
+import { recentSales } from "@/lib/recent-sales";
 import { AddToCart, CartButton } from "@/components/store-cart";
 import { offersCart } from "@/lib/cart-checkout";
 import { cartable, readCartIds } from "@/lib/cart-rules";
@@ -523,6 +525,8 @@ export default async function ProductPage({ params, searchParams }: Params) {
       <StickyBuy target={free ? "get" : "buy"} label={label} price={<PriceTag store={store} product={product} />} />
     );
 
+  // The store's latest real purchases, where the creator shows them (lib/recent-sales.ts).
+  const recent = await recentSales(store);
   const shell = (children: ReactNode, wide: boolean) => (
     <div
       lang={speech(store).lang.locale}
@@ -538,6 +542,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
         {children}
       </main>
       {sticky}
+      {recent.length ? <RecentSales sales={recent} handle={store.handle} language={store.language} locale={speech(store).lang.locale} /> : null}
     </div>
   );
 

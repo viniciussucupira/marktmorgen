@@ -1,4 +1,5 @@
 import { isDiscordConfigured } from "@/lib/discord";
+import { RecentSalesSwitch } from "@/components/recent-sales-switch";
 import { firstSaleAt } from "@/lib/yearly-offer";
 import { breakRunning, pauseOf } from "@/lib/plan-pause";
 import { PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS, PAUSE_EVERY_DAYS } from "@/lib/plan-pause-rules";
@@ -1318,6 +1319,9 @@ export default async function StudioPage({
                 />
               </div>
             ) : null}
+
+            {/* The store's latest real purchases on its pages (lib/recent-sales.ts): something visitors see, so a setting. */}
+            {may("settings") ? <RecentSalesSwitch on={store.recentSales} live={Boolean(store.stripeAccountId)} /> : null}
 
             {may("page") ? (
               <PageOrderEditor

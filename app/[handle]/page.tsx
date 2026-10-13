@@ -1,4 +1,6 @@
 import { StorePagesNav } from "@/components/store-pages-nav";
+import { RecentSales } from "@/components/recent-sales";
+import { recentSales } from "@/lib/recent-sales";
 import { after } from "next/server";
 import { CartButton } from "@/components/store-cart";
 import { offersCart } from "@/lib/cart-checkout";
@@ -279,6 +281,9 @@ export default async function StorePage({ params, searchParams }: Params) {
     contact: contactOpen(store),
     community: store.community?.on === true,
   };
+
+  // The store's latest real purchases, where the creator shows them (lib/recent-sales.ts).
+  const recent = await recentSales(store);
 
   return (
     <div
@@ -712,6 +717,7 @@ export default async function StorePage({ params, searchParams }: Params) {
           </div>
         </div>
       </main>
+      {recent.length ? <RecentSales sales={recent} handle={store.handle} language={store.language} locale={speech(store).lang.locale} /> : null}
     </div>
   );
 }
