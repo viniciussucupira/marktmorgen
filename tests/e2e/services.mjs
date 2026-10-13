@@ -273,6 +273,7 @@ export async function startServices(port) {
         if (trialEnd || body.get("subscription_data[trial_period_days]")) amount = 0;
         // A coupon that takes a set amount off, as an introductory price does, is taken off the first payment.
         const applied = coupons.find((c) => c.id && c.id === body.get("discounts[0][coupon]"));
+        const before = amount;
         if (applied?.amount_off) amount = Math.max(0, amount - Number(applied.amount_off));
         counter += 1;
         const id = `cs_test_local${String(counter).padStart(20, "0")}`;
@@ -284,7 +285,9 @@ export async function startServices(port) {
           mode: body.get("mode") ?? "payment",
           created: Math.floor(Date.now() / 1000),
           amount_total: amount,
-          amount_subtotal: amount,
+          amount_subtotal: before,
+          // What the coupon took off, as Stripe records it on the checkout (lib/discount-impact.ts).
+          total_details: { amount_discount: before - amount, amount_tax: 0, amount_shipping: 0 },
           currency: body.get("line_items[0][price_data][currency]") ?? "usd",
           payment_intent: `pi_local${String(counter).padStart(16, "0")}`,
           metadata,

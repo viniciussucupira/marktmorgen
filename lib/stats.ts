@@ -23,6 +23,7 @@
  * Sales are not counted here. They are read from the creator's own Stripe
  * account, which is the only record of money that deserves the name.
  */
+import { type DiscountRow, discountImpact } from "@/lib/discount-impact";
 import { saleHandles } from "@/lib/store";
 import { type Together, parseTogether, togetherFrom } from "@/lib/also-bought";
 import { keepPaths, pathsFrom } from "@/lib/next-bought";
@@ -770,6 +771,8 @@ export type SalesStats = {
   channelDays?: ChannelDays;
   /** Who bought, for each window, and the biggest buyers of the 90 days (buyersFrom; added 12 October 2026). */
   buyers?: BuyerNumbers;
+  /** Full price beside each kind of discount over the 90 days (lib/discount-impact.ts); null with no discounted sale. */
+  discounts?: { rows: DiscountRow[] | null; refundsRead: boolean };
 };
 
 /**
@@ -1277,6 +1280,10 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   }
   out.channelDays = channelDays;
   out.buyers = buyersFrom(read, store.currency, now);
+  out.discounts = {
+    rows: discountImpact(read, new Set((refundRows ?? []).map((r) => r.paymentIntent).filter(Boolean)), store.currency, now, STATS_DAYS),
+    refundsRead: refundRows !== null,
+  };
   out.previous = {
     d7: stretch(dayKey(now - 13 * 86400_000), cut7),
     d30: stretch(dayKey(now - 59 * 86400_000), cut30),
@@ -1424,6 +1431,8 @@ export type StatsData = {
   channelDays?: ChannelDays;
   /** Who bought, for each window (SalesStats.buyers): counts and money only, no address. */
   buyers?: Record<"d7" | "d30" | "d90", BuyersWindow> | null;
+  /** Full price beside each kind of discount over the 90 days (SalesStats.discounts). */
+  discounts?: { rows: DiscountRow[] | null; refundsRead: boolean } | null;
   /**
    * The biggest buyers of the 90 days, with their addresses: added by the
    * studio page only for whoever may read orders (lib/team-roles.ts), never
@@ -1667,6 +1676,7 @@ export function studioStats(
     refundsByProduct: sales?.refundsByProduct ?? {},
     channelDays: sales?.channelDays ?? {},
     buyers: sales?.buyers ? { d7: sales.buyers.d7, d30: sales.buyers.d30, d90: sales.buyers.d90 } : null,
+    discounts: sales?.discounts ?? null,
     reach: {
       d7: reachItems(store, w.d7.reach ?? {}, titles),
       d30: reachItems(store, w.d30.reach ?? {}, titles),

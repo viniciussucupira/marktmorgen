@@ -28,6 +28,7 @@
  * Read at most MAX_PAGES pages of 100 and kept CACHE_SECONDS, so the page
  * that shows them asks Stripe at most once every few minutes.
  */
+import { DISCOUNT_KINDS, type DiscountKind, entryOf } from "@/lib/discount-impact";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
 import { type Store, saleHandles } from "@/lib/store";
@@ -56,6 +57,8 @@ export type Sub = {
    * written onto memberships on October 11, 2026.
    */
   channel: string;
+  /** How it began: at full price, or with which discount (lib/discount-impact.ts). Absent on a reading from before October 12, 2026. */
+  entry?: DiscountKind;
   /** When the member asked to cancel (seconds), 0 for never; and why, as Stripe's portal recorded it. */
   canceledAt: number;
   /** Stripe's own reason: "cancellation_requested", "payment_failed" or "payment_disputed"; "" for none. */
@@ -249,6 +252,8 @@ export type Numbers = {
   cohorts?: Cohort[];
   /** By the channel each was sold through, the biggest first; absent on a reading from before. */
   byChannel?: ChannelStay[];
+  /** By how each began, full price or which discount (lib/discount-impact.ts), full price first; absent on a reading from before. */
+  byEntry?: (Omit<ChannelStay, "channel"> & { entry: DiscountKind })[];
   /** Why members left in the last year; absent on a reading from before. */
   leaving?: Leaving;
   /** The next three months at the pace of the last 90 days; null with too few members to read a pace from. */
@@ -337,6 +342,7 @@ export function numbersFrom(subs: Sub[], currency: string, now: number, complete
   out.churn30 = payingThen > 0 ? churned / payingThen : null;
   out.cohorts = cohortsFrom(subs, now);
   out.byChannel = channelsFrom(subs, now);
+  out.byEntry = entriesFrom(subs, now);
   out.leaving = leavingFrom(subs, currency, now);
   out.forecast = forecastFrom(subs, currency, now, out.mrr);
   out.mrr = Math.round(out.mrr);
@@ -375,10 +381,27 @@ export function cohortsFrom(subs: Sub[], now: number): Cohort[] {
 
 /** By channel, for memberships begun in the last year. Pure. */
 export function channelsFrom(subs: Sub[], now: number): ChannelStay[] {
+  return staysBy(subs, now, (sub) => sub.channel);
+}
+
+/**
+ * By how each began, for memberships begun in the last year: full price
+ * first, then each discount; empty when none began with a discount, so there
+ * is nothing to set beside full price. Pure.
+ */
+export function entriesFrom(subs: Sub[], now: number): (Omit<ChannelStay, "channel"> & { entry: DiscountKind })[] {
+  const rows = staysBy(subs, now, (sub) => sub.entry ?? "full");
+  if (!rows.some((row) => row.channel !== "full")) return [];
+  return DISCOUNT_KINDS.flatMap((kind) => rows.filter((row) => row.channel === kind)).map(({ channel, ...row }) => ({ ...row, entry: channel as DiscountKind }));
+}
+
+/** Who stayed and for how long, grouped by `keyOf`, for memberships begun in the last year, the biggest group first. Pure. */
+export function staysBy(subs: Sub[], now: number, keyOf: (sub: Sub) => string): ChannelStay[] {
   const by = new Map<string, { started: number; running: number; old: number; stayed: number; months: number }>();
   for (const sub of subs) {
     if (!sub.start || sub.start < now - 365 * DAY) continue;
-    const row = by.get(sub.channel) ?? { started: 0, running: 0, old: 0, stayed: 0, months: 0 };
+    const key = keyOf(sub);
+    const row = by.get(key) ?? { started: 0, running: 0, old: 0, stayed: 0, months: 0 };
     row.started += 1;
     if (LIVE.has(sub.status) && (!sub.ended || sub.ended > now)) row.running += 1;
     if (sub.start + 3 * MONTH <= now) {
@@ -386,7 +409,7 @@ export function channelsFrom(subs: Sub[], now: number): ChannelStay[] {
       if (runningAt(sub, sub.start + 3 * MONTH)) row.stayed += 1;
     }
     row.months += (Math.min(sub.ended || now, now) - sub.start) / MONTH;
-    by.set(sub.channel, row);
+    by.set(key, row);
   }
   return [...by.entries()]
     .map(([channel, r]) => ({
@@ -451,6 +474,7 @@ export function readSub(raw: Raw, handles: Set<string>): Sub | null {
     ended: num(raw.ended_at),
     trialEnd: num(raw.trial_end),
     channel: "channel" in meta ? (meta.channel && meta.channel !== "direct" ? meta.channel : "direct") : meta.utm_source || "unrecorded",
+    entry: entryOf(meta),
     // A membership with a set number of payments is given its end when it is
     // bought; that is not somebody leaving.
     canceledAt: meta.ends_after ? 0 : num(raw.canceled_at),

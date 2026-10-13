@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DISCOUNT_NAMES } from "@/lib/discount-impact";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -475,6 +476,45 @@ export default async function StudioMembershipsPage({ searchParams }: Params) {
                       <p className="mt-2 text-xs text-ink-soft">
                         A channel that brings fewer members who stay longer can be worth more than one that brings many who
                         leave. Memberships sold before October 11, 2026 have no channel written on them and are counted apart.
+                      </p>
+                    </>
+                  ) : null}
+
+                  {numbers.byEntry && numbers.byEntry.length ? (
+                    <>
+                      <h3 className="mt-8 text-base font-semibold text-ink">By how they joined, last 12 months</h3>
+                      <div className="mt-3 overflow-x-auto" tabIndex={0} role="region" aria-label="Who stays, by discount" data-stays-by-discount>
+                        <table className="w-full text-left text-sm">
+                          <thead>
+                            <tr className="text-xs uppercase tracking-[0.08em] text-ink-mute">
+                              <th scope="col" className="py-2 pr-4 font-semibold">Joined at</th>
+                              <th scope="col" className="py-2 pr-3 text-right font-semibold">Joined</th>
+                              <th scope="col" className="py-2 pr-3 text-right font-semibold">Still members</th>
+                              <th scope="col" className="py-2 pr-3 text-right font-semibold" title="Of those who joined at least three months ago, the share still running three months in">
+                                After 3 months
+                              </th>
+                              <th scope="col" className="py-2 text-right font-semibold" title="Months each was kept on average, so far">
+                                Months kept
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-line">
+                            {numbers.byEntry.map((row) => (
+                              <tr key={row.entry}>
+                                <th scope="row" className="py-2.5 pr-4 font-semibold text-ink">{DISCOUNT_NAMES[row.entry]}</th>
+                                <td className="py-2.5 pr-3 text-right tabular-nums">{row.started}</td>
+                                <td className="py-2.5 pr-3 text-right tabular-nums">{row.running}</td>
+                                <td className="py-2.5 pr-3 text-right tabular-nums">{row.stayed3 === null ? "—" : percent(row.stayed3)}</td>
+                                <td className="py-2.5 text-right tabular-nums">{row.months.toFixed(1)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="mt-2 text-xs text-ink-soft">
+                        Whether members who joined with a discount stay once it ends. An introductory price and a come-back offer are known on every
+                        membership; a code from a link and your store sale on those begun from October 12, 2026. A code typed into Stripe&apos;s own box
+                        is not written on the membership, so it is counted at full price here.
                       </p>
                     </>
                   ) : null}
