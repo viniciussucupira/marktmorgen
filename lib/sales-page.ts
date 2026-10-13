@@ -105,7 +105,8 @@ export type BlockKind =
   | "facts"
   | "feature"
   | "product"
-  | "quotes";
+  | "quotes"
+  | "form";
 
 export const BLOCK_KINDS: { kind: BlockKind; label: string; hint: string }[] = [
   { kind: "hero", label: "Hero", hint: "The big headline at the top, with the product's picture or a video." },
@@ -128,6 +129,7 @@ export const BLOCK_KINDS: { kind: BlockKind; label: string; hint: string }[] = [
   { kind: "quotes", label: "Said elsewhere", hint: `Up to ${MAX_QUOTES} things people said about it in public — a post, a video, a comment — each with a link to where it was said, so a visitor can check it.` },
   { kind: "product", label: "Another product", hint: "One of your other products, with its picture, price and a link to its own page: what goes well with this one." },
   { kind: "facts", label: "By the numbers", hint: "Lessons, episodes, buyers, the average rating: counted for you from the store, never typed, and always up to date." },
+  { kind: "form", label: "Form", hint: "One of your forms, surveys or quizzes, made under Forms: the questions, and where the answers lead. On your own pages." },
 ];
 
 export type VideoProvider = "youtube" | "vimeo" | "loom";
@@ -297,6 +299,9 @@ export const MAX_PRODUCT_NOTE = 160;
 export type Quote = { text: string; name: string; url: string };
 export type QuotesBlock = { id: string; kind: "quotes"; heading: string; items: Quote[] };
 
+/** One of the store's forms, surveys or quizzes (lib/forms.ts), by its id: only on the store's own pages. */
+export type FormBlock = { id: string; kind: "form"; heading: string; form: string };
+
 /** An https address as it will be linked, or "" when it is not one: no other scheme, no login in it, no address on this machine. */
 export function quoteUrl(raw: unknown): string {
   if (typeof raw !== "string") return "";
@@ -361,6 +366,7 @@ export type PageBlock = { screens?: BlockShow } & (
   | CountdownBlock
   | ProductBlock
   | QuotesBlock
+  | FormBlock
 );
 
 export type SalesPage = {
@@ -812,6 +818,8 @@ function parseBlock(raw: unknown): PageBlock | null {
       const product = typeof value.product === "string" && PRODUCT_ID_PATTERN.test(value.product) ? value.product : "";
       return { id, kind: "product", heading, product, note: line(value.note, MAX_PRODUCT_NOTE) };
     }
+    case "form":
+      return { id, kind: "form", heading, form: typeof value.form === "string" && /^[a-z0-9]{10}$/.test(value.form) ? value.form : "" };
     default:
       return null;
   }
@@ -1026,6 +1034,8 @@ export function emptyBlock(kind: BlockKind, id = newBlockId()): PageBlock {
       return { id, kind, heading: "Goes well with it", product: "", note: "" };
     case "quotes":
       return { id, kind, heading: "What people say", items: [] };
+    case "form":
+      return { id, kind, heading: "", form: "" };
   }
 }
 

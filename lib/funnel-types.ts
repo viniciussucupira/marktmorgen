@@ -40,6 +40,12 @@ export type PageSlot = {
   blocks: BlockKind[];
   /** Where its buttons lead, when that is a product chosen for the funnel rather than its next step. */
   target?: string;
+  /**
+   * A form the page asks, made with it (lib/forms.ts): questions anyone asks
+   * at that step, none of them a claim, and the form block among the page's
+   * blocks points at it.
+   */
+  form?: { name: string; fields: { type: "short" | "long" | "email"; label: string; required: boolean }[] };
 };
 
 /** A product the funnel's page leads to without it being a step: a call, booked on a page of its own. */
@@ -113,10 +119,40 @@ export const FUNNEL_TYPES: FunnelType[] = [
   {
     id: "application",
     label: "Application",
-    hint: "A page that says who you work with and how, whose button leads to booking a call with you.",
+    hint: "A page that says who you work with and how, with an application form. You read each one, and answer the people you want to work with.",
     slots: [
-      { kind: "page", key: "apply", title: "Work with me", slug: "work-with-me", blocks: ["hero", "fit", "steps", "faq", "cta"], target: "call" },
-      { kind: "target", key: "call", label: "The call they book", wants: "call" },
+      {
+        kind: "page",
+        key: "apply",
+        title: "Work with me",
+        slug: "work-with-me",
+        blocks: ["hero", "fit", "steps", "form", "faq"],
+        form: {
+          name: "Application",
+          fields: [
+            { type: "short", label: "Your name", required: true },
+            { type: "email", label: "Your email", required: true },
+            { type: "long", label: "What would you like help with?", required: true },
+            { type: "long", label: "What have you tried so far?", required: false },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "quiz",
+    label: "Quiz",
+    hint: "A page with a quiz whose results each suggest one of your products, then a page that says what happens next. You write the questions and the results.",
+    slots: [
+      {
+        kind: "page",
+        key: "quiz",
+        title: "Find what fits you",
+        slug: "quiz",
+        blocks: ["hero", "form"],
+        form: { name: "Quiz", fields: [{ type: "email", label: "Your email", required: false }] },
+      },
+      thanks,
     ],
   },
 ];

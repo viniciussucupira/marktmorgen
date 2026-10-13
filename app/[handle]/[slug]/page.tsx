@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { readForm } from "@/lib/form-store";
+import type { FormDef } from "@/lib/forms";
+import { listOpen } from "@/lib/store-join";
 import type { ReactNode } from "react";
 import { cache } from "react";
 import Link from "next/link";
@@ -98,6 +101,10 @@ export default async function StoreOwnPage({ params, searchParams }: Params) {
     now: saleClock(),
     lang: store.language,
     featured: featuredCards(store, ""),
+    // The forms its blocks ask (lib/forms.ts), where their answers go, and what happened to one just sent.
+    forms: await formsOf(store, blocks.blocks),
+    formTarget: { handle: store.handle, page: page.id, funnel: here?.funnel.id ?? "", listOpen: listOpen(store) },
+    formNotice: typeof query.form === "string" && typeof query.status === "string" ? { form: query.form.slice(0, 12), status: query.status.slice(0, 20) } : undefined,
   };
   const hero = blocks.blocks[0]?.kind === "hero" ? blocks.blocks[0] : null;
   const rest = hero ? blocks.blocks.slice(1) : blocks.blocks;
@@ -150,3 +157,11 @@ export default async function StoreOwnPage({ params, searchParams }: Params) {
     </div>
   );
 }
+
+/** The forms a page's blocks ask, read once each. */
+async function formsOf(store: Store, blocks: SalesPage["blocks"]): Promise<Record<string, FormDef>> {
+  const ids = [...new Set(blocks.flatMap((block) => (block.kind === "form" && block.form ? [block.form] : [])))];
+  const found = await Promise.all(ids.map((id) => readForm(store.statsId, id).catch(() => null)));
+  return Object.fromEntries(found.filter((f): f is FormDef => f !== null).map((f) => [f.id, f]));
+}
+

@@ -1,0 +1,164 @@
+/**
+ * The words a form on a store's page adds (lib/forms.ts), in every language a
+ * store sells in. The questions themselves are the creator's own. Browser-safe.
+ */
+import { type LanguageCode, parseLanguage } from "@/lib/store-language";
+
+/** French spaces its colon with a space that never breaks. */
+const S = "\u00a0";
+
+const en = {
+  send: "Send",
+  required: "Required",
+  choose: "Choose one",
+  /** The box to hear from the creator: empty until checked. */
+  hearFrom: (store: string) => `Email me news from ${store}. I can unsubscribe at any time.`,
+  doneHeading: "Thank you",
+  doneBody: (store: string) => `Your answers were sent to ${store}.`,
+  confirmSent: "One more step: we emailed you a button to confirm you want to hear from them.",
+  result: "Your result",
+  seeProduct: "Take a look",
+  backTo: (store: string) => `Back to ${store}`,
+  errors: {
+    required: "Please answer every question marked required.",
+    email: "That does not look like an email address.",
+    invalid: "One of the answers was not one of the choices. Please try again.",
+    limited: "Too many tries for now. Please try again in an hour.",
+    closed: "This form is not taking answers right now.",
+    error: "Something went wrong, and nothing was sent. Please try again.",
+  },
+};
+
+export type FormWords = typeof en;
+
+const es: FormWords = {
+  send: "Enviar",
+  required: "Obligatorio",
+  choose: "Elige una opción",
+  hearFrom: (store) => `Quiero recibir novedades de ${store} por email. Puedo darme de baja cuando quiera.`,
+  doneHeading: "Gracias",
+  doneBody: (store) => `Tus respuestas se enviaron a ${store}.`,
+  confirmSent: "Un paso más: te enviamos un email con un botón para confirmar que quieres recibir sus novedades.",
+  result: "Tu resultado",
+  seeProduct: "Echar un vistazo",
+  backTo: (store) => `Volver a ${store}`,
+  errors: {
+    required: "Responde todas las preguntas marcadas como obligatorias.",
+    email: "Eso no parece una dirección de email.",
+    invalid: "Una de las respuestas no estaba entre las opciones. Inténtalo de nuevo.",
+    limited: "Demasiados intentos por ahora. Inténtalo de nuevo en una hora.",
+    closed: "Este formulario no acepta respuestas en este momento.",
+    error: "Algo salió mal y no se envió nada. Inténtalo de nuevo.",
+  },
+};
+
+const fr: FormWords = {
+  send: "Envoyer",
+  required: "Obligatoire",
+  choose: "Choisissez une option",
+  hearFrom: (store) => `Je veux recevoir les nouvelles de ${store} par email. Je peux me désinscrire à tout moment.`,
+  doneHeading: "Merci",
+  doneBody: (store) => `Vos réponses ont été envoyées à ${store}.`,
+  confirmSent: `Encore une étape${S}: nous vous avons envoyé un email avec un bouton pour confirmer que vous voulez recevoir leurs nouvelles.`,
+  result: "Votre résultat",
+  seeProduct: "Découvrir",
+  backTo: (store) => `Retour à ${store}`,
+  errors: {
+    required: "Répondez à toutes les questions marquées comme obligatoires.",
+    email: "Cela ne ressemble pas à une adresse email.",
+    invalid: "L'une des réponses ne faisait pas partie des choix. Réessayez.",
+    limited: "Trop de tentatives pour le moment. Réessayez dans une heure.",
+    closed: "Ce formulaire n'accepte pas de réponses pour le moment.",
+    error: "Une erreur s'est produite et rien n'a été envoyé. Réessayez.",
+  },
+};
+
+const de: FormWords = {
+  send: "Senden",
+  required: "Pflichtfeld",
+  choose: "Bitte wählen",
+  hearFrom: (store) => `Ich möchte Neuigkeiten von ${store} per E-Mail erhalten. Ich kann mich jederzeit abmelden.`,
+  doneHeading: "Vielen Dank",
+  doneBody: (store) => `Ihre Antworten wurden an ${store} gesendet.`,
+  confirmSent: "Noch ein Schritt: Wir haben Ihnen eine E-Mail mit einer Schaltfläche geschickt, mit der Sie bestätigen, dass Sie Neuigkeiten erhalten möchten.",
+  result: "Ihr Ergebnis",
+  seeProduct: "Ansehen",
+  backTo: (store) => `Zurück zu ${store}`,
+  errors: {
+    required: "Bitte beantworten Sie alle als Pflichtfeld markierten Fragen.",
+    email: "Das sieht nicht nach einer E-Mail-Adresse aus.",
+    invalid: "Eine der Antworten war keine der Auswahlmöglichkeiten. Bitte versuchen Sie es erneut.",
+    limited: "Zu viele Versuche für den Moment. Bitte versuchen Sie es in einer Stunde erneut.",
+    closed: "Dieses Formular nimmt im Moment keine Antworten an.",
+    error: "Etwas ist schiefgegangen, und es wurde nichts gesendet. Bitte versuchen Sie es erneut.",
+  },
+};
+
+const it: FormWords = {
+  send: "Invia",
+  required: "Obbligatorio",
+  choose: "Scegli un'opzione",
+  hearFrom: (store) => `Voglio ricevere novità da ${store} via email. Posso disiscrivermi quando voglio.`,
+  doneHeading: "Grazie",
+  doneBody: (store) => `Le tue risposte sono state inviate a ${store}.`,
+  confirmSent: "Ancora un passo: ti abbiamo inviato un'email con un pulsante per confermare che vuoi ricevere le sue novità.",
+  result: "Il tuo risultato",
+  seeProduct: "Dai un'occhiata",
+  backTo: (store) => `Torna a ${store}`,
+  errors: {
+    required: "Rispondi a tutte le domande segnate come obbligatorie.",
+    email: "Non sembra un indirizzo email.",
+    invalid: "Una delle risposte non era tra le opzioni. Riprova.",
+    limited: "Troppi tentativi per ora. Riprova tra un'ora.",
+    closed: "Questo modulo al momento non accetta risposte.",
+    error: "Qualcosa è andato storto e non è stato inviato nulla. Riprova.",
+  },
+};
+
+const nl: FormWords = {
+  send: "Versturen",
+  required: "Verplicht",
+  choose: "Kies er één",
+  hearFrom: (store) => `Ik wil nieuws van ${store} per e-mail ontvangen. Ik kan me altijd afmelden.`,
+  doneHeading: "Bedankt",
+  doneBody: (store) => `Je antwoorden zijn naar ${store} gestuurd.`,
+  confirmSent: "Nog één stap: we hebben je een e-mail gestuurd met een knop om te bevestigen dat je hun nieuws wilt ontvangen.",
+  result: "Jouw resultaat",
+  seeProduct: "Bekijken",
+  backTo: (store) => `Terug naar ${store}`,
+  errors: {
+    required: "Beantwoord alle vragen die als verplicht zijn gemarkeerd.",
+    email: "Dat lijkt geen e-mailadres.",
+    invalid: "Een van de antwoorden was geen van de keuzes. Probeer het opnieuw.",
+    limited: "Te veel pogingen voor nu. Probeer het over een uur opnieuw.",
+    closed: "Dit formulier neemt op dit moment geen antwoorden aan.",
+    error: "Er ging iets mis en er is niets verstuurd. Probeer het opnieuw.",
+  },
+};
+
+const pt: FormWords = {
+  send: "Enviar",
+  required: "Obrigatório",
+  choose: "Escolha uma opção",
+  hearFrom: (store) => `Quero receber novidades de ${store} por email. Posso cancelar a qualquer momento.`,
+  doneHeading: "Obrigado",
+  doneBody: (store) => `As suas respostas foram enviadas a ${store}.`,
+  confirmSent: "Só mais um passo: enviámos-lhe um email com um botão para confirmar que quer receber as novidades.",
+  result: "O seu resultado",
+  seeProduct: "Ver",
+  backTo: (store) => `Voltar a ${store}`,
+  errors: {
+    required: "Responda a todas as perguntas marcadas como obrigatórias.",
+    email: "Isso não parece um endereço de email.",
+    invalid: "Uma das respostas não estava entre as opções. Tente novamente.",
+    limited: "Demasiadas tentativas por agora. Tente novamente daqui a uma hora.",
+    closed: "Este formulário não está a aceitar respostas neste momento.",
+    error: "Algo correu mal e nada foi enviado. Tente novamente.",
+  },
+};
+
+export const FORM_WORDS: Record<LanguageCode, FormWords> = { en, es, fr, de, it, nl, pt };
+
+export function formWords(language: unknown): FormWords {
+  return FORM_WORDS[parseLanguage(language)];
+}

@@ -656,6 +656,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I add a form, a survey or a quiz?",
+        a: [
+          "Yes, on every plan. Make one under Forms in your studio: up to 12 questions, each a short or long answer, an email address, one choice or several from up to 8 options, or a scale of 1 to 10, marked required or not. Then add a Form block to one of your own pages under Your pages and choose it there. A store can have 20 forms.",
+          "A quiz is a form with results: each option of a choice can point at one of up to 6 results you write, and each person sees the result most of their answers point at, the first in your list on a tie, with one of your products for it if you choose one. On a page that is a step of a funnel, sending the form leads on to the next step, after the result when there is one.",
+          "The newest 2,000 answers of each form are kept for you: the newest 50 are shown in your studio, and all of them download as a spreadsheet. A form with an email question can offer to join your list: a box under the questions, empty until it is checked, which sends the person an email with a button, and they join only once they press it. Never ask for a card number, a password or anything a stranger could use.",
+        ],
+      },
+      {
         q: "Will search engines find my store?",
         a: [
           "Yes. Every store has its own map for search engines, at marktmorgen.com/@yourname/sitemap.xml: your front page once it has something on it, every product a visitor can see, each of your pages that is out, your blog and each published post. Nothing you hide, nothing kept back for later, and nothing behind a purchase is in it, and each address is the one the page itself names as its own.",
