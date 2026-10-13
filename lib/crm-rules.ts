@@ -59,6 +59,10 @@ export type Deal = {
   cents: number;
   stage: string;
   note: string;
+  /** Next action, date and responsible teammate; optional for older records. */
+  nextAction?: string;
+  dueDate?: string;
+  assignee?: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -119,7 +123,7 @@ export function fieldValue(field: CrmField, raw: unknown): string | null {
       return Number.isFinite(n) && Math.abs(n) < 1e15 ? String(n) : null;
     }
     case "date":
-      return /^\d{4}-\d{2}-\d{2}$/.test(text) && Number.isFinite(Date.parse(`${text}T00:00:00Z`)) ? text : null;
+      return validCrmDate(text) ? text : null;
     case "choice":
       return field.options.includes(text) ? text : null;
   }
@@ -162,7 +166,8 @@ export function parseDeal(raw: unknown, stages: readonly Stage[]): Deal | null {
           .slice(0, MAX_DEAL_NOTE)
       : "";
   const at = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? v : 0);
-  return { id, title, email: EMAIL.test(email) ? email : "", cents, stage, note, createdAt: at(value.createdAt), updatedAt: at(value.updatedAt) };
+  const follow = readFollowUp(value);
+  return { id, title, email: EMAIL.test(email) ? email : "", cents, stage, note, ...(follow.ok ? follow.value : {}), createdAt: at(value.createdAt), updatedAt: at(value.updatedAt) };
 }
 
 /** Each stage's deals, how many and what they are worth, in the stages' order. */
@@ -171,4 +176,46 @@ export function boardTotals(stages: readonly Stage[], deals: readonly Deal[]): {
     const here = deals.filter((d) => d.stage === stage.id);
     return { stage, count: here.length, cents: here.reduce((sum, d) => sum + d.cents, 0) };
   });
+}
+
+/** Calendar dates are kept as dates, never shifted through a browser time zone. */
+export function validCrmDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const at = Date.parse(value + "T00:00:00Z");
+  return Number.isFinite(at) && new Date(at).toISOString().slice(0, 10) === value;
+}
+
+export type FollowUp = { nextAction?: string; dueDate?: string; assignee?: string };
+
+/** Missing fields preserve older data; explicit empty strings clear a field. */
+export function readFollowUp(raw: Record<string, unknown>): { ok: true; value: FollowUp } | { ok: false; error: "followup" | "date" | "assignee" } {
+  const out: FollowUp = {};
+  if (raw.nextAction !== undefined) {
+    if (typeof raw.nextAction !== "string" || raw.nextAction.length > 200) return { ok: false, error: "followup" };
+    out.nextAction = oneLine(raw.nextAction, 200);
+  }
+  if (raw.dueDate !== undefined) {
+    if (raw.dueDate !== "" && !validCrmDate(raw.dueDate)) return { ok: false, error: "date" };
+    out.dueDate = raw.dueDate as string;
+  }
+  if (raw.assignee !== undefined) {
+    if (typeof raw.assignee !== "string") return { ok: false, error: "assignee" };
+    const email = raw.assignee.trim().toLowerCase();
+    if (email && (email.length > 254 || !EMAIL.test(email))) return { ok: false, error: "assignee" };
+    out.assignee = email;
+  }
+  if (out.dueDate && !out.nextAction) return { ok: false, error: "followup" };
+  return { ok: true, value: out };
+}
+
+/** Open deals to act on, ordered by date then longest without a change. */
+export function dealFollowUps(stages: readonly Stage[], deals: readonly Deal[], today: string): { overdue: Deal[]; today: Deal[]; upcoming: Deal[]; unplanned: Deal[] } {
+  const open = new Set(stages.filter(s => s.kind === "open").map(s => s.id));
+  const rows = deals.filter(d => open.has(d.stage)).slice().sort((a,b) => (a.dueDate || "9999-12-31").localeCompare(b.dueDate || "9999-12-31") || a.updatedAt - b.updatedAt || a.id.localeCompare(b.id));
+  return {
+    overdue: rows.filter(d => d.nextAction && validCrmDate(d.dueDate) && d.dueDate < today),
+    today: rows.filter(d => d.nextAction && d.dueDate === today),
+    upcoming: rows.filter(d => d.nextAction && validCrmDate(d.dueDate) && d.dueDate > today),
+    unplanned: rows.filter(d => !d.nextAction || !validCrmDate(d.dueDate)),
+  };
 }
