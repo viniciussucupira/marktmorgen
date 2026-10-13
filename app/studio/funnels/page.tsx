@@ -14,7 +14,10 @@ import { FunnelEditor } from "@/components/funnel-editor";
 import { offerableAfterPaying } from "@/lib/bundles";
 import { PageFunnelEditor, type SavedFunnel, type StepChoice } from "@/components/page-funnel-editor";
 import { readFunnelCounts, readPageFunnels, stepStates } from "@/lib/page-funnel-store";
-import { pageOut } from "@/lib/site-page-rules";
+import { MAX_SITE_PAGES, pageOut } from "@/lib/site-page-rules";
+import { FunnelTypePicker, type TypeProduct } from "@/components/funnel-type-picker";
+import { MAX_PAGE_FUNNELS } from "@/lib/page-funnel";
+import { can } from "@/lib/team-roles";
 import { canUseDomain } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -117,6 +120,8 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
       };
     }),
   );
+  // What a kind of funnel can be built with (lib/funnel-types.ts): every product, and what it is.
+  const typeProducts: TypeProduct[] = [...cards.values()].map((p) => ({ id: p.id, title: p.title, free: free.has(p.id), call: calls.has(p.id), draft: drafts.has(p.id) }));
   const funnelBase =
     store.domain?.liveAt && canUseDomain(store) ? `https://${store.domain.name}/go/` : `${SITE_URL}/@${store.handle}/go/`;
 
@@ -137,6 +142,16 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
         <p className="mt-3 max-w-2xl text-ink-soft">
           Pages walked in order from one address, and the offers a buyer meets right after paying.
         </p>
+
+        <div className="mt-8">
+          <FunnelTypePicker
+            products={typeProducts}
+            pagesLeft={Math.max(0, MAX_SITE_PAGES - store.sitePages.length)}
+            canMakePages={can(view.role, "page")}
+            funnelsLeft={Math.max(0, MAX_PAGE_FUNNELS - savedFunnels.length)}
+            sid={store.sid}
+          />
+        </div>
 
         <div className="mt-8">
           <PageFunnelEditor saved={savedFunnels} choices={choices} base={funnelBase} />
