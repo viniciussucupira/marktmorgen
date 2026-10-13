@@ -1188,6 +1188,25 @@ export default function PrivacyPage() {
           creator withdraws our access in their Google account, we stop using
           the connection and tell them, and disconnecting deletes it.
         </p>
+        <p id="meta-ads" className="scroll-mt-24">
+          <strong className="text-black">Meta ads.</strong> A creator can
+          connect their own Meta ad account, so their numbers read what their
+          ads cost. We ask Meta only for permission to read their ads
+          (ads_read), and we read only, once a day, what each campaign spent
+          on each day and on each platform (Facebook, Instagram, Threads,
+          Messenger, the Audience Network), for the last 30 days. We never
+          ask for, and never receive, anything about the people who saw or
+          clicked an ad, and we never change or create ads. We keep the
+          Meta user ID of whoever connected it, the ad accounts&apos; IDs,
+          names and currencies, the access token Meta gives us, encrypted at
+          rest and sent to nobody but Meta, and what was spent, kept a week
+          to a line after 30 days and for 400 days at most. When the creator
+          disconnects from the studio, we give the permission back to Meta
+          and delete the connection, its token and every figure read from
+          it. If they remove our app in their Facebook settings, or ask Meta
+          for their data to be deleted, Meta tells us and we do the same at
+          once, and tell the store&apos;s owner.
+        </p>
         <p>
           <strong className="text-black">Usage and technical data.</strong> We
           may collect information such as IP address, browser type, device

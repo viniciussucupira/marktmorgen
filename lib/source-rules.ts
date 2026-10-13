@@ -56,7 +56,9 @@ const IN_APP: [RegExp, string][] = [
 /**
  * Tags the assistants put on the links they hand out themselves — ChatGPT adds
  * utm_source=chatgpt.com — counted under the same word as a visit they sent
- * without one, so one assistant is one row.
+ * without one, so one assistant is one row. Meta's ads fill
+ * utm_source={{site_source_name}} with fb, ig, msg or an: counted under
+ * the words Meta's own spend is read under (lib/meta-ads-rules.ts).
  */
 const TAG_ALIASES: Record<string, string> = {
   "chatgpt.com": "chatgpt",
@@ -67,6 +69,10 @@ const TAG_ALIASES: Record<string, string> = {
   "gemini.google.com": "gemini",
   "copilot.microsoft.com": "copilot",
   "grok.com": "grok",
+  fb: "facebook",
+  ig: "instagram",
+  msg: "facebook",
+  an: "facebook",
 };
 
 /** The AI assistants a visit can come from, by the word it is counted under. */

@@ -40,7 +40,10 @@ export type AccountChange =
   | { kind: "meeting-connected"; name: string; account: string }
   | { kind: "meeting-disconnected"; name: string; account: string; byProvider?: boolean }
   | { kind: "meeting-broken"; name: string }
-  | { kind: "discord-connected"; server: string };
+  | { kind: "discord-connected"; server: string }
+  | { kind: "metaads-connected"; account: string }
+  | { kind: "metaads-disconnected"; byMeta?: boolean }
+  | { kind: "metaads-broken" };
 
 const SUPPORT = "support@marktmorgen.com";
 
@@ -115,6 +118,25 @@ function describe(change: AccountChange): { subject: string; line: string } {
       return {
         subject: "A Discord server was connected to your store",
         line: `The Discord server ${change.server} was connected to your store. Buyers of the products you choose can join it, and get the roles you picked while they hold what they bought.`,
+      };
+    case "metaads-connected":
+      return {
+        subject: "A Meta ad account was connected to your store",
+        line: change.account
+          ? `The Meta ad account ${change.account} was connected to your store. Once a day, your numbers read what each of its campaigns spent, and nothing else; the call on each channel and the days it took to pay back use it.`
+          : "A Meta account was connected to your store. Choose which ad account to read, at the bottom of your numbers; then, once a day, your numbers read what each of its campaigns spent, and nothing else.",
+      };
+    case "metaads-disconnected":
+      return {
+        subject: "Meta ads were disconnected from your store",
+        line: change.byMeta
+          ? "Marktmorgen was removed from your Meta account, so your numbers no longer read what your ads spent, and what was read was deleted. What you typed yourself stays."
+          : "Your store's Meta ad account was disconnected and its permission given back. What was read from it was deleted; what you typed yourself stays.",
+      };
+    case "metaads-broken":
+      return {
+        subject: "Your numbers can no longer read your Meta ads",
+        line: "Meta stopped letting your store read your ad account (the permission was withdrawn or ran out; Meta asks for it again every 60 days or so). What was read before stays in your numbers. Connect again at the bottom of your numbers, under what you spent on ads.",
       };
     case "meeting-connected":
       return {

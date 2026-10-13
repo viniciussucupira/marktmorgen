@@ -11,6 +11,7 @@ import { type AdSpend, VERDICT_NAMES, paybackOf, spendBy, verdictFor } from "@/l
 import { READ_MIN_VISITORS, READ_SAMPLE } from "@/lib/page-read-sample";
 import { NumbersNotes } from "@/components/numbers-notes";
 import { AdSpendEditor } from "@/components/ad-spend-editor";
+import type { MetaAdsView } from "@/lib/meta-ads";
 import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
 import { toast } from "@/components/toast";
 import { type InsightContext, insightsFrom } from "@/lib/insights";
@@ -362,6 +363,9 @@ export function StatsPanel({
   insightContext,
   voice,
   marks = [],
+  meta = null,
+  canConnectMeta = false,
+  pin = "",
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -393,6 +397,12 @@ export function StatsPanel({
   voice?: VoiceSummary | null;
   /** Marks the store recorded on its own: emails sent, products added, sales (lib/auto-marks.ts). */
   marks?: AutoMark[];
+  /** The store's Meta ad account (lib/meta-ads.ts); null when the deployment has no Meta app. */
+  meta?: MetaAdsView | null;
+  /** Whether this person may connect or disconnect it ("settings"). */
+  canConnectMeta?: boolean;
+  /** "?store=<id>", carried on the forms that post to the studio's routes. */
+  pin?: string;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [pickDates, setPickDates] = useState(false);
@@ -980,6 +990,9 @@ export function StatsPanel({
           spends={spends}
           onChange={setSpends}
           channels={spendChannels}
+          meta={meta}
+          canConnectMeta={canConnectMeta}
+          pin={pin}
           currency={data.currency ?? "usd"}
           today={data.days[data.days.length - 1]?.date ?? ""}
         />

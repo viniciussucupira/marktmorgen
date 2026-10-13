@@ -27,6 +27,8 @@ export type AdSpend = {
   /** First and last day it ran, inclusive (UTC). */
   from: string;
   to: string;
+  /** Where it came from when it was not typed: "meta", read from the creator's ad account (lib/meta-ads.ts). */
+  source?: "meta";
 };
 
 export const MAX_SPEND_ENTRIES = 300;
@@ -154,4 +156,24 @@ export function paybackOf(
     if (back >= spent) return { spent, back, days: count };
   }
   return { spent, back, days: null };
+}
+
+/**
+ * Typed lines that may repeat what Meta reads: on a channel Meta's lines
+ * are on, over a day Meta read. Shown to the creator, never removed for
+ * them: a sponsored post paid to someone on Instagram is not a Meta ad.
+ */
+export function typedOverlap(typed: AdSpend[], meta: AdSpend[]): AdSpend[] {
+  if (!meta.length) return [];
+  const days = new Map<string, { first: string; last: string }>();
+  for (const line of meta) {
+    const span = days.get(line.channel) ?? { first: line.from, last: line.to };
+    if (line.from < span.first) span.first = line.from;
+    if (line.to > span.last) span.last = line.to;
+    days.set(line.channel, span);
+  }
+  return typed.filter((line) => {
+    const span = days.get(line.channel);
+    return Boolean(span && line.from <= span.last && line.to >= span.first);
+  });
 }

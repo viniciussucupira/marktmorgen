@@ -49,6 +49,7 @@ import { productsInStats, reachProducts, readAllTimeSales, readSales, readStats,
 import { StatsPanel } from "@/components/stats-panel";
 import { readNotes } from "@/lib/stats-notes";
 import { readSpends } from "@/lib/ad-spend";
+import { metaView } from "@/lib/meta-ads";
 import { heardOff } from "@/lib/heard";
 import { weeklyTeam } from "@/lib/stats-report";
 import { NO_SETUP, SERVER_PLATFORMS, serverSetup } from "@/lib/ad-events";
@@ -273,6 +274,58 @@ const PAYPAL_NOTICES: Record<string, { title: string; body: string }> = {
   error: {
     title: "PayPal could not be reached",
     body: "Nothing was changed. Try again in a moment.",
+  },
+};
+
+/** How connecting the store's Meta ad account went (lib/meta-routes.ts). */
+const META_NOTICES: Record<string, { title: string; body: string }> = {
+  connected: {
+    title: "Your Meta ad account is connected",
+    body: "Your numbers read what each campaign spent over the last 30 days, and read it again once a day. It is at the bottom of your numbers, under what you spent on ads.",
+  },
+  choose: {
+    title: "Meta is connected: choose the ad account to read",
+    body: "Your Meta login can read more than one ad account. Choose one at the bottom of your numbers, under what you spent on ads.",
+  },
+  disconnected: {
+    title: "Meta ads are disconnected",
+    body: "The permission was given back to Meta, and what was read from it was deleted. What you typed yourself stays.",
+  },
+  declined: {
+    title: "Nothing was connected",
+    body: "Meta's page was closed or cancelled. Connect again when you are ready.",
+  },
+  permission: {
+    title: "Meta did not give the permission to read your ads",
+    body: "Nothing was kept. Connect again and leave “Read your ads” ticked on Meta's page.",
+  },
+  accounts: {
+    title: "Meta found no ad account to read",
+    body: "The Facebook login you used cannot see any ad account. Nothing was kept. Connect again with the login that runs your ads.",
+  },
+  refused: {
+    title: "Meta did not finish connecting",
+    body: "Nothing was kept. Connect again in a moment.",
+  },
+  expired: {
+    title: "That took too long",
+    body: "For your safety a connection must be finished within ten minutes, in the same browser. Nothing was kept. Connect again.",
+  },
+  limited: {
+    title: "That was a lot of tries",
+    body: "Wait ten minutes, then connect again.",
+  },
+  busy: {
+    title: "Meta could not be reached",
+    body: "Nothing was kept. Try again in a moment.",
+  },
+  seal: {
+    title: "Meta ads are not ready here yet",
+    body: "Nothing was kept.",
+  },
+  error: {
+    title: "Something went wrong",
+    body: "Nothing was kept. Try again in a moment.",
   },
 };
 
@@ -638,6 +691,7 @@ export default async function StudioPage({
     ADDRESS_NOTICES[typeof params.address === "string" ? params.address : ""] ??
     STRIPE_NOTICES[typeof params.stripe === "string" ? params.stripe : ""] ??
     PAYPAL_NOTICES[typeof params.paypal === "string" ? params.paypal : ""] ??
+    META_NOTICES[typeof params.metaads === "string" ? params.metaads : ""] ??
     BILLING_NOTICES[BILLING_ALIASES[String(params.billing)] ?? (typeof params.billing === "string" ? params.billing : "")] ??
     TEAM_NOTICES[typeof params.team === "string" ? params.team : ""] ??
     STORES_NOTICES[typeof params.stores === "string" ? params.stores : ""] ??
@@ -1150,6 +1204,9 @@ export default async function StudioPage({
                   notes={statsNotes}
                   marks={autoMarks}
                   spends={adSpends}
+                  meta={await metaView(store.statsId, store.currency).catch(() => null)}
+                  canConnectMeta={may("settings")}
+                  pin={pin}
                   askHeard={!heardIsOff}
                   canSetHeard={may("settings")}
                   canSetAttribution={may("settings")}
