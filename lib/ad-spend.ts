@@ -5,11 +5,17 @@
  * the days of visits are, counted from the last entry added. Shown only in
  * the studio.
  *
+ * What the store's Meta ad account spent is read into lines of its own
+ * (lib/meta-ads.ts), and readSpends hands them back with the typed ones,
+ * marked source "meta", so every figure that uses spend uses both. They
+ * cannot be removed one by one: they go with the connection.
+ *
  *   nl:stats:<statsId>:spend   hash: <id> → JSON { channel, campaign, cents, from, to }
  */
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type AdSpend, MAX_SPEND_ENTRIES, readSpend } from "@/lib/ad-spend-rules";
+import { metaLines } from "@/lib/meta-ads";
 
 const key = (statsId: string) => `nl:stats:${statsId}:spend`;
 const ID = /^[a-f0-9]{8}$/;
@@ -35,10 +41,17 @@ export function parseSpends(raw: unknown): AdSpend[] {
   return out.sort((a, b) => a.from.localeCompare(b.from) || a.id.localeCompare(b.id)).slice(-MAX_SPEND_ENTRIES);
 }
 
-export async function readSpends(statsId: string | null): Promise<AdSpend[]> {
-  if (!statsId || !isRedisConfigured()) return [];
+/** The typed lines only. */
+async function typedSpends(statsId: string): Promise<AdSpend[]> {
   const [raw] = await redisPipeline([["HGETALL", key(statsId)]]);
   return parseSpends(raw);
+}
+
+/** Every line: the typed ones, then those read from Meta while the store is connected. */
+export async function readSpends(statsId: string | null): Promise<AdSpend[]> {
+  if (!statsId || !isRedisConfigured()) return [];
+  const [typed, meta] = await Promise.all([typedSpends(statsId), metaLines(statsId).catch(() => [])]);
+  return [...typed, ...meta];
 }
 
 export async function addSpend(
@@ -54,7 +67,7 @@ export async function addSpend(
     ["HSET", key(statsId), id, JSON.stringify(read.spend)],
     ["EXPIRE", key(statsId), KEEP_SECONDS],
   ]);
-  const spends = await readSpends(statsId);
+  const spends = await typedSpends(statsId);
   const [count] = await redisPipeline([["HLEN", key(statsId)]]);
   if (Number(count) > MAX_SPEND_ENTRIES) {
     const keep = new Set(spends.map((s) => s.id));
@@ -62,7 +75,7 @@ export async function addSpend(
     const drop = (Array.isArray(all) ? (all as unknown[]).map(String) : []).filter((field) => !keep.has(field));
     if (drop.length) await redisPipeline([["HDEL", key(statsId), ...drop]]);
   }
-  return { ok: true, spends };
+  return { ok: true, spends: await readSpends(statsId) };
 }
 
 export async function removeSpend(statsId: string, id: unknown): Promise<AdSpend[]> {

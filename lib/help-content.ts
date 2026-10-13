@@ -185,6 +185,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can my numbers read what I spent on Meta ads?",
+        a: [
+          "Yes, once Marktmorgen's Meta app is approved to read ads. At the bottom of your numbers, under what you spent on ads, press \u201cConnect Meta ads\u201d and allow it on Meta's page. Your numbers then read what each campaign spent on each day, on Facebook, Instagram and Threads, for the last 30 days, and read it again once a day. Each channel's row counts it with whatever you typed: what was left after the ads, the call to spend more, keep or cut, and the days it took to pay back.",
+          "Only what was spent is read: nothing about who saw or clicked your ads, and nothing is ever changed in your ad account. The amounts are read only when your ad account pays in your store's currency, because no exchange rate is guessed. Meta asks for the permission again every 60 days or so; your studio says when, and you are emailed if it stops. Disconnecting gives the permission back to Meta and deletes what was read; what you typed stays.",
+          "For each campaign to get its own row beside your posts, tag your ads' links in Ads Manager with utm_source={{site_source_name}}&utm_campaign={{campaign.name}}. The owner and Admins connect and disconnect it; anyone who sees your numbers sees what was read.",
+        ],
+      },
+      {
         q: "Can I give someone a discount code?",
         a: [
           `Yes, and it is on the ${PLAN_AT.creator} plan. On Stan, discount codes are on the $99 Creator Pro plan, according to its help center, read on September 28, 2026.`,

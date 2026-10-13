@@ -46,6 +46,8 @@ export async function startServices(port) {
   const portalConfigs = [];
   // Discord: one server, its roles, and who the bot put in it (lib/discord.ts).
   const discordCalls = [];
+  /** What was asked of Meta's Graph API, in order. */
+  const metaCalls = [];
   const discordMembers = new Set();
   const DISCORD = { server: "910000000000000001", bot: "920000000000000001", botRole: "930000000000000001", members: "930000000000000002", buyer: "940000000000000001" };
   const discordRoles = [
@@ -159,6 +161,36 @@ export async function startServices(port) {
           return json(res, 200, {});
         }
         return json(res, 404, { error: { code: "not_found", message: "no such file here" } });
+      }
+      // Meta (lib/meta-ads.ts, META_GRAPH_BASE): its consent page agrees at once and sends the
+      // person back; the Graph API answers for one person with one ad account in dollars.
+      if (path === "/meta/dialog/oauth") {
+        const back = new URL(url.searchParams.get("redirect_uri") ?? "");
+        back.searchParams.set("code", url.searchParams.get("scope") === "ads_read" ? "code-meta" : "code-wrong");
+        back.searchParams.set("state", url.searchParams.get("state") ?? "");
+        res.writeHead(302, { Location: back.toString() });
+        return res.end();
+      }
+      if (/^\/v\d+\.\d\//.test(path)) {
+        const api = path.replace(/^\/v\d+\.\d/, "");
+        const method = req.method ?? "GET";
+        metaCalls.push(`${method} ${api}`);
+        if (api === "/oauth/access_token") {
+          if (url.searchParams.get("grant_type") === "fb_exchange_token") return json(res, 200, { access_token: "EAAlocallong", token_type: "bearer", expires_in: 5184000 });
+          return url.searchParams.get("code") === "code-meta" ? json(res, 200, { access_token: "EAAlocalshort" }) : json(res, 400, { error: { code: 100, message: "Invalid verification code" } });
+        }
+        if (api === "/me/permissions" && method === "DELETE") return json(res, 200, { success: true });
+        if (api === "/me/permissions") return json(res, 200, { data: [{ permission: "ads_read", status: "granted" }] });
+        if (api === "/me") return json(res, 200, { id: "10150000000000009" });
+        if (api === "/me/adaccounts") return json(res, 200, { data: [{ id: "act_555", account_id: "555", name: "Local Ads", currency: "USD", account_status: 1 }] });
+        if (api === "/act_555/insights") {
+          const day = new Date().toISOString().slice(0, 10);
+          return json(res, 200, { data: [
+            { campaign_id: "1", campaign_name: "October Reel", spend: "30.00", date_start: day, publisher_platform: "instagram" },
+            { campaign_id: "1", campaign_name: "October Reel", spend: "12.00", date_start: day, publisher_platform: "facebook" },
+          ] });
+        }
+        return json(res, 404, { error: { code: 803, message: "unknown" } });
       }
       // Discord's own page agrees at once and sends the person back; its API answers for one server.
       if (path === "/discord/oauth2/authorize") {
@@ -481,6 +513,7 @@ export async function startServices(port) {
     portalConfigs: () => [...portalConfigs],
     /** What Discord was asked, and its ids. */
     discord: () => ({ calls: [...discordCalls], members: new Set(discordMembers), ids: DISCORD }),
+    meta: () => [...metaCalls],
     /** What was written to the file store, by its path. */
     blobs: () => new Map(blobs),
     /** The database itself, for a test to read or set what only time or many buyers would make. */

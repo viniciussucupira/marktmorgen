@@ -85,6 +85,10 @@ const env = {
   PAYPAL_PARTNER_SECRET: "EPlocalPartnerSecret0123",
   PAYPAL_PARTNER_MERCHANT_ID: "LOCALPARTNER01",
   PAYPAL_BN_CODE: "Marktmorgen_Local",
+  // Meta: the app's keys, and its consent page and Graph API answered by the stand-in (lib/meta-ads.ts).
+  META_APP_ID: "100000000000001",
+  META_APP_SECRET: "local_only_a_stand_in",
+  META_GRAPH_BASE: FAKE,
   // Discord: the application's keys, and its page and API answered by the stand-in.
   DISCORD_API_BASE: FAKE,
   DISCORD_CLIENT_ID: "950000000000000001",
@@ -519,6 +523,27 @@ try {
     const row = await studio.locator("#numbers tr", { has: studio.locator('th:text-is("Instagram")') }).first().innerText();
     is("$50 that brought nothing is called cut, and is not paid back", [/Cut/.test(row), /Not yet, 0%/.test(row)], [true, true]);
     is("the buyers' file for ad audiences is offered", await studio.getByRole("button", { name: "Download buyers for ads" }).count(), 1);
+    // What the store's Meta ad account spent, read into the same rows (lib/meta-ads.ts).
+    {
+      // Meta's page is another site: the form's redirect to it is followed here by hand, as a browser would.
+      const toMeta = (await studio.request.post(`${LOCAL}/api/integrations/meta/start`, { form: {}, maxRedirects: 0, headers: { Origin: LOCAL } })).headers().location ?? "";
+      is("connecting Meta asks for reading ads and nothing else", new URL(toMeta).searchParams.get("scope"), "ads_read");
+      await open(studio, toMeta);
+      await studio.locator("[data-meta-ads]").waitFor({ state: "attached", timeout: 30_000 });
+      const said = await words(studio.locator("main"));
+      is("and comes back connected, read at once", [studio.url().includes("metaads=connected"), /Your Meta ad account is connected/i.test(said)], [true, true]);
+      await studio.locator("#numbers details", { has: studio.locator("[data-meta-ads]") }).locator("summary").click();
+      const block = await words(studio.locator("[data-meta-ads]"));
+      is("the account and what it spent over the last 30 days", [/Local Ads \(USD\)/.test(block), /\$42(\.00)? over the last 30 days, 1 campaign/.test(block)], [true, true]);
+      const igRow = await studio.locator("#numbers tr", { has: studio.locator('th:text-is("Instagram")') }).first().innerText();
+      is("Instagram's row now counts the $30 Meta read with the $50 typed", /\$80/.test(igRow), true);
+      is("the typed line on the same channel and day is pointed out", (await words(studio.locator("#numbers details", { has: studio.locator("[data-meta-ads]") }))).includes("on days Meta was read"), true);
+      is("read once, from the account connected", services.meta().filter((c) => c.startsWith("GET /act_555/insights")).length, 1);
+      if (process.env.E2E_SHOTS) await studio.locator("[data-meta-ads]").screenshot({ path: join(process.env.E2E_SHOTS, "meta-ads.png") });
+      await studio.locator("[data-meta-ads]").getByRole("button", { name: "Disconnect Meta ads" }).click();
+      await studio.waitForURL(/metaads=disconnected/, { timeout: 30_000 });
+      is("disconnecting gives the permission back and takes Meta's lines away", [services.meta().includes("DELETE /me/permissions"), /\$80/.test(await studio.locator("#numbers tr", { has: studio.locator('th:text-is("Instagram")') }).first().innerText())], [true, false]);
+    }
     // The same money three ways (lib/attribution-rules.ts), and the window the creator chooses.
     const three = studio.locator("#numbers [data-attribution]");
     is("each channel's money by its last visit, its first and what buyers said, side by side", [
