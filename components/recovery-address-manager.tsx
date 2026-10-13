@@ -59,8 +59,8 @@ export function RecoveryAddressManager({ shown: initial }: { shown: string }) {
   }
 
   return (
-    <section id="recovery-address" aria-labelledby="recovery-title" className="mt-8 scroll-mt-32 border-t border-line pt-6">
-      <h3 id="recovery-title" className="flex items-center gap-2 font-semibold text-ink">
+    <section id="account-recovery" aria-labelledby="account-recovery-title" className="mt-8 scroll-mt-32 border-t border-line pt-6">
+      <h3 id="account-recovery-title" className="flex items-center gap-2 font-semibold text-ink">
         <Icon name="mail" size={18} className="text-violet-deep" />
         Recovery address
       </h3>
