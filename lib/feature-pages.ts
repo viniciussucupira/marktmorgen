@@ -1089,6 +1089,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "lock", title: "Only for the buyer who paid", body: "The offers show only in the browser that paid, within an hour of paying." },
           { icon: "mail", title: "A confirmation for each", body: "Every offer taken is delivered on the thank-you page and gets its own confirmation email." },
           { icon: "layout", title: "Pages in order", body: "Your own pages and your products' pages, up to 20 in a row, from one address: marktmorgen.com/@you/go/launch, or yourdomain.com/go/launch.", href: "/platform/sales-pages" },
+          { icon: "list", title: "Seven kinds to start from", body: "Lead magnet, video training, challenge, product launch, book, small first purchase and application: pick one, choose your products for its steps, and the funnel is made with the pages it needs, empty and hidden until you write them." },
           { icon: "chart", title: "Counted step by step", body: "How many people opened each step, and how many signed up or paid there, each person once a step, never you or your team." },
           { icon: "door", title: "Nobody is trapped", body: "A paid step says “No thanks, continue” under its buy box, and a step you take off or keep back is passed over instead of leading nowhere." },
         ],
@@ -1099,6 +1100,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           "A step is a page that exists on its own: one of your pages or a product's page. Nothing is drawn only for a funnel, and the thank-you page after paying is the store's own, with a note from you and, in a funnel, a button to the next step once the offers are answered.",
           "Each page or product is one step of a funnel, once. A call cannot be a step, because it is booked on a page of its own.",
+          "A kind of funnel writes nothing for you: the pages it makes are empty under their titles, and a funnel goes past them until you write them and let them out. A training is recorded and called recorded; nothing here pretends to be live.",
           "A funnel is carried by the address of its pages. Someone who opens a step from a bookmark is not in the funnel, and the next step after paying or signing up is found from the page the button was pressed on, so a browser set to hide that address goes on to the thank-you page alone.",
           "Up to 10 funnels in a store. A person is counted once a step by their connection and browser, so somebody who changes device is counted again.",
           "Offers are shown only after a card, Apple Pay or Google Pay payment.",

@@ -1,8 +1,15 @@
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { readListings } from "@/lib/catalog";
-import { FUNNEL_ID, MAX_FUNNEL_PAGES, productStepProblem, readFunnelInput } from "@/lib/page-funnel";
+import { idsOfKind, readListings } from "@/lib/catalog";
+import { FUNNEL_ID, MAX_FUNNEL_NAME, MAX_FUNNEL_PAGES, MAX_PAGE_FUNNELS, type PageFunnelStep, funnelSlugFrom, funnelSlugProblem, newFunnelId, productStepProblem, readFunnelInput } from "@/lib/page-funnel";
 import { dropPageFunnel, readPageFunnels, writePageFunnel } from "@/lib/page-funnel-store";
+import { randomBytes } from "node:crypto";
+import { can } from "@/lib/team-roles";
+import { setSitePages } from "@/lib/store";
+import { emptyBlock, parsePage } from "@/lib/sales-page";
+import { writePage } from "@/lib/sales-page-store";
+import { MAX_SITE_PAGES, type SitePage, siteKey, slugProblem } from "@/lib/site-page-rules";
+import { choicesOf, freeSlug, funnelType, pagesOf, slotProblem } from "@/lib/funnel-types";
 
 /**
  * Saves or removes one funnel of pages (lib/page-funnel.ts).
@@ -11,6 +18,12 @@ import { dropPageFunnel, readPageFunnels, writePageFunnel } from "@/lib/page-fun
  * saves it; `{ action: "remove", id }` removes it. Every step has to be a page
  * the store has, or a product of the store that has a page of its own and is
  * bought from it; a draft may be a step, and is passed over until it is out.
+ *
+ * `{ action: "from-type", type, name, products: { <slot>: <product id> } }`
+ * builds one from a funnel type (lib/funnel-types.ts): the store's own pages
+ * the type needs, made empty and kept back until the creator lets them out,
+ * and the funnel walking them and the chosen products in the type's order.
+ * Making pages needs the permission to change the public page as well.
  */
 export async function POST(request: NextRequest) {
   const guarded = await guardStoreWrite(request, "products", 12_000);
@@ -27,6 +40,60 @@ export async function POST(request: NextRequest) {
       if (!FUNNEL_ID.test(id)) return Response.json({ ok: false, error: "unknown" }, { status: 400 });
       const removed = await dropPageFunnel(statsId, id);
       return removed ? Response.json({ ok: true }) : Response.json({ ok: false, error: "unknown" }, { status: 404 });
+    }
+
+    if (body.action === "from-type") {
+      const type = funnelType(text(body.type, 40));
+      if (!type) return Response.json({ ok: false, error: "type" }, { status: 400 });
+      if (!can(guarded.role, "page")) return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+      if (existing.length >= MAX_PAGE_FUNNELS) return Response.json({ ok: false, error: "full" }, { status: 400 });
+      const name = text(body.name, MAX_FUNNEL_NAME).replace(/\s+/g, " ").trim() || type.label;
+      const pages = pagesOf(type);
+      if (store.sitePages.length + pages.length > MAX_SITE_PAGES) return Response.json({ ok: false, error: "pages_full" }, { status: 400 });
+
+      // Each product chosen is the store's, once, and the kind the role asks for.
+      const chosen = body.products && typeof body.products === "object" ? (body.products as Record<string, unknown>) : {};
+      const free = new Set(idsOfKind(store, "free"));
+      const calls = new Set(idsOfKind(store, "call"));
+      const known = new Set(store.catalog.items.map((item) => item.id));
+      const picked: Record<string, string> = {};
+      for (const slot of choicesOf(type)) {
+        const id = text(chosen[slot.key], 40);
+        const problem = slotProblem(slot, id && known.has(id) ? { free: free.has(id), call: calls.has(id) } : null);
+        if (problem) return Response.json({ ok: false, error: `slot_${problem}`, slot: slot.key }, { status: 400 });
+        if (Object.values(picked).includes(id)) return Response.json({ ok: false, error: "slot_twice", slot: slot.key }, { status: 400 });
+        picked[slot.key] = id;
+      }
+
+      // The pages, at addresses of their own, out of the menu: they belong to the funnel.
+      const taken = new Set(store.sitePages.map((page) => page.slug));
+      const made: { slot: (typeof pages)[number]; page: SitePage }[] = [];
+      for (const slot of pages) {
+        let slug = freeSlug(slot.slug, taken);
+        if (slugProblem(slug, store.sitePages) === "reserved") slug = freeSlug(`${slot.slug}-page`, taken);
+        taken.add(slug);
+        made.push({ slot, page: { id: randomBytes(5).toString("hex"), slug, title: slot.title, nav: false, target: slot.target ? picked[slot.target] : "", from: -1 } });
+      }
+      if (made.length) {
+        const saved = await setSitePages(guarded.ref, [...store.sitePages, ...made.map((m) => m.page)]);
+        if (!saved.ok || !saved.store.statsId) return Response.json({ ok: false, error: "server_error" }, { status: 500 });
+        for (const { slot, page } of made) {
+          const blocks = slot.blocks.map((kind) => emptyBlock(kind));
+          const hero = blocks[0];
+          if (hero?.kind === "hero") Object.assign(hero, { headline: slot.title, media: "none" });
+          await writePage(saved.store.statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true });
+        }
+      }
+
+      const steps: PageFunnelStep[] = type.slots.flatMap((slot): PageFunnelStep[] => {
+        if (slot.kind === "page") return [{ kind: "page", id: made.find((m) => m.slot.key === slot.key)!.page.id }];
+        if (slot.kind === "product") return [{ kind: "product", id: picked[slot.key] }];
+        return [];
+      });
+      let slug = funnelSlugFrom(name) || "funnel";
+      for (let n = 2; funnelSlugProblem(slug, existing) !== null && n < 100; n += 1) slug = `${(funnelSlugFrom(name) || "funnel").slice(0, 36)}-${n}`;
+      const kept = await writePageFunnel(statsId, { id: newFunnelId(), name, slug, steps, on: true, since: Math.floor(Date.now() / 1000) }, existing);
+      return Response.json({ ok: true, funnel: kept, pages: made.map((m) => ({ id: m.page.id, title: m.page.title, slug: m.page.slug })) });
     }
 
     const read = readFunnelInput(body.funnel, existing, Math.floor(Date.now() / 1000));
