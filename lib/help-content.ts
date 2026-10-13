@@ -681,6 +681,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I keep my own details about people, and track deals?",
+        a: [
+          "Yes, on every plan, under Deals and fields in your studio. A field is something you keep about each person: up to 10, each text, a number, a date or one of a few choices you name. You fill it in on the person's page under Buyers, and your list's file has a column for each. Taking a field away takes every answer to it.",
+          "A deal is somebody you are talking to about a sale that does not happen at your checkout, such as a coaching package or a project, with what it is worth in your store's currency. It sits on a stage you name, each open, won or lost, and each stage is added up. A store keeps up to 1,000 deals. Only people on your team who see your orders see any of it, and nothing in it emails anybody.",
+        ],
+      },
+      {
         q: "Will search engines find my store?",
         a: [
           "Yes. Every store has its own map for search engines, at marktmorgen.com/@yourname/sitemap.xml: your front page once it has something on it, every product a visitor can see, each of your pages that is out, your blog and each published post. Nothing you hide, nothing kept back for later, and nothing behind a purchase is in it, and each address is the one the page itself names as its own.",

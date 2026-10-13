@@ -1,0 +1,347 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Icon } from "@/components/icons";
+import { toast } from "@/components/toast";
+import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { formatMoney, moneyField, readMoney, type Currency } from "@/lib/money";
+import {
+  type CrmField,
+  type Deal,
+  FIELD_TYPES,
+  type FieldType,
+  MAX_CRM_FIELDS,
+  MAX_DEAL_NOTE,
+  MAX_DEAL_TITLE,
+  MAX_FIELD_NAME,
+  MAX_STAGE_NAME,
+  MAX_STAGES,
+  type Stage,
+  type StageKind,
+  boardTotals,
+  newCrmId,
+} from "@/lib/crm-rules";
+
+const MESSAGES: Record<string, string> = {
+  title: "Give the deal a name.",
+  stage: "That stage is gone. Reload the page.",
+  full: "This store has as many deals as it can keep. Remove some that are won or lost.",
+  unknown: "That is already gone. Reload the page.",
+  fields: "Each field needs a name of its own, and a choice needs at least two options.",
+  stages: "Keep at least one open stage, one won and one lost, each with a name.",
+  server_error: "Something went wrong. Nothing was changed. Try again.",
+  ...STUDIO_MESSAGES,
+};
+
+async function call(body: Record<string, unknown>): Promise<{ ok?: boolean; error?: string }> {
+  try {
+    const response = await fetch("/api/store/crm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    return (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+  } catch {
+    return { error: "server_error" };
+  }
+}
+
+type DealDraft = { id: string; title: string; email: string; value: string; stage: string; note: string };
+
+const KIND_WORDS: Record<StageKind, string> = { open: "Open", won: "Won", lost: "Lost" };
+
+/**
+ * A store's deals, stage by stage (lib/crm-rules.ts): what each is worth,
+ * who it is with, and a way to move it on. The stages are the store's own,
+ * and so are the fields kept about each person, made here too.
+ */
+export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[]; stages: Stage[]; fields: CrmField[]; currency: string }) {
+  const router = useRouter();
+  const money = (cents: number) => formatMoney(cents, currency);
+  const [draft, setDraft] = useState<DealDraft | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [stageDraft, setStageDraft] = useState<Stage[] | null>(null);
+  const [fieldDraft, setFieldDraft] = useState<(CrmField & { optionsText: string })[] | null>(null);
+  const totals = boardTotals(stages, deals);
+  const open = totals.filter((t) => t.stage.kind === "open");
+  const won = totals.filter((t) => t.stage.kind === "won");
+
+  async function run(body: Record<string, unknown>, done: string, after?: () => void) {
+    setBusy(true);
+    setError(null);
+    const answer = await call(body);
+    setBusy(false);
+    if (answer.ok) {
+      toast(done);
+      after?.();
+      router.refresh();
+      return;
+    }
+    setError(MESSAGES[answer.error ?? ""] ?? MESSAGES.server_error);
+  }
+
+  function saveDeal() {
+    if (!draft) return;
+    const cents = draft.value.trim() ? readMoney(draft.value, currency as Currency) : 0;
+    if (cents === null) {
+      setError("Type what it is worth as a number, like 1500 or 1500.50.");
+      return;
+    }
+    void run(
+      { action: "deal", deal: { id: draft.id || undefined, title: draft.title, email: draft.email, cents, stage: draft.stage, note: draft.note } },
+      draft.id ? "Deal saved." : "Deal added.",
+      () => setDraft(null),
+    );
+  }
+
+  const firstOpen = stages.find((s) => s.kind === "open")?.id ?? stages[0]?.id ?? "";
+
+  return (
+    <div className="space-y-8">
+      <section aria-labelledby="deals-title" className="card min-w-0 p-5 sm:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 max-w-2xl">
+            <h2 id="deals-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
+              Deals
+            </h2>
+            <p className="mt-1 text-sm text-ink-soft">
+              {`People you are talking to about something sold outside a checkout: a coaching package, a custom project. ${open.reduce((n, t) => n + t.count, 0)} open, worth ${money(open.reduce((n, t) => n + t.cents, 0))}; won so far, ${money(won.reduce((n, t) => n + t.cents, 0))}.`}
+            </p>
+          </div>
+          {draft === null ? (
+            <button type="button" className="btn btn-primary" onClick={() => { setError(null); setDraft({ id: "", title: "", email: "", value: "", stage: firstOpen, note: "" }); }}>
+              <Icon name="plus" size={18} />
+              New deal
+            </button>
+          ) : null}
+        </div>
+
+        {draft ? (
+          <div className="mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block sm:col-span-2">
+                <span className="field-label">What it is</span>
+                <input className="field mt-2" maxLength={MAX_DEAL_TITLE} value={draft.title} placeholder="Six coaching sessions for Dana" onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="field-label">Their email (optional)</span>
+                <input className="field mt-2" type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="field-label">{`What it is worth, in ${currency.toUpperCase()} (optional)`}</span>
+                <input className="field mt-2" inputMode="decimal" value={draft.value} placeholder="1500" onChange={(e) => setDraft({ ...draft, value: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="field-label">Stage</span>
+                <select className="field mt-2" value={draft.stage} onChange={(e) => setDraft({ ...draft, stage: e.target.value })}>
+                  {stages.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="field-label">A note (optional)</span>
+                <textarea className="field mt-2" rows={3} maxLength={MAX_DEAL_NOTE} value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
+              </label>
+            </div>
+            {error ? (
+              <p className="notice notice-error mt-4" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button type="button" className="btn btn-primary" disabled={busy} onClick={saveDeal}>
+                {busy ? "Saving…" : "Save deal"}
+              </button>
+              <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => { setDraft(null); setError(null); }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {totals.map(({ stage, count, cents }) => (
+            <section key={stage.id} aria-label={stage.name} className="min-w-0 rounded-2xl bg-paper p-4 ring-1 ring-line">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-semibold text-ink">
+                  {stage.name}
+                  {stage.kind !== "open" ? <span className="tag ml-2">{KIND_WORDS[stage.kind]}</span> : null}
+                </h3>
+                <p className="text-sm tabular-nums text-ink-soft">{`${count} · ${money(cents)}`}</p>
+              </div>
+              <ul className="mt-3 space-y-3">
+                {deals
+                  .filter((d) => d.stage === stage.id)
+                  .map((deal) => (
+                    <li key={deal.id} className="rounded-xl bg-white p-3 text-sm ring-1 ring-line">
+                      <p className="font-semibold text-ink [overflow-wrap:anywhere]">{deal.title}</p>
+                      <p className="mt-1 tabular-nums text-ink-soft">{deal.cents ? money(deal.cents) : "No amount yet"}</p>
+                      {deal.email ? (
+                        <p className="mt-1 text-ink-soft [overflow-wrap:anywhere]">
+                          {deal.email}
+                        </p>
+                      ) : null}
+                      {deal.note ? <p className="mt-2 whitespace-pre-line text-ink-soft [overflow-wrap:anywhere]">{deal.note}</p> : null}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <label className="min-w-0 flex-1">
+                          <span className="sr-only">{`Move ${deal.title}`}</span>
+                          <select
+                            className="field"
+                            value={deal.stage}
+                            disabled={busy}
+                            onChange={(e) => void run({ action: "deal", deal: { ...deal, stage: e.target.value } }, "Deal moved.")}
+                          >
+                            {stages.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          disabled={busy}
+                          onClick={() => { setError(null); setDraft({ id: deal.id, title: deal.title, email: deal.email, value: deal.cents ? moneyField(deal.cents, currency) : "", stage: deal.stage, note: deal.note }); }}
+                        >
+                          Edit
+                        </button>
+                        <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => void run({ action: "undeal", id: deal.id }, "Deal removed.")} aria-label={`Remove ${deal.title}`}>
+                          <Icon name="minus" size={16} />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+        {error && !draft ? (
+          <p className="notice notice-error mt-4" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <div className="mt-6">
+          {stageDraft ? (
+            <div className="rounded-2xl border border-line bg-white p-4 sm:p-6">
+              <p className="font-semibold text-ink">Stages, in order</p>
+              <ol className="mt-3 space-y-2">
+                {stageDraft.map((stage, i) => (
+                  <li key={stage.id} className="flex flex-wrap items-center gap-2">
+                    <input className="field min-w-0 flex-1" aria-label={`Stage ${i + 1}`} maxLength={MAX_STAGE_NAME} value={stage.name} onChange={(e) => setStageDraft(stageDraft.map((s, j) => (j === i ? { ...s, name: e.target.value } : s)))} />
+                    <select className="field w-auto" aria-label={`What stage ${i + 1} means`} value={stage.kind} onChange={(e) => setStageDraft(stageDraft.map((s, j) => (j === i ? { ...s, kind: e.target.value as StageKind } : s)))}>
+                      <option value="open">Open</option>
+                      <option value="won">Won</option>
+                      <option value="lost">Lost</option>
+                    </select>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setStageDraft(stageDraft.filter((_, j) => j !== i))} aria-label={`Remove stage ${i + 1}`}>
+                      <Icon name="minus" size={16} />
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              {stageDraft.length < MAX_STAGES ? (
+                <button type="button" className="btn btn-secondary btn-sm mt-3" onClick={() => setStageDraft([...stageDraft, { id: newCrmId(), name: "", kind: "open" }])}>
+                  <Icon name="plus" size={16} />
+                  Add a stage
+                </button>
+              ) : null}
+              <p className="mt-3 text-xs text-ink-soft">A deal in a stage you remove moves to the first open stage.</p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void run({ action: "stages", stages: stageDraft }, "Stages saved.", () => setStageDraft(null))}>
+                  Save stages
+                </button>
+                <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => setStageDraft(null)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setStageDraft(structuredClone(stages))}>
+              Change the stages
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section aria-labelledby="crm-fields-title" id="fields" className="card min-w-0 scroll-mt-32 p-5 sm:p-8">
+        <h2 id="crm-fields-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
+          Your fields
+        </h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          {`Up to ${MAX_CRM_FIELDS} things you keep about each person: their company, a date, which offer interests them. Filled in on each person's page under Buyers, and written into your list's file as columns of their own. Removing a field removes every answer to it.`}
+        </p>
+        {fieldDraft ? (
+          <div className="mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+            <ol className="space-y-3">
+              {fieldDraft.map((field, i) => (
+                <li key={field.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto]">
+                  <input className="field" aria-label={`Field ${i + 1}`} maxLength={MAX_FIELD_NAME} placeholder="Company" value={field.name} onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, name: e.target.value } : f)))} />
+                  <select className="field" aria-label={`Kind of field ${i + 1}`} value={field.type} onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, type: e.target.value as FieldType } : f)))}>
+                    {FIELD_TYPES.map((t) => (
+                      <option key={t.type} value={t.type}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setFieldDraft(fieldDraft.filter((_, j) => j !== i))} aria-label={`Remove field ${i + 1}`}>
+                    <Icon name="minus" size={16} />
+                  </button>
+                  {field.type === "choice" ? (
+                    <input
+                      className="field sm:col-span-3"
+                      aria-label={`Choices for field ${i + 1}, separated by commas`}
+                      placeholder="Coaching, Course, Not sure yet"
+                      value={field.optionsText}
+                      onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, optionsText: e.target.value } : f)))}
+                    />
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+            {fieldDraft.length < MAX_CRM_FIELDS ? (
+              <button type="button" className="btn btn-secondary btn-sm mt-3" onClick={() => setFieldDraft([...fieldDraft, { id: newCrmId(), name: "", type: "text", options: [], optionsText: "" }])}>
+                <Icon name="plus" size={16} />
+                Add a field
+              </button>
+            ) : null}
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy}
+                onClick={() =>
+                  void run(
+                    { action: "fields", fields: fieldDraft.map(({ optionsText, ...f }) => ({ ...f, options: f.type === "choice" ? optionsText.split(",").map((o) => o.trim()).filter(Boolean) : [] })) },
+                    "Fields saved.",
+                    () => setFieldDraft(null),
+                  )
+                }
+              >
+                Save fields
+              </button>
+              <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => setFieldDraft(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {fields.length ? (
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {fields.map((f) => (
+                  <li key={f.id} className="tag">{`${f.name} · ${FIELD_TYPES.find((t) => t.type === f.type)?.label ?? ""}`}</li>
+                ))}
+              </ul>
+            ) : null}
+            <button type="button" className="btn btn-secondary btn-sm mt-4" onClick={() => setFieldDraft(fields.map((f) => ({ ...f, optionsText: f.options.join(", ") })))}>
+              {fields.length ? "Change the fields" : "Add your first field"}
+            </button>
+          </>
+        )}
+      </section>
+    </div>
+  );
+}

@@ -25,6 +25,8 @@
  * The list is keyed by the store's own list id, not by the sign-in address,
  * so moving the account to another address takes the list along untouched.
  */
+import { allValues, readFields } from "@/lib/crm";
+import { personKey } from "@/lib/person-key";
 import { countOrder, storeOrdersThisMonth } from "@/lib/orders";
 import { freeCopiesLimitFor } from "@/lib/order-rules";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -350,8 +352,11 @@ function cell(value: string): string {
  * the ones a creator in Europe may write to about anything new.
  */
 export async function listAsCsv(store: Store, onlyAgreed: boolean): Promise<string> {
+  const fields = await readFields(store.statsId).catch(() => []);
+  const answers = fields.length ? await allValues(store.statsId, fields).catch(() => ({}) as Record<string, Record<string, string>>) : {};
   const rows = [
-    ["email", "agreed_to_emails", "agreed_at", "first_at", "last_at", "asked_for", "unsubscribed_at", "name", "tags", "source", "imported_at"]
+    // And the store's own fields, each a column of its own (lib/crm-rules.ts).
+    ["email", "agreed_to_emails", "agreed_at", "first_at", "last_at", "asked_for", "unsubscribed_at", "name", "tags", "source", "imported_at", ...fields.map((f) => f.name)]
       .map(cell)
       .join(","),
   ];
@@ -384,6 +389,7 @@ export async function listAsCsv(store: Store, onlyAgreed: boolean): Promise<stri
           lead.tags.join("; "),
           lead.source,
           lead.importedAt,
+          ...fields.map((f) => (store.statsId ? answers[f.id]?.[personKey(store.statsId, email)] ?? "" : "")),
         ]
           .map(cell)
           .join(","),

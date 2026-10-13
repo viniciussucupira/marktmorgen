@@ -7,6 +7,9 @@ import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { PersonFind } from "@/components/person-find";
 import { PersonNotes } from "@/components/person-notes";
+import { PersonFields } from "@/components/person-fields";
+import { readFields, readValues } from "@/lib/crm";
+import type { CrmField } from "@/lib/crm-rules";
 import { type BuyerProfile, type ProfileMembership, type ProfileOrder, SALE_REFERENCE, addressForSale, addressForToken, buyerProfile } from "@/lib/buyer-profile";
 import { channelName } from "@/lib/channel-names";
 import { formatMoney } from "@/lib/money";
@@ -89,6 +92,9 @@ export default async function StudioPeoplePage({ searchParams }: Params) {
   }
   const asked = Boolean(token || sale);
   const profile = email ? await buyerProfile(store, email) : null;
+  // The store's own fields about each person (lib/crm-rules.ts), and this one's answers.
+  const fields = profile ? await readFields(store.statsId) : [];
+  const values = profile?.person ? await readValues(store.statsId, profile.person, fields) : {};
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -103,7 +109,7 @@ export default async function StudioPeoplePage({ searchParams }: Params) {
         <main id="content" className="container-page pb-20 pt-10 sm:pt-14">
           <p className="eyebrow">Buyers</p>
           {profile ? (
-            <Profile store={store} profile={profile} />
+            <Profile store={store} profile={profile} fields={fields} values={values} />
           ) : (
             <>
               <h1 className="t-h2 mt-3">Everything one buyer has done with your store</h1>
@@ -180,7 +186,7 @@ async function LatestBuyers({ store }: { store: Store }) {
   );
 }
 
-function Profile({ store, profile }: { store: Store; profile: BuyerProfile }) {
+function Profile({ store, profile, fields, values }: { store: Store; profile: BuyerProfile; fields: CrmField[]; values: Record<string, string> }) {
   const money = (cents: number, currency = profile.currency) => formatMoney(cents, currency);
   const net = profile.paid - profile.refunded;
   const others = Object.entries(profile.otherCurrencies).filter(([, cents]) => cents !== 0);
@@ -348,6 +354,17 @@ function Profile({ store, profile }: { store: Store; profile: BuyerProfile }) {
         {contact && contact.tags.length ? (
           <p className="mt-2 text-sm text-ink-soft">{`Labels, from your import or a sequence: ${contact.tags.join(", ")}.`}</p>
         ) : null}
+      </section>
+
+      <section aria-labelledby="fields-title" className="card mt-8 p-6 sm:p-8">
+        <h2 id="fields-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Your fields</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          What you keep about each person, in fields of your own. They go into your list&apos;s file as columns.{" "}
+          <Link href={studioPath(store, "", "deals")} className="underline underline-offset-4">
+            {fields.length ? "Change the fields" : "Make your first field"}
+          </Link>
+        </p>
+        {profile.person && fields.length ? <PersonFields person={profile.person} fields={fields} initial={values} /> : null}
       </section>
 
       <section aria-labelledby="notes-title" className="card mt-8 p-6 sm:p-8">
