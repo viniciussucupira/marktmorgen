@@ -998,8 +998,8 @@ export function StatsPanel({
       {range !== "all" ? (
         <RevenueQuality data={data} range={range} spends={spends} />
       ) : null}
-      {salesHere && range !== "all" && data.buyerChannels ? (
-        <BuyerChannelsPanel window={data.buyerChannels[range]} currency={data.currency} historyPartial={data.buyerChannels.historyPartial} />
+      {salesHere && range !== "all" && days.length > 0 && data.buyerChannels ? (
+        <BuyerChannelsPanel window={data.buyerChannels[range]} currency={data.currency} historyPartial={data.buyerChannels.historyPartial} period={{ from: days[0].date, to: days[days.length - 1].date }} />
       ) : null}
       {range !== "all" ? (
         <AdSpendEditor
