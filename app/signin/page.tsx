@@ -208,6 +208,12 @@ export default async function SignInPage({
           <div className="card mt-8 p-6 sm:p-8">
             <SignInForm />
             <PasskeySignIn />
+            {/* Lost the inbox this account logs in with (lib/recovery-address.ts). */}
+            <p className="mt-4 text-sm text-ink-soft">
+              <Link href="/signin/lost" className="link inline-flex min-h-11 items-center">
+                Cannot open your email any more?
+              </Link>
+            </p>
           </div>
 
           <section aria-labelledby="next-title" className="mt-10">

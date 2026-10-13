@@ -10,7 +10,7 @@ import {
   sessionCookie,
   takeSignInLink,
 } from "@/lib/auth";
-import { HOLD_SECONDS, TWO_STEP_COOKIE, holdSignIn, resetIfDue, twoStepOn } from "@/lib/two-step";
+import { HOLD_SECONDS, TWO_STEP_COOKIE, endRecoveryAccess, holdSignIn, resetIfDue, twoStepOn } from "@/lib/two-step";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
 
 /**
@@ -70,6 +70,8 @@ export async function POST(request: NextRequest) {
       return response;
     }
     sessionId = owner ? await openSession(owner) : null;
+    // The sign-in inbox itself: what the recovery address opened is closed (lib/recovery-address.ts).
+    if (owner) await endRecoveryAccess(owner).catch((error) => console.error("closing a recovery login failed", error));
   } catch (error) {
     console.error("sign-in callback failed", error);
   }

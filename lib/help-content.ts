@@ -704,6 +704,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "What if I can no longer open the email I log in with?",
+        a: [
+          "Two things get you back in without it, and both are set up ahead of time under Account in your studio. A passkey logs you in with your fingerprint, face or device PIN, with everything open; then move your sign-in address to an inbox you have. A recovery address is a second inbox you confirm with a code: from \u201cCannot open your email any more?\u201d on the login page, type the address you log in with, and a link goes there that lets you in at once.",
+          "Through the recovery address, your products, pages, buyers, numbers and drafts are open straight away. Payments, your plan, your team, exports, settings, sending to your list, imports and your sign-in address open 7 days later, and the inbox you log in with is told at once. That week is only so that somebody who got into an old recovery inbox cannot quietly take your store: logging in with your sign-in email, a passkey or your two-step code before then logs them out. After the week, the recovery address opens everything, so you can move your sign-in address.",
+          "With neither a passkey nor a recovery address, the account cannot be opened without that inbox, and nobody here can open it for you. That is what keeps it yours: get the inbox back through your email provider's own recovery.",
+        ],
+      },
+      {
         q: "Can I keep my own details about people, and track deals?",
         a: [
           "Yes, on every plan, under Deals and fields in your studio. A field is something you keep about each person: up to 10, each text, a number, a date or one of a few choices you name. You fill it in on the person's page under Buyers, and your list's file has a column for each. Taking a field away takes every answer to it.",
