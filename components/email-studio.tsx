@@ -1204,7 +1204,7 @@ function History({
 type StepDraft = {
   id?: string;
   /** An email, or a step that acts instead (lib/flow-rules.ts, FlowAction). */
-  kind: "email" | "tag" | "untag" | "start";
+  kind: "email" | "tag" | "untag" | "start" | "webhook";
   actionTag: string;
   actionFlow: string;
   wait: string;
@@ -1245,6 +1245,8 @@ const STEP_IF_WORDS: { value: StepIf | ""; label: string }[] = [
   { value: "started", label: "Only those who have opened a course" },
   { value: "unfinished", label: "Only those who have not finished a course" },
   { value: "finished", label: "Only those who have finished a course" },
+  { value: "half-a", label: "Only the first half of the sequence (A)" },
+  { value: "half-b", label: "Only the second half of the sequence (B)" },
 ];
 
 function blankStep(wait: string, unit: "hours" | "days", firstProduct: string): StepDraft {
@@ -1257,6 +1259,7 @@ function actionWords(action: FlowAction, flows: { id: string; name: string }[]):
     const target = action.flowId;
     return `starts the sequence “${flows.find((f) => f.id === target)?.name ?? "a sequence no longer in your store"}”`;
   }
+  if (action.do === "webhook") return "tells your webhooks who reached it";
   return action.do === "tag" ? `gives the label “${action.tag}”` : `takes off the label “${action.tag}”`;
 }
 
@@ -1272,6 +1275,7 @@ function stepCount(steps: Pick<FlowStep, "action">[]): string {
 function actionOf(s: StepDraft): FlowAction | null {
   if (s.kind === "tag" || s.kind === "untag") return { do: s.kind, tag: s.actionTag };
   if (s.kind === "start") return { do: "start", flowId: s.actionFlow };
+  if (s.kind === "webhook") return { do: "webhook" };
   return null;
 }
 
@@ -1297,7 +1301,7 @@ function conditionOf(s: StepDraft): StepCondition | null {
   if (s.when === "has" || s.when === "lacks") return { if: s.when, productId: s.whenProduct };
   if (isCourseIf(s.when)) return { if: s.when, productId: s.whenProduct };
   if (s.when === "tag" || s.when === "untagged") return { if: s.when, tag: s.whenTag };
-  if (s.when === "buyer" || s.when === "lead" || s.when === "clicked" || s.when === "unclicked") return { if: s.when };
+  if (s.when === "buyer" || s.when === "lead" || s.when === "clicked" || s.when === "unclicked" || s.when === "half-a" || s.when === "half-b") return { if: s.when };
   return null;
 }
 
@@ -1713,7 +1717,7 @@ function Flows({
                       data-step-kind
                       value={s.kind}
                       onChange={(e) => {
-                        const kind = e.target.value === "tag" || e.target.value === "untag" || e.target.value === "start" ? e.target.value : "email";
+                        const kind = e.target.value === "tag" || e.target.value === "untag" || e.target.value === "start" || e.target.value === "webhook" ? e.target.value : "email";
                         setStep(i, { kind, actionFlow: s.actionFlow || otherFlows[0]?.id || "" });
                       }}
                     >
@@ -1721,6 +1725,7 @@ function Flows({
                       <option value="tag">Gives a label</option>
                       <option value="untag">Takes a label off</option>
                       {otherFlows.length ? <option value="start">Starts another sequence</option> : null}
+                      <option value="webhook">Tells your webhooks</option>
                     </select>
                   </label>
                 </div>
@@ -1769,6 +1774,10 @@ function Flows({
                     </select>
                     <span className="mt-1 block text-sm text-ink-soft">Each person goes through a sequence once, so nobody is started on it twice.</span>
                   </label>
+                ) : s.kind === "webhook" ? (
+                  <p className="mt-3 text-sm text-ink-soft">
+                    Each person who reaches this step is sent to your own server as a &ldquo;Sequence step&rdquo; event, once: their email, the sequence and the step. Choose an address that listens for it under Webhooks, in your settings; with none, this step does nothing.
+                  </p>
                 ) : (
                 <>
                 <label className="mt-3 block">

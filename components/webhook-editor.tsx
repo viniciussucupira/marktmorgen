@@ -17,6 +17,7 @@ const EVENTS: { key: WebhookEvent; label: string; hint: string }[] = [
   { key: "call.booked", label: "Call booked", hint: "A call or a seat in a session, paid" },
   { key: "call.moved", label: "Call moved", hint: "A buyer moved their booking" },
   { key: "refund.issued", label: "Refund issued", hint: "A refund on your Stripe account" },
+  { key: "sequence.step", label: "Sequence step", hint: "Somebody reached a step of a sequence that calls your webhooks" },
 ];
 const ALL = EVENTS.map((e) => e.key);
 

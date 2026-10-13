@@ -16,6 +16,7 @@
  *   nl:mail:flowq                       steps due, scored by when
  *   nl:mail:enr:<flowId>:<address key>  who has started a sequence
  */
+import { emitEvent } from "@/lib/webhooks";
 import { hasPlaceholder } from "@/lib/mail-body";
 import { createHash, randomBytes } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
@@ -32,6 +33,7 @@ import {
   type StepCondition,
   cleanTag,
   goalClash,
+  halfOf,
   holds,
   isCourseIf,
   readAction,
@@ -330,9 +332,21 @@ async function startFlows(store: Store, flows: Flow[], addresses: string[]): Pro
  * all the same, and nobody is started twice. Says how many it did something
  * for.
  */
-async function act(store: Store, flows: Flow[], action: FlowAction, emails: string[]): Promise<number> {
+async function act(store: Store, flows: Flow[], action: FlowAction, emails: string[], at: { flow: Flow; step: FlowStep; index: number }): Promise<number> {
   const listId = store.listId;
   if (!listId || !emails.length) return 0;
+  if (action.do === "webhook") {
+    // One event for each person, once each (lib/webhooks.ts keeps the event's own mark): who, and where in which sequence.
+    let told = 0;
+    for (const email of emails) {
+      told += await emitEvent(store, "sequence.step", `${at.flow.id}:${at.step.id}:${email}`, {
+        sequence: { id: at.flow.id, name: at.flow.name },
+        step: at.index + 1,
+        email,
+      }).then((n) => (n > 0 ? 1 : 0), () => 0);
+    }
+    return told;
+  }
   if (action.do === "start") {
     const target = flows.find((f) => f.id === action.flowId && f.active && f.steps.length > 0);
     return target ? startFlows(store, [target], emails) : 0;
@@ -458,7 +472,7 @@ export async function sendDueSteps(
         done += 1;
         return;
       }
-      if (step.when && !holds(step.when, { ...contact, used: used.has(email), course: progress?.get(email) }, paid)) {
+      if (step.when && !holds(step.when, { ...contact, used: used.has(email), course: progress?.get(email), half: halfOf(flow.id, email) }, paid)) {
         if (step.otherwise === "end" || !following) left += 1;
         else onward.push(email);
         return;
@@ -476,7 +490,7 @@ export async function sendDueSteps(
     // A step that acts instead of writing: done for everyone it is for, then
     // on to the next step, its wait counted from now.
     if (step.action) {
-      const acted = await act(store, flowsFor.get(listId) ?? [], step.action, still);
+      const acted = await act(store, flowsFor.get(listId) ?? [], step.action, still, { flow, step, index });
       const after: (string | number)[][] = acted ? [["HINCRBY", statsKey(flow.id), "acted", acted]] : [];
       if (following) {
         const at = now + following.delayHours * 3600;

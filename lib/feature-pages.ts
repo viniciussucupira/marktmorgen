@@ -680,7 +680,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "shield", title: "Dead addresses taken off for you", body: "An address that cannot be delivered to, or whose owner reports an email as spam, is taken off your list by itself and never written to again. Mail apps judge a sender by exactly those two things." },
           { icon: "download", title: "Your list is yours", body: "Download it as a CSV any time, from any plan. Bring one in from a spreadsheet, up to 50,000 addresses a file, confirming each time that those people agreed.", href: "/platform/switching-to-marktmorgen" },
           { icon: "target", title: "Sequences that stop selling to buyers", body: "End a sequence for anyone who buys, or gets one product, checked before each email, so a launch sequence never pitches the course to somebody who already owns it. And send any email of it only to those who have a product or do not, who have bought or not yet, or who carry a label, from your import or from a sequence; everyone else skips it or leaves the sequence there. Or only to those who used a link in the email before, or did not: counted only for readers who allowed it with a box of their own when they joined, and never from opens." },
-          { icon: "ladder", title: "Steps that act, not only emails", body: "A step can give someone a label, take one off, or start them on another sequence, with the same conditions an email has. “If they used the link and have not bought, label them interested”, and a sequence that starts with that label takes it from there: automations, in the sequences you already have." },
+          { icon: "ladder", title: "Steps that act, not only emails", body: "A step can give someone a label, take one off, start them on another sequence or tell your webhooks, with the same conditions an email has, and a sequence can split its people into halves A and B to try two versions on one list. “If they used the link and have not bought, label them interested”, and a sequence that starts with that label takes it from there: automations, in the sequences you already have." },
           { icon: "play", title: "Two sequences written for you", body: "A welcome for everyone who joins and a thank-you after a first purchase, written from your store's name, products and links in one press. They are left switched off: nothing is sent until you have read one and turned it on." },
           { icon: "sparkle", title: "A whole sequence, written with AI", body: "Pick the moment it starts on and how many emails, 3 to 7, and AI writes them from your products' names, prices and links, in your store's language, paced a few days apart. Only your store's own links stay in; nothing goes out until you read it and save it." },
           { icon: "refresh", title: "Tell buyers about an update", body: "A new edition, more templates, new lessons: one press emails everyone who bought that product, with your words and the link to get the new version, in your store's language. Once a week at most per product, with a link to stop these emails." },
@@ -1346,12 +1346,13 @@ export const FEATURE_PAGES: TopicPage[] = [
       },
       {
         kind: "features",
-        title: "Seven events, and how they arrive",
+        title: "Eight events, and how they arrive",
         items: [
           { icon: "receipt", title: "sale.completed and refund.issued", body: "A paid checkout of any product, each one-click offer taken after it, and a refund, even one made in your Stripe dashboard." },
           { icon: "repeat", title: "membership.started and membership.canceled", body: "A membership bought, and a membership set to end or ended." },
           { icon: "gift", title: "lead.captured", body: "Someone confirmed their address for a free product." },
           { icon: "calendar", title: "call.booked and call.moved", body: "A call or a seat in a session booked and paid, and a booking the buyer moved." },
+          { icon: "ladder", title: "sequence.step", body: "Somebody reached a step of one of your sequences that tells your webhooks: their email, the sequence and the step, once for each person." },
           { icon: "lock", title: "Signed", body: "Every message carries a Marktmorgen-Signature header: an HMAC-SHA256 of its time and body under that address's secret." },
           { icon: "refresh", title: "Tried again", body: "When an address does not answer, the message is tried six more times over about forty hours, then marked failed." },
           { icon: "list", title: "A log you can read", body: "Your studio keeps the last 50 deliveries, each for up to seven days, with what the address answered." },
