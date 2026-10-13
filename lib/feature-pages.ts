@@ -690,6 +690,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "sparkle", title: "A first draft with AI", body: "Pick what the email is for and which product it is about, say it in a few words, and the subject and body are filled in for you to read and change, with the product's link. Your unsubscribe link and postal address are added at the bottom as always." },
           { icon: "chat", title: "Announcements to your community", body: "A post in your community can also go by email to the members who asked for it, counted in the same monthly emails.", href: "/platform/community" },
           { icon: "star", title: "One email that asks for a review", body: "Switch it on and each buyer is asked once per order, 3 to 30 days after buying, for an honest review. Counted in the same monthly emails.", href: "/platform/reviews" },
+          { icon: "list", title: "Fields of your own, and deals", body: "Up to 10 things you keep about each person — their company, a date, which offer interests them — filled in on their page and written into your list's file as columns. And deals: people you are talking to about a sale made outside a checkout, with what each is worth, on stages you name, open, won or lost, added up stage by stage. Only your team sees them, and nothing in them sends anything to anybody." },
           { icon: "type", title: "Drafts your team can write", body: "Up to 20 drafts per store. An Editor writes one; you or an Admin reads it and sends it.", href: "/platform/teams-and-stores" },
         ],
       },

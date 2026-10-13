@@ -35,8 +35,9 @@
  *   nl:person:<statsId>:n:<person>     hash: <id> → JSON { at, by, text }
  *   nl:person:find:<token>             JSON { s: store id, e: address }, an hour
  */
+import { personKey } from "@/lib/person-key";
 import { readPaid } from "@/lib/paypal-sales";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
@@ -74,10 +75,8 @@ const findKey = (token: string) => `nl:person:find:${token}`;
 const whoKey = (statsId: string) => `nl:person:${statsId}:who`;
 const notesKey = (statsId: string, person: string) => `nl:person:${statsId}:n:${person}`;
 
-/** The key one address is kept under for one store: never the address itself. */
-export function personKey(statsId: string, email: string): string {
-  return createHash("sha256").update(`nimbus-person:${statsId}:${normaliseEmail(email)}`).digest("hex").slice(0, 32);
-}
+/** The key one address is kept under for one store: never the address itself (lib/person-key.ts). */
+export { personKey };
 
 // ------------------------------------------------------------------ finding
 

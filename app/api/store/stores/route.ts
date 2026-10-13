@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { forgetCrm } from "@/lib/crm";
 import { away, creatorFrom, storeCookie } from "@/lib/studio-route";
 import { limited } from "@/lib/request-guard";
 import { deleteStore } from "@/lib/store";
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       // Nothing of a deleted store is kept that could still reach anyone: the
       // sealed key to its email platform, its phones' push addresses, and the
       // notes its team wrote about buyers (lib/buyer-profile.ts).
-      await Promise.all([forgetStoreSync(result.store.statsId), forgetStorePhones(result.store.statsId), forgetPersonNotes(result.store.statsId)]).catch((error: unknown) =>
+      await Promise.all([forgetStoreSync(result.store.statsId), forgetStorePhones(result.store.statsId), forgetPersonNotes(result.store.statsId), forgetCrm(result.store.statsId)]).catch((error: unknown) =>
         console.error("forgetting a deleted store's integrations failed", error),
       );
       // Back to the owner's first store, and the switcher forgets this one.

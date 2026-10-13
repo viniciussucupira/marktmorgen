@@ -1102,7 +1102,11 @@ export default async function StudioPage({
                   : []),
                 // One page per buyer, read from the creator's own Stripe account (lib/buyer-profile.ts).
                 ...(may("orders")
-                  ? [{ href: studioPath(store, "", "people"), title: "Buyers", text: "One page per buyer: what they paid, where they found you, their courses and your team's notes.", icon: "user" as const }]
+                  ? [
+                      { href: studioPath(store, "", "people"), title: "Buyers", text: "One page per buyer: what they paid, where they found you, their courses and your team's notes.", icon: "user" as const },
+                      // Fields of the store's own and its deals (lib/crm-rules.ts).
+                      { href: studioPath(store, "", "deals"), title: "Deals and fields", text: "Sales you are talking through, stage by stage, and the fields you keep about each person.", icon: "chart" as const },
+                    ]
                   : []),
                 // The credit lands on the plan, so whoever may handle the plan (lib/creator-invites.ts).
                 ...(billingReady && may("billing")
