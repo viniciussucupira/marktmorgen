@@ -1021,7 +1021,12 @@ export default function PrivacyPage() {
           browser and system as the browser names them; we do not keep that
           description. In the studio, a cookie named <code>nl_store</code>{" "}
           remembers which of an account&apos;s stores was last open, for a
-          year.
+          year. A creator who turns on two-step login has the secret their
+          authenticator app shares with us kept encrypted, a one-way hash of
+          each recovery code not yet used, and the last code used, until they
+          turn it off. Between the emailed link and the code, a cookie named{" "}
+          <code>nl_2fa</code> holds a random code for that one login, for ten
+          minutes.
         </p>
         <p id="drafts">
           <strong className="text-black">Email drafts.</strong> For each draft

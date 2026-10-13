@@ -175,6 +175,8 @@ import { SESSION_COOKIE, isFreshSession } from "@/lib/auth";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { PasskeyManager } from "@/components/passkey-manager";
+import { TwoStepManager } from "@/components/two-step-manager";
+import { twoStepStatus } from "@/lib/two-step";
 import { ResendPurchase } from "@/components/resend-purchase";
 import { LeaveTeam } from "@/components/team-manager";
 import { productSegment } from "@/lib/product-slug";
@@ -925,10 +927,12 @@ export default async function StudioPage({
     : [null, { state: "none" as const }, null];
   // The person's own passkeys, and — for the owner — how many are on the team.
   // Adding a passkey needs a login from the last fifteen minutes (lib/auth.ts).
-  const [passkeys, team, freshLogin] = await Promise.all([
+  const [passkeys, team, freshLogin, twoStep] = await Promise.all([
     email ? listPasskeys(email).catch(() => []) : Promise.resolve([]),
     store?.sid && may("team") ? readTeam(store.sid).catch(() => null) : Promise.resolve(null),
     isFreshSession(cookieStore.get(SESSION_COOKIE)?.value).catch(() => false),
+    // The person's two-step login (lib/two-step.ts), beside their passkeys.
+    email ? twoStepStatus(email).catch(() => ({ on: false, since: 0, codesLeft: 0 })) : Promise.resolve({ on: false, since: 0, codesLeft: 0 }),
   ]);
   const connectReady = isConnectConfigured();
   const billingReadyForSteps = isBillingConfigured();
@@ -2828,6 +2832,7 @@ export default async function StudioPage({
                 initial={passkeys.map(({ id, name, createdAt, lastUsedAt, synced }) => ({ id, name, createdAt, lastUsedAt, synced }))}
                 fresh={freshLogin}
               />
+              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} fresh={freshLogin} />
 
               {role !== "owner" ? (
                 <section aria-labelledby="leave-title" className="mt-8 border-t border-line pt-6">

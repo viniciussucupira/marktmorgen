@@ -6,9 +6,11 @@ import {
   emailForSession,
   endSession,
   noteSignIn,
+  openSession,
   sessionCookie,
-  spendSignInLink,
+  takeSignInLink,
 } from "@/lib/auth";
+import { HOLD_SECONDS, TWO_STEP_COOKIE, holdSignIn, twoStepOn } from "@/lib/two-step";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
 
 /**
@@ -56,7 +58,17 @@ export async function POST(request: NextRequest) {
 
   let sessionId: string | null = null;
   try {
-    sessionId = await spendSignInLink(token);
+    const owner = await takeSignInLink(token);
+    // Two-step login (lib/two-step.ts): the link is spent, and the session
+    // waits for the app's code, behind a cookie of this browser alone.
+    if (owner && (await twoStepOn(owner))) {
+      const held = await holdSignIn(owner);
+      const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+      const response = redirectTo(origin, "/signin/code");
+      response.headers.append("Set-Cookie", `${TWO_STEP_COOKIE}=${held}; Path=/; Max-Age=${HOLD_SECONDS}; HttpOnly; SameSite=Lax${secure}`);
+      return response;
+    }
+    sessionId = owner ? await openSession(owner) : null;
   } catch (error) {
     console.error("sign-in callback failed", error);
   }

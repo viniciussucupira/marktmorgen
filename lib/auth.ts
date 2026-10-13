@@ -279,10 +279,12 @@ export async function sendSignInLink(
 }
 
 /**
- * Spends a sign-in link and opens a session. The link is deleted first, so a
- * link that leaks after the fact is already worthless.
+ * Spends a sign-in link and says whose it was, opening nothing: for an
+ * account with two-step login, the session waits for its code
+ * (lib/two-step.ts). The link is deleted first, so a link that leaks after the
+ * fact is already worthless.
  */
-export async function spendSignInLink(token: string): Promise<string | null> {
+export async function takeSignInLink(token: string): Promise<string | null> {
   if (!isRedisConfigured()) return null;
   if (!/^[0-9a-f]{64}$/.test(token)) return null;
 
@@ -300,21 +302,16 @@ export async function spendSignInLink(token: string): Promise<string | null> {
     const [removed] = await redisPipeline([["DEL", key]]);
     email = Number(removed) === 1 ? read : null;
   }
-  if (typeof email !== "string" || !email) return null;
+  return typeof email === "string" && email ? email : null;
+}
 
-  const id = randomToken();
-  const opened = await sessionKey(id);
-  const owned = await sessionsKey(email);
-  await redisPipeline([
-    ["SET", opened, email, "EX", SESSION_TTL_SECONDS],
-    ["SET", await freshKey(id), "1", "EX", FRESH_LOGIN_SECONDS],
-    // The creator's own list of open sessions, which is what makes "sign out
-    // everywhere" possible. It outlives any single session by a day, so the
-    // last entry is never orphaned before the session it names.
-    ["SADD", owned, opened],
-    ["EXPIRE", owned, SESSION_TTL_SECONDS + 86_400],
-  ]);
-  return id;
+/**
+ * Spends a sign-in link and opens a session. The link is deleted first, so a
+ * link that leaks after the fact is already worthless.
+ */
+export async function spendSignInLink(token: string): Promise<string | null> {
+  const email = await takeSignInLink(token);
+  return email ? openSession(email) : null;
 }
 
 export async function emailForSession(
