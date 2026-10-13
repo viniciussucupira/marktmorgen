@@ -12,6 +12,12 @@ This increment connects existing product capabilities. It does not claim that ev
 - Date fields reject normalized overflow dates such as February 30.
 - Product checks run lint, the existing behavior suite and a production build on pull requests and main. Actions are pinned; the job uses read-only repository permission and no production secrets.
 
+## Saved paid-offer checks
+
+The funnel editor and growth workspace now reuse canSell, canSellProduct and bundleReady. They flag unavailable store payments, paid offers without configured delivery, and bundles without enough eligible items. The check reads only the selected store and never creates payment sessions, sends email, fetches external links or changes products. Failed reads are explicitly unknown.
+
+This is a configuration review, not a live checkout or delivery test. Free sign-up/email delivery, stock and license availability, provider health, external link health, and actual file access remain manual release checks.
+
 ## Verification
 
 The new regression file covers date validation, queue membership, descriptive funnel observations, role-filtered plans, route validation, cross-site rejection, pinned-store isolation, multi-store writes and teammate eligibility. Existing CRM and page-funnel regressions must pass too.
