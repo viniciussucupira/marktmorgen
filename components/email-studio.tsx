@@ -8,7 +8,7 @@ import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
-import { MailPictureButton } from "@/components/mail-picture-button";
+import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import type { Flow, FlowCounts, FlowStep } from "@/lib/flows";
 import { type FlowAction, MAX_CONDITION_TAG, type StepCondition, type StepIf, isCourseIf } from "@/lib/flow-rules";
 import type { MailSettings } from "@/lib/store";
@@ -29,6 +29,7 @@ const MESSAGES: Record<string, string> = {
   too_many: "That is more than one import takes. Split it into files of 5,000 addresses or fewer.",
   subject: "Write a subject line.",
   body: "Write the email itself.",
+  placeholder: "Part of the template is still in ⟦brackets⟧. Replace each with your own words, or remove it, before it can go out.",
   when: "Pick a time between now and a year from now.",
   product: "That product is not in your store anymore.",
   empty: "Nobody on your list matches, so there is nobody to send it to yet.",
@@ -241,11 +242,14 @@ export function EmailStudio(props: {
   courses?: string[];
   /** Who a new email goes to, when opened from "Worth knowing" (lib/insights.ts). */
   preset?: { who: Who };
+  /** The store's colour for a button in its emails (lib/store-look.ts), so the designer's preview is what is sent. */
+  accent?: string;
 }) {
   const ready = props.mail !== null;
   // The draft open in the composer; a new key starts the composer afresh.
   const [open, setOpen] = useState<DraftRow | null>(null);
   return (
+    <MailAccent.Provider value={props.accent ?? "#4c1d95"}>
     <div className="mt-8 grid items-start gap-x-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
       <div className="min-w-0">
         {ready ? (
@@ -325,6 +329,7 @@ export function EmailStudio(props: {
         ) : null}
       </div>
     </div>
+    </MailAccent.Provider>
   );
 }
 
@@ -684,13 +689,15 @@ function Compose(props: {
             ) : null}
           </div>
         ) : null}
-        <label className="block">
-          <span className="field-label">Email</span>
-          <textarea ref={bodyBox} className="field mt-2 min-h-56" rows={12} maxLength={20000} value={body} onChange={(e) => setBody(e.target.value)} />
-        </label>
-        <MailPictureButton body={body} onChange={setBody} box={() => bodyBox.current} />
+        <MailBodyEditor
+          body={body}
+          onChange={setBody}
+          boxRef={(el) => {
+            bodyBox.current = el;
+          }}
+        />
         <p className="text-sm text-ink-soft">
-          Blank lines make paragraphs, lines starting with &quot;- &quot; make a list, web addresses become links, and a picture you add shows where its line is. Why they are getting it, the unsubscribe link and your postal address are added at the bottom.
+          Blank lines make paragraphs, lines starting with &quot;- &quot; make a list, web addresses become links, and a picture you add shows where its line is. Design lays it out in blocks, with headings, buttons and templates. Why they are getting it, the unsubscribe link and your postal address are added at the bottom.
         </p>
         {segments.length ? (
           <label className="block">
@@ -1768,21 +1775,15 @@ function Flows({
                   <span className="text-sm text-ink-soft">Subject</span>
                   <input className="field mt-1" maxLength={150} value={s.subject} onChange={(e) => setStep(i, { subject: e.target.value })} />
                 </label>
-                <label className="mt-3 block">
-                  <span className="text-sm text-ink-soft">Email</span>
-                  <textarea
-                    ref={(el) => {
+                <div className="mt-3">
+                  <MailBodyEditor
+                    body={s.body}
+                    rows={6}
+                    onChange={(next) => setStep(i, { body: next })}
+                    boxRef={(el) => {
                       stepBoxes.current[i] = el;
                     }}
-                    className="field mt-1"
-                    rows={6}
-                    maxLength={20000}
-                    value={s.body}
-                    onChange={(e) => setStep(i, { body: e.target.value })}
                   />
-                </label>
-                <div className="mt-2">
-                  <MailPictureButton body={s.body} onChange={(next) => setStep(i, { body: next })} box={() => stepBoxes.current[i] ?? null} />
                 </div>
                 </>
                 )}

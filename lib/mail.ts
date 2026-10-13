@@ -13,7 +13,8 @@
  * Only people who agreed are ever written to (lib/contacts.ts), and a month
  * has a published number of emails, counted before each batch goes out.
  */
-import { MAX_MAIL_PICTURES, readPicture, withoutPictures } from "@/lib/mail-picture-rules";
+import { bodyHtml, bodyText } from "@/lib/mail-body";
+import { lookColours } from "@/lib/store-look";
 import { NIMBUS_FROM, type BatchMessage, hasResend, sendBatch, sendEmail, sentThisMonth } from "@/lib/email";
 import { SES_BULK_SHARE, isSesConfigured, sesBulkRoom, sesReady, sesSentLast24h } from "@/lib/ses";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -274,70 +275,8 @@ function escape(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-const URL_PATTERN = /(https:\/\/[^\s<>"')\]]+)/g;
-const BULLET = /^[-•]\s+/;
-
-/** The full stop or comma that ends a sentence, which the pattern above takes for part of the address. */
-const TRAILING = /[.,;:!?]+$/;
-
-/**
- * `goesTo` is where a link leads when that is not the address as written:
- * the same address with the email's tag on it (lib/mail-links.ts). The reader
- * always sees what the creator typed.
- */
-function linked(text: string, goesTo?: (href: string) => string): string {
-  return text
-    .split(URL_PATTERN)
-    .map((part, i) => {
-      if (i % 2 === 0) return escape(part).replace(/\n/g, "<br>");
-      // "…at https://example.com/plan." — the full stop belongs to the
-      // sentence. Left inside the link it opened a page that is not there.
-      const tail = part.match(TRAILING)?.[0] ?? "";
-      const href = tail ? part.slice(0, -tail.length) : part;
-      return `<a href="${escape(goesTo ? goesTo(href) : href)}" style="color:#4c1d95;text-decoration:underline">${escape(href)}</a>${escape(tail)}`;
-    })
-    .join("");
-}
-
-/**
- * The creator's text as HTML: paragraphs, lists, links and the pictures kept
- * for it (lib/mail-picture-rules.ts), nothing else.
- */
-export function bodyHtml(body: string, goesTo?: (href: string) => string): string {
-  const blocks = body.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
-  const out: string[] = [];
-  let pictures = 0;
-  for (const block of blocks) {
-    let list: string[] = [];
-    let para: string[] = [];
-    const flush = () => {
-      if (para.length) out.push(`<p style="margin:0 0 16px">${linked(para.join("\n"), goesTo)}</p>`);
-      if (list.length) out.push(`<ul style="margin:0 0 16px;padding-left:22px">${list.map((l) => `<li style="margin:0 0 6px">${linked(l, goesTo)}</li>`).join("")}</ul>`);
-      para = [];
-      list = [];
-    };
-    for (const line of block.split("\n")) {
-      const picture = pictures < MAX_MAIL_PICTURES ? readPicture(line) : null;
-      if (picture) {
-        flush();
-        pictures += 1;
-        out.push(
-          `<p style="margin:0 0 16px"><img src="${escape(picture.url)}" alt="${escape(picture.alt)}" width="512" style="display:block;width:100%;max-width:512px;height:auto;border:0;border-radius:12px"></p>`,
-        );
-        continue;
-      }
-      if (BULLET.test(line)) {
-        if (para.length) flush();
-        list.push(line.replace(BULLET, ""));
-      } else {
-        if (list.length) flush();
-        para.push(line);
-      }
-    }
-    flush();
-  }
-  return out.join("");
-}
+/** The creator's text as HTML, now kept with the designer that writes it (lib/mail-body.ts). */
+export { bodyHtml };
 
 export type Rendered = { subject: string; html: string; text: string; headers: Record<string, string> };
 
@@ -388,7 +327,7 @@ export function render(
   const stopCounting = counting ? `${SITE_URL}/unsubscribe?l=${token}` : "";
   const html = `<!doctype html><html lang="${escape(door?.lang ?? LANGUAGES[parseLanguage(store.language)].locale)}"><body style="margin:0;padding:0;background:#f7f5f0">
 <div style="max-width:560px;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1c1917">
-<div style="background:#ffffff;border-radius:16px;padding:28px 24px">${bodyHtml(body, tag ? (href) => taggedLink(href, store, tag, counting ? readerKey : undefined) : undefined)}</div>
+<div style="background:#ffffff;border-radius:16px;padding:28px 24px">${bodyHtml(body, tag ? (href) => taggedLink(href, store, tag, counting ? readerKey : undefined) : undefined, store.look ? lookColours(store.look).accent : undefined)}</div>
 <div style="padding:20px 8px 0;font-size:13px;line-height:1.5;color:#57534e">
 <p style="margin:0 0 8px">${escape(why)}</p>
 <p style="margin:0 0 8px"><a href="${escape(unsub)}" style="color:#57534e;text-decoration:underline">${escape(label)}</a> ${escape(after)}</p>
@@ -397,7 +336,7 @@ ${address ? `<p style="margin:0 0 8px">${escape(fromName)} · ${escape(address)}
 <p style="margin:0">${escape(sent)}</p>
 </div></div></body></html>`;
   const text = [
-    withoutPictures(body).trim(),
+    bodyText(body).trim(),
     "",
     "—",
     why,

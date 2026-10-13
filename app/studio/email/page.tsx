@@ -1,4 +1,5 @@
 import { WHO, type Who } from "@/lib/contacts";
+import { lookColours } from "@/lib/store-look";
 import type { Metadata } from "next";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { productLink } from "@/lib/checkout-recovery";
@@ -145,6 +146,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             </div>
           ) : null}
           <EmailStudio
+            accent={lookColours(store.look).accent}
             email={view.email}
             canSend={can(role, "send")}
             canSettings={can(role, "settings")}
