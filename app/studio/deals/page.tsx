@@ -1,3 +1,4 @@
+import { dealActionFilter } from "@/lib/crm-deal-filter";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -56,7 +57,7 @@ export default async function StudioDealsPage({ searchParams }: Params) {
             .
           </p>
           <div className="mt-8">
-            <DealsBoard deals={deals} stages={stages} fields={fields} currency={store.currency} assignees={assignees} today={today} />
+            <DealsBoard deals={deals} stages={stages} fields={fields} currency={store.currency} assignees={assignees} today={today} initialFilter={dealActionFilter(query.followup)} />
           </div>
         </main>
       </StudioStorePin>
