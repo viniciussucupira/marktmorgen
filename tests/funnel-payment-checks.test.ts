@@ -1,4 +1,4 @@
-import { paidStepProblem, readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
+import { paidStepProblem, freeStepProblem, readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Listing, Store } from "@/lib/store";
 import { done, is, part } from "./check";
 process.env.STRIPE_SECRET_KEY = "sk_test_local_configuration_only";
@@ -17,6 +17,27 @@ const bundle = { ...product, link: null, bundle: ["a", "b", "c", "d"], pick: 3 }
 is("bundle needs enough deliverable choices", paidStepProblem(store, bundle, 2)?.includes("enough deliverable"), true);
 is("bundle with enough choices", paidStepProblem(store, bundle, 3), null);
 is("whole bundle needs at least two", paidStepProblem(store, { ...bundle, pick: null }, 1)?.includes("enough deliverable"), true);
+
+part("Free sign-up uses the public eligibility rule");
+process.env.RESEND_API_KEY = "re_test_configuration_only";
+const freeStore = { ...store, listId: "list1" } as Store;
+const free = { ...product, priceCents: 0 };
+is("configured free delivery", freeStepProblem(freeStore, free), null);
+is("no mailing list", freeStepProblem({ ...freeStore, listId: null }, free)?.includes("Free sign-up"), true);
+is("no free delivery", freeStepProblem(freeStore, { ...free, link: null })?.includes("Free sign-up"), true);
+is("free subscription inactive", freeStepProblem({ ...freeStore, subscriptionActive: false }, free)?.includes("Free sign-up"), true);
+is("paid product excluded from free review", freeStepProblem(freeStore, product), null);
+part("PayPal-only offers follow the public eligibility rule");
+process.env.PAYPAL_PARTNER_CLIENT_ID = "test-client";
+process.env.PAYPAL_PARTNER_SECRET = "test-secret";
+process.env.PAYPAL_PARTNER_MERCHANT_ID = "TEST123456";
+process.env.PAYPAL_BN_CODE = "test-code";
+const paypalStore = { ...store, stripeChargesEnabled: false, currency: "usd", paypalSeller: { merchant: "TEST123456" } } as unknown as Store;
+const paypalOffer = { ...product, stock: null, keys: null, pwyw: null };
+is("PayPal-only offer is available", paidStepProblem(paypalStore, paypalOffer, 0), null);
+is("unsupported PayPal offer stays unavailable", paidStepProblem(paypalStore, { ...paypalOffer, stock: 2 } as unknown as Listing, 0)?.includes("not sellable"), true);
+is("PayPal does not bypass missing delivery", paidStepProblem(paypalStore, { ...paypalOffer, link: null }, 0)?.includes("delivery"), true);
+
 async function main() {
   const catalogStore = { ...store, catalog: { id: null, inline: null, items: [{ id: product.id }], head: [product] } } as unknown as Store;
   is("configured paid step checked", await readFunnelPaymentChecks(catalogStore, { steps: [{ kind: "product", id: product.id }] }), []);
