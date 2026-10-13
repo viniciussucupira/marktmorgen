@@ -810,6 +810,18 @@ export default function PrivacyPage() {
           with the order, the buyer or the time, and the creator sees only the
           counts.
         </p>
+        <p id="recent-purchases">
+          <strong className="text-black">
+            A store&apos;s latest purchases.
+          </strong>{" "}
+          Where a creator switches it on, their store&apos;s pages show a card
+          with a recent purchase: which product, how long ago, and the country
+          the card was billed in, as Stripe gives it. For that, we keep the
+          product, the time, the country and the payment&apos;s reference of
+          the store&apos;s 20 latest purchases for up to 8 days, and use the
+          reference only to leave out a refunded one. Nothing about who bought
+          is kept for it or shown: no name, address, email, city or picture.
+        </p>
         <p id="affiliates">
           <strong className="text-black">
             A creator&apos;s affiliate program.

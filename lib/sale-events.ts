@@ -24,7 +24,9 @@
  *     buyer agreed to hear from the creator, which lib/email-sync.ts decides;
  *   - the team's Slack or Discord channel gets one line, where the creator
  *     asked for each sale there: the amount, what was bought and the channel
- *     it came from, never the buyer.
+ *     it came from, never the buyer;
+ *   - the store's own pages, where the creator shows its latest purchases:
+ *     what was bought, when and the billing country (lib/recent-sales.ts).
  */
 import { saleHandles } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -37,6 +39,7 @@ import { bumpsFromMeta, bundleFromMeta } from "@/lib/bundle-rules";
 import { formatMoney } from "@/lib/money";
 import { chatAddress, postToChat } from "@/lib/chat-summary";
 import { channelName } from "@/lib/channel-names";
+import { rememberSale } from "@/lib/recent-sales";
 
 /** How long a told sale is remembered: past the day the job looks back over. */
 const TOLD_SECONDS = 40 * 86400;
@@ -52,13 +55,15 @@ export type SaleRecord = {
   currency?: unknown;
   customer_email?: unknown;
   metadata?: Record<string, string> | null;
-  customer_details?: { email?: unknown; name?: unknown } | null;
+  customer_details?: { email?: unknown; name?: unknown; address?: { country?: unknown } | null } | null;
   consent?: { promotions?: unknown } | null;
+  mode?: unknown;
+  payment_intent?: unknown;
 };
 
 /** Whether anything listens for this store's sales. */
 export function listensToSales(store: Store): boolean {
-  return Boolean(store.stripeAccountId) && (store.phoneSales || store.emailSync !== null || store.chatSales);
+  return Boolean(store.stripeAccountId) && (store.phoneSales || store.emailSync !== null || store.chatSales || store.recentSales);
 }
 
 /** An amount as the checkout charged it: in its own currency, the store's when Stripe did not say. */
@@ -93,6 +98,9 @@ async function tell(store: Store, record: SaleRecord, session: string): Promise<
   const title = product?.title ?? meta.title ?? "A product";
   const amount = typeof record.amount_total === "number" ? record.amount_total : 0;
   const at = typeof record.created === "number" ? record.created * 1000 : Date.now();
+
+  // The store's own pages, where the creator shows its latest purchases (lib/recent-sales.ts).
+  await rememberSale(store, record).catch((error) => console.error("remembering a recent purchase failed", error));
 
   if (meta.kind !== "call") {
     await alertCreator(

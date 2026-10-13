@@ -479,6 +479,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { title: "Nothing pre-checked for them", body: "An extra charge the buyer did not choose is not a sale, and in Europe it is not allowed either." },
           { title: "The button says the total", body: "Check the box or pick the plan, and the buy button changes to what is charged today." },
           { title: "Scarcity that is true", body: "The number left is counted from real payments. No invented countdowns, no fake stock." },
+          { title: "Latest purchases that happened", body: "Switch it on and your front page and product pages show a card with a recent purchase: what was bought, how long ago and the country it was billed in, never who. Only payments settled on your Stripe account in the last 7 days, up to 3 a visit, each once; refunded ones are left out, and nothing can be typed in." },
         ],
       },
       {

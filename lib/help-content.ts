@@ -681,6 +681,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can my store show that people are buying?",
+        a: [
+          "Yes, with the truth only. Under \u201cLatest purchases on your store\u201d in your studio, switch it on, and your front page and product pages show a small card at the bottom: what was bought, how long ago, and the country the card was billed in, written in your store's language. It never says who bought, by name, city or picture.",
+          "It shows only purchases paid on your own Stripe account with real money, from the moment you switch it on, for 7 days each: up to 3 a visit, each once, never repeated to fill the space. Test payments, free copies, trials, calls and tips are not shown. A payment refunded in any part is left out, and so is a product you hide or remove. With no purchase in the last 7 days, nothing is shown. There is no way to type one in, here or anywhere else. A visitor can close it, and it stays closed for the rest of their visit.",
+        ],
+      },
+      {
         q: "Can I add a form, a survey or a quiz?",
         a: [
           "Yes, on every plan. Make one under Forms in your studio: up to 12 questions, each a short or long answer, an email address, one choice or several from up to 8 options, or a scale of 1 to 10, marked required or not. Then add a Form block to one of your own pages under Your pages and choose it there. A store can have 20 forms.",

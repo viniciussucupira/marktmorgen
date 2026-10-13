@@ -663,6 +663,12 @@ export type Store = {
    */
   askWhyNot: boolean;
   /**
+   * Whether the store's front page and product pages show its latest real
+   * purchases, one at a time, without names (lib/recent-sales.ts, added
+   * 13 October 2026). Off until the creator turns it on.
+   */
+  recentSales: boolean;
+  /**
    * Whether the creator brought past buyers over from another platform
    * (lib/imported-purchases.ts). Set once, by the first such import, so the
    * list of purchases knows to look for them without reading anything.
@@ -926,6 +932,7 @@ function parseStore(raw: unknown): Store | null {
       emailSync: parseEmailSyncRef(value.emailSync),
       phoneSales: value.phoneSales === true,
       askWhyNot: value.askWhyNot === true,
+      recentSales: value.recentSales === true,
       // Stores written before imports existed brought nobody over.
       pastBuyers: value.pastBuyers === true,
       // Stores written before PayPal selling existed sell through Stripe only.
@@ -1119,6 +1126,7 @@ async function freshStore(fields: {
     emailSync: null,
     phoneSales: false,
     askWhyNot: false,
+    recentSales: false,
     pastBuyers: false,
     paypalSeller: null,
   };
@@ -2496,6 +2504,11 @@ export async function setEmailSyncRef(email: string, ref: EmailSyncRef | null): 
     const emailSync = parseEmailSyncRef(ref);
     return JSON.stringify(emailSync) === JSON.stringify(store.emailSync) ? null : { emailSync };
   });
+}
+
+/** Whether the store shows its latest real purchases (lib/recent-sales.ts). */
+export async function setRecentSales(email: string, on: boolean): Promise<Store | null> {
+  return patchStore(email, (store) => (store.recentSales === on ? null : { recentSales: on }));
 }
 
 /** Keeps the store's note of whether a device wants each sale (lib/phone-alerts.ts). */
