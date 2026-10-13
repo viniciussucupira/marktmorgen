@@ -153,6 +153,7 @@ const en = {
   payPalSlow: "Too many changes for now. Try again in an hour.",
   savePayPal: "Save my PayPal address",
   signOut: "Sign out on this browser",
+  allPrograms: "All your affiliate programs on Marktmorgen, in one place",
 
   // ---- Joining from an order ---------------------------------------------------------------
   earnPercent: (percent: number, store: string) => `Earn ${percent}% by sharing ${store}`,
@@ -435,6 +436,7 @@ const es: AffiliatesWords = {
   payPalSlow: "Demasiados cambios por ahora. Inténtalo de nuevo dentro de una hora.",
   savePayPal: "Guardar mi dirección de PayPal",
   signOut: "Cerrar sesión en este navegador",
+  allPrograms: "Todos tus programas de afiliados en Marktmorgen, en un solo lugar",
 
   earnPercent: (percent, store) => `Gana un ${percent}${S}% compartiendo ${store}`,
   buyerJoinBody: (store, days, percent) =>
@@ -694,6 +696,7 @@ const fr: AffiliatesWords = {
   payPalSlow: "Trop de modifications pour le moment. Réessayez dans une heure.",
   savePayPal: "Enregistrer mon adresse PayPal",
   signOut: "Se déconnecter sur ce navigateur",
+  allPrograms: "Tous vos programmes d'affiliation sur Marktmorgen, au même endroit",
 
   earnPercent: (percent, store) => `Gagnez ${percent}${S}% en partageant ${store}`,
   buyerJoinBody: (store, days, percent) =>
@@ -959,6 +962,7 @@ const de: AffiliatesWords = {
   payPalSlow: "Zu viele Änderungen für den Moment. Versuchen Sie es in einer Stunde erneut.",
   savePayPal: "Meine PayPal-Adresse speichern",
   signOut: "In diesem Browser abmelden",
+  allPrograms: "Alle Ihre Partnerprogramme auf Marktmorgen an einem Ort",
 
   earnPercent: (percent, store) => `Verdienen Sie ${percent}${S}% durch Empfehlen von ${store}`,
   buyerJoinBody: (store, days, percent) =>
@@ -1228,6 +1232,7 @@ const it: AffiliatesWords = {
   payPalSlow: "Troppe modifiche per ora. Riprova tra un'ora.",
   savePayPal: "Salva il mio indirizzo PayPal",
   signOut: "Esci da questo browser",
+  allPrograms: "Tutti i tuoi programmi di affiliazione su Marktmorgen, in un unico posto",
 
   earnPercent: (percent, store) => `Guadagna il ${percent}${S}% condividendo ${store}`,
   buyerJoinBody: (store, days, percent) =>
@@ -1491,6 +1496,7 @@ const nl: AffiliatesWords = {
   payPalSlow: "Te veel wijzigingen voor nu. Probeer het over een uur opnieuw.",
   savePayPal: "Mijn PayPal-adres opslaan",
   signOut: "Uitloggen in deze browser",
+  allPrograms: "Al je affiliateprogramma's op Marktmorgen op één plek",
 
   earnPercent: (percent, store) => `Verdien ${percent}${S}% door ${store} te delen`,
   buyerJoinBody: (store, days, percent) =>
@@ -1762,6 +1768,7 @@ const pt: AffiliatesWords = {
   payPalSlow: "Demasiadas alterações por agora. Tente novamente dentro de uma hora.",
   savePayPal: "Guardar o meu endereço PayPal",
   signOut: "Terminar sessão neste navegador",
+  allPrograms: "Todos os seus programas de afiliados na Marktmorgen, num só lugar",
 
   earnPercent: (percent, store) => `Ganhe ${percent}${S}% ao partilhar ${store}`,
   buyerJoinBody: (store, days, percent) =>

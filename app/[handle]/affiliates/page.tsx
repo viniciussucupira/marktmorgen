@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/site-url";
 import type { Metadata } from "next";
 import { readListings, recordListings } from "@/lib/catalog";
 import Link from "next/link";
@@ -411,7 +412,12 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                 </form>
               ) : null}
 
-              <form action="/api/store/affiliates/signout" method="post" className="mt-8">
+              <p className="mt-8 text-sm">
+                <a href={`${SITE_URL}/affiliate`} className="st-footer-link inline-flex min-h-11 items-center font-semibold underline underline-offset-4">
+                  {a.allPrograms}
+                </a>
+              </p>
+              <form action="/api/store/affiliates/signout" method="post" className="mt-2">
                 <input type="hidden" name="handle" value={store.handle} />
                 <button type="submit" className="st-footer-link inline-flex min-h-11 items-center text-sm font-semibold">
                   {a.signOut}

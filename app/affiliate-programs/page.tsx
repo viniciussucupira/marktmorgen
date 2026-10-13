@@ -56,6 +56,13 @@ export default async function AffiliateProgramsPage() {
               Creators who sell on Marktmorgen list their own programs here: the share of each sale, how long a click counts, when they pay, and what one sale of
               each product earns at today&apos;s price. Read from their stores, never typed for this page.
             </p>
+            <p className="mt-4 text-sm text-white/80">
+              Already promoting creators here?{" "}
+              <Link href="/affiliate" className="underline underline-offset-4">
+                See all your programs in one place
+              </Link>
+              .
+            </p>
             <p className="mt-6 text-sm text-white/70" data-count>
               {rows.length === 0
                 ? "No program is listed yet."

@@ -20,7 +20,7 @@ export default function PrivacyPage() {
   // Named only while the files creators sell are kept there (lib/vault.ts).
   const cloudflare = isVaultConfigured();
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 12, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="October 13, 2026">
       <p>
         Marktmorgen (“Marktmorgen,” “we,” “us,” or “our”) is operated by
         Solrenning, an independent software studio. This Privacy Policy
@@ -506,6 +506,19 @@ export default function PrivacyPage() {
           we email a link that opens it for 24 hours, only if that address
           bought something, and the page says the same either way. The
           creators do not see it.
+        </p>
+        <p id="affiliate-page">
+          <strong className="text-black">Your affiliate programs.</strong> So
+          that an affiliate can see every store they promote in one place
+          (marktmorgen.com/affiliate), we keep, for each email address that
+          joined a store&apos;s affiliate program, which stores it joined: the
+          store&apos;s id only, under a one-way hash of the address. Your
+          link, where your application stands and your numbers are each
+          store&apos;s own, read from that store when you open the page. It is
+          kept for three years after you last joined or signed in. When you
+          ask for the page, we email a link that opens it for 24 hours, only
+          if that address is an affiliate somewhere here, and the page says
+          the same either way.
         </p>
         <p>
           <strong className="text-black">
