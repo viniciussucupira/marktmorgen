@@ -81,7 +81,7 @@ import { BuyButtonEditor } from "@/components/buy-button-editor";
 import { lookColours } from "@/lib/store-look";
 import { AnswersEditor } from "@/components/answers-editor";
 import { STORE_PAGE, answersAllowance, answersUsed, missedQuestions } from "@/lib/answers";
-import { readCards } from "@/lib/catalog";
+import { readCards, readTitles } from "@/lib/catalog";
 import { TaxEditor } from "@/components/tax-editor";
 import { StoreLanguageEditor } from "@/components/store-language-editor";
 import { RecoveryEditor } from "@/components/recovery-editor";
@@ -176,6 +176,8 @@ import { ResendPurchase } from "@/components/resend-purchase";
 import { LeaveTeam } from "@/components/team-manager";
 import { productSegment } from "@/lib/product-slug";
 import { SharePanel } from "@/components/share-panel";
+import { ShortLinks } from "@/components/short-links";
+import { readLinks } from "@/lib/short-links";
 import { storeBase } from "@/lib/purchase-email";
 import { feeWords } from "@/lib/fee-words";
 
@@ -1175,6 +1177,22 @@ export default async function StudioPage({
                 <summary className="cursor-pointer text-sm font-semibold text-ink">Share the store: link, QR code, posts</summary>
                 <div className="mt-4">
                   <SharePanel url={storeBase(store)} title={store.name} what="store" />
+                  {may("page") && store.statsId ? (
+                    <ShortLinks
+                      links={await readLinks(store.statsId).catch(() => [])}
+                      products={[...(await readTitles(store).catch(() => new Map<string, string>()))].map(([id, title]) => ({ id, title }))}
+                      results={
+                        numbers
+                          ? (numbers.posts?.d90 ?? []).reduce<Record<string, { visits: number; sales: number; cents: number }>>((all, row) => {
+                              const sum = all[row.campaign] ?? { visits: 0, sales: 0, cents: 0 };
+                              all[row.campaign] = { visits: sum.visits + row.visits, sales: sum.sales + row.sales, cents: sum.cents + row.cents };
+                              return all;
+                            }, {})
+                          : undefined
+                      }
+                      currency={store.currency}
+                    />
+                  ) : null}
                   {may("page") ? (
                     <AiOn value={ai}>
                       <AiPosts url={storeBase(store)} what="store" />

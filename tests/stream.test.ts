@@ -176,7 +176,10 @@ function setUp(on: boolean): void {
 }
 
 const input = { folder: FOLDER, lessonId: LESSON, name: "Lesson one.mp4", bytes: 800_000_000, type: "video/mp4" };
-const NOW = Date.UTC(2026, 9, 6, 12, 0, 0);
+// The test's clock starts at the hour now: the service's announcements are
+// read at the real time (lib/stream.ts, heard), and a fixed day here grew a
+// week older than the videos it made, which the code rightly treats as given up on.
+const NOW = Math.floor(Date.now() / 3_600_000) * 3_600_000;
 const MINUTE = 60_000;
 
 async function main() {
