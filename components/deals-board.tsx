@@ -20,11 +20,15 @@ import {
   type Stage,
   type StageKind,
   boardTotals,
+  dealFollowUps,
   newCrmId,
 } from "@/lib/crm-rules";
 
 const MESSAGES: Record<string, string> = {
   title: "Give the deal a name.",
+  followup: "Write a next action before setting its date. Keep it within 200 characters.",
+  date: "Choose a real calendar date.",
+  assignee: "Choose someone on this store’s team who can read deals.",
   stage: "That stage is gone. Reload the page.",
   full: "This store has as many deals as it can keep. Remove some that are won or lost.",
   unknown: "That is already gone. Reload the page.",
@@ -43,7 +47,7 @@ async function call(body: Record<string, unknown>): Promise<{ ok?: boolean; erro
   }
 }
 
-type DealDraft = { id: string; title: string; email: string; value: string; stage: string; note: string };
+type DealDraft = { id: string; title: string; email: string; value: string; stage: string; note: string; nextAction: string; dueDate: string; assignee: string };
 
 const KIND_WORDS: Record<StageKind, string> = { open: "Open", won: "Won", lost: "Lost" };
 
@@ -52,7 +56,7 @@ const KIND_WORDS: Record<StageKind, string> = { open: "Open", won: "Won", lost: 
  * who it is with, and a way to move it on. The stages are the store's own,
  * and so are the fields kept about each person, made here too.
  */
-export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[]; stages: Stage[]; fields: CrmField[]; currency: string }) {
+export function DealsBoard({ deals, stages, fields, currency, assignees, today }: { deals: Deal[]; stages: Stage[]; fields: CrmField[]; currency: string; assignees: string[]; today: string }) {
   const router = useRouter();
   const money = (cents: number) => formatMoney(cents, currency);
   const [draft, setDraft] = useState<DealDraft | null>(null);
@@ -60,7 +64,11 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
   const [error, setError] = useState<string | null>(null);
   const [stageDraft, setStageDraft] = useState<Stage[] | null>(null);
   const [fieldDraft, setFieldDraft] = useState<(CrmField & { optionsText: string })[] | null>(null);
+  const [filter, setFilter] = useState("all");
+  const followUps = dealFollowUps(stages, deals, today);
+  const visibleIds = filter === "all" ? null : new Set(followUps[filter as keyof typeof followUps].map(d => d.id));
   const totals = boardTotals(stages, deals);
+  const columns = boardTotals(stages, deals.filter(d => !visibleIds || visibleIds.has(d.id)));
   const open = totals.filter((t) => t.stage.kind === "open");
   const won = totals.filter((t) => t.stage.kind === "won");
 
@@ -86,7 +94,7 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
       return;
     }
     void run(
-      { action: "deal", deal: { id: draft.id || undefined, title: draft.title, email: draft.email, cents, stage: draft.stage, note: draft.note } },
+      { action: "deal", deal: { id: draft.id || undefined, title: draft.title, email: draft.email, cents, stage: draft.stage, note: draft.note, nextAction: draft.nextAction, dueDate: draft.dueDate, assignee: draft.assignee } },
       draft.id ? "Deal saved." : "Deal added.",
       () => setDraft(null),
     );
@@ -107,12 +115,17 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
             </p>
           </div>
           {draft === null ? (
-            <button type="button" className="btn btn-primary" onClick={() => { setError(null); setDraft({ id: "", title: "", email: "", value: "", stage: firstOpen, note: "" }); }}>
+            <button type="button" className="btn btn-primary" onClick={() => { setError(null); setDraft({ id: "", title: "", email: "", value: "", stage: firstOpen, note: "", nextAction: "", dueDate: "", assignee: "" }); }}>
               <Icon name="plus" size={18} />
               New deal
             </button>
           ) : null}
         </div>
+
+        <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Filter deals by next action">
+          {([{ key: "all", label: "All deals" }, { key: "overdue", label: `Overdue (${followUps.overdue.length})` }, { key: "today", label: `Due today (${followUps.today.length})` }, { key: "upcoming", label: `Upcoming (${followUps.upcoming.length})` }, { key: "unplanned", label: `No dated action (${followUps.unplanned.length})` }]).map(item => <button key={item.key} type="button" aria-pressed={filter === item.key} className={`btn btn-sm ${filter === item.key ? "btn-primary" : "btn-secondary"}`} onClick={() => setFilter(item.key)}>{item.label}</button>)}
+        </div>
+        <p className="mt-2 text-xs text-ink-mute">Dates use the calendar day shown here, {today} (UTC). Won and lost deals are left out of action filters. Nothing is sent automatically.</p>
 
         {draft ? (
           <div className="mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
@@ -140,6 +153,22 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
                 </select>
               </label>
               <label className="block sm:col-span-2">
+                <span className="field-label">Next action (optional)</span>
+                <input className="field mt-2" maxLength={200} value={draft.nextAction} placeholder="Follow up on the proposal" onChange={e => setDraft({ ...draft, nextAction: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="field-label">Action date (optional, UTC calendar date)</span>
+                <input className="field mt-2" type="date" value={draft.dueDate} onChange={e => setDraft({ ...draft, dueDate: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="field-label">Responsible teammate (optional)</span>
+                <select className="field mt-2" value={draft.assignee} onChange={e => setDraft({ ...draft, assignee: e.target.value })}>
+                  <option value="">Unassigned</option>
+                  {draft.assignee && !assignees.includes(draft.assignee) ? <option value={draft.assignee}>{draft.assignee} (no longer eligible)</option> : null}
+                  {assignees.map(email => <option key={email} value={email}>{email}</option>)}
+                </select>
+              </label>
+              <label className="block sm:col-span-2">
                 <span className="field-label">A note (optional)</span>
                 <textarea className="field mt-2" rows={3} maxLength={MAX_DEAL_NOTE} value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
               </label>
@@ -161,7 +190,7 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
         ) : null}
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {totals.map(({ stage, count, cents }) => (
+          {columns.map(({ stage, count, cents }) => (
             <section key={stage.id} aria-label={stage.name} className="min-w-0 rounded-2xl bg-paper p-4 ring-1 ring-line">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="font-semibold text-ink">
@@ -170,9 +199,10 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
                 </h3>
                 <p className="text-sm tabular-nums text-ink-soft">{`${count} · ${money(cents)}`}</p>
               </div>
+              {visibleIds && !deals.some(d => d.stage === stage.id && visibleIds.has(d.id)) ? <p className="mt-3 text-sm text-ink-mute">No deals match this filter.</p> : null}
               <ul className="mt-3 space-y-3">
                 {deals
-                  .filter((d) => d.stage === stage.id)
+                  .filter((d) => d.stage === stage.id && (!visibleIds || visibleIds.has(d.id)))
                   .map((deal) => (
                     <li key={deal.id} className="rounded-xl bg-white p-3 text-sm ring-1 ring-line">
                       <p className="font-semibold text-ink [overflow-wrap:anywhere]">{deal.title}</p>
@@ -182,6 +212,9 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
                           {deal.email}
                         </p>
                       ) : null}
+                      {deal.nextAction ? <p className="mt-2 font-semibold text-ink">Next: {deal.nextAction}</p> : null}
+                      {deal.dueDate ? <p className={`mt-1 text-xs ${followUps.overdue.some(d => d.id === deal.id) ? "font-semibold text-danger" : "text-ink-soft"}`}>Due {deal.dueDate}</p> : null}
+                      {deal.assignee ? <p className="mt-1 text-xs text-ink-soft [overflow-wrap:anywhere]">Responsible: {deal.assignee}</p> : null}
                       {deal.note ? <p className="mt-2 whitespace-pre-line text-ink-soft [overflow-wrap:anywhere]">{deal.note}</p> : null}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <label className="min-w-0 flex-1">
@@ -203,7 +236,7 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
                           type="button"
                           className="btn btn-secondary btn-sm"
                           disabled={busy}
-                          onClick={() => { setError(null); setDraft({ id: deal.id, title: deal.title, email: deal.email, value: deal.cents ? moneyField(deal.cents, currency) : "", stage: deal.stage, note: deal.note }); }}
+                          onClick={() => { setError(null); setDraft({ id: deal.id, title: deal.title, email: deal.email, value: deal.cents ? moneyField(deal.cents, currency) : "", stage: deal.stage, note: deal.note, nextAction: deal.nextAction ?? "", dueDate: deal.dueDate ?? "", assignee: deal.assignee ?? "" }); }}
                         >
                           Edit
                         </button>
