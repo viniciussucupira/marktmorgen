@@ -1,5 +1,6 @@
 "use client";
 
+import { filterDeals } from "@/lib/crm-deal-filter";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -65,10 +66,14 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
   const [stageDraft, setStageDraft] = useState<Stage[] | null>(null);
   const [fieldDraft, setFieldDraft] = useState<(CrmField & { optionsText: string })[] | null>(null);
   const [filter, setFilter] = useState("all");
-  const followUps = dealFollowUps(stages, deals, today);
+  const [search, setSearch] = useState("");
+  const [responsible, setResponsible] = useState("all");
+  const scopedDeals = filterDeals(deals, search, responsible === "all" ? null : responsible === "unassigned" ? "" : responsible.slice(7));
+  const responsibleChoices = [...new Set([...assignees, ...deals.flatMap(d => d.assignee ? [d.assignee] : [])])].sort();
+  const followUps = dealFollowUps(stages, scopedDeals, today);
   const visibleIds = filter === "all" ? null : new Set(followUps[filter as keyof typeof followUps].map(d => d.id));
   const totals = boardTotals(stages, deals);
-  const columns = boardTotals(stages, deals.filter(d => !visibleIds || visibleIds.has(d.id)));
+  const columns = boardTotals(stages, scopedDeals.filter(d => !visibleIds || visibleIds.has(d.id)));
   const open = totals.filter((t) => t.stage.kind === "open");
   const won = totals.filter((t) => t.stage.kind === "won");
 
@@ -122,6 +127,8 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
           ) : null}
         </div>
 
+        <div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="block"><span className="field-label">Find a deal</span><input type="search" className="field mt-2" maxLength={80} value={search} onChange={e => setSearch(e.target.value)} placeholder="Name, email, next action or note" /></label><label className="block"><span className="field-label">Responsible teammate</span><select className="field mt-2" value={responsible} onChange={e => setResponsible(e.target.value)}><option value="all">Everyone</option><option value="unassigned">Unassigned</option>{responsibleChoices.map(email => <option key={email} value={"person:" + email}>{email}{assignees.includes(email) ? "" : " (no longer eligible)"}</option>)}</select></label></div>
+        <p className="mt-2 text-xs text-ink-mute">The summary above includes all deals. Action counts and columns follow your search and teammate selection.</p>
         <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Filter deals by next action">
           {([{ key: "all", label: "All deals" }, { key: "overdue", label: `Overdue (${followUps.overdue.length})` }, { key: "today", label: `Due today (${followUps.today.length})` }, { key: "upcoming", label: `Upcoming (${followUps.upcoming.length})` }, { key: "unplanned", label: `No dated action (${followUps.unplanned.length})` }]).map(item => <button key={item.key} type="button" aria-pressed={filter === item.key} className={`btn btn-sm ${filter === item.key ? "btn-primary" : "btn-secondary"}`} onClick={() => setFilter(item.key)}>{item.label}</button>)}
         </div>
@@ -199,9 +206,9 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
                 </h3>
                 <p className="text-sm tabular-nums text-ink-soft">{`${count} · ${money(cents)}`}</p>
               </div>
-              {visibleIds && !deals.some(d => d.stage === stage.id && visibleIds.has(d.id)) ? <p className="mt-3 text-sm text-ink-mute">No deals match this filter.</p> : null}
+              {visibleIds && !scopedDeals.some(d => d.stage === stage.id && visibleIds.has(d.id)) ? <p className="mt-3 text-sm text-ink-mute">No deals match this filter.</p> : null}
               <ul className="mt-3 space-y-3">
-                {deals
+                {scopedDeals
                   .filter((d) => d.stage === stage.id && (!visibleIds || visibleIds.has(d.id)))
                   .map((deal) => (
                     <li key={deal.id} className="rounded-xl bg-white p-3 text-sm ring-1 ring-line">
