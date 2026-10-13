@@ -1,3 +1,4 @@
+import { readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -27,7 +28,7 @@ export default async function GrowthPage({ searchParams }: Params) {
   const today = new Date().toISOString().slice(0, 10);
   const actions = growthActions(goal, role);
   let follow: ReturnType<typeof dealFollowUps> | null = null;
-  let funnels: { name: string; unavailable: number; on: boolean }[] | null = null;
+  let funnels: { name: string; unavailable: number; paymentIssues: string[] | null; on: boolean }[] | null = null;
   let followFailed = false;
   let funnelsFailed = false;
   if (can(role, "orders")) {
@@ -35,10 +36,10 @@ export default async function GrowthPage({ searchParams }: Params) {
     catch { followFailed = true; }
   }
   if (can(role, "products")) {
-    try { funnels = await Promise.all((await readPageFunnels(store.statsId)).map(async f => ({ name: f.name, on: f.on, unavailable: (await stepStates(store, f)).filter(s => !s.open).length }))); }
+    try { funnels = await Promise.all((await readPageFunnels(store.statsId)).map(async f => ({ name: f.name, on: f.on, paymentIssues: await readFunnelPaymentChecks(store, f).catch(() => null), unavailable: (await stepStates(store, f)).filter(s => !s.open).length }))); }
     catch { funnelsFailed = true; }
   }
-  const attention = funnels?.filter(f => f.on && f.unavailable > 0) ?? [];
+  const attention = funnels?.filter(f => f.on && (f.unavailable > 0 || f.paymentIssues === null || f.paymentIssues.length > 0)) ?? [];
   const linkFor = (path: string) => path.startsWith("#") ? studioPath(store) + path : studioPath(store, "", path);
   return <div className="min-h-screen bg-paper text-ink">
     <StudioHeader current={store} role={role} stores={view.stores} owned={view.owned} action={{ href: studioPath(store), label: "Back to the studio", short: "Studio" }} />
@@ -55,7 +56,7 @@ export default async function GrowthPage({ searchParams }: Params) {
         </section>
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {follow || followFailed ? <section className="card p-5 sm:p-8" aria-labelledby="growth-deals"><h2 id="growth-deals" className="font-semibold">Opportunities to follow up</h2>{followFailed ? <p className="mt-3 text-sm text-ink-soft">We could not read the deals right now. No conclusion has been made about them.</p> : <><p className="mt-3 text-sm text-ink-soft">{follow!.overdue.length} overdue, {follow!.today.length} due today, {follow!.unplanned.length} without a dated next action.</p><p className="mt-2 text-xs text-ink-mute">Open deals only. Calendar day: {today} (UTC).</p></>}<Link className="btn btn-secondary mt-4" href={studioPath(store, "", "deals")}>Review deals</Link></section> : null}
-          {funnels || funnelsFailed ? <section className="card p-5 sm:p-8" aria-labelledby="growth-funnels"><h2 id="growth-funnels" className="font-semibold">Check the journey</h2>{funnelsFailed ? <p className="mt-3 text-sm text-ink-soft">We could not read the funnels right now. Open the editor to check them.</p> : attention.length ? <ul className="mt-3 space-y-2 text-sm text-ink-soft">{attention.map(f => <li key={f.name}>{f.name}: {f.unavailable} unavailable step(s). Visitors skip them.</li>)}</ul> : <p className="mt-3 text-sm text-ink-soft">{funnels!.length ? "No active funnel has an unavailable step in this check. Test checkout and delivery separately." : "No page funnels yet. Start from a type and choose your products."}</p>}<Link className="btn btn-secondary mt-4" href={studioPath(store, "", "funnels")}>Review funnels</Link></section> : null}
+          {funnels || funnelsFailed ? <section className="card p-5 sm:p-8" aria-labelledby="growth-funnels"><h2 id="growth-funnels" className="font-semibold">Check the journey</h2>{funnelsFailed ? <p className="mt-3 text-sm text-ink-soft">We could not read the funnels right now. Open the editor to check them.</p> : attention.length ? <ul className="mt-3 space-y-2 text-sm text-ink-soft">{attention.map(f => <li key={f.name}>{f.name}: {f.unavailable} unavailable step(s). {f.paymentIssues === null ? "Payment configuration could not be checked." : `${f.paymentIssues.length} paid-offer configuration issue(s).`}</li>)}</ul> : <p className="mt-3 text-sm text-ink-soft">{funnels!.length ? "No blocker found in the available steps or saved paid-offer configuration. Test live checkout, free sign-up, email and delivery separately." : "No page funnels yet. Start from a type and choose your products."}</p>}<Link className="btn btn-secondary mt-4" href={studioPath(store, "", "funnels")}>Review funnels</Link></section> : null}
         </div>
       </main>
     </StudioStorePin>
