@@ -22,9 +22,12 @@ import type { ChatKind } from "@/lib/chat-summary";
 import { NoCountToggle } from "@/components/no-count-toggle";
 import { BuyerNumbers } from "@/components/buyer-numbers";
 import { DiscountImpact } from "@/components/discount-impact";
+import { BuyingHours } from "@/components/buying-hours";
+import { CustomRange } from "@/components/custom-range";
 import { NumbersAsk } from "@/components/numbers-ask";
 import { CustomerVoice } from "@/components/customer-voice";
 import type { VoiceSummary } from "@/lib/customer-voice";
+import type { AutoMark, MarkKind } from "@/lib/auto-marks";
 import { useStudioStore } from "@/components/studio-store-pin";
 import { WeeklyAiToggle } from "@/components/weekly-ai-toggle";
 import { AttributionTable } from "@/components/attribution-table";
@@ -337,6 +340,9 @@ function RightNow({ currency }: { currency: string }) {
   );
 }
 
+/** The color of each kind of mark the store makes on its own (lib/auto-marks.ts); the creator's own notes are amber. */
+const MARK_COLORS: Record<MarkKind, string> = { email: "bg-sky-brand", product: "bg-mint-deep", sale: "bg-coral" };
+
 /** A store's visits, checkouts and sales, for the last week, month, quarter or all time. */
 export function StatsPanel({
   data,
@@ -355,6 +361,7 @@ export function StatsPanel({
   weeklyAi,
   insightContext,
   voice,
+  marks = [],
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -384,8 +391,11 @@ export function StatsPanel({
   insightContext?: InsightContext;
   /** What customers are saying (lib/customer-voice.ts): the latest summary, null for none yet; undefined to leave it out. */
   voice?: VoiceSummary | null;
+  /** Marks the store recorded on its own: emails sent, products added, sales (lib/auto-marks.ts). */
+  marks?: AutoMark[];
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
+  const [pickDates, setPickDates] = useState(false);
   const [notes, setNotes] = useState(notesGiven);
   const [spends, setSpends] = useState(spendsGiven);
   const [all, setAll] = useState<{ state: "idle" | "loading" | "error" } | { state: "ok"; sales: AllTimeSales }>({ state: "idle" });
@@ -489,6 +499,9 @@ export function StatsPanel({
   // Notes by day, for the marks under the chart.
   const notesOn = new Map<string, string[]>();
   for (const note of notes) notesOn.set(note.day, [...(notesOn.get(note.day) ?? []), note.text]);
+  // And what the store recorded on its own, by day.
+  const marksOn = new Map<string, AutoMark[]>();
+  for (const mark of marks) marksOn.set(mark.day, [...(marksOn.get(mark.day) ?? []), mark]);
   // What was spent on ads inside the days shown (lib/ad-spend-rules.ts); none for "all".
   const spent = range === "all" || !days.length ? null : spendBy(spends, days[0].date, days[days.length - 1].date);
   const withSpend = Boolean(spent && spent.total > 0);
@@ -546,8 +559,20 @@ export function StatsPanel({
               {label}
             </button>
           ))}
+          <button
+            type="button"
+            aria-pressed={pickDates}
+            onClick={() => setPickDates((open) => !open)}
+            className={`inline-flex min-h-11 items-center rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+              pickDates ? "bg-white text-ink shadow-sm ring-1 ring-line" : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            Any dates
+          </button>
         </div>
       </div>
+
+      {pickDates ? <CustomRange today={data.days[data.days.length - 1]?.date ?? new Date().toISOString().slice(0, 10)} currency={data.currency ?? "usd"} /> : null}
 
       {empty ? (
         <p className="mt-3 text-ink-soft">
@@ -659,7 +684,7 @@ export function StatsPanel({
               <div
                 key={day.date}
                 className="flex h-full min-w-0 flex-1 flex-col justify-end"
-                title={`${shortDate(day.date)}: ${day.visitors} visitors, ${day.sales} sales${(notesOn.get(day.date) ?? []).map((t) => `\n${t}`).join("")}`}
+                title={`${shortDate(day.date)}: ${day.visitors} visitors, ${day.sales} sales${[...(notesOn.get(day.date) ?? []), ...(marksOn.get(day.date) ?? []).map((m) => m.text)].map((t) => `\n${t}`).join("")}`}
               >
                 <div
                   className="w-full rounded-t-[3px] bg-violet-brand/80"
@@ -669,13 +694,23 @@ export function StatsPanel({
             ))}
           </div>
           {/* Days with a note (components/numbers-notes.tsx): a mark under the day's bar, the words in the list below. */}
-          {days.some((day) => notesOn.has(day.date)) ? (
+          {days.some((day) => notesOn.has(day.date) || marksOn.has(day.date)) ? (
             <div className={`mt-0.5 flex ${days.length > 30 ? "gap-px" : "gap-[3px]"}`} aria-hidden="true">
-              {days.map((day) => (
-                <div key={day.date} className="flex min-w-0 flex-1 justify-center" title={(notesOn.get(day.date) ?? []).join("\n")}>
-                  {notesOn.has(day.date) ? <span className="block h-1.5 w-1.5 rounded-full bg-amber-brand" /> : null}
-                </div>
-              ))}
+              {days.map((day) => {
+                const kinds = [...new Set((marksOn.get(day.date) ?? []).map((m) => m.kind))];
+                return (
+                  <div
+                    key={day.date}
+                    className="flex min-w-0 flex-1 flex-col items-center gap-px"
+                    title={[...(notesOn.get(day.date) ?? []), ...(marksOn.get(day.date) ?? []).map((m) => m.text)].join("\n")}
+                  >
+                    {notesOn.has(day.date) ? <span className="block h-1.5 w-1.5 rounded-full bg-amber-brand" /> : null}
+                    {kinds.map((kind) => (
+                      <span key={kind} className={`block h-1.5 w-1.5 rounded-full ${MARK_COLORS[kind]}`} />
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           ) : null}
           <div className="mt-1 flex justify-between text-xs text-ink-mute" aria-hidden="true">
@@ -707,6 +742,25 @@ export function StatsPanel({
               </table>
             </div>
           </details>
+          {(() => {
+            const shown = marks.filter((m) => m.day >= days[0].date && m.day <= days[days.length - 1].date);
+            if (!shown.length) return null;
+            return (
+              <details className="mt-2 text-sm" data-auto-marks>
+                <summary className="cursor-pointer font-semibold text-ink-soft">{`Marked on their own: ${shown.length} ${shown.length === 1 ? "event" : "events"}`}</summary>
+                <ul className="mt-2 space-y-1">
+                  {[...shown].reverse().map((m, i) => (
+                    <li key={`${m.day}-${i}`} className="flex items-baseline gap-2" data-mark>
+                      <span aria-hidden="true" className={`mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full ${MARK_COLORS[m.kind]}`} />
+                      <span className="shrink-0 tabular-nums text-ink-soft">{shortDate(m.day)}</span>
+                      <span className="min-w-0 text-ink [overflow-wrap:anywhere]">{m.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-1 text-xs text-ink-soft">From your store&apos;s own records: emails sent to your list, products added, and when a store sale began and ended. Your own notes are the amber marks.</p>
+              </details>
+            );
+          })()}
           <NumbersNotes notes={notes} onChange={setNotes} from={days[0].date} to={days[days.length - 1].date} today={data.days[data.days.length - 1]?.date ?? days[days.length - 1].date} />
         </div>
       ) : null}
@@ -811,6 +865,8 @@ export function StatsPanel({
       {range !== "all" && data.buyers ? (
         <BuyerNumbers windows={data.buyers} range={range} span={span} currency={data.currency ?? "usd"} top={data.topBuyers} />
       ) : null}
+
+      {salesKnown && data.hours ? <BuyingHours hours={data.hours.sales} /> : null}
 
       {range !== "all" && salesKnown && data.discounts?.rows ? (
         <DiscountImpact rows={data.discounts.rows} refundsRead={data.discounts.refundsRead} currency={data.currency ?? "usd"} />
