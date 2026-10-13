@@ -1,3 +1,4 @@
+import { readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Metadata } from "next";
 import { BUMP_CHOICES, idsOfKind, readCards, readListings, readProduct } from "@/lib/catalog";
 import Link from "next/link";
@@ -108,6 +109,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
       const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCounts(store.statsId, funnel)]);
       return {
         funnel,
+        paymentIssues: await readFunnelPaymentChecks(store, funnel).catch(() => null),
         steps: states.map((state, i) => ({
           title: state.title,
           open: state.open,
