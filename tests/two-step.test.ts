@@ -19,7 +19,9 @@
 import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 import { base32Decode, base32Encode, codeAt, stepOf, STEP_SECONDS } from "@/lib/totp";
-import { RESET_DAYS, cancelReset, finishSetup, hideAddress, moveTwoStep, resetIfDue, startSetup, turnOff, twoStepOn, twoStepStatus } from "@/lib/two-step";
+import { emailForSession } from "@/lib/auth";
+import { studioAccess } from "@/lib/studio-route";
+import { RESET_DAYS, cancelReset, finishSetup, hideAddress, lockedUntil, moveTwoStep, resetIfDue, startSetup, turnOff, twoStepOn, twoStepStatus } from "@/lib/two-step";
 import { POST as callback } from "@/app/api/auth/callback/route";
 import { POST as codeRoute } from "@/app/api/auth/code/route";
 import { store as redis } from "./redis-stub";
@@ -142,28 +144,44 @@ async function main(): Promise<void> {
   is("and it works once", (await rescueRoute(post("https://marktmorgen.com/api/auth/rescue", { token: rescueLink }))).headers.get("location"), "https://marktmorgen.com/signin?status=expired");
   is("the sign-in address is told", mails.some((m) => m.to === RESCUED && m.text.includes("recovery address, and your account was logged in")), true);
 
-  part("Lost the recovery inbox too: nobody is locked out");
+  part("Lost the recovery inbox too: in at once, with what matters locked");
   const LOST = "lost@example.com";
   const set3Start = await startSetup(LOST, SESSION, "lost.backup@example.org");
   if (typeof set3Start === "string") throw new Error(set3Start);
   const set3 = await finishSetup(LOST, SESSION, nowCode(set3Start.secret), codeTo("lost.backup@example.org"));
   if (typeof set3 === "string") throw new Error(set3);
   const lostHold = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) })), "nl_2fa");
-  const asked = await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${lostHold}`));
+  const entered = await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${lostHold}`));
+  const lockedSession = cookieOf(entered, "nl_session");
   const until = (await twoStepStatus(LOST)).reset;
-  is("asked from the code page, it is set to turn off in a week", [asked.headers.get("location"), Math.round((until - Date.now()) / 86_400_000)], ["https://marktmorgen.com/signin/code?status=reset", RESET_DAYS]);
-  await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${lostHold}`));
-  is("asking again does not move the day", (await twoStepStatus(LOST)).reset, until);
+  is("in at once, from the code page", [entered.headers.get("location"), lockedSession.length, await emailForSession(lockedSession)], ["https://marktmorgen.com/studio", 64, LOST]);
+  is("with what matters locked for a week", [Math.round(((await lockedUntil(lockedSession)) - Date.now()) / 86_400_000), (await lockedUntil(lockedSession)) === until], [RESET_DAYS, true]);
+  const asStudio = (need: string, session: string) =>
+    studioAccess(new NextRequest("https://marktmorgen.com/api/store/x", { method: "POST", headers: { cookie: `nl_session=${session}` } }), need as never);
+  const lockedAnswers = await Promise.all(["payments", "billing", "team", "delete", "export", "settings", "send", "import"].map(async (need) => (await asStudio(need, lockedSession)).ok === false && ((await asStudio(need, lockedSession)) as { reason: string }).reason));
+  is("payments, the plan, the team, deleting, exports, settings, sending and imports wait", lockedAnswers, new Array(8).fill("locked"));
+  const openAnswers = await Promise.all(["products", "page", "orders", "stats", "draft", "reviews"].map(async (need) => { const a = await asStudio(need, lockedSession); return a.ok ? "open" : (a as { reason: string }).reason; }));
+  is("products, pages, orders, numbers, drafts and reviews do not", openAnswers.every((a) => a !== "locked"), true);
+  const { POST: twoStepRoute } = await import("@/app/api/auth/two-step/route");
+  const tried = await twoStepRoute(new NextRequest("https://marktmorgen.com/api/auth/two-step", { method: "POST", headers: { "content-type": "application/json", cookie: `nl_session=${lockedSession}` }, body: JSON.stringify({ action: "cancel" }) }));
+  is("two-step login cannot be changed from it", [tried.status, ((await tried.json()) as { error?: string }).error], [403, "locked"]);
+
+  const secondHold = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) })), "nl_2fa");
+  const secondSession = cookieOf(await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${secondHold}`)), "nl_session");
+  is("getting in again does not move the day", [(await twoStepStatus(LOST)).reset, await lockedUntil(secondSession)], [until, until]);
   const early = await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) }));
-  is("before the week is out, the link still asks for the code", early.headers.get("location"), "https://marktmorgen.com/signin/code");
+  is("before the week is out, the link still asks for the code first", early.headers.get("location"), "https://marktmorgen.com/signin/code");
   is("a login with a recovery code calls it off", [(await codeRoute(post("https://marktmorgen.com/api/auth/code", { code: set3.codes[0] }, `nl_2fa=${cookieOf(early, "nl_2fa")}`))).headers.get("location"), (await twoStepStatus(LOST)).reset], ["https://marktmorgen.com/studio", 0]);
+  is("and logs out every browser let in without it", [await emailForSession(lockedSession), await emailForSession(secondSession)], [null, null]);
+
   const again3 = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) })), "nl_2fa");
-  await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${again3}`));
-  is("and Cancel in the studio does too", [await cancelReset(LOST, "studio"), (await twoStepStatus(LOST)).reset], [true, 0]);
+  const thirdLocked = cookieOf(await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${again3}`)), "nl_session");
+  is("Cancel in the studio does too", [await cancelReset(LOST, "studio"), (await twoStepStatus(LOST)).reset, await emailForSession(thirdLocked)], [true, 0, null]);
+
   const again4 = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) })), "nl_2fa");
-  await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${again4}`));
+  const fourthLocked = cookieOf(await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${again4}`)), "nl_session");
   is("not a day early", await resetIfDue(LOST, Date.now() + (RESET_DAYS - 1) * 86_400_000), false);
-  is("after the week, it turns off", [await resetIfDue(LOST, Date.now() + (RESET_DAYS + 1) * 86_400_000), await twoStepOn(LOST)], [true, false]);
+  is("after the week, it turns off, and nothing is locked", [await resetIfDue(LOST, Date.now() + (RESET_DAYS + 1) * 86_400_000), await twoStepOn(LOST), await lockedUntil(fourthLocked, Date.now() + (RESET_DAYS + 1) * 86_400_000)], [true, false, 0]);
   const back = await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) }));
   is("and the emailed link logs in on its own", [back.headers.get("location"), cookieOf(back, "nl_session").length], ["https://marktmorgen.com/studio", 64]);
 

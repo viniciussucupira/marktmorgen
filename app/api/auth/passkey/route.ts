@@ -4,6 +4,7 @@ import { SESSION_COOKIE, emailForSession, isFreshSession } from "@/lib/auth";
 import { isRedisConfigured } from "@/lib/redis";
 import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { addPasskey, listPasskeys, registrationOptions, removePasskey } from "@/lib/passkeys";
+import { lockedUntil } from "@/lib/two-step";
 
 const MAX_BODY_BYTES = 16_000;
 /** Changes one account may make to its passkeys in an hour: each one emails the account. */
@@ -47,6 +48,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }
 
+  // A session let in without its second step cannot add a way in of its own (lib/two-step.ts).
+  if ((body.action === "options" || body.action === "add") && (await lockedUntil(session)) > 0) {
+    return Response.json({ ok: false, error: "locked" }, { status: 403 });
+  }
   if ((body.action === "options" || body.action === "add") && !(await isFreshSession(session))) {
     return Response.json({ ok: false, error: "reauth" }, { status: 403 });
   }

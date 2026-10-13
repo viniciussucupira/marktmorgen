@@ -30,14 +30,21 @@
  * two-step login off and logs them in at once. Somebody who got into the
  * sign-in inbox alone cannot, because the link goes to the other one.
  *
- * Only when the recovery inbox is lost as well (or for an account set up
- * before there was one) does the creator ask, from the same page, for two-step
- * login to be turned off; it turns off by itself RESET_DAYS later, at their
- * next emailed link. In that time the account is emailed, the studio shows it to every
- * browser still logged in, and any login with a right code or a passkey — or
- * one press of Cancel in the studio — calls it off. So somebody who only has
- * the inbox has to wait a week in plain view of the owner, while the owner who
- * really lost everything gets back in without writing to anyone.
+ * When the recovery inbox is lost as well (or for an account set up before
+ * there was one), the creator still gets in at once, from the same page, with
+ * the emailed link alone — into a studio where what could take money, data or
+ * the account itself away is locked for RESET_DAYS (LOCKED_NEEDS: payments,
+ * the plan, the team, deleting, exports, settings, sending to the list,
+ * imports, the sign-in address, passkeys, two-step login). They can sell, edit
+ * their products and pages, answer buyers and read their numbers meanwhile.
+ * After those days two-step login turns off and nothing is locked. In that
+ * time the account is emailed, every browser still logged in shows it, and any
+ * login with a right code or a passkey — or one press of Cancel in the studio —
+ * calls it off and logs the locked sessions out. So somebody who only has the
+ * inbox gets nothing that matters before the owner can see it, and the owner
+ * who really lost everything is back at work the same minute, without writing
+ * to anyone. Exchanges and banks hold withdrawals after a recovery the same
+ * way; NIST SP 800-63B-4 asks for the notices.
  *
  * The app's secret is sealed at rest (lib/secret-box.ts), bound to the
  * account's address, so a copy of the database alone opens nothing. If the
@@ -51,9 +58,11 @@
  *   nl:2fa:hold:<hash>    a login that has passed the emailed link and waits
  *                         for its code, 10 minutes, tied to a cookie of that browser
  *   nl:2fa:rescue:<hash>  a link sent to the recovery address, 15 minutes, spent once
+ *   nl:2fa:locked:<hash>  a session opened without the second step: until when it is locked
+ *   nl:2fa:lockedset:<hash> the account's locked sessions, to log them out on Cancel
  */
 import { createHash, randomBytes } from "node:crypto";
-import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
+import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, endSession, normaliseEmail, openSession } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { withinLimit } from "@/lib/request-guard";
@@ -75,6 +84,8 @@ const ISSUER = "Marktmorgen";
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const recordKey = (email: string) => `nl:2fa:${sha(`nimbus-2fa:${normaliseEmail(email)}`).slice(0, 40)}`;
 const setupKey = (session: string) => `nl:2fa:setup:${sha(`nimbus-2fa-setup:${session}`).slice(0, 40)}`;
+const lockedKey = (session: string) => `nl:2fa:locked:${sha(`nimbus-2fa-locked:${session}`).slice(0, 40)}`;
+const lockedSetKey = (email: string) => `nl:2fa:lockedset:${sha(`nimbus-2fa-lockedset:${normaliseEmail(email)}`).slice(0, 40)}`;
 const rescueKey = (token: string) => `nl:2fa:rescue:${sha(`nimbus-2fa-rescue:${token}`).slice(0, 40)}`;
 const holdKey = (token: string) => `nl:2fa:hold:${sha(`nimbus-2fa-hold:${token}`).slice(0, 40)}`;
 const context = (email: string) => `two-step|${normaliseEmail(email)}`;
@@ -163,6 +174,8 @@ export function hideAddress(address: string): string {
 }
 
 export async function twoStepStatus(email: string): Promise<TwoStepStatus> {
+  // A request whose days are over turns it off here too, so the studio never shows it as pending.
+  await resetIfDue(email);
   const record = await read(email);
   return record
     ? { on: true, since: record.since, codesLeft: record.codes.length, reset: record.reset, backup: record.backup ? hideAddress(record.backup) : "" }
@@ -172,40 +185,76 @@ export async function twoStepStatus(email: string): Promise<TwoStepStatus> {
 const day = (ms: number) => new Date(ms).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 
 /**
- * Asked from the code page by somebody who has just opened an emailed link and
- * has neither a code nor a passkey: two-step login turns off RESET_DAYS from
- * now, unless the owner calls it off. Asking again does not move the day.
+ * What a session opened without the second step may not do until its days
+ * are over (lib/studio-route.ts studioAccess): everything that moves money or
+ * data out, changes who can get in, or cannot be undone.
  */
-export async function askReset(token: string, now = Date.now()): Promise<{ until: number } | null> {
+export const LOCKED_NEEDS: readonly string[] = ["billing", "payments", "team", "delete", "export", "settings", "send", "import"];
+
+/** Until when a session is locked, in ms, or 0 for a session that is not. */
+export async function lockedUntil(session: string | undefined, now = Date.now()): Promise<number> {
+  if (!session || !/^[0-9a-f]{64}$/.test(session) || !isRedisConfigured()) return 0;
+  const [raw] = await redisPipeline([["GET", lockedKey(session)]]);
+  const until = Number(raw);
+  return Number.isFinite(until) && until > now ? until : 0;
+}
+
+/**
+ * Asked from the code page by somebody who has just opened an emailed link and
+ * has neither a code, a passkey nor their recovery inbox: a session opens at
+ * once, locked (LOCKED_NEEDS) until two-step login turns off by itself
+ * RESET_DAYS after the first such request, unless the owner calls it off.
+ * Asking again does not move the day. Answers the session to set.
+ */
+export async function enterLocked(token: string, now = Date.now()): Promise<{ session: string; email: string; until: number } | null> {
   const email = await heldFor(token);
   const record = email ? await read(email) : null;
   if (!email || !record) return null;
-  if (record.reset > 0) return { until: record.reset };
-  const until = now + RESET_DAYS * 86_400_000;
-  await write(email, { ...record, reset: until });
+  // Spent, as a right code spends it: one waiting login, one session.
+  const [removed] = await redisPipeline([["DEL", holdKey(token)]]);
+  if (Number(removed) !== 1) return null;
+  const first = record.reset === 0;
+  const until = first ? now + RESET_DAYS * 86_400_000 : record.reset;
+  if (first) await write(email, { ...record, reset: until });
+  const session = await openSession(email);
+  const seconds = Math.max(60, Math.ceil((until - now) / 1000));
+  await redisPipeline([
+    ["SET", lockedKey(session), String(until), "EX", seconds],
+    ["SADD", lockedSetKey(email), session],
+    ["EXPIRE", lockedSetKey(email), seconds + 86_400],
+  ]);
   await tell(
     email,
-    "Two-step login will turn off on your Marktmorgen account",
-    `Somebody who opened a login link sent to this address said they no longer have your authenticator app, your recovery codes or a passkey, and asked for two-step login to be turned off. It turns off by itself on ${day(until)}, and from then the emailed link alone logs in.
+    first ? "Your Marktmorgen account was opened without two-step login" : "Your Marktmorgen account was opened again without two-step login",
+    `Somebody who opened a login link sent to this address said they no longer have your authenticator app, your recovery codes, a passkey or your recovery address, and was let in. Until ${day(until)}, payments, your plan, your team, exports, settings, sending to your list, your sign-in address, passkeys and two-step login are locked for them; after that, two-step login turns off.
 
-If that was you, there is nothing to do but wait.
+If that was you, keep working: everything else is open.
 
-If it was not you, somebody can read your email: log in with your app's code or a passkey, or open your studio in a browser that is still logged in, and the request is canceled. Then change your email password.`,
+If it was not you, somebody can read your email: log in with your app's code or a passkey, or open your studio in a browser that is still logged in and press Cancel. That logs them out and keeps two-step login on. Then change your email password.`,
   );
-  return { until };
+  return { session, email, until };
 }
 
-/** Calls off a pending request to turn it off: the owner logged in with a code or a passkey, or pressed Cancel. */
+/** Logs out every session opened without the second step. */
+async function endLocked(email: string): Promise<void> {
+  const [members] = await redisPipeline([["SMEMBERS", lockedSetKey(email)]]);
+  const sessions = (Array.isArray(members) ? members : []).filter((m): m is string => typeof m === "string");
+  for (const session of sessions) await endSession(session);
+  await redisPipeline([["DEL", lockedSetKey(email), ...sessions.map((session) => lockedKey(session))]]);
+}
+
+/** Calls off a pending request: the owner logged in with a code or a passkey, or pressed Cancel. The locked sessions are logged out. */
 export async function cancelReset(email: string, why: "login" | "studio"): Promise<boolean> {
   const record = await read(email);
   if (!record || record.reset === 0) return false;
   await write(email, { ...record, reset: 0 });
+  await endLocked(email);
   await tell(
     email,
     "Two-step login stays on for your Marktmorgen account",
     why === "login"
-      ? "The request to turn off two-step login was canceled, because your account was just logged in with a code or a passkey."
-      : "The request to turn off two-step login was canceled from your studio.",
+      ? "Your account was just logged in with a code or a passkey, so the request to turn off two-step login was canceled, and the browsers let in without it were logged out."
+      : "The request to turn off two-step login was canceled from your studio, and the browsers let in without it were logged out.",
   );
   return true;
 }
@@ -217,8 +266,8 @@ export async function cancelReset(email: string, why: "login" | "studio"): Promi
 export async function resetIfDue(email: string, now = Date.now()): Promise<boolean> {
   const record = await read(email);
   if (!record || record.reset === 0 || now < record.reset) return false;
-  await redisPipeline([["DEL", recordKey(email)]]);
-  await tell(email, "Two-step login is off for your Marktmorgen account", `Two-step login was turned off after waiting ${RESET_DAYS} days, as asked from the login page. You can turn it on again in your studio, with a new app setup and new recovery codes.`);
+  await redisPipeline([["DEL", recordKey(email), lockedSetKey(email)]]);
+  await tell(email, "Two-step login is off for your Marktmorgen account", `Two-step login was turned off ${RESET_DAYS} days after you got in without it, and nothing in your studio is locked any more. You can turn it on again in your studio, with a new app setup and new recovery codes.`);
   return true;
 }
 

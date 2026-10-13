@@ -91,7 +91,7 @@ function Codes({ codes, onDone }: { codes: string[]; onDone: () => void }) {
  * beside their passkeys: turn it on with an authenticator app, see how many
  * recovery codes are left, make new ones, or turn it off.
  */
-export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: initialReset, backup: backupShown, fresh }: { on: boolean; codesLeft: number; reset: number; backup: string; fresh: boolean }) {
+export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: initialReset, backup: backupShown, fresh, locked = false }: { on: boolean; codesLeft: number; reset: number; backup: string; fresh: boolean; locked?: boolean }) {
   const [reset, setReset] = useState(initialReset);
   const [recoveryShown, setRecoveryShown] = useState(backupShown);
   const [on, setOn] = useState(initialOn);
@@ -143,7 +143,13 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: i
           : "After the emailed link, ask for a six-digit code from an authenticator app, such as Google Authenticator, Microsoft Authenticator, 1Password or Authy. Someone who gets into your email still cannot open your studio without your phone. A passkey needs no code."}
       </p>
 
-      {on && reset > 0 ? (
+      {locked ? (
+        <p className="notice mt-4 text-sm" role="status">
+          You got in without your second step, so two-step login cannot be changed from this browser until it turns off; the date is at the top of your studio.
+        </p>
+      ) : null}
+
+      {!locked && on && reset > 0 ? (
         <div className="notice notice-warn mt-4" role="status">
           <p className="text-sm text-ink">
             {`Set to turn off on ${new Date(reset).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })}, asked from the login page by somebody without a code or a passkey. If that was not you, cancel it and change your email password.`}
@@ -174,7 +180,7 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: i
         />
       ) : null}
 
-      {stale && !on ? (
+      {locked ? null : stale && !on ? (
         <div className="mt-4 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line">
           <p className="text-sm text-ink-soft">{MESSAGES.reauth}</p>
           <Link href="/signin?status=reauth" className="btn btn-secondary mt-3">
