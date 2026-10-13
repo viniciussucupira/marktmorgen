@@ -3,7 +3,7 @@ import { SESSION_COOKIE, emailForSession, isFreshSession } from "@/lib/auth";
 import { isRedisConfigured } from "@/lib/redis";
 import { canSeal } from "@/lib/secret-box";
 import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
-import { cancelReset, finishSetup, replaceCodes, startSetup, turnOff } from "@/lib/two-step";
+import { cancelReset, finishSetup, lockedUntil, replaceCodes, startSetup, turnOff } from "@/lib/two-step";
 
 /** Changes one account may ask for in an hour: most of them email the account. */
 const CHANGES_PER_HOUR = 30;
@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
   const session = request.cookies.get(SESSION_COOKIE)?.value ?? "";
   const email = await emailForSession(session);
   if (!email) return Response.json({ ok: false, error: "signed_out" }, { status: 401 });
+  // A session let in without its second step changes nothing about it (lib/two-step.ts).
+  if ((await lockedUntil(session)) > 0) return Response.json({ ok: false, error: "locked" }, { status: 403 });
   if (!isRedisConfigured() || !canSeal()) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
 
   let body: Record<string, unknown>;

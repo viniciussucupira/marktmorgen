@@ -32,6 +32,7 @@ import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { fromAnotherSite as crossSite } from "@/lib/request-guard";
 import { SESSION_COOKIE, emailForSession } from "@/lib/auth";
+import { LOCKED_NEEDS, lockedUntil } from "@/lib/two-step";
 import { type Store, STORE_ID_PATTERN, accountStores, ensureStoreId, storeForEmail, storeForId, storeRef } from "@/lib/store";
 import { type Permission, type Role, PERMISSION_WORDS, can } from "@/lib/team-roles";
 import { logTeam, memberStores, roleIn } from "@/lib/team";
@@ -74,7 +75,8 @@ export type Creator = Access & {
   studio: (query?: string) => string;
 };
 
-export type Refusal = "signed_out" | "no_store" | "forbidden" | "gone";
+/** `locked`: a session let in without its second step, for what waits until two-step login turns off (lib/two-step.ts). */
+export type Refusal = "signed_out" | "no_store" | "forbidden" | "gone" | "locked";
 
 /**
  * What a check asks of a role: one permission, or "member" — any role at all
@@ -155,8 +157,11 @@ export async function studioAccess(
   need: Need,
   action = "",
 ): Promise<{ ok: true; access: Access } | { ok: false; reason: Refusal; store?: Store }> {
-  const email = await emailForSession(request.cookies.get(SESSION_COOKIE)?.value);
+  const session = request.cookies.get(SESSION_COOKIE)?.value;
+  const email = await emailForSession(session);
   if (!email) return { ok: false, reason: "signed_out" };
+  // Let in without the second step: what moves money or data out waits (lib/two-step.ts).
+  if (LOCKED_NEEDS.includes(need) && (await lockedUntil(session)) > 0) return { ok: false, reason: "locked" };
   const result = await resolveAccess(
     email,
     { pinned: pinnedStore(request), remembered: request.cookies.get(STORE_COOKIE)?.value ?? null },
@@ -196,6 +201,8 @@ export function refusedJson(reason: Refusal): Response {
       return Response.json({ ok: false, error: "role" }, { status: 403 });
     case "gone":
       return Response.json({ ok: false, error: "store_gone" }, { status: 409 });
+    case "locked":
+      return Response.json({ ok: false, error: "locked" }, { status: 403 });
   }
 }
 
@@ -220,6 +227,7 @@ export async function creatorFrom(
     if (result.reason === "signed_out") return away(origin, "/signin?status=expired");
     if (result.reason === "no_store") return away(origin, "/studio?stripe=nostore");
     if (result.reason === "gone") return away(origin, "/studio?team=gone");
+    if (result.reason === "locked") return away(origin, "/studio?two-step=locked");
     return away(origin, studioPath(result.store ?? { sid: "" }, "team=forbidden"));
   }
   const { access } = result;

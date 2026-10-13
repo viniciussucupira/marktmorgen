@@ -6,6 +6,7 @@ import {
   endAllSessions,
 } from "@/lib/auth";
 import { fromAnotherSite } from "@/lib/request-guard";
+import { lockedUntil } from "@/lib/two-step";
 
 /**
  * Closes every session this creator has open, on every device.
@@ -20,6 +21,10 @@ export async function POST(request: NextRequest) {
 
   const id = request.cookies.get(SESSION_COOKIE)?.value;
   const email = await emailForSession(id);
+  // A session let in without its second step cannot log the others out (lib/two-step.ts).
+  if (email && (await lockedUntil(id)) > 0) {
+    return new Response(null, { status: 303, headers: { Location: `${originFrom(request)}/studio?two-step=locked` } });
+  }
   if (email) await endAllSessions(email);
 
   const response = new Response(null, {

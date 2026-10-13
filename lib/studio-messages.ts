@@ -13,6 +13,8 @@ const PAID_GB = 200;
 
 export const STUDIO_MESSAGES: Record<string, string> = {
   role: "Your role on this store does not include this. The store's owner can change your role.",
+  // A session let in without its second step (lib/two-step.ts LOCKED_NEEDS).
+  locked: "You got in without your second step, so this is locked until two-step login turns off. The date is at the top of your studio.",
   store_gone: "This store was deleted, or you are no longer on its team. Reload the page to see your stores.",
   // What an upload of a file that is sold can be told (lib/sold-file-upload.ts).
   storage_full: "Your store is holding as much as one store can hold. Delete a file you no longer sell to make room — nothing already bought is affected.",

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { DEVICE_COOKIE, SESSION_COOKIE, endSession, noteSignIn, openSession, sessionCookie } from "@/lib/auth";
-import { TWO_STEP_COOKIE, askReset, finishSignIn, sendRescue } from "@/lib/two-step";
+import { TWO_STEP_COOKIE, enterLocked, finishSignIn, sendRescue } from "@/lib/two-step";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
 
 /**
@@ -12,8 +12,9 @@ import { fromAnotherSite, limited } from "@/lib/request-guard";
  *
  * `action=rescue` sends a link to the account's recovery address, which turns
  * two-step login off and logs in at once (lib/two-step.ts sendRescue).
- * `action=reset` is somebody with neither a code nor a passkey asking for
- * two-step login to turn off after its waiting days (lib/two-step.ts askReset).
+ * `action=reset` is somebody with neither a code, a passkey nor the recovery
+ * inbox: they are let in at once, with what could take money, data or the
+ * account away locked until two-step login turns off (lib/two-step.ts enterLocked).
  */
 export async function POST(request: NextRequest) {
   const origin = originFrom(request);
@@ -45,9 +46,18 @@ export async function POST(request: NextRequest) {
   }
   if (action === "reset") {
     try {
-      return (await askReset(held)) ? away("/signin/code?status=reset") : away("/signin?status=expired");
+      const entered = await enterLocked(held);
+      if (!entered) return away("/signin?status=expired");
+      const previous = request.cookies.get(SESSION_COOKIE)?.value;
+      if (previous) await endSession(previous);
+      const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+      const response = away("/studio");
+      response.headers.append("Set-Cookie", sessionCookie(entered.session));
+      response.headers.append("Set-Cookie", `${TWO_STEP_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${secure}`);
+      response.headers.append("Set-Cookie", await noteSignIn(entered.email, request.cookies.get(DEVICE_COOKIE)?.value, "link", request.headers.get("user-agent") ?? ""));
+      return response;
     } catch (error) {
-      console.error("asking to turn two-step login off failed", error);
+      console.error("letting somebody in without two-step login failed", error);
       return away("/signin/code?status=wrong");
     }
   }

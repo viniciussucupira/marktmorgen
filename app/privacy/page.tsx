@@ -1025,9 +1025,9 @@ export default function PrivacyPage() {
           authenticator app shares with us kept encrypted, a one-way hash of
           each recovery code not yet used, the recovery address they gave
           (which we write to only to confirm it and when they ask for a way
-          back in from the login page), the last code used and, while a
-          request to turn it off without a code waits, the day it takes
-          effect, until they turn it off. Between the emailed link and the code, a cookie named{" "}
+          back in from the login page), the last code used and, after a login
+          let in without its second step, the day two-step login turns off and
+          which sessions are locked until then, until they turn it off. Between the emailed link and the code, a cookie named{" "}
           <code>nl_2fa</code> holds a random code for that one login, for ten
           minutes.
         </p>

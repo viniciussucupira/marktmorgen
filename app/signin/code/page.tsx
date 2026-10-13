@@ -92,24 +92,20 @@ export default async function CodePage({ searchParams }: { searchParams: Promise
               </form>
             </div>
           ) : null}
-          {reset ? (
-            <p className="notice mt-5" role="status">
-              {`Two-step login turns off on ${resetDay}, as you asked. From then, the link we email you logs you in on its own. Logging in with a code or a passkey before then cancels it.`}
+          <details className="mt-5 text-sm text-ink-soft" open={Boolean(reset)}>
+            <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-ink underline underline-offset-4">
+              {backup ? "Cannot open your recovery address either?" : "Lost your phone, your recovery codes and your passkeys?"}
+            </summary>
+            <p className="mt-2">
+              {reset
+                ? `You can get in now, as before. Payments, your plan, your team, exports, settings, sending to your list, your sign-in address, passkeys and two-step login stay locked until ${resetDay}, when two-step login turns off; everything else is open.`
+                : `Get in now. Everything you need to keep selling is open at once: your products, pages, buyers, numbers and drafts. What could take money, data or the account away — payments, your plan, your team, exports, settings, sending to your list, your sign-in address — stays locked for ${RESET_DAYS} days, and then two-step login turns off. That is what keeps someone who only got into your email from doing harm: we email you, and logging in with a code or a passkey in that time, or Cancel in your studio, logs them out.`}
             </p>
-          ) : (
-            <details className="mt-5 text-sm text-ink-soft">
-              <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-ink underline underline-offset-4">
-                {backup ? "Cannot open your recovery address either?" : "Lost your phone, your recovery codes and your passkeys?"}
-              </summary>
-              <p className="mt-2">
-                {`Ask for two-step login to turn off. It turns off by itself in ${RESET_DAYS} days, and from then the link we email you logs you in on its own. The wait is what keeps someone who got into your email from doing the same: we email you, your studio shows it, and logging in with a code or a passkey in that time cancels it.`}
-              </p>
-              <form method="post" action="/api/auth/code" className="mt-3">
-                <input type="hidden" name="action" value="reset" />
-                <PendingSubmit label={`Turn it off in ${RESET_DAYS} days`} pending="Asking…" className="btn btn-secondary" />
-              </form>
-            </details>
-          )}
+            <form method="post" action="/api/auth/code" className="mt-3">
+              <input type="hidden" name="action" value="reset" />
+              <PendingSubmit label="Get in now" pending="Letting you in…" className="btn btn-secondary" />
+            </form>
+          </details>
         </div>
       </main>
     </div>

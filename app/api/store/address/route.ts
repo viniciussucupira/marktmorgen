@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth";
 import { storeForEmail } from "@/lib/store";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
+import { lockedUntil } from "@/lib/two-step";
 
 /**
  * Asks to move the sign-in address.
@@ -41,6 +42,9 @@ export async function POST(request: NextRequest) {
       headers: { Location: `${origin}/signin?status=expired` },
     });
   }
+
+  // A session let in without its second step cannot move the account (lib/two-step.ts).
+  if ((await lockedUntil(session)) > 0) return back("locked");
 
   let wanted = "";
   try {

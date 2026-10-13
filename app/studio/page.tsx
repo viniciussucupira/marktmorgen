@@ -178,7 +178,7 @@ import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { PasskeyManager } from "@/components/passkey-manager";
 import { TwoStepManager } from "@/components/two-step-manager";
-import { twoStepStatus } from "@/lib/two-step";
+import { lockedUntil, twoStepStatus } from "@/lib/two-step";
 import { ResendPurchase } from "@/components/resend-purchase";
 import { LeaveTeam } from "@/components/team-manager";
 import { productSegment } from "@/lib/product-slug";
@@ -552,6 +552,10 @@ const ADDRESS_NOTICES: Record<string, { title: string; body: string }> = {
   invalid: {
     title: "That does not look like an email address",
     body: "Check it and try again.",
+  },
+  locked: {
+    title: "Your sign-in address cannot change yet",
+    body: "You got in without your second step, so moving the account waits until two-step login turns off. The date is above.",
   },
   taken: {
     title: "That address already has a store",
@@ -929,10 +933,12 @@ export default async function StudioPage({
     : [null, { state: "none" as const }, null];
   // The person's own passkeys, and — for the owner — how many are on the team.
   // Adding a passkey needs a login from the last fifteen minutes (lib/auth.ts).
-  const [passkeys, team, freshLogin, twoStep] = await Promise.all([
+  const [passkeys, team, freshLogin, lockedTill, twoStep] = await Promise.all([
     email ? listPasskeys(email).catch(() => []) : Promise.resolve([]),
     store?.sid && may("team") ? readTeam(store.sid).catch(() => null) : Promise.resolve(null),
     isFreshSession(cookieStore.get(SESSION_COOKIE)?.value).catch(() => false),
+    // Whether this browser got in without its second step, and until when what matters is locked (lib/two-step.ts).
+    lockedUntil(cookieStore.get(SESSION_COOKIE)?.value).catch(() => 0),
     // The person's two-step login (lib/two-step.ts), beside their passkeys.
     email ? twoStepStatus(email).catch(() => ({ on: false, since: 0, codesLeft: 0, reset: 0, backup: "" })) : Promise.resolve({ on: false, since: 0, codesLeft: 0, reset: 0, backup: "" }),
   ]);
@@ -1010,11 +1016,18 @@ export default async function StudioPage({
         )}
 
         {/* A request to turn two-step login off without a code (lib/two-step.ts askReset), shown to every logged-in browser. */}
-        {twoStep.reset > 0 ? (
+        {lockedTill > 0 ? (
+          <div className="notice notice-warn mt-6" role="status">
+            <p className="font-bold text-ink">{`Some things are locked until ${new Date(lockedTill).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })}`}</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              You got in without your second step, so payments, your plan, your team, exports, settings, sending to your list, your sign-in address, passkeys and two-step login wait until then. Everything else is open: your products, pages, buyers, numbers and drafts. On that day two-step login turns off and nothing is locked; turn it on again with your new phone.
+            </p>
+          </div>
+        ) : twoStep.reset > 0 ? (
           <div className="notice notice-warn mt-6" role="status">
             <p className="font-bold text-ink">Two-step login is set to turn off</p>
             <p className="mt-1 text-sm text-ink-soft">
-              {`Somebody who opened a login link asked for it, saying the phone, the recovery codes and the passkeys are lost. It turns off on ${new Date(twoStep.reset).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })}. If that was not you, cancel it under Two-step login, and change your email password.`}
+              {`Somebody who opened a login link was let in without the second step, saying the phone, the recovery codes, the passkeys and the recovery address are all lost. What matters is locked for them, and two-step login turns off on ${new Date(twoStep.reset).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })}. If that was not you, press Cancel under Two-step login: they are logged out at once. Then change your email password.`}
             </p>
             <a href="#two-step" className="mt-2 inline-flex min-h-11 items-center text-sm font-bold text-ink underline underline-offset-4">
               Go to Two-step login
@@ -2857,7 +2870,7 @@ export default async function StudioPage({
                 initial={passkeys.map(({ id, name, createdAt, lastUsedAt, synced }) => ({ id, name, createdAt, lastUsedAt, synced }))}
                 fresh={freshLogin}
               />
-              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} reset={twoStep.reset} backup={twoStep.backup} fresh={freshLogin} />
+              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} reset={lockedTill > 0 ? 0 : twoStep.reset} backup={twoStep.backup} fresh={freshLogin} locked={lockedTill > 0} />
 
               {role !== "owner" ? (
                 <section aria-labelledby="leave-title" className="mt-8 border-t border-line pt-6">
