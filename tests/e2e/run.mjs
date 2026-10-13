@@ -3025,6 +3025,46 @@ try {
   }
 
   await keepSmall();
+  part("Short links for posts: made in the studio, opened, sent somewhere else, ended");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const share = studio.locator("details", { has: studio.locator("[data-short-links]") });
+    await share.locator("summary").first().click();
+    const box = studio.locator("[data-short-links]");
+    await box.getByLabel("Name of the post").fill("October Reel!");
+    is("the name is shown as it is counted", await box.getByText("Counted as “october-reel”.").count(), 1);
+    await box.getByLabel("Where you post it").selectOption("tiktok");
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/short-links") && r.ok(), { timeout: 30_000 }),
+      box.getByRole("button", { name: "Make a short link" }).click(),
+    ]);
+    const short = await box.getByLabel("Short link for october-reel").inputValue();
+    is("a short address of six letters", /^https:\/\/marktmorgen\.com\/l\/[a-hj-km-np-z2-9]{6}$/.test(short), true);
+    await box.getByRole("button", { name: "QR code" }).click();
+    is("with its own QR code", await box.getByRole("img", { name: "QR code that opens the link for october-reel" }).count(), 1);
+    const sent = await studio.request.get(local(short), { maxRedirects: 0 });
+    const to = sent.headers().location ?? "";
+    is("it opens the store, tagged with where it was posted and the post's name, and the CDN keeps it", [sent.status(), to.endsWith("/@localshop?utm_source=tiktok&utm_medium=post&utm_campaign=october-reel"), /s-maxage=300/.test(sent.headers()["cache-control"] ?? "")], [302, true, true]);
+    await open(page, local(to));
+    is("and the store opens", await page.locator('form[action="/api/store/checkout"]').count() > 0, true);
+    const line = box.locator("li", { hasText: "october-reel" });
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/short-links") && r.ok(), { timeout: 30_000 }),
+      line.getByLabel("Goes to").selectOption({ label: "Knife Skills" }),
+    ]);
+    const moved = (await studio.request.get(local(short), { maxRedirects: 0 })).headers().location ?? "";
+    is("sent to a product instead, the same link", moved.includes(`/@localshop/p/${ids["Knife Skills"]}?utm_source=tiktok`), true);
+    if (process.env.E2E_SHOTS) await box.screenshot({ path: join(process.env.E2E_SHOTS, "short-links.png") });
+    await Promise.all([
+      studio.waitForResponse((r) => r.url().endsWith("/api/store/short-links") && r.ok(), { timeout: 30_000 }),
+      line.getByRole("button", { name: "End the link for october-reel" }).click(),
+    ]);
+    const endedTo = (await studio.request.get(local(short), { maxRedirects: 0 })).headers().location ?? "";
+    await open(page, local(endedTo));
+    is("ended, it says so", [endedTo.endsWith("/l/ended"), await page.getByRole("heading", { name: "This link has ended" }).count()], [true, 1]);
+  }
+
+  await keepSmall();
   part("Discord: a server connected in the studio, a product giving a role, a buyer let in");
   {
     // Discord's page is another site: a form's redirect to it is followed here by hand, as a browser would.

@@ -185,6 +185,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I make a short link for a post?",
+        a: [
+          "Yes. In your studio, under \u201cShare the store,\u201d give the post a name, say where you post it and where the link goes: your store or one of your products. You get an address like marktmorgen.com/l/k7p2qa, short enough for a caption, a bio, a slide or a flyer, and its own QR code to download as SVG or PNG. The letters leave out 0, o, 1, l and i, so nobody misreads it from print.",
+          "The link opens the page already tagged with where you posted it and the post's name, so each link has its own line of visits, sales and revenue for the last 90 days beside it, and the same row in your numbers under \u201cWhich post made you money.\u201d You can change where a link goes at any time without touching the post, and end a link you no longer want; a change reaches everyone within five minutes. The visit is counted by the page it opens, like any other visit to your store. A store can have up to 100 links.",
+        ],
+      },
+      {
         q: "Can my numbers read what I spent on Meta ads?",
         a: [
           "Yes, once Marktmorgen's Meta app is approved to read ads. At the bottom of your numbers, under what you spent on ads, press \u201cConnect Meta ads\u201d and allow it on Meta's page. Your numbers then read what each campaign spent on each day, on Facebook, Instagram and Threads, for the last 30 days, and read it again once a day. Each channel's row counts it with whatever you typed: what was left after the ads, the call to spend more, keep or cut, and the days it took to pay back.",
