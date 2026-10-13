@@ -22,8 +22,8 @@ export async function makeSaveCoupon(
   store: Store,
   percent: number,
   months: number,
-  /** Which offer it is for: the one on the cancel page, or the come-back email (lib/winback.ts). */
-  purpose: "save-offer" | "win-back" = "save-offer",
+  /** Which offer it is for: the one on the cancel page, the come-back email (lib/winback.ts), or the welcome offer (lib/welcome-offer.ts). */
+  purpose: "save-offer" | "win-back" | "welcome" = "save-offer",
 ): Promise<string> {
   const account = store.stripeAccountId;
   if (!account) throw new Error("no Stripe account to make the coupon on");
@@ -37,7 +37,7 @@ export async function makeSaveCoupon(
       ...(months === 1 ? {} : { duration_in_months: String(months) }),
       // What the creator sees in their own Stripe dashboard, so a coupon they
       // did not make by hand is not a mystery.
-      name: `${purpose === "win-back" ? "Come-back offer" : "Stay offer"}: ${percent}% off`.slice(0, 40),
+      name: `${purpose === "win-back" ? "Come-back offer" : purpose === "welcome" ? "Welcome offer" : "Stay offer"}: ${percent}% off`.slice(0, 40),
       "metadata[made_by]": "nimbus-labs",
       "metadata[purpose]": purpose,
     }),

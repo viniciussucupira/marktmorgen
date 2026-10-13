@@ -215,6 +215,8 @@ export async function createCheckout(
      * or the other.
      */
     coupon?: string;
+    /** The coupon is the store's welcome offer (lib/welcome-offer.ts), not a come-back one. */
+    welcome?: boolean;
     /** The address the checkout opens with, fixed, for an offer made to one person. */
     email?: string;
     /**
@@ -451,7 +453,13 @@ export async function createCheckout(
   // (lib/platform-share.ts): the fee set below is the share of the least the
   // buyer can pay, and whatever is above what they did pay is given back.
   const mayComeOff: MayComeOff[] = [];
-  if (extras.coupon && !pwyw) {
+  if (extras.coupon && !pwyw && extras.welcome) {
+    // A welcome offer with a deadline of the person's own (lib/welcome-offer.ts).
+    body.set("discounts[0][coupon]", extras.coupon);
+    body.set("metadata[welcome]", "yes");
+    if (recurring) body.set("subscription_data[metadata][discount]", "welcome");
+    mayComeOff.push(extras.coupon === store.welcomeOffer.coupon ? { kind: "percent", percent: store.welcomeOffer.percent } : { kind: "unknown" });
+  } else if (extras.coupon && !pwyw) {
     body.set("discounts[0][coupon]", extras.coupon);
     body.set("metadata[winback]", "yes");
     mayComeOff.push(extras.coupon === store.winback.coupon ? { kind: "percent", percent: store.winback.percent } : { kind: "unknown" });
@@ -561,7 +569,7 @@ export async function createCheckout(
     body.set("subscription_data[metadata][store]", store.handle);
     body.set("subscription_data[metadata][product]", product.id);
     if (chosen) body.set("subscription_data[metadata][option]", chosen.id);
-    if (extras.coupon) body.set("subscription_data[metadata][winback]", "yes");
+    if (extras.coupon && !extras.welcome) body.set("subscription_data[metadata][winback]", "yes");
     // A member moving from another platform has paid there up to the day
     // it would renew: the card is taken now and first charged on that day.
     if (extras.moved) {

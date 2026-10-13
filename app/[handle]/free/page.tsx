@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { type Listing, type Store, normaliseHandle, storeForPage } from "@/lib/store";
 import { linkHost } from "@/lib/product-link";
-import { readClaim } from "@/lib/free";
+import { readClaimFull } from "@/lib/free";
+import { welcomeFor } from "@/lib/welcome-offer-send";
+import { welcomeWords } from "@/lib/buyer-words/welcome";
+import { WelcomeCountdown } from "@/components/welcome-countdown";
 import { lookStyle } from "@/lib/store-look";
 import { StoreTracking } from "@/components/store-tracking";
 import { readListing } from "@/lib/catalog";
@@ -94,7 +97,8 @@ export default async function FreePage({ params, searchParams }: Params) {
   // Nothing asked and nothing to pick up: the store itself is the page.
   if (!token && !status) redirect(`/@${store.handle}`);
 
-  const claim = token ? await readClaim(token) : null;
+  const full = token ? await readClaimFull(token) : null;
+  const claim = full ? { handle: full.h, productId: full.p } : null;
   // The product the email named, looked up in the store as it is now. The
   // claim may be for a store's old address, which still leads here.
   const claimed = claim
@@ -109,6 +113,11 @@ export default async function FreePage({ params, searchParams }: Params) {
   const next = here?.next ? null : await nextProduct(store, token ? (stillFree ? claimed : null) : status === "sent" ? asked : null);
   const said = speech(store);
   const g = givingWords(store.language);
+  // The welcome offer, with a deadline of the person's own, begun when they asked (lib/welcome-offer.ts).
+  const welcome = full && stillFree && full.h === store.handle ? await welcomeFor(store, full).catch(() => null) : null;
+  const ww = welcomeWords(store.language);
+  const welcomeNotice = typeof query.welcome === "string" ? ww.notices[query.welcome as keyof typeof ww.notices] : undefined;
+  const endedOn = welcome ? new Date(welcome.until * 1000).toLocaleString(said.lang.locale, { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }) : "";
   const notice = g.freeNotices[status] ?? g.freeNotices.error;
 
   return (
@@ -204,6 +213,40 @@ export default async function FreePage({ params, searchParams }: Params) {
             />
           </div>
         </div>
+        {welcome ? (
+          <section aria-labelledby="welcome-title" className="st-card mt-6 p-6 sm:p-7" data-welcome-offer>
+            <p className="st-label">{ww.label}</p>
+            <h2 id="welcome-title" className="font-display mt-1 text-xl font-semibold leading-snug">
+              {ww.offer(welcome.percent, welcome.product.title)}
+            </h2>
+            {welcomeNotice ? (
+              <p className="notice notice-error mt-3" role="alert">
+                <strong>{welcomeNotice.title}</strong> {welcomeNotice.body}
+              </p>
+            ) : null}
+            {welcome.ended ? (
+              <>
+                <p className="st-muted mt-2 text-sm">{ww.ended(endedOn)}</p>
+                <p className="st-muted mt-1 text-sm">{ww.endedNote}</p>
+                <Link href={productPath(store, welcome.product)} className="btn st-btn mt-4">
+                  {ww.see}
+                </Link>
+              </>
+            ) : (
+              <>
+                <WelcomeCountdown until={welcome.until} left={ww.left} untilWords={ww.until("{when}")} locale={said.lang.locale} />
+                <form action="/api/store/welcome/open" method="post" className="mt-4">
+                  <input type="hidden" name="handle" value={store.handle} />
+                  <input type="hidden" name="token" value={token} />
+                  <button type="submit" className="btn st-btn btn-lg">
+                    {ww.button(welcome.percent)}
+                  </button>
+                </form>
+                <p className="st-muted mt-3 text-xs">{ww.note}</p>
+              </>
+            )}
+          </section>
+        ) : null}
         {here?.next ? (
           <section aria-labelledby="funnel-next" className="st-card mt-6 p-6 sm:p-7">
             <p id="funnel-next" className="st-label">{funnelWords(store.language).nextLabel}</p>
@@ -212,7 +255,7 @@ export default async function FreePage({ params, searchParams }: Params) {
             </Link>
           </section>
         ) : null}
-        {next ? <NextUp store={store} product={next} /> : null}
+        {next && next.id !== welcome?.product.id ? <NextUp store={store} product={next} /> : null}
       </main>
     </div>
   );

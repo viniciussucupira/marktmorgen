@@ -4,6 +4,7 @@ import { withCutoff } from "@/lib/fetch-timeout";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { advanceImports, sendMoveReminders } from "@/lib/imports";
 import { readMetaDue } from "@/lib/meta-ads";
+import { sendWelcomeReminders } from "@/lib/welcome-offer-send";
 import { storeForId } from "@/lib/store";
 import { noticeCreator } from "@/lib/account-notice";
 
@@ -46,9 +47,14 @@ async function run(request: NextRequest): Promise<Response> {
       console.error("reading Meta ad spend failed", error);
       return null;
     });
+    // The welcome offers' one reminder each, as they come due (lib/welcome-offer-send.ts).
+    const welcome = await sendWelcomeReminders(Math.min(started + 47_000, Date.now() + 4_000)).catch((error: unknown) => {
+      console.error("sending welcome offer reminders failed", error);
+      return null;
+    });
     // Then the one reminder to members moved from another platform who have not kept theirs yet.
     const reminded = await sendMoveReminders(started + 50_000);
-    return Response.json({ ok: true, ...counts, metaAds, reminded }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ ok: true, ...counts, metaAds, welcome, reminded }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("the import job failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

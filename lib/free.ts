@@ -240,6 +240,13 @@ export async function readClaim(
   return claim ? { handle: claim.h, productId: claim.p } : null;
 }
 
+/** The whole of what an emailed link names, address included, without spending anything. */
+export async function readClaimFull(token: string): Promise<Claim | null> {
+  if (!TOKEN_PATTERN.test(token) || !isRedisConfigured()) return null;
+  const [raw] = await redisPipeline([["GET", await claimKey(token)]]);
+  return parseClaim(raw);
+}
+
 function parseClaim(raw: unknown): Claim | null {
   if (typeof raw !== "string" || !raw) return null;
   try {

@@ -14,8 +14,8 @@
  */
 
 /** Which discount a sale had, as the checkout wrote it (lib/store-checkout.ts). */
-export type DiscountKind = "full" | "code" | "sale" | "fair" | "intro" | "comeback";
-export const DISCOUNT_KINDS: DiscountKind[] = ["full", "code", "sale", "fair", "intro", "comeback"];
+export type DiscountKind = "full" | "code" | "sale" | "fair" | "intro" | "comeback" | "welcome";
+export const DISCOUNT_KINDS: DiscountKind[] = ["full", "code", "sale", "fair", "intro", "comeback", "welcome"];
 
 export const DISCOUNT_NAMES: Record<DiscountKind, string> = {
   full: "Full price",
@@ -24,6 +24,7 @@ export const DISCOUNT_NAMES: Record<DiscountKind, string> = {
   fair: "Fair price by country",
   intro: "Introductory price",
   comeback: "Come-back offer",
+  welcome: "Welcome offer",
 };
 
 /** The parts of a sale this reads. */
@@ -57,6 +58,7 @@ export function discountKindOf(row: Record<string, unknown>): DiscountKind {
   const meta = (row.metadata ?? {}) as Record<string, string>;
   const off = num((row.total_details as { amount_discount?: unknown } | null | undefined)?.amount_discount);
   if (meta.winback) return "comeback";
+  if (meta.welcome) return "welcome";
   if (meta.intro) return "intro";
   if (meta.fair) return "fair";
   if (meta.sale) return "sale";
@@ -120,7 +122,8 @@ export function discountImpact(sales: DiscountSale[], refunded: Set<string>, cur
 export function entryOf(meta: Record<string, string> | null | undefined): DiscountKind {
   if (!meta) return "full";
   if (meta.winback) return "comeback";
+  if (meta.welcome) return "welcome";
   if (meta.intro) return "intro";
   const d = meta.discount;
-  return d === "code" || d === "sale" || d === "fair" ? d : "full";
+  return d === "code" || d === "sale" || d === "fair" || d === "welcome" ? d : "full";
 }
