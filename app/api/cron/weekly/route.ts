@@ -11,6 +11,7 @@ import { claimWeek, readNumbers, weeklyMessage, weeklyOff, weeklyToken } from "@
 import { weeklySummary } from "@/lib/numbers-ask";
 import { isAiConfigured } from "@/lib/ai";
 import { readSpends } from "@/lib/ad-spend";
+import { recordSample } from "@/lib/benchmarks";
 import { weeklyMemberToken, weeklyTeam } from "@/lib/stats-report";
 import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
@@ -71,6 +72,8 @@ export async function GET(request: NextRequest) {
       if (!(await claimWeek(store.handle))) continue;
       out.looked += 1;
       const data = await readNumbers(store).catch(() => null);
+      // Its rates, for the ranges stores its size are set beside (lib/benchmarks.ts): read here anyway.
+      await recordSample(store, data);
       const token = weeklyToken(store.handle);
       const stopUrl = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&t=${encodeURIComponent(token)}`;
       const spends = await readSpends(store.statsId).catch(() => []);

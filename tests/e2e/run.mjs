@@ -523,6 +523,18 @@ try {
     const row = await studio.locator("#numbers tr", { has: studio.locator('th:text-is("Instagram")') }).first().innerText();
     is("$50 that brought nothing is called cut, and is not paid back", [/Cut/.test(row), /Not yet, 0%/.test(row)], [true, true]);
     is("the buyers' file for ad audiences is offered", await studio.getByRole("button", { name: "Download buyers for ads" }).count(), 1);
+    // Beside stores its size (lib/benchmarks.ts): the studio's numbers are this week's sample; a store
+    // under 300 visitors in 90 days is set beside nobody, even where its band has ranges.
+    {
+      const [weeks] = await services.redis([["SCAN", "0", "MATCH", "nl:bench:s:*", "COUNT", "1000"]]);
+      const week = (weeks?.[1] ?? [])[0] ?? "";
+      const [fields] = week ? await services.redis([["HGETALL", week]]) : [[]];
+      is("the studio's numbers are kept as the week's sample, marked as too small to compare", [Boolean(week), (fields ?? []).filter((_, i) => i % 2 === 1).every((v) => v === "{}")], [true, true]);
+      const range = { low: 0.01, median: 0.02, high: 0.03, stores: 12 };
+      await services.redis([["SET", "nl:bench:ranges", JSON.stringify({ at: 1, stores: 12, ranges: { a: { converted: range, paid: range, refunded: range, returning: range } } })]]);
+      await open(studio, `${LOCAL}/studio`);
+      is("and with too few visitors of its own, it is set beside nobody", await studio.locator("[data-beside-stores]").count(), 0);
+    }
     // What the store's Meta ad account spent, read into the same rows (lib/meta-ads.ts).
     {
       // Meta's page is another site: the form's redirect to it is followed here by hand, as a browser would.
