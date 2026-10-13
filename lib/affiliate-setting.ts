@@ -141,7 +141,21 @@ export type AffiliateSetting = {
    * tagged cpc) holds that affiliate's commission until the creator looks.
    */
   paidSearch: boolean;
+  /**
+   * The second tier (added 13 October 2026): 0, none, as every programme
+   * before it; otherwise the percent of each sale an affiliate earns on top
+   * when the sale was brought by somebody who joined through their
+   * invitation link. Paid by the creator, beside the first affiliate's own
+   * share and never out of it. Fixed for each recruit at the moment they
+   * join (Affiliate.by), so changing it later never rewrites what somebody
+   * was promised. One level only: nobody earns on the people their recruits
+   * bring.
+   */
+  secondTier: number;
 };
+
+/** The choices for the second tier, in percent; 0 is "none". */
+export const SECOND_TIER_OPTIONS = [0, 2, 3, 5, 10, 15, 20] as const;
 
 export type AffiliateBonus = { sales: number; cents: number };
 
@@ -211,6 +225,7 @@ export const NO_AFFILIATES: AffiliateSetting = {
   recurring: 0,
   bonuses: [],
   paidSearch: false,
+  secondTier: 0,
 };
 
 /** The goals as given, each whole and in range, the fewest sales first; null when any is not. */
@@ -273,6 +288,8 @@ export function parseAffiliateSetting(raw: unknown): AffiliateSetting {
     recurring: (RECURRING_OPTIONS as readonly number[]).includes(Number(value.recurring)) ? Number(value.recurring) : 0,
     bonuses: readBonuses(value.bonuses) ?? [],
     paidSearch: value.paidSearch === true,
+    // Missing on every programme saved before it existed: none.
+    secondTier: (SECOND_TIER_OPTIONS as readonly number[]).includes(Number(value.secondTier)) ? Number(value.secondTier) : 0,
   };
 }
 

@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       if (Number(body.hold) !== setting.hold) return fail("hold");
       if (body.recurring !== undefined && Number(body.recurring) !== setting.recurring) return fail("recurring");
       if (readBonuses(body.bonuses) === null) return fail("bonus");
+      if (body.secondTier !== undefined && Number(body.secondTier) !== setting.secondTier) return fail("tier");
       const asked = body.rates && typeof body.rates === "object" ? Object.keys(body.rates as object).length : 0;
       if (asked !== Object.keys(setting.rates).length) return fail("rate");
       const result = await setAffiliateSetting(guarded.ref, setting);

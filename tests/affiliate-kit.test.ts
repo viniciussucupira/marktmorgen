@@ -36,7 +36,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
 }) as typeof fetch;
 
 const OWNER = "chef@example.com";
-const affiliate = (over: Partial<Affiliate> = {}): Affiliate => ({ id: "aaaaaaaaaaaa", email: "fan@example.com", code: "fanlink", status: "approved", appliedAt: 1, decidedAt: 1, note: "", rate: null, paypal: "", share: null, cleared: null, ...over });
+const affiliate = (over: Partial<Affiliate> = {}): Affiliate => ({ id: "aaaaaaaaaaaa", email: "fan@example.com", code: "fanlink", status: "approved", appliedAt: 1, decidedAt: 1, note: "", rate: null, paypal: "", share: null, cleared: null, by: null, ...over });
 
 async function main(): Promise<void> {
   redis.clear();

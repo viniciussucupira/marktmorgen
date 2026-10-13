@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
   let email = "";
   let note = "";
   let honeypot = "";
+  let by = "";
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
     const read = (name: string) => {
@@ -39,6 +40,8 @@ export async function POST(request: NextRequest) {
     email = read("email").slice(0, 300);
     note = read("note").slice(0, 400);
     honeypot = read("website");
+    // The code of the affiliate whose invitation link brought them (lib/affiliates.ts recruiterFor).
+    by = read("by").trim().toLowerCase().slice(0, 40);
   } catch {
     return new Response("Bad request", { status: 400 });
   }
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
   if (honeypot.trim()) return away(`${page}?status=sent`);
 
   try {
-    const result = await requestAffiliateLink({ store, email, note, ip: clientIp(request), origin: linkOrigin(request, store) });
+    const result = await requestAffiliateLink({ store, email, note, by, ip: clientIp(request), origin: linkOrigin(request, store) });
     return away(`${page}?status=${result}`);
   } catch (error) {
     console.error("sending an affiliate link failed", error);

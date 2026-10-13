@@ -174,6 +174,13 @@ export type Affiliate = {
    * then. Somebody new sharing it holds it again. Null for anybody never held.
    */
   cleared: { paid: number; with: string[] } | null;
+  /**
+   * The affiliate whose invitation link they joined through, and the second
+   * tier's percent as it stood when they joined (lib/affiliate-setting.ts
+   * secondTier). That affiliate earns it on each sale this one brings, on top
+   * of this one's own share. Null for everybody else.
+   */
+  by: { id: string; percent: number } | null;
 };
 
 /**
@@ -188,9 +195,11 @@ export type Affiliate = {
  *            of the product itself (lib/partner-share.ts);
  *   "recurring" a payment of a membership or payment plan sold through their
  *            link, read from its invoice;
- *   "bonus"  a goal reached in a month, not a sale at all.
+ *   "bonus"  a goal reached in a month, not a sale at all;
+ *   "tier2"  a sale brought by somebody who joined through their invitation
+ *            link: the second tier, worked out when the book is read.
  */
-export type Credit = "click" | "code" | "buyer" | "partner" | "recurring" | "bonus";
+export type Credit = "click" | "code" | "buyer" | "partner" | "recurring" | "bonus" | "tier2";
 
 /** A sale that came through an affiliate's link. */
 export type Referral = {
@@ -307,6 +316,12 @@ function parseAffiliate(raw: unknown): Affiliate | null {
                 .slice(0, 50),
             }
           : null,
+      by: (() => {
+        const by = value.by as { id?: unknown; percent?: unknown } | null | undefined;
+        if (!by || typeof by !== "object" || typeof by.id !== "string" || !AFFILIATE_ID_PATTERN.test(by.id) || by.id === value.id) return null;
+        const percent = Number(by.percent);
+        return Number.isInteger(percent) && percent >= 1 && percent <= MAX_COMMISSION ? { id: by.id, percent } : null;
+      })(),
     };
   } catch {
     return null;
@@ -559,8 +574,29 @@ export type ApplyRequest = "sent" | "email" | "limited" | "unavailable" | "owner
  * A partner is not an applicant. Hotmart has the producer send the invitation,
  * and that is the right way round: somebody who helped make the product should
  * not have to apply to an affiliate programme to be paid for it.
+ *
+ * `r` is the affiliate whose invitation link they applied through, when the
+ * programme has a second tier (lib/affiliate-setting.ts secondTier).
  */
-type LinkGrant = { s: string; e: string; n: string; k?: 1; p?: PartnerShare };
+type LinkGrant = { s: string; e: string; n: string; k?: 1; p?: PartnerShare; r?: string };
+
+/**
+ * The affiliate whose invitation link this is, when it may bring anybody: the
+ * programme has a second tier, they are approved, and they are not inviting
+ * themselves under another address.
+ */
+export async function recruiterFor(store: Store, code: string, email: string): Promise<Affiliate | null> {
+  if (!store.statsId || store.affiliates.secondTier <= 0 || !AFFILIATE_CODE_PATTERN.test(code)) return null;
+  const [id] = await redisPipeline([["HGET", codesKey(store.statsId), code]]);
+  const affiliate = typeof id === "string" ? await readAffiliate(store, id) : null;
+  if (!affiliate || affiliate.status !== "approved") return null;
+  return canonicalEmail(affiliate.email) === canonicalEmail(email) ? null : affiliate;
+}
+
+/** An affiliate's invitation link: the programme's page, carrying their code. */
+export function recruitLink(store: Store, code: string): string {
+  return `${SITE_URL}/@${store.handle}/affiliates?by=${encodeURIComponent(code)}`;
+}
 
 /**
  * Emails a link to the address typed. Opening it is what makes the
@@ -573,6 +609,8 @@ export async function requestAffiliateLink(input: {
   note: string;
   ip: string;
   origin: string;
+  /** The code of the affiliate whose invitation link they came through, if any. */
+  by?: string;
 }): Promise<ApplyRequest> {
   const { store, ip, origin } = input;
   const raw = input.email.trim();
@@ -586,7 +624,8 @@ export async function requestAffiliateLink(input: {
   const [known] = await redisPipeline([["HGET", emailsKey(store.statsId as string), email]]);
   const token = randomBytes(32).toString("hex");
   const note = input.note.replace(/\s+/g, " ").trim().slice(0, MAX_NOTE_LENGTH);
-  const grant: LinkGrant = { s: store.statsId as string, e: email, n: note };
+  const recruiter = input.by ? await recruiterFor(store, input.by, email) : null;
+  const grant: LinkGrant = { s: store.statsId as string, e: email, n: note, ...(recruiter ? { r: recruiter.id } : {}) };
   await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", AFFILIATE_LINK_SECONDS]]);
 
   const name = store.name;
@@ -743,6 +782,7 @@ function parseGrant(raw: unknown): LinkGrant | null {
       n: typeof value.n === "string" ? value.n : "",
       ...(value.k === 1 ? { k: 1 as const } : {}),
       ...(share ? { p: share } : {}),
+      ...(typeof value.r === "string" && AFFILIATE_ID_PATTERN.test(value.r) ? { r: value.r } : {}),
     };
   } catch {
     return null;
@@ -814,6 +854,12 @@ export async function openAffiliateLink(store: Store, token: string): Promise<Op
       const code = await claimCode(store, grant.e, id);
       const now = Date.now();
       const invited = grant.k === 1;
+      // Checked again now, because the programme or the recruiter may have changed since the email went out.
+      const recruiter = grant.r && !invited ? await readAffiliate(store, grant.r) : null;
+      const by =
+        recruiter && store.affiliates.secondTier > 0 && recruiter.status === "approved" && canonicalEmail(recruiter.email) !== canonicalEmail(grant.e)
+          ? { id: recruiter.id, percent: store.affiliates.secondTier }
+          : null;
       affiliate = {
         id,
         email: grant.e,
@@ -826,6 +872,7 @@ export async function openAffiliateLink(store: Store, token: string): Promise<Op
         paypal: "",
         share: invited ? grant.p ?? null : null,
         cleared: null,
+        by,
       };
       await writeAffiliate(store, affiliate);
       created = true;
@@ -940,7 +987,7 @@ export async function joinAsBuyer(store: Store, sessionId: string): Promise<Join
     } else {
       const code = await claimCode(store, email, id);
       const now = Date.now();
-      affiliate = { id, email, code, status: "approved", appliedAt: now, decidedAt: now, note: "Joined after buying", rate: null, paypal: "", share: null, cleared: null };
+      affiliate = { id, email, code, status: "approved", appliedAt: now, decidedAt: now, note: "Joined after buying", rate: null, paypal: "", share: null, cleared: null, by: null };
       await writeAffiliate(store, affiliate);
       created = true;
     }
@@ -1553,11 +1600,15 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
     .map(([, raw]) => parseAffiliate(raw))
     .filter((a): a is Affiliate => a !== null);
   const affiliates = everyone.filter((a) => !only || a.id === only);
+  // Whose sales are read: one affiliate's own, and, for their second tier,
+  // those of the people who joined through their invitation link.
+  const recruits = new Set(everyone.filter((a) => only && a.by?.id === only).map((a) => a.id));
+  const mine = (aff: string) => !only || aff === only || recruits.has(aff);
   const clickCount = new Map(pairs(clicks).map(([id, n]) => [id, Number(n) || 0]));
   const paidCount = new Map(pairs(paidClicks).map(([id, n]) => [id, Number(n) || 0]));
   const referrals = pairs(sales)
     .map(([, raw]) => parseReferral(raw))
-    .filter((r): r is Referral => r !== null && (!only || r.aff === only));
+    .filter((r): r is Referral => r !== null && mine(r.aff));
   // A partner's standing share of a sale reads as one more Referral, credited
   // "partner" (lib/partner-share.ts). Keeping the shape means the payouts, the
   // batches, the spreadsheet and the partner's own page all work unchanged,
@@ -1590,7 +1641,7 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
   if (store.stripeAccountId && everyone.length) {
     try {
       const read = await recurringReferrals(store, everyone, Math.min(...everyone.map((a) => Math.floor(a.appliedAt / 1000))) - 86_400);
-      recurringLines = read.lines.filter((r) => !only || r.aff === only);
+      recurringLines = read.lines.filter((r) => mine(r.aff));
       invoicesChecked = read.complete;
     } catch (error) {
       console.error("reading invoices for the affiliate book failed", error);
@@ -1614,9 +1665,13 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
     }
   }
   const settled = everything.map((r) => settleLine(r, r.pi ? refunds.get(r.pi) ?? 0 : 0));
-  // A goal reached in a month adds its bonus, worked out from the sales as they stand after refunds.
-  const lines = [...settled, ...bonusLines(store, settled)].sort((a, b) => b.at - a.at);
   const flagsOf = holdFlags(store, everyone, paidCount);
+  // A goal reached in a month adds its bonus, and a sale by somebody an
+  // affiliate brought adds their second tier, both worked out from the sales
+  // as they stand after refunds. Then only the one affiliate's, when it is one.
+  const lines = [...settled, ...bonusLines(store, settled), ...tierLines(everyone, settled, flagsOf)]
+    .filter((l) => !only || l.aff === only)
+    .sort((a, b) => b.at - a.at);
 
   // A sale made less than the creator's wait ago is not payable yet, so their
   // refund window can pass before the money leaves them. `hold` is 0 for a
@@ -1634,7 +1689,7 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
       return {
         affiliate,
         clicks: clickCount.get(affiliate.id) ?? 0,
-        sales: own.filter((l) => l.commission > 0 && l.how !== "bonus").length,
+        sales: own.filter((l) => l.commission > 0 && l.how !== "bonus" && l.how !== "tier2").length,
         earned,
         paid: out,
         owed,
@@ -1758,7 +1813,7 @@ export function bonusLines(store: Pick<Store, "affiliates" | "currency">, lines:
   if (!goals.length) return [];
   const months = new Map<string, Line[]>();
   for (const line of lines) {
-    if (line.commission <= 0 || line.how === "partner" || line.how === "bonus" || line.currency !== store.currency) continue;
+    if (line.commission <= 0 || line.how === "partner" || line.how === "bonus" || line.how === "tier2" || line.currency !== store.currency) continue;
     const key = `${line.aff}|${new Date(line.at * 1000).toISOString().slice(0, 7)}`;
     months.set(key, [...(months.get(key) ?? []), line]);
   }
@@ -1786,6 +1841,47 @@ export function bonusLines(store: Pick<Store, "affiliates" | "currency">, lines:
         status: "earned",
       });
     }
+  }
+  return out;
+}
+
+/** What a line credited this way is: a sale somebody brought, as opposed to a share, a bonus or a second tier. */
+const BROUGHT: readonly Credit[] = ["click", "code", "buyer", "recurring"];
+
+/**
+ * The second tier: for each sale an affiliate brought that earns them
+ * something, the affiliate who invited them earns the percent fixed when they
+ * joined (Affiliate.by), of what was kept after refunds — on top, never out of
+ * the first share. Three things keep it honest:
+ *
+ *   - one level only: it is read from sales the recruit brought, never from
+ *     another second tier, a partner share or a bonus;
+ *   - everything promised on one sale — both shares and any partner's —
+ *     never passes the programme's cap;
+ *   - nothing is earned on a recruit's sales while that recruit is held for
+ *     the creator to look at, nor on sales made after the inviting affiliate
+ *     was declined or removed.
+ */
+export function tierLines(everyone: Affiliate[], lines: Line[], flags: Map<string, HoldFlag[]>): Line[] {
+  const byId = new Map(everyone.map((a) => [a.id, a]));
+  // What partners take of each sale (written "<sale>:<partner>"), so all the shares of one sale stay under the cap together.
+  const partners = new Map<string, number>();
+  for (const line of lines) {
+    if (line.how !== "partner") continue;
+    const sale = line.ref.slice(0, line.ref.lastIndexOf(":"));
+    partners.set(sale, (partners.get(sale) ?? 0) + line.rate);
+  }
+  const out: Line[] = [];
+  for (const line of lines) {
+    if (line.self || line.commission <= 0 || !BROUGHT.includes(line.how)) continue;
+    const recruit = byId.get(line.aff);
+    if (!recruit?.by || (flags.get(recruit.id) ?? []).length) continue;
+    const up = byId.get(recruit.by.id);
+    if (!up || up.id === recruit.id) continue;
+    if (up.status !== "approved" && (up.status !== "removed" || line.at * 1000 > up.decidedAt)) continue;
+    const percent = Math.min(recruit.by.percent, MAX_COMMISSION - line.rate - (partners.get(line.ref) ?? 0));
+    if (percent <= 0) continue;
+    out.push(settleLine({ ref: `tier2:${line.ref}`, pi: line.pi, aff: up.id, at: line.at, product: line.product, title: line.title, base: line.base, total: line.total, currency: line.currency, rate: percent, self: false, how: "tier2" }, line.refunded));
   }
   return out;
 }
@@ -1856,7 +1952,7 @@ export function bookCsv(book: Book, all: Affiliate[]): string {
   ];
   const rows: (string | number)[][] = [
     ...book.lines.map((l) => [
-      "sale",
+      l.how === "tier2" ? "second tier" : "sale",
       day(l.at),
       who.get(l.aff)?.email ?? "",
       who.get(l.aff)?.code ?? "",

@@ -103,6 +103,9 @@ const en = {
   copy: "Copy",
   copied: "Copied",
   orAddVia: (code: string) => `Or add ?via=${code} to the address of any page of this store.`,
+  recruitLabel: "Your invitation link",
+  recruitNote: (percent: number, store: string) =>
+    `Somebody who applies through this link and is approved by ${store} is yours: you earn ${percent}% of each sale they bring, on top of what they earn, which is not reduced. The share is fixed when they join, and does not reach the people they bring in turn.`,
   codesLabel: (count: number): string => (count === 1 ? "Your code" : "Your codes"),
   codeNoteOne:
     "Say it out loud, print it, put it in a caption. A buyer who types it at checkout earns you your share even if they never clicked your link — which is how a sale from a podcast, a stage or a video without links reaches you at all.",
@@ -134,6 +137,8 @@ const en = {
   noneYet: "None yet.",
   aProduct: "A product",
   /** "Oct 8, 2026 · $40 before tax · 20% · refunded"; `status` is "" for a sale that earns as it was. */
+  tierLine: (date: string, amount: string, percent: number, status: string) =>
+    `${date} · a sale by somebody you brought · ${amount} before tax · ${percent}%${status ? ` · ${status}` : ""}`,
   saleLine: (date: string, amount: string, percent: number, status: string) =>
     `${date} · ${amount} before tax · ${percent}%${status ? ` · ${status}` : ""}`,
   /** A sale's state (lib/affiliates.ts, settleLine), when it is not simply earned. */
@@ -395,6 +400,9 @@ const es: AffiliatesWords = {
   copy: "Copiar",
   copied: "Copiado",
   orAddVia: (code) => `O añade ?via=${code} a la dirección de cualquier página de esta tienda.`,
+  recruitLabel: "Tu enlace de invitación",
+  recruitNote: (percent, store) =>
+    `Quien solicite unirse con este enlace y sea aprobado por ${store} queda contigo: ganas el ${percent}${S}% de cada venta que traiga, además de lo que gana esa persona, que no se reduce. La parte queda fija cuando se une, y no alcanza a las personas que traiga a su vez.`,
   codesLabel: (count) => (count === 1 ? "Tu código" : "Tus códigos"),
   codeNoteOne:
     "Dilo en voz alta, imprímelo, ponlo en un pie de foto. Un comprador que lo escriba al pagar te hace ganar tu parte aunque nunca haya hecho clic en tu enlace — es la única forma de que te llegue una venta desde un podcast, un escenario o un video sin enlaces.",
@@ -423,6 +431,8 @@ const es: AffiliatesWords = {
   salesHead: "Ventas a través de tu enlace",
   noneYet: "Ninguna todavía.",
   aProduct: "Un producto",
+  tierLine: (date, amount, percent, status) =>
+    `${date} · una venta de alguien que trajiste · ${amount} antes de impuestos · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   saleLine: (date, amount, percent, status) =>
     `${date} · ${amount} antes de impuestos · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   lineStatus: { "own purchase": "compra propia", refunded: "reembolsada", "partly refunded": "reembolsada en parte" },
@@ -657,6 +667,9 @@ const fr: AffiliatesWords = {
   copy: "Copier",
   copied: "Copié",
   orAddVia: (code) => `Ou ajoutez ?via=${code} à l'adresse de n'importe quelle page de cette boutique.`,
+  recruitLabel: "Votre lien d'invitation",
+  recruitNote: (percent, store) =>
+    `Une personne qui postule par ce lien et que ${store} approuve est la vôtre${S}: vous gagnez ${percent}${S}% de chaque vente qu'elle apporte, en plus de ce qu'elle gagne, qui n'est pas réduit. La part est fixée à son arrivée, et ne s'applique pas aux personnes qu'elle amène à son tour.`,
   codesLabel: (count) => (count < 2 ? "Votre code" : "Vos codes"),
   codeNoteOne:
     "Dites-le à voix haute, imprimez-le, mettez-le dans une légende. Un acheteur qui le saisit au paiement vous rapporte votre part même s'il n'a jamais cliqué sur votre lien — c'est la seule façon pour qu'une vente venue d'un podcast, d'une scène ou d'une vidéo sans liens vous revienne.",
@@ -684,6 +697,8 @@ const fr: AffiliatesWords = {
   salesHead: "Ventes via votre lien",
   noneYet: "Aucune pour l'instant.",
   aProduct: "Un produit",
+  tierLine: (date, amount, percent, status) =>
+    `${date} · une vente d'une personne que vous avez amenée · ${amount} hors taxes · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   saleLine: (date, amount, percent, status) => `${date} · ${amount} hors taxes · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   lineStatus: { "own purchase": "achat personnel", refunded: "remboursée", "partly refunded": "partiellement remboursée" },
   paidByHead: (store) => `Ce que ${store} vous a versé`,
@@ -922,6 +937,9 @@ const de: AffiliatesWords = {
   copy: "Kopieren",
   copied: "Kopiert",
   orAddVia: (code) => `Oder hängen Sie ?via=${code} an die Adresse einer beliebigen Seite dieses Shops an.`,
+  recruitLabel: "Ihr Einladungslink",
+  recruitNote: (percent, store) =>
+    `Wer sich über diesen Link bewirbt und von ${store} angenommen wird, gehört zu Ihnen: Sie verdienen ${percent}${S}% an jedem Verkauf, den diese Person bringt, zusätzlich zu dem, was sie selbst verdient, und das wird nicht gekürzt. Der Anteil steht fest, sobald sie beitritt, und gilt nicht für die Personen, die sie ihrerseits bringt.`,
   codesLabel: (count) => (count === 1 ? "Ihr Code" : "Ihre Codes"),
   codeNoteOne:
     "Sagen Sie ihn laut, drucken Sie ihn, schreiben Sie ihn in eine Bildunterschrift. Wer ihn beim Bezahlen eingibt, bringt Ihnen Ihren Anteil ein, auch ohne je auf Ihren Link geklickt zu haben — nur so erreicht Sie überhaupt ein Verkauf aus einem Podcast, von einer Bühne oder aus einem Video ohne Links.",
@@ -950,6 +968,8 @@ const de: AffiliatesWords = {
   salesHead: "Verkäufe über Ihren Link",
   noneYet: "Noch keine.",
   aProduct: "Ein Produkt",
+  tierLine: (date, amount, percent, status) =>
+    `${date} · ein Verkauf von jemandem, den Sie geworben haben · ${amount} vor Steuern · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   saleLine: (date, amount, percent, status) => `${date} · ${amount} vor Steuern · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   lineStatus: { "own purchase": "eigener Kauf", refunded: "erstattet", "partly refunded": "teilweise erstattet" },
   paidByHead: (store) => `Von ${store} an Sie gezahlt`,
@@ -1191,6 +1211,9 @@ const it: AffiliatesWords = {
   copy: "Copia",
   copied: "Copiato",
   orAddVia: (code) => `Oppure aggiungi ?via=${code} all'indirizzo di qualsiasi pagina di questo negozio.`,
+  recruitLabel: "Il tuo link di invito",
+  recruitNote: (percent, store) =>
+    `Chi si candida con questo link e viene approvato da ${store} è tuo: guadagni il ${percent}${S}% di ogni vendita che porta, in più di quanto guadagna, che non viene ridotto. La quota è fissata quando entra e non vale per le persone che porta a sua volta.`,
   codesLabel: (count) => (count === 1 ? "Il tuo codice" : "I tuoi codici"),
   codeNoteOne:
     "Dillo ad alta voce, stampalo, mettilo in una didascalia. Un acquirente che lo digita al pagamento ti fa guadagnare la tua quota anche se non ha mai cliccato sul tuo link — ed è l'unico modo in cui una vendita da un podcast, da un palco o da un video senza link può arrivare fino a te.",
@@ -1219,6 +1242,8 @@ const it: AffiliatesWords = {
   salesHead: "Vendite tramite il tuo link",
   noneYet: "Ancora nessuna.",
   aProduct: "Un prodotto",
+  tierLine: (date, amount, percent, status) =>
+    `${date} · una vendita di una persona che hai portato · ${amount} al netto delle tasse · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   saleLine: (date, amount, percent, status) =>
     `${date} · ${amount} al netto delle tasse · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   lineStatus: { "own purchase": "acquisto tuo", refunded: "rimborsata", "partly refunded": "rimborsata in parte" },
@@ -1456,6 +1481,9 @@ const nl: AffiliatesWords = {
   copy: "Kopiëren",
   copied: "Gekopieerd",
   orAddVia: (code) => `Of voeg ?via=${code} toe aan het adres van elke pagina van deze winkel.`,
+  recruitLabel: "Je uitnodigingslink",
+  recruitNote: (percent, store) =>
+    `Wie zich via deze link aanmeldt en door ${store} wordt goedgekeurd, hoort bij jou: je verdient ${percent}${S}% van elke verkoop die die persoon brengt, bovenop wat die zelf verdient, dat niet minder wordt. Het deel staat vast zodra die persoon instapt, en geldt niet voor de mensen die die op zijn beurt brengt.`,
   codesLabel: (count) => (count === 1 ? "Je code" : "Je codes"),
   codeNoteOne:
     "Zeg hem hardop, print hem, zet hem in een bijschrift. Een koper die hem bij het afrekenen invult, levert je je aandeel op, ook als die nooit op je link heeft geklikt — alleen zo bereikt een verkoop via een podcast, een podium of een video zonder links je überhaupt.",
@@ -1484,6 +1512,8 @@ const nl: AffiliatesWords = {
   salesHead: "Verkopen via je link",
   noneYet: "Nog geen.",
   aProduct: "Een product",
+  tierLine: (date, amount, percent, status) =>
+    `${date} · een verkoop van iemand die jij bracht · ${amount} vóór belasting · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   saleLine: (date, amount, percent, status) => `${date} · ${amount} vóór belasting · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   lineStatus: { "own purchase": "eigen aankoop", refunded: "terugbetaald", "partly refunded": "deels terugbetaald" },
   paidByHead: (store) => `Door ${store} aan je betaald`,
@@ -1727,6 +1757,9 @@ const pt: AffiliatesWords = {
   copy: "Copiar",
   copied: "Copiado",
   orAddVia: (code) => `Ou acrescente ?via=${code} ao endereço de qualquer página desta loja.`,
+  recruitLabel: "A sua ligação de convite",
+  recruitNote: (percent, store) =>
+    `Quem se candidatar por esta ligação e for aprovado por ${store} fica consigo: ganha ${percent}${S}% de cada venda que essa pessoa trouxer, além do que ela ganha, que não diminui. A parte fica fixa quando ela entra e não se aplica às pessoas que ela trouxer por sua vez.`,
   codesLabel: (count) => (count === 1 ? "O seu código" : "Os seus códigos"),
   codeNoteOne:
     "Diga-o em voz alta, imprima-o, coloque-o numa legenda. Um comprador que o introduza no pagamento faz-lhe ganhar a sua parte mesmo que nunca tenha clicado na sua ligação — é a única forma de lhe chegar uma venda vinda de um podcast, de um palco ou de um vídeo sem ligações.",
@@ -1755,6 +1788,8 @@ const pt: AffiliatesWords = {
   salesHead: "Vendas através da sua ligação",
   noneYet: "Ainda nenhuma.",
   aProduct: "Um produto",
+  tierLine: (date, amount, percent, status) =>
+    `${date} · uma venda de alguém que trouxe · ${amount} antes de impostos · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   saleLine: (date, amount, percent, status) =>
     `${date} · ${amount} antes de impostos · ${percent}${S}%${status ? ` · ${status}` : ""}`,
   lineStatus: { "own purchase": "compra própria", refunded: "reembolsada", "partly refunded": "parcialmente reembolsada" },
