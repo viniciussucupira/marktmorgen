@@ -36,8 +36,8 @@
  * Browser-safe.
  */
 
-export type StepIf = "has" | "lacks" | "buyer" | "lead" | "tag" | "untagged" | "clicked" | "unclicked" | "started" | "unstarted" | "finished" | "unfinished";
-export const STEP_IFS: readonly StepIf[] = ["has", "lacks", "buyer", "lead", "tag", "untagged", "clicked", "unclicked", "started", "unstarted", "finished", "unfinished"];
+export type StepIf = "has" | "lacks" | "buyer" | "lead" | "tag" | "untagged" | "clicked" | "unclicked" | "started" | "unstarted" | "finished" | "unfinished" | "half-a" | "half-b";
+export const STEP_IFS: readonly StepIf[] = ["has", "lacks", "buyer", "lead", "tag", "untagged", "clicked", "unclicked", "started", "unstarted", "finished", "unfinished", "half-a", "half-b"];
 
 /** The conditions read from a course's record of its students: opened it or not, finished it or not. */
 export const COURSE_IFS: readonly StepIf[] = ["started", "unstarted", "finished", "unfinished"];
@@ -50,7 +50,14 @@ export type StepCondition =
   /** Used a link to the store in the email before this one, or did not (lib/mail-clicks.ts). */
   | { if: "clicked" | "unclicked" }
   /** Opened the course this product is, or not; did every lesson of it, or not (lib/learn.ts). */
-  | { if: "started" | "unstarted" | "finished" | "unfinished"; productId: string };
+  | { if: "started" | "unstarted" | "finished" | "unfinished"; productId: string }
+  /**
+   * One half of the people in the sequence, or the other (added 13 October
+   * 2026): an A/B split. Each person's half is worked out from their address
+   * and the sequence, so it is the same at every step: somebody in the first
+   * half gets every "first half" email of it and none of the other.
+   */
+  | { if: "half-a" | "half-b" };
 
 /** Whether a condition reads the email before, so cannot be on the first. */
 export const readsEmailBefore = (condition: StepCondition | null | undefined): boolean => condition?.if === "clicked" || condition?.if === "unclicked";
@@ -76,7 +83,23 @@ export type Person = {
   used?: boolean;
   /** For a condition on a course: whether they opened it and whether they did every lesson. */
   course?: { started: boolean; finished: boolean };
+  /** Their half of the sequence, for an A/B split (halfOf). */
+  half?: "a" | "b";
 };
+
+/**
+ * Which half of a sequence somebody is in: the same for the same address and
+ * sequence, about even across many people, and nothing anybody chooses. A
+ * hash, so nothing is stored to know it.
+ */
+export function halfOf(flowId: string, email: string): "a" | "b" {
+  let hash = 0x811c9dc5;
+  for (const char of `${flowId}|${email.trim().toLowerCase()}`) {
+    hash ^= char.codePointAt(0) ?? 0;
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash % 2 === 0 ? "a" : "b";
+}
 
 const sameTag = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
 
@@ -112,6 +135,10 @@ export function holds(condition: StepCondition, person: Person, paid: ReadonlySe
       return person.course?.finished === true;
     case "unfinished":
       return person.course?.finished !== true;
+    case "half-a":
+      return person.half === "a";
+    case "half-b":
+      return person.half === "b";
   }
 }
 
@@ -186,7 +213,7 @@ export function goalClash(trigger: "joined" | "product" | "bought" | "tagged" | 
  * that starts a sequence, or a sequence that starts another, runs at most
  * once for them.
  */
-export type FlowAction = { do: "tag" | "untag"; tag: string } | { do: "start"; flowId: string };
+export type FlowAction = { do: "tag" | "untag"; tag: string } | { do: "start"; flowId: string } | { do: "webhook" };
 
 /** An action as sent from the studio, cleaned; null for an email. `isFlow` says whether a sequence is the store's. */
 export function readAction(raw: unknown, isFlow: (flowId: string) => boolean): FlowAction | null | "bad" {
@@ -201,6 +228,8 @@ export function readAction(raw: unknown, isFlow: (flowId: string) => boolean): F
     const flowId = typeof value.flowId === "string" ? value.flowId : "";
     return flowId && isFlow(flowId) ? { do: "start", flowId } : "bad";
   }
+  // Tells the store's own server, through its webhooks (lib/webhooks.ts, "sequence.step"), who reached this step.
+  if (value.do === "webhook") return { do: "webhook" };
   return "bad";
 }
 

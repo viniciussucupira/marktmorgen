@@ -65,6 +65,7 @@ export const WEBHOOK_EVENTS = [
   "call.booked",
   "call.moved",
   "refund.issued",
+  "sequence.step",
 ] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
