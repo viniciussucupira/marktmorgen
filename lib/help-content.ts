@@ -4,9 +4,12 @@
  * the page shows. Each answer is plain text; numbers come from the rules they
  * describe, so the two can never disagree.
  */
+import { countWords } from "@/lib/traffic-rules";
+import { centsWords } from "@/lib/watch-rules";
+import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, perOrderWords } from "@/lib/order-rules";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import { isDomainsConfigured } from "@/lib/domains";
-import { PRO_MONTHLY_EMAILS, REFUND_DAYS, TRIAL_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS } from "@/lib/plan";
+import { PLAN_TITLES, PRO_MONTHLY_EMAILS, REFUND_DAYS, TRIAL_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS } from "@/lib/plan";
 import { PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS } from "@/lib/plan-pause-rules";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { formatMoney } from "@/lib/money";
@@ -74,7 +77,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "What will it cost?",
         a: [
           feeWords().costLine,
-          "Two things are charged by use, and only if you reach them, both added to your next invoice. Lesson video watched past 400 hours in a month is $0.03 for each hour. Visits to your store past what your plan covers are $0.50 for each thousand. Your studio shows both as they are counted, and neither ever takes your store down or cuts a student off. Downloads are never charged for.",
+          `Three things are charged by use, and only if you reach them, all added to your next invoice. Lesson video watched past 400 hours in a month is $0.03 for each hour. Visits to your store past what your plan covers are $0.50 for each thousand. Orders past what your plan covers are ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand. Your studio shows each as it is counted, and none of them ever takes your store down, turns a buyer away or cuts a student off. Downloads are never charged for.`,
           "The price is published on the home page. If it ever changes, existing subscribers are told before it applies to them.",
         ],
       },
@@ -256,6 +259,15 @@ export const HELP_SECTIONS: HelpSection[] = [
           "A buyer who comes back counts the same way: a student or a member who opens a course or your community on a day is that day's visit, once. A subscriber to a private podcast is one visit on each day their app checks for episodes. Your community's live room checks for new messages for as long as it is open in front of a member, so it counts by the 10 minutes it is open, for each member: 2.6 visits while people are talking, when it checks every 5 seconds, and 0.6 of a visit while the room is quiet. A room in a background tab, or one nobody has touched for 20 minutes, checks nothing and counts nothing.",
           "Past your plan's figure, visits are $0.50 for each thousand, counted to the visit and added to your next invoice. Your store is never taken down for it. We email you the first time a month passes it, and your studio shows the count as it grows.",
           "A store with no paid plan has nothing a charge can be added to, so its public pages rest past its visits until the plan is paid or the month turns: 3,000 visits a month in the free trial, and 500 a month before a plan starts and after one ends. A visitor is told the page will be open again soon. What your buyers already have stays open: their orders, downloads, lessons, podcasts and memberships. The live room of such a store stops checking by itself, and shows new messages when a member presses a button.",
+        ],
+      },
+      {
+        q: "What if I sell a very large number of things?",
+        a: [
+          `Your plan covers ${countWords(ORDERS_INCLUDED.creator)} orders a month on ${PLAN_TITLES.creator}, ${countWords(ORDERS_INCLUDED.pro)} on ${PLAN_TITLES.pro}, and ${countWords(ORDERS_INCLUDED.scale)} on ${PLAN_TITLES.scale}. An order is a purchase confirmed (a bundle or a cart of several products is one), an offer taken after paying, a place taken in a purchase made for several people, or a free copy sent.${feeWords().ordersShared}`,
+          `Past your plan's figure, orders are ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, ${perOrderWords()} an order, counted to the order and added to your next invoice. Nothing is ever refused to a buyer for it. We email you the first time a month passes it, and your studio shows the count as it grows.`,
+          "Selling video works the same way at any volume. A video sold as a file is sent to each buyer at no cost to you however many buy it. A video inside a course counts by the hour watched, as the question on lesson video says.",
+          `In the free trial there is no invoice to add an order to, so free copies stop for the month once the store has had ${countWords(TRIAL_ORDERS)} orders, until the plan is paid or the month turns. Paid orders are never stopped.`,
         ],
       },
       {

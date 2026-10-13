@@ -10,6 +10,7 @@ import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords } from "@/
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, centsWords } from "@/lib/watch-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS } from "@/lib/order-rules";
 import { ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER, countWords, partsWords } from "@/lib/traffic-rules";
 import { ROOM_GRANT_MINUTES } from "@/lib/chat-pace";
 import { STORAGE_BRAKE_BYTES, storageWords } from "@/lib/storage-quota";
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 12, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 13, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -430,6 +431,27 @@ export default function TermsPage() {
           orders, downloads, lessons, podcasts and memberships stay open. The
           live room of such a store stops checking by itself and shows new
           messages when a member asks for them.
+        </p>
+        <p>
+          Orders are counted the same way. An order is one purchase confirmed
+          (a bundle or a cart of several products is one), one offer taken
+          after paying, one place taken in a purchase made for several people,
+          or one free copy sent to an address, each counted once. Your plan
+          covers a number of orders in each calendar month:{" "}
+          {countWords(ORDERS_INCLUDED.creator)} on {PLAN_TITLES.creator},{" "}
+          {countWords(ORDERS_INCLUDED.pro)} on {PLAN_TITLES.pro}, and{" "}
+          {countWords(ORDERS_INCLUDED.scale)} on {PLAN_TITLES.scale}. Past
+          that, orders are charged rather than limited:{" "}
+          {centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand orders
+          above your plan&apos;s figure in a calendar month, counted to the
+          order and rounded down to the cent, added to your next subscription
+          invoice the same way visits are. Nothing is ever refused to a buyer
+          because a store has passed its orders, and you are emailed
+          automatically the first time a month passes them.
+          {feeWords().ordersShared} In the free trial, free copies stop for
+          the month once the store has had {countWords(TRIAL_ORDERS)} orders,
+          until the plan is paid or the month turns; paid orders are never
+          stopped.
         </p>
         <p>
           What we ask in return is that the Services are used to sell your own

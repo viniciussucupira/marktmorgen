@@ -248,6 +248,7 @@ const en = {
     noFile: "There is no file on this product.",
     addedToOrderNoPart: "The product added to this order has no such part.",
     noSuchProduct: "This order has no such product in it.",
+    tooOften: "This link has been opened very many times in the last hour. Please try again in a little while.",
   },
 };
 
@@ -458,6 +459,7 @@ const es: OrdersWords = {
     noFile: "Este producto no tiene ningún archivo.",
     addedToOrderNoPart: "El producto añadido a este pedido no tiene esa parte.",
     noSuchProduct: "Este pedido no contiene ese producto.",
+    tooOften: "Este enlace se ha abierto muchísimas veces en la última hora. Vuelve a intentarlo dentro de un rato.",
   },
 };
 
@@ -664,6 +666,7 @@ const fr: OrdersWords = {
     noFile: "Ce produit n'a aucun fichier.",
     addedToOrderNoPart: "Le produit ajouté à cette commande ne contient pas cet élément.",
     noSuchProduct: "Cette commande ne contient pas ce produit.",
+    tooOften: "Ce lien a été ouvert un très grand nombre de fois dans la dernière heure. Réessayez dans un moment.",
   },
 };
 
@@ -871,6 +874,7 @@ const de: OrdersWords = {
     noFile: "Zu diesem Produkt gibt es keine Datei.",
     addedToOrderNoPart: "Das zu dieser Bestellung hinzugefügte Produkt hat keinen solchen Teil.",
     noSuchProduct: "Diese Bestellung enthält kein solches Produkt.",
+    tooOften: "Dieser Link wurde in der letzten Stunde sehr oft geöffnet. Bitte versuchen Sie es in Kürze noch einmal.",
   },
 };
 
@@ -1082,6 +1086,7 @@ const it: OrdersWords = {
     noFile: "Questo prodotto non ha alcun file.",
     addedToOrderNoPart: "Il prodotto aggiunto a questo ordine non contiene quella parte.",
     noSuchProduct: "Questo ordine non contiene quel prodotto.",
+    tooOften: "Questo link è stato aperto moltissime volte nell'ultima ora. Riprova tra poco.",
   },
 };
 
@@ -1288,6 +1293,7 @@ const nl: OrdersWords = {
     noFile: "Bij dit product hoort geen bestand.",
     addedToOrderNoPart: "Het product dat aan deze bestelling is toegevoegd, heeft zo'n onderdeel niet.",
     noSuchProduct: "Deze bestelling bevat zo'n product niet.",
+    tooOften: "Deze link is het afgelopen uur heel vaak geopend. Probeer het over een poosje opnieuw.",
   },
 };
 
@@ -1495,6 +1501,7 @@ const pt: OrdersWords = {
     noFile: "Este produto não tem nenhum ficheiro.",
     addedToOrderNoPart: "O produto adicionado a esta encomenda não tem essa parte.",
     noSuchProduct: "Esta encomenda não contém esse produto.",
+    tooOften: "Esta ligação foi aberta muitíssimas vezes na última hora. Tente novamente daqui a pouco.",
   },
 };
 

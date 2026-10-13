@@ -20,6 +20,8 @@ import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, VIDEO_SECONDS_INCLUDED
 import { visitedFolders, visitsIn } from "@/lib/traffic";
 import { firstWordOnVisits, settleAllVisits } from "@/lib/traffic-billing";
 import { SETUP_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor, visitsIncluded, visitsOwedCents, visitsWords } from "@/lib/traffic-rules";
+import { firstWordOnOrders, settleAllOrders } from "@/lib/orders-billing";
+import { ORDER_CENTS_PER_THOUSAND_OVER, ordersIncluded, ordersOwedCents, ordersWords } from "@/lib/order-rules";
 
 /**
  * The daily run that writes to a creator who has gone past the allowance.
@@ -53,6 +55,11 @@ import { SETUP_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor,
  * (lib/traffic-billing.ts), billed and written about the same way. A store
  * with no plan to charge is written to because its pages are resting
  * (lib/traffic.ts).
+ *
+ * And orders past the orders a plan covers (lib/orders-billing.ts), billed
+ * and written about the same way. There is nothing to rest for them: a buyer
+ * is never refused, and a store with no plan to charge gives no free copies
+ * past the trial's (lib/order-rules.ts).
  */
 export const maxDuration = 60;
 
@@ -268,6 +275,7 @@ export async function GET(request: NextRequest) {
 
   const video = await videoRun();
   const visits = await visitsRun();
+  const orders = await ordersRun();
 
   const over = await storesOverAllowance();
   const allowance = bytesWords(DELIVERY_ALLOWANCE_BYTES);
@@ -283,7 +291,7 @@ export async function GET(request: NextRequest) {
   const fresh = over.filter((s) => !seen.has(s.folder));
   if (fresh.length === 0) {
     return Response.json(
-      { ok: true, over: over.length, told: 0, video, visits },
+      { ok: true, over: over.length, told: 0, video, visits, orders },
       { headers: { "Cache-Control": "no-store" } },
     );
   }
@@ -364,7 +372,71 @@ export async function GET(request: NextRequest) {
   ]);
 
   return Response.json(
-    { ok: true, over: over.length, told, unknown: unknown.length, video, visits },
+    { ok: true, over: over.length, told, unknown: unknown.length, video, visits, orders },
     { headers: { "Cache-Control": "no-store" } },
   );
+}
+
+type OrdersRun = { stores: number; billed: number; cents: number; failed: number; told: number };
+
+/** Bills orders past the plan's, and writes to each creator the first time a month passes them. */
+async function ordersRun(): Promise<OrdersRun> {
+  const out: OrdersRun = { stores: 0, billed: 0, cents: 0, failed: 0, told: 0 };
+  let settled: Awaited<ReturnType<typeof settleAllOrders>> = [];
+  try {
+    settled = await settleAllOrders();
+  } catch (error) {
+    console.error("settling orders failed", error);
+    return out;
+  }
+  const month = monthKey();
+  for (const row of settled) {
+    if (row.owed > 0) out.stores += 1;
+    if (row.added > 0) {
+      out.billed += 1;
+      out.cents += row.added;
+    }
+    if (row.state === "failed") out.failed += 1;
+    // Written to once, about the month that is running, the first time it passes what the plan covers.
+    const store = row.store;
+    if (row.month !== month || !store || row.owed <= 0 || !canBeCharged(store)) continue;
+    try {
+      if (!isSenderConfigured() || !(await firstWordOnOrders(row.folder, month))) continue;
+      const included = ordersIncluded(store.tier);
+      const sent = await sendEmail({
+        from: NIMBUS_FROM,
+        to: store.email,
+        replyTo: SUPPORT_EMAIL,
+        subject: `Your store has had ${ordersWords(row.amount)} this month`,
+        text: [
+          `Your store has had ${ordersWords(row.amount)} so far this month. Your plan covers`,
+          `${countWords(included)} a month, so you are past it.`,
+          "",
+          "Nothing is refused to a buyer for this, and nothing is asked of you.",
+          "",
+          `Past the ${countWords(included)}, orders are ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, half a cent an order.`,
+          `So far this month that comes to ${centsWords(ordersOwedCents(row.amount, store.tier))}. It is added to your next invoice, on`,
+          "the card you already pay with. There is nothing for you to do.",
+          "",
+          "An order is a purchase confirmed, an offer taken after paying, a place taken",
+          "in a purchase for several people, or a free copy sent. Your studio shows the",
+          `count as it grows, under your plan: ${SITE_URL}/studio`,
+          "",
+          `If the figure surprises you, reply to this email or write to ${SUPPORT_EMAIL}.`,
+        ].join("\n"),
+      }).catch((error) => {
+        console.error("sending the orders notice failed", error);
+        return false;
+      });
+      if (sent !== false) out.told += 1;
+    } catch (error) {
+      console.error("writing to a creator about orders failed", error);
+    }
+  }
+  console.log(
+    out.stores === 0
+      ? "orders-watch: every store inside its orders"
+      : `orders-watch: ${out.stores} past a plan's orders, ${out.billed} billed ${centsWords(out.cents)}, ${out.failed} failed, ${out.told} written to`,
+  );
+  return out;
 }

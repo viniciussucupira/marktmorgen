@@ -22,6 +22,7 @@
  * handed over. Two people pressing at the same instant for the last place
  * leave one of them told that every place is taken.
  */
+import { countOrder } from "@/lib/orders";
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -418,6 +419,9 @@ export async function takePlace(input: {
   // A course is dated from the day its place was taken, so what opens over
   // time opens on time for each person.
   for (const id of [group.p, ...(group.items ?? [])]) await input.recordStart(email, id, at);
+  // Each place taken is one of the month's orders (lib/orders.ts). The
+  // purchase was paid, so it is covered wherever its sale paid a share.
+  await countOrder(store, `place:${group.id}:${who}`, group.paid ? 1 : 0);
   return { outcome: "taken", email, group };
 }
 

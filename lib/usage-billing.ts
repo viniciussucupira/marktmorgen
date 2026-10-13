@@ -1,9 +1,10 @@
 /**
  * Use past what a plan covers, put on the creator's next invoice.
  *
- * Two things here are charged by use: lesson video watched past a plan's
- * hours (lib/watch-rules.ts) and visits to a store past a plan's visits
- * (lib/traffic-rules.ts). Each keeps its own count (lib/watch.ts,
+ * Three things here are charged by use: lesson video watched past a plan's
+ * hours (lib/watch-rules.ts), visits to a store past a plan's visits
+ * (lib/traffic-rules.ts), and orders past a plan's orders
+ * (lib/order-rules.ts). Each keeps its own count (lib/watch.ts,
  * lib/traffic.ts) and has its own price; this is the part they share, the
  * daily job's part (app/api/cron/usage): for every store past what its plan
  * covers it works out what the month has come to, takes away what was
