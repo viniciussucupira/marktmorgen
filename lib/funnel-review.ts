@@ -16,3 +16,9 @@ export function reviewFunnel(steps: readonly ReviewStep[]): FunnelReview {
   else if (!invalid && !inconsistent && open) observation = "More visits are needed for a useful numerical comparison. Check the pages and payment path first.";
   return { ready: steps.length > 0 && open === steps.length, open, issues, observation };
 }
+
+/** Independent estimates: suppress impossible or unknown rates. */
+export function funnelRate(completed: number, opened: number): number | null {
+  if (!Number.isFinite(completed) || !Number.isFinite(opened) || completed < 0 || opened <= 0 || completed > opened) return null;
+  return Math.round(completed / opened * 100);
+}
