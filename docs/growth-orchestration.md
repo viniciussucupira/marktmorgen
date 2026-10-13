@@ -18,6 +18,10 @@ The funnel editor and growth workspace now reuse canSell, canSellProduct, paypal
 
 This is a configuration review, not a live checkout or delivery test. Actual sign-up/email delivery, stock and license availability, provider health, external link health, and actual file access remain manual release checks.
 
+## Guided corrections
+
+When a review has issues or is incomplete, it offers navigation to products/delivery and the store pages. Only owners receive payment-connection and plan destinations. Links preserve the selected store query before the fragment. These are navigation links; no subscription, payment connection, product or page is changed by clicking them. Destination routes keep their own permission checks.
+
 ## Verification
 
 The new regression file covers date validation, queue membership, descriptive funnel observations, role-filtered plans, route validation, cross-site rejection, pinned-store isolation, multi-store writes and teammate eligibility. Existing CRM and page-funnel regressions must pass too.
