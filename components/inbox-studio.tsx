@@ -55,7 +55,7 @@ export function InboxStudio({
   setting: givenSetting,
   ai,
   canSettings,
-  chatReady,
+  chatBlock,
 }: {
   me: string;
   initial: Conversation[];
@@ -64,7 +64,8 @@ export function InboxStudio({
   setting: InboxSetting;
   ai: { on: boolean; left: number };
   canSettings: boolean;
-  chatReady: boolean;
+  /** Why the chat cannot be turned on: "demo" for the demo store, "setup" for a store not ready yet, "" when it can. */
+  chatBlock: "" | "demo" | "setup";
 }) {
   const [list, setList] = useState(initial);
   const [thread, setThread] = useState<Thread | null>(first);
@@ -325,7 +326,7 @@ export function InboxStudio({
             <input
               type="checkbox"
               checked={setting.chat}
-              disabled={busy || (!chatReady && !setting.chat)}
+              disabled={busy || (chatBlock !== "" && !setting.chat)}
               onChange={(e) => void saveSetting({ action: "chat", on: e.target.checked }, e.target.checked ? "The chat is on your store." : "The chat is off.")}
             />
             <span>Show the chat on my store</span>
@@ -333,7 +334,11 @@ export function InboxStudio({
         ) : (
           <p className="mt-4 text-sm text-ink-soft">The chat is {setting.chat ? "on" : "off"}. The owner or an Admin turns it on or off.</p>
         )}
-        {!chatReady ? <p className="mt-2 text-sm text-ink-soft">The chat opens once your store is published and has its email address.</p> : null}
+        {chatBlock === "demo" ? (
+          <p className="mt-2 text-sm text-ink-soft">The demo store takes no messages: a chat there would reach nobody. It works on your own store.</p>
+        ) : chatBlock === "setup" ? (
+          <p className="mt-2 text-sm text-ink-soft">The chat can be turned on once your store has its email address and is not paused.</p>
+        ) : null}
       </section>
 
       <SavedReplies saved={setting.saved} busy={busy} onSave={(saved, done) => void saveSetting({ action: "saved", saved }, done)} />
