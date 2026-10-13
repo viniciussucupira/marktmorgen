@@ -4,3 +4,8 @@ export function filterDeals(deals: readonly Deal[], query: string, assignee: str
   const text = query.trim().slice(0, 80).toLowerCase();
   return deals.filter(deal => (assignee === null || (deal.assignee ?? "").toLowerCase() === assignee.toLowerCase()) && (!text || [deal.title, deal.email, deal.nextAction ?? "", deal.note].some(value => value.toLowerCase().includes(text))));
 }
+
+export type DealActionFilter = "all" | "overdue" | "today" | "upcoming" | "unplanned";
+export function dealActionFilter(raw: unknown): DealActionFilter {
+  return raw === "overdue" || raw === "today" || raw === "upcoming" || raw === "unplanned" ? raw : "all";
+}
