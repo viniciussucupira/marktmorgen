@@ -23,6 +23,8 @@ export type StepChoice = { kind: PageFunnelStep["kind"]; id: string; title: stri
 /** One saved funnel, with its steps as the store stands and how many people each reached. */
 export type SavedFunnel = {
   funnel: PageFunnel;
+  /** Null means the saved payment configuration could not be checked. */
+  paymentIssues?: string[] | null;
   steps: { title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number; done: number }[];
 };
 
@@ -188,7 +190,7 @@ export function PageFunnelEditor({
       ) : null}
 
       <ul className="mt-6 space-y-4">
-        {saved.map(({ funnel, steps }) => {
+        {saved.map(({ funnel, steps, paymentIssues }) => {
           const review = reviewFunnel(steps);
 
 
@@ -242,6 +244,9 @@ export function PageFunnelEditor({
               <details className="mt-4 rounded-xl bg-paper p-4 ring-1 ring-line">
                 <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-ink"><Icon name="chevron-down" size={16} className="shrink-0" />{review.ready ? "Review: all steps available" : "Review: check unavailable steps"}</summary>
                 {review.issues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{review.issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">Every configured step is currently available. This does not verify payment-provider health, delivery or page copy.</p>}
+                <h3 className="mt-3 text-sm font-semibold text-ink">Payment and delivery configuration</h3>
+                {paymentIssues == null ? <p className="mt-2 text-sm text-ink-soft">This configuration could not be checked. Review payment and delivery before sharing the funnel.</p> : paymentIssues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{paymentIssues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">No blocker found in the saved paid-offer configuration.</p>}
+                <p className="mt-2 text-xs text-ink-mute">This does not contact Stripe, open a checkout, test file storage or external links, or verify free sign-up and email delivery. Test those paths as a buyer.</p>
                 {review.observation ? <p className="mt-3 text-sm text-ink-soft">{review.observation}</p> : null}
                 <a className="btn btn-secondary btn-sm mt-3" href={base + funnel.slug} target="_blank" rel="noopener noreferrer">Open as a visitor</a>
               </details>
