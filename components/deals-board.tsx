@@ -1,7 +1,7 @@
 "use client";
 
 import { useLeaveGuard } from "@/components/leave-guard";
-import { filterDeals } from "@/lib/crm-deal-filter";
+import { dealActionFilter, filterDeals, type DealActionFilter } from "@/lib/crm-deal-filter";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -62,7 +62,7 @@ const KIND_WORDS: Record<StageKind, string> = { open: "Open", won: "Won", lost: 
  * who it is with, and a way to move it on. The stages are the store's own,
  * and so are the fields kept about each person, made here too.
  */
-export function DealsBoard({ deals, stages, fields, currency, assignees, today }: { deals: Deal[]; stages: Stage[]; fields: CrmField[]; currency: string; assignees: string[]; today: string }) {
+export function DealsBoard({ deals, stages, fields, currency, assignees, today, initialFilter = "all" }: { deals: Deal[]; stages: Stage[]; fields: CrmField[]; currency: string; assignees: string[]; today: string; initialFilter?: DealActionFilter }) {
   const router = useRouter();
   const money = (cents: number) => formatMoney(cents, currency);
   const [draft, setDraft] = useState<DealDraft | null>(null);
@@ -70,7 +70,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
   const [error, setError] = useState<string | null>(null);
   const [stageDraft, setStageDraft] = useState<Stage[] | null>(null);
   const [fieldDraft, setFieldDraft] = useState<(CrmField & { optionsText: string })[] | null>(null);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState<DealActionFilter>(dealActionFilter(initialFilter));
   const [search, setSearch] = useState("");
   const [responsible, setResponsible] = useState("all");
   const scopedDeals = filterDeals(deals, search, responsible === "all" ? null : responsible === "unassigned" ? "" : responsible.slice(7));
@@ -142,7 +142,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
         <div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="block"><span className="field-label">Find a deal</span><input type="search" className="field mt-2" maxLength={80} value={search} onChange={e => setSearch(e.target.value)} placeholder="Name, email, next action or note" /></label><label className="block"><span className="field-label">Responsible teammate</span><select className="field mt-2" value={responsible} onChange={e => setResponsible(e.target.value)}><option value="all">Everyone</option><option value="unassigned">Unassigned</option>{responsibleChoices.map(email => <option key={email} value={"person:" + email}>{email}{assignees.includes(email) ? "" : " (no longer eligible)"}</option>)}</select></label></div>
         <p className="mt-2 text-xs text-ink-mute">The summary above includes all deals. Action counts and columns follow your search and teammate selection.</p>
         <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Filter deals by next action">
-          {([{ key: "all", label: "All deals" }, { key: "overdue", label: `Overdue (${followUps.overdue.length})` }, { key: "today", label: `Due today (${followUps.today.length})` }, { key: "upcoming", label: `Upcoming (${followUps.upcoming.length})` }, { key: "unplanned", label: `No dated action (${followUps.unplanned.length})` }]).map(item => <button key={item.key} type="button" aria-pressed={filter === item.key} className={`btn btn-sm ${filter === item.key ? "btn-primary" : "btn-secondary"}`} onClick={() => setFilter(item.key)}>{item.label}</button>)}
+          {([{ key: "all", label: "All deals" }, { key: "overdue", label: `Overdue (${followUps.overdue.length})` }, { key: "today", label: `Due today (${followUps.today.length})` }, { key: "upcoming", label: `Upcoming (${followUps.upcoming.length})` }, { key: "unplanned", label: `No dated action (${followUps.unplanned.length})` }]).map(item => <button key={item.key} type="button" aria-pressed={filter === item.key} className={`btn btn-sm ${filter === item.key ? "btn-primary" : "btn-secondary"}`} onClick={() => setFilter(dealActionFilter(item.key))}>{item.label}</button>)}
         </div>
         <p className="mt-2 text-xs text-ink-mute">Dates use the calendar day shown here, {today} (UTC). Won and lost deals are left out of action filters. Nothing is sent automatically.</p>
 
