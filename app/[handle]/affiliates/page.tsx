@@ -23,7 +23,9 @@ import {
   canApply,
   linkEmail,
   readBook,
+  recruitLink,
 } from "@/lib/affiliates";
+import { AFFILIATE_CODE_PATTERN } from "@/lib/affiliate-setting";
 import { AffiliateLinkBox } from "@/components/affiliate-link-box";
 import { AffiliateKit } from "@/components/affiliate-kit";
 import { kitProduct } from "@/lib/affiliate-kit";
@@ -78,6 +80,8 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
   const query = await searchParams;
   const token = typeof query.token === "string" ? query.token : "";
   const status = typeof query.status === "string" ? query.status : "";
+  // An affiliate's invitation link (lib/affiliates.ts recruitLink): checked when the application is sent.
+  const by = typeof query.by === "string" && AFFILIATE_CODE_PATTERN.test(query.by) && store.affiliates.secondTier > 0 ? query.by : "";
   const order = typeof query.order === "string" && /^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(query.order) ? query.order : "";
   const linkFor = token ? await linkEmail(store, token) : null;
   const affiliate = await affiliateForSession(store, (await cookies()).get(affiliateCookieName(store.handle))?.value);
@@ -130,6 +134,7 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
   const form = (
     <form action="/api/store/affiliates/apply" method="post" className="mt-7 space-y-3">
       <input type="hidden" name="handle" value={store.handle} />
+      {by ? <input type="hidden" name="by" value={by} /> : null}
       <div aria-hidden="true" className="hidden">
         <label>
           {w.leaveEmpty}
@@ -240,6 +245,14 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                   </p>
                   <p className="st-muted mt-2 text-sm">{attribution(store.affiliates)}</p>
                   <p className="st-muted mt-2 text-sm" data-disclose>{a.termDisclose}</p>
+                  {/* The second tier (lib/affiliates.ts tierLines), only while the programme has one. */}
+                  {store.affiliates.secondTier > 0 ? (
+                    <>
+                      <p className="st-label mt-7">{a.recruitLabel}</p>
+                      <AffiliateLinkBox link={recruitLink(store, affiliate.code)} words={{ label: a.recruitLabel, copy: a.copy, copied: a.copied }} />
+                      <p className="st-muted mt-2 text-sm">{a.recruitNote(store.affiliates.secondTier, store.name)}</p>
+                    </>
+                  ) : null}
                   <AffiliateKit handle={store.handle} language={store.language} products={kitProducts} />
                   {/*
                     A code of the store's own, given to this affiliate
@@ -358,7 +371,9 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                             <span className="st-muted block text-xs">
                               {line.how === "bonus"
                                 ? a.bonusLine(day(line.at))
-                                : a.saleLine(day(line.at), money(line.base, line.currency), line.rate, line.status === "earned" ? "" : a.lineStatus[line.status] ?? line.status)}
+                                : line.how === "tier2"
+                                  ? a.tierLine(day(line.at), money(line.base, line.currency), line.rate, line.status === "earned" ? "" : a.lineStatus[line.status] ?? line.status)
+                                  : a.saleLine(day(line.at), money(line.base, line.currency), line.rate, line.status === "earned" ? "" : a.lineStatus[line.status] ?? line.status)}
                             </span>
                           </span>
                           <span className="font-semibold tabular-nums">{money(line.commission, line.currency)}</span>

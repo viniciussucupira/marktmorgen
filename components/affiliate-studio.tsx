@@ -21,6 +21,7 @@ import {
   MAX_BONUS_SALES,
   RECURRING_ALWAYS,
   RECURRING_OPTIONS,
+  SECOND_TIER_OPTIONS,
   commissionRate,
   ordinal,
 } from "@/lib/affiliate-setting";
@@ -53,6 +54,7 @@ const MESSAGES: Record<string, string> = {
   payday: `Pick a day from the 1st to the ${MAX_PAYDAY}th, or no fixed day.`,
   hold: `Type a whole number of days from 0 to ${MAX_HOLD_DAYS}.`,
   recurring: "Pick how long a membership earns.",
+  tier: "Pick a second tier from the list.",
   bonus: `A bonus needs a number of sales from 1 to ${MAX_BONUS_SALES} and an amount from 1 to 10,000, each number of sales once.`,
   amount: "Type the amount you paid, like 25 or 25.50.",
   date: "Pick the day you paid it.",
@@ -127,6 +129,7 @@ const CREDIT_WORDS: Record<Credit, string> = {
   partner: "Partner share",
   recurring: "A membership or plan payment",
   bonus: "A monthly goal reached",
+  tier2: "A sale by somebody they brought",
 };
 
 /** An amount in the currency it was paid in (lib/money.ts). */
@@ -419,7 +422,12 @@ export function AffiliateStudio({
               {pending.map((row) => (
                 <li key={row.affiliate.id} className="rounded-2xl border border-line bg-paper p-4">
                   <p className="font-semibold text-ink [overflow-wrap:anywhere]">{row.affiliate.email}</p>
-                  <p className="mt-0.5 text-xs text-ink-soft">{`Applied ${dayMs(row.affiliate.appliedAt)}`}</p>
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    {`Applied ${dayMs(row.affiliate.appliedAt)}`}
+                    {row.affiliate.by
+                      ? ` · invited by ${rows.find((r) => r.affiliate.id === row.affiliate.by?.id)?.affiliate.email ?? "an affiliate no longer here"}, who would earn ${row.affiliate.by.percent}% of their sales on top`
+                      : ""}
+                  </p>
                   {row.affiliate.note ? <p className="mt-2 text-sm text-ink-soft">{`“${row.affiliate.note}”`}</p> : null}
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
@@ -511,7 +519,7 @@ export function AffiliateStudio({
           */}
           {lines.length ? (
             <ul className="mt-3 flex flex-wrap gap-2 text-xs">
-              {(["click", "code", "buyer", "recurring", "bonus", "partner"] as const)
+              {(["click", "code", "buyer", "recurring", "bonus", "tier2", "partner"] as const)
                 .map((how) => ({ how, rows: lines.filter((l) => l.how === how && l.commission > 0) }))
                 .filter(({ rows }) => rows.length)
                 .map(({ how, rows }) => (
@@ -615,6 +623,7 @@ function Terms({
   const [lifetime, setLifetime] = useState(setting.lifetime);
   const [recurringMonths, setRecurringMonths] = useState(String(setting.recurring));
   const [paidSearch, setPaidSearch] = useState(setting.paidSearch);
+  const [secondTier, setSecondTier] = useState(String(setting.secondTier));
   const storeCurrency = useStoreCurrency();
   const [bonuses, setBonuses] = useState<{ sales: string; amount: string }[]>(
     setting.bonuses.map((b) => ({ sales: String(b.sales), amount: moneyField(b.cents, storeCurrency) })),
@@ -650,6 +659,7 @@ function Terms({
               lifetime,
               recurring: Number(recurringMonths),
               paidSearch,
+              secondTier: Number(secondTier),
               // An unreadable amount goes as 0, which the server refuses with the reason.
               bonuses: bonuses
                 .filter((b) => b.sales.trim() || b.amount.trim())
@@ -978,6 +988,23 @@ function Terms({
                 ? `Not credited now: ${left.map((p) => p.title).join(", ")}.`
                 : "Nothing you sell is a membership or a payment plan yet."
               : "A membership sold through an affiliate's link earns their share of each payment within that time, read from your Stripe account as it is paid, and a payment plan earns on each of its payments. A refunded payment earns nothing. A membership keeps the terms it was sold with if you change this later."}
+          </span>
+        </label>
+
+        {/* The second tier (lib/affiliates.ts tierLines): fixed for each recruit when they join. */}
+        <label className="mt-5 block" htmlFor="aff-tier">
+          <span className="field-label">Second tier</span>
+          <select id="aff-tier" value={secondTier} onChange={(e) => setSecondTier(e.target.value)} className="field">
+            {SECOND_TIER_OPTIONS.map((n) => (
+              <option key={n} value={String(n)}>
+                {n === 0 ? "None" : `${n}% of each sale by somebody an affiliate brought`}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-ink-soft">
+            {secondTier === "0"
+              ? "Affiliates earn only on the sales they bring."
+              : "Each approved affiliate gets an invitation link. Somebody who applies through it and whom you approve is theirs: on each sale that person brings, the affiliate who invited them earns this share too, paid by you on top of the first share, never out of it. One level only, never past 90% of a sale with every other share on it, and nothing while the person they brought is held. Changing it later keeps the share each person joined with."}
           </span>
         </label>
 
