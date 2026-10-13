@@ -704,6 +704,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can visitors chat with me, and where do I answer them?",
+        a: [
+          "Yes, on every plan. Under Inbox in your studio, switch on the chat, and a button shows in the corner of every page of your store. A visitor writes with their email, and their name if they like. Your answer shows in their chat while the page is open, and goes to their email too, with a link back to the conversation, so nobody has to wait on the page. Messages from your contact form land in the same inbox, and still reach your own email as before.",
+          "You are emailed when someone writes, at most every half hour for each conversation. In the inbox, give a conversation to someone on your team whose role answers buyers (Admin or Support), keep saved replies for what you are asked often, and close a conversation when it is done: it opens again if they write. Where the writing help is on, \u201cSuggest an answer\u201d writes one from your store's questions and answers and the conversation, for you to change before sending; their address, phone numbers and links are taken out first, and it uses one of the month's writing jobs.",
+          "Your answers only ever go to the person who wrote, and only in answer to them. Conversations are kept 180 days after their last message, the newest 500 of them. A visit to your store asks nothing more of our servers for the chat: only writing in it does.",
+        ],
+      },
+      {
         q: "What if I can no longer open the email I log in with?",
         a: [
           "Two things get you back in without it, and both are set up ahead of time under Account in your studio. A passkey logs you in with your fingerprint, face or device PIN, with everything open; then move your sign-in address to an inbox you have. A recovery address is a second inbox you confirm with a code: from \u201cCannot open your email any more?\u201d on the login page, type the address you log in with, and a link goes there that lets you in at once.",

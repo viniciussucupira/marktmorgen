@@ -68,6 +68,7 @@ import { NO_NUDGE, type Nudge, parseNudge } from "@/lib/member-health-rules";
 import { NO_YEARLY_ASK, type YearlyAsk, parseYearlyAsk } from "@/lib/yearly-switch-rules";
 import { type WinBack, NO_WINBACK, parseWinBack } from "@/lib/winback";
 import { type WelcomeOffer, NO_WELCOME_OFFER, parseWelcomeOffer } from "@/lib/welcome-offer";
+import { type InboxSetting, NO_INBOX, parseInboxSetting } from "@/lib/inbox-rules";
 import { type PastSale, type StoreSale, NO_SALE, parsePastSales, parseSale, withPastSale } from "@/lib/store-sale";
 import { parseTiers } from "@/lib/tier-rules";
 import { ENDED_INDEX } from "@/lib/plan-standing";
@@ -525,6 +526,8 @@ export type Store = {
    * for a free product (lib/welcome-offer.ts). Off until the creator sets one.
    */
   welcomeOffer: WelcomeOffer;
+  /** The chat on the store's pages and the inbox's saved replies (lib/inbox-rules.ts). The chat is off until turned on. */
+  inbox: InboxSetting;
   /** A sale across the store, with its start and end (lib/store-sale.ts). None until the creator sets one. */
   sale: StoreSale;
   /** Sales that ran before the one set now, for the marks on the numbers (lib/auto-marks.ts). */
@@ -902,6 +905,7 @@ function parseStore(raw: unknown): Store | null {
       chatSales: value.chatSales === true,
       winback: parseWinBack(value.winback),
       welcomeOffer: parseWelcomeOffer(value.welcomeOffer),
+      inbox: parseInboxSetting(value.inbox),
       sale: parseSale(value.sale),
       pastSales: parsePastSales(value.pastSales),
       tiers: parseTiers(value.tiers),
@@ -1102,6 +1106,7 @@ async function freshStore(fields: {
     chatSales: false,
     winback: { ...NO_WINBACK },
     welcomeOffer: { ...NO_WELCOME_OFFER },
+    inbox: { ...NO_INBOX, saved: [] },
     sale: { ...NO_SALE },
     pastSales: [],
     tiers: [],
@@ -2342,6 +2347,14 @@ export async function setWelcomeOffer(
   offer: WelcomeOffer,
 ): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" }> {
   const next = await patchStore(email, () => ({ welcomeOffer: parseWelcomeOffer(offer) }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+export async function setInboxSetting(
+  email: string,
+  inbox: InboxSetting,
+): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" }> {
+  const next = await patchStore(email, () => ({ inbox: parseInboxSetting(inbox) }));
   return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 

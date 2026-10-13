@@ -36,6 +36,7 @@ import { DISCORD_WORDS } from "@/lib/buyer-words/discord";
 import { MOVE_WORDS } from "@/lib/buyer-words/move";
 import { ACCESS_WORDS } from "@/lib/buyer-words/access";
 import { WELCOME_WORDS } from "@/lib/buyer-words/welcome";
+import { CHAT_WORDS } from "@/lib/buyer-words/chat";
 import { addProduct, claimHandle, ensureStatsId, setLanguage, setProductLink, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
 import { createCheckout } from "@/lib/store-checkout";
@@ -58,6 +59,8 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
 
 /** Words that are the same in a language as in English, on purpose. */
 const SAME: Record<string, Record<string, string[]>> = {
+  // "Chat" is the word in these.
+  "store chat": { es: ["launcher"], de: ["launcher"], it: ["launcher"], nl: ["launcher"] },
   "store and product pages": {
     // "Blog" is the word in every one of them.
     es: ["namePlaceholder", "fromCapital", "blog"],
@@ -183,6 +186,7 @@ async function main(): Promise<void> {
     ["moving a membership", (code) => MOVE_WORDS[code]],
     ["given through the API", (code) => ACCESS_WORDS[code]],
     ["welcome offer", (code) => WELCOME_WORDS[code]],
+    ["store chat", (code) => CHAT_WORDS[code]],
   ];
   for (const [area, wordsOf] of AREAS) {
     const englishWords = wordsOf("en");

@@ -3087,6 +3087,55 @@ try {
   }
 
   await keepSmall();
+  part("A chat on the store, answered from the studio's inbox, the answer in the chat and by email");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    await open(page, `${LOCAL}/@localshop`);
+    is("no chat until it is turned on", await page.locator(".st-chat").count(), 0);
+    const on = await post("/api/store/inbox", { action: "chat", on: true });
+    is("turned on", [on.ok, on.inbox?.chat], [true, true]);
+
+    const visitor = "chat.visitor@example.com";
+    await open(page, `${LOCAL}/@localshop`);
+    await page.locator(".st-chat button[aria-expanded]").click();
+    const panel = page.locator(".st-chat [role=dialog]");
+    await panel.getByLabel("Your email").fill(visitor);
+    await panel.getByLabel("Your name (optional)").fill("Vee Visitor");
+    await panel.getByLabel("Your message").fill("Does the course include the recipes as a PDF?");
+    await panel.getByRole("button", { name: "Send" }).click();
+    await panel.locator("[data-chat-thread]").getByText("Does the course include the recipes as a PDF?").waitFor({ timeout: 30_000 });
+    is("sent from the store's page, and said where the answer goes", (await words(panel)).includes("The answer shows here, and goes to your email too."), true);
+    const tellMail = services.emails().filter((email) => /^New message from Vee Visitor on /.test(email.subject ?? "")).at(-1);
+    is("the creator is told by email, with the way to the inbox", /\/studio\/inbox\?(store=[^&]+&)?c=[a-z0-9]{12}/.test(tellMail?.text ?? ""), true);
+
+    await open(studio, `${LOCAL}/studio/inbox`);
+    await studio.locator("[data-inbox-list]").getByText("Vee Visitor").first().click();
+    const thread = studio.locator("[data-inbox-thread]");
+    await thread.getByText("Does the course include the recipes as a PDF?").waitFor({ timeout: 30_000 });
+    const saved = await post("/api/store/inbox", { action: "saved", saved: [{ id: "pdf001", title: "PDF", text: "Yes, every recipe comes as a PDF too." }] });
+    is("a saved reply kept", saved.inbox?.saved?.map((s) => s.title), ["PDF"]);
+    await thread.getByLabel("Your answer").fill("Yes, every recipe comes as a PDF too.");
+    await thread.getByRole("button", { name: "Send the answer" }).click();
+    await studio.getByText(`Sent: in their chat, and emailed to ${visitor}.`).first().waitFor({ timeout: 30_000 });
+    if (process.env.E2E_SHOTS) await studio.locator("main").screenshot({ path: join(process.env.E2E_SHOTS, "inbox-studio.png") });
+
+    const answerMail = services.emails().filter((email) => [].concat(email.to).includes(visitor)).at(-1);
+    const back = answerMail?.text.match(/https?:\/\/\S+\/@localshop\?chat=[A-Za-z0-9_-]{32}/)?.[0] ?? "";
+    is("the answer is emailed to the visitor alone, with the way back to the chat", [answerMail?.subject?.endsWith("answered your message"), Boolean(back), answerMail?.text.includes("Yes, every recipe comes as a PDF too.")], [true, true, true]);
+    await open(page, local(back));
+    const reopened = page.locator(".st-chat [data-chat-thread]");
+    await reopened.getByText("Yes, every recipe comes as a PDF too.").waitFor({ timeout: 30_000 });
+    is("the link opens the conversation with the answer in it", (await words(reopened)).includes("Does the course include the recipes as a PDF?"), true);
+    if (process.env.E2E_SHOTS) await page.locator(".st-chat").screenshot({ path: join(process.env.E2E_SHOTS, "store-chat.png") });
+
+    await post("/api/store/inbox", { action: "saved", saved: [] });
+    const off = await post("/api/store/inbox", { action: "chat", on: false });
+    await open(page, `${LOCAL}/@localshop`);
+    is("turned off, it is gone from the store", [off.inbox?.chat, await page.locator(".st-chat").count()], [false, 0]);
+  }
+
+  await keepSmall();
   part("A page of the store's own, in its menu and on its address");
   {
     await open(studio, `${LOCAL}/studio/site?store=${fresh}`);

@@ -1,0 +1,374 @@
+/**
+ * The store's inbox, kept (lib/inbox-rules.ts says what it is for).
+ *
+ *   nl:inbox:<statsId>:all        zset: conversation id → its last message's time (ms)
+ *   nl:inbox:<statsId>:c:<id>     the conversation (JSON), with the visitor's chat token
+ *   nl:inbox:<statsId>:m:<id>     list: its messages, oldest first, the newest MAX_MESSAGES
+ *   nl:inbox:tok:<token>          "<statsId>|<id>|<handle>": what a visitor's chat opens
+ *
+ * Every key but the index lives KEEP_DAYS after the conversation's last
+ * message; the index drops what has gone the next time it is read, and keeps
+ * the newest MAX_CONVERSATIONS.
+ *
+ * A visit to the store reads none of this: the chat is drawn from the store
+ * record the page already has, and only a visitor who opens it and writes, or
+ * comes back to a conversation they started, reaches these keys.
+ */
+import { randomBytes } from "node:crypto";
+import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
+import { type AiResult, answerModel, askModel, counted } from "@/lib/ai";
+import { storeSender } from "@/lib/calls";
+import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { isHouseStore } from "@/lib/house-store";
+import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { withinLimit } from "@/lib/request-guard";
+import { SITE_URL } from "@/lib/site-url";
+import { LANGUAGES, parseLanguage } from "@/lib/store-language";
+import { chatWords } from "@/lib/buyer-words/chat";
+import type { Store } from "@/lib/store";
+import {
+  CHAT_TOKEN,
+  CONVERSATION_ID,
+  type Conversation,
+  KEEP_DAYS,
+  MAX_CONVERSATIONS,
+  MAX_MESSAGES,
+  MIN_MESSAGE,
+  type Message,
+  NEW_PER_DAY,
+  type Source,
+  VISITOR_PER_HOUR,
+  forAi,
+  inboxOrder,
+  messageText,
+  nameText,
+  parseConversation,
+  parseMessage,
+} from "@/lib/inbox-rules";
+
+const KEEP = KEEP_DAYS * 86_400;
+const indexKey = (statsId: string) => `nl:inbox:${statsId}:all`;
+const convKey = (statsId: string, id: string) => `nl:inbox:${statsId}:c:${id}`;
+const msgKey = (statsId: string, id: string) => `nl:inbox:${statsId}:m:${id}`;
+const tokenKey = (token: string) => `nl:inbox:tok:${token}`;
+
+type Kept = Conversation & { token: string };
+
+const LETTERS = "abcdefghijklmnopqrstuvwxyz0123456789";
+function newId(): string {
+  const bytes = randomBytes(12);
+  return [...bytes].map((b) => LETTERS[b % LETTERS.length]).join("");
+}
+
+function parseKept(raw: unknown): Kept | null {
+  const conversation = parseConversation(raw);
+  if (!conversation) return null;
+  try {
+    const token = (JSON.parse(String(raw)) as { token?: unknown }).token;
+    return { ...conversation, token: typeof token === "string" && CHAT_TOKEN.test(token) ? token : "" };
+  } catch {
+    return null;
+  }
+}
+
+/** What the studio is given: the conversation without the visitor's token. */
+function shown(kept: Kept): Conversation {
+  const { token, ...conversation } = kept;
+  void token;
+  return conversation;
+}
+
+/** Whether the store's pages show the chat. Read from the store record alone: no extra read on a visit. */
+export function chatOpen(store: Store): boolean {
+  return store.inbox.chat && !store.suspended && !isHouseStore(store) && isRedisConfigured() && Boolean(store.statsId) && Boolean(store.email);
+}
+
+function readEmail(raw: unknown): string | null {
+  const text = typeof raw === "string" ? raw.trim() : "";
+  if (!text || text.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(text)) return null;
+  return normaliseEmail(text);
+}
+
+async function write(statsId: string, handle: string, conversation: Kept, add: Message | null): Promise<void> {
+  const commands: (string | number)[][] = [
+    ["SET", convKey(statsId, conversation.id), JSON.stringify(conversation), "EX", KEEP],
+    ["ZADD", indexKey(statsId), conversation.lastAt, conversation.id],
+  ];
+  if (add) {
+    commands.push(["RPUSH", msgKey(statsId, conversation.id), JSON.stringify(add)]);
+    commands.push(["LTRIM", msgKey(statsId, conversation.id), -MAX_MESSAGES, -1]);
+  }
+  commands.push(["EXPIRE", msgKey(statsId, conversation.id), KEEP]);
+  if (conversation.token) commands.push(["SET", tokenKey(conversation.token), `${statsId}|${conversation.id}|${handle}`, "EX", KEEP]);
+  await redisPipeline(commands);
+}
+
+async function readKept(statsId: string, id: string): Promise<Kept | null> {
+  if (!CONVERSATION_ID.test(id)) return null;
+  const [raw] = await redisPipeline([["GET", convKey(statsId, id)]]);
+  return parseKept(raw);
+}
+
+async function readMessages(statsId: string, id: string): Promise<Message[]> {
+  const [raw] = await redisPipeline([["LRANGE", msgKey(statsId, id), 0, -1]]);
+  return (Array.isArray(raw) ? raw : []).map(parseMessage).filter((m): m is Message => Boolean(m));
+}
+
+/** Keeps the newest MAX_CONVERSATIONS: the older ones' records go with them. */
+async function trim(statsId: string): Promise<void> {
+  const [over] = await redisPipeline([["ZREVRANGE", indexKey(statsId), MAX_CONVERSATIONS, -1]]);
+  const ids = (Array.isArray(over) ? over : []).filter((id): id is string => typeof id === "string" && CONVERSATION_ID.test(id));
+  if (!ids.length) return;
+  const gone = await Promise.all(ids.map((id) => readKept(statsId, id)));
+  await redisPipeline([
+    ["ZREM", indexKey(statsId), ...ids],
+    ...ids.flatMap((id) => [["DEL", convKey(statsId, id)], ["DEL", msgKey(statsId, id)]]),
+    ...gone.filter((c): c is Kept => Boolean(c?.token)).map((c) => ["DEL", tokenKey(c.token)]),
+  ]);
+}
+
+type NewInput = { store: Store; email: unknown; name: unknown; text: unknown; source: Source; now?: number };
+
+/** A new conversation, its first message and the visitor's token. */
+async function open(input: NewInput): Promise<{ ok: true; conversation: Kept; messages: Message[] } | { ok: false; reason: "email" | "short" | "limited" | "closed" }> {
+  const { store } = input;
+  const statsId = store.statsId;
+  if (!statsId || !isRedisConfigured()) return { ok: false, reason: "closed" };
+  const email = readEmail(input.email);
+  if (!email) return { ok: false, reason: "email" };
+  const text = messageText(input.text);
+  if (text.length < MIN_MESSAGE) return { ok: false, reason: "short" };
+  if (!(await withinLimit("inbox-new", statsId, NEW_PER_DAY, 86_400))) return { ok: false, reason: "limited" };
+  const now = input.now ?? Date.now();
+  const conversation: Kept = {
+    id: newId(),
+    email,
+    name: nameText(input.name),
+    source: input.source,
+    status: "open",
+    assigned: "",
+    startedAt: now,
+    lastAt: now,
+    lastFrom: "visitor",
+    unread: 1,
+    token: randomBytes(24).toString("base64url"),
+  };
+  const message: Message = { at: now, from: "visitor", text };
+  await write(statsId, store.handle, conversation, message);
+  await trim(statsId);
+  return { ok: true, conversation, messages: [message] };
+}
+
+export type VisitorThread = { token: string; status: Conversation["status"]; messages: { at: number; from: Message["from"]; text: string }[] };
+
+const forVisitor = (conversation: Kept, messages: Message[]): VisitorThread => ({
+  token: conversation.token,
+  status: conversation.status,
+  messages: messages.map(({ at, from, text }) => ({ at, from, text })),
+});
+
+export type ChatResult = { ok: true; thread: VisitorThread } | { ok: false; reason: "email" | "short" | "limited" | "closed" | "error" | "gone" };
+
+/** A visitor starts a conversation from the chat on the store's pages. The team is told by email. */
+export async function startChat(input: { store: Store; email: unknown; name: unknown; text: unknown; ip: string; now?: number }): Promise<ChatResult> {
+  const { store } = input;
+  if (!chatOpen(store)) return { ok: false, reason: "closed" };
+  if (!(await withinLimit("chat-start", `${store.statsId}:${input.ip}`, 5, 3_600))) return { ok: false, reason: "limited" };
+  const made = await open({ ...input, source: "chat" });
+  if (!made.ok) return made;
+  await tellTeam(store, made.conversation, made.messages[0].text).catch((error) => console.error("telling a store of a chat failed", error));
+  return { ok: true, thread: forVisitor(made.conversation, made.messages) };
+}
+
+/** A message sent with the store's contact form, filed in the inbox too. Nothing more is sent: the form already emailed the creator. */
+export async function fileContact(input: { store: Store; email: string; name: string; text: string; now?: number }): Promise<boolean> {
+  if (!input.store.statsId || !isRedisConfigured()) return false;
+  const made = await open({ ...input, source: "contact" });
+  return made.ok;
+}
+
+async function fromToken(token: unknown): Promise<{ statsId: string; id: string; handle: string } | null> {
+  if (typeof token !== "string" || !CHAT_TOKEN.test(token) || !isRedisConfigured()) return null;
+  const [raw] = await redisPipeline([["GET", tokenKey(token)]]);
+  const [statsId, id, handle] = typeof raw === "string" ? raw.split("|") : [];
+  return statsId && id && handle ? { statsId, id, handle } : null;
+}
+
+/** What a visitor's chat shows: their conversation's messages, by the token only they hold. */
+export async function visitorThread(token: unknown): Promise<VisitorThread | null> {
+  const found = await fromToken(token);
+  if (!found) return null;
+  const [rawConversation, rawMessages] = await redisPipeline([
+    ["GET", convKey(found.statsId, found.id)],
+    ["LRANGE", msgKey(found.statsId, found.id), 0, -1],
+  ]);
+  const conversation = parseKept(rawConversation);
+  if (!conversation || conversation.token !== token) return null;
+  const messages = (Array.isArray(rawMessages) ? rawMessages : []).map(parseMessage).filter((m): m is Message => Boolean(m));
+  return forVisitor(conversation, messages);
+}
+
+/** A visitor writes again in their conversation; a closed one opens again. */
+export async function visitorSend(
+  token: unknown,
+  textRaw: unknown,
+  storeFor: (handle: string) => Promise<Store | null>,
+  now = Date.now(),
+): Promise<ChatResult> {
+  const found = await fromToken(token);
+  if (!found) return { ok: false, reason: "gone" };
+  const store = await storeFor(found.handle);
+  if (!store || store.statsId !== found.statsId) return { ok: false, reason: "gone" };
+  if (store.suspended) return { ok: false, reason: "closed" };
+  const text = messageText(textRaw);
+  if (text.length < MIN_MESSAGE) return { ok: false, reason: "short" };
+  const conversation = await readKept(found.statsId, found.id);
+  if (!conversation || conversation.token !== token) return { ok: false, reason: "gone" };
+  if (!(await withinLimit("chat-send", `${found.statsId}:${found.id}`, VISITOR_PER_HOUR, 3_600))) return { ok: false, reason: "limited" };
+  const message: Message = { at: now, from: "visitor", text };
+  const next: Kept = { ...conversation, status: "open", lastAt: now, lastFrom: "visitor", unread: conversation.unread + 1 };
+  await write(found.statsId, store.handle, next, message);
+  await tellTeam(store, next, text).catch((error) => console.error("telling a store of a chat failed", error));
+  return { ok: true, thread: forVisitor(next, await readMessages(found.statsId, found.id)) };
+}
+
+/** One email to whoever has the conversation (the owner when nobody does), at most every half hour for one conversation. */
+async function tellTeam(store: Store, conversation: Kept, text: string): Promise<void> {
+  if (!isSenderConfigured() || !store.statsId) return;
+  if (!(await withinLimit("inbox-tell", `${store.statsId}:${conversation.id}`, 1, 1_800))) return;
+  const to = conversation.assigned || store.email;
+  const who = conversation.name || conversation.email;
+  const sid = store.sid ? `store=${store.sid}&` : "";
+  await sendEmail({
+    from: NIMBUS_FROM,
+    to,
+    subject: `New message from ${who.slice(0, 60)} on ${store.name}`.slice(0, 200),
+    text: [
+      `${who} wrote in ${store.name}'s inbox:`,
+      "",
+      text.slice(0, 1_000),
+      "",
+      "Answer it in the studio, so your answer reaches their chat and their email and stays in the conversation:",
+      `${SITE_URL}/studio/inbox?${sid}c=${conversation.id}`,
+      "",
+      "—",
+      "You get one of these at most every half hour for each conversation.",
+    ].join("\n"),
+    idempotencyKey: `inbox-tell-${store.statsId}-${conversation.id}-${conversation.lastAt}`,
+  });
+}
+
+// ------------------------------------------------------------------ studio
+
+/** The store's conversations, open first, then the newest; what has expired is dropped from the index. */
+export async function readInbox(statsId: string | null): Promise<Conversation[]> {
+  if (!statsId || !isRedisConfigured()) return [];
+  const [rawIds] = await redisPipeline([["ZREVRANGE", indexKey(statsId), 0, MAX_CONVERSATIONS - 1]]);
+  const ids = (Array.isArray(rawIds) ? rawIds : []).filter((id): id is string => typeof id === "string" && CONVERSATION_ID.test(id));
+  if (!ids.length) return [];
+  const [raw] = await redisPipeline([["MGET", ...ids.map((id) => convKey(statsId, id))]]);
+  const values = Array.isArray(raw) ? raw : [];
+  const gone = ids.filter((_, i) => !values[i]);
+  if (gone.length) await redisPipeline([["ZREM", indexKey(statsId), ...gone]]).catch(() => {});
+  return inboxOrder(values.map(parseKept).filter((c): c is Kept => Boolean(c)).map(shown));
+}
+
+/** How many open conversations have something the store has not read. */
+export function unreadCount(list: Conversation[]): number {
+  return list.filter((c) => c.status === "open" && c.unread > 0).length;
+}
+
+export type Thread = { conversation: Conversation; messages: Message[] };
+
+/** One conversation and its messages, marked as read. */
+export async function openConversation(statsId: string, id: string, store?: Store): Promise<Thread | null> {
+  const conversation = await readKept(statsId, id);
+  if (!conversation) return null;
+  if (conversation.unread && store) {
+    const next = { ...conversation, unread: 0 };
+    await write(statsId, store.handle, next, null);
+    return { conversation: shown(next), messages: await readMessages(statsId, id) };
+  }
+  return { conversation: shown(conversation), messages: await readMessages(statsId, id) };
+}
+
+export type ReplyResult = { ok: true; thread: Thread; emailed: boolean } | { ok: false; reason: "short" | "none" | "limited" };
+
+/** The store answers: the message is kept, shows in the visitor's chat, and is emailed to them in the store's language. */
+export async function replyTo(store: Store, id: string, by: string, textRaw: unknown, now = Date.now()): Promise<ReplyResult> {
+  const statsId = store.statsId;
+  if (!statsId) return { ok: false, reason: "none" };
+  const text = messageText(textRaw);
+  if (text.length < MIN_MESSAGE) return { ok: false, reason: "short" };
+  const conversation = await readKept(statsId, id);
+  if (!conversation) return { ok: false, reason: "none" };
+  if (!(await withinLimit("inbox-reply", statsId, 400, 86_400))) return { ok: false, reason: "limited" };
+  const message: Message = { at: now, from: "store", text, by };
+  const next: Kept = { ...conversation, lastAt: now, lastFrom: "store", unread: 0 };
+  await write(statsId, store.handle, next, message);
+  const w = chatWords(store.language);
+  const link = chatOpen(store) && next.token ? `${SITE_URL}/@${store.handle}?chat=${next.token}` : "";
+  const emailed = isSenderConfigured()
+    ? await sendEmail({
+        from: storeSender(store),
+        to: next.email,
+        replyTo: store.email,
+        subject: w.replySubject(store.name).slice(0, 200),
+        text: [w.replyIntro(store.name), "", text, "", ...(link ? [w.replyLink, link] : [w.replyByEmail]), "", `— ${store.name}`].join("\n"),
+        idempotencyKey: `inbox-reply-${statsId}-${id}-${now}`,
+      }).catch(() => false)
+    : false;
+  return { ok: true, thread: { conversation: shown(next), messages: await readMessages(statsId, id) }, emailed };
+}
+
+/** Closes a conversation, or opens it again. */
+export async function setStatus(store: Store, id: string, status: unknown): Promise<Conversation | null> {
+  if (!store.statsId || (status !== "open" && status !== "closed")) return null;
+  const conversation = await readKept(store.statsId, id);
+  if (!conversation) return null;
+  const next = { ...conversation, status, unread: status === "closed" ? 0 : conversation.unread } as Kept;
+  await write(store.statsId, store.handle, next, null);
+  return shown(next);
+}
+
+/** Gives a conversation to one of the people who may answer, or to nobody (""). */
+export async function assignTo(store: Store, id: string, email: unknown, allowed: string[]): Promise<Conversation | null> {
+  if (!store.statsId || typeof email !== "string") return null;
+  const who = email ? normaliseEmail(email) : "";
+  if (who && !allowed.includes(who)) return null;
+  const conversation = await readKept(store.statsId, id);
+  if (!conversation) return null;
+  const next = { ...conversation, assigned: who };
+  await write(store.statsId, store.handle, next, null);
+  return shown(next);
+}
+
+/**
+ * A suggested answer, for the creator to change before sending (one of the
+ * month's jobs). The model is given the store's own questions and answers
+ * and the conversation, never the visitor's address or name: addresses,
+ * phone numbers and links are taken out of every message first.
+ */
+export async function suggestReply(store: Store, id: string, now = Date.now()): Promise<AiResult<string>> {
+  if (!store.statsId) return { ok: false, reason: "off" };
+  const thread = await openConversation(store.statsId, id);
+  if (!thread) return { ok: false, reason: "notes" };
+  const language = LANGUAGES[parseLanguage(store.language)].english;
+  return counted(store, now, async () => {
+    const faq = store.faq.slice(0, 20).map((f) => `Q: ${forAi(f.q, 300)}\nA: ${forAi(f.a, 800)}`).join("\n\n");
+    const transcript = thread.messages
+      .slice(-20)
+      .map((m) => `${m.from === "visitor" ? "Visitor" : "Store"}: ${forAi(m.text, 1_200)}`)
+      .join("\n\n");
+    const system = [
+      `You draft the next answer from ${store.name}, a creator's online store, to a visitor who wrote to it. The creator reads it and changes it before it is sent.`,
+      `Write in ${language}. Plain text, at most 120 words, friendly and direct. No greeting placeholders, no brackets to fill in, no signature.`,
+      "Use only what the store's questions and answers and the conversation say. When they do not answer the question, say the creator will check and come back to them. Never promise a refund, a discount, a date or a result they do not state.",
+      "Return only the answer.",
+    ].join("\n\n");
+    const prompt = [faq ? `The store's questions and answers:\n\n${faq}` : "The store has written no questions and answers.", `The conversation, oldest first:\n\n${transcript}`].join("\n\n---\n\n");
+    const answer = await askModel(system, prompt, 500, answerModel());
+    const text = answer ? messageText(answer) : "";
+    return text || null;
+  });
+}

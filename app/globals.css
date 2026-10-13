@@ -1871,6 +1871,19 @@ a.chip {
   border-radius: 1.5rem;
   box-shadow: 0 1px 2px rgba(11, 17, 25, 0.04), 0 10px 30px -22px rgba(11, 17, 25, 0.35);
 }
+/* The chat on a store's pages (components/store-chat.tsx): drawn outside .st-page, so its colours are set on .st-chat. */
+.st-chat {
+  color: var(--st-text);
+  font-family: var(--st-font-body, var(--font-body)), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+.st-chat-mine {
+  background: var(--st-accent-soft);
+  color: var(--st-accent-text);
+}
+.st-chat-theirs {
+  background: var(--st-bg);
+  border: 1px solid var(--st-line);
+}
 .st-link-card {
   display: block;
   transition:
