@@ -12,6 +12,7 @@ import { originFrom } from "@/lib/request-origin";
 import type { ProductFile } from "@/lib/product-file";
 import { BUMP_KEYS } from "@/lib/bundle-rules";
 import { ordersWords } from "@/lib/buyer-words/orders";
+import { withinLimit } from "@/lib/request-guard";
 
 /**
  * Hands the buyer the file they paid for.
@@ -30,6 +31,15 @@ import { ordersWords } from "@/lib/buyer-words/orders";
  * seconds the first time for a big book: hence the longer time limit.
  */
 export const maxDuration = 60;
+
+/**
+ * How often one order's link may be opened in an hour. Each opening asks
+ * Stripe about the order on the creator's own account and runs a function
+ * here, and nothing else bounded it: a script looping on one link would run
+ * up our bill and spend the creator's allowance of requests at Stripe. A
+ * bundle of every file a store sells, downloaded twice, fits well inside it.
+ */
+const OPENS_PER_HOUR = 240;
 
 /** The status of each answer to an order that is not paid; its words are the store's (lib/buyer-words/orders.ts). */
 const STATUSES = {
@@ -85,6 +95,14 @@ export async function GET(request: NextRequest) {
   // Asked for again from the emailed list of purchases: the link's address
   // must still have paid for this one, by Stripe's account of it right now.
   const token = request.nextUrl.searchParams.get("token");
+  // Counted by the link, before anything is asked of Stripe.
+  const link = token ? `t:${token}` : `s:${request.nextUrl.searchParams.get("session_id") ?? ""}`;
+  if (!(await withinLimit("download", `${store.handle}:${link}`, OPENS_PER_HOUR, 3600))) {
+    return new Response(say.tooOften, {
+      status: 429,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Retry-After": "600", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" },
+    });
+  }
   if (token) {
     let purchase;
     let email: string | null = null;

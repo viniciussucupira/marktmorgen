@@ -34,6 +34,7 @@
  * its license key when it hands one out — kept under the offer's payment,
  * the same reference the thanks page and the list of purchases use.
  */
+import { countOrder } from "@/lib/orders";
 import { shippingWords } from "@/lib/buyer-words/shipping";
 import { shippingAddressOf, wasShipped } from "@/lib/shipping-address";
 import { recordPackage } from "@/lib/call-packages";
@@ -377,6 +378,23 @@ export async function confirmPurchase(
   sessionId: string,
   known?: SessionRecord,
 ): Promise<ConfirmOutcome> {
+  const read: { session?: SessionRecord } = {};
+  const outcome = await confirmOnce(store, sessionId, known, read);
+  // Confirmed now, so it is one of the month's orders (lib/orders.ts): once,
+  // by the checkout, and not at all when its sale paid a share.
+  if (outcome === "sent") {
+    const paid = typeof read.session?.amount_total === "number" ? read.session.amount_total : 0;
+    await countOrder(store, `checkout:${sessionId}`, paid);
+  }
+  return outcome;
+}
+
+async function confirmOnce(
+  store: Store,
+  sessionId: string,
+  known: SessionRecord | undefined,
+  read: { session?: SessionRecord },
+): Promise<ConfirmOutcome> {
   if (!canConfirm(store) || !SESSION_ID_PATTERN.test(sessionId)) return "skip";
   const key = confirmationKey(sessionId);
   const [mark] = await redisPipeline([["GET", key]]);
@@ -396,6 +414,7 @@ export async function confirmPurchase(
     }
   }
   if (session.id !== sessionId) return "skip";
+  read.session = session;
   // A gift through "Support my work" has nothing to hand over or confirm (lib/store-tips.ts).
   if (session.metadata?.kind === "tip") return "skip";
   const listings = await listingsNamed(store, session.metadata);
@@ -622,6 +641,8 @@ export async function confirmOffer(store: Store, offer: TakenOffer): Promise<Con
   } finally {
     await redisPipeline(sent ? [["SET", mark, "sent", "EX", SENT_MARK_SECONDS]] : [["DEL", mark]]);
   }
+  // One of the month's orders (lib/orders.ts), by its own payment.
+  if (sent) await countOrder(store, `offer:${offer.reference}`, offer.amountCents);
   return sent ? "sent" : "failed";
 }
 

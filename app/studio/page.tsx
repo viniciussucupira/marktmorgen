@@ -154,6 +154,8 @@ import {
 } from "@/lib/billing";
 import { STORAGE_BRAKE_BYTES, storageBrakeFor, storageUsed, storageWords } from "@/lib/storage-quota";
 import { trafficIn } from "@/lib/traffic";
+import { ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, ordersIncluded, ordersOwedCents, ordersWords, perOrderWords } from "@/lib/order-rules";
+import { ordersIn } from "@/lib/orders";
 import { SETUP_VISITS, TRIAL_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor, visitsIncluded, visitsOwedCents, visitsWords } from "@/lib/traffic-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
@@ -737,6 +739,9 @@ export default async function StudioPage({
   const roomVisits = traffic.visits - traffic.people;
   const visitLimit = store ? visitLimitFor(store) : null;
   const visitRoom = visitLimit ?? (store ? visitsIncluded(store.tier) : 0);
+  // The orders counted this month, the third thing charged by use (lib/order-rules.ts).
+  const ordered = store && may("settings") ? await ordersIn(folder) : 0;
+  const orderRoom = standing === "paid" && store ? ordersIncluded(store.tier) : TRIAL_ORDERS;
   // A store whose plan has ended and that keeps more than a store with no
   // plan may: the day what it keeps is removed, counted the way the daily
   // job counts it (lib/plan-closing.ts). Measured only for such a store.
@@ -2154,6 +2159,36 @@ export default async function StudioPage({
                     </div>
                   </dl>
                 </div>
+                {/*
+                  Orders: charged by use like visits (lib/order-rules.ts),
+                  from the same count the invoice is made from.
+                */}
+                {standing === "paid" || standing === "trial" ? (
+                <div className="mt-6 border-t border-line pt-5">
+                  <p className="font-semibold text-ink">Orders this month</p>
+                  <p className="mt-1 text-ink-soft">
+                    {`${ordersWords(ordered)} counted of the ${countWords(orderRoom)} ${
+                      standing === "paid" ? "your plan covers" : "a free trial has before free copies stop"
+                    }. An order is a purchase confirmed, an offer taken after paying, a place taken in a purchase for several people, or a free copy sent.${feeWords().ordersShared}`}
+                  </p>
+                  {standing === "paid" && store && ordered > orderRoom ? (
+                    <p className="mt-4 notice notice-warn">
+                      {`You are past the ${countWords(orderRoom)} orders this month. `}
+                      <strong>Nothing is refused to a buyer for it.</strong>
+                      {` The orders past it come to ${centsWords(ordersOwedCents(ordered, store.tier))} so far, and go on your next invoice.`}
+                    </p>
+                  ) : null}
+                  {standing === "trial" && ordered >= TRIAL_ORDERS ? (
+                    <p className="mt-4 notice notice-warn">
+                      <strong>Free copies are paused for the month.</strong>
+                      {` Your store has had the ${countWords(TRIAL_ORDERS)} orders a free trial has. Free copies start again as soon as your plan is paid, or when the month turns; paid orders are never stopped.`}
+                    </p>
+                  ) : null}
+                  <p className="mt-3 text-sm text-ink-soft">
+                    {`Past your plan\u2019s orders: ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, ${perOrderWords()} an order, on your next invoice. We email you the first time a month passes them.`}
+                  </p>
+                </div>
+                ) : null}
               </div>
             ) : null}
 

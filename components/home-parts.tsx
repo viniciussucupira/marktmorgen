@@ -9,6 +9,7 @@ import { HOME_QUESTIONS } from "@/lib/home-faq";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, centsWords } from "@/lib/watch-rules";
 import { VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
+import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER } from "@/lib/order-rules";
 import {
   PLAN_NAMES,
   PLAN_PRICES,
@@ -407,6 +408,7 @@ export function HeroFlow() {
 const INCLUDED = [
   "Your own store address, live the moment you take it",
   `${VISITS_INCLUDED.creator.toLocaleString("en-US")} visits to your store a month covered; past that, ${centsWords(VISIT_CENTS_PER_THOUSAND_OVER)} for each thousand, and your store is never taken down for being busy`,
+  `${ORDERS_INCLUDED.creator.toLocaleString("en-US")} orders a month covered${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; past that, ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, and a buyer is never turned away`,
   "Buyers pay into your own Stripe account",
   "Up to 2,000 products: files, courses, memberships, paid calls and live sessions",
   "Sales pages and landing pages built from blocks, and reviews only buyers can write",
@@ -430,6 +432,7 @@ const INCLUDED = [
 const PRO_INCLUDED = [
   `Everything in ${PLAN_TITLES.creator}`,
   `${VISITS_INCLUDED.pro.toLocaleString("en-US")} visits to your store a month covered, instead of ${VISITS_INCLUDED.creator.toLocaleString("en-US")}`,
+  `${ORDERS_INCLUDED.pro.toLocaleString("en-US")} orders a month covered, instead of ${ORDERS_INCLUDED.creator.toLocaleString("en-US")}`,
   "One-off emails to your list, now or at a time you choose, to everyone or to the people who have not bought a particular thing yet",
   "Sequences that go out by themselves after someone joins or buys",
   `Up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month (${TRIAL_MONTHLY_EMAILS.toLocaleString("en-US")} during the free trial), from your name, with replies coming to you`,
@@ -742,7 +745,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
               {`For a bigger list: $${((yearly ? PLAN_PRICES.scale.year : PLAN_PRICES.scale.month) / 100).toLocaleString("en-US")} ${yearly ? "a year" : "a month"}`}
             </strong>
             <span className="mt-1 block">
-              {`Everything in ${PLAN_TITLES.pro}, with up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, ${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits to your store a month instead of ${VISITS_INCLUDED.pro.toLocaleString("en-US")}, and ${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts instead of ${AI_MONTHLY.pro}. Start on it, or move up from your studio the day you need it and back whenever you like. On your receipts it is called ${PLAN_NAMES.scale}.`}
+              {`Everything in ${PLAN_TITLES.pro}, with up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, ${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits to your store a month instead of ${VISITS_INCLUDED.pro.toLocaleString("en-US")}, ${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month instead of ${ORDERS_INCLUDED.pro.toLocaleString("en-US")}, and ${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts instead of ${AI_MONTHLY.pro}. Start on it, or move up from your studio the day you need it and back whenever you like. On your receipts it is called ${PLAN_NAMES.scale}.`}
             </span>
           </span>
         </p>

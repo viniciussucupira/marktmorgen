@@ -14,6 +14,7 @@
  * Nothing here may read an environment variable or a secret: client pages
  * import it, as they import lib/plan.ts.
  */
+import { perOrderWords } from "@/lib/order-rules";
 import { COMMISSION_BPS, COMMISSION_LIVE, PLAN_PRICES, PRICES_WITH_COMMISSION, PRICES_WITHOUT_COMMISSION, type Tier } from "@/lib/plan";
 
 /** "6.25%", "2.75%". */
@@ -64,13 +65,15 @@ export function feeWords(live = COMMISSION_LIVE) {
       /** The mission page's promise about charging. */
       missionPromise: "One subscription, written in one line. No cut of your sales, no fee that appears at the last screen, no feature listed on the site that does not exist in the product.",
       /** The mission page, on how we make money. */
-      missionMoney: "We take 0% of your sales and make money one way only — a flat subscription, the same price whether you sell three files or three thousand.",
+      missionMoney: `We take 0% of your sales and make money one way only — your subscription: the same price whether you sell three files or three hundred, with ${perOrderWords()} an order past what your plan covers added to the same invoice.`,
       /** The Terms, on what we charge. */
       termsCharge: "Marktmorgen takes 0% of a creator's sales; what we charge a creator is a subscription for the store itself.",
       /** The Terms, on the money. */
       termsMoney: "We never hold, route, or take a cut of your sales revenue.",
+      /** Said after how orders are counted (app/terms): nothing while no share is taken. */
+      ordersShared: "",
       /** The studio's "What you pay us". */
-      studioPay: "A plan, and 0% of what you sell, because what you sell never passes through us. The subscription is the same whether you sell three files or three thousand.",
+      studioPay: `A plan, and 0% of what you sell, because what you sell never passes through us. The subscription is the same whether you sell three files or three hundred; past the orders your plan covers, an order is ${perOrderWords()} on the same invoice.`,
       /** The answer to "what does Marktmorgen take from a sale?". */
       fromASale: "Nothing. 0% of your sales, with no asterisk. Our only income is the subscription.",
       /** The answer to "what does it take from a renewal?". */
@@ -141,6 +144,7 @@ export function feeWords(live = COMMISSION_LIVE) {
     missionMoney: `We make money two ways, both on the pricing page: a subscription, and a share of each sale that gets smaller as you sell more — ${store} on Store, ${studio} on Studio, and none on Scale.`,
     termsCharge: `What we charge a creator is a subscription for the store and the share of each sale their plan sets (${store} on Store, ${studio} on Studio, none on Scale), which Stripe deducts from the sale as an application fee. No share is taken on a sale made in the free trial, and the share of a sale that is refunded, or lost to a dispute, is given back.`,
     termsMoney: "We never hold or route your sales revenue. The one thing taken from a sale is your plan's share, which Stripe deducts as an application fee and pays to us.",
+    ordersShared: " An order whose sale paid your plan's share is covered by that share and is not counted.",
     studioPay: `A plan, and its share of each sale: ${store} on Store, ${studio} on Studio, none on Scale. Stripe takes the share from the sale itself, so what you sell never passes through us, and a refund gives back its part.`,
     fromASale: `Your plan's share of each sale, after any discount and before tax and shipping: ${store} on Store, ${studio} on Studio, none on Scale. Nothing on a sale made in your free trial, and the share of a refunded sale comes back to you.`,
     fromARenewal: `Your plan's share of each payment, as on any sale: ${store}, ${studio}, or none on Scale. Stripe charges its own card fee on your account.`,

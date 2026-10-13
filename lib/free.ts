@@ -25,6 +25,8 @@
  * The list is keyed by the store's own list id, not by the sign-in address,
  * so moving the account to another address takes the list along untouched.
  */
+import { countOrder, storeOrdersThisMonth } from "@/lib/orders";
+import { freeCopiesLimitFor } from "@/lib/order-rules";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -181,6 +183,11 @@ export async function requestCopy(input: {
 
   if (!(await within(await ipKey(ip, store.handle), IP_LIMIT))) return "limited";
   if (!(await within(await addressKey(email), ADDRESS_LIMIT))) return "limited";
+  // A store with no invoice to add an order to gives free copies only up to
+  // what a free trial has in a month (lib/order-rules.ts); a store that pays
+  // is never stopped, and its orders past its plan are charged instead.
+  const cap = freeCopiesLimitFor(store);
+  if (cap !== null && (await storeOrdersThisMonth(store)) >= cap) return "unavailable";
 
   const token = randomToken();
   const claim: Claim = {
@@ -216,6 +223,8 @@ export async function requestCopy(input: {
       g.freeSentBy(name),
     ].join("\n"),
   });
+  // One of the month's orders (lib/orders.ts): nothing was paid, so it always counts.
+  if (sent) await countOrder(store, `free:${token}`, 0);
   return sent ? "sent" : "error";
 }
 

@@ -32,6 +32,9 @@
  *                                                     2026)
  *   Resend                     $0.0009 / email
  *   Stripe                     2.9% + $0.30 on each subscription charge
+ *   Stripe Billing             0.7% of each subscription charge (left out of
+ *                                                     these sums until October
+ *                                                     13, 2026)
  *
  * What changed on October 7, 2026, and what these figures now count on.
  *
@@ -103,7 +106,9 @@ import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { LONGEST_PAUSE_MONTHS, PAID_MONTHS_BEFORE_PAUSE } from "@/lib/plan-pause-rules";
 import { SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
 import { visitCost } from "./traffic-cost";
-import { SHARE_PROVED_IN_TEST_MODE } from "@/lib/platform-share";
+import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, freeCopiesLimitFor } from "@/lib/order-rules";
+import { coveredByShare } from "@/lib/orders";
+import { SHARE_PROVED_IN_TEST_MODE, shareOf } from "@/lib/platform-share";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -121,8 +126,25 @@ const FETCHED_AHEAD = 1.25;
 const PER_EMAIL = 0.0009;
 /** A rough, deliberately high figure for one AI draft. */
 const PER_DRAFT = 0.015;
-/** Receipts, file delivery and login links, which nothing caps. Set high. */
-const TRANSACTIONAL: Record<Tier, number> = { creator: 2_000, pro: 5_000, scale: 10_000 };
+/**
+ * What one order costs us, at the most an order sends: its confirmation and,
+ * for a physical product, the email that says it shipped, and the pages and
+ * jobs that settle it (the thanks page, the five-minute sweep, the database
+ * writes), set at three hundredths of a cent, which is well over what a
+ * visit's whole page costs (tests/traffic-cost.ts).
+ */
+const ORDER_COMPUTE = 0.0003;
+const ORDER_COST = 2 * PER_EMAIL + ORDER_COMPUTE;
+/**
+ * The other emails nothing counts by the order: sign-in links and a buyer's
+ * link to their purchases, each held back per address. Set high. Until
+ * October 13, 2026 receipts were in this figure as well (2,000, 5,000 and
+ * 10,000 emails), which put a number on what no limit held; they are orders
+ * now (lib/order-rules.ts).
+ */
+const TRANSACTIONAL: Record<Tier, number> = { creator: 500, pro: 1_000, scale: 2_000 };
+/** What Stripe Billing takes of a subscription charge, on top of the card fee. */
+const BILLING_RATE = 0.007;
 
 /**
  * What reaches us for one month of a plan, after Stripe takes its cut: one
@@ -131,7 +153,7 @@ const TRANSACTIONAL: Record<Tier, number> = { creator: 2_000, pro: 5_000, scale:
 type Prices = Record<Tier, Record<Cycle, number>>;
 function netOf(tier: Tier, cycle: Cycle = "month", prices: Prices = PLAN_PRICES): number {
   const gross = prices[tier][cycle] / 100;
-  const kept = gross - (gross * 0.029 + 0.3);
+  const kept = gross - (gross * (0.029 + BILLING_RATE) + 0.3);
   return cycle === "year" ? kept / 12 : kept;
 }
 
@@ -151,6 +173,11 @@ function visitsCost(tier: Tier): number {
   return VISITS_INCLUDED[tier] * visitCost();
 }
 
+/** The orders a plan covers, all of them made, each at the most an order costs. */
+function ordersCost(tier: Tier): number {
+  return ORDERS_INCLUDED[tier] * ORDER_COST;
+}
+
 /** Everything one store on this plan can run up in a month, at every limit at once. */
 function worstCost(tier: Tier): number {
   const storage = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB;
@@ -159,7 +186,7 @@ function worstCost(tier: Tier): number {
   const email = monthlyEmails(tier) * PER_EMAIL;
   const drafts = AI_MONTHLY[tier] * PER_DRAFT;
   const receipts = TRANSACTIONAL[tier] * PER_EMAIL;
-  return storage + free + video + visitsCost(tier) + email + drafts + receipts;
+  return storage + free + video + visitsCost(tier) + email + drafts + receipts + ordersCost(tier);
 }
 
 /**
@@ -218,6 +245,7 @@ for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
       ["free downloads", (FREE_PAUSE_ABOVE_BYTES / GB) * FILE_DELIVERY_PER_GB],
       ["video", videoCost()],
       ["visits", visitsCost(tier)],
+      ["orders", ordersCost(tier)],
       ["email", monthlyEmails(tier) * PER_EMAIL],
       ["AI drafts", AI_MONTHLY[tier] * PER_DRAFT],
     ];
@@ -293,6 +321,63 @@ test("a thousand visits past what a plan covers bring in well over what they cos
     `a thousand visits past the plan bring in $${kept.toFixed(4)} and cost $${cost.toFixed(4)}, which keeps ${(margin * 100).toFixed(0)}%. ` +
       "A price near what the visits cost is a slower loss.",
   );
+});
+
+test("a thousand orders past what a plan covers bring in well over what they cost", () => {
+  // The third thing charged by use, held to the same floor: what reaches us
+  // for a thousand orders, against a thousand of the dearest order there is.
+  const kept = (ORDER_CENTS_PER_THOUSAND_OVER / 100) * (1 - 0.029 - BILLING_RATE);
+  const cost = 1000 * ORDER_COST;
+  const margin = (kept - cost) / kept;
+  assert.ok(
+    margin >= 0.45,
+    `a thousand orders past the plan bring in $${kept.toFixed(4)} and cost $${cost.toFixed(4)}, which keeps ${(margin * 100).toFixed(0)}%.`,
+  );
+});
+
+test("an order that paid a share is covered by it several times over, so it is not counted", () => {
+  // The smallest payment Stripe takes, at the smallest share there is: what
+  // it pays has to be several times what the dearest order costs, or leaving
+  // it out of the count (lib/orders.ts) would be a loss.
+  const smallest = Math.min(...TIERS.map((tier) => COMMISSION_BPS[tier]).filter((bps) => bps > 0));
+  const paid = shareOf(smallest, 50) / 100;
+  assert.ok(paid >= 3 * ORDER_COST, `the smallest share is $${paid.toFixed(4)} against $${ORDER_COST.toFixed(4)} for an order`);
+  // And an order that paid nothing, or paid while no share is taken, always counts.
+  const store = { shared: true, subscriptionActive: true, trialEnds: 0, tier: "pro" as Tier };
+  assert.equal(coveredByShare(store, 2700, 1e10, true), true);
+  assert.equal(coveredByShare(store, 0, 1e10, true), false);
+  assert.equal(coveredByShare(store, 2700, 1e10, false), false);
+  assert.equal(coveredByShare({ ...store, trialEnds: 2e10 }, 2700, 1e10, true), false);
+  assert.equal(coveredByShare({ ...store, tier: "scale" }, 2700, 1e10, true), false);
+});
+
+test("a store nobody can charge gives free copies only up to a trial's orders", () => {
+  // A free copy costs its email and nobody pays for it. A store with an
+  // invoice is charged past its plan; one in its trial stops giving them at
+  // TRIAL_ORDERS; one with no plan gives none (lib/free.ts, isPaidUp).
+  const base = { subscriptionId: "sub_1", planEndedAt: "" };
+  const now = 1_000_000;
+  assert.equal(freeCopiesLimitFor({ ...base, subscriptionActive: true, trialEnds: 0 }, now), null);
+  assert.equal(freeCopiesLimitFor({ ...base, subscriptionActive: true, trialEnds: now + 10 }, now), TRIAL_ORDERS);
+  assert.equal(freeCopiesLimitFor({ ...base, subscriptionActive: false, trialEnds: 0 }, now), 0);
+  assert.ok(TRIAL_ORDERS * ORDER_COST < 2, `a trial's orders can cost $${(TRIAL_ORDERS * ORDER_COST).toFixed(2)} with nothing paid`);
+  const free = readFileSync(join(process.cwd(), "lib/free.ts"), "utf8");
+  assert.match(free, /freeCopiesLimitFor\(store\)/, "lib/free.ts must hold free copies to the trial's orders");
+  assert.match(free, /isPaidUp\(store\)/, "lib/free.ts must give no free copies without a plan");
+});
+
+test("every place an order is handed over counts it", () => {
+  // An order nothing counts is an order nobody pays for on a plan with no share.
+  for (const [file, mark] of [
+    ["lib/purchase-email.ts", "countOrder(store, `checkout:"],
+    ["lib/purchase-email.ts", "countOrder(store, `offer:"],
+    ["lib/group-buy.ts", "countOrder(store, `place:"],
+    ["lib/free.ts", "countOrder(store, `free:"],
+  ] as const) {
+    assert.ok(readFileSync(join(process.cwd(), file), "utf8").includes(mark), `${file} must count its orders (${mark})`);
+  }
+  const cron = readFileSync(join(process.cwd(), "app/api/cron/usage/route.ts"), "utf8");
+  assert.match(cron, /settleAllOrders\(\)/, "the daily job must bill orders past a plan");
 });
 
 test("a store nobody can charge cannot be visited past the visits it has", () => {
@@ -427,7 +512,7 @@ test("a break from the plan is paid for by the months before it, at its longest"
  * kept at the monthly price; a renewal is not refunded. Stripe keeps its
  * processing fee on a refund and never returns the fee for a dispute.
  */
-const STRIPE_FEE = (grossCents: number) => (grossCents / 100) * 0.029 + 0.3;
+const STRIPE_FEE = (grossCents: number) => (grossCents / 100) * (0.029 + BILLING_RATE) + 0.3;
 
 /**
  * What a store's files cost after its plan ends, until its closing day: all a
