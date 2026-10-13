@@ -14,9 +14,9 @@ This increment connects existing product capabilities. It does not claim that ev
 
 ## Saved paid-offer checks
 
-The funnel editor and growth workspace now reuse canSell, canSellProduct and bundleReady. They flag unavailable store payments, paid offers without configured delivery, and bundles without enough eligible items. The check reads only the selected store and never creates payment sessions, sends email, fetches external links or changes products. Failed reads are explicitly unknown.
+The funnel editor and growth workspace now reuse canSell, canSellProduct, paypalReady, canGiveProduct and bundleReady. They flag unavailable store payments, offers without configured delivery, free sign-ups that fail the public eligibility rule, and bundles without enough eligible items. PayPal-only offers are accepted when the public product page would accept them. The check reads only the selected store and never creates payment sessions, sends email, fetches external links or changes products. Failed reads are explicitly unknown.
 
-This is a configuration review, not a live checkout or delivery test. Free sign-up/email delivery, stock and license availability, provider health, external link health, and actual file access remain manual release checks.
+This is a configuration review, not a live checkout or delivery test. Actual sign-up/email delivery, stock and license availability, provider health, external link health, and actual file access remain manual release checks.
 
 ## Verification
 
