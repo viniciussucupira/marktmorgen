@@ -18,6 +18,8 @@ import { inTrial, monthlyAllowance, usedThisMonth } from "@/lib/mail";
 import { healthId, pauseWords, pausedFor } from "@/lib/mail-health";
 import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
 import { EmailStudio } from "@/components/email-studio";
+import { readForms } from "@/lib/form-store";
+import { readFields, readStages } from "@/lib/crm";
 import { listDrafts } from "@/lib/mail-drafts";
 import { can } from "@/lib/team-roles";
 import { trialOffered } from "@/lib/billing";
@@ -198,6 +200,11 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             segments={await listSegments(store.listId).catch(() => [])}
             preset={typeof query.who === "string" && (WHO as readonly string[]).includes(query.who) ? { who: query.who as Who } : undefined}
             courses={idsOfKind(store, "course")}
+            automation={{
+              forms: (await readForms(store.statsId).catch(() => [])).filter((f) => f.fields.some((x) => x.type === "email")).map((f) => ({ id: f.id, name: f.name })),
+              fields: (await readFields(store.statsId).catch(() => [])).map((f) => ({ id: f.id, name: f.name, type: f.type, options: f.options })),
+              stages: (await readStages(store.statsId).catch(() => [])).map((st) => ({ id: st.id, name: st.name })),
+            }}
           />
           </>
         )}

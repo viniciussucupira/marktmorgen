@@ -44,6 +44,13 @@ import {
   sameLabel,
 } from "@/lib/flow-rules";
 import { changeLabels, readTags } from "@/lib/contacts";
+import { type ActionContext } from "@/lib/flow-rules";
+import { readFields, readStages, readDeals, setValue, writeDeal } from "@/lib/crm";
+import { newCrmId } from "@/lib/crm-rules";
+import { personKey } from "@/lib/person-key";
+import { readForm } from "@/lib/form-store";
+import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/site-url";
 import { usedLinkIn } from "@/lib/mail-clicks";
 import { courseProgress } from "@/lib/learn";
 
@@ -73,12 +80,15 @@ export type Flow = {
    * product; "bought": paid for anything at all, the first time they do;
    * "tagged": a step of a sequence gave them the label `tag`; "finished":
    * did every lesson of the course `productId` is (added 12 October 2026,
-   * lib/course-finish.ts).
+   * lib/course-finish.ts); "form": sent the store's form `formId` with their
+   * address in it, while on the list (added 13 October 2026).
    */
-  trigger: "joined" | "product" | "bought" | "tagged" | "finished";
+  trigger: "joined" | "product" | "bought" | "tagged" | "finished" | "form";
   productId: string | null;
   /** The label that starts it, for "tagged". */
   tag?: string;
+  /** The form that starts it, for "form" (lib/forms.ts). */
+  formId?: string;
   steps: FlowStep[];
   active: boolean;
   createdAt: number;
@@ -115,11 +125,11 @@ export const FLOW_ID = /^[0-9a-f]{16}$/;
 
 const newId = () => randomBytes(8).toString("hex");
 
-function cleanStep(raw: unknown, known: (productId: string) => boolean, isFlow: (flowId: string) => boolean, isCourse: (productId: string) => boolean): FlowStep | null {
+function cleanStep(raw: unknown, known: (productId: string) => boolean, isFlow: (flowId: string) => boolean, isCourse: (productId: string) => boolean, ctx: ActionContext = {}): FlowStep | null {
   if (!raw || typeof raw !== "object") return null;
   const value = raw as Record<string, unknown>;
   const delay = Number(value.delayHours);
-  const action = readAction(value.action, isFlow);
+  const action = readAction(value.action, isFlow, ctx);
   if (action === "bad") return null;
   // A step that acts writes nothing: whatever words came with it are not kept.
   const subject = action ? "" : typeof value.subject === "string" ? value.subject.replace(/\s+/g, " ").trim().slice(0, MAX_SUBJECT) : "";
@@ -155,7 +165,7 @@ const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw =
 
 export type FlowResult =
   | { ok: true; flows: Flow[] }
-  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "steps" | "step" | "goal" | "too_many" | "unknown" | "setup" | "plan" | "placeholder" };
+  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "form" | "steps" | "step" | "goal" | "too_many" | "unknown" | "setup" | "plan" | "placeholder" };
 
 /** Adds a sequence, or replaces one with the same id. Checked whole every time. */
 export async function saveFlow(store: Store, raw: Record<string, unknown>): Promise<FlowResult> {
@@ -164,7 +174,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   const name = typeof raw.name === "string" ? raw.name.replace(/\s+/g, " ").trim().slice(0, MAX_FLOW_NAME) : "";
   if (!name) return { ok: false, reason: "name" };
   const trigger =
-    raw.trigger === "joined" || raw.trigger === "product" || raw.trigger === "bought" || raw.trigger === "tagged" || raw.trigger === "finished" ? raw.trigger : null;
+    raw.trigger === "joined" || raw.trigger === "product" || raw.trigger === "bought" || raw.trigger === "tagged" || raw.trigger === "finished" || raw.trigger === "form" ? raw.trigger : null;
   if (!trigger) return { ok: false, reason: "trigger" };
   const courses = new Set(idsOfKind(store, "course"));
   const isCourse = (id: string) => courses.has(id);
@@ -174,6 +184,15 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   if (trigger === "finished" && !(productId && hasProduct(store, productId) && isCourse(productId))) return { ok: false, reason: "product" };
   const tag = trigger === "tagged" ? cleanTag(raw.tag) : "";
   if (trigger === "tagged" && !tag) return { ok: false, reason: "tag" };
+  // A form of the store's own that asks for an address: without one, nobody it starts could be written to.
+  const formId = trigger === "form" && typeof raw.formId === "string" ? raw.formId : "";
+  if (trigger === "form") {
+    const form = formId ? await readForm(store.statsId, formId).catch(() => null) : null;
+    if (!form || !form.fields.some((f) => f.type === "email")) return { ok: false, reason: "form" };
+  }
+  // The store's fields and stages, for a step that sets one or moves a deal (lib/crm.ts).
+  const [crmFields, stages] = await Promise.all([readFields(store.statsId), readStages(store.statsId)]);
+  const ctx: ActionContext = { field: (fid) => crmFields.find((f) => f.id === fid), isStage: (sid) => stages.some((st) => st.id === sid) };
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
   if (rawSteps.length === 0 || rawSteps.length > MAX_STEPS) return { ok: false, reason: "steps" };
   const known = (id: string) => hasProduct(store, id);
@@ -183,7 +202,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   const isFlow = (flowId: string) => flowId !== id && flows.some((f) => f.id === flowId);
   const steps: FlowStep[] = [];
   for (const s of rawSteps) {
-    const step = cleanStep(s, known, isFlow, isCourse);
+    const step = cleanStep(s, known, isFlow, isCourse, ctx);
     // A condition on the email before needs an email before it.
     const before = steps.at(-1);
     if (!step || (readsEmailBefore(step.when) && (!before || before.action))) return { ok: false, reason: "step" };
@@ -206,6 +225,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
     trigger,
     productId,
     ...(tag ? { tag } : {}),
+    ...(formId ? { formId } : {}),
     steps,
     active: raw.active === true,
     createdAt: at >= 0 ? flows[at].createdAt : Math.floor(Date.now() / 1000),
@@ -270,7 +290,7 @@ export async function flowsStartedFor(flows: Flow[], email: string): Promise<str
  * Starts whichever sequences this event begins, for this person. Never
  * throws: the list must never cost anyone what they asked for.
  */
-export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string }): Promise<void> {
+export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string; form?: string }): Promise<void> {
   try {
     if (!store.listId || monthlyAllowance(store) === 0) return;
     // Whether what they just got is sold for money: the store's own index
@@ -284,7 +304,8 @@ export async function enroll(store: Store, email: string, event: { joined: boole
           (f.trigger === "product" && event.productId && f.productId === event.productId) ||
           (f.trigger === "bought" && paid) ||
           (f.trigger === "tagged" && event.tag && f.tag && sameLabel(f.tag, event.tag)) ||
-          (f.trigger === "finished" && event.finished && f.productId === event.finished)),
+          (f.trigger === "finished" && event.finished && f.productId === event.finished) ||
+          (f.trigger === "form" && event.form && f.formId === event.form)),
     );
     if (!flows.length) return;
     const address = normaliseEmail(email);
@@ -351,6 +372,7 @@ async function act(store: Store, flows: Flow[], action: FlowAction, emails: stri
     const target = flows.find((f) => f.id === action.flowId && f.active && f.steps.length > 0);
     return target ? startFlows(store, [target], emails) : 0;
   }
+  if (action.do === "field" || action.do === "deal" || action.do === "note" || action.do === "notify") return actOnPeople(store, action, emails, at);
   if (action.do === "untag") {
     const { changed } = await changeLabels(listId, emails, (tags) =>
       tags.some((t) => sameLabel(t, action.tag)) ? tags.filter((t) => !sameLabel(t, action.tag)) : "same",
@@ -367,6 +389,77 @@ async function act(store: Store, flows: Flow[], action: FlowAction, emails: stri
   const starting = flows.filter((f) => f.active && f.steps.length > 0 && f.trigger === "tagged" && f.tag && sameLabel(f.tag, action.tag));
   if (labeled.length && starting.length) await startFlows(store, starting, labeled);
   return changed.length;
+}
+
+/**
+ * The actions on the store's own people (added 13 October 2026): a field
+ * set, a deal put in a stage, a note written, the owner told. Kept under each
+ * person's key, never their address (lib/person-key.ts), as the studio keeps
+ * them. Says how many it did something for.
+ */
+async function actOnPeople(
+  store: Store,
+  action: Extract<FlowAction, { do: "field" | "deal" | "note" | "notify" }>,
+  emails: string[],
+  at: { flow: Flow; step: FlowStep; index: number },
+): Promise<number> {
+  const statsId = store.statsId;
+  if (!statsId) return 0;
+  if (action.do === "field") {
+    const field = (await readFields(statsId)).find((f) => f.id === action.field);
+    if (!field) return 0;
+    let done = 0;
+    for (const email of emails) if (await setValue(statsId, personKey(statsId, email), field, action.value)) done += 1;
+    return done;
+  }
+  if (action.do === "note") {
+    // Read when needed: the buyer's page reads the sequences too (lib/buyer-profile.ts), so not at the top.
+    const { addPersonNote } = await import("@/lib/buyer-profile");
+    let done = 0;
+    for (const email of emails) {
+      const kept = await addPersonNote(statsId, personKey(statsId, email), "sequence", `${action.text} (Sequence “${at.flow.name}”, step ${at.index + 1}.)`);
+      if (kept) done += 1;
+    }
+    return done;
+  }
+  if (action.do === "deal") {
+    const stages = await readStages(statsId);
+    const stage = stages.find((s) => s.id === action.stage);
+    if (!stage) return 0;
+    const deals = await readDeals(statsId, stages);
+    const now = Math.floor(Date.now() / 1000);
+    let done = 0;
+    for (const email of emails) {
+      // Their open deal moves; with none open, a new one is made for them.
+      const open = deals.find((d) => d.email === email && stages.find((s) => s.id === d.stage)?.kind === "open");
+      const deal = open
+        ? { ...open, stage: stage.id, updatedAt: now }
+        : { id: newCrmId(10), title: (action.title || at.flow.name).slice(0, 90), email, cents: 0, stage: stage.id, note: `Made by the sequence “${at.flow.name}”.`.slice(0, 500), createdAt: now, updatedAt: now };
+      if (open && open.stage === stage.id) continue;
+      if (await writeDeal(statsId, deal)) done += 1;
+    }
+    return done;
+  }
+  // The owner, told once for everyone who reached the step together: who, and where.
+  if (!isSenderConfigured() || !emails.length) return 0;
+  const shown = emails.slice(0, 50);
+  const sent = await sendEmail({
+    from: NIMBUS_FROM,
+    to: store.email,
+    subject: `${emails.length === 1 ? emails[0] : `${emails.length} people`} reached step ${at.index + 1} of “${at.flow.name}”`.slice(0, 200),
+    text: [
+      `In your sequence “${at.flow.name}”, ${emails.length === 1 ? "this person" : "these people"} reached step ${at.index + 1}:`,
+      "",
+      ...shown,
+      ...(emails.length > shown.length ? [`and ${emails.length - shown.length} more.`] : []),
+      "",
+      `Find each of them in your studio: ${SITE_URL}/studio/people`,
+      "",
+      "You get this because a step of that sequence tells you. Change it under Email, in your studio.",
+    ].join("\n"),
+    idempotencyKey: `nimbus-fl-notify:${at.flow.id}:${at.step.id}:${createHash("sha256").update([...emails].sort().join(",")).digest("hex").slice(0, 24)}`,
+  }).catch(() => false);
+  return sent ? emails.length : 0;
 }
 
 /**
