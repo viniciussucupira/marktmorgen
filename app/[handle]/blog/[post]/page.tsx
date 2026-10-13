@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { storeRoot } from "@/lib/store-sitemap";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { normaliseHandle, storeForPage } from "@/lib/store";
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const found = await load(handle, segment);
   if (!found) return { title: "Not found — Marktmorgen" };
   const { store, post } = found;
-  const url = `${SITE_URL}/@${store.handle}/blog/${postSegment(post)}`;
+  const url = `${storeRoot(store)}/blog/${postSegment(post)}`;
   return {
     title: `${post.title} — ${store.name}`,
     description: post.excerpt,
@@ -57,7 +58,7 @@ export default async function PostPage({ params }: Params) {
   const date = new Intl.DateTimeFormat(say.lang.locale, { year: "numeric", month: "long", day: "numeric" });
   const published = new Date(post.publishedAt * 1000);
   const featured = post.product ? featuredCards(store, "", [post.product]) : {};
-  const url = `${SITE_URL}/@${store.handle}/blog/${postSegment(post)}`;
+  const url = `${storeRoot(store)}/blog/${postSegment(post)}`;
   return (
     <div lang={say.lang.locale} className={`st-page st-theme-${store.look.theme} relative min-h-screen`} style={lookStyle(store.look) as React.CSSProperties}>
       <JsonLd

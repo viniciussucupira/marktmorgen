@@ -656,6 +656,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Will search engines find my store?",
+        a: [
+          "Yes. Every store has its own map for search engines, at marktmorgen.com/@yourname/sitemap.xml: your front page once it has something on it, every product a visitor can see, each of your pages that is out, your blog and each published post. Nothing you hide, nothing kept back for later, and nothing behind a purchase is in it, and each address is the one the page itself names as its own.",
+          "On your own domain the map is at yourdomain.com/sitemap.xml and lists your domain's addresses, and yourdomain.com/robots.txt points search engines to it, so you can add it in Google Search Console for your domain. A product, page or post that is gone shows a page in your store's look and language that leads back to your front page, instead of ours.",
+        ],
+      },
+      {
         q: "Can I use my own domain?",
         a: [
           ...(isDomainsConfigured()

@@ -279,6 +279,8 @@ export const de: BuyerWords = {
 
   reviewsOf: (title) => `Bewertungen zu ${title}`,
   backTo: (title) => `Zurück zu ${title}`,
+  missingTitle: "Diese Seite gibt es hier nicht",
+  missingBody: (store) => `Sie wurde vielleicht verschoben oder entfernt. Alles, was ${store} anbietet, finden Sie auf der Startseite des Shops.`,
   noReviewsToShow: "Es gibt keine Bewertungen zum Anzeigen.",
   pagesOfReviews: "Seiten mit Bewertungen",
   newer: "Neuere",

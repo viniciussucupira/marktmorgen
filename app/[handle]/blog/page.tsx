@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { storeRoot } from "@/lib/store-sitemap";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { normaliseHandle, storeForPage } from "@/lib/store";
@@ -30,8 +31,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description: store.bio || title,
-    alternates: { canonical: `${SITE_URL}/@${store.handle}/blog`, types: { "application/rss+xml": `${SITE_URL}/@${store.handle}/blog/feed.xml` } },
-    openGraph: { title, description: store.bio || title, url: `${SITE_URL}/@${store.handle}/blog`, type: "website" },
+    alternates: { canonical: `${storeRoot(store)}/blog`, types: { "application/rss+xml": `${SITE_URL}/@${store.handle}/blog/feed.xml` } },
+    openGraph: { title, description: store.bio || title, url: `${storeRoot(store)}/blog`, type: "website" },
   };
 }
 
