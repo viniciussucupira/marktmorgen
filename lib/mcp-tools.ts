@@ -28,6 +28,7 @@ import { listCounts } from "@/lib/contacts";
 import { affiliatesOn, readBook } from "@/lib/affiliates";
 import { insightsFrom } from "@/lib/insights";
 import { readPaths } from "@/lib/next-bought";
+import { refundActivityFrom } from "@/lib/refund-activity";
 import { channelCashflows } from "@/lib/channel-cashflow";
 
 export type Window = "d7" | "d30" | "d90";
@@ -62,6 +63,7 @@ export function channelsTool(data: StatsData, w: Window) {
   const table = data.attribution?.[w];
   const days = (data.days ?? []).slice(-(w === "d7" ? 7 : w === "d30" ? 30 : 90));
   const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], new Map(), days[0].date, days[days.length - 1].date) : [];
+  const refundActivity = known && days.length ? refundActivityFrom(data, w, days[0].date, days[days.length - 1].date) : null;
   return {
     window: NAMES[w],
     currency: data.currency,
@@ -71,6 +73,11 @@ export function channelsTool(data: StatsData, w: Window) {
       note: "Payments include renewals. Refunds include pending refunds in the days recorded. After refunds is before ad spend, fees, tax, commissions and other costs; not profit or causal lift. Null means incomplete.",
       channels: cash.map((c) => ({ channel: c.source, payments_received: c.receipts, refunds: c.refunds, after_refunds: c.afterRefunds })),
     } : null,
+    ...(refundActivity ? { refund_activity: {
+      payments_received: refundActivity.payments, refunds_recorded: refundActivity.refunds, refund_records: refundActivity.records,
+      note: "Money is in the currency smallest unit. Same-period payments including renewals, and recorded refunds including pending refunds. Not a refund rate for purchases or buyers: refunded purchases may be earlier and records are not unique buyers or orders. Ratio is refunded amount / received amount, may exceed 1; null means no payments. Only complete, matched readings.",
+      channels: refundActivity.rows.map((row) => ({ channel: row.source, payments_received: row.payments, refunds_recorded: row.refunds, refund_records: row.records, recorded_refunds_over_payments: row.share })),
+    } } : {}),
     buyer_cohorts: known && data.buyerChannels ? {
       history_partial: data.buyerChannels.historyPartial,
       unidentified_orders: data.buyerChannels[w].unidentifiedOrders,
