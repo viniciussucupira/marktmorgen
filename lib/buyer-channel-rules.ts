@@ -11,7 +11,16 @@ export type BuyerChannelRow = {
   repeated30: number;
 };
 export type BuyerChannelWindow = { rows: BuyerChannelRow[]; unidentifiedOrders: number };
-export type BuyerChannels = Record<"d7" | "d30" | "d90", BuyerChannelWindow> & { historyPartial: boolean };
+export const COHORT_AGES = [7, 30, 60, 90] as const;
+export type CohortAge = (typeof COHORT_AGES)[number];
+export type WeeklyBuyerCohort = {
+  /** Monday of the first observed purchase week, in UTC. */
+  week: string;
+  buyers: number;
+  observations: Record<CohortAge, { eligible: number; repeated: number }>;
+};
+export type WeeklyBuyerCohorts = { rows: WeeklyBuyerCohort[]; unidentifiedOrders: number; asOf: string };
+export type BuyerChannels = Record<"d7" | "d30" | "d90", BuyerChannelWindow> & { historyPartial: boolean; weekly?: WeeklyBuyerCohorts };
 
 const DAY = 86_400_000;
 const date = (at: number) => new Date(at).toISOString().slice(0, 10);
@@ -64,5 +73,28 @@ export function buyerChannelsFrom(sales: Sale[], currency: string, now: number, 
       unidentifiedOrders: own.filter((s) => !s.upsell && !emailOf(s) && date(s.created) >= cut).length,
     };
   };
-  return { d7: window(7), d30: window(30), d90: window(90), historyPartial };
+  const weeks = new Map<string, WeeklyBuyerCohort>();
+  for (const payments of people.values()) {
+    const orders = payments.filter((s) => !s.upsell).sort((a, b) => a.created - b.created || String(a.row.id ?? "").localeCompare(String(b.row.id ?? "")));
+    const first = orders[0];
+    if (!first || first.created < now - 180 * DAY) continue;
+    const monday = new Date(first.created);
+    monday.setUTCHours(0, 0, 0, 0);
+    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
+    const week = date(monday.getTime());
+    const row = weeks.get(week) ?? { week, buyers: 0, observations: { 7: { eligible: 0, repeated: 0 }, 30: { eligible: 0, repeated: 0 }, 60: { eligible: 0, repeated: 0 }, 90: { eligible: 0, repeated: 0 } } };
+    row.buyers += 1;
+    for (const age of COHORT_AGES) {
+      if (now - first.created < age * DAY) continue;
+      row.observations[age].eligible += 1;
+      if (orders.slice(1).some((sale) => sale.created <= first.created + age * DAY)) row.observations[age].repeated += 1;
+    }
+    weeks.set(week, row);
+  }
+  const weekly: WeeklyBuyerCohorts = {
+    rows: [...weeks.values()].sort((a, b) => b.week.localeCompare(a.week)),
+    unidentifiedOrders: own.filter((s) => !s.upsell && !emailOf(s) && s.created >= now - 180 * DAY).length,
+    asOf: new Date(now).toISOString(),
+  };
+  return { d7: window(7), d30: window(30), d90: window(90), historyPartial, weekly };
 }

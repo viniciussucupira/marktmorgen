@@ -77,6 +77,15 @@ export function channelsTool(data: StatsData, w: Window) {
       note: "First purchase observed in up to 180 days; not lifetime acquisition. Renewals are not repurchases. Revenue is gross; the 30-day rate uses only buyers observed for 30 days.",
       channels: data.buyerChannels[w].rows.map((c) => ({ ...c })),
     } : null,
+    ...(known && data.buyerChannels?.weekly ? { weekly_repurchase_cohorts: {
+      as_of_utc: data.buyerChannels.weekly.asOf,
+      history_partial: data.buyerChannels.historyPartial,
+      unidentified_orders: data.buyerChannels.weekly.unidentifiedOrders,
+      note: "UTC first observed purchase weeks from up to 180 days of history, independent of the selected window. Cumulative repurchases within 7/30/60/90 days, not product activity retention or lifetime acquisition. Only buyers observed for the full period enter the denominator. Null rate means no eligible buyers; renewals and one-click extras do not count. Small groups fluctuate; partial history may miss purchases.",
+      weeks: data.buyerChannels.weekly.rows.map((row) => ({ week: row.week, buyers: row.buyers,
+        periods: Object.entries(row.observations).map(([days, cell]) => ({ days: Number(days), eligible: cell.eligible, repeated: cell.repeated, percent: cell.eligible ? Math.round(cell.repeated / cell.eligible * 100) : null })),
+      })),
+    } } : {}),
     channels: (data.channels?.[w] ?? []).map((c) => ({
       channel: c.source,
       visits: c.visits,
