@@ -140,6 +140,7 @@ const KIND_ICONS: Record<BlockKind, IconName> = {
   feature: "layout",
   product: "basket",
   quotes: "quote",
+  form: "list",
 };
 
 /** A moment in seconds as the date-and-time field holds it, in the creator's own time zone. */
@@ -266,7 +267,7 @@ export function PageEditor({
    * its own place, and none of what belongs to a product — tests, a buy box,
    * a draft written from the product, what visitors to it did.
    */
-  site?: { id: string; kinds: readonly BlockKind[] };
+  site?: { id: string; kinds: readonly BlockKind[]; forms?: { id: string; name: string }[] };
 }) {
   const router = useRouter();
   const [drafts, setDrafts] = useState<Draft[]>(() => toDrafts(initial));
@@ -506,7 +507,7 @@ export function PageEditor({
   useLeaveGuard(dirty && !busy);
   const hasHero = drafts[0]?.block.kind === "hero";
   const hasReviews = drafts.some((d) => d.block.kind === "reviews");
-  const addable = BLOCK_KINDS.filter((k) => (site ? site.kinds.includes(k.kind) : true) && (k.kind === "hero" ? !hasHero : k.kind === "reviews" ? !hasReviews : true));
+  const addable = BLOCK_KINDS.filter((k) => (site ? site.kinds.includes(k.kind) : k.kind !== "form") && (k.kind === "hero" ? !hasHero : k.kind === "reviews" ? !hasReviews : true));
 
   function change(index: number, patch: Partial<PageBlock>) {
     setDrafts((all) => all.map((d, i) => (i === index ? { ...d, block: { ...d.block, ...patch } as PageBlock } : d)));
@@ -1462,6 +1463,39 @@ export function PageEditor({
           </div>
         );
       }
+      case "form": {
+        const forms = site?.forms ?? [];
+        const known = forms.some((f) => f.id === block.form);
+        return (
+          <div className="space-y-4">
+            {forms.length ? (
+              field(
+                `${base}-f`,
+                "Form",
+                <select id={`${base}-f`} className="field" value={known ? block.form : ""} onChange={(e) => change(index, { form: e.target.value })}>
+                  <option value="">Choose one of your forms</option>
+                  {forms.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>,
+              )
+            ) : (
+              <p className="notice notice-warn text-sm">You have no forms yet. Make one under Forms in your studio, then choose it here.</p>
+            )}
+            {block.form && !known ? (
+              <p className="notice notice-error text-sm" role="status">
+                The form chosen before was deleted, so nothing is shown here. Choose another.
+              </p>
+            ) : null}
+            {field(`${base}-h`, "Heading (optional)", <input id={`${base}-h`} className="field" maxLength={MAX_HEADING} value={block.heading} placeholder="A few questions first" onChange={(e) => change(index, { heading: e.target.value })} />)}
+            <p className="text-xs text-ink-soft">
+              The questions are the form&apos;s, and so is what a person reads after sending it. On a page that is a step of a funnel, sending it leads on to the next step, after the result when it is a quiz.
+            </p>
+          </div>
+        );
+      }
       case "facts": {
         const chosen = new Set(block.show);
         return (
@@ -1595,6 +1629,10 @@ export function PageEditor({
       }
       case "quotes":
         return `${block.heading ? `${block.heading} · ` : ""}${block.items.length} said elsewhere`;
+      case "form": {
+        const chosen = site?.forms?.find((f) => f.id === block.form);
+        return `${block.heading ? `${block.heading} · ` : ""}${chosen ? chosen.name : "No form chosen yet"}`;
+      }
       case "facts": {
         const live = block.show.filter((key) => facts[key]).length;
         return `${block.heading ? `${block.heading} · ` : ""}${live} ${live === 1 ? "number" : "numbers"} shown now`;

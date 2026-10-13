@@ -101,7 +101,7 @@ async function main(): Promise<void> {
   is("no room for its pages", crowded.error, "pages_full");
   is("a kind that is not one", (await (await send({ action: "from-type", type: "summit", products: {} })).json()).error, "type");
   is("a call asked for and a paid product given", (await (await send({ action: "from-type", type: "book", products: { book: "nope" } })).json()).error, "slot_missing");
-  is("the call step of an application takes only a call", slotProblem(choicesOf(funnelType("application")!).find((s) => s.key === "call")!, { free: false, call: false }), "call");
+  is("an application asks for no product: its page asks the questions", choicesOf(funnelType("application")!).length, 0);
   done();
 }
 

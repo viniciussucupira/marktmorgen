@@ -66,6 +66,8 @@ export const RESERVED_SLUGS = new Set([
   // A store's map and its crawler rules (lib/store-sitemap.ts), served as sitemap.xml and robots.txt.
   "store-sitemap",
   "store-robots",
+  // What a person sees after sending a form (lib/forms.ts).
+  "form",
   "affiliates",
   "app-icon",
   "blog",
@@ -156,6 +158,8 @@ export const SITE_KINDS: readonly BlockKind[] = [
   "product",
   "countdown",
   "cta",
+  // A form, survey or quiz (lib/forms.ts): asked on the store's own pages only, where it can lead a funnel on.
+  "form",
 ];
 
 /** The key a page's blocks are kept under, beside the products' (lib/sales-page-store.ts). */

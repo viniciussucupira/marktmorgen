@@ -9,6 +9,8 @@ import { type Piece, aboutBlocks } from "@/lib/product-about";
 import { CELL_NO, CELL_YES, type CtaBlock, type HeroBlock, type PageBlock, type PageStyle, bandsOf, quoteHost } from "@/lib/sales-page";
 import { blockWords } from "@/lib/buyer-words/blocks";
 import type { PageFacts } from "@/lib/page-facts";
+import { MAX_LONG_ANSWER, MAX_SHORT_ANSWER, type FormDef, type FormField } from "@/lib/forms";
+import { formWords } from "@/lib/buyer-words/form";
 
 /**
  * The blocks of a product's page, drawn (lib/sales-page.ts says what each is).
@@ -53,6 +55,11 @@ export type BlockContext = {
   facts?: PageFacts;
   /** The store's other products a page may show as a card (lib/sales-page.ts, ProductBlock), by id. */
   featured?: Record<string, FeaturedCard>;
+  /** The store's forms a page may ask (lib/forms.ts, FormBlock), by id, and where their answers go. */
+  forms?: Record<string, FormDef>;
+  formTarget?: { handle: string; page: string; funnel: string; listOpen: boolean };
+  /** What happened to a form just sent from this page, to say above it. */
+  formNotice?: { form: string; status: string };
 };
 
 /** Another product, as its card on a sales page shows it: today's name, picture and price. */
@@ -622,6 +629,11 @@ export function BlockView({ block, ctx, reviews }: { block: PageBlock; ctx: Bloc
         </section>
       );
     }
+    case "form": {
+      const form = block.form ? ctx.forms?.[block.form] : undefined;
+      if (!form) return null;
+      return <FormView block={block} form={form} ctx={ctx} />;
+    }
     case "facts": {
       // Only numbers the store counted, and only those the creator chose; none, and the block is not drawn.
       const shown = block.show.map((key) => ctx.facts?.[key]).filter((fact): fact is NonNullable<typeof fact> => Boolean(fact));
@@ -714,3 +726,107 @@ export function PageSections({
     </>
   );
 }
+
+/** One question of a form, drawn as the browser's own controls, so it works with JavaScript off. */
+function FormQuestion({ field, form, ctx }: { field: FormField; form: FormDef; ctx: BlockContext }) {
+  const w = formWords(ctx.lang ?? DEFAULT_LANGUAGE);
+  const id = `f-${form.id}-${field.id}`;
+  const name = `q_${field.id}`;
+  const label = (
+    <>
+      {field.label}
+      {field.required ? <span className="st-muted text-sm font-normal">{` (${w.required})`}</span> : null}
+    </>
+  );
+  if (field.type === "choice" || field.type === "choices" || field.type === "scale") {
+    const options = field.type === "scale" ? Array.from({ length: 10 }, (_, i) => ({ id: String(i + 1), label: String(i + 1) })) : field.options;
+    const many = field.type === "choices";
+    return (
+      <fieldset className="sp-form-field">
+        <legend className="st-label">{label}</legend>
+        <div className={field.type === "scale" ? "sp-form-scale" : "sp-form-options"}>
+          {options.map((option, i) => (
+            <label key={option.id} className="sp-form-option">
+              <input
+                type={many ? "checkbox" : "radio"}
+                name={name}
+                value={option.id}
+                required={!many && field.required && i === 0}
+                disabled={ctx.preview}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
+  return (
+    <div className="sp-form-field">
+      <label htmlFor={id} className="st-label">
+        {label}
+      </label>
+      {field.type === "long" ? (
+        <textarea id={id} name={name} rows={4} maxLength={MAX_LONG_ANSWER} required={field.required} disabled={ctx.preview} className="st-field" />
+      ) : (
+        <input
+          id={id}
+          name={name}
+          type={field.type === "email" ? "email" : "text"}
+          autoComplete={field.type === "email" ? "email" : "off"}
+          maxLength={field.type === "email" ? 254 : MAX_SHORT_ANSWER}
+          required={field.required}
+          disabled={ctx.preview}
+          className="st-field"
+        />
+      )}
+    </div>
+  );
+}
+
+/** A form, survey or quiz on one of the store's own pages (lib/forms.ts). */
+function FormView({ block, form, ctx }: { block: Extract<PageBlock, { kind: "form" }>; form: FormDef; ctx: BlockContext }) {
+  const w = formWords(ctx.lang ?? DEFAULT_LANGUAGE);
+  const notice = ctx.formNotice?.form === form.id ? ctx.formNotice.status : "";
+  const problem = notice && notice in w.errors ? w.errors[notice as keyof typeof w.errors] : "";
+  const target = ctx.formTarget;
+  return (
+    <section className="sp-section" id={`form-${form.id}`}>
+      <Heading text={block.heading} />
+      {problem ? (
+        <p className="notice notice-error mt-4" role="alert">
+          {problem}
+        </p>
+      ) : null}
+      <form action="/api/store/form" method="post" className={`sp-form ${block.heading ? "mt-5" : ""}`}>
+        {target ? (
+          <>
+            <input type="hidden" name="handle" value={target.handle} />
+            <input type="hidden" name="page" value={target.page} />
+            {target.funnel ? <input type="hidden" name="f" value={target.funnel} /> : null}
+          </>
+        ) : null}
+        <input type="hidden" name="form" value={form.id} />
+        <div aria-hidden="true" className="hidden">
+          <label>
+            Leave this empty
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
+        {form.fields.map((field) => (
+          <FormQuestion key={field.id} field={field} form={form} ctx={ctx} />
+        ))}
+        {form.offerList && target?.listOpen ? (
+          <label className="sp-form-option">
+            <input type="checkbox" name="consent" value="yes" disabled={ctx.preview} />
+            <span className="text-sm">{w.hearFrom(ctx.storeName)}</span>
+          </label>
+        ) : null}
+        <button type={ctx.preview ? "button" : "submit"} className="btn st-btn btn-lg mt-2 self-start">
+          {form.button || w.send}
+        </button>
+      </form>
+    </section>
+  );
+}
+

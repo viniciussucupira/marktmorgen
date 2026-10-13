@@ -2607,6 +2607,51 @@ form:has(input[name="pay"][value="plan"]:checked):has(input[data-bump="0"]:check
   outline-color: #5a36ee;
 }
 /* Another product, as a card (lib/sales-page.ts, ProductBlock). */
+/* A form, survey or quiz on a store's own page (components/sales-blocks.tsx, FormView). */
+.sp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.sp-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.sp-form-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+.sp-form-scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+.sp-form-scale .sp-form-option {
+  min-width: 2.75rem;
+  justify-content: center;
+}
+.sp-form-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--st-text);
+}
+.sp-form-option input {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
+  accent-color: var(--st-accent-text);
+}
 .sp-product {
   display: flex;
   align-items: stretch;

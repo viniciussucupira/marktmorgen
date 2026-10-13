@@ -39,7 +39,18 @@ type Grant = { s: string; h: string; e: string; at: string; k?: boolean };
  * can fill in must never be a way to send somebody an email.
  */
 export function joinOpen(store: Store): boolean {
-  return !isHouseStore(store) && !store.suspended && store.join.on && Boolean(store.listId) && Boolean(store.statsId) && isPaidUp(store) && isRedisConfigured() && isSenderConfigured();
+  return store.join.on && listOpen(store);
+}
+
+/**
+ * Whether an address can be asked to join this store's list at all: a list
+ * to join, a subscription in good standing and email to send with. The
+ * sign-up box needs this and its switch; a form that offers the list
+ * (lib/forms.ts) needs this alone, because offering it is the form's own
+ * setting.
+ */
+export function listOpen(store: Store): boolean {
+  return !isHouseStore(store) && !store.suspended && Boolean(store.listId) && Boolean(store.statsId) && isPaidUp(store) && isRedisConfigured() && isSenderConfigured();
 }
 
 function sender(store: Store): string {
@@ -52,11 +63,11 @@ function sender(store: Store): string {
 export type JoinResult = "sent" | "email" | "limited" | "closed" | "error";
 
 /** Emails a button to confirm. Nothing is added to the list here. */
-export async function askToJoin(input: { store: Store; email: string; clicks?: boolean; ip: string; origin: string }): Promise<JoinResult> {
+export async function askToJoin(input: { store: Store; email: string; clicks?: boolean; ip: string; origin: string; fromForm?: boolean }): Promise<JoinResult> {
   const { store, ip, origin } = input;
   const raw = input.email.trim();
   if (!raw || raw.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(raw)) return "email";
-  if (!joinOpen(store) || !store.statsId) return "closed";
+  if (!(input.fromForm ? listOpen(store) : joinOpen(store)) || !store.statsId) return "closed";
   const email = normaliseEmail(raw);
   if (!(await withinLimit("join-ip", `${store.statsId}:${ip}`, 10, 3_600))) return "limited";
   if (!(await withinLimit("join-address", sha(email), 5, 3_600))) return "limited";

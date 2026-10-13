@@ -10,6 +10,8 @@ import { emptyBlock, parsePage } from "@/lib/sales-page";
 import { writePage } from "@/lib/sales-page-store";
 import { MAX_SITE_PAGES, type SitePage, siteKey, slugProblem } from "@/lib/site-page-rules";
 import { choicesOf, freeSlug, funnelType, pagesOf, slotProblem } from "@/lib/funnel-types";
+import { newFormId, parseForm } from "@/lib/forms";
+import { writeForm } from "@/lib/form-store";
 
 /**
  * Saves or removes one funnel of pages (lib/page-funnel.ts).
@@ -81,6 +83,18 @@ export async function POST(request: NextRequest) {
           const blocks = slot.blocks.map((kind) => emptyBlock(kind));
           const hero = blocks[0];
           if (hero?.kind === "hero") Object.assign(hero, { headline: slot.title, media: "none" });
+          // The form the page asks, made with it: questions only, nothing claimed (lib/funnel-types.ts).
+          const asks = blocks.find((block) => block.kind === "form");
+          if (slot.form && asks?.kind === "form") {
+            const form = parseForm({
+              id: newFormId(),
+              name: `${slot.form.name}: ${name}`.slice(0, 60),
+              fields: slot.form.fields.map((field) => ({ id: newFormId(6), options: [], ...field })),
+              offerList: slot.form.fields.some((field) => field.type === "email"),
+              updatedAt: Math.floor(Date.now() / 1000),
+            });
+            if (form && (await writeForm(saved.store.statsId, form))) asks.form = form.id;
+          }
           await writePage(saved.store.statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true });
         }
       }

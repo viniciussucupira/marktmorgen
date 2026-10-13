@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
     if (Array.isArray(raw.blocks) && raw.blocks.length > MAX_BLOCKS) return Response.json({ ok: false, error: "too_many" }, { status: 400 });
     const problem = pageProblem(raw, page);
     if (problem) return Response.json({ ok: false, error: problem }, { status: 400 });
+    // A form is asked on the store's own pages, where it can lead a funnel on; a product's page has its own checkout.
+    if (page.blocks.some((block) => block.kind === "form")) return Response.json({ ok: false, error: "kind" }, { status: 400 });
     if (oversized(page)) return Response.json({ ok: false, error: "too_big" }, { status: 400 });
     // What is shown after a free sign-up is another product of this store,
     // one that costs money; a paid product's page shows nothing after.
