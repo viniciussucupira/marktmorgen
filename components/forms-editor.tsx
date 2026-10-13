@@ -26,6 +26,7 @@ import {
   type FormField,
   type FormOutcome,
   type FormResponse,
+  END,
   answerText,
   newFormId,
 } from "@/lib/forms";
@@ -83,8 +84,13 @@ export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[
       if (!d) return d;
       const to = i + by;
       if (to < 0 || to >= d.fields.length) return d;
-      const fields = d.fields.slice();
-      [fields[i], fields[to]] = [fields[to], fields[i]];
+      const swapped = d.fields.slice();
+      [swapped[i], swapped[to]] = [swapped[to], swapped[i]];
+      // An answer leads only forward: one that now points back goes on to the next question instead.
+      const fields = swapped.map((f, at) => ({
+        ...f,
+        options: f.options.map((o) => (o.next && o.next !== END && swapped.findIndex((x) => x.id === o.next) <= at + 1 ? { ...o, next: "" } : o)),
+      }));
       return { ...d, fields };
     });
   }
@@ -228,6 +234,10 @@ export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[
           </label>
 
           <p className="field-label mt-6">Questions, in order</p>
+          <p className="mt-1 text-xs text-ink-soft">
+            On a one-choice question, each answer can lead on to a later question or end the form there. The questions an
+            answer skips are hidden from that person, not asked and not kept.
+          </p>
           <ol className="mt-2 space-y-4">
             {draft.fields.map((field, i) => (
               <li key={field.id} className="rounded-2xl bg-paper p-4 ring-1 ring-line">
@@ -280,6 +290,22 @@ export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[
                                 {o.title || `Result ${n + 1}`}
                               </option>
                             ))}
+                          </select>
+                        ) : null}
+                        {field.type === "choice" ? (
+                          <select
+                            className="field w-auto"
+                            aria-label={`After option ${k + 1}`}
+                            value={option.next ?? ""}
+                            onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, next: e.target.value } : o)) })}
+                          >
+                            <option value="">Then the next question</option>
+                            {draft.fields.slice(i + 2).map((f, n) => (
+                              <option key={f.id} value={f.id}>
+                                {`Then skip to question ${i + 3 + n}${f.label ? `: ${f.label.slice(0, 40)}` : ""}`}
+                              </option>
+                            ))}
+                            <option value={END}>{draft.outcomes.length ? "Then end, with its result" : "Then end the form"}</option>
                           </select>
                         ) : null}
                         <button

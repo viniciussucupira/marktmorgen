@@ -3009,6 +3009,45 @@ try {
   }
 
   await keepSmall();
+  part("A form whose questions branch: the questions follow the answers, and what is skipped is not kept");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const saved = await post("/api/store/forms", {
+      form: {
+        name: "Coaching application",
+        fields: [
+          { id: "q1aaaa", type: "choice", label: "Have you sold online before?", required: true, options: [{ id: "yes001", label: "Yes", outcome: "", next: "q3cccc" }, { id: "no0001", label: "No", outcome: "" }, { id: "skip01", label: "Just looking", outcome: "", next: "end" }] },
+          { id: "q2bbbb", type: "short", label: "What would you sell?", required: true },
+          { id: "q3cccc", type: "short", label: "What do you sell now?", required: true },
+        ],
+        outcomes: [],
+        doneHeading: "Thank you",
+        doneBody: "",
+      },
+    });
+    const formId = saved.form?.id ?? "";
+    is("saved with its branches", [saved.ok, saved.form?.fields?.[0]?.options?.map((o) => o.next ?? "")], [true, ["q3cccc", "", "end"]]);
+    const pageId = (await post("/api/store/site-page", { action: "add", title: "Apply", slug: "apply" })).id ?? "";
+    const pageSaved = await post("/api/store/site-page", { action: "save", id: pageId, page: { blocks: [{ id: "apply01", kind: "form", heading: "Apply", form: formId }], hidden: false } });
+    is("placed on a page of the store's own", pageSaved.ok, true);
+    await open(page, `${LOCAL}/@localshop/apply`);
+    const shown = async () => page.locator("[data-field]").evaluateAll((all) => all.filter((el) => !el.hidden).map((el) => el.getAttribute("data-field")));
+    is("before any answer, every question", await shown(), ["q1aaaa", "q2bbbb", "q3cccc"]);
+    await page.getByRole("radio", { name: "Yes" }).check();
+    is("yes skips the second question", await shown(), ["q1aaaa", "q3cccc"]);
+    await page.getByRole("radio", { name: "Just looking" }).check();
+    is("just looking ends the form there", await shown(), ["q1aaaa"]);
+    await page.getByRole("radio", { name: "Yes" }).check();
+    await page.getByLabel("What do you sell now?").fill("Cookbooks");
+    await Promise.all([page.waitForLoadState("networkidle"), page.locator(`#form-${formId} button[type=submit]`).click()]);
+    const csv = await studio.evaluate(async (id) => (await fetch(`/api/store/forms/export?id=${id}`)).text(), formId);
+    is("sent: the answers asked are kept, the skipped one is empty", csv.split("\r\n")[1]?.split(",").slice(1, 4), ["Yes", "", "Cookbooks"]);
+    await post("/api/store/site-page", { action: "remove", id: pageId });
+    await post("/api/store/forms", { action: "remove", id: formId });
+  }
+
+  await keepSmall();
   part("A page of the store's own, in its menu and on its address");
   {
     await open(studio, `${LOCAL}/studio/site?store=${fresh}`);

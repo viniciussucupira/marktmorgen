@@ -13,6 +13,15 @@
  * product of the creator's when they chose one for it. That is a sum anyone
  * could check by hand, written down here; nothing scores a person in secret.
  *
+ * Branching (added 13 October 2026, as ClickFunnels' survey workflows do):
+ * an answer to a one-choice question may lead on to a later question,
+ * skipping those between, or end the form there. Only forward, so nobody is
+ * ever sent round in a circle. Questions a person's answers skip are not
+ * asked of them, need no answer and keep none; and an answer that ends a
+ * quiz decides its result when it points at one, since nothing after it was
+ * asked. With JavaScript off every question shows, and the same rules are
+ * applied when the answers arrive (pathOf).
+ *
  * What it never does:
  *
  *   - Put anybody on the creator's list for answering. A form may offer a box
@@ -56,12 +65,22 @@ export const FIELD_TYPES: { type: FieldType; label: string; hint: string }[] = [
   { type: "short", label: "Short answer", hint: "One line: a name, a website, a number." },
   { type: "long", label: "Long answer", hint: "A few paragraphs: what they want, where they are stuck." },
   { type: "email", label: "Email address", hint: "Checked as an address. Needed to offer them your list." },
-  { type: "choice", label: "One choice", hint: `Up to ${MAX_OPTIONS} options; they pick one. In a quiz, each option can point at a result.` },
+  { type: "choice", label: "One choice", hint: `Up to ${MAX_OPTIONS} options; they pick one. Each option can lead to a later question or end the form, and in a quiz point at a result.` },
   { type: "choices", label: "Several choices", hint: `Up to ${MAX_OPTIONS} options; they pick any.` },
   { type: "scale", label: "Scale of 1 to 10", hint: "A number from 1 to 10." },
 ];
 
-export type FormOption = { id: string; label: string; /** In a quiz: the result this answer points at, or "". */ outcome: string };
+export type FormOption = {
+  id: string;
+  label: string;
+  /** In a quiz: the result this answer points at, or "". */
+  outcome: string;
+  /** Where this answer leads, on a one-choice question: "" for the next question, a later question's id, or END. */
+  next?: string;
+};
+
+/** An answer that ends the form there. */
+export const END = "end";
 
 export type FormField = { id: string; type: FieldType; label: string; required: boolean; options: FormOption[] };
 
@@ -154,7 +173,8 @@ export function parseForm(raw: unknown): FormDef | null {
         const pid = typeof opt.id === "string" && PIECE_ID.test(opt.id) ? opt.id : "";
         const text = oneLine(opt.label, MAX_OPTION);
         if (!pid || !text || options.some((o) => o.id === pid) || ids.has(pid)) continue;
-        options.push({ id: pid, label: text, outcome: typeof opt.outcome === "string" && results.has(opt.outcome) ? opt.outcome : "" });
+        const next = row.type === "choice" && typeof opt.next === "string" && (opt.next === END || PIECE_ID.test(opt.next)) ? opt.next : "";
+        options.push({ id: pid, label: text, outcome: typeof opt.outcome === "string" && results.has(opt.outcome) ? opt.outcome : "", ...(next ? { next } : {}) });
       }
       // A choice with fewer than two options is not a choice.
       if (options.length < 2) continue;
@@ -164,6 +184,14 @@ export function parseForm(raw: unknown): FormDef | null {
     fields.push({ id: fid, type: row.type, label, required: row.required === true, options });
   }
   if (!fields.length) return null;
+  // An answer leads only forward, to a question that is still there: anything else goes on to the next one.
+  fields.forEach((field, at) => {
+    for (const option of field.options) {
+      if (!option.next || option.next === END) continue;
+      const to = fields.findIndex((f) => f.id === option.next);
+      if (to <= at) delete option.next;
+    }
+  });
 
   const offerList = value.offerList === true && fields.some((f) => f.type === "email");
   const updatedAt = typeof value.updatedAt === "number" && Number.isInteger(value.updatedAt) && value.updatedAt > 0 ? value.updatedAt : 0;
@@ -196,10 +224,37 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
  * returns every value sent under a name (a form's own way of sending several
  * choices).
  */
+/**
+ * The questions a person is asked, in order, given the answers to the
+ * one-choice questions so far: each answer that leads somewhere is followed,
+ * forward only, and one that ends the form stops it. Pure, and the same in
+ * the browser and on the server.
+ */
+export function pathOf(form: FormDef, choiceOf: (fieldId: string) => string | undefined): FormField[] {
+  const path: FormField[] = [];
+  let at = 0;
+  while (at < form.fields.length) {
+    const field = form.fields[at];
+    path.push(field);
+    const picked = field.type === "choice" ? field.options.find((o) => o.id === choiceOf(field.id)) : undefined;
+    if (picked?.next === END) break;
+    const to = picked?.next ? form.fields.findIndex((f) => f.id === picked.next) : -1;
+    at = to > at ? to : at + 1;
+  }
+  return path;
+}
+
+/** Whether any answer of a form leads somewhere other than the next question. */
+export function branches(form: FormDef): boolean {
+  return form.fields.some((f) => f.options.some((o) => Boolean(o.next)));
+}
+
 export function readAnswers(form: FormDef, get: (name: string) => string[]): ReadAnswers {
   const answers: Answers = {};
   let email = "";
-  for (const field of form.fields) {
+  // Only the questions this person's own answers lead through: the others were not asked.
+  const asked = pathOf(form, (id) => get(`q_${id}`).map((v) => v.trim()).find(Boolean));
+  for (const field of asked) {
     const sent = get(`q_${field.id}`).map((v) => v.trim()).filter(Boolean);
     if (!sent.length) {
       if (field.required) return { ok: false, error: "required", field: field.id };
@@ -243,12 +298,18 @@ export function readAnswers(form: FormDef, get: (name: string) => string[]): Rea
 }
 
 /**
- * A quiz's result: the one the most chosen answers point at, the first of
- * them in the creator's order on a tie. Null for a form with no results, or
- * when no answer pointed anywhere.
+ * A quiz's result: the one an answer that ended the quiz points at, or else
+ * the one the most chosen answers point at, the first of them in the
+ * creator's order on a tie. Null for a form with no results, or when no
+ * answer pointed anywhere.
  */
 export function outcomeOf(form: FormDef, answers: Answers): FormOutcome | null {
   if (!form.outcomes.length) return null;
+  // An answer that ended the quiz decides it, when it points at a result: nothing after it was asked.
+  const path = pathOf(form, (id) => (typeof answers[id] === "string" ? (answers[id] as string) : undefined));
+  const last = path[path.length - 1];
+  const ending = last?.type === "choice" ? last.options.find((o) => o.id === answers[last.id] && o.next === END && o.outcome) : undefined;
+  if (ending) return form.outcomes.find((o) => o.id === ending.outcome) ?? null;
   const votes = new Map<string, number>();
   for (const field of form.fields) {
     const given = answers[field.id];
