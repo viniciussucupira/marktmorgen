@@ -164,7 +164,12 @@ export default async function BlogPostPage({
 
         {/* The article's own colours, carried over from the card that led here. */}
         <div className="container-page -mt-8 sm:-mt-10">
-          <PostCover post={post} size="md" className="rounded-[var(--r-xl)] shadow-[var(--shadow-md)]" />
+          <PostCover
+            post={post}
+            size="md"
+            headings={headings.map((h) => h.text)}
+            className="rounded-[var(--r-xl)] shadow-[var(--shadow-md)]"
+          />
         </div>
 
         <div className="container-page py-12 sm:py-16 lg:grid lg:grid-cols-[15rem_minmax(0,46rem)] lg:justify-center lg:gap-14">
@@ -196,7 +201,7 @@ export default async function BlogPostPage({
 
           <aside className="surface-night on-dark mt-16 overflow-hidden rounded-[var(--r-xl)] p-8 sm:p-10">
             <h2 className="t-h3 text-[1.6rem] text-white">See it working before you believe us</h2>
-            <p className="mt-3 max-w-lg text-white/75">
+            <p className="mt-3 max-w-lg text-white/80">
               The demo store is a real Stripe checkout with a test card. Buy the file, watch it arrive, then decide.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">

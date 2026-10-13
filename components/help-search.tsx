@@ -44,31 +44,63 @@ export function HelpSearch() {
     return () => window.removeEventListener("hashchange", openFromHash);
   }, []);
 
+  const search = (value: string) => {
+    setQuery(value);
+    setShown(narrow(value));
+  };
+
   return (
-    <div className="mt-8 max-w-xl">
+    <div className="mt-8 max-w-2xl">
       <label htmlFor="help-search" className="sr-only">
         Search the help centre
       </label>
-      <input
-        id="help-search"
-        type="search"
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setShown(narrow(e.target.value));
-        }}
-        placeholder="Search: refunds, courses, domain, Stripe…"
-        aria-describedby={hint}
-        autoComplete="off"
-        className="field h-12 w-full bg-white text-ink"
-      />
-      <p id={hint} className="mt-2 text-sm text-white/65" aria-live="polite">
+      {/*
+        The field is the first thing on the page for a reason: most people
+        arrive with one question, not with an appetite for forty answers. It
+        is set at the size of a primary control rather than a form input, and
+        the magnifier is decorative — the label and the input type already say
+        what it is.
+      */}
+      <div className="relative">
+        <span aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-mute">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.2-3.2" />
+          </svg>
+        </span>
+        <input
+          id="help-search"
+          type="search"
+          value={query}
+          onChange={(e) => search(e.target.value)}
+          placeholder="Search: refunds, courses, domain, Stripe…"
+          aria-describedby={hint}
+          autoComplete="off"
+          className="field field-search w-full bg-white shadow-[var(--shadow-sm)]"
+        />
+      </div>
+      <p id={hint} className="mt-3 text-sm text-ink-mute" aria-live="polite">
         {shown === null
           ? "Type a word and the answers that mention it open below."
           : shown === 0
             ? "No answer mentions that yet. Write to us at the bottom of the page and a person answers."
             : `${shown} ${shown === 1 ? "answer" : "answers"} below.`}
       </p>
+
+      {/* The questions people actually arrive with, one tap away. */}
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-ink-mute">Asked most:</span>
+        {["refund", "Stripe", "trial", "course", "domain"].map((word) => (
+          <button
+            key={word}
+            type="button"
+            onClick={() => search(word)}
+            className="chip transition-colors hover:border-line-strong hover:text-ink"
+          >
+            {word}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

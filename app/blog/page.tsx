@@ -27,7 +27,7 @@ export default function BlogIndexPage() {
       <SiteNav />
 
       <main id="content" className="flex-1">
-        <section className="border-b border-line bg-white">
+        <section className="surface-dawn border-b border-line">
           <div className="container-page py-14 sm:py-20">
             <p className="eyebrow">The Nimbus Journal</p>
             <h1 className="t-h1 balance mt-4 max-w-3xl">
@@ -36,6 +36,13 @@ export default function BlogIndexPage() {
             <p className="t-lead mt-6 max-w-2xl text-ink-soft">
               No hacks, no invented case studies. What to charge, what the page has to say, where the money lands, and
               what each platform really costs you on a sale.
+            </p>
+            <p className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-mute">
+              <span>{`${postsSorted().length} articles`}</span>
+              <span aria-hidden="true">·</span>
+              <span>{`Written by us, latest ${formatPostDate(featured.date)}`}</span>
+              <span aria-hidden="true">·</span>
+              <span>Every figure carries its source</span>
             </p>
           </div>
         </section>
@@ -46,7 +53,7 @@ export default function BlogIndexPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-3 text-[0.8125rem]">
                   <span className="eyebrow">Start here</span>
-                  <span className="text-white/55">
+                  <span className="text-white/70">
                     {featured.category} · {formatPostDate(featured.date)} · {featured.readMinutes} min read
                   </span>
                 </div>
@@ -55,7 +62,7 @@ export default function BlogIndexPage() {
                     {featured.title}
                   </Link>
                 </h2>
-                <p className="mt-4 max-w-xl text-white/75">{featured.excerpt}</p>
+                <p className="mt-4 max-w-xl text-white/80">{featured.excerpt}</p>
                 <p className="link-arrow on-dark mt-7">
                   Read the article
                   <span aria-hidden="true" className="arrow">
@@ -64,7 +71,7 @@ export default function BlogIndexPage() {
                 </p>
               </div>
               <ul className="panel-dark relative space-y-3 p-6 text-[0.9375rem] text-white/80">
-                <li className="text-[0.8125rem] font-semibold uppercase tracking-[0.14em] text-white/50">Inside</li>
+                <li className="text-[0.8125rem] font-semibold uppercase tracking-[0.14em] text-white/70">Inside</li>
                 {[
                   "What to sell when you have never sold anything",
                   "The price that makes the decision easy",

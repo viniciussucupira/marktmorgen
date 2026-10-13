@@ -80,18 +80,56 @@ export function HeroFlow() {
   const paid = step === 2;
 
   return (
-    <div className="relative mx-auto w-full max-w-[34rem]">
-      <div className="relative h-[30rem] sm:h-[31rem]">
+    <div className="relative mx-auto w-full max-w-[35rem]">
+      {/*
+        Two compositions, not one squeezed.
+        On a wide screen the three cards overlap in depth, which is what makes
+        it read as one movement. On a phone there is no depth to spend: the
+        same three pieces stack in the order they happen — the store, then
+        whichever card the current step is on, then where the money landed —
+        so nothing is laid over the phone it is meant to be explaining.
+      */}
+      <div className="flex flex-col items-center gap-4 sm:relative sm:block sm:h-[35rem]">
         {/* soft light behind the devices */}
         <div
           aria-hidden="true"
-          className="absolute left-1/2 top-1/2 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(124,92,255,0.45),transparent)] blur-2xl"
+          className="absolute left-[56%] top-[38%] h-[78%] w-[86%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(124,92,255,0.5),transparent)] blur-2xl"
         />
+        {/*
+          The thread the sale runs along. Two faint strokes from the store to
+          the checkout and from the checkout down to the delivery: enough to
+          read the three cards as one movement, far too faint to compete with
+          them. Hidden on a phone, where the cards are already stacked in the
+          order they happen.
+        */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-0 hidden h-full w-full sm:block"
+        >
+          <path
+            d="M34 26 C 52 22, 58 24, 70 30"
+            fill="none"
+            stroke="rgba(255,255,255,0.22)"
+            strokeWidth="0.35"
+            strokeDasharray="1.6 1.6"
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            d="M82 50 C 84 60, 80 64, 74 70"
+            fill="none"
+            stroke="rgba(255,255,255,0.22)"
+            strokeWidth="0.35"
+            strokeDasharray="1.6 1.6"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
 
         {/* the store, on a phone */}
-        <div className="absolute left-1/2 top-0 w-[16.5rem] -translate-x-1/2 sm:left-[2%] sm:w-[58%] sm:max-w-[17rem] sm:translate-x-0">
-          <div className="rounded-[2.1rem] bg-[#0a0820] p-[7px] shadow-[var(--shadow-device)] ring-1 ring-white/10">
-            <div className="overflow-hidden rounded-[1.7rem] bg-paper">
+        <div className="w-[15.5rem] sm:absolute sm:left-0 sm:top-0 sm:w-[54%] sm:max-w-[16.5rem]">
+          <div className="device">
+            <div className="device-screen">
               <div className="flex items-center justify-between px-4 pb-1 pt-2.5 text-[10px] font-semibold text-ink-mute">
                 <span>9:41</span>
                 <span className="rounded-[5px] bg-white px-1.5 py-0.5 text-[9px] text-ink-soft ring-1 ring-line">
@@ -105,6 +143,7 @@ export function HeroFlow() {
                     alt=""
                     width={40}
                     height={40}
+                    fetchPriority="high"
                     className="h-10 w-10 rounded-full bg-sand-deep object-cover"
                   />
                   <div className="min-w-0">
@@ -155,11 +194,19 @@ export function HeroFlow() {
           </div>
         </div>
 
+        {/*
+          The slot the step's card sits in on a phone. It keeps one height
+          whichever card is showing, so stepping through the sale does not
+          make the page under it jump. At 640px the wrapper stops existing
+          (`display: contents`) and both cards go back to being positioned
+          against the composition itself.
+        */}
+        <div className="flex min-h-[15.5rem] w-full max-w-[18rem] items-start justify-center sm:contents">
         {/* the Stripe checkout */}
         <div
-          className={`absolute left-1/2 top-[34%] w-[17rem] -translate-x-1/2 transition-all duration-700 [transition-timing-function:var(--ease)] sm:left-auto sm:right-0 sm:top-[9%] sm:w-[56%] sm:max-w-[16.5rem] sm:translate-x-0 ${
-            step === 1 ? "translate-y-0 opacity-100" : "max-sm:pointer-events-none max-sm:translate-y-6 max-sm:opacity-0"
-          } ${step === 0 ? "sm:translate-y-3 sm:opacity-60" : "sm:translate-y-0 sm:opacity-100"}`}
+          className={`w-[17rem] transition-all duration-700 [transition-timing-function:var(--ease)] sm:absolute sm:right-0 sm:top-[7%] sm:w-[54%] sm:max-w-[16.5rem] ${
+            step === 1 ? "opacity-100" : "hidden opacity-100 sm:block"
+          } ${step === 0 ? "sm:translate-y-3 sm:opacity-65" : "sm:translate-y-0 sm:opacity-100"}`}
           aria-hidden={step === 0}
         >
           <div className="rounded-[16px] bg-white p-3.5 text-ink shadow-[var(--shadow-lg)] ring-1 ring-black/5">
@@ -197,10 +244,12 @@ export function HeroFlow() {
           </div>
         </div>
 
-        {/* delivered, and where the money went */}
+        {/* delivered */}
         <div
-          className={`absolute bottom-[4%] left-1/2 w-[18rem] -translate-x-1/2 transition-all duration-700 [transition-timing-function:var(--ease)] sm:bottom-[5%] sm:left-auto sm:right-[2%] sm:w-[64%] sm:max-w-[19rem] sm:translate-x-0 ${
-            paid ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+          className={`w-[17rem] transition-all duration-700 [transition-timing-function:var(--ease)] sm:absolute sm:bottom-[5.25rem] sm:right-[3%] sm:w-[62%] sm:max-w-[18.5rem] ${
+            paid
+              ? "opacity-100 sm:translate-y-0"
+              : "hidden sm:block sm:pointer-events-none sm:translate-y-4 sm:opacity-0"
           }`}
           aria-hidden={!paid}
         >
@@ -228,30 +277,54 @@ export function HeroFlow() {
               </span>
             </div>
           </div>
-          <div className="mt-2 flex items-center justify-between gap-2 rounded-[12px] bg-[#0a0820] px-3 py-2 text-[11px] text-white ring-1 ring-white/10">
-            <span className="flex items-center gap-1.5 text-white/80">
-              <Icon name="bank" size={14} /> Your Stripe account
+        </div>
+
+        {/*
+          Where the money ended up, along the foot of the whole composition.
+          It is here from the first frame rather than arriving with the sale,
+          because it is the claim the page is making: the line is the
+          creator's own Stripe account, and the figure beside it is what the
+          platform took. The row fills as the sale completes.
+        */}
+        </div>
+
+        <div className="w-full max-w-[20rem] sm:absolute sm:inset-x-0 sm:bottom-0 sm:max-w-none">
+          <div className="flex items-center justify-between gap-3 rounded-[14px] border border-white/14 bg-[#05081a]/85 px-3.5 py-3 backdrop-blur-sm sm:px-4">
+            <span className="flex min-w-0 items-center gap-2.5">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-white/10 text-[#b9a8ff]">
+                <Icon name="bank" size={17} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[12px] font-semibold text-white">Your Stripe account</span>
+                <span className="block text-[10.5px] text-white/70">Nimbus takes $0.00</span>
+              </span>
             </span>
-            <span className="font-semibold">+$39.00 · Nimbus fee $0</span>
+            <span
+              className={`shrink-0 rounded-[9px] px-2.5 py-1.5 text-[13px] font-semibold tabular-nums transition-colors duration-700 ${
+                paid ? "bg-mint-soft text-mint-deep" : "bg-white/10 text-white/70"
+              }`}
+            >
+              {paid ? "+$39.00" : "$0.00"}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="mt-6 flex justify-center" role="group" aria-label="Steps of a sale">
-        <ol className="flex items-center gap-1 rounded-[12px] bg-white/[0.06] p-1 ring-1 ring-white/10">
+        <ol className="flex items-center gap-1 rounded-[12px] bg-white/[0.08] p-1 ring-1 ring-white/14">
           {FLOW.map((s, i) => (
             <li key={s.key}>
               <button
                 type="button"
                 onClick={() => choose(i)}
                 aria-pressed={step === i}
-                className={`flex h-9 items-center gap-1.5 rounded-[9px] px-3 text-[13px] font-medium transition-colors ${
-                  step === i ? "bg-white text-ink" : "text-white/70 hover:bg-white/10 hover:text-white"
+                className={`flex h-11 items-center gap-1.5 rounded-[9px] px-3 text-[13px] font-medium transition-colors sm:h-10 ${
+                  step === i ? "bg-white text-ink" : "text-white/80 hover:bg-white/12 hover:text-white"
                 }`}
               >
                 <span
                   className={`grid h-5 w-5 place-items-center rounded-full text-[11px] font-semibold ${
-                    step === i ? "bg-violet-brand text-white" : "bg-white/12 text-white/80"
+                    step === i ? "bg-violet-brand text-white" : "bg-white/15 text-white"
                   }`}
                 >
                   {i + 1}
@@ -294,32 +367,60 @@ const PRO_INCLUDED = [
 function PlanCard({
   name,
   tag,
+  bestFor,
   tier,
   perks,
   featured,
   cta,
+  yearly,
 }: {
   name: string;
   tag: string;
+  bestFor: string;
   tier: "creator" | "pro";
   perks: string[];
   featured: boolean;
   cta: string;
+  yearly: boolean;
 }) {
   const { month, year } = PLAN_PRICES[tier];
+  const saving = yearSaving(tier) / 100;
   return (
-    <div className={`${featured ? "card" : "card-flat"} flex flex-col p-7 sm:p-9`}>
+    <div
+      className={`relative flex flex-col p-7 sm:p-9 ${
+        featured
+          ? "card border-violet-brand/35 shadow-[var(--shadow-md)] ring-1 ring-violet-brand/15"
+          : "card-flat"
+      }`}
+    >
+      {/*
+        The recommended plan is marked once, in words that say why, and
+        nothing else on this block tries to hurry anybody: no countdown, no
+        "only today", no crossed-out price that was never charged.
+      */}
+      {featured ? (
+        <span className="absolute -top-3 left-7 rounded-full bg-violet-brand px-3 py-1 text-[0.75rem] font-semibold text-white shadow-[var(--shadow-sm)] sm:left-9">
+          Where most people start
+        </span>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-lg font-semibold text-ink">{name}</p>
         <span className={`tag ${featured ? "tag-brand" : ""}`}>{tag}</span>
       </div>
+      <p className="mt-2 text-[0.9375rem] text-ink-soft">{bestFor}</p>
+
       <p className="mt-6 flex items-baseline gap-2">
-        <span className="text-[3.5rem] font-semibold leading-none tracking-[-0.05em] text-ink">${month / 100}</span>
-        <span className="text-ink-mute">per month</span>
+        <span className="text-[3.5rem] font-semibold leading-none tracking-[-0.05em] text-ink tabular-nums">
+          ${yearly ? year / 100 : month / 100}
+        </span>
+        <span className="text-ink-mute">{yearly ? "a year" : "per month"}</span>
       </p>
-      <p className="mt-2 text-ink-soft">
-        {`Or $${year / 100} a year, paid once \u2014 $${yearSaving(tier) / 100} less than twelve months.`}
+      <p className="mt-2 min-h-[1.5rem] text-[0.9375rem] text-ink-soft">
+        {yearly
+          ? `Paid once. $${saving} less than twelve months at $${month / 100}.`
+          : `Or $${year / 100} a year, paid once \u2014 $${saving} less than twelve months.`}
       </p>
+
       <ul className="mt-6 space-y-3">
         {perks.map((perk) => (
           <li key={perk} className="flex gap-3 text-ink-soft">
@@ -332,20 +433,59 @@ function PlanCard({
         <Link href="/signin" className={`btn ${featured ? "btn-primary" : "btn-secondary"} btn-lg btn-block`}>
           {cta}
         </Link>
+        {/* What the button does, before it is pressed. */}
+        <p className="mt-3 text-center text-[0.8125rem] leading-relaxed text-ink-mute">
+          {`Sends a sign-in link to your email. ${TRIAL_DAYS} days free, then $${
+            yearly ? year / 100 : month / 100
+          } ${yearly ? "a year" : "a month"}. Cancel in one click.`}
+        </p>
       </div>
     </div>
   );
 }
 
 export function Pricing({ domains = false }: { domains?: boolean }) {
+  const [yearly, setYearly] = useState(false);
   const proPerks = domains
     ? [...PRO_INCLUDED.slice(0, 1), "Your store on your own domain, with its certificate handled for you", ...PRO_INCLUDED.slice(1)]
     : PRO_INCLUDED;
   return (
     <div>
+      <div className="mb-8 flex flex-col items-center gap-3">
+        <div className="seg" role="group" aria-label="How often you pay">
+          <button type="button" className="seg-item" aria-pressed={!yearly} onClick={() => setYearly(false)}>
+            Monthly
+          </button>
+          <button type="button" className="seg-item" aria-pressed={yearly} onClick={() => setYearly(true)}>
+            Yearly
+            <span className="rounded-full bg-mint-soft px-2 py-0.5 text-[0.75rem] font-semibold text-mint-deep">
+              {`save $${yearSaving("creator") / 100}`}
+            </span>
+          </button>
+        </div>
+        <p className="text-sm text-ink-mute">Both plans, both ways. Switch from your studio whenever you like.</p>
+      </div>
       <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-        <PlanCard name="Nimbus" tag="Everything to sell" tier="creator" perks={INCLUDED} featured cta="Start your store" />
-        <PlanCard name="Nimbus Pro" tag={domains ? "Email and your own domain" : "With email to your list"} tier="pro" perks={proPerks} featured={false} cta="Start on Pro" />
+        <PlanCard
+          name="Nimbus"
+          tag="Everything to sell"
+          bestFor="For a creator putting a store up and selling from it."
+          tier="creator"
+          perks={INCLUDED}
+          featured
+          cta="Start your store"
+          yearly={yearly}
+        />
+        <PlanCard
+          name="Nimbus Pro"
+          tag={domains ? "Email and your own domain" : "With email to your list"}
+          bestFor="For a creator with a list to write to, and sell to again."
+          tier="pro"
+          perks={proPerks}
+          featured={false}
+          cta="Start on Pro"
+          yearly={yearly}
+        />
       </div>
       <CostAtVolume />
       <div className="card-flat mt-6 grid gap-4 p-6 text-sm sm:grid-cols-3 sm:p-7">
@@ -394,7 +534,15 @@ function CostAtVolume() {
     <div className="card-flat mt-6 p-6 sm:p-7">
       <p className="font-semibold text-ink">What you pay as your sales grow</p>
       <p className="mt-1 text-sm text-ink-soft">{`Each month, at a $${AVERAGE_PRICE} average price. Card processing is not included: every option pays it, to Stripe.`}</p>
-      <table className="mt-4 w-full text-left text-sm tabular-nums">
+      {/*
+        Four money columns do not fit a 320px screen, and a table that is cut
+        off at the edge hides the column the whole comparison turns on. Above
+        640px it stays a table, because that is what it is; below, each level
+        of sales becomes its own small card with the three platforms listed
+        under it, so nothing is clipped and nothing has to be scrolled
+        sideways to be found.
+      */}
+      <table className="mt-4 hidden w-full text-left text-sm tabular-nums sm:table">
         <caption className="sr-only">What each platform takes each month at three levels of sales</caption>
         <thead>
           <tr className="text-ink-mute">
@@ -422,6 +570,33 @@ function CostAtVolume() {
           })}
         </tbody>
       </table>
+
+      <ul className="mt-4 grid gap-3 sm:hidden">
+        {SALES_LEVELS.map((n) => {
+          const revenue = n * AVERAGE_PRICE;
+          const gumroad = revenue * GUMROAD_RATE + n * GUMROAD_PER_SALE;
+          return (
+            <li key={n} className="rounded-[var(--r-md)] border border-line p-4">
+              <p className="flex items-baseline justify-between gap-3">
+                <span className="font-semibold text-ink tabular-nums">{money(revenue)}</span>
+                <span className="text-xs text-ink-mute">{`${n} sales a month`}</span>
+              </p>
+              <dl className="mt-3 grid gap-1.5 border-t border-line pt-3 text-sm tabular-nums">
+                {[
+                  { k: "Nimbus", v: money(flat), ours: true },
+                  { k: "Stan Creator", v: money(flat), ours: false },
+                  { k: "Gumroad", v: money(gumroad), ours: false },
+                ].map((r) => (
+                  <div key={r.k} className="flex items-baseline justify-between gap-3">
+                    <dt className={r.ours ? "font-semibold text-violet-deep" : "text-ink-soft"}>{r.k}</dt>
+                    <dd className={r.ours ? "font-semibold text-violet-deep" : "text-ink"}>{r.v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          );
+        })}
+      </ul>
       <p className="mt-3 text-xs text-ink-mute">
         {`Nimbus and Stan's Creator plan are both $${flat} a month with 0% of sales; Pro and Stan's Creator Pro are both $${PLAN_PRICES.pro.month / 100}. Gumroad takes 10% plus 50 cents on a sale you bring yourself and has no monthly fee, so under about nine sales a month it costs less. Prices read on each company's own pricing page on 20 September 2026.`}
       </p>

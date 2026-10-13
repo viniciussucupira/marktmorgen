@@ -45,27 +45,53 @@ export default function CreatorsPage() {
       <SiteNav />
 
       <main id="content" className="flex-1">
-        <section className="surface-night nb-grid-lines on-dark overflow-hidden">
-          <div className="container-narrow py-16 sm:py-24">
-            <p className="eyebrow">Creator research</p>
-            <h1 className="t-h1 balance mt-5 text-white">
-              Selling digital products?{" "}
-              <span className="serif font-normal text-[#cfc4ff]">Tell me what&apos;s broken.</span>
-            </h1>
-            <div className="t-lead mt-6 max-w-2xl space-y-4 text-white/75">
-              <p>
-                I&apos;m Vinicius, the founder of Nimbus Labs. Before we build our next tool, I&apos;m talking to creators
-                who sell guides, courses, templates and paid calls from their link in bio.
-              </p>
-              <p>
-                This is not a sales page. There is nothing to buy. I want to know what is hard about selling online today,
-                in your own words.
+        <section className="surface-navy nb-grid-lines on-dark overflow-hidden">
+          <div className="container-page grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+            <div>
+              <p className="eyebrow">Creator research</p>
+              <h1 className="t-h1 balance mt-5 text-white">
+                Selling digital products?{" "}
+                <span className="serif font-normal text-[#cfc4ff]">Tell me what&apos;s broken.</span>
+              </h1>
+              <div className="t-lead mt-6 max-w-2xl space-y-4 text-white/80">
+                <p>
+                  I&apos;m Vinicius, the founder of Nimbus Labs. Before we build our next tool, I&apos;m talking to creators
+                  who sell guides, courses, templates and paid calls from their link in bio.
+                </p>
+                <p>
+                  This is not a sales page. There is nothing to buy. I want to know what is hard about selling online today,
+                  in your own words.
+                </p>
+              </div>
+              <p className="mt-8 flex items-center gap-2 text-[0.9375rem] text-white/80">
+                <Icon name="clock" size={18} className="text-[#b9a8ff]" />
+                Two minutes, eight questions, four of them optional
               </p>
             </div>
-            <p className="mt-8 flex items-center gap-2 text-[0.9375rem] text-white/70">
-              <Icon name="clock" size={18} className="text-[#b9a8ff]" />
-              Two minutes, eight questions, four of them optional
-            </p>
+            {/*
+              What happens to an answer, said before the form is reached
+              rather than under it. Somebody deciding whether to type into a
+              box wants this here, not after they have already typed.
+            */}
+            <div className="rounded-[var(--r-lg)] border border-white/14 bg-white/[0.05] p-6 backdrop-blur-sm sm:p-7">
+              <p className="text-[0.75rem] font-semibold uppercase tracking-[0.14em] text-white/70">
+                What happens to your answer
+              </p>
+              <ul className="mt-4 space-y-4 text-[0.9375rem] text-white/80">
+                {[
+                  { icon: "user" as const, text: "It is read by one person — me — and nobody else." },
+                  { icon: "target" as const, text: "It goes on the list that decides what gets built next." },
+                  { icon: "mail" as const, text: "No email back unless you tick the box asking for one." },
+                ].map((i) => (
+                  <li key={i.text} className="flex gap-3">
+                    <span className="icon-tile icon-tile-sm">
+                      <Icon name={i.icon} size={17} />
+                    </span>
+                    <span className="pt-1.5">{i.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </section>
 

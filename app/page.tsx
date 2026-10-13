@@ -230,7 +230,7 @@ export default function Home() {
       <main id="content">
         {/* ------------------------------------------------------------ hero */}
         <section className="surface-night nb-grid-lines on-dark overflow-hidden">
-          <div className="container-page grid items-center gap-14 pb-16 pt-14 sm:pt-20 lg:grid-cols-[1.02fr_1fr] lg:gap-10 lg:pb-24 lg:pt-24">
+          <div className="container-page grid items-center gap-12 pb-16 pt-12 sm:gap-14 sm:pt-16 lg:grid-cols-[1.04fr_1fr] lg:gap-12 lg:pb-20 lg:pt-20">
             <div className="nb-fade-up">
               <p className="eyebrow">Link-in-bio store for creators</p>
               <h1 className="t-display mt-5 text-white">
@@ -240,20 +240,61 @@ export default function Home() {
                 <br />
                 Your money.
               </h1>
-              <p className="t-lead measure mt-7 text-white/75">
+              <p className="t-lead measure mt-7 text-white/80">
                 Sell files, courses, calls and memberships from the link in your bio. Buyers pay straight into your own
                 Stripe account, what they bought arrives a second later, and Nimbus takes{" "}
                 <strong className="font-semibold text-white">0% of your sales</strong>.
               </p>
-              <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
-                <Link href="/signin" className="btn btn-light btn-lg">
+              {/*
+                On a phone the two calls to action run the width of the
+                column: a thumb reaching across a 390px screen should not have
+                to find a 180px target, and a half-width button next to empty
+                space reads as the smaller of two choices rather than the
+                first of two. From 480px up they sit side by side.
+              */}
+              <div className="mt-9 grid gap-3 min-[480px]:flex min-[480px]:flex-wrap min-[480px]:items-center">
+                {/*
+                  `w-full` rather than `.btn-block`: that class is plain CSS
+                  and Tailwind's utilities sit in a layer, so `.btn-block`
+                  would beat the breakpoint that is meant to undo it and the
+                  buttons would run the full column on a desktop too.
+                */}
+                <Link href="/signin" className="btn btn-light btn-lg w-full min-[480px]:w-auto">
                   Start your store
                   <Icon name="arrow-right" size={18} />
                 </Link>
-                <DemoWindow label="Try the live demo" />
+                {/*
+                  A second button, not a sentence with an arrow. The demo is
+                  the strongest thing on this page — a visitor can buy from a
+                  real store with a test card in under a minute — and an
+                  offer that good should not be dressed as a footnote.
+                */}
+                <DemoWindow
+                  label="See the live demo"
+                  className="btn btn-outline-light btn-lg w-full min-[480px]:w-auto"
+                />
               </div>
-              <p className="mt-4 text-sm text-white/55">
-                {`$${PRICE} a month, with a ${TRIAL_DAYS}-day trial. Cancel in one click.`}
+              {/*
+                Three facts, not three adjectives. Each one is checkable
+                elsewhere on this site inside a minute: the price page, the
+                money section and the demo store. They are kept short enough
+                to sit two to a row on a phone rather than stacking into a
+                third list.
+              */}
+              <ul className="mt-7 flex flex-wrap gap-2">
+                {[
+                  { icon: "percent" as IconName, text: "0% of your sales" },
+                  { icon: "bank" as IconName, text: "Your own Stripe" },
+                  { icon: "calendar" as IconName, text: `${TRIAL_DAYS} days free` },
+                ].map((c) => (
+                  <li key={c.text} className="chip chip-dark">
+                    <Icon name={c.icon} size={15} />
+                    {c.text}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-sm text-white/80">
+                {`$${PRICE} a month after the trial. Cancel in one click, from your own studio.`}
               </p>
             </div>
 
@@ -262,49 +303,59 @@ export default function Home() {
             </div>
           </div>
 
-          {/*
-            The four promises, directly under the hero.
+        </section>
 
-            Each one is a fact a visitor can check on this site in under a
-            minute, not a slogan: the price page, the money section, the demo
-            store and the speed measurement all back one of these lines.
-          */}
-          <div className="border-t border-white/10">
-            <ul className="container-page grid gap-x-8 gap-y-7 py-8 sm:grid-cols-2 sm:py-9 lg:grid-cols-4">
-              {[
-                {
-                  icon: "percent" as IconName,
-                  title: "0% of your sales",
-                  body: "One monthly price. We never take a share of what you sell.",
-                },
-                {
-                  icon: "bank" as IconName,
-                  title: "Paid into your own Stripe",
-                  body: "A direct charge on your account, on your payout schedule.",
-                },
-                {
-                  icon: "bolt" as IconName,
-                  title: "Delivered on the spot",
-                  body: "On the buyer's screen the second Stripe confirms the payment.",
-                },
-                {
-                  icon: "gauge" as IconName,
-                  title: "Built for a phone first",
-                  body: "97–100 on Google PageSpeed, measured on the demo store.",
-                },
-              ].map((f) => (
-                <li key={f.title} className="flex gap-3.5">
-                  <span className="icon-tile icon-tile-sm">
-                    <Icon name={f.icon} size={18} />
+        {/*
+          The band under the hero.
+
+          It deliberately does not repeat the three chips above it. Those are
+          the offer; these are the four things a careful person checks next —
+          how fast it is, who handles the card, how hard it is to leave, and
+          what the limit is — and every one of them is a measurement or a
+          number stated elsewhere on this site, not a slogan.
+        */}
+        <section aria-label="What you can check before you sign up" className="border-b border-line bg-white">
+          <ul className="container-page grid gap-x-10 gap-y-7 py-8 sm:grid-cols-2 sm:py-9 lg:grid-cols-4">
+            {[
+              {
+                icon: "gauge" as IconName,
+                figure: "97–100",
+                title: "Google PageSpeed",
+                body: "Mobile performance on the demo store, measured 17 September 2026.",
+              },
+              {
+                icon: "lock" as IconName,
+                figure: "Stripe",
+                title: "Handles the card",
+                body: "The payment happens on Stripe's own checkout. We never see a card number.",
+              },
+              {
+                icon: "door" as IconName,
+                figure: "1 click",
+                title: "To cancel",
+                body: "From your own studio. No email to us, no chat, no second request.",
+              },
+              {
+                icon: "download" as IconName,
+                figure: "200 GB",
+                title: "Of downloads a month",
+                body: "Written here, not buried in the terms. Files up to 5 GB each.",
+              },
+            ].map((f) => (
+              <li key={f.title} className="flex gap-3.5">
+                <span className="icon-tile icon-tile-sm">
+                  <Icon name={f.icon} size={18} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[1.375rem] font-semibold leading-none tracking-[-0.035em] text-ink">
+                    {f.figure}
                   </span>
-                  <span className="min-w-0">
-                    <span className="block font-semibold text-white">{f.title}</span>
-                    <span className="mt-1 block text-[0.875rem] leading-snug text-white/60">{f.body}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  <span className="mt-1.5 block text-[0.9375rem] font-semibold leading-snug text-ink-soft">{f.title}</span>
+                  <span className="mt-1 block text-[0.875rem] leading-snug text-ink-mute">{f.body}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* ------------------------------------------------ the buyer's path */}
@@ -383,7 +434,7 @@ export default function Home() {
                       <ul className="mt-5 space-y-3.5 border-t border-line pt-5">{shown.map(item)}</ul>
                       {more.length > 0 ? (
                         <details className="group/more mt-3.5">
-                          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-[8px] text-sm font-semibold text-violet-deep [&::-webkit-details-marker]:hidden">
+                          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-[8px] text-sm font-semibold text-violet-deep [&::-webkit-details-marker]:hidden">
                             <Icon name="plus" size={15} className="transition-transform duration-200 group-open/more:rotate-45" />
                             <span className="group-open/more:hidden">{`${more.length} more`}</span>
                             <span className="hidden group-open/more:inline">Fewer</span>
@@ -453,13 +504,13 @@ export default function Home() {
                   >
                     <span className="flex items-center justify-between">
                       <Icon name={n.icon} size={18} className={n.ours ? "text-violet-deep" : "text-[#b9a8ff]"} />
-                      <span className={`text-[0.75rem] font-semibold ${n.ours ? "text-ink-soft" : "text-white/55"}`}>{i + 1}</span>
+                      <span className={`text-[0.75rem] font-semibold ${n.ours ? "text-ink-soft" : "text-white/70"}`}>{i + 1}</span>
                     </span>
                     <span className="font-semibold">{n.label}</span>
                   </li>
                 ))}
               </ol>
-              <p className="mt-3 text-sm text-white/55">Nimbus is not a step on this path.</p>
+              <p className="mt-3 text-sm text-white/70">Nimbus is not a step on this path.</p>
               <Link href="/platform/your-stripe" className="btn btn-outline-light mt-8">
                 How the money moves
               </Link>
@@ -586,7 +637,21 @@ export default function Home() {
                   <li key={r.row} className={`${same ? "card-flat" : "card"} flex flex-col p-6`}>
                     <div className="flex items-start justify-between gap-3">
                       <p className="font-semibold text-ink">{r.row}</p>
-                      {same ? <span className="tag shrink-0">Same on both</span> : null}
+                      <span className={`tag shrink-0 ${same ? "" : "tag-brand"}`}>
+                        {same ? (
+                          <>
+                            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                              <path d="M2 4.5h8M2 7.5h8" />
+                            </svg>
+                            Same on both
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="check" size={12} strokeWidth={3} />
+                            Nimbus ahead
+                          </>
+                        )}
+                      </span>
                     </div>
                     <dl className="mt-4 grid gap-2.5 text-[0.9375rem]">
                       <div className="grid grid-cols-[4.25rem_1fr] gap-3">

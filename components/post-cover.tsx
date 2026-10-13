@@ -13,18 +13,34 @@ import type { BlogPost } from "@/lib/blog";
 export function PostCover({
   post,
   size = "md",
+  headings,
   className = "",
 }: {
   post: BlogPost;
   size?: "sm" | "md" | "lg";
+  /**
+   * The article's own section titles. Given these, the plate stops being a
+   * coloured rectangle and becomes the front of the article: what is in it,
+   * before the first paragraph. Without them it falls back to the kicker
+   * alone, which is all a small card has room for anyway.
+   */
+  headings?: string[];
   className?: string;
 }) {
-  const ratio = size === "lg" ? "aspect-[16/6]" : size === "sm" ? "aspect-[16/9]" : "aspect-[16/8]";
+  const inside = headings?.slice(0, 3) ?? [];
+  const listed = size !== "sm" && inside.length >= 2;
+  const ratio = listed
+    ? "aspect-[16/9] sm:aspect-[16/7]"
+    : size === "lg"
+      ? "aspect-[16/6]"
+      : size === "sm"
+        ? "aspect-[16/9]"
+        : "aspect-[16/8]";
   const kicker = size === "sm" ? "text-[0.6875rem]" : "text-[0.75rem]";
 
   return (
     <div
-      aria-hidden="true"
+      aria-hidden={listed ? undefined : "true"}
       className={`relative isolate overflow-hidden ${ratio} ${className}`}
       style={{ backgroundImage: `linear-gradient(135deg, ${post.from} 0%, ${post.to} 100%)` }}
     >
@@ -51,12 +67,34 @@ export function PostCover({
           maskImage: "radial-gradient(ellipse 85% 80% at 70% 20%, #000 10%, transparent 72%)",
         }}
       />
-      <p
-        className={`absolute inset-x-0 bottom-0 flex items-center gap-2 px-4 pb-3.5 font-semibold uppercase tracking-[0.14em] text-white/90 sm:px-5 ${kicker}`}
-      >
-        <span className="h-px w-6 shrink-0 bg-white/60" />
-        <span className="truncate">{post.kicker}</span>
-      </p>
+      {listed ? (
+        <div className="absolute inset-0 flex flex-col justify-between p-5 sm:p-7">
+          <p className={`flex items-center gap-2 font-semibold uppercase tracking-[0.14em] text-white ${kicker}`}>
+            <span className="h-px w-6 shrink-0 bg-white/60" />
+            <span className="truncate">{post.kicker}</span>
+          </p>
+          <ul className="grid gap-1.5 text-[0.875rem] leading-snug text-white/85 sm:text-[0.9375rem]">
+            <li className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-white/70">
+              What is in it
+            </li>
+            {inside.map((h) => (
+              <li key={h} className="flex gap-2.5">
+                <span aria-hidden="true" className="text-white/60">
+                  —
+                </span>
+                <span className="line-clamp-1">{h}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p
+          className={`absolute inset-x-0 bottom-0 flex items-center gap-2 px-4 pb-3.5 font-semibold uppercase tracking-[0.14em] text-white sm:px-5 ${kicker}`}
+        >
+          <span className="h-px w-6 shrink-0 bg-white/60" />
+          <span className="truncate">{post.kicker}</span>
+        </p>
+      )}
     </div>
   );
 }

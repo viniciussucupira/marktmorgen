@@ -342,7 +342,7 @@ export function SiteNav() {
                 <div className="surface-night on-dark flex flex-col justify-between p-6">
                   <div>
                     <p className="eyebrow">{menu.label}</p>
-                    <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/75">{menu.blurb}</p>
+                    <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/80">{menu.blurb}</p>
                   </div>
                   <Link href={menu.feature.href} onClick={closeAll} className="group mt-6 block rounded-[var(--r-md)] border border-white/12 bg-white/[0.06] p-4 transition-colors hover:bg-white/[0.1]">
                     <span className="block font-semibold text-white">{menu.feature.title}</span>

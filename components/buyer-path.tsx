@@ -220,7 +220,12 @@ export function BuyerPath() {
             role="tablist"
             aria-label="The steps of a sale"
             aria-orientation="vertical"
-            className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0"
+            /* min-w-0 is load-bearing: a grid item will not shrink below the
+               width of its widest child unless it is told it may, and these
+               tabs hold a line of whitespace-nowrap text. Without it the row
+               refuses to shrink and the whole page grows a sideways scrollbar
+               at 320px instead of scrolling inside this strip. */
+            className="flex min-w-0 gap-2 overflow-x-auto pb-1 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0"
             onKeyDown={(e) => {
               if (e.key === "ArrowDown" || e.key === "ArrowRight") {
                 e.preventDefault();
@@ -284,8 +289,15 @@ export function BuyerPath() {
             className="mx-auto w-full max-w-[22rem]"
           >
             <figure>
-              <div className="rounded-[2.4rem] bg-[#0f0c2a] p-2 shadow-[var(--shadow-device)]">
-                <div className="relative h-[34rem] overflow-hidden rounded-[2rem] bg-paper">
+              {/*
+                On a wide screen this is a phone, because the point is that
+                the store is a phone page. On a real phone the drawn frame
+                would be a screen inside a screen at almost the same width, so
+                `device-soft` takes the frame away below 640px and lets the
+                interface fill the card instead.
+              */}
+              <div className="device device-soft">
+                <div className="device-screen relative h-[34rem]">
                   <div className="flex items-center justify-between px-5 pb-1 pt-3 text-[11px] font-semibold text-ink-soft">
                     <span>9:41</span>
                     <span className="rounded-[6px] bg-white px-2 py-0.5 text-[10px] text-ink-soft ring-1 ring-line">

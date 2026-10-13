@@ -411,13 +411,63 @@ function Related({ slugs }: { slugs: string[] }) {
   );
 }
 
+/*
+ * What the page covers, beside its own heading.
+ *
+ * The comparison pages carry no screenshot, and a heading with half a screen
+ * of empty space next to it is the part of a site that looks unfinished. This
+ * is the index of the page itself, read from the blocks below, so the space is
+ * filled by something a visitor actually wants: how long this is, what is in
+ * it, and a way straight to the row they came for.
+ */
+function HeroContents({ blocks }: { blocks: Block[] }) {
+  const titles = blocks
+    .map((b) => ("title" in b && typeof b.title === "string" ? b.title : null))
+    .filter((t): t is string => Boolean(t))
+    .slice(0, 6);
+  if (titles.length < 2) return null;
+  return (
+    <div className="nb-fade-up nb-delay-2 rounded-[var(--r-lg)] border border-white/14 bg-white/[0.05] p-6 backdrop-blur-sm sm:p-7">
+      <p className="text-[0.75rem] font-semibold uppercase tracking-[0.14em] text-white/70">On this page</p>
+      <ol className="mt-4 grid gap-1">
+        {titles.map((t, i) => (
+          <li key={t}>
+            <a
+              href={`#${sectionId(t)}`}
+              className="flex items-baseline gap-3 rounded-[10px] px-2 py-2 text-[0.9375rem] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <span className="w-4 shrink-0 text-[0.75rem] font-semibold tabular-nums text-white/70">{i + 1}</span>
+              <span>{t}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 export function TopicPageView({ page }: { page: TopicPage }) {
   // A creator page shows its example store beside the heading, where a
   // feature page shows the drawing of its screen.
   const heroStore = page.section === "for" && page.blocks[0]?.kind === "storecard" ? page.blocks[0] : null;
   const blocks = heroStore ? page.blocks.slice(1) : page.blocks;
-  const wide = Boolean(page.visual || heroStore);
   const pro = page.plan === "pro";
+  /* A page with a drawing or a store card beside it reads wide; an argument
+     made of tables and paragraphs reads at a column a person can follow. */
+  const wide = Boolean(page.visual || heroStore);
+
+  /*
+   * Three sections, three openings.
+   *
+   * A feature page opens in daylight, because its whole job is to let you
+   * read a screenshot; the creator pages stay dark, because a photograph of
+   * somebody at work carries further against it; the evidence pages take the
+   * steady navy rather than the home page's one dramatic dark, so that
+   * reading four of them in a row does not feel like four launches. Before
+   * this, every page on the site opened with the same violet-black band, and
+   * the tenth one looked exactly like the first.
+   */
+  const light = page.section === "platform";
 
   return (
     <div className="flex min-h-screen flex-col bg-paper text-ink">
@@ -425,11 +475,15 @@ export function TopicPageView({ page }: { page: TopicPage }) {
       <SiteNav />
 
       <main id="content" className="flex-1">
-        <section className="surface-night nb-grid-lines overflow-hidden">
-          <div
-            className={`${wide ? "container-page grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16" : "container-narrow py-16 sm:py-24"}`}
-          >
-            <div className="on-dark">
+        <section
+          className={
+            light
+              ? "surface-dawn overflow-hidden border-b border-line"
+              : "surface-navy nb-grid-lines overflow-hidden"
+          }
+        >
+          <div className="container-page grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+            <div className={light ? "" : "on-dark"}>
               <p className="eyebrow nb-fade-up">{page.eyebrow}</p>
               {/*
                 The expressive face carries a few words, never a clause. Set a
@@ -438,33 +492,44 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                 short phrase the highlight keeps the heading's own face and is
                 separated by colour alone.
               */}
-              <h1 className="t-h1 balance nb-fade-up nb-delay-1 mt-5 text-white">
+              <h1 className={`t-h1 balance nb-fade-up nb-delay-1 mt-5 ${light ? "text-ink" : "text-white"}`}>
                 {page.title}{" "}
-                <span className={page.highlight.length <= 26 ? "serif font-normal text-[#cfc4ff]" : "text-[#cfc4ff]"}>
+                <span
+                  className={`${page.highlight.length <= 26 ? "serif font-normal" : ""} ${
+                    light ? "text-violet-deep" : "text-[#cfc4ff]"
+                  }`}
+                >
                   {page.highlight}
                 </span>
               </h1>
-              <p className="t-lead nb-fade-up nb-delay-2 mt-6 max-w-2xl text-white/75">{page.intro}</p>
+              <p
+                className={`t-lead nb-fade-up nb-delay-2 mt-6 max-w-2xl ${light ? "text-ink-soft" : "text-white/80"}`}
+              >
+                {page.intro}
+              </p>
               <p className="nb-fade-up nb-delay-3 mt-7 flex flex-wrap items-center gap-2">
                 <span className={BADGE_CLASS[page.badge.tone]}>{page.badge.label}</span>
                 {page.plan ? <span className="tag">{PLAN_LINE[page.plan]}</span> : null}
               </p>
               {page.section !== "proof" ? (
-                <div className="nb-fade-up nb-delay-3 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-                  <Link href="/signin" className="btn btn-light btn-lg">
+                <div className="nb-fade-up nb-delay-3 mt-8 flex flex-wrap items-center gap-3">
+                  <Link href="/signin" className={`btn btn-lg ${light ? "btn-primary" : "btn-light"}`}>
                     {`Try it free for ${TRIAL_DAYS} days`}
                     <Icon name="arrow-right" size={18} />
                   </Link>
-                  <Link href={pro ? "/#pricing" : "/demo"} className="link-arrow">
-                    {pro ? "Compare the plans" : "Open the live demo store"}
-                    <Icon name="arrow-right" size={18} className="arrow" />
+                  <Link
+                    href={pro ? "/#pricing" : "/demo"}
+                    className={`btn btn-lg ${light ? "btn-secondary" : "btn-outline-light"}`}
+                  >
+                    {pro ? "Compare the plans" : "See the live demo"}
+                    <Icon name="arrow-right" size={18} />
                   </Link>
                 </div>
               ) : null}
             </div>
             {page.visual ? (
               <div className="nb-fade-up nb-delay-2 flex justify-center lg:justify-end">
-                <FeatureVisual visual={page.visual} />
+                <FeatureVisual visual={page.visual} tone={light ? "light" : "dark"} />
               </div>
             ) : heroStore ? (
               /*
@@ -484,6 +549,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                     width={720}
                     height={540}
                     loading="eager"
+                    fetchPriority="high"
                     decoding="async"
                     className="aspect-[4/3] w-full rounded-[var(--r-xl)] bg-white/10 object-cover shadow-[var(--shadow-device)]"
                   />
@@ -499,12 +565,14 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                   <StoreCard block={heroStore} hero />
                 </div>
                 {page.photo ? (
-                  <p className="mt-4 text-[0.8125rem] leading-relaxed text-white/45">
+                  <p className="mt-4 text-[0.8125rem] leading-relaxed text-white/70">
                     A licensed photograph of somebody at work, not a customer of ours.
                   </p>
                 ) : null}
               </div>
-            ) : null}
+            ) : (
+              <HeroContents blocks={blocks} />
+            )}
           </div>
         </section>
 
@@ -530,7 +598,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                 <Icon name="arrow-right" size={18} />
               </Link>
               <Link href={pro ? "/#pricing" : "/demo"} className="link-arrow">
-                {pro ? "See both plans" : "Open the live demo store"}
+                {pro ? "See both plans" : "See the live demo"}
                 <Icon name="arrow-right" size={18} className="arrow" />
               </Link>
             </div>
