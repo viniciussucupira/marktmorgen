@@ -9,7 +9,8 @@ import { type Piece, aboutBlocks } from "@/lib/product-about";
 import { CELL_NO, CELL_YES, type CtaBlock, type HeroBlock, type PageBlock, type PageStyle, bandsOf, quoteHost } from "@/lib/sales-page";
 import { blockWords } from "@/lib/buyer-words/blocks";
 import type { PageFacts } from "@/lib/page-facts";
-import { MAX_LONG_ANSWER, MAX_SHORT_ANSWER, type FormDef, type FormField } from "@/lib/forms";
+import { MAX_LONG_ANSWER, MAX_SHORT_ANSWER, type FormDef, type FormField, branches } from "@/lib/forms";
+import { FormBranching } from "@/components/form-branching";
 import { formWords } from "@/lib/buyer-words/form";
 
 /**
@@ -742,7 +743,7 @@ function FormQuestion({ field, form, ctx }: { field: FormField; form: FormDef; c
     const options = field.type === "scale" ? Array.from({ length: 10 }, (_, i) => ({ id: String(i + 1), label: String(i + 1) })) : field.options;
     const many = field.type === "choices";
     return (
-      <fieldset className="sp-form-field">
+      <fieldset className="sp-form-field" data-field={field.id}>
         <legend className="st-label">{label}</legend>
         <div className={field.type === "scale" ? "sp-form-scale" : "sp-form-options"}>
           {options.map((option, i) => (
@@ -762,7 +763,7 @@ function FormQuestion({ field, form, ctx }: { field: FormField; form: FormDef; c
     );
   }
   return (
-    <div className="sp-form-field">
+    <div className="sp-form-field" data-field={field.id}>
       <label htmlFor={id} className="st-label">
         {label}
       </label>
@@ -816,6 +817,7 @@ function FormView({ block, form, ctx }: { block: Extract<PageBlock, { kind: "for
         {form.fields.map((field) => (
           <FormQuestion key={field.id} field={field} form={form} ctx={ctx} />
         ))}
+        {branches(form) && !ctx.preview ? <FormBranching form={{ id: form.id, fields: form.fields, outcomes: form.outcomes }} /> : null}
         {form.offerList && target?.listOpen ? (
           <label className="sp-form-option">
             <input type="checkbox" name="consent" value="yes" disabled={ctx.preview} />
