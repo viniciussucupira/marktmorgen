@@ -1,3 +1,4 @@
+import { funnelRepairActions } from "@/lib/funnel-review-actions";
 import { readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Metadata } from "next";
 import { BUMP_CHOICES, idsOfKind, readCards, readListings, readProduct } from "@/lib/catalog";
@@ -156,7 +157,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
         </div>
 
         <div className="mt-8">
-          <PageFunnelEditor saved={savedFunnels} choices={choices} base={funnelBase} />
+          <PageFunnelEditor saved={savedFunnels} choices={choices} base={funnelBase} repairActions={funnelRepairActions(store, view.role)} />
         </div>
 
         <h2 className="mt-14 text-xl font-semibold tracking-[-0.02em] text-ink">Offers after they pay</h2>
