@@ -1,4 +1,4 @@
-import { filterDeals } from "@/lib/crm-deal-filter";
+import { dealActionFilter, filterDeals } from "@/lib/crm-deal-filter";
 import type { Deal } from "@/lib/crm-rules";
 import { done, is, part } from "./check";
 const deals = [{ id: "a", title: "Proposal", email: "a@example.com", note: "Discuss budget", nextAction: "Call tomorrow", assignee: "owner@example.com" }, { id: "b", title: "Workshop", email: "b@example.com", note: "", assignee: "helper@example.com" }, { id: "c", title: "New enquiry", email: "", note: "" }] as Deal[];
@@ -14,4 +14,6 @@ is("unassigned includes legacy deals", ids("", ""), ["c"]);
 is("search intersects ownership", ids("Proposal", "helper@example.com"), []);
 is("literal punctuation is not a pattern", ids(".*"), []);
 is("source order and records remain unchanged", [deals.map(d => d.id), deals[0].assignee], [["a", "b", "c"], "owner@example.com"]);
+is("valid queue parameters", ["all", "overdue", "today", "upcoming", "unplanned"].map(dealActionFilter), ["all", "overdue", "today", "upcoming", "unplanned"]);
+is("untrusted parameters default to all", [undefined, null, ["overdue"], "constructor", "OVERDUE", {}, ""].map(dealActionFilter), Array(7).fill("all"));
 done();
