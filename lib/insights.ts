@@ -27,6 +27,7 @@
  */
 import type { StatsData } from "@/lib/stats";
 import { type AdSpend, spendBy, VERDICT_MIN_CENTS } from "@/lib/ad-spend-rules";
+import { refundActivityFrom } from "@/lib/refund-activity";
 import { channelCashflows } from "@/lib/channel-cashflow";
 import { channelName } from "@/lib/channel-names";
 import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
@@ -34,7 +35,7 @@ import { formatMoney } from "@/lib/money";
 import { recordsFrom } from "@/lib/records";
 
 /** Where a sentence leads: a screen of the studio, already set, or a part of the numbers panel by its id there. */
-export type InsightAction = { label: string; href: string } | { label: string; section: "funnel" | "channels" | "posts" | "ads" | "products" | "reach" | "cashflow" };
+export type InsightAction = { label: string; href: string } | { label: string; section: "funnel" | "channels" | "posts" | "ads" | "products" | "reach" | "cashflow" | "refund-activity" };
 export type Insight = {
   text: string;
   tone: "good" | "bad" | "info";
@@ -89,6 +90,23 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
         tone: row.afterAds < 0 ? "bad" : "info",
         action: { label: "See payments and costs", section: "cashflow" },
         math: `${money(row.receipts)} received − ${money(row.refunds ?? 0)} refunded − ${money(row.adSpend)} spent = ${money(row.afterAds)}. This includes organic sales; it is not profit or proof of ad lift.`,
+      });
+    }
+  }
+
+  // Refund activity uses same-period receipts, never a claim about which sales were refunded.
+  if (known && data.days.length) {
+    const days = data.days.slice(-DAYS[window]);
+    const activity = refundActivityFrom(data, window, days[0].date, days[days.length - 1].date);
+    const row = activity?.rows.find((r) => r.records >= 2 && r.refunds > 0 && (r.share === null || r.share >= 0.2));
+    if (row) {
+      out.push({
+        text: `${channelName(row.source)} recorded ${money(row.refunds)} in ${n(row.records)} refund records in the last ${span}, against ${money(row.payments)} in payments received, including renewals. The refunded purchases may have been earlier.`,
+        tone: "bad",
+        action: { label: "See recorded refunds", section: "refund-activity" },
+        math: row.share === null
+          ? `${money(row.refunds)} recorded in refunds with no payments in these days; no ratio can be calculated.`
+          : `${money(row.refunds)} recorded in refunds ÷ ${money(row.payments)} received = ${pct(row.refunds, row.payments)}. Same-period money, not the percentage of these purchases refunded.`,
       });
     }
   }
@@ -229,16 +247,6 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
   const missed = data.searchMisses?.[window]?.[0];
   if (missed && missed.visits >= 3) {
     out.push({ text: `“${missed.name}” was searched for in your store ${n(missed.visits)} times and not found.`, tone: "info" });
-  }
-
-  // 10. A channel whose sales come back as refunds.
-  const refunds = data.refunds?.[window] ?? [];
-  for (const row of refunds) {
-    const sold = channels.find((c) => c.source === (row.source || "direct"))?.cents ?? 0;
-    if (row.refunds >= 2 && sold > 0 && row.cents / sold >= 0.2 && row.source !== "unrecorded") {
-      out.push({ text: `${pct(row.cents, sold)} of what ${channelName(row.source || "direct")} sold was refunded in the last ${span}.`, tone: "bad", action: { label: "Compare your channels", section: "channels" }, math: `${money(row.cents)} refunded of ${money(sold)} sold.` });
-      break;
-    }
   }
 
   return out.slice(0, max);

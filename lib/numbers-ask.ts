@@ -24,13 +24,14 @@ import { channelName } from "@/lib/channel-names";
 import { DISCOUNT_NAMES } from "@/lib/discount-impact";
 import { readSpends } from "@/lib/ad-spend";
 import { spendBy, type AdSpend } from "@/lib/ad-spend-rules";
+import { refundActivityFrom } from "@/lib/refund-activity";
 import { channelCashflows } from "@/lib/channel-cashflow";
 
 export const MAX_QUESTION = 300;
 export const WINDOWS = ["d7", "d30", "d90"] as const;
 export type AskWindow = (typeof WINDOWS)[number];
 /** The parts of the Numbers panel an answer can open, by their ids there (components/stats-panel.tsx). */
-export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels", "weekly-cohorts"] as const;
+export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels", "weekly-cohorts", "refund-activity"] as const;
 export type AskSection = (typeof SECTIONS)[number];
 
 export type NumbersAnswer = {
@@ -60,6 +61,7 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
     const days = (data.days ?? []).slice(-(w === "d7" ? 7 : w === "d30" ? 30 : 90));
     const costs = spends !== undefined && days.length ? spendBy(spends, days[0].date, days[days.length - 1].date).channels : new Map<string, number>();
     const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], costs, days[0].date, days[days.length - 1].date) : [];
+    const refundActivity = known && days.length ? refundActivityFrom(data, w, days[0].date, days[days.length - 1].date) : null;
     out[NAMES[w]] = {
       visitors: t.visitors,
       page_views: t.views,
@@ -94,6 +96,11 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
           refunds: c.refunds === null ? null : money(c.refunds), after_refunds: c.afterRefunds === null ? null : money(c.afterRefunds),
           ...(spends !== undefined ? { ad_spend_recorded: money(c.adSpend), after_refunds_and_ads: c.afterAds === null ? null : money(c.afterAds) } : {}),
         })),
+      } } : {}),
+      ...(refundActivity ? { refund_activity: {
+        payments_received: money(refundActivity.payments), refunds_recorded: money(refundActivity.refunds), refund_records: refundActivity.records,
+        note: "Records include pending refunds and are not unique buyers or orders. Refunds may belong to earlier purchases. Payments include renewals. Same-period amount ratio, not the percentage of purchases refunded. Can exceed 100%; null means no payments. Only complete, matched readings.",
+        channels: refundActivity.rows.slice(0, 15).map((row) => ({ channel: channelName(row.source), refund_records: row.records, refunds_recorded: money(row.refunds), payments_received: money(row.payments), recorded_refunds_over_payments: row.share === null ? null : Math.round(row.share * 100) + "%" })),
       } } : {}),
       ...(known && data.buyerChannels ? { buyer_channels: {
         history_partial: data.buyerChannels.historyPartial,
@@ -174,7 +181,7 @@ export async function askNumbers(store: Store, question: string, data: StatsData
       "You answer a creator's question about their own online store's numbers.",
       "Answer ONLY from the JSON of numbers given. Never estimate, project or invent a number, a cause or a fact that is not in it. If the numbers cannot answer the question, say so plainly in one sentence and say what the numbers do show that comes closest.",
       "Money is already written as the creator reads it: repeat amounts exactly as given. Windows are the last 7, 30 and 90 days; with no window in the question, use the last 30 days.",
-      "Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days. Weekly cohorts are independent of the selected channel window. Always name the period and eligible denominator, do not treat immature cells as zero, infer churn or claim a trend from small groups or incomplete history.",
+      "Refund activity is same-period recorded money, not a refund rate for those purchases or buyers. Do not infer dissatisfaction, causes or the number of buyers from refund records. A missing ratio with no payments is unknown, not zero. Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days. Weekly cohorts are independent of the selected channel window. Always name the period and eligible denominator, do not treat immature cells as zero, infer churn or claim a trend from small groups or incomplete history.",
       "Write in the language of the question. At most 90 words, plain sentences, no markdown, no headings. Be direct: the answer first, then one short line on what it suggests doing, only if the numbers clearly support it.",
       `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights.`,
     ].join("\n\n");

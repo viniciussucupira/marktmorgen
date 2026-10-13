@@ -1,3 +1,4 @@
+import type { RefundActivity } from "@/lib/refund-activity";
 import type { ChannelCashflow } from "@/lib/channel-cashflow";
 import { COHORT_AGES, type WeeklyBuyerCohorts, type BuyerChannelWindow } from "@/lib/buyer-channel-rules";
 import { csvCell } from "@/lib/csv";
@@ -40,5 +41,13 @@ export function weeklyCohortReport(cohorts: WeeklyBuyerCohorts, historyPartial: 
       return [row.week, cohorts.asOf, row.buyers, age, eligible, repeated, eligible ? Math.round(repeated / eligible * 100) : null, historyPartial ? "Partial" : "Up to 180 days", cohorts.unidentifiedOrders, note];
     })),
     ...(!cohorts.rows.length && cohorts.unidentifiedOrders ? [["No identified buyers", cohorts.asOf, 0, null, 0, 0, null, historyPartial ? "Partial" : "Up to 180 days", cohorts.unidentifiedOrders, note] as Cell[]] : []),
+  ]);
+}
+
+export function refundActivityReport(activity: RefundActivity, period: ReportPeriod): string {
+  const note = "Refund records include pending refunds and are not unique buyers or orders. Refunds are recorded in these UTC days and matched to the purchase channel; purchases may have been earlier. Payments include renewals. Refunds / payments compares same-period amounts, not the percentage of purchases refunded; it may exceed 100%. Blank ratio means no payments in the period. Only complete, matched readings.";
+  return csv([
+    ["From (UTC)", "To (UTC)", "Currency", "Channel", "Refund records", "Refund amount", "Payments received", "Recorded refunds / payments (%)", "Definition"],
+    ...activity.rows.map((row): Cell[] => [period.from, period.to, period.currency.toUpperCase(), channelName(row.source), row.records, amount(row.refunds, period.currency), amount(row.payments, period.currency), row.share === null ? null : Math.round(row.share * 100), note]),
   ]);
 }
