@@ -2,8 +2,9 @@ import type { NextRequest } from "next/server";
 import { countLeave } from "@/lib/leave-flow";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
-import { MANAGE_TOKEN_PATTERN } from "@/lib/membership-manage";
+import { MANAGE_TOKEN_PATTERN, linkIsLive } from "@/lib/membership-manage";
 import { switchTier } from "@/lib/tier-switch";
+import { YEARLY_TARGET, switchYearly } from "@/lib/yearly-switch";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
@@ -58,6 +59,19 @@ export async function POST(request: NextRequest) {
 
   if (!MANAGE_TOKEN_PATTERN.test(token)) return back("expired");
   if (!(await withinLimit("tier-switch", `${clientAddress(request)}|${store.handle}`, 10, 600))) return back("limited");
+
+  // The same membership, paid yearly (lib/yearly-switch.ts). From the emailed
+  // link, which opens nothing else, the member comes back to the page that
+  // asks for their address, with the result said there.
+  if (target === YEARLY_TARGET) {
+    const yearly = await switchYearly(store, token, subscription, at);
+    const status = yearly.ok ? "yearly" : yearly.reason === "gone" || yearly.reason === "yearly" ? "cannot-switch" : yearly.reason;
+    if (await linkIsLive(token)) return back(status);
+    return new Response(null, {
+      status: 303,
+      headers: { Location: `${origin}/@${store.handle}/manage?status=${status === "expired" ? "offer-expired" : status}`, "Cache-Control": "no-store" },
+    });
+  }
 
   const result = await switchTier(store, token, subscription, target, at);
   // Switched instead of leaving, from the page that asked why (lib/leave-flow.ts).

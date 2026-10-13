@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/money";
 import { speech } from "@/lib/buyer-words";
 import { membershipWords } from "@/lib/buyer-words/membership";
 import { choicesFor, liveTiers } from "@/lib/tier-switch";
+import { YEARLY_TARGET, priceWords } from "@/lib/yearly-switch";
 
 /** The time the page is drawn at, in seconds: whether a pause has started yet. */
 function secondsNow(): number {
@@ -58,7 +59,11 @@ export default async function ManagePage({ params, searchParams }: Params) {
   const { w } = say;
   const m = membershipWords(store.language);
   const pauseNotice: Record<string, string> = { paused: "paused", resumed: "resumed", "cannot-pause": "cannot", "resume-declined": "declined" };
-  const notice = token && !live ? m.manageNotices.expired : m.manageNotices[status] ?? (pauseNotice[status] ? m.pauseNotices[pauseNotice[status]] : null);
+  const notice =
+    token && !live
+      ? m.manageNotices.expired
+      : m.manageNotices[status] ??
+        (pauseNotice[status] ? m.pauseNotices[pauseNotice[status]] : status === "offer-expired" ? m.switchProblems.yearlyExpired : null);
   const nowSeconds = secondsNow();
   const hours = Math.round(MANAGE_LINK_SECONDS / 3600);
   // Out loud, the way a member thinks about what they pay: "$29 a month".
@@ -200,6 +205,19 @@ export default async function ManagePage({ params, searchParams }: Params) {
                             </button>
                           </form>
                         </details>
+                      ) : null}
+                      {one.yearly && !one.pause ? (
+                        // The same membership, paid yearly (lib/yearly-switch.ts): the next page says the exact amount first.
+                        <div className="mt-3 w-full basis-full" data-pay-yearly>
+                          <Link
+                            prefetch={false}
+                            href={`/@${store.handle}/manage/switch?token=${token}&sub=${one.id}&to=${YEARLY_TARGET}`}
+                            className="btn btn-secondary btn-sm"
+                          >
+                            {m.payYearly(priceWords(store, one.yearly.cents, "year", store.language), formatMoney(one.yearly.saving, one.currency, say.lang.locale))}
+                          </Link>
+                          <p className="st-muted mt-1 text-xs">{m.exactFirst}</p>
+                        </div>
                       ) : null}
                       {one.pause ? null : (() => {
                         const choices = choicesFor(store, one, tiers);

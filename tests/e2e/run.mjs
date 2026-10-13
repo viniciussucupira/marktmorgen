@@ -2396,6 +2396,43 @@ try {
     is("and the email to members who stopped coming, off until turned on with an address", [await studio.locator("[data-nudge-editor]").count(), await studio.locator("#nudge-on").isChecked()], [1, false]);
     const nudgeRefused = await studio.evaluate(async () => (await fetch("/api/store/nudge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ on: true, address: "" }) })).status);
     is("never on without a postal address", nudgeRefused, 400);
+    is("and the email offering monthly members the yearly price, off until turned on with an address", [
+      await studio.locator("[data-yearly-ask-editor]").count(),
+      await studio.locator("#yearly-ask-on").isChecked(),
+      await studio.locator("[data-yearly-none]").count(),
+    ], [1, false, 0]);
+    const yearlyRefused = await studio.evaluate(async () => (await fetch("/api/store/yearly-ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ on: true, address: "" }) })).status);
+    is("that one never on without a postal address either", yearlyRefused, 400);
+
+    // A member paying monthly for Recipe Club moves to yearly from their own page (lib/yearly-switch.ts).
+    services.setPauseProduct(club);
+    await open(page, `${LOCAL}/@localshop/manage`);
+    await page.fill("#manage-email", "pause.member@example.com");
+    const askedLink = services.emails().length;
+    await Promise.all([page.waitForURL(/status=sent/), page.getByRole("button", { name: "Email me a link to my membership" }).click()]);
+    let linkMail = null;
+    for (let i = 0; i < 40 && !linkMail; i += 1) {
+      linkMail = services.emails().slice(askedLink).find((email) => [email.to].flat().includes("pause.member@example.com") && /token=/.test(String(email.text))) ?? null;
+      if (!linkMail) await new Promise((wait) => setTimeout(wait, 250));
+    }
+    await open(page, local(String(linkMail?.text ?? "").match(/https?:\/\/\S+\/manage\?token=[0-9a-f]{64}/)?.[0] ?? ""));
+    const payYearly = page.locator("[data-pay-yearly] a");
+    is("the monthly member's page offers paying yearly, with what it saves", await words(payYearly), "Pay yearly: $200 a year, saves $40");
+    await Promise.all([page.waitForURL(/to=yearly/), payYearly.click()]);
+    is("the next page says what moving charges today, in Stripe's figures, before anything happens", [
+      await words(page.locator("[data-yearly-due]")),
+      (await words(page.locator("main"))).includes("Saves $40 a year against twelve monthly payments."),
+    ], ["$193.33 charged today", true]);
+    if (process.env.E2E_SHOTS) await page.locator("main").screenshot({ path: join(process.env.E2E_SHOTS, "pay-yearly.png") });
+    await Promise.all([page.waitForURL(/status=yearly/), page.getByRole("button", { name: "Switch and pay $193.33" }).click()]);
+    const movedYearly = services.subscriptionUpdates().filter((u) => u["items[0][price]"]).at(-1);
+    is("the same membership on a yearly price, charged at once, and the page says so", [
+      movedYearly?.["items[0][price]"],
+      movedYearly?.payment_behavior,
+      services.subscriptionUpdates().at(-1)?.["metadata[every]"],
+      (await words(page.locator("main"))).includes("You now pay yearly"),
+    ], ["price_LocalYearly0001", "pending_if_incomplete", "year", true]);
+    services.resetPauseSub();
     is("and beside it, the question asked before members cancel, off until turned on", [await studio.locator("[data-leave-editor]").count(), await studio.locator("#leave-on").isChecked()], [1, false]);
     if (process.env.E2E_SHOTS) await studio.locator("[data-leave-editor]").screenshot({ path: join(process.env.E2E_SHOTS, "leave-editor.png") });
     const refused = await studio.evaluate(async () => (await fetch("/api/store/dunning", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reminders: 9, cardNotice: true }) })).status);
