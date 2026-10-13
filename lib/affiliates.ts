@@ -70,6 +70,7 @@
  *   nl:aff:<id>:sales    hash  Stripe reference -> the sale
  *   nl:aff:<id>:payouts  hash  payout id -> what the creator says they paid
  */
+import { rememberAffiliate } from "@/lib/affiliate-hub";
 import { saleHandles } from "@/lib/store";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -488,6 +489,32 @@ export async function readAffiliate(store: Store, id: string): Promise<Affiliate
 
 async function writeAffiliate(store: Store, affiliate: Affiliate): Promise<void> {
   await redisPipeline([["HSET", peopleKey(store.statsId as string), affiliate.id, JSON.stringify(affiliate)]]);
+  // Found again from their own page across every store (lib/affiliate-hub.ts).
+  await rememberAffiliate(store.sid, affiliate.email);
+}
+
+/** The affiliate this store has under an address, or null. */
+export async function affiliateByEmail(store: Store, email: string): Promise<Affiliate | null> {
+  if (!store.statsId || !isRedisConfigured()) return null;
+  const [id] = await redisPipeline([["HGET", emailsKey(store.statsId), normaliseEmail(email)]]);
+  return typeof id === "string" && id ? readAffiliate(store, id) : null;
+}
+
+/**
+ * A link that signs an affiliate this store already has in to its page, made
+ * for an address whose owner has just proved it (lib/affiliate-hub.ts): the
+ * same one-off link the store's own form emails, handed over instead of sent.
+ * Null for an address the store does not have, so it never makes an
+ * application nobody asked for.
+ */
+export async function signInLinkFor(store: Store, email: string, origin: string): Promise<string | null> {
+  if (!affiliatesOn(store)) return null;
+  const affiliate = await affiliateByEmail(store, email);
+  if (!affiliate) return null;
+  const token = randomBytes(32).toString("hex");
+  const grant: LinkGrant = { s: store.statsId as string, e: affiliate.email, n: "" };
+  await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", AFFILIATE_LINK_SECONDS]]);
+  return `${origin}/@${store.handle}/affiliates?token=${token}`;
 }
 
 async function within(key: string, limit: number): Promise<boolean> {
@@ -804,6 +831,8 @@ export async function openAffiliateLink(store: Store, token: string): Promise<Op
     }
   }
 
+  // Somebody who joined before their page across every store existed is found from their next sign-in.
+  await rememberAffiliate(store.sid, affiliate.email);
   const session = randomBytes(32).toString("hex");
   await redisPipeline([
     ["SET", sessionKey(session), JSON.stringify({ s: statsId, a: affiliate.id }), "EX", AFFILIATE_SESSION_SECONDS],

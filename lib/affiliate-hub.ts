@@ -1,0 +1,109 @@
+/**
+ * An affiliate's own page across every store (added 13 October 2026): one
+ * place, at marktmorgen.com/affiliate, for somebody who promotes several
+ * creators here.
+ *
+ * Each store already has its affiliates' page (app/[handle]/affiliates):
+ * their link, their numbers, what the creator paid them. An affiliate of
+ * five creators had five pages and five emails to sign in from. What keeps
+ * an affiliate on a platform rather than with one seller is that their work
+ * lives in one place: the programs they are in, side by side, and the
+ * directory of programs they could join (app/affiliate-programs) one click
+ * away. So this keeps, for an address, which stores it is an affiliate of,
+ * and nothing else: the status, the link and the numbers are each store's
+ * own, read from the store when the page is opened, and each store's page
+ * is opened from here with a sign-in made for that address on the spot.
+ *
+ * What is kept is the least that can do it, the same as a buyer's library
+ * (lib/buyer-library.ts): for an address, read only as a one-way hash of it,
+ * the ids of the stores it joined. Written whenever a store writes the
+ * affiliate down (lib/affiliates.ts, writeAffiliate) and whenever they sign
+ * in to a store's page, so somebody who joined before this existed is found
+ * the next time they open any one of them.
+ *
+ * Signing in is the library's: the address is typed, and a link that opens
+ * the page for a day is emailed to it. Nothing is sent to an address that is
+ * nobody's affiliate, and the answer on the page is the same either way, so
+ * the form cannot be used to learn who promotes whom.
+ *
+ *   nl:affhub:<hash of the address>       the stores it is an affiliate of (a set of ids), kept 3 years after the last
+ *   nl:affhub:link:<hash of a token>      the address a link was sent to, for a day
+ */
+import { createHash, randomBytes } from "node:crypto";
+import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
+import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { withinLimit } from "@/lib/request-guard";
+import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+
+export const HUB_LINK_SECONDS = 24 * 60 * 60;
+export const HUB_TOKEN = /^[0-9a-f]{64}$/;
+/** The most stores one page lists. */
+export const MAX_HUB_STORES = 100;
+const KEEP_SECONDS = 3 * 365 * 86_400;
+const STORE_ID = /^[0-9a-f]{32}$/;
+
+const sha = (value: string) => createHash("sha256").update(value).digest("hex");
+const hubKey = (email: string) => `nl:affhub:${sha(`nimbus-affhub:${normaliseEmail(email)}`).slice(0, 40)}`;
+const linkKey = (token: string) => `nl:affhub:link:${sha(`nimbus-affhub-link:${token}`).slice(0, 40)}`;
+
+/** Notes that this address is an affiliate of the store with this id. Never throws. */
+export async function rememberAffiliate(sid: string, email: string): Promise<void> {
+  if (!STORE_ID.test(sid) || typeof email !== "string" || !EMAIL_PATTERN.test(normaliseEmail(email)) || !isRedisConfigured()) return;
+  try {
+    await redisPipeline([
+      ["SADD", hubKey(email), sid],
+      ["EXPIRE", hubKey(email), KEEP_SECONDS],
+    ]);
+  } catch (error) {
+    console.error("noting an affiliate for their page failed", error);
+  }
+}
+
+/** The ids of the stores an address is an affiliate of. */
+export async function storesPromoted(email: string): Promise<string[]> {
+  if (!isRedisConfigured()) return [];
+  const [ids] = await redisPipeline([["SMEMBERS", hubKey(email)]]);
+  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string" && STORE_ID.test(id)).slice(0, MAX_HUB_STORES) : [];
+}
+
+export type HubRequest = "sent" | "email" | "limited" | "error";
+
+/**
+ * Emails a link that opens the page. "sent" whether or not the address is
+ * anybody's affiliate; nothing is sent to one that is not.
+ */
+export async function requestHubLink(input: { email: string; ip: string; origin: string }): Promise<HubRequest> {
+  const raw = input.email.trim();
+  if (!raw || raw.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(raw)) return "email";
+  if (!isRedisConfigured() || !isSenderConfigured()) return "error";
+  const email = normaliseEmail(raw);
+  if (!(await withinLimit("affhub-ip", input.ip, 10, 3_600))) return "limited";
+  if (!(await withinLimit("affhub-address", sha(email), 5, 3_600))) return "limited";
+  const stores = await storesPromoted(email);
+  if (!stores.length) return "sent";
+  const token = randomBytes(32).toString("hex");
+  await redisPipeline([["SET", linkKey(token), email, "EX", HUB_LINK_SECONDS]]);
+  const link = `${input.origin}/affiliate?token=${token}`;
+  const sent = await sendEmail({
+    from: NIMBUS_FROM,
+    to: email,
+    subject: "Your affiliate programs on Marktmorgen",
+    text: [
+      `Here are the affiliate programs you are in on Marktmorgen, ${stores.length} ${stores.length === 1 ? "store" : "stores"} in one place:`,
+      "",
+      link,
+      "",
+      "The link works for 24 hours. After that, ask for a new one at marktmorgen.com/affiliate.",
+      "",
+      "If you did not ask for this, you can ignore it: nobody can open the page without this email.",
+    ].join("\n"),
+  });
+  return sent ? "sent" : "error";
+}
+
+/** The address a live link was sent to, or null. */
+export async function hubOwner(token: string): Promise<string | null> {
+  if (!HUB_TOKEN.test(token) || !isRedisConfigured()) return null;
+  const [email] = await redisPipeline([["GET", linkKey(token)]]);
+  return typeof email === "string" && email ? email : null;
+}
