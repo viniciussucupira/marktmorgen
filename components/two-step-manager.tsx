@@ -139,7 +139,7 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: i
       </h3>
       <p className="mt-2 text-sm text-ink-soft">
         {on
-          ? `On. Logging in with the emailed link also asks for the code in your authenticator app; a passkey needs no code. ${left} recovery ${left === 1 ? "code" : "codes"} left.${recoveryShown ? ` Lose your phone and your codes, and a link to your recovery address, ${recoveryShown}, lets you back in.` : " Set up before recovery addresses: turn it off and on again to add one, so losing your phone never keeps you out."}`
+          ? `On. Logging in with the emailed link also asks for the code in your authenticator app; a passkey needs no code. ${left} recovery ${left === 1 ? "code" : "codes"} left.${recoveryShown ? ` Lose your phone and your codes, and a link to your recovery address, ${recoveryShown}, lets you back in.` : " There is no recovery address: add one above, so losing your phone never keeps you out."}`
           : "After the emailed link, ask for a six-digit code from an authenticator app, such as Google Authenticator, Microsoft Authenticator, 1Password or Authy. Someone who gets into your email still cannot open your studio without your phone. A passkey needs no code."}
       </p>
 
@@ -195,11 +195,15 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: i
             void run({ action: "start", backup }, (answer) => answer.secret && answer.uri && setSetup({ secret: answer.secret, uri: answer.uri }));
           }}
         >
-          <label className="block min-w-0 flex-1 basis-60 text-sm font-bold text-ink">
-            Recovery address
-            <span className="block text-xs font-normal text-ink-soft">A second inbox you can open. If you ever lose your phone, a link sent there lets you straight back in.</span>
-            <input className="field mt-1" type="email" autoComplete="email" required maxLength={254} value={backup} onChange={(e) => setBackup(e.target.value)} />
-          </label>
+          {recoveryShown ? (
+            <p className="min-w-0 flex-1 basis-60 text-sm text-ink-soft">{`Your recovery address, ${recoveryShown}, is the way back in if you ever lose your phone.`}</p>
+          ) : (
+            <label className="block min-w-0 flex-1 basis-60 text-sm font-bold text-ink">
+              Recovery address
+              <span className="block text-xs font-normal text-ink-soft">A second inbox you can open. If you ever lose your phone, a link sent there lets you straight back in.</span>
+              <input className="field mt-1" type="email" autoComplete="email" required maxLength={254} value={backup} onChange={(e) => setBackup(e.target.value)} />
+            </label>
+          )}
           <button type="submit" className="btn btn-secondary" disabled={busy}>
             <Icon name="lock" size={16} />
             Turn on two-step login
@@ -219,17 +223,19 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: i
               void run({ action: "finish", code, backupCode }, (answer) => {
                 setOn(true);
                 setSetup(null);
-                setRecoveryShown(backup.trim());
+                if (!recoveryShown) setRecoveryShown(backup.trim());
                 setLeft(answer.codes?.length ?? 0);
                 setCodes(answer.codes ?? []);
               });
             }}
           >
             {codeField("Code from the app")}
-            <label className="block min-w-0 flex-1 basis-48 text-sm font-bold text-ink">
-              {`Code sent to ${backup}`}
-              <input className="field mt-1 tracking-[0.15em]" inputMode="numeric" autoComplete="one-time-code" maxLength={10} value={backupCode} onChange={(e) => setBackupCode(e.target.value)} />
-            </label>
+            {recoveryShown ? null : (
+              <label className="block min-w-0 flex-1 basis-48 text-sm font-bold text-ink">
+                {`Code sent to ${backup}`}
+                <input className="field mt-1 tracking-[0.15em]" inputMode="numeric" autoComplete="one-time-code" maxLength={10} value={backupCode} onChange={(e) => setBackupCode(e.target.value)} />
+              </label>
+            )}
             <button type="submit" className="btn btn-primary" disabled={busy}>
               {busy ? "Checking…" : "Turn it on"}
             </button>

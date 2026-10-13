@@ -179,6 +179,8 @@ import { StudioStorePin } from "@/components/studio-store-pin";
 import { PasskeyManager } from "@/components/passkey-manager";
 import { TwoStepManager } from "@/components/two-step-manager";
 import { lockedUntil, twoStepStatus } from "@/lib/two-step";
+import { RecoveryAddressManager } from "@/components/recovery-address-manager";
+import { hideAddress, recoveryAddress } from "@/lib/recovery-address";
 import { ResendPurchase } from "@/components/resend-purchase";
 import { LeaveTeam } from "@/components/team-manager";
 import { productSegment } from "@/lib/product-slug";
@@ -933,7 +935,7 @@ export default async function StudioPage({
     : [null, { state: "none" as const }, null];
   // The person's own passkeys, and — for the owner — how many are on the team.
   // Adding a passkey needs a login from the last fifteen minutes (lib/auth.ts).
-  const [passkeys, team, freshLogin, lockedTill, twoStep] = await Promise.all([
+  const [passkeys, team, freshLogin, lockedTill, twoStep, recoveryShown] = await Promise.all([
     email ? listPasskeys(email).catch(() => []) : Promise.resolve([]),
     store?.sid && may("team") ? readTeam(store.sid).catch(() => null) : Promise.resolve(null),
     isFreshSession(cookieStore.get(SESSION_COOKIE)?.value).catch(() => false),
@@ -941,6 +943,8 @@ export default async function StudioPage({
     lockedUntil(cookieStore.get(SESSION_COOKIE)?.value).catch(() => 0),
     // The person's two-step login (lib/two-step.ts), beside their passkeys.
     email ? twoStepStatus(email).catch(() => ({ on: false, since: 0, codesLeft: 0, reset: 0, backup: "" })) : Promise.resolve({ on: false, since: 0, codesLeft: 0, reset: 0, backup: "" }),
+    // The person's recovery address, partly hidden (lib/recovery-address.ts).
+    email ? recoveryAddress(email).then((a) => (a ? hideAddress(a) : "")).catch(() => "") : Promise.resolve(""),
   ]);
   const connectReady = isConnectConfigured();
   const billingReadyForSteps = isBillingConfigured();
@@ -1020,7 +1024,7 @@ export default async function StudioPage({
           <div className="notice notice-warn mt-6" role="status">
             <p className="font-bold text-ink">{`Some things are locked until ${new Date(lockedTill).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })}`}</p>
             <p className="mt-1 text-sm text-ink-soft">
-              You got in without your second step, so payments, your plan, your team, exports, settings, sending to your list, your sign-in address, passkeys and two-step login wait until then. Everything else is open: your products, pages, buyers, numbers and drafts. On that day two-step login turns off and nothing is locked; turn it on again with your new phone.
+              You got in through your recovery address or without your second step, so payments, your plan, your team, exports, settings, sending to your list, your sign-in address, passkeys and two-step login wait until then. Everything else is open: your products, pages, buyers, numbers and drafts. On that day nothing is locked any more, and you can move your sign-in address to an inbox you have. Logging in with your sign-in email, a passkey or your app&apos;s code before then opens everything at once.
             </p>
           </div>
         ) : twoStep.reset > 0 ? (
@@ -2870,7 +2874,8 @@ export default async function StudioPage({
                 initial={passkeys.map(({ id, name, createdAt, lastUsedAt, synced }) => ({ id, name, createdAt, lastUsedAt, synced }))}
                 fresh={freshLogin}
               />
-              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} reset={lockedTill > 0 ? 0 : twoStep.reset} backup={twoStep.backup} fresh={freshLogin} locked={lockedTill > 0} />
+              <RecoveryAddressManager shown={recoveryShown} />
+              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} reset={lockedTill > 0 ? 0 : twoStep.reset} backup={twoStep.backup || recoveryShown} fresh={freshLogin} locked={lockedTill > 0} />
 
               {role !== "owner" ? (
                 <section aria-labelledby="leave-title" className="mt-8 border-t border-line pt-6">

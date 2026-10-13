@@ -69,6 +69,9 @@ import { withinLimit } from "@/lib/request-guard";
 import { seal, unseal } from "@/lib/secret-box";
 import { SITE_URL } from "@/lib/site-url";
 import { newSecret, otpauthUri, stepOf } from "@/lib/totp";
+import { alignRecoveryLock, endRecoveryLock, hideAddress, keepRecoveryAddress, recoveryAddress } from "@/lib/recovery-address";
+
+export { hideAddress };
 
 export const TWO_STEP_COOKIE = "nl_2fa";
 export const HOLD_SECONDS = 10 * 60;
@@ -164,13 +167,10 @@ async function tell(email: string, subject: string, line: string): Promise<void>
  */
 export type TwoStepStatus = { on: boolean; since: number; codesLeft: number; reset: number; backup: string };
 
-/** An address shown without giving it away: its first letters, the rest as dots. */
-export function hideAddress(address: string): string {
-  const [name = "", domain = ""] = address.split("@");
-  const dot = domain.lastIndexOf(".");
-  const host = dot > 0 ? domain.slice(0, dot) : domain;
-  const end = dot > 0 ? domain.slice(dot) : "";
-  return `${name.slice(0, 1)}\u2022\u2022\u2022@${host.slice(0, 1)}\u2022\u2022\u2022${end}`;
+
+/** The account's recovery address (lib/recovery-address.ts); a record from before kept its own. */
+async function backupOf(email: string, record: TwoStep): Promise<string> {
+  return (await recoveryAddress(email)) || record.backup;
 }
 
 export async function twoStepStatus(email: string): Promise<TwoStepStatus> {
@@ -178,7 +178,7 @@ export async function twoStepStatus(email: string): Promise<TwoStepStatus> {
   await resetIfDue(email);
   const record = await read(email);
   return record
-    ? { on: true, since: record.since, codesLeft: record.codes.length, reset: record.reset, backup: record.backup ? hideAddress(record.backup) : "" }
+    ? { on: true, since: record.since, codesLeft: record.codes.length, reset: record.reset, backup: await backupOf(email, record).then((b) => (b ? hideAddress(b) : "")) }
     : { on: false, since: 0, codesLeft: 0, reset: 0, backup: "" };
 }
 
@@ -207,15 +207,34 @@ export async function lockedUntil(session: string | undefined, now = Date.now())
  * Asking again does not move the day. Answers the session to set.
  */
 export async function enterLocked(token: string, now = Date.now()): Promise<{ session: string; email: string; until: number } | null> {
-  const email = await heldFor(token);
+  const held = await heldInfo(token);
+  const email = held?.email ?? null;
   const record = email ? await read(email) : null;
   if (!email || !record) return null;
+  const through = held?.viaRecovery ? "a login link sent to your recovery address" : "a login link sent to this address";
   // Spent, as a right code spends it: one waiting login, one session.
   const [removed] = await redisPipeline([["DEL", holdKey(token)]]);
   if (Number(removed) !== 1) return null;
   const first = record.reset === 0;
   const until = first ? now + RESET_DAYS * 86_400_000 : record.reset;
   if (first) await write(email, { ...record, reset: until });
+  const session = await openLockedSession(email, until, now);
+  // The same day for a later login through the recovery address, which then opens everything once it has passed.
+  await alignRecoveryLock(email, until, now);
+  await tell(
+    email,
+    first ? "Your Marktmorgen account was opened without two-step login" : "Your Marktmorgen account was opened again without two-step login",
+    `Somebody who opened ${through} said they no longer have your authenticator app, your recovery codes, a passkey or your recovery address, and was let in. Until ${day(until)}, payments, your plan, your team, exports, settings, sending to your list, your sign-in address, passkeys and two-step login are locked for them; after that, two-step login turns off.
+
+If that was you, keep working: everything else is open.
+
+If it was not you, somebody can read your email: log in with your app's code or a passkey, or open your studio in a browser that is still logged in and press Cancel. That logs them out and keeps two-step login on. Then change your email password.`,
+  );
+  return { session, email, until };
+}
+
+/** Opens a session locked (LOCKED_NEEDS) until `until`, logged out by Cancel or a full login. */
+export async function openLockedSession(email: string, until: number, now = Date.now()): Promise<string> {
   const session = await openSession(email);
   const seconds = Math.max(60, Math.ceil((until - now) / 1000));
   await redisPipeline([
@@ -223,16 +242,18 @@ export async function enterLocked(token: string, now = Date.now()): Promise<{ se
     ["SADD", lockedSetKey(email), session],
     ["EXPIRE", lockedSetKey(email), seconds + 86_400],
   ]);
-  await tell(
-    email,
-    first ? "Your Marktmorgen account was opened without two-step login" : "Your Marktmorgen account was opened again without two-step login",
-    `Somebody who opened a login link sent to this address said they no longer have your authenticator app, your recovery codes, a passkey or your recovery address, and was let in. Until ${day(until)}, payments, your plan, your team, exports, settings, sending to your list, your sign-in address, passkeys and two-step login are locked for them; after that, two-step login turns off.
+  return session;
+}
 
-If that was you, keep working: everything else is open.
-
-If it was not you, somebody can read your email: log in with your app's code or a passkey, or open your studio in a browser that is still logged in and press Cancel. That logs them out and keeps two-step login on. Then change your email password.`,
-  );
-  return { session, email, until };
+/**
+ * A full login — the sign-in inbox without two-step login, a right code or a
+ * passkey — ends what the recovery address opened (lib/recovery-address.ts):
+ * its locked sessions are logged out, and the account is told when there were any.
+ */
+export async function endRecoveryAccess(email: string): Promise<void> {
+  if (!(await endRecoveryLock(email))) return;
+  await endLocked(email);
+  await tell(email, "What your recovery address opened was closed", "Your account was just logged in with your sign-in email, a code or a passkey, so the browsers that got in through your recovery address were logged out.");
 }
 
 /** Logs out every session opened without the second step. */
@@ -249,6 +270,7 @@ export async function cancelReset(email: string, why: "login" | "studio"): Promi
   if (!record || record.reset === 0) return false;
   await write(email, { ...record, reset: 0 });
   await endLocked(email);
+  await endRecoveryLock(email);
   await tell(
     email,
     "Two-step login stays on for your Marktmorgen account",
@@ -289,6 +311,13 @@ export type SetupStart = { secret: string; uri: string } | "already" | "backup" 
  */
 export async function startSetup(email: string, session: string, backupRaw: string): Promise<SetupStart> {
   if (await twoStepOn(email)) return "already";
+  // An account that already has a confirmed recovery address uses it, with no new code.
+  const existing = await recoveryAddress(email);
+  if (existing) {
+    const secret = newSecret();
+    await redisPipeline([["SET", setupKey(session), JSON.stringify({ e: normaliseEmail(email), s: seal(secret, context(email)), b: existing, c: "" }), "EX", SETUP_SECONDS]]);
+    return { secret, uri: otpauthUri(secret, normaliseEmail(email), ISSUER) };
+  }
   const backup = normaliseEmail(backupRaw);
   if (!backup || backup.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(backup)) return "backup";
   if (backup === normaliseEmail(email)) return "same";
@@ -332,13 +361,16 @@ export async function finishSetup(
     pending = {};
   }
   if (pending.e !== normaliseEmail(email) || typeof pending.s !== "string" || typeof pending.b !== "string" || typeof pending.c !== "string") return "expired";
-  if (sha(`nimbus-2fa-backup:${backupCode.replace(/\D/g, "")}`) !== pending.c) return "backup-wrong";
+  // "" for an address the account had already confirmed (startSetup).
+  if (pending.c !== "" && sha(`nimbus-2fa-backup:${backupCode.replace(/\D/g, "")}`) !== pending.c) return "backup-wrong";
   const opened = unseal(pending.s, context(email));
   if (!opened.ok) return "expired";
   const step = stepOf(opened.value, typed, now);
   if (step === null) return "wrong";
   const codes = newCodes();
-  await write(email, { s: pending.s, since: now, codes: codes.map((c) => codeHash(c)), last: step, reset: 0, backup: pending.b });
+  await write(email, { s: pending.s, since: now, codes: codes.map((c) => codeHash(c)), last: step, reset: 0, backup: "" });
+  // The account's recovery address from now on, for losing the email too (lib/recovery-address.ts).
+  await keepRecoveryAddress(email, pending.b);
   await redisPipeline([["DEL", setupKey(session)]]);
   await tell(email, "Two-step login is on for your Marktmorgen account", `Two-step login was turned on for your Marktmorgen account. From now on, logging in with the emailed link also asks for the code in your authenticator app. If you ever lose your phone and your recovery codes, a link sent to your recovery address (${hideAddress(pending.b)}) lets you back in.`);
   return { codes };
@@ -350,17 +382,21 @@ export async function finishSetup(
  * an hour. False when the account has no recovery address.
  */
 export async function sendRescue(token: string, origin: string): Promise<"sent" | "none" | "limited" | "expired" | "unsent"> {
-  const email = await heldFor(token);
+  const held = await heldInfo(token);
+  const email = held?.email ?? null;
   const record = email ? await read(email) : null;
   if (!email || !record) return "expired";
-  if (!record.backup) return "none";
+  // A login that came through the recovery address cannot be rescued by it again.
+  if (held?.viaRecovery) return "none";
+  const backup = await backupOf(email, record);
+  if (!backup) return "none";
   if (!(await withinLimit("two-step-rescue", normaliseEmail(email), 3, 60 * 60))) return "limited";
   const rescue = randomBytes(32).toString("hex");
   await redisPipeline([["SET", rescueKey(rescue), normaliseEmail(email), "EX", 15 * 60]]);
   const sent = isSenderConfigured()
     ? await sendEmail({
         from: NIMBUS_FROM,
-        to: record.backup,
+        to: backup,
         replyTo: "support@marktmorgen.com",
         subject: "Get back into your Marktmorgen account",
         text: [
@@ -442,9 +478,9 @@ export async function replaceCodes(email: string, typed: string): Promise<{ code
 }
 
 /** A login that has passed the emailed link and now waits for its code: the token for the browser's cookie. */
-export async function holdSignIn(email: string): Promise<string> {
+export async function holdSignIn(email: string, viaRecovery = false): Promise<string> {
   const token = randomBytes(32).toString("hex");
-  await redisPipeline([["SET", holdKey(token), JSON.stringify({ e: normaliseEmail(email), n: 0 }), "EX", HOLD_SECONDS]]);
+  await redisPipeline([["SET", holdKey(token), JSON.stringify({ e: normaliseEmail(email), n: 0, ...(viaRecovery ? { v: 1 } : {}) }), "EX", HOLD_SECONDS]]);
   return token;
 }
 
@@ -455,7 +491,7 @@ export async function finishSignIn(token: string, typed: string, now = Date.now(
   if (!/^[0-9a-f]{64}$/.test(token) || !isRedisConfigured()) return { ok: false, reason: "expired" };
   const key = holdKey(token);
   const [raw] = await redisPipeline([["GET", key]]);
-  let hold: { e?: unknown; n?: unknown } = {};
+  let hold: { e?: unknown; n?: unknown; v?: unknown } = {};
   try {
     hold = typeof raw === "string" ? (JSON.parse(raw) as typeof hold) : {};
   } catch {
@@ -472,15 +508,27 @@ export async function finishSignIn(token: string, typed: string, now = Date.now(
     // Spent: only the caller whose delete removed it opens the session.
     const [removed] = await redisPipeline([["DEL", key]]);
     if (Number(removed) !== 1) return { ok: false, reason: "expired" };
-    // The owner has the second step after all: a pending request to turn it off is called off.
+    // The owner has the second step after all: anything opened without it is called off.
     await cancelReset(hold.e, "login");
+    await endRecoveryAccess(hold.e);
     return { ok: true, email: hold.e, how: checked };
   }
-  if (checked === "wrong") await redisPipeline([["SET", key, JSON.stringify({ e: hold.e, n: tries + 1 }), "EX", HOLD_SECONDS]]);
+  if (checked === "wrong") await redisPipeline([["SET", key, JSON.stringify({ e: hold.e, n: tries + 1, ...(hold.v === 1 ? { v: 1 } : {}) }), "EX", HOLD_SECONDS]]);
   return { ok: false, reason: checked };
 }
 
 /** Whose login is waiting behind a token, for the page that asks for the code. */
+export async function heldInfo(token: string): Promise<{ email: string; viaRecovery: boolean } | null> {
+  if (!/^[0-9a-f]{64}$/.test(token) || !isRedisConfigured()) return null;
+  const [raw] = await redisPipeline([["GET", holdKey(token)]]);
+  try {
+    const hold = typeof raw === "string" ? (JSON.parse(raw) as { e?: unknown; v?: unknown }) : {};
+    return typeof hold.e === "string" ? { email: hold.e, viaRecovery: hold.v === 1 } : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function heldFor(token: string): Promise<string | null> {
   if (!/^[0-9a-f]{64}$/.test(token) || !isRedisConfigured()) return null;
   const [raw] = await redisPipeline([["GET", holdKey(token)]]);

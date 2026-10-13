@@ -1021,7 +1021,10 @@ export default function PrivacyPage() {
           browser and system as the browser names them; we do not keep that
           description. In the studio, a cookie named <code>nl_store</code>{" "}
           remembers which of an account&apos;s stores was last open, for a
-          year. A creator who turns on two-step login has the secret their
+          year. A creator who adds a recovery address has it kept, to email a
+          code to it once and a link when they ask for one from the login page;
+          after a login through it, we keep until when what matters is locked
+          for that login, and for 30 days after. A creator who turns on two-step login has the secret their
           authenticator app shares with us kept encrypted, a one-way hash of
           each recovery code not yet used, the recovery address they gave
           (which we write to only to confirm it and when they ask for a way
