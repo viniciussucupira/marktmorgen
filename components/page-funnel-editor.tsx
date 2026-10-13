@@ -1,5 +1,6 @@
 "use client";
 
+import type { FunnelRepairAction } from "@/lib/funnel-review-actions";
 import { funnelRate, reviewFunnel } from "@/lib/funnel-review";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -63,11 +64,13 @@ export function PageFunnelEditor({
   saved,
   choices,
   base,
+  repairActions = [],
 }: {
   saved: SavedFunnel[];
   choices: StepChoice[];
   /** The funnels' addresses start with this: https://marktmorgen.com/@chef/go/ */
   base: string;
+  repairActions?: FunnelRepairAction[];
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -248,6 +251,7 @@ export function PageFunnelEditor({
                 {paymentIssues == null ? <p className="mt-2 text-sm text-ink-soft">This configuration could not be checked. Review payment and delivery before sharing the funnel.</p> : paymentIssues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{paymentIssues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">No blocker found in the saved offer configuration.</p>}
                 <p className="mt-2 text-xs text-ink-mute">This does not contact Stripe, open a checkout, test file storage or external links, or verify that a sign-up email arrives. Test those paths as a buyer.</p>
                 {review.observation ? <p className="mt-3 text-sm text-ink-soft">{review.observation}</p> : null}
+                {repairActions.length > 0 && (review.issues.length > 0 || paymentIssues == null || paymentIssues.length > 0) ? <nav aria-label={"Corrections for " + funnel.name} className="mt-3 flex flex-wrap gap-2">{repairActions.map(action => <a key={action.href} className="btn btn-secondary btn-sm" href={action.href}>{action.label}</a>)}</nav> : null}
                 <a className="btn btn-secondary btn-sm mt-3" href={base + funnel.slug} target="_blank" rel="noopener noreferrer">Open as a visitor</a>
               </details>
               <ol className="mt-4 space-y-2">
