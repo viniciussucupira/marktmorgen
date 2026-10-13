@@ -2,7 +2,7 @@ import { paidStepProblem, readFunnelPaymentChecks } from "@/lib/funnel-payment-c
 import type { Listing, Store } from "@/lib/store";
 import { done, is, part } from "./check";
 process.env.STRIPE_SECRET_KEY = "sk_test_local_configuration_only";
-const store = { stripeAccountId: "acct_test", stripeChargesEnabled: true, subscriptionActive: true, suspended: false } as Store;
+const store = { stripeAccountId: "acct_test", stripeChargesEnabled: true, subscriptionActive: true, suspended: false } as unknown as Store;
 const product = { id: "offer1", title: "Offer", priceCents: 1000, hidden: false, call: null, course: null, podcast: null, shipping: null, options: [], recurring: null, bundle: null, link: "https://example.com/delivery", file: null } as unknown as Listing;
 part("Paid funnel configuration follows the existing sale rules");
 is("ready link offer", paidStepProblem(store, product, 0), null);
