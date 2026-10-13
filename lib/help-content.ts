@@ -185,6 +185,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "How do I know if my numbers are good?",
+        a: [
+          "Your numbers set four of your rates beside stores your size, under \u201cBeside stores your size\u201d: visits that became a sale, checkouts that were paid, sales refunded and buyers who had bought before, all over the last 90 days. Stores are grouped by their visitors in those 90 days (300 to 2,999, 3,000 to 29,999, and 30,000 or more), and for each rate you see your own figure, the middle half of those stores, their median, and whether you are in the middle half, above it or below it.",
+          "A rate is shown only once at least 10 stores your size have it, and only once your own counts are big enough to mean something: 300 visitors, and 10 checkouts, sales or buyers for the rates made from them. The ranges are worked out once a day from the stores' own numbers. No store is named or can be picked out, and nothing about any buyer is used.",
+        ],
+      },
+      {
         q: "Can I make a short link for a post?",
         a: [
           "Yes. In your studio, under \u201cShare the store,\u201d give the post a name, say where you post it and where the link goes: your store or one of your products. You get an address like marktmorgen.com/l/k7p2qa, short enough for a caption, a bio, a slide or a flyer, and its own QR code to download as SVG or PNG. The letters leave out 0, o, 1, l and i, so nobody misreads it from print.",

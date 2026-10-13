@@ -27,6 +27,8 @@ import { BuyingHours } from "@/components/buying-hours";
 import { CustomRange } from "@/components/custom-range";
 import { NumbersAsk } from "@/components/numbers-ask";
 import { CustomerVoice } from "@/components/customer-voice";
+import { BesideStores } from "@/components/beside-stores";
+import type { Band, Comparison } from "@/lib/benchmark-rules";
 import type { VoiceSummary } from "@/lib/customer-voice";
 import type { AutoMark, MarkKind } from "@/lib/auto-marks";
 import { useStudioStore } from "@/components/studio-store-pin";
@@ -366,6 +368,7 @@ export function StatsPanel({
   meta = null,
   canConnectMeta = false,
   pin = "",
+  beside = null,
 }: {
   data: StatsData;
   canExport?: boolean;
@@ -403,6 +406,8 @@ export function StatsPanel({
   canConnectMeta?: boolean;
   /** "?store=<id>", carried on the forms that post to the studio's routes. */
   pin?: string;
+  /** The store's rates beside stores its size (lib/benchmark-rules.ts); null when there is nothing to set them beside. */
+  beside?: { band: Band; rows: Comparison[] } | null;
 }) {
   const [range, setRange] = useState<RangeKey>("d7");
   const [pickDates, setPickDates] = useState(false);
@@ -877,6 +882,8 @@ export function StatsPanel({
       ) : null}
 
       {salesKnown && data.hours ? <BuyingHours hours={data.hours.sales} /> : null}
+
+      {beside ? <BesideStores band={beside.band} rows={beside.rows} /> : null}
 
       {range !== "all" && salesKnown && data.discounts?.rows ? (
         <DiscountImpact rows={data.discounts.rows} refundsRead={data.discounts.refundsRead} currency={data.currency ?? "usd"} />

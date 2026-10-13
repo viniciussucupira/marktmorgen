@@ -11,6 +11,7 @@ import { recoverFailedPayments } from "@/lib/payment-recovery";
 import { sendMemberNudges } from "@/lib/member-nudge";
 import { sendYearlyAsks } from "@/lib/yearly-ask";
 import { sendVerified } from "@/lib/verified-numbers";
+import { refreshRanges } from "@/lib/benchmarks";
 import { settleInvites } from "@/lib/creator-invite-credit";
 import { sendWinBacks } from "@/lib/winback-send";
 import { ensureDemoStore } from "@/lib/demo-seed";
@@ -123,6 +124,11 @@ async function run(request: NextRequest): Promise<Response> {
     } catch (error) {
       console.error("reading the shared numbers failed", error);
     }
+    // The ranges stores are set beside, from the last two weeks' samples (lib/benchmarks.ts): one read and one write.
+    const benchmarks = await refreshRanges().then((r) => (r ? r.stores : null)).catch((error: unknown) => {
+      console.error("working out the ranges of stores failed", error);
+      return null;
+    });
     // Invited creators' payments, past their refund window, become credit on
     // the plan of whoever invited them (lib/creator-invite-credit.ts).
     let invites = null;
@@ -148,7 +154,7 @@ async function run(request: NextRequest): Promise<Response> {
     });
     if (demo && demo.pending.length) console.error("the demo store is missing something", demo.pending);
     const ok = plans !== null && (billing !== null || !isBillingConfigured());
-    return Response.json({ ok, ...(plans ?? {}), billing, recovered, comeBack, nudged, yearly, verified, invites, catalogs, demo }, { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
+    return Response.json({ ok, ...(plans ?? {}), billing, recovered, comeBack, nudged, yearly, verified, benchmarks, invites, catalogs, demo }, { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
   } finally {
     await redisPipeline([["DEL", "nl:plans:lock"]]).catch(() => {});
   }

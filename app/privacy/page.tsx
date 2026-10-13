@@ -1207,6 +1207,19 @@ export default function PrivacyPage() {
           for their data to be deleted, Meta tells us and we do the same at
           once, and tell the store&apos;s owner.
         </p>
+        <p id="comparisons" className="scroll-mt-24">
+          <strong className="text-black">Comparisons between stores.</strong>{" "}
+          To show a creator how their store&apos;s rates sit beside stores of
+          its size, we keep, for each store whose numbers are read in the
+          studio or for the weekly email, four rates over the last 90 days
+          (visits that became a sale, checkouts that were paid, sales
+          refunded, buyers who had bought before) and the size band of its
+          visitors, for three weeks. Nothing about any buyer is in it. From
+          them we work out, once a day, each band&apos;s middle half and
+          median, and only from at least 10 stores; that is all any creator
+          is shown, and no store is named or can be picked out. The demo
+          store and suspended stores are left out.
+        </p>
         <p>
           <strong className="text-black">Usage and technical data.</strong> We
           may collect information such as IP address, browser type, device
