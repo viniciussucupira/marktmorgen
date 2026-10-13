@@ -206,7 +206,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
                 </h3>
                 <p className="text-sm tabular-nums text-ink-soft">{`${count} · ${money(cents)}`}</p>
               </div>
-              {visibleIds && !scopedDeals.some(d => d.stage === stage.id && visibleIds.has(d.id)) ? <p className="mt-3 text-sm text-ink-mute">No deals match this filter.</p> : null}
+              {(visibleIds || search.trim() || responsible !== "all") && !scopedDeals.some(d => d.stage === stage.id && visibleIds.has(d.id)) ? <p className="mt-3 text-sm text-ink-mute">No deals match this filter.</p> : null}
               <ul className="mt-3 space-y-3">
                 {scopedDeals
                   .filter((d) => d.stage === stage.id && (!visibleIds || visibleIds.has(d.id)))
