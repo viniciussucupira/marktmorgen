@@ -11,8 +11,8 @@
  * enough to mean something; on a quiet week the list is empty, and empty is
  * the honest answer.
  *
- * Ads are called by lib/ad-spend-rules.ts: spend more at SCALE_AT back for
- * each 1 spent, cut below 1.
+ * Recorded ad spend is compared with payments after matched refunds.
+ * Neither attributed revenue nor this cash result proves advertising lift.
  *
  * Each sentence can carry the step it points at (added 12 October 2026), as
  * Triple Whale, Cometly and FullStory pair a finding with an action: a
@@ -26,14 +26,15 @@
  * Pure: the studio's panel and the weekly email both call it on StatsData.
  */
 import type { StatsData } from "@/lib/stats";
-import { type AdSpend, spendBy, verdictFor } from "@/lib/ad-spend-rules";
+import { type AdSpend, spendBy, VERDICT_MIN_CENTS } from "@/lib/ad-spend-rules";
+import { channelCashflows } from "@/lib/channel-cashflow";
 import { channelName } from "@/lib/channel-names";
 import { HEARD_NAMES, isHeardAnswer } from "@/lib/heard-rules";
 import { formatMoney } from "@/lib/money";
 import { recordsFrom } from "@/lib/records";
 
 /** Where a sentence leads: a screen of the studio, already set, or a part of the numbers panel by its id there. */
-export type InsightAction = { label: string; href: string } | { label: string; section: "funnel" | "channels" | "posts" | "ads" | "products" | "reach" };
+export type InsightAction = { label: string; href: string } | { label: string; section: "funnel" | "channels" | "posts" | "ads" | "products" | "reach" | "cashflow" };
 export type Insight = {
   text: string;
   tone: "good" | "bad" | "info";
@@ -76,22 +77,19 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
   // The average order in these days, the one figure the arithmetic below is made with.
   const average = known && now.sales > 0 ? Math.round(now.cents / now.sales) : 0;
 
-  // 1. Ads that cost more than they brought, in these days.
+  // 1. Recorded receipts after refunds, set against recorded ad spend.
   if (known && spends.length && data.days.length) {
     const days = data.days.slice(-DAYS[window]);
     const spent = spendBy(spends, days[0].date, days[days.length - 1].date);
-    for (const [channel, cost] of spent.channels) {
-      const brought = data.channels?.[window]?.find((row) => row.source === channel)?.cents ?? 0;
-      const call = verdictFor(brought, cost);
-      if (call === "cut") {
-        out.push({ text: `Ads on ${channelName(channel)} cost ${money(cost)} in the last ${span} and brought ${money(brought)} in sales: worth cutting, or changing.`, tone: "bad", action: { label: "See your ads", section: "ads" }, math: `${money(cost)} spent − ${money(brought)} brought = ${money(cost - brought)} more out than in.` });
-      } else if (call === "scale") {
-        out.push({
-          text: `Ads on ${channelName(channel)} cost ${money(cost)} in the last ${span} and brought ${money(brought)} in sales, ${(brought / cost).toFixed(1)} back for each 1 spent: worth spending more there.`,
-          tone: "good",
-          action: { label: "See your ads", section: "ads" },
-        });
-      }
+    const rows = channelCashflows(data, window, data.channels?.[window] ?? [], spent.channels, days[0].date, days[days.length - 1].date);
+    for (const row of rows.sort((a, b) => (a.afterAds ?? 0) - (b.afterAds ?? 0))) {
+      if (row.adSpend < VERDICT_MIN_CENTS || row.afterRefunds === null || row.afterAds === null) continue;
+      out.push({
+        text: `${channelName(row.source)} received ${money(row.receipts)} in payments in the last ${span}, with ${money(row.refunds ?? 0)} in refunds and ${money(row.adSpend)} in recorded ads. ${money(row.afterAds)} remains before fees and other costs.`,
+        tone: row.afterAds < 0 ? "bad" : "info",
+        action: { label: "See payments and costs", section: "cashflow" },
+        math: `${money(row.receipts)} received − ${money(row.refunds ?? 0)} refunded − ${money(row.adSpend)} spent = ${money(row.afterAds)}. This includes organic sales; it is not profit or proof of ad lift.`,
+      });
     }
   }
 

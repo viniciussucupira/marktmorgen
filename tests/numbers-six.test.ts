@@ -240,9 +240,12 @@ async function main(): Promise<void> {
     { id: "a", channel: "instagram", campaign: "", cents: 10_000, from: "2026-10-05", to: "2026-10-11" },
     { id: "b", channel: "tiktok", campaign: "", cents: 5_000, from: "2026-10-05", to: "2026-10-11" },
   ];
+  data.cashflowComplete = true;
+  data.refunds = { d7: [], d30: [], d90: [] };
   const said = insightsFrom(data, "d7", adSpends, 6).map((i) => i.text);
-  is("ads that brought three times their cost: spend more", said.some((t) => /^Ads on Instagram cost \$100 in the last 7 days and brought \$300 in sales, 3\.0 back for each 1 spent: worth spending more there\.$/.test(t)), true);
-  is("ads that brought nothing: cut", said.some((t) => /^Ads on TikTok cost \$50 in the last 7 days and brought \$0 in sales: worth cutting, or changing\.$/.test(t)), true);
+  is("a channel's recorded payments less costs, not a budget instruction", said.some((t) => /^Instagram received \$300 in payments in the last 7 days, with \$0 in refunds and \$100 in recorded ads\. \$200 remains before fees and other costs\.$/.test(t)), true);
+  is("a channel with spend and no payments discloses the negative result", said.some((t) => /^TikTok received \$0 in payments in the last 7 days, with \$0 in refunds and \$50 in recorded ads\. -\$50 remains before fees and other costs\.$/.test(t)), true);
+  is("no direction to scale or cut follows from gross attributed sales", said.some((t) => /spending more|worth cutting/.test(t)), false);
   is("and the record, said as of the last 90 days", said.some((t) => /best 7 days of the last 90/.test(t)), true);
   const week = weeklyMessage(store, data, "https://marktmorgen.com/stop", [], 300_000)!;
   is("the Monday email carries the goal", /October goal: \$300 of \$3,000 \(10%\), \$135 a day needed for the 20 days left\./.test(week.text), true);

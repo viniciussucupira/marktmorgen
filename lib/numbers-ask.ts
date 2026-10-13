@@ -22,12 +22,15 @@ import type { Store } from "@/lib/store";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
 import { DISCOUNT_NAMES } from "@/lib/discount-impact";
+import { readSpends } from "@/lib/ad-spend";
+import { spendBy, type AdSpend } from "@/lib/ad-spend-rules";
+import { channelCashflows } from "@/lib/channel-cashflow";
 
 export const MAX_QUESTION = 300;
 export const WINDOWS = ["d7", "d30", "d90"] as const;
 export type AskWindow = (typeof WINDOWS)[number];
 /** The parts of the Numbers panel an answer can open, by their ids there (components/stats-panel.tsx). */
-export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights"] as const;
+export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels"] as const;
 export type AskSection = (typeof SECTIONS)[number];
 
 export type NumbersAnswer = {
@@ -44,7 +47,7 @@ const NAMES: Record<AskWindow, string> = { d7: "last_7_days", d30: "last_30_days
  * The block of numbers the model is handed: money already written as the
  * creator reads it, so an amount it repeats is the amount on the panel.
  */
-export function numbersContext(data: StatsData): Record<string, unknown> {
+export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<string, unknown> {
   const known = data.sales === "ok";
   const money = (cents: number) => formatMoney(cents, data.currency);
   const out: Record<string, unknown> = {
@@ -54,6 +57,9 @@ export function numbersContext(data: StatsData): Record<string, unknown> {
   for (const w of WINDOWS) {
     const t = data.totals[w];
     const p = data.previous?.[w];
+    const days = (data.days ?? []).slice(-(w === "d7" ? 7 : w === "d30" ? 30 : 90));
+    const costs = spends !== undefined && days.length ? spendBy(spends, days[0].date, days[days.length - 1].date).channels : new Map<string, number>();
+    const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], costs, days[0].date, days[days.length - 1].date) : [];
     out[NAMES[w]] = {
       visitors: t.visitors,
       page_views: t.views,
@@ -81,6 +87,22 @@ export function numbersContext(data: StatsData): Record<string, unknown> {
       devices_by_views: (data.devices?.[w] ?? []).slice(0, 5).map((r) => ({ device: r.name, page_views: r.visits })),
       ...(known && data.renewals ? { renewals: { payments: data.renewals[w].payments, revenue: money(data.renewals[w].cents) } } : {}),
       ...(known && data.buyers ? { buyers: { buyers: data.buyers[w].buyers, orders: data.buyers[w].orders, came_back: data.buyers[w].returning } } : {}),
+      ...(known && cash.length ? { cashflow: {
+        complete: data.cashflowComplete === true,
+        note: "Payments include renewals; refunds include pending refunds and belong to the days recorded. Before fees, tax, commissions and other costs. Not profit or causal ad lift.",
+        channels: cash.slice(0, 15).map((c) => ({ channel: channelName(c.source), payments_received: money(c.receipts),
+          refunds: c.refunds === null ? null : money(c.refunds), after_refunds: c.afterRefunds === null ? null : money(c.afterRefunds),
+          ...(spends !== undefined ? { ad_spend_recorded: money(c.adSpend), after_refunds_and_ads: c.afterAds === null ? null : money(c.afterAds) } : {}),
+        })),
+      } } : {}),
+      ...(known && data.buyerChannels ? { buyer_channels: {
+        history_partial: data.buyerChannels.historyPartial,
+        unidentified_orders: data.buyerChannels[w].unidentifiedOrders,
+        note: "First purchase observed in up to 180 days, not lifetime acquisition. Renewals are not repurchases. Only buyers observed for a full 30 days enter the 30-day rate. Gross revenue, not predicted LTV.",
+        channels: data.buyerChannels[w].rows.slice(0, 15).map((c) => ({ channel: channelName(c.source), buyers: c.buyers, buyers_who_bought_again: c.repeatBuyers,
+          revenue_per_buyer: money(Math.round(c.cents / Math.max(1, c.buyers))), observed_for_30_days: c.eligible30, bought_again_within_30_days: c.repeated30,
+        })),
+      } } : {}),
       searched_for_and_not_found: (data.searchMisses?.[w] ?? []).slice(0, 10).map((r) => ({ words: r.name, times: r.visits })),
       // The same money three ways (lib/attribution-rules.ts): last visit, first visit, what buyers said.
       ...(known && data.attribution
@@ -130,12 +152,14 @@ const line = (value: unknown, max: number) => (typeof value === "string" ? value
 export async function askNumbers(store: Store, question: string, data: StatsData, now = Date.now()): Promise<AiResult<NumbersAnswer>> {
   const asked = line(question, MAX_QUESTION);
   if (!asked) return { ok: false, reason: "notes" };
-  const context = JSON.stringify(numbersContext(data));
+  const spends = await readSpends(store.statsId).catch(() => undefined);
+  const context = JSON.stringify(numbersContext(data, spends));
   return counted(store, now, async () => {
     const system = [
       "You answer a creator's question about their own online store's numbers.",
       "Answer ONLY from the JSON of numbers given. Never estimate, project or invent a number, a cause or a fact that is not in it. If the numbers cannot answer the question, say so plainly in one sentence and say what the numbers do show that comes closest.",
       "Money is already written as the creator reads it: repeat amounts exactly as given. Windows are the last 7, 30 and 90 days; with no window in the question, use the last 30 days.",
+      "Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days.",
       "Write in the language of the question. At most 90 words, plain sentences, no markdown, no headings. Be direct: the answer first, then one short line on what it suggests doing, only if the numbers clearly support it.",
       `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights.`,
     ].join("\n\n");
@@ -163,7 +187,8 @@ export async function askNumbers(store: Store, question: string, data: StatsData
  * goes without it.
  */
 export async function weeklySummary(store: Store, data: StatsData, now = Date.now()): Promise<string | null> {
-  const context = JSON.stringify(numbersContext(data));
+  const spends = await readSpends(store.statsId).catch(() => undefined);
+  const context = JSON.stringify(numbersContext(data, spends));
   const done = await counted(store, now, async () => {
     const system = [
       "You write the first lines of a creator's weekly email about their own online store's numbers.",

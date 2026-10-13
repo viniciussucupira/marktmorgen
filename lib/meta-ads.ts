@@ -1,7 +1,7 @@
 /**
  * A store's own Meta ad account, connected with Facebook Login, so what its
  * campaigns spent is read once a day into the numbers (added 13 October
- * 2026): each channel's "Left", its call to spend more, keep or cut, and the
+ * 2026): each channel's "Left", its recorded result after refunds, and the
  * days it took to pay back (lib/ad-spend-rules.ts) then use what Meta
  * charged, not only what was typed. The rows become lines by
  * lib/meta-ads-rules.ts.

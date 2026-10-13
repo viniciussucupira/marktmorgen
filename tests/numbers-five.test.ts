@@ -164,6 +164,9 @@ async function main(): Promise<void> {
   is("a quiet week says little", quiet.length <= 1, true);
   const busy: StatsData = {
     ...data,
+    cashflowComplete: true,
+    refunds: { d7: [], d30: [], d90: [] },
+    channelDays: { instagram: { [data.days[data.days.length - 1].date]: 9000 } },
     totals: { ...data.totals, d7: { visitors: 400, views: 600, checkouts: 30, sales: 3, cents: 9000 } },
     previous: { ...data.previous, d7: { visitors: 200, views: 300, checkouts: 10, sales: 6, cents: 12000 } },
     channels: {
@@ -175,7 +178,7 @@ async function main(): Promise<void> {
     },
   };
   const said = insightsFrom(busy, "d7", [{ id: "aaaaaaaa", channel: "tiktok", campaign: "", cents: 5000, from: data.days[data.days.length - 3].date, to: data.days[data.days.length - 1].date }]).map((i) => i.text);
-  is("ads that cost more than they brought come first", /^Ads on TikTok cost \$50 in the last 7 days and brought \$0/.test(said[0] ?? ""), true);
+  is("a negative recorded result comes first, without a budget instruction", /^TikTok received \$0 in payments in the last 7 days, with \$0 in refunds and \$50 in recorded ads\. -\$50 remains/.test(said[0] ?? ""), true);
   is("then the visitors, the buying and the checkouts", [
     said.some((t) => /More people visited: 400 .* up 100%/.test(t)),
     said.some((t) => /Fewer of your visitors bought: 0\.8% .* 3\.0%/.test(t)),
