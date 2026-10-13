@@ -71,6 +71,7 @@ const spends = [{ id: "ad1", channel: "instagram", campaign: "", cents: 5000, fr
 const insights = insightsFrom(data, "d7", spends);
 is("the alert points to the recorded loss rather than gross ROAS", [insights[0].tone, insights[0].text.includes("-$20"), insights[0].action], ["bad", true, { label: "See payments and costs", section: "cashflow" }]);
 is("no budget instruction", /spending more|worth cutting/.test(JSON.stringify(insights)), false);
+is("a recorded loss is not hidden by positive channels when the alert list is short", insightsFrom({ ...data, channelDays: { ...data.channelDays, google: { "2026-10-13": 90000 } } }, "d7", [...spends, { id: "ad2", channel: "google", campaign: "", cents: 1000, from: "2026-10-07", to: "2026-10-13" }], 1)[0].tone, "bad");
 is("incomplete figures do not produce financial alerts", insightsFrom({ ...data, cashflowComplete: false }, "d7", spends).some((i) => i.action && "section" in i.action && i.action.section === "cashflow"), false);
 const context = numbersContext(data, spends);
 const text = JSON.stringify(context);
