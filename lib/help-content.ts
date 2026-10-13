@@ -185,6 +185,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I give a countdown offer to people who download my freebie?",
+        a: [
+          "Yes. Under \u201cA welcome offer with a deadline of their own\u201d, choose a paid product, a discount of 10% to 50% and how long it lasts: 24, 48 or 72 hours, or 7 days. Whoever asks for one of your free products sees it on the page they pick their copy up from, with the time left counting down, and a button that opens your checkout with the discount already taken off by Stripe, for the address the free copy went to.",
+          "The deadline is real. It starts when the person asks for the free product and is kept for them, so asking again, on another device or a month later, never starts it again. When it ends, the button goes, the page says when it ended, and the product is at its usual price. With the reminder on, one email goes before the end, only to someone who agreed to hear from you and confirmed their address. Your numbers count these sales as \u201cWelcome offer\u201d beside the other discounts.",
+        ],
+      },
+      {
         q: "How do I know if my numbers are good?",
         a: [
           "Your numbers set four of your rates beside stores your size, under \u201cBeside stores your size\u201d: visits that became a sale, checkouts that were paid, sales refunded and buyers who had bought before, all over the last 90 days. Stores are grouped by their visitors in those 90 days (300 to 2,999, 3,000 to 29,999, and 30,000 or more), and for each rate you see your own figure, the middle half of those stores, their median, and whether you are in the middle half, above it or below it.",

@@ -2970,6 +2970,45 @@ try {
   }
 
   await keepSmall();
+  part("A welcome offer with a deadline of each person's own: set, shown with its time, opened at the discount");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const post = (path, body) => studio.evaluate(async ([path, body]) => (await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json(), [path, body]);
+    const guide = (await post("/api/store/product", { action: "add", title: "Welcome Guide", price: "0" })).product?.id ?? "";
+    const course = (await post("/api/store/product", { action: "add", title: "Welcome Course", price: "49" })).product?.id ?? "";
+    await post("/api/store/product", { action: "link", id: guide, link: "https://example.com/welcome-guide" });
+    await post("/api/store/product", { action: "link", id: course, link: "https://example.com/welcome-course" });
+    const saved = await post("/api/store/welcome-offer", { product: course, percent: 25, hours: 48, remind: true, address: "1 Main St, Austin, TX 78701" });
+    is("saved, with a coupon made on the creator's own Stripe account", [saved.ok, saved.welcomeOffer?.percent, /^coupon_|^[A-Za-z0-9_-]{3,}$/.test(saved.welcomeOffer?.coupon ?? "")], [true, 25, true]);
+    await open(studio, `${LOCAL}/studio`);
+    const editor = studio.locator("[data-welcome-offer-editor]");
+    is("the studio shows it on", [await editor.count(), (await words(editor)).includes("On")], [1, true]);
+
+    const lead = "welcome.lead@example.com";
+    await open(page, `${LOCAL}/@localshop/p/${guide}`);
+    const form = page.locator('form[action="/api/store/free"]').first();
+    await form.locator('input[name="email"]').fill(lead);
+    await form.locator("input[name=consent]").check();
+    await Promise.all([page.waitForURL(/status=sent/, { timeout: 60_000 }), form.locator("button[type=submit]").click()]);
+    const mail = services.emails().filter((email) => [].concat(email.to).includes(lead)).at(-1);
+    const link = mail?.text.match(/https?:\/\/\S+\/free\?token=[0-9a-f]{64}/)?.[0] ?? "";
+    await open(page, local(link));
+    const box = page.locator("[data-welcome-offer]");
+    await box.locator("[data-welcome-left]").waitFor({ timeout: 30_000 });
+    const left = await words(box.locator("[data-welcome-left]"));
+    is("the page the copy is picked up from offers it, with the time left counting down", [(await words(box)).includes("25% off Welcome Course"), /^Ends in 4[78]:\d\d:\d\d$/.test(left)], [true, true]);
+    if (process.env.E2E_SHOTS) await box.screenshot({ path: join(process.env.E2E_SHOTS, "welcome-offer.png") });
+    const token = new URL(local(link)).searchParams.get("token") ?? "";
+    const opened = await page.request.post(`${LOCAL}/api/store/welcome/open`, { form: { handle: "localshop", token }, maxRedirects: 0, headers: { Origin: LOCAL } });
+    const session = services.checkouts().at(-1);
+    is("its button opens the checkout with the discount, for that address, as a welcome offer", [opened.status(), session?.discount_coupon === saved.welcomeOffer?.coupon, session?.customer_details?.email, session?.metadata?.welcome], [303, true, lead, "yes"]);
+    await open(studio, `${LOCAL}/studio`);
+    is("and the studio counts the person offered", (await words(studio.locator("[data-welcome-offer-editor]"))).includes("Offered so far: 1."), true);
+    await post("/api/store/welcome-offer", { percent: 0 });
+    for (const id of [guide, course]) await post("/api/store/product", { action: "remove", id });
+  }
+
+  await keepSmall();
   part("A page of the store's own, in its menu and on its address");
   {
     await open(studio, `${LOCAL}/studio/site?store=${fresh}`);

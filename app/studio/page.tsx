@@ -105,6 +105,8 @@ import { NumbersLinksEditor } from "@/components/numbers-links-editor";
 import { yearlyAsksThisMonth } from "@/lib/yearly-ask";
 import { activeYearly } from "@/lib/yearly-price";
 import { WinBackEditor } from "@/components/winback-editor";
+import { WelcomeOfferEditor } from "@/components/welcome-offer-editor";
+import { welcomesOffered } from "@/lib/welcome-offer-send";
 import { aiLeft, isAiConfigured } from "@/lib/ai";
 import { AiOn } from "@/components/ai-assist";
 import { AiPosts } from "@/components/ai-posts";
@@ -1672,6 +1674,16 @@ export default async function StudioPage({
                 <TaxEditor tax={store.tax} status={tax ? tax.state : "unknown"} connected={Boolean(current?.stripeAccountId)} />
 
                 {may("settings") ? <StoreLanguageEditor language={store.language} handle={store.handle} /> : null}
+
+                {givesAway && may("settings") ? (
+                  <WelcomeOfferEditor
+                    offer={store.welcomeOffer}
+                    products={[...(await readCards(store).catch(() => new Map()))].map(([, c]) => c).filter((c) => c.priceCents > 0).map((c) => ({ id: c.id, title: c.title }))}
+                    connected={Boolean(current?.stripeAccountId)}
+                    suggestedAddress={store.winback.address || store.recovery.address || store.mail?.address || ""}
+                    offered={await welcomesOffered(store).catch(() => 0)}
+                  />
+                ) : null}
 
                 <RecoveryEditor
                   recovery={store.recovery}

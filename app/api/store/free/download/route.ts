@@ -1,6 +1,7 @@
 import { type NextRequest, after } from "next/server";
 import { isFree, storeForHandle } from "@/lib/store";
 import { recordLead, spendClaim } from "@/lib/free";
+import { scheduleReminder } from "@/lib/welcome-offer-send";
 import { enroll } from "@/lib/flows";
 import { emitEvent } from "@/lib/webhooks";
 import { queuePerson } from "@/lib/email-sync";
@@ -73,6 +74,8 @@ export async function POST(request: NextRequest) {
   // After the file is on its way, so it never waits on another company.
   // The sign-up happens now, when the address is confirmed.
   const confirmedAt = Date.now();
+  // The welcome offer's one reminder, now that the address is confirmed and only if they agreed (lib/welcome-offer-send.ts).
+  after(() => scheduleReminder(store, claim, token).then(() => undefined).catch((error) => console.error("setting the welcome offer reminder failed", error)));
   after(() =>
     queuePerson(store, {
       source: "free",
