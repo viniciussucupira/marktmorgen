@@ -24,7 +24,7 @@ When a review has issues or is incomplete, it offers navigation to products/deli
 
 ## Unsaved CRM work
 
-The existing leave guard now covers modified deal, stage and custom-field drafts. Opening an unchanged editor does not activate it. It remains active during a pending save and after a failed save, until the draft is successfully saved or explicitly cancelled. It covers browser reload/close and normal same-origin navigation links under the existing guard rules. It is not autosave or durable draft storage; in-page replacement of a draft and browser Back behavior remain outside this guard.
+The existing leave guard now covers modified deal, stage and custom-field drafts. Opening an unchanged editor does not activate it. It remains active during a pending save and after a failed save, until the draft is successfully saved or explicitly cancelled. It covers browser reload/close and normal same-origin navigation links under the existing guard rules. It is not autosave or durable draft storage; browser Back behavior remains outside this guard. The CRM now allows one editor at a time: opening another editor and moving/removing cards wait until the current deal, stage or field editor is saved or cancelled. This prevents in-page replacement of an open draft without adding another confirmation dialog.
 
 ## Verification
 
