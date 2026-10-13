@@ -771,6 +771,8 @@ export type SalesStats = {
    * (lib/ad-spend-rules.ts, paybackOf). Days with nothing are left out.
    */
   channelDays?: ChannelDays;
+  /** Refund amounts on the UTC day recorded; null means no complete ledger was read. */
+  refundDays?: Record<string, number> | null;
   /** Who bought, for each window, and the biggest buyers of the 90 days (buyersFrom; added 12 October 2026). */
   buyers?: BuyerNumbers;
   buyerChannels?: BuyerChannels;
@@ -1339,6 +1341,12 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
       return [...by.values()].sort((a, b) => b.cents - a.cents || a.source.localeCompare(b.source));
     };
     out.refundsIn = { d7: refundsFrom(cut7), d30: refundsFrom(cut30), d90: refundsFrom(cut90) };
+    out.refundDays = {};
+    for (const refund of refundRows) {
+      const day = dayKey(refund.created);
+      if (refund.currency !== store.currency || day < cut90) continue;
+      out.refundDays[day] = (out.refundDays[day] ?? 0) + refund.cents;
+    }
     out.refundsByProduct = {};
     for (const refund of refundRows) {
       if (refund.currency !== store.currency) continue;
@@ -1681,6 +1689,8 @@ export type StatsData = {
   refundsByProduct: Record<string, { refunds: number; cents: number }>;
   /** Each channel's money by the day over the 90 days, renewals included (SalesStats.channelDays). */
   channelDays?: ChannelDays;
+  /** Refund amounts on the UTC day recorded; null means no complete ledger was read. */
+  refundDays?: Record<string, number> | null;
   /** Who bought, for each window (SalesStats.buyers): counts and money only, no address. */
   buyers?: Record<"d7" | "d30" | "d90", BuyersWindow> | null;
   buyerChannels?: BuyerChannels | null;
@@ -1931,6 +1941,7 @@ export function studioStats(
     refunds: sales?.refundsIn ?? null,
     refundsByProduct: sales?.refundsByProduct ?? {},
     channelDays: sales?.channelDays ?? {},
+    refundDays: sales?.refundDays ?? null,
     buyers: sales?.buyers ? { d7: sales.buyers.d7, d30: sales.buyers.d30, d90: sales.buyers.d90 } : null,
     buyerChannels: sales?.buyerChannels ?? null,
     cashflowComplete: sales?.cashflowComplete ?? false,

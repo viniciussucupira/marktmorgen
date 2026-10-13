@@ -82,7 +82,11 @@ export function spendWithin(entry: Pick<AdSpend, "cents" | "from" | "to">, from:
   const start = entry.from > from ? entry.from : from;
   const end = entry.to < to ? entry.to : to;
   const inside = daysBetween(start, end);
-  return inside ? Math.round((entry.cents * inside) / span) : 0;
+  if (!inside) return 0;
+  // Allocate by differences of rounded cumulative amounts. Every split of a
+  // recorded interval then conserves its smallest currency units exactly.
+  const before = daysBetween(entry.from, start) - 1;
+  return Math.round(entry.cents * (before + inside) / span) - Math.round(entry.cents * before / span);
 }
 
 /** What was spent on each channel, and on each campaign, between two days. */

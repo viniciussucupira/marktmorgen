@@ -136,6 +136,7 @@ async function main(): Promise<void> {
     { source: "unrecorded", refunds: 1, cents: 500 },
   ]);
   is("and under its product", sales.refundsByProduct, { prod000001: { refunds: 1, cents: 3000 } });
+  is("daily refunds stay on their recorded date", sales.refundDays, { [new Date(NOW - DAY).toISOString().slice(0, 10)]: 3500 });
 
   part("Searched for and not found");
   await countSearchMiss(statsId, ["notion", "template"], NOW);

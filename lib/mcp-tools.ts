@@ -28,6 +28,7 @@ import { listCounts } from "@/lib/contacts";
 import { affiliatesOn, readBook } from "@/lib/affiliates";
 import { insightsFrom } from "@/lib/insights";
 import { readPaths } from "@/lib/next-bought";
+import { dailyCashflowRows } from "@/lib/daily-cashflow";
 import { refundActivityFrom } from "@/lib/refund-activity";
 import { channelCashflows } from "@/lib/channel-cashflow";
 
@@ -77,6 +78,10 @@ export function channelsTool(data: StatsData, w: Window) {
       payments_received: refundActivity.payments, refunds_recorded: refundActivity.refunds, refund_records: refundActivity.records,
       note: "Money is in the currency smallest unit. Same-period payments including renewals, and recorded refunds including pending refunds. Not a refund rate for purchases or buyers: refunded purchases may be earlier and records are not unique buyers or orders. Ratio is refunded amount / received amount, may exceed 1; null means no payments. Only complete, matched readings.",
       channels: refundActivity.rows.map((row) => ({ channel: row.source, payments_received: row.payments, refunds_recorded: row.refunds, refund_records: row.records, recorded_refunds_over_payments: row.share })),
+    } } : {}),
+    ...(known ? { daily_recorded_cashflow: {
+      note: "UTC days; money is in the currency smallest unit. Payments include renewals. Refunds include pending refunds on their recorded day, even for older purchases. Null means incomplete or unavailable readings. Before ad spend, fees and other costs; not profit. This tool does not load recorded ad spend.",
+      days: dailyCashflowRows(data, w).map((row) => ({ day: row.date, payments_received: row.payments, refunds_recorded: row.refunds, after_refunds: row.afterRefunds })),
     } } : {}),
     buyer_cohorts: known && data.buyerChannels ? {
       history_partial: data.buyerChannels.historyPartial,
