@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import { guardStoreWrite } from "@/lib/store-request";
 import { ensureStatsId } from "@/lib/store";
-import { DEAL_ID, newCrmId, parseDeal, parseFields, parseStages } from "@/lib/crm-rules";
+import { DEAL_ID, newCrmId, readFollowUp, parseDeal, parseFields, parseStages } from "@/lib/crm-rules";
+import { readTeam } from "@/lib/team";
+import { can } from "@/lib/team-roles";
 import { dropDeal, readDeal, readFields, readStages, setValue, writeDeal, writeFields, writeStages } from "@/lib/crm";
 
 /** Ten fields of ten choices, or a deal with its note, as JSON. */
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
   const { body } = guarded;
   const refuse = (error: string, status = 400) => Response.json({ ok: false, error }, { status });
   try {
-    const store = guarded.store.statsId ? guarded.store : await ensureStatsId(guarded.store.email);
+    const store = guarded.store.statsId ? guarded.store : await ensureStatsId(guarded.ref);
     if (!store?.statsId) return refuse("unavailable", 503);
     const statsId = store.statsId;
 
@@ -50,8 +52,15 @@ export async function POST(request: NextRequest) {
       const asked = typeof raw.id === "string" && DEAL_ID.test(raw.id) ? raw.id : "";
       const existing = asked ? await readDeal(statsId, asked, stages) : null;
       if (asked && !existing) return refuse("unknown", 404);
+      const follow = readFollowUp({ ...existing, ...raw });
+      if (!follow.ok) return refuse(follow.error);
+      if (follow.value.assignee && follow.value.assignee !== existing?.assignee) {
+        const team = await readTeam(store.sid);
+        const eligible = follow.value.assignee === store.email || team.members.some(m => m.email === follow.value.assignee && can(m.role, "orders"));
+        if (!eligible) return refuse("assignee");
+      }
       const now = Math.floor(Date.now() / 1000);
-      const deal = parseDeal({ ...raw, id: existing?.id ?? newCrmId(10), createdAt: existing?.createdAt ?? now, updatedAt: now }, stages);
+      const deal = parseDeal({ ...existing, ...raw, ...follow.value, id: existing?.id ?? newCrmId(10), createdAt: existing?.createdAt ?? now, updatedAt: now }, stages);
       if (!deal) return refuse(typeof raw.title === "string" && raw.title.trim() ? "stage" : "title");
       if (!(await writeDeal(statsId, deal))) return refuse("full");
       return Response.json({ ok: true, deal });
