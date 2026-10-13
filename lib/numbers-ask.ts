@@ -30,7 +30,7 @@ export const MAX_QUESTION = 300;
 export const WINDOWS = ["d7", "d30", "d90"] as const;
 export type AskWindow = (typeof WINDOWS)[number];
 /** The parts of the Numbers panel an answer can open, by their ids there (components/stats-panel.tsx). */
-export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels"] as const;
+export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels", "weekly-cohorts"] as const;
 export type AskSection = (typeof SECTIONS)[number];
 
 export type NumbersAnswer = {
@@ -134,6 +134,21 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
       buyers_who_bought_again: r.again,
     }));
   }
+  if (known && data.buyerChannels?.weekly) {
+    out.weekly_repurchase_cohorts = {
+      as_of_utc: data.buyerChannels.weekly.asOf,
+      history_partial: data.buyerChannels.historyPartial,
+      unidentified_orders: data.buyerChannels.weekly.unidentifiedOrders,
+      note: "UTC first observed purchase weeks from up to 180 days of history, independent of the selected 7/30/90-day window. Rates are cumulative repurchases, not activity retention. Each denominator contains only buyers observed for the full 7, 30, 60 or 90 days; null rate means no eligible buyers. Renewals and one-click extras do not count. Small groups fluctuate and incomplete history may miss purchases. Not lifetime acquisition or a prediction.",
+      weeks: data.buyerChannels.weekly.rows.map((row) => ({
+        first_purchase_week_utc: row.week, buyers: row.buyers,
+        periods: Object.entries(row.observations).map(([days, cell]) => ({
+          days: Number(days), observed_for_full_period: cell.eligible, bought_again_within_period: cell.repeated,
+          rate: cell.eligible ? Math.round(cell.repeated / cell.eligible * 100) + "%" : null,
+        })),
+      })),
+    };
+  }
   return out;
 }
 
@@ -159,7 +174,7 @@ export async function askNumbers(store: Store, question: string, data: StatsData
       "You answer a creator's question about their own online store's numbers.",
       "Answer ONLY from the JSON of numbers given. Never estimate, project or invent a number, a cause or a fact that is not in it. If the numbers cannot answer the question, say so plainly in one sentence and say what the numbers do show that comes closest.",
       "Money is already written as the creator reads it: repeat amounts exactly as given. Windows are the last 7, 30 and 90 days; with no window in the question, use the last 30 days.",
-      "Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days.",
+      "Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days. Weekly cohorts are independent of the selected channel window. Always name the period and eligible denominator, do not treat immature cells as zero, infer churn or claim a trend from small groups or incomplete history.",
       "Write in the language of the question. At most 90 words, plain sentences, no markdown, no headings. Be direct: the answer first, then one short line on what it suggests doing, only if the numbers clearly support it.",
       `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights.`,
     ].join("\n\n");
