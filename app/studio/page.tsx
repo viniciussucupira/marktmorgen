@@ -972,6 +972,10 @@ export default async function StudioPage({
               },
             ]
           : []),
+        // A way back in that needs no email, for the day the sign-in inbox is lost (lib/recovery-address.ts).
+        ...(role === "owner"
+          ? [{ key: "recovery", title: "Keep a way back in", hint: "A recovery address or a passkey: if you ever cannot open your email, either lets you straight back in.", done: Boolean(recoveryShown) || passkeys.length > 0, href: "#account-recovery" }]
+          : []),
         { key: "share", title: "Share your address", hint: "Put it in your bio. This checks itself off when your first visitor arrives.", done: (numbers?.totals.d30.visitors ?? 0) > 0, href: "#details" },
       ]
     : [];
