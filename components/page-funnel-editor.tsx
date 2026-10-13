@@ -1,6 +1,6 @@
 "use client";
 
-import { reviewFunnel } from "@/lib/funnel-review";
+import { funnelRate, reviewFunnel } from "@/lib/funnel-review";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -46,7 +46,10 @@ const key = (step: Pick<PageFunnelStep, "kind" | "id">) => `${step.kind}:${step.
 
 /** "120 people", "1 person". */
 const people = (n: number) => `${n.toLocaleString("en-US")} ${n === 1 ? "person" : "people"}`;
-const share = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : "–");
+const share = (part: number, whole: number) => {
+  const rate = funnelRate(part, whole);
+  return rate === null ? "rate unavailable" : `${rate}% of estimated opens`;
+};
 
 /**
  * The studio's funnels of pages (lib/page-funnel.ts): each with its address,
@@ -187,8 +190,8 @@ export function PageFunnelEditor({
       <ul className="mt-6 space-y-4">
         {saved.map(({ funnel, steps }) => {
           const review = reviewFunnel(steps);
-          const first = steps.find((s) => s.open)?.seen ?? 0;
-          const last = [...steps].reverse().find((s) => s.open);
+
+
           return (
             <li key={funnel.id} className="rounded-2xl border border-line bg-white p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -266,9 +269,7 @@ export function PageFunnelEditor({
                 ))}
               </ol>
               <p className="mt-3 text-xs text-ink-mute">
-                {last && first > 0
-                  ? `${share(last.seen, first)} of the people who opened the first step reached the last. `
-                  : ""}
+                Counts are independent estimates for each step. They do not identify the same people moving between steps. {" "}
                 {`Counted since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed: each person once a step, never you or your team.`}
               </p>
             </li>
