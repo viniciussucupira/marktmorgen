@@ -19,7 +19,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { STORAGE_BRAKE_BYTES, storageWords } from "@/lib/storage-quota";
 
 const GB = 1024 * 1024 * 1024;
@@ -82,6 +82,7 @@ test("it appears nowhere a creator is choosing or comparing a plan", () => {
 test("only an upload is ever refused by it, never a download", () => {
   const callers = walk(join(process.cwd(), "app"))
     .concat(walk(join(process.cwd(), "lib")))
+    .map((file) => relative(process.cwd(), file).replaceAll("\\", "/"))
     .filter((f) => !f.endsWith("lib/storage-quota.ts"))
     .filter((f) => /storageUsed/.test(readFileSync(f, "utf8")));
 

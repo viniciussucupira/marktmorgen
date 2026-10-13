@@ -733,16 +733,22 @@ export async function readPayPalSales(statsId: string | null, since: number, lim
 }
 
 /** PayPal sales refunded in full since `since` (seconds): the payment, how much, in what, and when the refund was seen. */
-export async function readPayPalRefunds(statsId: string | null, since: number): Promise<{ order: string; capture: string; cents: number; currency: string; at: number }[]> {
-  if (!statsId || !isRedisConfigured()) return [];
-  const [orders] = await redisPipeline([["ZRANGEBYSCORE", refundedKey(statsId), String(Math.max(0, since)), "+inf", "WITHSCORES", "LIMIT", "0", "500"]]);
+export async function readPayPalRefundsWithCoverage(statsId: string | null, since: number): Promise<{ rows: { order: string; capture: string; cents: number; currency: string; at: number }[]; partial: boolean }> {
+  if (!statsId || !isRedisConfigured()) return { rows: [], partial: false };
+  const [orders] = await redisPipeline([["ZRANGEBYSCORE", refundedKey(statsId), String(Math.max(0, since)), "+inf", "WITHSCORES", "LIMIT", "0", "501"]]);
   const flat = Array.isArray(orders) ? (orders as string[]) : [];
   const out: { order: string; capture: string; cents: number; currency: string; at: number }[] = [];
-  for (let i = 0; i + 1 < flat.length; i += 2) {
+  let missing = false;
+  for (let i = 0; i + 1 < Math.min(flat.length, 1000); i += 2) {
     const paid = await readPaid(flat[i]);
     if (paid && paid.store === statsId) out.push({ order: paid.order, capture: paid.capture, cents: paid.cents, currency: paid.currency, at: Number(flat[i + 1]) || 0 });
+    else missing = true;
   }
-  return out;
+  return { rows: out, partial: flat.length > 1000 || missing };
+}
+
+export async function readPayPalRefunds(statsId: string | null, since: number): Promise<{ order: string; capture: string; cents: number; currency: string; at: number }[]> {
+  return (await readPayPalRefundsWithCoverage(statsId, since)).rows;
 }
 
 /** What a payment is called where a refund names it: the capture, so it never mixes with a Stripe payment's id. */

@@ -23,7 +23,8 @@
  * Sales are not counted here. They are read from the creator's own Stripe
  * account, which is the only record of money that deserves the name.
  */
-import { type Paid, paypalPaymentId, readPayPalRefunds, readPayPalSales } from "@/lib/paypal-sales";
+import { type Paid, paypalPaymentId, readPayPalRefundsWithCoverage, readPayPalSales } from "@/lib/paypal-sales";
+import { buyerChannelsFrom, type BuyerChannels } from "@/lib/buyer-channel-rules";
 import { type DiscountRow, discountImpact } from "@/lib/discount-impact";
 import { saleHandles } from "@/lib/store";
 import { type Together, parseTogether, togetherFrom } from "@/lib/also-bought";
@@ -772,6 +773,9 @@ export type SalesStats = {
   channelDays?: ChannelDays;
   /** Who bought, for each window, and the biggest buyers of the 90 days (buyersFrom; added 12 October 2026). */
   buyers?: BuyerNumbers;
+  buyerChannels?: BuyerChannels;
+  /** All receipts, renewals and refunds were read, and each refund was matched to this store. */
+  cashflowComplete?: boolean;
   /** Full price beside each kind of discount over the 90 days (lib/discount-impact.ts); null with no discounted sale. */
   discounts?: { rows: DiscountRow[] | null; refundsRead: boolean };
   /** When buyers bought over the 90 days: checkouts by hour of the week in UTC, Sunday 0:00 first (hoursOfWeek). */
@@ -993,7 +997,7 @@ export async function readPaidSales(store: Store, since: number, pages: number):
   // Sales paid with PayPal, written down as each was paid (lib/paypal-sales.ts): counted beside Stripe's.
   const paypal = await readPayPalSales(store.statsId, since, pages * 100).catch((error) => {
     console.error("reading PayPal sales failed", error);
-    return { sales: [], partial: false };
+    return { sales: [], partial: true };
   });
   for (const paid of paypal.sales) sales.push(payPalSale(paid));
   if (paypal.partial) partial = true;
@@ -1147,9 +1151,10 @@ async function readRenewals(store: Store, since: number, now: number, pages: num
 export type RefundRow = { created: number; cents: number; currency: string; paymentIntent: string };
 
 /** The refunds made on the creator's account since `since` (seconds) that went through; at most `pages` pages of a hundred. */
-async function readRefunds(store: Store, since: number, pages: number): Promise<RefundRow[]> {
+async function readRefunds(store: Store, since: number, pages: number): Promise<{ rows: RefundRow[]; partial: boolean }> {
   const out: RefundRow[] = [];
   let after = "";
+  let partial = false;
   for (let page = 0; page < pages; page += 1) {
     const list = (await onAccount(
       "GET",
@@ -1169,9 +1174,10 @@ async function readRefunds(store: Store, since: number, pages: number): Promise<
     if (list.has_more !== true || rows.length === 0) break;
     const last = rows[rows.length - 1];
     after = typeof last.id === "string" ? last.id : "";
-    if (!after) break;
+    if (!after) { partial = true; break; }
+    if (page === pages - 1) partial = true;
   }
-  return out;
+  return { rows: out, partial };
 }
 
 /** Sales in the last STATS_DAYS days, by day, by product, and for each window. */
@@ -1183,7 +1189,7 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   // as they did when only they were read.
   const sinceBefore = Math.floor(now / 1000) - 2 * STATS_DAYS * 86400;
   // Read beside the sales; a store whose renewals cannot be read still sees its sales.
-  const [{ sales: read, partial: readPartial }, renewals, refundRows] = await Promise.all([
+  const [{ sales: read, partial: readPartial }, renewals, refundRead] = await Promise.all([
     readPaidSales(store, sinceBefore, 20),
     store.stripeAccountId
       ? readRenewals(store, since, now, 10).catch((error) => {
@@ -1191,19 +1197,24 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
           return undefined;
         })
       : Promise.resolve(undefined),
-    (async (): Promise<RefundRow[] | null> => {
+    (async (): Promise<{ rows: RefundRow[]; partial: boolean } | null> => {
       // Stripe's refunds, and PayPal's refunded in full (lib/paypal-sales.ts), named by the payment each gave back.
       const stripe = store.stripeAccountId
         ? await readRefunds(store, since, 5).catch((error) => {
             console.error("reading refunds failed", error);
             return null;
           })
-        : [];
+        : { rows: [], partial: false };
       if (stripe === null) return null;
-      const paypal = await readPayPalRefunds(store.statsId, since).catch(() => []);
-      return [...stripe, ...paypal.map((r) => ({ created: r.at * 1000, cents: r.cents, currency: r.currency, paymentIntent: paypalPaymentId(r.capture) }))];
+      const paypal = await readPayPalRefundsWithCoverage(store.statsId, since).catch(() => null);
+      if (paypal === null) return null;
+      return {
+        rows: [...stripe.rows, ...paypal.rows.map((r) => ({ created: r.at * 1000, cents: r.cents, currency: r.currency, paymentIntent: paypalPaymentId(r.capture) }))],
+        partial: stripe.partial || paypal.partial,
+      };
     })(),
   ]);
+  const refundRows = refundRead?.rows ?? null;
   const cut7 = dayKey(now - 6 * 86400_000);
   const cut30 = dayKey(now - 29 * 86400_000);
   const cut90 = dayKey(now - (STATS_DAYS - 1) * 86400_000);
@@ -1350,6 +1361,10 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   }
   out.channelDays = channelDays;
   out.buyers = buyersFrom(read, store.currency, now);
+  out.buyerChannels = buyerChannelsFrom(read, store.currency, now, readPartial);
+  out.cashflowComplete = !readPartial && refundRead !== null && !refundRead.partial &&
+    (!store.stripeAccountId || Boolean(renewals && !renewals.partial)) &&
+    !(out.refundsIn?.d90 ?? []).some((r) => r.source === UNRECORDED);
   out.hours = hoursOfWeek(own.filter((sale) => !sale.upsell));
   out.discounts = {
     rows: discountImpact(read, new Set((refundRows ?? []).map((r) => r.paymentIntent).filter(Boolean)), store.currency, now, STATS_DAYS),
@@ -1668,6 +1683,8 @@ export type StatsData = {
   channelDays?: ChannelDays;
   /** Who bought, for each window (SalesStats.buyers): counts and money only, no address. */
   buyers?: Record<"d7" | "d30" | "d90", BuyersWindow> | null;
+  buyerChannels?: BuyerChannels | null;
+  cashflowComplete?: boolean;
   /** Full price beside each kind of discount over the 90 days (SalesStats.discounts). */
   discounts?: { rows: DiscountRow[] | null; refundsRead: boolean } | null;
   /** Checkouts by hour of the week in UTC over the 90 days (SalesStats.hours); the browser turns them to its own time. */
@@ -1915,6 +1932,8 @@ export function studioStats(
     refundsByProduct: sales?.refundsByProduct ?? {},
     channelDays: sales?.channelDays ?? {},
     buyers: sales?.buyers ? { d7: sales.buyers.d7, d30: sales.buyers.d30, d90: sales.buyers.d90 } : null,
+    buyerChannels: sales?.buyerChannels ?? null,
+    cashflowComplete: sales?.cashflowComplete ?? false,
     discounts: sales?.discounts ?? null,
     hours: sales?.hours ?? null,
     reach: {

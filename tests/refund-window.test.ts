@@ -15,7 +15,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 import { INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
 
@@ -34,7 +34,7 @@ const files = [
   ...walk(join(process.cwd(), "app")),
   ...walk(join(process.cwd(), "lib")),
   ...walk(join(process.cwd(), "components")),
-];
+].map((file) => relative(process.cwd(), file).replaceAll("\\", "/"));
 
 test("the guarantee is held for longer than the trial", () => {
   assert.ok(

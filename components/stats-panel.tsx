@@ -7,7 +7,9 @@ import { StoreField } from "@/components/studio-store-pin";
 import { formatMoney } from "@/lib/money";
 import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
 import type { StatsNote } from "@/lib/stats-notes";
-import { type AdSpend, VERDICT_NAMES, paybackOf, spendBy, verdictFor } from "@/lib/ad-spend-rules";
+import { type AdSpend, paybackOf, spendBy } from "@/lib/ad-spend-rules";
+import { channelCashflows, cashflowStatus } from "@/lib/channel-cashflow";
+import { RevenueQuality, BuyerChannelsPanel } from "@/components/revenue-quality";
 import { READ_MIN_VISITORS, READ_SAMPLE } from "@/lib/page-read-sample";
 import { NumbersNotes } from "@/components/numbers-notes";
 import { AdSpendEditor } from "@/components/ad-spend-editor";
@@ -520,6 +522,7 @@ export function StatsPanel({
   // What was spent on ads inside the days shown (lib/ad-spend-rules.ts); none for "all".
   const spent = range === "all" || !days.length ? null : spendBy(spends, days[0].date, days[days.length - 1].date);
   const withSpend = Boolean(spent && spent.total > 0);
+  const cashflows = range === "all" || !days.length ? [] : channelCashflows(data, range, data.channels?.[range] ?? [], spent?.channels ?? new Map(), days[0].date, days[days.length - 1].date);
   // Each channel for the range chosen; "all" has none, because sales are read for 90 days.
   // A channel money was spent on is shown even when it brought nobody: that is the row that most needs reading.
   const channelsCounted = range === "all" ? [] : data.channels?.[range] ?? [];
@@ -926,8 +929,8 @@ export function StatsPanel({
                     <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Revenue for every unit of currency spent on ads there">
                       Back per 1
                     </th>
-                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Spend more at 2 back for each 1 spent or better, cut below 1, keep in between; said from 10 of spend">
-                      Call
+                    <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Payments including renewals, less matched refunds and recorded ad spend, before fees and other costs; not a budget recommendation">
+                      Recorded result
                     </th>
                     <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Days from the first day of spend until the channel's money, renewals included, covered it">
                       Paid back
@@ -953,7 +956,7 @@ export function StatsPanel({
                     (() => {
                       const cost = spent?.channels.get(row.source) ?? 0;
                       const left = row.cents - cost;
-                      const call = salesHere ? verdictFor(row.cents, cost) : null;
+                      const cash = cashflows.find((c) => c.source === row.source);
                       const payback = salesHere && cost ? paybackOf(spends, row.source, data.channelDays?.[row.source], days[0].date, days[days.length - 1].date) : null;
                       return (
                         <>
@@ -963,9 +966,9 @@ export function StatsPanel({
                           </td>
                           <td className="py-1 pl-3 text-right tabular-nums">{cost && salesHere ? (row.cents / cost).toFixed(2) : "—"}</td>
                           <td
-                            className={`whitespace-nowrap py-1 pl-3 text-right font-semibold ${call === "scale" ? "text-mint-deep" : call === "cut" ? "text-danger" : "text-ink"}`}
+                            className={`py-1 pl-3 text-right font-semibold ${cash?.afterAds !== null && cash?.afterAds !== undefined && cash.afterAds < 0 ? "text-danger" : "text-ink"}`}
                           >
-                            {call ? VERDICT_NAMES[call] : "—"}
+                            {salesHere && cash ? cashflowStatus(cash) : "—"}
                           </td>
                           <td className="whitespace-nowrap py-1 pl-3 text-right tabular-nums">
                             {payback
@@ -987,10 +990,16 @@ export function StatsPanel({
             credited to, so a buyer who first came from Instagram and returned later still counts there. Checkouts and
             signups by channel are counted from October 11, 2026.
             {withSpend
-              ? " Left is the channel's revenue less what you spent on ads there in these days, before Stripe's fee; renewals that came later are not in it. The call says spend more where each 1 spent brought 2 or more, cut where it brought less than 1, and keep in between, once 10 or more was spent; it does not know your own costs. Paid back counts the days from the first day of spend until the channel's money, renewals of the memberships it sold included, covered what was spent; money the channel brings without ads counts too, so ads alone may have taken longer."
+              ? " Left and Back per 1 use initial sales before refunds and payment fees; renewals are not in them. Recorded result instead includes renewals and matched refunds, and waits when figures are incomplete. Neither is profit or a recommendation to increase a budget. Paid back counts gross payments, including renewals and organic sales, until they cover recorded ad spend; refunds and fees may delay actual payback."
               : ""}
           </p>
         </div>
+      ) : null}
+      {range !== "all" ? (
+        <RevenueQuality data={data} range={range} spends={spends} />
+      ) : null}
+      {salesHere && range !== "all" && data.buyerChannels ? (
+        <BuyerChannelsPanel window={data.buyerChannels[range]} currency={data.currency} historyPartial={data.buyerChannels.historyPartial} />
       ) : null}
       {range !== "all" ? (
         <AdSpendEditor
