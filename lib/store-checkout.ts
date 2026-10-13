@@ -469,6 +469,8 @@ export async function createCheckout(
   } else if (saleOffNow > 0) {
     body.set("discounts[0][coupon]", store.sale.coupon);
     body.set("metadata[sale]", String(saleOffNow));
+    // How a membership began, for who stays (lib/discount-impact.ts, entryOf).
+    if (recurring) body.set("subscription_data[metadata][discount]", "sale");
     mayComeOff.push({ kind: "percent", percent: saleOffNow });
   } else if (store.hasDiscounts && !pwyw) {
     // A code from a link, or one typed in Stripe's box: either may be the
@@ -480,6 +482,7 @@ export async function createCheckout(
     if (promotion) {
       body.set("discounts[0][promotion_code]", promotion);
       body.set("metadata[code]", extras.code as string);
+      if (recurring) body.set("subscription_data[metadata][discount]", "code");
     } else {
       body.set("allow_promotion_codes", "true");
     }

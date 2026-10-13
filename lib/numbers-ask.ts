@@ -21,6 +21,7 @@ import type { StatsData } from "@/lib/stats";
 import type { Store } from "@/lib/store";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
+import { DISCOUNT_NAMES } from "@/lib/discount-impact";
 
 export const MAX_QUESTION = 300;
 export const WINDOWS = ["d7", "d30", "d90"] as const;
@@ -98,6 +99,18 @@ export function numbersContext(data: StatsData): Record<string, unknown> {
           }
         : {}),
     };
+  }
+  // Full price beside each discount over the 90 days (lib/discount-impact.ts).
+  if (known && data.discounts?.rows) {
+    out.discounts_last_90_days = data.discounts.rows.map((r) => ({
+      paid: DISCOUNT_NAMES[r.kind],
+      sales: r.sales,
+      revenue: money(r.cents),
+      given_off: money(r.off),
+      ...(data.discounts?.refundsRead ? { refunded_sales: r.refunded } : {}),
+      buyers: r.buyers,
+      buyers_who_bought_again: r.again,
+    }));
   }
   return out;
 }

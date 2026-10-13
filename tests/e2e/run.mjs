@@ -2343,6 +2343,15 @@ try {
     is("Stripe charges the regular price less a coupon for the first 3 months", [paid.mode, paid.amount_total, paid.metadata.intro, paid.discount_coupon], ["subscription", 500, "3", "mm_intro_usd_1500_3"]);
     is("the coupon is made on the creator's account, for 3 months", services.coupons().filter((c) => c.id === "mm_intro_usd_1500_3").map((c) => [c.amount_off, c.duration, c.duration_in_months]), [["1500", "repeating", "3"]]);
     is("and the page after paying says both prices", (await words(page.locator("main"))).includes("for $5 a month for the first 3 months, then $20 a month."), true);
+    // The numbers set it beside the sales at full price (lib/discount-impact.ts).
+    await open(studio, `${LOCAL}/studio`);
+    const discounts = studio.locator("[data-discount-impact]");
+    await discounts.waitFor({ timeout: 40_000 });
+    const introRow = await words(discounts.locator("tr", { hasText: "Introductory price" }));
+    is("the numbers set the introductory price beside full price, with what it took off", [
+      await discounts.locator("tr", { hasText: "Full price" }).count(),
+      /Introductory price \d+ \$[\d,.]+ \$15/.test(introRow),
+    ], [1, true]);
     let mail = null;
     for (let i = 0; i < 60 && !mail; i += 1) {
       mail = services.emails().find((email) => String(email.text ?? "").includes("Supper Club") && /You paid|Paid/.test(String(email.text ?? ""))) ?? null;

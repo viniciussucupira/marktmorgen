@@ -21,6 +21,7 @@ import { moneyByDay } from "@/lib/sales-goal-rules";
 import type { ChatKind } from "@/lib/chat-summary";
 import { NoCountToggle } from "@/components/no-count-toggle";
 import { BuyerNumbers } from "@/components/buyer-numbers";
+import { DiscountImpact } from "@/components/discount-impact";
 import { NumbersAsk } from "@/components/numbers-ask";
 import { CustomerVoice } from "@/components/customer-voice";
 import type { VoiceSummary } from "@/lib/customer-voice";
@@ -809,6 +810,10 @@ export function StatsPanel({
 
       {range !== "all" && data.buyers ? (
         <BuyerNumbers windows={data.buyers} range={range} span={span} currency={data.currency ?? "usd"} top={data.topBuyers} />
+      ) : null}
+
+      {range !== "all" && salesKnown && data.discounts?.rows ? (
+        <DiscountImpact rows={data.discounts.rows} refundsRead={data.discounts.refundsRead} currency={data.currency ?? "usd"} />
       ) : null}
 
       {channels.length ? (
