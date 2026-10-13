@@ -3,7 +3,7 @@ import { SESSION_COOKIE, emailForSession, isFreshSession } from "@/lib/auth";
 import { isRedisConfigured } from "@/lib/redis";
 import { canSeal } from "@/lib/secret-box";
 import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
-import { finishSetup, replaceCodes, startSetup, turnOff } from "@/lib/two-step";
+import { cancelReset, finishSetup, replaceCodes, startSetup, turnOff } from "@/lib/two-step";
 
 /** Changes one account may ask for in an hour: most of them email the account. */
 const CHANGES_PER_HOUR = 30;
@@ -17,6 +17,9 @@ const CHANGES_PER_HOUR = 30;
  *                                  answers the recovery codes, this once
  *   { action: "off", code }        turns it off, with a right code
  *   { action: "codes", code }      ten new recovery codes, with a right code
+ *   { action: "cancel" }           calls off a request to turn it off without a
+ *                                  code; any logged-in browser may, because a
+ *                                  session here only ever opened past the second step
  *
  * It belongs to the person, not to a store, like their passkeys.
  */
@@ -50,6 +53,10 @@ export async function POST(request: NextRequest) {
       }
       const done = await finishSetup(email, session, code);
       return typeof done === "string" ? refuse(done) : Response.json({ ok: true, codes: done.codes }, { headers: { "Cache-Control": "no-store" } });
+    }
+    if (body.action === "cancel") {
+      await cancelReset(email, "studio");
+      return Response.json({ ok: true });
     }
     if (body.action === "off") {
       const done = await turnOff(email, code);

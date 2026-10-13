@@ -10,7 +10,7 @@ import {
   sessionCookie,
   takeSignInLink,
 } from "@/lib/auth";
-import { HOLD_SECONDS, TWO_STEP_COOKIE, holdSignIn, twoStepOn } from "@/lib/two-step";
+import { HOLD_SECONDS, TWO_STEP_COOKIE, holdSignIn, resetIfDue, twoStepOn } from "@/lib/two-step";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
 
 /**
@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
     const owner = await takeSignInLink(token);
     // Two-step login (lib/two-step.ts): the link is spent, and the session
     // waits for the app's code, behind a cookie of this browser alone.
-    if (owner && (await twoStepOn(owner))) {
+    // A request to turn it off that has waited its days turns it off here, and the link logs in alone.
+    if (owner && (await twoStepOn(owner)) && !(await resetIfDue(owner))) {
       const held = await holdSignIn(owner);
       const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
       const response = redirectTo(origin, "/signin/code");

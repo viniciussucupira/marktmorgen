@@ -12,12 +12,14 @@
  *   - a recovery code works once;
  *   - turning it off needs a right code; without it, the link opens the
  *     session as it always did;
- *   - moving the sign-in address carries it.
+ *   - moving the sign-in address carries it;
+ *   - nobody is locked out: with nothing left, it turns off a week after it is
+ *     asked for, and a login with a code, or Cancel, calls that off.
  */
 import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 import { base32Decode, base32Encode, codeAt, stepOf, STEP_SECONDS } from "@/lib/totp";
-import { finishSetup, moveTwoStep, startSetup, turnOff, twoStepOn, twoStepStatus } from "@/lib/two-step";
+import { RESET_DAYS, cancelReset, finishSetup, moveTwoStep, resetIfDue, startSetup, turnOff, twoStepOn, twoStepStatus } from "@/lib/two-step";
 import { POST as callback } from "@/app/api/auth/callback/route";
 import { POST as codeRoute } from "@/app/api/auth/code/route";
 import { store as redis } from "./redis-stub";
@@ -107,6 +109,31 @@ async function main(): Promise<void> {
   is("a recovery code does", [await turnOff("new@example.com", set2.codes[5]), await twoStepOn("new@example.com")], ["recovery", false]);
   const plain = await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor("new@example.com") }));
   is("without it, the link opens the session as it always did", [plain.headers.get("location"), cookieOf(plain, "nl_session").length], ["https://marktmorgen.com/studio", 64]);
+
+  part("Lost everything: nobody is locked out");
+  const LOST = "lost@example.com";
+  const set3Start = await startSetup(LOST, SESSION);
+  if (set3Start === "already") throw new Error("already on");
+  const set3 = await finishSetup(LOST, SESSION, nowCode(set3Start.secret));
+  if (typeof set3 === "string") throw new Error(set3);
+  const lostHold = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) })), "nl_2fa");
+  const asked = await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${lostHold}`));
+  const until = (await twoStepStatus(LOST)).reset;
+  is("asked from the code page, it is set to turn off in a week", [asked.headers.get("location"), Math.round((until - Date.now()) / 86_400_000)], ["https://marktmorgen.com/signin/code?status=reset", RESET_DAYS]);
+  await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${lostHold}`));
+  is("asking again does not move the day", (await twoStepStatus(LOST)).reset, until);
+  const early = await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) }));
+  is("before the week is out, the link still asks for the code", early.headers.get("location"), "https://marktmorgen.com/signin/code");
+  is("a login with a recovery code calls it off", [(await codeRoute(post("https://marktmorgen.com/api/auth/code", { code: set3.codes[0] }, `nl_2fa=${cookieOf(early, "nl_2fa")}`))).headers.get("location"), (await twoStepStatus(LOST)).reset], ["https://marktmorgen.com/studio", 0]);
+  const again3 = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) })), "nl_2fa");
+  await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${again3}`));
+  is("and Cancel in the studio does too", [await cancelReset(LOST, "studio"), (await twoStepStatus(LOST)).reset], [true, 0]);
+  const again4 = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) })), "nl_2fa");
+  await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${again4}`));
+  is("not a day early", await resetIfDue(LOST, Date.now() + (RESET_DAYS - 1) * 86_400_000), false);
+  is("after the week, it turns off", [await resetIfDue(LOST, Date.now() + (RESET_DAYS + 1) * 86_400_000), await twoStepOn(LOST)], [true, false]);
+  const back = await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) }));
+  is("and the emailed link logs in on its own", [back.headers.get("location"), cookieOf(back, "nl_session").length], ["https://marktmorgen.com/studio", 64]);
 
   done();
 }

@@ -934,7 +934,7 @@ export default async function StudioPage({
     store?.sid && may("team") ? readTeam(store.sid).catch(() => null) : Promise.resolve(null),
     isFreshSession(cookieStore.get(SESSION_COOKIE)?.value).catch(() => false),
     // The person's two-step login (lib/two-step.ts), beside their passkeys.
-    email ? twoStepStatus(email).catch(() => ({ on: false, since: 0, codesLeft: 0 })) : Promise.resolve({ on: false, since: 0, codesLeft: 0 }),
+    email ? twoStepStatus(email).catch(() => ({ on: false, since: 0, codesLeft: 0, reset: 0 })) : Promise.resolve({ on: false, since: 0, codesLeft: 0, reset: 0 }),
   ]);
   const connectReady = isConnectConfigured();
   const billingReadyForSteps = isBillingConfigured();
@@ -1008,6 +1008,19 @@ export default async function StudioPage({
             created, and none is stored.
           </p>
         )}
+
+        {/* A request to turn two-step login off without a code (lib/two-step.ts askReset), shown to every logged-in browser. */}
+        {twoStep.reset > 0 ? (
+          <div className="notice notice-warn mt-6" role="status">
+            <p className="font-bold text-ink">Two-step login is set to turn off</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              {`Somebody who opened a login link asked for it, saying the phone, the recovery codes and the passkeys are lost. It turns off on ${new Date(twoStep.reset).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })}. If that was not you, cancel it under Two-step login, and change your email password.`}
+            </p>
+            <a href="#two-step" className="mt-2 inline-flex min-h-11 items-center text-sm font-bold text-ink underline underline-offset-4">
+              Go to Two-step login
+            </a>
+          </div>
+        ) : null}
 
         {notice ? (
           <div className="notice notice-warn mt-6">
@@ -2844,7 +2857,7 @@ export default async function StudioPage({
                 initial={passkeys.map(({ id, name, createdAt, lastUsedAt, synced }) => ({ id, name, createdAt, lastUsedAt, synced }))}
                 fresh={freshLogin}
               />
-              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} fresh={freshLogin} />
+              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} reset={twoStep.reset} fresh={freshLogin} />
 
               {role !== "owner" ? (
                 <section aria-labelledby="leave-title" className="mt-8 border-t border-line pt-6">

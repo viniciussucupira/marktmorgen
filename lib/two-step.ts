@@ -23,6 +23,16 @@
  * login, and an account answers ten codes an hour at most, so six digits
  * cannot be guessed by trying.
  *
+ * Nobody is locked out, and nobody here has to unlock anybody by hand. A
+ * creator who has lost the phone, the recovery codes and every passkey asks,
+ * from the code page they reach with an emailed link, for two-step login to be
+ * turned off; it turns off by itself RESET_DAYS later, at their next emailed
+ * link. In that time the account is emailed, the studio shows it to every
+ * browser still logged in, and any login with a right code or a passkey — or
+ * one press of Cancel in the studio — calls it off. So somebody who only has
+ * the inbox has to wait a week in plain view of the owner, while the owner who
+ * really lost everything gets back in without writing to anyone.
+ *
  * The app's secret is sealed at rest (lib/secret-box.ts), bound to the
  * account's address, so a copy of the database alone opens nothing. If the
  * deployment's root secret were ever rolled the app's codes could no longer be
@@ -51,6 +61,8 @@ const TRIES = 5;
 const CODES_PER_HOUR = 10;
 export const RECOVERY_CODES = 10;
 const CODE_LETTERS = "abcdefghjkmnpqrstuvwxyz23456789";
+/** How long a request to turn it off without a code waits before it does. */
+export const RESET_DAYS = 7;
 const ISSUER = "Marktmorgen";
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -61,7 +73,8 @@ const context = (email: string) => `two-step|${normaliseEmail(email)}`;
 // Not bound to the address, so a move of the sign-in address keeps them; each code is random enough on its own.
 const codeHash = (code: string) => sha(`nimbus-2fa-code:${code.toLowerCase().replace(/[^a-z0-9]/g, "")}`);
 
-type TwoStep = { s: string; since: number; codes: string[]; last: number };
+/** `reset`: when a request to turn it off without a code takes effect, in ms; 0 for none. */
+type TwoStep = { s: string; since: number; codes: string[]; last: number; reset: number };
 
 function parse(raw: unknown): TwoStep | null {
   if (typeof raw !== "string") return null;
@@ -73,6 +86,7 @@ function parse(raw: unknown): TwoStep | null {
       since: typeof v.since === "number" ? v.since : 0,
       codes: Array.isArray(v.codes) ? v.codes.filter((c): c is string => typeof c === "string" && /^[0-9a-f]{64}$/.test(c)) : [],
       last: typeof v.last === "number" ? v.last : -1,
+      reset: typeof v.reset === "number" && v.reset > 0 ? v.reset : 0,
     };
   } catch {
     return null;
@@ -121,11 +135,65 @@ async function tell(email: string, subject: string, line: string): Promise<void>
   }).catch(() => false);
 }
 
-export type TwoStepStatus = { on: boolean; since: number; codesLeft: number };
+/** `reset`: when a pending request to turn it off without a code takes effect, in ms; 0 for none. */
+export type TwoStepStatus = { on: boolean; since: number; codesLeft: number; reset: number };
 
 export async function twoStepStatus(email: string): Promise<TwoStepStatus> {
   const record = await read(email);
-  return record ? { on: true, since: record.since, codesLeft: record.codes.length } : { on: false, since: 0, codesLeft: 0 };
+  return record ? { on: true, since: record.since, codesLeft: record.codes.length, reset: record.reset } : { on: false, since: 0, codesLeft: 0, reset: 0 };
+}
+
+const day = (ms: number) => new Date(ms).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+
+/**
+ * Asked from the code page by somebody who has just opened an emailed link and
+ * has neither a code nor a passkey: two-step login turns off RESET_DAYS from
+ * now, unless the owner calls it off. Asking again does not move the day.
+ */
+export async function askReset(token: string, now = Date.now()): Promise<{ until: number } | null> {
+  const email = await heldFor(token);
+  const record = email ? await read(email) : null;
+  if (!email || !record) return null;
+  if (record.reset > 0) return { until: record.reset };
+  const until = now + RESET_DAYS * 86_400_000;
+  await write(email, { ...record, reset: until });
+  await tell(
+    email,
+    "Two-step login will turn off on your Marktmorgen account",
+    `Somebody who opened a login link sent to this address said they no longer have your authenticator app, your recovery codes or a passkey, and asked for two-step login to be turned off. It turns off by itself on ${day(until)}, and from then the emailed link alone logs in.
+
+If that was you, there is nothing to do but wait.
+
+If it was not you, somebody can read your email: log in with your app's code or a passkey, or open your studio in a browser that is still logged in, and the request is canceled. Then change your email password.`,
+  );
+  return { until };
+}
+
+/** Calls off a pending request to turn it off: the owner logged in with a code or a passkey, or pressed Cancel. */
+export async function cancelReset(email: string, why: "login" | "studio"): Promise<boolean> {
+  const record = await read(email);
+  if (!record || record.reset === 0) return false;
+  await write(email, { ...record, reset: 0 });
+  await tell(
+    email,
+    "Two-step login stays on for your Marktmorgen account",
+    why === "login"
+      ? "The request to turn off two-step login was canceled, because your account was just logged in with a code or a passkey."
+      : "The request to turn off two-step login was canceled from your studio.",
+  );
+  return true;
+}
+
+/**
+ * For the emailed link: whether a request to turn it off has waited its days.
+ * When it has, two-step login is turned off here, and the link logs in alone.
+ */
+export async function resetIfDue(email: string, now = Date.now()): Promise<boolean> {
+  const record = await read(email);
+  if (!record || record.reset === 0 || now < record.reset) return false;
+  await redisPipeline([["DEL", recordKey(email)]]);
+  await tell(email, "Two-step login is off for your Marktmorgen account", `Two-step login was turned off after waiting ${RESET_DAYS} days, as asked from the login page. You can turn it on again in your studio, with a new app setup and new recovery codes.`);
+  return true;
 }
 
 export async function twoStepOn(email: string): Promise<boolean> {
@@ -156,7 +224,7 @@ export async function finishSetup(email: string, session: string, typed: string,
   const step = stepOf(opened.value, typed, now);
   if (step === null) return "wrong";
   const codes = newCodes();
-  await write(email, { s: pending.s, since: now, codes: codes.map((c) => codeHash(c)), last: step });
+  await write(email, { s: pending.s, since: now, codes: codes.map((c) => codeHash(c)), last: step, reset: 0 });
   await redisPipeline([["DEL", setupKey(session)]]);
   await tell(email, "Two-step login is on for your Marktmorgen account", "Two-step login was turned on for your Marktmorgen account. From now on, logging in with the emailed link also asks for the code in your authenticator app.");
   return { codes };
@@ -240,7 +308,10 @@ export async function finishSignIn(token: string, typed: string, now = Date.now(
   if (checked === "app" || checked === "recovery") {
     // Spent: only the caller whose delete removed it opens the session.
     const [removed] = await redisPipeline([["DEL", key]]);
-    return Number(removed) === 1 ? { ok: true, email: hold.e, how: checked } : { ok: false, reason: "expired" };
+    if (Number(removed) !== 1) return { ok: false, reason: "expired" };
+    // The owner has the second step after all: a pending request to turn it off is called off.
+    await cancelReset(hold.e, "login");
+    return { ok: true, email: hold.e, how: checked };
   }
   if (checked === "wrong") await redisPipeline([["SET", key, JSON.stringify({ e: hold.e, n: tries + 1 }), "EX", HOLD_SECONDS]]);
   return { ok: false, reason: checked };

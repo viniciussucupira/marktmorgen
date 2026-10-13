@@ -87,7 +87,8 @@ function Codes({ codes, onDone }: { codes: string[]; onDone: () => void }) {
  * beside their passkeys: turn it on with an authenticator app, see how many
  * recovery codes are left, make new ones, or turn it off.
  */
-export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, fresh }: { on: boolean; codesLeft: number; fresh: boolean }) {
+export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: initialReset, fresh }: { on: boolean; codesLeft: number; reset: number; fresh: boolean }) {
+  const [reset, setReset] = useState(initialReset);
   const [on, setOn] = useState(initialOn);
   const [left, setLeft] = useState(initialLeft);
   const [setup, setSetup] = useState<{ secret: string; uri: string } | null>(null);
@@ -134,6 +135,27 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, fresh }:
           ? `On. Logging in with the emailed link also asks for the code in your authenticator app; a passkey needs no code. ${left} recovery ${left === 1 ? "code" : "codes"} left.`
           : "After the emailed link, ask for a six-digit code from an authenticator app, such as Google Authenticator, Microsoft Authenticator, 1Password or Authy. Someone who gets into your email still cannot open your studio without your phone. A passkey needs no code."}
       </p>
+
+      {on && reset > 0 ? (
+        <div className="notice notice-warn mt-4" role="status">
+          <p className="text-sm text-ink">
+            {`Set to turn off on ${new Date(reset).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })}, asked from the login page by somebody without a code or a passkey. If that was not you, cancel it and change your email password.`}
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary mt-3"
+            disabled={busy}
+            onClick={() =>
+              void run({ action: "cancel" }, () => {
+                setReset(0);
+                toast("Canceled. Two-step login stays on.");
+              })
+            }
+          >
+            Cancel: keep two-step login on
+          </button>
+        </div>
+      ) : null}
 
       {codes ? (
         <Codes
