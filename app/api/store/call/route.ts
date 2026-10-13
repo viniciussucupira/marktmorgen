@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
     }
     const result = await setProductCall(guarded.ref, id, setup);
     if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
-    return Response.json({ ok: true, store: result.store });
+    // Nothing of the store record goes back: the editor needs only to know it saved.
+    return Response.json({ ok: true });
   } catch (error) {
     console.error("saving a call failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

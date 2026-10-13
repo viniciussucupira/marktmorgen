@@ -96,6 +96,7 @@ import { nudgesThisMonth } from "@/lib/member-nudge";
 import { YearlyAskEditor } from "@/components/yearly-ask-editor";
 import { readVoice } from "@/lib/customer-voice";
 import { readMarks } from "@/lib/auto-marks";
+import { NumbersLinksEditor } from "@/components/numbers-links-editor";
 import { yearlyAsksThisMonth } from "@/lib/yearly-ask";
 import { activeYearly } from "@/lib/yearly-price";
 import { WinBackEditor } from "@/components/winback-editor";
@@ -591,6 +592,11 @@ async function tierCandidates(store: Store): Promise<{ id: string; title: string
   if (!ids.length) return [];
   const listings = await readListings(store, ids).catch(() => []);
   return listings.filter(canTier).map((p) => ({ id: p.id, title: p.title, words: tierWords(store, p) }));
+}
+
+/** Now, in seconds: which links still work. */
+function nowSeconds(): number {
+  return Math.floor(Date.now() / 1000);
 }
 
 /** The first and last days the numbers' chart can show, in UTC: the 90 days up to today. */
@@ -1442,6 +1448,13 @@ export default async function StudioPage({
                 socials={store.socials.map((social) => social.network)}
                 ai={ai}
                 contact={contactOpen(store)}
+              />
+            ) : null}
+
+            {may("settings") ? (
+              <NumbersLinksEditor
+                now={nowSeconds()}
+                links={store.numbersLinks.map((l) => ({ id: l.id, label: l.label, expires: l.expires, money: l.money, url: `${SITE_URL}/numbers/${l.id}` }))}
               />
             ) : null}
 

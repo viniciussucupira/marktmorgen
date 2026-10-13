@@ -1829,6 +1829,9 @@ try {
     await kit.getByRole("button", { name: "Add an offer" }).click();
     await kit.getByLabel("What", { exact: true }).nth(1).fill("A newsletter mention");
     await kit.locator("#kit-brands").fill("Acme Pans, Green Grocer");
+    // Numbers this site counted, picked to be shown (lib/verified-numbers.ts).
+    await kit.getByRole("checkbox", { name: /^Visitors to my store/ }).check();
+    await kit.getByRole("checkbox", { name: /^Sales, last 30 days/ }).check();
     await kit.getByRole("button", { name: "Save the media kit" }).click();
     await studio.getByText("Media kit saved.").first().waitFor({ timeout: 30_000 });
     await open(page, `${LOCAL}/@localshop`);
@@ -1838,6 +1841,12 @@ try {
     is("the kit says who, to whom, and how many, compactly", [await words(page.locator("h1")), main.includes("12.4K followers"), main.includes("3.1K average views"), main.includes("2.6K subscribers"), main.includes("Combined reach 15K")], ["Harbor Kitchen Local", true, true, true, true]);
     is("the numbers are said to be the creator's, with the day", /Numbers as stated by Harbor Kitchen Local, last updated [A-Z][a-z]+ \d{1,2}, \d{4}\./.test(main), true);
     is("what this site counted is set apart", [main.includes("Counted by Marktmorgen"), main.includes("Products in the store")], [true, true]);
+    is("with the visitors and sales it counted itself, dated, where the creator picked them", [
+      await page.locator("[data-kit-counted=visitors]").count(),
+      await page.locator("[data-kit-counted=sales]").count(),
+      await page.locator("[data-kit-counted=countries]").count(),
+      /Visitors counted on this store's own pages; sales and buyers' countries from the payments on its Stripe account\. Read on [A-Z][a-z]+ \d{1,2}, \d{4}\./.test(main),
+    ], [1, 1, 0, true]);
     is("what a collaboration costs, or on request, and who they worked with", [main.includes("One Instagram Reel $800"), main.includes("A newsletter mention Price on request"), main.includes("Acme Pans"), main.includes("Green Grocer")], [true, true, true, true]);
     is("a brand can write, or save it as a PDF", [await page.getByRole("link", { name: "Get in touch" }).getAttribute("href"), await page.getByRole("button", { name: "Save as PDF" }).count()], ["/@localshop#contact", 1]);
     await page.emulateMedia({ media: "print" });
@@ -1846,6 +1855,40 @@ try {
     if (process.env.E2E_SHOTS) await page.screenshot({ path: join(process.env.E2E_SHOTS, "media-kit.png"), fullPage: true });
     await open(page, `${LOCAL}/@longshop/media-kit`);
     is("a store without one has no such page", await words(page.locator("h1")), "Nothing lives at this address");
+  }
+
+  part("The numbers shared with a link, a password and an end");
+  {
+    await open(studio, `${LOCAL}/studio`);
+    const links = studio.locator("[data-numbers-links]");
+    await links.locator("#numbers-link-label").fill("Acme sponsorship");
+    await links.locator("#numbers-link-password").fill("short");
+    await links.getByRole("button", { name: "Make the link" }).click();
+    await links.getByRole("alert").waitFor({ timeout: 15_000 });
+    is("a short password is refused", await words(links.getByRole("alert")), "Use a password of 8 characters or more. Send it apart from the link.");
+    await links.locator("#numbers-link-password").fill("harbor-local-2026");
+    await links.getByRole("button", { name: "Make the link" }).click();
+    await links.locator("[data-numbers-link-made]").waitFor({ timeout: 30_000 });
+    const url = await links.locator("[data-numbers-link-made] a").getAttribute("href");
+    is("a link is made, at its own address", /\/numbers\/[a-z0-9]{20}$/.test(url ?? ""), true);
+    const reader = await browser.newContext({ viewport: { width: 430, height: 900 } });
+    const partner = await reader.newPage();
+    await partner.goto(local(url ?? ""), { waitUntil: "networkidle", timeout: 120_000 });
+    is("it asks for the password first, and shows nothing before", [await partner.locator("#numbers-password").count(), await partner.locator("[data-numbers-link]").count()], [1, 0]);
+    await partner.fill("#numbers-password", "wrong-password");
+    await Promise.all([partner.waitForURL(/wrong=1/), partner.getByRole("button", { name: "Open the numbers" }).click()]);
+    is("a wrong one says so", await words(partner.locator("main").getByRole("alert")), "That password does not open these numbers.");
+    await partner.fill("#numbers-password", "harbor-local-2026");
+    await Promise.all([partner.waitForURL((u) => !u.search.includes("wrong")), partner.getByRole("button", { name: "Open the numbers" }).click()]);
+    await partner.locator("[data-numbers-link]").waitFor({ timeout: 30_000 });
+    const shown = await words(partner.locator("main"));
+    is("the right one shows the counted numbers, read-only, dated, without revenue unless chosen", [/Counted by Marktmorgen, not typed/.test(shown), /Read on [A-Z][a-z]+ \d{1,2}, \d{4}/.test(shown), /Products sold, last 30 days/.test(shown), /Revenue/i.test(shown)], [true, true, true, false]);
+    if (process.env.E2E_SHOTS) await partner.screenshot({ path: join(process.env.E2E_SHOTS, "numbers-link.png"), fullPage: true });
+    await links.getByRole("button", { name: "Take it back" }).first().click();
+    await studio.getByText("Taken back. The link no longer opens.").first().waitFor({ timeout: 30_000 });
+    await partner.reload({ waitUntil: "networkidle" });
+    is("taken back, it no longer opens", await words(partner.locator("h1")), "This link has ended");
+    await reader.close();
   }
 
   await keepSmall();

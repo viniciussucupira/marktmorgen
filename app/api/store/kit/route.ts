@@ -3,6 +3,7 @@ import { setKit, storeForEmail } from "@/lib/store";
 import { guardStoreWrite } from "@/lib/store-request";
 import { readMoney } from "@/lib/money";
 import { MAX_KIT_COUNT, MAX_KIT_RATES } from "@/lib/store-kit";
+import { readVerified, refreshVerified, usesVerified } from "@/lib/verified-numbers";
 
 /** A count as typed: "12400", "12,400" or "12.4k" are all the same number. */
 function readCount(raw: unknown): number | null {
@@ -46,8 +47,10 @@ export async function POST(request: NextRequest) {
       return { t: value.t, cents };
     });
     if (bad.length) return Response.json({ ok: false, error: "number", bad }, { status: 400 });
-    const saved = await setKit(ref, { on: body.on === true, pitch: body.pitch, audience, facts: body.facts, rates, brands: body.brands });
+    const saved = await setKit(ref, { on: body.on === true, pitch: body.pitch, audience, facts: body.facts, rates, brands: body.brands, counted: body.counted });
     if (!saved) return Response.json({ ok: false, error: "none" }, { status: 404 });
+    // Numbers this site counted, the first time any is shown: read now, then once a day (lib/verified-numbers.ts).
+    if (usesVerified(saved) && !(await readVerified(saved).catch(() => null))) await refreshVerified(saved).catch((error) => console.error("reading the counted numbers failed", error));
     return Response.json({ ok: true, kit: saved.kit });
   } catch (error) {
     console.error("saving the media kit failed", error);
