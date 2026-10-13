@@ -18,7 +18,8 @@
  * domain serves; otherwise they are under marktmorgen.com/@handle.
  *
  *   /@handle/sitemap.xml   on every store, and /sitemap.xml on its own domain
- *   /@handle/robots.txt    served as /robots.txt on its own domain only
+ *                          (app/[handle]/store-sitemap, reached through proxy.ts)
+ *   /robots.txt            on its own domain only (app/[handle]/store-robots)
  */
 import { canUseDomain } from "@/lib/domains";
 import { readListings, visibleCount } from "@/lib/catalog";

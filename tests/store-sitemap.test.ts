@@ -65,10 +65,11 @@ async function main(): Promise<void> {
   part("Who answers what");
   const proxy = readFileSync("proxy.ts", "utf8");
   is("a creator's domain answers both files with the store's, and the site keeps its own", [
-    proxy.includes('"/sitemap.xml", "/robots.txt"]'),
+    proxy.includes('"/sitemap.xml", "/robots.txt", "/:handle/sitemap.xml"]'),
     /if \(CRAWLER_FILES\.test\(request\.nextUrl\.pathname\)\) return NextResponse\.next\(\);/.test(proxy),
-    proxy.includes("url.pathname = `/@${handle}${pathname}`;"),
-  ], [true, true, true]);
+    proxy.includes("url.pathname = `/@${handle}${CRAWLER_ROUTES[pathname]}`;"),
+    proxy.includes('"/store-sitemap"') && proxy.includes("STORE_SITEMAP.test(request.nextUrl.pathname)"),
+  ], [true, true, true, true]);
   is("and names the store for the page that says it is not there, dropping one a visitor sent", [proxy.includes("headers.delete(STORE_HEADER);"), proxy.includes("headers.set(STORE_HEADER, handle);")], [true, true]);
   done();
 }
