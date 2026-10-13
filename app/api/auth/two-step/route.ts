@@ -11,10 +11,13 @@ const CHANGES_PER_HOUR = 30;
 /**
  * The signed-in person's two-step login (lib/two-step.ts):
  *
- *   { action: "start" }            a secret for the app, with its QR address;
+ *   { action: "start", backup }    a secret for the app, with its QR address,
+ *                                  and a code emailed to the recovery address;
  *                                  needs a login from the last 15 minutes
- *   { action: "finish", code }     turns it on with a right code from the app;
- *                                  answers the recovery codes, this once
+ *   { action: "finish", code, backupCode }
+ *                                  turns it on with a right code from the app and
+ *                                  the one the recovery address got; answers the
+ *                                  recovery codes, this once
  *   { action: "off", code }        turns it off, with a right code
  *   { action: "codes", code }      ten new recovery codes, with a right code
  *   { action: "cancel" }           calls off a request to turn it off without a
@@ -48,10 +51,12 @@ export async function POST(request: NextRequest) {
     if (body.action === "start" || body.action === "finish") {
       if (!(await isFreshSession(session))) return refuse("reauth", 403);
       if (body.action === "start") {
-        const started = await startSetup(email, session);
-        return started === "already" ? refuse("already", 409) : Response.json({ ok: true, ...started }, { headers: { "Cache-Control": "no-store" } });
+        const started = await startSetup(email, session, typeof body.backup === "string" ? body.backup.slice(0, 300) : "");
+        return typeof started === "string"
+          ? refuse(started, started === "already" ? 409 : started === "limited" ? 429 : started === "unsent" ? 503 : 400)
+          : Response.json({ ok: true, ...started }, { headers: { "Cache-Control": "no-store" } });
       }
-      const done = await finishSetup(email, session, code);
+      const done = await finishSetup(email, session, code, typeof body.backupCode === "string" ? body.backupCode.slice(0, 20) : "");
       return typeof done === "string" ? refuse(done) : Response.json({ ok: true, codes: done.codes }, { headers: { "Cache-Control": "no-store" } });
     }
     if (body.action === "cancel") {

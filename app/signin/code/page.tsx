@@ -17,6 +17,8 @@ const NOTICES: Record<string, string> = {
   limited: "That is a lot of codes in an hour. Wait a while, then try again, or log in with a passkey.",
   unreadable:
     "Your app's codes cannot be checked right now, after a security change on our side. Use one of your recovery codes, or log in with a passkey, then turn two-step login off and on again.",
+  "rescue-limited": "A link has gone to your recovery address three times this hour. Use the newest one, or try again later.",
+  "rescue-unsent": "The email to your recovery address could not be sent just now. Try again in a moment.",
 };
 
 /**
@@ -32,7 +34,7 @@ export default async function CodePage({ searchParams }: { searchParams: Promise
   const status = typeof params.status === "string" ? params.status : "";
   const notice = NOTICES[status] ?? null;
   // A request to turn it off without a code, waiting its days (lib/two-step.ts askReset).
-  const { reset } = await twoStepStatus(email);
+  const { reset, backup } = await twoStepStatus(email);
   const resetDay = reset ? new Date(reset).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }) : "";
 
   return (
@@ -75,6 +77,21 @@ export default async function CodePage({ searchParams }: { searchParams: Promise
             </Link>
             , which needs no code.
           </p>
+          {/* The way back in at once: a link to the recovery address (lib/two-step.ts sendRescue). */}
+          {status === "rescue-sent" ? (
+            <p className="notice mt-5" role="status">
+              {`We sent a link to your recovery address, ${backup}. Open it on any device: it turns two-step login off and logs you in. It works once, for 15 minutes.`}
+            </p>
+          ) : backup ? (
+            <div className="mt-5 rounded-[12px] bg-paper px-4 py-4 text-sm ring-1 ring-line">
+              <p className="font-semibold text-ink">Lost your phone, your recovery codes and your passkeys?</p>
+              <p className="mt-1 text-ink-soft">{`We email a link to your recovery address, ${backup}. Opening it turns two-step login off and logs you in, right away.`}</p>
+              <form method="post" action="/api/auth/code" className="mt-3">
+                <input type="hidden" name="action" value="rescue" />
+                <PendingSubmit label="Email my recovery address" pending="Sending…" className="btn btn-secondary" />
+              </form>
+            </div>
+          ) : null}
           {reset ? (
             <p className="notice mt-5" role="status">
               {`Two-step login turns off on ${resetDay}, as you asked. From then, the link we email you logs you in on its own. Logging in with a code or a passkey before then cancels it.`}
@@ -82,7 +99,7 @@ export default async function CodePage({ searchParams }: { searchParams: Promise
           ) : (
             <details className="mt-5 text-sm text-ink-soft">
               <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-ink underline underline-offset-4">
-                Lost your phone, your recovery codes and your passkeys?
+                {backup ? "Cannot open your recovery address either?" : "Lost your phone, your recovery codes and your passkeys?"}
               </summary>
               <p className="mt-2">
                 {`Ask for two-step login to turn off. It turns off by itself in ${RESET_DAYS} days, and from then the link we email you logs you in on its own. The wait is what keeps someone who got into your email from doing the same: we email you, your studio shows it, and logging in with a code or a passkey in that time cancels it.`}
