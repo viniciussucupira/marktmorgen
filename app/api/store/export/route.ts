@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { creatorFrom } from "@/lib/studio-route";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { readStats, salesCsv, sourcesCsv, studioStats, visitsCsv } from "@/lib/stats";
+import { readStats, salesCsv, sourcesCsv, studioStats, visitsCsv, readsSales } from "@/lib/stats";
 
 /** Files one store may take in ten minutes: each sales file is up to a hundred reads of Stripe. */
 const EXPORTS_PER_WINDOW = 10;
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
   try {
     if (what === "sales") {
-      if (!store.stripeAccountId) return plain(400, "Connect your Stripe account first: sales are read from it.");
+      if (!readsSales(store)) return plain(400, "Connect Stripe or PayPal first: sales are read from them.");
       const days = range === "30" ? 30 : range === "90" ? 90 : range === "all" ? 0 : -1;
       if (days < 0) return plain(400, "Choose 30 days, 90 days or all time.");
       const since = days ? Math.floor(Date.now() / 1000) - days * 86400 : 0;

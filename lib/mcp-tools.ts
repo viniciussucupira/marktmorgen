@@ -18,7 +18,7 @@
  * not quoted. Money is in the smallest unit of the store's currency.
  */
 import type { Store } from "@/lib/store";
-import { type StatsData, productsInStats, readSales, readStats, studioStats } from "@/lib/stats";
+import { type StatsData, readsSales, productsInStats, readSales, readStats, studioStats } from "@/lib/stats";
 import { readListings, readTitles } from "@/lib/catalog";
 import { membershipNumbers } from "@/lib/membership-numbers";
 import { listBroadcasts } from "@/lib/broadcasts";
@@ -42,8 +42,8 @@ export function windowOf(raw: unknown): Window {
 export async function readFullNumbers(store: Store, now = Date.now()): Promise<StatsData | null> {
   const stats = await readStats(store, now);
   if (!stats) return null;
-  let state: StatsData["sales"] = store.stripeAccountId ? "ok" : "none";
-  const sales = store.stripeAccountId
+  let state: StatsData["sales"] = readsSales(store) ? "ok" : "none";
+  const sales = readsSales(store)
     ? await readSales(store, now).catch(() => {
         state = "error";
         return null;

@@ -71,6 +71,7 @@
  *   nl:aff:<id>:payouts  hash  payout id -> what the creator says they paid
  */
 import { rememberAffiliate } from "@/lib/affiliate-hub";
+import { type Paid, paypalPaymentId, readPayPalRefunds } from "@/lib/paypal-sales";
 import { saleHandles } from "@/lib/store";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -1187,6 +1188,33 @@ export async function notePartners(
   await redisPipeline(commands);
 }
 
+/**
+ * A sale paid with PayPal (lib/paypal-sales.ts), credited as a Stripe one is
+ * (added 13 October 2026): to the affiliate whose link the visit carried, at
+ * the share it had when the buyer paid, and to every partner who shares in
+ * the product. Once per order, whichever of the return page and the sweep
+ * hands it over first. A refund in full on PayPal takes it back in the book
+ * (readBook, through readPayPalRefunds).
+ */
+export async function creditPayPalSale(store: Store, paid: Paid, title: string): Promise<void> {
+  if (!store.statsId || !isRedisConfigured()) return;
+  const sale = {
+    ref: `paypal:${paid.order}`,
+    pi: paypalPaymentId(paid.capture),
+    at: paid.at,
+    product: paid.product,
+    title: title.slice(0, 200),
+    base: paid.cents,
+    total: paid.cents,
+    currency: readCurrencyCode(paid.currency),
+  };
+  if (paid.via && affiliatesOn(store) && paid.via.rate > 0) {
+    await writeReferral(store, { ...sale, aff: paid.via.aff, rate: paid.via.rate, self: await isSelf(store, paid.via.aff, paid.email), how: "click" });
+    await rememberBuyer(store, paid.email, paid.via.aff, store.affiliates.rule).catch((error) => console.error("remembering an affiliate's buyer failed", error));
+  }
+  await notePartners(store, { ...sale, buyer: paid.email });
+}
+
 async function isSelf(store: Store, aff: string, buyer: string): Promise<boolean> {
   if (!buyer) return false;
   const affiliate = await readAffiliate(store, aff);
@@ -1575,9 +1603,11 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
   if (everything.length) {
     const since = Math.min(...everything.map((r) => r.at));
     try {
-      const read = await refundsSince(store, since);
+      const read = store.stripeAccountId ? await refundsSince(store, since) : { byIntent: new Map<string, number>(), complete: true };
       refunds = read.byIntent;
       refundsChecked = read.complete;
+      // PayPal's refunds in full, named by the payment as the book names it.
+      for (const r of await readPayPalRefunds(store.statsId, since)) refunds.set(paypalPaymentId(r.capture), (refunds.get(paypalPaymentId(r.capture)) ?? 0) + r.cents);
     } catch (error) {
       console.error("reading refunds for the affiliate book failed", error);
       refundsChecked = false;

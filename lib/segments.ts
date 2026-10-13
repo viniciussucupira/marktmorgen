@@ -22,11 +22,13 @@
  * A group is a name over the choices the composer already has: who, one
  * product, one left out, and the three above. Choosing it fills them in.
  */
+import { importedBuyers } from "@/lib/imported-purchases";
+import { IMPORTED_CHANNEL } from "@/lib/channel-names";
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { normaliseEmail } from "@/lib/auth";
 import { WHO, type Who } from "@/lib/contacts";
-import { ALL_TIME_PAGES, readPaidSales } from "@/lib/stats";
+import { ALL_TIME_PAGES, readsSales, readPaidSales } from "@/lib/stats";
 import { hasProduct } from "@/lib/catalog";
 import type { Store } from "@/lib/store";
 import { MAX_SEGMENTS, MAX_SEGMENT_NAME, type Narrow, type Segment, isNarrowed, readNarrow } from "@/lib/segments-rules";
@@ -51,7 +53,7 @@ type Row = [string, number, number, string];
  * store's currency counts; support for the creator's work is not a purchase.
  */
 export async function buyerLedger(store: Store): Promise<Ledger> {
-  if (!store.stripeAccountId) return { buyers: new Map(), partial: false };
+  if (!readsSales(store) && !store.pastBuyers) return { buyers: new Map(), partial: false };
   if (store.statsId && isRedisConfigured()) {
     const [cached] = await redisPipeline([["GET", ledgerKey(store.statsId)]]);
     if (typeof cached === "string" && cached) {
@@ -85,6 +87,11 @@ export async function buyerLedger(store: Store): Promise<Ledger> {
     buyers.set(email, row);
   }
   const out: Ledger = { buyers: new Map([...buyers].map(([e, r]) => [e, { cents: r.cents, last: r.last, channel: r.channel }])), partial };
+  // Buyers brought over from another platform (lib/imported-purchases.ts): history, never a sale.
+  // Nothing spent here and no purchase date here; they first came "imported".
+  for (const email of (await importedBuyers(store.statsId).catch(() => new Map<string, number>())).keys()) {
+    if (!out.buyers.has(email)) out.buyers.set(email, { cents: 0, last: 0, channel: IMPORTED_CHANNEL });
+  }
   if (store.statsId && isRedisConfigured()) {
     const rows: Row[] = [...out.buyers].map(([e, r]) => [e, r.cents, r.last, r.channel]);
     await redisPipeline([["SET", ledgerKey(store.statsId), JSON.stringify({ c: store.currency, p: partial, r: rows }), "EX", LEDGER_SECONDS]]).catch(() => {});

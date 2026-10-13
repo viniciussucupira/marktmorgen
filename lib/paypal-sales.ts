@@ -8,6 +8,8 @@
  *   nl:ppsell:watch:<stats>  paid orders inside PayPal's refund window, scored by when to ask next
  *   nl:ppsell:pending:<stats> orders whose payment PayPal holds as pending, until it completes or fails
  *   nl:ppsell:own:<stats>:<address hash>:<product>  the paid orders behind one address's product
+ *   nl:ppsell:sales:<stats>     every paid order, scored by when it was paid (400 days): the store's numbers read it
+ *   nl:ppsell:refunded:<stats>  paid orders PayPal says were refunded in full, scored by when that was seen
  *
  * How it fits together. Marktmorgen is a PayPal partner; a creator connects their
  * PayPal Business account through PayPal's own onboarding (Partner Referrals
@@ -29,8 +31,13 @@
  * What it sells, said plainly where it is offered: one-time products at one
  * price that hand over a file, a link, a course, a bundle or a podcast. Not
  * memberships, payment plans, calls, price options, pay what you want or
- * license keys; no add-on, no gift, no discount code. Affiliates are not
- * credited and the store's numbers do not count these sales yet.
+ * license keys; no add-on, no gift, no discount code.
+ *
+ * Counted like a Stripe sale (added 13 October 2026): each paid order is
+ * written to the store's own list of PayPal sales with the channel and the
+ * affiliate its visit carried, so "Your numbers", the sales file, the
+ * affiliate book and the webhooks count it (lib/stats.ts readPaidSales,
+ * lib/paypal-delivery.ts).
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { addressHash, grantImported, importedKey } from "@/lib/imported-purchases";
@@ -64,6 +71,10 @@ const pendingKey = (statsId: string) => `nl:ppsell:pending:${statsId}`;
 const DECLINED = new Set(["INSTRUMENT_DECLINED", "PAYER_ACTION_REQUIRED", "ORDER_NOT_APPROVED", "PAYEE_ACCOUNT_RESTRICTED", "PAYER_ACCOUNT_RESTRICTED"]);
 /** Every PayPal order one address paid for one product, so a refund of one leaves the others standing. */
 const ownKey = (statsId: string, email: string, productId: string) => `nl:ppsell:own:${statsId}:${addressHash(email)}:${productId}`;
+/** Every paid order, scored by when it was paid, and those refunded in full: what the store's numbers read. */
+const salesKey = (statsId: string) => `nl:ppsell:sales:${statsId}`;
+const refundedKey = (statsId: string) => `nl:ppsell:refunded:${statsId}`;
+const SALES_KEPT_SECONDS = 400 * 86_400;
 
 type Partner = { client: string; secret: string; merchant: string; bn: string };
 
@@ -288,12 +299,43 @@ export function orderBody(store: Store, product: Listing, cents: number, urls: {
 }
 
 /** An order opened: store, handle, product, cents, currency, the creator's PayPal, and when. */
-type Opened = { s: string; h: string; p: string; c: number; cur: string; m: string; at: number };
+/**
+ * An order opened: the store, the product, the price asked, the merchant, when;
+ * and what the visit carried, as a Stripe checkout carries it in its
+ * metadata: the channel (lib/visit-channel.ts), the affiliate and their
+ * share (lib/affiliates.ts), and the store sale's percent and what it took off.
+ */
+type Opened = {
+  s: string;
+  h: string;
+  p: string;
+  c: number;
+  cur: string;
+  m: string;
+  at: number;
+  meta?: Record<string, string>;
+  via?: { aff: string; rate: number };
+  off?: number;
+  sale?: number;
+};
+
+/** What a visit carried into an order, read by the checkout route. */
+export type OrderExtras = { meta?: Record<string, string>; via?: { aff: string; rate: number } | null };
+
+const META_KEY = /^[a-z_]{1,40}$/;
+/** The metadata kept on an order: short keys and values only, as Stripe would take them. Pure. */
+export function cleanMeta(meta: Record<string, string> | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(meta ?? {})) {
+    if (META_KEY.test(key) && typeof value === "string" && Object.keys(out).length < 20) out[key] = value.slice(0, 200);
+  }
+  return out;
+}
 
 export type OrderResult = { ok: true; url: string; order: string } | { ok: false; reason: "unavailable" | "error" };
 
 /** Opens a PayPal order for one product and returns where the buyer approves it. */
-export async function openOrder(store: Store, product: Listing, origin: string): Promise<OrderResult> {
+export async function openOrder(store: Store, product: Listing, origin: string, extras: OrderExtras = {}): Promise<OrderResult> {
   if (!paypalReady(store, product) || !store.statsId || !store.paypalSeller || !isRedisConfigured()) return { ok: false, reason: "unavailable" };
   const cents = payPalPrice(store, product);
   const returnUrl = `${origin}/api/store/paypal/return?store=${encodeURIComponent(store.handle)}`;
@@ -307,7 +349,19 @@ export async function openOrder(store: Store, product: Listing, origin: string):
     const links = Array.isArray(made.links) ? (made.links as { rel?: unknown; href?: unknown }[]) : [];
     const approve = links.find((l) => l.rel === "payer-action" || l.rel === "approve");
     if (!ORDER_ID.test(order) || typeof approve?.href !== "string" || !approve.href.startsWith("https://")) return { ok: false, reason: "error" };
-    const opened: Opened = { s: store.statsId, h: store.handle, p: product.id, c: cents, cur: store.currency, m: store.paypalSeller.merchant, at: Math.floor(Date.now() / 1000) };
+    const salePercent = saleOff(store.sale, product, Math.floor(Date.now() / 1000));
+    const opened: Opened = {
+      s: store.statsId,
+      h: store.handle,
+      p: product.id,
+      c: cents,
+      cur: store.currency,
+      m: store.paypalSeller.merchant,
+      at: Math.floor(Date.now() / 1000),
+      meta: cleanMeta(extras.meta),
+      ...(extras.via && /^[a-z0-9]{12}$/.test(extras.via.aff) ? { via: { aff: extras.via.aff, rate: Math.max(0, Math.min(100, Number(extras.via.rate) || 0)) } } : {}),
+      ...(salePercent > 0 ? { off: Math.max(0, product.priceCents - cents), sale: salePercent } : {}),
+    };
     await redisPipeline([["SET", orderKey(order), JSON.stringify(opened), "EX", 3 * 86_400]]);
     return { ok: true, url: approve.href, order };
   } catch (error) {
@@ -317,7 +371,22 @@ export async function openOrder(store: Store, product: Listing, origin: string):
 }
 
 /** A PayPal order paid: the store's stats id, the capture, the buyer's PayPal address, what and how much, when. */
-export type Paid = { store: string; order: string; capture: string; email: string; product: string; cents: number; currency: string; at: number };
+export type Paid = {
+  store: string;
+  order: string;
+  capture: string;
+  email: string;
+  product: string;
+  cents: number;
+  currency: string;
+  at: number;
+  /** Added 13 October 2026; absent on orders paid before: the store's handle, and what the visit carried (Opened). */
+  handle?: string;
+  meta?: Record<string, string>;
+  via?: { aff: string; rate: number };
+  off?: number;
+  sale?: number;
+};
 export type CaptureResult = { ok: true; paid: Paid; fresh: boolean } | { ok: false; reason: "unknown" | "pending" | "declined" | "mismatch" | "error" };
 
 /** Whether PayPal is still being waited on for an order this store opened. */
@@ -382,7 +451,20 @@ async function watchLater(order: string, opened: Opened): Promise<void> {
 
 /** Writes a completed payment down, once. Returns it, and whether this call wrote it. */
 async function settle(order: string, opened: Opened, captureId: string, email: string): Promise<{ paid: Paid; fresh: boolean }> {
-  const paid: Paid = { store: opened.s, order, capture: captureId, email, product: opened.p, cents: opened.c, currency: opened.cur, at: Math.floor(Date.now() / 1000) };
+  const paid: Paid = {
+    store: opened.s,
+    order,
+    capture: captureId,
+    email,
+    product: opened.p,
+    cents: opened.c,
+    currency: opened.cur,
+    at: Math.floor(Date.now() / 1000),
+    handle: opened.h,
+    ...(opened.meta ? { meta: opened.meta } : {}),
+    ...(opened.via ? { via: opened.via } : {}),
+    ...(opened.off ? { off: opened.off, sale: opened.sale } : {}),
+  };
   const [fresh] = await redisPipeline([["SET", paidKey(order), JSON.stringify(paid), "NX", "EX", PAID_KEPT_SECONDS]]);
   if (fresh === null) return { paid: (await readPaid(order)) ?? paid, fresh: false };
   await redisPipeline([
@@ -390,6 +472,10 @@ async function settle(order: string, opened: Opened, captureId: string, email: s
     ["SADD", ownKey(opened.s, email, opened.p), order],
     ["EXPIRE", ownKey(opened.s, email, opened.p), PAID_KEPT_SECONDS],
     ["ZREM", pendingKey(opened.s), order],
+    // Counted in the store's numbers like a Stripe sale (lib/stats.ts readPaidSales).
+    ["ZADD", salesKey(opened.s), String(paid.at), order],
+    ["ZREMRANGEBYSCORE", salesKey(opened.s), "-inf", String(paid.at - SALES_KEPT_SECONDS)],
+    ["EXPIRE", salesKey(opened.s), SALES_KEPT_SECONDS],
   ]);
   return { paid, fresh: true };
 }
@@ -511,7 +597,7 @@ export function nextLook(paidAt: number, now: number): number | null {
 export async function watchPayPal(
   store: Store,
   deadline: number,
-  on: { handOver: (paid: Paid) => Promise<void>; dropStart: (email: string, productId: string) => Promise<void> },
+  on: { handOver: (paid: Paid) => Promise<void>; dropStart: (email: string, productId: string) => Promise<void>; refunded?: (paid: Paid) => Promise<void> },
 ): Promise<{ cleared: number; revoked: number }> {
   const result = { cleared: 0, revoked: 0 };
   if (!paypalSalesConfigured() || !store.statsId || !store.paypalSeller || !isRedisConfigured()) return result;
@@ -576,6 +662,12 @@ export async function watchPayPal(
       await redisPipeline([next === null ? ["ZREM", watchKey(statsId), order] : ["ZADD", watchKey(statsId), String(next), order]]);
       continue;
     }
+    // Refunded in full: counted as a refund in the store's numbers and the affiliate book, whatever is handed back below.
+    await redisPipeline([
+      ["ZADD", refundedKey(statsId), String(now), order],
+      ["EXPIRE", refundedKey(statsId), SALES_KEPT_SECONDS],
+    ]);
+    if (on.refunded) await on.refunded(paid).catch((error) => console.error("telling of a PayPal refund failed", error));
     const [given] = await redisPipeline([["HGET", importedKey(statsId, paid.email), paid.product]]);
     let items: string[] = [];
     try {
@@ -615,3 +707,43 @@ export async function watchPayPal(
   result.revoked = revoked;
   return result;
 }
+
+/**
+ * The store's PayPal sales paid since `since` (seconds), newest first, at most
+ * `limit`: one range and one read of the orders. Nothing is asked of PayPal.
+ */
+export async function readPayPalSales(statsId: string | null, since: number, limit: number): Promise<{ sales: Paid[]; partial: boolean }> {
+  if (!statsId || !isRedisConfigured()) return { sales: [], partial: false };
+  const [orders] = await redisPipeline([["ZREVRANGEBYSCORE", salesKey(statsId), "+inf", String(Math.max(0, since)), "LIMIT", "0", String(limit + 1)]]);
+  const list = (Array.isArray(orders) ? (orders as string[]) : []).filter((o) => ORDER_ID.test(o));
+  if (!list.length) return { sales: [], partial: false };
+  const partial = list.length > limit;
+  const read = await redisPipeline([["MGET", ...list.slice(0, limit).map(paidKey)]]);
+  const rows = Array.isArray(read[0]) ? (read[0] as unknown[]) : [];
+  const sales: Paid[] = [];
+  for (const raw of rows) {
+    try {
+      const paid = typeof raw === "string" ? (JSON.parse(raw) as Paid) : null;
+      if (paid && paid.store === statsId && typeof paid.order === "string") sales.push(paid);
+    } catch {
+      // An order that cannot be read is left out, not guessed at.
+    }
+  }
+  return { sales, partial };
+}
+
+/** PayPal sales refunded in full since `since` (seconds): the payment, how much, in what, and when the refund was seen. */
+export async function readPayPalRefunds(statsId: string | null, since: number): Promise<{ order: string; capture: string; cents: number; currency: string; at: number }[]> {
+  if (!statsId || !isRedisConfigured()) return [];
+  const [orders] = await redisPipeline([["ZRANGEBYSCORE", refundedKey(statsId), String(Math.max(0, since)), "+inf", "WITHSCORES", "LIMIT", "0", "500"]]);
+  const flat = Array.isArray(orders) ? (orders as string[]) : [];
+  const out: { order: string; capture: string; cents: number; currency: string; at: number }[] = [];
+  for (let i = 0; i + 1 < flat.length; i += 2) {
+    const paid = await readPaid(flat[i]);
+    if (paid && paid.store === statsId) out.push({ order: paid.order, capture: paid.capture, cents: paid.cents, currency: paid.currency, at: Number(flat[i + 1]) || 0 });
+  }
+  return out;
+}
+
+/** What a payment is called where a refund names it: the capture, so it never mixes with a Stripe payment's id. */
+export const paypalPaymentId = (capture: string) => `paypal:${capture}`;
