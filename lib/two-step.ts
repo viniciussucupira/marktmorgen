@@ -23,11 +23,17 @@
  * login, and an account answers ten codes an hour at most, so six digits
  * cannot be guessed by trying.
  *
- * Nobody is locked out, and nobody here has to unlock anybody by hand. A
- * creator who has lost the phone, the recovery codes and every passkey asks,
- * from the code page they reach with an emailed link, for two-step login to be
- * turned off; it turns off by itself RESET_DAYS later, at their next emailed
- * link. In that time the account is emailed, the studio shows it to every
+ * Nobody is locked out, and nobody here has to unlock anybody by hand. Turning
+ * it on asks for a recovery address — a second inbox, confirmed with a code
+ * sent to it — and a creator who has lost the phone, the recovery codes and
+ * every passkey has a link sent there from the code page: opening it turns
+ * two-step login off and logs them in at once. Somebody who got into the
+ * sign-in inbox alone cannot, because the link goes to the other one.
+ *
+ * Only when the recovery inbox is lost as well (or for an account set up
+ * before there was one) does the creator ask, from the same page, for two-step
+ * login to be turned off; it turns off by itself RESET_DAYS later, at their
+ * next emailed link. In that time the account is emailed, the studio shows it to every
  * browser still logged in, and any login with a right code or a passkey — or
  * one press of Cancel in the studio — calls it off. So somebody who only has
  * the inbox has to wait a week in plain view of the owner, while the owner who
@@ -44,9 +50,10 @@
  *   nl:2fa:setup:<hash>   a secret being set up, 10 minutes, tied to the session
  *   nl:2fa:hold:<hash>    a login that has passed the emailed link and waits
  *                         for its code, 10 minutes, tied to a cookie of that browser
+ *   nl:2fa:rescue:<hash>  a link sent to the recovery address, 15 minutes, spent once
  */
 import { createHash, randomBytes } from "node:crypto";
-import { normaliseEmail } from "@/lib/auth";
+import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { withinLimit } from "@/lib/request-guard";
@@ -68,13 +75,17 @@ const ISSUER = "Marktmorgen";
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const recordKey = (email: string) => `nl:2fa:${sha(`nimbus-2fa:${normaliseEmail(email)}`).slice(0, 40)}`;
 const setupKey = (session: string) => `nl:2fa:setup:${sha(`nimbus-2fa-setup:${session}`).slice(0, 40)}`;
+const rescueKey = (token: string) => `nl:2fa:rescue:${sha(`nimbus-2fa-rescue:${token}`).slice(0, 40)}`;
 const holdKey = (token: string) => `nl:2fa:hold:${sha(`nimbus-2fa-hold:${token}`).slice(0, 40)}`;
 const context = (email: string) => `two-step|${normaliseEmail(email)}`;
 // Not bound to the address, so a move of the sign-in address keeps them; each code is random enough on its own.
 const codeHash = (code: string) => sha(`nimbus-2fa-code:${code.toLowerCase().replace(/[^a-z0-9]/g, "")}`);
 
-/** `reset`: when a request to turn it off without a code takes effect, in ms; 0 for none. */
-type TwoStep = { s: string; since: number; codes: string[]; last: number; reset: number };
+/**
+ * `reset`: when a request to turn it off without a code takes effect, in ms; 0 for none.
+ * `backup`: the recovery address, confirmed when it was turned on; "" on a record from before.
+ */
+type TwoStep = { s: string; since: number; codes: string[]; last: number; reset: number; backup: string };
 
 function parse(raw: unknown): TwoStep | null {
   if (typeof raw !== "string") return null;
@@ -87,6 +98,7 @@ function parse(raw: unknown): TwoStep | null {
       codes: Array.isArray(v.codes) ? v.codes.filter((c): c is string => typeof c === "string" && /^[0-9a-f]{64}$/.test(c)) : [],
       last: typeof v.last === "number" ? v.last : -1,
       reset: typeof v.reset === "number" && v.reset > 0 ? v.reset : 0,
+      backup: typeof v.backup === "string" && EMAIL_PATTERN.test(v.backup) ? v.backup : "",
     };
   } catch {
     return null;
@@ -135,12 +147,26 @@ async function tell(email: string, subject: string, line: string): Promise<void>
   }).catch(() => false);
 }
 
-/** `reset`: when a pending request to turn it off without a code takes effect, in ms; 0 for none. */
-export type TwoStepStatus = { on: boolean; since: number; codesLeft: number; reset: number };
+/**
+ * `reset`: when a pending request to turn it off without a code takes effect, in ms; 0 for none.
+ * `backup`: the recovery address, partly hidden ("v•••@g•••.com"), or "" when there is none.
+ */
+export type TwoStepStatus = { on: boolean; since: number; codesLeft: number; reset: number; backup: string };
+
+/** An address shown without giving it away: its first letters, the rest as dots. */
+export function hideAddress(address: string): string {
+  const [name = "", domain = ""] = address.split("@");
+  const dot = domain.lastIndexOf(".");
+  const host = dot > 0 ? domain.slice(0, dot) : domain;
+  const end = dot > 0 ? domain.slice(dot) : "";
+  return `${name.slice(0, 1)}\u2022\u2022\u2022@${host.slice(0, 1)}\u2022\u2022\u2022${end}`;
+}
 
 export async function twoStepStatus(email: string): Promise<TwoStepStatus> {
   const record = await read(email);
-  return record ? { on: true, since: record.since, codesLeft: record.codes.length, reset: record.reset } : { on: false, since: 0, codesLeft: 0, reset: 0 };
+  return record
+    ? { on: true, since: record.since, codesLeft: record.codes.length, reset: record.reset, backup: record.backup ? hideAddress(record.backup) : "" }
+    : { on: false, since: 0, codesLeft: 0, reset: 0, backup: "" };
 }
 
 const day = (ms: number) => new Date(ms).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -200,34 +226,122 @@ export async function twoStepOn(email: string): Promise<boolean> {
   return (await read(email)) !== null;
 }
 
-/** A new secret for the app, kept against the session setting it up. */
-export async function startSetup(email: string, session: string): Promise<{ secret: string; uri: string } | "already"> {
+/** A six-digit code for confirming the recovery address, and its hash. */
+function confirmCode(): { code: string; hash: string } {
+  const code = String(randomBytes(4).readUInt32BE(0) % 1_000_000).padStart(6, "0");
+  return { code, hash: sha(`nimbus-2fa-backup:${code}`) };
+}
+
+export type SetupStart = { secret: string; uri: string } | "already" | "backup" | "same" | "limited" | "unsent";
+
+/**
+ * A new secret for the app, kept against the session setting it up, and a
+ * code sent to the recovery address to confirm it is one the creator reads.
+ */
+export async function startSetup(email: string, session: string, backupRaw: string): Promise<SetupStart> {
   if (await twoStepOn(email)) return "already";
+  const backup = normaliseEmail(backupRaw);
+  if (!backup || backup.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(backup)) return "backup";
+  if (backup === normaliseEmail(email)) return "same";
+  if (!(await withinLimit("two-step-backup", normaliseEmail(email), 5, 60 * 60))) return "limited";
   const secret = newSecret();
-  await redisPipeline([["SET", setupKey(session), JSON.stringify({ e: normaliseEmail(email), s: seal(secret, context(email)) }), "EX", SETUP_SECONDS]]);
+  const confirm = confirmCode();
+  const sent = isSenderConfigured()
+    ? await sendEmail({
+        from: NIMBUS_FROM,
+        to: backup,
+        replyTo: "support@marktmorgen.com",
+        subject: `${confirm.code} is your code to confirm a recovery address`,
+        text: [
+          `The Marktmorgen account ${normaliseEmail(email)} is choosing this address to recover it, if its owner ever loses their phone.`,
+          "",
+          `Your code: ${confirm.code}`,
+          "",
+          "It works for ten minutes. If you did not expect this, ignore it: nothing happens unless the code is typed in.",
+        ].join("\n"),
+      }).catch(() => false)
+    : false;
+  if (!sent) return "unsent";
+  await redisPipeline([["SET", setupKey(session), JSON.stringify({ e: normaliseEmail(email), s: seal(secret, context(email)), b: backup, c: confirm.hash }), "EX", SETUP_SECONDS]]);
   return { secret, uri: otpauthUri(secret, normaliseEmail(email), ISSUER) };
 }
 
-/** Turns it on once the app shows a right code; returns the recovery codes, shown this once. */
-export async function finishSetup(email: string, session: string, typed: string, now = Date.now()): Promise<{ codes: string[] } | "expired" | "wrong" | "already"> {
+/** Turns it on once the app shows a right code and the recovery address's code is right; returns the recovery codes, shown this once. */
+export async function finishSetup(
+  email: string,
+  session: string,
+  typed: string,
+  backupCode: string,
+  now = Date.now(),
+): Promise<{ codes: string[] } | "expired" | "wrong" | "backup-wrong" | "already"> {
   if (await twoStepOn(email)) return "already";
   const [raw] = await redisPipeline([["GET", setupKey(session)]]);
-  let pending: { e?: unknown; s?: unknown } = {};
+  let pending: { e?: unknown; s?: unknown; b?: unknown; c?: unknown } = {};
   try {
     pending = typeof raw === "string" ? (JSON.parse(raw) as typeof pending) : {};
   } catch {
     pending = {};
   }
-  if (pending.e !== normaliseEmail(email) || typeof pending.s !== "string") return "expired";
+  if (pending.e !== normaliseEmail(email) || typeof pending.s !== "string" || typeof pending.b !== "string" || typeof pending.c !== "string") return "expired";
+  if (sha(`nimbus-2fa-backup:${backupCode.replace(/\D/g, "")}`) !== pending.c) return "backup-wrong";
   const opened = unseal(pending.s, context(email));
   if (!opened.ok) return "expired";
   const step = stepOf(opened.value, typed, now);
   if (step === null) return "wrong";
   const codes = newCodes();
-  await write(email, { s: pending.s, since: now, codes: codes.map((c) => codeHash(c)), last: step, reset: 0 });
+  await write(email, { s: pending.s, since: now, codes: codes.map((c) => codeHash(c)), last: step, reset: 0, backup: pending.b });
   await redisPipeline([["DEL", setupKey(session)]]);
-  await tell(email, "Two-step login is on for your Marktmorgen account", "Two-step login was turned on for your Marktmorgen account. From now on, logging in with the emailed link also asks for the code in your authenticator app.");
+  await tell(email, "Two-step login is on for your Marktmorgen account", `Two-step login was turned on for your Marktmorgen account. From now on, logging in with the emailed link also asks for the code in your authenticator app. If you ever lose your phone and your recovery codes, a link sent to your recovery address (${hideAddress(pending.b)}) lets you back in.`);
   return { codes };
+}
+
+/**
+ * From the code page, for somebody with neither a code nor a passkey: a link
+ * to the recovery address that turns two-step login off and logs in. Three
+ * an hour. False when the account has no recovery address.
+ */
+export async function sendRescue(token: string, origin: string): Promise<"sent" | "none" | "limited" | "expired" | "unsent"> {
+  const email = await heldFor(token);
+  const record = email ? await read(email) : null;
+  if (!email || !record) return "expired";
+  if (!record.backup) return "none";
+  if (!(await withinLimit("two-step-rescue", normaliseEmail(email), 3, 60 * 60))) return "limited";
+  const rescue = randomBytes(32).toString("hex");
+  await redisPipeline([["SET", rescueKey(rescue), normaliseEmail(email), "EX", 15 * 60]]);
+  const sent = isSenderConfigured()
+    ? await sendEmail({
+        from: NIMBUS_FROM,
+        to: record.backup,
+        replyTo: "support@marktmorgen.com",
+        subject: "Get back into your Marktmorgen account",
+        text: [
+          `This is the recovery address of the Marktmorgen account ${normaliseEmail(email)}. Somebody logging in to it said the phone, the recovery codes and the passkeys are lost.`,
+          "",
+          "This link turns two-step login off and logs you in. It works once, for 15 minutes:",
+          `${origin}/signin/rescue?token=${rescue}`,
+          "",
+          "If you did not ask for this, ignore it: nothing changes unless the link is used.",
+        ].join("\n"),
+      }).catch(() => false)
+    : false;
+  return sent ? "sent" : "unsent";
+}
+
+/** Spends a link sent to the recovery address: two-step login is turned off, and the account's address is told. */
+export async function spendRescue(token: string): Promise<string | null> {
+  if (!/^[0-9a-f]{64}$/.test(token) || !isRedisConfigured()) return null;
+  let email: unknown;
+  try {
+    [email] = await redisPipeline([["GETDEL", rescueKey(token)]]);
+  } catch {
+    const [readBack] = await redisPipeline([["GET", rescueKey(token)]]);
+    const [removed] = await redisPipeline([["DEL", rescueKey(token)]]);
+    email = Number(removed) === 1 ? readBack : null;
+  }
+  if (typeof email !== "string" || !email || !(await twoStepOn(email))) return null;
+  await redisPipeline([["DEL", recordKey(email)]]);
+  await tell(email, "Two-step login is off for your Marktmorgen account", "Two-step login was turned off with a link sent to your recovery address, and your account was logged in. Turn it on again in your studio, with your phone, to get new recovery codes.");
+  return email;
 }
 
 export type CodeCheck = "app" | "recovery" | "wrong" | "unreadable" | "limited";

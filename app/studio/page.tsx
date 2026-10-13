@@ -934,7 +934,7 @@ export default async function StudioPage({
     store?.sid && may("team") ? readTeam(store.sid).catch(() => null) : Promise.resolve(null),
     isFreshSession(cookieStore.get(SESSION_COOKIE)?.value).catch(() => false),
     // The person's two-step login (lib/two-step.ts), beside their passkeys.
-    email ? twoStepStatus(email).catch(() => ({ on: false, since: 0, codesLeft: 0, reset: 0 })) : Promise.resolve({ on: false, since: 0, codesLeft: 0, reset: 0 }),
+    email ? twoStepStatus(email).catch(() => ({ on: false, since: 0, codesLeft: 0, reset: 0, backup: "" })) : Promise.resolve({ on: false, since: 0, codesLeft: 0, reset: 0, backup: "" }),
   ]);
   const connectReady = isConnectConfigured();
   const billingReadyForSteps = isBillingConfigured();
@@ -2857,7 +2857,7 @@ export default async function StudioPage({
                 initial={passkeys.map(({ id, name, createdAt, lastUsedAt, synced }) => ({ id, name, createdAt, lastUsedAt, synced }))}
                 fresh={freshLogin}
               />
-              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} reset={twoStep.reset} fresh={freshLogin} />
+              <TwoStepManager on={twoStep.on} codesLeft={twoStep.codesLeft} reset={twoStep.reset} backup={twoStep.backup} fresh={freshLogin} />
 
               {role !== "owner" ? (
                 <section aria-labelledby="leave-title" className="mt-8 border-t border-line pt-6">

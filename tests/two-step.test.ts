@@ -19,13 +19,25 @@
 import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 import { base32Decode, base32Encode, codeAt, stepOf, STEP_SECONDS } from "@/lib/totp";
-import { RESET_DAYS, cancelReset, finishSetup, moveTwoStep, resetIfDue, startSetup, turnOff, twoStepOn, twoStepStatus } from "@/lib/two-step";
+import { RESET_DAYS, cancelReset, finishSetup, hideAddress, moveTwoStep, resetIfDue, startSetup, turnOff, twoStepOn, twoStepStatus } from "@/lib/two-step";
 import { POST as callback } from "@/app/api/auth/callback/route";
 import { POST as codeRoute } from "@/app/api/auth/code/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
 process.env.NIMBUS_DATA_KEY ??= "tests-only-not-a-real-deployment-secret";
+process.env.RESEND_API_KEY = "re_test_two_step_only_a_stand_in";
+const mails: { to: string; text: string }[] = [];
+globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+  if (String(input).includes("resend")) {
+    const body = JSON.parse(String(init?.body ?? "{}")) as { to?: string | string[]; text?: string };
+    mails.push({ to: Array.isArray(body.to) ? body.to[0] : String(body.to ?? ""), text: String(body.text ?? "") });
+    return new Response(JSON.stringify({ id: "email_1" }), { status: 200 });
+  }
+  return new Response("{}", { status: 404 });
+}) as typeof fetch;
+/** The six digits in the last email to an address. */
+const codeTo = (to: string) => /Your code: (\d{6})/.exec([...mails].reverse().find((m) => m.to === to)?.text ?? "")?.[1] ?? "";
 
 const EMAIL = "maker@example.com";
 const SESSION = "a".repeat(64);
@@ -61,12 +73,16 @@ async function main(): Promise<void> {
   is("never a step already used", stepOf(secret, codeAt(rfc, step), at, step), null);
 
   part("Turning it on");
-  const started = await startSetup(EMAIL, SESSION);
-  if (started === "already") throw new Error("already on");
+  is("the recovery address has to be another inbox", [await startSetup(EMAIL, SESSION, "Maker@Example.com"), await startSetup(EMAIL, SESSION, "not an address")], ["same", "backup"]);
+  const started = await startSetup(EMAIL, SESSION, "backup@example.org");
+  if (typeof started === "string") throw new Error(started);
+  const backupCode = codeTo("backup@example.org");
+  is("a code is emailed to the recovery address", backupCode.length, 6);
   is("the app reads a secret and an address", [started.uri.startsWith("otpauth://totp/Marktmorgen%3Amaker%40example.com?secret="), started.secret.length], [true, 32]);
-  is("a wrong code does not turn it on", [await finishSetup(EMAIL, SESSION, "000000" === nowCode(started.secret) ? "111111" : "000000"), await twoStepOn(EMAIL)], ["wrong", false]);
-  is("another session cannot finish it", await finishSetup(EMAIL, "b".repeat(64), nowCode(started.secret)), "expired");
-  const finished = await finishSetup(EMAIL, SESSION, nowCode(started.secret));
+  is("a wrong code does not turn it on", [await finishSetup(EMAIL, SESSION, "000000" === nowCode(started.secret) ? "111111" : "000000", backupCode), await twoStepOn(EMAIL)], ["wrong", false]);
+  is("another session cannot finish it", await finishSetup(EMAIL, "b".repeat(64), nowCode(started.secret), backupCode), "expired");
+  is("not without the recovery address's code", await finishSetup(EMAIL, SESSION, nowCode(started.secret), backupCode === "000000" ? "111111" : "000000"), "backup-wrong");
+  const finished = await finishSetup(EMAIL, SESSION, nowCode(started.secret), backupCode);
   if (typeof finished === "string") throw new Error(finished);
   is("on, with ten recovery codes shown once", [await twoStepOn(EMAIL), finished.codes.length, new Set(finished.codes).size], [true, 10, 10]);
 
@@ -90,9 +106,9 @@ async function main(): Promise<void> {
 
   redis.clear();
   // A fresh hour of tries, and the account set up again for the rest.
-  const again2 = await startSetup(EMAIL, SESSION);
-  if (again2 === "already") throw new Error("already on");
-  const set2 = await finishSetup(EMAIL, SESSION, nowCode(again2.secret));
+  const again2 = await startSetup(EMAIL, SESSION, "backup@example.org");
+  if (typeof again2 === "string") throw new Error(again2);
+  const set2 = await finishSetup(EMAIL, SESSION, nowCode(again2.secret), codeTo("backup@example.org"));
   if (typeof set2 === "string") throw new Error(set2);
   const third = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(EMAIL) })), "nl_2fa");
   const byRecovery = await codeRoute(post("https://marktmorgen.com/api/auth/code", { code: set2.codes[3].toUpperCase() }, `nl_2fa=${third}`));
@@ -110,11 +126,27 @@ async function main(): Promise<void> {
   const plain = await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor("new@example.com") }));
   is("without it, the link opens the session as it always did", [plain.headers.get("location"), cookieOf(plain, "nl_session").length], ["https://marktmorgen.com/studio", 64]);
 
-  part("Lost everything: nobody is locked out");
+  part("Lost the phone and the codes: back in at once through the recovery address");
+  const RESCUED = "rescued@example.com";
+  const rStart = await startSetup(RESCUED, SESSION, "second@example.org");
+  if (typeof rStart === "string") throw new Error(rStart);
+  if (typeof (await finishSetup(RESCUED, SESSION, nowCode(rStart.secret), codeTo("second@example.org"))) === "string") throw new Error("not set");
+  is("the recovery address is shown without giving it away", (await twoStepStatus(RESCUED)).backup, hideAddress("second@example.org"));
+  const rHold = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(RESCUED) })), "nl_2fa");
+  const rSent = await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "rescue" }, `nl_2fa=${rHold}`));
+  const rescueLink = /signin\/rescue\?token=([0-9a-f]{64})/.exec([...mails].reverse().find((m) => m.to === "second@example.org")?.text ?? "")?.[1] ?? "";
+  is("a link goes to the recovery address, not the sign-in one", [rSent.headers.get("location"), rescueLink.length], ["https://marktmorgen.com/signin/code?status=rescue-sent", 64]);
+  const { POST: rescueRoute } = await import("@/app/api/auth/rescue/route");
+  const rescued = await rescueRoute(post("https://marktmorgen.com/api/auth/rescue", { token: rescueLink }));
+  is("opening it logs in at once, and two-step login is off", [rescued.headers.get("location"), cookieOf(rescued, "nl_session").length, await twoStepOn(RESCUED)], ["https://marktmorgen.com/studio#two-step", 64, false]);
+  is("and it works once", (await rescueRoute(post("https://marktmorgen.com/api/auth/rescue", { token: rescueLink }))).headers.get("location"), "https://marktmorgen.com/signin?status=expired");
+  is("the sign-in address is told", mails.some((m) => m.to === RESCUED && m.text.includes("recovery address, and your account was logged in")), true);
+
+  part("Lost the recovery inbox too: nobody is locked out");
   const LOST = "lost@example.com";
-  const set3Start = await startSetup(LOST, SESSION);
-  if (set3Start === "already") throw new Error("already on");
-  const set3 = await finishSetup(LOST, SESSION, nowCode(set3Start.secret));
+  const set3Start = await startSetup(LOST, SESSION, "lost.backup@example.org");
+  if (typeof set3Start === "string") throw new Error(set3Start);
+  const set3 = await finishSetup(LOST, SESSION, nowCode(set3Start.secret), codeTo("lost.backup@example.org"));
   if (typeof set3 === "string") throw new Error(set3);
   const lostHold = cookieOf(await callback(post("https://marktmorgen.com/api/auth/callback", { token: await linkFor(LOST) })), "nl_2fa");
   const asked = await codeRoute(post("https://marktmorgen.com/api/auth/code", { action: "reset" }, `nl_2fa=${lostHold}`));

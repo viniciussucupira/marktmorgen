@@ -18,6 +18,10 @@ const MESSAGES: Record<string, string> = {
   unavailable: "Two-step login is not available on this deployment yet.",
   signed_out: "Your session ended. Log in again.",
   server_error: "Something went wrong on our side. Try again in a moment.",
+  backup: "Type the email address of a second inbox you can open, to get back in if you lose your phone.",
+  same: "The recovery address has to be another inbox than the one you log in with: that is what makes it a way back in.",
+  unsent: "The code could not be emailed to that address just now. Check it, and try again.",
+  "backup-wrong": "The code from your recovery address is not right. Type the six digits in the email we sent there.",
 };
 
 type Answer = { ok?: boolean; error?: string; secret?: string; uri?: string; codes?: string[] };
@@ -87,11 +91,14 @@ function Codes({ codes, onDone }: { codes: string[]; onDone: () => void }) {
  * beside their passkeys: turn it on with an authenticator app, see how many
  * recovery codes are left, make new ones, or turn it off.
  */
-export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: initialReset, fresh }: { on: boolean; codesLeft: number; reset: number; fresh: boolean }) {
+export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: initialReset, backup: backupShown, fresh }: { on: boolean; codesLeft: number; reset: number; backup: string; fresh: boolean }) {
   const [reset, setReset] = useState(initialReset);
+  const [recoveryShown, setRecoveryShown] = useState(backupShown);
   const [on, setOn] = useState(initialOn);
   const [left, setLeft] = useState(initialLeft);
   const [setup, setSetup] = useState<{ secret: string; uri: string } | null>(null);
+  const [backup, setBackup] = useState("");
+  const [backupCode, setBackupCode] = useState("");
   const [codes, setCodes] = useState<string[] | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -132,7 +139,7 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: i
       </h3>
       <p className="mt-2 text-sm text-ink-soft">
         {on
-          ? `On. Logging in with the emailed link also asks for the code in your authenticator app; a passkey needs no code. ${left} recovery ${left === 1 ? "code" : "codes"} left.`
+          ? `On. Logging in with the emailed link also asks for the code in your authenticator app; a passkey needs no code. ${left} recovery ${left === 1 ? "code" : "codes"} left.${recoveryShown ? ` Lose your phone and your codes, and a link to your recovery address, ${recoveryShown}, lets you back in.` : " Set up before recovery addresses: turn it off and on again to add one, so losing your phone never keeps you out."}`
           : "After the emailed link, ask for a six-digit code from an authenticator app, such as Google Authenticator, Microsoft Authenticator, 1Password or Authy. Someone who gets into your email still cannot open your studio without your phone. A passkey needs no code."}
       </p>
 
@@ -175,15 +182,23 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: i
           </Link>
         </div>
       ) : !on && !setup ? (
-        <button
-          type="button"
-          className="btn btn-secondary mt-4"
-          disabled={busy}
-          onClick={() => void run({ action: "start" }, (answer) => answer.secret && answer.uri && setSetup({ secret: answer.secret, uri: answer.uri }))}
+        <form
+          className="mt-4 flex flex-wrap items-end gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void run({ action: "start", backup }, (answer) => answer.secret && answer.uri && setSetup({ secret: answer.secret, uri: answer.uri }));
+          }}
         >
-          <Icon name="lock" size={16} />
-          Turn on two-step login
-        </button>
+          <label className="block min-w-0 flex-1 basis-60 text-sm font-bold text-ink">
+            Recovery address
+            <span className="block text-xs font-normal text-ink-soft">A second inbox you can open. If you ever lose your phone, a link sent there lets you straight back in.</span>
+            <input className="field mt-1" type="email" autoComplete="email" required maxLength={254} value={backup} onChange={(e) => setBackup(e.target.value)} />
+          </label>
+          <button type="submit" className="btn btn-secondary" disabled={busy}>
+            <Icon name="lock" size={16} />
+            Turn on two-step login
+          </button>
+        </form>
       ) : !on && setup ? (
         <div className="mt-4 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line">
           <p className="text-sm text-ink-soft">Scan this with your authenticator app, or type the key into it. Then type the six digits it shows.</p>
@@ -195,15 +210,20 @@ export function TwoStepManager({ on: initialOn, codesLeft: initialLeft, reset: i
             className="mt-4 flex flex-wrap items-end gap-3"
             onSubmit={(e) => {
               e.preventDefault();
-              void run({ action: "finish", code }, (answer) => {
+              void run({ action: "finish", code, backupCode }, (answer) => {
                 setOn(true);
                 setSetup(null);
+                setRecoveryShown(backup.trim());
                 setLeft(answer.codes?.length ?? 0);
                 setCodes(answer.codes ?? []);
               });
             }}
           >
             {codeField("Code from the app")}
+            <label className="block min-w-0 flex-1 basis-48 text-sm font-bold text-ink">
+              {`Code sent to ${backup}`}
+              <input className="field mt-1 tracking-[0.15em]" inputMode="numeric" autoComplete="one-time-code" maxLength={10} value={backupCode} onChange={(e) => setBackupCode(e.target.value)} />
+            </label>
             <button type="submit" className="btn btn-primary" disabled={busy}>
               {busy ? "Checking…" : "Turn it on"}
             </button>
