@@ -79,6 +79,12 @@ const env = {
   ANTHROPIC_API_BASE: FAKE,
   // The ad platforms conversions are sent to from the server (lib/ad-events.ts).
   ADS_API_BASE: FAKE,
+  // PayPal, as an approved partner, answered by the stand-in (lib/paypal-sales.ts).
+  PAYPAL_API_BASE: FAKE,
+  PAYPAL_PARTNER_CLIENT_ID: "AZlocalPartnerClient0123",
+  PAYPAL_PARTNER_SECRET: "EPlocalPartnerSecret0123",
+  PAYPAL_PARTNER_MERCHANT_ID: "LOCALPARTNER01",
+  PAYPAL_BN_CODE: "Marktmorgen_Local",
   // Discord: the application's keys, and its page and API answered by the stand-in.
   DISCORD_API_BASE: FAKE,
   DISCORD_CLIENT_ID: "950000000000000001",
@@ -189,7 +195,7 @@ try {
     child.on("close", (status) => done({ status, ...said }));
   });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.err}`);
-  const { ids, reviews: seededReviews, fresh, session, statsId } = JSON.parse(seeded.out.trim().split("\n").at(-1));
+  const { ids, reviews: seededReviews, fresh, session, statsId, longSession } = JSON.parse(seeded.out.trim().split("\n").at(-1));
 
   // Built once, before it is served (see PRODUCTION above).
   if (PRODUCTION) {
@@ -1701,6 +1707,40 @@ try {
     await person.close();
   }
 
+  part("A sale paid with PayPal, counted like any other");
+  {
+    const buyerContext = await browser.newContext({ viewport: { width: 430, height: 900 } });
+    const buyer = await buyerContext.newPage();
+    await buyer.goto(`${LOCAL}/@longshop?utm_source=instagram`, { waitUntil: "networkidle", timeout: 120_000 });
+    const href = await buyer.locator("a[href*='/@longshop/p/']").first().getAttribute("href");
+    // Tagged as the creator's link in a bio would be: the page's own tags credit the sale.
+    await buyer.goto(`${LOCAL}${href}?utm_source=instagram`, { waitUntil: "networkidle", timeout: 120_000 });
+    const paypalForm = buyer.locator("form[action='/api/store/paypal/checkout']").first();
+    is("the product page offers PayPal", (await paypalForm.count()) > 0, true);
+    // PayPal's own page cannot be reached from here: the button's request goes to the store as the
+    // browser sends it, cookies and all, and where its answer sends the buyer is read off it.
+    let approve = "";
+    await buyer.route("**/api/store/paypal/checkout", async (route) => {
+      const answer = await route.fetch({ maxRedirects: 0 });
+      approve = answer.headers().location ?? "";
+      await route.fulfill({ status: 200, contentType: "text/html", body: "<title>Off to PayPal</title><main>Off to PayPal</main>" });
+    });
+    await Promise.all([buyer.waitForURL(/\/api\/store\/paypal\/checkout/, { timeout: 60_000 }), paypalForm.locator("button[type=submit]").click()]);
+    is("the buyer is sent to PayPal's own page", /^https:\/\/www\.paypal\.com\/checkoutnow\?token=/.test(approve), true);
+    const order = approve ? new URL(approve).searchParams.get("token") : "";
+    await buyer.goto(`${LOCAL}/api/store/paypal/return?store=longshop&token=${order}`, { waitUntil: "networkidle", timeout: 120_000 });
+    is("back from PayPal, on the thanks page", /\/thanks\?paypal=/.test(buyer.url()), true);
+    const ownerContext = await browser.newContext();
+    await ownerContext.addCookies([{ name: "nl_session", value: longSession, url: LOCAL }]);
+    const today = new Date().toISOString().slice(0, 10);
+    const range = await (await ownerContext.request.get(`${LOCAL}/api/store/stats/range?from=${today}&to=${today}`)).json();
+    is("in the owner's numbers, with the channel the visit came from", [range.range?.totals?.sales, range.range?.totals?.cents, range.range?.channels?.find((c) => c.source === "instagram")?.sales], [1, 300, 1]);
+    const file = await (await ownerContext.request.get(`${LOCAL}/api/store/export?what=sales&range=30`)).text();
+    is("and in the sales file, said to be paid with PayPal", file.split("\r\n").some((line) => line.includes(`paypal:${order}`) && line.endsWith('"paypal"')), true);
+    await buyerContext.close();
+    await ownerContext.close();
+  }
+
   part("A reply to a review, drafted with AI");
   {
     await open(studio, `${LOCAL}/studio/reviews?view=all`);
@@ -1854,7 +1894,7 @@ try {
     await page.emulateMedia({ media: "screen" });
     if (process.env.E2E_SHOTS) await page.screenshot({ path: join(process.env.E2E_SHOTS, "media-kit.png"), fullPage: true });
     await open(page, `${LOCAL}/@longshop/media-kit`);
-    is("a store without one has no such page", await words(page.locator("h1")), "Nothing lives at this address");
+    is("a store without one has no such page, said in the store's own look", await words(page.locator("h1")), "This page isn't here");
   }
 
   part("The numbers shared with a link, a password and an end");

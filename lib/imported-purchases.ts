@@ -18,6 +18,8 @@
  * still has it there.
  *
  *   nl:imp:buy:<statsId>:<address hash>  product id -> { at, job, items }
+ *   nl:imp:who:<statsId>                  address -> when it was first brought over: the buyers an import
+ *                                         brought, for the list's groups as history, never as a sale (lib/segments.ts)
  *
  * One entry per product and address, written only if there is none (HSETNX),
  * so importing the same file twice gives nobody anything twice.
@@ -62,6 +64,19 @@ export function addressHash(email: string): string {
 }
 
 export const importedKey = (statsId: string, email: string) => `nl:imp:buy:${statsId}:${addressHash(email)}`;
+export const importedWhoKey = (statsId: string) => `nl:imp:who:${statsId}`;
+/** An import's own job id (lib/imports.ts): only those are brought over; a gift, a place or a PayPal sale is not. */
+const IMPORT_JOB = /^[0-9a-f]{24}$/;
+
+/** The addresses an import brought over, with when each was first brought (seconds). */
+export async function importedBuyers(statsId: string | null): Promise<Map<string, number>> {
+  if (!statsId || !isRedisConfigured()) return new Map();
+  const [raw] = await redisPipeline([["HGETALL", importedWhoKey(statsId)]]);
+  const flat = Array.isArray(raw) ? (raw as unknown[]).map(String) : [];
+  const out = new Map<string, number>();
+  for (let i = 0; i + 1 < flat.length; i += 2) out.set(flat[i], Number(flat[i + 1]) || 0);
+  return out;
+}
 
 /** The reference one imported purchase is known by on the list of purchases and in a download link. */
 export function importedReference(statsId: string, email: string, productId: string): string {
@@ -116,7 +131,13 @@ export async function importedFor(store: Store, email: string): Promise<Imported
   const read = importedRead(store, email);
   if (!read || !isRedisConfigured()) return [];
   const [raw] = await redisPipeline([read]);
-  return importedFrom(raw);
+  const found = importedFrom(raw);
+  // Brought over before the list of who was brought existed: noted the first time they are read.
+  const brought = found.filter((p) => IMPORT_JOB.test(p.job));
+  if (brought.length && store.statsId) {
+    await redisPipeline([["HSETNX", importedWhoKey(store.statsId), normaliseEmail(email), String(Math.min(...brought.map((p) => p.at)))]]).catch(() => {});
+  }
+  return found;
 }
 
 /**
@@ -133,6 +154,9 @@ export async function grantImported(
 ): Promise<boolean[]> {
   if (!grants.length || !isRedisConfigured()) return grants.map(() => false);
   if (sid) await rememberBuyers(sid, grants.map((g) => g.email));
+  if (IMPORT_JOB.test(job)) {
+    await redisPipeline([...new Set(grants.map((g) => normaliseEmail(g.email)))].map((email) => ["HSETNX", importedWhoKey(statsId), email, String(atSeconds)]));
+  }
   const answers = await redisPipeline(
     grants.map((g) => [
       "HSETNX",

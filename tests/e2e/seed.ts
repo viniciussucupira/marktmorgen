@@ -4,6 +4,7 @@
  * a session for its owner. Written through the same functions the studio
  * uses, into the stand-in database.
  */
+import { setPayPalSeller } from "@/lib/store";
 import { addProduct, addStoreLink, claimHandle, createStore, ensureStatsId, setProductPage, setAnnouncement, setProductExtras, setProductImage, setLinkImage, setProductLink, setReviewed, setSections, storeForEmail, setStripeAccount, setSubscription, setMailSettings, storeRef } from "@/lib/store";
 import { openSession } from "@/lib/auth";
 import { saveReview, setReviewPhoto } from "@/lib/reviews";
@@ -90,6 +91,8 @@ async function main(): Promise<void> {
   if (!long.ok) throw new Error(`the long store's address was refused: ${long.reason}`);
   await setStripeAccount(LONG, "acct_1LocalLong00001", true);
   await setSubscription(LONG, { active: true, tier: "creator", cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0 });
+  // Its buyers can pay with PayPal too, into the owner's own PayPal account (lib/paypal-sales.ts).
+  await setPayPalSeller(LONG, "7KNGBPH2U58GQ");
   for (let n = 1; n <= 30; n++) {
     const kind = ["Soup", "Bread", "Salad"][n % 3];
     const made = await addProduct(LONG, `${kind} recipe ${n}`, n === 7 ? "With roasted tomatoes and crème fraîche." : `Recipe number ${n}.`, "3", null);
@@ -107,7 +110,7 @@ async function main(): Promise<void> {
   // On Pro, so its studio writes to a list (app/studio/email).
   await setSubscription(storeRef(fresh.store), { active: true, tier: "pro", cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0 });
   await setMailSettings(storeRef(fresh.store), { fromName: "Fresh Kitchen", address: "1 Main St, Austin, TX 78701" });
-  console.log(JSON.stringify({ ids, reviews, fresh: fresh.store.sid, session: await openSession(OWNER), statsId }));
+  console.log(JSON.stringify({ ids, reviews, fresh: fresh.store.sid, session: await openSession(OWNER), statsId, longSession: await openSession(LONG) }));
 }
 
 main().catch((error) => {

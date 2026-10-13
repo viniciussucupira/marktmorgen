@@ -35,6 +35,7 @@
  *   nl:person:<statsId>:n:<person>     hash: <id> → JSON { at, by, text }
  *   nl:person:find:<token>             JSON { s: store id, e: address }, an hour
  */
+import { readPaid } from "@/lib/paypal-sales";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -516,6 +517,28 @@ export async function buyerProfile(store: Store, rawEmail: string): Promise<Buye
     for (const given of await importedFor(store, email).catch(() => [])) {
       const listing = await find(given.productId);
       productIds.push(given.productId, ...(given.items ?? []));
+      // A sale paid with PayPal is a sale (lib/paypal-sales.ts): its amount, its channel, counted in what they paid.
+      const paypal = given.job.startsWith("paypal:") ? await readPaid(given.job.slice(7)).catch(() => null) : null;
+      if (paypal && paypal.store === store.statsId) {
+        const channel = saleChannel(paypal.meta ?? {});
+        const recorded = Boolean(paypal.meta && "channel" in paypal.meta);
+        orders.push({
+          reference: "",
+          kind: "sale",
+          title: listing?.title ?? "A product that is no longer listed",
+          at: paypal.at,
+          cents: paypal.cents,
+          currency: paypal.currency,
+          refunded: 0,
+          channel: channel.source,
+          recorded,
+          campaign: channel.campaign,
+          note: "paypal",
+        });
+        sales.push({ at: paypal.at, source: channel.source, first: channel.first, recorded });
+        charges.set(`paypal:${paypal.order}`, { id: `paypal:${paypal.order}`, cents: paypal.cents, refunded: 0, currency: paypal.currency, at: paypal.at });
+        continue;
+      }
       orders.push({
         reference: "",
         kind: "brought",

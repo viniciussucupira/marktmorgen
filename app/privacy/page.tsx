@@ -314,6 +314,15 @@ export default function PrivacyPage() {
           two months.
         </p>
         <p>
+          <strong className="text-black">Paying with PayPal.</strong> Where a store takes PayPal, the buyer
+          pays the creator&apos;s own PayPal account, under PayPal&apos;s privacy policy. We keep, for up to
+          about 400 days, the order and payment numbers, the email address of the buyer&apos;s PayPal account
+          (to hand over what they bought and send it again on request), what was bought, the amount, and the
+          same notes a card checkout carries: the channel the visit came from and, where an affiliate sent the
+          buyer, that affiliate and their share. The creator sees the sale in their numbers and orders like a
+          card sale, and their affiliates and webhooks are told of it.
+        </p>
+        <p>
           <strong className="text-black">Numbers a creator shares.</strong> A creator can show, on their media
           kit, the visitors and sales of the last 30 days and the countries their buyers are in, as shares; and
           can give somebody a read-only link, with a password and an end date, to their store&apos;s visits,

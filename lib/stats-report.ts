@@ -10,7 +10,7 @@
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Store } from "@/lib/store";
-import { type Ranked, type StatsData, readSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
+import { type Ranked, type StatsData, readSales, readsSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { standingOf } from "@/lib/plan-standing";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -55,8 +55,8 @@ const NAMES: Record<Window, keyof Summary["days"]> = { d7: "last_7_days", d30: "
 export async function readNumbers(store: Store, now = Date.now()): Promise<StatsData | null> {
   const stats = await readStats(store, now);
   if (!stats) return null;
-  let state: StatsData["sales"] = store.stripeAccountId ? "ok" : "none";
-  const sales = store.stripeAccountId
+  let state: StatsData["sales"] = readsSales(store) ? "ok" : "none";
+  const sales = readsSales(store)
     ? await readSales(store, now).catch((error) => {
         console.error("reading sales for a summary failed", error);
         state = "error";

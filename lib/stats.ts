@@ -23,6 +23,7 @@
  * Sales are not counted here. They are read from the creator's own Stripe
  * account, which is the only record of money that deserves the name.
  */
+import { type Paid, paypalPaymentId, readPayPalRefunds, readPayPalSales } from "@/lib/paypal-sales";
 import { type DiscountRow, discountImpact } from "@/lib/discount-impact";
 import { saleHandles } from "@/lib/store";
 import { type Together, parseTogether, togetherFrom } from "@/lib/also-bought";
@@ -311,7 +312,7 @@ export async function readToday(store: Store, now = Date.now()): Promise<Today> 
     } catch {
       sales = null;
     }
-  } else if (store.stripeAccountId) {
+  } else if (readsSales(store)) {
     const start = Math.floor(Date.parse(`${date}T00:00:00Z`) / 1000);
     sales = await readPaidSales(store, start, 1)
       .then(({ sales: rows }) => {
@@ -927,6 +928,52 @@ export function saleChannel(meta: Record<string, string>): { source: string; med
   };
 }
 
+/** Whether a store has sales to read: a Stripe account connected, or PayPal (lib/paypal-sales.ts). */
+export function readsSales(store: Pick<Store, "stripeAccountId" | "paypalSeller">): boolean {
+  return Boolean(store.stripeAccountId || store.paypalSeller);
+}
+
+/**
+ * A PayPal sale as a Stripe one is read everywhere here: a row shaped like a
+ * paid Checkout Session, with the channel, the affiliate and the store sale
+ * the order carried in its metadata, and `paid_with: "paypal"`. Pure.
+ */
+export function payPalSale(paid: Paid): Sale {
+  const meta: Record<string, string> = {
+    store: paid.handle ?? "",
+    product: paid.product,
+    ...(paid.meta ?? {}),
+    ...(paid.via ? { via: paid.via.aff, via_rate: String(paid.via.rate) } : {}),
+    ...(paid.sale ? { sale: String(paid.sale) } : {}),
+    paid_with: "paypal",
+  };
+  const row: Record<string, unknown> = {
+    id: `paypal:${paid.order}`,
+    object: "paypal.order",
+    status: "complete",
+    payment_status: "paid",
+    mode: "payment",
+    amount_total: paid.cents,
+    currency: paid.currency,
+    created: paid.at,
+    customer_details: { email: paid.email, name: null },
+    total_details: { amount_discount: paid.off ?? 0, amount_tax: 0 },
+    payment_intent: paypalPaymentId(paid.capture),
+    metadata: meta,
+  };
+  return {
+    created: paid.at * 1000,
+    product: paid.product,
+    cents: paid.cents,
+    currency: paid.currency,
+    row,
+    upsell: false,
+    ...saleChannel(meta),
+    country: "",
+    paymentIntent: paypalPaymentId(paid.capture),
+  };
+}
+
 /** The currency Stripe reports on a checkout or a payment; US dollars when it says none. */
 const currencyOf = (row: { currency?: unknown }) => (typeof row.currency === "string" && row.currency ? row.currency.toLowerCase() : "usd");
 
@@ -939,10 +986,21 @@ const currencyOf = (row: { currency?: unknown }) => (typeof row.currency === "st
  * Stripe's fee or any refund, each in the currency it was paid in.
  */
 export async function readPaidSales(store: Store, since: number, pages: number): Promise<{ sales: Sale[]; partial: boolean }> {
-  if (!store.stripeAccountId) return { sales: [], partial: false };
+  if (!readsSales(store)) return { sales: [], partial: false };
   const handles = saleHandles(store);
   const sales: Sale[] = [];
   let partial = false;
+  // Sales paid with PayPal, written down as each was paid (lib/paypal-sales.ts): counted beside Stripe's.
+  const paypal = await readPayPalSales(store.statsId, since, pages * 100).catch((error) => {
+    console.error("reading PayPal sales failed", error);
+    return { sales: [], partial: false };
+  });
+  for (const paid of paypal.sales) sales.push(payPalSale(paid));
+  if (paypal.partial) partial = true;
+  if (!store.stripeAccountId) {
+    sales.sort((a, b) => b.created - a.created);
+    return { sales, partial };
+  }
   const walk = async (path: string, take: (row: Record<string, unknown>) => void) => {
     let after = "";
     for (let page = 0; page < pages; page += 1) {
@@ -1118,7 +1176,7 @@ async function readRefunds(store: Store, since: number, pages: number): Promise<
 
 /** Sales in the last STATS_DAYS days, by day, by product, and for each window. */
 export async function readSales(store: Store, now = Date.now()): Promise<SalesStats | null> {
-  if (!store.stripeAccountId) return null;
+  if (!readsSales(store)) return null;
   const since = Math.floor(now / 1000) - STATS_DAYS * 86400;
   // Twice as far back for the sales, so each window can be set beside the
   // stretch before it; twice the pages, so the 90 days themselves reach as far
@@ -1127,14 +1185,24 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   // Read beside the sales; a store whose renewals cannot be read still sees its sales.
   const [{ sales: read, partial: readPartial }, renewals, refundRows] = await Promise.all([
     readPaidSales(store, sinceBefore, 20),
-    readRenewals(store, since, now, 10).catch((error) => {
-      console.error("reading renewals failed", error);
-      return undefined;
-    }),
-    readRefunds(store, since, 5).catch((error) => {
-      console.error("reading refunds failed", error);
-      return null;
-    }),
+    store.stripeAccountId
+      ? readRenewals(store, since, now, 10).catch((error) => {
+          console.error("reading renewals failed", error);
+          return undefined;
+        })
+      : Promise.resolve(undefined),
+    (async (): Promise<RefundRow[] | null> => {
+      // Stripe's refunds, and PayPal's refunded in full (lib/paypal-sales.ts), named by the payment each gave back.
+      const stripe = store.stripeAccountId
+        ? await readRefunds(store, since, 5).catch((error) => {
+            console.error("reading refunds failed", error);
+            return null;
+          })
+        : [];
+      if (stripe === null) return null;
+      const paypal = await readPayPalRefunds(store.statsId, since).catch(() => []);
+      return [...stripe, ...paypal.map((r) => ({ created: r.at * 1000, cents: r.cents, currency: r.currency, paymentIntent: paypalPaymentId(r.capture) }))];
+    })(),
   ]);
   const cut7 = dayKey(now - 6 * 86400_000);
   const cut30 = dayKey(now - 29 * 86400_000);
@@ -1403,7 +1471,7 @@ export async function readRange(store: Store, from: string, to: string, now = Da
     before,
     channels: [],
     products: [],
-    sales: store.stripeAccountId ? "ok" : "none",
+    sales: readsSales(store) ? "ok" : "none",
     partial: false,
     elsewhere: 0,
   };
@@ -1414,7 +1482,7 @@ export async function readRange(store: Store, from: string, to: string, now = Da
   for (const [id, n] of Object.entries(window.viewsByProduct)) byProduct.set(id, { ...productRow(id), views: n });
   for (const [id, n] of Object.entries(window.checkoutsByProduct)) byProduct.set(id, { ...productRow(id), checkouts: n });
 
-  if (store.stripeAccountId) {
+  if (readsSales(store)) {
     const start = Date.parse(`${(before ? beforeFrom : from)}T00:00:00Z`);
     const end = Date.parse(`${to}T00:00:00Z`) + 86400_000;
     try {
@@ -1472,7 +1540,7 @@ const ALL_SALES_SECONDS = 600;
  * checkouts reach, read when the creator asks for it and kept ten minutes.
  */
 export async function readAllTimeSales(store: Store): Promise<AllTimeSales | null> {
-  if (!store.stripeAccountId) return null;
+  if (!readsSales(store)) return null;
   if (store.statsId && isRedisConfigured()) {
     const [cached] = await redisPipeline([["GET", allSalesKey(store.statsId)]]);
     if (typeof cached === "string" && cached) {
@@ -1887,7 +1955,7 @@ export async function salesCsv(store: Store, sinceSeconds: number): Promise<{ cs
   const find = listingFinder(store);
   const title = async (id: string, fallback: unknown) => (await find(id))?.title ?? (typeof fallback === "string" ? fallback : "");
   const lines = [
-    csvRow(["paid_at_utc", "stripe_id", "product_id", "product", "price_option", "order_bump", "kind", "amount", "discount", "tax", "currency", "buyer_email", "buyer_name", "buyer_country"]),
+    csvRow(["paid_at_utc", "stripe_id", "product_id", "product", "price_option", "order_bump", "kind", "amount", "discount", "tax", "currency", "buyer_email", "buyer_name", "buyer_country", "paid_with"]),
   ];
   for (const sale of sales) {
     const row = sale.row;
@@ -1925,6 +1993,7 @@ export async function salesCsv(store: Store, sinceSeconds: number): Promise<{ cs
         text(details.email) || text(row.customer_email) || text(row.receipt_email),
         text(details.name),
         text(details.address?.country),
+        meta.paid_with === "paypal" ? "paypal" : "stripe",
       ]),
     );
   }

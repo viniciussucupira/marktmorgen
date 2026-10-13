@@ -38,6 +38,9 @@ export async function startServices(port) {
   const adEvents = [];
   const writing = [];
   let counter = 0;
+  /** PayPal orders opened here, by id: the amount and the payee asked for. */
+  const paypalOrders = new Map();
+  let paypalCounter = 0;
   const blobs = new Map();
   const subscriptionUpdates = [];
   const portalConfigs = [];
@@ -101,6 +104,34 @@ export async function startServices(port) {
         res.writeHead(200, { "Content-Type": "font/woff2" });
         return res.end(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../node_modules/next/dist/next-devtools/server/font/geist-latin.woff2")));
       }
+      // PayPal (lib/paypal-sales.ts, PAYPAL_API_BASE): the partner's token, an
+      // order paid into the creator's account, its capture, and a capture read
+      // back, as PayPal's Orders and Payments APIs answer them.
+      if (path === "/v1/oauth2/token" && req.method === "POST") {
+        await read(req);
+        return json(res, 200, { access_token: "A21AAlocalpartner", token_type: "Bearer", expires_in: 32400 });
+      }
+      if (path === "/v2/checkout/orders" && req.method === "POST") {
+        const body = JSON.parse(await read(req));
+        paypalCounter += 1;
+        const id = `5O190127TN3647${String(paypalCounter).padStart(4, "0")}`;
+        paypalOrders.set(id, { amount: body.purchase_units?.[0]?.amount ?? {}, payee: body.purchase_units?.[0]?.payee?.merchant_id ?? "" });
+        return json(res, 201, { id, status: "PAYER_ACTION_REQUIRED", links: [{ href: `https://www.paypal.com/checkoutnow?token=${id}`, rel: "payer-action", method: "GET" }] });
+      }
+      const ppCapture = /^\/v2\/checkout\/orders\/([A-Z0-9]+)\/capture$/.exec(path)?.[1];
+      if (ppCapture && req.method === "POST") {
+        await read(req);
+        const order = paypalOrders.get(ppCapture);
+        if (!order) return json(res, 404, { name: "RESOURCE_NOT_FOUND" });
+        return json(res, 201, {
+          id: ppCapture,
+          status: "COMPLETED",
+          payer: { email_address: "paypal.buyer@example.com", payer_id: "QYR5Z8XDVJNXQ" },
+          purchase_units: [{ payee: { merchant_id: order.payee }, payments: { captures: [{ id: `3C679366HH${ppCapture.slice(-6)}`, status: "COMPLETED", amount: order.amount }] } }],
+        });
+      }
+      const ppCaptureRead = /^\/v2\/payments\/captures\/([A-Z0-9]+)$/.exec(path)?.[1];
+      if (ppCaptureRead && req.method === "GET") return json(res, 200, { id: ppCaptureRead, status: "COMPLETED" });
       // The ad platforms a creator sends conversions to from the server
       // (lib/ad-events.ts, ADS_API_BASE): Meta, TikTok, Google Analytics and
       // Pinterest, each answering as it does when it takes an event.

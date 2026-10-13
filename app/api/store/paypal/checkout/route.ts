@@ -7,6 +7,10 @@ import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/requ
 import { isSoon } from "@/lib/waitlist";
 import { countHit } from "@/lib/visit";
 import { openOrder, paypalReady } from "@/lib/paypal-sales";
+import { cameFrom } from "@/lib/came-from";
+import { channelOfRequest } from "@/lib/visit-channel";
+import { affiliateCookieName, attributionFor } from "@/lib/affiliates";
+import { viaCookieName } from "@/lib/affiliate-setting";
 
 /**
  * Starts a purchase paid with PayPal, into the creator's own PayPal account
@@ -42,7 +46,22 @@ export async function POST(request: NextRequest) {
   if (product.bundle && deliverableItems(product, await readListings(store, product.bundle)).length < MIN_BUNDLE_ITEMS) {
     return away(`/@${store.handle}`);
   }
-  const opened = await openOrder(store, product, linkOrigin(request, store));
+  // What the visit carried, as a Stripe checkout carries it: the channel this
+  // sale is credited to (lib/visit-channel.ts) and the affiliate who sent the
+  // buyer, if one did (lib/affiliates.ts). A lookup that fails never stops the sale.
+  const host = new URL(origin).hostname;
+  const via = await attributionFor(store, product.id, {
+    via: request.cookies.get(viaCookieName(store.handle))?.value,
+    session: request.cookies.get(affiliateCookieName(store.handle))?.value,
+  }).catch(() => null);
+  const meta = {
+    ...channelOfRequest(request, store.handle, host, Date.now() / 1000, store.attributionDays),
+    ...(() => {
+      const page = cameFrom(request.headers.get("referer"), host);
+      return { ...(page.source ? { utm_source: page.source } : {}), ...(page.medium ? { utm_medium: page.medium } : {}), ...(page.campaign ? { utm_campaign: page.campaign } : {}) };
+    })(),
+  };
+  const opened = await openOrder(store, product, linkOrigin(request, store), { meta, via: via && via.rate > 0 ? { aff: via.aff, rate: via.rate } : null });
   if (!opened.ok) return away(`/@${store.handle}/p/${product.id}?paypal=error`);
   after(() => countHit(request, store, { kind: "checkout", id: product.id }));
   return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });

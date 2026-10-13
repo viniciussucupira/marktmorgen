@@ -96,6 +96,7 @@ import { nudgesThisMonth } from "@/lib/member-nudge";
 import { YearlyAskEditor } from "@/components/yearly-ask-editor";
 import { readVoice } from "@/lib/customer-voice";
 import { readMarks } from "@/lib/auto-marks";
+import { readsSales } from "@/lib/stats";
 import { NumbersLinksEditor } from "@/components/numbers-links-editor";
 import { yearlyAsksThisMonth } from "@/lib/yearly-ask";
 import { activeYearly } from "@/lib/yearly-price";
@@ -823,7 +824,7 @@ export default async function StudioPage({
   const [visits, salesRead, statsNotes, adSpends, heardIsOff, trouble, autoMarks] = current && may("stats")
     ? await Promise.all([
         readStats(current).catch(() => null),
-        current.stripeAccountId
+        readsSales(current)
           ? readSales(current).then(
               (value) => ({ state: "ok" as const, value }),
               () => ({ state: "error" as const, value: null }),
@@ -1887,7 +1888,7 @@ export default async function StudioPage({
                 <li>For one-time products at one price that hand over a file, a link, a course, a bundle or a podcast.</li>
                 <li>Not for memberships, payment plans, calls, price options, pay what you want, license keys or limited stock, and no add-on, gift or discount code is offered with it.</li>
                 <li>What a buyer gets is sent to the email address of their PayPal account. A refund in full in your PayPal takes it back.</li>
-                <li>Not counted in your sales numbers here or credited to affiliates yet: PayPal&apos;s own reports have these sales.</li>
+                <li>Counted in your numbers, your sales file, your affiliates&apos; and partners&apos; book and your webhooks like a Stripe sale, with the channel the buyer came from. A refund in full in your PayPal is counted as a refund.</li>
               </ul>
               {store.paypalSeller ? (
                 <>

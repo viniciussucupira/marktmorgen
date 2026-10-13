@@ -33,9 +33,13 @@ export const SOURCE_NAMES: Record<string, string> = {
   direct: "Direct, or an app that hides it",
 };
 
+/** Where a buyer brought over from another platform first came from, in the list's groups (lib/segments.ts). */
+export const IMPORTED_CHANNEL = "imported";
+
 /** A channel's name where money is concerned: "direct" there means nothing the store could name. */
 export function channelName(source: string): string {
   if (source === "direct" || source === "") return "Direct or unknown";
   if (source === "unrecorded") return "Sold before channels were recorded";
+  if (source === IMPORTED_CHANNEL) return "Brought over from another platform";
   return SOURCE_NAMES[source] ?? source;
 }
