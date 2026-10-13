@@ -16,6 +16,7 @@ import { average, showsRating, storeSummary } from "@/lib/review-summary";
 import { contactOpen } from "@/lib/store-contact";
 import { PrintButton } from "@/components/print-button";
 import { SITE_URL } from "@/lib/site-url";
+import { readVerified } from "@/lib/verified-numbers";
 
 type Params = { params: Promise<{ handle: string }> };
 
@@ -67,6 +68,15 @@ export default async function MediaKitPage({ params }: Params) {
   const rating = storeSummary(rated, listed);
   const products = visibleCount(store);
   const since = /^\d{4}-\d{2}-\d{2}/.test(store.createdAt) ? said.date(Date.parse(`${store.createdAt.slice(0, 10)}T00:00:00Z`)) : "";
+  // Numbers this site counted, where the creator chose to show them (lib/verified-numbers.ts): read once a day, kept.
+  const counted = kit.counted;
+  const wantsCounted = counted.visitors || counted.sales || counted.countries;
+  const verified = wantsCounted ? await readVerified(store).catch(() => null) : null;
+  const showVisitors = Boolean(verified && counted.visitors);
+  const showSales = Boolean(verified && counted.sales && verified.salesRead);
+  const showCountries = Boolean(verified && counted.countries && verified.countries.length);
+  const regions = new Intl.DisplayNames([said.lang.locale], { type: "region" });
+  const percent = new Intl.NumberFormat(said.lang.locale, { style: "percent", maximumFractionDigits: 0 });
 
   return (
     <div lang={said.lang.locale} className={`st-page st-theme-${store.look.theme} kit-page relative min-h-screen overflow-hidden`} style={lookStyle(store.look) as React.CSSProperties}>
@@ -146,7 +156,7 @@ export default async function MediaKitPage({ params }: Params) {
           </section>
         ) : null}
 
-        {products > 0 ? (
+        {products > 0 || showVisitors || showSales || showCountries ? (
           <section aria-labelledby="kit-counted" className="mt-12">
             <h2 id="kit-counted" className="st-section-title">{w.countedTitle}</h2>
             <dl className="grid gap-3 sm:grid-cols-3">
@@ -169,7 +179,34 @@ export default async function MediaKitPage({ params }: Params) {
                   <dd className="font-display mt-1 text-xl font-semibold">{since}</dd>
                 </div>
               ) : null}
+              {showVisitors && verified ? (
+                <div className="st-card px-5 py-4 text-center" data-kit-counted="visitors">
+                  <dt className="st-muted text-sm font-semibold">{w.countedVisitors}</dt>
+                  <dd className="font-display mt-1 text-2xl font-semibold tabular-nums">{compact.format(verified.windows.d30.visitors)}</dd>
+                </div>
+              ) : null}
+              {showSales && verified ? (
+                <div className="st-card px-5 py-4 text-center" data-kit-counted="sales">
+                  <dt className="st-muted text-sm font-semibold">{w.countedSales}</dt>
+                  <dd className="font-display mt-1 text-2xl font-semibold tabular-nums">{said.num(verified.windows.d30.sales ?? 0)}</dd>
+                </div>
+              ) : null}
             </dl>
+            {showCountries && verified ? (
+              <div className="st-card mt-3 px-5 py-4" data-kit-counted="countries">
+                <p className="st-muted text-sm font-semibold">{w.countedCountries}</p>
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {verified.countries.map((c) => (
+                    <li key={c.country} className="rounded-full px-3 py-1 text-sm font-semibold" style={{ background: "var(--st-line)" }}>
+                      {`${regions.of(c.country) ?? c.country} ${percent.format(c.share)}`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {verified && (showVisitors || showSales || showCountries) ? (
+              <p className="st-muted mt-3 text-center text-sm">{w.countedNote(said.date(Date.parse(`${verified.day}T00:00:00Z`)))}</p>
+            ) : null}
           </section>
         ) : null}
 

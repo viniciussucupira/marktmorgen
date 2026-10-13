@@ -48,7 +48,16 @@ export type StoreKit = {
   brands: string[];
   /** The day the numbers were last changed (YYYY-MM-DD), "" before any were given. */
   stated: string;
+  /**
+   * Which numbers this site counted the page shows too (added 13 October
+   * 2026; lib/verified-numbers.ts): visitors and sales of the last 30 days,
+   * and buyers' countries. Off until the creator picks them.
+   */
+  counted: KitCounted;
 };
+
+export type KitCounted = { visitors: boolean; sales: boolean; countries: boolean };
+export const NO_COUNTED: KitCounted = { visitors: false, sales: false, countries: false };
 
 export const MAX_KIT_PITCH = 700;
 export const MAX_KIT_AUDIENCE = 8;
@@ -61,14 +70,20 @@ export const MAX_KIT_BRAND = 40;
 /** More than anybody has; a typo with three zeros too many is refused rather than shown. */
 export const MAX_KIT_COUNT = 2_000_000_000;
 
-export const NO_KIT: StoreKit = { on: false, pitch: "", audience: [], facts: [], rates: [], brands: [], stated: "" };
+export const NO_KIT: StoreKit = { on: false, pitch: "", audience: [], facts: [], rates: [], brands: [], stated: "", counted: { ...NO_COUNTED } };
 
 const words = (input: unknown, max: number) => (typeof input === "string" ? input.replace(/\s+/g, " ").trim().slice(0, max) : "");
 const whole = (input: unknown, max: number) => (typeof input === "number" && Number.isSafeInteger(input) && input >= 0 && input <= max ? input : -1);
 
+/** Which counted numbers are shown: each one only when it is plainly asked for. */
+export function parseCounted(raw: unknown): KitCounted {
+  const value = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  return { visitors: value.visitors === true, sales: value.sales === true, countries: value.countries === true };
+}
+
 /** Whatever came back from storage or a form, made safe to show. */
 export function parseKit(raw: unknown): StoreKit {
-  if (!raw || typeof raw !== "object") return { ...NO_KIT, audience: [], facts: [], rates: [], brands: [] };
+  if (!raw || typeof raw !== "object") return { ...NO_KIT, audience: [], facts: [], rates: [], brands: [], counted: { ...NO_COUNTED } };
   const value = raw as Record<string, unknown>;
   const audience: KitAudience[] = [];
   for (const entry of Array.isArray(value.audience) ? value.audience : []) {
@@ -100,6 +115,7 @@ export function parseKit(raw: unknown): StoreKit {
     rates,
     brands: list(value.brands, MAX_KIT_BRANDS, MAX_KIT_BRAND),
     stated,
+    counted: parseCounted(value.counted),
   };
 }
 

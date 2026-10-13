@@ -314,6 +314,16 @@ export default function PrivacyPage() {
           two months.
         </p>
         <p>
+          <strong className="text-black">Numbers a creator shares.</strong> A creator can show, on their media
+          kit, the visitors and sales of the last 30 days and the countries their buyers are in, as shares; and
+          can give somebody a read-only link, with a password and an end date, to their store&apos;s visits,
+          sales, channels, products sold and buyers&apos; countries. Both are read once a day and kept for three
+          days. Neither ever holds a buyer&apos;s name or address. The password is kept only as a salted hash;
+          whoever opens the link with it is remembered in that browser for at most twelve hours by a cookie that
+          opens only that link, and the network address it is opened from is used, for ten minutes, only to
+          limit wrong passwords.
+        </p>
+        <p>
           <strong className="text-black">
             Numbers to Slack or Discord, a goal, and the month&apos;s email.
           </strong>{" "}

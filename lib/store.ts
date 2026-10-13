@@ -31,6 +31,7 @@
  * person who owns them. Every function below that takes a store's key calls
  * it `email` for the first kind and works the same for the second.
  */
+import { MAX_LINKS, type NumbersLink, parseLinks } from "@/lib/numbers-links";
 import { type ShipProblem, type Shipping, shipProblem } from "@/lib/shipping";
 import { type CartDeal, NO_DEAL, parseCartDeal } from "@/lib/cart-rules";
 import { type Video, parseVideo } from "@/lib/sales-page";
@@ -572,6 +573,8 @@ export type Store = {
   tips: StoreTips;
   /** The media kit at /@handle/media-kit (lib/store-kit.ts). Off on every store written before it existed. */
   kit: StoreKit;
+  /** Read-only links to the store's counted numbers, each with a password and an end (lib/numbers-links.ts). */
+  numbersLinks: NumbersLink[];
   /**
    * Taken down after notices (lib/takedown.ts): the day the store's pages and
    * sales were switched off ("" while they are on), and every piece of
@@ -903,6 +906,7 @@ function parseStore(raw: unknown): Store | null {
       contact: parseJoin(value.contact),
       tips: parseTips(value.tips),
       kit: parseKit(value.kit),
+      numbersLinks: parseLinks(value.numbersLinks),
       suspended: typeof value.suspended === "string" && /^\d{4}-\d{2}-\d{2}/.test(value.suspended) ? value.suspended : "",
       strikes: parseStrikes(value.strikes),
       faq: parseFaq(value.faq),
@@ -1098,6 +1102,7 @@ async function freshStore(fields: {
     contact: { on: false, heading: "", line: "" },
     tips: { ...NO_TIPS },
     kit: parseKit(null),
+    numbersLinks: [],
     suspended: "",
     strikes: [],
     faq: [],
@@ -3383,6 +3388,30 @@ export async function setTips(email: string, tips: StoreTips): Promise<Store | n
 }
 
 /** Saves the media kit (lib/store-kit.ts), dated today when any of its numbers changed. */
+/**
+ * Adds a read-only link to the store's numbers (lib/numbers-links.ts): links
+ * that have ended are let go first; no more than MAX_LINKS at once.
+ */
+export async function addNumbersLink(email: string, link: NumbersLink, now = Date.now()): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" | "full" }> {
+  let full = false;
+  const next = await patchStore(email, (store) => {
+    const live = (store.numbersLinks ?? []).filter((l) => l.expires > Math.floor(now / 1000));
+    if (live.length >= MAX_LINKS) {
+      full = true;
+      return null;
+    }
+    return { numbersLinks: [...live, link] };
+  });
+  if (full) return { ok: false, reason: "full" };
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
+/** Takes a link back: it stops opening at once. */
+export async function removeNumbersLink(email: string, id: string): Promise<{ ok: true; store: Store } | { ok: false; reason: "none" }> {
+  const next = await patchStore(email, (store) => ({ numbersLinks: (store.numbersLinks ?? []).filter((l) => l.id !== id) }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
+}
+
 export async function setKit(email: string, sent: unknown, today = new Date().toISOString().slice(0, 10)): Promise<Store | null> {
   return patchStore(email, (store) => ({ kit: nextKit(sent, store.kit, today) }));
 }

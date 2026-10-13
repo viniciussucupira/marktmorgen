@@ -53,6 +53,7 @@ export function KitEditor({
   const [facts, setFacts] = useState(kit.facts.join("\n"));
   const [rates, setRates] = useState<RateRow[]>(() => kit.rates.map((rate, key) => ({ key, t: rate.t, price: rate.cents ? moneyField(rate.cents, currency) : "" })));
   const [brands, setBrands] = useState(kit.brands.join(", "));
+  const [counted, setCounted] = useState(kit.counted);
   const [next, setNext] = useState(100);
   const [bad, setBad] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -72,6 +73,7 @@ export function KitEditor({
     facts: lines(facts),
     rates: rates.filter((r) => r.t.trim()).map(({ t, price }) => ({ t, price })),
     brands: brands.split(/[,\n]/).map((b) => b.trim()).filter(Boolean),
+    counted,
   });
 
   async function draft() {
@@ -133,8 +135,8 @@ export function KitEditor({
       <p className="mt-2 text-ink-soft">
         A page for brands at marktmorgen.com{address}: who you are, your audience, what a collaboration costs and who you have
         worked with, in your store&apos;s look, with a button to save it as a PDF. The numbers are yours to type, and the page says so,
-        with the day you last changed them. Beside them it shows what this site counted itself: your products and your buyers&apos;
-        rating.
+        with the day you last changed them. Beside them it shows what this site counted itself: your products, your buyers&apos;
+        rating and, if you choose, your visitors, sales and buyers&apos; countries.
       </p>
 
       <label className="mt-5 flex items-start gap-3 text-ink">
@@ -252,6 +254,28 @@ export function KitEditor({
         <input id="kit-brands" value={brands} onChange={(e) => setBrands(e.target.value)} className="field mt-2" placeholder="Separated by commas" />
         <p className="mt-1 text-sm text-ink-soft">{`Up to ${MAX_KIT_BRANDS}, ${MAX_KIT_BRAND} characters each. Shown as plain names, never logos. Only brands you really worked with.`}</p>
       </div>
+
+      <fieldset className="mt-6" data-kit-counted-editor>
+        <legend className="field-label">Numbers this site counted (optional)</legend>
+        <p className="mt-1 text-sm text-ink-soft">
+          Counted here, not typed: visits to your store&apos;s pages, and sales and buyers&apos; countries from the payments on your own Stripe
+          account. Read once a day, and the page says the day and where each number comes from.
+        </p>
+        <div className="mt-3 space-y-1">
+          {(
+            [
+              ["visitors", "Visitors to my store, last 30 days"],
+              ["sales", "Sales, last 30 days: the count, never the money"],
+              ["countries", "My buyers' countries, as shares, last 90 days"],
+            ] as const
+          ).map(([field, label]) => (
+            <label key={field} className="flex min-h-11 items-center gap-3 text-sm text-ink">
+              <input type="checkbox" checked={counted[field]} onChange={(e) => setCounted({ ...counted, [field]: e.target.checked })} className="size-5 shrink-0 accent-violet-brand" />
+              <span>{label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       {note ? <p className="mt-4 text-sm font-semibold text-ink" role="status">{note}</p> : null}
       <div className="mt-5 flex flex-wrap items-center gap-3">
