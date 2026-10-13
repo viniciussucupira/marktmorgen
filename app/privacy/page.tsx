@@ -1243,6 +1243,19 @@ export default function PrivacyPage() {
           is shown, and no store is named or can be picked out. The demo
           store and suspended stores are left out.
         </p>
+        <p id="inbox" className="scroll-mt-24">
+          <strong className="text-black">A store&apos;s chat and inbox.</strong>{" "}
+          When a visitor writes to a store through its chat or its contact
+          form, we keep the address they give, the name if they give one, and
+          the messages, for that store&apos;s team to answer, and for 180 days
+          after the last message. The store&apos;s answers go only to that
+          address. A code kept in the visitor&apos;s browser, and in the link
+          of each answer&apos;s email, opens the conversation again; nothing
+          else does. Where the creator asks for a suggested answer, the
+          messages are sent to Anthropic to write it, with addresses, phone
+          numbers and links taken out first, and the visitor&apos;s name and
+          address are never sent.
+        </p>
         <p>
           <strong className="text-black">Usage and technical data.</strong> We
           may collect information such as IP address, browser type, device

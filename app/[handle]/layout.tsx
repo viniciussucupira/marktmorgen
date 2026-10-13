@@ -10,6 +10,9 @@ import { StoreApp } from "@/components/store-app";
 import { isHouseStore } from "@/lib/house-store";
 import { DemoStrip } from "@/components/demo-notes";
 import { MailClick } from "@/components/mail-click";
+import { StoreChat } from "@/components/store-chat";
+import { chatOpen } from "@/lib/inbox";
+import { lookStyle } from "@/lib/store-look";
 
 /**
  * Around every page of a creator's store: the store's own manifest, icon and
@@ -23,6 +26,9 @@ import { MailClick } from "@/components/mail-click";
  * The demo store is drawn by these same pages, and carries one thing more: a
  * strip across the top of each of them saying that it is a demo and which
  * card to pay with (lib/house-store.ts).
+ *
+ * And, where the creator turned it on, the chat in the corner of every page
+ * of the store (components/store-chat.tsx).
  */
 const loadStore = cache(async (raw: string) => {
   const decoded = decodeURIComponent(raw);
@@ -76,6 +82,12 @@ export default async function StoreLayout({ children, params }: LayoutProps<"/[h
       <StoreApp />
       {/* A link from a sequence's email, used by somebody who allowed it to be seen (lib/mail-clicks.ts). */}
       {store ? <MailClick /> : null}
+      {/* The chat, where the creator turned it on (lib/inbox.ts): drawn from the store already read, nothing more asked of the server. */}
+      {store && chatOpen(store) ? (
+        <div className={`st-theme-${store.look.theme}`} style={lookStyle(store.look) as React.CSSProperties}>
+          <StoreChat handle={store.handle} storeName={store.name} language={store.language} />
+        </div>
+      ) : null}
     </>
   );
 }

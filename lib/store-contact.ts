@@ -9,6 +9,9 @@
  * address is only where the creator's reply will go. A few messages an hour
  * from one connection, and at most MAX_PER_DAY a day to one store, so a
  * creator is never flooded and the sends stay a small, fixed cost.
+ *
+ * Each message sent is also filed in the studio's inbox (lib/inbox.ts,
+ * 13 October 2026), where it can be answered like a chat.
  */
 import { createHash } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -17,6 +20,7 @@ import { isRedisConfigured } from "@/lib/redis";
 import { withinLimit } from "@/lib/request-guard";
 import { isHouseStore } from "@/lib/house-store";
 import type { Store } from "@/lib/store";
+import { fileContact } from "@/lib/inbox";
 
 import { MAX_MESSAGE, MAX_NAME, MIN_MESSAGE } from "@/lib/store-contact-rules";
 /** Messages one store receives in a day, at most. */
@@ -66,5 +70,7 @@ export async function sendContact(input: { store: Store; name: string; email: st
     ].join("\n"),
     idempotencyKey: `contact-${who}-${sha(`${email}|${message}`).slice(0, 24)}`,
   });
+  // Filed in the studio's inbox too (lib/inbox.ts), so it can be answered there with the rest.
+  if (sent) await fileContact({ store, email, name, text: message }).catch((error) => console.error("filing a contact message failed", error));
   return sent ? "sent" : "error";
 }
