@@ -36,8 +36,12 @@ const DOMAIN_HEADER = "x-nimbus-domain";
 const PATH_HEADER = "x-nimbus-path";
 /** Which store an address belongs to, for the page that says it is not there (app/[handle]/not-found.tsx). */
 const STORE_HEADER = "x-nimbus-store";
-/** The two files a crawler asks a site for, which a creator's domain answers with the store's own (app/[handle]/sitemap.xml, robots.txt). */
+/** The two files a crawler asks a site for, which a creator's domain answers with the store's own (app/[handle]/store-sitemap, store-robots). */
 const CRAWLER_FILES = /^\/(sitemap\.xml|robots\.txt)$/;
+/** Where each is served from: a folder named like the file itself would be taken for one of Next's own. */
+const CRAWLER_ROUTES: Record<string, string> = { "/sitemap.xml": "/store-sitemap", "/robots.txt": "/store-robots" };
+/** A store's map under its address here: /@handle/sitemap.xml. */
+const STORE_SITEMAP = /^\/(?:@|%40)([^/]+)\/sitemap\.xml$/i;
 const STORE_PATHS = /^\/(media-kit|tip|thanks|free|manage|orders|course|book|community|p|affiliates|renew|certificate|review|waitlist|podcast|left|group|blog|join|contact|discord|go)(\/|$)/;
 
 /**
@@ -263,6 +267,12 @@ export async function proxy(request: NextRequest) {
   if (isPlatformHost(host)) {
     // The site's own map and rules: nothing of a store's to add to them.
     if (CRAWLER_FILES.test(request.nextUrl.pathname)) return NextResponse.next();
+    // A store's own map, under its address here.
+    if (STORE_SITEMAP.test(request.nextUrl.pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = request.nextUrl.pathname.replace(/\/sitemap\.xml$/i, "/store-sitemap");
+      return NextResponse.rewrite(url);
+    }
     const params = request.nextUrl.searchParams;
     const store = params.has("via") || params.has("code") ? handleInPath(request.nextUrl.pathname) : "";
     // The header is ours to set; one sent by a visitor is dropped.
@@ -296,7 +306,7 @@ export async function proxy(request: NextRequest) {
   // A creator's domain is their site: its map and its rules are the store's.
   if (CRAWLER_FILES.test(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = `/@${handle}${pathname}`;
+    url.pathname = `/@${handle}${CRAWLER_ROUTES[pathname]}`;
     return NextResponse.rewrite(url, { request: { headers } });
   }
   if (STORE_PATHS.test(pathname)) return rewrite(`/@${handle}${pathname}`);
@@ -318,5 +328,5 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Pages (not Next's own files, not files with an extension), and the API,
   // where only the request guard above runs.
-  matcher: ["/((?!api/|_next/|.*\\.[a-z0-9]+$).*)", "/api/:path*", "/sitemap.xml", "/robots.txt"],
+  matcher: ["/((?!api/|_next/|.*\\.[a-z0-9]+$).*)", "/api/:path*", "/sitemap.xml", "/robots.txt", "/:handle/sitemap.xml"],
 };
