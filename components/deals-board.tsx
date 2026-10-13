@@ -1,5 +1,6 @@
 "use client";
 
+import { useLeaveGuard } from "@/components/leave-guard";
 import { filterDeals } from "@/lib/crm-deal-filter";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -49,6 +50,10 @@ async function call(body: Record<string, unknown>): Promise<{ ok?: boolean; erro
 }
 
 type DealDraft = { id: string; title: string; email: string; value: string; stage: string; note: string; nextAction: string; dueDate: string; assignee: string };
+
+function draftFromDeal(deal: Deal, currency: string): DealDraft {
+  return { id: deal.id, title: deal.title, email: deal.email, value: deal.cents ? moneyField(deal.cents, currency) : "", stage: deal.stage, note: deal.note, nextAction: deal.nextAction ?? "", dueDate: deal.dueDate ?? "", assignee: deal.assignee ?? "" };
+}
 
 const KIND_WORDS: Record<StageKind, string> = { open: "Open", won: "Won", lost: "Lost" };
 
@@ -106,6 +111,11 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
   }
 
   const firstOpen = stages.find((s) => s.kind === "open")?.id ?? stages[0]?.id ?? "";
+  const original = draft?.id ? deals.find(deal => deal.id === draft.id) : null;
+  const initialDeal = original ? draftFromDeal(original, currency) : { id: "", title: "", email: "", value: "", stage: firstOpen, note: "", nextAction: "", dueDate: "", assignee: "" };
+  const initialFields = fields.map(field => ({ ...field, optionsText: field.options.join(", ") }));
+  const dirty = (draft !== null && JSON.stringify(draft) !== JSON.stringify(initialDeal)) || (stageDraft !== null && JSON.stringify(stageDraft) !== JSON.stringify(stages)) || (fieldDraft !== null && JSON.stringify(fieldDraft) !== JSON.stringify(initialFields));
+  useLeaveGuard(dirty);
 
   return (
     <div className="space-y-8">
@@ -243,7 +253,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
                           type="button"
                           className="btn btn-secondary btn-sm"
                           disabled={busy}
-                          onClick={() => { setError(null); setDraft({ id: deal.id, title: deal.title, email: deal.email, value: deal.cents ? moneyField(deal.cents, currency) : "", stage: deal.stage, note: deal.note, nextAction: deal.nextAction ?? "", dueDate: deal.dueDate ?? "", assignee: deal.assignee ?? "" }); }}
+                          onClick={() => { setError(null); setDraft(draftFromDeal(deal, currency)); }}
                         >
                           Edit
                         </button>
