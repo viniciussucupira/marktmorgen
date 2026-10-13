@@ -1023,8 +1023,9 @@ export default function PrivacyPage() {
           remembers which of an account&apos;s stores was last open, for a
           year. A creator who turns on two-step login has the secret their
           authenticator app shares with us kept encrypted, a one-way hash of
-          each recovery code not yet used, and the last code used, until they
-          turn it off. Between the emailed link and the code, a cookie named{" "}
+          each recovery code not yet used, the last code used and, while a
+          request to turn it off without a code waits, the day it takes
+          effect, until they turn it off. Between the emailed link and the code, a cookie named{" "}
           <code>nl_2fa</code> holds a random code for that one login, for ten
           minutes.
         </p>

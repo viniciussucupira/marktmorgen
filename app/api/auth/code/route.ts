@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { DEVICE_COOKIE, SESSION_COOKIE, endSession, noteSignIn, openSession, sessionCookie } from "@/lib/auth";
-import { TWO_STEP_COOKIE, finishSignIn } from "@/lib/two-step";
+import { TWO_STEP_COOKIE, askReset, finishSignIn } from "@/lib/two-step";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
 
 /**
@@ -9,6 +9,9 @@ import { fromAnotherSite, limited } from "@/lib/request-guard";
  * a recovery code, for the login this browser's cookie says is waiting. A
  * right one opens the session exactly as the emailed link does for an account
  * without two-step login.
+ *
+ * `action=reset` is somebody with neither a code nor a passkey asking for
+ * two-step login to turn off after its waiting days (lib/two-step.ts askReset).
  */
 export async function POST(request: NextRequest) {
   const origin = originFrom(request);
@@ -16,15 +19,25 @@ export async function POST(request: NextRequest) {
   const away = (path: string) => new Response(null, { status: 303, headers: { Location: `${origin}${path}`, "Cache-Control": "no-store" } });
 
   let code = "";
+  let action = "";
   try {
     const form = await (await limited(request, 2_000)).formData();
     const value = form.get("code");
     code = typeof value === "string" ? value.slice(0, 40) : "";
+    action = form.get("action") === "reset" ? "reset" : "";
   } catch {
     return away("/signin/code?status=wrong");
   }
 
   const held = request.cookies.get(TWO_STEP_COOKIE)?.value ?? "";
+  if (action === "reset") {
+    try {
+      return (await askReset(held)) ? away("/signin/code?status=reset") : away("/signin?status=expired");
+    } catch (error) {
+      console.error("asking to turn two-step login off failed", error);
+      return away("/signin/code?status=wrong");
+    }
+  }
   let answer: Awaited<ReturnType<typeof finishSignIn>>;
   try {
     answer = await finishSignIn(held, code);

@@ -4,6 +4,7 @@ import { DEVICE_COOKIE, SESSION_COOKIE, endSession, noteSignIn, openSession, ses
 import { isRedisConfigured } from "@/lib/redis";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { PASSKEY_COOKIE, signInOptions, signInWith } from "@/lib/passkeys";
+import { cancelReset } from "@/lib/two-step";
 
 const MAX_BODY_BYTES = 16_000;
 /** Tries one browser may make in ten minutes. */
@@ -55,6 +56,8 @@ export async function POST(request: NextRequest) {
       const previous = request.cookies.get(SESSION_COOKIE)?.value;
       if (previous) await endSession(previous);
       const id = await openSession(email);
+      // A passkey is the second step: a pending request to turn two-step login off is called off (lib/two-step.ts).
+      await cancelReset(email, "login").catch((error) => console.error("calling off a two-step reset failed", error));
       const response = Response.json({ ok: true, next: "/studio" });
       response.headers.append("Set-Cookie", sessionCookie(id));
       response.headers.append("Set-Cookie", `${PASSKEY_COOKIE}=; Path=/api/auth/passkey; Max-Age=0; HttpOnly; SameSite=Strict${secure}`);

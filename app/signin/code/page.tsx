@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { Logo } from "@/components/logo";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { TWO_STEP_COOKIE, heldFor } from "@/lib/two-step";
+import { RESET_DAYS, TWO_STEP_COOKIE, heldFor, twoStepStatus } from "@/lib/two-step";
 
 export const metadata: Metadata = {
   title: "Your code — Marktmorgen",
@@ -27,9 +27,13 @@ const NOTICES: Record<string, string> = {
 export default async function CodePage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const params = await searchParams;
   const held = (await cookies()).get(TWO_STEP_COOKIE)?.value ?? "";
-  if (!(await heldFor(held))) redirect("/signin?status=expired");
+  const email = await heldFor(held);
+  if (!email) redirect("/signin?status=expired");
   const status = typeof params.status === "string" ? params.status : "";
   const notice = NOTICES[status] ?? null;
+  // A request to turn it off without a code, waiting its days (lib/two-step.ts askReset).
+  const { reset } = await twoStepStatus(email);
+  const resetDay = reset ? new Date(reset).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }) : "";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-paper text-ink">
@@ -71,6 +75,24 @@ export default async function CodePage({ searchParams }: { searchParams: Promise
             </Link>
             , which needs no code.
           </p>
+          {reset ? (
+            <p className="notice mt-5" role="status">
+              {`Two-step login turns off on ${resetDay}, as you asked. From then, the link we email you logs you in on its own. Logging in with a code or a passkey before then cancels it.`}
+            </p>
+          ) : (
+            <details className="mt-5 text-sm text-ink-soft">
+              <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-ink underline underline-offset-4">
+                Lost your phone, your recovery codes and your passkeys?
+              </summary>
+              <p className="mt-2">
+                {`Ask for two-step login to turn off. It turns off by itself in ${RESET_DAYS} days, and from then the link we email you logs you in on its own. The wait is what keeps someone who got into your email from doing the same: we email you, your studio shows it, and logging in with a code or a passkey in that time cancels it.`}
+              </p>
+              <form method="post" action="/api/auth/code" className="mt-3">
+                <input type="hidden" name="action" value="reset" />
+                <PendingSubmit label={`Turn it off in ${RESET_DAYS} days`} pending="Asking…" className="btn btn-secondary" />
+              </form>
+            </details>
+          )}
         </div>
       </main>
     </div>
