@@ -9,6 +9,7 @@ import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
 import type { StatsNote } from "@/lib/stats-notes";
 import { type AdSpend, paybackOf, spendBy } from "@/lib/ad-spend-rules";
 import { channelCashflows, cashflowStatus } from "@/lib/channel-cashflow";
+import { DailyCashflowPanel } from "@/components/daily-cashflow";
 import { RefundActivityPanel } from "@/components/refund-activity";
 import { WeeklyCohortsPanel } from "@/components/weekly-cohorts";
 import { RevenueQuality, BuyerChannelsPanel } from "@/components/revenue-quality";
@@ -1000,6 +1001,7 @@ export function StatsPanel({
       {range !== "all" ? (
         <RevenueQuality data={data} range={range} spends={spends} />
       ) : null}
+      {range !== "all" ? <DailyCashflowPanel data={data} range={range} spends={spends} /> : null}
       {range !== "all" ? <RefundActivityPanel data={data} range={range} /> : null}
       {salesHere && range !== "all" && days.length > 0 && data.buyerChannels ? (
         <BuyerChannelsPanel window={data.buyerChannels[range]} currency={data.currency} historyPartial={data.buyerChannels.historyPartial} period={{ from: days[0].date, to: days[days.length - 1].date }} />

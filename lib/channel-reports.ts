@@ -1,3 +1,4 @@
+import type { DailyCashflowRow } from "@/lib/daily-cashflow";
 import type { RefundActivity } from "@/lib/refund-activity";
 import type { ChannelCashflow } from "@/lib/channel-cashflow";
 import { COHORT_AGES, type WeeklyBuyerCohorts, type BuyerChannelWindow } from "@/lib/buyer-channel-rules";
@@ -49,5 +50,13 @@ export function refundActivityReport(activity: RefundActivity, period: ReportPer
   return csv([
     ["From (UTC)", "To (UTC)", "Currency", "Channel", "Refund records", "Refund amount", "Payments received", "Recorded refunds / payments (%)", "Definition"],
     ...activity.rows.map((row): Cell[] => [period.from, period.to, period.currency.toUpperCase(), channelName(row.source), row.records, amount(row.refunds, period.currency), amount(row.payments, period.currency), row.share === null ? null : Math.round(row.share * 100), note]),
+  ]);
+}
+
+export function dailyCashflowReport(rows: DailyCashflowRow[], currency: string): string {
+  const note = "Recorded payments include renewals. Refunds include pending refunds and belong to the day recorded; purchases may be earlier. Multi-day ad entries are allocated evenly with cumulative rounding that preserves smallest currency units. Before fees, tax, commissions and other costs; not profit or advertising lift. Blank means incomplete or unavailable figures.";
+  return csv([
+    ["Day (UTC)", "Currency", "Payments received", "Refunds recorded", "Ad spend recorded", "After refunds", "After refunds and ads", "Definition"],
+    ...rows.map((row): Cell[] => [row.date, currency.toUpperCase(), amount(row.payments, currency), amount(row.refunds, currency), amount(row.ads, currency), amount(row.afterRefunds, currency), amount(row.afterAds, currency), note]),
   ]);
 }
