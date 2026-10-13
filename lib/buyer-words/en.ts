@@ -304,6 +304,8 @@ export const en = {
   // ---- Every review of a product ----------------------------------------------------
   reviewsOf: (title: string) => `Reviews of ${title}`,
   backTo: (title: string) => `Back to ${title}`,
+  missingTitle: "This page isn't here",
+  missingBody: (store: string) => `It may have been moved or taken down. Everything ${store} offers is on the store's front page.`,
   noReviewsToShow: "There are no reviews to show.",
   pagesOfReviews: "Pages of reviews",
   newer: "Newer",

@@ -282,6 +282,8 @@ export const es: BuyerWords = {
 
   reviewsOf: (title) => `Reseñas de ${title}`,
   backTo: (title) => `Volver a ${title}`,
+  missingTitle: "Esta página no está aquí",
+  missingBody: (store) => `Puede que se haya movido o retirado. Todo lo que ofrece ${store} está en la portada de la tienda.`,
   noReviewsToShow: "No hay reseñas que mostrar.",
   pagesOfReviews: "Páginas de reseñas",
   newer: "Más recientes",

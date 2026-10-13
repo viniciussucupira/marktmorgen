@@ -34,6 +34,10 @@ import { isOwnPagePath } from "@/lib/site-page-rules";
 const DOMAIN_HEADER = "x-nimbus-domain";
 /** The path and query a visitor asked for on a creator's domain, before it was rewritten. */
 const PATH_HEADER = "x-nimbus-path";
+/** Which store an address belongs to, for the page that says it is not there (app/[handle]/not-found.tsx). */
+const STORE_HEADER = "x-nimbus-store";
+/** The two files a crawler asks a site for, which a creator's domain answers with the store's own (app/[handle]/sitemap.xml, robots.txt). */
+const CRAWLER_FILES = /^\/(sitemap\.xml|robots\.txt)$/;
 const STORE_PATHS = /^\/(media-kit|tip|thanks|free|manage|orders|course|book|community|p|affiliates|renew|certificate|review|waitlist|podcast|left|group|blog|join|contact|discord|go)(\/|$)/;
 
 /**
@@ -257,15 +261,19 @@ export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/api/")) return guardApi(request);
 
   if (isPlatformHost(host)) {
+    // The site's own map and rules: nothing of a store's to add to them.
+    if (CRAWLER_FILES.test(request.nextUrl.pathname)) return NextResponse.next();
     const params = request.nextUrl.searchParams;
     const store = params.has("via") || params.has("code") ? handleInPath(request.nextUrl.pathname) : "";
     // The header is ours to set; one sent by a visitor is dropped.
     const headers = new Headers(request.headers);
     headers.delete(DOMAIN_HEADER);
     headers.delete(PATH_HEADER);
+    headers.delete(STORE_HEADER);
     const policy = withPolicy(request.nextUrl.pathname, headers);
     const productPage = /^\/(?:@|%40)[^/]+\/p\/[^/]+\/?$/i.test(request.nextUrl.pathname);
     const visited = handleInPath(request.nextUrl.pathname);
+    if (visited) headers.set(STORE_HEADER, visited);
     return answer(withChannel(request, visited, host, withTestGroup(request, productPage, withZoomArrival(request, withCodeLink(request, store, withAffiliateClick(request, store, NextResponse.next({ request: { headers } })))))), policy);
   }
 
@@ -276,6 +284,7 @@ export async function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.set(DOMAIN_HEADER, host);
   headers.set(PATH_HEADER, `${pathname}${search}`.slice(0, 2_000));
+  headers.set(STORE_HEADER, handle);
   const rewrite = (path: string) => {
     const url = request.nextUrl.clone();
     url.pathname = path;
@@ -284,6 +293,12 @@ export async function proxy(request: NextRequest) {
   };
 
   if (pathname === "/") return rewrite(`/@${handle}`);
+  // A creator's domain is their site: its map and its rules are the store's.
+  if (CRAWLER_FILES.test(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/@${handle}${pathname}`;
+    return NextResponse.rewrite(url, { request: { headers } });
+  }
   if (STORE_PATHS.test(pathname)) return rewrite(`/@${handle}${pathname}`);
   if (pathname === "/unsubscribe") {
     const policy = withPolicy(pathname, headers);
@@ -303,5 +318,5 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Pages (not Next's own files, not files with an extension), and the API,
   // where only the request guard above runs.
-  matcher: ["/((?!api/|_next/|.*\\.[a-z0-9]+$).*)", "/api/:path*"],
+  matcher: ["/((?!api/|_next/|.*\\.[a-z0-9]+$).*)", "/api/:path*", "/sitemap.xml", "/robots.txt"],
 };

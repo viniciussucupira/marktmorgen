@@ -285,6 +285,8 @@ export const fr: BuyerWords = {
 
   reviewsOf: (title) => `Avis sur ${title}`,
   backTo: (title) => `Retour à ${title}`,
+  missingTitle: "Cette page n'est pas ici",
+  missingBody: (store) => `Elle a peut-être été déplacée ou retirée. Tout ce que propose ${store} se trouve sur la page d'accueil de la boutique.`,
   noReviewsToShow: "Aucun avis à afficher.",
   pagesOfReviews: "Pages d'avis",
   newer: "Plus récents",

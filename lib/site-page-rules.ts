@@ -63,6 +63,9 @@ export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
  * against the folders that exist.
  */
 export const RESERVED_SLUGS = new Set([
+  // A store's map and its crawler rules (lib/store-sitemap.ts): not words a page could take, and listed so every folder is.
+  "sitemap.xml",
+  "robots.txt",
   "affiliates",
   "app-icon",
   "blog",

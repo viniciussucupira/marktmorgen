@@ -276,6 +276,8 @@ export const nl: BuyerWords = {
 
   reviewsOf: (title) => `Beoordelingen van ${title}`,
   backTo: (title) => `Terug naar ${title}`,
+  missingTitle: "Deze pagina is er niet",
+  missingBody: (store) => `Misschien is ze verplaatst of weggehaald. Alles wat ${store} aanbiedt, staat op de voorpagina van de winkel.`,
   noReviewsToShow: "Er zijn geen beoordelingen om te tonen.",
   pagesOfReviews: "Pagina's met beoordelingen",
   newer: "Nieuwer",
