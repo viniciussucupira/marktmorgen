@@ -166,7 +166,7 @@ export function DealsBoard({ deals, stages, fields, currency }: { deals: Deal[];
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="font-semibold text-ink">
                   {stage.name}
-                  {stage.kind !== "open" ? <span className="tag ml-2">{KIND_WORDS[stage.kind]}</span> : null}
+                  {stage.kind !== "open" && stage.name.toLowerCase() !== KIND_WORDS[stage.kind].toLowerCase() ? <span className="tag ml-2">{KIND_WORDS[stage.kind]}</span> : null}
                 </h3>
                 <p className="text-sm tabular-nums text-ink-soft">{`${count} · ${money(cents)}`}</p>
               </div>
