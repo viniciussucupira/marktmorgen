@@ -7,7 +7,7 @@ This increment connects existing product capabilities. It does not claim that ev
 - /studio/growth: four goal-based plans using existing products, pages, funnels, forms, email, buyers and reports. Links respect the current role and carry the selected store.
 - CRM: optional next action, UTC calendar date and responsible teammate. Existing deal records remain readable. Overdue, today, upcoming and unplanned filters exclude won/lost deals. No messages or payments are triggered.
 - Assignment validates the owner or current teammates with orders permission. A former assignee does not prevent an existing opportunity from moving stages.
-- Funnel review: unavailable configured steps, insufficient traffic and inconsistent estimated counts. Numerical observations are descriptive and never infer causes, revenue uplift or statistical significance.
+- Funnel review: unavailable configured steps, insufficient traffic and inconsistent estimated counts. Numerical observations are descriptive and never infer causes, revenue uplift or statistical significance. Rates are unavailable for missing, negative, infinite or impossible estimates. Independent counts never claim that the same visitors moved from the first step to the last.
 - The CRM initializes records using the selected store reference, including secondary stores.
 - Date fields reject normalized overflow dates such as February 30.
 - Product checks run lint, the existing behavior suite and a production build on pull requests and main. Actions are pinned; the job uses read-only repository permission and no production secrets.
