@@ -237,7 +237,7 @@ export function PageFunnelEditor({
               </div>
 
               <details className="mt-4 rounded-xl bg-paper p-4 ring-1 ring-line">
-                <summary className="min-h-11 cursor-pointer font-semibold text-ink">{review.ready ? "Review: all steps available" : "Review: check unavailable steps"}</summary>
+                <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-ink"><Icon name="chevron-down" size={16} className="shrink-0" />{review.ready ? "Review: all steps available" : "Review: check unavailable steps"}</summary>
                 {review.issues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{review.issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">Every configured step is currently available. This does not verify payment-provider health, delivery or page copy.</p>}
                 {review.observation ? <p className="mt-3 text-sm text-ink-soft">{review.observation}</p> : null}
                 <a className="btn btn-secondary btn-sm mt-3" href={base + funnel.slug} target="_blank" rel="noopener noreferrer">Open as a visitor</a>
