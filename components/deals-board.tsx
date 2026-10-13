@@ -116,9 +116,11 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
   const initialFields = fields.map(field => ({ ...field, optionsText: field.options.join(", ") }));
   const dirty = (draft !== null && JSON.stringify(draft) !== JSON.stringify(initialDeal)) || (stageDraft !== null && JSON.stringify(stageDraft) !== JSON.stringify(stages)) || (fieldDraft !== null && JSON.stringify(fieldDraft) !== JSON.stringify(initialFields));
   useLeaveGuard(dirty);
+  const editing = draft !== null || stageDraft !== null || fieldDraft !== null;
 
   return (
     <div className="space-y-8">
+      {editing ? <p className="notice notice-warn" role="status">Save or cancel the open editor before starting another edit, moving a deal or removing one.</p> : null}
       <section aria-labelledby="deals-title" className="card min-w-0 p-5 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 max-w-2xl">
@@ -130,7 +132,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
             </p>
           </div>
           {draft === null ? (
-            <button type="button" className="btn btn-primary" onClick={() => { setError(null); setDraft({ id: "", title: "", email: "", value: "", stage: firstOpen, note: "", nextAction: "", dueDate: "", assignee: "" }); }}>
+            <button type="button" className="btn btn-primary" disabled={busy || editing} onClick={() => { setError(null); setDraft({ id: "", title: "", email: "", value: "", stage: firstOpen, note: "", nextAction: "", dueDate: "", assignee: "" }); }}>
               <Icon name="plus" size={18} />
               New deal
             </button>
@@ -239,7 +241,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
                           <select
                             className="field"
                             value={deal.stage}
-                            disabled={busy}
+                            disabled={busy || editing}
                             onChange={(e) => void run({ action: "deal", deal: { ...deal, stage: e.target.value } }, "Deal moved.")}
                           >
                             {stages.map((s) => (
@@ -252,12 +254,12 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          disabled={busy}
+                          disabled={busy || editing}
                           onClick={() => { setError(null); setDraft(draftFromDeal(deal, currency)); }}
                         >
                           Edit
                         </button>
-                        <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => void run({ action: "undeal", id: deal.id }, "Deal removed.")} aria-label={`Remove ${deal.title}`}>
+                        <button type="button" className="btn btn-secondary btn-sm" disabled={busy || editing} onClick={() => void run({ action: "undeal", id: deal.id }, "Deal removed.")} aria-label={`Remove ${deal.title}`}>
                           <Icon name="minus" size={16} />
                         </button>
                       </div>
@@ -309,7 +311,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
               </div>
             </div>
           ) : (
-            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setStageDraft(structuredClone(stages))}>
+            <button type="button" className="btn btn-secondary btn-sm" disabled={busy || editing} onClick={() => setStageDraft(structuredClone(stages))}>
               Change the stages
             </button>
           )}
@@ -386,7 +388,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today }
                 ))}
               </ul>
             ) : null}
-            <button type="button" className="btn btn-secondary btn-sm mt-4" onClick={() => setFieldDraft(fields.map((f) => ({ ...f, optionsText: f.options.join(", ") })))}>
+            <button type="button" className="btn btn-secondary btn-sm mt-4" disabled={busy || editing} onClick={() => setFieldDraft(fields.map((f) => ({ ...f, optionsText: f.options.join(", ") })))}>
               {fields.length ? "Change the fields" : "Add your first field"}
             </button>
           </>
