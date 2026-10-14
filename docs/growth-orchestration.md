@@ -34,6 +34,10 @@ When a review has issues or is incomplete, it offers navigation to products/deli
 
 The existing leave guard now covers modified deal, stage and custom-field drafts. Opening an unchanged editor does not activate it. It remains active during a pending save and after a failed save, until the draft is successfully saved or explicitly cancelled. It covers browser reload/close and normal same-origin navigation links under the existing guard rules. It is not autosave or durable draft storage; browser Back behavior remains outside this guard. The CRM now allows one editor at a time: opening another editor and moving/removing cards wait until the current deal, stage or field editor is saved or cancelled. This prevents in-page replacement of an open draft without adding another confirmation dialog.
 
+## Failed funnel-list reads
+
+A rejected saved-funnel list read is shown as an explicit unknown state instead of an empty catalog. The page-funnel editor offers a reload action and hides its mutation controls; the type-based creation picker is withheld until the saved list can be read. A successful empty list retains the normal onboarding. This does not delete funnels or retry writes automatically. The separate post-purchase-offer area remains available under its existing permissions.
+
 ## Direct funnel review links
 
 Each funnel requiring attention in Growth links to its own review, carrying the selected store query and a fragment based on the saved funnel id. The target is inside the native details disclosure so fragment navigation can reveal the review. Duplicate funnel names use distinct ids and no longer share a React key. The general editor link remains available. Links do not mutate a funnel and destination authorization remains unchanged.
