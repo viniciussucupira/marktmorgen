@@ -152,13 +152,14 @@ export function funnelTool(data: StatsData, w: Window) {
   const known = paidFiguresComplete(data);
   const t = data.totals[w];
   const p = data.previous?.[w];
+  const trafficKnown = p != null && data.previousTrafficAvailable?.[w] !== false;
   const reach = data.reach?.[w];
   return {
     window: NAMES[w],
     currency: data.currency,
     paid_figures_complete: known,
     partial: data.partial === true,
-    coverage_note: "Paid totals and paid conversion rates require a successful non-partial reading. Null is unavailable, not zero. Visits, page views and checkout starts remain available.",
+    coverage_note: "Paid totals and paid conversion rates require a successful non-partial reading. Null is unavailable, not zero. Visits, page views and checkout starts remain available. Previous traffic with traffic_available false is unavailable, not zero; confirmed previous paid figures remain independent.",
     visitors: t.visitors,
     page_views: t.views,
     checkouts_started: t.checkouts,
@@ -167,8 +168,9 @@ export function funnelTool(data: StatsData, w: Window) {
     checkouts_per_visitor: share(t.checkouts, t.visitors),
     sales_per_checkout: known ? share(t.sales, t.checkouts) : null,
     sales_per_visitor: known ? share(t.sales, t.visitors) : null,
+    previous_traffic_available: trafficKnown,
     the_same_days_before: p
-      ? { visitors: p.visitors, page_views: p.views, checkouts_started: p.checkouts, sales: known ? p.sales : null, revenue: known ? p.cents : null }
+      ? { traffic_available: trafficKnown, visitors: trafficKnown ? p.visitors : null, page_views: trafficKnown ? p.views : null, checkouts_started: trafficKnown ? p.checkouts : null, sales: known ? p.sales : null, revenue: known ? p.cents : null }
       : null,
     store_page: reach
       ? {
