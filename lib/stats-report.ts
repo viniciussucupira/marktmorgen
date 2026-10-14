@@ -47,6 +47,11 @@ export type SummaryWindow = {
   /** Gross receipts include renewals; after_refunds excludes fees and ad spend. Smallest currency unit. */
   payments: { complete: boolean; gross_receipts: number | null; after_refunds: number | null };
   renewals: { complete: boolean; count: number | null; revenue: number | null };
+  buyer_channels: {
+    complete: boolean;
+    unidentified_orders: number | null;
+    rows: { channel: string; buyers: number; repeat_buyers: number; orders: number; revenue: number; eligible_30_days: number; repeated_30_days: number; repeat_rate_30_days: number | null }[];
+  };
   /** All gross receipt channels, including unidentified origins. Shares are fractions of all receipts. */
   payment_channels: { complete: boolean; from: string | null; to: string | null; rows: { channel: string; gross_receipts: number; share: number; identified: boolean }[] };
   payment_comparison: {
@@ -105,6 +110,7 @@ export function summaryOf(data: StatsData): Summary {
     const comparison = paymentComparisonFrom(data, w);
     const refunded = refundsKnown ? data.refunds![w].reduce((n, r) => n + r.cents, 0) : null;
     const renewalsKnown = known && data.renewals != null && !data.renewals.partial;
+    const buyers = known && data.buyerChannels?.historyPartial === false ? data.buyerChannels[w] : null;
     const countriesKnown = known && data.salesCountries?.[w] != null;
     const adsKnown = known && data.ads?.[w] != null;
     days[NAMES[w]] = {
@@ -145,6 +151,11 @@ export function summaryOf(data: StatsData): Summary {
       },
       payments: { complete: payments !== null, gross_receipts: payments?.total ?? null, after_refunds: payments !== null && refunded !== null ? payments.total - refunded : null },
       renewals: { complete: renewalsKnown, count: renewalsKnown ? data.renewals![w].payments : null, revenue: renewalsKnown ? data.renewals![w].cents : null },
+      buyer_channels: {
+        complete: buyers != null,
+        unidentified_orders: buyers?.unidentifiedOrders ?? null,
+        rows: buyers?.rows.map(row => ({ channel: row.source, buyers: row.buyers, repeat_buyers: row.repeatBuyers, orders: row.orders, revenue: row.cents, eligible_30_days: row.eligible30, repeated_30_days: row.repeated30, repeat_rate_30_days: row.eligible30 > 0 ? row.repeated30 / row.eligible30 : null })) ?? [],
+      },
       payment_channels: {
         complete: payments !== null,
         from: payments?.from ?? null,
