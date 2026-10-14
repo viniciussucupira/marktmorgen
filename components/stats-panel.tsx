@@ -808,7 +808,7 @@ export function StatsPanel({
           checkouts={totals.checkouts}
           sales={totals.sales}
           salesHere={salesHere}
-          before={before ? { visitors: before.visitors, checkouts: before.checkouts, sales: before.sales } : null}
+          before={beforeTraffic ? { visitors: beforeTraffic.visitors, checkouts: beforeTraffic.checkouts, sales: beforeTraffic.sales } : null}
           span={span}
         />
       ) : null}

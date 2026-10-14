@@ -383,6 +383,7 @@ export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, sp
     : `${store.name}: ${people} this week`;
 
   const before = data.previous?.d7;
+  const beforeTraffic = data.previousTrafficAvailable?.d7 === false ? null : before;
   // "(up 23% on the week before)", or nothing when there is nothing honest to say.
   const against = (now: number, then: number | null | undefined) => {
     if (then === null || then === undefined || then === 0) return "";
@@ -393,8 +394,8 @@ export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, sp
   };
   const lines: string[] = [];
   lines.push(`Here is ${store.name} over the last 7 days.`, "");
-  lines.push(`Visitors: ${week.visitors.toLocaleString("en-US")}${against(week.visitors, before?.visitors)}`);
-  lines.push(`Checkouts started: ${week.checkouts.toLocaleString("en-US")}${against(week.checkouts, before?.checkouts)}`);
+  lines.push(`Visitors: ${week.visitors.toLocaleString("en-US")}${against(week.visitors, beforeTraffic?.visitors)}`);
+  lines.push(`Checkouts started: ${week.checkouts.toLocaleString("en-US")}${against(week.checkouts, beforeTraffic?.checkouts)}`);
   if (known) {
     lines.push(`Sales: ${week.sales.toLocaleString("en-US")}, ${money(week.cents)} before Stripe's fee${against(week.cents, before?.cents)}`);
     const renewals = data.renewals?.d7;
