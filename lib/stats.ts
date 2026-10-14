@@ -1667,6 +1667,8 @@ export type StatsData = {
    * they were not read, or not read in full.
    */
   previous: Record<"d7" | "d30" | "d90", { visitors: number; views: number; checkouts: number; sales: number | null; cents: number | null }>;
+  /** Availability of the source traffic history, before legacy zero placeholders are applied. */
+  previousTrafficAvailable?: Record<"d7" | "d30" | "d90", boolean>;
   /** Buyers' answers to "where did you hear about us?" for the window, the most first (lib/heard.ts). */
   heard: Record<"d7" | "d30" | "d90", { answer: string; buyers: number; cents: number; unknownBuyers?: number; unknownCents?: number }[]>;
   /** Each channel's money three ways, for the window: by the last visit, the first, and what buyers said (lib/attribution-rules.ts). */
@@ -1909,6 +1911,9 @@ export function studioStats(
     renewals: sales?.renewals
       ? { d7: sales.renewals.d7, d30: sales.renewals.d30, d90: sales.renewals.d90, partial: sales.renewals.partial }
       : null,
+    previousTrafficAvailable: Object.fromEntries(
+      (["d7", "d30", "d90"] as const).map(k => [k, stats.previous?.[k] != null]),
+    ) as NonNullable<StatsData["previousTrafficAvailable"]>,
     previous: Object.fromEntries(
       (["d7", "d30", "d90"] as const).map((k) => {
         const visits = stats.previous?.[k] ?? { visitors: 0, views: 0, checkouts: 0 };
