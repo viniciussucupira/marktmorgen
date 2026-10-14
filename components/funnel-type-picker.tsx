@@ -22,7 +22,9 @@ const MESSAGES: Record<string, string> = {
   slot_paid: "That step needs a paid product.",
   slot_call: "Choose one of your calls for the booking, and no call for the other steps.",
   slot_twice: "Each product can fill one step.",
-  server_error: "Something went wrong. Nothing was changed. Try again.",
+  forms_full: "This store has no room for the required forms. Review Forms before trying again.",
+  setup_incomplete: "We could not confirm completion. Some pages, forms or a funnel may already exist. Review them before creating another funnel.",
+  server_error: "Something went wrong before setup started. Try again.",
   ...STUDIO_MESSAGES,
 };
 
@@ -47,6 +49,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [picked, setPicked] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recovery, setRecovery] = useState<"setup" | "forms" | null>(null);
   const [made, setMade] = useState<{ pages: { title: string; id: string }[]; funnelId: string | null } | null>(null);
   useLeaveGuard(type !== null);
   const slots = type ? choicesOf(type) : [];
@@ -60,6 +63,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
 
   function choose(next: FunnelType) {
     setMade(null);
+    setRecovery(null);
     setType(next);
     setName(next.label);
     setError(null);
@@ -78,8 +82,9 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   }
 
   async function build() {
-    if (!type || busy || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
+    if (!type || busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
     setBusy(true);
+    setRecovery(null);
     setError(null);
     try {
       const response = await fetch("/api/store/page-funnels", {
@@ -96,9 +101,12 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      const uncertain = data.error === "setup_incomplete" || !data.error || !MESSAGES[data.error];
+      setRecovery(uncertain ? "setup" : data.error === "forms_full" ? "forms" : null);
+      setError(uncertain ? MESSAGES.setup_incomplete : MESSAGES[data.error!]);
     } catch {
-      setError(MESSAGES.server_error);
+      setRecovery("setup");
+      setError(MESSAGES.setup_incomplete);
     } finally {
       setBusy(false);
     }
@@ -227,12 +235,17 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
               {error}
             </p>
           ) : null}
+          {recovery ? <nav aria-label="Review setup records" className="mt-4 flex flex-wrap gap-3">
+            {recovery === "setup" ? <a className="underline" href={`/studio/site${sid ? `?store=${encodeURIComponent(sid)}` : ""}`}>Review pages</a> : null}
+            <a className="underline" href={`/studio/forms${sid ? `?store=${encodeURIComponent(sid)}` : ""}`}>Review forms</a>
+            {recovery === "setup" ? <a className="underline" href={`/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}`}>Review funnels</a> : null}
+          </nav> : null}
           <div className="mt-5 flex flex-wrap gap-3">
-            <button type="button" className="btn btn-primary" onClick={() => void build()} disabled={busy || !name.trim() || selectionIssues.length > 0 || repeated || Boolean(capacityIssue)} aria-busy={busy}>
+            <button type="button" className="btn btn-primary" onClick={() => void build()} disabled={busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || Boolean(capacityIssue)} aria-busy={busy}>
               {busy ? "Making it…" : "Make the funnel"}
             </button>
             <button type="button" className="btn btn-secondary" onClick={() => setType(null)} disabled={busy}>
-              Cancel setup
+              {recovery === "setup" ? "Close setup" : "Cancel setup"}
             </button>
           </div>
         </fieldset>
