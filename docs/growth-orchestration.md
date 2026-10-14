@@ -18,6 +18,10 @@ The funnel editor and growth workspace now reuse canSell, canSellProduct, paypal
 
 This is a configuration review, not a live checkout or delivery test. Actual sign-up/email delivery, stock and license availability, provider health, external link health, and actual file access remain manual release checks.
 
+## Payment-plan diagnostics
+
+The saved review also reuses planState and planPauseWords to explain configured installment plans that no longer appear at checkout: changed product type, buyer-chosen prices, missing option payments, or payments below the current price. Each warning identifies the funnel step and the exact correction. A suppressed plan is distinguished from the up-front purchase; no price or payment configuration is changed. A valid plan produces no warning. This remains configuration review, not a provider transaction test.
+
 ## Guided corrections
 
 When a review has issues or is incomplete, it offers navigation to products/delivery and the store pages. Only owners receive payment-connection and plan destinations. Links preserve the selected store query before the fragment. These are navigation links; no subscription, payment connection, product or page is changed by clicking them. Destination routes keep their own permission checks.
