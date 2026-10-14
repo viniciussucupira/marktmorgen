@@ -55,6 +55,10 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const slots = type ? choicesOf(type) : [];
   const selected = slots.map(slot => picked[slot.key] || "").filter(Boolean);
   const repeated = new Set(selected).size !== selected.length;
+  const draftSelections = slots.flatMap(slot => {
+    const product = products.find(product => product.id === picked[slot.key]);
+    return product?.draft ? [slot.label + ": " + product.title] : [];
+  });
   const selectionIssues = slots.flatMap(slot => {
     const problem = slotProblem(slot, products.find(product => product.id === picked[slot.key]) ?? null);
     return problem ? [slot.label + ": " + MESSAGES["slot_" + problem]] : [];
@@ -115,6 +119,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   }
 
   const reviewHref = `/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}${made?.funnelId ? `#funnel-review-${made.funnelId}` : ""}`;
+  const productsHref = `/studio${sid ? `?store=${encodeURIComponent(sid)}` : ""}#products`;
   const pagesHref = (id: string) => `/studio/site?${sid ? `store=${encodeURIComponent(sid)}&` : ""}page=${encodeURIComponent(id)}`;
 
   return (
@@ -219,6 +224,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
                       : slot.wants === "call"
                         ? "You have no call yet. Add one under Products, then come back."
                         : "You have no paid product yet. Add one under Products, then come back."}
+                    <a className="mt-2 inline-flex min-h-11 items-center font-semibold text-violet-deep underline underline-offset-4" href={productsHref}>Review products</a>
                   </span>
                 )}
               </label>
@@ -231,6 +237,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
                 .join(", ")}), empty and hidden from visitors until you write them. A draft product is passed over until you publish it.`}
             </p>
           ) : null}
+          {draftSelections.length > 0 ? <div className="notice notice-warn mt-4 text-sm" role="status"><p className="font-semibold">Some selected products are still drafts.</p><ul className="mt-2 list-disc space-y-1 pl-5">{draftSelections.map(selection => <li key={selection}>{selection}</li>)}</ul><p className="mt-2">You can create this setup, but publish these products and review the funnel before sharing it.</p><a className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={productsHref}>Review products</a></div> : null}
           {selectionIssues.length > 0 || repeated || capacityIssue ? <div className="notice notice-warn mt-4 text-sm" role="status"><p className="font-semibold">Complete the setup before creating the funnel.</p><ul className="mt-2 list-disc space-y-1 pl-5">{selectionIssues.map(issue => <li key={issue}>{issue}</li>)}{repeated ? <li>{MESSAGES.slot_twice}</li> : null}{capacityIssue ? <li>{capacityIssue}</li> : null}</ul></div> : null}
           {error ? (
             <p className="notice notice-error mt-4" role="alert">
