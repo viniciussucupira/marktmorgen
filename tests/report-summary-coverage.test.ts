@@ -38,6 +38,17 @@ is("refund failure leaves cohort available",summaryOf({...buyerData,cashflowComp
 is("no eligible buyers has no false zero rate",summaryOf({...buyerData,buyerChannels:{...buyerData.buyerChannels,d7:{rows:[{...buyerRow,eligible30:0,repeated30:0}],unidentifiedOrders:0}}}).days.last_7_days.buyer_channels.rows[0].repeat_rate_30_days,null);
 is("cohort output contains no identities",/email|customer_details|receipt_email/.test(JSON.stringify(buyerReport)),false);
 is("provider failure blocks cohorts",summaryOf({...buyerData,sales:"error"}).days.last_7_days.buyer_channels.complete,false);
+part("API weekly cohorts retain all observation windows");
+const weeklyData={...buyerData,buyerChannels:{...buyerData.buyerChannels,weekly:{asOf:date(0),unidentifiedOrders:3,rows:[{week:date(20),buyers:5,observations:{7:{eligible:5,repeated:2},30:{eligible:4,repeated:1},60:{eligible:2,repeated:0},90:{eligible:0,repeated:0}}}]}}};
+const weeklyReport=summaryOf(weeklyData).weekly_buyer_cohorts;
+is("weekly coverage and observation date explicit",[weeklyReport.complete,weeklyReport.as_of,weeklyReport.unidentified_orders],[true,date(0),3]);
+is("all ages use their own eligible denominators",weeklyReport.rows[0].observations,[{days:7,eligible:5,repeated:2,rate:0.4},{days:30,eligible:4,repeated:1,rate:0.25},{days:60,eligible:2,repeated:0,rate:0},{days:90,eligible:0,repeated:0,rate:null}]);
+is("missing weekly report unavailable",summaryOf(buyerData).weekly_buyer_cohorts,{complete:false,as_of:null,unidentified_orders:null,rows:[]});
+is("complete empty weekly report available",summaryOf({...weeklyData,buyerChannels:{...weeklyData.buyerChannels,weekly:{asOf:date(0),unidentifiedOrders:0,rows:[]}}}).weekly_buyer_cohorts,{complete:true,as_of:date(0),unidentified_orders:0,rows:[]});
+is("partial history blocks weekly cohorts",summaryOf({...weeklyData,buyerChannels:{...weeklyData.buyerChannels,historyPartial:true}}).weekly_buyer_cohorts.complete,false);
+is("partial purchase reading blocks weekly cohorts",summaryOf({...weeklyData,partial:true}).weekly_buyer_cohorts.complete,false);
+is("refund failure preserves weekly cohorts",summaryOf({...weeklyData,cashflowComplete:false}).weekly_buyer_cohorts,weeklyReport);
+is("weekly output contains no identities",/customer|email|receipt_email/.test(JSON.stringify(weeklyReport)),false);
 part("API refund activity distinguishes refunded money from buyer refund rates");
 const refundData={...data,channelDays:{instagram:{[date(1)]:1000}},refunds:{d7:[{source:"instagram",refunds:2,cents:1500},{source:"direct",refunds:1,cents:500}],d30:[],d90:[]}};
 const refundReport=summaryOf(refundData).days.last_7_days.refund_activity;

@@ -13,6 +13,7 @@ import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
 import { paymentMixFrom } from "@/lib/payment-mix";
 import { paymentComparisonFrom } from "@/lib/payment-comparison";
 import { refundActivityFrom } from "@/lib/refund-activity";
+import { COHORT_AGES } from "@/lib/buyer-channel-rules";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Store } from "@/lib/store";
 import { type Ranked, type StatsData, readSales, readsSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
@@ -76,6 +77,12 @@ export type Summary = {
   partial: boolean;
   paid_figures_complete: boolean;
   payments_complete: boolean;
+  weekly_buyer_cohorts: {
+    complete: boolean;
+    as_of: string | null;
+    unidentified_orders: number | null;
+    rows: { week: string; buyers: number; observations: { days: number; eligible: number; repeated: number; rate: number | null }[] }[];
+  };
   days: Record<"last_7_days" | "last_30_days" | "last_90_days", SummaryWindow>;
 };
 
@@ -175,7 +182,17 @@ export function summaryOf(data: StatsData): Summary {
       ads: adsKnown ? (data.ads?.[w] ?? []).slice(0, 20).map((r) => ({ ad: r.content, channel: r.source, campaign: r.campaign, sales: r.sales, revenue: r.cents })) : [],
     };
   }
-  return { currency: data.currency, sales: data.sales, partial: data.partial === true, paid_figures_complete: known, payments_complete: ledgerPaymentsComplete(data), days };
+  const weekly = known && data.buyerChannels?.historyPartial === false ? data.buyerChannels.weekly : null;
+  return {
+    currency: data.currency, sales: data.sales, partial: data.partial === true,
+    paid_figures_complete: known, payments_complete: ledgerPaymentsComplete(data), days,
+    weekly_buyer_cohorts: {
+      complete: weekly != null,
+      as_of: weekly?.asOf ?? null,
+      unidentified_orders: weekly?.unidentifiedOrders ?? null,
+      rows: weekly?.rows.map(row => ({ week: row.week, buyers: row.buyers, observations: COHORT_AGES.map(age => ({ days: age, eligible: row.observations[age].eligible, repeated: row.observations[age].repeated, rate: row.observations[age].eligible > 0 ? row.observations[age].repeated / row.observations[age].eligible : null })) })) ?? [],
+    },
+  };
 }
 
 // ---- The weekly email ------------------------------------------------------------
