@@ -15,6 +15,7 @@ import { paymentComparisonFrom } from "@/lib/payment-comparison";
 import { refundActivityFrom } from "@/lib/refund-activity";
 import { COHORT_AGES } from "@/lib/buyer-channel-rules";
 import { dailyCashflowRows } from "@/lib/daily-cashflow";
+import { campaignResultsFrom } from "@/lib/campaign-results";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Store } from "@/lib/store";
 import { type Ranked, type StatsData, readSales, readsSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
@@ -54,6 +55,13 @@ export type SummaryWindow = {
     rows: { date: string; gross_receipts: number; refunded: number | null; after_refunds: number | null }[];
   };
   renewals: { complete: boolean; count: number | null; revenue: number | null };
+  campaign_results: {
+    available: boolean;
+    paid_figures_complete: boolean;
+    from: string | null;
+    to: string | null;
+    rows: { campaign: string; visits: number; paid_records: number | null; revenue: number | null; payment_channels: string[] | null }[];
+  };
   buyer_channels: {
     complete: boolean;
     unidentified_orders: number | null;
@@ -119,6 +127,7 @@ export function summaryOf(data: StatsData): Summary {
     const t = data.totals[w];
     const refundsKnown = ledgerPaymentsComplete(data) && data.cashflowComplete === true && data.refunds?.[w] != null;
     const payments = paymentMixFrom(data, w);
+    const campaigns = data.posts?.[w] != null ? campaignResultsFrom(data, w) : null;
     const daily = payments ? dailyCashflowRows(data, w) : [];
     const refundActivity = payments ? refundActivityFrom(data, w, payments.from, payments.to) : null;
     const comparison = paymentComparisonFrom(data, w);
@@ -170,6 +179,13 @@ export function summaryOf(data: StatsData): Summary {
         rows: daily.map(row => ({ date: row.date, gross_receipts: row.payments!, refunded: row.refunds, after_refunds: row.afterRefunds })),
       },
       renewals: { complete: renewalsKnown, count: renewalsKnown ? data.renewals![w].payments : null, revenue: renewalsKnown ? data.renewals![w].cents : null },
+      campaign_results: {
+        available: campaigns !== null,
+        paid_figures_complete: campaigns !== null && campaigns.salesKnown,
+        from: campaigns?.from ?? null,
+        to: campaigns?.to ?? null,
+        rows: campaigns?.rows.map(row => ({ campaign: row.campaign, visits: row.visits, paid_records: row.paidRecords, revenue: row.gross, payment_channels: row.paymentChannels })) ?? [],
+      },
       buyer_channels: {
         complete: buyers != null,
         unidentified_orders: buyers?.unidentifiedOrders ?? null,
