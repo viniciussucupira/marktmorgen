@@ -13,11 +13,25 @@ export const SHARE_MEDIUM = "share";
 
 export type SharePlace = "x" | "facebook" | "linkedin" | "whatsapp" | "email" | "qr" | "device" | "instagram";
 
+/** Replace attribution tags without duplicates, preserving other query values and anchors. */
+function withTags(url: string, tags: Record<string, string>): string {
+  const hash = url.indexOf("#");
+  const fragment = hash < 0 ? "" : url.slice(hash);
+  const address = hash < 0 ? url : url.slice(0, hash);
+  const question = address.indexOf("?");
+  const base = question < 0 ? address : address.slice(0, question);
+  const params = new URLSearchParams(question < 0 ? "" : address.slice(question + 1));
+  for (const [name, value] of Object.entries(tags)) {
+    if (value) params.set(name, value);
+    else params.delete(name);
+  }
+  const query = params.toString();
+  return base + (query ? "?" + query : "") + fragment;
+}
+
 /** The address with the tags naming where it was shared. */
 export function taggedFor(url: string, place: SharePlace): string {
-  const join = url.includes("?") ? "&" : "?";
-  const medium = place === "qr" ? "qr-code" : SHARE_MEDIUM;
-  return `${url}${join}utm_source=${place}&utm_medium=${medium}`;
+  return withTags(url, { utm_source: place, utm_medium: place === "qr" ? "qr-code" : SHARE_MEDIUM });
 }
 
 /** Where a post can go, for a link made for that one post (postLink). */
@@ -30,6 +44,9 @@ export const POST_PLACES: { place: string; label: string }[] = [
   { place: "facebook", label: "Facebook" },
   { place: "linkedin", label: "LinkedIn" },
   { place: "pinterest", label: "Pinterest" },
+  { place: "google", label: "Google" },
+  { place: "bing", label: "Bing" },
+  { place: "email", label: "Email" },
   { place: "newsletter", label: "Newsletter" },
   { place: "podcast", label: "Podcast" },
 ];
@@ -50,11 +67,22 @@ export function postName(raw: string): string {
  * the post's own name as its campaign, so the studio can say which post — not
  * only which network — brought the visits and the money.
  */
+export type CampaignMedium = "post" | "paid" | "email";
+export const CAMPAIGN_MEDIA: { value: CampaignMedium; label: string }[] = [
+  { value: "post", label: "Organic post" },
+  { value: "paid", label: "Paid ad" },
+  { value: "email", label: "Email campaign" },
+];
+
+/** A campaign and optional creative, using exactly the tag shape checkout reads. */
+export function campaignLink(url: string, place: string, name: string, medium: CampaignMedium = "post", content = ""): string {
+  const where = POST_PLACES.some(p => p.place === place) ? place : "other";
+  const kind = CAMPAIGN_MEDIA.some(m => m.value === medium) ? medium : "post";
+  return withTags(url, { utm_source: where, utm_medium: kind, utm_campaign: postName(name), utm_content: postName(content) });
+}
+
 export function postLink(url: string, place: string, name: string): string {
-  const join = url.includes("?") ? "&" : "?";
-  const where = POST_PLACES.some((p) => p.place === place) ? place : "other";
-  const campaign = postName(name);
-  return `${url}${join}utm_source=${where}&utm_medium=post${campaign ? `&utm_campaign=${campaign}` : ""}`;
+  return campaignLink(url, place, name);
 }
 
 /** Where each network's own page to post from opens, with the words in. */

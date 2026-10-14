@@ -139,6 +139,20 @@ async function main(): Promise<void> {
   is("and under its product", sales.refundsByProduct, { prod000001: { refunds: 1, cents: 3000 } });
   is("daily refunds stay on their recorded date", sales.refundDays, { [new Date(NOW - DAY).toISOString().slice(0, 10)]: 3500 });
 
+  part("Reused ad names stay separate in the payment reading");
+  const originalSessions = sessions;
+  sessions = [...sessions,
+    paid("cs_test_variant0000004", 1, 1500, { channel: "google", channel_campaign: "launch", channel_content: "reel-b" }, "US"),
+    paid("cs_test_variant0000005", 1, 1200, { channel: "instagram", channel_campaign: "winter", channel_content: "reel-b" }, "DE"),
+  ];
+  const variants = (await readSales(store, NOW))!;
+  is("one content name in different channels or campaigns is not merged", variants.byContentIn?.d7.map(r=>[r.content,r.source,r.campaign,r.cents,r.sales]), [
+    ["reel-b","instagram","launch",5000,1],
+    ["reel-b","google","launch",1500,1],
+    ["reel-b","instagram","winter",1200,1],
+  ]);
+  sessions = originalSessions;
+
   part("Searched for and not found");
   await countSearchMiss(statsId, ["notion", "template"], NOW);
   await countSearchMiss(statsId, ["notion", "template"], NOW);

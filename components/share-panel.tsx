@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
-import { POST_PLACES, postLink, postName, qrFileName, qrSvg, shareLinks, taggedFor } from "@/lib/share-links";
+import { CAMPAIGN_MEDIA, type CampaignMedium, campaignLink, POST_PLACES, postName, qrFileName, qrSvg, shareLinks, taggedFor } from "@/lib/share-links";
 
 /**
  * Sharing a page (added 8 October 2026): its address to copy, a QR code to
@@ -16,6 +16,7 @@ import { POST_PLACES, postLink, postName, qrFileName, qrSvg, shareLinks, taggedF
  * markup handed in, and downloaded as an SVG for print or a PNG for slides.
  */
 export function SharePanel({ url, title, what = "page" }: { url: string; title: string; what?: string }) {
+  const panelId = useId();
   const qrUrl = taggedFor(url, "qr");
   const grid = useMemo(() => {
     try {
@@ -29,7 +30,9 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
   const [canShare, setCanShare] = useState(false);
   const [postPlace, setPostPlace] = useState("instagram");
   const [post, setPost] = useState("");
-  const forPost = postName(post) ? postLink(url, postPlace, post) : "";
+  const [postMedium, setPostMedium] = useState<CampaignMedium>("post");
+  const [postContent, setPostContent] = useState("");
+  const forPost = postName(post) ? campaignLink(url, postPlace, post, postMedium, postContent) : "";
   useEffect(() => {
     const id = window.setTimeout(() => setCanShare(typeof navigator.share === "function"), 0);
     return () => window.clearTimeout(id);
@@ -82,11 +85,11 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
     <div className="grid gap-5 sm:grid-cols-[1fr_auto]">
       <div className="min-w-0 space-y-4">
         <div>
-          <label htmlFor="share-url" className="field-label">
+          <label htmlFor={`${panelId}-share-url`} className="field-label">
             {`Link to this ${what}`}
           </label>
           <div className="flex flex-wrap gap-2">
-            <input id="share-url" className="field min-w-0 flex-1" readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
+            <input id={`${panelId}-share-url`} className="field min-w-0 flex-1" readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
             <button type="button" onClick={() => void copy()} className="btn btn-secondary">
               <Icon name="copy" size={16} />
               Copy
@@ -118,33 +121,45 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
           </p>
         </div>
         <div>
-          <p className="field-label">A link for one post</p>
+          <p className="field-label">A link for a post or ad</p>
           <div className="flex flex-wrap gap-2">
-            <label className="sr-only" htmlFor="share-post-place">
-              Where the post goes
+            <label className="sr-only" htmlFor={`${panelId}-share-post-place`}>
+              Where the link goes
             </label>
-            <select id="share-post-place" className="field w-auto" value={postPlace} onChange={(e) => setPostPlace(e.target.value)}>
+            <select id={`${panelId}-share-post-place`} className="field w-auto" value={postPlace} onChange={(e) => setPostPlace(e.target.value)}>
               {POST_PLACES.map((p) => (
                 <option key={p.place} value={p.place}>
                   {p.label}
                 </option>
               ))}
             </select>
-            <label className="sr-only" htmlFor="share-post-name">
-              Name of the post
+            <label className="sr-only" htmlFor={`${panelId}-share-post-name`}>
+              Campaign name
             </label>
             <input
-              id="share-post-name"
+              id={`${panelId}-share-post-name`}
               className="field min-w-0 flex-1"
-              placeholder="A name for the post, like october-reel"
+              placeholder="A campaign name, like summer-launch"
               maxLength={60}
               value={post}
               onChange={(e) => setPost(e.target.value)}
             />
           </div>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <label htmlFor={`${panelId}-share-post-medium`} className="text-sm">
+              <span className="field-label">Link type</span>
+              <select id={`${panelId}-share-post-medium`} className="field mt-1" value={postMedium} onChange={(e) => setPostMedium(e.target.value as CampaignMedium)}>
+                {CAMPAIGN_MEDIA.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+            </label>
+            <label htmlFor={`${panelId}-share-post-content`} className="text-sm">
+              <span className="field-label">Ad or link variant (optional)</span>
+              <input id={`${panelId}-share-post-content`} className="field mt-1" placeholder="Like reel-a or headline-b" maxLength={60} value={postContent} onChange={(e) => setPostContent(e.target.value)} />
+            </label>
+          </div>
           {forPost ? (
             <div className="mt-2 flex flex-wrap gap-2">
-              <input aria-label="The post's link" className="field min-w-0 flex-1" readOnly value={forPost} onFocus={(e) => e.currentTarget.select()} />
+              <input aria-label="Campaign link" className="field min-w-0 flex-1" readOnly value={forPost} onFocus={(e) => e.currentTarget.select()} />
               <button type="button" onClick={() => void copy(forPost)} className="btn btn-secondary">
                 <Icon name="copy" size={16} />
                 Copy
@@ -152,7 +167,7 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
             </div>
           ) : null}
           <p className="mt-1 text-xs text-ink-soft">
-            Put this link in one post&apos;s caption or bio, and your numbers show what that post brought: visits, sales and revenue.
+            Use this link in the post, email or ad. Your numbers use the campaign tag for visits and paid records, and the optional variant for ad records. Names are normalized to the displayed link and capped at 40 characters; use the same campaign tag when recording ad spend. Existing tracking tags are replaced, while other query values and page anchors are preserved.
           </p>
         </div>
       </div>

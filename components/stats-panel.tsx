@@ -1025,19 +1025,19 @@ export function StatsPanel({
         <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-ads">
           <table className="w-full text-left text-sm">
             <caption id="numbers-ads" className="text-left text-sm font-bold text-ink">
-              Which ad sold
+              Paid records by ad or link variant
             </caption>
             <thead>
               <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                 <th scope="col" className="py-1 font-semibold">Ad (utm_content)</th>
                 <th scope="col" className="py-1 pl-3 font-semibold">Campaign</th>
-                <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th>
-                <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Paid records</th>
+                <th scope="col" className="py-1 pl-3 text-right font-semibold">Gross amount</th>
               </tr>
             </thead>
             <tbody>
               {ads.slice(0, 15).map((row) => (
-                <tr key={row.content} className="border-b border-line/60">
+                <tr key={JSON.stringify([row.source, row.campaign, row.content])} className="border-b border-line/60">
                   <th scope="row" className="py-1 pr-3 font-medium text-ink">
                     {row.content}
                     <span className="ml-1.5 text-xs font-normal text-ink-soft">{channelName(row.source)}</span>
@@ -1050,8 +1050,7 @@ export function StatsPanel({
             </tbody>
           </table>
           <p className="mt-2 text-xs text-ink-soft">
-            An ad appears here when its link carries <span className="font-mono">utm_content=</span> with the ad&apos;s name, as Meta,
-            TikTok and Google can add for you. Remembered for 30 days like the channel, from October 11, 2026.
+            Use Share to create a campaign link with an optional ad or link variant. Each row keeps the channel, campaign and <span className="font-mono">utm_content</span> together, so reused names do not merge different ads. Paid records include purchases and one-click extras, not unique buyers; gross amounts are before refunds and fees, with renewals excluded.
           </p>
         </div>
       ) : null}

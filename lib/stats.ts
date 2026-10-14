@@ -1,3 +1,4 @@
+import { creativeRowsFrom } from "@/lib/creative-results";
 /**
  * How many people visit a store, where they come from, and how many of them
  * start to pay.
@@ -1302,17 +1303,7 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   };
   out.attributionIn = { d7: sideBySide(cut7), d30: sideBySide(cut30), d90: sideBySide("") };
   // Which ad, and which country, each window's money came from.
-  const contentIn = (cut: string) => {
-    const by = new Map<string, { content: string; source: string; campaign: string; cents: number; sales: number }>();
-    for (const sale of own) {
-      if (!sale.content || dayKey(sale.created) < cut) continue;
-      const row = by.get(sale.content) ?? { content: sale.content, source: sale.source || "direct", campaign: sale.campaign, cents: 0, sales: 0 };
-      row.cents += sale.cents;
-      row.sales += 1;
-      by.set(sale.content, row);
-    }
-    return [...by.values()].sort((a, b) => b.cents - a.cents || b.sales - a.sales || a.content.localeCompare(b.content));
-  };
+  const contentIn = (cut: string) => creativeRowsFrom(own, cut);
   const countryIn = (cut: string) => {
     const by = new Map<string, { country: string; cents: number; sales: number }>();
     for (const sale of own) {

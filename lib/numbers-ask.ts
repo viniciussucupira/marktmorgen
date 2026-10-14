@@ -87,7 +87,8 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
         .slice(0, 15)
         .map((row) => ({ product: row.title, page_views: row.views, checkouts_started: row.checkouts, ...(known ? { sales: row.sales, revenue: money(row.cents) } : {}) })),
       posts: (data.posts?.[w] ?? []).slice(0, 10).map((r) => ({ post: r.campaign, payment_channels: known ? r.sources?.map(channelName) ?? null : null, visits: r.visits, ...(known && !data.partial ? { paid_records: r.sales, gross_amount: money(r.cents) } : {}) })),
-      ads: known ? (data.ads?.[w] ?? []).slice(0, 10).map((r) => ({ ad: r.content, channel: channelName(r.source), sales: r.sales, revenue: money(r.cents) })) : [],
+      ad_records_note: "Each variant is grouped by channel, campaign and content tag. Paid records include purchases and one-click extras, not unique buyers. Gross amounts are before refunds and fees; recurring renewals are excluded.",
+      ads: known ? (data.ads?.[w] ?? []).slice(0, 10).map((r) => ({ ad: r.content, campaign: r.campaign, channel: channelName(r.source), sales: r.sales, revenue: money(r.cents) })) : [],
       countries_by_views: (data.countries?.[w] ?? []).slice(0, 10).map((r) => ({ country: r.name, page_views: r.visits })),
       devices_by_views: (data.devices?.[w] ?? []).slice(0, 5).map((r) => ({ device: r.name, page_views: r.visits })),
       ...(known && data.renewals ? { renewals: { payments: data.renewals[w].payments, revenue: money(data.renewals[w].cents) } } : {}),
