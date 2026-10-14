@@ -12,6 +12,7 @@ export type FlowReviewContext = {
 /** Saved references only; never sends email or executes an action. */
 export function flowConfigurationIssues(flow: Flow, context: FlowReviewContext): string[] {
   const issues: string[] = [];
+  if (!flow.steps.length) issues.push("This sequence has no steps. Add an email or action before activating.");
   const productExists = (id: string | null) => context.products.some(product => product.id === id);
   if (flow.trigger === "product" && !productExists(flow.productId)) issues.push("The trigger product is unavailable. Choose a product in this store.");
   if (flow.trigger === "finished" && !context.courses.includes(flow.productId ?? "")) issues.push("The trigger course is unavailable. Choose a current course.");
@@ -19,6 +20,7 @@ export function flowConfigurationIssues(flow: Flow, context: FlowReviewContext):
   if (flow.goal && "productId" in flow.goal && !productExists(flow.goal.productId)) issues.push("The product used to end this sequence is unavailable. Review the goal.");
   flow.steps.forEach((step, index) => {
     const prefix = "Step " + (index + 1) + ": ";
+    if (!step.action && (!step.subject.trim() || !step.body.trim())) issues.push(prefix + "Complete the email subject and content before activating.");
     if (step.when && "productId" in step.when) {
       const course = ["started", "unstarted", "finished", "unfinished"].includes(step.when.if);
       if (course ? !context.courses.includes(step.when.productId) : !productExists(step.when.productId)) issues.push(prefix + "The condition refers to an unavailable " + (course ? "course" : "product") + ". Review it before activating.");
