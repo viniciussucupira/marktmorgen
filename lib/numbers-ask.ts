@@ -1,3 +1,4 @@
+import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 /**
  * Asking the store's numbers a question in plain words, and a short summary
@@ -126,9 +127,10 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
       } } : {}),
       ...(known && data.buyers ? { buyers: { buyers: data.buyers[w].buyers, orders: data.buyers[w].orders, came_back: data.buyers[w].returning } } : {}),
       ...(known && cash.length ? { cashflow: {
-        complete: data.cashflowComplete === true,
+        complete: cash.every(c => c.afterRefunds !== null),
+        payments_complete: ledgerPaymentsComplete(data),
         note: "Payments include renewals; refunds include pending refunds and belong to the days recorded. Before fees, tax, commissions and other costs. Not profit or causal ad lift.",
-        channels: cash.slice(0, 15).map((c) => ({ channel: channelName(c.source), payments_received: money(c.receipts),
+        channels: cash.slice(0, 15).map((c) => ({ channel: channelName(c.source), payments_received: c.receipts === null ? null : money(c.receipts),
           refunds: c.refunds === null ? null : money(c.refunds), after_refunds: c.afterRefunds === null ? null : money(c.afterRefunds),
           ...(spends !== undefined ? { ad_spend_recorded: money(c.adSpend), after_refunds_and_ads: c.afterAds === null ? null : money(c.afterAds) } : {}),
         })),
@@ -170,8 +172,9 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
   if (known) {
     const daily = dailyCashflowRows(data, "d90", spends);
     if (daily.length) out.daily_recorded_cashflow = {
+      payments_complete: ledgerPaymentsComplete(data),
       note: "UTC days from the latest 90-day reading. Payments include renewals. Refunds include pending refunds on the days recorded and may relate to older purchases. Daily ad amounts are allocated from recorded intervals with rounding that conserves smallest currency units. Null is incomplete or unavailable, not zero. Results are before fees, tax, commissions and other costs; not profit, predicted revenue or causal advertising lift.",
-      days: daily.map((row) => ({ day: row.date, payments_received: money(row.payments), refunds_recorded: row.refunds === null ? null : money(row.refunds), after_refunds: row.afterRefunds === null ? null : money(row.afterRefunds),
+      days: daily.map((row) => ({ day: row.date, payments_received: row.payments === null ? null : money(row.payments), refunds_recorded: row.refunds === null ? null : money(row.refunds), after_refunds: row.afterRefunds === null ? null : money(row.afterRefunds),
         ...(spends !== undefined ? { ad_spend_recorded: row.ads === null ? null : money(row.ads), after_refunds_and_ads: row.afterAds === null ? null : money(row.afterAds) } : {}),
       })),
     };

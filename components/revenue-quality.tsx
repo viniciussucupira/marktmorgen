@@ -15,12 +15,12 @@ export function RevenueQuality({ data, range, spends }: { data: StatsData; range
   if (data.sales !== "ok" || !days.length) return null;
   const spent = spendBy(spends, days[0].date, days[days.length - 1].date);
   const rows = channelCashflows(data, range, data.channels?.[range] ?? [], spent.channels, days[0].date, days[days.length - 1].date)
-    .filter((r) => r.receipts || r.refunds || r.adSpend);
+    .filter((r) => r.receipts === null || r.refunds === null || r.receipts || r.refunds || r.adSpend);
   if (!rows.length) return null;
   const money = (amount: number | null) => amount === null ? "—" : formatMoney(amount, data.currency);
-  const received = rows.reduce((sum, r) => sum + r.receipts, 0);
-  const returned = data.cashflowComplete ? rows.reduce((sum, r) => sum + (r.refunds ?? 0), 0) : null;
-  const left = returned === null ? null : received - returned - spent.total;
+  const received = rows.every(r => r.receipts !== null) ? rows.reduce((sum, r) => sum + (r.receipts ?? 0), 0) : null;
+  const returned = rows.every(r => r.refunds !== null) ? rows.reduce((sum, r) => sum + (r.refunds ?? 0), 0) : null;
+  const left = returned === null || received === null ? null : received - returned - spent.total;
   const tiles = [
     { name: "Payments received", value: money(received) },
     { name: "Refunds recorded", value: money(returned) },
@@ -31,7 +31,7 @@ export function RevenueQuality({ data, range, spends }: { data: StatsData; range
     <section className="mt-6 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" aria-labelledby="numbers-cashflow">
       <h3 id="numbers-cashflow" className="text-sm font-bold text-ink">What remains after refunds and ads</h3>
       <p className="mt-1 text-xs text-ink-soft">Payments received in these days, including renewals and later installments. This is before payment fees, tax, affiliate commissions and your other costs; it is not profit.</p>
-      {!data.cashflowComplete ? <p className="mt-2 text-sm text-ink-soft" role="status">Some payments or refunds could not be read in full, or a refund could not be matched to this store. The result after refunds waits for complete figures.</p> : null}
+      {left === null ? <p className="mt-2 text-sm text-ink-soft" role="status">Some payments or refunds could not be read in full, or a refund could not be matched to this store. The result after refunds waits for complete figures; payment totals also wait when their reading is incomplete. Recorded ad spend remains available.</p> : null}
       <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {tiles.map((t) => <div key={t.name}><dt className="text-xs text-ink-soft">{t.name}</dt><dd className="mt-1 text-lg font-bold tabular-nums text-ink">{t.value}</dd></div>)}
       </dl>

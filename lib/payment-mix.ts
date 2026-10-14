@@ -1,9 +1,10 @@
 import type { StatsData } from "@/lib/stats";
+import { ledgerPaymentsComplete, type PaymentLedgerReading } from "@/lib/payment-ledger-coverage";
 export type PaymentMixRow = { source: string; cents: number; share: number; identified: boolean };
 export type PaymentMix = { from: string; to: string; total: number; unidentified: number; unidentifiedShare: number | null; largest: PaymentMixRow | null; topThreeShare: number | null; rows: PaymentMixRow[] };
 /** Gross recorded payments, including renewals. Unknown channel groups are not treated as a single marketing channel. */
-export function paymentMixFrom(data: Pick<StatsData, "sales" | "partial" | "cashflowComplete" | "channelDays" | "days">, range: "d7" | "d30" | "d90"): PaymentMix | null {
-  if (data.sales !== "ok" || data.partial || data.cashflowComplete !== true || !data.channelDays) return null;
+export function paymentMixFrom(data: PaymentLedgerReading & Pick<StatsData, "days">, range: "d7" | "d30" | "d90"): PaymentMix | null {
+  if (!ledgerPaymentsComplete(data) || data.cashflowComplete !== true || !data.channelDays) return null;
   const days = data.days.slice(-(range === "d7" ? 7 : range === "d30" ? 30 : 90));
   if (!days.length) return null;
   const selected = new Set(days.map(d => d.date));

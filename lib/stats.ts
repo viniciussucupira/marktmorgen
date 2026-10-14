@@ -779,6 +779,8 @@ export type SalesStats = {
   buyerChannels?: BuyerChannels;
   /** All receipts, renewals and refunds were read, and each refund was matched to this store. */
   cashflowComplete?: boolean;
+  /** Purchases and renewals were read in full for the current 90-day ledger, independently of refunds. */
+  paymentsComplete?: boolean;
   /** Full price beside each kind of discount over the 90 days (lib/discount-impact.ts); null with no discounted sale. */
   discounts?: { rows: DiscountRow[] | null; refundsRead: boolean };
   /** When buyers bought over the 90 days: checkouts by hour of the week in UTC, Sunday 0:00 first (hoursOfWeek). */
@@ -1364,8 +1366,8 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   out.channelDays = channelDays;
   out.buyers = buyersFrom(read, store.currency, now);
   out.buyerChannels = buyerChannelsFrom(read, store.currency, now, readPartial);
-  out.cashflowComplete = !readPartial && refundRead !== null && !refundRead.partial &&
-    (!store.stripeAccountId || Boolean(renewals && !renewals.partial)) &&
+  out.paymentsComplete = !partial && (!store.stripeAccountId || Boolean(renewals && !renewals.partial));
+  out.cashflowComplete = out.paymentsComplete && !readPartial && refundRead !== null && !refundRead.partial &&
     !(out.refundsIn?.d90 ?? []).some((r) => r.source === UNRECORDED);
   out.hours = hoursOfWeek(own.filter((sale) => !sale.upsell));
   out.discounts = {
@@ -1689,6 +1691,8 @@ export type StatsData = {
   buyers?: Record<"d7" | "d30" | "d90", BuyersWindow> | null;
   buyerChannels?: BuyerChannels | null;
   cashflowComplete?: boolean;
+  /** Purchases and renewals were read in full for the current 90-day ledger, independently of refunds. */
+  paymentsComplete?: boolean;
   /** Full price beside each kind of discount over the 90 days (SalesStats.discounts). */
   discounts?: { rows: DiscountRow[] | null; refundsRead: boolean } | null;
   /** Checkouts by hour of the week in UTC over the 90 days (SalesStats.hours); the browser turns them to its own time. */
@@ -1942,6 +1946,7 @@ export function studioStats(
     buyers: sales?.buyers ? { d7: sales.buyers.d7, d30: sales.buyers.d30, d90: sales.buyers.d90 } : null,
     buyerChannels: sales?.buyerChannels ?? null,
     cashflowComplete: sales?.cashflowComplete ?? false,
+    paymentsComplete: sales?.paymentsComplete,
     discounts: sales?.discounts ?? null,
     hours: sales?.hours ?? null,
     reach: {

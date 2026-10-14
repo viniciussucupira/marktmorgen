@@ -1,3 +1,4 @@
+import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 /**
  * The read-only tools of the MCP server beyond the first three (added 12
@@ -79,7 +80,8 @@ export function channelsTool(data: StatsData, w: Window) {
     partial: data.partial === true,
     paid_figures_complete: known,
     coverage_note: "Paid totals require a successful, non-partial reading. Null or omitted figures and empty ad/post lists with paid_figures_complete false mean unavailable, not zero sales. Traffic counts may remain available. Money is in the currency smallest unit.",
-    cashflow_complete: known && data.cashflowComplete === true,
+    payments_complete: ledgerPaymentsComplete(data),
+    cashflow_complete: ledgerPaymentsComplete(data) && data.cashflowComplete === true && data.refunds?.[w] != null,
     payment_comparison: comparison ? {current_from_utc:comparison.current.from,current_to_utc:comparison.current.to,current_payments:comparison.current.total,previous_available:comparison.previous!==null,previous_period:comparison.previous ? {from_utc:comparison.previous.from,to_utc:comparison.previous.to,payments:comparison.previous.total} : null,difference:comparison.delta,relative_change:comparison.change,channels:comparison.rows,
       note:"Money in smallest currency units; relative changes and shares are fractions. shareChange is current share minus previous share; multiply by 100 for percentage points. Equal consecutive UTC periods including today as recorded so far. Comparisons fit only 7 and 30 days within the complete 90-day ledger. Null means unavailable or no valid denominator, never zero. Gross recorded payments include renewals, before refunds, fees and ads; not customers, profit or causal marketing lift."} : null,
     payment_mix: mix ? {from_utc:mix.from,to_utc:mix.to,total_payments:mix.total,unidentified_payments:mix.unidentified,unidentified_share:mix.unidentifiedShare,largest_identified_channel:mix.largest,top_three_identified_share:mix.topThreeShare,channels:mix.rows,

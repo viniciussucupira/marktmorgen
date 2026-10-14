@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { AllTimeSales, Ranked, RangeKey, StatsData, Today } from "@/lib/stats";
 import { StoreField } from "@/components/studio-store-pin";
 import { dashboardPaidComplete, dashboardProducts } from "@/lib/dashboard-coverage";
+import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { formatMoney } from "@/lib/money";
 import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
@@ -960,7 +961,7 @@ export function StatsPanel({
                       const cost = spent?.channels.get(row.source) ?? 0;
                       const left = row.cents - cost;
                       const cash = cashflows.find((c) => c.source === row.source);
-                      const payback = salesHere && cost ? paybackOf(spends, row.source, data.channelDays?.[row.source], days[0].date, days[days.length - 1].date) : null;
+                      const payback = salesHere && ledgerPaymentsComplete(data) && cost ? paybackOf(spends, row.source, data.channelDays?.[row.source], days[0].date, days[days.length - 1].date) : null;
                       return (
                         <>
                           <td className="py-1 pl-3 text-right tabular-nums">{cost ? money(cost) : "—"}</td>
