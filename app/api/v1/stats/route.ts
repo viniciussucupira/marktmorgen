@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   try {
     const data = await readNumbers(store);
     if (!data) return apiError(503, "unavailable", "Your numbers could not be read just now. Try again in a moment.");
-    return apiOk({ data: summaryOf(data) });
+    return apiOk({ data: summaryOf(data, { fullDetails: new URL(request.url).searchParams.get("details") === "all" }) });
   } catch (error) {
     console.error("api: stats failed", error);
     return apiError(502, "unavailable", "Your numbers could not be read just now. Try again in a moment.");
