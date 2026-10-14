@@ -269,6 +269,15 @@ export default function DevelopersPage() {
           no refund activity; incomplete readings have null totals and an empty list. Confirmed gross receipt
           reports remain available independently.
         </p>
+        <p>
+          <code className="font-mono">buyer_channels</code> groups buyers by the channel of their first observed
+          purchase in each 7-, 30- or 90-day window, not their lifetime first purchase. It includes buyers, repeat
+          buyers, orders and observed purchase revenue before refunds and fees, excluding subscription renewals.
+          Thirty-day repeat rates are fractions based only on buyers with 30 full days observed; the rate is null
+          when none are eligible. Unidentified orders are reported separately. Incomplete purchase history makes
+          this group unavailable, with null unidentified-order counts and empty rows. A complete empty group is
+          a confirmed empty reading. No buyer identities are exposed.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
