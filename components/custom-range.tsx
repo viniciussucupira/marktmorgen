@@ -21,7 +21,8 @@ const day = (date: string) => {
   const [y, m, d] = date.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 };
-const change = (now: number, before: number) => {
+const change = (now: number, before: number | null) => {
+  if (before === null) return "";
   if (before === 0) return now === 0 ? "same as the days before" : "none the days before";
   const pct = Math.round(((now - before) / before) * 100);
   return pct === 0 ? "same as the days before" : `${pct > 0 ? "+" : ""}${pct}% on the days before`;

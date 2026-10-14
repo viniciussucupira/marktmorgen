@@ -1402,7 +1402,7 @@ export type RangeData = {
   days: { date: string; visitors: number; views: number; checkouts: number; sales: number; cents: number }[];
   totals: { visitors: number; views: number; checkouts: number; sales: number; cents: number };
   /** The same number of days just before, where they are kept; null where they are not. */
-  before: { visitors: number; views: number; checkouts: number; sales: number; cents: number } | null;
+  before: { visitors: number; views: number; checkouts: number; sales: number | null; cents: number | null } | null;
   /** Visits by channel, with the sales credited to it, the biggest first. */
   channels: { source: string; visits: number; sales: number; cents: number }[];
   /** Each product's page views, checkouts and sales, the biggest first. */
@@ -1506,7 +1506,9 @@ export async function readRange(store: Store, from: string, to: string, now = Da
     const end = Date.parse(`${to}T00:00:00Z`) + 86400_000;
     try {
       const { sales, partial } = await readPaidSales(store, Math.floor(start / 1000), 20);
-      out.partial = partial && sales.length > 0 && sales[sales.length - 1].created > Date.parse(`${from}T00:00:00Z`);
+      // Different providers and record types have independent pagination. An old
+      // returned sale cannot prove that another capped reading reached this range.
+      out.partial = partial;
       const byDay = new Map(days.map((d) => [d.date, d]));
       for (const sale of sales) {
         if (sale.created >= end || sale.created < start) continue;
@@ -1517,8 +1519,8 @@ export async function readRange(store: Store, from: string, to: string, now = Da
         const day = byDay.get(dayKey(sale.created));
         if (!day) {
           if (before) {
-            before.sales += 1;
-            before.cents += sale.cents;
+            before.sales = (before.sales ?? 0) + 1;
+            before.cents = (before.cents ?? 0) + sale.cents;
           }
           continue;
         }
@@ -1542,6 +1544,10 @@ export async function readRange(store: Store, from: string, to: string, now = Da
       console.error("reading the sales of a stretch failed", error);
       out.sales = "error";
     }
+  }
+  if (before && (out.sales !== "ok" || out.partial)) {
+    before.sales = null;
+    before.cents = null;
   }
   out.channels = [...bySource.values()].sort((a, b) => b.cents - a.cents || b.visits - a.visits || a.source.localeCompare(b.source)).slice(0, 15);
   out.products = [...byProduct.values()].sort((a, b) => b.cents - a.cents || b.views - a.views || a.id.localeCompare(b.id)).slice(0, 15);

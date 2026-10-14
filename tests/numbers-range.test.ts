@@ -23,11 +23,24 @@ process.env.STRIPE_SECRET_KEY = "sk_test_numbers_range_only";
 const NOW = Date.UTC(2026, 9, 12, 15);
 
 let sessions: Record<string, unknown>[] = [];
+let capped = false;
+let failed = false;
+let upsells: Record<string, unknown>[] = [];
+let upsellsCapped = false;
+let pageNumber = 0;
 
 globalThis.fetch = (async (input: string | URL | Request) => {
   const url = new URL(String(input));
   const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
-  if (url.pathname === "/v1/checkout/sessions") return json({ object: "list", data: sessions, has_more: false });
+  if (url.pathname === "/v1/checkout/sessions") {
+    if (failed) return new Response(JSON.stringify({error:{message:"test reading failed"}}),{status:400});
+    pageNumber += 1;
+    return json({ object: "list", data: capped ? sessions.map(row=>({...row,id:String(row.id)+"_"+pageNumber})) : sessions, has_more: capped });
+  }
+  if (url.pathname === "/v1/payment_intents") {
+    pageNumber += 1;
+    return json({object:"list",data:upsellsCapped ? upsells.map(row=>({...row,id:String(row.id)+"_"+pageNumber})) : upsells,has_more:upsellsCapped});
+  }
   return json({ object: "list", data: [], has_more: false });
 }) as typeof fetch;
 
@@ -83,6 +96,35 @@ async function main(): Promise<void> {
     ["newsletter", 1, 0],
   ]);
   is("nothing read for days that cannot be", await readRange(store, "2026-10-07", "2026-10-05", NOW), null);
+
+  part("Capped readings cannot borrow coverage from old sales");
+  capped=true;
+  sessions=[session("cs_test_capold",Date.UTC(2026,9,3,20),1900)];
+  const oldCap=(await readRange(store,"2026-10-05","2026-10-07",NOW))!;
+  is("old sales do not certify current coverage",oldCap.partial,true);
+  is("capped prior paid totals unknown",[oldCap.before?.sales,oldCap.before?.cents],[null,null]);
+  is("prior traffic survives cap",oldCap.before?.visitors,1);
+  is("current traffic survives cap",oldCap.totals.visitors,3);
+  sessions=[{...session("cs_test_nonpaid",Date.UTC(2026,9,6),1900),status:"open",payment_status:"unpaid"}];
+  const noPaid=(await readRange(store,"2026-10-05","2026-10-07",NOW))!;
+  is("empty paid subset of capped reading is incomplete",noPaid.partial,true);
+  is("empty capped prior paid figures stay null",noPaid.before?.sales,null);
+  sessions=[session("cs_test_boundary",Date.UTC(2026,9,5),1900)];
+  is("cap exactly at selected start remains incomplete",(await readRange(store,"2026-10-05","2026-10-07",NOW))?.partial,true);
+  capped=false;
+  sessions=[session("cs_test_old_complete",Date.UTC(2026,9,3),1900)];
+  upsellsCapped=true;
+  upsells=[{id:"pi_test_cap",created:Math.floor(Date.UTC(2026,9,6)/1000),status:"succeeded",amount:500,currency:"usd",metadata:{kind:"upsell",store:"harbor",product:"guide"}}];
+  is("complete old checkouts cannot certify capped extras",(await readRange(store,"2026-10-05","2026-10-07",NOW))?.partial,true);
+  upsellsCapped=false;upsells=[];sessions=[];
+  const confirmedZero=(await readRange(store,"2026-10-05","2026-10-07",NOW))!;
+  is("complete empty reading remains zero",[confirmedZero.partial,confirmedZero.totals.sales,confirmedZero.before?.sales],[false,0,0]);
+  failed=true;
+  const failedRange=(await readRange(store,"2026-10-05","2026-10-07",NOW))!;
+  is("provider failure remains explicit",failedRange.sales,"error");
+  is("failure withholds prior paid figures",[failedRange.before?.sales,failedRange.before?.cents],[null,null]);
+  is("failure retains traffic",failedRange.totals.visitors,3);
+  failed=false;
 
   part("When buyers buy");
   const hours = hoursOfWeek([{ created: Date.UTC(2026, 9, 4, 23, 30), cents: 1000 }, { created: Date.UTC(2026, 9, 5, 0, 10), cents: 500 }]);
