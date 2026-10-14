@@ -278,6 +278,14 @@ export default function DevelopersPage() {
           this group unavailable, with null unidentified-order counts and empty rows. A complete empty group is
           a confirmed empty reading. No buyer identities are exposed.
         </p>
+        <p>
+          At the response root, <code className="font-mono">weekly_buyer_cohorts</code> groups buyers by the UTC
+          Monday of their first observed purchase week. It includes the observation date and 7-, 30-, 60- and
+          90-day eligible-buyer counts, repeat counts and fractional rates. Each rate uses only buyers with the
+          full observation window; no eligible buyers means null, not zero. History is limited to the purchases
+          read by the platform. Missing or incomplete history makes this group unavailable, while a complete
+          empty reading remains available. Unidentified orders are separate and no identities are included.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
