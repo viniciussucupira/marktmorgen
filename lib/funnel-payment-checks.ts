@@ -6,6 +6,7 @@ import { offeredItems } from "@/lib/bundles";
 import { canGiveProduct } from "@/lib/free";
 import { paypalReady, sellsThroughPayPal } from "@/lib/paypal-sales";
 import { bundleReady } from "@/lib/bundle-rules";
+import { planState, planPauseWords } from "@/lib/product-extras";
 
 /** Saved configuration only: never opens a checkout or probes delivery URLs. */
 export function paidStepProblem(store: Store, product: Listing, bundleItems: number): string | null {
@@ -23,6 +24,15 @@ export function freeStepProblem(store: Store, product: Listing): string | null {
   return canGiveProduct(store, product) ? null : "Free sign-up is unavailable with the saved configuration. Review delivery, the mailing list, the store subscription and email configuration.";
 }
 
+/** A suppressed payment plan does not mean the up-front purchase is blocked. */
+export function planStepProblem(store: Store, product: Listing): string | null {
+  if (product.hidden) return null;
+  const state = planState(product);
+  return state && "paused" in state
+    ? "The configured payment plan is not offered to buyers. " + planPauseWords(state.paused, state.plan, product, store.currency) + " Review the plan separately from the up-front purchase."
+    : null;
+}
+
 /** Strict reads: a storage failure is unknown, never a clean bill of health. */
 export async function readFunnelPaymentChecks(store: Store, funnel: Pick<PageFunnel, "steps">): Promise<string[]> {
   const products = await readListings(store, funnel.steps.filter(s => s.kind === "product").map(s => s.id));
@@ -32,6 +42,7 @@ export async function readFunnelPaymentChecks(store: Store, funnel: Pick<PageFun
     const product = products.find(p => p.id === step.id);
     if (!product) return ["Step " + (i + 1) + ": product could not be found. Review the step."];
     const issue = product.priceCents === 0 ? freeStepProblem(store, product) : paidStepProblem(store, product, bundles.get(product.id)?.length ?? 0);
-    return issue ? ["Step " + (i + 1) + ", " + product.title + ": " + issue] : [];
+    return [issue, planStepProblem(store, product)].filter((problem): problem is string => problem !== null)
+      .map(problem => "Step " + (i + 1) + ", " + product.title + ": " + problem);
   });
 }
