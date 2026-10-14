@@ -5,16 +5,22 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { parsePage } from "@/lib/sales-page";
 import { FORM_ID, parseForm } from "@/lib/forms";
 
-/** Read-only checks of form bindings on the saved page and its configured A/B variant; no answers are read. */
+/** Read-only checks of saved A/B form bindings, in two batched reads at most. No answers are read. */
 export async function readFunnelPageChecks(store: Store, funnel: Pick<PageFunnel, "steps">): Promise<string[]> {
-  const issues: string[] = [];
-  const forms = new Map<string, Promise<boolean>>();
-  for (const [index, step] of funnel.steps.entries()) {
-    if (step.kind !== "page") continue;
+  const steps = funnel.steps.flatMap((step, index) => {
+    if (step.kind !== "page") return [];
     const page = (store.sitePages ?? []).find(page => page.id === step.id);
-    if (!page || !pageOut(page)) continue;
-    if (!store.statsId || !isRedisConfigured()) throw new Error("Page form checks unavailable");
-    const [raw] = await redisPipeline([["GET", `nl:product:page:${store.statsId}:${siteKey(page.id)}`]]);
+    return page && pageOut(page) ? [{ page, index }] : [];
+  });
+  if (!steps.length) return [];
+  if (!store.statsId || !isRedisConfigured()) throw new Error("Page form checks unavailable");
+  const ids = [...new Set(steps.map(step => step.page.id))];
+  const pages = await redisPipeline(ids.map(id => ["GET", `nl:product:page:${store.statsId}:${siteKey(id)}`]));
+  if (pages.length !== ids.length) throw new Error("Saved pages could not be read");
+  const pageRecords = new Map(ids.map((id, index) => [id, pages[index]]));
+  const checks: { prefix: string; form: string | null }[] = [];
+  for (const { page, index } of steps) {
+    const raw = pageRecords.get(page.id);
     if (typeof raw !== "string") throw new Error("Saved page could not be read");
     const value = JSON.parse(raw) as { blocks?: unknown; variant?: unknown } | null;
     if (!value || !Array.isArray(value.blocks) || value.blocks.some(block => !block || typeof block !== "object" || typeof block.kind !== "string")) throw new Error("Saved page blocks could not be read");
@@ -29,21 +35,25 @@ export async function readFunnelPageChecks(store: Store, funnel: Pick<PageFunnel
       for (const block of version.blocks) {
         if (block.kind !== "form") continue;
         const prefix = "Step " + (index + 1) + ", " + page.title + ": " + version.label;
-        if (typeof block.form !== "string" || !FORM_ID.test(block.form)) {
-          issues.push(prefix + "A form block has no selected form. Choose a form in the page editor before sharing.");
-          continue;
-        }
-        if (!forms.has(block.form)) forms.set(block.form, (async () => {
-          const [stored] = await redisPipeline([["HGET", `nl:forms:${store.statsId}`, block.form]]);
-          if (stored === null) return false;
-          if (typeof stored !== "string") throw new Error("Form could not be read");
-          const form = parseForm(JSON.parse(stored));
-          if (!form || form.id !== block.form) throw new Error("Stored form is invalid");
-          return true;
-        })());
-        if (!(await forms.get(block.form))) issues.push(prefix + "The selected form is no longer available in this store. Review Forms and select a replacement in the page editor.");
+        checks.push({ prefix, form: typeof block.form === "string" && FORM_ID.test(block.form) ? block.form : null });
       }
     }
   }
-  return issues;
+  const formIds = [...new Set(checks.flatMap(check => check.form ? [check.form] : []))];
+  const available = new Set<string>();
+  if (formIds.length) {
+    const [stored] = await redisPipeline([["HMGET", `nl:forms:${store.statsId}`, ...formIds]]);
+    if (!Array.isArray(stored) || stored.length !== formIds.length) throw new Error("Forms could not be read");
+    for (const [index, id] of formIds.entries()) {
+      const raw = stored[index];
+      if (raw === null) continue;
+      if (typeof raw !== "string") throw new Error("Form could not be read");
+      const form = parseForm(JSON.parse(raw));
+      if (!form || form.id !== id) throw new Error("Stored form is invalid");
+      available.add(id);
+    }
+  }
+  return checks.flatMap(({ prefix, form }) => !form
+    ? [prefix + "A form block has no selected form. Choose a form in the page editor before sharing."]
+    : available.has(form) ? [] : [prefix + "The selected form is no longer available in this store. Review Forms and select a replacement in the page editor."]);
 }
