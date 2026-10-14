@@ -10,6 +10,7 @@ export function funnelRepairActions(store: Pick<Store, "sid">, role: Role): Funn
   return [
     ...(can(role, "products") ? [{ label: "Review products and delivery", href: home + "#products" }] : []),
     ...(can(role, "page") ? [{ label: "Review your pages", href: studioPath(store, "", "site") }] : []),
+    ...(can(role, "page") ? [{ label: "Review forms and quizzes", href: studioPath(store, "", "forms") }] : []),
     ...(can(role, "payments") ? [
       { label: "Review Stripe connection", href: home + "#stripe" },
       ...(paypalSalesConfigured() ? [{ label: "Review PayPal connection", href: home + "#paypal" }] : []),
