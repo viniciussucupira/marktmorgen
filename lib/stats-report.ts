@@ -33,6 +33,16 @@ type Window = "d7" | "d30" | "d90";
 const WINDOWS: Window[] = ["d7", "d30", "d90"];
 
 export type SummaryWindow = {
+  attribution: {
+    complete: boolean;
+    first_visit_complete: boolean;
+    window_days: number | null;
+    total: { sales: number; revenue: number } | null;
+    unknown_last: { sales: number; revenue: number } | null;
+    unknown_first: { sales: number; revenue: number } | null;
+    rows: { key: string; name: string; last: { sales: number; revenue: number }; first: { sales: number; revenue: number } | null; said: { buyers: number; revenue: number } }[];
+    unknown_said: { answer: string; name: string; buyers: number; revenue: number }[];
+  };
   visitors: number;
   page_views: number;
   checkouts: number;
@@ -125,11 +135,14 @@ export async function readNumbers(store: Store, now = Date.now()): Promise<Stats
 /** What /api/v1/stats answers: the last 7, 30 and 90 days, money in the smallest unit of the store's currency. */
 export function summaryOf(data: StatsData, options: { fullDetails?: boolean } = {}): Summary {
   const known = paidFiguresComplete(data);
+  const money = (value: { sales: number; cents: number }) => ({ sales: value.sales, revenue: value.cents });
   const detailLimit = options.fullDetails ? undefined : 20;
   const ranked = <K extends string>(rows: Ranked, key: K) => rows.map((r) => ({ [key]: r.name, views: r.visits })) as ({ [P in K]: string } & { views: number })[];
   const days = {} as Summary["days"];
   for (const w of WINDOWS) {
     const t = data.totals[w];
+    const attribution = known ? data.attribution?.[w] : null;
+    const firstKnown = attribution?.unknownFirst != null;
     const refundsKnown = ledgerPaymentsComplete(data) && data.cashflowComplete === true && data.refunds?.[w] != null;
     const payments = paymentMixFrom(data, w);
     const campaigns = data.posts?.[w] != null ? campaignResultsFrom(data, w) : null;
@@ -142,6 +155,16 @@ export function summaryOf(data: StatsData, options: { fullDetails?: boolean } = 
     const countriesKnown = known && data.salesCountries?.[w] != null;
     const adsKnown = known && data.ads?.[w] != null;
     days[NAMES[w]] = {
+      attribution: {
+        complete: attribution != null,
+        first_visit_complete: firstKnown,
+        window_days: attribution ? data.attributionDays ?? null : null,
+        total: attribution ? money(attribution.total) : null,
+        unknown_last: attribution ? money(attribution.unknown) : null,
+        unknown_first: attribution?.unknownFirst ? money(attribution.unknownFirst) : null,
+        rows: attribution?.rows.map(row => ({ key: row.key, name: row.name, last: money(row.last), first: firstKnown ? money(row.first) : null, said: { buyers: row.said.buyers, revenue: row.said.cents } })) ?? [],
+        unknown_said: attribution?.unknownSaid.map(row => ({ answer: row.answer, name: row.name, buyers: row.buyers, revenue: row.cents })) ?? [],
+      },
       visitors: t.visitors,
       page_views: t.views,
       checkouts: t.checkouts,
