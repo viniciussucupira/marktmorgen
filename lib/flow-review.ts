@@ -1,4 +1,4 @@
-import { MAX_FLOW_WAIT_HOURS, readsEmailBefore } from "@/lib/flow-rules";
+import { goalClash, MAX_FLOW_WAIT_HOURS, readsEmailBefore } from "@/lib/flow-rules";
 import { hasPlaceholder } from "@/lib/mail-body";
 import { fieldValue } from "@/lib/crm-rules";
 import type { Flow } from "@/lib/flows";
@@ -20,6 +20,9 @@ export function flowConfigurationIssues(flow: Flow, context: FlowReviewContext):
   if (flow.trigger === "finished" && !context.courses.includes(flow.productId ?? "")) issues.push("The trigger course is unavailable. Choose a current course.");
   if (flow.trigger === "form" && !context.forms.some(form => form.id === flow.formId)) issues.push("The trigger form is unavailable for this sequence. Choose a form that collects an email address.");
   if (flow.goal && "productId" in flow.goal && !productExists(flow.goal.productId)) issues.push("The product used to end this sequence is unavailable. Review the goal.");
+  // These clashes are known without knowing which trigger products are paid.
+  // Paid-product purchase goals still use authoritative server validation.
+  if (goalClash(flow.trigger, flow.productId, flow.goal ?? null, false)) issues.push("This ending conflicts with the trigger and would stop the sequence before its first email. Choose another ending or none.");
   flow.steps.forEach((step, index) => {
     const prefix = "Step " + (index + 1) + ": ";
     if (readsEmailBefore(step.when) && (index === 0 || flow.steps[index - 1].action)) issues.push(prefix + "This click condition needs an email immediately before it. Move it after an email or choose another condition.");
