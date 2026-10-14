@@ -244,6 +244,8 @@ export function EmailStudio(props: {
   segments?: Segment[];
   /** The products that are courses (lib/catalog.ts, "course"). */
   courses?: string[];
+  /** Paid products in the selected store catalog, for sequence ending checks. */
+  paidProducts?: string[];
   /** The store's forms that ask for an address, its own fields and its deal stages, for the sequences (lib/flows.ts). */
   automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
   /** Who a new email goes to, when opened from "Worth knowing" (lib/insights.ts). */
@@ -279,7 +281,7 @@ export function EmailStudio(props: {
             <History broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
-                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} automation={props.automation} />
+                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} />
               </AiOn>
             ) : null}
           </>
@@ -1399,6 +1401,7 @@ function Flows({
   currency,
   sells,
   courses = [],
+  paidProducts,
   automation = { forms: [], fields: [], stages: [] },
 }: {
   flows: FlowRow[];
@@ -1407,6 +1410,7 @@ function Flows({
   automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
   /** The products that are courses, for "finishes a course" and the conditions on one. */
   courses?: string[];
+  paidProducts?: string[];
   /** Whether the store sells anything for money, so a first purchase can happen at all. */
   sells: boolean;
 }) {
@@ -1495,7 +1499,7 @@ function Flows({
       const when = conditionOf(step);
       return { id: step.id ?? "draft-step-" + index, delayHours: flowWaitHours(step.wait, step.unit) ?? NaN, subject: step.subject, body: step.body, ...(action ? { action } : {}), ...(when ? { when } : {}) };
     }),
-  }, { products, courses, flows, ...automation }) : [];
+  }, { products, courses, paidProducts, flows, ...automation }) : [];
 
   // Which of the two starter sequences this store has no sequence for yet.
   // The after-a-purchase one is made only by a store that sells something,
@@ -1572,7 +1576,7 @@ function Flows({
               </div>
               <p className="mt-1 text-sm text-ink-soft">{`${triggerWords(f)} · ${stepCount(f.steps)}`}</p>
               {(() => {
-                const issues = flowConfigurationIssues(f, { products, courses, flows, ...automation });
+                const issues = flowConfigurationIssues(f, { products, courses, paidProducts, flows, ...automation });
                 return issues.length ? <div className="notice notice-warn mt-3 text-sm"><p className="font-semibold">Review saved configuration</p><ul className="mt-2 list-disc space-y-1 pl-5">{issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul><p className="mt-2">Edit this sequence to review its references. No live delivery or action has been tested.</p></div> : null;
               })()}
               {f.goal ? <p className="mt-1 text-sm text-ink-soft" data-flow-goal>{`${goalWords(f, products)}.`}</p> : null}
