@@ -1,3 +1,4 @@
+import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 /**
  * What changed, in words (added 11 October 2026): the few things in a
@@ -113,7 +114,7 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
   }
 
   // A record of the last 90 days, set in the last 7 (lib/records.ts).
-  if (known && data.days.length) {
+  if (ledgerPaymentsComplete(data) && data.days.length) {
     const records = recordsFrom(data.channelDays, data.days[data.days.length - 1].date);
     if (records.bestWeek) {
       out.push({ text: `Your best 7 days of the last 90: ${money(records.bestWeek.cents)} in sales and renewals. Worth noting what you did this week.`, tone: "good" });

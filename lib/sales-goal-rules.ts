@@ -9,6 +9,7 @@
  * the store's currency, by the calendar month in UTC. Pure, so the panel, the
  * emails and the tests read it the same way; kept by lib/sales-goal.ts.
  */
+import { ledgerPaymentsComplete, type PaymentLedgerReading } from "@/lib/payment-ledger-coverage";
 import type { ChannelDays } from "@/lib/stats";
 
 /** Ten million in the store's currency: no month's goal a creator types is over it. */
@@ -28,6 +29,11 @@ export function moneyByDay(channelDays: ChannelDays | undefined): Record<string,
     for (const [day, cents] of Object.entries(days)) out[day] = (out[day] ?? 0) + cents;
   }
   return out;
+}
+
+/** Unknown purchase or renewal amounts must not become goal progress, pace or achievement. */
+export function goalMoneyByDay(data: PaymentLedgerReading): Record<string, number> | null {
+  return ledgerPaymentsComplete(data) ? moneyByDay(data.channelDays) : null;
 }
 
 const daysIn = (month: string) => {

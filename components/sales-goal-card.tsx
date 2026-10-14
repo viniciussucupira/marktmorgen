@@ -16,8 +16,8 @@ export function SalesGoalCard({
   currency,
 }: {
   goal: number;
-  /** The store's money by the day, first sales and renewals. */
-  byDay: Record<string, number>;
+  /** Complete payments by day, including renewals; null means unavailable. */
+  byDay: Record<string, number> | null;
   today: string;
   currency: string;
 }) {
@@ -26,7 +26,7 @@ export function SalesGoalCard({
   const [text, setText] = useState(given ? plainAmount(given, currency) : "");
   const [busy, setBusy] = useState(false);
   const money = (cents: number) => formatMoney(cents, currency);
-  const progress = goalProgress(goal, byDay, today);
+  const progress = byDay === null ? null : goalProgress(goal, byDay, today);
   const month = monthTitle(today.slice(0, 7)).split(" ")[0];
 
   async function save(cents: number) {
@@ -58,6 +58,10 @@ export function SalesGoalCard({
           </button>
         ) : null}
       </div>
+      {byDay === null && !editing ? <>
+        {goal > 0 ? <p className="mt-1 text-sm text-ink">Your target: {money(goal)}.</p> : null}
+        <p className="mt-2 text-sm text-ink-soft" role="status">Complete payment figures are not available. Goal progress, pace and achievement wait for a complete purchase and renewal reading.</p>
+      </> : null}
       {progress && !editing ? (
         <>
           <p className="mt-1 text-sm text-ink">

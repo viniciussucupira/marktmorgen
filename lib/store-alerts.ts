@@ -44,7 +44,7 @@ import { type DayStats, readSales, readStats } from "@/lib/stats";
 import { weeklyOff, weeklyToken } from "@/lib/stats-report";
 import { alertCreator } from "@/lib/phone-alerts";
 import { chatAddress, postToChat } from "@/lib/chat-summary";
-import { goalProgress, moneyByDay, monthTitle } from "@/lib/sales-goal-rules";
+import { goalProgress, goalMoneyByDay, monthTitle } from "@/lib/sales-goal-rules";
 import { goalForMonth, readSalesGoal } from "@/lib/sales-goal";
 
 export type AlertKind = "traffic" | "conversion" | "refunds" | "goal-pace" | "goal-reached";
@@ -79,7 +79,7 @@ export type AlertInput = {
   refunds90: number;
   /** The month's goal, 0 for none, and money by day as the studio's goal card counts it. */
   goal: number;
-  moneyByDay: Record<string, number>;
+  moneyByDay: Record<string, number> | null;
   today: string;
 };
 
@@ -154,7 +154,7 @@ export function alertsFrom(input: AlertInput): StoreAlert[] {
   }
 
   // The month's goal.
-  const progress = input.goal > 0 ? goalProgress(input.goal, input.moneyByDay, input.today) : null;
+  const progress = input.goal > 0 && input.moneyByDay !== null ? goalProgress(input.goal, input.moneyByDay, input.today) : null;
   if (progress) {
     const money = (cents: number) => formatMoney(cents, input.currency);
     const month = monthTitle(progress.month);
@@ -203,7 +203,7 @@ export async function checkAlerts(store: Store, now = Date.now()): Promise<Alert
     refunds7: refunds("d7"),
     refunds90: refunds("d90"),
     goal: goalForMonth(goal, today.slice(0, 7)),
-    moneyByDay: moneyByDay(sales.channelDays),
+    moneyByDay: goalMoneyByDay({ ...sales, sales: "ok" }),
     today,
   });
   if (!alerts.length) return { said: 0, skipped: false };
