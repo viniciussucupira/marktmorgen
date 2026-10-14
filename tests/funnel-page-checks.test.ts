@@ -1,3 +1,4 @@
+import { emptyBlock } from "@/lib/sales-page";
 import { readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Store } from "@/lib/store";
 import { readFunnelPageChecks } from "@/lib/funnel-page-checks";
@@ -39,6 +40,21 @@ async function main() {
   } finally { redis.pipeline = pipeline; }
   await redis.pipeline([["SET", key, JSON.stringify({ blocks: [{ kind: "form", form: "" }] })]]);
   is("form warning reaches the existing saved funnel review", (await readFunnelPaymentChecks({ ...store, catalog: { id: null, inline: null, items: [], head: [] } } as unknown as Store, funnel))[0]?.includes("no selected form"), true);
+  const blockA = { ...emptyBlock("form"), form: "abcdef1234" };
+  const blockB = { ...emptyBlock("form"), form: "bbbbbb1234" };
+  const validForm = { id: "abcdef1234", name: "Apply", fields: [{ id: "field1", type: "email", label: "Email", required: true }], updatedAt: 1 };
+  await redis.pipeline([["HSET", "nl:forms:forms-a", "abcdef1234", JSON.stringify(validForm)], ["SET", key, JSON.stringify({ blocks: [blockA], variant: { blocks: [blockB] } })]]);
+  is("missing B form identifies version B", (await readFunnelPageChecks(store, funnel))[0]?.includes("Version B:"), true);
+  await redis.pipeline([["HSET", "nl:forms:forms-a", "bbbbbb1234", JSON.stringify({ ...validForm, id: "bbbbbb1234" })]]);
+  is("valid forms in both versions pass", await readFunnelPageChecks(store, funnel), []);
+  await redis.pipeline([["SET", key, JSON.stringify({ blocks: [{ ...blockA, form: "" }], variant: { blocks: [blockB] } })]]);
+  is("empty A form identifies version A", (await readFunnelPageChecks(store, funnel))[0]?.includes("Version A:"), true);
+  await redis.pipeline([["SET", key, JSON.stringify({ blocks: [blockA], variant: { blocks: "invalid" } })]]);
+  let invalidVariant = false;
+  try { await readFunnelPageChecks(store, funnel); } catch { invalidVariant = true; }
+  is("malformed variant stays unknown", invalidVariant, true);
+  await redis.pipeline([["SET", key, JSON.stringify({ blocks: [blockA], test: { headline: "Different headline" } })]]);
+  is("headline-only test does not invent a second form", await readFunnelPageChecks(store, funnel), []);
   done();
 }
 void main();
