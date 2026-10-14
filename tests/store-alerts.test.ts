@@ -12,7 +12,7 @@
  *   - each sale posted to the chat where asked for: the amount, what and from
  *     where, never who.
  */
-import { type AlertInput, alertsFrom, checkAlerts, poissonAtLeast, poissonAtMost } from "@/lib/store-alerts";
+import { type AlertInput, alertPaymentFigures, alertsFrom, checkAlerts, poissonAtLeast, poissonAtMost } from "@/lib/store-alerts";
 import { setChatAddress } from "@/lib/chat-summary";
 import { setSalesGoal } from "@/lib/sales-goal";
 import { setWeeklyOff } from "@/lib/stats-report";
@@ -98,6 +98,19 @@ async function main(): Promise<void> {
   part("Refunds piling up");
   is("6 in a week, where 2 in a season is usual", alertsFrom(base({ refunds7: 6, refunds90: 8 })).map((a) => a.title), ["Harbor: 6 refunds in 7 days"]);
   is("not 3 where 3 a week is usual", alertsFrom(base({ refunds7: 3, refunds90: 40 })).length, 0);
+
+  part("Unavailable payment readings");
+  is("missing sales do not imply a conversion drop", alertsFrom(base({ days: steady, salesByDay: null })).length, 0);
+  is("traffic remains available without money readings", alertsFrom(base({ days: fell, salesByDay: null, refunds7: null, refunds90: null, moneyByDay: null })).map(a => a.kind), ["traffic"]);
+  is("unknown historical refunds do not imply a spike", alertsFrom(base({ refunds7: 6, refunds90: null })).length, 0);
+  is("unknown recent refunds do not imply zero", alertsFrom(base({ refunds7: null, refunds90: 8 })).length, 0);
+  const fixture = { partial: false, byDay: {}, channelDays: {}, paymentsComplete: true, cashflowComplete: true, refundsIn: { d7: [], d30: [], d90: [] } } as Parameters<typeof alertPaymentFigures>[0];
+  is("confirmed empty readings stay zero", alertPaymentFigures(fixture), { salesByDay: {}, refunds7: 0, refunds90: 0 });
+  is("capped purchase reading blocks conversion and refunds", alertPaymentFigures({ ...fixture, partial: true }), { salesByDay: null, refunds7: null, refunds90: null });
+  is("failed refunds preserve complete purchase figures", alertPaymentFigures({ ...fixture, cashflowComplete: false }), { salesByDay: {}, refunds7: null, refunds90: null });
+  is("missing refund records stay unavailable", alertPaymentFigures({ ...fixture, refundsIn: undefined }), { salesByDay: {}, refunds7: null, refunds90: null });
+  is("incomplete renewals block refund comparison", alertPaymentFigures({ ...fixture, paymentsComplete: false }), { salesByDay: {}, refunds7: null, refunds90: null });
+  is("legacy unconfirmed coverage blocks refunds", alertPaymentFigures({ ...fixture, paymentsComplete: undefined, cashflowComplete: undefined }), { salesByDay: {}, refunds7: null, refunds90: null });
 
   part("The month's goal");
   const money = (perDay: number, upTo: number) => Object.fromEntries(Array.from({ length: upTo }, (_, i) => [`2026-10-${String(i + 1).padStart(2, "0")}`, perDay]));
