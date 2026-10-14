@@ -26,6 +26,10 @@ When a review has issues or is incomplete, it offers navigation to products/deli
 
 The existing leave guard now covers modified deal, stage and custom-field drafts. Opening an unchanged editor does not activate it. It remains active during a pending save and after a failed save, until the draft is successfully saved or explicitly cancelled. It covers browser reload/close and normal same-origin navigation links under the existing guard rules. It is not autosave or durable draft storage; browser Back behavior remains outside this guard. The CRM now allows one editor at a time: opening another editor and moving/removing cards wait until the current deal, stage or field editor is saved or cancelled. This prevents in-page replacement of an open draft without adding another confirmation dialog.
 
+## Store changes
+
+The shared StudioStorePin provider now keys its child area by the selected store id. Switching stores remounts that area, clearing previous local drafts, selections and dialog state. Refreshes within the same store preserve local state. This changes client state isolation only: no stored records are deleted, and the existing API authorization and store-pin checks remain in force.
+
 ## Verification
 
 The new regression file covers date validation, queue membership, descriptive funnel observations, role-filtered plans, route validation, cross-site rejection, pinned-store isolation, multi-store writes and teammate eligibility. Existing CRM and page-funnel regressions must pass too.
