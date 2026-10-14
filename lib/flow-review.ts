@@ -1,10 +1,11 @@
+import { fieldValue } from "@/lib/crm-rules";
 import type { Flow } from "@/lib/flows";
 
 export type FlowReviewContext = {
   products: readonly { id: string }[];
   courses: readonly string[];
   forms: readonly { id: string }[];
-  fields: readonly { id: string }[];
+  fields: readonly { id: string; name: string; type: string; options: string[] }[];
   stages: readonly { id: string }[];
   flows: readonly Pick<Flow, "id" | "name" | "active" | "steps">[];
 };
@@ -28,7 +29,12 @@ export function flowConfigurationIssues(flow: Flow, context: FlowReviewContext):
       if (!target) issues.push(prefix + "The sequence to start is unavailable. Choose another sequence.");
       else if (!target.active || !target.steps.length) issues.push(prefix + "The sequence “" + target.name + "” is paused or has no steps. Review it before expecting this action to start it.");
     }
-    if (action?.do === "field" && !context.fields.some(field => field.id === action.field)) issues.push(prefix + "The contact field is unavailable. Choose a current field.");
+    if (action?.do === "field") {
+      const field = context.fields.find(field => field.id === action.field);
+      if (!field) issues.push(prefix + "The contact field is unavailable. Choose a current field.");
+      else if (field.type !== "text" && field.type !== "number" && field.type !== "date" && field.type !== "choice") issues.push(prefix + "The contact field format could not be checked. Review the field configuration.");
+      else if (fieldValue({ ...field, type: field.type }, action.value) === null) issues.push(prefix + "The saved value is incompatible with contact field “" + field.name + "”. Review its type and allowed values.");
+    }
     if (action?.do === "deal" && !context.stages.some(stage => stage.id === action.stage)) issues.push(prefix + "The deal stage is unavailable. Choose a current stage.");
   });
   return issues;
