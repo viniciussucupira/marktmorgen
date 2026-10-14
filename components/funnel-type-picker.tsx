@@ -50,7 +50,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recovery, setRecovery] = useState<"setup" | "forms" | null>(null);
-  const [made, setMade] = useState<{ pages: { title: string; id: string }[]; funnelId: string | null } | null>(null);
+  const [made, setMade] = useState<{ pages: { title: string; id: string }[]; funnelId: string | null; drafts: string[] } | null>(null);
   useLeaveGuard(type !== null);
   const slots = type ? choicesOf(type) : [];
   const selected = slots.map(slot => picked[slot.key] || "").filter(Boolean);
@@ -101,7 +101,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
         toast("Funnel made.");
         const id = data.funnel?.id;
         const pages = Array.isArray(data.pages) ? data.pages.filter(page => page && typeof page.id === "string" && /^[a-f0-9]{10}$/.test(page.id) && typeof page.title === "string") : [];
-        setMade({ pages, funnelId: typeof id === "string" && FUNNEL_ID.test(id) ? id : null });
+        setMade({ pages, funnelId: typeof id === "string" && FUNNEL_ID.test(id) ? id : null, drafts: draftSelections });
         setType(null);
         router.refresh();
         return;
@@ -159,6 +159,8 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
               </ul>
             </>
           ) : null}
+          {made.drafts.length ? <div className="mt-4 text-sm"><p className="font-semibold">Products that were drafts at setup:</p><ul className="mt-2 list-disc space-y-1 pl-5">{made.drafts.map(draft => <li key={draft}>{draft}</li>)}</ul><p className="mt-2">Review their current status and publish them before sharing the funnel.</p><a className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={productsHref}>Review products</a></div> : null}
+          <p className="mt-4 text-sm text-ink-soft">After preparing the pages and products, review the saved checks and test the customer journey before sharing.</p>
           <a className="btn btn-secondary mt-4" href={reviewHref}>{made.funnelId ? "Review the new funnel" : "Review funnels"}</a>
         </div>
       ) : null}
