@@ -55,6 +55,24 @@ async function main() {
   is("malformed variant stays unknown", invalidVariant, true);
   await redis.pipeline([["SET", key, JSON.stringify({ blocks: [blockA], test: { headline: "Different headline" } })]]);
   is("headline-only test does not invent a second form", await readFunnelPageChecks(store, funnel), []);
+  const calls: (string | number)[][][] = [];
+  try {
+    redis.pipeline = async commands => { calls.push(commands); return pipeline(commands); };
+    await readFunnelPageChecks(store, { steps: [...funnel.steps, ...funnel.steps] });
+    is("repeated page and form use two reads with unique identifiers", [calls.length, calls[0]?.length, calls[1]?.[0]?.length], [2, 1, 3]);
+  } finally { redis.pipeline = pipeline; }
+  try {
+    redis.pipeline = async commands => commands[0]?.[0] === "GET" ? [] : pipeline(commands);
+    let shortPages = false;
+    try { await readFunnelPageChecks(store, funnel); } catch { shortPages = true; }
+    is("incomplete page batch stays unknown", shortPages, true);
+  } finally { redis.pipeline = pipeline; }
+  try {
+    redis.pipeline = async commands => commands[0]?.[0] === "HMGET" ? [[]] : pipeline(commands);
+    let shortForms = false;
+    try { await readFunnelPageChecks(store, funnel); } catch { shortForms = true; }
+    is("incomplete form batch stays unknown", shortForms, true);
+  } finally { redis.pipeline = pipeline; }
   done();
 }
 void main();
