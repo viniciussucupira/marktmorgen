@@ -34,6 +34,10 @@ When a review has issues or is incomplete, it offers navigation to products/deli
 
 The existing leave guard now covers modified deal, stage and custom-field drafts. Opening an unchanged editor does not activate it. It remains active during a pending save and after a failed save, until the draft is successfully saved or explicitly cancelled. It covers browser reload/close and normal same-origin navigation links under the existing guard rules. It is not autosave or durable draft storage; browser Back behavior remains outside this guard. The CRM now allows one editor at a time: opening another editor and moving/removing cards wait until the current deal, stage or field editor is saved or cancelled. This prevents in-page replacement of an open draft without adding another confirmation dialog.
 
+## Created-funnel handoff
+
+A successful guided creation keeps the validated funnel id from the response and offers a native link directly to its saved review, carrying the current store. Links to the generated pages remain available. Starting another setup clears the previous success panel so its destinations cannot be confused with the new draft. The success message asks for review before sharing. If an older or malformed response has no valid funnel id, the destination falls back to the general funnel editor rather than inventing a target. No publication, payment or campaign send is triggered by the handoff.
+
 ## Guided creation safeguards
 
 Type-based setup reuses slotProblem to identify missing or incompatible selections and refuses repeated products before posting. Empty names, capacity and page-permission problems also block creation, while server validation remains authoritative. Suggested selections prefer published products, with drafts still selectable and labelled. Setup uses the existing departure guard through pending and failed requests, and a disabled native fieldset prevents concurrent edits during creation. Cancel setup explicitly discards the current setup. The shared departure guard asks at most once per navigation event when several editors are dirty. This is not autosave or a live offer-readiness test.
