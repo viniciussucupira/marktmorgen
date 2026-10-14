@@ -25,6 +25,19 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API capped detail lists expose totals and truncation independently of reading coverage");
+const detailData={...data,ads:{...data.ads!,d7:Array.from({length:25},(_,i)=>({content:`ad-${i}`,source:"instagram",campaign:"launch",sales:1,cents:100}))},salesCountries:{...data.salesCountries!,d7:Array.from({length:21},(_,i)=>({country:`country-${i}`,sales:1,cents:100}))}};
+const detailReport=summaryOf(detailData).days.last_7_days;
+is("ad detail cap explicit despite complete reading",[detailReport.ads.length,detailReport.ad_records_complete,detailReport.ad_records_total,detailReport.ad_records_truncated],[20,true,25,true]);
+is("country detail cap explicit",[detailReport.sales_by_country.length,detailReport.sales_by_country_complete,detailReport.sales_by_country_total,detailReport.sales_by_country_truncated],[20,true,21,true]);
+is("short complete ad list is not truncated",[complete.days.last_7_days.ad_records_total,complete.days.last_7_days.ad_records_truncated],[1,false]);
+is("complete empty details have real zero counts",[complete.days.last_30_days.ad_records_total,complete.days.last_30_days.ad_records_truncated,complete.days.last_30_days.sales_by_country_total,complete.days.last_30_days.sales_by_country_truncated],[0,false,0,false]);
+const missingDetails=summaryOf({...data,ads:undefined,salesCountries:undefined} as unknown as StatsData).days.last_7_days;
+is("missing detail counts stay unknown",[missingDetails.ad_records_total,missingDetails.ad_records_truncated,missingDetails.sales_by_country_total,missingDetails.sales_by_country_truncated],[null,null,null,null]);
+const partialDetails=summaryOf({...detailData,partial:true}).days.last_7_days;
+is("partial detail counts withheld",[partialDetails.ad_records_total,partialDetails.ad_records_truncated,partialDetails.sales_by_country_total,partialDetails.sales_by_country_truncated],[null,null,null,null]);
+is("partial lists stay empty",[partialDetails.ads,partialDetails.sales_by_country],[[],[]]);
+is("refund failure preserves complete detail metadata",summaryOf({...detailData,cashflowComplete:false}).days.last_7_days.ad_records_total,25);
 part("API campaign results retain traffic independently of paid coverage");
 const campaignData={...data,posts:{d7:[{campaign:"launch",source:"",sources:["instagram","newsletter"],visits:80,sales:3,cents:6000},{campaign:"quiet",source:"",visits:10,sales:0,cents:0}],d30:[],d90:[]}};
 const campaignReport=summaryOf(campaignData).days.last_7_days.campaign_results;

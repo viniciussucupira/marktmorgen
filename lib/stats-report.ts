@@ -79,6 +79,10 @@ export type SummaryWindow = {
   /** Reading coverage; detail lists contain at most 20 entries. */
   sales_by_country_complete: boolean;
   ad_records_complete: boolean;
+  sales_by_country_total: number | null;
+  sales_by_country_truncated: boolean | null;
+  ad_records_total: number | null;
+  ad_records_truncated: boolean | null;
   /** Money by the buyer's country, and by the ad it came from (utm_content), the biggest first. */
   sales_by_country: { country: string; sales: number; revenue: number }[];
   ads: { ad: string; channel: string; campaign: string; sales: number; revenue: number }[];
@@ -206,6 +210,10 @@ export function summaryOf(data: StatsData): Summary {
       },
       sales_by_country_complete: countriesKnown,
       ad_records_complete: adsKnown,
+      sales_by_country_total: countriesKnown ? data.salesCountries![w].length : null,
+      sales_by_country_truncated: countriesKnown ? data.salesCountries![w].length > 20 : null,
+      ad_records_total: adsKnown ? data.ads![w].length : null,
+      ad_records_truncated: adsKnown ? data.ads![w].length > 20 : null,
       sales_by_country: countriesKnown ? (data.salesCountries?.[w] ?? []).slice(0, 20).map((r) => ({ country: r.country, sales: r.sales, revenue: r.cents })) : [],
       ads: adsKnown ? (data.ads?.[w] ?? []).slice(0, 20).map((r) => ({ ad: r.content, channel: r.source, campaign: r.campaign, sales: r.sales, revenue: r.cents })) : [],
     };

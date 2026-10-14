@@ -302,6 +302,13 @@ export default function DevelopersPage() {
           paid amounts and payment channels remain null. A null channel list means unavailable origin detail;
           an empty list means zero paid records. Available empty reports are distinct from missing reports.
         </p>
+        <p>
+          The <code className="font-mono">ads</code> and <code className="font-mono">sales_by_country</code> lists
+          return at most 20 entries. Their total counts and truncated flags indicate whether more recorded
+          entries exist. The existing completeness flags describe reading coverage, not whether the response
+          contains every entry. Unknown readings have null counts and truncated flags; confirmed empty readings
+          have zero counts and false flags. Do not sum a truncated list as the full period total.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
