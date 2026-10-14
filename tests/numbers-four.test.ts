@@ -183,7 +183,7 @@ async function main(): Promise<void> {
   const data = studioStats(store, visits, sales, "ok", []);
   is("the studio has both", [data.previous.d7.visitors, data.previous.d7.cents], [2, 2000]);
   const summary = summaryOf(data);
-  is("so does the API", summary.days.last_7_days.previous, { visitors: 2, page_views: 2, checkouts: 0, sales: 1, revenue: 2000 });
+  is("so does the API", summary.days.last_7_days.previous, { available: true, visitors: 2, page_views: 2, checkouts: 0, sales: 1, revenue: 2000 });
   const weekly = weeklyMessage(store, data, "https://marktmorgen.com/x");
   is("and the weekly email says it in words", [/Visitors: 4 \(up 100% on the week before\)/.test(weekly?.text ?? ""), /\(up 145% on the week before\)/.test(weekly?.text ?? "")], [true, true]);
 

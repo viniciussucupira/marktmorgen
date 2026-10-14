@@ -53,7 +53,7 @@ export type SummaryWindow = {
   countries: { country: string; views: number }[];
   devices: { device: string; views: number }[];
   /** The same number of days just before, to compare with; sales and revenue null where they were not read in full. */
-  previous: { visitors: number; page_views: number; checkouts: number; sales: number | null; revenue: number | null };
+  previous: { available: boolean; visitors: number | null; page_views: number | null; checkouts: number | null; sales: number | null; revenue: number | null };
   /** Refunds given in the window; null when they were not read. */
   refunded: number | null;
   refunds_complete: boolean;
@@ -190,9 +190,10 @@ export function summaryOf(data: StatsData, options: { fullDetails?: boolean } = 
       previous: (() => {
         const p = data.previous?.[w];
         return {
-          visitors: p?.visitors ?? 0,
-          page_views: p?.views ?? 0,
-          checkouts: p?.checkouts ?? 0,
+          available: p != null,
+          visitors: p?.visitors ?? null,
+          page_views: p?.views ?? null,
+          checkouts: p?.checkouts ?? null,
           sales: known && p ? p.sales : null,
           revenue: known && p ? p.cents : null,
         };
