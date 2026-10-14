@@ -37,6 +37,14 @@
  */
 import { type CrmField, MAX_DEAL_TITLE, fieldValue } from "@/lib/crm-rules";
 
+export const MAX_FLOW_WAIT_HOURS = 365 * 24;
+/** Match the server's whole-hour range without silently turning invalid input into zero. */
+export function flowWaitHours(value: string, unit: "hours" | "days"): number | null {
+  if (!value.trim()) return null;
+  const hours = Number(value) * (unit === "days" ? 24 : 1);
+  return Number.isInteger(hours) && hours >= 0 && hours <= MAX_FLOW_WAIT_HOURS ? hours : null;
+}
+
 export type StepIf = "has" | "lacks" | "buyer" | "lead" | "tag" | "untagged" | "clicked" | "unclicked" | "started" | "unstarted" | "finished" | "unfinished" | "half-a" | "half-b";
 export const STEP_IFS: readonly StepIf[] = ["has", "lacks", "buyer", "lead", "tag", "untagged", "clicked", "unclicked", "started", "unstarted", "finished", "unfinished", "half-a", "half-b"];
 
