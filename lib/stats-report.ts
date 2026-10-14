@@ -188,7 +188,7 @@ export function summaryOf(data: StatsData, options: { fullDetails?: boolean } = 
       countries: ranked(data.countries?.[w] ?? [], "country"),
       devices: ranked(data.devices?.[w] ?? [], "device"),
       previous: (() => {
-        const p = data.previous?.[w];
+        const p = data.previousTrafficAvailable?.[w] === false ? null : data.previous?.[w];
         return {
           available: p != null,
           visitors: p?.visitors ?? null,
