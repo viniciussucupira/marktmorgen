@@ -1,3 +1,4 @@
+import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 import { hasPlaceholder } from "@/lib/mail-body";
 import { fieldValue } from "@/lib/crm-rules";
 import type { Flow } from "@/lib/flows";
@@ -21,6 +22,7 @@ export function flowConfigurationIssues(flow: Flow, context: FlowReviewContext):
   if (flow.goal && "productId" in flow.goal && !productExists(flow.goal.productId)) issues.push("The product used to end this sequence is unavailable. Review the goal.");
   flow.steps.forEach((step, index) => {
     const prefix = "Step " + (index + 1) + ": ";
+    if (!Number.isInteger(step.delayHours) || step.delayHours < 0 || step.delayHours > MAX_FLOW_WAIT_HOURS) issues.push(prefix + "Choose a valid wait from zero to 365 days, in whole hours.");
     if (hasPlaceholder(JSON.stringify(step))) issues.push(prefix + "Replace the template placeholders in this step before saving or activating.");
     if (!step.action && (!step.subject.trim() || !step.body.trim())) issues.push(prefix + "Complete the email subject and content before activating.");
     if (step.when && "productId" in step.when) {
