@@ -338,7 +338,8 @@ export default function DevelopersPage() {
           When it is false, previous visitors, page views, checkouts, sales and revenue are null, rather than
           invented zeros. Confirmed empty periods retain zero traffic. Availability of previous traffic does
           not confirm paid coverage: previous paid values still require a complete purchase reading. Current
-          results remain independent of missing previous history.
+          results remain independent of missing previous history. Availability is carried from the underlying
+          traffic reading, so older snapshots without that history do not acquire an artificial zero baseline.
         </p>
       </LegalSection>
 
