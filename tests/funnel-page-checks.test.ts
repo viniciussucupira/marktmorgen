@@ -1,3 +1,4 @@
+import { KIND } from "@/lib/catalog";
 import { emptyBlock } from "@/lib/sales-page";
 import { readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Store } from "@/lib/store";
@@ -73,6 +74,24 @@ async function main() {
     try { await readFunnelPageChecks(store, funnel); } catch { shortForms = true; }
     is("incomplete form batch stays unknown", shortForms, true);
   } finally { redis.pipeline = pipeline; }
+  const result = { id: "result", title: "Your next step", body: "", product: "offer001" };
+  const quizForm = { ...validForm, outcomes: [result] };
+  await redis.pipeline([["HSET", "nl:forms:forms-a", "abcdef1234", JSON.stringify(quizForm)]]);
+  const quizStore = { ...store, catalog: { id: null, inline: null, head: [], items: [{ id: "offer001", kind: KIND.paid, options: [] }] } } as unknown as Store;
+  is("listed quiz recommendation passes", await readFunnelPageChecks(quizStore, funnel), []);
+  const missingRecommendation = await readFunnelPageChecks({ ...quizStore, catalog: { ...quizStore.catalog, items: [] } }, funnel);
+  is("removed quiz recommendation identifies result", missingRecommendation[0]?.includes("Your next step") && missingRecommendation[0]?.includes("no longer available in this store"), true);
+  const draftRecommendation = await readFunnelPageChecks({ ...quizStore, catalog: { ...quizStore.catalog, items: [{ ...quizStore.catalog.items[0], kind: KIND.paid | KIND.hidden }] } }, funnel);
+  is("draft quiz recommendation needs publication", draftRecommendation[0]?.includes("draft product"), true);
+  await redis.pipeline([["HSET", "nl:forms:forms-a", "abcdef1234", JSON.stringify({ ...quizForm, outcomes: [{ ...result, product: "" }] })]]);
+  is("text-only quiz result needs no product", await readFunnelPageChecks(store, funnel), []);
+  await redis.pipeline([["HSET", "nl:forms:forms-a", "abcdef1234", JSON.stringify(quizForm)]]);
+  let unknownCatalog = false;
+  try { await readFunnelPageChecks(store, funnel); } catch { unknownCatalog = true; }
+  is("unavailable product index stays unknown", unknownCatalog, true);
+  let unknownKind = false;
+  try { await readFunnelPageChecks({ ...quizStore, catalog: { ...quizStore.catalog, items: [{ ...quizStore.catalog.items[0], kind: NaN }] } }, funnel); } catch { unknownKind = true; }
+  is("malformed recommendation availability stays unknown", unknownKind, true);
   done();
 }
 void main();
