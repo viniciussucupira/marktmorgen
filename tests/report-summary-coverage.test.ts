@@ -25,6 +25,20 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API attribution preserves unknown first visits and independent reading coverage");
+const attributionData={...data,attributionDays:30,attribution:{d7:{total:{sales:3,cents:6000},unknown:{sales:1,cents:2000},unknownFirst:{sales:2,cents:4000},rows:[{key:"instagram",name:"Instagram",last:{sales:2,cents:4000},first:{sales:1,cents:2000},said:{buyers:1,cents:2000}}],unknownSaid:[{answer:"podcast",name:"Podcasts",buyers:1,cents:2000}]},d30:{total:{sales:0,cents:0},unknown:{sales:0,cents:0},unknownFirst:{sales:0,cents:0},rows:[],unknownSaid:[]},d90:{total:{sales:0,cents:0},unknown:{sales:0,cents:0},rows:[],unknownSaid:[]}}};
+const attributionReport=summaryOf(attributionData).days.last_7_days.attribution;
+is("attribution coverage and configured window explicit",[attributionReport.complete,attributionReport.first_visit_complete,attributionReport.window_days],[true,true,30]);
+is("unidentified first visit amounts retained",attributionReport.unknown_first,{sales:2,revenue:4000});
+is("same purchases represented in alternative models",attributionReport.rows[0],{key:"instagram",name:"Instagram",last:{sales:2,revenue:4000},first:{sales:1,revenue:2000},said:{buyers:1,revenue:2000}});
+is("unidentified last visits retain survey aggregates",attributionReport.unknown_said,[{answer:"podcast",name:"Podcasts",buyers:1,revenue:2000}]);
+const legacyAttribution=summaryOf({...attributionData,attribution:{...attributionData.attribution,d7:{...attributionData.attribution.d7,unknownFirst:undefined}}}).days.last_7_days.attribution;
+is("legacy missing first visits remain unavailable",[legacyAttribution.first_visit_complete,legacyAttribution.unknown_first,legacyAttribution.rows[0].first],[false,null,null]);
+is("confirmed empty first history stays zero",summaryOf(attributionData).days.last_30_days.attribution.unknown_first,{sales:0,revenue:0});
+is("partial readings cannot expose attribution amounts",summaryOf({...attributionData,partial:true}).days.last_7_days.attribution,{complete:false,first_visit_complete:false,window_days:null,total:null,unknown_last:null,unknown_first:null,rows:[],unknown_said:[]});
+is("missing attribution reading unavailable",summaryOf(data).days.last_7_days.attribution.complete,false);
+is("refund failure preserves purchase attribution",summaryOf({...attributionData,cashflowComplete:false}).days.last_7_days.attribution,attributionReport);
+is("no identities exposed in attribution",/email|customer_details|receipt_email/.test(JSON.stringify(attributionReport)),false);
 part("API capped detail lists expose totals and truncation independently of reading coverage");
 const detailData={...data,ads:{...data.ads!,d7:Array.from({length:25},(_,i)=>({content:`ad-${i}`,source:"instagram",campaign:"launch",sales:1,cents:100}))},salesCountries:{...data.salesCountries!,d7:Array.from({length:21},(_,i)=>({country:`country-${i}`,sales:1,cents:100}))}};
 const detailReport=summaryOf(detailData).days.last_7_days;
