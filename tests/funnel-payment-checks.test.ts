@@ -1,9 +1,9 @@
-import { paidStepProblem, freeStepProblem, planStepProblem, readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
+import { paidStepProblem, freeStepProblem, planStepProblem, bumpStepProblems, readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Listing, Store } from "@/lib/store";
 import { done, is, part } from "./check";
 process.env.STRIPE_SECRET_KEY = "sk_test_local_configuration_only";
 const store = { currency: "usd", stripeAccountId: "acct_test", stripeChargesEnabled: true, subscriptionActive: true, suspended: false } as unknown as Store;
-const product = { id: "offer1", title: "Offer", priceCents: 1000, hidden: false, call: null, course: null, podcast: null, shipping: null, options: [], recurring: null, bundle: null, link: "https://example.com/delivery", file: null } as unknown as Listing;
+const product = { id: "offer1", title: "Offer", priceCents: 1000, hidden: false, call: null, course: null, podcast: null, shipping: null, options: [], recurring: null, bundle: null, bumps: [], stock: null, pwyw: null, link: "https://example.com/delivery", file: null } as unknown as Listing;
 part("Paid funnel configuration follows the existing sale rules");
 is("ready link offer", paidStepProblem(store, product, 0), null);
 is("disabled payments found", paidStepProblem({ ...store, stripeChargesEnabled: false }, product, 0)?.includes("Payments are unavailable"), true);
@@ -53,6 +53,19 @@ is("missing option names affected price", planStepProblem(store, priced)?.includ
 is("option payments too small", planStepProblem(store, { ...priced, plan: { ...priced.plan!, options: { commercial1: 400 } } })?.includes("less than the \u201cCommercial\u201d price"), true);
 is("all eligible prices covered", planStepProblem(store, { ...priced, plan: { ...priced.plan!, options: { commercial1: 500 } } }), null);
 
+part("Saved checkout add-ons explain suppressed offers");
+const extra = { ...product, id: "extra1", title: "Extra pack" };
+const withBump = { ...product, bumps: [{ productId: extra.id, priceCents: 500, pitch: "Add extra pack" }] };
+is("eligible add-on remains quiet", bumpStepProblems(withBump, [extra]), []);
+is("no add-on remains quiet", bumpStepProblems(product, []), []);
+is("removed add-on gives correction", bumpStepProblems(withBump, [])[0]?.includes("no longer in your store"), true);
+is("changed target price explains disappearance", bumpStepProblems(withBump, [{ ...extra, priceCents: 400 }])[0]?.includes("charges more for Extra pack"), true);
+is("missing target delivery names affected product", bumpStepProblems(withBump, [{ ...extra, link: null }])[0]?.includes("behind Extra pack to hand over"), true);
+is("limited target explains own checkout requirement", bumpStepProblems(withBump, [{ ...extra, stock: 2 }])[0]?.includes("only its own checkout counts"), true);
+is("buyer-chosen price explains suppression", bumpStepProblems({ ...withBump, pwyw: { minCents: 100 } } as unknown as Listing, [extra])[0]?.includes("only thing in its checkout"), true);
+is("hidden main product is reviewed separately", bumpStepProblems({ ...withBump, hidden: true }, []), []);
+is("main purchase remains eligible with missing add-on", paidStepProblem(store, withBump, 0), null);
+
 async function main() {
   const catalogStore = { ...store, catalog: { id: null, inline: null, items: [{ id: product.id }], head: [product] } } as unknown as Store;
   is("configured paid step checked", await readFunnelPaymentChecks(catalogStore, { steps: [{ kind: "product", id: product.id }] }), []);
@@ -66,6 +79,11 @@ async function main() {
   const planStore = { ...catalogStore, catalog: { ...catalogStore.catalog, head: [short] } } as Store;
   const planIssues = await readFunnelPaymentChecks(planStore, { steps: [{ kind: "page", id: "page1" }, { kind: "product", id: short.id }] });
   is("saved funnel locates plan warning at correct step", planIssues.length === 1 && planIssues[0].startsWith("Step 2, Offer:") && planIssues[0].includes("payment plan"), true);
+  const addOnStore = { ...catalogStore, catalog: { ...catalogStore.catalog, items: [{ id: withBump.id }, { id: extra.id }], head: [withBump, { ...extra, priceCents: 400 }] } } as Store;
+  const addOnIssues = await readFunnelPaymentChecks(addOnStore, { steps: [{ kind: "product", id: withBump.id }] });
+  is("saved review loads configured add-on outside funnel", addOnIssues.length === 1 && addOnIssues[0].startsWith("Step 1, Offer:") && addOnIssues[0].includes("Extra pack"), true);
+  const foreignAddOnStore = { ...addOnStore, catalog: { ...addOnStore.catalog, items: [{ id: withBump.id }] } } as Store;
+  is("add-on outside selected store cannot appear ready", (await readFunnelPaymentChecks(foreignAddOnStore, { steps: [{ kind: "product", id: withBump.id }] }))[0]?.includes("no longer in your store"), true);
   done();
 }
 void main();
