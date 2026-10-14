@@ -232,6 +232,7 @@ export function EmailStudio(props: {
   /** Whether anything on the store is sold for money. */
   sells: boolean;
   flows: FlowRow[];
+  flowsReadFailed?: boolean;
   drafts: DraftRow[];
   canSend: boolean;
   canSettings: boolean;
@@ -281,7 +282,7 @@ export function EmailStudio(props: {
             <History broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
-                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} />
+                <Flows flows={props.flows} readFailed={props.flowsReadFailed ?? false} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} />
               </AiOn>
             ) : null}
           </>
@@ -1397,6 +1398,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
 
 function Flows({
   flows,
+  readFailed = false,
   products,
   currency,
   sells,
@@ -1405,6 +1407,7 @@ function Flows({
   automation = { forms: [], fields: [], stages: [] },
 }: {
   flows: FlowRow[];
+  readFailed?: boolean;
   products: { id: string; title: string }[];
   currency: string;
   automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
@@ -1427,6 +1430,14 @@ function Flows({
   const [operationBusy, setBusy] = useState(false);
   const busy = operationBusy || refreshing;
   const [error, setError] = useState<string | null>(null);
+
+  if (readFailed) return (
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="flows-title">
+      <h2 id="flows-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sequences</h2>
+      <p role="status" className="mt-2 text-ink-soft">Your sequences could not be loaded. This does not mean the list is empty. Reload before creating or changing a sequence.</p>
+      <button type="button" className="btn btn-secondary mt-4" disabled={refreshing} aria-busy={refreshing} onClick={refreshFlows}>{refreshing ? "Reloading sequences…" : "Reload sequences"}</button>
+    </section>
+  );
 
   const triggerWords = (f: FlowRow) =>
     f.trigger === "joined"
