@@ -1,3 +1,4 @@
+import { readFunnelPageChecks } from "@/lib/funnel-page-checks";
 import type { Listing, Store } from "@/lib/store";
 import type { PageFunnel } from "@/lib/page-funnel";
 import { readListings } from "@/lib/catalog";
@@ -47,18 +48,19 @@ export function bumpStepProblems(product: Listing, targets: Listing[]): string[]
 
 /** Strict reads: a storage failure is unknown, never a clean bill of health. */
 export async function readFunnelPaymentChecks(store: Store, funnel: Pick<PageFunnel, "steps">): Promise<string[]> {
+  const pageIssues = await readFunnelPageChecks(store, funnel);
   const products = await readListings(store, funnel.steps.filter(s => s.kind === "product").map(s => s.id));
   const targetIds = [...new Set(products.flatMap(p => p.bumps?.length ? bumpTargets(p) : []))];
   const knownIds = new Set(products.map(p => p.id));
   const missingTargets = targetIds.filter(id => !knownIds.has(id));
   const targets = [...products, ...(missingTargets.length ? await readListings(store, missingTargets) : [])];
   const bundles = await offeredItems(store, products);
-  return funnel.steps.flatMap((step, i) => {
+  return [...pageIssues, ...funnel.steps.flatMap((step, i) => {
     if (step.kind !== "product") return [];
     const product = products.find(p => p.id === step.id);
     if (!product) return ["Step " + (i + 1) + ": product could not be found. Review the step."];
     const issue = product.priceCents === 0 ? freeStepProblem(store, product) : paidStepProblem(store, product, bundles.get(product.id)?.length ?? 0);
     return [issue, planStepProblem(store, product), ...bumpStepProblems(product, targets)].filter((problem): problem is string => problem !== null)
       .map(problem => "Step " + (i + 1) + ", " + product.title + ": " + problem);
-  });
+  })];
 }
