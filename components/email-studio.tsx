@@ -120,7 +120,7 @@ type BroadcastRow = {
   test: SubjectTest | null;
 };
 type Money = { sales: number; cents: number };
-type FlowRow = Flow & { stats: FlowCounts; money: Money | null };
+type FlowRow = Flow & { stats: FlowCounts; statsAvailable?: boolean; money: Money | null };
 
 /** "3 sales · $117.00 from its links in the last 90 days", in the store's own currency. */
 function soldWords(money: Money, currency: string): string {
@@ -1591,7 +1591,7 @@ function Flows({
                   )}
                 </ul>
               ) : null}
-              <p className="mt-1 text-sm text-ink-soft">
+              {f.statsAvailable === false ? <p role="status" className="mt-1 text-sm text-ink-soft">Sequence activity is unavailable. Reload to try again.</p> : <p className="mt-1 text-sm text-ink-soft">
                 {[
                   `${n(f.stats.started)} started`,
                   `${n(f.stats.sent)} emails sent`,
@@ -1599,7 +1599,7 @@ function Flows({
                   ...(f.steps.some((s) => s.when) || f.stats.skipped ? [`${n(f.stats.skipped)} skipped by a condition`] : []),
                   ...(f.steps.some((s) => s.action) || f.stats.acted ? [`${n(f.stats.acted)} ${f.stats.acted === 1 ? "action" : "actions"} done`] : []),
                 ].join(" · ")}
-              </p>
+              </p>}
               {f.money ? <p className="mt-1 text-sm font-semibold text-ink">{soldWords(f.money, currency)}</p> : null}
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
                 <button
