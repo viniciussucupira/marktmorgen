@@ -1,3 +1,4 @@
+import { paidFiguresComplete } from "@/lib/paid-coverage";
 /**
  * Asking the store's numbers a question in plain words, and a short summary
  * written at the top of the weekly email (added 12 October 2026).
@@ -53,11 +54,14 @@ const NAMES: Record<AskWindow, string> = { d7: "last_7_days", d30: "last_30_days
  * creator reads it, so an amount it repeats is the amount on the panel.
  */
 export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<string, unknown> {
-  const known = data.sales === "ok";
+  const known = paidFiguresComplete(data);
   const money = (cents: number) => formatMoney(cents, data.currency);
   const out: Record<string, unknown> = {
     currency: data.currency.toUpperCase(),
-    sales_read: known ? "yes" : data.sales === "none" ? "no Stripe account connected" : "Stripe did not answer",
+    sales_read: data.sales === "ok" ? data.partial ? "incomplete purchase reading" : "yes" : data.sales === "none" ? "no Stripe account connected" : "Stripe did not answer",
+    paid_figures_complete: known,
+    partial: data.partial === true,
+    coverage_note: "Paid figures require a successful non-partial purchase reading. Omitted or null paid totals, conversion rates and paid-derived insights are unavailable, not zero. Traffic and checkouts can remain available.",
   };
   for (const w of WINDOWS) {
     const t = data.totals[w];
@@ -100,12 +104,12 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
       })),
       products: data.products
         .map((row) => ({ title: row.title, ...row[w] }))
-        .filter((row) => row.views || row.checkouts || row.sales)
-        .sort((a, b) => b.cents - a.cents || b.views - a.views)
+        .filter((row) => row.views || row.checkouts || (known && row.sales))
+        .sort((a, b) => (known ? b.cents - a.cents : 0) || b.views - a.views || a.title.localeCompare(b.title))
         .slice(0, 15)
         .map((row) => ({ product: row.title, page_views: row.views, checkouts_started: row.checkouts, ...(known ? { sales: row.sales, revenue: money(row.cents) } : {}) })),
       posts: (data.posts?.[w] ?? []).slice(0, 10).map((r) => ({ post: r.campaign, payment_channels: known ? r.sources?.map(channelName) ?? null : null, visits: r.visits, ...(known && !data.partial ? { paid_records: r.sales, gross_amount: money(r.cents) } : {}) })),
-      ad_records_complete: known && !data.partial,
+      ad_records_complete: known && data.ads?.[w] != null,
       ad_records_note: "Each variant is grouped by channel, campaign and content tag. Paid records include purchases and one-click extras, not unique buyers. Gross amounts are before refunds and fees; recurring renewals are excluded. When ad_records_complete is false, missing variants mean unavailable totals, not zero payments.",
       ads: known && !data.partial ? (data.ads?.[w] ?? []).slice(0, 10).map((r) => ({ ad: r.content, campaign: r.campaign, channel: channelName(r.source), sales: r.sales, revenue: money(r.cents) })) : [],
       countries_by_views: (data.countries?.[w] ?? []).slice(0, 10).map((r) => ({ country: r.name, page_views: r.visits })),
