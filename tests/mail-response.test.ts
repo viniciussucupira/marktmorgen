@@ -1,0 +1,12 @@
+import { mailAnswer } from "@/lib/mail-response";
+import { done, is, part } from "./check";
+part("Mail operation response validation");
+is("HTTP failure cannot confirm success", mailAnswer(false, { ok: true }).ok, false);
+is("truthy string cannot confirm success", mailAnswer(true, { ok: "true" }).ok, false);
+is("null response becomes a recoverable error", mailAnswer(true, null).error, "server_error");
+is("array response becomes a recoverable error", mailAnswer(true, []).ok, false);
+is("missing success flag cannot confirm success", mailAnswer(true, { sent: 1 }).ok, false);
+is("valid success preserves result fields", mailAnswer(true, { ok: true, id: "saved" }), { ok: true, id: "saved" });
+is("known server refusal is preserved", mailAnswer(false, { ok: false, error: "forbidden" }).error, "forbidden");
+is("invalid error shape becomes a recoverable error", mailAnswer(false, { ok: false, error: 3 }).error, "server_error");
+done();
