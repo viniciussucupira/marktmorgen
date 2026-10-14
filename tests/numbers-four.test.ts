@@ -184,6 +184,19 @@ async function main(): Promise<void> {
   is("the studio has both", [data.previous.d7.visitors, data.previous.d7.cents], [2, 2000]);
   const summary = summaryOf(data);
   is("so does the API", summary.days.last_7_days.previous, { available: true, visitors: 2, page_views: 2, checkouts: 0, sales: 1, revenue: 2000 });
+  part("Source traffic coverage survives legacy previous-period placeholders");
+  is("confirmed source history available in all windows",data.previousTrafficAvailable,{d7:true,d30:true,d90:true});
+  const previousCoverageMissing=studioStats(store,{...visits,previous:undefined} as unknown as typeof visits,sales,"ok",[]);
+  is("missing source history is marked unavailable",previousCoverageMissing.previousTrafficAvailable,{d7:false,d30:false,d90:false});
+  is("API does not expose legacy placeholders as real zeros",summaryOf(previousCoverageMissing).days.last_7_days.previous,{available:false,visitors:null,page_views:null,checkouts:null,sales:null,revenue:null});
+  is("current results survive missing previous traffic",[previousCoverageMissing.totals.d7.visitors,previousCoverageMissing.totals.d7.cents],[4,4900]);
+  const previousCoverageOneMissing=studioStats(store,{...visits,previous:{...visits.previous,d7:undefined}} as unknown as typeof visits,sales,"ok",[]);
+  is("source windows have independent availability",[summaryOf(previousCoverageOneMissing).days.last_7_days.previous.available,summaryOf(previousCoverageOneMissing).days.last_30_days.previous.available],[false,true]);
+  const previousCoverageZero=studioStats(store,{...visits,previous:{...visits.previous,d7:{visitors:0,views:0,checkouts:0}}},sales,"ok",[]);
+  is("confirmed source zero traffic remains zero",[previousCoverageZero.previousTrafficAvailable?.d7,summaryOf(previousCoverageZero).days.last_7_days.previous.available,summaryOf(previousCoverageZero).days.last_7_days.previous.visitors],[true,true,0]);
+  is("legacy stats data without the new flag retains reported history",summaryOf({...data,previousTrafficAvailable:undefined}).days.last_7_days.previous.visitors,2);
+  const previousCoverageNoPayments=summaryOf(studioStats(store,visits,null,"error",[])).days.last_7_days.previous;
+  is("payment failure does not hide complete prior traffic",[previousCoverageNoPayments.available,previousCoverageNoPayments.visitors,previousCoverageNoPayments.revenue],[true,2,null]);
   const weekly = weeklyMessage(store, data, "https://marktmorgen.com/x");
   is("and the weekly email says it in words", [/Visitors: 4 \(up 100% on the week before\)/.test(weekly?.text ?? ""), /\(up 145% on the week before\)/.test(weekly?.text ?? "")], [true, true]);
 
