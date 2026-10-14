@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
+import { useLeaveGuard } from "@/components/leave-guard";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
-import { FUNNEL_TYPES, type FunnelType, choicesOf, pagesOf } from "@/lib/funnel-types";
+import { FUNNEL_TYPES, type FunnelType, choicesOf, pagesOf, slotProblem } from "@/lib/funnel-types";
 import { MAX_FUNNEL_NAME } from "@/lib/page-funnel";
 
 /** A product a type can be built with, as the studio knows it. */
@@ -24,10 +25,6 @@ const MESSAGES: Record<string, string> = {
   server_error: "Something went wrong. Nothing was changed. Try again.",
   ...STUDIO_MESSAGES,
 };
-
-/** "free download", "paid product", "call": what a slot asks for, in the list's words. */
-const fits = (wants: "free" | "paid" | "any" | "call", product: TypeProduct) =>
-  wants === "call" ? product.call : !product.call && (wants === "any" || (wants === "free" ? product.free : !product.free));
 
 /**
  * Funnels to start from (lib/funnel-types.ts): pick a kind, choose the
@@ -51,6 +48,15 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [made, setMade] = useState<{ title: string; id: string }[] | null>(null);
+  useLeaveGuard(type !== null);
+  const slots = type ? choicesOf(type) : [];
+  const selected = slots.map(slot => picked[slot.key] || "").filter(Boolean);
+  const repeated = new Set(selected).size !== selected.length;
+  const selectionIssues = slots.flatMap(slot => {
+    const problem = slotProblem(slot, products.find(product => product.id === picked[slot.key]) ?? null);
+    return problem ? [slot.label + ": " + MESSAGES["slot_" + problem]] : [];
+  });
+  const capacityIssue = type && (funnelsLeft <= 0 ? MESSAGES.full : pagesOf(type).length > pagesLeft ? MESSAGES.pages_full : pagesOf(type).length > 0 && !canMakePages ? MESSAGES.forbidden : null);
 
   function choose(next: FunnelType) {
     setType(next);
@@ -59,8 +65,9 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
     // The first product that fits each step, each product once.
     const used = new Set<string>();
     const start: Record<string, string> = {};
+    const publishedFirst = products.slice().sort((a, b) => Number(a.draft) - Number(b.draft));
     for (const slot of choicesOf(next)) {
-      const first = products.find((p) => fits(slot.wants, p) && !used.has(p.id));
+      const first = publishedFirst.find((p) => slotProblem(slot, p) === null && !used.has(p.id));
       if (first) {
         start[slot.key] = first.id;
         used.add(first.id);
@@ -70,7 +77,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   }
 
   async function build() {
-    if (!type) return;
+    if (!type || busy || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
     setBusy(true);
     setError(null);
     try {
@@ -166,14 +173,15 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
       ) : null}
 
       {type ? (
-        <div className="mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+        <fieldset disabled={busy} className="mt-6 min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-6">
+          <legend className="sr-only">Funnel setup</legend>
           <p className="font-semibold text-ink">{type.label}</p>
           <label className="mt-4 block">
             <span className="field-label">Name, for you</span>
             <input className="field mt-2" value={name} maxLength={MAX_FUNNEL_NAME} onChange={(e) => setName(e.target.value)} />
           </label>
           {choicesOf(type).map((slot) => {
-            const fitting = products.filter((p) => fits(slot.wants, p));
+            const fitting = products.filter((p) => slotProblem(slot, p) === null);
             return (
               <label key={slot.key} className="mt-4 block">
                 <span className="field-label">{slot.label}</span>
@@ -209,20 +217,21 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
                 .join(", ")}), empty and hidden from visitors until you write them. A draft product is passed over until you publish it.`}
             </p>
           ) : null}
+          {selectionIssues.length > 0 || repeated || capacityIssue ? <div className="notice notice-warn mt-4 text-sm" role="status"><p className="font-semibold">Complete the setup before creating the funnel.</p><ul className="mt-2 list-disc space-y-1 pl-5">{selectionIssues.map(issue => <li key={issue}>{issue}</li>)}{repeated ? <li>{MESSAGES.slot_twice}</li> : null}{capacityIssue ? <li>{capacityIssue}</li> : null}</ul></div> : null}
           {error ? (
             <p className="notice notice-error mt-4" role="alert">
               {error}
             </p>
           ) : null}
           <div className="mt-5 flex flex-wrap gap-3">
-            <button type="button" className="btn btn-primary" onClick={() => void build()} disabled={busy}>
+            <button type="button" className="btn btn-primary" onClick={() => void build()} disabled={busy || !name.trim() || selectionIssues.length > 0 || repeated || Boolean(capacityIssue)} aria-busy={busy}>
               {busy ? "Making it…" : "Make the funnel"}
             </button>
             <button type="button" className="btn btn-secondary" onClick={() => setType(null)} disabled={busy}>
-              Back to the kinds
+              Cancel setup
             </button>
           </div>
-        </div>
+        </fieldset>
       ) : null}
     </section>
   );
