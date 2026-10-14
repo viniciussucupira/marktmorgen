@@ -316,6 +316,15 @@ export default function DevelopersPage() {
           Complete full lists have false truncation flags. Ad variants keep their channel and campaign, so the
           same creative name in different campaigns or channels remains distinct.
         </p>
+        <p>
+          <code className="font-mono">attribution</code> compares purchase counts and revenue by the last visit,
+          first visit and the origin buyers reported, using the same channel groups as the studio. These are
+          alternative views of the same purchases; do not add the columns. Unidentified last and first visits
+          remain separate, with survey answers for unidentified last visits. Missing first-visit history leaves
+          its figures null and first_visit_complete false. Incomplete paid readings make the entire comparison
+          unavailable. The configured attribution window is reported when known. Renewals are excluded, and
+          no individual survey answers or buyer identities are exposed.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
