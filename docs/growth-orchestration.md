@@ -87,8 +87,10 @@ Funnel correction actions explicitly separate Stripe and PayPal connection desti
 
 A structurally valid installment plan is reviewed against canSell(store): unavailable Stripe/store billing produces a separate installment warning. PayPal eligibility for the up-front offer remains independent. Existing structural plan errors retain their detailed messages. No checkout is opened.
 
-Published funnel pages now receive read-only checks of form bindings in their saved default blocks and configured A/B variant. Empty bindings and forms missing from the selected store are flagged. Malformed pages/forms and storage failures keep the configuration review unknown. Kept-back or foreign pages are left to step availability checks. Variant alerts identify Version A or Version B, while malformed variants remain unknown. This does not validate submitted answers, email delivery or quiz outcomes, and sends no messages.
+Published funnel pages now receive read-only checks of form bindings in their saved default blocks and configured A/B variant. Empty bindings and forms missing from the selected store are flagged. Malformed pages/forms and storage failures keep the configuration review unknown. Kept-back or foreign pages are left to step availability checks. Variant alerts identify Version A or Version B, while malformed variants remain unknown. This does not validate submitted answers, email delivery or quiz scoring, and sends no messages.
 
 Form-binding review now offers a direct Forms and quizzes correction link to roles with page permission, carrying the selected store. Form responses remain subject to the destination export permission; the link itself neither reads answers nor submits a form.
 
 Page/form review batches unique published page ids into one read and unique form ids into one store-scoped HMGET. A funnel uses at most two storage round trips, with no form read when none is selected. Incomplete replies remain unknown; duplicate steps keep their own diagnostic labels.
+
+Saved quiz recommendations are checked against the selected store catalog index: removed/foreign and draft products produce result-named alerts. Text-only outcomes remain valid. A missing catalog index with product recommendations leaves review unknown. This adds no storage reads and does not score answers or validate payment/delivery for recommended products.
