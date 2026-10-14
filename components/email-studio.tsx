@@ -13,7 +13,7 @@ import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import { flowConfigurationIssues } from "@/lib/flow-review";
 import type { Flow, FlowCounts, FlowStep } from "@/lib/flows";
-import { type FlowAction, MAX_CONDITION_TAG, type StepCondition, type StepIf, isCourseIf } from "@/lib/flow-rules";
+import { flowWaitHours, type FlowAction, MAX_CONDITION_TAG, type StepCondition, type StepIf, isCourseIf } from "@/lib/flow-rules";
 import type { MailSettings } from "@/lib/store";
 import { StoreField } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
@@ -1412,6 +1412,7 @@ function Flows({
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<FlowDraft | null>(null);
+  const invalidWait = draft?.steps.some(step => flowWaitHours(step.wait, step.unit) === null) ?? false;
   const [draftBaseline, setDraftBaseline] = useState<string | null>(null);
   useLeaveGuard(draft !== null && JSON.stringify(draft) !== draftBaseline);
   const [draftCount, setDraftCount] = useState<number>(DEFAULT_SEQUENCE_DRAFT);
@@ -1444,7 +1445,7 @@ function Flows({
   }
 
   async function save() {
-    if (!draft || busy) return;
+    if (!draft || busy || invalidWait) return;
     setBusy(true);
     setError(null);
     const a = await call({
@@ -1462,7 +1463,7 @@ function Flows({
           const action = actionOf(s);
           return {
             id: s.id,
-            delayHours: (Number(s.wait) || 0) * (s.unit === "days" ? 24 : 1),
+            delayHours: flowWaitHours(s.wait, s.unit)!,
             subject: action ? "" : s.subject,
             body: action ? "" : s.body,
             ...(action ? { action } : {}),
@@ -1489,7 +1490,7 @@ function Flows({
     steps: draft.steps.map((step, index) => {
       const action = actionOf(step);
       const when = conditionOf(step);
-      return { id: step.id ?? "draft-step-" + index, delayHours: 0, subject: step.subject, body: step.body, ...(action ? { action } : {}), ...(when ? { when } : {}) };
+      return { id: step.id ?? "draft-step-" + index, delayHours: flowWaitHours(step.wait, step.unit) ?? NaN, subject: step.subject, body: step.body, ...(action ? { action } : {}), ...(when ? { when } : {}) };
     }),
   }, { products, courses, flows, ...automation }) : [];
 
@@ -2049,7 +2050,7 @@ function Flows({
             <span>On. Switched off, nobody new starts it, and those already in it get none of its emails that are still to come.</span>
           </label>
           <div className="flex flex-wrap items-center gap-3">
-            <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-primary">Save the sequence</button>
+            <button type="submit" aria-busy={busy} disabled={busy || invalidWait} className="btn btn-primary">Save the sequence</button>
             <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" onClick={() => setDraft(null)}>
               Close
             </button>
