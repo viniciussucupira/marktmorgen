@@ -126,14 +126,16 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
       } } : {}),
       searched_for_and_not_found: (data.searchMisses?.[w] ?? []).slice(0, 10).map((r) => ({ words: r.name, times: r.visits })),
       // The same money three ways (lib/attribution-rules.ts): last visit, first visit, what buyers said.
-      ...(known && data.attribution
+      ...(known && !data.partial && data.attribution
         ? {
+            attribution_note: "Visit models are alternative readings, not additional revenue. Include unattributed amounts in each column total. Buyer answers belong to answer days and cover respondents only. Missing unattributed first visits mean unavailable, not zero. Gross before refunds and fees; extras excluded; no causal lift.",
+            sales_with_no_first_visit_channel: data.attribution[w].unknownFirst ? { sales: data.attribution[w].unknownFirst.sales, revenue: money(data.attribution[w].unknownFirst.cents) } : null,
             channels_three_ways: data.attribution[w].rows.slice(0, 15).map((r) => ({
               channel: r.name,
               sales_by_last_visit: r.last.sales,
               revenue_by_last_visit: money(r.last.cents),
-              sales_by_first_visit: r.first.sales,
-              revenue_by_first_visit: money(r.first.cents),
+              sales_by_first_visit: data.attribution?.[w].unknownFirst ? r.first.sales : null,
+              revenue_by_first_visit: data.attribution?.[w].unknownFirst ? money(r.first.cents) : null,
               buyers_who_said_it: r.said.buyers,
               revenue_of_buyers_who_said_it: money(r.said.cents),
             })),

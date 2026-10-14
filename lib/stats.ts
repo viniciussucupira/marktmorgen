@@ -1926,7 +1926,7 @@ export function studioStats(
         k,
         attributionTable(
           sales?.attributionIn?.[k].last ?? [],
-          sales?.attributionIn?.[k].first ?? [],
+          sales?.attributionIn?.[k]?.first,
           Object.entries(w[k].heard ?? {}).map(([answer, v]) => ({ answer, ...v })),
         ),
       ]),
