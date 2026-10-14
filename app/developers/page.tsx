@@ -294,6 +294,14 @@ export default function DevelopersPage() {
           Complete readings include days with zero activity. Refunds of older purchases can produce a negative
           daily result. Incomplete payment readings have no daily rows.
         </p>
+        <p>
+          <code className="font-mono">campaign_results</code> exposes every recorded campaign in each period:
+          visits, paid purchase records, purchase revenue before refunds and fees, and the channels of those
+          payments. Campaign tags aggregate across channels; they do not provide a traffic split by channel.
+          Subscription renewals are excluded. Incomplete purchase readings preserve campaign visits while
+          paid amounts and payment channels remain null. A null channel list means unavailable origin detail;
+          an empty list means zero paid records. Available empty reports are distinct from missing reports.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
