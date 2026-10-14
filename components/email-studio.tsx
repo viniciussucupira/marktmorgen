@@ -8,6 +8,7 @@ import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
+import { mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import { flowConfigurationIssues } from "@/lib/flow-review";
@@ -75,7 +76,7 @@ const MESSAGES: Record<string, string> = {
   server_error: "Something went wrong on our side. Try again in a moment.",
 };
 
-type Answer = Record<string, unknown> & { ok?: boolean; error?: string };
+type Answer = MailAnswer;
 
 async function call(payload: Record<string, unknown>): Promise<Answer> {
   try {
@@ -84,7 +85,7 @@ async function call(payload: Record<string, unknown>): Promise<Answer> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return (await response.json().catch(() => ({ ok: false, error: "server_error" }))) as Answer;
+    return mailAnswer(response.ok, await response.json().catch(() => null));
   } catch {
     return { ok: false, error: "server_error" };
   }
