@@ -59,6 +59,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const capacityIssue = type && (funnelsLeft <= 0 ? MESSAGES.full : pagesOf(type).length > pagesLeft ? MESSAGES.pages_full : pagesOf(type).length > 0 && !canMakePages ? MESSAGES.forbidden : null);
 
   function choose(next: FunnelType) {
+    setMade(null);
     setType(next);
     setName(next.label);
     setError(null);
