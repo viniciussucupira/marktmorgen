@@ -105,8 +105,12 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
       .filter((p) => !calls.has(p.id))
       .map((p) => ({ kind: "product" as const, id: p.id, title: p.title, note: drafts.has(p.id) ? "draft" : free.has(p.id) ? "free" : "" })),
   ];
-  let savedFunnelsFailed = false;
-  const pageFunnels = await readPageFunnels(store.statsId).catch(() => { savedFunnelsFailed = true; return []; });
+  const loadedFunnels = await readPageFunnels(store.statsId).then(
+    funnels => ({ funnels, failed: false }),
+    () => ({ funnels: [], failed: true }),
+  );
+  const savedFunnelsFailed = loadedFunnels.failed;
+  const pageFunnels = loadedFunnels.funnels;
   const savedFunnels: SavedFunnel[] = await Promise.all(
     pageFunnels.map(async (funnel) => {
       const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCounts(store.statsId, funnel)]);
