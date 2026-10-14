@@ -11,6 +11,7 @@
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
 import { paymentMixFrom } from "@/lib/payment-mix";
+import { paymentComparisonFrom } from "@/lib/payment-comparison";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Store } from "@/lib/store";
 import { type Ranked, type StatsData, readSales, readsSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
@@ -46,6 +47,13 @@ export type SummaryWindow = {
   renewals: { complete: boolean; count: number | null; revenue: number | null };
   /** All gross receipt channels, including unidentified origins. Shares are fractions of all receipts. */
   payment_channels: { complete: boolean; from: string | null; to: string | null; rows: { channel: string; gross_receipts: number; share: number; identified: boolean }[] };
+  payment_comparison: {
+    complete: boolean;
+    previous: { from: string; to: string; gross_receipts: number } | null;
+    delta: number | null;
+    change: number | null;
+    rows: { channel: string; current: number; previous: number; delta: number; change: number | null; current_share: number | null; previous_share: number | null; share_change: number | null }[];
+  };
   /** Reading coverage; detail lists contain at most 20 entries. */
   sales_by_country_complete: boolean;
   ad_records_complete: boolean;
@@ -91,6 +99,7 @@ export function summaryOf(data: StatsData): Summary {
     const t = data.totals[w];
     const refundsKnown = ledgerPaymentsComplete(data) && data.cashflowComplete === true && data.refunds?.[w] != null;
     const payments = paymentMixFrom(data, w);
+    const comparison = paymentComparisonFrom(data, w);
     const refunded = refundsKnown ? data.refunds![w].reduce((n, r) => n + r.cents, 0) : null;
     const renewalsKnown = known && data.renewals != null && !data.renewals.partial;
     const countriesKnown = known && data.salesCountries?.[w] != null;
@@ -130,6 +139,13 @@ export function summaryOf(data: StatsData): Summary {
         from: payments?.from ?? null,
         to: payments?.to ?? null,
         rows: payments?.rows.map(row => ({ channel: row.source, gross_receipts: row.cents, share: row.share, identified: row.identified })) ?? [],
+      },
+      payment_comparison: {
+        complete: comparison?.previous != null,
+        previous: comparison?.previous ? { from: comparison.previous.from, to: comparison.previous.to, gross_receipts: comparison.previous.total } : null,
+        delta: comparison?.delta ?? null,
+        change: comparison?.change ?? null,
+        rows: comparison?.rows.map(row => ({ channel: row.source, current: row.current, previous: row.previous, delta: row.current - row.previous, change: row.change, current_share: row.currentShare, previous_share: row.previousShare, share_change: row.shareChange })) ?? [],
       },
       sales_by_country_complete: countriesKnown,
       ad_records_complete: adsKnown,
