@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import type { AllTimeSales, Ranked, RangeKey, StatsData, Today } from "@/lib/stats";
 import { StoreField } from "@/components/studio-store-pin";
+import { dashboardPaidComplete, dashboardProducts } from "@/lib/dashboard-coverage";
+import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { formatMoney } from "@/lib/money";
 import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
 import type { StatsNote } from "@/lib/stats-notes";
@@ -445,7 +447,7 @@ export function StatsPanel({
 
   // All-time sales arrive when asked for; until then they are shown as coming.
   const allSales = all.state === "ok" ? all.sales : null;
-  const salesHere = salesKnown && (range !== "all" || allSales !== null);
+  const salesHere = dashboardPaidComplete(data, range, allSales);
   // Every amount here is in the store's currency (lib/stats.ts leaves sales in
   // any other out of the totals and counts them).
   const money = (cents: number) => formatMoney(cents, data.currency ?? "usd");
@@ -463,7 +465,9 @@ export function StatsPanel({
       ? all.state === "error"
         ? "Stripe did not answer"
         : "Reading Stripe…"
-      : "Paid, from your Stripe";
+      : !salesHere
+        ? "Incomplete reading; paid totals unavailable"
+        : "Paid, from your Stripe";
 
   // The same stretch just before the one chosen, to set each figure beside.
   const before = range === "all" ? null : data.previous?.[range] ?? null;
@@ -478,14 +482,14 @@ export function StatsPanel({
     { label: "Revenue", value: salesHere ? money(totals.cents) : "—", note: "Before Stripe's fee", moved: salesHere ? moved(totals.cents, before?.cents) : null },
     // Memberships renewed and later plan payments: money the sales above leave out (lib/stats.ts).
     // Shown once there is any in the last 90 days, so a store without memberships sees no empty tile.
-    ...(data.renewals && data.renewals.d90.payments > 0
+    ...(data.renewals && (data.renewals.d90.payments > 0 || data.renewals.partial)
       ? [
           range === "all"
             ? { label: "Renewals", value: "—", note: "Shown for up to 90 days; all of them are in your Stripe" }
             : {
                 label: "Renewals",
-                value: money(data.renewals[range].cents),
-                note: `${count(data.renewals[range].payments)} ${data.renewals[range].payments === 1 ? "payment" : "payments"} after the first: memberships renewed and plan payments`,
+                value: data.renewals.partial ? "—" : money(data.renewals[range].cents),
+                note: data.renewals.partial ? "Incomplete invoice reading; renewals unavailable" : `${count(data.renewals[range].payments)} ${data.renewals[range].payments === 1 ? "payment" : "payments"} after the first: memberships renewed and plan payments`,
               },
         ]
       : []),
@@ -497,17 +501,9 @@ export function StatsPanel({
     },
   ];
 
-  // Products, the best sellers first: by revenue, then sales, then checkouts.
-  const products = data.products
-    .map((product) => {
-      const row = product[range];
-      const sold = range === "all" ? allSales?.byProduct[product.id] ?? { sales: 0, cents: 0 } : row;
-      return { id: product.id, title: product.title, views: row.views, checkouts: row.checkouts, sales: sold.sales, cents: sold.cents };
-    })
-    .sort((a, b) => b.cents - a.cents || b.sales - a.sales || b.checkouts - a.checkouts);
-  // Refunds by product are read for 90 days, so they are shown beside that window only.
-  const withProductRefunds = range === "d90" && Object.keys(data.refundsByProduct ?? {}).length > 0;
-  const shownProducts = products.filter((p) => p.views > 0 || p.checkouts || p.sales).length ? products.filter((p) => p.views > 0 || p.checkouts || p.sales) : products;
+  const shownProducts = dashboardProducts(data, range, allSales);
+  // Refunds have their own coverage and are only read for 90 days.
+  const withProductRefunds = range === "d90" && data.cashflowComplete === true && Object.keys(data.refundsByProduct ?? {}).length > 0;
   const withRenewalColumn = data.revenueBySource.some((row) => row.renewals > 0);
   // Refunds over the 90 days, by the channel of the sale given back (lib/stats.ts, readRefunds).
   const refunds90 = new Map((data.refunds?.d90 ?? []).map((row) => [row.source || "direct", row]));
@@ -606,12 +602,12 @@ export function StatsPanel({
       {range === "all" ? (
         <p className="mt-3 text-sm text-ink-soft">
           {`Visits since ${data.since ? longDate(data.since) : "the first one counted"}. `}
-          {allSales
+          {allSales && !allSales.partial
             ? allSales.since
               ? `Sales since ${longDate(allSales.since)}, the first one on your Stripe account.`
               : "No sales on your Stripe account yet."
             : null}
-          {allSales?.partial ? " Your store has more sales than one reading covers (3,000 checkouts), so the oldest are left out." : ""}
+          {allSales?.partial ? " The all-time purchase reading is incomplete. Paid totals, rates and product rankings wait for complete figures." : ""}
         </p>
       ) : null}
       {salesHere && elsewhere > 0 ? (
@@ -813,7 +809,8 @@ export function StatsPanel({
         />
       ) : null}
 
-      {data.revenueBySource.length ? (
+      {data.revenueBySource.length > 0 && (!paidFiguresComplete(data) || data.renewals?.partial || data.cashflowComplete !== true) ? <p className="mt-6 text-sm text-ink-soft" role="status">The 90-day money-by-source table waits for complete purchase, renewal and refund readings.</p> : null}
+      {paidFiguresComplete(data) && !data.renewals?.partial && data.cashflowComplete === true && data.revenueBySource.length ? (
         <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-revenue-source">
           <table className="w-full text-left text-sm">
             <caption id="numbers-revenue-source" className="text-left text-sm font-bold text-ink">
@@ -1223,15 +1220,15 @@ export function StatsPanel({
               {shownProducts.map((product, index) => (
                 <tr key={product.id} className="border-t border-line">
                   <td className="max-w-[7rem] truncate py-1.5 pr-2 font-semibold text-ink sm:max-w-[14rem]">
-                    {index < 3 && product.cents > 0 ? <span className="mr-1.5 tabular-nums text-violet-deep">{index + 1}.</span> : null}
+                    {index < 3 && product.cents !== null && product.cents > 0 ? <span className="mr-1.5 tabular-nums text-violet-deep">{index + 1}.</span> : null}
                     {product.title}
                   </td>
                   <td className="py-1.5 pl-3 text-right tabular-nums">{product.views < 0 ? "—" : count(product.views)}</td>
                   <td className="py-1.5 pl-3 text-right tabular-nums">{count(product.checkouts)}</td>
-                  <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere ? count(product.sales) : "—"}</td>
-                  <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere ? money(product.cents) : "—"}</td>
-                  <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere ? rate(product.sales, product.checkouts) : "—"}</td>
-                  <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere && product.views > 0 && product.views >= product.sales ? rate(product.sales, product.views) : "—"}</td>
+                  <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere && product.sales !== null ? count(product.sales) : "—"}</td>
+                  <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere && product.cents !== null ? money(product.cents) : "—"}</td>
+                  <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere && product.sales !== null ? rate(product.sales, product.checkouts) : "—"}</td>
+                  <td className="py-1.5 pl-3 text-right tabular-nums">{salesHere && product.sales !== null && product.views > 0 && product.views >= product.sales ? rate(product.sales, product.views) : "—"}</td>
                   {withProductRefunds ? (
                     <td className="py-1.5 pl-3 text-right tabular-nums">
                       {data.refundsByProduct?.[product.id] ? `${data.refundsByProduct[product.id].refunds} · ${money(data.refundsByProduct[product.id].cents)}` : "—"}
@@ -1348,8 +1345,8 @@ export function StatsPanel({
         purchases and new members, before Stripe&apos;s fee and any refund. Renewals are the payments after the first of
         memberships and payment plans, from the paid invoices of your store&apos;s subscriptions over the last 90 days;
         all of them are in your Stripe dashboard.
-        {data.partial ? " These 90 days had more sales than one reading covers (1,000 checkouts), so the oldest are left out of these totals." : ""}
-        {data.renewals?.partial ? " They also had more invoices than one reading covers (1,000), so the oldest renewals are left out." : ""}
+        {data.partial ? " The recent purchase reading is incomplete. Paid totals, rates and product rankings wait for complete figures; visits and checkouts remain available." : ""}
+        {data.renewals?.partial ? " The invoice reading is incomplete, so renewal totals are unavailable." : ""}
       </p>
     </section>
   );
