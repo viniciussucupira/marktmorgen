@@ -1,3 +1,4 @@
+import { paidFiguresComplete } from "@/lib/paid-coverage";
 /**
  * The read-only tools of the MCP server beyond the first three (added 12
  * October 2026): revenue by channel, the funnel, each product, memberships,
@@ -63,7 +64,7 @@ const share = (part: number, whole: number) => (whole > 0 ? Math.round((part / w
 
 /** Revenue by channel for the window, three ways, with ads and posts. */
 export function channelsTool(data: StatsData, w: Window) {
-  const known = data.sales === "ok" && !data.partial;
+  const known = paidFiguresComplete(data);
   const table = data.attribution?.[w];
   const days = (data.days ?? []).slice(-(w === "d7" ? 7 : w === "d30" ? 30 : 90));
   const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], new Map(), days[0].date, days[days.length - 1].date) : [];
@@ -146,13 +147,16 @@ export function channelsTool(data: StatsData, w: Window) {
 
 /** From visit to sale for the window, beside the stretch before, and how far down the store page is read. */
 export function funnelTool(data: StatsData, w: Window) {
-  const known = data.sales === "ok";
+  const known = paidFiguresComplete(data);
   const t = data.totals[w];
   const p = data.previous?.[w];
   const reach = data.reach?.[w];
   return {
     window: NAMES[w],
     currency: data.currency,
+    paid_figures_complete: known,
+    partial: data.partial === true,
+    coverage_note: "Paid totals and paid conversion rates require a successful non-partial reading. Null is unavailable, not zero. Visits, page views and checkout starts remain available.",
     visitors: t.visitors,
     page_views: t.views,
     checkouts_started: t.checkouts,
@@ -176,13 +180,16 @@ export function funnelTool(data: StatsData, w: Window) {
 
 /** Each product for the window, and what its buyers went on to buy (lib/next-bought.ts). */
 export async function productsTool(store: Store, data: StatsData, w: Window) {
-  const known = data.sales === "ok";
+  const known = paidFiguresComplete(data);
   const paths = await readPaths(store.statsId).catch(() => null);
   const titles = await readTitles(store).catch(() => new Map<string, string>());
   const name = (id: string) => titles.get(id) ?? id;
   return {
     window: NAMES[w],
     currency: data.currency,
+    paid_figures_complete: known,
+    partial: data.partial === true,
+    coverage_note: "Paid totals and paid conversion rates require a successful non-partial reading. Null is unavailable, not zero. Visits, page views and checkout starts remain available.",
     products: data.products
       .map((row) => ({
         id: row.id,

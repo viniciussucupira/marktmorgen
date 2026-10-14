@@ -1,3 +1,4 @@
+import { paidFiguresComplete } from "@/lib/paid-coverage";
 /**
  * What changed, in words (added 11 October 2026): the few things in a
  * store's numbers worth acting on this week, said as sentences, at the top of
@@ -70,7 +71,7 @@ const n = (value: number) => value.toLocaleString("en-US");
 export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] = [], max = 4, context: InsightContext = {}): Insight[] {
   const out: Insight[] = [];
   const money = (cents: number) => formatMoney(cents, data.currency ?? "usd");
-  const known = data.sales === "ok";
+  const known = paidFiguresComplete(data);
   const now = data.totals[window];
   const before = data.previous?.[window];
   const span = SPAN[window];
