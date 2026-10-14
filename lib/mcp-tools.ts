@@ -29,6 +29,7 @@ import { affiliatesOn, readBook } from "@/lib/affiliates";
 import { insightsFrom } from "@/lib/insights";
 import { readPaths } from "@/lib/next-bought";
 import { campaignResultsFrom } from "@/lib/campaign-results";
+import { paymentMixFrom } from "@/lib/payment-mix";
 import { dailyCashflowRows } from "@/lib/daily-cashflow";
 import { refundActivityFrom } from "@/lib/refund-activity";
 import { channelCashflows } from "@/lib/channel-cashflow";
@@ -67,11 +68,14 @@ export function channelsTool(data: StatsData, w: Window) {
   const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], new Map(), days[0].date, days[days.length - 1].date) : [];
   const refundActivity = known && days.length ? refundActivityFrom(data, w, days[0].date, days[days.length - 1].date) : null;
   const campaignReport = campaignResultsFrom(data, w);
+  const mix = paymentMixFrom(data,w);
   return {
     window: NAMES[w],
     currency: data.currency,
     sales_read: data.sales,
     cashflow_complete: data.cashflowComplete === true,
+    payment_mix: mix ? {from_utc:mix.from,to_utc:mix.to,total_payments:mix.total,unidentified_payments:mix.unidentified,unidentified_share:mix.unidentifiedShare,largest_identified_channel:mix.largest,top_three_identified_share:mix.topThreeShare,channels:mix.rows,
+      note:"Money in smallest currency units; shares are fractions of all recorded payments. Includes renewals at recorded subscription channel, before refunds, fees and ads. Direct, unrecorded and imported origins excluded from largest and top-three identified channels. Complete ledger coverage required; null is unavailable. Not customer acquisition, profit or causal ad lift."} : null,
     cashflow: known && cash.length ? {
       note: "Payments include renewals. Refunds include pending refunds in the days recorded. After refunds is before ad spend, fees, tax, commissions and other costs; not profit or causal lift. Null means incomplete.",
       channels: cash.map((c) => ({ channel: c.source, payments_received: c.receipts, refunds: c.refunds, after_refunds: c.afterRefunds })),
