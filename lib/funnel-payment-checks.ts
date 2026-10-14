@@ -6,7 +6,7 @@ import { offeredItems } from "@/lib/bundles";
 import { canGiveProduct } from "@/lib/free";
 import { paypalReady, sellsThroughPayPal } from "@/lib/paypal-sales";
 import { bundleReady } from "@/lib/bundle-rules";
-import { planState, planPauseWords, bumpStates, bumpTargets, bumpPauseWords } from "@/lib/product-extras";
+import { planState, planPauseWords, bumpStates, bumpTargets, bumpPauseWords, limitedStock } from "@/lib/product-extras";
 
 /** Saved configuration only: never opens a checkout or probes delivery URLs. */
 export function paidStepProblem(store: Store, product: Listing, bundleItems: number): string | null {
@@ -14,6 +14,7 @@ export function paidStepProblem(store: Store, product: Listing, bundleItems: num
   const paypal = paypalReady(store, product);
   if (!canSell(store) && !sellsThroughPayPal(store)) return "Payments are unavailable for this store. Review the store subscription and payment connection.";
   if (!canSellProduct(store, product) && !paypal) return "This paid offer is not sellable with its current delivery. Review its file, link, lessons, episodes or price options.";
+  if (limitedStock(product) === 0) return "This offer has a configured quantity of zero. Review its quantity before sending buyers to checkout. Reservations and live stock have not been checked.";
   if (product.bundle && !bundleReady(product, bundleItems)) return "This bundle does not have enough deliverable products for the buyer's selection.";
   return null;
 }
