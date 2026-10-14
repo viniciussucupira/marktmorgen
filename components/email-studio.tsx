@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
+import { flowConfigurationIssues } from "@/lib/flow-review";
 import type { Flow, FlowCounts, FlowStep } from "@/lib/flows";
 import { type FlowAction, MAX_CONDITION_TAG, type StepCondition, type StepIf, isCourseIf } from "@/lib/flow-rules";
 import type { MailSettings } from "@/lib/store";
@@ -1540,6 +1541,10 @@ function Flows({
                 <span className="tag">{f.active ? "On" : "Paused"}</span>
               </div>
               <p className="mt-1 text-sm text-ink-soft">{`${triggerWords(f)} · ${stepCount(f.steps)}`}</p>
+              {(() => {
+                const issues = flowConfigurationIssues(f, { products, courses, flows, ...automation });
+                return issues.length ? <div className="notice notice-warn mt-3 text-sm"><p className="font-semibold">Review saved configuration</p><ul className="mt-2 list-disc space-y-1 pl-5">{issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul><p className="mt-2">Edit this sequence to review its references. No live delivery or action has been tested.</p></div> : null;
+              })()}
               {f.goal ? <p className="mt-1 text-sm text-ink-soft" data-flow-goal>{`${goalWords(f, products)}.`}</p> : null}
               {f.steps.some((step) => step.when || step.action) ? (
                 <ul className="mt-1 text-sm text-ink-soft" data-flow-steps>
