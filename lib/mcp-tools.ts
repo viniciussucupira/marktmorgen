@@ -63,7 +63,7 @@ const share = (part: number, whole: number) => (whole > 0 ? Math.round((part / w
 
 /** Revenue by channel for the window, three ways, with ads and posts. */
 export function channelsTool(data: StatsData, w: Window) {
-  const known = data.sales === "ok";
+  const known = data.sales === "ok" && !data.partial;
   const table = data.attribution?.[w];
   const days = (data.days ?? []).slice(-(w === "d7" ? 7 : w === "d30" ? 30 : 90));
   const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], new Map(), days[0].date, days[days.length - 1].date) : [];
@@ -75,7 +75,10 @@ export function channelsTool(data: StatsData, w: Window) {
     window: NAMES[w],
     currency: data.currency,
     sales_read: data.sales,
-    cashflow_complete: data.cashflowComplete === true,
+    partial: data.partial === true,
+    paid_figures_complete: known,
+    coverage_note: "Paid totals require a successful, non-partial reading. Null or omitted figures and empty ad/post lists with paid_figures_complete false mean unavailable, not zero sales. Traffic counts may remain available. Money is in the currency smallest unit.",
+    cashflow_complete: known && data.cashflowComplete === true,
     payment_comparison: comparison ? {current_from_utc:comparison.current.from,current_to_utc:comparison.current.to,current_payments:comparison.current.total,previous_available:comparison.previous!==null,previous_period:comparison.previous ? {from_utc:comparison.previous.from,to_utc:comparison.previous.to,payments:comparison.previous.total} : null,difference:comparison.delta,relative_change:comparison.change,channels:comparison.rows,
       note:"Money in smallest currency units; relative changes and shares are fractions. shareChange is current share minus previous share; multiply by 100 for percentage points. Equal consecutive UTC periods including today as recorded so far. Comparisons fit only 7 and 30 days within the complete 90-day ledger. Null means unavailable or no valid denominator, never zero. Gross recorded payments include renewals, before refunds, fees and ads; not customers, profit or causal marketing lift."} : null,
     payment_mix: mix ? {from_utc:mix.from,to_utc:mix.to,total_payments:mix.total,unidentified_payments:mix.unidentified,unidentified_share:mix.unidentifiedShare,largest_identified_channel:mix.largest,top_three_identified_share:mix.topThreeShare,channels:mix.rows,
@@ -122,15 +125,20 @@ export function channelsTool(data: StatsData, w: Window) {
       revenue: known ? c.cents : null,
       sales_per_visit: known ? share(c.sales, c.visits) : null,
     })),
-    three_ways: table
+    three_ways: known && table
       ? {
-          note: "The same checkouts credited to the last visit before buying, to the first visit in the 90 days before, and to what buyers answered after paying.",
+          note: "Alternative visit models for the same purchases; include the no-channel amount in each column and never add the columns together. Buyer answers cover only respondents and belong to the day answered, which may differ from purchase days. Gross before refunds and fees; extras excluded. Missing first-visit coverage stays null, not zero. No causal marketing lift.",
+          first_visit_complete: table.unknownFirst != null,
           attribution_days: data.attributionDays ?? 30,
-          rows: table.rows.map((r) => ({ channel: r.name, last_visit: r.last, first_visit: r.first, buyers_said: r.said })),
+          rows: table.rows.map((r) => ({ channel: r.name, last_visit: r.last, first_visit: table.unknownFirst ? r.first : null, buyers_said: r.said })),
           no_channel: table.unknown,
+          no_first_visit_channel: table.unknownFirst ?? null,
           no_channel_buyers_said: table.unknownSaid.map((r) => ({ answer: r.name, buyers: r.buyers, revenue: r.cents })),
         }
       : null,
+    ad_records_note: "Variants are grouped by channel, campaign and content tag. Paid records include purchases and one-click extras, not unique buyers; renewals excluded. Amounts are gross before refunds and fees. At most 25 variants are returned; empty with ad_records_complete false means unavailable, not zero.",
+    ad_records_complete: known && data.ads?.[w] != null,
+    ads_total: known && data.ads?.[w] != null ? data.ads[w].length : null,
     ads: known ? (data.ads?.[w] ?? []).slice(0, 25).map((r) => ({ ad: r.content, channel: r.source, campaign: r.campaign, sales: r.sales, revenue: r.cents })) : [],
     posts: known ? (data.posts?.[w] ?? []).slice(0, 25).map((r) => ({ post: r.campaign, channel: r.sources?.length === 1 ? r.sources[0] : "", payment_channels: r.sources ?? null, visits: r.visits, sales: r.sales, revenue: r.cents })) : [],
   };
