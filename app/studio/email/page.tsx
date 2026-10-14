@@ -13,7 +13,8 @@ import { listCounts } from "@/lib/contacts";
 import { listBroadcasts } from "@/lib/broadcasts";
 import { broadcastMoney, flowMoney, readMailRevenue, readMailVisits } from "@/lib/mail-revenue";
 import { sellsSomething } from "@/lib/mail-starters";
-import { flowStats, readFlows } from "@/lib/flows";
+import { readFlowStatsStrict } from "@/lib/flow-stats";
+import { readFlows } from "@/lib/flows";
 import { inTrial, monthlyAllowance, usedThisMonth } from "@/lib/mail";
 import { healthId, pauseWords, pausedFor } from "@/lib/mail-health";
 import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
@@ -62,7 +63,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
   // What each email sold, from the creator's own Stripe account, cached for
   // ten minutes (lib/mail-revenue.ts). Asked only when something was sent.
   const [stats, revenue, visits] = await Promise.all([
-    flowStats(flows),
+    readFlowStatsStrict(flows).catch(() => null),
     broadcasts.length || flows.length ? readMailRevenue(store) : Promise.resolve(null),
     // And how many times its links opened a page of the store, from the
     // store's own count of visits by tag: nothing in the email reports back.
@@ -194,7 +195,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             }))}
             currency={store.currency}
             sells={sellsSomething(store)}
-            flows={flows.map((f) => ({ ...f, stats: stats.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0, acted: 0 }, money: flowMoney(revenue, f.id) }))}
+            flows={flows.map((f) => ({ ...f, statsAvailable: stats?.has(f.id) ?? false, stats: stats?.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0, acted: 0 }, money: flowMoney(revenue, f.id) }))}
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
             ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
             segments={await listSegments(store.listId).catch(() => [])}
