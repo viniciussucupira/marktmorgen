@@ -627,11 +627,15 @@ export async function listingsNamed(store: Store, meta: Record<string, string | 
 // ---- Reading ----------------------------------------------------------------
 
 /** Many GETs, in pipelines of a few hundred sent side by side. */
-async function getMany(keys: string[]): Promise<unknown[]> {
+async function getMany(keys: string[], strict = false): Promise<unknown[]> {
   if (keys.length === 0) return [];
   const chunks: string[][] = [];
   for (let i = 0; i < keys.length; i += 400) chunks.push(keys.slice(i, i + 400));
-  const answers = await Promise.all(chunks.map((chunk) => redisPipeline(chunk.map((key) => ["GET", key]))));
+  const answers = await Promise.all(chunks.map(async (chunk) => {
+    const reply = await redisPipeline(chunk.map((key) => ["GET", key]));
+    if (strict && (!Array.isArray(reply) || reply.length !== chunk.length)) throw new Error("Catalog reply is incomplete");
+    return reply;
+  }));
   return answers.flat();
 }
 
@@ -661,6 +665,15 @@ function wanted(store: Store, ids: Iterable<string> | undefined): string[] {
  * holds is not read again.
  */
 export async function readListings(store: Store, ids?: Iterable<string>): Promise<Listing[]> {
+  return readListingsWithPolicy(store, ids, false);
+}
+
+/** Saved reviews distinguish missing products from unreadable catalog records. */
+export async function readListingsStrict(store: Store, ids?: Iterable<string>): Promise<Listing[]> {
+  return readListingsWithPolicy(store, ids, true);
+}
+
+async function readListingsWithPolicy(store: Store, ids: Iterable<string> | undefined, strict: boolean): Promise<Listing[]> {
   const asked = wanted(store, ids);
   const catalog = store.catalog;
   if (catalog.inline) {
@@ -670,10 +683,13 @@ export async function readListings(store: Store, ids?: Iterable<string>): Promis
   if (asked.length === 0) return [];
   const found = new Map(catalog.head.map((listing) => [listing.id, listing]));
   const missing = asked.filter((id) => !found.has(id));
+  if (strict && missing.length && (!catalog.id || !isRedisConfigured())) throw new Error("Catalog reads unavailable");
   if (missing.length && catalog.id && isRedisConfigured()) {
-    const raws = await getMany(missing.map((id) => listingKey(catalog.id!, id)));
+    const raws = await getMany(missing.map((id) => listingKey(catalog.id!, id)), strict);
     missing.forEach((id, i) => {
-      const listing = parseListing(parseJson(raws[i]));
+      const raw = raws[i];
+      const listing = parseListing(parseJson(raw));
+      if (strict && raw !== null && (!listing || listing.id !== id)) throw new Error("Catalog record is invalid");
       if (listing && listing.id === id) found.set(id, listing);
     });
   }
