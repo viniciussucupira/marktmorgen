@@ -1,7 +1,7 @@
 import { readFunnelPageReview } from "@/lib/funnel-page-checks";
 import type { Listing, Store } from "@/lib/store";
 import type { PageFunnel } from "@/lib/page-funnel";
-import { readListings } from "@/lib/catalog";
+import { readListingsStrict as readListings } from "@/lib/catalog";
 import { canSell, canSellProduct } from "@/lib/store-checkout";
 import { offeredItems } from "@/lib/bundles";
 import { canGiveProduct } from "@/lib/free";
@@ -55,7 +55,7 @@ export async function readFunnelPaymentChecks(store: Store, funnel: Pick<PageFun
   const knownIds = new Set(products.map(p => p.id));
   const missingTargets = targetIds.filter(id => !knownIds.has(id));
   const targets = [...products, ...(missingTargets.length ? await readListings(store, missingTargets) : [])];
-  const bundles = await offeredItems(store, products);
+  const bundles = await offeredItems(store, products, readListings);
   const recommendationIssues = recommendations.flatMap(recommendation => {
     const product = products.find(product => product.id === recommendation.id);
     const prefix = recommendation.prefix + "Quiz result “" + recommendation.title + "”: ";
