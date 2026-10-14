@@ -74,7 +74,7 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
   const money = (cents: number) => formatMoney(cents, data.currency ?? "usd");
   const known = paidFiguresComplete(data);
   const now = data.totals[window];
-  const before = data.previous?.[window];
+  const before = data.previousTrafficAvailable?.[window] === false ? null : data.previous?.[window];
   const span = SPAN[window];
   const may = context.may ?? {};
   // The average order in these days, the one figure the arithmetic below is made with.
