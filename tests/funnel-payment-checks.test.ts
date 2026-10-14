@@ -1,5 +1,7 @@
 import { paidStepProblem, freeStepProblem, planStepProblem, bumpStepProblems, readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Listing, Store } from "@/lib/store";
+import { readListings } from "@/lib/catalog";
+import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 process.env.STRIPE_SECRET_KEY = "sk_test_local_configuration_only";
 const store = { currency: "usd", stripeAccountId: "acct_test", stripeChargesEnabled: true, subscriptionActive: true, suspended: false } as unknown as Store;
@@ -91,6 +93,29 @@ async function main() {
   is("saved review loads configured add-on outside funnel", addOnIssues.length === 1 && addOnIssues[0].startsWith("Step 1, Offer:") && addOnIssues[0].includes("Extra pack"), true);
   const foreignAddOnStore = { ...addOnStore, catalog: { ...addOnStore.catalog, items: [{ id: withBump.id }] } } as Store;
   is("add-on outside selected store cannot appear ready", (await readFunnelPaymentChecks(foreignAddOnStore, { steps: [{ kind: "product", id: withBump.id }] }))[0]?.includes("no longer in your store"), true);
+  const externalStore = { ...catalogStore, catalog: { ...catalogStore.catalog, id: "review-catalog", head: [] } } as Store;
+  const originalPipeline = redis.pipeline;
+  const rejectsReview = async () => {
+    try { await readFunnelPaymentChecks(externalStore, { steps: [{ kind: "product", id: product.id }] }); return false; } catch { return true; }
+  };
+  try {
+    redis.pipeline = async () => [];
+    is("incomplete catalog reply leaves review unknown", await rejectsReview(), true);
+    is("public catalog reader retains tolerant behavior", await readListings(externalStore, [product.id]), []);
+    const unreadBundle = { ...product, link: null, bundle: ["bundle-a", "bundle-b"], pick: null };
+    const unreadBundleStore = { ...externalStore, catalog: { ...externalStore.catalog, items: [{ id: product.id }, { id: "bundle-a" }, { id: "bundle-b" }], head: [unreadBundle] } } as Store;
+    let bundleUnknown = false;
+    try { await readFunnelPaymentChecks(unreadBundleStore, { steps: [{ kind: "product", id: product.id }] }); } catch { bundleUnknown = true; }
+    is("incomplete bundle member reads keep review unknown", bundleUnknown, true);
+    redis.pipeline = async () => ["broken"];
+    is("invalid catalog record leaves review unknown", await rejectsReview(), true);
+    redis.pipeline = async () => [JSON.stringify({ ...product, id: "wrong" })];
+    is("mismatched catalog id leaves review unknown", await rejectsReview(), true);
+    redis.pipeline = async () => [null];
+    is("confirmed missing catalog record remains a correction", (await readFunnelPaymentChecks(externalStore, { steps: [{ kind: "product", id: product.id }] }))[0]?.includes("could not be found"), true);
+    redis.pipeline = async () => [JSON.stringify(product)];
+    is("valid external catalog record remains eligible", await readFunnelPaymentChecks(externalStore, { steps: [{ kind: "product", id: product.id }] }), []);
+  } finally { redis.pipeline = originalPipeline; }
   done();
 }
 void main();
