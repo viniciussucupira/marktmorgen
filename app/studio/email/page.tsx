@@ -14,7 +14,7 @@ import { listBroadcasts } from "@/lib/broadcasts";
 import { broadcastMoney, flowMoney, readMailRevenue, readMailVisits } from "@/lib/mail-revenue";
 import { sellsSomething } from "@/lib/mail-starters";
 import { readFlowStatsStrict } from "@/lib/flow-stats";
-import { readFlows } from "@/lib/flows";
+import { readFlowListStrict } from "@/lib/flow-list";
 import { inTrial, monthlyAllowance, usedThisMonth } from "@/lib/mail";
 import { healthId, pauseWords, pausedFor } from "@/lib/mail-health";
 import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
@@ -46,11 +46,11 @@ export default async function StudioEmailPage({ searchParams }: Params) {
   const { store } = view;
 
   const allowance = monthlyAllowance(store);
-  const [counts, used, broadcasts, flows, listings, drafts, pause] = await Promise.all([
+  const [counts, used, broadcasts, loadedFlows, listings, drafts, pause] = await Promise.all([
     listCounts(store.listId),
     usedThisMonth(store.listId),
     listBroadcasts(store.listId),
-    readFlows(store.listId),
+    readFlowListStrict(store.listId).catch(() => null),
     // The names of the products a flow or a broadcast can be about: one
     // command, where reading every card was one per product (lib/catalog.ts).
     readTitles(store),
@@ -59,6 +59,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
     // of its addresses bounced or reported it (lib/mail-health.ts).
     pausedFor(healthId(store)),
   ]);
+  const flows = loadedFlows ?? [];
   const role = view.role;
   // What each email sold, from the creator's own Stripe account, cached for
   // ten minutes (lib/mail-revenue.ts). Asked only when something was sent.
@@ -195,6 +196,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             }))}
             currency={store.currency}
             sells={sellsSomething(store)}
+            flowsReadFailed={loadedFlows === null}
             flows={flows.map((f) => ({ ...f, statsAvailable: stats?.has(f.id) ?? false, stats: stats?.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0, acted: 0 }, money: flowMoney(revenue, f.id) }))}
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
             ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
