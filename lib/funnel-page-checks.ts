@@ -6,14 +6,20 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { parsePage } from "@/lib/sales-page";
 import { FORM_ID, parseForm, type FormDef } from "@/lib/forms";
 
-/** Read-only checks of saved A/B form bindings, in two batched reads at most. No answers are read. */
+export type QuizRecommendation = { prefix: string; title: string; id: string };
+
 export async function readFunnelPageChecks(store: Store, funnel: Pick<PageFunnel, "steps">): Promise<string[]> {
+  return (await readFunnelPageReview(store, funnel)).issues;
+}
+
+/** Read-only checks of saved A/B form bindings, in two batched reads at most. No answers are read. */
+export async function readFunnelPageReview(store: Store, funnel: Pick<PageFunnel, "steps">): Promise<{ issues: string[]; recommendations: QuizRecommendation[] }> {
   const steps = funnel.steps.flatMap((step, index) => {
     if (step.kind !== "page") return [];
     const page = (store.sitePages ?? []).find(page => page.id === step.id);
     return page && pageOut(page) ? [{ page, index }] : [];
   });
-  if (!steps.length) return [];
+  if (!steps.length) return { issues: [], recommendations: [] };
   if (!store.statsId || !isRedisConfigured()) throw new Error("Page form checks unavailable");
   const ids = [...new Set(steps.map(step => step.page.id))];
   const pages = await redisPipeline(ids.map(id => ["GET", `nl:product:page:${store.statsId}:${siteKey(id)}`]));
@@ -54,7 +60,8 @@ export async function readFunnelPageChecks(store: Store, funnel: Pick<PageFunnel
       available.set(id, form);
     }
   }
-  return checks.flatMap(({ prefix, form }) => {
+  const recommendations: QuizRecommendation[] = [];
+  const issues = checks.flatMap(({ prefix, form }) => {
     if (!form) return [prefix + "A form block has no selected form. Choose a form in the page editor before sharing."];
     const selected = available.get(form);
     if (!selected) return [prefix + "The selected form is no longer available in this store. Review Forms and select a replacement in the page editor."];
@@ -65,7 +72,9 @@ export async function readFunnelPageChecks(store: Store, funnel: Pick<PageFunnel
       if (!product) return [prefix + "Quiz result “" + outcome.title + "” recommends a product that is no longer available in this store. Review its recommendation under Forms."];
       if (!Number.isSafeInteger(product.kind) || product.kind < 0) throw new Error("Quiz product availability could not be checked");
       if ((product.kind & KIND.hidden) !== 0) return [prefix + "Quiz result “" + outcome.title + "” recommends a draft product. Publish that product or choose another recommendation under Forms."];
+      recommendations.push({ prefix, title: outcome.title, id: outcome.product });
       return [];
     });
   });
+  return { issues, recommendations };
 }
