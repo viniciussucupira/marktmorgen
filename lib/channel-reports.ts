@@ -1,3 +1,4 @@
+import type { CampaignResults } from "@/lib/campaign-results";
 import type { DailyCashflowRow } from "@/lib/daily-cashflow";
 import type { RefundActivity } from "@/lib/refund-activity";
 import type { ChannelCashflow } from "@/lib/channel-cashflow";
@@ -58,5 +59,13 @@ export function dailyCashflowReport(rows: DailyCashflowRow[], currency: string):
   return csv([
     ["Day (UTC)", "Currency", "Payments received", "Refunds recorded", "Ad spend recorded", "After refunds", "After refunds and ads", "Definition"],
     ...rows.map((row): Cell[] => [row.date, currency.toUpperCase(), amount(row.payments, currency), amount(row.refunds, currency), amount(row.ads, currency), amount(row.afterRefunds, currency), amount(row.afterAds, currency), note]),
+  ]);
+}
+
+export function campaignResultsReport(report: CampaignResults, currency: string): string {
+  const note = "Campaign tag totals across channels; visits are not split by payment channel. Paid records include purchases and one-click extras, not unique buyers; recurring renewals excluded. Gross less ads is before refunds, fees, tax, commissions and other costs, not profit or causal ad lift. Blank means unavailable or incomplete. Untagged ad spend is not allocated to campaign rows.";
+  return csv([
+    ["From (UTC)", "To (UTC)", "Currency", "Campaign", "Recorded payment channels", "Recorded ad channels", "Visits", "Paid records", "Gross amount", "Recorded ads", "Gross amount less ads", "Untagged ad spend (whole report)", "Definition"],
+    ...report.rows.map((row): Cell[] => [report.from, report.to, currency.toUpperCase(), row.campaign, row.paymentChannels === null ? "Unavailable" : row.paymentChannels.join("; "), row.adChannels === null ? "Unavailable" : row.adChannels.join("; "), row.visits, row.paidRecords, amount(row.gross, currency), amount(row.ads, currency), amount(row.grossLessAds, currency), amount(report.unassignedAds, currency), note]),
   ]);
 }
