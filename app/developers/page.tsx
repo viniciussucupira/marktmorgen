@@ -261,6 +261,14 @@ export default function DevelopersPage() {
           is unavailable for 90 days or when either period cannot be read completely; complete is false and rows
           are empty, while confirmed current receipts may remain available.
         </p>
+        <p>
+          <code className="font-mono">refund_activity</code> provides refund records and amounts by channel for
+          the stated UTC dates. Its share compares refunded money with gross receipts in the same period,
+          including renewals. It is not the fraction of buyers or purchases refunded: refunds can concern older
+          purchases and the ratio can exceed 1. Share is null when receipts are zero. A complete empty list means
+          no refund activity; incomplete readings have null totals and an empty list. Confirmed gross receipt
+          reports remain available independently.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
