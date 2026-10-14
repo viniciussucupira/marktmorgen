@@ -1,3 +1,4 @@
+import type { AttributionTable } from "@/lib/attribution-rules";
 import type { CreativeRow } from "@/lib/creative-results";
 import type { CampaignResults } from "@/lib/campaign-results";
 import type { DailyCashflowRow } from "@/lib/daily-cashflow";
@@ -76,5 +77,16 @@ export function creativeResultsReport(rows: CreativeRow[], period: ReportPeriod)
   return csv([
     ["From (UTC)", "To (UTC)", "Currency", "Channel", "Campaign", "Variant (utm_content)", "Paid records", "Gross amount", "Definition"],
     ...rows.map((row): Cell[] => [period.from, period.to, period.currency.toUpperCase(), row.source, row.campaign, row.content, row.sales, amount(row.cents, period.currency), note]),
+  ]);
+}
+
+export function attributionReport(table: AttributionTable, period: ReportPeriod): string {
+  const note = "First and last visits are alternative readings of the same purchases; never add the columns. One-click extras excluded. Gross before refunds and fees. Buyer answers belong to the UTC day answered and cover only respondents; their amounts are not an extra revenue source. Answer subset rows describe buyers of last-visit unattributed sales and overlap channel rows. A blank first-visit unattributed figure means unavailable in an older reading, not zero. No causal marketing lift.";
+  const entry = (kind: string, name: string, last: number | null, lastCents: number | null, first: number | null, firstCents: number | null, buyers: number | null, saidCents: number | null): Cell[] => [period.from, period.to, period.currency.toUpperCase(), kind, name, last, amount(lastCents, period.currency), first, amount(firstCents, period.currency), buyers, amount(saidCents, period.currency), note];
+  return csv([
+    ["From (UTC)", "To (UTC)", "Currency", "Row type", "Channel or answer", "Last-visit sales", "Last-visit gross", "First-visit sales", "First-visit gross", "Buyer answers", "Gross of answered sales", "Definition"],
+    ...table.rows.map(row => entry("Channel", row.name, row.last.sales, row.last.cents, table.unknownFirst ? row.first.sales : null, table.unknownFirst ? row.first.cents : null, row.said.buyers, row.said.cents)),
+    entry("No channel", "No channel", table.unknown.sales, table.unknown.cents, table.unknownFirst?.sales ?? null, table.unknownFirst?.cents ?? null, null, null),
+    ...table.unknownSaid.map(row => entry("Answer subset: last-visit no channel", row.name, null, null, null, null, row.buyers, row.cents)),
   ]);
 }

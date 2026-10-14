@@ -1107,9 +1107,10 @@ export function StatsPanel({
         </div>
       ) : null}
 
-      {attribution && salesHere ? (
+      {attribution && salesHere && !data.partial ? (
         <AttributionTable
           table={attribution}
+          period={days.length ? { from: days[0].date, to: days[days.length - 1].date, currency: data.currency ?? "usd" } : undefined}
           days={data.attributionDays ?? 30}
           canSet={canSetAttribution}
           span={span}
@@ -1117,6 +1118,8 @@ export function StatsPanel({
           count={count}
         />
       ) : null}
+
+      {attribution && data.partial ? <p className="mt-6 text-sm text-ink-soft" role="status">The purchase reading is incomplete. Attribution comparisons and downloads wait for complete figures.</p> : null}
 
       {sources.length ? (
         <div className="mt-6">

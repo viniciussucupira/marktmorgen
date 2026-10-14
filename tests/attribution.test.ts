@@ -109,6 +109,9 @@ async function main(): Promise<void> {
   ]);
   is("and the last visit adds up to all the money", table.total, { sales: 7, cents: 18000 });
 
+  is("first visits keep no-channel money", table.unknownFirst, { sales: 3, cents: 9000 });
+  is("both visit columns conserve purchases", [table.rows.reduce((n,r) => n+r.last.cents,table.unknown.cents),table.rows.reduce((n,r) => n+r.first.cents,table.unknownFirst?.cents ?? 0)], [18000,18000]);
+
   part("In the studio's numbers");
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
@@ -135,6 +138,10 @@ async function main(): Promise<void> {
   is("with the store's window", data.attributionDays, 60);
   const context = numbersContext(data) as Record<string, Record<string, unknown>>;
   is("and Ask your numbers can read it", (context.last_7_days.channels_three_ways as { channel: string }[]).map((r) => r.channel), ["Instagram", "YouTube", "Podcasts"]);
+
+  is("studio keeps first-visit no channel", week.unknownFirst, { sales: 1, cents: 2000 });
+  is("assistant keeps first-visit no channel", context.last_7_days.sales_with_no_first_visit_channel, { sales: 1, revenue: "$20" });
+  is("partial attribution withheld from assistant", JSON.stringify(numbersContext({ ...data, partial: true })).includes("channels_three_ways"), false);
 
   done();
 }

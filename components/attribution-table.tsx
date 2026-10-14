@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { attributionReport, type ReportPeriod } from "@/lib/channel-reports";
+import { ReportDownload } from "@/components/report-download";
 import { toast } from "@/components/toast";
 import { ATTRIBUTION_DAYS, type AttributionTable as Table } from "@/lib/attribution-rules";
 
@@ -18,6 +20,7 @@ export function AttributionTable({
   span,
   money,
   count,
+  period,
 }: {
   table: Table;
   days: number;
@@ -26,6 +29,7 @@ export function AttributionTable({
   span: string;
   money: (cents: number) => string;
   count: (n: number) => string;
+  period?: ReportPeriod;
 }) {
   const [days, setDays] = useState(daysGiven);
   const [busy, setBusy] = useState(false);
@@ -62,7 +66,7 @@ export function AttributionTable({
       <span className="text-ink-mute">—</span>
     );
 
-  const hasAny = table.rows.length > 0 || table.unknown.sales > 0;
+  const hasAny = table.rows.length > 0 || table.unknown.sales > 0 || (table.unknownFirst?.sales ?? 0) > 0;
   return (
     <div className="mt-6" data-attribution="">
       {hasAny ? (
@@ -92,17 +96,17 @@ export function AttributionTable({
                     {row.name}
                   </th>
                   <td className="py-1.5 pl-3 text-right tabular-nums">{cell(row.last.sales, row.last.cents, ["sale", "sales"])}</td>
-                  <td className="py-1.5 pl-3 text-right tabular-nums">{cell(row.first.sales, row.first.cents, ["sale", "sales"])}</td>
+                  <td className="py-1.5 pl-3 text-right tabular-nums">{table.unknownFirst ? cell(row.first.sales, row.first.cents, ["sale", "sales"]) : <span className="text-xs text-ink-soft">Unavailable</span>}</td>
                   <td className="py-1.5 pl-3 text-right tabular-nums">{cell(row.said.buyers, row.said.cents, ["buyer", "buyers"])}</td>
                 </tr>
               ))}
-              {table.unknown.sales > 0 ? (
+              {table.unknown.sales > 0 || (table.unknownFirst?.sales ?? 0) > 0 ? (
                 <tr className="align-top">
                   <th scope="row" className="py-1.5 pr-3 font-medium text-ink">
                     No channel
                   </th>
                   <td className="py-1.5 pl-3 text-right tabular-nums">{cell(table.unknown.sales, table.unknown.cents, ["sale", "sales"])}</td>
-                  <td className="py-1.5 pl-3 text-right text-ink-mute">—</td>
+                  <td className="py-1.5 pl-3 text-right tabular-nums">{table.unknownFirst ? cell(table.unknownFirst.sales, table.unknownFirst.cents, ["sale", "sales"]) : <span className="text-xs text-ink-soft">Unavailable</span>}</td>
                   <td className="py-1.5 pl-3 text-right text-ink-mute">—</td>
                 </tr>
               ) : null}
@@ -127,8 +131,9 @@ export function AttributionTable({
         </div>
       ) : null}
       <p className="mt-2 text-xs text-ink-soft">
-        {`The same sales read three ways, from your own Stripe account: by the last place each buyer came from before buying, within the ${days} days before; by the first place, within the 90 days before; and by what buyers answered on the page after paying (on the day they answered). The first two add up to the same money; the third only counts buyers who answered. Where the law asks visitors first, or a browser asks not to be followed, only the tags on the page they bought from count. One-click extras taken after paying are left out.`}
+        {`The same sales read three ways, from your own Stripe account: by the last place each buyer came from before buying, within the ${days} days before; by the first place, within the 90 days before; and by what buyers answered on the page after paying (on the day they answered). Include the no-channel row when summing either visit column. The visit columns are alternative readings of the same purchases and must not be added together. Buyer answers cover only respondents and can fall in different days from their purchases; they must not be added to visit revenue. Where the law asks visitors first, or a browser asks not to be followed, only the tags on the page they bought from count. One-click extras taken after paying are left out.`}
       </p>
+      {period && hasAny ? <ReportDownload csv={attributionReport(table, period)} filename={"marktmorgen-attribution-" + period.from + "-to-" + period.to + ".csv"}>Download attribution comparison</ReportDownload> : null}
       {canSet ? (
         <label className="mt-3 flex flex-wrap items-center gap-2 text-sm text-ink">
           <span>Credit a sale to a visit up to</span>

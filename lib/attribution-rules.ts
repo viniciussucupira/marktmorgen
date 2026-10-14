@@ -84,6 +84,8 @@ export type AttributionTable = {
   rows: AttributionRow[];
   /** Sales credited to no channel at all, by the last visit. */
   unknown: Money;
+  /** Unattributed first visits; absent only in older cached readings. */
+  unknownFirst?: Money;
   /** Of those, what their buyers said, the most money first. */
   unknownSaid: { answer: string; name: string; buyers: number; cents: number }[];
   /** Everything credited, by the last visit: the total each column adds up to. */
@@ -113,7 +115,7 @@ function nameOf(key: string): string {
  * row with no channel is not a row: it is `unknown`, split by what its
  * buyers said. Sorted by the most money in any of the three columns.
  */
-export function attributionTable(last: BySource, first: BySource, heard: Heard): AttributionTable {
+export function attributionTable(last: BySource, first: BySource | undefined, heard: Heard): AttributionTable {
   const rows = new Map<string, AttributionRow>();
   const row = (key: string) => {
     let found = rows.get(key);
@@ -124,6 +126,7 @@ export function attributionTable(last: BySource, first: BySource, heard: Heard):
     return found;
   };
   const unknown: Money = { sales: 0, cents: 0 };
+  const unknownFirst: Money = { sales: 0, cents: 0 };
   const total: Money = { sales: 0, cents: 0 };
   for (const r of last) {
     total.sales += r.sales;
@@ -137,8 +140,12 @@ export function attributionTable(last: BySource, first: BySource, heard: Heard):
     target.sales += r.sales;
     target.cents += r.cents;
   }
-  for (const r of first) {
-    if (!r.source || r.source === "direct") continue;
+  for (const r of first ?? []) {
+    if (!r.source || r.source === "direct") {
+      unknownFirst.sales += r.sales;
+      unknownFirst.cents += r.cents;
+      continue;
+    }
     const target = row(rowOf(r.source)).first;
     target.sales += r.sales;
     target.cents += r.cents;
@@ -159,6 +166,7 @@ export function attributionTable(last: BySource, first: BySource, heard: Heard):
   return {
     rows: [...rows.values()].sort((a, b) => most(b) - most(a) || b.last.sales + b.said.buyers - (a.last.sales + a.said.buyers) || a.name.localeCompare(b.name)),
     unknown,
+    unknownFirst: first === undefined ? undefined : unknownFirst,
     unknownSaid,
     total,
   };
