@@ -1,9 +1,10 @@
+import { KIND } from "@/lib/catalog";
 import type { Store } from "@/lib/store";
 import type { PageFunnel } from "@/lib/page-funnel";
 import { pageOut, siteKey } from "@/lib/site-page-rules";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { parsePage } from "@/lib/sales-page";
-import { FORM_ID, parseForm } from "@/lib/forms";
+import { FORM_ID, parseForm, type FormDef } from "@/lib/forms";
 
 /** Read-only checks of saved A/B form bindings, in two batched reads at most. No answers are read. */
 export async function readFunnelPageChecks(store: Store, funnel: Pick<PageFunnel, "steps">): Promise<string[]> {
@@ -40,7 +41,7 @@ export async function readFunnelPageChecks(store: Store, funnel: Pick<PageFunnel
     }
   }
   const formIds = [...new Set(checks.flatMap(check => check.form ? [check.form] : []))];
-  const available = new Set<string>();
+  const available = new Map<string, FormDef>();
   if (formIds.length) {
     const [stored] = await redisPipeline([["HMGET", `nl:forms:${store.statsId}`, ...formIds]]);
     if (!Array.isArray(stored) || stored.length !== formIds.length) throw new Error("Forms could not be read");
@@ -50,10 +51,21 @@ export async function readFunnelPageChecks(store: Store, funnel: Pick<PageFunnel
       if (typeof raw !== "string") throw new Error("Form could not be read");
       const form = parseForm(JSON.parse(raw));
       if (!form || form.id !== id) throw new Error("Stored form is invalid");
-      available.add(id);
+      available.set(id, form);
     }
   }
-  return checks.flatMap(({ prefix, form }) => !form
-    ? [prefix + "A form block has no selected form. Choose a form in the page editor before sharing."]
-    : available.has(form) ? [] : [prefix + "The selected form is no longer available in this store. Review Forms and select a replacement in the page editor."]);
+  return checks.flatMap(({ prefix, form }) => {
+    if (!form) return [prefix + "A form block has no selected form. Choose a form in the page editor before sharing."];
+    const selected = available.get(form);
+    if (!selected) return [prefix + "The selected form is no longer available in this store. Review Forms and select a replacement in the page editor."];
+    return selected.outcomes.flatMap(outcome => {
+      if (!outcome.product) return [];
+      if (!Array.isArray(store.catalog?.items)) throw new Error("Quiz product recommendations could not be checked");
+      const product = store.catalog.items.find(item => item.id === outcome.product);
+      if (!product) return [prefix + "Quiz result “" + outcome.title + "” recommends a product that is no longer available in this store. Review its recommendation under Forms."];
+      if (!Number.isSafeInteger(product.kind) || product.kind < 0) throw new Error("Quiz product availability could not be checked");
+      if ((product.kind & KIND.hidden) !== 0) return [prefix + "Quiz result “" + outcome.title + "” recommends a draft product. Publish that product or choose another recommendation under Forms."];
+      return [];
+    });
+  });
 }
