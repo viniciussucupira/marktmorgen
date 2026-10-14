@@ -1482,6 +1482,17 @@ function Flows({
     router.refresh();
   }
 
+  const draftIssues = draft ? flowConfigurationIssues({
+    id: draft.id ?? "", name: draft.name, trigger: draft.trigger, active: draft.active, createdAt: 0,
+    productId: draft.productId, tag: draft.triggerTag, formId: draft.formId,
+    goal: draft.goal === "any" ? { any: true } : draft.goal === "product" ? { productId: draft.goalProduct } : undefined,
+    steps: draft.steps.map((step, index) => {
+      const action = actionOf(step);
+      const when = conditionOf(step);
+      return { id: step.id ?? "draft-step-" + index, delayHours: 0, subject: step.subject, body: step.body, ...(action ? { action } : {}), ...(when ? { when } : {}) };
+    }),
+  }, { products, courses, flows, ...automation }) : [];
+
   // Which of the two starter sequences this store has no sequence for yet.
   // The after-a-purchase one is made only by a store that sells something,
   // and the server decides that; here it is offered whenever none exists.
@@ -2031,6 +2042,7 @@ function Flows({
               Add a step
             </button>
           ) : null}
+          {draftIssues.length ? <div className="notice notice-warn text-sm"><p className="font-semibold">Review this configuration before activating</p><ul className="mt-2 list-disc space-y-1 pl-5">{draftIssues.map((issue, index) => <li key={index}>{issue}</li>)}</ul><p className="mt-2">These are reference checks. Saving still uses server validation; delivery and action execution have not been tested.</p></div> : null}
           <label className="flex items-center gap-2 text-sm text-ink">
             <input type="checkbox" checked={draft.active} onChange={(e) => setDraft({ ...draft, active: e.target.checked })} />
             <span>On. Switched off, nobody new starts it, and those already in it get none of its emails that are still to come.</span>
