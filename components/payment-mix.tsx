@@ -9,8 +9,9 @@ export function PaymentMixPanel({data,range}:{data:StatsData;range:"d7"|"d30"|"d
   const mix=paymentMixFrom(data,range);
   return <section className="mt-6 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" aria-labelledby="numbers-payment-mix">
     <h3 id="numbers-payment-mix" className="text-sm font-bold text-ink">How payments depend on channels</h3>
-    {!mix ? <p className="mt-2 text-sm text-ink-soft" role="status">Complete ledger coverage is not available. Payment shares and downloads wait for complete figures.</p> : <>
+    {!mix ? <p className="mt-2 text-sm text-ink-soft" role="status">Complete payment coverage is not available. Payment shares and downloads wait for complete figures.</p> : <>
       <p className="mt-1 text-xs text-ink-soft">{mix.from} to {mix.to}, UTC. {formatMoney(mix.total,data.currency)} in recorded payments, including renewals. Every share uses all these payments as its denominator.</p>
+      {data.cashflowComplete !== true ? <p className="mt-2 text-sm text-ink-soft" role="status">The payment reading is complete. Results after refunds remain unavailable; these figures are before refunds.</p> : null}
       {mix.total > 0 ? <>
         <dl className="mt-3 grid gap-3 sm:grid-cols-3">
           <div><dt className="text-xs text-ink-soft">Largest identified channel</dt><dd className="text-sm font-semibold text-ink">{mix.largest ? channelName(mix.largest.source)+" · "+paymentShare(mix.largest.share) : "No identified channel"}</dd></div>
