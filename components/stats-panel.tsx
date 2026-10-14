@@ -472,13 +472,14 @@ export function StatsPanel({
 
   // The same stretch just before the one chosen, to set each figure beside.
   const before = range === "all" ? null : data.previous?.[range] ?? null;
+  const beforeTraffic = range === "all" || data.previousTrafficAvailable?.[range] === false ? null : before;
   const span = range === "d7" ? "7 days" : range === "d30" ? "30 days" : "90 days";
   const moved = (now: number, then: number | null | undefined) => (before ? change(now, then, span) : null);
 
   const tiles: { label: string; value: string; note?: string; moved?: ReturnType<typeof change> }[] = [
-    { label: "Visitors", value: count(totals.visitors), note: "People, each counted once a day", moved: moved(totals.visitors, before?.visitors) },
-    { label: "Page views", value: count(totals.views), note: "Every time your store was opened", moved: moved(totals.views, before?.views) },
-    { label: "Checkouts started", value: count(totals.checkouts), note: "Pressed buy, book or get it free", moved: moved(totals.checkouts, before?.checkouts) },
+    { label: "Visitors", value: count(totals.visitors), note: "People, each counted once a day", moved: moved(totals.visitors, beforeTraffic?.visitors) },
+    { label: "Page views", value: count(totals.views), note: "Every time your store was opened", moved: moved(totals.views, beforeTraffic?.views) },
+    { label: "Checkouts started", value: count(totals.checkouts), note: "Pressed buy, book or get it free", moved: moved(totals.checkouts, beforeTraffic?.checkouts) },
     { label: "Sales", value: salesHere ? count(totals.sales) : "—", note: salesNote, moved: salesHere ? moved(totals.sales, before?.sales) : null },
     { label: "Revenue", value: salesHere ? money(totals.cents) : "—", note: "Before Stripe's fee", moved: salesHere ? moved(totals.cents, before?.cents) : null },
     // Memberships renewed and later plan payments: money the sales above leave out (lib/stats.ts).
@@ -616,6 +617,8 @@ export function StatsPanel({
           {`${count(elsewhere)} ${elsewhere === 1 ? "sale was" : "sales were"} paid in another currency, from before your store charged in ${(data.currency ?? "usd").toUpperCase()}. ${elsewhere === 1 ? "It is" : "They are"} left out of these numbers, because amounts in two currencies do not add up, and ${elsewhere === 1 ? "it is" : "they are"} in the sales download with ${elsewhere === 1 ? "its" : "their"} own currency.`}
         </p>
       ) : null}
+
+      {range !== "all" && !beforeTraffic ? <p className="mt-3 text-sm text-ink-soft" role="status">Previous traffic figures are unavailable. Current visitors, page views and checkouts remain available.</p> : null}
 
       <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {tiles.map((tile) => (
