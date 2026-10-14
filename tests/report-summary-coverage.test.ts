@@ -25,6 +25,17 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API windows expose UTC boundaries and calendar coverage");
+is("seven day boundaries explicit",complete.days.last_7_days.period,{from:date(6),to:date(0),requested_days:7,days_returned:7,calendar_complete:true,timezone:"UTC"});
+is("thirty day dates match the request",[complete.days.last_30_days.period.from,complete.days.last_30_days.period.days_returned,complete.days.last_30_days.period.calendar_complete],[date(29),30,true]);
+is("ninety day dates match the request",[complete.days.last_90_days.period.from,complete.days.last_90_days.period.days_returned],[date(89),90]);
+is("partial payment coverage doesn't change date coverage",summaryOf({...data,partial:true}).days.last_7_days.period,complete.days.last_7_days.period);
+is("short history remains explicit",summaryOf({...data,days:data.days.slice(-3)}).days.last_7_days.period,{from:date(2),to:date(0),requested_days:7,days_returned:3,calendar_complete:false,timezone:"UTC"});
+is("missing days leave boundaries unknown",summaryOf({...data,days:[]}).days.last_7_days.period,{from:null,to:null,requested_days:7,days_returned:0,calendar_complete:false,timezone:"UTC"});
+is("date gap blocks calendar completeness",summaryOf({...data,days:data.days.filter(d=>d.date!==date(2))}).days.last_7_days.period.calendar_complete,false);
+is("duplicate date blocks calendar completeness",summaryOf({...data,days:data.days.map((d,i)=>i===88?{...d,date:date(2)}:d)}).days.last_7_days.period.calendar_complete,false);
+is("invalid date cannot create reported boundaries",summaryOf({...data,days:[...data.days.slice(0,-1),{...data.days[89],date:"2026-02-30"}]}).days.last_7_days.period.from,null);
+is("reversed dates block calendar completeness",summaryOf({...data,days:[...data.days].reverse()}).days.last_7_days.period.calendar_complete,false);
 part("API attribution preserves unknown first visits and independent reading coverage");
 const attributionData={...data,attributionDays:30,attribution:{d7:{total:{sales:3,cents:6000},unknown:{sales:1,cents:2000},unknownFirst:{sales:2,cents:4000},rows:[{key:"instagram",name:"Instagram",last:{sales:2,cents:4000},first:{sales:1,cents:2000},said:{buyers:1,cents:2000}}],unknownSaid:[{answer:"podcast",name:"Podcasts",buyers:1,cents:2000}]},d30:{total:{sales:0,cents:0},unknown:{sales:0,cents:0},unknownFirst:{sales:0,cents:0},rows:[],unknownSaid:[]},d90:{total:{sales:0,cents:0},unknown:{sales:0,cents:0},rows:[],unknownSaid:[]}}};
 const attributionReport=summaryOf(attributionData).days.last_7_days.attribution;
