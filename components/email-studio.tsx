@@ -1555,9 +1555,9 @@ function Flows({
           >
             Write them for me
           </button>
-          <Feedback error={error} done={null} />
         </div>
       ) : null}
+      {!draft ? <Feedback error={error} done={null} /> : null}
       {flows.length ? (
         <ul className="mt-4 space-y-3">
           {flows.map((f) => (
@@ -1610,9 +1610,14 @@ function Flows({
                   className="text-ink-soft underline underline-offset-4 hover:text-danger"
                   onClick={async () => {
                     setBusy(true);
+                    setError(null);
                     const a = await call({ action: "flow-remove", id: f.id });
                     setBusy(false);
-                    if (a.ok) toast("Sequence removed.");
+                    if (!a.ok) {
+                      setError("Removal of “" + f.name + "” could not be confirmed. Reload to check its current status. " + message(a));
+                      return;
+                    }
+                    toast("Sequence removed.");
                     router.refresh();
                   }}
                 >
