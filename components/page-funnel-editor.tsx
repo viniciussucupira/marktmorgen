@@ -248,6 +248,7 @@ export function PageFunnelEditor({
 
               <details className="mt-4 rounded-xl bg-paper p-4 ring-1 ring-line">
                 <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-ink"><Icon name="chevron-down" size={16} className="shrink-0" />{review.ready ? "Review: all steps available" : "Review: check unavailable steps"}</summary>
+                <div id={`funnel-review-${funnel.id}`} tabIndex={-1} className="scroll-mt-24">
                 {review.issues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{review.issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">Every configured step is currently available. This does not verify payment-provider health, delivery or page copy.</p>}
                 <h3 className="mt-3 text-sm font-semibold text-ink">Payments, free sign-up and delivery</h3>
                 {paymentIssues == null ? <p className="mt-2 text-sm text-ink-soft">This configuration could not be checked. Review payment and delivery before sharing the funnel.</p> : paymentIssues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{paymentIssues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">No blocker found in the saved offer configuration.</p>}
@@ -255,6 +256,7 @@ export function PageFunnelEditor({
                 {review.observation ? <p className="mt-3 text-sm text-ink-soft">{review.observation}</p> : null}
                 {repairActions.length > 0 && (review.issues.length > 0 || paymentIssues == null || paymentIssues.length > 0) ? <nav aria-label={"Corrections for " + funnel.name} className="mt-3 flex flex-wrap gap-2">{repairActions.map(action => <a key={action.href} className="btn btn-secondary btn-sm" href={action.href}>{action.label}</a>)}</nav> : null}
                 <a className="btn btn-secondary btn-sm mt-3" href={base + funnel.slug} target="_blank" rel="noopener noreferrer">Open as a visitor</a>
+                </div>
               </details>
               <ol className="mt-4 space-y-2">
                 {steps.map((step, index) => (
