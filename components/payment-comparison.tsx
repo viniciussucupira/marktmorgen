@@ -12,6 +12,7 @@ export function PaymentComparisonPanel({data,range}:{data:StatsData;range:"d7"|"
   const money=(value:number)=>formatMoney(value,data.currency);
   return <section className="mt-6 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" aria-labelledby="numbers-payment-comparison">
     <h3 id="numbers-payment-comparison" className="text-sm font-bold text-ink">Payments compared with the previous period</h3>
+    {previous && data.cashflowComplete !== true ? <p className="mt-2 text-sm text-ink-soft" role="status">The payment reading is complete. Results after refunds remain unavailable; these figures are before refunds.</p> : null}
     {!previous ? <p className="mt-2 text-sm text-ink-soft" role="status">A complete previous period is not available in this reading. Comparisons need two consecutive periods inside the 90-day ledger; use 7 or 30 days when both periods are available.</p> : <>
       <p className="mt-1 text-xs text-ink-soft">{report.current.from} to {report.current.to} compared with {previous.from} to {previous.to}, UTC. {money(report.current.total)} received now versus {money(previous.total)} before: {money(report.delta ?? 0)} difference · {paymentChange(report.change)}.</p>
       {report.rows.length ? <div className="mt-3 max-h-80 overflow-auto" tabIndex={0} role="region" aria-label="Channel payments compared with the previous period">

@@ -1,9 +1,10 @@
+import type { PaymentLedgerReading } from "@/lib/payment-ledger-coverage";
 import type { StatsData } from "@/lib/stats";
 import { paymentMixFrom, type PaymentMix } from "@/lib/payment-mix";
 export type PaymentComparisonRow = {source:string;current:number;previous:number;change:number|null;currentShare:number|null;previousShare:number|null;shareChange:number|null};
 export type PaymentComparison = {current:PaymentMix;previous:PaymentMix|null;delta:number|null;change:number|null;rows:PaymentComparisonRow[]};
-/** Equal, adjacent UTC windows entirely within the complete 90-day ledger. */
-export function paymentComparisonFrom(data:Pick<StatsData,"sales"|"partial"|"cashflowComplete"|"channelDays"|"days">,range:"d7"|"d30"|"d90"):PaymentComparison|null {
+/** Equal, adjacent UTC windows entirely within the complete 90-day payment ledger. */
+export function paymentComparisonFrom(data:PaymentLedgerReading & Pick<StatsData,"days">,range:"d7"|"d30"|"d90"):PaymentComparison|null {
   const current=paymentMixFrom(data,range);
   if(!current)return null;
   const unavailable:PaymentComparison={current,previous:null,delta:null,change:null,rows:[]};
