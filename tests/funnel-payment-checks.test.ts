@@ -44,6 +44,10 @@ is("PayPal does not bypass missing delivery", paidStepProblem(paypalStore, { ...
 part("Saved funnel plans explain why installments disappeared");
 const installment = { ...product, plan: { payments: 3, interval: "month", amountCents: 400 } } as Listing;
 is("valid installment plan", planStepProblem(store, installment), null);
+is("installments require Stripe even when PayPal can sell up front", planStepProblem(paypalStore, installment)?.includes("requires an available Stripe"), true);
+is("PayPal up-front purchase remains eligible", paidStepProblem(paypalStore, installment, 0), null);
+is("expired plan blocks configured installments", planStepProblem({ ...store, subscriptionActive: false }, installment)?.includes("store plan"), true);
+is("no installments means no provider warning", planStepProblem(paypalStore, product), null);
 is("no plan remains quiet", planStepProblem(store, product), null);
 is("price increase explains short installments", planStepProblem(store, { ...installment, priceCents: 1500 })?.includes("less than the "), true);
 is("up-front checkout remains eligible", paidStepProblem(store, { ...installment, priceCents: 1500 }, 0), null);
