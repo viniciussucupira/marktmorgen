@@ -49,4 +49,12 @@ for (const condition of ["clicked", "unclicked"] as const) {
   is(condition + " after an email remains valid", flowConfigurationIssues({ ...flow, steps: [step, { ...step, id: "next", when: { if: condition } }] }, context), []);
 }
 is("a non-click condition can follow an action", flowConfigurationIssues({ ...flow, steps: [{ ...step, action: { do: "notify" } }, { ...step, id: "next", when: { if: "half-a" } }] }, context), []);
+is("purchase trigger cannot end at any purchase", flowConfigurationIssues({ ...flow, trigger: "bought", goal: { any: true } }, context)[0]?.includes("ending conflicts"), true);
+for (const trigger of ["product", "finished"] as const) {
+  is(trigger + " trigger cannot end at the same product", flowConfigurationIssues({ ...flow, trigger, productId: "p1", goal: { productId: "p1" } }, context)[0]?.includes("ending conflicts"), true);
+  is(trigger + " trigger can end at another product", flowConfigurationIssues({ ...flow, trigger, productId: "p1", goal: { productId: "p2" } }, { ...context, products: [...context.products, { id: "p2" }] }), []);
+}
+is("joined trigger can end at a purchase", flowConfigurationIssues({ ...flow, goal: { any: true } }, context), []);
+is("purchase trigger without a goal remains valid", flowConfigurationIssues({ ...flow, trigger: "bought" }, context), []);
+is("product trigger without a goal remains valid", flowConfigurationIssues({ ...flow, trigger: "product", productId: "p1" }, context), []);
 done();
