@@ -1,3 +1,5 @@
+import { weeklyMessage } from "@/lib/stats-report";
+import { insightsFrom } from "@/lib/insights";
 import { StatsPanel } from "@/components/stats-panel";
 import { readStats, studioStats, type StatsData } from "@/lib/stats";
 import { claimHandle, ensureStatsId, storeForEmail } from "@/lib/store";
@@ -40,6 +42,31 @@ async function main(){
  is("confirmed positive traffic has its real change",tile(known,"Visitors").includes("100%"),true);
  is("legacy snapshot without new flag retains reported comparison",tile(render({...data,previousTrafficAvailable:undefined}),"Visitors").includes("None in the 7 days before"),true);
  is("rendering preserves the source snapshot",data.previous.d7.visitors,0);
+ const positive={...data,totals:{...data.totals,d7:{...totals,visitors:200}},previous:{...data.previous,d7:{visitors:100,views:200,checkouts:20,sales:10,cents:5000}}};
+ const funnel=(html:string)=>{const start=html.indexOf('id="numbers-funnel"');return html.slice(start,html.indexOf('</ol>',start));};
+ const unknownFunnel=funnel(render(positive));
+ is("unavailable prior traffic suppresses both funnel rate comparisons",unknownFunnel.includes("in the 7 days before"),false);
+ is("unavailable prior traffic retains current funnel",unknownFunnel.includes("Started a checkout")&&unknownFunnel.includes("Paid"),true);
+ const confirmed={...positive,previousTrafficAvailable:{d7:true,d30:false,d90:false}};
+ is("confirmed funnel retains comparison",funnel(render(confirmed)).includes("in the 7 days before"),true);
+ is("legacy funnel retains reported comparison",funnel(render({...positive,previousTrafficAvailable:undefined})).includes("in the 7 days before"),true);
+ const insightTexts=(snapshot:StatsData)=>insightsFrom(snapshot,"d7",[],20).map(i=>i.text);
+ const trend=(text:string)=>/people visited:|of your visitors bought:/.test(text);
+ is("unavailable prior traffic suppresses visitor and conversion insights",insightTexts(positive).filter(trend),[]);
+ is("current checkout insight remains",insightTexts(positive).some(text=>text.startsWith("Of 10 checkouts started")),true);
+ is("confirmed prior visitor and conversion insights remain",insightTexts(confirmed).filter(trend).length,2);
+ is("legacy prior insights remain",insightTexts({...positive,previousTrafficAvailable:undefined}).filter(trend).length,2);
+ const message=(snapshot:StatsData)=>weeklyMessage(store,snapshot,"https://example.com/stop")!.text;
+ const line=(text:string,start:string)=>text.split("\n").find(line=>line.startsWith(start));
+ const unknownWeek=message(positive);
+ is("weekly visitors remain without unconfirmed comparison",line(unknownWeek,"Visitors:"),"Visitors: 200");
+ is("weekly checkouts remain without unconfirmed comparison",line(unknownWeek,"Checkouts started:"),"Checkouts started: 10");
+ is("weekly confirmed revenue comparison remains",line(unknownWeek,"Sales:")?.includes("up 100% on the week before"),true);
+ is("weekly confirmed visitors retain change",line(message(confirmed),"Visitors:")?.includes("up 100% on the week before"),true);
+ is("weekly confirmed checkouts retain change",line(message(confirmed),"Checkouts started:")?.includes("down 50% on the week before"),true);
+ is("weekly legacy retains reported change",line(message({...positive,previousTrafficAvailable:undefined}),"Visitors:")?.includes("up 100% on the week before"),true);
+ is("partial purchases still allow confirmed traffic trends",insightTexts({...confirmed,partial:true}).filter(trend).length,1);
+ is("selected window coverage does not borrow another window",insightTexts({...positive,previousTrafficAvailable:{d7:false,d30:true,d90:true}}).filter(trend),[]);
  done();
 }
 main().catch(error=>{console.error(error);process.exit(1);});
