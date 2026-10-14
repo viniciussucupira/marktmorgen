@@ -5,7 +5,7 @@ import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
 import { DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { mailAnswer, type MailAnswer } from "@/lib/mail-response";
@@ -1411,6 +1411,8 @@ function Flows({
   sells: boolean;
 }) {
   const router = useRouter();
+  const [refreshing, startRefresh] = useTransition();
+  const refreshFlows = () => startRefresh(() => router.refresh());
   const [draft, setDraft] = useState<FlowDraft | null>(null);
   const invalidWait = draft?.steps.some(step => flowWaitHours(step.wait, step.unit) === null) ?? false;
   const [draftBaseline, setDraftBaseline] = useState<string | null>(null);
@@ -1418,7 +1420,8 @@ function Flows({
   const [draftCount, setDraftCount] = useState<number>(DEFAULT_SEQUENCE_DRAFT);
   // Each step's box, so a picture goes where the cursor is.
   const stepBoxes = useRef<(HTMLTextAreaElement | null)[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [operationBusy, setBusy] = useState(false);
+  const busy = operationBusy || refreshing;
   const [error, setError] = useState<string | null>(null);
 
   const triggerWords = (f: FlowRow) =>
@@ -1480,7 +1483,7 @@ function Flows({
     }
     setDraft(null);
     toast("Sequence saved.");
-    router.refresh();
+    refreshFlows();
   }
 
   const draftIssues = draft ? flowConfigurationIssues({
@@ -1550,13 +1553,14 @@ function Flows({
               if (!a.ok) return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
               const made = Array.isArray(a.made) ? a.made.length : 0;
               toast(made === 1 ? "Written. It is below, switched off, for you to read." : "Written. Both are below, switched off, for you to read.");
-              router.refresh();
+              refreshFlows();
             }}
           >
             Write them for me
           </button>
         </div>
       ) : null}
+      {refreshing ? <p role="status" className="mt-4 text-sm text-ink-soft">Updating sequences… Wait for the latest list before making another change.</p> : null}
       {!draft ? <Feedback error={error} done={null} /> : null}
       {flows.length ? (
         <ul className="mt-4 space-y-3">
@@ -1618,7 +1622,7 @@ function Flows({
                       return;
                     }
                     toast("Sequence removed.");
-                    router.refresh();
+                    refreshFlows();
                   }}
                 >
                   Remove
@@ -2064,7 +2068,7 @@ function Flows({
           </fieldset>
         </form>
       ) : flows.length < 10 ? (
-        <button type="button" className="btn btn-secondary mt-5" onClick={() => openDraft(null)}>
+        <button type="button" className="btn btn-secondary mt-5" disabled={busy} onClick={() => openDraft(null)}>
           New sequence
         </button>
       ) : null}
