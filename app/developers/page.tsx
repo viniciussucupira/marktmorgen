@@ -253,6 +253,14 @@ export default function DevelopersPage() {
           in the denominator. The list is not capped. An empty list with complete true means no receipts; complete
           false means the reading is unavailable. Refund availability does not block confirmed receipt channels.
         </p>
+        <p>
+          <code className="font-mono">payment_comparison</code> compares gross receipts with the immediately preceding
+          period of equal length for 7 and 30 days, including channels present in only one period. It provides the
+          earlier UTC dates and total, changes in money, fractional growth and changes in channel share. Multiply
+          share changes by 100 for percentage points. Growth is null when the earlier amount is zero. Comparison
+          is unavailable for 90 days or when either period cannot be read completely; complete is false and rows
+          are empty, while confirmed current receipts may remain available.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
