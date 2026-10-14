@@ -29,6 +29,7 @@ export function freeStepProblem(store: Store, product: Listing): string | null {
 export function planStepProblem(store: Store, product: Listing): string | null {
   if (product.hidden) return null;
   const state = planState(product);
+  if (state && !("paused" in state) && !canSell(store)) return "The configured payment plan requires an available Stripe connection and store plan. Review installments separately from the up-front purchase, which may still be available through PayPal.";
   return state && "paused" in state
     ? "The configured payment plan is not offered to buyers. " + planPauseWords(state.paused, state.plan, product, store.currency) + " Review the plan separately from the up-front purchase."
     : null;
