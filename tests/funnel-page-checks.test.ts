@@ -1,7 +1,7 @@
 import { KIND } from "@/lib/catalog";
 import { emptyBlock } from "@/lib/sales-page";
 import { readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
-import type { Store } from "@/lib/store";
+import type { Listing, Store } from "@/lib/store";
 import { readFunnelPageChecks } from "@/lib/funnel-page-checks";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -92,6 +92,25 @@ async function main() {
   let unknownKind = false;
   try { await readFunnelPageChecks({ ...quizStore, catalog: { ...quizStore.catalog, items: [{ ...quizStore.catalog.items[0], kind: NaN }] } }, funnel); } catch { unknownKind = true; }
   is("malformed recommendation availability stays unknown", unknownKind, true);
+  process.env.STRIPE_SECRET_KEY = "sk_test_local_configuration_only";
+  const offer = { id: "offer001", title: "Recommended offer", priceCents: 1000, hidden: false, call: null, course: null, podcast: null, shipping: null, options: [], recurring: null, bundle: null, bumps: [], stock: null, pwyw: null, plan: null, keys: null, file: null, link: null };
+  const checkoutStore = { ...quizStore, currency: "usd", stripeAccountId: "acct_test", stripeChargesEnabled: true, subscriptionActive: true, suspended: false, catalog: { ...quizStore.catalog, head: [offer] } } as unknown as Store;
+  const deliveryIssues = await readFunnelPaymentChecks(checkoutStore, funnel);
+  is("quiz delivery problem identifies result and offer", deliveryIssues[0]?.includes("Your next step") && deliveryIssues[0]?.includes("Recommended offer") && deliveryIssues[0]?.includes("delivery"), true);
+  const readyOffer = { ...offer, link: "https://example.com/delivery" };
+  const readyStore = { ...checkoutStore, catalog: { ...checkoutStore.catalog, head: [readyOffer] } } as unknown as Store;
+  is("configured recommended offer passes", await readFunnelPaymentChecks(readyStore, funnel), []);
+  is("recommended paid offer checks payments", (await readFunnelPaymentChecks({ ...readyStore, stripeChargesEnabled: false }, funnel))[0]?.includes("Payments are unavailable"), true);
+  const freeStore = { ...readyStore, listId: null, catalog: { ...readyStore.catalog, head: [{ ...readyOffer, priceCents: 0 }] } } as unknown as Store;
+  is("recommended free offer checks sign-up eligibility", (await readFunnelPaymentChecks(freeStore, funnel))[0]?.includes("Free sign-up is unavailable"), true);
+  const noStock = { ...readyStore, catalog: { ...readyStore.catalog, head: [{ ...readyOffer, stock: 0 }] } } as unknown as Store;
+  is("recommended offer checks configured quantity", (await readFunnelPaymentChecks(noStock, funnel))[0]?.includes("quantity of zero"), true);
+  const newlyHidden = { ...readyStore, catalog: { ...readyStore.catalog, head: [{ ...readyOffer, hidden: true }] } } as unknown as Store;
+  is("listing draft wins over older catalog visibility", (await readFunnelPaymentChecks(newlyHidden, funnel))[0]?.includes("now a draft"), true);
+  const failedListing = { ...readyStore, catalog: { ...readyStore.catalog, get head(): Listing[] { throw new Error("Injected recommended listing failure"); } } } as Store;
+  let recommendationUnknown = false;
+  try { await readFunnelPaymentChecks(failedListing, funnel); } catch { recommendationUnknown = true; }
+  is("recommended listing failure keeps review unknown", recommendationUnknown, true);
   done();
 }
 void main();
