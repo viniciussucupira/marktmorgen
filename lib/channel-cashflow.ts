@@ -1,9 +1,10 @@
+import { ledgerPaymentsComplete, type PaymentLedgerReading } from "@/lib/payment-ledger-coverage";
 import type { ChannelRow, StatsData } from "@/lib/stats";
 
 /** Receipts and refunds in the same UTC days, not accounting profit or ad lift. */
 export type ChannelCashflow = {
   source: string;
-  receipts: number;
+  receipts: number | null;
   refunds: number | null;
   adSpend: number;
   afterRefunds: number | null;
@@ -12,7 +13,7 @@ export type ChannelCashflow = {
 };
 
 export function channelCashflows(
-  data: Pick<StatsData, "sales" | "cashflowComplete" | "channelDays" | "refunds">,
+  data: PaymentLedgerReading & Pick<StatsData, "refunds">,
   range: "d7" | "d30" | "d90",
   channels: ChannelRow[],
   spend: Map<string, number>,
@@ -31,12 +32,13 @@ export function channelCashflows(
     refunds.set(source, (refunds.get(source) ?? 0) + row.cents);
   }
   const names = new Set([...channels.map((c) => c.source || "direct"), ...receipts.keys(), ...refunds.keys(), ...spend.keys()]);
-  const complete = data.sales === "ok" && data.cashflowComplete === true;
+  const paymentsKnown = ledgerPaymentsComplete(data);
+  const complete = paymentsKnown && data.cashflowComplete === true && data.refunds?.[range] != null;
   return [...names].map((source) => {
-    const received = receipts.get(source) ?? 0;
+    const received = paymentsKnown ? receipts.get(source) ?? 0 : null;
     const returned = complete ? refunds.get(source) ?? 0 : null;
     const cost = spend.get(source) ?? 0;
-    const afterRefunds = returned === null ? null : received - returned;
+    const afterRefunds = returned === null || received === null ? null : received - returned;
     return {
       source,
       receipts: received,
@@ -46,7 +48,7 @@ export function channelCashflows(
       afterAds: afterRefunds === null ? null : afterRefunds - cost,
       backPerOne: afterRefunds === null || cost <= 0 ? null : afterRefunds / cost,
     };
-  }).sort((a, b) => (b.afterAds ?? b.receipts) - (a.afterAds ?? a.receipts) || a.source.localeCompare(b.source));
+  }).sort((a, b) => (b.afterAds ?? b.receipts ?? b.adSpend) - (a.afterAds ?? a.receipts ?? a.adSpend) || a.source.localeCompare(b.source));
 }
 
 /** A recorded result, never an instruction to raise an ad budget. */

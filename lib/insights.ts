@@ -85,7 +85,7 @@ export function insightsFrom(data: StatsData, window: Window, spends: AdSpend[] 
     const spent = spendBy(spends, days[0].date, days[days.length - 1].date);
     const rows = channelCashflows(data, window, data.channels?.[window] ?? [], spent.channels, days[0].date, days[days.length - 1].date);
     for (const row of rows.sort((a, b) => (a.afterAds ?? 0) - (b.afterAds ?? 0))) {
-      if (row.adSpend < VERDICT_MIN_CENTS || row.afterRefunds === null || row.afterAds === null) continue;
+      if (row.adSpend < VERDICT_MIN_CENTS || row.receipts === null || row.afterRefunds === null || row.afterAds === null) continue;
       out.push({
         text: `${channelName(row.source)} received ${money(row.receipts)} in payments in the last ${span}, with ${money(row.refunds ?? 0)} in refunds and ${money(row.adSpend)} in recorded ads. ${money(row.afterAds)} remains before fees and other costs.`,
         tone: row.afterAds < 0 ? "bad" : "info",

@@ -33,7 +33,7 @@ is("payments, refund date and rounded spend are explicit",rows[1],{date:dates[1]
 is("renewal and other-channel payments are included",rows[2].payments,400);
 const cash=channelCashflows(data,"d7",[],spendBy(costs,dates[0],dates[2]).channels,dates[0],dates[2]);
 is("daily results sum exactly to channel results",rows.reduce((sum,row)=>sum+(row.afterAds??0),0),cash.reduce((sum,row)=>sum+(row.afterAds??0),0));
-is("days outside selected range are not counted",rows.reduce((sum,row)=>sum+row.payments,0),3400);
+is("days outside selected range are not counted",rows.reduce((sum,row)=>sum+(row.payments??0),0),3400);
 is("incomplete reading does not invent zero refunds",dailyCashflowRows({...data,cashflowComplete:false},"d7",costs)[0].refunds,null);
 is("missing daily ledger stays unknown even with old coverage flag",dailyCashflowRows({...data,refundDays:null},"d7",costs)[0].afterAds,null);
 is("recorded zero refunds are zero with complete daily ledger",rows[0].refunds,0);
