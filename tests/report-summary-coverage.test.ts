@@ -25,6 +25,20 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API campaign results retain traffic independently of paid coverage");
+const campaignData={...data,posts:{d7:[{campaign:"launch",source:"",sources:["instagram","newsletter"],visits:80,sales:3,cents:6000},{campaign:"quiet",source:"",visits:10,sales:0,cents:0}],d30:[],d90:[]}};
+const campaignReport=summaryOf(campaignData).days.last_7_days.campaign_results;
+is("campaign report dates and coverage",[campaignReport.available,campaignReport.paid_figures_complete,campaignReport.from,campaignReport.to],[true,true,date(6),date(0)]);
+is("shared campaign preserves all payment channels",campaignReport.rows[0],{campaign:"launch",visits:80,paid_records:3,revenue:6000,payment_channels:["instagram","newsletter"]});
+is("confirmed campaign without payments has empty channels",campaignReport.rows[1].payment_channels,[]);
+const partialCampaign=summaryOf({...campaignData,partial:true}).days.last_7_days.campaign_results;
+is("partial purchases preserve measured campaign traffic",[partialCampaign.available,partialCampaign.paid_figures_complete,partialCampaign.rows[0].visits],[true,false,80]);
+is("partial campaign amounts and channels unknown",[partialCampaign.rows[0].paid_records,partialCampaign.rows[0].revenue,partialCampaign.rows[0].payment_channels],[null,null,null]);
+is("missing campaign records unavailable",summaryOf(data).days.last_7_days.campaign_results,{available:false,paid_figures_complete:false,from:null,to:null,rows:[]});
+is("confirmed empty campaign list available",summaryOf(campaignData).days.last_30_days.campaign_results.available,true);
+is("refund failure preserves purchase campaign results",summaryOf({...campaignData,cashflowComplete:false}).days.last_7_days.campaign_results,campaignReport);
+is("missing legacy payment channel detail remains unknown",summaryOf({...campaignData,posts:{...campaignData.posts,d7:[{campaign:"legacy",source:"",visits:5,sales:1,cents:1000}]}}).days.last_7_days.campaign_results.rows[0].payment_channels,null);
+is("provider error preserves traffic without money",summaryOf({...campaignData,sales:"error"}).days.last_7_days.campaign_results.rows[0],{campaign:"launch",visits:80,paid_records:null,revenue:null,payment_channels:null});
 part("API daily receipts retain independent refund coverage");
 const dailyData={...data,channelDays:{instagram:{[date(1)]:1000},direct:{[date(1)]:500}},refundDays:{[date(1)]:200,[date(2)]:1000}};
 const dailyReport=summaryOf(dailyData).days.last_7_days.daily_payments;
