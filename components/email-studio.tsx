@@ -7,6 +7,7 @@ import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { useLeaveGuard } from "@/components/leave-guard";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import { flowConfigurationIssues } from "@/lib/flow-review";
@@ -1410,6 +1411,8 @@ function Flows({
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<FlowDraft | null>(null);
+  const [draftBaseline, setDraftBaseline] = useState<string | null>(null);
+  useLeaveGuard(draft !== null && JSON.stringify(draft) !== draftBaseline);
   const [draftCount, setDraftCount] = useState<number>(DEFAULT_SEQUENCE_DRAFT);
   // Each step's box, so a picture goes where the cursor is.
   const stepBoxes = useRef<(HTMLTextAreaElement | null)[]>([]);
@@ -1429,8 +1432,18 @@ function Flows({
         ? "Starts the first time someone who agreed to hear from you buys anything"
         : `Starts when someone who agreed to hear from you gets ${products.find((p) => p.id === f.productId)?.title ?? "a product"}`;
 
+  function openDraft(flow: FlowRow | null) {
+    if (busy || draft !== null) return;
+    const opened = toDraft(flow, products);
+    const others = flows.filter(other => other.id !== flow?.id);
+    const next = { ...opened, steps: opened.steps.map(step => step.kind === "start" && !others.some(other => other.id === step.actionFlow) ? { ...step, actionFlow: "" } : step) };
+    setDraftBaseline(JSON.stringify(next));
+    setError(null);
+    setDraft(next);
+  }
+
   async function save() {
-    if (!draft) return;
+    if (!draft || busy) return;
     setBusy(true);
     setError(null);
     const a = await call({
@@ -1571,21 +1584,16 @@ function Flows({
                 <button
                   type="button"
                   className="text-ink-soft underline underline-offset-4 hover:text-violet-deep"
+                  disabled={busy || draft !== null}
                   onClick={() => {
-                    const opened = toDraft(f, products);
-                    // A step that starts a sequence since removed is shown as needing a new choice, not as one it is not.
-                    const others = flows.filter((o) => o.id !== f.id);
-                    setDraft({
-                      ...opened,
-                      steps: opened.steps.map((x) => (x.kind === "start" && !others.some((o) => o.id === x.actionFlow) ? { ...x, actionFlow: "" } : x)),
-                    });
+                    openDraft(f);
                   }}
                 >
                   Edit
                 </button>
                 <button
                   type="button"
-                  aria-busy={busy} disabled={busy}
+                  aria-busy={busy} disabled={busy || draft !== null}
                   className="text-ink-soft underline underline-offset-4 hover:text-danger"
                   onClick={async () => {
                     setBusy(true);
@@ -1611,6 +1619,8 @@ function Flows({
             save();
           }}
         >
+          <fieldset disabled={busy} className="min-w-0 space-y-4">
+          <legend className="sr-only">Sequence configuration</legend>
           <label className="block">
             <span className="field-label">Name, for you</span>
             <input className="field mt-2" maxLength={80} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
@@ -2031,9 +2041,10 @@ function Flows({
             </button>
           </div>
           <Feedback error={error} done={null} />
+          </fieldset>
         </form>
       ) : flows.length < 10 ? (
-        <button type="button" className="btn btn-secondary mt-5" onClick={() => setDraft(toDraft(null, products))}>
+        <button type="button" className="btn btn-secondary mt-5" onClick={() => openDraft(null)}>
           New sequence
         </button>
       ) : null}
