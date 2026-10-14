@@ -1,3 +1,4 @@
+import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 /**
  * Automatic sequences: emails that go out by themselves, a set time after
  * somebody joins the list, gets one of the creator's products, or is given a
@@ -56,7 +57,7 @@ import { courseProgress } from "@/lib/learn";
 
 export const MAX_FLOWS = 10;
 export const MAX_STEPS = 10;
-export const MAX_DELAY_HOURS = 365 * 24;
+export const MAX_DELAY_HOURS = MAX_FLOW_WAIT_HOURS;
 export const MAX_FLOW_NAME = 80;
 
 export type FlowStep = {
