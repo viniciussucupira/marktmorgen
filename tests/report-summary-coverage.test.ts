@@ -25,6 +25,20 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API payment channels include renewals and unknown origins");
+const origins={...data,channelDays:{instagram:{[date(1)]:6000},direct:{[date(1)]:2000},unrecorded:{[date(1)]:1000},imported:{[date(1)]:1000},old:{[date(10)]:5000}}};
+const originReport=summaryOf(origins).days.last_7_days.payment_channels;
+is("channel amounts and shares include all origins",originReport.rows,[{channel:"instagram",gross_receipts:6000,share:0.6,identified:true},{channel:"direct",gross_receipts:2000,share:0.2,identified:false},{channel:"imported",gross_receipts:1000,share:0.1,identified:false},{channel:"unrecorded",gross_receipts:1000,share:0.1,identified:false}]);
+is("receipt dates explicit",[originReport.from,originReport.to],[date(6),date(0)]);
+is("rows reconcile to the gross total",originReport.rows.reduce((n,r)=>n+r.gross_receipts,0),summaryOf(origins).days.last_7_days.payments.gross_receipts);
+is("refund failure preserves channel distribution",summaryOf({...origins,cashflowComplete:false}).days.last_7_days.payment_channels,originReport);
+is("partial history has no apparent zero channel report",summaryOf({...origins,partial:true}).days.last_7_days.payment_channels,{complete:false,from:null,to:null,rows:[]});
+is("missing ledger remains unavailable",summaryOf({...origins,channelDays:undefined}).days.last_7_days.payment_channels.complete,false);
+is("confirmed empty ledger has an available empty list",summaryOf({...origins,channelDays:{}}).days.last_7_days.payment_channels,{complete:true,from:date(6),to:date(0),rows:[]});
+is("older receipts belong to longer period",summaryOf(origins).days.last_30_days.payment_channels.rows.some(r=>r.channel==="old"),true);
+const many={...data,channelDays:Object.fromEntries(Array.from({length:25},(_,i)=>[`channel-${i}`,{[date(1)]:100+i}]))};
+is("all receipt channels remain visible beyond twenty",summaryOf(many).days.last_7_days.payment_channels.rows.length,25);
+is("channel output contains no buyer identities",/customer|email|buyer/.test(JSON.stringify(originReport)),false);
 part("API exposes gross receipts and renewals independently of refunds");
 is("gross receipts use recorded payment ledger",complete.days.last_7_days.payments,{complete:true,gross_receipts:3654321,after_refunds:3653321});
 is("renewal counts and amounts exposed",complete.days.last_7_days.renewals,{complete:true,count:2,revenue:1298765});
