@@ -24,7 +24,7 @@ for(const report of reports({...data,previousTrafficAvailable:{d7:true,d30:false
  is(report.name+" real zero",[report.read.previous_traffic_available,before.visitors,before.checkouts_started],[true,0,0]);
 }
 for(const report of reports({...data,previousTrafficAvailable:undefined}))is(report.name+" legacy confirmed history",report.read.previous_traffic_available,true);
-for(const report of reports({...data,previous:undefined}))is(report.name+" missing history",[report.read.previous_traffic_available,report.read[report.key]],[false,null]);
+for(const report of reports({...data,previous:undefined} as unknown as StatsData))is(report.name+" missing history",[report.read.previous_traffic_available,report.read[report.key]],[false,null]);
 part("Independent paid availability");
 for(const report of reports({...data,partial:true})){
  const before=report.read[report.key] as Record<string,unknown>;
