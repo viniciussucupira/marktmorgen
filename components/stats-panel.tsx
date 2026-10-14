@@ -31,7 +31,7 @@ import { type InsightContext, insightsFrom } from "@/lib/insights";
 import { WeeklyTeamPicker } from "@/components/weekly-team-picker";
 import { SalesGoalCard } from "@/components/sales-goal-card";
 import { ChatSummaryEditor } from "@/components/chat-summary-editor";
-import { moneyByDay } from "@/lib/sales-goal-rules";
+import { goalMoneyByDay } from "@/lib/sales-goal-rules";
 import type { ChatKind } from "@/lib/chat-summary";
 import { NoCountToggle } from "@/components/no-count-toggle";
 import { BuyerNumbers } from "@/components/buyer-numbers";
@@ -647,7 +647,7 @@ export function StatsPanel({
       ) : null}
 
       {salesKnown && data.days.length ? (
-        <SalesGoalCard goal={goal} byDay={moneyByDay(data.channelDays)} today={data.days[data.days.length - 1].date} currency={data.currency ?? "usd"} />
+        <SalesGoalCard goal={goal} byDay={goalMoneyByDay(data)} today={data.days[data.days.length - 1].date} currency={data.currency ?? "usd"} />
       ) : null}
 
       {range !== "all" && insights.length ? (

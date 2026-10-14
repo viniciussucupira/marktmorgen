@@ -40,11 +40,13 @@ import { SITE_URL } from "@/lib/site-url";
 import { formatMoney } from "@/lib/money";
 import type { Store } from "@/lib/store";
 import { standingOf } from "@/lib/plan-standing";
-import { type DayStats, readSales, readStats } from "@/lib/stats";
+import { type DayStats, type SalesStats, readSales, readStats } from "@/lib/stats";
 import { weeklyOff, weeklyToken } from "@/lib/stats-report";
 import { alertCreator } from "@/lib/phone-alerts";
 import { chatAddress, postToChat } from "@/lib/chat-summary";
-import { goalProgress, moneyByDay, monthTitle } from "@/lib/sales-goal-rules";
+import { goalProgress, goalMoneyByDay, monthTitle } from "@/lib/sales-goal-rules";
+import { paidFiguresComplete } from "@/lib/paid-coverage";
+import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
 import { goalForMonth, readSalesGoal } from "@/lib/sales-goal";
 
 export type AlertKind = "traffic" | "conversion" | "refunds" | "goal-pace" | "goal-reached";
@@ -73,13 +75,13 @@ export type AlertInput = {
   /** Visits by day, oldest first, today last (lib/stats.ts). */
   days: DayStats[];
   /** Sales by day, in the store's currency. */
-  salesByDay: Record<string, { sales: number; cents: number }>;
+  salesByDay: Record<string, { sales: number; cents: number }> | null;
   /** Refunds made in the last 7 days and the last 90. */
-  refunds7: number;
-  refunds90: number;
+  refunds7: number | null;
+  refunds90: number | null;
   /** The month's goal, 0 for none, and money by day as the studio's goal card counts it. */
   goal: number;
-  moneyByDay: Record<string, number>;
+  moneyByDay: Record<string, number> | null;
   today: string;
 };
 
@@ -92,7 +94,7 @@ export function alertsFrom(input: AlertInput): StoreAlert[] {
   // Full days only: today is still going.
   const full = input.days.filter((d) => d.date < input.today);
   const sum = (list: DayStats[], pick: (d: DayStats) => number) => list.reduce((n, d) => n + pick(d), 0);
-  const salesOn = (list: DayStats[]) => list.reduce((n, d) => n + (input.salesByDay[d.date]?.sales ?? 0), 0);
+  const salesOn = (list: DayStats[]) => list.reduce((n, d) => n + (input.salesByDay?.[d.date]?.sales ?? 0), 0);
 
   // Visits that fell away.
   if (full.length >= 31) {
@@ -114,7 +116,7 @@ export function alertsFrom(input: AlertInput): StoreAlert[] {
   }
 
   // Sales from visits that fell, while visits held.
-  if (full.length >= 35) {
+  if (input.salesByDay !== null && full.length >= 35) {
     const recent = full.slice(-7);
     const before = full.slice(-35, -7);
     const visitorsNow = sum(recent, (d) => d.visitors);
@@ -138,7 +140,7 @@ export function alertsFrom(input: AlertInput): StoreAlert[] {
   }
 
   // Refunds piling up.
-  {
+  if (input.refunds7 !== null && input.refunds90 !== null) {
     const usualWeek = Math.max(0, input.refunds90 - input.refunds7) / 83 * 7;
     const mean = Math.max(usualWeek, 0.25);
     if (input.refunds7 >= 3 && input.refunds7 >= 3 * usualWeek && poissonAtLeast(input.refunds7, mean) < 0.01) {
@@ -154,7 +156,7 @@ export function alertsFrom(input: AlertInput): StoreAlert[] {
   }
 
   // The month's goal.
-  const progress = input.goal > 0 ? goalProgress(input.goal, input.moneyByDay, input.today) : null;
+  const progress = input.goal > 0 && input.moneyByDay !== null ? goalProgress(input.goal, input.moneyByDay, input.today) : null;
   if (progress) {
     const money = (cents: number) => formatMoney(cents, input.currency);
     const month = monthTitle(progress.month);
@@ -177,6 +179,14 @@ export function alertsFrom(input: AlertInput): StoreAlert[] {
   return out;
 }
 
+/** Unknown readings stay unavailable; confirmed empty readings remain zero. */
+export function alertPaymentFigures(sales: Pick<SalesStats, "byDay" | "partial" | "channelDays" | "paymentsComplete" | "cashflowComplete" | "refundsIn" | "renewals">): Pick<AlertInput, "salesByDay" | "refunds7" | "refunds90"> {
+  const reading = { ...sales, sales: "ok" as const };
+  const refunds = (w: "d7" | "d90") => ledgerPaymentsComplete(reading) && sales.cashflowComplete === true && sales.refundsIn?.[w] != null
+    ? sales.refundsIn[w].reduce((n, r) => n + r.refunds, 0) : null;
+  return { salesByDay: paidFiguresComplete(reading) ? sales.byDay : null, refunds7: refunds("d7"), refunds90: refunds("d90") };
+}
+
 const seenKey = (day: string, statsId: string) => `nl:alert:seen:${day}:${statsId}`;
 const saidKey = (statsId: string, alert: StoreAlert, today: string) =>
   alert.kind.startsWith("goal") ? `nl:alert:${statsId}:${alert.kind}:${today.slice(0, 7)}` : `nl:alert:${statsId}:${alert.kind}`;
@@ -194,16 +204,13 @@ export async function checkAlerts(store: Store, now = Date.now()): Promise<Alert
 
   const [stats, sales, goal] = await Promise.all([readStats(store, now), readSales(store, now), readSalesGoal(store.statsId, store.currency)]);
   if (!stats || !sales) return { said: 0, skipped: false };
-  const refunds = (w: "d7" | "d90") => (sales.refundsIn?.[w] ?? []).reduce((n, r) => n + r.refunds, 0);
   const alerts = alertsFrom({
     name: store.name,
     currency: store.currency,
     days: stats.days,
-    salesByDay: sales.byDay,
-    refunds7: refunds("d7"),
-    refunds90: refunds("d90"),
+    ...alertPaymentFigures(sales),
     goal: goalForMonth(goal, today.slice(0, 7)),
-    moneyByDay: moneyByDay(sales.channelDays),
+    moneyByDay: goalMoneyByDay({ ...sales, sales: "ok" }),
     today,
   });
   if (!alerts.length) return { said: 0, skipped: false };
