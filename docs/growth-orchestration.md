@@ -82,3 +82,5 @@ Before production release: require successful CI, validate authenticated desktop
 Guided setup checks the stored form count before writing pages. This is a preflight, not a transaction: concurrent changes or storage failures can leave partial records. Required form failures stop setup. The client treats interrupted or unrecognized responses as uncertain, preserves selections, disables immediate retries, and offers store-scoped pages/forms/funnels review links. No automatic rollback or cleanup is performed.
 
 Paid-offer configuration review flags a one-off offer whose configured stock is zero using limitedStock. Positive quantity is not a live availability guarantee; reservations, provider reconciliation and license inventory are not checked by this read-only configuration review.
+
+Funnel correction actions explicitly separate Stripe and PayPal connection destinations, both carrying the selected store and shown only with payments permission. Existing destination authorization remains authoritative; navigation does not connect a provider or initiate a payment.
