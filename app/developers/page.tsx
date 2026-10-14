@@ -217,6 +217,10 @@ export default function DevelopersPage() {
         "refunds_complete": true,
         "payments": { "complete": true, "gross_receipts": 31100, "after_refunds": 28200 },
         "renewals": { "complete": true, "count": 2, "revenue": 5000 },
+        "payment_channels": {
+          "complete": true, "from": "2026-10-08", "to": "2026-10-14",
+          "rows": [{ "channel": "instagram", "gross_receipts": 31100, "share": 1, "identified": true }]
+        },
         "sales_by_country": [{ "country": "US", "sales": 5, "revenue": 14500 }],
         "ads": [{ "ad": "reel-b", "channel": "instagram", "campaign": "launch", "sales": 3, "revenue": 8700 }]
       },
@@ -241,6 +245,13 @@ export default function DevelopersPage() {
           Each group has its own completeness flag. Unavailable values are null, while confirmed empty readings are zero.
           Complete gross receipts remain available when only refunds are unavailable. Initial sales and revenue also
           remain null when the purchase reading is incomplete, even if the provider answered successfully.
+        </p>
+        <p>
+          <code className="font-mono">payment_channels</code> lists every channel with positive gross receipts,
+          including renewals, in the stated UTC dates. Each share is a fraction of all recorded receipts (0 to 1).
+          Direct, unrecorded and imported origins have <code className="font-mono">identified: false</code> and remain
+          in the denominator. The list is not capped. An empty list with complete true means no receipts; complete
+          false means the reading is unavailable. Refund availability does not block confirmed receipt channels.
         </p>
       </LegalSection>
 
