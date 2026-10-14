@@ -55,7 +55,7 @@ export function isQuiet(sales: number[], now: number): { quiet: boolean; days: n
 }
 
 /** The paid checkouts of this store over the last QUIET_PACE_DAYS days, as times; at most three pages of a hundred. */
-async function saleTimes(store: Store, now: number): Promise<number[]> {
+export async function saleTimes(store: Store, now: number): Promise<number[] | null> {
   const handles = saleHandles(store);
   const since = Math.floor(now / 1000) - QUIET_PACE_DAYS * 86400;
   const times: number[] = [];
@@ -66,18 +66,21 @@ async function saleTimes(store: Store, now: number): Promise<number[]> {
       store.stripeAccountId as string,
       `/checkout/sessions?limit=100&created[gte]=${since}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
     )) as { data?: unknown; has_more?: unknown };
-    const rows = Array.isArray(list.data) ? (list.data as Record<string, unknown>[]) : [];
+    if (!Array.isArray(list.data) || typeof list.has_more !== "boolean") return null;
+    const rows = list.data as Record<string, unknown>[];
     for (const row of rows) {
       const meta = (row.metadata ?? {}) as Record<string, string>;
       if (row.status !== "complete" || row.payment_status !== "paid" || !handles.has(meta.store ?? "")) continue;
-      if (typeof row.created === "number") times.push(row.created * 1000);
+      if (typeof row.created !== "number" || !Number.isFinite(row.created)) return null;
+      times.push(row.created * 1000);
     }
-    if (list.has_more !== true || rows.length === 0) break;
+    if (!list.has_more) return times;
+    if (rows.length === 0) return null;
     const last = rows[rows.length - 1];
     after = typeof last.id === "string" ? last.id : "";
-    if (!after) break;
+    if (!after) return null;
   }
-  return times;
+  return null;
 }
 
 const checkedKey = (day: string, handle: string) => `nl:quiet:seen:${day}:${handle}`;
@@ -94,7 +97,9 @@ export async function checkQuiet(store: Store, now = Date.now()): Promise<QuietO
   const day = new Date(now).toISOString().slice(0, 10);
   const [first] = await redisPipeline([["SET", checkedKey(day, store.handle), "1", "NX", "EX", 2 * 86400]]);
   if (first === null) return "seen";
-  const verdict = isQuiet(await saleTimes(store, now), now);
+  const times = await saleTimes(store, now).catch(() => null);
+  if (times === null) return "skipped";
+  const verdict = isQuiet(times, now);
   if (!verdict.quiet) return "fine";
   const [claimed] = await redisPipeline([["SET", sentKey(store.handle, verdict.last), "1", "NX", "EX", 90 * 86400]]);
   if (claimed === null) return "fine";
