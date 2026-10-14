@@ -43,4 +43,10 @@ is("fractional day with whole hours remains valid", flowWaitHours("1.5", "days")
 is("immediate step remains valid", flowWaitHours("0", "hours"), 0);
 is("maximum wait remains valid", flowWaitHours("365", "days"), MAX_FLOW_WAIT_HOURS);
 is("overlong wait is rejected", flowWaitHours("366", "days"), null);
+for (const condition of ["clicked", "unclicked"] as const) {
+  is(condition + " on first step is flagged", flowConfigurationIssues({ ...flow, steps: [{ ...step, when: { if: condition } }] }, context)[0]?.startsWith("Step 1: This click condition"), true);
+  is(condition + " after an action is flagged", flowConfigurationIssues({ ...flow, steps: [{ ...step, action: { do: "notify" } }, { ...step, id: "next", when: { if: condition } }] }, context)[0]?.startsWith("Step 2: This click condition"), true);
+  is(condition + " after an email remains valid", flowConfigurationIssues({ ...flow, steps: [step, { ...step, id: "next", when: { if: condition } }] }, context), []);
+}
+is("a non-click condition can follow an action", flowConfigurationIssues({ ...flow, steps: [{ ...step, action: { do: "notify" } }, { ...step, id: "next", when: { if: "half-a" } }] }, context), []);
 done();
