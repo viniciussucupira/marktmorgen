@@ -98,3 +98,5 @@ Saved quiz recommendations are checked against the selected store catalog index:
 Recommended product diagnostics identify the quiz result and page/version. A missing recommended listing produces an explicit warning, a newly hidden listing overrides the older index, and storage failures keep the combined review unknown.
 
 Saved funnel reviews use a strict catalog reader for products, checkout add-on targets and bundle contents. Incomplete batched replies, malformed records, mismatched ids and unavailable storage remain unknown; a confirmed null record remains a missing-product correction. Public catalog readers retain their existing tolerant behavior.
+
+Automation sequences now show read-only diagnostics for unavailable product/course/form triggers, missing product goals and conditions, missing CRM fields/stages, and missing/paused/empty sequence targets. The diagnostics use the references supplied to Email Studio; they do not execute actions, send email, validate provider health or automatically prevent activation.
