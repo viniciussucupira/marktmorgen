@@ -84,3 +84,5 @@ Guided setup checks the stored form count before writing pages. This is a prefli
 Paid-offer configuration review flags a one-off offer whose configured stock is zero using limitedStock. Positive quantity is not a live availability guarantee; reservations, provider reconciliation and license inventory are not checked by this read-only configuration review.
 
 Funnel correction actions explicitly separate Stripe and PayPal connection destinations, both carrying the selected store and shown only with payments permission. Existing destination authorization remains authoritative; navigation does not connect a provider or initiate a payment.
+
+A structurally valid installment plan is reviewed against canSell(store): unavailable Stripe/store billing produces a separate installment warning. PayPal eligibility for the up-front offer remains independent. Existing structural plan errors retain their detailed messages. No checkout is opened.
