@@ -325,6 +325,14 @@ export default function DevelopersPage() {
           unavailable. The configured attribution window is reported when known. Renewals are excluded, and
           no individual survey answers or buyer identities are exposed.
         </p>
+        <p>
+          Each window includes <code className="font-mono">period</code> with UTC start and end dates, the
+          requested length and the number of returned days. Calendar completeness requires the full requested
+          sequence of consecutive valid dates; gaps, duplicates and short histories make it false. Missing or
+          invalid dates are not replaced with invented dates. This describes date coverage, independently of
+          payment coverage. The last day can still be in progress; complete calendar coverage does not mean
+          that today has finished or that financial readings are complete.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">

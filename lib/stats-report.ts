@@ -33,6 +33,7 @@ type Window = "d7" | "d30" | "d90";
 const WINDOWS: Window[] = ["d7", "d30", "d90"];
 
 export type SummaryWindow = {
+  period: { from: string | null; to: string | null; requested_days: number; days_returned: number; calendar_complete: boolean; timezone: "UTC" };
   attribution: {
     complete: boolean;
     first_visit_complete: boolean;
@@ -141,6 +142,11 @@ export function summaryOf(data: StatsData, options: { fullDetails?: boolean } = 
   const days = {} as Summary["days"];
   for (const w of WINDOWS) {
     const t = data.totals[w];
+    const requestedDays = w === "d7" ? 7 : w === "d30" ? 30 : 90;
+    const selectedDays = data.days.slice(-requestedDays);
+    const times = selectedDays.map(day => Date.parse(day.date + "T00:00:00Z"));
+    const validDates = times.every((at, i) => Number.isFinite(at) && new Date(at).toISOString().slice(0, 10) === selectedDays[i].date);
+    const calendarComplete = selectedDays.length === requestedDays && validDates && times.every((at, i) => i === 0 || at - times[i - 1] === 86400000);
     const attribution = known ? data.attribution?.[w] : null;
     const firstKnown = attribution?.unknownFirst != null;
     const refundsKnown = ledgerPaymentsComplete(data) && data.cashflowComplete === true && data.refunds?.[w] != null;
@@ -155,6 +161,7 @@ export function summaryOf(data: StatsData, options: { fullDetails?: boolean } = 
     const countriesKnown = known && data.salesCountries?.[w] != null;
     const adsKnown = known && data.ads?.[w] != null;
     days[NAMES[w]] = {
+      period: { from: validDates ? selectedDays[0]?.date ?? null : null, to: validDates ? selectedDays[selectedDays.length - 1]?.date ?? null : null, requested_days: requestedDays, days_returned: selectedDays.length, calendar_complete: calendarComplete, timezone: "UTC" },
       attribution: {
         complete: attribution != null,
         first_visit_complete: firstKnown,
