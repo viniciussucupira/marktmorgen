@@ -7,7 +7,7 @@ import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { FUNNEL_TYPES, type FunnelType, choicesOf, pagesOf, slotProblem } from "@/lib/funnel-types";
-import { MAX_FUNNEL_NAME } from "@/lib/page-funnel";
+import { FUNNEL_ID, MAX_FUNNEL_NAME } from "@/lib/page-funnel";
 
 /** A product a type can be built with, as the studio knows it. */
 export type TypeProduct = { id: string; title: string; free: boolean; call: boolean; draft: boolean };
@@ -47,7 +47,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [picked, setPicked] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [made, setMade] = useState<{ title: string; id: string }[] | null>(null);
+  const [made, setMade] = useState<{ pages: { title: string; id: string }[]; funnelId: string | null } | null>(null);
   useLeaveGuard(type !== null);
   const slots = type ? choicesOf(type) : [];
   const selected = slots.map(slot => picked[slot.key] || "").filter(Boolean);
@@ -86,10 +86,11 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "from-type", type: type.id, name, products: picked }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; pages?: { id: string; title: string }[] };
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; funnel?: { id?: unknown }; pages?: { id: string; title: string }[] };
       if (data.ok) {
         toast("Funnel made.");
-        setMade(data.pages ?? []);
+        const id = data.funnel?.id;
+        setMade({ pages: data.pages ?? [], funnelId: typeof id === "string" && FUNNEL_ID.test(id) ? id : null });
         setType(null);
         router.refresh();
         return;
@@ -102,6 +103,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
     }
   }
 
+  const reviewHref = `/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}${made?.funnelId ? `#funnel-review-${made.funnelId}` : ""}`;
   const pagesHref = (id: string) => `/studio/site?${sid ? `store=${sid}&` : ""}page=${id}`;
 
   return (
@@ -126,12 +128,12 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
 
       {made ? (
         <div className="notice notice-success mt-6" role="status">
-          <p className="font-semibold text-ink">The funnel is made, and on.</p>
-          {made.length ? (
+          <p className="font-semibold text-ink">Funnel created. Review it before sharing.</p>
+          {made.pages.length ? (
             <>
               <p className="mt-1 text-sm text-ink-soft">Write these pages and let them out, and visitors walk through them:</p>
               <ul className="mt-2 space-y-1 text-sm">
-                {made.map((page) => (
+                {made.pages.map((page) => (
                   <li key={page.id}>
                     <a className="underline underline-offset-4" href={pagesHref(page.id)}>
                       {page.title}
@@ -141,6 +143,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
               </ul>
             </>
           ) : null}
+          <a className="btn btn-secondary mt-4" href={reviewHref}>{made.funnelId ? "Review the new funnel" : "Review funnels"}</a>
         </div>
       ) : null}
 
