@@ -1,3 +1,4 @@
+import { hasPlaceholder } from "@/lib/mail-body";
 import { fieldValue } from "@/lib/crm-rules";
 import type { Flow } from "@/lib/flows";
 
@@ -20,6 +21,7 @@ export function flowConfigurationIssues(flow: Flow, context: FlowReviewContext):
   if (flow.goal && "productId" in flow.goal && !productExists(flow.goal.productId)) issues.push("The product used to end this sequence is unavailable. Review the goal.");
   flow.steps.forEach((step, index) => {
     const prefix = "Step " + (index + 1) + ": ";
+    if (hasPlaceholder(JSON.stringify(step))) issues.push(prefix + "Replace the template placeholders in this step before saving or activating.");
     if (!step.action && (!step.subject.trim() || !step.body.trim())) issues.push(prefix + "Complete the email subject and content before activating.");
     if (step.when && "productId" in step.when) {
       const course = ["started", "unstarted", "finished", "unfinished"].includes(step.when.if);
