@@ -29,6 +29,7 @@ import { affiliatesOn, readBook } from "@/lib/affiliates";
 import { insightsFrom } from "@/lib/insights";
 import { readPaths } from "@/lib/next-bought";
 import { campaignResultsFrom } from "@/lib/campaign-results";
+import { paymentComparisonFrom } from "@/lib/payment-comparison";
 import { paymentMixFrom } from "@/lib/payment-mix";
 import { dailyCashflowRows } from "@/lib/daily-cashflow";
 import { refundActivityFrom } from "@/lib/refund-activity";
@@ -69,11 +70,14 @@ export function channelsTool(data: StatsData, w: Window) {
   const refundActivity = known && days.length ? refundActivityFrom(data, w, days[0].date, days[days.length - 1].date) : null;
   const campaignReport = campaignResultsFrom(data, w);
   const mix = paymentMixFrom(data,w);
+  const comparison=paymentComparisonFrom(data,w);
   return {
     window: NAMES[w],
     currency: data.currency,
     sales_read: data.sales,
     cashflow_complete: data.cashflowComplete === true,
+    payment_comparison: comparison ? {current_from_utc:comparison.current.from,current_to_utc:comparison.current.to,current_payments:comparison.current.total,previous_available:comparison.previous!==null,previous_period:comparison.previous ? {from_utc:comparison.previous.from,to_utc:comparison.previous.to,payments:comparison.previous.total} : null,difference:comparison.delta,relative_change:comparison.change,channels:comparison.rows,
+      note:"Money in smallest currency units; relative changes and shares are fractions. shareChange is current share minus previous share; multiply by 100 for percentage points. Equal consecutive UTC periods including today as recorded so far. Comparisons fit only 7 and 30 days within the complete 90-day ledger. Null means unavailable or no valid denominator, never zero. Gross recorded payments include renewals, before refunds, fees and ads; not customers, profit or causal marketing lift."} : null,
     payment_mix: mix ? {from_utc:mix.from,to_utc:mix.to,total_payments:mix.total,unidentified_payments:mix.unidentified,unidentified_share:mix.unidentifiedShare,largest_identified_channel:mix.largest,top_three_identified_share:mix.topThreeShare,channels:mix.rows,
       note:"Money in smallest currency units; shares are fractions of all recorded payments. Includes renewals at recorded subscription channel, before refunds, fees and ads. Direct, unrecorded and imported origins excluded from largest and top-three identified channels. Complete ledger coverage required; null is unavailable. Not customer acquisition, profit or causal ad lift."} : null,
     cashflow: known && cash.length ? {
