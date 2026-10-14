@@ -2,7 +2,7 @@
 
 import type { FunnelRepairAction } from "@/lib/funnel-review-actions";
 import { funnelRate, reviewFunnel } from "@/lib/funnel-review";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -77,6 +77,8 @@ export function PageFunnelEditor({
   readFailed?: boolean;
 }) {
   const router = useRouter();
+  const [refreshing, startRefresh] = useTransition();
+  const refreshChecks = () => startRefresh(() => router.refresh());
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +172,7 @@ export function PageFunnelEditor({
     <section aria-labelledby="page-funnels-title" className="card min-w-0 p-5 sm:p-8">
       <h2 id="page-funnels-title" className="text-lg font-semibold">Pages in order</h2>
       <p className="notice notice-warn mt-4 text-sm" role="alert">Your saved funnels could not be loaded. Their availability and the remaining creation limit are unknown. Reload before creating or editing a page funnel.</p>
-      <button type="button" className="btn btn-secondary mt-4" onClick={() => router.refresh()}>Reload funnels</button>
+      <button type="button" className="btn btn-secondary mt-4" onClick={refreshChecks} disabled={refreshing || busy} aria-busy={refreshing}>{refreshing ? "Reloading…" : "Reload funnels"}</button>
     </section>
   );
 
@@ -185,12 +187,15 @@ export function PageFunnelEditor({
             {`Your own pages and your products' pages, one after another, from one address. Each step leads to the next: a page's buttons, the page after a free sign-up, and the thank-you page after paying, once its offers are answered. Up to ${MAX_FUNNEL_PAGES} steps in a funnel and ${MAX_PAGE_FUNNELS} funnels in a store.`}
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        <button type="button" className="btn btn-secondary" onClick={refreshChecks} disabled={refreshing || busy || draft !== null || removing !== null} aria-busy={refreshing}>{refreshing ? "Refreshing…" : "Refresh checks"}</button>
         {draft === null && saved.length < MAX_PAGE_FUNNELS ? (
-          <button type="button" className="btn btn-primary" onClick={() => start(null)} disabled={busy || removing !== null || choices.length === 0}>
+          <button type="button" className="btn btn-primary" onClick={() => start(null)} disabled={refreshing || busy || removing !== null || choices.length === 0}>
             <Icon name="plus" size={18} />
             New funnel
           </button>
         ) : null}
+        </div>
       </div>
 
       {choices.length === 0 ? (
@@ -237,7 +242,7 @@ export function PageFunnelEditor({
                     <Icon name="copy" size={16} />
                     Copy address
                   </button>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => start(funnel)} disabled={busy || draft !== null || removing !== null}>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => start(funnel)} disabled={refreshing || busy || draft !== null || removing !== null}>
                     Edit
                   </button>
                   {removing === funnel.id ? (
@@ -251,7 +256,7 @@ export function PageFunnelEditor({
                       </button>
                     </span>
                   ) : (
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(funnel.id)} disabled={busy || draft !== null || removing !== null}>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(funnel.id)} disabled={refreshing || busy || draft !== null || removing !== null}>
                       Remove
                     </button>
                   )}
@@ -259,7 +264,7 @@ export function PageFunnelEditor({
               </div>
 
               <details className="mt-4 rounded-xl bg-paper p-4 ring-1 ring-line">
-                <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-ink"><Icon name="chevron-down" size={16} className="shrink-0" />{review.ready ? "Review: all steps available" : "Review: check unavailable steps"}</summary>
+                <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-ink"><Icon name="chevron-down" size={16} className="shrink-0" />{!review.ready || review.issues.length > 0 || paymentIssues == null || paymentIssues.length > 0 ? "Review: needs attention" : "Review: saved checks passed"}</summary>
                 <div id={`funnel-review-${funnel.id}`} tabIndex={-1} className="scroll-mt-24">
                 {review.issues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{review.issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">Every configured step is currently available. This does not verify payment-provider health, delivery or page copy.</p>}
                 <h3 className="mt-3 text-sm font-semibold text-ink">Payments, free sign-up and delivery</h3>
