@@ -25,6 +25,14 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API preceding traffic distinguishes unavailable history from zero");
+is("known previous period remains available",complete.days.last_7_days.previous,{available:true,visitors:7,page_views:10,checkouts:2,sales:2,revenue:500000});
+is("missing preceding history stays fully unknown",summaryOf({...data,previous:undefined} as unknown as StatsData).days.last_7_days.previous,{available:false,visitors:null,page_views:null,checkouts:null,sales:null,revenue:null});
+is("missing individual window stays unavailable",summaryOf({...data,previous:{...data.previous,d7:undefined}} as unknown as StatsData).days.last_7_days.previous.available,false);
+is("confirmed zero history stays zero",summaryOf({...data,previous:{...data.previous!,d7:{visitors:0,views:0,checkouts:0,sales:0,cents:0}}}).days.last_7_days.previous,{available:true,visitors:0,page_views:0,checkouts:0,sales:0,revenue:0});
+is("partial purchases preserve known prior traffic",summaryOf({...data,partial:true}).days.last_7_days.previous,{available:true,visitors:7,page_views:10,checkouts:2,sales:null,revenue:null});
+is("missing history preserves current traffic",summaryOf({...data,previous:undefined} as unknown as StatsData).days.last_7_days.visitors,14);
+is("provider failure leaves known prior visits available",summaryOf({...data,sales:"error"}).days.last_7_days.previous.visitors,7);
 part("API windows expose UTC boundaries and calendar coverage");
 is("seven day boundaries explicit",complete.days.last_7_days.period,{from:date(6),to:date(0),requested_days:7,days_returned:7,calendar_complete:true,timezone:"UTC"});
 is("thirty day dates match the request",[complete.days.last_30_days.period.from,complete.days.last_30_days.period.days_returned,complete.days.last_30_days.period.calendar_complete],[date(29),30,true]);
