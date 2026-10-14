@@ -6,7 +6,7 @@ import { offeredItems } from "@/lib/bundles";
 import { canGiveProduct } from "@/lib/free";
 import { paypalReady, sellsThroughPayPal } from "@/lib/paypal-sales";
 import { bundleReady } from "@/lib/bundle-rules";
-import { planState, planPauseWords } from "@/lib/product-extras";
+import { planState, planPauseWords, bumpStates, bumpTargets, bumpPauseWords } from "@/lib/product-extras";
 
 /** Saved configuration only: never opens a checkout or probes delivery URLs. */
 export function paidStepProblem(store: Store, product: Listing, bundleItems: number): string | null {
@@ -33,16 +33,30 @@ export function planStepProblem(store: Store, product: Listing): string | null {
     : null;
 }
 
+/** Explain saved order bumps suppressed by the checkout rules, without changing charges. */
+export function bumpStepProblems(product: Listing, targets: Listing[]): string[] {
+  if (product.hidden || !product.bumps?.length) return [];
+  return bumpStates(targets, product).flatMap(state => {
+    if (!("paused" in state)) return [];
+    const target = targets.find(p => p.id === state.bump.productId);
+    return ["A configured checkout add-on is not offered. " + bumpPauseWords(state.paused, target?.title ?? "") + " Review the add-on separately from the main purchase."];
+  });
+}
+
 /** Strict reads: a storage failure is unknown, never a clean bill of health. */
 export async function readFunnelPaymentChecks(store: Store, funnel: Pick<PageFunnel, "steps">): Promise<string[]> {
   const products = await readListings(store, funnel.steps.filter(s => s.kind === "product").map(s => s.id));
+  const targetIds = [...new Set(products.flatMap(p => p.bumps?.length ? bumpTargets(p) : []))];
+  const knownIds = new Set(products.map(p => p.id));
+  const missingTargets = targetIds.filter(id => !knownIds.has(id));
+  const targets = [...products, ...(missingTargets.length ? await readListings(store, missingTargets) : [])];
   const bundles = await offeredItems(store, products);
   return funnel.steps.flatMap((step, i) => {
     if (step.kind !== "product") return [];
     const product = products.find(p => p.id === step.id);
     if (!product) return ["Step " + (i + 1) + ": product could not be found. Review the step."];
     const issue = product.priceCents === 0 ? freeStepProblem(store, product) : paidStepProblem(store, product, bundles.get(product.id)?.length ?? 0);
-    return [issue, planStepProblem(store, product)].filter((problem): problem is string => problem !== null)
+    return [issue, planStepProblem(store, product), ...bumpStepProblems(product, targets)].filter((problem): problem is string => problem !== null)
       .map(problem => "Step " + (i + 1) + ", " + product.title + ": " + problem);
   });
 }
