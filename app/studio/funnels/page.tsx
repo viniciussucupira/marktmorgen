@@ -15,7 +15,7 @@ import { imageUrl } from "@/lib/product-image";
 import { FunnelEditor } from "@/components/funnel-editor";
 import { offerableAfterPaying } from "@/lib/bundles";
 import { PageFunnelEditor, type SavedFunnel, type StepChoice } from "@/components/page-funnel-editor";
-import { readFunnelCounts, readPageFunnels, stepStates } from "@/lib/page-funnel-store";
+import { readFunnelCountsStrict, readPageFunnels, stepStates } from "@/lib/page-funnel-store";
 import { MAX_SITE_PAGES, pageOut } from "@/lib/site-page-rules";
 import { FunnelTypePicker, type TypeProduct } from "@/components/funnel-type-picker";
 import { MAX_PAGE_FUNNELS } from "@/lib/page-funnel";
@@ -113,9 +113,10 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
   const pageFunnels = loadedFunnels.funnels;
   const savedFunnels: SavedFunnel[] = await Promise.all(
     pageFunnels.map(async (funnel) => {
-      const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCounts(store.statsId, funnel)]);
+      const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCountsStrict(store.statsId, funnel).catch(() => null)]);
       return {
         funnel,
+        countsAvailable: counts !== null,
         paymentIssues: await readFunnelPaymentChecks(store, funnel).catch(() => null),
         steps: states.map((state, i) => ({
           title: state.title,
@@ -123,8 +124,8 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
           why: state.why,
           free: state.free,
           product: state.step.kind === "product",
-          seen: counts[i]?.seen ?? 0,
-          done: counts[i]?.done ?? 0,
+          seen: counts?.[i]?.seen ?? 0,
+          done: counts?.[i]?.done ?? 0,
         })),
       };
     }),
