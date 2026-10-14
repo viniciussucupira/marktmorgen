@@ -65,6 +65,10 @@ async function main(): Promise<void> {
   is("nothing about any buyer", context.includes("@example.com"), false);
   is("a figure is found only as given", [figureIn(context, "480"), figureIn(context, "481"), figureIn(context, "Instagram"), figureIn(context, "$999.00")], [true, false, true, false]);
 
+  const variants = { ...data, ads: { d7: [], d30: [{ content: "variant-a", campaign: "launch", source: "google", cents: 12345, sales: 2 }], d90: [] } };
+  is("complete variant amount reaches assistant", JSON.stringify(numbersContext(variants)).includes("variant-a"), true);
+  is("partial variant amount withheld", JSON.stringify(numbersContext({ ...variants, partial: true })).includes("variant-a"), false);
+
   const owner = "owner@example.com";
   await claimHandle(owner, "numshop", "Num Shop", "");
   await ensureStatsId(owner);
