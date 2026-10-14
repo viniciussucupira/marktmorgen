@@ -57,4 +57,13 @@ for (const trigger of ["product", "finished"] as const) {
 is("joined trigger can end at a purchase", flowConfigurationIssues({ ...flow, goal: { any: true } }, context), []);
 is("purchase trigger without a goal remains valid", flowConfigurationIssues({ ...flow, trigger: "bought" }, context), []);
 is("product trigger without a goal remains valid", flowConfigurationIssues({ ...flow, trigger: "product", productId: "p1" }, context), []);
+for (const trigger of ["product", "finished"] as const) {
+  const purchaseGoal = { ...flow, trigger, productId: "p1", goal: { any: true as const } };
+  is(trigger + " paid entry conflicts with any purchase ending", flowConfigurationIssues(purchaseGoal, { ...context, paidProducts: ["p1"] })[0]?.includes("ending conflicts"), true);
+  is(trigger + " free entry can end at a later purchase", flowConfigurationIssues(purchaseGoal, { ...context, paidProducts: [] }), []);
+  is(trigger + " unrelated paid product does not change entry", flowConfigurationIssues(purchaseGoal, { ...context, paidProducts: ["other-store-product"] }), []);
+  is(trigger + " missing paid context does not invent a conflict", flowConfigurationIssues(purchaseGoal, context), []);
+}
+is("joined entry is not a purchase even with paid context", flowConfigurationIssues({ ...flow, goal: { any: true } }, { ...context, paidProducts: ["p1"] }), []);
+is("paid entry with no ending remains valid", flowConfigurationIssues({ ...flow, trigger: "product", productId: "p1" }, { ...context, paidProducts: ["p1"] }), []);
 done();
