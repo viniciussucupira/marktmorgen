@@ -105,8 +105,10 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
       .filter((p) => !calls.has(p.id))
       .map((p) => ({ kind: "product" as const, id: p.id, title: p.title, note: drafts.has(p.id) ? "draft" : free.has(p.id) ? "free" : "" })),
   ];
+  let savedFunnelsFailed = false;
+  const pageFunnels = await readPageFunnels(store.statsId).catch(() => { savedFunnelsFailed = true; return []; });
   const savedFunnels: SavedFunnel[] = await Promise.all(
-    (await readPageFunnels(store.statsId).catch(() => [])).map(async (funnel) => {
+    pageFunnels.map(async (funnel) => {
       const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCounts(store.statsId, funnel)]);
       return {
         funnel,
@@ -146,7 +148,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
           Pages walked in order from one address, and the offers a buyer meets right after paying.
         </p>
 
-        <div className="mt-8">
+        {!savedFunnelsFailed ? <div className="mt-8">
           <FunnelTypePicker
             products={typeProducts}
             pagesLeft={Math.max(0, MAX_SITE_PAGES - store.sitePages.length)}
@@ -154,10 +156,10 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
             funnelsLeft={Math.max(0, MAX_PAGE_FUNNELS - savedFunnels.length)}
             sid={store.sid}
           />
-        </div>
+        </div> : null}
 
         <div className="mt-8">
-          <PageFunnelEditor saved={savedFunnels} choices={choices} base={funnelBase} repairActions={funnelRepairActions(store, view.role)} />
+          <PageFunnelEditor readFailed={savedFunnelsFailed} saved={savedFunnels} choices={choices} base={funnelBase} repairActions={funnelRepairActions(store, view.role)} />
         </div>
 
         <h2 className="mt-14 text-xl font-semibold tracking-[-0.02em] text-ink">Offers after they pay</h2>
