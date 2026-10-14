@@ -32,4 +32,9 @@ for(const sales of ["none","error"] as const){const html=render({...range,partia
 is("reading failure message remains",render({...range,partial:false,sales:"error"}).includes("Stripe did not answer"),true);
 is("confirmed zero paid totals remain zero",tile(render({...range,partial:false,totals:{...range.totals,sales:0,cents:0}}),"Sales")?.includes(">0</dd>"),true);
 is("rendering does not mutate source",range.totals.cents,99900);
+const unknownBefore=render({...range,partial:false,before:{...range.before!,sales:null,cents:null}});
+is("unknown previous sales have no zero comparison",tile(unknownBefore,"Sales")?.includes("days before"),false);
+is("unknown previous revenue has no zero comparison",tile(unknownBefore,"Revenue")?.includes("days before"),false);
+is("current confirmed money survives unknown paid history",tile(unknownBefore,"Revenue")?.includes("$999"),true);
+is("prior traffic comparison survives unknown paid history",tile(unknownBefore,"Visitors")?.includes("+100%"),true);
 done();
