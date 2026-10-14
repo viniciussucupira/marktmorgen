@@ -77,3 +77,6 @@ Calendar dates currently use an explicitly labelled UTC day. Store-local timezon
 Audit the existing implementations of every benchmark item before replacing them. Next priorities are a full journey preflight that validates delivery and payment capabilities, versioned workflows and publication, contextual AI creation of complete operations, controlled experiments, and validated predictive models. This change supplies practical guidance and descriptive review; it does not introduce autonomous optimization or predict revenue/churn.
 
 Before production release: require successful CI, validate authenticated desktop/mobile flows, and verify that role-based visibility matches the current permissions table. No deployment settings, prices, payment destinations or campaign opt-ins are changed by this increment.
+
+
+Guided setup checks the stored form count before writing pages. This is a preflight, not a transaction: concurrent changes or storage failures can leave partial records. Required form failures stop setup. The client treats interrupted or unrecognized responses as uncertain, preserves selections, disables immediate retries, and offers store-scoped pages/forms/funnels review links. No automatic rollback or cleanup is performed.
