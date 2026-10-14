@@ -214,6 +214,9 @@ export default function DevelopersPage() {
         "devices": [{ "device": "mobile", "views": 521 }],
         "previous": { "visitors": 335, "page_views": 540, "checkouts": 24, "sales": 7, "revenue": 20300 },
         "refunded": 2900,
+        "refunds_complete": true,
+        "payments": { "complete": true, "gross_receipts": 31100, "after_refunds": 28200 },
+        "renewals": { "complete": true, "count": 2, "revenue": 5000 },
         "sales_by_country": [{ "country": "US", "sales": 5, "revenue": 14500 }],
         "ads": [{ "ad": "reel-b", "channel": "instagram", "campaign": "launch", "sales": 3, "revenue": 8700 }]
       },
@@ -230,6 +233,14 @@ export default function DevelopersPage() {
           the store could name. <code className="font-mono">previous</code> is the same number of days just before, to compare
           with; its <code className="font-mono">sales</code> and <code className="font-mono">revenue</code> are{" "}
           <code className="font-mono">null</code> when Stripe could not be read that far back in full.
+        </p>
+        <p>
+          Each period also includes <code className="font-mono">payments</code> and <code className="font-mono">renewals</code>.
+          Gross receipts include initial purchases and renewals. The amount after refunds subtracts refunds recorded
+          in the same period, including refunds of older purchases, before fees and ad spend; it is not profit.
+          Each group has its own completeness flag. Unavailable values are null, while confirmed empty readings are zero.
+          Complete gross receipts remain available when only refunds are unavailable. Initial sales and revenue also
+          remain null when the purchase reading is incomplete, even if the provider answered successfully.
         </p>
       </LegalSection>
 
