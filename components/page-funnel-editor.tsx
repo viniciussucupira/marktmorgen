@@ -77,7 +77,9 @@ export function PageFunnelEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
-  useLeaveGuard(draft !== null && !busy);
+  const original = draft?.id ? saved.find(item => item.funnel.id === draft.id)?.funnel : null;
+  const dirty = draft !== null && (!original || draft.name !== original.name || draft.slug !== original.slug || draft.on !== original.on || JSON.stringify(draft.steps) !== JSON.stringify(original.steps));
+  useLeaveGuard(dirty);
 
   const pages = choices.filter((c) => c.kind === "page");
   const products = choices.filter((c) => c.kind === "product");
@@ -172,7 +174,7 @@ export function PageFunnelEditor({
           </p>
         </div>
         {draft === null && saved.length < MAX_PAGE_FUNNELS ? (
-          <button type="button" className="btn btn-primary" onClick={() => start(null)} disabled={choices.length === 0}>
+          <button type="button" className="btn btn-primary" onClick={() => start(null)} disabled={busy || removing !== null || choices.length === 0}>
             <Icon name="plus" size={18} />
             New funnel
           </button>
@@ -223,7 +225,7 @@ export function PageFunnelEditor({
                     <Icon name="copy" size={16} />
                     Copy address
                   </button>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => start(funnel)} disabled={draft !== null}>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => start(funnel)} disabled={busy || draft !== null || removing !== null}>
                     Edit
                   </button>
                   {removing === funnel.id ? (
@@ -232,12 +234,12 @@ export function PageFunnelEditor({
                       <button type="button" className="btn btn-danger btn-sm" disabled={busy} onClick={() => send({ action: "remove", id: funnel.id }, "Funnel removed.")}>
                         Yes, remove
                       </button>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(null)}>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(null)} disabled={busy}>
                         Keep it
                       </button>
                     </span>
                   ) : (
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(funnel.id)} disabled={draft !== null}>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(funnel.id)} disabled={busy || draft !== null || removing !== null}>
                       Remove
                     </button>
                   )}
@@ -287,7 +289,8 @@ export function PageFunnelEditor({
       </ul>
 
       {draft ? (
-        <div className="mt-6 rounded-2xl border-2 border-violet-brand/40 bg-white p-4 sm:p-6">
+        <fieldset disabled={busy} className="mt-6 min-w-0 rounded-2xl border-2 border-violet-brand/40 bg-white p-4 sm:p-6">
+          <legend className="sr-only">Funnel settings</legend>
           <p className="font-semibold text-ink">{draft.id ? "Edit the funnel" : "A new funnel"}</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="block" htmlFor="pf-name">
@@ -415,7 +418,7 @@ export function PageFunnelEditor({
               Cancel
             </button>
           </div>
-        </div>
+        </fieldset>
       ) : null}
 
       {error && !draft ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
