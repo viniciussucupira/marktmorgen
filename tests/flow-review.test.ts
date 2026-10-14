@@ -1,3 +1,4 @@
+import { flowWaitHours, MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 import { flowConfigurationIssues, type FlowReviewContext } from "@/lib/flow-review";
 import type { Flow } from "@/lib/flows";
 import { done, is, part } from "./check";
@@ -33,4 +34,13 @@ is("template subject identifies the affected step", flowConfigurationIssues({ ..
 is("template body needs completion", flowConfigurationIssues({ ...flow, steps: [{ ...step, body: "Tell them about ⟦your offer⟧" }] }, context)[0]?.includes("template placeholders"), true);
 is("action note placeholder is reviewed too", flowConfigurationIssues({ ...flow, steps: [{ ...step, action: { do: "note", text: "Follow up on ⟦their goal⟧" } }] }, context)[0]?.includes("template placeholders"), true);
 is("ordinary brackets are not template placeholders", flowConfigurationIssues({ ...flow, steps: [{ ...step, body: "See [the guide](https://example.com)" }] }, context), []);
+is("invalid wait identifies step", flowConfigurationIssues({ ...flow, steps: [{ ...step, delayHours: NaN }] }, context)[0]?.includes("valid wait"), true);
+is("blank wait cannot become immediate", flowWaitHours("", "hours"), null);
+is("text wait cannot become immediate", flowWaitHours("later", "hours"), null);
+is("negative wait is rejected", flowWaitHours("-1", "hours"), null);
+is("fractional hour is rejected", flowWaitHours("1.5", "hours"), null);
+is("fractional day with whole hours remains valid", flowWaitHours("1.5", "days"), 36);
+is("immediate step remains valid", flowWaitHours("0", "hours"), 0);
+is("maximum wait remains valid", flowWaitHours("365", "days"), MAX_FLOW_WAIT_HOURS);
+is("overlong wait is rejected", flowWaitHours("366", "days"), null);
 done();
