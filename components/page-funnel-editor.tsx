@@ -24,6 +24,8 @@ export type StepChoice = { kind: PageFunnelStep["kind"]; id: string; title: stri
 /** One saved funnel, with its steps as the store stands and how many people each reached. */
 export type SavedFunnel = {
   funnel: PageFunnel;
+  /** False distinguishes unknown reads from confirmed zero activity. */
+  countsAvailable?: boolean;
   /** Null means the saved payment configuration could not be checked. */
   paymentIssues?: string[] | null;
   steps: { title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number; done: number }[];
@@ -205,8 +207,8 @@ export function PageFunnelEditor({
       ) : null}
 
       <ul className="mt-6 space-y-4">
-        {saved.map(({ funnel, steps, paymentIssues }) => {
-          const review = reviewFunnel(steps);
+        {saved.map(({ funnel, steps, paymentIssues, countsAvailable }) => {
+          const review = reviewFunnel(countsAvailable === false ? steps.map(step => ({ ...step, seen: Number.NaN, done: Number.NaN })) : steps);
 
 
           return (
@@ -281,8 +283,8 @@ export function PageFunnelEditor({
                       </p>
                       {step.open ? (
                         <p className="mt-0.5 text-ink-soft">
-                          {`${people(step.seen)} opened it`}
-                          {step.product ? ` · ${step.done.toLocaleString("en-US")} ${step.free ? "signed up" : "paid"} (${share(step.done, step.seen)})` : ""}
+                          {countsAvailable === false ? "Counts unavailable. Reload before comparing results." : <>{`${people(step.seen)} opened it`}
+                          {step.product ? ` · ${step.done.toLocaleString("en-US")} ${step.free ? "signed up" : "paid"} (${share(step.done, step.seen)})` : ""}</>}
                         </p>
                       ) : (
                         <p className="mt-0.5 font-semibold text-ink">{step.why}</p>
