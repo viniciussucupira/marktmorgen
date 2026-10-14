@@ -35,15 +35,15 @@ export async function contentsOf(store: Store, ids: string[]): Promise<BundleCon
  * at all for a page without any, so a store without bundles keeps its round
  * trips exactly as they were (lib/catalog.ts).
  */
-export async function offeredItems(store: Store, listings: Listing[]): Promise<Map<string, Listing[]>> {
+export async function offeredItems(store: Store, listings: Listing[], read: typeof readListings = readListings): Promise<Map<string, Listing[]>> {
   const bundles = listings.filter((p) => p.bundle && p.bundle.length > 0);
   const out = new Map<string, Listing[]>();
   if (bundles.length === 0) return out;
   const ids = [...new Set(bundles.flatMap((p) => p.bundle ?? []))];
   const known = new Map(listings.map((p) => [p.id, p]));
   const missing = ids.filter((id) => !known.has(id));
-  const read = missing.length ? await readListings(store, missing) : [];
-  const all = [...listings, ...read];
+  const loaded = missing.length ? await read(store, missing) : [];
+  const all = [...listings, ...loaded];
   for (const bundle of bundles) out.set(bundle.id, deliverableItems(bundle, all));
   return out;
 }
