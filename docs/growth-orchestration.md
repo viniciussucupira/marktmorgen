@@ -34,6 +34,10 @@ When a review has issues or is incomplete, it offers navigation to products/deli
 
 The existing leave guard now covers modified deal, stage and custom-field drafts. Opening an unchanged editor does not activate it. It remains active during a pending save and after a failed save, until the draft is successfully saved or explicitly cancelled. It covers browser reload/close and normal same-origin navigation links under the existing guard rules. It is not autosave or durable draft storage; browser Back behavior remains outside this guard. The CRM now allows one editor at a time: opening another editor and moving/removing cards wait until the current deal, stage or field editor is saved or cancelled. This prevents in-page replacement of an open draft without adding another confirmation dialog.
 
+## Refreshing saved checks
+
+The review summary includes unavailable steps, offer issues and unknown reads rather than only step visibility. A clear summary says saved checks passed, not that live checkout or delivery were tested. Refresh checks requests the current route again through router.refresh inside a React transition. While refreshing, competing edit/create/remove controls are disabled; refreshing checks waits for an open draft or removal confirmation to be saved/cancelled. Read-failure recovery uses the same transition and remains available for recovery. No payment session or email is created.
+
 ## Unknown funnel metrics
 
 The studio review uses a strict counter reader. Storage failures, missing counter configuration, incomplete replies and invalid counts are unavailable instead of zero. Confirmed zero remains valid. Each funnel carries a countsAvailable flag; unavailable counts suppress numerical step labels, rates and observations while keeping configuration review and editing available. The legacy reader remains unchanged for other callers.
