@@ -8,6 +8,8 @@
  * from our counts, money from the creator's own Stripe account. Nothing new
  * is recorded for either.
  */
+import { paidFiguresComplete } from "@/lib/paid-coverage";
+import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Store } from "@/lib/store";
 import { type Ranked, type StatsData, readSales, readsSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
@@ -37,6 +39,10 @@ export type SummaryWindow = {
   previous: { visitors: number; page_views: number; checkouts: number; sales: number | null; revenue: number | null };
   /** Refunds given in the window; null when they were not read. */
   refunded: number | null;
+  refunds_complete: boolean;
+  /** Reading coverage; detail lists contain at most 20 entries. */
+  sales_by_country_complete: boolean;
+  ad_records_complete: boolean;
   /** Money by the buyer's country, and by the ad it came from (utm_content), the biggest first. */
   sales_by_country: { country: string; sales: number; revenue: number }[];
   ads: { ad: string; channel: string; campaign: string; sales: number; revenue: number }[];
@@ -46,6 +52,9 @@ export type Summary = {
   currency: string;
   /** "ok" when sales were read from Stripe, "none" with no Stripe account, "error" when Stripe did not answer. */
   sales: StatsData["sales"];
+  partial: boolean;
+  paid_figures_complete: boolean;
+  payments_complete: boolean;
   days: Record<"last_7_days" | "last_30_days" | "last_90_days", SummaryWindow>;
 };
 
@@ -69,11 +78,14 @@ export async function readNumbers(store: Store, now = Date.now()): Promise<Stats
 
 /** What /api/v1/stats answers: the last 7, 30 and 90 days, money in the smallest unit of the store's currency. */
 export function summaryOf(data: StatsData): Summary {
-  const known = data.sales === "ok";
+  const known = paidFiguresComplete(data);
   const ranked = <K extends string>(rows: Ranked, key: K) => rows.map((r) => ({ [key]: r.name, views: r.visits })) as ({ [P in K]: string } & { views: number })[];
   const days = {} as Summary["days"];
   for (const w of WINDOWS) {
     const t = data.totals[w];
+    const refundsKnown = ledgerPaymentsComplete(data) && data.cashflowComplete === true && data.refunds?.[w] != null;
+    const countriesKnown = known && data.salesCountries?.[w] != null;
+    const adsKnown = known && data.ads?.[w] != null;
     days[NAMES[w]] = {
       visitors: t.visitors,
       page_views: t.views,
@@ -100,12 +112,15 @@ export function summaryOf(data: StatsData): Summary {
           revenue: known && p ? p.cents : null,
         };
       })(),
-      refunded: known && data.refunds ? data.refunds[w].reduce((n, r) => n + r.cents, 0) : null,
-      sales_by_country: known ? (data.salesCountries?.[w] ?? []).slice(0, 20).map((r) => ({ country: r.country, sales: r.sales, revenue: r.cents })) : [],
-      ads: known ? (data.ads?.[w] ?? []).slice(0, 20).map((r) => ({ ad: r.content, channel: r.source, campaign: r.campaign, sales: r.sales, revenue: r.cents })) : [],
+      refunded: refundsKnown ? data.refunds![w].reduce((n, r) => n + r.cents, 0) : null,
+      refunds_complete: refundsKnown,
+      sales_by_country_complete: countriesKnown,
+      ad_records_complete: adsKnown,
+      sales_by_country: countriesKnown ? (data.salesCountries?.[w] ?? []).slice(0, 20).map((r) => ({ country: r.country, sales: r.sales, revenue: r.cents })) : [],
+      ads: adsKnown ? (data.ads?.[w] ?? []).slice(0, 20).map((r) => ({ ad: r.content, channel: r.source, campaign: r.campaign, sales: r.sales, revenue: r.cents })) : [],
     };
   }
-  return { currency: data.currency, sales: data.sales, days };
+  return { currency: data.currency, sales: data.sales, partial: data.partial === true, paid_figures_complete: known, payments_complete: ledgerPaymentsComplete(data), days };
 }
 
 // ---- The weekly email ------------------------------------------------------------
@@ -220,7 +235,7 @@ const channelWord = (source: string) => CHANNEL_WORDS[source] ?? source;
 export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, spends: AdSpend[] = [], goal = 0): { subject: string; text: string } | null {
   const week = data.totals.d7;
   if (week.visitors === 0) return null;
-  const known = data.sales === "ok";
+  const known = paidFiguresComplete(data);
   const money = (cents: number) => formatMoney(cents, data.currency ?? "usd");
   const people = `${week.visitors.toLocaleString("en-US")} ${week.visitors === 1 ? "visitor" : "visitors"}`;
   const subject = known
@@ -243,14 +258,23 @@ export function weeklyMessage(store: Store, data: StatsData, stopUrl: string, sp
   if (known) {
     lines.push(`Sales: ${week.sales.toLocaleString("en-US")}, ${money(week.cents)} before Stripe's fee${against(week.cents, before?.cents)}`);
     const renewals = data.renewals?.d7;
-    if (renewals && renewals.payments > 0) lines.push(`Renewals: ${renewals.payments.toLocaleString("en-US")}, ${money(renewals.cents)}`);
+    if (data.renewals?.partial) lines.push("Renewals: incomplete invoice reading; totals are unavailable.");
+    else if (renewals && renewals.payments > 0) lines.push(`Renewals: ${renewals.payments.toLocaleString("en-US")}, ${money(renewals.cents)}`);
   } else if (data.sales === "none") {
     lines.push("Sales: connect Stripe in your studio to see them here.");
+  } else if (data.sales === "ok") {
+    lines.push("Sales: incomplete purchase reading; totals are unavailable.");
+  } else {
+    lines.push("Sales: the payment provider did not answer; totals are unavailable.");
   }
-  const line = known ? goalLine(data, goal, money) : "";
+  const line = ledgerPaymentsComplete(data) ? goalLine(data, goal, money) : goal > 0 ? "Monthly goal progress is unavailable until the payment reading is complete." : "";
   if (line) lines.push(line);
 
-  const channels = (data.channels?.d7 ?? []).slice(0, 3);
+  const measuredChannels = data.channels?.d7 ?? [];
+  const channels = (known ? measuredChannels : measuredChannels
+    .filter(c => c.visits > 0 || c.checkouts > 0 || c.free > 0)
+    .sort((a, b) => b.visits - a.visits || b.checkouts - a.checkouts || a.source.localeCompare(b.source)))
+    .slice(0, 3);
   if (channels.length) {
     lines.push("", "Where it came from:");
     for (const c of channels) {
@@ -315,7 +339,8 @@ export async function releaseMonth(handle: string, month: string): Promise<void>
  * when the month had no visitors and no money.
  */
 export function monthlyMessage(store: Store, data: StatsData, month: string, stopUrl: string, goal = 0): { subject: string; text: string } | null {
-  const known = data.sales === "ok";
+  const known = paidFiguresComplete(data);
+  const paymentsKnown = ledgerPaymentsComplete(data);
   const money = (cents: number) => formatMoney(cents, data.currency ?? "usd");
   const byDay = moneyByDay(data.channelDays);
   const [y, m] = month.split("-").map(Number);
@@ -344,8 +369,11 @@ export function monthlyMessage(store: Store, data: StatsData, month: string, sto
   const lines = [`Here is ${store.name} in ${title}.`, ""];
   lines.push(`Visitors: ${now.visitors.toLocaleString("en-US")}${against(now.visitors, then?.visitors)}`);
   lines.push(`Checkouts started: ${now.checkouts.toLocaleString("en-US")}${against(now.checkouts, then?.checkouts)}`);
-  if (known) {
-    lines.push(`Sales: ${now.sales.toLocaleString("en-US")}`);
+  if (known) lines.push(`Sales: ${now.sales.toLocaleString("en-US")}`);
+  else if (data.sales === "none") lines.push("Sales: connect Stripe in your studio to see them here.");
+  else if (data.sales === "ok") lines.push("Sales: incomplete purchase reading; totals are unavailable.");
+  else lines.push("Sales: the payment provider did not answer; totals are unavailable.");
+  if (paymentsKnown) {
     lines.push(`Money from sales and renewals: ${money(now.cents)} before Stripe's fee${against(now.cents, then?.cents)}`);
     const channels = Object.entries(data.channelDays ?? {})
       .map(([channel, days]) => ({ channel, cents: Object.entries(days).reduce((n, [day, c]) => (day.startsWith(month) ? n + c : n), 0) }))
@@ -373,13 +401,14 @@ export function monthlyMessage(store: Store, data: StatsData, month: string, sto
           : `Your goal was ${money(goal)}: ${money(now.cents)} came in, ${share}% of it.`,
       );
     }
-  } else if (data.sales === "none") {
-    lines.push("Sales: connect Stripe in your studio to see them here.");
+  } else {
+    if (data.sales === "ok") lines.push("Money from sales and renewals: incomplete payment reading; totals are unavailable.");
+    if (goal > 0) lines.push("Monthly goal progress is unavailable until the payment reading is complete.");
   }
   lines.push("", `Everything, day by day, is in your studio: ${SITE_URL}/studio`);
   lines.push("", `You get this on the 1st of each month while your store has visitors. To stop it, the weekly one and the busy-day one: ${stopUrl}`);
   // The money is sales and renewals together, so it is not said to be "from" the count of sales.
-  const subject = known ? `${store.name} in ${title}: ${money(now.cents)} in sales and renewals` : `${store.name} in ${title}`;
+  const subject = paymentsKnown ? `${store.name} in ${title}: ${money(now.cents)} in sales and renewals` : `${store.name} in ${title}`;
   return { subject: subject.slice(0, 180), text: lines.join("\n") };
 }
 

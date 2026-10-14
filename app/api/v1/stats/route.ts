@@ -6,7 +6,7 @@ import { readNumbers, summaryOf } from "@/lib/stats-report";
  * visitors, checkouts, sales and revenue, each channel from visit to sale,
  * and page views by country and by device. The same figures the studio
  * shows; money in the smallest unit of the store's currency, and null where
- * Stripe could not be read.
+ * paid figures are unavailable or incomplete, with explicit coverage flags.
  */
 export async function GET(request: Request) {
   const store = await apiStore(request);
