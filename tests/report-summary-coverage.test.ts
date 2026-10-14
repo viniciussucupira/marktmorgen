@@ -25,6 +25,22 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API daily receipts retain independent refund coverage");
+const dailyData={...data,channelDays:{instagram:{[date(1)]:1000},direct:{[date(1)]:500}},refundDays:{[date(1)]:200,[date(2)]:1000}};
+const dailyReport=summaryOf(dailyData).days.last_7_days.daily_payments;
+is("daily coverage confirmed",[dailyReport.payments_complete,dailyReport.refunds_complete],[true,true]);
+is("complete report contains all seven UTC days",dailyReport.rows.map(r=>r.date),Array.from({length:7},(_,i)=>date(6-i)));
+is("channels sum into daily receipts",dailyReport.rows.find(r=>r.date===date(1)),{date:date(1),gross_receipts:1500,refunded:200,after_refunds:1300});
+is("older refunds preserve negative daily result",dailyReport.rows.find(r=>r.date===date(2))?.after_refunds,-1000);
+is("confirmed quiet day is zero",dailyReport.rows[0],{date:date(6),gross_receipts:0,refunded:0,after_refunds:0});
+is("daily receipts reconcile with period total",dailyReport.rows.reduce((n,r)=>n+r.gross_receipts,0),summaryOf(dailyData).days.last_7_days.payments.gross_receipts);
+const dailyRefundFailure=summaryOf({...dailyData,cashflowComplete:false}).days.last_7_days.daily_payments;
+is("refund failure preserves receipt coverage",[dailyRefundFailure.payments_complete,dailyRefundFailure.refunds_complete],[true,false]);
+is("refund failure leaves day amounts unknown",dailyRefundFailure.rows.find(r=>r.date===date(1)),{date:date(1),gross_receipts:1500,refunded:null,after_refunds:null});
+is("missing daily refunds never become zero",summaryOf({...dailyData,refundDays:undefined}).days.last_7_days.daily_payments.refunds_complete,false);
+is("partial payment history produces no daily rows",summaryOf({...dailyData,partial:true}).days.last_7_days.daily_payments,{payments_complete:false,refunds_complete:false,rows:[]});
+is("missing ledger produces no daily rows",summaryOf({...dailyData,channelDays:undefined}).days.last_7_days.daily_payments.rows,[]);
+is("ninety day report includes all days",summaryOf(dailyData).days.last_90_days.daily_payments.rows.length,90);
 part("API buyer cohorts preserve eligibility and history coverage");
 const buyerRow={source:"instagram",buyers:10,repeatBuyers:3,orders:13,cents:26000,eligible30:4,repeated30:2};
 const buyerData={...data,buyerChannels:{historyPartial:false,d7:{rows:[buyerRow],unidentifiedOrders:2},d30:{rows:[],unidentifiedOrders:0},d90:{rows:[buyerRow],unidentifiedOrders:2}}};
