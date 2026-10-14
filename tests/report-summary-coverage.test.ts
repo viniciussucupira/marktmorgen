@@ -25,6 +25,23 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API exposes gross receipts and renewals independently of refunds");
+is("gross receipts use recorded payment ledger",complete.days.last_7_days.payments,{complete:true,gross_receipts:3654321,after_refunds:3653321});
+is("renewal counts and amounts exposed",complete.days.last_7_days.renewals,{complete:true,count:2,revenue:1298765});
+is("purchase revenue keeps its original meaning",complete.days.last_7_days.revenue,3654321);
+is("partial purchase ledger withholds gross receipts",summary.days.last_7_days.payments,{complete:false,gross_receipts:null,after_refunds:null});
+is("partial purchase reading withholds renewals",summary.days.last_7_days.renewals,{complete:false,count:null,revenue:null});
+is("refund failure preserves gross receipts",summaryOf({...data,cashflowComplete:false}).days.last_7_days.payments,{complete:true,gross_receipts:3654321,after_refunds:null});
+is("missing refund records withhold amount after refunds",summaryOf({...data,refunds:null}).days.last_7_days.payments.after_refunds,null);
+is("missing payment ledger remains unavailable",summaryOf({...data,channelDays:undefined}).days.last_7_days.payments.complete,false);
+is("explicit payment failure wins over stale combined flag",summaryOf({...data,paymentsComplete:false}).days.last_7_days.payments.gross_receipts,null);
+is("unread renewals never turn into zero",summaryOf({...data,renewals:null,paymentsComplete:false}).days.last_7_days.renewals,{complete:false,count:null,revenue:null});
+is("capped renewal reading remains unavailable",summaryOf({...data,renewals:{...data.renewals!,partial:true}}).days.last_7_days.renewals.complete,false);
+is("capped renewal reading blocks gross ledger",summaryOf({...data,renewals:{...data.renewals!,partial:true}}).days.last_7_days.payments.complete,false);
+is("confirmed empty payment ledger is zero",summaryOf({...data,channelDays:{},refunds:{d7:[],d30:[],d90:[]}}).days.last_7_days.payments,{complete:true,gross_receipts:0,after_refunds:0});
+is("negative result after older purchase refunds retained",summaryOf({...data,channelDays:{},refunds:{d7:[{source:"instagram",refunds:1,cents:1000}],d30:[],d90:[]}}).days.last_7_days.payments.after_refunds,-1000);
+is("invalid ledger amount withheld",summaryOf({...data,channelDays:{instagram:{[date(1)]:-1}}}).days.last_7_days.payments.complete,false);
+is("each period uses its own dates",complete.days.last_90_days.payments.gross_receipts,3954321);
 is("complete purchase totals retained",[complete.days.last_7_days.sales,complete.days.last_7_days.revenue],[9,3654321]);
 is("complete refund amount retained",[complete.days.last_7_days.refunded,complete.days.last_7_days.refunds_complete],[1000,true]);
 is("complete empty detail lists are measured",[complete.days.last_30_days.ad_records_complete,complete.days.last_30_days.sales_by_country_complete],[true,true]);
