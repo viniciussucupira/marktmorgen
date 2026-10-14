@@ -93,17 +93,19 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
         body: JSON.stringify({ action: "from-type", type: type.id, name, products: picked }),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; funnel?: { id?: unknown }; pages?: { id: string; title: string }[] };
-      if (data.ok) {
+      if (response.ok && data?.ok === true) {
         toast("Funnel made.");
         const id = data.funnel?.id;
-        setMade({ pages: data.pages ?? [], funnelId: typeof id === "string" && FUNNEL_ID.test(id) ? id : null });
+        const pages = Array.isArray(data.pages) ? data.pages.filter(page => page && typeof page.id === "string" && /^[a-f0-9]{10}$/.test(page.id) && typeof page.title === "string") : [];
+        setMade({ pages, funnelId: typeof id === "string" && FUNNEL_ID.test(id) ? id : null });
         setType(null);
         router.refresh();
         return;
       }
-      const uncertain = data.error === "setup_incomplete" || !data.error || !MESSAGES[data.error];
-      setRecovery(uncertain ? "setup" : data.error === "forms_full" ? "forms" : null);
-      setError(uncertain ? MESSAGES.setup_incomplete : MESSAGES[data.error!]);
+      const errorCode = typeof data?.error === "string" && Object.hasOwn(MESSAGES, data.error) ? data.error : null;
+      const uncertain = errorCode === "setup_incomplete" || !errorCode;
+      setRecovery(uncertain ? "setup" : errorCode === "forms_full" ? "forms" : null);
+      setError(uncertain ? MESSAGES.setup_incomplete : MESSAGES[errorCode!]);
     } catch {
       setRecovery("setup");
       setError(MESSAGES.setup_incomplete);
@@ -113,7 +115,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   }
 
   const reviewHref = `/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}${made?.funnelId ? `#funnel-review-${made.funnelId}` : ""}`;
-  const pagesHref = (id: string) => `/studio/site?${sid ? `store=${sid}&` : ""}page=${id}`;
+  const pagesHref = (id: string) => `/studio/site?${sid ? `store=${encodeURIComponent(sid)}&` : ""}page=${encodeURIComponent(id)}`;
 
   return (
     <section aria-labelledby="funnel-types-title" className="card min-w-0 p-5 sm:p-8">
