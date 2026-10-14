@@ -25,6 +25,7 @@ import { DISCOUNT_NAMES } from "@/lib/discount-impact";
 import { readSpends } from "@/lib/ad-spend";
 import { spendBy, type AdSpend } from "@/lib/ad-spend-rules";
 import { campaignResultsFrom } from "@/lib/campaign-results";
+import { paymentComparisonFrom, paymentChange, paymentShareChange } from "@/lib/payment-comparison";
 import { paymentMixFrom, paymentShare } from "@/lib/payment-mix";
 import { dailyCashflowRows } from "@/lib/daily-cashflow";
 import { refundActivityFrom } from "@/lib/refund-activity";
@@ -34,7 +35,7 @@ export const MAX_QUESTION = 300;
 export const WINDOWS = ["d7", "d30", "d90"] as const;
 export type AskWindow = (typeof WINDOWS)[number];
 /** The parts of the Numbers panel an answer can open, by their ids there (components/stats-panel.tsx). */
-export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels", "weekly-cohorts", "refund-activity", "daily-cashflow", "payment-mix"] as const;
+export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels", "weekly-cohorts", "refund-activity", "daily-cashflow", "payment-mix", "payment-comparison"] as const;
 export type AskSection = (typeof SECTIONS)[number];
 
 export type NumbersAnswer = {
@@ -67,7 +68,15 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
     const refundActivity = known && days.length ? refundActivityFrom(data, w, days[0].date, days[days.length - 1].date) : null;
     const campaignReport = campaignResultsFrom(data, w, spends);
     const mix = paymentMixFrom(data,w);
+    const comparison = paymentComparisonFrom(data,w);
     out[NAMES[w]] = {
+      payment_comparison: comparison ? {
+        current_from_utc:comparison.current.from,current_to_utc:comparison.current.to,previous_available:comparison.previous!==null,
+        previous_period:comparison.previous ? {from_utc:comparison.previous.from,to_utc:comparison.previous.to,payments:money(comparison.previous.total)} : null,
+        current_payments:money(comparison.current.total),difference:comparison.delta===null ? null : money(comparison.delta),change:comparison.previous ? paymentChange(comparison.change) : null,
+        channels_total:comparison.rows.length,channels:comparison.rows.slice(0,20).map(row=>({channel:channelName(row.source),current_payments:money(row.current),previous_payments:money(row.previous),change:paymentChange(row.change),current_share:paymentShare(row.currentShare),previous_share:paymentShare(row.previousShare),share_change:paymentShareChange(row.shareChange)})),
+        note:"Equal consecutive UTC periods, including today as recorded so far. Only 7- and 30-day comparisons fit the complete 90-day ledger. Previous reading unavailable means null, not zero. Gross payments include renewals, before refunds, fees and ads. Share changes are percentage points; relative growth needs previous payments and share changes need payments in both periods. Includes channels present only in one period. Not new customers, profit or causal marketing lift. At most 20 rows; totals use all channels.",
+      } : null,
       payment_mix: mix ? {
         from_utc:mix.from,to_utc:mix.to,total_payments:money(mix.total),
         largest_identified_channel:mix.largest ? {channel:channelName(mix.largest.source),payments:money(mix.largest.cents),share:paymentShare(mix.largest.share)} : null,
@@ -217,7 +226,7 @@ export async function askNumbers(store: Store, question: string, data: StatsData
       "Money is already written as the creator reads it: repeat amounts exactly as given. Windows are the last 7, 30 and 90 days; with no window in the question, use the last 30 days.",
       "Campaign tags combine channels. Payment channel lists do not split visit counts. Campaign paid records include one-click extras and are not unique buyers or a visitor conversion rate. Never call gross less ads profit, customer acquisition cost or advertising lift; renewals and refunds are not in that comparison. Never infer a missing channel list from the legacy single-source label. Daily cashflow is recorded UTC activity, not profit or proof of advertising lift. A multi-day spend is allocated with exact total-preserving rounding. Never replace missing daily refunds or ad spend with zero. Refund activity is same-period recorded money, not a refund rate for those purchases or buyers. Do not infer dissatisfaction, causes or the number of buyers from refund records. A missing ratio with no payments is unknown, not zero. Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days. Weekly cohorts are independent of the selected channel window. Always name the period and eligible denominator, do not treat immature cells as zero, infer churn or claim a trend from small groups or incomplete history.",
       "Write in the language of the question. At most 90 words, plain sentences, no markdown, no headings. Be direct: the answer first, then one short line on what it suggests doing, only if the numbers clearly support it.",
-      `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights, payment-mix (recorded payment shares and channel concentration).`,
+      `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights, payment-mix (recorded payment shares and channel concentration), payment-comparison (equal consecutive UTC payment periods by channel).`,
     ].join("\n\n");
     const reply = await askModel(system, `The question: ${asked}\n\nThe numbers:\n${context}`, 600, answerModel());
     const json = reply ? jsonIn(reply) : null;

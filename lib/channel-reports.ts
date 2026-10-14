@@ -1,3 +1,4 @@
+import type { PaymentComparison } from "@/lib/payment-comparison";
 import type { PaymentMix } from "@/lib/payment-mix";
 import type { AttributionTable } from "@/lib/attribution-rules";
 import type { CreativeRow } from "@/lib/creative-results";
@@ -97,5 +98,14 @@ export function paymentMixReport(mix: PaymentMix,currency: string): string {
   return csv([
     ["From (UTC)","To (UTC)","Currency","Channel","Identified marketing channel","Payments","Share of all payments (%)","Total payments (whole report)","Unidentified payments (whole report)","Top 3 identified channels (%)","Definition"],
     ...mix.rows.map((row):Cell[] => [mix.from,mix.to,currency.toUpperCase(),row.source,row.identified ? "Yes" : "No",amount(row.cents,currency),row.share*100,amount(mix.total,currency),amount(mix.unidentified,currency),mix.topThreeShare === null ? null : mix.topThreeShare*100,note]),
+  ]);
+}
+
+export function paymentComparisonReport(report:PaymentComparison,currency:string):string {
+  const previous=report.previous;
+  const note="Equal adjacent UTC periods, including current day as recorded so far. Gross recorded payments include renewals, before refunds, fees and ads. No previous payments means blank relative change; share change is percentage points and requires payments in both periods. A missing complete previous reading exports no rows. Not new customers, profit or causal marketing lift.";
+  return csv([
+    ["Current from (UTC)","Current to (UTC)","Previous from (UTC)","Previous to (UTC)","Currency","Channel","Current payments","Previous payments","Payment difference","Payment change (%)","Current share (%)","Previous share (%)","Share change (percentage points)","Definition"],
+    ...(previous ? report.rows.map((row):Cell[]=>[report.current.from,report.current.to,previous.from,previous.to,currency.toUpperCase(),row.source,amount(row.current,currency),amount(row.previous,currency),amount(row.current-row.previous,currency),row.change===null ? null : row.change*100,row.currentShare===null ? null : row.currentShare*100,row.previousShare===null ? null : row.previousShare*100,row.shareChange===null ? null : row.shareChange*100,note]) : []),
   ]);
 }
