@@ -111,6 +111,26 @@ async function main() {
   let recommendationUnknown = false;
   try { await readFunnelPaymentChecks(failedListing, funnel); } catch { recommendationUnknown = true; }
   is("recommended listing failure keeps review unknown", recommendationUnknown, true);
+  const shortPlan = { ...readyOffer, priceCents: 1500, plan: { payments: 3, interval: "month", amountCents: 400 } };
+  const planRecommendation = { ...readyStore, catalog: { ...readyStore.catalog, head: [shortPlan] } } as unknown as Store;
+  is("quiz result locates suppressed installment plan", (await readFunnelPaymentChecks(planRecommendation, funnel)).some(issue => issue.includes("Your next step") && issue.includes("payment plan")), true);
+  const extra = { ...readyOffer, id: "extra001", title: "Recommended extra", priceCents: 400 };
+  const bumpOffer = { ...readyOffer, bumps: [{ productId: extra.id, priceCents: 500, pitch: "Add extra" }] };
+  const bumpRecommendation = { ...readyStore, catalog: { ...readyStore.catalog, items: [...readyStore.catalog.items, { id: extra.id, kind: KIND.paid, options: [] }], head: [bumpOffer, extra] } } as unknown as Store;
+  is("quiz reads add-on outside funnel and names its problem", (await readFunnelPaymentChecks(bumpRecommendation, funnel)).some(issue => issue.includes("Your next step") && issue.includes("Recommended extra") && issue.includes("add-on")), true);
+  const foreignBump = { ...bumpRecommendation, catalog: { ...bumpRecommendation.catalog, items: readyStore.catalog.items } } as Store;
+  is("quiz add-on outside store stays unavailable", (await readFunnelPaymentChecks(foreignBump, funnel)).some(issue => issue.includes("Your next step") && issue.includes("no longer in your store")), true);
+  const memberA = { ...readyOffer, id: "membera1" };
+  const memberB = { ...readyOffer, id: "memberb1" };
+  const bundleOffer = { ...readyOffer, link: null, bundle: [memberA.id, memberB.id], pick: null };
+  const bundleRecommendation = { ...readyStore, catalog: { ...readyStore.catalog, items: [...readyStore.catalog.items, { id: memberA.id, kind: KIND.paid, options: [] }], head: [bundleOffer, memberA, memberB] } } as unknown as Store;
+  is("quiz bundle cannot use a product outside selected store", (await readFunnelPaymentChecks(bundleRecommendation, funnel)).some(issue => issue.includes("Your next step") && issue.includes("enough deliverable")), true);
+  const fullBundle = { ...bundleRecommendation, catalog: { ...bundleRecommendation.catalog, items: [...bundleRecommendation.catalog.items, { id: memberB.id, kind: KIND.paid, options: [] }] } } as Store;
+  is("quiz bundle with enough stored delivery passes", await readFunnelPaymentChecks(fullBundle, funnel), []);
+  const versionFunnel = { steps: [...funnel.steps, ...funnel.steps] };
+  await redis.pipeline([["SET", key, JSON.stringify({ blocks: [emptyBlock("hero")], variant: { blocks: [blockA] } })]]);
+  const versionIssues = await readFunnelPaymentChecks(checkoutStore, versionFunnel);
+  is("quiz delivery preserves variant and repeated-step labels", versionIssues.length === 2 && versionIssues[0].startsWith("Step 1, Apply: Version B:") && versionIssues[1].startsWith("Step 2, Apply: Version B:"), true);
   done();
 }
 void main();
