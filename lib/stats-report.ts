@@ -355,7 +355,7 @@ export function monthlyMessage(store: Store, data: StatsData, month: string, sto
     };
   };
   const now = sum(month);
-  if (now.visitors === 0 && (!known || now.sales === 0) && (!paymentsKnown || now.cents === 0)) return null;
+  if (now.visitors === 0 && now.cents === 0) return null;
   // The month before only when the days read start at its first day or earlier.
   const then = data.days[0] && data.days[0].date <= `${before}-01` ? sum(before) : null;
   const against = (a: number, b: number | undefined) => {

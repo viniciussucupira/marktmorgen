@@ -62,7 +62,10 @@ is("complete receipts do not depend on refunds",monthly({...data,cashflowComplet
 is("failed renewal reading still preserves complete purchase counts",[monthly({...data,paymentsComplete:false,renewals:null}).text.includes("Sales: 30"),monthly({...data,paymentsComplete:false,renewals:null}).text.includes("$2,000")],[true,false]);
 is("failed renewal reading blocks monthly goal",monthly({...data,paymentsComplete:false,renewals:null}).text.includes("Monthly goal progress is unavailable"),true);
 is("partial renewal summary blocks combined monthly money",monthly(renewalPartial).subject,"Coverage Store in September 2026");
-is("partial money alone doesn't activate quiet-month report",monthlyMessage(store,{...partial,days:partial.days.map(d=>({...d,visitors:0,checkouts:0}))},"2026-09",stop),null);
+const activeWithoutVisits=monthlyMessage(store,{...partial,days:partial.days.map(d=>({...d,visitors:0,checkouts:0}))},"2026-09",stop);
+is("observed activity retains monthly report even with no visits",activeWithoutVisits!==null,true);
+is("active incomplete month has no monetary subject",activeWithoutVisits?.subject,"Coverage Store in September 2026");
+is("active incomplete month explains unavailable income",activeWithoutVisits?.text.includes("incomplete payment reading") && !activeWithoutVisits?.text.includes("$2,000"),true);
 for(const sales of ["none","error"] as const){
  const failed={...data,sales};
  is(sales+" API has no paid coverage",summaryOf(failed).paid_figures_complete,false);
