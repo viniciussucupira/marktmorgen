@@ -9,6 +9,8 @@ import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
 import type { StatsNote } from "@/lib/stats-notes";
 import { type AdSpend, paybackOf, spendBy } from "@/lib/ad-spend-rules";
 import { channelCashflows, cashflowStatus } from "@/lib/channel-cashflow";
+import { creativeResultsReport } from "@/lib/channel-reports";
+import { ReportDownload } from "@/components/report-download";
 import { CampaignResultsPanel } from "@/components/campaign-results";
 import { DailyCashflowPanel } from "@/components/daily-cashflow";
 import { RefundActivityPanel } from "@/components/refund-activity";
@@ -1021,7 +1023,7 @@ export function StatsPanel({
 
       {range !== "all" ? <CampaignResultsPanel data={data} range={range} spends={spends} /> : null}
 
-      {ads.length && salesHere ? (
+      {ads.length && salesHere && !data.partial ? (
         <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-ads">
           <table className="w-full text-left text-sm">
             <caption id="numbers-ads" className="text-left text-sm font-bold text-ink">
@@ -1052,8 +1054,12 @@ export function StatsPanel({
           <p className="mt-2 text-xs text-ink-soft">
             Use Share to create a campaign link with an optional ad or link variant. Each row keeps the channel, campaign and <span className="font-mono">utm_content</span> together, so reused names do not merge different ads. Paid records include purchases and one-click extras, not unique buyers; gross amounts are before refunds and fees, with renewals excluded.
           </p>
+          <p className="mt-2 text-xs text-ink-soft">Showing {Math.min(15, ads.length)} of {ads.length} variants. The download includes every row in this period.</p>
+          {days.length ? <ReportDownload csv={creativeResultsReport(ads, { from: days[0].date, to: days[days.length - 1].date, currency: data.currency ?? "usd" })} filename={"marktmorgen-variants-" + days[0].date + "-to-" + days[days.length - 1].date + ".csv"}>Download all variant results</ReportDownload> : null}
         </div>
       ) : null}
+
+      {ads.length > 0 && data.partial ? <p className="mt-6 text-sm text-ink-soft" role="status">The purchase reading is incomplete. Variant totals and downloads wait for complete figures.</p> : null}
 
       {range !== "all" ? <HeardTable rows={heard} money={money} ask={askHeard} canSet={canSetHeard} /> : null}
 

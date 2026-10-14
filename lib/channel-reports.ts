@@ -1,3 +1,4 @@
+import type { CreativeRow } from "@/lib/creative-results";
 import type { CampaignResults } from "@/lib/campaign-results";
 import type { DailyCashflowRow } from "@/lib/daily-cashflow";
 import type { RefundActivity } from "@/lib/refund-activity";
@@ -67,5 +68,13 @@ export function campaignResultsReport(report: CampaignResults, currency: string)
   return csv([
     ["From (UTC)", "To (UTC)", "Currency", "Campaign", "Recorded payment channels", "Recorded ad channels", "Visits", "Paid records", "Gross amount", "Recorded ads", "Gross amount less ads", "Untagged ad spend (whole report)", "Definition"],
     ...report.rows.map((row): Cell[] => [report.from, report.to, currency.toUpperCase(), row.campaign, row.paymentChannels === null ? "Unavailable" : row.paymentChannels.join("; "), row.adChannels === null ? "Unavailable" : row.adChannels.join("; "), row.visits, row.paidRecords, amount(row.gross, currency), amount(row.ads, currency), amount(row.grossLessAds, currency), amount(report.unassignedAds, currency), note]),
+  ]);
+}
+
+export function creativeResultsReport(rows: CreativeRow[], period: ReportPeriod): string {
+  const note = "Each row groups channel, campaign and content tag. Paid records include purchases and one-click extras, not unique buyers; renewals excluded. Gross before refunds, fees and other costs, not profit or causal ad lift. All variants in the selected period are exported, including those outside the first 15 displayed. Only complete purchase readings.";
+  return csv([
+    ["From (UTC)", "To (UTC)", "Currency", "Channel", "Campaign", "Variant (utm_content)", "Paid records", "Gross amount", "Definition"],
+    ...rows.map((row): Cell[] => [period.from, period.to, period.currency.toUpperCase(), row.source, row.campaign, row.content, row.sales, amount(row.cents, period.currency), note]),
   ]);
 }
