@@ -66,11 +66,11 @@ export function dailyCashflowReport(rows: DailyCashflowRow[], currency: string):
   ]);
 }
 
-export function campaignResultsReport(report: CampaignResults, currency: string): string {
+export function campaignResultsReport(report: CampaignResults, currency: string, view?: {query:string;sort:string;total:number}): string {
   const note = "Campaign tag totals across channels; visits are not split by payment channel. Paid records include purchases and one-click extras, not unique buyers; recurring renewals excluded. Gross less ads is before refunds, fees, tax, commissions and other costs, not profit or causal ad lift. Blank means unavailable or incomplete. Untagged ad spend is not allocated to campaign rows.";
   return csv([
-    ["From (UTC)", "To (UTC)", "Currency", "Campaign", "Recorded payment channels", "Recorded ad channels", "Visits", "Paid records", "Gross amount", "Recorded ads", "Gross amount less ads", "Untagged ad spend (whole report)", "Definition"],
-    ...report.rows.map((row): Cell[] => [report.from, report.to, currency.toUpperCase(), row.campaign, row.paymentChannels === null ? "Unavailable" : row.paymentChannels.join("; "), row.adChannels === null ? "Unavailable" : row.adChannels.join("; "), row.visits, row.paidRecords, amount(row.gross, currency), amount(row.ads, currency), amount(row.grossLessAds, currency), amount(report.unassignedAds, currency), note]),
+    ["From (UTC)", "To (UTC)", "Currency", "Campaign", "Recorded payment channels", "Recorded ad channels", "Visits", "Paid records", "Gross amount", "Recorded ads", "Gross amount less ads", "Untagged ad spend (whole report)", "Definition", ...(view ? ["Search filter", "Sort order", "Unfiltered campaigns (whole report)"] : [])],
+    ...report.rows.map((row): Cell[] => [report.from, report.to, currency.toUpperCase(), row.campaign, row.paymentChannels === null ? "Unavailable" : row.paymentChannels.join("; "), row.adChannels === null ? "Unavailable" : row.adChannels.join("; "), row.visits, row.paidRecords, amount(row.gross, currency), amount(row.ads, currency), amount(row.grossLessAds, currency), amount(report.unassignedAds, currency), note, ...(view ? [view.query,view.sort,view.total] : [])]),
   ]);
 }
 
