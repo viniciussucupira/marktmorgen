@@ -12,6 +12,7 @@ import { channelCashflows, cashflowStatus } from "@/lib/channel-cashflow";
 import { creativeResultsReport } from "@/lib/channel-reports";
 import { ReportDownload } from "@/components/report-download";
 import { CampaignResultsPanel } from "@/components/campaign-results";
+import { PaymentMixPanel } from "@/components/payment-mix";
 import { DailyCashflowPanel } from "@/components/daily-cashflow";
 import { RefundActivityPanel } from "@/components/refund-activity";
 import { WeeklyCohortsPanel } from "@/components/weekly-cohorts";
@@ -1002,6 +1003,7 @@ export function StatsPanel({
       {range !== "all" ? (
         <RevenueQuality data={data} range={range} spends={spends} />
       ) : null}
+      {range !== "all" ? <PaymentMixPanel data={data} range={range} /> : null}
       {range !== "all" ? <DailyCashflowPanel data={data} range={range} spends={spends} /> : null}
       {range !== "all" ? <RefundActivityPanel data={data} range={range} /> : null}
       {salesHere && range !== "all" && days.length > 0 && data.buyerChannels ? (

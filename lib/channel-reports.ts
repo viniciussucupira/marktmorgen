@@ -1,3 +1,4 @@
+import type { PaymentMix } from "@/lib/payment-mix";
 import type { AttributionTable } from "@/lib/attribution-rules";
 import type { CreativeRow } from "@/lib/creative-results";
 import type { CampaignResults } from "@/lib/campaign-results";
@@ -88,5 +89,13 @@ export function attributionReport(table: AttributionTable, period: ReportPeriod)
     ...table.rows.map(row => entry("Channel", row.name, row.last.sales, row.last.cents, table.unknownFirst ? row.first.sales : null, table.unknownFirst ? row.first.cents : null, row.said.buyers, row.said.cents)),
     entry("No channel", "No channel", table.unknown.sales, table.unknown.cents, table.unknownFirst?.sales ?? null, table.unknownFirst?.cents ?? null, null, null),
     ...table.unknownSaid.map(row => entry("Answer subset: last-visit no channel", row.name, null, null, null, null, row.buyers, row.cents)),
+  ]);
+}
+
+export function paymentMixReport(mix: PaymentMix,currency: string): string {
+  const note="Gross recorded payments include renewals at the recorded subscription channel; before refunds, fees and ads. Shares use all recorded payments, including unidentified origins. Direct, unrecorded and imported origins are excluded from largest and top-three identified channels. Not profit, customer acquisition or causal ad lift. Only complete ledger coverage; no buyers exported.";
+  return csv([
+    ["From (UTC)","To (UTC)","Currency","Channel","Identified marketing channel","Payments","Share of all payments (%)","Total payments (whole report)","Unidentified payments (whole report)","Top 3 identified channels (%)","Definition"],
+    ...mix.rows.map((row):Cell[] => [mix.from,mix.to,currency.toUpperCase(),row.source,row.identified ? "Yes" : "No",amount(row.cents,currency),row.share*100,amount(mix.total,currency),amount(mix.unidentified,currency),mix.topThreeShare === null ? null : mix.topThreeShare*100,note]),
   ]);
 }

@@ -25,6 +25,7 @@ import { DISCOUNT_NAMES } from "@/lib/discount-impact";
 import { readSpends } from "@/lib/ad-spend";
 import { spendBy, type AdSpend } from "@/lib/ad-spend-rules";
 import { campaignResultsFrom } from "@/lib/campaign-results";
+import { paymentMixFrom, paymentShare } from "@/lib/payment-mix";
 import { dailyCashflowRows } from "@/lib/daily-cashflow";
 import { refundActivityFrom } from "@/lib/refund-activity";
 import { channelCashflows } from "@/lib/channel-cashflow";
@@ -33,7 +34,7 @@ export const MAX_QUESTION = 300;
 export const WINDOWS = ["d7", "d30", "d90"] as const;
 export type AskWindow = (typeof WINDOWS)[number];
 /** The parts of the Numbers panel an answer can open, by their ids there (components/stats-panel.tsx). */
-export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels", "weekly-cohorts", "refund-activity", "daily-cashflow"] as const;
+export const SECTIONS = ["funnel", "channels", "revenue-source", "attribution", "products", "posts", "ads", "reach", "buyers", "insights", "cashflow", "buyer-channels", "weekly-cohorts", "refund-activity", "daily-cashflow", "payment-mix"] as const;
 export type AskSection = (typeof SECTIONS)[number];
 
 export type NumbersAnswer = {
@@ -65,7 +66,15 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
     const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], costs, days[0].date, days[days.length - 1].date) : [];
     const refundActivity = known && days.length ? refundActivityFrom(data, w, days[0].date, days[days.length - 1].date) : null;
     const campaignReport = campaignResultsFrom(data, w, spends);
+    const mix = paymentMixFrom(data,w);
     out[NAMES[w]] = {
+      payment_mix: mix ? {
+        from_utc:mix.from,to_utc:mix.to,total_payments:money(mix.total),
+        largest_identified_channel:mix.largest ? {channel:channelName(mix.largest.source),payments:money(mix.largest.cents),share:paymentShare(mix.largest.share)} : null,
+        top_three_identified_share:paymentShare(mix.topThreeShare),unidentified_payments:money(mix.unidentified),unidentified_share:paymentShare(mix.unidentifiedShare),
+        channels_total:mix.rows.length,channels:mix.rows.slice(0,20).map(row=>({channel:channelName(row.source),identified:row.identified,payments:money(row.cents),share:paymentShare(row.share)})),
+        note:"Complete recorded ledger, including renewals at the recorded subscription channel. Every share divides by all payments, including unidentified origins. Direct, unrecorded and imported origins do not enter largest or top-three identified channels. Gross before refunds, fees and ads; not acquisition, profit or causal ad lift. Empty zero-payment readings have no calculable shares. Summary uses every channel; at most 20 channel rows shown.",
+      } : null,
       visitors: t.visitors,
       page_views: t.views,
       checkouts_started: t.checkouts,
@@ -208,7 +217,7 @@ export async function askNumbers(store: Store, question: string, data: StatsData
       "Money is already written as the creator reads it: repeat amounts exactly as given. Windows are the last 7, 30 and 90 days; with no window in the question, use the last 30 days.",
       "Campaign tags combine channels. Payment channel lists do not split visit counts. Campaign paid records include one-click extras and are not unique buyers or a visitor conversion rate. Never call gross less ads profit, customer acquisition cost or advertising lift; renewals and refunds are not in that comparison. Never infer a missing channel list from the legacy single-source label. Daily cashflow is recorded UTC activity, not profit or proof of advertising lift. A multi-day spend is allocated with exact total-preserving rounding. Never replace missing daily refunds or ad spend with zero. Refund activity is same-period recorded money, not a refund rate for those purchases or buyers. Do not infer dissatisfaction, causes or the number of buyers from refund records. A missing ratio with no payments is unknown, not zero. Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days. Weekly cohorts are independent of the selected channel window. Always name the period and eligible denominator, do not treat immature cells as zero, infer churn or claim a trend from small groups or incomplete history.",
       "Write in the language of the question. At most 90 words, plain sentences, no markdown, no headings. Be direct: the answer first, then one short line on what it suggests doing, only if the numbers clearly support it.",
-      `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights.`,
+      `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights, payment-mix (recorded payment shares and channel concentration).`,
     ].join("\n\n");
     const reply = await askModel(system, `The question: ${asked}\n\nThe numbers:\n${context}`, 600, answerModel());
     const json = reply ? jsonIn(reply) : null;
