@@ -29,4 +29,8 @@ is("empty sequence needs a step", flowConfigurationIssues({ ...flow, steps: [] }
 is("empty email needs content", flowConfigurationIssues({ ...flow, steps: [{ ...step, body: " " }] }, context)[0]?.startsWith("Step 1:"), true);
 is("empty subject needs completion", flowConfigurationIssues({ ...flow, steps: [{ ...step, subject: " " }] }, context)[0]?.includes("subject and content"), true);
 is("action step does not need email content", flowConfigurationIssues({ ...flow, steps: [{ ...step, subject: "", body: "", action: { do: "notify" } }] }, context), []);
+is("template subject identifies the affected step", flowConfigurationIssues({ ...flow, steps: [{ ...step, subject: "Welcome ⟦name⟧" }] }, context)[0]?.startsWith("Step 1:"), true);
+is("template body needs completion", flowConfigurationIssues({ ...flow, steps: [{ ...step, body: "Tell them about ⟦your offer⟧" }] }, context)[0]?.includes("template placeholders"), true);
+is("action note placeholder is reviewed too", flowConfigurationIssues({ ...flow, steps: [{ ...step, action: { do: "note", text: "Follow up on ⟦their goal⟧" } }] }, context)[0]?.includes("template placeholders"), true);
+is("ordinary brackets are not template placeholders", flowConfigurationIssues({ ...flow, steps: [{ ...step, body: "See [the guide](https://example.com)" }] }, context), []);
 done();
