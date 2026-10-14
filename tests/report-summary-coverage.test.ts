@@ -25,6 +25,19 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API buyer cohorts preserve eligibility and history coverage");
+const buyerRow={source:"instagram",buyers:10,repeatBuyers:3,orders:13,cents:26000,eligible30:4,repeated30:2};
+const buyerData={...data,buyerChannels:{historyPartial:false,d7:{rows:[buyerRow],unidentifiedOrders:2},d30:{rows:[],unidentifiedOrders:0},d90:{rows:[buyerRow],unidentifiedOrders:2}}};
+const buyerReport=summaryOf(buyerData).days.last_7_days.buyer_channels;
+is("cohort values mapped with eligible denominator",buyerReport,{complete:true,unidentified_orders:2,rows:[{channel:"instagram",buyers:10,repeat_buyers:3,orders:13,revenue:26000,eligible_30_days:4,repeated_30_days:2,repeat_rate_30_days:0.5}]});
+is("confirmed empty cohort stays available",summaryOf(buyerData).days.last_30_days.buyer_channels,{complete:true,unidentified_orders:0,rows:[]});
+is("history cap blocks cohort values",summaryOf({...buyerData,buyerChannels:{...buyerData.buyerChannels,historyPartial:true}}).days.last_7_days.buyer_channels,{complete:false,unidentified_orders:null,rows:[]});
+is("purchase cap blocks cohort values",summaryOf({...buyerData,partial:true}).days.last_7_days.buyer_channels.complete,false);
+is("missing cohort is unavailable",summaryOf(data).days.last_7_days.buyer_channels.complete,false);
+is("refund failure leaves cohort available",summaryOf({...buyerData,cashflowComplete:false}).days.last_7_days.buyer_channels,buyerReport);
+is("no eligible buyers has no false zero rate",summaryOf({...buyerData,buyerChannels:{...buyerData.buyerChannels,d7:{rows:[{...buyerRow,eligible30:0,repeated30:0}],unidentifiedOrders:0}}}).days.last_7_days.buyer_channels.rows[0].repeat_rate_30_days,null);
+is("cohort output contains no identities",/email|customer_details|receipt_email/.test(JSON.stringify(buyerReport)),false);
+is("provider failure blocks cohorts",summaryOf({...buyerData,sales:"error"}).days.last_7_days.buyer_channels.complete,false);
 part("API refund activity distinguishes refunded money from buyer refund rates");
 const refundData={...data,channelDays:{instagram:{[date(1)]:1000}},refunds:{d7:[{source:"instagram",refunds:2,cents:1500},{source:"direct",refunds:1,cents:500}],d30:[],d90:[]}};
 const refundReport=summaryOf(refundData).days.last_7_days.refund_activity;
