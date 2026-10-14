@@ -1,5 +1,6 @@
 "use client";
 
+import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -40,7 +41,6 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[] } | null>(null);
-  const money = (cents: number) => formatMoney(cents, currency);
 
   async function show() {
     setBusy(true);
@@ -58,21 +58,6 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
   }
 
   const r = result?.range;
-  const sold = r?.sales === "ok";
-  const peak = r ? Math.max(1, ...r.days.map((d) => d.visitors)) : 1;
-  const tiles = r
-    ? [
-        { label: "Visitors", value: count(r.totals.visitors), note: r.before ? change(r.totals.visitors, r.before.visitors) : "" },
-        { label: "Page views", value: count(r.totals.views), note: r.before ? change(r.totals.views, r.before.views) : "" },
-        { label: "Checkouts started", value: count(r.totals.checkouts), note: r.before ? change(r.totals.checkouts, r.before.checkouts) : "" },
-        ...(sold
-          ? [
-              { label: "Sales", value: count(r.totals.sales), note: r.before ? change(r.totals.sales, r.before.sales) : "" },
-              { label: "Revenue", value: money(r.totals.cents), note: r.before ? change(r.totals.cents, r.before.cents) : "" },
-            ]
-          : []),
-      ]
-    : [];
 
   return (
     <div className="mt-5 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" role="region" aria-labelledby="custom-range" data-custom-range>
@@ -104,91 +89,112 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
           {error}
         </p>
       ) : null}
-      {r ? (
-        <div className="mt-4" data-range-result>
-          <p className="text-sm font-semibold text-ink">{r.from === r.to ? day(r.from) : `${day(r.from)} to ${day(r.to)}, ${r.days.length} days`}</p>
-          <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {tiles.map((t) => (
-              <div key={t.label} className="rounded-[12px] bg-white px-4 py-3 ring-1 ring-line">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">{t.label}</dt>
-                <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{t.value}</dd>
-                {t.note ? <dd className="text-xs text-ink-soft">{t.note}</dd> : null}
-              </div>
-            ))}
-          </dl>
-          {r.sales === "error" ? <p className="mt-2 text-sm text-ink-soft">Stripe did not answer, so sales are not shown. Try again in a moment.</p> : null}
-          {r.partial ? <p className="mt-2 text-sm text-ink-soft">More sales than one reading takes: the earliest days may be missing some.</p> : null}
-          <div className={`mt-4 flex h-24 items-end ${r.days.length > 60 ? "gap-0" : "gap-[2px]"}`} role="img" aria-label="Visitors each day">
-            {r.days.map((d) => (
-              <div key={d.date} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={`${day(d.date)}: ${d.visitors} visitors${sold ? `, ${d.sales} sales` : ""}`}>
-                <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{ height: `${Math.max(d.visitors ? 4 : 1, (d.visitors / peak) * 100)}%`, opacity: d.visitors ? 1 : 0.25 }} />
-              </div>
-            ))}
+      {r ? <CustomRangeResults range={r} marks={result.marks} currency={currency} /> : null}
+    </div>
+  );
+}
+
+/** The confirmed results of the requested dates, with paid coverage checked separately. */
+export function CustomRangeResults({ range, marks, currency }: { range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; currency: string }) {
+  const money = (cents: number) => formatMoney(cents, currency);
+  const r = range;
+  const sold = paidFiguresComplete(r);
+  const peak = Math.max(1, ...r.days.map((d) => d.visitors));
+  const tiles = [
+        { label: "Visitors", value: count(r.totals.visitors), note: r.before ? change(r.totals.visitors, r.before.visitors) : "" },
+        { label: "Page views", value: count(r.totals.views), note: r.before ? change(r.totals.views, r.before.views) : "" },
+        { label: "Checkouts started", value: count(r.totals.checkouts), note: r.before ? change(r.totals.checkouts, r.before.checkouts) : "" },
+        ...(sold
+          ? [
+              { label: "Sales", value: count(r.totals.sales), note: r.before ? change(r.totals.sales, r.before.sales) : "" },
+              { label: "Revenue", value: money(r.totals.cents), note: r.before ? change(r.totals.cents, r.before.cents) : "" },
+            ]
+          : []),
+      ];
+
+  return (
+    <div className="mt-4" data-range-result>
+      <p className="text-sm font-semibold text-ink">{r.from === r.to ? day(r.from) : `${day(r.from)} to ${day(r.to)}, ${r.days.length} days`}</p>
+      <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {tiles.map((t) => (
+          <div key={t.label} className="rounded-[12px] bg-white px-4 py-3 ring-1 ring-line">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">{t.label}</dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{t.value}</dd>
+            {t.note ? <dd className="text-xs text-ink-soft">{t.note}</dd> : null}
           </div>
-          {result.marks.length ? (
-            <ul className="mt-3 space-y-1 text-sm" aria-label="Marked on these days">
-              {result.marks.map((m, i) => (
-                <li key={`${m.day}-${i}`} className="flex gap-2">
-                  <span className="shrink-0 tabular-nums text-ink-soft">{day(m.day)}</span>
-                  <span className="min-w-0 text-ink [overflow-wrap:anywhere]">{m.text}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <div className="mt-4 grid gap-5 lg:grid-cols-2">
-            {r.channels.length ? (
-              <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
-                <table className="w-full text-left text-sm">
-                  <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from</caption>
-                  <thead>
-                    <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
-                      <th scope="col" className="py-1 font-semibold">Channel</th>
-                      <th scope="col" className="py-1 pl-3 text-right font-semibold">Visits</th>
-                      {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th> : null}
-                      {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {r.channels.map((c) => (
-                      <tr key={c.source} className="border-b border-line/60">
-                        <th scope="row" className="py-1.5 pr-3 font-medium text-ink">{channelName(c.source)}</th>
-                        <td className="py-1.5 pl-3 text-right tabular-nums">{count(c.visits)}</td>
-                        {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{count(c.sales)}</td> : null}
-                        {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(c.cents)}</td> : null}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : null}
-            {r.products.length ? (
-              <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
-                <table className="w-full text-left text-sm">
-                  <caption id="range-products" className="text-left text-sm font-bold text-ink">Products</caption>
-                  <thead>
-                    <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
-                      <th scope="col" className="py-1 font-semibold">Product</th>
-                      <th scope="col" className="py-1 pl-3 text-right font-semibold">Views</th>
-                      <th scope="col" className="py-1 pl-3 text-right font-semibold">Checkouts</th>
-                      {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {r.products.map((p) => (
-                      <tr key={p.id} className="border-b border-line/60">
-                        <th scope="row" className="py-1.5 pr-3 font-medium text-ink [overflow-wrap:anywhere]">{p.title}</th>
-                        <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.views)}</td>
-                        <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.checkouts)}</td>
-                        {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(p.cents)}</td> : null}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : null}
+        ))}
+      </dl>
+      {r.sales === "error" ? <p className="mt-2 text-sm text-ink-soft">Stripe did not answer, so sales are not shown. Try again in a moment.</p> : null}
+      {r.partial ? <p className="mt-2 text-sm text-ink-soft">The purchase reading is incomplete. Sales and revenue are unavailable; traffic and checkouts remain visible.</p> : null}
+      <div className={`mt-4 flex h-24 items-end ${r.days.length > 60 ? "gap-0" : "gap-[2px]"}`} role="img" aria-label="Visitors each day">
+        {r.days.map((d) => (
+          <div key={d.date} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={`${day(d.date)}: ${d.visitors} visitors${sold ? `, ${d.sales} sales` : ""}`}>
+            <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{ height: `${Math.max(d.visitors ? 4 : 1, (d.visitors / peak) * 100)}%`, opacity: d.visitors ? 1 : 0.25 }} />
           </div>
-        </div>
+        ))}
+      </div>
+      {marks.length ? (
+        <ul className="mt-3 space-y-1 text-sm" aria-label="Marked on these days">
+          {marks.map((m, i) => (
+            <li key={`${m.day}-${i}`} className="flex gap-2">
+              <span className="shrink-0 tabular-nums text-ink-soft">{day(m.day)}</span>
+              <span className="min-w-0 text-ink [overflow-wrap:anywhere]">{m.text}</span>
+            </li>
+          ))}
+        </ul>
       ) : null}
+      <div className="mt-4 grid gap-5 lg:grid-cols-2">
+        {r.channels.length ? (
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
+            <table className="w-full text-left text-sm">
+              <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from</caption>
+              <thead>
+                <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                  <th scope="col" className="py-1 font-semibold">Channel</th>
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold">Visits</th>
+                  {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th> : null}
+                  {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {r.channels.map((c) => (
+                  <tr key={c.source} className="border-b border-line/60">
+                    <th scope="row" className="py-1.5 pr-3 font-medium text-ink">{channelName(c.source)}</th>
+                    <td className="py-1.5 pl-3 text-right tabular-nums">{count(c.visits)}</td>
+                    {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{count(c.sales)}</td> : null}
+                    {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(c.cents)}</td> : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+        {r.products.length ? (
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
+            <table className="w-full text-left text-sm">
+              <caption id="range-products" className="text-left text-sm font-bold text-ink">Products</caption>
+              <thead>
+                <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                  <th scope="col" className="py-1 font-semibold">Product</th>
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold">Views</th>
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold">Checkouts</th>
+                  {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {r.products.map((p) => (
+                  <tr key={p.id} className="border-b border-line/60">
+                    <th scope="row" className="py-1.5 pr-3 font-medium text-ink [overflow-wrap:anywhere]">{p.title}</th>
+                    <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.views)}</td>
+                    <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.checkouts)}</td>
+                    {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(p.cents)}</td> : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
