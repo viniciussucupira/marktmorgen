@@ -25,6 +25,19 @@ for(const key of ["last_7_days","last_30_days","last_90_days"] as const){
  is(key+" detail and refund coverage explicit",[w.refunded,w.refunds_complete,w.sales_by_country_complete,w.ad_records_complete,w.sales_by_country,w.ads],[null,false,false,false,[],[]]);
 }
 const complete=summaryOf(data);
+part("API refund activity distinguishes refunded money from buyer refund rates");
+const refundData={...data,channelDays:{instagram:{[date(1)]:1000}},refunds:{d7:[{source:"instagram",refunds:2,cents:1500},{source:"direct",refunds:1,cents:500}],d30:[],d90:[]}};
+const refundReport=summaryOf(refundData).days.last_7_days.refund_activity;
+is("complete activity dates and totals",[refundReport.complete,refundReport.from,refundReport.to,refundReport.records,refundReport.share],[true,date(6),date(0),3,2]);
+is("refund ratios can exceed receipts",refundReport.rows[0],{channel:"instagram",gross_receipts:1000,refunded:1500,records:2,share:1.5});
+is("refund-only channel remains visible without a ratio",refundReport.rows[1],{channel:"direct",gross_receipts:0,refunded:500,records:1,share:null});
+is("refund rows reconcile with refund total",refundReport.rows.reduce((n,r)=>n+r.refunded,0),summaryOf(refundData).days.last_7_days.refunded);
+is("failed refund reading unavailable",summaryOf({...refundData,cashflowComplete:false}).days.last_7_days.refund_activity,{complete:false,from:null,to:null,records:null,share:null,rows:[]});
+is("missing refund window stays unavailable",summaryOf({...refundData,refunds:null}).days.last_7_days.refund_activity.complete,false);
+is("incomplete purchases block ratios",summaryOf({...refundData,partial:true}).days.last_7_days.refund_activity.complete,false);
+is("confirmed empty activity has zero records",summaryOf({...data,channelDays:{},refunds:{d7:[],d30:[],d90:[]}}).days.last_7_days.refund_activity,{complete:true,from:date(6),to:date(0),records:0,share:null,rows:[]});
+is("refund failure preserves gross totals",summaryOf({...refundData,cashflowComplete:false}).days.last_7_days.payments.gross_receipts,1000);
+is("refund output has no buyer identity",/customer|email|buyer/.test(JSON.stringify(refundReport)),false);
 part("API payment channels include renewals and unknown origins");
 const origins={...data,channelDays:{instagram:{[date(1)]:6000},direct:{[date(1)]:2000},unrecorded:{[date(1)]:1000},imported:{[date(1)]:1000},old:{[date(10)]:5000}}};
 const originReport=summaryOf(origins).days.last_7_days.payment_channels;
