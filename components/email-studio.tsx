@@ -1373,7 +1373,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
       productId: first,
       triggerTag: "",
       formId: "",
-      active: true,
+      active: false,
       steps: [blankStep("0", "hours", first)],
       goal: "",
       goalProduct: first,
@@ -2043,6 +2043,7 @@ function Flows({
             </button>
           ) : null}
           {draftIssues.length ? <div className="notice notice-warn text-sm"><p className="font-semibold">Review this configuration before activating</p><ul className="mt-2 list-disc space-y-1 pl-5">{draftIssues.map((issue, index) => <li key={index}>{issue}</li>)}</ul><p className="mt-2">These are reference checks. Saving still uses server validation; delivery and action execution have not been tested.</p></div> : null}
+          {!draft.id ? <p className="text-sm text-ink-soft">New sequences start paused. Review the content, trigger and actions, then switch On when ready to save an active sequence.</p> : null}
           <label className="flex items-center gap-2 text-sm text-ink">
             <input type="checkbox" checked={draft.active} onChange={(e) => setDraft({ ...draft, active: e.target.checked })} />
             <span>On. Switched off, nobody new starts it, and those already in it get none of its emails that are still to come.</span>
