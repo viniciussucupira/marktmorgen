@@ -47,7 +47,7 @@ is("up-front checkout remains eligible", paidStepProblem(store, { ...installment
 is("recurring product explains incompatible plan", planStepProblem(store, { ...installment, recurring: { interval: "month" } } as Listing)?.includes("only goes on a product sold once"), true);
 is("chosen price explains suppressed plan", planStepProblem(store, { ...installment, pwyw: { minCents: 100 } } as unknown as Listing)?.includes("no fixed price"), true);
 is("hidden product availability remains separate", planStepProblem(store, { ...installment, hidden: true, priceCents: 1500 }), null);
-const option = { id: "commercial1", label: "Commercial", priceCents: 1500, file: null, link: "https://example.com/commercial", details: [], recommended: false };
+const option = { id: "commercial1", label: "Commercial", priceCents: 1500, file: null, link: "https://example.com/commercial", details: [], best: false };
 const priced = { ...installment, options: [option], plan: { ...installment.plan!, options: { personal1: 400 } } } as Listing;
 is("missing option names affected price", planStepProblem(store, priced)?.includes("no payment for the \u201cCommercial\u201d price"), true);
 is("option payments too small", planStepProblem(store, { ...priced, plan: { ...priced.plan!, options: { commercial1: 400 } } })?.includes("less than the \u201cCommercial\u201d price"), true);
