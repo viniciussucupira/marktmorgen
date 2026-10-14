@@ -212,7 +212,7 @@ export default function DevelopersPage() {
         ],
         "countries": [{ "country": "US", "views": 388 }],
         "devices": [{ "device": "mobile", "views": 521 }],
-        "previous": { "visitors": 335, "page_views": 540, "checkouts": 24, "sales": 7, "revenue": 20300 },
+        "previous": { "available": true, "visitors": 335, "page_views": 540, "checkouts": 24, "sales": 7, "revenue": 20300 },
         "refunded": 2900,
         "refunds_complete": true,
         "payments": { "complete": true, "gross_receipts": 31100, "after_refunds": 28200 },
@@ -332,6 +332,13 @@ export default function DevelopersPage() {
           invalid dates are not replaced with invented dates. This describes date coverage, independently of
           payment coverage. The last day can still be in progress; complete calendar coverage does not mean
           that today has finished or that financial readings are complete.
+        </p>
+        <p>
+          <code className="font-mono">previous.available</code> indicates whether the preceding period was read.
+          When it is false, previous visitors, page views, checkouts, sales and revenue are null, rather than
+          invented zeros. Confirmed empty periods retain zero traffic. Availability of previous traffic does
+          not confirm paid coverage: previous paid values still require a complete purchase reading. Current
+          results remain independent of missing previous history.
         </p>
       </LegalSection>
 
