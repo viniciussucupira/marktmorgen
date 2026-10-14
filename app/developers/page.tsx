@@ -309,6 +309,13 @@ export default function DevelopersPage() {
           contains every entry. Unknown readings have null counts and truncated flags; confirmed empty readings
           have zero counts and false flags. Do not sum a truncated list as the full period total.
         </p>
+        <p>
+          Use <code className="font-mono">/api/v1/stats?details=all</code> to retrieve every recorded ad variant
+          and buyer country in each period. Default requests retain the 20-entry limit. The same authentication
+          and reading-coverage rules apply: requesting all details does not expose incomplete paid readings.
+          Complete full lists have false truncation flags. Ad variants keep their channel and campaign, so the
+          same creative name in different campaigns or channels remains distinct.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
