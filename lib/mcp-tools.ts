@@ -28,6 +28,7 @@ import { listCounts } from "@/lib/contacts";
 import { affiliatesOn, readBook } from "@/lib/affiliates";
 import { insightsFrom } from "@/lib/insights";
 import { readPaths } from "@/lib/next-bought";
+import { campaignResultsFrom } from "@/lib/campaign-results";
 import { dailyCashflowRows } from "@/lib/daily-cashflow";
 import { refundActivityFrom } from "@/lib/refund-activity";
 import { channelCashflows } from "@/lib/channel-cashflow";
@@ -65,6 +66,7 @@ export function channelsTool(data: StatsData, w: Window) {
   const days = (data.days ?? []).slice(-(w === "d7" ? 7 : w === "d30" ? 30 : 90));
   const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], new Map(), days[0].date, days[days.length - 1].date) : [];
   const refundActivity = known && days.length ? refundActivityFrom(data, w, days[0].date, days[days.length - 1].date) : null;
+  const campaignReport = campaignResultsFrom(data, w);
   return {
     window: NAMES[w],
     currency: data.currency,
@@ -82,6 +84,11 @@ export function channelsTool(data: StatsData, w: Window) {
     ...(known ? { daily_recorded_cashflow: {
       note: "UTC days; money is in the currency smallest unit. Payments include renewals. Refunds include pending refunds on their recorded day, even for older purchases. Null means incomplete or unavailable readings. Before ad spend, fees and other costs; not profit. This tool does not load recorded ad spend.",
       days: dailyCashflowRows(data, w).map((row) => ({ day: row.date, payments_received: row.payments, refunds_recorded: row.refunds, after_refunds: row.afterRefunds })),
+    } } : {}),
+    ...(campaignReport ? { campaign_recorded_results: {
+      from_utc: campaignReport.from, to_utc: campaignReport.to, complete_paid_records: campaignReport.salesKnown,
+      note: "Same campaign tag totals across channels; visits are not split by payment channel. Paid records include purchases and one-click extras, not unique buyers; renewals excluded. Gross amounts are in the currency smallest unit, before refunds and other costs. This tool does not load ad spend. Null is unavailable or incomplete; no profit, acquisition cost or causal lift is inferred.",
+      campaigns: campaignReport.rows.map((row) => ({ campaign: row.campaign, payment_channels: row.paymentChannels, visits: row.visits, paid_records: row.paidRecords, gross_amount: row.gross })),
     } } : {}),
     buyer_cohorts: known && data.buyerChannels ? {
       history_partial: data.buyerChannels.historyPartial,
@@ -117,7 +124,7 @@ export function channelsTool(data: StatsData, w: Window) {
         }
       : null,
     ads: known ? (data.ads?.[w] ?? []).slice(0, 25).map((r) => ({ ad: r.content, channel: r.source, campaign: r.campaign, sales: r.sales, revenue: r.cents })) : [],
-    posts: known ? (data.posts?.[w] ?? []).slice(0, 25).map((r) => ({ post: r.campaign, channel: r.source, visits: r.visits, sales: r.sales, revenue: r.cents })) : [],
+    posts: known ? (data.posts?.[w] ?? []).slice(0, 25).map((r) => ({ post: r.campaign, channel: r.sources?.length === 1 ? r.sources[0] : "", payment_channels: r.sources ?? null, visits: r.visits, sales: r.sales, revenue: r.cents })) : [],
   };
 }
 

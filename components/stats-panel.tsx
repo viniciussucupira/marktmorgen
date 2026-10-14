@@ -9,6 +9,7 @@ import { SOURCE_NAMES, channelName } from "@/lib/channel-names";
 import type { StatsNote } from "@/lib/stats-notes";
 import { type AdSpend, paybackOf, spendBy } from "@/lib/ad-spend-rules";
 import { channelCashflows, cashflowStatus } from "@/lib/channel-cashflow";
+import { CampaignResultsPanel } from "@/components/campaign-results";
 import { DailyCashflowPanel } from "@/components/daily-cashflow";
 import { RefundActivityPanel } from "@/components/refund-activity";
 import { WeeklyCohortsPanel } from "@/components/weekly-cohorts";
@@ -535,7 +536,6 @@ export function StatsPanel({
       .filter((name) => !channelsCounted.some((row) => row.source === name))
       .map((source) => ({ source, visits: 0, checkouts: 0, free: 0, sales: 0, cents: 0 })),
   ];
-  const withPostSpend = Boolean(spent && spent.campaigns.size > 0);
   // The channels offered when adding what was spent: the ones the store already counts, then the usual ones.
   const spendChannels = [
     ...new Set([...(data.channels?.d90 ?? []).map((row) => row.source), "instagram", "tiktok", "youtube", "facebook", "pinterest", "x", "google", "newsletter", "podcast"]),
@@ -550,7 +550,6 @@ export function StatsPanel({
   // The store page item by item, once enough visits were measured to say anything.
   const reach = range === "all" ? null : data.reach?.[range] ?? null;
   const withFreeColumn = channels.some((row) => row.free > 0);
-  const posts = range === "all" ? [] : data.posts?.[range] ?? [];
   // Page views by country and device, kept by the day: none for "all".
   const countries = data.countries?.[range] ?? [];
   const devices = data.devices?.[range] ?? [];
@@ -1020,59 +1019,7 @@ export function StatsPanel({
         />
       ) : null}
 
-      {posts.length ? (
-        <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-posts">
-          <table className="w-full text-left text-sm">
-            <caption id="numbers-posts" className="text-left text-sm font-bold text-ink">
-              Which post made you money
-            </caption>
-            <thead>
-              <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
-                <th scope="col" className="py-1 font-semibold">Post or campaign</th>
-                <th scope="col" className="py-1 pl-3 text-right font-semibold">Visits</th>
-                <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th>
-                <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th>
-                {withPostSpend ? (
-                  <>
-                    <th scope="col" className="py-1 pl-3 text-right font-semibold">Ad spend</th>
-                    <th scope="col" className="py-1 pl-3 text-right font-semibold">Left</th>
-                  </>
-                ) : null}
-              </tr>
-            </thead>
-            <tbody>
-              {posts.slice(0, 15).map((row) => (
-                <tr key={row.campaign} className="border-b border-line/60">
-                  <th scope="row" className="py-1 pr-3 font-medium text-ink">
-                    {row.campaign}
-                    {row.source ? <span className="ml-1.5 text-xs font-normal text-ink-soft">{channelName(row.source)}</span> : null}
-                  </th>
-                  <td className="py-1 pl-3 text-right tabular-nums">{count(row.visits)}</td>
-                  <td className="py-1 pl-3 text-right tabular-nums">{salesHere ? count(row.sales) : "—"}</td>
-                  <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{salesHere ? money(row.cents) : "—"}</td>
-                  {withPostSpend ? (
-                    (() => {
-                      const cost = spent?.campaigns.get(row.campaign) ?? 0;
-                      return (
-                        <>
-                          <td className="py-1 pl-3 text-right tabular-nums">{cost ? money(cost) : "—"}</td>
-                          <td className={`py-1 pl-3 text-right font-semibold tabular-nums ${cost && salesHere && row.cents < cost ? "text-danger" : "text-ink"}`}>
-                            {cost && salesHere ? money(row.cents - cost) : "—"}
-                          </td>
-                        </>
-                      );
-                    })()
-                  ) : null}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="mt-2 text-xs text-ink-soft">
-            A post appears here when its link carries its name: make one under Share, &ldquo;A link for one post,&rdquo; or add{" "}
-            <span className="font-mono">utm_campaign=</span> to any link you share.
-          </p>
-        </div>
-      ) : null}
+      {range !== "all" ? <CampaignResultsPanel data={data} range={range} spends={spends} /> : null}
 
       {ads.length && salesHere ? (
         <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-labelledby="numbers-ads">

@@ -747,7 +747,7 @@ export type SalesStats = {
    */
   attributionIn?: Record<"d7" | "d30" | "d90", { last: { source: string; cents: number; sales: number }[]; first: { source: string; cents: number; sales: number }[] }>;
   /** Money by campaign — one post, when its link was made for it — for each window, in the store's currency. */
-  byCampaignIn?: Record<"d7" | "d30" | "d90", { campaign: string; source: string; cents: number; sales: number }[]>;
+  byCampaignIn?: Record<"d7" | "d30" | "d90", { campaign: string; source: string; sources?: string[]; cents: number; sales: number }[]>;
   /** bySource for each window, so a channel's sales sit beside its visits for the same days. */
   bySourceIn?: Record<"d7" | "d30" | "d90", { source: string; currency: string; cents: number; sales: number }[]>;
   /**
@@ -1271,10 +1271,13 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
     revenueBySource(own.filter((sale) => dayKey(sale.created) >= cut).map((sale) => ({ cents: sale.cents, currency: sale.currency, source: sale.source })));
   out.bySourceIn = { d7: fromDay(cut7), d30: fromDay(cut30), d90: out.bySource };
   const campaignsFrom = (cut: string) => {
-    const by = new Map<string, { campaign: string; source: string; cents: number; sales: number }>();
+    const by = new Map<string, { campaign: string; source: string; sources: string[]; cents: number; sales: number }>();
     for (const sale of own) {
       if (!sale.campaign || dayKey(sale.created) < cut) continue;
-      const row = by.get(sale.campaign) ?? { campaign: sale.campaign, source: sale.source, cents: 0, sales: 0 };
+      const source = sale.source || "direct";
+      const row = by.get(sale.campaign) ?? { campaign: sale.campaign, source, sources: [], cents: 0, sales: 0 };
+      row.sources = [...new Set([...row.sources, source])].sort();
+      row.source = row.sources.length === 1 ? row.sources[0] : "";
       row.cents += sale.cents;
       row.sales += 1;
       by.set(sale.campaign, row);
@@ -1653,7 +1656,7 @@ export type StatsData = {
    * name (lib/share-links.ts postLink) — with its visits and the money it
    * brought, for the window. Biggest first.
    */
-  posts: Record<"d7" | "d30" | "d90", { campaign: string; source: string; visits: number; sales: number; cents: number }[]>;
+  posts: Record<"d7" | "d30" | "d90", { campaign: string; source: string; sources?: string[]; visits: number; sales: number; cents: number }[]>;
   /** Page views by country and by device, for the window; empty for "all", which keeps neither. */
   countries: Record<RangeKey, Ranked>;
   devices: Record<RangeKey, Ranked>;
@@ -1790,13 +1793,16 @@ export function channelRows(
 /** One window's posts: the visits each campaign tag brought, beside the money its sales carried. */
 export function postRows(
   window: WindowStats,
-  sales: { campaign: string; source: string; cents: number; sales: number }[] | undefined,
+  sales: { campaign: string; source: string; sources?: string[]; cents: number; sales: number }[] | undefined,
 ): StatsData["posts"]["d7"] {
   const rows = new Map<string, StatsData["posts"]["d7"][number]>();
+  const unknownChannels = new Set<string>();
   for (const c of window.campaigns ?? []) rows.set(c.name, { campaign: c.name, source: "", visits: c.visits, sales: 0, cents: 0 });
   for (const s of sales ?? []) {
     const row = rows.get(s.campaign) ?? { campaign: s.campaign, source: s.source, visits: 0, sales: 0, cents: 0 };
-    row.source = row.source || s.source;
+    if (s.sources === undefined) unknownChannels.add(s.campaign);
+    row.sources = unknownChannels.has(s.campaign) ? undefined : [...new Set([...(row.sources ?? []), ...(s.sources ?? [])])].sort();
+    row.source = row.sources && row.sources.length > 1 ? "" : row.source || s.source;
     row.sales += s.sales;
     row.cents += s.cents;
     rows.set(s.campaign, row);

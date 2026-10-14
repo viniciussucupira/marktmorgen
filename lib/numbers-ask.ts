@@ -24,6 +24,7 @@ import { channelName } from "@/lib/channel-names";
 import { DISCOUNT_NAMES } from "@/lib/discount-impact";
 import { readSpends } from "@/lib/ad-spend";
 import { spendBy, type AdSpend } from "@/lib/ad-spend-rules";
+import { campaignResultsFrom } from "@/lib/campaign-results";
 import { dailyCashflowRows } from "@/lib/daily-cashflow";
 import { refundActivityFrom } from "@/lib/refund-activity";
 import { channelCashflows } from "@/lib/channel-cashflow";
@@ -63,6 +64,7 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
     const costs = spends !== undefined && days.length ? spendBy(spends, days[0].date, days[days.length - 1].date).channels : new Map<string, number>();
     const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], costs, days[0].date, days[days.length - 1].date) : [];
     const refundActivity = known && days.length ? refundActivityFrom(data, w, days[0].date, days[days.length - 1].date) : null;
+    const campaignReport = campaignResultsFrom(data, w, spends);
     out[NAMES[w]] = {
       visitors: t.visitors,
       page_views: t.views,
@@ -84,11 +86,20 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
         .sort((a, b) => b.cents - a.cents || b.views - a.views)
         .slice(0, 15)
         .map((row) => ({ product: row.title, page_views: row.views, checkouts_started: row.checkouts, ...(known ? { sales: row.sales, revenue: money(row.cents) } : {}) })),
-      posts: (data.posts?.[w] ?? []).slice(0, 10).map((r) => ({ post: r.campaign, channel: channelName(r.source), visits: r.visits, ...(known ? { sales: r.sales, revenue: money(r.cents) } : {}) })),
+      posts: (data.posts?.[w] ?? []).slice(0, 10).map((r) => ({ post: r.campaign, payment_channels: known ? r.sources?.map(channelName) ?? null : null, visits: r.visits, ...(known && !data.partial ? { paid_records: r.sales, gross_amount: money(r.cents) } : {}) })),
       ads: known ? (data.ads?.[w] ?? []).slice(0, 10).map((r) => ({ ad: r.content, channel: channelName(r.source), sales: r.sales, revenue: money(r.cents) })) : [],
       countries_by_views: (data.countries?.[w] ?? []).slice(0, 10).map((r) => ({ country: r.name, page_views: r.visits })),
       devices_by_views: (data.devices?.[w] ?? []).slice(0, 5).map((r) => ({ device: r.name, page_views: r.visits })),
       ...(known && data.renewals ? { renewals: { payments: data.renewals[w].payments, revenue: money(data.renewals[w].cents) } } : {}),
+      ...(campaignReport ? { campaign_recorded_results: {
+        from_utc: campaignReport.from, to_utc: campaignReport.to, complete_paid_records: campaignReport.salesKnown,
+        campaigns_available: campaignReport.rows.length, campaigns_included: Math.min(20, campaignReport.rows.length),
+        untagged_ad_spend: campaignReport.unassignedAds === null ? null : money(campaignReport.unassignedAds),
+        note: "Same campaign tag combined across channels. Visits are not split by payment channel. Paid records include purchases and one-click extras, not unique buyers or a conversion rate; recurring renewals are excluded. Gross less recorded ads is before refunds and all other costs, not profit or causal ad lift. Unknown or partial paid figures stay null. Missing ad entries are not invented as zero; untagged spend is not allocated. At most 20 campaigns, with highest recorded spend first.",
+        campaigns: campaignReport.rows.slice(0,20).map((row) => ({ campaign: row.campaign, payment_channels: row.paymentChannels?.map(channelName) ?? null, ad_channels: row.adChannels?.map(channelName) ?? null, visits: row.visits,
+          paid_records: row.paidRecords, gross_amount: row.gross === null ? null : money(row.gross), recorded_ads: row.ads === null ? null : money(row.ads), gross_amount_less_ads: row.grossLessAds === null ? null : money(row.grossLessAds),
+        })),
+      } } : {}),
       ...(known && data.buyers ? { buyers: { buyers: data.buyers[w].buyers, orders: data.buyers[w].orders, came_back: data.buyers[w].returning } } : {}),
       ...(known && cash.length ? { cashflow: {
         complete: data.cashflowComplete === true,
@@ -191,7 +202,7 @@ export async function askNumbers(store: Store, question: string, data: StatsData
       "You answer a creator's question about their own online store's numbers.",
       "Answer ONLY from the JSON of numbers given. Never estimate, project or invent a number, a cause or a fact that is not in it. If the numbers cannot answer the question, say so plainly in one sentence and say what the numbers do show that comes closest.",
       "Money is already written as the creator reads it: repeat amounts exactly as given. Windows are the last 7, 30 and 90 days; with no window in the question, use the last 30 days.",
-      "Daily cashflow is recorded UTC activity, not profit or proof of advertising lift. A multi-day spend is allocated with exact total-preserving rounding. Never replace missing daily refunds or ad spend with zero. Refund activity is same-period recorded money, not a refund rate for those purchases or buyers. Do not infer dissatisfaction, causes or the number of buyers from refund records. A missing ratio with no payments is unknown, not zero. Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days. Weekly cohorts are independent of the selected channel window. Always name the period and eligible denominator, do not treat immature cells as zero, infer churn or claim a trend from small groups or incomplete history.",
+      "Campaign tags combine channels. Payment channel lists do not split visit counts. Campaign paid records include one-click extras and are not unique buyers or a visitor conversion rate. Never call gross less ads profit, customer acquisition cost or advertising lift; renewals and refunds are not in that comparison. Never infer a missing channel list from the legacy single-source label. Daily cashflow is recorded UTC activity, not profit or proof of advertising lift. A multi-day spend is allocated with exact total-preserving rounding. Never replace missing daily refunds or ad spend with zero. Refund activity is same-period recorded money, not a refund rate for those purchases or buyers. Do not infer dissatisfaction, causes or the number of buyers from refund records. A missing ratio with no payments is unknown, not zero. Cashflow is before fees, tax, commissions and other costs: never call it profit. Do not recommend increasing ad budgets from attributed sales. A null result is unknown, not zero. Buyer cohorts show first observed purchases, not lifetime acquisition; compare 30-day repurchases only among buyers observed for 30 days. Weekly cohorts are independent of the selected channel window. Always name the period and eligible denominator, do not treat immature cells as zero, infer churn or claim a trend from small groups or incomplete history.",
       "Write in the language of the question. At most 90 words, plain sentences, no markdown, no headings. Be direct: the answer first, then one short line on what it suggests doing, only if the numbers clearly support it.",
       `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights.`,
     ].join("\n\n");
