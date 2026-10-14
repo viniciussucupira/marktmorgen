@@ -34,6 +34,8 @@ function missing(snapshot:StatsData,name:string){
  is(name+" channel CSV keeps payments blank",byChannel.every(r=>r[4]===""&&r[9]==="Incomplete"),true);
  is(name+" concentration cannot use partial renewals",paymentMixFrom(snapshot,"d7"),null);
  is(name+" refund ratio cannot use unknown denominator",refundActivityFrom(snapshot,"d7",date,date),null);
+ const context=numbersContext(snapshot) as {last_7_days:{renewals?:unknown}};
+ is(name+" incomplete renewal summaries omitted",context.last_7_days.renewals,undefined);
 }
 async function main(){
  part("Contradictory and legacy snapshots don't invent complete payments");
@@ -45,6 +47,8 @@ async function main(){
  missing({...data,partial:true},"Purchase cap");
  missing({...data,renewals:{d7:{payments:1,cents:100},d30:{payments:1,cents:100},d90:{payments:1,cents:100},partial:true}},"Renewal cap");
  missing({...data,paymentsComplete:false},"Failed renewal read");
+ const completeRenewals={d7:{payments:1,cents:100},d30:{payments:1,cents:100},d90:{payments:1,cents:100},partial:false};
+ is("complete renewal summary retained",(numbersContext({...data,renewals:completeRenewals}) as {last_7_days:{renewals:unknown}}).last_7_days.renewals,{payments:1,revenue:"$1"});
  part("Refund failures keep separately confirmed payments");
  const refundsMissing={...data,cashflowComplete:false,refundDays:null};
  is("receipts stay complete when only refunds fail",ledgerPaymentsComplete(refundsMissing),true);

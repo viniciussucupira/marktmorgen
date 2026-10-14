@@ -115,7 +115,7 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
       ads: known && !data.partial ? (data.ads?.[w] ?? []).slice(0, 10).map((r) => ({ ad: r.content, campaign: r.campaign, channel: channelName(r.source), sales: r.sales, revenue: money(r.cents) })) : [],
       countries_by_views: (data.countries?.[w] ?? []).slice(0, 10).map((r) => ({ country: r.name, page_views: r.visits })),
       devices_by_views: (data.devices?.[w] ?? []).slice(0, 5).map((r) => ({ device: r.name, page_views: r.visits })),
-      ...(known && data.renewals ? { renewals: { payments: data.renewals[w].payments, revenue: money(data.renewals[w].cents) } } : {}),
+      ...(known && data.renewals && !data.renewals.partial ? { renewals: { payments: data.renewals[w].payments, revenue: money(data.renewals[w].cents) } } : {}),
       ...(campaignReport ? { campaign_recorded_results: {
         from_utc: campaignReport.from, to_utc: campaignReport.to, complete_paid_records: campaignReport.salesKnown,
         campaigns_available: campaignReport.rows.length, campaigns_included: Math.min(20, campaignReport.rows.length),
