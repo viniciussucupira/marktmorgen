@@ -10,6 +10,7 @@
  */
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { ledgerPaymentsComplete } from "@/lib/payment-ledger-coverage";
+import { paymentMixFrom } from "@/lib/payment-mix";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Store } from "@/lib/store";
 import { type Ranked, type StatsData, readSales, readsSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
@@ -40,6 +41,9 @@ export type SummaryWindow = {
   /** Refunds given in the window; null when they were not read. */
   refunded: number | null;
   refunds_complete: boolean;
+  /** Gross receipts include renewals; after_refunds excludes fees and ad spend. Smallest currency unit. */
+  payments: { complete: boolean; gross_receipts: number | null; after_refunds: number | null };
+  renewals: { complete: boolean; count: number | null; revenue: number | null };
   /** Reading coverage; detail lists contain at most 20 entries. */
   sales_by_country_complete: boolean;
   ad_records_complete: boolean;
@@ -84,6 +88,9 @@ export function summaryOf(data: StatsData): Summary {
   for (const w of WINDOWS) {
     const t = data.totals[w];
     const refundsKnown = ledgerPaymentsComplete(data) && data.cashflowComplete === true && data.refunds?.[w] != null;
+    const payments = paymentMixFrom(data, w);
+    const refunded = refundsKnown ? data.refunds![w].reduce((n, r) => n + r.cents, 0) : null;
+    const renewalsKnown = known && data.renewals != null && !data.renewals.partial;
     const countriesKnown = known && data.salesCountries?.[w] != null;
     const adsKnown = known && data.ads?.[w] != null;
     days[NAMES[w]] = {
@@ -112,8 +119,10 @@ export function summaryOf(data: StatsData): Summary {
           revenue: known && p ? p.cents : null,
         };
       })(),
-      refunded: refundsKnown ? data.refunds![w].reduce((n, r) => n + r.cents, 0) : null,
+      refunded,
       refunds_complete: refundsKnown,
+      payments: { complete: payments !== null, gross_receipts: payments?.total ?? null, after_refunds: payments !== null && refunded !== null ? payments.total - refunded : null },
+      renewals: { complete: renewalsKnown, count: renewalsKnown ? data.renewals![w].payments : null, revenue: renewalsKnown ? data.renewals![w].cents : null },
       sales_by_country_complete: countriesKnown,
       ad_records_complete: adsKnown,
       sales_by_country: countriesKnown ? (data.salesCountries?.[w] ?? []).slice(0, 20).map((r) => ({ country: r.country, sales: r.sales, revenue: r.cents })) : [],
