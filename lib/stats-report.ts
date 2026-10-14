@@ -14,6 +14,7 @@ import { paymentMixFrom } from "@/lib/payment-mix";
 import { paymentComparisonFrom } from "@/lib/payment-comparison";
 import { refundActivityFrom } from "@/lib/refund-activity";
 import { COHORT_AGES } from "@/lib/buyer-channel-rules";
+import { dailyCashflowRows } from "@/lib/daily-cashflow";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Store } from "@/lib/store";
 import { type Ranked, type StatsData, readSales, readsSales, readStats, sourcesToday, studioStats, viewsBefore } from "@/lib/stats";
@@ -47,6 +48,11 @@ export type SummaryWindow = {
   refund_activity: { complete: boolean; from: string | null; to: string | null; records: number | null; share: number | null; rows: { channel: string; gross_receipts: number; refunded: number; records: number; share: number | null }[] };
   /** Gross receipts include renewals; after_refunds excludes fees and ad spend. Smallest currency unit. */
   payments: { complete: boolean; gross_receipts: number | null; after_refunds: number | null };
+  daily_payments: {
+    payments_complete: boolean;
+    refunds_complete: boolean;
+    rows: { date: string; gross_receipts: number; refunded: number | null; after_refunds: number | null }[];
+  };
   renewals: { complete: boolean; count: number | null; revenue: number | null };
   buyer_channels: {
     complete: boolean;
@@ -113,6 +119,7 @@ export function summaryOf(data: StatsData): Summary {
     const t = data.totals[w];
     const refundsKnown = ledgerPaymentsComplete(data) && data.cashflowComplete === true && data.refunds?.[w] != null;
     const payments = paymentMixFrom(data, w);
+    const daily = payments ? dailyCashflowRows(data, w) : [];
     const refundActivity = payments ? refundActivityFrom(data, w, payments.from, payments.to) : null;
     const comparison = paymentComparisonFrom(data, w);
     const refunded = refundsKnown ? data.refunds![w].reduce((n, r) => n + r.cents, 0) : null;
@@ -157,6 +164,11 @@ export function summaryOf(data: StatsData): Summary {
         rows: refundActivity?.rows.map(row => ({ channel: row.source, gross_receipts: row.payments, refunded: row.refunds, records: row.records, share: row.share })) ?? [],
       },
       payments: { complete: payments !== null, gross_receipts: payments?.total ?? null, after_refunds: payments !== null && refunded !== null ? payments.total - refunded : null },
+      daily_payments: {
+        payments_complete: payments !== null,
+        refunds_complete: daily.length > 0 && daily.every(row => row.refunds !== null),
+        rows: daily.map(row => ({ date: row.date, gross_receipts: row.payments!, refunded: row.refunds, after_refunds: row.afterRefunds })),
+      },
       renewals: { complete: renewalsKnown, count: renewalsKnown ? data.renewals![w].payments : null, revenue: renewalsKnown ? data.renewals![w].cents : null },
       buyer_channels: {
         complete: buyers != null,

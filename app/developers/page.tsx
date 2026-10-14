@@ -286,6 +286,14 @@ export default function DevelopersPage() {
           read by the platform. Missing or incomplete history makes this group unavailable, while a complete
           empty reading remains available. Unidentified orders are separate and no identities are included.
         </p>
+        <p>
+          Each period includes <code className="font-mono">daily_payments</code>, with UTC dates, gross receipts
+          including renewals, refunds recorded that day and amounts after refunds, before fees and ad spend.
+          Separate payment and refund coverage flags distinguish unavailable readings from real zero amounts.
+          Missing refund coverage leaves confirmed daily receipts available but refunded and after_refunds null.
+          Complete readings include days with zero activity. Refunds of older purchases can produce a negative
+          daily result. Incomplete payment readings have no daily rows.
+        </p>
       </LegalSection>
 
       <LegalSection title="Ask your AI assistant">
