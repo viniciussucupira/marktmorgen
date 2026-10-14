@@ -65,12 +65,14 @@ export function PageFunnelEditor({
   choices,
   base,
   repairActions = [],
+  readFailed = false,
 }: {
   saved: SavedFunnel[];
   choices: StepChoice[];
   /** The funnels' addresses start with this: https://marktmorgen.com/@chef/go/ */
   base: string;
   repairActions?: FunnelRepairAction[];
+  readFailed?: boolean;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -161,6 +163,14 @@ export function PageFunnelEditor({
       draft.id ? "Funnel saved." : "Funnel made.",
     );
   }
+
+  if (readFailed) return (
+    <section aria-labelledby="page-funnels-title" className="card min-w-0 p-5 sm:p-8">
+      <h2 id="page-funnels-title" className="text-lg font-semibold">Pages in order</h2>
+      <p className="notice notice-warn mt-4 text-sm" role="alert">Your saved funnels could not be loaded. Their availability and the remaining creation limit are unknown. Reload before creating or editing a page funnel.</p>
+      <button type="button" className="btn btn-secondary mt-4" onClick={() => router.refresh()}>Reload funnels</button>
+    </section>
+  );
 
   return (
     <section aria-labelledby="page-funnels-title" className="card min-w-0 p-5 sm:p-8">
