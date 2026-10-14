@@ -62,11 +62,12 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
     sales_read: data.sales === "ok" ? data.partial ? "incomplete purchase reading" : "yes" : data.sales === "none" ? "no Stripe account connected" : "Stripe did not answer",
     paid_figures_complete: known,
     partial: data.partial === true,
-    coverage_note: "Paid figures require a successful non-partial purchase reading. Omitted or null paid totals, conversion rates and paid-derived insights are unavailable, not zero. Traffic and checkouts can remain available.",
+    coverage_note: "Paid figures require a successful non-partial purchase reading. Omitted or null paid totals, conversion rates and paid-derived insights are unavailable, not zero. Traffic and checkouts can remain available. Previous traffic with traffic_available false is unavailable, not zero; confirmed previous paid figures remain independent.",
   };
   for (const w of WINDOWS) {
     const t = data.totals[w];
     const p = data.previous?.[w];
+    const trafficKnown = p != null && data.previousTrafficAvailable?.[w] !== false;
     const days = (data.days ?? []).slice(-(w === "d7" ? 7 : w === "d30" ? 30 : 90));
     const costs = spends !== undefined && days.length ? spendBy(spends, days[0].date, days[days.length - 1].date).channels : new Map<string, number>();
     const cash = known && days.length ? channelCashflows(data, w, data.channels?.[w] ?? [], costs, days[0].date, days[days.length - 1].date) : [];
@@ -93,8 +94,9 @@ export function numbersContext(data: StatsData, spends?: AdSpend[]): Record<stri
       page_views: t.views,
       checkouts_started: t.checkouts,
       ...(known ? { sales: t.sales, revenue: money(t.cents) } : {}),
+      previous_traffic_available: trafficKnown,
       the_same_number_of_days_before: p
-        ? { visitors: p.visitors, page_views: p.views, checkouts_started: p.checkouts, ...(known && p.sales !== null ? { sales: p.sales } : {}), ...(known && p.cents !== null ? { revenue: money(p.cents) } : {}) }
+        ? { traffic_available: trafficKnown, visitors: trafficKnown ? p.visitors : null, page_views: trafficKnown ? p.views : null, checkouts_started: trafficKnown ? p.checkouts : null, ...(known && p.sales !== null ? { sales: p.sales } : {}), ...(known && p.cents !== null ? { revenue: money(p.cents) } : {}) }
         : null,
       channels: (data.channels?.[w] ?? []).slice(0, 15).map((c) => ({
         channel: channelName(c.source),
