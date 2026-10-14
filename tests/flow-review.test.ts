@@ -1,7 +1,7 @@
 import { flowConfigurationIssues, type FlowReviewContext } from "@/lib/flow-review";
 import type { Flow } from "@/lib/flows";
 import { done, is, part } from "./check";
-const flow = { id: "main", name: "Welcome", trigger: "joined", productId: null, active: false, createdAt: 1, steps: [] } as Flow;
+const flow = { id: "main", name: "Welcome", trigger: "joined", productId: null, active: false, createdAt: 1, steps: [{ id: "initial", delayHours: 0, subject: "Hello", body: "Welcome" }] } as Flow;
 const step = { id: "step1", delayHours: 0, subject: "Hello", body: "Welcome" };
 const context: FlowReviewContext = { products: [{ id: "p1" }], courses: ["p1"], forms: [{ id: "form1" }], fields: [{ id: "field1", name: "Score", type: "text", options: [] }], stages: [{ id: "stage1" }], flows: [] };
 part("Saved automation references");
@@ -25,4 +25,8 @@ is("invalid calendar date is flagged", flowConfigurationIssues({ ...fieldAction,
 is("removed choice value is flagged", flowConfigurationIssues(fieldAction, { ...context, fields: [{ ...context.fields[0], type: "choice", options: ["Approved"] }] }).length, 1);
 is("clear-field action remains valid", flowConfigurationIssues({ ...fieldAction, steps: [{ ...step, action: { do: "field", field: "field1", value: "" } }] }, numberContext), []);
 is("unknown field format is not claimed valid", flowConfigurationIssues(fieldAction, { ...context, fields: [{ ...context.fields[0], type: "unknown" }] })[0]?.includes("could not be checked"), true);
+is("empty sequence needs a step", flowConfigurationIssues({ ...flow, steps: [] }, context)[0]?.includes("no steps"), true);
+is("empty email needs content", flowConfigurationIssues({ ...flow, steps: [{ ...step, body: " " }] }, context)[0]?.startsWith("Step 1:"), true);
+is("empty subject needs completion", flowConfigurationIssues({ ...flow, steps: [{ ...step, subject: " " }] }, context)[0]?.includes("subject and content"), true);
+is("action step does not need email content", flowConfigurationIssues({ ...flow, steps: [{ ...step, subject: "", body: "", action: { do: "notify" } }] }, context), []);
 done();
