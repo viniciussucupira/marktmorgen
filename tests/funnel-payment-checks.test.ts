@@ -1,8 +1,8 @@
-import { paidStepProblem, freeStepProblem, readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
+import { paidStepProblem, freeStepProblem, planStepProblem, readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Listing, Store } from "@/lib/store";
 import { done, is, part } from "./check";
 process.env.STRIPE_SECRET_KEY = "sk_test_local_configuration_only";
-const store = { stripeAccountId: "acct_test", stripeChargesEnabled: true, subscriptionActive: true, suspended: false } as unknown as Store;
+const store = { currency: "usd", stripeAccountId: "acct_test", stripeChargesEnabled: true, subscriptionActive: true, suspended: false } as unknown as Store;
 const product = { id: "offer1", title: "Offer", priceCents: 1000, hidden: false, call: null, course: null, podcast: null, shipping: null, options: [], recurring: null, bundle: null, link: "https://example.com/delivery", file: null } as unknown as Listing;
 part("Paid funnel configuration follows the existing sale rules");
 is("ready link offer", paidStepProblem(store, product, 0), null);
@@ -38,6 +38,21 @@ is("PayPal-only offer is available", paidStepProblem(paypalStore, paypalOffer, 0
 is("unsupported PayPal offer stays unavailable", paidStepProblem(paypalStore, { ...paypalOffer, stock: 2 } as unknown as Listing, 0)?.includes("not sellable"), true);
 is("PayPal does not bypass missing delivery", paidStepProblem(paypalStore, { ...paypalOffer, link: null }, 0)?.includes("delivery"), true);
 
+part("Saved funnel plans explain why installments disappeared");
+const installment = { ...product, plan: { payments: 3, interval: "month", amountCents: 400 } } as Listing;
+is("valid installment plan", planStepProblem(store, installment), null);
+is("no plan remains quiet", planStepProblem(store, product), null);
+is("price increase explains short installments", planStepProblem(store, { ...installment, priceCents: 1500 })?.includes("less than the "), true);
+is("up-front checkout remains eligible", paidStepProblem(store, { ...installment, priceCents: 1500 }, 0), null);
+is("recurring product explains incompatible plan", planStepProblem(store, { ...installment, recurring: { interval: "month" } } as Listing)?.includes("only goes on a product sold once"), true);
+is("chosen price explains suppressed plan", planStepProblem(store, { ...installment, pwyw: { minCents: 100 } } as unknown as Listing)?.includes("no fixed price"), true);
+is("hidden product availability remains separate", planStepProblem(store, { ...installment, hidden: true, priceCents: 1500 }), null);
+const option = { id: "commercial1", label: "Commercial", priceCents: 1500, file: null, link: "https://example.com/commercial", details: [], recommended: false };
+const priced = { ...installment, options: [option], plan: { ...installment.plan!, options: { personal1: 400 } } } as Listing;
+is("missing option names affected price", planStepProblem(store, priced)?.includes("no payment for the \u201cCommercial\u201d price"), true);
+is("option payments too small", planStepProblem(store, { ...priced, plan: { ...priced.plan!, options: { commercial1: 400 } } })?.includes("less than the \u201cCommercial\u201d price"), true);
+is("all eligible prices covered", planStepProblem(store, { ...priced, plan: { ...priced.plan!, options: { commercial1: 500 } } }), null);
+
 async function main() {
   const catalogStore = { ...store, catalog: { id: null, inline: null, items: [{ id: product.id }], head: [product] } } as unknown as Store;
   is("configured paid step checked", await readFunnelPaymentChecks(catalogStore, { steps: [{ kind: "product", id: product.id }] }), []);
@@ -47,6 +62,10 @@ async function main() {
   let unknown = false;
   try { await readFunnelPaymentChecks(broken, { steps: [{ kind: "product", id: product.id }] }); } catch { unknown = true; }
   is("failed reads remain unknown", unknown, true);
+  const short = { ...installment, priceCents: 1500 };
+  const planStore = { ...catalogStore, catalog: { ...catalogStore.catalog, head: [short] } } as Store;
+  const planIssues = await readFunnelPaymentChecks(planStore, { steps: [{ kind: "page", id: "page1" }, { kind: "product", id: short.id }] });
+  is("saved funnel locates plan warning at correct step", planIssues.length === 1 && planIssues[0].startsWith("Step 2, Offer:") && planIssues[0].includes("payment plan"), true);
   done();
 }
 void main();
