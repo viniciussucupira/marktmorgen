@@ -259,6 +259,18 @@ export function EmailStudio(props: {
   const ready = props.mail !== null;
   // The draft open in the composer; a new key starts the composer afresh.
   const [open, setOpen] = useState<DraftRow | null>(null);
+  const [composeRevision, setComposeRevision] = useState(0);
+  const composerState = useRef({ dirty: false, busy: false });
+  const openDraft = (draft: DraftRow | null) => {
+    if (draft && open?.id === draft.id && open.savedAt === draft.savedAt) return;
+    if (composerState.current.busy) {
+      toast("Wait for the current email operation to finish before opening another email.");
+      return;
+    }
+    if (composerState.current.dirty && !window.confirm("You have email changes that are not saved. Discard them and open another email?")) return;
+    setOpen(draft);
+    setComposeRevision((value) => value + 1);
+  };
   const [uncertainList, setUncertainList] = useState<FlowRow[] | null>(null);
   const writeUnconfirmed = uncertainList === props.flows;
   const onWriteUnconfirmed = () => setUncertainList(props.flows);
@@ -270,21 +282,23 @@ export function EmailStudio(props: {
           <>
             <AiOn value={props.ai ?? { on: false, left: 0 }}>
               <Compose
-                key={open ? `${open.id}-${open.savedAt}` : "new"}
+                key={`${composeRevision}-${open ? `${open.id}-${open.savedAt}` : "new"}`}
                 email={props.email}
                 products={props.products}
                 links={props.links ?? {}}
                 counts={props.counts}
                 canSend={props.canSend}
                 draft={open}
-                onDone={() => setOpen(null)}
+                onDone={() => { setOpen(null); setComposeRevision((value) => value + 1); }}
+                onStartNew={() => openDraft(null)}
+                composerState={composerState}
                 currency={props.currency}
                 segments={props.segments ?? []}
                 preset={open ? undefined : props.preset}
               />
             </AiOn>
-            <Drafts drafts={props.drafts} products={props.products} open={open} onOpen={setOpen} />
-            <History writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
+            <Drafts drafts={props.drafts} products={props.products} open={open} onOpen={openDraft} />
+            <History writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={openDraft} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
                 <Flows writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flows={props.flows} readFailed={props.flowsReadFailed ?? false} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} />
@@ -473,6 +487,8 @@ function Compose(props: {
   /** A draft opened into the composer, or null for a new email. */
   draft: DraftRow | null;
   onDone: () => void;
+  onStartNew: () => void;
+  composerState: { current: { dirty: boolean; busy: boolean } };
   currency: string;
   segments: Segment[];
   preset?: { who: Who };
@@ -514,6 +530,15 @@ function Compose(props: {
   // What the writing help is asked to write, and about which product.
   const [goal, setGoal] = useState<EmailGoal>("announce");
   const [about, setAbout] = useState("");
+  const [savedContent, setSavedContent] = useState(() => JSON.stringify([props.draft?.subject ?? "", props.draft?.body ?? "", props.draft?.productId ?? ""]));
+  const content = JSON.stringify([subject, body, productId]);
+  const dirty = content !== savedContent || who !== (props.draft?.who ?? props.preset?.who ?? "all") || notProductId !== "" || later || at !== "" || testing || subjectB !== "" || spentText !== "" || channel !== "" || quietDays !== 0;
+  useLeaveGuard(dirty);
+  useEffect(() => {
+    const state = props.composerState;
+    state.current = { dirty, busy };
+    return () => { state.current = { dirty: false, busy: false }; };
+  }, [dirty, busy, props.composerState]);
 
   useEffect(() => {
     let live = true;
@@ -580,7 +605,10 @@ function Compose(props: {
       return;
     }
     const saved = a.draft as DraftRow | undefined;
-    if (saved) setDraftId(saved.id);
+    if (saved && typeof saved.id === "string" && saved.id) {
+      setDraftId(saved.id);
+      setSavedContent(content);
+    }
     toast("Draft saved.");
     router.refresh();
   }
@@ -592,7 +620,7 @@ function Compose(props: {
           {draftId ? "Draft" : "New email"}
         </h2>
         {draftId ? (
-          <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" onClick={props.onDone}>
+          <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" disabled={busy} onClick={props.onStartNew}>
             Start a new one instead
           </button>
         ) : null}
