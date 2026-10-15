@@ -6,7 +6,7 @@ import { ReportDownload } from "@/components/report-download";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, customRangeMinimumTraffic, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
-import { CUSTOM_RANGE_METRICS, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
+import { CUSTOM_RANGE_METRICS, customRangeChartSummary, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
 import { customRangeComparison } from "@/lib/custom-range-comparison";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
@@ -285,6 +285,7 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
    {CUSTOM_RANGE_GROUPINGS.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}
   </select>
   <p className="mt-1 text-xs text-ink-soft">Daily totals in UTC.{unit!=="day"?" Weeks start on Monday. First and last groups may cover only part of a week or month. Visitors are summed daily counts, not distinct people across the group.":""}{selected==="cents"||selected==="sales"?" Purchases include one-click extras and exclude renewals. Revenue is before fees, refunds and ad spend.":""}</p>
+  <CustomRangeChartSummary range={range} currency={currency} metric={selected} />
   <div className={"mt-3 flex h-24 items-end "+(rows.length>60?"gap-0":"gap-[2px]")} role="img" aria-label={chartLabel}>
    {rows.map(row=><div key={row.from} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={dates(row)+": "+value(row.value)+" "+label.toLowerCase()+(selected==="visitors"&&row.sales!==null?", "+row.sales+" sales":"")}>
     <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{height:Math.max(row.value?4:1,(row.value/peak)*100)+"%",opacity:row.value?1:0.25}} />
@@ -354,5 +355,22 @@ export function CustomRangeSelectionSummary({range,currency,selection}:{range:Ra
   <p className="mt-2 text-xs text-ink-soft">Totals cover matching loaded rows, not the whole period. Channels and products overlap; do not add them together.{range.channelsTruncated||range.productsTruncated?" Some loaded lists are limited.":""}</p>
   <p className="mt-1 text-xs text-ink-soft">Channel purchases exclude one-click extras; product purchases include them. Both exclude renewals. Gross revenue is before refunds, fees and ad spend.</p>
   {selection?<ReportDownload csv={customRangeSelectionReport(range,selection)} filename={"marktmorgen-custom-selection-"+range.from+"-to-"+range.to+".csv"}>Download selection totals</ReportDownload>:null}
+ </div>;
+}
+
+/** The summary uses daily rows even when bars are grouped by week or month. */
+export function CustomRangeChartSummary({range,currency,metric}:{range:RangeData;currency:string;metric:CustomRangeMetric}) {
+ const summary=customRangeChartSummary(range,metric);
+ if(!summary)return null;
+ const label=CUSTOM_RANGE_METRICS.find(item=>item.value===summary.metric)!.label;
+ const value=(n:number,average=false)=>summary.metric==="cents"?formatMoney(Math.round(n),currency):n.toLocaleString("en-US",{maximumFractionDigits:average?2:0});
+ return <div className="mt-3" role="region" aria-label="Chart metric summary">
+  <p className="text-xs font-semibold text-ink">{label} over {count(summary.days)} recorded UTC days</p>
+  <dl className="mt-2 grid gap-3 sm:grid-cols-3">
+   <div><dt className="text-xs text-ink-soft">Recorded total</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.total)}</dd></div>
+   <div><dt className="text-xs text-ink-soft">Average per recorded day</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.average,true)}</dd></div>
+   <div><dt className="text-xs text-ink-soft">Highest recorded day</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.peak.value)}</dd><dd className="text-xs text-ink-soft">{day(summary.peak.date)}{summary.peak.ties>1?" · "+count(summary.peak.ties)+" days tied; earliest shown.":""}</dd></div>
+  </dl>
+  <p className="mt-1 text-xs text-ink-soft">Summary uses daily rows even when the chart is grouped. Averages are rounded for display.{summary.metric==="visitors"?" Visitors are summed daily counts, not distinct people across the period.":""} Values for today can still grow.</p>
  </div>;
 }
