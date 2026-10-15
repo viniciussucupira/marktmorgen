@@ -21,6 +21,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { formatMoney } from "@/lib/money";
 import { MIN_TEST_REACH, TEST_HOURS, TEST_SHARES, type SubjectTest, type TestBy } from "@/lib/mail-test";
 import { type Currency, plainAmount } from "@/lib/money";
+import { mailAudienceWords, type MailAudienceSelection } from "@/lib/mail-audience-summary";
 import { campaignHistoryView, HISTORY_STATUSES, type HistoryStatus } from "@/lib/broadcast-history-view";
 import { broadcastAnswer, cancellationAnswer } from "@/lib/broadcast-response";
 import { readMailSchedule } from "@/lib/mail-schedule";
@@ -191,6 +192,20 @@ function narrowWords(narrow: Narrow, currency: string): string {
   return `Only those who ${parts.join(", ")}.`;
 }
 
+/** Shared wording keeps saved drafts, history and the final review consistent. */
+function AudienceSummary({ audience, products, currency }: {
+  audience: MailAudienceSelection & { narrow?: Narrow | null };
+  products: readonly { id: string; title: string }[];
+  currency: string;
+}) {
+  const narrow = audience.narrow;
+  const narrowed = narrow && Boolean(narrow.minSpent || narrow.channel || narrow.quietDays);
+  return <div className="mt-1 break-words text-sm text-ink-soft">
+    <p><span className="font-semibold">Audience criteria: </span>{mailAudienceWords(audience, products)}</p>
+    {narrowed ? <p className="mt-1">{narrowWords(narrow, currency)}</p> : null}
+  </div>;
+}
+
 function keepable(b: Pick<BroadcastRow, "who" | "productId" | "notProductId" | "narrow">): boolean {
   // Chosen by spending, a channel or quiet days: a sequence cannot choose that way (lib/mail-reuse.ts).
   if (b.narrow) return false;
@@ -330,7 +345,7 @@ export function EmailStudio(props: {
                 preset={open ? undefined : props.preset}
               />
             </AiOn>
-            <Drafts readFailed={props.draftsReadFailed ?? false} drafts={props.drafts} products={props.products} open={open} onOpen={openDraft} />
+            <Drafts currency={props.currency} readFailed={props.draftsReadFailed ?? false} drafts={props.drafts} products={props.products} open={open} onOpen={openDraft} />
             <History readFailed={props.broadcastsReadFailed ?? false} writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={openDraft} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
@@ -997,12 +1012,14 @@ function Compose(props: {
         </fieldset>
         ) : null}
         {confirming && reach !== null ? (
-          <p id="mail-send-review" role="status" className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
-            Review <strong>{subject.trim() || "this email"}</strong> for {n(reach)} {reach === 1 ? "person" : "people"}.{" "}
+          <div id="mail-send-review" role="status" className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
+            <p>Review <strong>{subject.trim() || "this email"}</strong> for {n(reach)} {reach === 1 ? "person" : "people"}.{" "}
             {later ? scheduledAt === null ? "Choose a valid future time before confirming." : (
               <>Scheduled for <time dateTime={new Date(scheduledAt).toISOString()} className="font-semibold">{new Date(scheduledAt).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</time> ({Intl.DateTimeFormat().resolvedOptions().timeZone}).</>
-            ) : "Sending starts after you confirm."}
-          </p>
+            ) : "Sending starts after you confirm."}</p>
+            <AudienceSummary audience={{ who, productId: productId || null, notProductId, narrow }} products={props.products} currency={props.currency} />
+            <p className="mt-2">Eligibility is checked again when sending starts.</p>
+          </div>
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -1098,12 +1115,14 @@ function Compose(props: {
 
 /** The store's drafts: open one into the composer, or throw it away. */
 function Drafts({
+  currency,
   readFailed,
   drafts,
   products,
   open,
   onOpen,
 }: {
+  currency: string;
   drafts: DraftRow[];
   readFailed: boolean;
   products: { id: string; title: string }[];
@@ -1134,13 +1153,14 @@ function Drafts({
       <ul className="mt-4 divide-y divide-line">
         {drafts.map((d) => (
           <li key={d.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
-            <span className="min-w-0">
+            <div className="min-w-0">
               <span className="block break-words font-semibold text-ink">{d.subject}</span>
               <span className="block text-sm text-ink-soft">
-                {`${d.productId ? `To those who got ${products.find((p) => p.id === d.productId)?.title ?? "a product"}` : "To everyone you can write to"} · saved by ${d.by || "someone"}, `}
+                {`Saved by ${d.by || "someone"}, `}
                 <When seconds={Math.floor(new Date(d.savedAt).getTime() / 1000)} />
               </span>
-            </span>
+              <AudienceSummary audience={d} products={products} currency={currency} />
+            </div>
             <span className="flex items-center gap-4">
               <button
                 type="button"
@@ -1349,6 +1369,7 @@ function History({
         {filtered ? <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => { setQuery(""); setStatus("all"); }}>Clear history filters</button> : null}
       </div>
       {!view.rows.length ? <p className="mt-4 text-sm text-ink-soft">No loaded campaigns match these filters. Clear the filters to see the loaded history.</p> : null}
+      <p className="mt-2 text-sm text-ink-soft">Audience summaries describe saved criteria, not individual recipients or delivery. Product titles use the current catalog.</p>
       <ul className="mt-4 divide-y divide-line">
         {view.rows.map((b) => (
           <li key={b.id} className="py-3">
@@ -1361,7 +1382,7 @@ function History({
                 <>
                   {"Goes out "}
                   <When seconds={b.sendAt} />
-                  {` to ${n(b.total)}${b.productId ? ` who got ${products.find((p) => p.id === b.productId)?.title ?? "a product"}` : ""}`}
+                  {` to ${n(b.total)} ${b.total === 1 ? "person" : "people"}`}
                 </>
               ) : (
                 <>
@@ -1375,7 +1396,7 @@ function History({
                 </>
               )}
             </p>
-            {b.narrow ? <p className="mt-1 text-sm text-ink-soft">{narrowWords(b.narrow, currency)}</p> : null}
+            <AudienceSummary audience={b} products={products} currency={currency} />
             {b.note ? <p className="mt-1 text-sm text-ink-soft">{b.note}</p> : null}
             {b.test ? <TestLine test={b.test} status={b.status} /> : null}
             {/* Said only for an email whose links were tagged: for an older
