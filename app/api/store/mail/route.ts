@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
         subject: text(body.subject, 400),
         body: text(body.body, MAX_MAIL_BODY * 2),
         productId: text(body.productId, 40),
+        audience: body.audience,
       });
       return result.ok ? Response.json({ ok: true, draft: result.draft }) : fail(result.reason);
     }
