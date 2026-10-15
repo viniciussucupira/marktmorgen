@@ -239,6 +239,7 @@ export function EmailStudio(props: {
   flows: FlowRow[];
   flowsReadFailed?: boolean;
   drafts: DraftRow[];
+  draftsReadFailed?: boolean;
   canSend: boolean;
   canSettings: boolean;
   canExport: boolean;
@@ -300,7 +301,7 @@ export function EmailStudio(props: {
                 preset={open ? undefined : props.preset}
               />
             </AiOn>
-            <Drafts drafts={props.drafts} products={props.products} open={open} onOpen={openDraft} />
+            <Drafts readFailed={props.draftsReadFailed ?? false} drafts={props.drafts} products={props.products} open={open} onOpen={openDraft} />
             <History writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={openDraft} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
@@ -992,12 +993,14 @@ function Compose(props: {
 
 /** The store's drafts: open one into the composer, or throw it away. */
 function Drafts({
+  readFailed,
   drafts,
   products,
   open,
   onOpen,
 }: {
   drafts: DraftRow[];
+  readFailed: boolean;
   products: { id: string; title: string }[];
   open: DraftRow | null;
   onOpen: (draft: DraftRow | null) => void;
@@ -1007,6 +1010,15 @@ function Drafts({
   const [refreshing, startRefresh] = useTransition();
   const locked = busy !== null || refreshing;
   const [error, setError] = useState<string | null>(null);
+  if (readFailed) return (
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="drafts-title">
+      <h2 id="drafts-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Drafts</h2>
+      <p role="status" className="mt-3 text-sm text-ink-soft">Saved drafts are unavailable. Reload to check them before opening or deleting a draft. Your current email stays in the composer.</p>
+      <button type="button" className="btn btn-secondary mt-3" disabled={locked} aria-busy={refreshing} onClick={() => startRefresh(() => router.refresh())}>
+        {refreshing ? "Reloading drafts…" : "Reload saved drafts"}
+      </button>
+    </section>
+  );
   if (!drafts.length) return null;
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="drafts-title">
