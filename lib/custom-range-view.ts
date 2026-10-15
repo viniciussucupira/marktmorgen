@@ -16,14 +16,30 @@ export function customRangeOrderLabel(data:RangeData,sort:string,kind:"channels"
  const metric=selected.startsWith("traffic_")?traffic:selected.startsWith("sales_")?"Paid records":"Revenue";
  return metric+(selected.endsWith("_asc")?", lowest first":", highest first");
 }
+
+export const CUSTOM_RANGE_FILTERS=[
+ {value:"all",label:"All loaded rows"},{value:"paid",label:"With sales"},{value:"unconverted",label:"Traffic without sales"},
+] as const;
+export type CustomRangeFilter=typeof CUSTOM_RANGE_FILTERS[number]["value"];
+/** Missing paid coverage cannot classify a row as having no purchases. */
+export function effectiveCustomRangeFilter(data:RangeData,filter:string):CustomRangeFilter {
+ const selected=CUSTOM_RANGE_FILTERS.find(item=>item.value===filter)?.value??"all";
+ return paidFiguresComplete(data)?selected:"all";
+}
+export function customRangeFilterLabel(data:RangeData,filter:string):string {
+ const selected=effectiveCustomRangeFilter(data,filter);
+ return CUSTOM_RANGE_FILTERS.find(item=>item.value===selected)!.label;
+}
 const productName=(row:RangeData["products"][number])=>"title" in row?String(row.title??row.id):row.id;
 /** Search and sort loaded rows without mutating their source or period-wide figures. */
-export function customRangeView<T extends RangeData>(data:T,query:string,sort:CustomRangeSort="recorded"):T {
+export function customRangeView<T extends RangeData>(data:T,query:string,sort:CustomRangeSort="recorded",filter:CustomRangeFilter="all"):T {
  const needle=normalized(query);
  const selected=effectiveCustomRangeSort(data,sort);
- if(!needle&&selected==="recorded")return data;
- const channels=data.channels.filter(row=>normalized(row.source+" "+channelName(row.source)).includes(needle));
- const products=data.products.filter(row=>normalized(row.id+" "+productName(row)).includes(needle));
+ const actualFilter=effectiveCustomRangeFilter(data,filter);
+ const matches=(sales:number,traffic:number)=>actualFilter==="all"||(actualFilter==="paid"?sales>0:traffic>0&&sales===0);
+ if(!needle&&selected==="recorded"&&actualFilter==="all")return data;
+ const channels=data.channels.filter(row=>matches(row.sales,row.visits)&&normalized(row.source+" "+channelName(row.source)).includes(needle));
+ const products=data.products.filter(row=>matches(row.sales,row.views)&&normalized(row.id+" "+productName(row)).includes(needle));
  const direction=selected.endsWith("_asc")?1:-1;
  const names=(a:string,b:string)=>normalized(a).localeCompare(normalized(b),"en");
  if(selected==="name"){
