@@ -15,7 +15,7 @@ import { healthId, startRamp } from "@/lib/mail-health";
 import { BroadcastWriteUnconfirmed, advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
 import { buyerLedger, isNarrowed, keeps, ledgerChannels, readNarrow, removeSegment, saveSegment } from "@/lib/segments";
 import { FlowWriteUnconfirmed, removeFlow, saveFlow } from "@/lib/flows";
-import { DraftRemovalUnconfirmed, DraftReadUnavailable, DraftWriteUnconfirmed, removeDraft, saveDraft } from "@/lib/mail-drafts";
+import { DraftRemovalUnconfirmed, DraftReadUnavailable, DraftWriteUnconfirmed, finishBroadcastDraft, removeDraft, saveDraft } from "@/lib/mail-drafts";
 import { copyOf, keepSending } from "@/lib/mail-reuse";
 import { setUpStarters } from "@/lib/mail-starters";
 import { readListings } from "@/lib/catalog";
@@ -209,13 +209,14 @@ export async function POST(request: NextRequest) {
       const id = created.broadcast.id;
       // A draft that has now been sent or scheduled is done with.
       const fromDraft = text(body.draftId, 40);
-      if (fromDraft) await removeDraft(store, fromDraft);
+      const draftCleanupConfirmed = await finishBroadcastDraft(store, fromDraft);
+      if (!draftCleanupConfirmed) console.error("A confirmed campaign draft cleanup could not be confirmed");
       if (created.broadcast.sendAt <= Math.floor(Date.now() / 1000) + 60) {
         // Starts as soon as the studio has its answer; the scheduled job
         // finishes anything this run does not.
         after(() => advanceBroadcast(id, storeForHandle, Date.now() + 50_000).then(() => undefined));
       }
-      return Response.json({ ok: true, broadcast: created.broadcast });
+      return Response.json({ ok: true, broadcast: created.broadcast, draftCleanupConfirmed });
     }
 
     if (action === "cancel") {
