@@ -33,7 +33,7 @@ is("UI without traffic is unavailable",html(noTraffic).includes(">Unavailable</t
 for(const d of [{...data,partial:true},{...data,sales:"error" as const},{...data,sales:"none" as const}]){
  is("incomplete channel ratio blank",channel(d)["Revenue per visit"],"");
  is("incomplete product ratio blank",product(d)["Revenue per page view"],"");
- is("incomplete UI ratio columns hidden",html(d).includes("Revenue / visit")||html(d).includes("Revenue / view"),false);
+ is("incomplete UI ratio columns hidden",html(d).includes(">Revenue / visit</th>")||html(d).includes(">Revenue / view</th>"),false);
 }
 for(const invalid of [-1,0.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1]){
  is("invalid revenue rejected",revenuePerTraffic(invalid,10,true),null);

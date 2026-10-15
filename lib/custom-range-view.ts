@@ -1,19 +1,20 @@
+import { revenuePerTraffic } from "@/lib/custom-range-efficiency";
 import type { RangeData } from "@/lib/stats";
 import { channelName } from "@/lib/channel-names";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 const normalized=(value:string)=>value.normalize("NFD").replace(/\p{M}/gu,"").toLowerCase().trim();
-export const CUSTOM_RANGE_SORTS=["recorded","traffic_desc","traffic_asc","revenue_desc","revenue_asc","sales_desc","sales_asc","name"] as const;
+export const CUSTOM_RANGE_SORTS=["recorded","traffic_desc","traffic_asc","revenue_desc","revenue_asc","sales_desc","sales_asc","efficiency_desc","efficiency_asc","name"] as const;
 export type CustomRangeSort=typeof CUSTOM_RANGE_SORTS[number];
 export function effectiveCustomRangeSort(data:RangeData,sort:string):CustomRangeSort {
  const selected=CUSTOM_RANGE_SORTS.includes(sort as CustomRangeSort)?sort as CustomRangeSort:"recorded";
- return !paidFiguresComplete(data)&&(selected.startsWith("revenue_")||selected.startsWith("sales_"))?"traffic_desc":selected;
+ return !paidFiguresComplete(data)&&(selected.startsWith("revenue_")||selected.startsWith("sales_")||selected.startsWith("efficiency_"))?"traffic_desc":selected;
 }
 export function customRangeOrderLabel(data:RangeData,sort:string,kind:"channels"|"products"):string {
  const selected=effectiveCustomRangeSort(data,sort);
  const traffic=kind==="channels"?"Visits":"Page views";
  if(selected==="recorded")return paidFiguresComplete(data)?"Revenue":traffic;
  if(selected==="name")return "Name, A–Z";
- const metric=selected.startsWith("traffic_")?traffic:selected.startsWith("sales_")?"Paid records":"Revenue";
+ const metric=selected.startsWith("efficiency_")?(kind==="channels"?"Revenue per visit":"Revenue per page view"):selected.startsWith("traffic_")?traffic:selected.startsWith("sales_")?"Paid records":"Revenue";
  return metric+(selected.endsWith("_asc")?", lowest first":", highest first");
 }
 
@@ -53,10 +54,12 @@ export function customRangeView<T extends RangeData>(data:T,query:string,sort:Cu
   channels.sort((a,b)=>names(channelName(a.source),channelName(b.source)));
   products.sort((a,b)=>names(productName(a),productName(b)));
  }else if(selected!=="recorded"){
-  const channelValue=(row:RangeData["channels"][number])=>selected.startsWith("revenue_")?row.cents:selected.startsWith("sales_")?row.sales:row.visits;
-  const productValue=(row:RangeData["products"][number])=>selected.startsWith("revenue_")?row.cents:selected.startsWith("sales_")?row.sales:row.views;
-  channels.sort((a,b)=>(channelValue(a)-channelValue(b))*direction||names(channelName(a.source),channelName(b.source)));
-  products.sort((a,b)=>(productValue(a)-productValue(b))*direction||names(productName(a),productName(b)));
+  const known=paidFiguresComplete(data);
+  const compare=(a:number|null,b:number|null)=>a===null?(b===null?0:1):b===null?-1:(a-b)*direction;
+  const channelValue=(row:RangeData["channels"][number])=>selected.startsWith("efficiency_")?revenuePerTraffic(row.cents,row.visits,known):selected.startsWith("revenue_")?row.cents:selected.startsWith("sales_")?row.sales:row.visits;
+  const productValue=(row:RangeData["products"][number])=>selected.startsWith("efficiency_")?revenuePerTraffic(row.cents,row.views,known):selected.startsWith("revenue_")?row.cents:selected.startsWith("sales_")?row.sales:row.views;
+  channels.sort((a,b)=>compare(channelValue(a),channelValue(b))||names(channelName(a.source),channelName(b.source)));
+  products.sort((a,b)=>compare(productValue(a),productValue(b))||names(productName(a),productName(b)));
  }
  return {...data,channels,products};
 }
