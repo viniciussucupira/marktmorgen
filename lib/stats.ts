@@ -1012,18 +1012,28 @@ export async function readPaidSales(store: Store, since: number, pages: number):
   }
   const walk = async (path: string, take: (row: Record<string, unknown>) => void) => {
     let after = "";
+    const seen = new Set<string>();
     for (let page = 0; page < pages; page += 1) {
       const list = (await onAccount(
         "GET",
         store.stripeAccountId as string,
         `${path}${since > 0 ? `&created[gte]=${since}` : ""}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
       )) as { data?: unknown; has_more?: unknown };
-      const rows = Array.isArray(list.data) ? (list.data as Record<string, unknown>[]) : [];
+      // Invalid pages and stalled cursors are failed readings, never confirmed zero.
+      if (!list || !Array.isArray(list.data) || typeof list.has_more !== "boolean") {
+        throw new Error("Invalid paid-sales page");
+      }
+      const rows = list.data as Record<string, unknown>[];
+      for (const row of rows) {
+        if (!row || typeof row !== "object" || Array.isArray(row) || typeof row.id !== "string" || !row.id || seen.has(row.id)) {
+          throw new Error("Invalid or repeated paid-sales record");
+        }
+        seen.add(row.id);
+      }
+      if (list.has_more && rows.length === 0) throw new Error("Paid-sales pagination has no next cursor");
       rows.forEach(take);
-      if (list.has_more !== true || rows.length === 0) return;
-      const last = rows[rows.length - 1];
-      after = typeof last.id === "string" ? last.id : "";
-      if (!after) return;
+      if (!list.has_more) return;
+      after = rows[rows.length - 1].id as string;
       if (page === pages - 1) partial = true;
     }
   };
