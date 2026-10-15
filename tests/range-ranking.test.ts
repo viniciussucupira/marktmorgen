@@ -18,6 +18,8 @@ async function main(){await claimHandle("ranking@example.com","ranking","Ranking
  part("Unknown paid amounts cannot select the first fifteen rows");
  const partial=await read();
  is("reading incomplete",partial.partial,true);
+ is("recorded rows counted before cap",[partial.channelsTotal,partial.productsTotal],[17,17]);
+ is("both list caps disclosed",[partial.channelsTruncated,partial.productsTruncated],[true,true]);
  is("channels selected by visits before limiting",partial.channels.map(r=>r.source),channels);
  is("products selected by views before limiting",partial.products.map(r=>r.id),products);
  is("partial paid-only channel cannot displace traffic",partial.channels.some(r=>r.source==="paidonly"),false);
@@ -31,6 +33,7 @@ async function main(){await claimHandle("ranking@example.com","ranking","Ranking
  is("complete channel ranking retains revenue priority",complete.channels[0].source,"paidonly");
  is("complete product ranking retains revenue priority",complete.products[0].id,"paidonly0001");
  is("complete amount preserved",complete.channels[0].cents,900000);
+ is("complete paid reading does not imply full list",[complete.partial,complete.channelsTotal,complete.channelsTruncated],[false,17,true]);
  failed=true;const failure=await read();
  is("failed reading stays explicit",failure.sales,"error");
  is("failed read ranks channels by traffic",failure.channels.map(r=>r.source),channels);
