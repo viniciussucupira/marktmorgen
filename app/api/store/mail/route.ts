@@ -14,7 +14,7 @@ import { sendBatch } from "@/lib/email";
 import { healthId, startRamp } from "@/lib/mail-health";
 import { advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
 import { buyerLedger, isNarrowed, keeps, ledgerChannels, readNarrow, removeSegment, saveSegment } from "@/lib/segments";
-import { removeFlow, saveFlow } from "@/lib/flows";
+import { FlowWriteUnconfirmed, removeFlow, saveFlow } from "@/lib/flows";
 import { removeDraft, saveDraft } from "@/lib/mail-drafts";
 import { copyOf, keepSending } from "@/lib/mail-reuse";
 import { setUpStarters } from "@/lib/mail-starters";
@@ -257,6 +257,7 @@ export async function POST(request: NextRequest) {
     return fail("invalid");
   } catch (error) {
     console.error("an email action failed", error);
+    if (error instanceof FlowWriteUnconfirmed) return fail("flow_write_unconfirmed", 502);
     return fail("server_error", 500);
   }
 }
