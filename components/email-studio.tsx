@@ -60,6 +60,7 @@ const MESSAGES: Record<string, string> = {
   send: "The email service did not take it just now. Nothing was sent; try again in a moment.",
   signed_out: "Your session ended. Log in again.",
   unavailable: "Email is not switched on yet, so nothing was sent.",
+  audience: "The audience filters could not be saved. Review the recipient choices and try again.",
   full: "A store keeps 20 drafts at most. Send or delete one first.",
   list: "This store has no list yet, so there is nowhere to keep a draft.",
   role: "Your role on this store does not include this.",
@@ -582,9 +583,9 @@ function Compose(props: {
   // What the writing help is asked to write, and about which product.
   const [goal, setGoal] = useState<EmailGoal>("announce");
   const [about, setAbout] = useState("");
-  const [savedContent, setSavedContent] = useState(() => JSON.stringify([props.draft?.subject ?? "", props.draft?.body ?? "", props.draft?.productId ?? ""]));
-  const content = JSON.stringify([subject, body, productId]);
-  const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || who !== (props.draft?.who ?? props.preset?.who ?? "all") || notProductId !== "" || later || at !== "" || testing || subjectB !== "" || spentText !== "" || channel !== "" || quietDays !== 0;
+  const content = JSON.stringify([subject, body, productId, who, notProductId, spentText, channel, quietDays]);
+  const [savedContent, setSavedContent] = useState(content);
+  const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || later || at !== "" || testing || subjectB !== "";
   useLeaveGuard(dirty || aiBusy);
   useImperativeHandle(props.composerState, () => ({ dirty, busy: locked }), [dirty, locked]);
 
@@ -661,17 +662,18 @@ function Compose(props: {
   }
 
   async function keep() {
-    if (locked || draftSaveBlocked) return;
+    if (locked || draftSaveBlocked || invalidSpent) return;
     setBusy(true);
     setError(null);
-    const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId });
+    const audience = { who, notProductId: notProductId || null, narrow: minSpent || channel || quietDays ? narrow : null };
+    const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId, audience });
     setBusy(false);
     if (!a.ok) {
       if (a.error === "draft_write_unconfirmed") setUncertainDrafts(props.savedDrafts);
       setError(message(a));
       return;
     }
-    const savedId = confirmedDraftId(a, draftId);
+    const savedId = confirmedDraftId(a, draftId, audience);
     if (!savedId) {
       setUncertainDrafts(props.savedDrafts);
       setError("The draft save could not be confirmed. Your text is still here. Check your saved drafts before saving again; the draft may already exist.");
@@ -1006,7 +1008,7 @@ function Compose(props: {
           <button
             type="button"
             aria-busy={busy}
-            disabled={busy || draftSaveBlocked || !subject.trim() || !body.trim()}
+            disabled={busy || draftSaveBlocked || invalidSpent || !subject.trim() || !body.trim()}
             className="btn btn-secondary"
             onClick={() => void keep()}
           >
