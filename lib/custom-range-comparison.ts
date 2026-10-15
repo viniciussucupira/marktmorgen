@@ -31,7 +31,7 @@ export function customRangeComparison(data:RangeData) {
  const span=end-start+86400000;
  const previousFrom=Number.isFinite(span)&&span>0?new Date(start-span).toISOString().slice(0,10):null;
  const previousTo=Number.isFinite(start)?new Date(start-86400000).toISOString().slice(0,10):null;
- const metrics:{name:keyof typeof METRIC_DEFINITIONS;unit:string;money:boolean;current:number|null;previous:number|null}[]=[
+ const metrics:{name:keyof typeof METRIC_DEFINITIONS;unit:string;money:boolean;ratio?:boolean;current:number|null;previous:number|null}[]=[
   {name:"Visitors",unit:"Count",money:false,current:data.totals.visitors,previous:before?.visitors??null},
   {name:"Page views",unit:"Count",money:false,current:data.totals.views,previous:before?.views??null},
   {name:"Checkouts",unit:"Count",money:false,current:data.totals.checkouts,previous:before?.checkouts??null},
@@ -39,8 +39,8 @@ export function customRangeComparison(data:RangeData) {
   {name:"Gross revenue",unit:data.currency.toUpperCase(),money:true,current:known?data.totals.cents:null,previous:known?before?.cents??null:null},
   {name:"Revenue per paid record",unit:data.currency.toUpperCase(),money:true,current:known?revenuePerCount(data.totals.cents,data.totals.sales):null,previous:known?revenuePerCount(before?.cents,before?.sales):null},
   {name:"Revenue per visitor",unit:data.currency.toUpperCase(),money:true,current:known?revenuePerCount(data.totals.cents,data.totals.visitors):null,previous:known?revenuePerCount(before?.cents,before?.visitors):null},
-  {name:"Paid records per 100 visitors",unit:"Records per 100 visitors",money:false,current:known?eventsPer100Visitors(data.totals.sales,data.totals.visitors):null,previous:known?eventsPer100Visitors(before?.sales,before?.visitors):null},
-  {name:"Checkouts per 100 visitors",unit:"Checkouts per 100 visitors",money:false,current:eventsPer100Visitors(data.totals.checkouts,data.totals.visitors),previous:eventsPer100Visitors(before?.checkouts,before?.visitors)},
+  {name:"Paid records per 100 visitors",unit:"Records per 100 visitors",money:false,ratio:true,current:known?eventsPer100Visitors(data.totals.sales,data.totals.visitors):null,previous:known?eventsPer100Visitors(before?.sales,before?.visitors):null},
+  {name:"Checkouts per 100 visitors",unit:"Checkouts per 100 visitors",money:false,ratio:true,current:eventsPer100Visitors(data.totals.checkouts,data.totals.visitors),previous:eventsPer100Visitors(before?.checkouts,before?.visitors)},
  ];
  return {previousFrom,previousTo,rows:metrics.map(row=>({...row,definition:METRIC_DEFINITIONS[row.name],
   difference:row.current===null||row.previous===null?null:row.current-row.previous,
