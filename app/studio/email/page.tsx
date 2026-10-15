@@ -157,7 +157,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             canSend={can(role, "send")}
             canSettings={can(role, "settings")}
             canExport={can(role, "export")}
-            drafts={drafts.map(({ id, subject, body, productId, by, savedAt }) => ({ id, subject, body, productId, by, savedAt }))}
+            drafts={drafts.map(({ id, subject, body, productId, by, savedAt, audience }) => ({ id, subject, body, productId, by, savedAt, ...audience }))}
             name={store.name}
             mail={store.mail}
             counts={counts}
