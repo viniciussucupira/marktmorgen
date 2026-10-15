@@ -1,3 +1,4 @@
+import { readFlowListStrict } from "@/lib/flow-list";
 import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 /**
  * Automatic sequences: emails that go out by themselves, a set time after
@@ -197,7 +198,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
   if (rawSteps.length === 0 || rawSteps.length > MAX_STEPS) return { ok: false, reason: "steps" };
   const known = (id: string) => hasProduct(store, id);
-  const flows = await readFlows(store.listId);
+  const flows = await readFlowListStrict(store.listId);
   const id = typeof raw.id === "string" && FLOW_ID.test(raw.id) ? raw.id : null;
   // Another of the store's sequences, never this one: starting itself would do nothing.
   const isFlow = (flowId: string) => flowId !== id && flows.some((f) => f.id === flowId);
@@ -243,7 +244,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
 
 export async function removeFlow(store: Store, id: string): Promise<FlowResult> {
   if (!store.listId) return { ok: false, reason: "unknown" };
-  const flows = await readFlows(store.listId);
+  const flows = await readFlowListStrict(store.listId);
   if (!flows.some((f) => f.id === id)) return { ok: false, reason: "unknown" };
   const next = flows.filter((f) => f.id !== id);
   await writeFlows(store.listId, next);
