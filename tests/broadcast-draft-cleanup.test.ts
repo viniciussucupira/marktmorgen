@@ -12,6 +12,7 @@ async function main() {
   let apply = false;
   let attempts = 0;
   redis.pipeline = async commands => {
+    if (!commands.some(command => command[0] === "HDEL" && command[1] === key)) return original.call(redis, commands);
     attempts += 1;
     if (reply === normal) return original.call(redis, commands);
     if (apply) await original.call(redis, commands);
