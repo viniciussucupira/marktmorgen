@@ -37,3 +37,15 @@ export function broadcastAnswer(responseOk: boolean, raw: unknown, input: Record
   }
   return answer;
 }
+
+const CANCEL_REFUSALS = new Set(["unknown", "role", "locked", "store_gone", "none", "signed_out", "origin", "bad_request"]);
+/** A generic success cannot confirm cancellation of the campaign the user chose. */
+export function cancellationAnswer(responseOk: boolean, raw: unknown, id: unknown): MailAnswer {
+  const unknown: MailAnswer = { ok: false, error: "broadcast_cancel_unconfirmed" };
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return unknown;
+  const answer = raw as MailAnswer;
+  if (answer.ok === false && typeof answer.error === "string" && CANCEL_REFUSALS.has(answer.error) && !Object.hasOwn(answer, "cancelled")) return answer;
+  if (!responseOk || answer.ok !== true || Object.hasOwn(answer, "error") || typeof id !== "string" || !/^[0-9a-f]{24}$/.test(id) || !answer.cancelled || typeof answer.cancelled !== "object" || Array.isArray(answer.cancelled)) return unknown;
+  const cancelled = answer.cancelled as Record<string, unknown>;
+  return cancelled.id === id && cancelled.status === "cancelled" ? answer : unknown;
+}
