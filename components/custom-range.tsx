@@ -125,7 +125,7 @@ export function CustomRangePresets({today,busy=false,onSelect}:{today:string;bus
    const period=presetCustomRange(preset.value,today);
    return <button key={preset.value} type="button" className="btn btn-secondary" disabled={busy || !period} onClick={()=>{if(period)onSelect(period);}}>{preset.label}</button>;
   })}</div>
-  <p className="mt-1 text-xs text-ink-soft">Last 7/30/90 days and This month include today in UTC. Today’s numbers may still grow. Yesterday and Last month use completed UTC dates.</p>
+  <p className="mt-1 text-xs text-ink-soft">Last 7/30/90 days and This month include today in UTC. Today’s numbers may still grow. Yesterday, Last month and completed-day shortcuts exclude today and use completed UTC dates.</p>
  </div>;
 }
 
