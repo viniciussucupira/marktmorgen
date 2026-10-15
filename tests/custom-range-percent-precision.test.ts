@@ -17,7 +17,7 @@ for(const name of ["Visitors","Page views","Checkouts","Paid records","Gross rev
 }
 const tiny={...base,totals:{...base.totals,visitors:Number.MAX_SAFE_INTEGER},before:{...base.before!,visitors:Number.MAX_SAFE_INTEGER-1}};
 is("largest safe counts retain nonzero growth",change(tiny,"Visitors"),"+0.0000000000000111%");
-is("zero stays zero",change({...base,totals:base.before!},"Visitors"),"0%");
+is("zero stays zero",change({...base,totals:{visitors:100000,views:100000,checkouts:100000,sales:100000,cents:100000}},"Visitors"),"0%");
 is("missing history stays unavailable",change({...base,before:null},"Visitors"),"—");
 is("previous zero stays unavailable",change({...base,before:{...base.before!,visitors:0}},"Visitors"),"—");
 is("partial payments stay unavailable",change({...base,partial:true},"Paid records"),"—");
