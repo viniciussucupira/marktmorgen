@@ -1,6 +1,6 @@
 "use client";
 
-import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyReport, customRangeComparisonReport } from "@/lib/channel-reports";
+import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyReport, customRangeComparisonReport, customRangeChartReport } from "@/lib/channel-reports";
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
@@ -271,6 +271,7 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
     <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{height:Math.max(row.value?4:1,(row.value/peak)*100)+"%",opacity:row.value?1:0.25}} />
    </div>)}
   </div>
+  {rows.length?<ReportDownload csv={customRangeChartReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-"+selected+"-"+unit+"-"+range.from+"-to-"+range.to+".csv"}>Download chart values</ReportDownload>:null}
   {rows.length?<details className="mt-2">
    <summary className="cursor-pointer text-sm font-semibold text-ink">View chart values</summary>
    <div className="mt-2 max-h-64 overflow-auto" tabIndex={0} role="region" aria-label="Chart values">
