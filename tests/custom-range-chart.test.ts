@@ -32,7 +32,7 @@ for(const data of [{...range,partial:true},{...range,sales:"error" as const},{..
 }
 is("unknown metric safely falls back",effectiveCustomRangeMetric(range,"bad" as CustomRangeMetric),"visitors");
 const zero={...range,days:range.days.map(row=>({...row,visitors:0,views:0,checkouts:0,sales:0,cents:0}))};
-is("confirmed zero revenue stays available",render("cents",zero).includes("$0.00 revenue"),true);
+is("confirmed zero revenue stays available",render("cents",zero).includes("$0 revenue"),true);
 is("zero chart has finite heights",/NaN|Infinity/.test(render("cents",zero)),false);
 is("empty chart has finite heights",/NaN|Infinity/.test(render("cents",{...range,days:[]})),false);
 is("source reading remains intact",range.days[0].cents,12345);
