@@ -6,7 +6,7 @@ import { ReportDownload } from "@/components/report-download";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
-import { CUSTOM_RANGE_METRICS, effectiveCustomRangeMetric, type CustomRangeMetric } from "@/lib/custom-range-chart";
+import { CUSTOM_RANGE_METRICS, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -128,6 +128,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
   const view = customRangeView(r, query, actualSort);
   const sold = paidFiguresComplete(r);
   const [chartMetric, setChartMetric] = useState<CustomRangeMetric>("visitors");
+  const [chartGrouping, setChartGrouping] = useState<CustomRangeGrouping>("day");
   const tiles = [
         { label: "Visitors", value: count(r.totals.visitors), note: r.before ? change(r.totals.visitors, r.before.visitors) : "" },
         { label: "Page views", value: count(r.totals.views), note: r.before ? change(r.totals.views, r.before.views) : "" },
@@ -162,7 +163,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
       {r.days.length ? <ReportDownload csv={customRangeDailyReport(r)} filename={"marktmorgen-custom-daily-"+r.from+"-to-"+r.to+".csv"}>Download daily results</ReportDownload> : null}
       {r.sales === "error" ? <p className="mt-2 text-sm text-ink-soft">Stripe did not answer, so sales are not shown. Try again in a moment.</p> : null}
       {r.partial ? <p className="mt-2 text-sm text-ink-soft">The purchase reading is incomplete. Sales and revenue are unavailable; traffic and checkouts remain visible.</p> : null}
-      <CustomRangeChart range={r} currency={currency} metric={chartMetric} onMetricChange={setChartMetric} />
+      <CustomRangeChart range={r} currency={currency} metric={chartMetric} onMetricChange={setChartMetric} grouping={chartGrouping} onGroupingChange={setChartGrouping} />
       {marks.length ? (
         <ul className="mt-3 space-y-1 text-sm" aria-label="Marked on these days">
           {marks.map((m, i) => (
@@ -243,23 +244,41 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
   );
 }
 
-/** Daily metric selection is checked against the currently displayed reading. */
-export function CustomRangeChart({range,currency,metric="visitors",onMetricChange}:{range:RangeData;currency:string;metric?:CustomRangeMetric;onMetricChange?:(metric:CustomRangeMetric)=>void}) {
+
+/** Every displayed group uses the current reading's coverage and exact recorded dates. */
+export function CustomRangeChart({range,currency,metric="visitors",grouping="day",onMetricChange,onGroupingChange}:{range:RangeData;currency:string;metric?:CustomRangeMetric;grouping?:CustomRangeGrouping;onMetricChange?:(metric:CustomRangeMetric)=>void;onGroupingChange?:(grouping:CustomRangeGrouping)=>void}) {
  const selected=effectiveCustomRangeMetric(range,metric);
+ const unit=effectiveCustomRangeGrouping(grouping);
  const label=CUSTOM_RANGE_METRICS.find(item=>item.value===selected)!.label;
  const sold=paidFiguresComplete(range);
- const peak=Math.max(1,...range.days.map(row=>row[selected]));
+ const rows=customRangeChartRows(range,selected,unit);
+ const peak=Math.max(1,...rows.map(row=>row.value));
  const value=(n:number)=>selected==="cents"?formatMoney(n,currency):count(n);
+ const dates=(row:typeof rows[number])=>row.from===row.to?day(row.from):day(row.from)+" to "+day(row.to);
+ const chartLabel=label+(unit==="day"?" each day":unit==="week"?" by week":" by month");
  return <div className="mt-4">
   <label className="field-label" htmlFor="range-chart-metric">Daily chart</label>
   <select id="range-chart-metric" className="field mt-1" value={selected} onChange={event=>onMetricChange?.(event.target.value as CustomRangeMetric)}>
    {CUSTOM_RANGE_METRICS.map(item=><option key={item.value} value={item.value} disabled={item.paid&&!sold}>{item.label}</option>)}
   </select>
-  <p className="mt-1 text-xs text-ink-soft">Daily totals in UTC.{selected==="cents"||selected==="sales"?" Purchases include one-click extras and exclude renewals. Revenue is before fees, refunds and ad spend.":""}</p>
-  <div className={"mt-3 flex h-24 items-end "+(range.days.length>60?"gap-0":"gap-[2px]")} role="img" aria-label={label+" each day"}>
-   {range.days.map(row=><div key={row.date} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={day(row.date)+": "+value(row[selected])+" "+label.toLowerCase()+(selected==="visitors"&&sold?", "+row.sales+" sales":"")}>
-    <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{height:Math.max(row[selected]?4:1,(row[selected]/peak)*100)+"%",opacity:row[selected]?1:0.25}} />
+  <label className="field-label mt-2" htmlFor="range-chart-grouping">Group chart by</label>
+  <select id="range-chart-grouping" className="field mt-1" value={unit} onChange={event=>onGroupingChange?.(event.target.value as CustomRangeGrouping)}>
+   {CUSTOM_RANGE_GROUPINGS.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}
+  </select>
+  <p className="mt-1 text-xs text-ink-soft">Daily totals in UTC.{unit!=="day"?" Weeks start on Monday. First and last groups may cover only part of a week or month. Visitors are summed daily counts, not distinct people across the group.":""}{selected==="cents"||selected==="sales"?" Purchases include one-click extras and exclude renewals. Revenue is before fees, refunds and ad spend.":""}</p>
+  <div className={"mt-3 flex h-24 items-end "+(rows.length>60?"gap-0":"gap-[2px]")} role="img" aria-label={chartLabel}>
+   {rows.map(row=><div key={row.from} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={dates(row)+": "+value(row.value)+" "+label.toLowerCase()+(selected==="visitors"&&row.sales!==null?", "+row.sales+" sales":"")}>
+    <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{height:Math.max(row.value?4:1,(row.value/peak)*100)+"%",opacity:row.value?1:0.25}} />
    </div>)}
   </div>
+  {rows.length?<details className="mt-2">
+   <summary className="cursor-pointer text-sm font-semibold text-ink">View chart values</summary>
+   <div className="mt-2 max-h-64 overflow-auto" tabIndex={0} role="region" aria-label="Chart values">
+    <table className="w-full text-left text-sm"><caption className="text-left text-xs text-ink-soft">{chartLabel} (UTC)</caption>
+     <thead><tr><th scope="col" className="py-1">Dates</th><th scope="col" className="py-1 text-right">{label}</th></tr></thead>
+     <tbody>{rows.map(row=><tr key={row.from}><th scope="row" className="py-1 font-normal">{dates(row)}</th><td className="py-1 text-right tabular-nums">{value(row.value)}</td></tr>)}</tbody>
+    </table>
+   </div>
+  </details>:null}
  </div>;
 }
