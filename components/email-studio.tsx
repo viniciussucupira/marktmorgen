@@ -8,6 +8,7 @@ import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
+import { isAiEmailCopy } from "@/lib/ai-response";
 import { confirmedDraftId, confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
@@ -637,6 +638,7 @@ function Compose(props: {
         <AiAssist<{ subject: string; body: string }>
           title="Write a draft with AI"
           onBusyChange={setAiBusy}
+          validateResult={isAiEmailCopy}
           hint="Pick what the email is for, and say in a few words what you want it to say. The subject and the email below are filled in for you to read and change."
           placeholder="The recipe pack is out: 40 weeknight dinners, $27, and the first 10 pages are free to read on the page."
           extra={
