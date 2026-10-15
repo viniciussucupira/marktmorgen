@@ -9,7 +9,7 @@ import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore,
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { isAiEmailCopy, isAiSequenceDraft } from "@/lib/ai-response";
-import { confirmedRecipientCount, confirmedDraftId, confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
+import { confirmedRecipientCount, confirmedDraftId, draftRemovalAnswer, confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import { flowConfigurationIssues } from "@/lib/flow-review";
@@ -103,10 +103,12 @@ async function call(payload: Record<string, unknown>): Promise<Answer> {
     const raw = await response.json().catch(() => null);
     if (payload.action === "broadcast") return broadcastAnswer(response.ok, raw, payload);
     if (payload.action === "cancel") return cancellationAnswer(response.ok, raw, payload.id);
+    if (payload.action === "draft-remove") return draftRemovalAnswer(response.ok, raw, payload.id, payload.expectedSavedAt);
     return mailAnswer(response.ok, raw, sequenceWrite, draftWrite);
   } catch {
     if (payload.action === "broadcast") return broadcastAnswer(false, null, payload);
     if (payload.action === "cancel") return cancellationAnswer(false, null, payload.id);
+    if (payload.action === "draft-remove") return draftRemovalAnswer(false, null, payload.id, payload.expectedSavedAt);
     return mailAnswer(false, null, sequenceWrite, draftWrite);
   }
 }
