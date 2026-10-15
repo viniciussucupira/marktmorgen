@@ -1,3 +1,4 @@
+import { rangeTrafficCoverage } from "@/lib/range-traffic-coverage";
 import { creativeRowsFrom } from "@/lib/creative-results";
 /**
  * How many people visit a store, where they come from, and how many of them
@@ -1479,6 +1480,8 @@ export async function readRange(store: Store, from: string, to: string, now = Da
     ["PFCOUNT", ...dates.map((d) => visitorsKey(statsId, d))],
     ...(beforeKept ? [["PFCOUNT", ...beforeDates.map((d) => visitorsKey(statsId, d))], ...beforeDates.map((d) => ["HMGET", countsKey(statsId, d), "v", "c"])] : []),
   ]);
+  const traffic = rangeTrafficCoverage(results, span, beforeKept);
+  if (!traffic.current) return null;
   const tally = new Tally();
   const days: RangeData["days"] = dates.map((date, i) => {
     let views = 0;
@@ -1492,7 +1495,7 @@ export async function readRange(store: Store, from: string, to: string, now = Da
   });
   const window = tally.window(Number(results[2 * span]) || 0);
   let before: RangeData["before"] = null;
-  if (beforeKept) {
+  if (traffic.previous) {
     const at = 2 * span + 1;
     before = { visitors: Number(results[at]) || 0, views: 0, checkouts: 0, sales: 0, cents: 0 };
     beforeDates.forEach((_, i) => {
