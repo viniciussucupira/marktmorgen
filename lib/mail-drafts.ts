@@ -36,6 +36,11 @@ async function draftPreflight(command: ["HLEN", string] | ["HEXISTS", string, st
   return response[0];
 }
 
+/** Deletion may already have happened when its acknowledgement is lost. */
+export class DraftRemovalUnconfirmed extends Error {
+  constructor() { super("Draft removal could not be confirmed"); this.name = "DraftRemovalUnconfirmed"; }
+}
+
 export const MAX_DRAFTS = 20;
 export const DRAFT_ID = /^[0-9a-f]{16}$/;
 
@@ -129,6 +134,8 @@ export async function saveDraft(
 /** Throws a draft away. True when there was one to throw away. */
 export async function removeDraft(store: Store, id: string): Promise<boolean> {
   if (!store.listId || !DRAFT_ID.test(id)) return false;
-  const [removed] = await redisPipeline([["HDEL", draftsKey(store.listId), id]]);
-  return Number(removed) === 1;
+  let response: unknown;
+  try { response = await redisPipeline([["HDEL", draftsKey(store.listId), id]]); } catch { throw new DraftRemovalUnconfirmed(); }
+  if (!Array.isArray(response) || response.length !== 1 || (response[0] !== 0 && response[0] !== 1)) throw new DraftRemovalUnconfirmed();
+  return response[0] === 1;
 }
