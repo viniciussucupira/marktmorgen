@@ -2,7 +2,7 @@
 
 import { AiAssist, AiOn } from "@/components/ai-assist";
 import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
-import { DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
+import { appendSequenceDraft, sequenceDraftSlots, DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 
 import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore, useTransition } from "react";
@@ -1520,10 +1520,14 @@ function Flows({
   const refreshFlows = () => startRefresh(() => router.refresh());
   const [draft, setDraft] = useState<FlowDraft | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
+  const overCapacity = (draft?.steps.length ?? 0) > 10;
+  const availableSlots = sequenceDraftSlots(draft?.steps ?? []);
+  const availableCounts = SEQUENCE_DRAFT_COUNTS.filter(count => count <= availableSlots);
   const invalidWait = draft?.steps.some(step => flowWaitHours(step.wait, step.unit) === null) ?? false;
   const [draftBaseline, setDraftBaseline] = useState<string | null>(null);
   useLeaveGuard(aiBusy || (draft !== null && JSON.stringify(draft) !== draftBaseline));
   const [draftCount, setDraftCount] = useState<number>(DEFAULT_SEQUENCE_DRAFT);
+  const requestedCount = availableCounts.some(count => count === draftCount) ? draftCount : (availableCounts[0] ?? DEFAULT_SEQUENCE_DRAFT);
   // Each step's box, so a picture goes where the cursor is.
   const stepBoxes = useRef<(HTMLTextAreaElement | null)[]>([]);
   const [operationBusy, setBusy] = useState(false);
@@ -1563,7 +1567,7 @@ function Flows({
   }
 
   async function save() {
-    if (!draft || locked || invalidWait) return;
+    if (!draft || locked || invalidWait || overCapacity) return;
     setBusy(true);
     setError(null);
     const a = await call({
@@ -1877,9 +1881,10 @@ function Flows({
               Checked before each email. Someone who buys while in it gets none of the emails still to come.
             </p>
           </div>
-          <AiAssist<DraftedStep[]>
+          {overCapacity ? <p role="status" className="text-sm text-danger">This sequence has more than 10 steps. Remove steps before saving; none have been discarded.</p> : null}
+          {availableCounts.length ? <AiAssist<DraftedStep[]>
             title="Write the emails with AI"
-            validateResult={isAiSequenceDraft}
+            validateResult={(value): value is DraftedStep[] => isAiSequenceDraft(value) && value.length <= requestedCount && value.length <= availableSlots}
             onBusyChange={setAiBusy}
             hint="For the moment chosen above, from what your store sells: its products' names, summaries, prices and links, and anything you add here. Only your store's own links are kept. The emails fill the sequence below for you to read and change; nothing is saved or sent until you save it."
             placeholder="Optional: what these emails should say, or the tone. For example: share my three favorite weeknight tricks before mentioning the meal planner."
@@ -1887,14 +1892,14 @@ function Flows({
             extra={
               <label className="flex flex-wrap items-center gap-2 text-sm text-ink">
                 <span className="font-semibold">How many emails</span>
-                <select className="field w-auto" value={draftCount} onChange={(e) => setDraftCount(Number(e.target.value))}>
-                  {SEQUENCE_DRAFT_COUNTS.map((n) => (
+                <select className="field w-auto" value={requestedCount} onChange={(e) => setDraftCount(Number(e.target.value))}>
+                  {availableCounts.map((n) => (
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
               </label>
             }
-            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : "", tag: draft.trigger === "tagged" ? draft.triggerTag : "", count: draftCount })}
+            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : "", tag: draft.trigger === "tagged" ? draft.triggerTag : "", count: requestedCount })}
             onResult={(written) =>
               setDraft((current) => {
                 if (!current) return current;
@@ -1907,12 +1912,11 @@ function Flows({
                 }));
                 // Emails still empty are replaced; the creator's own are kept, and these follow them.
                 // A step that acts has no words of its own, and is kept too.
-                const kept = current.steps.filter((x) => x.kind !== "email" || x.subject.trim() || x.body.trim());
-                return { ...current, steps: [...kept, ...steps].slice(0, 10) };
+                return { ...current, steps: appendSequenceDraft(current.steps, steps) };
               })
             }
             done="The emails are in the sequence below. Read each one, change what you like, then save it."
-          />
+          /> : <p role="status" className="text-sm text-ink-soft">AI writes at least 3 emails at a time. This sequence has {availableSlots} free {availableSlots === 1 ? "step" : "steps"}. Remove steps to make room before generating.</p>}
           <ol className="space-y-4">
             {draft.steps.map((s, i) => (
               <li key={i} className="rounded-[var(--r-sm)] bg-sand p-4">
@@ -2182,7 +2186,7 @@ function Flows({
             <span>On. Switched off, nobody new starts it, and those already in it get none of its emails that are still to come.</span>
           </label>
           <div className="flex flex-wrap items-center gap-3">
-            <button type="submit" aria-busy={busy} disabled={locked || invalidWait} className="btn btn-primary">Save the sequence</button>
+            <button type="submit" aria-busy={busy} disabled={locked || invalidWait || overCapacity} className="btn btn-primary">Save the sequence</button>
             <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" onClick={() => setDraft(null)}>
               Close
             </button>
