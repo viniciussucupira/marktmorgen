@@ -6,6 +6,7 @@ import { ReportDownload } from "@/components/report-download";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
+import { CUSTOM_RANGE_METRICS, effectiveCustomRangeMetric, type CustomRangeMetric } from "@/lib/custom-range-chart";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -126,7 +127,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
   const actualSort = effectiveCustomRangeSort(r, sort);
   const view = customRangeView(r, query, actualSort);
   const sold = paidFiguresComplete(r);
-  const peak = Math.max(1, ...r.days.map((d) => d.visitors));
+  const [chartMetric, setChartMetric] = useState<CustomRangeMetric>("visitors");
   const tiles = [
         { label: "Visitors", value: count(r.totals.visitors), note: r.before ? change(r.totals.visitors, r.before.visitors) : "" },
         { label: "Page views", value: count(r.totals.views), note: r.before ? change(r.totals.views, r.before.views) : "" },
@@ -161,13 +162,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
       {r.days.length ? <ReportDownload csv={customRangeDailyReport(r)} filename={"marktmorgen-custom-daily-"+r.from+"-to-"+r.to+".csv"}>Download daily results</ReportDownload> : null}
       {r.sales === "error" ? <p className="mt-2 text-sm text-ink-soft">Stripe did not answer, so sales are not shown. Try again in a moment.</p> : null}
       {r.partial ? <p className="mt-2 text-sm text-ink-soft">The purchase reading is incomplete. Sales and revenue are unavailable; traffic and checkouts remain visible.</p> : null}
-      <div className={`mt-4 flex h-24 items-end ${r.days.length > 60 ? "gap-0" : "gap-[2px]"}`} role="img" aria-label="Visitors each day">
-        {r.days.map((d) => (
-          <div key={d.date} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={`${day(d.date)}: ${d.visitors} visitors${sold ? `, ${d.sales} sales` : ""}`}>
-            <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{ height: `${Math.max(d.visitors ? 4 : 1, (d.visitors / peak) * 100)}%`, opacity: d.visitors ? 1 : 0.25 }} />
-          </div>
-        ))}
-      </div>
+      <CustomRangeChart range={r} currency={currency} metric={chartMetric} onMetricChange={setChartMetric} />
       {marks.length ? (
         <ul className="mt-3 space-y-1 text-sm" aria-label="Marked on these days">
           {marks.map((m, i) => (
@@ -246,4 +241,25 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
       </div>
     </div>
   );
+}
+
+/** Daily metric selection is checked against the currently displayed reading. */
+export function CustomRangeChart({range,currency,metric="visitors",onMetricChange}:{range:RangeData;currency:string;metric?:CustomRangeMetric;onMetricChange?:(metric:CustomRangeMetric)=>void}) {
+ const selected=effectiveCustomRangeMetric(range,metric);
+ const label=CUSTOM_RANGE_METRICS.find(item=>item.value===selected)!.label;
+ const sold=paidFiguresComplete(range);
+ const peak=Math.max(1,...range.days.map(row=>row[selected]));
+ const value=(n:number)=>selected==="cents"?formatMoney(n,currency):count(n);
+ return <div className="mt-4">
+  <label className="field-label" htmlFor="range-chart-metric">Daily chart</label>
+  <select id="range-chart-metric" className="field mt-1" value={selected} onChange={event=>onMetricChange?.(event.target.value as CustomRangeMetric)}>
+   {CUSTOM_RANGE_METRICS.map(item=><option key={item.value} value={item.value} disabled={item.paid&&!sold}>{item.label}</option>)}
+  </select>
+  <p className="mt-1 text-xs text-ink-soft">Daily totals in UTC.{selected==="cents"||selected==="sales"?" Purchases include one-click extras and exclude renewals. Revenue is before fees, refunds and ad spend.":""}</p>
+  <div className={"mt-3 flex h-24 items-end "+(range.days.length>60?"gap-0":"gap-[2px]")} role="img" aria-label={label+" each day"}>
+   {range.days.map(row=><div key={row.date} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={day(row.date)+": "+value(row[selected])+" "+label.toLowerCase()+(selected==="visitors"&&sold?", "+row.sales+" sales":"")}>
+    <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{height:Math.max(row[selected]?4:1,(row[selected]/peak)*100)+"%",opacity:row[selected]?1:0.25}} />
+   </div>)}
+  </div>
+ </div>;
 }
