@@ -4,7 +4,7 @@ import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyR
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
-import { customRangeView } from "@/lib/custom-range-view";
+import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, type CustomRangeSort } from "@/lib/custom-range-view";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -104,7 +104,9 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
   const money = (cents: number) => formatMoney(cents, currency);
   const r = range;
   const [query, setQuery] = useState("");
-  const view = customRangeView(r, query);
+  const [sort, setSort] = useState<CustomRangeSort>("recorded");
+  const actualSort = effectiveCustomRangeSort(r, sort);
+  const view = customRangeView(r, query, actualSort);
   const sold = paidFiguresComplete(r);
   const peak = Math.max(1, ...r.days.map((d) => d.visitors));
   const tiles = [
@@ -156,15 +158,21 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
       {r.channels.length || r.products.length ? <div className="mt-4">
         <label className="field-label" htmlFor="range-search">Search channels or products</label>
         <input id="range-search" type="search" className="field mt-1" value={query} maxLength={100} onChange={event=>setQuery(event.target.value)} placeholder="Channel, product name or product ID" />
+        <label className="field-label mt-3" htmlFor="range-sort">Order channels and products</label>
+        <select id="range-sort" className="field mt-1" value={actualSort} onChange={event=>setSort(event.target.value as CustomRangeSort)}>
+          <option value="recorded">Recorded order</option><option value="traffic_desc">Traffic, highest first</option><option value="traffic_asc">Traffic, lowest first</option>
+          <option value="revenue_desc" disabled={!sold}>Revenue, highest first</option><option value="revenue_asc" disabled={!sold}>Revenue, lowest first</option>
+          <option value="sales_desc" disabled={!sold}>Sales, highest first</option><option value="sales_asc" disabled={!sold}>Sales, lowest first</option><option value="name">Name, A–Z</option>
+        </select>
         <p className="mt-1 text-xs text-ink-soft">Search applies to the loaded lists. Period totals and daily results stay the same.{r.channelsTruncated || r.productsTruncated ? " Open all results above to search every recorded row." : ""}</p>
         {query.trim() ? <p className="mt-1 text-xs text-ink-soft" role="status">{view.channels.length} of {r.channels.length} loaded channels and {view.products.length} of {r.products.length} loaded products match.</p> : null}
       </div> : null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
-          <ReportDownload csv={customRangeChannelsReport(view,{query})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
+          <ReportDownload csv={customRangeChannelsReport(view,{query,sort:actualSort})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
             <table className="w-full text-left text-sm">
-              <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.channels.length} of {r.channelsTotal} recorded channels, ordered by {sold ? "revenue" : "visits"}.</span> : null}</caption>
+              <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.channels.length} of {r.channelsTotal} recorded channels, ordered by {customRangeOrderLabel(r,actualSort,"channels").toLowerCase()}.</span> : null}</caption>
               <thead>
                 <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                   <th scope="col" className="py-1 font-semibold">Channel</th>
@@ -188,9 +196,9 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
         ) : null}
         {view.products.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
-          <ReportDownload csv={customRangeProductsReport(view,{query})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
+          <ReportDownload csv={customRangeProductsReport(view,{query,sort:actualSort})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
             <table className="w-full text-left text-sm">
-              <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.products.length} of {r.productsTotal} recorded products, ordered by {sold ? "revenue" : "page views"}.</span> : null}</caption>
+              <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.products.length} of {r.productsTotal} recorded products, ordered by {customRangeOrderLabel(r,actualSort,"products").toLowerCase()}.</span> : null}</caption>
               <thead>
                 <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                   <th scope="col" className="py-1 font-semibold">Product</th>
