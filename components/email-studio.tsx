@@ -21,6 +21,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { formatMoney } from "@/lib/money";
 import { MIN_TEST_REACH, TEST_HOURS, TEST_SHARES, type SubjectTest, type TestBy } from "@/lib/mail-test";
 import { type Currency, plainAmount } from "@/lib/money";
+import { campaignHistoryView, HISTORY_STATUSES, type HistoryStatus } from "@/lib/broadcast-history-view";
 import { broadcastAnswer, cancellationAnswer } from "@/lib/broadcast-response";
 import { readMailSchedule } from "@/lib/mail-schedule";
 import { channelName } from "@/lib/channel-names";
@@ -1265,6 +1266,8 @@ function History({
   const busy = operationBusy || refreshing;
   const keepBlocked = busy || readFailed || writeUnconfirmed || flowsReadFailed;
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<HistoryStatus>("all");
   if (readFailed) return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
       <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
@@ -1279,6 +1282,9 @@ function History({
       <button type="button" className="btn btn-secondary mt-3" disabled={busy} aria-busy={refreshing} onClick={refreshHistory}>{refreshing ? "Reloading campaign history…" : "Reload campaign history"}</button>
     </section>
   );
+
+  const view = campaignHistoryView(broadcasts, query, status);
+  const filtered = Boolean(query.trim()) || status !== "all";
 
   /** A sent email's subject and text, back in the composer to change and send. */
   async function again(b: BroadcastRow) {
@@ -1325,8 +1331,26 @@ function History({
         readers who allowed it are counted as having used a link or not, only to choose their next email.)
       </p>
       {writeUnconfirmed || flowsReadFailed ? <div className="notice notice-warn mt-4"><p role="status">Reload and check the saved sequences before keeping another email sending. An unconfirmed change may already have happened.</p><button type="button" className="btn btn-secondary mt-3" disabled={busy} onClick={() => { setError(null); refreshHistory(); }}>Reload saved sequences from history</button></div> : null}
+      <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,auto)]">
+        <label className="text-sm font-semibold text-ink" htmlFor="history-search">
+          Search campaign subjects
+          <input id="history-search" type="search" className="input mt-1 w-full" value={query} maxLength={150} disabled={busy} aria-describedby="history-scope history-results" onChange={e => setQuery(e.target.value)} placeholder="Find a campaign…" />
+        </label>
+        <label className="text-sm font-semibold text-ink" htmlFor="history-status">
+          Campaign status
+          <select id="history-status" className="input mt-1 w-full" value={status} disabled={busy} aria-describedby="history-scope history-results" onChange={e => setStatus(e.target.value as HistoryStatus)}>
+            {HISTORY_STATUSES.map(value => <option key={value} value={value}>{value === "all" ? "All statuses" : STATUS[value]} ({n(view.counts[value])})</option>)}
+          </select>
+        </label>
+      </div>
+      <p id="history-scope" className="mt-2 text-sm text-ink-soft">Search and status counts cover only the campaigns loaded in this history. Status counts are before search.</p>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <p id="history-results" role="status" className="text-sm text-ink-soft">Showing {n(view.rows.length)} of {n(broadcasts.length)} loaded campaigns.</p>
+        {filtered ? <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => { setQuery(""); setStatus("all"); }}>Clear history filters</button> : null}
+      </div>
+      {!view.rows.length ? <p className="mt-4 text-sm text-ink-soft">No loaded campaigns match these filters. Clear the filters to see the loaded history.</p> : null}
       <ul className="mt-4 divide-y divide-line">
-        {broadcasts.map((b) => (
+        {view.rows.map((b) => (
           <li key={b.id} className="py-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="min-w-0 break-words font-semibold text-ink">{b.subject}</p>
