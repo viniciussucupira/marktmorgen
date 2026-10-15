@@ -37,7 +37,7 @@ for(const d of [{...data,partial:true},{...data,sales:"none" as const},{...data,
  is("fallback CSV labels actual filter",rows[0]["Sales filter"],"All loaded rows");
  is("fallback paid values blank",rows[0]["Paid records"],"");
 }
-const html=renderToStaticMarkup(createElement(CustomRangeResults,{range:data,marks:[],currency:"usd"}));
+const html=renderToStaticMarkup(createElement(CustomRangeResults,{range:{...data,products:data.products.map(row=>({...row,title:row.id}))},marks:[],currency:"usd"}));
 is("new option shown",html.includes('value="untracked"'),true);
 is("meaning explained without invented cause",html.includes("this does not establish why traffic is absent"),true);
 is("scope stays selected dates",html.includes("zero visits or views in the selected dates"),true);
