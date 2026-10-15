@@ -21,6 +21,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { formatMoney } from "@/lib/money";
 import { MIN_TEST_REACH, TEST_HOURS, TEST_SHARES, type SubjectTest, type TestBy } from "@/lib/mail-test";
 import { type Currency, plainAmount } from "@/lib/money";
+import { broadcastAnswer } from "@/lib/broadcast-response";
 import { readMailSchedule } from "@/lib/mail-schedule";
 import { channelName } from "@/lib/channel-names";
 import { type Narrow, MAX_SPENT, readSegmentSpend, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
@@ -36,6 +37,7 @@ const MESSAGES: Record<string, string> = {
   body: "Write the email itself.",
   placeholder: "Part of the template is still in ⟦brackets⟧. Replace each with your own words, or remove it, before it can go out.",
   when: "Pick a time between now and a year from now.",
+  broadcast_write_unconfirmed: "The campaign could not be confirmed. Your text is still here. It may already have been created; check Sent and scheduled before trying again.",
   product: "That product is not in your store anymore.",
   empty: "Nobody on your list matches, so there is nobody to send it to yet.",
   test_subject: "Write a second subject line that is different from the first, or uncheck the test.",
@@ -93,9 +95,10 @@ async function call(payload: Record<string, unknown>): Promise<Answer> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return mailAnswer(response.ok, await response.json().catch(() => null), sequenceWrite, draftWrite);
+    const raw = await response.json().catch(() => null);
+    return payload.action === "broadcast" ? broadcastAnswer(response.ok, raw, payload) : mailAnswer(response.ok, raw, sequenceWrite, draftWrite);
   } catch {
-    return mailAnswer(false, null, sequenceWrite, draftWrite);
+    return payload.action === "broadcast" ? broadcastAnswer(false, null, payload) : mailAnswer(false, null, sequenceWrite, draftWrite);
   }
 }
 
@@ -264,6 +267,7 @@ export function EmailStudio(props: {
   accent?: string;
 }) {
   const ready = props.mail !== null;
+  const [broadcastUnconfirmed, setBroadcastUnconfirmed] = useState(false);
   // The draft open in the composer; a new key starts the composer afresh.
   const [open, setOpen] = useState<DraftRow | null>(null);
   const [composeRevision, setComposeRevision] = useState(0);
@@ -295,6 +299,8 @@ export function EmailStudio(props: {
                 links={props.links ?? {}}
                 counts={props.counts}
                 canSend={props.canSend}
+                broadcastUnconfirmed={broadcastUnconfirmed}
+                onBroadcastUnconfirmed={() => setBroadcastUnconfirmed(true)}
                 draft={open}
                 onDone={() => { setOpen(null); setComposeRevision((value) => value + 1); }}
                 onStartNew={() => openDraft(null)}
@@ -488,6 +494,8 @@ function ListCard({
 }
 
 function Compose(props: {
+  broadcastUnconfirmed: boolean;
+  onBroadcastUnconfirmed: () => void;
   email: string;
   products: { id: string; title: string }[];
   links: Record<string, string>;
@@ -614,7 +622,7 @@ function Compose(props: {
   }
 
   async function send(payload: Record<string, unknown>, success: string) {
-    if (locked || (payload.action === "broadcast" && (reach === null || reach === 0))) return false;
+    if (locked || (payload.action === "broadcast" && (props.broadcastUnconfirmed || reach === null || reach === 0))) return false;
     if (payload.action === "broadcast" && later) {
       const sendAt = readMailSchedule(at, Date.now());
       if (sendAt === null) {
@@ -631,6 +639,7 @@ function Compose(props: {
     setBusy(false);
     setConfirming(false);
     if (!a.ok) {
+      if (payload.action === "broadcast" && a.error === "broadcast_write_unconfirmed") props.onBroadcastUnconfirmed();
       setError(message(a));
       return false;
     }
@@ -994,7 +1003,7 @@ function Compose(props: {
             <>
               <button
                 type="button"
-                aria-busy={busy} disabled={busy || invalidSchedule || !subject.trim() || !body.trim()}
+                aria-busy={busy} disabled={busy || props.broadcastUnconfirmed || invalidSchedule || !subject.trim() || !body.trim()}
                 aria-describedby="mail-send-review"
                 className="btn btn-primary"
                 onClick={async () => {
@@ -1034,9 +1043,10 @@ function Compose(props: {
           ) : (
             <button
               type="button"
-              disabled={busy || !subject.trim() || !body.trim() || reach === null || reach === 0 || invalidSchedule || (testing && (!subjectB.trim() || reach < MIN_TEST_REACH))}
+              disabled={busy || props.broadcastUnconfirmed || !subject.trim() || !body.trim() || reach === null || reach === 0 || invalidSchedule || (testing && (!subjectB.trim() || reach < MIN_TEST_REACH))}
               className="btn btn-primary"
               onClick={() => {
+                if (props.broadcastUnconfirmed) return;
                 if (later && readMailSchedule(at, Date.now()) === null) { setScheduleNow(Date.now()); setError(MESSAGES.when); return; }
                 setConfirming(true);
               }}
@@ -1051,6 +1061,7 @@ function Compose(props: {
             schedule it from this page.
           </p>
         )}
+        {props.broadcastUnconfirmed ? <p role="status" className="text-sm text-ink-soft">Sending and scheduling are paused on this page because the last campaign could not be confirmed. Save your text as a draft, then reload this page and check Sent and scheduled before trying again; the campaign may already exist.</p> : null}
         <Feedback error={error} done={null} />
       </fieldset>
       {uncertainDrafts !== null ? <div className="mt-4 space-y-3">
