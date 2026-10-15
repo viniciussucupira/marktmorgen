@@ -204,7 +204,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
         <select id="range-sort" className="field mt-1" value={actualSort} onChange={event=>setSort(event.target.value as CustomRangeSort)}>
           <option value="recorded">Recorded order</option><option value="traffic_desc">Traffic, highest first</option><option value="traffic_asc">Traffic, lowest first</option>
           <option value="revenue_desc" disabled={!sold}>Revenue, highest first</option><option value="revenue_asc" disabled={!sold}>Revenue, lowest first</option>
-          <option value="sales_desc" disabled={!sold}>Sales, highest first</option><option value="sales_asc" disabled={!sold}>Sales, lowest first</option><option value="name">Name, A–Z</option>
+          <option value="sales_desc" disabled={!sold}>Sales, highest first</option><option value="sales_asc" disabled={!sold}>Sales, lowest first</option><option value="efficiency_desc" disabled={!sold}>Revenue / visit or view, highest first</option><option value="efficiency_asc" disabled={!sold}>Revenue / visit or view, lowest first</option><option value="name">Name, A–Z</option>
         </select>
         <label className="field-label mt-3" htmlFor="range-sales-filter">Filter channels and products</label>
         <select id="range-sales-filter" className="field mt-1" value={actualFilter} onChange={event=>setFilter(event.target.value as CustomRangeFilter)}>
@@ -220,7 +220,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
       </div> : null}
       {hasListSelection?<CustomRangeSelectionSummary range={view} currency={currency} selection={{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum}} />:null}
       {hasListSelection?<button type="button" className="btn btn-secondary mt-3" onClick={()=>{setQuery("");setSort("recorded");setFilter("all");setMinimumTraffic("0");}}>Reset list view</button>:null}
-      {sold ? <p className="mt-3 text-xs text-ink-soft">Revenue / visit and Revenue / view divide each row’s gross revenue by recorded visits or page views, not unique people. Channels exclude one-click extras; products include them. Both exclude renewals and are before refunds, fees and costs. No traffic means unavailable. Analytical money uses up to four significant digits; CSV values keep calculated precision.</p> : null}
+      {sold ? <p className="mt-3 text-xs text-ink-soft">Revenue / visit and Revenue / view divide each row’s gross revenue by recorded visits or page views, not unique people. Channels exclude one-click extras; products include them. Both exclude renewals and are before refunds, fees and costs. No traffic means unavailable; rows without a defined ratio sort last in either direction. Analytical money uses up to four significant digits; CSV values keep calculated precision.</p> : null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
