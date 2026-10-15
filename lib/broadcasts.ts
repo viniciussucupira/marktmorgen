@@ -85,6 +85,10 @@ export class BroadcastWriteUnconfirmed extends Error {
   constructor() { super("Campaign creation could not be confirmed"); this.name = "BroadcastWriteUnconfirmed"; }
 }
 
+export class BroadcastCancellationUnconfirmed extends Error {
+  constructor() { super("Campaign cancellation could not be confirmed"); this.name = "BroadcastCancellationUnconfirmed"; }
+}
+
 export const MAX_SCHEDULE_DAYS = 365;
 const QUEUE = "nl:mail:queue";
 const bcKey = (id: string) => `nl:mail:bc:${id}`;
@@ -282,11 +286,34 @@ export async function createBroadcast(
 
 /** Stops a broadcast that has not started. One under way is not stopped halfway. */
 export async function cancelBroadcast(store: Store, id: string): Promise<boolean> {
-  const b = await readBroadcast(id);
-  if (!b || b.listId !== store.listId || b.status !== "scheduled") return false;
-  await save({ ...b, status: "cancelled", finishedAt: Math.floor(Date.now() / 1000) });
-  await redisPipeline([["SREM", QUEUE, id]]);
-  return true;
+  if (!BROADCAST_ID.test(id) || !store.listId) return false;
+  let acquired = false;
+  try {
+    acquired = await takeBroadcastLock(id);
+    if (!acquired) return false;
+    // Read only after acquiring the same lock used by the sender.
+    const b = await readBroadcast(id);
+    if (!b || b.id !== id || b.listId !== store.listId || b.status !== "scheduled" || b.sent !== 0 || b.listed !== false) return false;
+    const cancelled = { ...b, status: "cancelled", finishedAt: Math.floor(Date.now() / 1000) };
+    const saved = await redisPipeline([["SET", bcKey(id), JSON.stringify(cancelled), "EX", 400 * 86_400]]);
+    if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new BroadcastCancellationUnconfirmed();
+    const removed = await redisPipeline([["SREM", QUEUE, id]]);
+    if (!Array.isArray(removed) || removed.length !== 1 || (removed[0] !== 0 && removed[0] !== 1)) throw new BroadcastCancellationUnconfirmed();
+    return true;
+  } catch {
+    // Either write may have happened: do not retry or restore a scheduled state.
+    throw new BroadcastCancellationUnconfirmed();
+  } finally {
+    if (acquired) await redisPipeline([["DEL", lockKey(id)]]).catch(() => {});
+  }
+}
+
+/** Only an explicit lock acknowledgement permits a reader to become a writer. */
+async function takeBroadcastLock(id: string): Promise<boolean> {
+  if (!BROADCAST_ID.test(id)) return false;
+  const reply = await redisPipeline([["SET", lockKey(id), "1", "NX", "EX", 90]]);
+  if (!Array.isArray(reply) || reply.length !== 1 || (reply[0] !== "OK" && reply[0] !== null)) throw new Error("Campaign lock could not be confirmed");
+  return reply[0] === "OK";
 }
 
 /**
@@ -299,8 +326,7 @@ export async function advanceBroadcast(
   deadline: number,
 ): Promise<Broadcast | null> {
   const seconds = () => Math.floor(Date.now() / 1000);
-  const [got] = await redisPipeline([["SET", lockKey(id), "1", "NX", "EX", 90]]);
-  if (got === null) return null;
+  if (!await takeBroadcastLock(id)) return null;
   try {
     let b = await readBroadcast(id);
     if (!b) {
