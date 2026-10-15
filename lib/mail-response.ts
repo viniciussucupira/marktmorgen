@@ -15,3 +15,12 @@ export function keptWaitHours(answer: MailAnswer): number | null {
   const wait = answer.waitHours;
   return answer.ok === true && typeof wait === "number" && Number.isInteger(wait) && wait >= 0 && wait <= MAX_FLOW_WAIT_HOURS ? wait : null;
 }
+
+export type MailCopy = { subject: string; body: string; productId: string | null; who: "all" | "buyers" | "leads" };
+/** A copy must retain its content and audience before replacing the composer. */
+export function confirmedMailCopy(answer: MailAnswer): MailCopy | null {
+  if (answer.ok !== true || !answer.copy || typeof answer.copy !== "object" || Array.isArray(answer.copy)) return null;
+  const copy = answer.copy as Record<string, unknown>;
+  if (typeof copy.subject !== "string" || typeof copy.body !== "string" || !(copy.productId === null || typeof copy.productId === "string") || (copy.who !== "all" && copy.who !== "buyers" && copy.who !== "leads")) return null;
+  return { subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who as MailCopy["who"] };
+}
