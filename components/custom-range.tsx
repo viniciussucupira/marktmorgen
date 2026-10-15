@@ -7,6 +7,7 @@ import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
 import { CUSTOM_RANGE_METRICS, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
+import { customRangeComparison } from "@/lib/custom-range-comparison";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -159,6 +160,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
           </div>
         ))}
       </dl>
+      <CustomRangeComparison range={r} currency={currency} />
       <ReportDownload csv={customRangeComparisonReport(r)} filename={"marktmorgen-custom-comparison-"+r.from+"-to-"+r.to+".csv"}>Download period comparison</ReportDownload>
       {r.days.length ? <ReportDownload csv={customRangeDailyReport(r)} filename={"marktmorgen-custom-daily-"+r.from+"-to-"+r.to+".csv"}>Download daily results</ReportDownload> : null}
       {r.sales === "error" ? <p className="mt-2 text-sm text-ink-soft">Stripe did not answer, so sales are not shown. Try again in a moment.</p> : null}
@@ -282,4 +284,34 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
    </div>
   </details>:null}
  </div>;
+}
+
+/** Exact values behind the headline changes, independently of table search or chart grouping. */
+export function CustomRangeComparison({range,currency}:{range:RangeData;currency:string}) {
+ const comparison=customRangeComparison(range);
+ const dates=(from:string,to:string)=>from===to?day(from):day(from)+" to "+day(to);
+ const value=(n:number|null,money:boolean,signed=false)=>n===null?"Unavailable":(signed&&n>0?"+":"")+(money?formatMoney(n,currency):count(n));
+ const percent=(n:number|null)=>{
+  if(n===null)return "—";
+  const rounded=Math.round(n*10)/10;
+  return (rounded>0?"+":"")+(rounded===0?0:rounded).toLocaleString("en-US",{maximumFractionDigits:1})+"%";
+ };
+ return <details className="mt-3">
+  <summary className="cursor-pointer text-sm font-semibold text-ink">Compare with previous period</summary>
+  <p className="mt-2 text-xs text-ink-soft">Selected: {dates(range.from,range.to)} (UTC).{comparison.previousFrom&&comparison.previousTo?" Previous: "+dates(comparison.previousFrom,comparison.previousTo)+" (UTC).":""}</p>
+  <div className="mt-2 overflow-x-auto" tabIndex={0} role="region" aria-label="Period comparison">
+   <table className="w-full text-left text-sm">
+    <caption className="text-left text-xs text-ink-soft">Equal consecutive UTC periods</caption>
+    <thead><tr><th scope="col" className="py-1">Metric</th><th scope="col" className="py-1 pl-3 text-right">Selected days</th><th scope="col" className="py-1 pl-3 text-right">Previous days</th><th scope="col" className="py-1 pl-3 text-right">Difference</th><th scope="col" className="py-1 pl-3 text-right">Change</th></tr></thead>
+    <tbody>{comparison.rows.map(row=><tr key={row.name} className="border-b border-line/60">
+     <th scope="row" className="py-1.5 pr-3 font-medium">{row.name}</th>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.current,row.name==="Gross revenue")}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.previous,row.name==="Gross revenue")}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.difference,row.name==="Gross revenue",true)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{percent(row.change)}</td>
+    </tr>)}</tbody>
+   </table>
+  </div>
+  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Visitors are summed daily counts. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. The selected end day may still be in progress.</p>
+ </details>;
 }
