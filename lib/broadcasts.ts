@@ -128,6 +128,42 @@ export async function listBroadcasts(listId: string | null, limit = 30): Promise
   return rows.map(parse).filter((b): b is Broadcast => b !== null);
 }
 
+
+/** A studio snapshot is all-or-unavailable; missing rows must not look like no campaigns. */
+export async function listBroadcastsStrict(listId: string | null, limit = 30): Promise<Broadcast[]> {
+  if (!listId) return [];
+  if (!isRedisConfigured()) throw new Error("Campaign storage is unavailable");
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new Error("Invalid campaign history limit");
+  const response = await redisPipeline([["LRANGE", listKey(listId), 0, limit - 1]]);
+  if (!Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0])) throw new Error("Campaign index is unavailable");
+  const ids: unknown[] = response[0];
+  if (ids.length > limit || Array.from(ids).some(id => typeof id !== "string" || !BROADCAST_ID.test(id)) || new Set(ids).size !== ids.length) throw new Error("Campaign index is incomplete");
+  if (!ids.length) return [];
+  const rows = await redisPipeline(ids.map(id => ["GET", bcKey(id as string)]));
+  if (!Array.isArray(rows) || rows.length !== ids.length) throw new Error("Campaign records are incomplete");
+  const nonnegative = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
+  const association = (value: unknown) => value === null || typeof value === "string" && value.length > 0;
+  const statuses = new Set(["scheduled", "sending", "sent", "waiting", "cancelled", "failed"]);
+  return ids.map((id, i) => {
+    const raw = rows[i];
+    if (typeof raw !== "string") throw new Error("Campaign record is unavailable");
+    const record: unknown = JSON.parse(raw);
+    if (!record || typeof record !== "object" || Array.isArray(record)) throw new Error("Invalid campaign record");
+    const value = record as Record<string, unknown>;
+    const b = parse(raw);
+    if (!b || b.id !== id || b.listId !== listId || typeof b.handle !== "string" || !b.handle.trim() || typeof b.subject !== "string" || !b.subject.trim() || typeof b.body !== "string" || !b.body.trim() || !association(b.productId) || !statuses.has(b.status) || !nonnegative(b.createdAt) || !b.createdAt || !nonnegative(b.sendAt) || !b.sendAt || !nonnegative(b.finishedAt) || !nonnegative(b.total) || !nonnegative(b.sent) || b.sent > b.total || !nonnegative(b.failures) || typeof b.listed !== "boolean" || typeof b.note !== "string") throw new Error("Invalid campaign fields");
+    // These fields were absent in older campaigns; explicit malformed values are not legacy defaults.
+    if (value.who !== undefined && !WHO.includes(value.who as Who) || value.notProductId !== undefined && !association(value.notProductId) || value.tagged !== undefined && typeof value.tagged !== "boolean" || value.test !== undefined && value.test !== null && b.test === null) throw new Error("Invalid campaign options");
+    if (value.narrow !== undefined && value.narrow !== null) {
+      if (typeof value.narrow !== "object" || Array.isArray(value.narrow)) throw new Error("Invalid campaign audience");
+      const narrow = value.narrow as Record<string, unknown>;
+      const normalized = readNarrow(narrow);
+      if (narrow.minSpent !== normalized.minSpent || narrow.channel !== normalized.channel || narrow.quietDays !== normalized.quietDays) throw new Error("Invalid campaign audience fields");
+    }
+    return b;
+  });
+}
+
 /**
  * Who a kind of reader is, for this store today: the products sold for money
  * come from the store's own index, so nothing is read to know them.
