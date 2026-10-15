@@ -76,6 +76,36 @@ function parse(raw: unknown): Draft | null {
   }
 }
 
+/** A complete hash or unknown: never silently drop an unreadable saved draft. */
+export function parseDraftList(raw: unknown): Draft[] | null {
+  if (!Array.isArray(raw) || raw.length % 2 !== 0) return null;
+  const drafts: Draft[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; i < raw.length; i += 2) {
+    const id = raw[i];
+    if (typeof id !== "string" || !DRAFT_ID.test(id) || seen.has(id) || typeof raw[i + 1] !== "string") return null;
+    let value: unknown;
+    try { value = JSON.parse(raw[i + 1]); } catch { return null; }
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const draft = value as Record<string, unknown>;
+    if (draft.id !== id || typeof draft.subject !== "string" || typeof draft.body !== "string" || !(draft.productId === null || (typeof draft.productId === "string" && draft.productId !== "")) || typeof draft.by !== "string" || typeof draft.savedAt !== "string" || !Number.isFinite(Date.parse(draft.savedAt))) return null;
+    seen.add(id);
+    drafts.push({ id, subject: draft.subject, body: draft.body, productId: draft.productId, by: draft.by, savedAt: draft.savedAt });
+  }
+  return drafts.sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt));
+}
+
+/** Studio reader: confirmed emptiness is different from an unavailable list. */
+export async function listDraftsStrict(listId: string | null): Promise<Draft[]> {
+  if (!listId) return [];
+  if (!isRedisConfigured()) throw new Error("Draft storage is unavailable");
+  const response = await redisPipeline([["HGETALL", draftsKey(listId)]]);
+  if (!Array.isArray(response) || response.length !== 1) throw new Error("Draft list response is incomplete");
+  const drafts = parseDraftList(response[0]);
+  if (drafts === null) throw new Error("Draft list could not be read");
+  return drafts;
+}
+
 /** A store's drafts, the most recently saved first. */
 export async function listDrafts(listId: string | null): Promise<Draft[]> {
   if (!listId || !isRedisConfigured()) return [];
