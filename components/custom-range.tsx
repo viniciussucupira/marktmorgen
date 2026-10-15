@@ -167,8 +167,8 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
         ))}
       </dl>
       <CustomRangeComparison range={r} currency={currency} />
-      <ReportDownload csv={customRangeComparisonReport(r)} filename={"marktmorgen-custom-comparison-"+r.from+"-to-"+r.to+".csv"}>Download period comparison</ReportDownload>
-      {r.days.length ? <ReportDownload csv={customRangeDailyReport(r)} filename={"marktmorgen-custom-daily-"+r.from+"-to-"+r.to+".csv"}>Download daily results</ReportDownload> : null}
+      <ReportDownload csv={()=>customRangeComparisonReport(r)} filename={"marktmorgen-custom-comparison-"+r.from+"-to-"+r.to+".csv"}>Download period comparison</ReportDownload>
+      {r.days.length ? <ReportDownload csv={()=>customRangeDailyReport(r)} filename={"marktmorgen-custom-daily-"+r.from+"-to-"+r.to+".csv"}>Download daily results</ReportDownload> : null}
       {r.sales === "error" ? <p className="mt-2 text-sm text-ink-soft">Stripe did not answer, so sales are not shown. Try again in a moment.</p> : null}
       {r.partial ? <p className="mt-2 text-sm text-ink-soft">The purchase reading is incomplete. Sales and revenue are unavailable; traffic and checkouts remain visible.</p> : null}
       <CustomRangeChart range={r} currency={currency} metric={chartMetric} onMetricChange={setChartMetric} grouping={chartGrouping} onGroupingChange={setChartGrouping} />
@@ -208,7 +208,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
-          <ReportDownload csv={customRangeChannelsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
+          <ReportDownload csv={()=>customRangeChannelsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
             <table className="w-full text-left text-sm">
               <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.channels.length} of {r.channelsTotal} recorded channels, ordered by {customRangeOrderLabel(r,actualSort,"channels").toLowerCase()}.</span> : null}</caption>
               <thead>
@@ -234,7 +234,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
         ) : r.channels.length ? <p className="text-sm text-ink-soft">No loaded channels match the current search and filters. Reset the list view or adjust the filters.{r.channelsTruncated===true?" The loaded channel list is limited.":""}</p> : null}
         {view.products.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
-          <ReportDownload csv={customRangeProductsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
+          <ReportDownload csv={()=>customRangeProductsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
             <table className="w-full text-left text-sm">
               <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.products.length} of {r.productsTotal} recorded products, ordered by {customRangeOrderLabel(r,actualSort,"products").toLowerCase()}.</span> : null}</caption>
               <thead>
@@ -291,7 +291,7 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
     <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{height:Math.max(row.value?4:1,(row.value/peak)*100)+"%",opacity:row.value?1:0.25}} />
    </div>)}
   </div>
-  {rows.length?<ReportDownload csv={customRangeChartReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-"+selected+"-"+unit+"-"+range.from+"-to-"+range.to+".csv"}>Download chart values</ReportDownload>:null}
+  {rows.length?<ReportDownload csv={()=>customRangeChartReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-"+selected+"-"+unit+"-"+range.from+"-to-"+range.to+".csv"}>Download chart values</ReportDownload>:null}
   {rows.length?<details className="mt-2">
    <summary className="cursor-pointer text-sm font-semibold text-ink">View chart values</summary>
    <div className="mt-2 max-h-64 overflow-auto" tabIndex={0} role="region" aria-label="Chart values">
@@ -354,7 +354,7 @@ export function CustomRangeSelectionSummary({range,currency,selection}:{range:Ra
   </div>
   <p className="mt-2 text-xs text-ink-soft">Totals cover matching loaded rows, not the whole period. Channels and products overlap; do not add them together.{range.channelsTruncated||range.productsTruncated?" Some loaded lists are limited.":""}</p>
   <p className="mt-1 text-xs text-ink-soft">Channel purchases exclude one-click extras; product purchases include them. Both exclude renewals. Gross revenue is before refunds, fees and ad spend.</p>
-  {selection?<ReportDownload csv={customRangeSelectionReport(range,selection)} filename={"marktmorgen-custom-selection-"+range.from+"-to-"+range.to+".csv"}>Download selection totals</ReportDownload>:null}
+  {selection?<ReportDownload csv={()=>customRangeSelectionReport(range,selection)} filename={"marktmorgen-custom-selection-"+range.from+"-to-"+range.to+".csv"}>Download selection totals</ReportDownload>:null}
  </div>;
 }
 
@@ -372,6 +372,6 @@ export function CustomRangeChartSummary({range,currency,metric,grouping="day"}:{
    <div><dt className="text-xs text-ink-soft">Highest recorded day</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.peak.value)}</dd><dd className="text-xs text-ink-soft">{day(summary.peak.date)}{summary.peak.ties>1?" · "+count(summary.peak.ties)+" days tied; earliest shown.":""}</dd></div>
   </dl>
   <p className="mt-1 text-xs text-ink-soft">Summary uses daily rows even when the chart is grouped. Averages are rounded for display.{summary.metric==="visitors"?" Visitors are summed daily counts, not distinct people across the period.":""} Values for today can still grow.</p>
-  <ReportDownload csv={customRangeChartSummaryReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-summary-"+summary.metric+"-"+range.from+"-to-"+range.to+".csv"}>Download chart summary</ReportDownload>
+  <ReportDownload csv={()=>customRangeChartSummaryReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-summary-"+summary.metric+"-"+range.from+"-to-"+range.to+".csv"}>Download chart summary</ReportDownload>
  </div>;
 }
