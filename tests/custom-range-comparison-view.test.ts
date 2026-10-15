@@ -55,8 +55,8 @@ part("CSV and displayed model share exact amounts and availability");
 for(const d of [data,missing,unknownPaid,{...data,partial:true}]){
  const model=customRangeComparison(d);const parsed=parseCsv(customRangeComparisonReport(d));
  const rows=parsed.rows.map(row=>Object.fromEntries(parsed.header.map((key,i)=>[key,row[i]])));
- is("CSV current values match model",rows.map(row=>row.Current),model.rows.map(row=>row.current===null?"":String(row.name==="Gross revenue"?toMajor(row.current,d.currency):row.current)));
- is("CSV differences match model",rows.map(row=>row.Difference),model.rows.map(row=>row.difference===null?"":String(row.name==="Gross revenue"?toMajor(row.difference,d.currency):row.difference)));
+ is("CSV current values match model",rows.map(row=>row.Current),model.rows.map(row=>row.current===null?"":String(row.money?toMajor(row.current,d.currency):row.current)));
+ is("CSV differences match model",rows.map(row=>row.Difference),model.rows.map(row=>row.difference===null?"":String(row.money?toMajor(row.difference,d.currency):row.difference)));
 }
 is("input is unchanged",data.before!.cents,9902);
 done();
