@@ -8,7 +8,7 @@ import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
-import { mailAnswer, type MailAnswer } from "@/lib/mail-response";
+import { keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import { flowConfigurationIssues } from "@/lib/flow-review";
@@ -1131,7 +1131,13 @@ function History({
       if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
       return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
     }
-    toast(`Done. ${keptWords(b, products)} from now on gets this email ${waitWords(Number(a.waitHours))} later. It is under Sequences, switched on.`);
+    const waitHours = keptWaitHours(a);
+    if (waitHours === null) {
+      onWriteUnconfirmed();
+      setError(MESSAGES.flow_write_unconfirmed);
+      return;
+    }
+    toast(`Done. ${keptWords(b, products)} from now on gets this email ${waitWords(waitHours)} later. It is under Sequences, switched on.`);
     refreshHistory();
   }
   return (
