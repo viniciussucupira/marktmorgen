@@ -10,7 +10,7 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { listCounts } from "@/lib/contacts";
-import { listBroadcasts } from "@/lib/broadcasts";
+import { listBroadcastsStrict } from "@/lib/broadcasts";
 import { broadcastMoney, flowMoney, readMailRevenue, readMailVisits } from "@/lib/mail-revenue";
 import { sellsSomething } from "@/lib/mail-starters";
 import { readFlowStatsStrict } from "@/lib/flow-stats";
@@ -46,10 +46,10 @@ export default async function StudioEmailPage({ searchParams }: Params) {
   const { store } = view;
 
   const allowance = monthlyAllowance(store);
-  const [counts, used, broadcasts, loadedFlows, listings, loadedDrafts, pause] = await Promise.all([
+  const [counts, used, loadedBroadcasts, loadedFlows, listings, loadedDrafts, pause] = await Promise.all([
     listCounts(store.listId),
     usedThisMonth(store.listId),
-    listBroadcasts(store.listId),
+    listBroadcastsStrict(store.listId).catch(() => null),
     readFlowListStrict(store.listId).catch(() => null),
     // The names of the products a flow or a broadcast can be about: one
     // command, where reading every card was one per product (lib/catalog.ts).
@@ -59,6 +59,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
     // of its addresses bounced or reported it (lib/mail-health.ts).
     pausedFor(healthId(store)),
   ]);
+  const broadcasts = loadedBroadcasts ?? [];
   const flows = loadedFlows ?? [];
   const drafts = loadedDrafts ?? [];
   const role = view.role;
@@ -177,6 +178,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
                 : null
             }
             products={[...listings].map(([id, title]) => ({ id, title }))}
+            broadcastsReadFailed={loadedBroadcasts === null}
             broadcasts={broadcasts.map((b) => ({
               id: b.id,
               subject: b.subject,
