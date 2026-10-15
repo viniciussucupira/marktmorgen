@@ -1,4 +1,4 @@
-import { confirmedMailCopy, keptWaitHours, mailAnswer } from "@/lib/mail-response";
+import { confirmedDraftId, confirmedMailCopy, keptWaitHours, mailAnswer } from "@/lib/mail-response";
 import { done, is, part } from "./check";
 part("Mail operation response validation");
 is("HTTP failure cannot confirm success", mailAnswer(false, { ok: true }).ok, false);
@@ -35,4 +35,13 @@ for (const copy of [undefined, null, [], "text", {}, { ...validCopy, subject: 3 
 is("failed HTTP cannot open copy", confirmedMailCopy(mailAnswer(false, { ok: true, copy: validCopy })), null);
 is("refusal cannot open copy", confirmedMailCopy(mailAnswer(true, { ok: false, error: "unknown", copy: validCopy })), null);
 is("empty content stays editable", confirmedMailCopy(mailAnswer(true, { ok: true, copy: { ...validCopy, subject: "", body: "" } }))?.subject, "");
+part("Confirmed saved draft");
+const savedDraft = { id: "1111111111111111", subject: "Saved", body: "Saved content", productId: null, by: "owner@example.com", savedAt: "2026-10-15T00:00:00.000Z" };
+is("complete new draft confirms its id", confirmedDraftId({ ok: true, draft: savedDraft }), savedDraft.id);
+is("complete existing draft confirms its id", confirmedDraftId({ ok: true, draft: savedDraft }, savedDraft.id), savedDraft.id);
+is("another draft id cannot confirm this save", confirmedDraftId({ ok: true, draft: savedDraft }, "2222222222222222"), null);
+is("valid product association confirms", confirmedDraftId({ ok: true, draft: { ...savedDraft, productId: "product" } }), savedDraft.id);
+for (const draft of [undefined, [], {}, { ...savedDraft, id: "wrong" }, { ...savedDraft, subject: undefined }, { ...savedDraft, subject: " " }, { ...savedDraft, body: 1 }, { ...savedDraft, body: " " }, { ...savedDraft, productId: undefined }, { ...savedDraft, productId: [] }, { ...savedDraft, productId: "" }, { ...savedDraft, by: "" }, { ...savedDraft, savedAt: "invalid" }, { ...savedDraft, savedAt: undefined }]) is("incomplete saved draft " + JSON.stringify(draft), confirmedDraftId({ ok: true, draft }), null);
+is("HTTP failure cannot confirm saved draft", confirmedDraftId(mailAnswer(false, { ok: true, draft: savedDraft })), null);
+is("refusal cannot confirm saved draft", confirmedDraftId({ ok: false, draft: savedDraft }), null);
 done();
