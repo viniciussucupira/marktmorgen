@@ -48,17 +48,17 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
   const [to, setTo] = useState(today);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[] } | null>(null);
+  const [result, setResult] = useState<{ range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; fullDetails: boolean } | null>(null);
 
-  async function show(fullDetails = false, period?: CustomDatePeriod) {
+  async function show(fullDetails = false, period?: CustomDatePeriod, keepDraftDates = false) {
     setBusy(true);
     setError(null);
     try {
       const response = await fetch(`/api/store/stats/range?${new URLSearchParams({ from: period?.from ?? (fullDetails && result ? result.range.from : from), to: period?.to ?? (fullDetails && result ? result.range.to : to), ...(fullDetails ? { details: "all" } : {}) })}`, { cache: "no-store" });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; range?: RangeData & { products: Products }; marks?: AutoMark[] };
       if (data.ok && data.range) {
-        setResult({ range: data.range, marks: data.marks ?? [] });
-        if (period) { setFrom(data.range.from); setTo(data.range.to); }
+        setResult({ range: data.range, marks: data.marks ?? [], fullDetails });
+        if (period && !keepDraftDates) { setFrom(data.range.from); setTo(data.range.to); }
       }
       else setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
     } catch {
@@ -103,7 +103,7 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
           {error}
         </p>
       ) : null}
-      {r ? <CustomRangeResults range={r} marks={result.marks} currency={currency} onShowAll={() => { void show(true); }} busy={busy} onNavigate={direction=>{const period=direction===-1?previousPeriod:nextPeriod;if(period)void show(false,period);}} canPrevious={previousPeriod!==null} canNext={nextPeriod!==null} /> : null}
+      {r ? <CustomRangeResults range={r} marks={result.marks} currency={currency} onShowAll={() => { void show(true); }} onRefresh={() => { void show(result.fullDetails, {from:r.from,to:r.to}, true); }} busy={busy} onNavigate={direction=>{const period=direction===-1?previousPeriod:nextPeriod;if(period)void show(false,period);}} canPrevious={previousPeriod!==null} canNext={nextPeriod!==null} /> : null}
     </div>
   );
 }
@@ -120,7 +120,7 @@ export function CustomRangePresets({today,busy=false,onSelect}:{today:string;bus
 }
 
 /** The confirmed results of the requested dates, with paid coverage checked separately. */
-export function CustomRangeResults({ range, marks, currency, onShowAll, busy = false, onNavigate, canPrevious = false, canNext = false }: { range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; currency: string; onShowAll?: () => void; busy?: boolean; onNavigate?: (direction:-1|1)=>void; canPrevious?:boolean; canNext?:boolean }) {
+export function CustomRangeResults({ range, marks, currency, onShowAll, onRefresh, busy = false, onNavigate, canPrevious = false, canNext = false }: { range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; currency: string; onShowAll?: () => void; onRefresh?: () => void; busy?: boolean; onNavigate?: (direction:-1|1)=>void; canPrevious?:boolean; canNext?:boolean }) {
   const money = (cents: number) => formatMoney(cents, currency);
   const r = range;
   const [query, setQuery] = useState("");
@@ -150,6 +150,10 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
 
   return (
     <div className="mt-4" data-range-result>
+      {onRefresh ? <div className="mb-3">
+        <button type="button" className="btn btn-secondary" onClick={onRefresh} disabled={busy} aria-busy={busy}>{busy ? "Reading…" : "Refresh results"}</button>
+        <p className="mt-1 text-xs text-ink-soft">Refresh the displayed dates, keeping the list view. Dates being edited above stay unchanged.</p>
+      </div> : null}
       {onNavigate ? <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Move between periods">
         <button type="button" className="btn btn-secondary" disabled={busy || !canPrevious} onClick={()=>onNavigate(-1)}>Previous period</button>
         <button type="button" className="btn btn-secondary" disabled={busy || !canNext} onClick={()=>onNavigate(1)}>Next period</button>
