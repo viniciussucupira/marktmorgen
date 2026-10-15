@@ -10,6 +10,18 @@ function eventsPer100Visitors(records:number|null|undefined,visitors:number|null
  return typeof records==="number"&&Number.isSafeInteger(records)&&records>=0&&typeof visitors==="number"&&Number.isSafeInteger(visitors)&&visitors>0?records/visitors*100:null;
 }
 
+const METRIC_DEFINITIONS = {
+  "Visitors": "Visitor totals are estimates across each period, not sums of daily counts or unique buyers.",
+  "Page views": "Recorded page views during each period. Repeated views may count more than once.",
+  "Checkouts": "Recorded checkout starts during each period. These are events, not completed payments or distinct buyers.",
+  "Paid records": "Paid records include one-click extras and exclude renewals. These are payment records, not distinct buyers.",
+  "Gross revenue": "Gross revenue is before refunds, fees, ads and other costs, not profit. Paid records include purchases and one-click extras, exclude renewals.",
+  "Revenue per paid record": "Revenue per paid record is gross revenue divided by paid records for each period, not revenue per buyer. No paid records means the average is unavailable. Analytical averages and their differences retain calculated precision in the currency major unit.",
+  "Revenue per visitor": "Revenue per visitor divides gross revenue by the recorded visitor estimate for each period, not matched buyers; no visitors means unavailable. Money is rounded for display; the CSV keeps the calculated precision.",
+  "Paid records per 100 visitors": "Paid records per 100 visitors divides paid records by the period’s visitor estimate and multiplies by 100. It is not a matched-buyer conversion rate and can exceed 100 because of extras and repeated purchases. Its difference is in records per 100 visitors; its change is relative percentage growth. No visitors or unknown paid figures means unavailable.",
+  "Checkouts per 100 visitors": "Checkouts per 100 visitors divides recorded checkout starts by the period’s visitor estimate and multiplies by 100. It counts events, not distinct buyers or completed purchases, and may exceed 100 after repeated attempts. It is independent of paid coverage. Its difference is in checkouts per 100 visitors; its change is relative percentage growth. No visitors or missing traffic history means unavailable."
+} as const;
+
 /** One comparison model for the displayed table and CSV, with unknown values kept null. */
 export function customRangeComparison(data:RangeData) {
  const known=paidFiguresComplete(data);
@@ -19,7 +31,7 @@ export function customRangeComparison(data:RangeData) {
  const span=end-start+86400000;
  const previousFrom=Number.isFinite(span)&&span>0?new Date(start-span).toISOString().slice(0,10):null;
  const previousTo=Number.isFinite(start)?new Date(start-86400000).toISOString().slice(0,10):null;
- const metrics:{name:string;unit:string;money:boolean;current:number|null;previous:number|null}[]=[
+ const metrics:{name:keyof typeof METRIC_DEFINITIONS;unit:string;money:boolean;current:number|null;previous:number|null}[]=[
   {name:"Visitors",unit:"Count",money:false,current:data.totals.visitors,previous:before?.visitors??null},
   {name:"Page views",unit:"Count",money:false,current:data.totals.views,previous:before?.views??null},
   {name:"Checkouts",unit:"Count",money:false,current:data.totals.checkouts,previous:before?.checkouts??null},
@@ -30,7 +42,7 @@ export function customRangeComparison(data:RangeData) {
   {name:"Paid records per 100 visitors",unit:"Records per 100 visitors",money:false,current:known?eventsPer100Visitors(data.totals.sales,data.totals.visitors):null,previous:known?eventsPer100Visitors(before?.sales,before?.visitors):null},
   {name:"Checkouts per 100 visitors",unit:"Checkouts per 100 visitors",money:false,current:eventsPer100Visitors(data.totals.checkouts,data.totals.visitors),previous:eventsPer100Visitors(before?.checkouts,before?.visitors)},
  ];
- return {previousFrom,previousTo,rows:metrics.map(row=>({...row,
+ return {previousFrom,previousTo,rows:metrics.map(row=>({...row,definition:METRIC_DEFINITIONS[row.name],
   difference:row.current===null||row.previous===null?null:row.current-row.previous,
   change:row.current===null||row.previous===null||row.previous===0?null:(row.current-row.previous)/row.previous*100,
  }))};

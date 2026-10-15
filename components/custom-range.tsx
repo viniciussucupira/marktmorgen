@@ -340,7 +340,11 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
     </tr>)}</tbody>
    </table>
   </div>
-  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Visitor totals are estimates across each period, not sums of daily counts. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Revenue per paid record divides gross revenue by the paid records in each period, not by buyers; no paid records means unavailable. Revenue per visitor divides gross revenue by the recorded visitor estimate for each period, not matched buyers; no visitors means unavailable. Paid records per 100 visitors divides paid records by the period’s visitor estimate and multiplies by 100. It is not a matched-buyer conversion rate and can exceed 100 because of extras and repeated purchases. Its difference is in records per 100 visitors; its change is relative percentage growth. No visitors means unavailable. Checkouts per 100 visitors divides recorded checkout starts by the period’s visitor estimate and multiplies by 100. It counts events, not distinct buyers or completed purchases, and may exceed 100 after repeated attempts. It remains available independently of payments. Its difference is in checkouts per 100 visitors; its change is relative percentage growth. Money is rounded for display; the CSV keeps the calculated precision. The selected end day may still be in progress.</p>
+  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Traffic availability is independent of paid coverage. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Money is rounded for display; the CSV keeps the calculated precision. The selected end day may still be in progress.</p>
+  <details className="mt-2 text-xs text-ink-soft">
+   <summary className="cursor-pointer font-semibold">How metrics are calculated</summary>
+   <dl className="mt-2 space-y-2">{comparison.rows.map(row=><div key={row.name}><dt className="font-semibold text-ink">{row.name}</dt><dd>{row.definition}</dd></div>)}</dl>
+  </details>
  </details>;
 }
 
