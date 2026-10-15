@@ -1,3 +1,4 @@
+import { customRangeOrderLabel, type CustomRangeSort } from "@/lib/custom-range-view";
 import type { RangeData } from "@/lib/stats";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import type { PaymentComparison } from "@/lib/payment-comparison";
@@ -115,22 +116,22 @@ export function paymentComparisonReport(report:PaymentComparison,currency:string
 const rangeCoverage = (data: RangeData) => data.sales !== "ok" ? "Unavailable" : data.partial ? "Incomplete" : "Complete";
 const listCoverage = (limited: boolean | undefined) => limited === undefined ? "Unknown" : limited ? "Yes" : "No";
 /** Exports the displayed rows, including explicit list and financial coverage. */
-export function customRangeChannelsReport(data: RangeData, selection: { query?: string } = {}): string {
+export function customRangeChannelsReport(data: RangeData, selection: { query?: string; sort?: CustomRangeSort } = {}): string {
   const known = paidFiguresComplete(data);
   const query = selection.query?.trim() ?? "";
   const note = "Recorded rows for selected UTC dates; not unique buyers or causal marketing lift. Channel visits count recorded views. Paid records and gross revenue exclude renewals and one-click extras, before refunds, fees and other costs. Blank paid values mean unavailable or incomplete readings, not zero. Recorded row totals describe the reading, not proof of complete payments. This file contains the displayed search selection. Expand the list and clear the search for all recorded rows. List truncation is independent of search filtering.";
   return csv([
     ["From (UTC)","To (UTC)","Currency","Channel","Visits","Paid records","Gross revenue","Paid coverage","Displayed rows","Recorded rows","List truncated","Order","Definition","Search"],
-    ...data.channels.map((r): Cell[] => [data.from,data.to,data.currency.toUpperCase(),channelName(r.source),r.visits,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),data.channels.length,data.channelsTotal??null,listCoverage(data.channelsTruncated),known?"Revenue":"Visits",note,query]),
+    ...data.channels.map((r): Cell[] => [data.from,data.to,data.currency.toUpperCase(),channelName(r.source),r.visits,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),data.channels.length,data.channelsTotal??null,listCoverage(data.channelsTruncated),customRangeOrderLabel(data, selection.sort ?? "recorded", "channels"),note,query]),
   ]);
 }
-export function customRangeProductsReport(data: Omit<RangeData,"products"> & {products:(RangeData["products"][number]&{title?:string})[]}, selection: { query?: string } = {}): string {
+export function customRangeProductsReport(data: Omit<RangeData,"products"> & {products:(RangeData["products"][number]&{title?:string})[]}, selection: { query?: string; sort?: CustomRangeSort } = {}): string {
   const known = paidFiguresComplete(data);
   const query = selection.query?.trim() ?? "";
   const note = "Recorded product rows for selected UTC dates; not unique buyers or causal marketing lift. Paid records and gross revenue include purchases and one-click extras, exclude renewals, and are before refunds, fees and other costs. Blank paid values mean unavailable or incomplete readings, not zero. Recorded row totals describe the reading, not proof of complete payments. This file contains the displayed search selection. Expand the list and clear the search for all recorded rows. List truncation is independent of search filtering.";
   return csv([
     ["From (UTC)","To (UTC)","Currency","Product ID","Product","Page views","Checkouts","Paid records","Gross revenue","Paid coverage","Displayed rows","Recorded rows","List truncated","Order","Definition","Search"],
-    ...data.products.map((r): Cell[] => [data.from,data.to,data.currency.toUpperCase(),r.id,r.title??r.id,r.views,r.checkouts,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),data.products.length,data.productsTotal??null,listCoverage(data.productsTruncated),known?"Revenue":"Page views",note,query]),
+    ...data.products.map((r): Cell[] => [data.from,data.to,data.currency.toUpperCase(),r.id,r.title??r.id,r.views,r.checkouts,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),data.products.length,data.productsTotal??null,listCoverage(data.productsTruncated),customRangeOrderLabel(data, selection.sort ?? "recorded", "products"),note,query]),
   ]);
 }
 
