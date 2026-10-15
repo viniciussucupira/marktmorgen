@@ -22,7 +22,7 @@ export function effectiveCustomRangeGrouping(value:CustomRangeGrouping):CustomRa
  return CUSTOM_RANGE_GROUPINGS.some(item=>item.value===value)?value:"day";
 }
 /** Sum only recorded UTC days; do not pad boundary groups or expose unavailable paid values. */
-export function customRangeChartRows(range:RangeData,metric:CustomRangeMetric,grouping:CustomRangeGrouping) {
+export function customRangeChartRows(range:RangeData,metric:CustomRangeMetric,grouping:CustomRangeGrouping,cumulative=false) {
  const selected=effectiveCustomRangeMetric(range,metric);
  const unit=effectiveCustomRangeGrouping(grouping);
  const sold=paidFiguresComplete(range);
@@ -39,7 +39,10 @@ export function customRangeChartRows(range:RangeData,metric:CustomRangeMetric,gr
   if(group){group.to=row.date;group.value+=row[selected];if(group.sales!==null)group.sales+=row.sales;}
   else groups.set(key,{from:row.date,to:row.date,value:row[selected],sales:sold?row.sales:null});
  }
- return [...groups.values()];
+ const rows=[...groups.values()];
+ if(!cumulative)return rows;
+ let total=0,totalSales=0;
+ return rows.map(row=>{total+=row.value;if(row.sales!==null)totalSales+=row.sales;return {...row,value:total,sales:row.sales===null?null:totalSales};});
 }
 
 /** Describe recorded daily values, independently of chart grouping or list filters. */
