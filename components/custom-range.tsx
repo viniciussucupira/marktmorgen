@@ -404,9 +404,10 @@ export function CustomRangeChartSummary({range,currency,metric,grouping="day"}:{
  const value=(n:number,average=false)=>summary.metric==="cents"?(n!==0&&Math.abs(n)<1?formatRevenuePerTraffic(n,currency):formatMoney(Math.round(n),currency)):n.toLocaleString("en-US",average&&n!==0&&Math.abs(n)<0.01?{maximumSignificantDigits:4}:{maximumFractionDigits:average?2:0});
  return <div className="mt-3" role="region" aria-label="Chart metric summary">
   <p className="text-xs font-semibold text-ink">{label} over {count(summary.days)} recorded UTC days</p>
-  <dl className="mt-2 grid gap-3 sm:grid-cols-3">
+  <dl className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
    <div><dt className="text-xs text-ink-soft">Recorded total</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.total)}</dd></div>
    <div><dt className="text-xs text-ink-soft">Average per recorded day</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.average,true)}</dd></div>
+   <div><dt className="text-xs text-ink-soft">Days with activity</dt><dd className="text-lg font-semibold tabular-nums">{count(summary.activeDays)}</dd><dd className="text-xs text-ink-soft">{count(summary.zeroDays)} recorded days with zero activity. Counts follow the selected metric; missing days are excluded.</dd></div>
    <div><dt className="text-xs text-ink-soft">Highest recorded day</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.peak.value)}</dd><dd className="text-xs text-ink-soft">{day(summary.peak.date)}{summary.peak.ties>1?" · "+count(summary.peak.ties)+" days tied; earliest shown.":""}</dd></div>
   </dl>
   <p className="mt-1 text-xs text-ink-soft">Summary uses daily rows even when the chart is grouped. Averages are rounded for display; small nonzero averages remain visible with up to four significant digits.{summary.metric==="visitors"?" Visitors are summed daily counts, not distinct people across the period.":""} Values for today can still grow.</p>

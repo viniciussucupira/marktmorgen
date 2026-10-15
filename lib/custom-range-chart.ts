@@ -56,5 +56,5 @@ export function customRangeChartSummary(range:RangeData,metric:CustomRangeMetric
   if(row.value>peak.value){peak=row;ties=1;}
   else if(row.value===peak.value)ties++;
  }
- return {metric:selected,days:rows.length,total,average:total/rows.length,peak:{date:peak.from,value:peak.value,ties}};
+ return {metric:selected,days:rows.length,activeDays:rows.filter(row=>row.value>0).length,zeroDays:rows.filter(row=>row.value===0).length,total,average:total/rows.length,peak:{date:peak.from,value:peak.value,ties}};
 }
