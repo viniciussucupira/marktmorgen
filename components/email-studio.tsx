@@ -8,7 +8,7 @@ import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
-import { isAiEmailCopy } from "@/lib/ai-response";
+import { isAiEmailCopy, isAiSequenceDraft } from "@/lib/ai-response";
 import { confirmedDraftId, confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
@@ -1519,14 +1519,15 @@ function Flows({
   const [refreshing, startRefresh] = useTransition();
   const refreshFlows = () => startRefresh(() => router.refresh());
   const [draft, setDraft] = useState<FlowDraft | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
   const invalidWait = draft?.steps.some(step => flowWaitHours(step.wait, step.unit) === null) ?? false;
   const [draftBaseline, setDraftBaseline] = useState<string | null>(null);
-  useLeaveGuard(draft !== null && JSON.stringify(draft) !== draftBaseline);
+  useLeaveGuard(aiBusy || (draft !== null && JSON.stringify(draft) !== draftBaseline));
   const [draftCount, setDraftCount] = useState<number>(DEFAULT_SEQUENCE_DRAFT);
   // Each step's box, so a picture goes where the cursor is.
   const stepBoxes = useRef<(HTMLTextAreaElement | null)[]>([]);
   const [operationBusy, setBusy] = useState(false);
-  const busy = operationBusy || refreshing;
+  const busy = operationBusy || refreshing || aiBusy;
   const locked = busy || writeUnconfirmed;
   const [error, setError] = useState<string | null>(null);
 
@@ -1878,6 +1879,8 @@ function Flows({
           </div>
           <AiAssist<DraftedStep[]>
             title="Write the emails with AI"
+            validateResult={isAiSequenceDraft}
+            onBusyChange={setAiBusy}
             hint="For the moment chosen above, from what your store sells: its products' names, summaries, prices and links, and anything you add here. Only your store's own links are kept. The emails fill the sequence below for you to read and change; nothing is saved or sent until you save it."
             placeholder="Optional: what these emails should say, or the tone. For example: share my three favorite weeknight tricks before mentioning the meal planner."
             allowEmpty
