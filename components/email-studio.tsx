@@ -60,6 +60,8 @@ const MESSAGES: Record<string, string> = {
   send: "The email service did not take it just now. Nothing was sent; try again in a moment.",
   signed_out: "Your session ended. Log in again.",
   unavailable: "Email is not switched on yet, so nothing was sent.",
+  draft_conflict: "A newer version of this draft was saved. Your text is still here. Keep a copy of it, then reload saved drafts and open the latest version before saving again.",
+  draft_busy: "This draft is being changed. Your text is still here. Try saving again shortly.",
   audience: "The audience filters could not be saved. Review the recipient choices and try again.",
   full: "A store keeps 20 drafts at most. Send or delete one first.",
   list: "This store has no list yet, so there is nowhere to keep a draft.",
@@ -538,6 +540,7 @@ function Compose(props: {
   // Everybody, only people who have bought something, or only those who have not yet.
   const [who, setWho] = useState<Who>(props.draft?.who ?? props.preset?.who ?? "all");
   const [draftId, setDraftId] = useState(props.draft?.id ?? "");
+  const [draftSavedAt, setDraftSavedAt] = useState(props.draft?.savedAt ?? "");
   const [later, setLater] = useState(false);
   const [at, setAt] = useState("");
   const [scheduleNow, setScheduleNow] = useState(() => Date.now());
@@ -666,7 +669,7 @@ function Compose(props: {
     setBusy(true);
     setError(null);
     const audience = { who, notProductId: notProductId || null, narrow: minSpent || channel || quietDays ? narrow : null };
-    const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId, audience });
+    const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId, audience, expectedSavedAt: draftId ? draftSavedAt : undefined });
     setBusy(false);
     if (!a.ok) {
       if (a.error === "draft_write_unconfirmed") setUncertainDrafts(props.savedDrafts);
@@ -681,6 +684,7 @@ function Compose(props: {
     }
     setUncertainDrafts(null);
     setDraftId(savedId);
+    setDraftSavedAt((a.draft as { savedAt: string }).savedAt);
     setSavedContent(content);
     toast("Draft saved.");
     router.refresh();
