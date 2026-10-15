@@ -330,7 +330,7 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
 export function CustomRangeComparison({range,currency}:{range:RangeData;currency:string}) {
  const comparison=customRangeComparison(range);
  const dates=(from:string,to:string)=>from===to?day(from):day(from)+" to "+day(to);
- const value=(n:number|null,metric:typeof comparison.rows[number],signed=false)=>n===null?"Unavailable":(signed&&n>0?"+":"")+(metric.money?formatMoney(n,currency):metric.ratio?n.toLocaleString("en-US",{maximumSignificantDigits:4}):count(n));
+ const value=(n:number|null,metric:typeof comparison.rows[number],signed=false)=>n===null?"Unavailable":(signed&&n>0?"+":"")+(metric.money?(n!==0&&Math.abs(n)<1?formatRevenuePerTraffic(n,currency):formatMoney(n,currency)):metric.ratio?n.toLocaleString("en-US",{maximumSignificantDigits:4}):count(n));
 
  return <details className="mt-3">
   <summary className="cursor-pointer text-sm font-semibold text-ink">Compare with previous period</summary>
@@ -348,7 +348,7 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
     </tr>)}</tbody>
    </table>
   </div>
-  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Traffic availability is independent of paid coverage. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Money is rounded for display; count ratios use up to four significant digits, so small nonzero values remain visible. Nonzero percentage changes below 0.1% use up to four significant digits. The CSV keeps the calculated precision. The selected end day may still be in progress.</p>
+  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Traffic availability is independent of paid coverage. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Money is rounded for display; very small nonzero monetary values remain visible with up to four significant digits. Count ratios use up to four significant digits, so small nonzero values remain visible. Nonzero percentage changes below 0.1% use up to four significant digits. The CSV keeps the calculated precision. The selected end day may still be in progress.</p>
   <details className="mt-2 text-xs text-ink-soft">
    <summary className="cursor-pointer font-semibold">How metrics are calculated</summary>
    <dl className="mt-2 space-y-2">{comparison.rows.map(row=><div key={row.name}><dt className="font-semibold text-ink">{row.name}</dt><dd>{row.definition}</dd></div>)}</dl>
