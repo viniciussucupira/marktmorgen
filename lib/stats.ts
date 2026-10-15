@@ -994,6 +994,23 @@ const currencyOf = (row: { currency?: unknown }) => (typeof row.currency === "st
  * Amounts are what the buyer paid, after any discount code and before
  * Stripe's fee or any refund, each in the currency it was paid in.
  */
+/** A financial page completes only with explicit valid pagination and distinct records. */
+function financialPage(list: { data?: unknown; has_more?: unknown }, seen: Set<string>): Record<string, unknown>[] {
+  // Invalid pages and stalled cursors are failed readings, never confirmed zero.
+  if (!list || !Array.isArray(list.data) || typeof list.has_more !== "boolean") {
+    throw new Error("Invalid financial page");
+  }
+  const rows = list.data as Record<string, unknown>[];
+  for (const row of rows) {
+    if (!row || typeof row !== "object" || Array.isArray(row) || typeof row.id !== "string" || !row.id || seen.has(row.id)) {
+      throw new Error("Invalid or repeated financial record");
+    }
+    seen.add(row.id);
+  }
+  if (list.has_more && rows.length === 0) throw new Error("Paid-sales pagination has no next cursor");
+  return rows;
+}
+
 export async function readPaidSales(store: Store, since: number, pages: number): Promise<{ sales: Sale[]; partial: boolean }> {
   if (!readsSales(store)) return { sales: [], partial: false };
   const handles = saleHandles(store);
@@ -1019,18 +1036,7 @@ export async function readPaidSales(store: Store, since: number, pages: number):
         store.stripeAccountId as string,
         `${path}${since > 0 ? `&created[gte]=${since}` : ""}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
       )) as { data?: unknown; has_more?: unknown };
-      // Invalid pages and stalled cursors are failed readings, never confirmed zero.
-      if (!list || !Array.isArray(list.data) || typeof list.has_more !== "boolean") {
-        throw new Error("Invalid paid-sales page");
-      }
-      const rows = list.data as Record<string, unknown>[];
-      for (const row of rows) {
-        if (!row || typeof row !== "object" || Array.isArray(row) || typeof row.id !== "string" || !row.id || seen.has(row.id)) {
-          throw new Error("Invalid or repeated paid-sales record");
-        }
-        seen.add(row.id);
-      }
-      if (list.has_more && rows.length === 0) throw new Error("Paid-sales pagination has no next cursor");
+      const rows = financialPage(list, seen);
       rows.forEach(take);
       if (!list.has_more) return;
       after = rows[rows.length - 1].id as string;
@@ -1144,6 +1150,7 @@ export function renewalsFrom(
 async function readRenewals(store: Store, since: number, now: number, pages: number): Promise<SalesStats["renewals"]> {
   const invoices: Record<string, unknown>[] = [];
   let after = "";
+  const seen = new Set<string>();
   let partial = false;
   for (let page = 0; page < pages; page += 1) {
     const list = (await onAccount(
@@ -1151,9 +1158,9 @@ async function readRenewals(store: Store, since: number, now: number, pages: num
       store.stripeAccountId as string,
       `/invoices?limit=100&status=paid&created[gte]=${since}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
     )) as { data?: unknown; has_more?: unknown };
-    const rows = Array.isArray(list.data) ? (list.data as Record<string, unknown>[]) : [];
+    const rows = financialPage(list, seen);
     invoices.push(...rows);
-    if (list.has_more !== true || rows.length === 0) break;
+    if (!list.has_more) break;
     const last = rows[rows.length - 1];
     after = typeof last.id === "string" ? last.id : "";
     if (!after) break;
@@ -1169,6 +1176,7 @@ export type RefundRow = { created: number; cents: number; currency: string; paym
 async function readRefunds(store: Store, since: number, pages: number): Promise<{ rows: RefundRow[]; partial: boolean }> {
   const out: RefundRow[] = [];
   let after = "";
+  const seen = new Set<string>();
   let partial = false;
   for (let page = 0; page < pages; page += 1) {
     const list = (await onAccount(
@@ -1176,7 +1184,7 @@ async function readRefunds(store: Store, since: number, pages: number): Promise<
       store.stripeAccountId as string,
       `/refunds?limit=100&created[gte]=${since}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
     )) as { data?: unknown; has_more?: unknown };
-    const rows = Array.isArray(list.data) ? (list.data as Record<string, unknown>[]) : [];
+    const rows = financialPage(list, seen);
     for (const row of rows) {
       if (row.status !== "succeeded" && row.status !== "pending") continue;
       out.push({
@@ -1186,7 +1194,7 @@ async function readRefunds(store: Store, since: number, pages: number): Promise<
         paymentIntent: typeof row.payment_intent === "string" ? row.payment_intent : "",
       });
     }
-    if (list.has_more !== true || rows.length === 0) break;
+    if (!list.has_more) break;
     const last = rows[rows.length - 1];
     after = typeof last.id === "string" ? last.id : "";
     if (!after) { partial = true; break; }
