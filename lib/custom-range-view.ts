@@ -60,3 +60,17 @@ export function customRangeView<T extends RangeData>(data:T,query:string,sort:Cu
  }
  return {...data,channels,products};
 }
+
+/** Totals of these loaded rows only; source list caps and overlapping lists are not combined. */
+export function customRangeSelectionTotals(data:RangeData) {
+ const known=paidFiguresComplete(data);
+ const summary=(rows:{sales:number;cents:number}[],traffic:number)=>({
+  rows:rows.length,traffic,
+  paidRecords:known?rows.reduce((total,row)=>total+row.sales,0):null,
+  cents:known?rows.reduce((total,row)=>total+row.cents,0):null,
+ });
+ return {
+  channels:summary(data.channels,data.channels.reduce((total,row)=>total+row.visits,0)),
+  products:summary(data.products,data.products.reduce((total,row)=>total+row.views,0)),
+ };
+}

@@ -4,7 +4,7 @@ import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyR
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
-import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, customRangeMinimumTraffic, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
+import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, customRangeMinimumTraffic, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
 import { CUSTOM_RANGE_METRICS, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
 import { customRangeComparison } from "@/lib/custom-range-comparison";
@@ -203,6 +203,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
         <p className="mt-1 text-xs text-ink-soft">Search applies to the loaded lists. Period totals and daily results stay the same.{r.channelsTruncated || r.productsTruncated ? " Open all results above to search or filter every recorded row." : ""}</p>
         {query.trim() || actualFilter!=="all" || actualMinimum>0 ? <p className="mt-1 text-xs text-ink-soft" role="status">{view.channels.length} of {r.channels.length} loaded channels and {view.products.length} of {r.products.length} loaded products match.</p> : null}
       </div> : null}
+      {hasListSelection?<CustomRangeSelectionSummary range={view} currency={currency} />:null}
       {hasListSelection?<button type="button" className="btn btn-secondary mt-3" onClick={()=>{setQuery("");setSort("recorded");setFilter("all");setMinimumTraffic("0");}}>Reset list view</button>:null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
@@ -330,4 +331,27 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
   </div>
   <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Visitors are summed daily counts. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. The selected end day may still be in progress.</p>
  </details>;
+}
+
+/** Describe the loaded search/filter selection without presenting it as a whole-period total. */
+export function CustomRangeSelectionSummary({range,currency}:{range:RangeData;currency:string}) {
+ const totals=customRangeSelectionTotals(range);
+ const rows=[{name:"Channels (visits)",...totals.channels},{name:"Products (page views)",...totals.products}];
+ return <div className="mt-3 rounded-[12px] bg-white px-3 py-3 ring-1 ring-line" role="region" aria-label="Selection totals">
+  <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Matching loaded row totals">
+   <table className="w-full text-left text-sm">
+    <caption className="mb-1 text-left text-sm font-semibold text-ink">Matching loaded rows</caption>
+    <thead><tr><th scope="col" className="py-1">List</th><th scope="col" className="py-1 pl-3 text-right">Rows</th><th scope="col" className="py-1 pl-3 text-right">Traffic</th><th scope="col" className="py-1 pl-3 text-right">Paid records</th><th scope="col" className="py-1 pl-3 text-right">Gross revenue</th></tr></thead>
+    <tbody>{rows.map(row=><tr key={row.name} className="border-b border-line/60">
+     <th scope="row" className="py-1.5 font-medium">{row.name}</th>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{count(row.rows)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{count(row.traffic)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{row.paidRecords===null?"Unavailable":count(row.paidRecords)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{row.cents===null?"Unavailable":formatMoney(row.cents,currency)}</td>
+    </tr>)}</tbody>
+   </table>
+  </div>
+  <p className="mt-2 text-xs text-ink-soft">Totals cover matching loaded rows, not the whole period. Channels and products overlap; do not add them together.{range.channelsTruncated||range.productsTruncated?" Some loaded lists are limited.":""}</p>
+  <p className="mt-1 text-xs text-ink-soft">Channel purchases exclude one-click extras; product purchases include them. Both exclude renewals. Gross revenue is before refunds, fees and ad spend.</p>
+ </div>;
 }
