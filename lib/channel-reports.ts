@@ -131,3 +131,13 @@ export function customRangeProductsReport(data: Omit<RangeData,"products"> & {pr
     ...data.products.map((r): Cell[] => [data.from,data.to,data.currency.toUpperCase(),r.id,r.title??r.id,r.views,r.checkouts,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),data.products.length,data.productsTotal??null,listCoverage(data.productsTruncated),known?"Revenue":"Page views",note]),
   ]);
 }
+
+/** Every daily row returned for the selected dates, independently of channel/product list caps. */
+export function customRangeDailyReport(data: RangeData): string {
+  const known = paidFiguresComplete(data);
+  const note = "Recorded UTC daily activity for selected dates. Visitors are measured per day, not unique buyers or a lifetime audience. Paid records and gross revenue include purchases and one-click extras, exclude renewals, and are before refunds, fees, ads and other costs; not profit or causal marketing lift. Blank paid values mean incomplete or unavailable readings, not zero. All returned daily rows are included, independently of channel and product list limits.";
+  return csv([
+    ["From (UTC)","To (UTC)","Day (UTC)","Currency","Visitors","Page views","Checkouts","Paid records","Gross revenue","Paid coverage","Definition"],
+    ...data.days.map((r): Cell[] => [data.from,data.to,r.date,data.currency.toUpperCase(),r.visitors,r.views,r.checkouts,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),note]),
+  ]);
+}

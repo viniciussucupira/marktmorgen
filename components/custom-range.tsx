@@ -1,6 +1,6 @@
 "use client";
 
-import { customRangeChannelsReport, customRangeProductsReport } from "@/lib/channel-reports";
+import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyReport } from "@/lib/channel-reports";
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
@@ -129,6 +129,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
           </div>
         ))}
       </dl>
+      {r.days.length ? <ReportDownload csv={customRangeDailyReport(r)} filename={"marktmorgen-custom-daily-"+r.from+"-to-"+r.to+".csv"}>Download daily results</ReportDownload> : null}
       {r.sales === "error" ? <p className="mt-2 text-sm text-ink-soft">Stripe did not answer, so sales are not shown. Try again in a moment.</p> : null}
       {r.partial ? <p className="mt-2 text-sm text-ink-soft">The purchase reading is incomplete. Sales and revenue are unavailable; traffic and checkouts remain visible.</p> : null}
       <div className={`mt-4 flex h-24 items-end ${r.days.length > 60 ? "gap-0" : "gap-[2px]"}`} role="img" aria-label="Visitors each day">
