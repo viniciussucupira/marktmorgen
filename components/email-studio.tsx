@@ -258,6 +258,9 @@ export function EmailStudio(props: {
   const ready = props.mail !== null;
   // The draft open in the composer; a new key starts the composer afresh.
   const [open, setOpen] = useState<DraftRow | null>(null);
+  const [uncertainList, setUncertainList] = useState<FlowRow[] | null>(null);
+  const writeUnconfirmed = uncertainList === props.flows;
+  const onWriteUnconfirmed = () => setUncertainList(props.flows);
   return (
     <MailAccent.Provider value={props.accent ?? "#4c1d95"}>
     <div className="mt-8 grid items-start gap-x-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
@@ -280,10 +283,10 @@ export function EmailStudio(props: {
               />
             </AiOn>
             <Drafts drafts={props.drafts} products={props.products} open={open} onOpen={setOpen} />
-            <History broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
+            <History writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
-                <Flows flows={props.flows} readFailed={props.flowsReadFailed ?? false} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} />
+                <Flows writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flows={props.flows} readFailed={props.flowsReadFailed ?? false} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} />
               </AiOn>
             ) : null}
           </>
@@ -1075,12 +1078,18 @@ function waitWords(hours: number): string {
 
 function History({
   broadcasts,
+  writeUnconfirmed,
+  onWriteUnconfirmed,
+  flowsReadFailed,
   products,
   canSend,
   onOpen,
   currency,
 }: {
   broadcasts: BroadcastRow[];
+  writeUnconfirmed: boolean;
+  onWriteUnconfirmed: () => void;
+  flowsReadFailed: boolean;
   products: { id: string; title: string }[];
   canSend: boolean;
   /** Puts a sent email back in the composer, as a new one. */
@@ -1088,12 +1097,17 @@ function History({
   currency: string;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [operationBusy, setBusy] = useState(false);
+  const [refreshing, startRefresh] = useTransition();
+  const refreshHistory = () => startRefresh(() => router.refresh());
+  const busy = operationBusy || refreshing;
+  const keepBlocked = busy || writeUnconfirmed || flowsReadFailed;
   const [error, setError] = useState<string | null>(null);
   if (!broadcasts.length) return null;
 
   /** A sent email's subject and text, back in the composer to change and send. */
   async function again(b: BroadcastRow) {
+    if (busy) return;
     setBusy(true);
     setError(null);
     const a = await call({ action: "copy", id: b.id });
@@ -1108,13 +1122,17 @@ function History({
 
   /** The email joins a sequence, and goes by itself to everybody who arrives from now on. */
   async function keep(b: BroadcastRow) {
+    if (keepBlocked) return;
     setBusy(true);
     setError(null);
     const a = await call({ action: "keep", id: b.id });
     setBusy(false);
-    if (!a.ok) return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
+    if (!a.ok) {
+      if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
+      return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
+    }
     toast(`Done. ${keptWords(b, products)} from now on gets this email ${waitWords(Number(a.waitHours))} later. It is under Sequences, switched on.`);
-    router.refresh();
+    refreshHistory();
   }
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
@@ -1124,6 +1142,7 @@ function History({
         Nothing in an email reports back, so there is no open rate here, and nothing is kept about who visited. (In sequences,
         readers who allowed it are counted as having used a link or not, only to choose their next email.)
       </p>
+      {writeUnconfirmed || flowsReadFailed ? <div className="notice notice-warn mt-4"><p role="status">Reload and check the saved sequences before keeping another email sending. An unconfirmed change may already have happened.</p><button type="button" className="btn btn-secondary mt-3" disabled={busy} onClick={() => { setError(null); refreshHistory(); }}>Reload saved sequences from history</button></div> : null}
       <ul className="mt-4 divide-y divide-line">
         {broadcasts.map((b) => (
           <li key={b.id} className="py-3">
@@ -1168,7 +1187,7 @@ function History({
                   const a = await call({ action: "cancel", id: b.id });
                   setBusy(false);
                   if (a.ok) toast("Scheduled email canceled.");
-                  router.refresh();
+                  refreshHistory();
                 }}
               >
                 Cancel it
@@ -1189,7 +1208,7 @@ function History({
                 {canSend && keepable(b) ? (
                   <button
                     type="button"
-                    aria-busy={busy} disabled={busy}
+                    aria-busy={busy} disabled={keepBlocked}
                     className="inline-flex min-h-11 items-center text-left text-sm font-bold text-ink underline underline-offset-4"
                     onClick={() => keep(b)}
                   >
@@ -1399,6 +1418,8 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
 
 function Flows({
   flows,
+  writeUnconfirmed,
+  onWriteUnconfirmed,
   readFailed = false,
   products,
   currency,
@@ -1408,6 +1429,8 @@ function Flows({
   automation = { forms: [], fields: [], stages: [] },
 }: {
   flows: FlowRow[];
+  writeUnconfirmed: boolean;
+  onWriteUnconfirmed: () => void;
   readFailed?: boolean;
   products: { id: string; title: string }[];
   currency: string;
@@ -1430,8 +1453,6 @@ function Flows({
   const stepBoxes = useRef<(HTMLTextAreaElement | null)[]>([]);
   const [operationBusy, setBusy] = useState(false);
   const busy = operationBusy || refreshing;
-  const [uncertainList, setUncertainList] = useState<FlowRow[] | null>(null);
-  const writeUnconfirmed = uncertainList === flows;
   const locked = busy || writeUnconfirmed;
   const [error, setError] = useState<string | null>(null);
 
@@ -1497,7 +1518,7 @@ function Flows({
     });
     setBusy(false);
     if (!a.ok) {
-      if (a.error === "flow_write_unconfirmed") setUncertainList(flows);
+      if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
       setError(message(a));
       return;
     }
@@ -1571,7 +1592,7 @@ function Flows({
               const a = await call({ action: "starters" });
               setBusy(false);
               if (!a.ok) {
-                if (a.error === "flow_write_unconfirmed") setUncertainList(flows);
+                if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
                 return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
               }
               const made = Array.isArray(a.made) ? a.made.length : 0;
@@ -1642,7 +1663,7 @@ function Flows({
                     const a = await call({ action: "flow-remove", id: f.id });
                     setBusy(false);
                     if (!a.ok) {
-                      if (a.error === "flow_write_unconfirmed") setUncertainList(flows);
+                      if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
                       setError("Removal of “" + f.name + "” could not be confirmed. Reload to check its current status. " + message(a));
                       return;
                     }
