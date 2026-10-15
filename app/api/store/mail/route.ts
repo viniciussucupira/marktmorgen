@@ -190,8 +190,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "draft-remove") {
-      const done = await removeDraft(store, text(body.id, 40), body.expectedSavedAt);
-      return done ? Response.json({ ok: true }) : fail("unknown", 404);
+      const id = text(body.id, 40);
+      const done = await removeDraft(store, id, body.expectedSavedAt);
+      return done ? Response.json({ ok: true, removed: { id, savedAt: typeof body.expectedSavedAt === "string" ? body.expectedSavedAt : null } }) : fail("unknown", 404);
     }
 
     if (action === "broadcast") {
