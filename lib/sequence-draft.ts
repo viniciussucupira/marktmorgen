@@ -86,3 +86,16 @@ export function readDraftedSteps(raw: unknown, count: number, links: readonly st
   }
   return out;
 }
+
+type ExistingSequenceStep = { kind: string; subject: string; body: string };
+/** Only wholly blank email placeholders are replaced by generated emails. */
+export function keptSequenceSteps<T extends ExistingSequenceStep>(steps: readonly T[]): T[] {
+  return steps.filter(step => step.kind !== "email" || step.subject.trim() !== "" || step.body.trim() !== "");
+}
+export function sequenceDraftSlots(steps: readonly ExistingSequenceStep[]): number {
+  return Math.max(0, 10 - keptSequenceSteps(steps).length);
+}
+/** Preserve every existing and generated step; capacity is checked explicitly. */
+export function appendSequenceDraft<T extends ExistingSequenceStep>(steps: readonly T[], generated: readonly T[]): T[] {
+  return [...keptSequenceSteps(steps), ...generated];
+}
