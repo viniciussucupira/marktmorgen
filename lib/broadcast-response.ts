@@ -1,3 +1,4 @@
+import { MIN_TEST_REACH, newTest } from "@/lib/mail-test";
 import type { MailAnswer } from "@/lib/mail-response";
 import { readNarrow } from "@/lib/segments-rules";
 const REFUSALS = new Set(["subject", "body", "when", "product", "empty", "allowance", "setup", "plan", "test_subject", "test_small", "test_links", "placeholder", "role", "locked", "store_gone", "none", "signed_out", "origin", "bad_request"]);
@@ -23,5 +24,16 @@ export function broadcastAnswer(responseOk: boolean, raw: unknown, input: Record
     const actual = b.narrow as Record<string, unknown>;
     if (actual.minSpent !== narrow.minSpent || actual.channel !== narrow.channel || actual.quietDays !== narrow.quietDays) return unknown;
   } else if (b.narrow !== null) return unknown;
+  const expectedTest = newTest(input.test, subject, 150);
+  if (expectedTest === "subject") return unknown;
+  if (expectedTest === "none") {
+    if (b.test !== null) return unknown;
+  } else {
+    if ((b.total as number) < MIN_TEST_REACH) return unknown;
+    if (!b.test || typeof b.test !== "object" || Array.isArray(b.test)) return unknown;
+    const actualTest = b.test as Record<string, unknown>;
+    // Creation returns the initial test, before any allocation or winner exists.
+    if (Object.entries(expectedTest).some(([key, value]) => actualTest[key] !== value)) return unknown;
+  }
   return answer;
 }
