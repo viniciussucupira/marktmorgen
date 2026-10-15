@@ -203,6 +203,8 @@ export type DraftRow = {
   savedAt: string;
   /** Set when a sent email is written again, so it starts addressed to the same people. */
   who?: Who;
+  notProductId?: string | null;
+  narrow?: Narrow | null;
 };
 type Who = "all" | "buyers" | "leads";
 
@@ -531,7 +533,7 @@ function Compose(props: {
   // The email's box, so a picture goes where the cursor is.
   const bodyBox = useRef<HTMLTextAreaElement>(null);
   const [productId, setProductId] = useState(props.draft?.productId ?? "");
-  const [notProductId, setNotProductId] = useState("");
+  const [notProductId, setNotProductId] = useState(props.draft?.notProductId ?? "");
   // Everybody, only people who have bought something, or only those who have not yet.
   const [who, setWho] = useState<Who>(props.draft?.who ?? props.preset?.who ?? "all");
   const [draftId, setDraftId] = useState(props.draft?.id ?? "");
@@ -557,10 +559,10 @@ function Compose(props: {
   const [reachResult, setReachResult] = useState<{ key: string; count: number | null } | null>(null);
   // Spent at least, first found the store through, has not bought in these
   // days (lib/segments.ts), and the groups saved under a name.
-  const [spentText, setSpentText] = useState("");
-  const [channel, setChannel] = useState("");
-  const [quietDays, setQuietDays] = useState(0);
-  const [more, setMore] = useState(false);
+  const [spentText, setSpentText] = useState(props.draft?.narrow?.minSpent ? plainAmount(props.draft.narrow.minSpent, props.currency) : "");
+  const [channel, setChannel] = useState(props.draft?.narrow?.channel ?? "");
+  const [quietDays, setQuietDays] = useState(props.draft?.narrow?.quietDays ?? 0);
+  const [more, setMore] = useState(Boolean(props.draft?.narrow && (props.draft.narrow.minSpent || props.draft.narrow.channel || props.draft.narrow.quietDays)));
   const [channels, setChannels] = useState<string[] | null>(null);
   const [partial, setPartial] = useState(false);
   const [segments, setSegments] = useState<Segment[]>(props.segments);
@@ -582,7 +584,7 @@ function Compose(props: {
   const [about, setAbout] = useState("");
   const [savedContent, setSavedContent] = useState(() => JSON.stringify([props.draft?.subject ?? "", props.draft?.body ?? "", props.draft?.productId ?? ""]));
   const content = JSON.stringify([subject, body, productId]);
-  const dirty = content !== savedContent || who !== (props.draft?.who ?? props.preset?.who ?? "all") || notProductId !== "" || later || at !== "" || testing || subjectB !== "" || spentText !== "" || channel !== "" || quietDays !== 0;
+  const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || who !== (props.draft?.who ?? props.preset?.who ?? "all") || notProductId !== "" || later || at !== "" || testing || subjectB !== "" || spentText !== "" || channel !== "" || quietDays !== 0;
   useLeaveGuard(dirty || aiBusy);
   useImperativeHandle(props.composerState, () => ({ dirty, busy: locked }), [dirty, locked]);
 
@@ -911,12 +913,12 @@ function Compose(props: {
               <span className="field-label">First found you through</span>
               <select className="field mt-2" value={channel} onChange={(e) => setChannel(e.target.value)}>
                 <option value="">Anywhere</option>
-                {(channels ?? (channel ? [channel] : [])).map((c) => (
+                {[...new Set([...(channels ?? []), ...(channel ? [channel] : [])])].map((c) => (
                   <option key={c} value={c}>{channelName(c)}</option>
                 ))}
               </select>
               <span className="field-hint mt-1 block">
-                {channels === null ? "Reading where your buyers came from…" : channels.length ? "Where they were when they first bought." : "Nobody has bought yet, so there is no channel to choose."}
+                {channels === null ? "Reading where your buyers came from…" : channel && !channels.includes(channel) ? "The original channel is kept even though it is not in the current list. Keep it or choose another." : channels.length ? "Where they were when they first bought." : "Nobody has bought yet, so there is no channel to choose."}
               </span>
             </label>
             <label className="block">
@@ -1276,7 +1278,7 @@ function History({
     if (!copy) return setError(a.ok ? "The email copy could not be confirmed. Your current draft is unchanged. Try copying again when you are ready." : message(a));
     // No id: it is a new email, not the draft of an old one. The time makes
     // the composer start afresh even when the same email is opened twice.
-    onOpen({ id: "", subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who, by: "", savedAt: String(Date.now()) });
+    onOpen({ id: "", subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who, notProductId: copy.notProductId, narrow: copy.narrow, by: "", savedAt: String(Date.now()) });
     document.getElementById("compose-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
