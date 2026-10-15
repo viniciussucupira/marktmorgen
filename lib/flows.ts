@@ -159,9 +159,21 @@ export async function readFlows(listId: string | null): Promise<Flow[]> {
   }
 }
 
+export class FlowWriteUnconfirmed extends Error {
+  constructor() {
+    super("Sequence write could not be confirmed");
+    this.name = "FlowWriteUnconfirmed";
+  }
+}
+
 async function writeFlows(listId: string, flows: Flow[]): Promise<void> {
-  const replies = await redisPipeline([["SET", flowsKey(listId), JSON.stringify(flows)]]);
-  if (!Array.isArray(replies) || replies.length !== 1 || replies[0] !== "OK") throw new Error("Sequence write could not be confirmed");
+  let replies: unknown;
+  try {
+    replies = await redisPipeline([["SET", flowsKey(listId), JSON.stringify(flows)]]);
+  } catch {
+    throw new FlowWriteUnconfirmed();
+  }
+  if (!Array.isArray(replies) || replies.length !== 1 || replies[0] !== "OK") throw new FlowWriteUnconfirmed();
 }
 
 const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw === "bought" ? raw : undefined);
