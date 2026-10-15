@@ -325,14 +325,14 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
     <thead><tr><th scope="col" className="py-1">Metric</th><th scope="col" className="py-1 pl-3 text-right">Selected days</th><th scope="col" className="py-1 pl-3 text-right">Previous days</th><th scope="col" className="py-1 pl-3 text-right">Difference</th><th scope="col" className="py-1 pl-3 text-right">Change</th></tr></thead>
     <tbody>{comparison.rows.map(row=><tr key={row.name} className="border-b border-line/60">
      <th scope="row" className="py-1.5 pr-3 font-medium">{row.name}</th>
-     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.current,row.name==="Gross revenue")}</td>
-     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.previous,row.name==="Gross revenue")}</td>
-     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.difference,row.name==="Gross revenue",true)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.current,row.money)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.previous,row.money)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.difference,row.money,true)}</td>
      <td className="py-1.5 pl-3 text-right tabular-nums">{percent(row.change)}</td>
     </tr>)}</tbody>
    </table>
   </div>
-  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Visitors are summed daily counts. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. The selected end day may still be in progress.</p>
+  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Visitors are summed daily counts. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Revenue per paid record divides gross revenue by the paid records in each period, not by buyers; no paid records means unavailable. Money is rounded for display; the CSV keeps the calculated precision. The selected end day may still be in progress.</p>
  </details>;
 }
 
