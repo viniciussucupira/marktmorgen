@@ -269,6 +269,7 @@ export function EmailStudio(props: {
 }) {
   const ready = props.mail !== null;
   const [broadcastUnconfirmed, setBroadcastUnconfirmed] = useState(false);
+  const [draftCleanupUnconfirmed, setDraftCleanupUnconfirmed] = useState(false);
   // The draft open in the composer; a new key starts the composer afresh.
   const [open, setOpen] = useState<DraftRow | null>(null);
   const [composeRevision, setComposeRevision] = useState(0);
@@ -292,6 +293,7 @@ export function EmailStudio(props: {
       <div className="min-w-0">
         {ready ? (
           <>
+            {draftCleanupUnconfirmed ? <p role="status" className="mb-4 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink-soft">Your campaign was created, but clearing its saved draft could not be confirmed. Check Sent and scheduled before sending that draft again.</p> : null}
             <AiOn value={props.ai ?? { on: false, left: 0 }}>
               <Compose
                 key={`${composeRevision}-${open ? `${open.id}-${open.savedAt}` : "new"}`}
@@ -302,6 +304,7 @@ export function EmailStudio(props: {
                 canSend={props.canSend}
                 broadcastUnconfirmed={broadcastUnconfirmed}
                 onBroadcastUnconfirmed={() => setBroadcastUnconfirmed(true)}
+                onDraftCleanupUnconfirmed={() => setDraftCleanupUnconfirmed(true)}
                 draft={open}
                 onDone={() => { setOpen(null); setComposeRevision((value) => value + 1); }}
                 onStartNew={() => openDraft(null)}
@@ -497,6 +500,7 @@ function ListCard({
 function Compose(props: {
   broadcastUnconfirmed: boolean;
   onBroadcastUnconfirmed: () => void;
+  onDraftCleanupUnconfirmed: () => void;
   email: string;
   products: { id: string; title: string }[];
   links: Record<string, string>;
@@ -644,6 +648,7 @@ function Compose(props: {
       setError(message(a));
       return false;
     }
+    if (payload.action === "broadcast" && a.draftCleanupConfirmed === false) props.onDraftCleanupUnconfirmed();
     toast(success);
     return true;
   }
