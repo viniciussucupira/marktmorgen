@@ -1,4 +1,4 @@
-import { customRangeChannelsReport, customRangeProductsReport } from "@/lib/channel-reports";
+import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyReport } from "@/lib/channel-reports";
 import { CustomRangeResults } from "@/components/custom-range";
 import { parseCsv } from "@/lib/csv";
 import type { RangeData } from "@/lib/stats";
@@ -29,4 +29,19 @@ is("confirmed zero remains numeric zero",record(customRangeChannelsReport({...da
 is("unsafe product title is formula protected",record(customRangeProductsReport({...data,products:[{...data.products[0],title:"=HYPERLINK(1)"}]})).Product,"'=HYPERLINK(1)");
 const html=renderToStaticMarkup(createElement(CustomRangeResults,{range:{...data,partial:true},marks:[],currency:"usd"}));
 is("both downloads available with partial paid data",html.includes("Download displayed channels")&&html.includes("Download displayed products"),true);
+part("Daily export includes quiet dates independently of table limits");
+const dailyData={...data,days:[{date:data.from,visitors:5,views:8,checkouts:3,sales:2,cents:12345},{date:data.to,visitors:0,views:0,checkouts:0,sales:0,cents:0}]};
+const daily=parseCsv(customRangeDailyReport(dailyData));
+const dailyRow=record(customRangeDailyReport(dailyData));
+is("all daily rows exported in order",daily.rows.map(r=>r[2]),[data.from,data.to]);
+is("selected bounds and currency accompany each day",daily.rows.map(r=>r.slice(0,2).concat(r[3])),[[data.from,data.to,"USD"],[data.from,data.to,"USD"]]);
+is("daily figures preserve units",[dailyRow.Visitors,dailyRow["Page views"],dailyRow.Checkouts,dailyRow["Paid records"],dailyRow["Gross revenue"]],["5","8","3","2","123.45"]);
+is("quiet confirmed day stays zero",daily.rows[1].slice(4,9),["0","0","0","0","0"]);
+for(const snapshot of [{...dailyData,partial:true},{...dailyData,sales:"error" as const},{...dailyData,sales:"none" as const}]){const rows=parseCsv(customRangeDailyReport(snapshot)).rows;is("daily unknown paid values stay blank",rows.map(r=>r.slice(7,9)),[["",""],["",""]]);is("daily traffic survives unavailable money",rows[0].slice(4,7),["5","8","3"]);}
+is("daily yen keeps correct monetary unit",record(customRangeDailyReport({...dailyData,currency:"jpy"}))["Gross revenue"],"12345");
+is("daily definition explains extras and exclusions",dailyRow.Definition.includes("include purchases and one-click extras, exclude renewals"),true);
+is("table caps do not reduce daily export",parseCsv(customRangeDailyReport({...dailyData,channelsTotal:100,channelsTruncated:true,productsTotal:100,productsTruncated:true})).rows.length,2);
+const dailyHtml=renderToStaticMarkup(createElement(CustomRangeResults,{range:{...dailyData,partial:true},marks:[],currency:"usd"}));
+is("daily download remains available for traffic on partial reading",dailyHtml.includes("Download daily results"),true);
+is("no daily download when no daily rows were read",html.includes("Download daily results"),false);
 done();
