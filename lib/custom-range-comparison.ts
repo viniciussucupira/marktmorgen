@@ -10,7 +10,13 @@ function eventsPer100Visitors(records:number|null|undefined,visitors:number|null
  return typeof records==="number"&&Number.isSafeInteger(records)&&records>=0&&typeof visitors==="number"&&Number.isSafeInteger(visitors)&&visitors>0?records/visitors*100:null;
 }
 
+/** Aggregate page views divided by the period visitor estimate, not per session. */
+function viewsPerVisitor(views:number|null|undefined,visitors:number|null|undefined):number|null {
+ return typeof views==="number"&&Number.isSafeInteger(views)&&views>=0&&typeof visitors==="number"&&Number.isSafeInteger(visitors)&&visitors>0?views/visitors:null;
+}
+
 const METRIC_DEFINITIONS = {
+  "Page views per visitor": "Page views per visitor divides recorded page views by the visitor estimate across each period, not the sum of daily visitors. Repeated views count; this is an aggregate browsing ratio, not pages per session or per unique person. No visitors or missing traffic history means unavailable. It is independent of payment coverage. Its difference is in views per visitor; its change is relative percentage growth. Display uses up to four significant digits; the CSV keeps calculated precision.",
   "Visitors": "Visitor totals are estimates across each period, not sums of daily counts or unique buyers.",
   "Page views": "Recorded page views during each period. Repeated views may count more than once.",
   "Checkouts": "Recorded checkout starts during each period. These are events, not completed payments or distinct buyers.",
@@ -41,6 +47,7 @@ export function customRangeComparison(data:RangeData) {
   {name:"Revenue per visitor",unit:data.currency.toUpperCase(),money:true,current:known?revenuePerCount(data.totals.cents,data.totals.visitors):null,previous:known?revenuePerCount(before?.cents,before?.visitors):null},
   {name:"Paid records per 100 visitors",unit:"Records per 100 visitors",money:false,ratio:true,current:known?eventsPer100Visitors(data.totals.sales,data.totals.visitors):null,previous:known?eventsPer100Visitors(before?.sales,before?.visitors):null},
   {name:"Checkouts per 100 visitors",unit:"Checkouts per 100 visitors",money:false,ratio:true,current:eventsPer100Visitors(data.totals.checkouts,data.totals.visitors),previous:eventsPer100Visitors(before?.checkouts,before?.visitors)},
+  {name:"Page views per visitor",unit:"Views per visitor",money:false,ratio:true,current:viewsPerVisitor(data.totals.views,data.totals.visitors),previous:viewsPerVisitor(before?.views,before?.visitors)},
  ];
  return {previousFrom,previousTo,rows:metrics.map(row=>({...row,definition:METRIC_DEFINITIONS[row.name],
   difference:row.current===null||row.previous===null?null:row.current-row.previous,

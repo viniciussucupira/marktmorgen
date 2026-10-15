@@ -22,7 +22,7 @@ const maximum={...data,totals:{...data.totals,visitors:Number.MAX_SAFE_INTEGER}}
 is("ratio at largest safe denominator remains nonzero",cells(maximum,paid)[0],"0.0000000000000111");
 is("checkout at largest safe denominator remains nonzero",cells(maximum,checkout)[0],"0.0000000000000222");
 part("Only analytical count ratios use significant-digit display");
-is("only the two visitor ratios are marked",customRangeComparison(data).rows.filter(row=>row.ratio).map(row=>row.name),[paid,checkout]);
+is("only analytical count ratios are marked",customRangeComparison(data).rows.filter(row=>row.ratio).map(row=>row.name),[paid,checkout,"Page views per visitor"]);
 is("integer visitor counts retain grouping",cells(data,"Visitors").slice(0,3),["10,000,000","20,000,000","-10,000,000"]);
 is("paid records retain exact counts",cells({...data,totals:{...data.totals,sales:123456}},"Paid records")[0],"123,456");
 is("gross money keeps currency formatting",cells(data,"Gross revenue")[0],"$1");

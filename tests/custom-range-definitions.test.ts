@@ -19,7 +19,7 @@ for(const metric of model.rows){
  is(metric.name+" appears in a definition term",html.includes(">"+metric.name+"</dt>"),true);
  is(metric.name+" has shared availability context",row.Definition.includes("Blank figures and changes mean unavailable or incomplete readings"),true);
 }
-is("definitions are distinct",new Set(model.rows.map(row=>row.definition)).size,9);
+is("definitions are distinct",new Set(model.rows.map(row=>row.definition)).size,10);
 is("native disclosure can be opened with the keyboard",html.includes("<summary class=")&&html.includes("How metrics are calculated</summary>"),true);
 is("explanations use a definition list",html.includes("<dl")&&html.includes("<dd>"),true);
 is("disclosure is collapsed by default",html.includes("<details open"),false);
@@ -29,7 +29,7 @@ is("paid ratio retains repeated-payment warning",csvRows.find(row=>row.Metric===
 is("money scope remains available on every exported row",csvRows.every(row=>row.Definition.includes("exclude renewals")&&row.Definition.includes("not profit")),true);
 is("visitor definition warns about estimates",model.rows.find(row=>row.name==="Visitors")!.definition.includes("not sums of daily counts or unique buyers"),true);
 part("Changing explanations does not change figures or availability");
-is("current values preserved",model.rows.map(row=>row.current),[20,50,5,2,1000,500,50,10,25]);
+is("current values preserved",model.rows.map(row=>row.current),[20,50,5,2,1000,500,50,10,25,2.5]);
 is("CSV schema preserved",parsed.header,["From (UTC)","To (UTC)","Previous from (UTC)","Previous to (UTC)","Currency","Metric","Unit","Current","Previous","Difference","Change (%)","Current available","Previous available","Paid coverage","Definition"]);
 const partial=customRangeComparison({...data,partial:true});
 is("partial paid values remain withheld",partial.rows.filter(row=>row.money||row.name.startsWith("Paid records")).every(row=>row.current===null),true);
