@@ -1,0 +1,12 @@
+import { isAiEmailCopy, readAiAnswer } from "@/lib/ai-response";
+import { done, is, part } from "./check";
+part("AI response confirmation");
+const value = { subject: "Subject", body: "Content" };
+is("confirmed response preserves result and zero allowance", readAiAnswer(true, { ok: true, value, left: 0 }), { ok: true, value, left: 0 });
+is("HTTP failure cannot claim success", readAiAnswer(false, { ok: true, value, left: 2 }).ok, false);
+for (const raw of [null, [], {}, { ok: "true", value, left: 2 }, { ok: true, value: null, left: 2 }, { ok: true, left: 2 }, { ok: true, value }, { ok: true, value, left: "2" }, { ok: true, value, left: -1 }, { ok: true, value, left: 1.5 }, { ok: true, value, left: Infinity }, { ok: true, value, left: Number.MAX_SAFE_INTEGER + 1 }]) is("invalid response stays unconfirmed " + JSON.stringify(raw), readAiAnswer(true, raw), { ok: false, error: "unconfirmed" });
+is("explicit refusal retains code", readAiAnswer(false, { ok: false, error: "used" }), { ok: false, error: "used" });
+part("AI email result");
+is("valid email accepted", isAiEmailCopy(value), true);
+for (const invalid of [null, [], {}, { subject: 3, body: "Text" }, { subject: "Subject" }, { subject: " ", body: "Text" }, { subject: "Subject", body: " " }]) is("invalid email never replaces current content", isAiEmailCopy(invalid), false);
+done();
