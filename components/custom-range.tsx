@@ -151,6 +151,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
   const listTotals=customRangeSelectionTotals(view);
   const [chartMetric, setChartMetric] = useState<CustomRangeMetric>("visitors");
   const [chartGrouping, setChartGrouping] = useState<CustomRangeGrouping>("day");
+  const [chartCumulative,setChartCumulative]=useState(false);
   const tiles = [
         { label: "Visitors", value: count(r.totals.visitors), note: r.before ? change(r.totals.visitors, r.before.visitors) : "" },
         { label: "Page views", value: count(r.totals.views), note: r.before ? change(r.totals.views, r.before.views) : "" },
@@ -190,7 +191,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
       {r.days.length ? <ReportDownload csv={()=>customRangeDailyReport(r)} filename={"marktmorgen-custom-daily-"+r.from+"-to-"+r.to+".csv"}>Download daily results</ReportDownload> : null}
       {r.sales === "error" ? <p className="mt-2 text-sm text-ink-soft">Stripe did not answer, so sales are not shown. Try again in a moment.</p> : null}
       {r.partial ? <p className="mt-2 text-sm text-ink-soft">The purchase reading is incomplete. Sales and revenue are unavailable; traffic and checkouts remain visible.</p> : null}
-      <CustomRangeChart range={r} currency={currency} metric={chartMetric} onMetricChange={setChartMetric} grouping={chartGrouping} onGroupingChange={setChartGrouping} />
+      <CustomRangeChart range={r} currency={currency} metric={chartMetric} onMetricChange={setChartMetric} grouping={chartGrouping} onGroupingChange={setChartGrouping} cumulative={chartCumulative} onCumulativeChange={setChartCumulative} />
       {marks.length ? (
         <ul className="mt-3 space-y-1 text-sm" aria-label="Marked on these days">
           {marks.map((m, i) => (
@@ -299,16 +300,16 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
 
 
 /** Every displayed group uses the current reading's coverage and exact recorded dates. */
-export function CustomRangeChart({range,currency,metric="visitors",grouping="day",onMetricChange,onGroupingChange}:{range:RangeData;currency:string;metric?:CustomRangeMetric;grouping?:CustomRangeGrouping;onMetricChange?:(metric:CustomRangeMetric)=>void;onGroupingChange?:(grouping:CustomRangeGrouping)=>void}) {
+export function CustomRangeChart({range,currency,metric="visitors",grouping="day",onMetricChange,onGroupingChange,cumulative=false,onCumulativeChange}:{range:RangeData;currency:string;metric?:CustomRangeMetric;grouping?:CustomRangeGrouping;onMetricChange?:(metric:CustomRangeMetric)=>void;onGroupingChange?:(grouping:CustomRangeGrouping)=>void;cumulative?:boolean;onCumulativeChange?:(value:boolean)=>void}) {
  const selected=effectiveCustomRangeMetric(range,metric);
  const unit=effectiveCustomRangeGrouping(grouping);
  const label=CUSTOM_RANGE_METRICS.find(item=>item.value===selected)!.label;
  const sold=paidFiguresComplete(range);
- const rows=customRangeChartRows(range,selected,unit);
+ const rows=customRangeChartRows(range,selected,unit,cumulative);
  const peak=Math.max(1,...rows.map(row=>row.value));
  const value=(n:number)=>selected==="cents"?formatMoney(n,currency):count(n);
- const dates=(row:typeof rows[number])=>row.from===row.to?day(row.from):day(row.from)+" to "+day(row.to);
- const chartLabel=label+(unit==="day"?" each day":unit==="week"?" by week":" by month");
+ const dates=(row:typeof rows[number])=>cumulative?"Through "+day(row.to):row.from===row.to?day(row.from):day(row.from)+" to "+day(row.to);
+ const chartLabel=(cumulative?"Cumulative recorded ":"")+label+(unit==="day"?" each day":unit==="week"?" by week":" by month");
  return <div className="mt-4">
   <label className="field-label" htmlFor="range-chart-metric">Daily chart</label>
   <select id="range-chart-metric" className="field mt-1" value={selected} onChange={event=>onMetricChange?.(event.target.value as CustomRangeMetric)}>
@@ -318,6 +319,8 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
   <select id="range-chart-grouping" className="field mt-1" value={unit} onChange={event=>onGroupingChange?.(event.target.value as CustomRangeGrouping)}>
    {CUSTOM_RANGE_GROUPINGS.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}
   </select>
+  <label className="mt-2 flex items-center gap-2 text-sm text-ink" htmlFor="range-chart-cumulative"><input id="range-chart-cumulative" type="checkbox" checked={cumulative} onChange={event=>onCumulativeChange?.(event.target.checked)} />Cumulative recorded total</label>
+  {cumulative?<p className="mt-1 text-xs text-ink-soft">Each value accumulates recorded days from the selected start through that group’s last date. Missing days are not invented. Cumulative visitors sum daily counts, not distinct people across the period. The summary below still uses daily values.</p>:null}
   <p className="mt-1 text-xs text-ink-soft">Daily totals in UTC.{unit!=="day"?" Weeks start on Monday. First and last groups may cover only part of a week or month. Visitors are summed daily counts, not distinct people across the group.":""}{selected==="cents"||selected==="sales"?" Purchases include one-click extras and exclude renewals. Revenue is before fees, refunds and ad spend.":""}</p>
   <CustomRangeChartSummary range={range} currency={currency} metric={metric} grouping={unit} />
   <div className={"mt-3 flex h-24 items-end "+(rows.length>60?"gap-0":"gap-[2px]")} role="img" aria-label={chartLabel}>
@@ -325,12 +328,12 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
     <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{height:Math.max(row.value?4:1,(row.value/peak)*100)+"%",opacity:row.value?1:0.25}} />
    </div>)}
   </div>
-  {rows.length?<ReportDownload csv={()=>customRangeChartReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-"+selected+"-"+unit+"-"+range.from+"-to-"+range.to+".csv"}>Download chart values</ReportDownload>:null}
+  {rows.length?<ReportDownload csv={()=>customRangeChartReport(range,metric,grouping,cumulative)} filename={"marktmorgen-custom-chart-"+selected+"-"+unit+(cumulative?"-cumulative":"")+"-"+range.from+"-to-"+range.to+".csv"}>Download chart values</ReportDownload>:null}
   {rows.length?<details className="mt-2">
    <summary className="cursor-pointer text-sm font-semibold text-ink">View chart values</summary>
    <div className="mt-2 max-h-64 overflow-auto" tabIndex={0} role="region" aria-label="Chart values">
     <table className="w-full text-left text-sm"><caption className="text-left text-xs text-ink-soft">{chartLabel} (UTC)</caption>
-     <thead><tr><th scope="col" className="py-1">Dates</th><th scope="col" className="py-1 text-right">{label}</th></tr></thead>
+     <thead><tr><th scope="col" className="py-1">{cumulative?"Through (UTC)":"Dates"}</th><th scope="col" className="py-1 text-right">{label}</th></tr></thead>
      <tbody>{rows.map(row=><tr key={row.from}><th scope="row" className="py-1 font-normal">{dates(row)}</th><td className="py-1 text-right tabular-nums">{value(row.value)}</td></tr>)}</tbody>
     </table>
    </div>
