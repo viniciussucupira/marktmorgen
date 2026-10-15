@@ -7,7 +7,11 @@ const now=Date.UTC(2026,9,14,12);let capped=true;let failed=false;let page=0;
 let amount=900000;
 globalThis.fetch=(async(input:string|URL|Request)=>{const url=new URL(String(input));let body:unknown={data:[],has_more:false};if(url.pathname==="/v1/checkout/sessions"){if(failed)return new Response(JSON.stringify({error:{message:"test reading failed"}}),{status:400});page+=1;body={data:[{id:"cs_rank_"+page,created:now/1000-3600,status:"complete",payment_status:"paid",amount_total:amount,currency:"usd",metadata:{store:"ranking",product:"paidonly0001",channel:"paidonly"}}],has_more:capped};}return new Response(JSON.stringify(body),{status:200});}) as typeof fetch;
 async function main(){await claimHandle("ranking@example.com","ranking","Ranking Store","");await ensureStatsId("ranking@example.com");await setStripeAccount("ranking@example.com","acct_1RankingTest",true);const store=(await storeForEmail("ranking@example.com"))!;
- for(let i=0;i<16;i++)for(let j=0;j<=i;j++)await recordHit(store,{kind:"view",id:"prod0000"+String(i).padStart(2,"0"),source:"rank"+String(i).padStart(2,"0"),ip:"192.0.2."+(j+1),userAgent:"Mozilla/5.0"},now);
+ for(let i=0;i<16;i++)for(let j=0;j<=i;j++){
+  const hit={id:"prod0000"+String(i).padStart(2,"0"),source:"rank"+String(i).padStart(2,"0"),ip:"192.0.2."+(j+1),userAgent:"Mozilla/5.0"};
+  await recordHit(store,{...hit,kind:"view"},now);
+  await recordHit(store,{...hit,kind:"product"},now);
+ }
  const read=async()=>{page=0;return (await readRange(store,"2026-10-13","2026-10-14",now))!;};
  const channels=Array.from({length:15},(_,i)=>"rank"+String(15-i).padStart(2,"0"));
  const products=Array.from({length:15},(_,i)=>"prod0000"+String(15-i).padStart(2,"0"));
