@@ -1,6 +1,6 @@
 import { customRangeComparison } from "@/lib/custom-range-comparison";
 import { CUSTOM_RANGE_METRICS, CUSTOM_RANGE_GROUPINGS, customRangeChartRows, effectiveCustomRangeMetric, effectiveCustomRangeGrouping, type CustomRangeMetric, type CustomRangeGrouping } from "@/lib/custom-range-chart";
-import { customRangeOrderLabel, customRangeFilterLabel, customRangeMinimumTraffic, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
+import { customRangeOrderLabel, customRangeFilterLabel, customRangeMinimumTraffic, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import type { RangeData } from "@/lib/stats";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import type { PaymentComparison } from "@/lib/payment-comparison";
@@ -17,6 +17,7 @@ import { channelName } from "@/lib/channel-names";
 import { toMajor } from "@/lib/money";
 
 type Cell = string | number | null;
+export type CustomRangeReportSelection = {query?:string;sort?:CustomRangeSort;filter?:CustomRangeFilter;minimumTraffic?:number};
 export type ReportPeriod = { from: string; to: string; currency: string };
 /** Text is formula-safe; finite numbers remain numbers, including negative results. */
 const line = (cells: Cell[]) => cells.map((value) => typeof value === "number"
@@ -118,7 +119,7 @@ export function paymentComparisonReport(report:PaymentComparison,currency:string
 const rangeCoverage = (data: RangeData) => data.sales !== "ok" ? "Unavailable" : data.partial ? "Incomplete" : "Complete";
 const listCoverage = (limited: boolean | undefined) => limited === undefined ? "Unknown" : limited ? "Yes" : "No";
 /** Exports the displayed rows, including explicit list and financial coverage. */
-export function customRangeChannelsReport(data: RangeData, selection: { query?: string; sort?: CustomRangeSort; filter?: CustomRangeFilter; minimumTraffic?: number } = {}): string {
+export function customRangeChannelsReport(data: RangeData, selection: CustomRangeReportSelection = {}): string {
   const known = paidFiguresComplete(data);
   const query = selection.query?.trim() ?? "";
   const note = "Recorded rows for selected UTC dates; not unique buyers or causal marketing lift. Channel visits count recorded views. Paid records and gross revenue exclude renewals and one-click extras, before refunds, fees and other costs. Blank paid values mean unavailable or incomplete readings, not zero. Recorded row totals describe the reading, not proof of complete payments. This file contains the displayed search selection. Expand the list and clear the search and sales filter and remove the traffic minimum for all recorded rows. List truncation is independent of search filtering.";
@@ -127,7 +128,7 @@ export function customRangeChannelsReport(data: RangeData, selection: { query?: 
     ...data.channels.map((r): Cell[] => [data.from,data.to,data.currency.toUpperCase(),channelName(r.source),r.visits,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),data.channels.length,data.channelsTotal??null,listCoverage(data.channelsTruncated),customRangeOrderLabel(data, selection.sort ?? "recorded", "channels"),note,query,customRangeFilterLabel(data,selection.filter??"all"),customRangeMinimumTraffic(selection.minimumTraffic)]),
   ]);
 }
-export function customRangeProductsReport(data: Omit<RangeData,"products"> & {products:(RangeData["products"][number]&{title?:string})[]}, selection: { query?: string; sort?: CustomRangeSort; filter?: CustomRangeFilter; minimumTraffic?: number } = {}): string {
+export function customRangeProductsReport(data: Omit<RangeData,"products"> & {products:(RangeData["products"][number]&{title?:string})[]}, selection: CustomRangeReportSelection = {}): string {
   const known = paidFiguresComplete(data);
   const query = selection.query?.trim() ?? "";
   const note = "Recorded product rows for selected UTC dates; not unique buyers or causal marketing lift. Paid records and gross revenue include purchases and one-click extras, exclude renewals, and are before refunds, fees and other costs. Blank paid values mean unavailable or incomplete readings, not zero. Recorded row totals describe the reading, not proof of complete payments. This file contains the displayed search selection. Expand the list and clear the search and sales filter and remove the traffic minimum for all recorded rows. List truncation is independent of search filtering.";
@@ -168,5 +169,19 @@ export function customRangeChartReport(data:RangeData,metric:CustomRangeMetric,g
  return csv([
   ["From (UTC)","To (UTC)","Group from (UTC)","Group to (UTC)","Currency","Grouping","Requested metric","Metric","Unit","Value","Paid coverage","Definition"],
   ...customRangeChartRows(data,selected,unit).map((row):Cell[]=>[data.from,data.to,row.from,row.to,data.currency.toUpperCase(),groupLabel,requested,label,selected==="cents"?data.currency.toUpperCase():"Count",selected==="cents"?amount(row.value,data.currency):row.value,rangeCoverage(data),note]),
+ ]);
+}
+
+/** Independent totals of the displayed loaded lists, with the exact selection and source limits. */
+export function customRangeSelectionReport(data:RangeData,selection:CustomRangeReportSelection={}):string {
+ const totals=customRangeSelectionTotals(data);
+ const rows=[
+  {kind:"channels" as const,name:"Channels",unit:"Visits",...totals.channels,sourceTotal:data.channelsTotal,truncated:data.channelsTruncated,scope:"Channel purchases exclude renewals and one-click extras."},
+  {kind:"products" as const,name:"Products",unit:"Page views",...totals.products,sourceTotal:data.productsTotal,truncated:data.productsTruncated,scope:"Product purchases include one-click extras and exclude renewals."},
+ ];
+ const note="Matching loaded rows only, not whole-period totals. Lists overlap and must not be added together. Source row counts and truncation describe the original reading independently of filters. Blank paid values mean incomplete or unavailable purchase readings, not zero. Gross revenue is before refunds, fees, ads and other costs. ";
+ return csv([
+  ["From (UTC)","To (UTC)","Currency","List","Matching loaded rows","Traffic unit","Traffic","Paid records","Gross revenue","Paid coverage","Recorded source rows","Source list truncated","Search","Sales filter","Minimum traffic","Order","Definition"],
+  ...rows.map((row):Cell[]=>[data.from,data.to,data.currency.toUpperCase(),row.name,row.rows,row.unit,row.traffic,row.paidRecords,amount(row.cents,data.currency),rangeCoverage(data),row.sourceTotal??null,listCoverage(row.truncated),selection.query?.trim()??"",customRangeFilterLabel(data,selection.filter??"all"),customRangeMinimumTraffic(selection.minimumTraffic),customRangeOrderLabel(data,selection.sort??"recorded",row.kind),note+row.scope]),
  ]);
 }
