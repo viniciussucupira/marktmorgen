@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { shrink } from "@/components/shrink-image";
 import { IMAGE_ACCEPT, MAX_SOURCE_BYTES } from "@/lib/product-image";
 import { MAIL_PICTURE_SIDE, MAX_MAIL_PICTURES, MAX_MAIL_PICTURE_BYTES, pictureCount, pictureLine, readPicture } from "@/lib/mail-picture-rules";
+import { confirmedMailPictureUrl } from "@/lib/mail-picture-response";
 import { SITE_URL } from "@/lib/site-url";
 
 const PROBLEMS: Record<string, string> = {
   picture: "That picture could not be used. Try a JPEG, PNG or WebP photo.",
+  changed: "The email changed while the picture was being added. Your current text was kept. Add the picture again to insert it into this version.",
   big: `That file is too large to start from. Choose one under ${Math.round(MAX_SOURCE_BYTES / 1024 / 1024)} MB.`,
   slow: "That is a lot of pictures in an hour. Wait a little and try again.",
   signed_out: "Your session ended. Log in again.",
@@ -32,6 +34,13 @@ export function MailPictureButton({
   box: () => HTMLTextAreaElement | null;
 }) {
   const input = useRef<HTMLInputElement>(null);
+  const revision = useRef(0);
+  const mounted = useRef(false);
+  useLayoutEffect(() => {
+    mounted.current = true;
+    revision.current += 1;
+    return () => { mounted.current = false; revision.current += 1; };
+  }, [body]);
   const [alt, setAlt] = useState("");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
@@ -41,7 +50,8 @@ export function MailPictureButton({
 
   async function choose(file: File | undefined) {
     setProblem("");
-    if (!file) return;
+    if (!file || busy || full) return;
+    const startedAt = revision.current;
     if (file.size > MAX_SOURCE_BYTES) return setProblem(PROBLEMS.big);
     setBusy(true);
     try {
@@ -53,9 +63,15 @@ export function MailPictureButton({
         reader.readAsDataURL(shrunk.blob);
       });
       const response = await fetch("/api/store/mail/picture", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ picture }) });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string };
-      if (!data.ok || !data.url) return setProblem(PROBLEMS[data.error ?? ""] ?? PROBLEMS.server_error);
-      const line = pictureLine(alt, data.url);
+      const data: unknown = await response.json().catch(() => null);
+      if (!mounted.current) return;
+      if (revision.current !== startedAt) return setProblem(PROBLEMS.changed);
+      const url = confirmedMailPictureUrl(response.ok, data);
+      if (!url) {
+        const error = data && typeof data === "object" && "error" in data ? data.error : null;
+        return setProblem(typeof error === "string" && Object.hasOwn(PROBLEMS, error) ? PROBLEMS[error] : PROBLEMS.server_error);
+      }
+      const line = pictureLine(alt, url);
       const field = box();
       const at = field ? field.selectionStart : body.length;
       const before = body.slice(0, at).replace(/\s+$/, "");
@@ -63,10 +79,12 @@ export function MailPictureButton({
       onChange([before, line, after].filter(Boolean).join("\n\n"));
       setAlt("");
     } catch {
-      setProblem(PROBLEMS.picture);
+      if (mounted.current) setProblem(PROBLEMS.picture);
     } finally {
-      setBusy(false);
-      if (input.current) input.current.value = "";
+      if (mounted.current) {
+        setBusy(false);
+        if (input.current) input.current.value = "";
+      }
     }
   }
 
@@ -75,7 +93,7 @@ export function MailPictureButton({
       <div className="flex flex-wrap items-end gap-3">
         <label className="block min-w-48 flex-1">
           <span className="text-sm text-ink-soft">What the picture shows (for readers who cannot see it)</span>
-          <input className="field mt-1" maxLength={200} value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="The finished loaf, sliced on a board" />
+          <input className="field mt-1" maxLength={200} disabled={busy} value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="The finished loaf, sliced on a board" />
         </label>
         <label className={`btn btn-ghost btn-sm ${busy || full ? "pointer-events-none opacity-60" : "cursor-pointer"}`}>
           {busy ? "Adding the picture…" : "Add a picture"}
