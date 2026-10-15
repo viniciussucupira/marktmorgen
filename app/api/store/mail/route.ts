@@ -184,6 +184,7 @@ export async function POST(request: NextRequest) {
         body: text(body.body, MAX_MAIL_BODY * 2),
         productId: text(body.productId, 40),
         audience: body.audience,
+        subjectTest: body.subjectTest,
         expectedSavedAt: body.expectedSavedAt,
       });
       return result.ok ? Response.json({ ok: true, draft: result.draft }) : fail(result.reason, result.reason === "draft_conflict" || result.reason === "draft_busy" ? 409 : 400);
