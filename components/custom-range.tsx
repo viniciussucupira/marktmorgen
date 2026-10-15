@@ -4,7 +4,7 @@ import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyR
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
-import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, type CustomRangeSort } from "@/lib/custom-range-view";
+import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
 import { CUSTOM_RANGE_METRICS, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
 import { customRangeComparison } from "@/lib/custom-range-comparison";
@@ -125,8 +125,10 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
   const r = range;
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<CustomRangeSort>("recorded");
+  const [filter,setFilter] = useState<CustomRangeFilter>("all");
+  const actualFilter=effectiveCustomRangeFilter(r,filter);
   const actualSort = effectiveCustomRangeSort(r, sort);
-  const view = customRangeView(r, query, actualSort);
+  const view = customRangeView(r, query, actualSort, actualFilter);
   const sold = paidFiguresComplete(r);
   const [chartMetric, setChartMetric] = useState<CustomRangeMetric>("visitors");
   const [chartGrouping, setChartGrouping] = useState<CustomRangeGrouping>("day");
@@ -185,13 +187,18 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
           <option value="revenue_desc" disabled={!sold}>Revenue, highest first</option><option value="revenue_asc" disabled={!sold}>Revenue, lowest first</option>
           <option value="sales_desc" disabled={!sold}>Sales, highest first</option><option value="sales_asc" disabled={!sold}>Sales, lowest first</option><option value="name">Name, A–Z</option>
         </select>
+        <label className="field-label mt-3" htmlFor="range-sales-filter">Filter channels and products</label>
+        <select id="range-sales-filter" className="field mt-1" value={actualFilter} onChange={event=>setFilter(event.target.value as CustomRangeFilter)}>
+          {CUSTOM_RANGE_FILTERS.map(item=><option key={item.value} value={item.value} disabled={item.value!=="all"&&!sold}>{item.label}</option>)}
+        </select>
+        <p className="mt-1 text-xs text-ink-soft">Traffic without sales means recorded visits or views with zero recorded purchases in this reading. Sales filters require a complete purchase reading.</p>
         <p className="mt-1 text-xs text-ink-soft">Search applies to the loaded lists. Period totals and daily results stay the same.{r.channelsTruncated || r.productsTruncated ? " Open all results above to search every recorded row." : ""}</p>
-        {query.trim() ? <p className="mt-1 text-xs text-ink-soft" role="status">{view.channels.length} of {r.channels.length} loaded channels and {view.products.length} of {r.products.length} loaded products match.</p> : null}
+        {query.trim() || actualFilter!=="all" ? <p className="mt-1 text-xs text-ink-soft" role="status">{view.channels.length} of {r.channels.length} loaded channels and {view.products.length} of {r.products.length} loaded products match.</p> : null}
       </div> : null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
-          <ReportDownload csv={customRangeChannelsReport(view,{query,sort:actualSort})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
+          <ReportDownload csv={customRangeChannelsReport(view,{query,sort:actualSort,filter:actualFilter})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
             <table className="w-full text-left text-sm">
               <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.channels.length} of {r.channelsTotal} recorded channels, ordered by {customRangeOrderLabel(r,actualSort,"channels").toLowerCase()}.</span> : null}</caption>
               <thead>
@@ -217,7 +224,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
         ) : null}
         {view.products.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
-          <ReportDownload csv={customRangeProductsReport(view,{query,sort:actualSort})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
+          <ReportDownload csv={customRangeProductsReport(view,{query,sort:actualSort,filter:actualFilter})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
             <table className="w-full text-left text-sm">
               <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.products.length} of {r.productsTotal} recorded products, ordered by {customRangeOrderLabel(r,actualSort,"products").toLowerCase()}.</span> : null}</caption>
               <thead>
