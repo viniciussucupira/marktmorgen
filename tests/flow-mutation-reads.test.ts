@@ -16,11 +16,18 @@ async function main() {
   const normal = Symbol("normal");
   let reply: unknown = normal;
   let writes = 0;
+  let writeReply: unknown = normal;
+  let applyWrite = false;
   redis.pipeline = async commands => {
     writes += commands.filter(command => command[0] === "SET" && command[1] === key).length;
     if (commands.some(command => command[0] === "GET" && command[1] === key) && reply !== normal) {
       if (reply instanceof Error) throw reply;
       return reply as unknown[];
+    }
+    if (commands.some(command => command[0] === "SET" && command[1] === key) && writeReply !== normal) {
+      if (applyWrite) await original.call(redis, commands);
+      if (writeReply instanceof Error) throw writeReply;
+      return writeReply as unknown[];
     }
     return original.call(redis, commands);
   };
@@ -45,6 +52,24 @@ async function main() {
       }
     }
     reply = normal;
+    for (const uncertain of [[], [null], ["NO"], [true], ["OK", "extra"], null, {}, new Error("write unavailable")]) {
+      for (const [name, operation] of operations.slice(0, 2)) {
+        await original.call(redis, [["SET", key, JSON.stringify([first, second])]]);
+        writeReply = uncertain;
+        let rejected = false;
+        try { await operation(); } catch { rejected = true; }
+        is(name + " needs explicit write confirmation", rejected, true);
+      }
+    }
+    await original.call(redis, [["SET", key, JSON.stringify([first, second])]]);
+    applyWrite = true;
+    writeReply = [];
+    let uncertain = false;
+    try { await saveFlow(store, raw); } catch { uncertain = true; }
+    is("lost acknowledgement does not claim success", uncertain, true);
+    is("unconfirmed response does not imply rollback", (await readFlows(listId)).length, 3);
+    applyWrite = false;
+    writeReply = normal;
     await original.call(redis, [["SET", key, JSON.stringify([first, second])]]);
     const added = await saveFlow(store, raw);
     is("valid creation succeeds", added.ok, true);
