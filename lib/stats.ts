@@ -1,4 +1,4 @@
-import { rangeTrafficCoverage } from "@/lib/range-traffic-coverage";
+import { rangeTrafficCoverage, statsTrafficCoverage } from "@/lib/range-traffic-coverage";
 import { creativeRowsFrom } from "@/lib/creative-results";
 /**
  * How many people visit a store, where they come from, and how many of them
@@ -424,6 +424,8 @@ export type Stats = {
   windows: Windows;
   /** The 7, 30 and 90 days before each window, for "up 20% on the 30 days before". */
   previous: { d7: PreviousWindow; d30: PreviousWindow; d90: PreviousWindow };
+  /** Source-read coverage before legacy numeric placeholders, independent by window. */
+  previousTrafficAvailable?: Record<"d7" | "d30" | "d90", boolean>;
   /** Everything since `since`, or null when it could not be read. */
   life: (WindowStats & { since: string }) | null;
 };
@@ -535,6 +537,8 @@ export async function readStats(store: Store, now = Date.now()): Promise<Stats |
     ...older.map((d) => ["HMGET", countsKey(statsId, d), "v", "c"]),
   ];
   const results = await redisPipeline(commands);
+  const traffic = statsTrafficCoverage(results);
+  if (!traffic.current) return null;
 
   const days: DayStats[] = [];
   const tallies = { d7: new Tally(), d30: new Tally(), d90: new Tally() };
@@ -575,7 +579,7 @@ export async function readStats(store: Store, now = Date.now()): Promise<Stats |
     console.error("reading all-time counts failed", error);
     return null;
   });
-  return { days, windows, previous, life };
+  return { days, windows, previous, previousTrafficAvailable: traffic.previous, life };
 }
 
 /**
@@ -1948,7 +1952,7 @@ export function studioStats(
       ? { d7: sales.renewals.d7, d30: sales.renewals.d30, d90: sales.renewals.d90, partial: sales.renewals.partial }
       : null,
     previousTrafficAvailable: Object.fromEntries(
-      (["d7", "d30", "d90"] as const).map(k => [k, stats.previous?.[k] != null]),
+      (["d7", "d30", "d90"] as const).map(k => [k, stats.previous?.[k] != null && stats.previousTrafficAvailable?.[k] !== false]),
     ) as NonNullable<StatsData["previousTrafficAvailable"]>,
     previous: Object.fromEntries(
       (["d7", "d30", "d90"] as const).map((k) => {
