@@ -1,5 +1,8 @@
 "use client";
 
+import { customRangeChannelsReport, customRangeProductsReport } from "@/lib/channel-reports";
+import { ReportDownload } from "@/components/report-download";
+
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
@@ -148,6 +151,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {r.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
+          <ReportDownload csv={customRangeChannelsReport(r)} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
             <table className="w-full text-left text-sm">
               <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {r.channels.length} of {r.channelsTotal} recorded channels, ordered by {sold ? "revenue" : "visits"}.</span> : null}</caption>
               <thead>
@@ -173,6 +177,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
         ) : null}
         {r.products.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
+          <ReportDownload csv={customRangeProductsReport(r)} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
             <table className="w-full text-left text-sm">
               <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {r.products.length} of {r.productsTotal} recorded products, ordered by {sold ? "revenue" : "page views"}.</span> : null}</caption>
               <thead>

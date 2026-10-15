@@ -1,3 +1,5 @@
+import type { RangeData } from "@/lib/stats";
+import { paidFiguresComplete } from "@/lib/paid-coverage";
 import type { PaymentComparison } from "@/lib/payment-comparison";
 import type { PaymentMix } from "@/lib/payment-mix";
 import type { AttributionTable } from "@/lib/attribution-rules";
@@ -107,5 +109,25 @@ export function paymentComparisonReport(report:PaymentComparison,currency:string
   return csv([
     ["Current from (UTC)","Current to (UTC)","Previous from (UTC)","Previous to (UTC)","Currency","Channel","Current payments","Previous payments","Payment difference","Payment change (%)","Current share (%)","Previous share (%)","Share change (percentage points)","Definition"],
     ...(previous ? report.rows.map((row):Cell[]=>[report.current.from,report.current.to,previous.from,previous.to,currency.toUpperCase(),row.source,amount(row.current,currency),amount(row.previous,currency),amount(row.current-row.previous,currency),row.change===null ? null : row.change*100,row.currentShare===null ? null : row.currentShare*100,row.previousShare===null ? null : row.previousShare*100,row.shareChange===null ? null : row.shareChange*100,note]) : []),
+  ]);
+}
+
+const rangeCoverage = (data: RangeData) => data.sales !== "ok" ? "Unavailable" : data.partial ? "Incomplete" : "Complete";
+const listCoverage = (limited: boolean | undefined) => limited === undefined ? "Unknown" : limited ? "Yes" : "No";
+/** Exports the displayed rows, including explicit list and financial coverage. */
+export function customRangeChannelsReport(data: RangeData): string {
+  const known = paidFiguresComplete(data);
+  const note = "Recorded rows for selected UTC dates; not unique buyers or causal marketing lift. Channel visits count recorded views. Paid records and gross revenue exclude renewals and one-click extras, before refunds, fees and other costs. Blank paid values mean unavailable or incomplete readings, not zero. Recorded row totals describe the reading, not proof of complete payments. This file contains the displayed rows; expand the list first for all recorded rows.";
+  return csv([
+    ["From (UTC)","To (UTC)","Currency","Channel","Visits","Paid records","Gross revenue","Paid coverage","Displayed rows","Recorded rows","List truncated","Order","Definition"],
+    ...data.channels.map((r): Cell[] => [data.from,data.to,data.currency.toUpperCase(),channelName(r.source),r.visits,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),data.channels.length,data.channelsTotal??null,listCoverage(data.channelsTruncated),known?"Revenue":"Visits",note]),
+  ]);
+}
+export function customRangeProductsReport(data: Omit<RangeData,"products"> & {products:(RangeData["products"][number]&{title?:string})[]}): string {
+  const known = paidFiguresComplete(data);
+  const note = "Recorded product rows for selected UTC dates; not unique buyers or causal marketing lift. Paid records and gross revenue include purchases and one-click extras, exclude renewals, and are before refunds, fees and other costs. Blank paid values mean unavailable or incomplete readings, not zero. Recorded row totals describe the reading, not proof of complete payments. This file contains the displayed rows; expand the list first for all recorded rows.";
+  return csv([
+    ["From (UTC)","To (UTC)","Currency","Product ID","Product","Page views","Checkouts","Paid records","Gross revenue","Paid coverage","Displayed rows","Recorded rows","List truncated","Order","Definition"],
+    ...data.products.map((r): Cell[] => [data.from,data.to,data.currency.toUpperCase(),r.id,r.title??r.id,r.views,r.checkouts,known?r.sales:null,known?amount(r.cents,data.currency):null,rangeCoverage(data),data.products.length,data.productsTotal??null,listCoverage(data.productsTruncated),known?"Revenue":"Page views",note]),
   ]);
 }
