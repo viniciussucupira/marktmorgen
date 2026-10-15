@@ -1,6 +1,6 @@
 "use client";
 
-import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyReport, customRangeComparisonReport, customRangeChartReport, customRangeSelectionReport, type CustomRangeReportSelection } from "@/lib/channel-reports";
+import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyReport, customRangeComparisonReport, customRangeChartReport, customRangeSelectionReport, customRangeChartSummaryReport, type CustomRangeReportSelection } from "@/lib/channel-reports";
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
@@ -285,7 +285,7 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
    {CUSTOM_RANGE_GROUPINGS.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}
   </select>
   <p className="mt-1 text-xs text-ink-soft">Daily totals in UTC.{unit!=="day"?" Weeks start on Monday. First and last groups may cover only part of a week or month. Visitors are summed daily counts, not distinct people across the group.":""}{selected==="cents"||selected==="sales"?" Purchases include one-click extras and exclude renewals. Revenue is before fees, refunds and ad spend.":""}</p>
-  <CustomRangeChartSummary range={range} currency={currency} metric={selected} />
+  <CustomRangeChartSummary range={range} currency={currency} metric={metric} grouping={unit} />
   <div className={"mt-3 flex h-24 items-end "+(rows.length>60?"gap-0":"gap-[2px]")} role="img" aria-label={chartLabel}>
    {rows.map(row=><div key={row.from} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={dates(row)+": "+value(row.value)+" "+label.toLowerCase()+(selected==="visitors"&&row.sales!==null?", "+row.sales+" sales":"")}>
     <div className="w-full rounded-t-[2px] bg-violet-brand/80" style={{height:Math.max(row.value?4:1,(row.value/peak)*100)+"%",opacity:row.value?1:0.25}} />
@@ -359,7 +359,7 @@ export function CustomRangeSelectionSummary({range,currency,selection}:{range:Ra
 }
 
 /** The summary uses daily rows even when bars are grouped by week or month. */
-export function CustomRangeChartSummary({range,currency,metric}:{range:RangeData;currency:string;metric:CustomRangeMetric}) {
+export function CustomRangeChartSummary({range,currency,metric,grouping="day"}:{range:RangeData;currency:string;metric:CustomRangeMetric;grouping?:CustomRangeGrouping}) {
  const summary=customRangeChartSummary(range,metric);
  if(!summary)return null;
  const label=CUSTOM_RANGE_METRICS.find(item=>item.value===summary.metric)!.label;
@@ -372,5 +372,6 @@ export function CustomRangeChartSummary({range,currency,metric}:{range:RangeData
    <div><dt className="text-xs text-ink-soft">Highest recorded day</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.peak.value)}</dd><dd className="text-xs text-ink-soft">{day(summary.peak.date)}{summary.peak.ties>1?" · "+count(summary.peak.ties)+" days tied; earliest shown.":""}</dd></div>
   </dl>
   <p className="mt-1 text-xs text-ink-soft">Summary uses daily rows even when the chart is grouped. Averages are rounded for display.{summary.metric==="visitors"?" Visitors are summed daily counts, not distinct people across the period.":""} Values for today can still grow.</p>
+  <ReportDownload csv={customRangeChartSummaryReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-summary-"+summary.metric+"-"+range.from+"-to-"+range.to+".csv"}>Download chart summary</ReportDownload>
  </div>;
 }
