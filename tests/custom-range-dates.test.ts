@@ -29,9 +29,9 @@ const render=(canPrevious:boolean,canNext:boolean,busy=false)=>renderToStaticMar
 const enabled=render(true,true);const blocked=render(false,false);const loading=render(true,true,true);
 is("navigation group labeled",enabled.includes('role="group" aria-label="Move between periods"'),true);
 is("both navigation buttons available",enabled.includes("Previous period")&&enabled.includes("Next period"),true);
-is("unavailable navigation disabled",(blocked.match(/disabled=""/g)??[]).length,2);
-is("navigation disabled while reading",(loading.match(/disabled=""/g)??[]).length,2);
-is("available navigation enabled",enabled.includes('disabled=""'),false);
+is("unavailable navigation disabled",(blocked.match(/<button[^>]*disabled=""/g)??[]).length,2);
+is("navigation disabled while reading",(loading.match(/<button[^>]*disabled=""/g)??[]).length,2);
+is("available navigation enabled",/<button[^>]*disabled=""/.test(enabled),false);
 part("Quick date ranges include today and follow the UTC calendar");
 is("seven days includes today",presetCustomRange("7d",today),{from:"2026-10-09",to:today});
 is("thirty days includes today",presetCustomRange("30d",today),{from:"2026-09-16",to:today});
