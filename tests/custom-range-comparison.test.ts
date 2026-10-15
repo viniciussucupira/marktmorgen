@@ -32,5 +32,5 @@ is("zero prior payments preserve absolute change",noPriorPayments["Gross revenue
 const bothZero=rows({...data,totals:zero,before:zero});
 is("confirmed zero counts and delta retained",[bothZero.Visitors.Current,bothZero.Visitors.Previous,bothZero.Visitors.Difference],["0","0","0"]);
 is("definitions explain payment scope",report["Gross revenue"].Definition.includes("include purchases and one-click extras, exclude renewals"),true);
-is("comparison download available with incomplete payments",renderToStaticMarkup(createElement(CustomRangeResults,{range:{...data,partial:true},marks:[],currency:"usd"})).includes("Download period comparison"),true);
+is("comparison download available with incomplete payments",renderToStaticMarkup(createElement(CustomRangeResults,{range:{...data,products:[],partial:true},marks:[],currency:"usd"})).includes("Download period comparison"),true);
 done();
