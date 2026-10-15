@@ -24,6 +24,7 @@ import { type Currency, plainAmount } from "@/lib/money";
 import { mailAudienceWords, type MailAudienceSelection } from "@/lib/mail-audience-summary";
 import { campaignHistoryView, HISTORY_STATUSES, type HistoryStatus } from "@/lib/broadcast-history-view";
 import { broadcastAnswer, cancellationAnswer } from "@/lib/broadcast-response";
+import { subjectTestPreview, type SubjectTestPreview } from "@/lib/mail-test-preview";
 import { readMailSchedule } from "@/lib/mail-schedule";
 import { channelName } from "@/lib/channel-names";
 import { type Narrow, MAX_SPENT, readSegmentSpend, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
@@ -203,6 +204,21 @@ function AudienceSummary({ audience, products, currency }: {
   return <div className="mt-1 break-words text-sm text-ink-soft">
     <p><span className="font-semibold">Audience criteria: </span>{mailAudienceWords(audience, products)}</p>
     {narrowed ? <p className="mt-1">{narrowWords(narrow, currency)}</p> : null}
+  </div>;
+}
+
+/** A preview describes allocation, never a forecast or a statistically proven winner. */
+function SubjectTestReview({ preview }: { preview: SubjectTestPreview | null }) {
+  if (!preview || preview.state !== "ready") return null;
+  return <div className="mt-3 space-y-2 break-words text-sm text-ink-soft">
+    <p className="font-semibold text-ink">Subject test estimate for the currently confirmed audience</p>
+    <dl className="space-y-1">
+      <div><dt className="font-semibold">First subject (A) · {n(preview.a)} people</dt><dd>{preview.subjectA}</dd></div>
+      <div><dt className="font-semibold">Second subject (B) · {n(preview.b)} people</dt><dd>{preview.subjectB}</dd></div>
+    </dl>
+    <p>{n(preview.rest)} people wait for the selected subject. The {hoursWords(preview.hours)} comparison window starts after the test emails finish going out.</p>
+    <p>{preview.by === "sales" ? "Sales per email decide; visits decide if sales are tied or unavailable." : "Visits to the store per email decide."} If the available counts do not distinguish the subjects, the first subject is used. This does not establish statistical significance.</p>
+    <p>The audience is checked again when sending starts, so these numbers can change. If fewer than {n(MIN_TEST_REACH)} people remain, the first subject is used without a test.</p>
   </div>;
 }
 
@@ -596,6 +612,8 @@ function Compose(props: {
   const narrow: Narrow = { minSpent, channel, quietDays };
   const countKey = JSON.stringify([productId, notProductId, who, minSpent, channel, quietDays, more, countRevision, invalidSpent]);
   const reach = !invalidSpent && reachResult?.key === countKey ? reachResult.count : null;
+  const testPreview = testing ? subjectTestPreview(subject, { subjectB, share, hours, by }, reach) : null;
+  const invalidTest = testing && testPreview?.state !== "ready";
   const reachPending = !invalidSpent && reachResult?.key !== countKey;
   const [busy, setBusy] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
@@ -657,7 +675,7 @@ function Compose(props: {
   }
 
   async function send(payload: Record<string, unknown>, success: string) {
-    if (locked || (payload.action === "broadcast" && (props.broadcastUnconfirmed || reach === null || reach === 0))) return false;
+    if (locked || (payload.action === "broadcast" && (props.broadcastUnconfirmed || reach === null || reach === 0 || invalidTest))) return false;
     if (payload.action === "broadcast" && later) {
       const sendAt = readMailSchedule(at, Date.now());
       if (sendAt === null) {
@@ -788,7 +806,8 @@ function Compose(props: {
               <div className="mt-3 space-y-4 rounded-[var(--r-md)] bg-sand p-4">
                 <label className="block">
                   <span className="field-label">Second subject</span>
-                  <input className="field mt-2" maxLength={150} value={subjectB} onChange={(e) => setSubjectB(e.target.value)} />
+                  <input className="field mt-2" maxLength={150} value={subjectB} aria-invalid={testPreview?.state === "subject" || undefined} aria-describedby="subject-test-hint" onChange={(e) => setSubjectB(e.target.value)} />
+                  <span id="subject-test-hint" className="field-hint mt-1 block">{testPreview?.state === "subject" ? "Write two nonempty subjects that remain different after spaces and capitalization are normalized." : "The second subject must differ from the first."}</span>
                 </label>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <label className="block">
@@ -821,6 +840,7 @@ function Compose(props: {
                 <p className="text-sm text-ink-soft">
                   {`It needs at least ${MIN_TEST_REACH} people and a link to your store in the email. Emails here carry no tracking pixel, so opens are not counted, and a small difference on a small list is mostly chance.`}
                 </p>
+                <SubjectTestReview preview={testPreview} />
                 {reach !== null && reach < MIN_TEST_REACH ? (
                   <p className="notice notice-error" role="status">
                     {`This goes to ${n(reach)} ${reach === 1 ? "person" : "people"}, which is too few to compare two subjects. Uncheck the box, or choose a bigger group.`}
@@ -1018,6 +1038,7 @@ function Compose(props: {
               <>Scheduled for <time dateTime={new Date(scheduledAt).toISOString()} className="font-semibold">{new Date(scheduledAt).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</time> ({Intl.DateTimeFormat().resolvedOptions().timeZone}).</>
             ) : "Sending starts after you confirm."}</p>
             <AudienceSummary audience={{ who, productId: productId || null, notProductId, narrow }} products={props.products} currency={props.currency} />
+            <SubjectTestReview preview={testPreview} />
             <p className="mt-2">Eligibility is checked again when sending starts.</p>
           </div>
         ) : null}
@@ -1043,7 +1064,7 @@ function Compose(props: {
             <>
               <button
                 type="button"
-                aria-busy={busy} disabled={busy || props.broadcastUnconfirmed || invalidSchedule || !subject.trim() || !body.trim()}
+                aria-busy={busy} disabled={busy || props.broadcastUnconfirmed || invalidSchedule || invalidTest || !subject.trim() || !body.trim()}
                 aria-describedby="mail-send-review"
                 className="btn btn-primary"
                 onClick={async () => {
@@ -1084,10 +1105,10 @@ function Compose(props: {
           ) : (
             <button
               type="button"
-              disabled={busy || props.broadcastUnconfirmed || !subject.trim() || !body.trim() || reach === null || reach === 0 || invalidSchedule || (testing && (!subjectB.trim() || reach < MIN_TEST_REACH))}
+              disabled={busy || props.broadcastUnconfirmed || !subject.trim() || !body.trim() || reach === null || reach === 0 || invalidSchedule || invalidTest}
               className="btn btn-primary"
               onClick={() => {
-                if (props.broadcastUnconfirmed) return;
+                if (props.broadcastUnconfirmed || invalidTest) return;
                 if (later && readMailSchedule(at, Date.now()) === null) { setScheduleNow(Date.now()); setError(MESSAGES.when); return; }
                 setConfirming(true);
               }}
