@@ -21,6 +21,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { formatMoney } from "@/lib/money";
 import { MIN_TEST_REACH, TEST_HOURS, TEST_SHARES, type SubjectTest, type TestBy } from "@/lib/mail-test";
 import { type Currency, plainAmount } from "@/lib/money";
+import { readMailSchedule } from "@/lib/mail-schedule";
 import { channelName } from "@/lib/channel-names";
 import { type Narrow, MAX_SPENT, readSegmentSpend, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
 
@@ -518,6 +519,16 @@ function Compose(props: {
   const [draftId, setDraftId] = useState(props.draft?.id ?? "");
   const [later, setLater] = useState(false);
   const [at, setAt] = useState("");
+  const [scheduleNow, setScheduleNow] = useState(() => Date.now());
+  const scheduledAt = later ? readMailSchedule(at, scheduleNow) : null;
+  const invalidSchedule = later && scheduledAt === null;
+  useEffect(() => {
+    if (!later) return;
+    const tick = () => setScheduleNow(Date.now());
+    const timer = window.setInterval(tick, 30_000);
+    window.addEventListener("focus", tick);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", tick); };
+  }, [later]);
   // A second subject line tried on part of the list (lib/mail-test.ts).
   const [testing, setTesting] = useState(false);
   const [subjectB, setSubjectB] = useState("");
@@ -604,6 +615,16 @@ function Compose(props: {
 
   async function send(payload: Record<string, unknown>, success: string) {
     if (locked || (payload.action === "broadcast" && (reach === null || reach === 0))) return false;
+    if (payload.action === "broadcast" && later) {
+      const sendAt = readMailSchedule(at, Date.now());
+      if (sendAt === null) {
+        setError(MESSAGES.when);
+        setConfirming(false);
+        setScheduleNow(Date.now());
+        return false;
+      }
+      payload = { ...payload, sendAt };
+    }
     setBusy(true);
     setError(null);
     const a = await call(payload);
@@ -928,16 +949,17 @@ function Compose(props: {
           <legend className="field-label">When</legend>
           <div className="mt-2 flex flex-wrap gap-4 text-sm">
             <label className="flex items-center gap-2">
-              <input type="radio" name="when" checked={!later} onChange={() => setLater(false)} /> Now
+              <input type="radio" name="when" checked={!later} onChange={() => { setLater(false); setConfirming(false); }} /> Now
             </label>
             <label className="flex items-center gap-2">
-              <input type="radio" name="when" checked={later} onChange={() => setLater(true)} /> At a time I choose
+              <input type="radio" name="when" checked={later} onChange={() => { setLater(true); setScheduleNow(Date.now()); setConfirming(false); }} /> At a time I choose
             </label>
           </div>
           {later ? (
             <label className="mt-3 block">
               <span className="sr-only">Date and time, in your own time zone</span>
-              <input type="datetime-local" className="field" value={at} onChange={(e) => setAt(e.target.value)} />
+              <input type="datetime-local" className="field" value={at} aria-invalid={at !== "" && invalidSchedule || undefined} aria-describedby="mail-schedule-hint" onChange={(e) => { setAt(e.target.value); setScheduleNow(Date.now()); setConfirming(false); }} />
+              <span id="mail-schedule-hint" className="field-hint mt-1 block">{at !== "" && invalidSchedule ? "Choose a future date and time, within the next 365 days." : "In your device’s time zone. Choose a future time within the next 365 days; it is checked again before scheduling."}</span>
             </label>
           ) : null}
         </fieldset>
@@ -964,10 +986,10 @@ function Compose(props: {
             <>
               <button
                 type="button"
-                aria-busy={busy} disabled={busy}
+                aria-busy={busy} disabled={busy || invalidSchedule}
                 className="btn btn-primary"
                 onClick={async () => {
-                  const sendAt = later && at ? new Date(at).getTime() : undefined;
+                  const sendAt = later ? scheduledAt ?? undefined : undefined;
                   const ok = await send(
                     {
                       action: "broadcast",
@@ -1003,9 +1025,12 @@ function Compose(props: {
           ) : (
             <button
               type="button"
-              disabled={busy || !subject.trim() || !body.trim() || reach === null || reach === 0 || (later && !at) || (testing && (!subjectB.trim() || reach < MIN_TEST_REACH))}
+              disabled={busy || !subject.trim() || !body.trim() || reach === null || reach === 0 || invalidSchedule || (testing && (!subjectB.trim() || reach < MIN_TEST_REACH))}
               className="btn btn-primary"
-              onClick={() => setConfirming(true)}
+              onClick={() => {
+                if (later && readMailSchedule(at, Date.now()) === null) { setScheduleNow(Date.now()); setError(MESSAGES.when); return; }
+                setConfirming(true);
+              }}
             >
               {later ? "Schedule" : "Send"}
             </button>
