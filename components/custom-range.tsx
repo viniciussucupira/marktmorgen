@@ -28,11 +28,17 @@ const day = (date: string) => {
   const [y, m, d] = date.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 };
+const comparisonPercent=(n:number|null)=>{
+  if(n===null)return "—";
+  if(n!==0&&Math.abs(n)<0.1)return (n>0?"+":"")+n.toLocaleString("en-US",{maximumSignificantDigits:4})+"%";
+  const rounded=Math.round(n*10)/10;
+  return (rounded>0?"+":"")+(rounded===0?0:rounded).toLocaleString("en-US",{maximumFractionDigits:1})+"%";
+ };
 const change = (now: number, before: number | null) => {
   if (before === null) return "";
   if (before === 0) return now === 0 ? "same as the days before" : "none the days before";
-  const pct = Math.round(((now - before) / before) * 100);
-  return pct === 0 ? "same as the days before" : `${pct > 0 ? "+" : ""}${pct}% on the days before`;
+  if (now === before) return "same as the days before";
+  return `${comparisonPercent(((now - before) / before) * 100)} on the days before`;
 };
 
 type Products = (RangeData["products"][number] & { title: string })[];
@@ -319,12 +325,7 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
  const comparison=customRangeComparison(range);
  const dates=(from:string,to:string)=>from===to?day(from):day(from)+" to "+day(to);
  const value=(n:number|null,metric:typeof comparison.rows[number],signed=false)=>n===null?"Unavailable":(signed&&n>0?"+":"")+(metric.money?formatMoney(n,currency):metric.ratio?n.toLocaleString("en-US",{maximumSignificantDigits:4}):count(n));
- const percent=(n:number|null)=>{
-  if(n===null)return "—";
-  if(n!==0&&Math.abs(n)<0.1)return (n>0?"+":"")+n.toLocaleString("en-US",{maximumSignificantDigits:4})+"%";
-  const rounded=Math.round(n*10)/10;
-  return (rounded>0?"+":"")+(rounded===0?0:rounded).toLocaleString("en-US",{maximumFractionDigits:1})+"%";
- };
+
  return <details className="mt-3">
   <summary className="cursor-pointer text-sm font-semibold text-ink">Compare with previous period</summary>
   <p className="mt-2 text-xs text-ink-soft">Selected: {dates(range.from,range.to)} (UTC).{comparison.previousFrom&&comparison.previousTo?" Previous: "+dates(comparison.previousFrom,comparison.previousTo)+" (UTC).":""}</p>
@@ -337,7 +338,7 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
      <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.current,row)}</td>
      <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.previous,row)}</td>
      <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.difference,row,true)}</td>
-     <td className="py-1.5 pl-3 text-right tabular-nums">{percent(row.change)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{comparisonPercent(row.change)}</td>
     </tr>)}</tbody>
    </table>
   </div>

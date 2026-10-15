@@ -25,7 +25,7 @@ part("Confirmed and unavailable paid readings");
 const complete=render({...range,partial:false});
 is("complete sales tile present",tile(complete,"Sales")?.includes(">2</dd>"),true);
 is("complete money remains",tile(complete,"Revenue")?.includes("$999"),true);
-is("complete comparison remains",tile(complete,"Revenue")?.includes("+1898%"),true);
+is("complete comparison remains",tile(complete,"Revenue")?.includes("+1,898%"),true);
 is("complete table paid headings remain",complete.includes(">Sales</th>")&&complete.includes(">Revenue</th>"),true);
 is("complete daily paid counts remain",/title="[^"]*, 1 sales/.test(complete),true);
 for(const sales of ["none","error"] as const){const html=render({...range,partial:false,sales});is(sales+" has no money",html.includes("$999"),false);is(sales+" keeps traffic",tile(html,"Visitors")?.includes(">50</dd>"),true);}
