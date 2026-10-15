@@ -949,20 +949,28 @@ function Compose(props: {
           <legend className="field-label">When</legend>
           <div className="mt-2 flex flex-wrap gap-4 text-sm">
             <label className="flex items-center gap-2">
-              <input type="radio" name="when" checked={!later} onChange={() => { setLater(false); setConfirming(false); }} /> Now
+              <input type="radio" name="when" checked={!later} onChange={() => { setLater(false); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} /> Now
             </label>
             <label className="flex items-center gap-2">
-              <input type="radio" name="when" checked={later} onChange={() => { setLater(true); setScheduleNow(Date.now()); setConfirming(false); }} /> At a time I choose
+              <input type="radio" name="when" checked={later} onChange={() => { setLater(true); setScheduleNow(Date.now()); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} /> At a time I choose
             </label>
           </div>
           {later ? (
             <label className="mt-3 block">
               <span className="sr-only">Date and time, in your own time zone</span>
-              <input type="datetime-local" className="field" value={at} aria-invalid={at !== "" && invalidSchedule || undefined} aria-describedby="mail-schedule-hint" onChange={(e) => { setAt(e.target.value); setScheduleNow(Date.now()); setConfirming(false); }} />
+              <input type="datetime-local" className="field" value={at} aria-invalid={at !== "" && invalidSchedule || undefined} aria-describedby="mail-schedule-hint" onChange={(e) => { setAt(e.target.value); setScheduleNow(Date.now()); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} />
               <span id="mail-schedule-hint" className="field-hint mt-1 block">{at !== "" && invalidSchedule ? "Choose a future date and time, within the next 365 days." : "In your device’s time zone. Choose a future time within the next 365 days; it is checked again before scheduling."}</span>
             </label>
           ) : null}
         </fieldset>
+        ) : null}
+        {confirming && reach !== null ? (
+          <p id="mail-send-review" role="status" className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
+            Review <strong>{subject.trim() || "this email"}</strong> for {n(reach)} {reach === 1 ? "person" : "people"}.{" "}
+            {later ? scheduledAt === null ? "Choose a valid future time before confirming." : (
+              <>Scheduled for <time dateTime={new Date(scheduledAt).toISOString()} className="font-semibold">{new Date(scheduledAt).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</time> ({Intl.DateTimeFormat().resolvedOptions().timeZone}).</>
+            ) : "Sending starts after you confirm."}
+          </p>
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -986,7 +994,8 @@ function Compose(props: {
             <>
               <button
                 type="button"
-                aria-busy={busy} disabled={busy || invalidSchedule}
+                aria-busy={busy} disabled={busy || invalidSchedule || !subject.trim() || !body.trim()}
+                aria-describedby="mail-send-review"
                 className="btn btn-primary"
                 onClick={async () => {
                   const sendAt = later ? scheduledAt ?? undefined : undefined;
