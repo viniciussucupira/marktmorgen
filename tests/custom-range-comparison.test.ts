@@ -11,7 +11,7 @@ const data={from:"2026-10-01",to:"2026-10-02",currency:"usd",sales:"ok",partial:
 const rows=(snapshot:RangeData)=>{const csv=parseCsv(customRangeComparisonReport(snapshot));return Object.fromEntries(csv.rows.map(r=>[r[5],Object.fromEntries(csv.header.map((h,i)=>[h,r[i]]))]));};
 part("Equal consecutive dates, quantities and precise money");
 const report=rows(data);
-is("five summary metrics exported",Object.keys(report).length,5);
+is("six summary metrics exported",Object.keys(report).length,6);
 is("previous bounds are inclusive adjacent days",[report.Visitors["Previous from (UTC)"],report.Visitors["Previous to (UTC)"]],["2026-09-29","2026-09-30"]);
 is("selected dates and currency travel with rows",[report.Visitors["From (UTC)"],report.Visitors["To (UTC)"],report.Visitors.Currency],[data.from,data.to,"USD"]);
 is("negative quantity difference stays numeric",[report.Visitors.Current,report.Visitors.Previous,report.Visitors.Difference,report.Visitors["Change (%)"]],["50","100","-50","-50"]);
