@@ -60,6 +60,7 @@ const MESSAGES: Record<string, string> = {
   send: "The email service did not take it just now. Nothing was sent; try again in a moment.",
   signed_out: "Your session ended. Log in again.",
   unavailable: "Email is not switched on yet, so nothing was sent.",
+  draft_remove_conflict: "A newer version of this draft was saved. It was not deleted. Reload saved drafts and review the latest version before deleting it.",
   draft_conflict: "A newer version of this draft was saved. Your text is still here. Keep a copy of it, then reload saved drafts and open the latest version before saving again.",
   draft_busy: "This draft is being changed. Your text is still here. Try saving again shortly.",
   audience: "The audience filters could not be saved. Review the recipient choices and try again.",
@@ -1038,6 +1039,7 @@ function Compose(props: {
                       narrow,
                       sendAt,
                       draftId: draftId || undefined,
+                      draftSavedAt: draftId ? draftSavedAt : undefined,
                       test: testing ? { subjectB, share, hours, by } : undefined,
                     },
                     later ? "Your email is scheduled." : "Your email is on its way.",
@@ -1123,6 +1125,9 @@ function Drafts({
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="drafts-title">
       <h2 id="drafts-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Drafts</h2>
+      <button type="button" className="btn btn-secondary mt-3" disabled={locked} aria-busy={refreshing} onClick={() => startRefresh(() => router.refresh())}>
+        {refreshing ? "Reloading drafts…" : "Reload saved drafts"}
+      </button>
       <ul className="mt-4 divide-y divide-line">
         {drafts.map((d) => (
           <li key={d.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
@@ -1155,7 +1160,7 @@ function Drafts({
                   if (locked || !window.confirm("Delete this draft?")) return;
                   setError(null);
                   setBusy(d.id);
-                  const a = await call({ action: "draft-remove", id: d.id });
+                  const a = await call({ action: "draft-remove", id: d.id, expectedSavedAt: d.savedAt });
                   setBusy(null);
                   if (!a.ok) {
                     setError("Removal of “" + d.subject + "” could not be confirmed. Reload your saved drafts to check its current status. " + message(a));
