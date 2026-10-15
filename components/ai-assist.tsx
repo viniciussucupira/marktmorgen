@@ -36,6 +36,7 @@ export function AiAssist<T>({
   extra,
   allowEmpty = false,
   emptyMessage,
+  onBusyChange,
 }: {
   /** The line that opens it, like "Write the description for me". */
   title: string;
@@ -55,6 +56,8 @@ export function AiAssist<T>({
   allowEmpty?: boolean;
   /** What is said when the job had nothing to go on, where the usual words do not fit it. */
   emptyMessage?: string;
+  /** Lets a host pause conflicting actions while writing is pending. */
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const { on, left: startLeft } = useContext(AiOn);
   const [notes, setNotes] = useState("");
@@ -65,12 +68,14 @@ export function AiAssist<T>({
   if (!on) return null;
 
   async function run() {
+    if (busy) return;
     // Said here, before a round trip that would only come back with the same.
     if (!allowEmpty && !notes.trim()) {
       setError(MESSAGES.notes);
       return;
     }
     setBusy(true);
+    onBusyChange?.(true);
     setError(null);
     setFilled(false);
     try {
@@ -91,6 +96,7 @@ export function AiAssist<T>({
       setError(MESSAGES.failed);
     } finally {
       setBusy(false);
+      onBusyChange?.(false);
     }
   }
 
