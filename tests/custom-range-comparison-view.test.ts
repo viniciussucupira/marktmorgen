@@ -32,7 +32,7 @@ const unknownPaid={...data,before:{...data.before!,sales:null,cents:null}};
 is("unknown previous money stays null",find(unknownPaid,"Gross revenue").previous,null);
 is("confirmed current money survives",find(unknownPaid,"Gross revenue").current,10103);
 for(const d of [{...data,partial:true},{...data,sales:"none" as const},{...data,sales:"error" as const}]){
- is(d.sales+"/"+d.partial+" paid values withheld",customRangeComparison(d).rows.slice(3).every(row=>row.current===null&&row.previous===null&&row.difference===null&&row.change===null),true);
+ is(d.sales+"/"+d.partial+" paid values withheld",customRangeComparison(d).rows.filter(row=>row.money||row.name.startsWith("Paid records")).every(row=>row.current===null&&row.previous===null&&row.difference===null&&row.change===null),true);
  is(d.sales+"/"+d.partial+" traffic remains",find(d,"Visitors").difference,10);
 }
 part("Rendered comparison explains values and supports keyboard access");
