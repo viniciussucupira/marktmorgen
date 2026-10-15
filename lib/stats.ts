@@ -1243,11 +1243,10 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   const cut90 = dayKey(now - (STATS_DAYS - 1) * 86400_000);
   // The 90 days are the days the visits are read for, today and the 89 before.
   const sales = read.filter((sale) => dayKey(sale.created) >= cut90);
-  // Partial for the 90 days only when the reading stopped inside them.
-  const oldestRead = read.length ? dayKey(read[read.length - 1].created) : "";
-  const partial = readPartial && oldestRead >= cut90;
+  // A merged old sale cannot certify independent capped payment sources.
+  const partial = readPartial;
   const stretch = (from: string, to: string): SalesWindow | null => {
-    if (readPartial && oldestRead >= from) return null;
+    if (readPartial) return null;
     const out = { sales: 0, cents: 0 };
     for (const sale of read) {
       const day = dayKey(sale.created);
