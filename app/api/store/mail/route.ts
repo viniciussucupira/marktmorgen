@@ -15,7 +15,7 @@ import { healthId, startRamp } from "@/lib/mail-health";
 import { BroadcastCancellationUnconfirmed, BroadcastWriteUnconfirmed, advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
 import { buyerLedger, isNarrowed, keeps, ledgerChannels, readNarrow, removeSegment, saveSegment } from "@/lib/segments";
 import { FlowWriteUnconfirmed, removeFlow, saveFlow } from "@/lib/flows";
-import { DraftRemovalUnconfirmed, DraftReadUnavailable, DraftWriteUnconfirmed, finishBroadcastDraft, removeDraft, saveDraft } from "@/lib/mail-drafts";
+import { DraftRemovalConflict, DraftRemovalUnconfirmed, DraftReadUnavailable, DraftWriteUnconfirmed, finishBroadcastDraft, removeDraft, saveDraft } from "@/lib/mail-drafts";
 import { copyOf, keepSending } from "@/lib/mail-reuse";
 import { setUpStarters } from "@/lib/mail-starters";
 import { readListings } from "@/lib/catalog";
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "draft-remove") {
-      const done = await removeDraft(store, text(body.id, 40));
+      const done = await removeDraft(store, text(body.id, 40), body.expectedSavedAt);
       return done ? Response.json({ ok: true }) : fail("unknown", 404);
     }
 
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
       const id = created.broadcast.id;
       // A draft that has now been sent or scheduled is done with.
       const fromDraft = text(body.draftId, 40);
-      const draftCleanupConfirmed = await finishBroadcastDraft(store, fromDraft);
+      const draftCleanupConfirmed = await finishBroadcastDraft(store, fromDraft, body.draftSavedAt);
       if (!draftCleanupConfirmed) console.error("A confirmed campaign draft cleanup could not be confirmed");
       if (created.broadcast.sendAt <= Math.floor(Date.now() / 1000) + 60) {
         // Starts as soon as the studio has its answer; the scheduled job
@@ -266,6 +266,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof FlowWriteUnconfirmed) return fail("flow_write_unconfirmed", 502);
     if (error instanceof DraftWriteUnconfirmed) return fail("draft_write_unconfirmed", 502);
     if (error instanceof DraftReadUnavailable) return fail("draft_read_unavailable", 503);
+    if (error instanceof DraftRemovalConflict) return fail("draft_remove_conflict", 409);
     if (error instanceof DraftRemovalUnconfirmed) return fail("draft_remove_unconfirmed", 502);
     return fail("server_error", 500);
   }
