@@ -5,7 +5,7 @@ import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
 import { DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 
-import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
@@ -260,14 +260,14 @@ export function EmailStudio(props: {
   // The draft open in the composer; a new key starts the composer afresh.
   const [open, setOpen] = useState<DraftRow | null>(null);
   const [composeRevision, setComposeRevision] = useState(0);
-  const composerState = useRef({ dirty: false, busy: false });
+  const composerState = useRef<{ dirty: boolean; busy: boolean } | null>(null);
   const openDraft = (draft: DraftRow | null) => {
     if (draft && open?.id === draft.id && open.savedAt === draft.savedAt) return;
-    if (composerState.current.busy) {
+    if (composerState.current?.busy) {
       toast("Wait for the current email operation to finish before opening another email.");
       return;
     }
-    if (composerState.current.dirty && !window.confirm("You have email changes that are not saved. Discard them and open another email?")) return;
+    if (composerState.current?.dirty && !window.confirm("You have email changes that are not saved. Discard them and open another email?")) return;
     setOpen(draft);
     setComposeRevision((value) => value + 1);
   };
@@ -488,7 +488,7 @@ function Compose(props: {
   draft: DraftRow | null;
   onDone: () => void;
   onStartNew: () => void;
-  composerState: { current: { dirty: boolean; busy: boolean } };
+  composerState: { current: { dirty: boolean; busy: boolean } | null };
   currency: string;
   segments: Segment[];
   preset?: { who: Who };
@@ -534,11 +534,7 @@ function Compose(props: {
   const content = JSON.stringify([subject, body, productId]);
   const dirty = content !== savedContent || who !== (props.draft?.who ?? props.preset?.who ?? "all") || notProductId !== "" || later || at !== "" || testing || subjectB !== "" || spentText !== "" || channel !== "" || quietDays !== 0;
   useLeaveGuard(dirty);
-  useEffect(() => {
-    const state = props.composerState;
-    state.current = { dirty, busy };
-    return () => { state.current = { dirty: false, busy: false }; };
-  }, [dirty, busy, props.composerState]);
+  useImperativeHandle(props.composerState, () => ({ dirty, busy }), [dirty, busy]);
 
   useEffect(() => {
     let live = true;
