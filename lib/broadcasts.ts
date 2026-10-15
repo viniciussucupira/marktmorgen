@@ -80,6 +80,11 @@ export type Broadcast = {
   test: SubjectTest | null;
 };
 
+/** Creation may have been partially written even when its acknowledgement is lost. */
+export class BroadcastWriteUnconfirmed extends Error {
+  constructor() { super("Campaign creation could not be confirmed"); this.name = "BroadcastWriteUnconfirmed"; }
+}
+
 export const MAX_SCHEDULE_DAYS = 365;
 const QUEUE = "nl:mail:queue";
 const bcKey = (id: string) => `nl:mail:bc:${id}`;
@@ -260,11 +265,18 @@ export async function createBroadcast(
     tagged: true,
     test,
   };
-  await save(broadcast);
-  await redisPipeline([
-    ["LPUSH", listKey(store.listId), broadcast.id],
-    ["SADD", QUEUE, broadcast.id],
-  ]);
+  try {
+    const saved = await redisPipeline([["SET", bcKey(broadcast.id), JSON.stringify(broadcast), "EX", 400 * 86_400]]);
+    if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new BroadcastWriteUnconfirmed();
+    const indexed = await redisPipeline([
+      ["LPUSH", listKey(store.listId), broadcast.id],
+      ["SADD", QUEUE, broadcast.id],
+    ]);
+    if (!Array.isArray(indexed) || indexed.length !== 2 || typeof indexed[0] !== "number" || !Number.isSafeInteger(indexed[0]) || indexed[0] < 1 || (indexed[1] !== 0 && indexed[1] !== 1)) throw new BroadcastWriteUnconfirmed();
+  } catch {
+    // Do not retry or roll back: any of these writes may already have happened.
+    throw new BroadcastWriteUnconfirmed();
+  }
   return { ok: true, broadcast };
 }
 
