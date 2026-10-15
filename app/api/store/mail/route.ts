@@ -12,7 +12,7 @@ import { MAX_IMPORT, WHO, type Who, audience, importContacts, listCounts, readAd
 import { MAX_MAIL_BODY, MAX_SUBJECT, fromLine, monthlyAllowance, render, reserve, release } from "@/lib/mail";
 import { sendBatch } from "@/lib/email";
 import { healthId, startRamp } from "@/lib/mail-health";
-import { advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
+import { BroadcastWriteUnconfirmed, advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
 import { buyerLedger, isNarrowed, keeps, ledgerChannels, readNarrow, removeSegment, saveSegment } from "@/lib/segments";
 import { FlowWriteUnconfirmed, removeFlow, saveFlow } from "@/lib/flows";
 import { DraftRemovalUnconfirmed, DraftReadUnavailable, DraftWriteUnconfirmed, removeDraft, saveDraft } from "@/lib/mail-drafts";
@@ -257,6 +257,7 @@ export async function POST(request: NextRequest) {
     return fail("invalid");
   } catch (error) {
     console.error("an email action failed", error);
+    if (error instanceof BroadcastWriteUnconfirmed) return fail("broadcast_write_unconfirmed", 502);
     if (error instanceof FlowWriteUnconfirmed) return fail("flow_write_unconfirmed", 502);
     if (error instanceof DraftWriteUnconfirmed) return fail("draft_write_unconfirmed", 502);
     if (error instanceof DraftReadUnavailable) return fail("draft_read_unavailable", 503);
