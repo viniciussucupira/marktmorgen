@@ -63,7 +63,7 @@ async function main(): Promise<void> {
   const over = { bytes: 80 * GB, brake: 5 * GB, left: 0, full: true };
   is("a store that held more when its plan ended cannot add to it", [fits(over, 1, "ended"), over.full], [false, true]);
   const nearly = { bytes: 199 * GB, brake: STORAGE_BRAKE_BYTES, left: GB, full: false };
-  is("a store that pays is stopped at the brake and not before it, as it always was", [fits(nearly, 5 * GB, "paid"), fits({ ...nearly, bytes: 200 * GB, left: 0, full: true }, 1, "paid")], [true, false]);
+  is("a paid store cannot accept a file larger than its remaining space", [fits(nearly, 5 * GB, "paid"), fits({ ...nearly, bytes: 200 * GB, left: 0, full: true }, 1, "paid")], [false, false]);
 
   part("What an upload is told");
   is("each standing has its own word", [storageRefusal("paid"), storageRefusal("trial"), storageRefusal("none"), storageRefusal("ended")], ["storage_full", "storage_trial", "storage_setup", "storage_setup"]);
@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   is("a store is not told to start a plan while none can be started", STUDIO_MESSAGES.storage_setup.includes("Start your plan"), PLANS_ON_SALE);
   for (const [name, path] of [["files", "app/api/store/vault/route.ts"], ["lesson videos", "app/api/store/stream/route.ts"]] as const) {
     const door = read(path);
-    is(`the door for ${name} measures a store against its own figure and holds a file to what is left`, [/storageUsed\(folder, storageBrakeFor\(standing\)\)/.test(door), /!fits\(held, bytes, standing\)/.test(door), /storageRefusal\(standing\)/.test(door)], [true, true, true]);
+    is(`the door for ${name} measures a store against its own figure and holds a file to what is left`, [/storageUsed\(folder, storageBrakeFor\(standing\), true\)/.test(door), /!fits\(held, bytes, standing\)/.test(door), /storageRefusal\(standing\)/.test(door)], [true, true, true]);
   }
 
   part("The day a plan ends is written down once");

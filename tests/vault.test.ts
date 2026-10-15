@@ -313,6 +313,17 @@ async function main() {
   service = "down";
   is("and a count that cannot be read is said to be unknown, not zero", await vaultHeld(FOLDER), null);
   service = "up";
+  const originalFetch = globalThis.fetch;
+  let pagesRead = 0;
+  globalThis.fetch = async () => {
+    pagesRead += 1;
+    return xml('<ListBucketResult><IsTruncated>true</IsTruncated><NextContinuationToken>next</NextContinuationToken><Contents><Key>vault/file</Key><Size>1</Size></Contents></ListBucketResult>');
+  };
+  is("an unfinished listing is unknown rather than a complete storage count", await vaultHeld(FOLDER, true), null);
+  is("the bounded scan stops after twenty pages", pagesRead, 20);
+  globalThis.fetch = async () => xml('<ListBucketResult><IsTruncated>true</IsTruncated></ListBucketResult>');
+  is("a truncated listing without its continuation token cannot be trusted", await listVault('vault/'+FOLDER+'/', undefined, true), null);
+  globalThis.fetch = originalFetch;
 
   part("A creator removes a file");
   await deleteFile([pathname, copy]);

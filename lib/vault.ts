@@ -400,7 +400,7 @@ export async function writeVault(pathname: string, bytes: Uint8Array, contentTyp
 }
 
 /** One page of what is kept under a prefix: each file's path and size, and where to go on from. */
-export async function listVault(prefix: string, cursor?: string): Promise<{ files: { pathname: string; bytes: number }[]; cursor: string | null } | null> {
+export async function listVault(prefix: string, cursor?: string, requireComplete = false): Promise<{ files: { pathname: string; bytes: number }[]; cursor: string | null } | null> {
   const config = vaultConfig();
   if (!config) return null;
   const url = new URL(`${config.endpoint}/${config.bucket}`);
@@ -413,24 +413,29 @@ export async function listVault(prefix: string, cursor?: string): Promise<{ file
   const files: { pathname: string; bytes: number }[] = [];
   for (const entry of answer.text.match(/<Contents>[\s\S]*?<\/Contents>/g) ?? []) {
     const pathname = tag(entry, "Key");
-    const bytes = Number(tag(entry, "Size") ?? "");
+    const size = tag(entry, "Size");
+    const bytes = Number(size);
+    if (requireComplete && (!pathname || size === null || !Number.isSafeInteger(bytes) || bytes < 0)) return null;
     if (pathname && Number.isFinite(bytes)) files.push({ pathname, bytes });
   }
-  const more = tag(answer.text, "IsTruncated") === "true" ? tag(answer.text, "NextContinuationToken") : null;
+  const truncated = tag(answer.text, "IsTruncated") === "true";
+  const more = truncated ? tag(answer.text, "NextContinuationToken") : null;
+  if (requireComplete && truncated && !more) return null;
   return { files, cursor: more };
 }
 
 /** How many bytes a store keeps here. Null when it cannot be read. */
-export async function vaultHeld(folder: string): Promise<number | null> {
+export async function vaultHeld(folder: string, requireComplete = false): Promise<number | null> {
   if (!vaultConfig()) return 0;
   let bytes = 0;
   let cursor: string | undefined;
   for (let page = 0; page < 20; page += 1) {
-    const answer = await listVault(`vault/${folder}/`, cursor);
+    const answer = await listVault(`vault/${folder}/`, cursor, requireComplete);
     if (!answer) return null;
     for (const file of answer.files) bytes += file.bytes;
-    if (!answer.cursor) break;
+    if (!answer.cursor) return bytes;
     cursor = answer.cursor;
   }
-  return bytes;
+  // More pages remain: a partial count cannot authorize another upload.
+  return requireComplete ? null : bytes;
 }

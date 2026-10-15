@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       if (!(await withinLimit("vault-open", folder, OPENS_PER_HOUR, 3600))) return fail("slow_down", 429);
       // What a store may keep goes by where it stands with its plan (lib/plan-standing.ts).
       const standing = standingOf(store);
-      const held = await storageUsed(folder, storageBrakeFor(standing));
+      const held = await storageUsed(folder, storageBrakeFor(standing), true);
       if (!fits(held, bytes, standing)) return fail(storageRefusal(standing));
       await rememberFolderOwner(folder, ref);
 
@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
 
     return fail("invalid");
   } catch (error) {
+    if (error instanceof Error && error.message === "storage_unavailable") return fail("files_unavailable", 503);
     console.error("a file upload's door failed", error);
     return fail("server_error", 500);
   }

@@ -106,10 +106,9 @@ export async function POST(request: NextRequest) {
           It sits far above any real store and is not a plan limit.
         */
         // By where the store stands with its plan (lib/plan-standing.ts).
-        // This door is not told the file's size, so it stops a store that
-        // is at its figure and cannot hold one to what is left of it.
+        // The provider enforces the remaining space through the signed maximum size.
         const standing = standingOf(store);
-        const held = await storageUsed(folder, storageBrakeFor(standing));
+        const held = await storageUsed(folder, storageBrakeFor(standing), true);
         if (held.full) throw new Error(storageRefusal(standing));
 
         // The one moment this store's folder and its owner are both in hand.
@@ -125,12 +124,12 @@ export async function POST(request: NextRequest) {
             pathname,
             operations: ["put"],
             allowedContentTypes: ALLOWED_CONTENT_TYPES,
-            maximumSizeInBytes: MAX_FILE_BYTES,
+            maximumSizeInBytes: Math.min(MAX_FILE_BYTES, held.left),
             validUntil: Date.now() + UPLOAD_WINDOW_MS,
           }),
           urlOptions: {
             allowedContentTypes: ALLOWED_CONTENT_TYPES,
-            maximumSizeInBytes: MAX_FILE_BYTES,
+            maximumSizeInBytes: Math.min(MAX_FILE_BYTES, held.left),
             validUntil: Date.now() + UPLOAD_WINDOW_MS,
             // Two files of the same name never fight, and an upload can never
             // quietly replace something that is already selling.
@@ -143,7 +142,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json(answer);
   } catch (error) {
-    const reason = error instanceof Error ? error.message : "server_error";
+    const reason = error instanceof Error && error.message === "storage_unavailable" ? "files_unavailable" : error instanceof Error ? error.message : "server_error";
     const known = ["signed_out", "none", "unknown", "invalid", "forbidden", "gone", "storage_full", "storage_trial", "storage_setup", "files_unavailable"].includes(reason);
     if (!known) console.error("signing an upload failed", error);
     return Response.json(

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
     // What a store may keep goes by where it stands with its plan (lib/plan-standing.ts).
     const standing = standingOf(store);
-    const held = await storageUsed(folder, storageBrakeFor(standing));
+    const held = await storageUsed(folder, storageBrakeFor(standing), true);
     if (!fits(held, bytes, standing)) return Response.json({ ok: false, error: storageRefusal(standing) }, { status: 400 });
     await rememberFolderOwner(folder, ref);
 
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
     }
     return Response.json({ ok: true, door: opened.door }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    if (error instanceof Error && error.message === "storage_unavailable") return Response.json({ ok: false, error: "video_unavailable" }, { status: 503 });
     console.error("opening the door for a lesson video failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
   }

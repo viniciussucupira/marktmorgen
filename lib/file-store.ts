@@ -113,21 +113,25 @@ export async function listFiles(prefix: string): Promise<string[]> {
 }
 
 /**
- * How many bytes a store keeps in both file stores together. Stops after a
- * sane number of pages, which reports less than the truth: the safe
- * direction, for a figure that can only ever stop an upload. Throws when the
- * host's store cannot be read; a count from the other that cannot be read is
- * left out, as the video service's is (lib/storage-quota.ts).
+ * Bytes in both file stores. Upload admission requires a complete count;
+ * display and retention may use a partial count without authorizing uploads.
  */
-export async function filesHeld(folder: string): Promise<number> {
+export async function filesHeld(folder: string, requireComplete = false): Promise<number> {
   let bytes = 0;
   let cursor: string | undefined;
   for (let page = 0; page < 20; page += 1) {
     const answer = await blob.list({ prefix: `stores/${folder}/`, limit: 1000, cursor });
-    for (const entry of answer.blobs) bytes += typeof entry.size === "number" ? entry.size : 0;
-    if (!answer.hasMore || !answer.cursor) break;
+    for (const entry of answer.blobs) {
+      if (requireComplete && (!Number.isSafeInteger(entry.size) || entry.size < 0)) throw new Error("storage_unavailable");
+      bytes += typeof entry.size === "number" ? entry.size : 0;
+    }
+    if (!answer.hasMore) break;
+    if (requireComplete && (!answer.cursor || page === 19)) throw new Error("storage_unavailable");
+    if (!answer.cursor) break;
     cursor = answer.cursor;
   }
-  bytes += (await vaultHeld(folder).catch(() => null)) ?? 0;
+  const vaultBytes = await vaultHeld(folder, requireComplete).catch(() => null);
+  if (requireComplete && vaultBytes === null) throw new Error("storage_unavailable");
+  bytes += vaultBytes ?? 0;
   return bytes;
 }

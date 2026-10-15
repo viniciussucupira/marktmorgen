@@ -60,6 +60,9 @@ export type StorageUse = { bytes: number; brake: number; left: number; full: boo
 
 /**
  * What a store is holding, read from storage itself.
+ * Upload admission passes requireComplete: unavailable or incomplete counts
+ * then refuse new uploads. Display and retention keep their conservative
+ * fallback so an outage never triggers deletion.
  *
  * Not kept as a counter. A counter has to be incremented everywhere a file
  * is attached and decremented everywhere one is dropped, and the day someone
@@ -68,29 +71,31 @@ export type StorageUse = { bytes: number; brake: number; left: number; full: boo
  * one operation, costs a fraction of a cent, and cannot drift.
  *
  * Paged, and stopped after a sane number of pages so this can never become a
- * long walk while a creator waits to upload. Stopping early reports less
- * than the truth, which is the safe direction: it lets an upload through
- * rather than refusing one it should not have.
+ * long walk while a creator waits to upload. An incomplete count refuses
+ * upload admission; display and retention may conservatively undercount.
  *
  * Lesson videos kept by the video service are counted too, by the service's
  * own count of the store's collection (lib/stream.ts): every size of every
- * video, which is what is paid for. Read the same way and for the same
- * reason, and left out the same way when it cannot be read.
+ * video, which is what is paid for. An unavailable video count also refuses
+ * upload admission.
  */
-export async function storageUsed(folder: string, brake: number = STORAGE_BRAKE_BYTES): Promise<StorageUse> {
+export async function storageUsed(folder: string, brake: number = STORAGE_BRAKE_BYTES, requireComplete = false): Promise<StorageUse> {
+  if (requireComplete && !folder) throw new Error("storage_unavailable");
   if (!folder) return { bytes: 0, brake, left: brake, full: false };
   let bytes = 0;
   try {
     // Both file stores a sold file may be kept in, together (lib/file-store.ts).
-    bytes = await filesHeld(folder);
+    bytes = await filesHeld(folder, requireComplete);
   } catch (error) {
-    // Storage could not be read. A creator must not be stopped from adding a
-    // product because of that, so this reports an empty store and the upload
-    // goes through.
+    if (requireComplete) throw new Error("storage_unavailable", { cause: error });
+    // A display or retention read must not move a store toward deletion
+    // based on unknown usage. Upload admission has already thrown above.
     console.error("could not read what a store is storing", error);
     return { bytes: 0, brake, left: brake, full: false };
   }
-  bytes += (await streamHeld(folder).catch(() => null)) ?? 0;
+  const videoBytes = await streamHeld(folder).catch(() => null);
+  if (requireComplete && videoBytes === null) throw new Error("storage_unavailable");
+  bytes += videoBytes ?? 0;
   return { bytes, brake, left: Math.max(0, brake - bytes), full: bytes >= brake };
 }
 
@@ -104,18 +109,11 @@ export function storageBrakeFor(standing: Standing): number {
   return standing === "paid" ? STORAGE_BRAKE_BYTES : standing === "trial" ? TRIAL_STORAGE_BYTES : SETUP_STORAGE_BYTES;
 }
 
-/**
- * Whether a file of `bytes` may be taken in.
- *
- * A store that pays is stopped once it is at the brake, as it always was:
- * the brake is far above it, and the file that crosses it is let through. A
- * store that does not pay is held to its figure, so the file has to fit in
- * what is left. A count that could not be read is an empty store, and the
- * file goes through: an upload is never stopped on a guess.
- */
+/** Every new file must fit in the remaining measured space, including paid plans. */
 export function fits(held: StorageUse, bytes: number, standing: Standing): boolean {
-  if (held.full) return false;
-  return standing === "paid" || bytes <= held.left;
+  void standing;
+  return !held.full && Number.isSafeInteger(bytes) && bytes > 0 &&
+    Number.isSafeInteger(held.left) && bytes <= held.left;
 }
 
 /** "480 GB", "1.4 TB", "5 GB", "900 MB". */
