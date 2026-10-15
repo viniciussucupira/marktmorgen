@@ -156,8 +156,8 @@ export async function keepSending(
 export async function copyOf(
   store: Store,
   broadcastId: string,
-): Promise<{ subject: string; body: string; productId: string | null; who: Broadcast["who"] } | null> {
+): Promise<{ subject: string; body: string; productId: string | null; who: Broadcast["who"]; notProductId: string | null; narrow: Broadcast["narrow"] } | null> {
   const broadcast = await readBroadcast(broadcastId);
-  if (!broadcast || !store.listId || broadcast.listId !== store.listId) return null;
-  return { subject: broadcast.subject, body: broadcast.body, productId: broadcast.productId, who: broadcast.who };
+  if (!broadcast || broadcast.id !== broadcastId || !store.listId || broadcast.listId !== store.listId) return null;
+  return { subject: broadcast.subject, body: broadcast.body, productId: broadcast.productId, who: broadcast.who, notProductId: broadcast.notProductId, narrow: broadcast.narrow };
 }
