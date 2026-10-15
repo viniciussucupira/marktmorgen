@@ -34,8 +34,8 @@ try {
       logLevel: "error",
       alias: {
         "@": root,
-        // This integration test supplies its own fetch transport and malformed replies.
-        "@/lib/redis": file === "range-traffic-coverage.test.ts"
+        // These integration tests supply their own fetch transport and malformed replies.
+        "@/lib/redis": ["range-traffic-coverage.test.ts", "stats-traffic-coverage.test.ts"].includes(file)
           ? join(root, "lib/redis.ts")
           : join(here, "redis-stub.ts"),
       },
