@@ -19,7 +19,7 @@ export function customRangeOrderLabel(data:RangeData,sort:string,kind:"channels"
 }
 
 export const CUSTOM_RANGE_FILTERS=[
- {value:"all",label:"All loaded rows"},{value:"paid",label:"With sales"},{value:"unconverted",label:"Traffic without sales"},
+ {value:"all",label:"All loaded rows"},{value:"paid",label:"With sales"},{value:"unconverted",label:"Traffic without sales"},{value:"untracked",label:"Sales without recorded traffic"},
 ] as const;
 export type CustomRangeFilter=typeof CUSTOM_RANGE_FILTERS[number]["value"];
 /** Missing paid coverage cannot classify a row as having no purchases. */
@@ -49,7 +49,7 @@ export function customRangeView<T extends RangeData>(data:T,query:string,sort:Cu
  const actualFilter=effectiveCustomRangeFilter(data,filter);
  const minimum=customRangeMinimumTraffic(minimumTraffic);
  const paidMinimum=effectiveCustomRangeMinimumPaidRecords(data,minimumPaidRecords);
- const matches=(sales:number,traffic:number)=>traffic>=minimum&&(paidMinimum===0||sales>=paidMinimum)&&(actualFilter==="all"||(actualFilter==="paid"?sales>0:traffic>0&&sales===0));
+ const matches=(sales:number,traffic:number)=>traffic>=minimum&&(paidMinimum===0||sales>=paidMinimum)&&(actualFilter==="all"||(actualFilter==="paid"?sales>0:actualFilter==="untracked"?sales>0&&traffic===0:traffic>0&&sales===0));
  if(!needle&&selected==="recorded"&&actualFilter==="all"&&minimum===0&&paidMinimum===0)return data;
  const channels=data.channels.filter(row=>matches(row.sales,row.visits)&&normalized(row.source+" "+channelName(row.source)).includes(needle));
  const products=data.products.filter(row=>matches(row.sales,row.views)&&normalized(row.id+" "+productName(row)).includes(needle));
