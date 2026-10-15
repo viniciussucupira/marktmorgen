@@ -24,6 +24,7 @@ import { type Currency, plainAmount } from "@/lib/money";
 import { mailAudienceWords, type MailAudienceSelection } from "@/lib/mail-audience-summary";
 import { campaignHistoryView, HISTORY_STATUSES, type HistoryStatus } from "@/lib/broadcast-history-view";
 import { broadcastAnswer, cancellationAnswer } from "@/lib/broadcast-response";
+import type { DraftSubjectTest } from "@/lib/mail-draft-test";
 import { subjectTestPreview, type SubjectTestPreview } from "@/lib/mail-test-preview";
 import { readMailSchedule } from "@/lib/mail-schedule";
 import { channelName } from "@/lib/channel-names";
@@ -66,6 +67,7 @@ const MESSAGES: Record<string, string> = {
   draft_remove_conflict: "A newer version of this draft was saved. It was not deleted. Reload saved drafts and review the latest version before deleting it.",
   draft_conflict: "A newer version of this draft was saved. Your text is still here. Keep a copy of it, then reload saved drafts and open the latest version before saving again.",
   draft_busy: "This draft is being changed. Your text is still here. Try saving again shortly.",
+  draft_test: "The subject test settings could not be saved. Review the second subject, share, wait and selection criterion.",
   audience: "The audience filters could not be saved. Review the recipient choices and try again.",
   full: "A store keeps 20 drafts at most. Send or delete one first.",
   list: "This store has no list yet, so there is nowhere to keep a draft.",
@@ -233,6 +235,7 @@ function hoursWords(hours: number): string {
   return hours === 24 ? "a day" : `${hours} hours`;
 }
 export type DraftRow = {
+  subjectTest?: DraftSubjectTest | null;
   id: string;
   subject: string;
   body: string;
@@ -589,11 +592,11 @@ function Compose(props: {
     return () => { window.clearInterval(timer); window.removeEventListener("focus", tick); };
   }, [later]);
   // A second subject line tried on part of the list (lib/mail-test.ts).
-  const [testing, setTesting] = useState(false);
-  const [subjectB, setSubjectB] = useState("");
-  const [share, setShare] = useState<number>(TEST_SHARES[0]);
-  const [hours, setHours] = useState<number>(TEST_HOURS[1]);
-  const [by, setBy] = useState<TestBy>("visits");
+  const [testing, setTesting] = useState(Boolean(props.draft?.subjectTest));
+  const [subjectB, setSubjectB] = useState(props.draft?.subjectTest?.subjectB ?? "");
+  const [share, setShare] = useState<number>(props.draft?.subjectTest?.share ?? TEST_SHARES[0]);
+  const [hours, setHours] = useState<number>(props.draft?.subjectTest?.hours ?? TEST_HOURS[1]);
+  const [by, setBy] = useState<TestBy>(props.draft?.subjectTest?.by ?? "visits");
   const [countRevision, setCountRevision] = useState(0);
   const [reachResult, setReachResult] = useState<{ key: string; count: number | null } | null>(null);
   // Spent at least, first found the store through, has not bought in these
@@ -623,9 +626,10 @@ function Compose(props: {
   // What the writing help is asked to write, and about which product.
   const [goal, setGoal] = useState<EmailGoal>("announce");
   const [about, setAbout] = useState("");
-  const content = JSON.stringify([subject, body, productId, who, notProductId, spentText, channel, quietDays]);
+  const draftSubjectTest: DraftSubjectTest | null = testing ? { subjectB, share, hours, by } : null;
+  const content = JSON.stringify([subject, body, productId, who, notProductId, spentText, channel, quietDays, draftSubjectTest]);
   const [savedContent, setSavedContent] = useState(content);
-  const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || later || at !== "" || testing || subjectB !== "";
+  const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || later || at !== "";
   useLeaveGuard(dirty || aiBusy);
   useImperativeHandle(props.composerState, () => ({ dirty, busy: locked }), [dirty, locked]);
 
@@ -706,14 +710,14 @@ function Compose(props: {
     setBusy(true);
     setError(null);
     const audience = { who, notProductId: notProductId || null, narrow: minSpent || channel || quietDays ? narrow : null };
-    const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId, audience, expectedSavedAt: draftId ? draftSavedAt : undefined });
+    const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId, audience, subjectTest: draftSubjectTest, expectedSavedAt: draftId ? draftSavedAt : undefined });
     setBusy(false);
     if (!a.ok) {
       if (a.error === "draft_write_unconfirmed") setUncertainDrafts(props.savedDrafts);
       setError(message(a));
       return;
     }
-    const savedId = confirmedDraftId(a, draftId, audience, { subject, body, productId });
+    const savedId = confirmedDraftId(a, draftId, audience, { subject, body, productId }, draftSubjectTest);
     if (!savedId) {
       setUncertainDrafts(props.savedDrafts);
       setError("The draft save could not be confirmed. Your text is still here. Check your saved drafts before saving again; the draft may already exist.");
@@ -1181,6 +1185,7 @@ function Drafts({
                 <When seconds={Math.floor(new Date(d.savedAt).getTime() / 1000)} />
               </span>
               <AudienceSummary audience={d} products={products} currency={currency} />
+              {d.subjectTest ? <p className="mt-1 text-sm text-ink-soft">Subject test draft saved · {d.subjectTest.share}% · {hoursWords(d.subjectTest.hours)} · {d.subjectTest.by === "sales" ? "sales" : "visits"}. Review both subjects and the current audience before sending.</p> : null}
             </div>
             <span className="flex items-center gap-4">
               <button
