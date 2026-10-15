@@ -529,6 +529,8 @@ function Compose(props: {
   const minSpent = spentText.trim() ? readMoney(spentText, props.currency as Currency) ?? 0 : 0;
   const narrow: Narrow = { minSpent, channel, quietDays };
   const [busy, setBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const locked = busy || aiBusy;
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // What the writing help is asked to write, and about which product.
@@ -537,8 +539,8 @@ function Compose(props: {
   const [savedContent, setSavedContent] = useState(() => JSON.stringify([props.draft?.subject ?? "", props.draft?.body ?? "", props.draft?.productId ?? ""]));
   const content = JSON.stringify([subject, body, productId]);
   const dirty = content !== savedContent || who !== (props.draft?.who ?? props.preset?.who ?? "all") || notProductId !== "" || later || at !== "" || testing || subjectB !== "" || spentText !== "" || channel !== "" || quietDays !== 0;
-  useLeaveGuard(dirty);
-  useImperativeHandle(props.composerState, () => ({ dirty, busy }), [dirty, busy]);
+  useLeaveGuard(dirty || aiBusy);
+  useImperativeHandle(props.composerState, () => ({ dirty, busy: locked }), [dirty, locked]);
 
   useEffect(() => {
     let live = true;
@@ -558,7 +560,7 @@ function Compose(props: {
   }, [productId, notProductId, who, minSpent, channel, quietDays, more]);
 
   async function group(payload: Record<string, unknown>, done: string) {
-    if (busy) return;
+    if (locked) return;
     setBusy(true);
     setError(null);
     const a = await call(payload);
@@ -583,7 +585,7 @@ function Compose(props: {
   }
 
   async function send(payload: Record<string, unknown>, success: string) {
-    if (busy) return false;
+    if (locked) return false;
     setBusy(true);
     setError(null);
     const a = await call(payload);
@@ -598,7 +600,7 @@ function Compose(props: {
   }
 
   async function keep() {
-    if (busy) return;
+    if (locked) return;
     setBusy(true);
     setError(null);
     const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId });
@@ -625,15 +627,16 @@ function Compose(props: {
           {draftId ? "Draft" : "New email"}
         </h2>
         {draftId ? (
-          <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" disabled={busy} onClick={props.onStartNew}>
+          <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" disabled={locked} onClick={props.onStartNew}>
             Start a new one instead
           </button>
         ) : null}
       </div>
-      {busy ? <p role="status" className="mt-3 text-sm text-ink-soft">Working on your email. Editing is paused until this finishes.</p> : null}
-      <fieldset className="mt-4 min-w-0 space-y-4" disabled={busy} aria-label="Email composition" aria-busy={busy}>
+      {locked ? <p role="status" className="mt-3 text-sm text-ink-soft">Working on your email. Editing is paused until this finishes.</p> : null}
+      <fieldset className="mt-4 min-w-0 space-y-4" disabled={locked} aria-label="Email composition" aria-busy={locked}>
         <AiAssist<{ subject: string; body: string }>
           title="Write a draft with AI"
+          onBusyChange={setAiBusy}
           hint="Pick what the email is for, and say in a few words what you want it to say. The subject and the email below are filled in for you to read and change."
           placeholder="The recipe pack is out: 40 weeknight dinners, $27, and the first 10 pages are free to read on the page."
           extra={
