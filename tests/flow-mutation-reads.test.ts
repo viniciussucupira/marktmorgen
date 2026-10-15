@@ -1,4 +1,4 @@
-import { saveFlow, removeFlow, readFlows } from "@/lib/flows";
+import { FlowWriteUnconfirmed, saveFlow, removeFlow, readFlows } from "@/lib/flows";
 import { setUpStarters } from "@/lib/mail-starters";
 import { keepSending } from "@/lib/mail-reuse";
 import type { Store } from "@/lib/store";
@@ -57,7 +57,7 @@ async function main() {
         await original.call(redis, [["SET", key, JSON.stringify([first, second])]]);
         writeReply = uncertain;
         let rejected = false;
-        try { await operation(); } catch { rejected = true; }
+        try { await operation(); } catch (error) { rejected = error instanceof FlowWriteUnconfirmed; }
         is(name + " needs explicit write confirmation", rejected, true);
       }
     }
@@ -65,7 +65,7 @@ async function main() {
     applyWrite = true;
     writeReply = [];
     let uncertain = false;
-    try { await saveFlow(store, raw); } catch { uncertain = true; }
+    try { await saveFlow(store, raw); } catch (error) { uncertain = error instanceof FlowWriteUnconfirmed; }
     is("lost acknowledgement does not claim success", uncertain, true);
     is("unconfirmed response does not imply rollback", (await readFlows(listId)).length, 3);
     applyWrite = false;
