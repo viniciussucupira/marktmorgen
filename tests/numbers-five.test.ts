@@ -124,9 +124,9 @@ async function main(): Promise<void> {
     paid("cs_test_sale0000000003", 3, 2000, { channel: "instagram" }, "DE"),
   ];
   refunds = [
-    { status: "succeeded", amount: 3000, currency: "usd", created: Math.floor((NOW - DAY) / 1000), payment_intent: "pi_refunded" },
-    { status: "succeeded", amount: 500, currency: "usd", created: Math.floor((NOW - DAY) / 1000), payment_intent: "pi_unknown" },
-    { status: "failed", amount: 999, currency: "usd", created: Math.floor((NOW - DAY) / 1000), payment_intent: "pi_refunded" },
+    { id: "re_test_fixture1", status: "succeeded", amount: 3000, currency: "usd", created: Math.floor((NOW - DAY) / 1000), payment_intent: "pi_refunded" },
+    { id: "re_test_fixture2", status: "succeeded", amount: 500, currency: "usd", created: Math.floor((NOW - DAY) / 1000), payment_intent: "pi_unknown" },
+    { id: "re_test_fixture3", status: "failed", amount: 999, currency: "usd", created: Math.floor((NOW - DAY) / 1000), payment_intent: "pi_refunded" },
   ];
   const sales = (await readSales(store, NOW))!;
   is("money by the buyer's country", sales.byCountryIn?.d7, [{ country: "DE", cents: 7000, sales: 2 }, { country: "US", cents: 3000, sales: 1 }]);
