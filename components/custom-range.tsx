@@ -4,6 +4,7 @@ import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyR
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
+import { customRangeView } from "@/lib/custom-range-view";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -102,6 +103,8 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
 export function CustomRangeResults({ range, marks, currency, onShowAll, busy = false }: { range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; currency: string; onShowAll?: () => void; busy?: boolean }) {
   const money = (cents: number) => formatMoney(cents, currency);
   const r = range;
+  const [query, setQuery] = useState("");
+  const view = customRangeView(r, query);
   const sold = paidFiguresComplete(r);
   const peak = Math.max(1, ...r.days.map((d) => d.visitors));
   const tiles = [
@@ -150,12 +153,18 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
           ))}
         </ul>
       ) : null}
+      {r.channels.length || r.products.length ? <div className="mt-4">
+        <label className="field-label" htmlFor="range-search">Search channels or products</label>
+        <input id="range-search" type="search" className="field mt-1" value={query} maxLength={100} onChange={event=>setQuery(event.target.value)} placeholder="Channel, product name or product ID" />
+        <p className="mt-1 text-xs text-ink-soft">Search applies to the loaded lists. Period totals and daily results stay the same.{r.channelsTruncated || r.productsTruncated ? " Open all results above to search every recorded row." : ""}</p>
+        {query.trim() ? <p className="mt-1 text-xs text-ink-soft" role="status">{view.channels.length} of {r.channels.length} loaded channels and {view.products.length} of {r.products.length} loaded products match.</p> : null}
+      </div> : null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
-        {r.channels.length ? (
+        {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
-          <ReportDownload csv={customRangeChannelsReport(r)} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
+          <ReportDownload csv={customRangeChannelsReport(view,{query})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
             <table className="w-full text-left text-sm">
-              <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {r.channels.length} of {r.channelsTotal} recorded channels, ordered by {sold ? "revenue" : "visits"}.</span> : null}</caption>
+              <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.channels.length} of {r.channelsTotal} recorded channels, ordered by {sold ? "revenue" : "visits"}.</span> : null}</caption>
               <thead>
                 <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                   <th scope="col" className="py-1 font-semibold">Channel</th>
@@ -165,7 +174,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
                 </tr>
               </thead>
               <tbody>
-                {r.channels.map((c) => (
+                {view.channels.map((c) => (
                   <tr key={c.source} className="border-b border-line/60">
                     <th scope="row" className="py-1.5 pr-3 font-medium text-ink">{channelName(c.source)}</th>
                     <td className="py-1.5 pl-3 text-right tabular-nums">{count(c.visits)}</td>
@@ -177,11 +186,11 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
             </table>
           </div>
         ) : null}
-        {r.products.length ? (
+        {view.products.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
-          <ReportDownload csv={customRangeProductsReport(r)} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
+          <ReportDownload csv={customRangeProductsReport(view,{query})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
             <table className="w-full text-left text-sm">
-              <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {r.products.length} of {r.productsTotal} recorded products, ordered by {sold ? "revenue" : "page views"}.</span> : null}</caption>
+              <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.products.length} of {r.productsTotal} recorded products, ordered by {sold ? "revenue" : "page views"}.</span> : null}</caption>
               <thead>
                 <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                   <th scope="col" className="py-1 font-semibold">Product</th>
@@ -191,7 +200,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
                 </tr>
               </thead>
               <tbody>
-                {r.products.map((p) => (
+                {view.products.map((p) => (
                   <tr key={p.id} className="border-b border-line/60">
                     <th scope="row" className="py-1.5 pr-3 font-medium text-ink [overflow-wrap:anywhere]">{p.title}</th>
                     <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.views)}</td>
