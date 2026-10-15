@@ -169,3 +169,10 @@ export async function removeDraft(store: Store, id: string): Promise<boolean> {
   if (!Array.isArray(response) || response.length !== 1 || (response[0] !== 0 && response[0] !== 1)) throw new DraftRemovalUnconfirmed();
   return response[0] === 1;
 }
+
+/** Cleanup cannot undo a confirmed campaign; a lost reply must not invite resending it. */
+export async function finishBroadcastDraft(store: Store, id: string): Promise<boolean> {
+  if (!id) return true;
+  if (!store.listId || !DRAFT_ID.test(id)) return false;
+  try { await removeDraft(store, id); return true; } catch { return false; }
+}
