@@ -5,6 +5,11 @@ function revenuePerCount(cents:number|null|undefined,count:number|null|undefined
  return typeof cents==="number"&&Number.isFinite(cents)&&typeof count==="number"&&Number.isSafeInteger(count)&&count>0?cents/count:null;
 }
 
+/** Counts per visitor are an aggregate ratio, not a matched-buyer conversion rate. */
+function paidRecordsPer100Visitors(records:number|null|undefined,visitors:number|null|undefined):number|null {
+ return typeof records==="number"&&Number.isSafeInteger(records)&&records>=0&&typeof visitors==="number"&&Number.isSafeInteger(visitors)&&visitors>0?records/visitors*100:null;
+}
+
 /** One comparison model for the displayed table and CSV, with unknown values kept null. */
 export function customRangeComparison(data:RangeData) {
  const known=paidFiguresComplete(data);
@@ -22,6 +27,7 @@ export function customRangeComparison(data:RangeData) {
   {name:"Gross revenue",unit:data.currency.toUpperCase(),money:true,current:known?data.totals.cents:null,previous:known?before?.cents??null:null},
   {name:"Revenue per paid record",unit:data.currency.toUpperCase(),money:true,current:known?revenuePerCount(data.totals.cents,data.totals.sales):null,previous:known?revenuePerCount(before?.cents,before?.sales):null},
   {name:"Revenue per visitor",unit:data.currency.toUpperCase(),money:true,current:known?revenuePerCount(data.totals.cents,data.totals.visitors):null,previous:known?revenuePerCount(before?.cents,before?.visitors):null},
+  {name:"Paid records per 100 visitors",unit:"Records per 100 visitors",money:false,current:known?paidRecordsPer100Visitors(data.totals.sales,data.totals.visitors):null,previous:known?paidRecordsPer100Visitors(before?.sales,before?.visitors):null},
  ];
  return {previousFrom,previousTo,rows:metrics.map(row=>({...row,
   difference:row.current===null||row.previous===null?null:row.current-row.previous,
