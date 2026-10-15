@@ -7,6 +7,7 @@ import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, customRangeMinimumTraffic, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
 import { CUSTOM_RANGE_METRICS, customRangeChartSummary, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
+import { revenuePerTraffic, formatRevenuePerTraffic } from "@/lib/custom-range-efficiency";
 import { customRangeComparison } from "@/lib/custom-range-comparison";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
@@ -219,6 +220,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
       </div> : null}
       {hasListSelection?<CustomRangeSelectionSummary range={view} currency={currency} selection={{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum}} />:null}
       {hasListSelection?<button type="button" className="btn btn-secondary mt-3" onClick={()=>{setQuery("");setSort("recorded");setFilter("all");setMinimumTraffic("0");}}>Reset list view</button>:null}
+      {sold ? <p className="mt-3 text-xs text-ink-soft">Revenue / visit and Revenue / view divide each row’s gross revenue by recorded visits or page views, not unique people. Channels exclude one-click extras; products include them. Both exclude renewals and are before refunds, fees and costs. No traffic means unavailable. Analytical money uses up to four significant digits; CSV values keep calculated precision.</p> : null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
@@ -231,6 +233,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
                   <th scope="col" className="py-1 pl-3 text-right font-semibold">Visits</th>
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th> : null}
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
+                  {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue / visit</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -240,6 +243,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
                     <td className="py-1.5 pl-3 text-right tabular-nums">{count(c.visits)}</td>
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{count(c.sales)}</td> : null}
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(c.cents)}</td> : null}
+                    {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{formatRevenuePerTraffic(revenuePerTraffic(c.cents,c.visits,sold),currency)}</td> : null}
                   </tr>
                 ))}
               </tbody>
@@ -258,6 +262,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
                   <th scope="col" className="py-1 pl-3 text-right font-semibold">Checkouts</th>
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th> : null}
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
+                  {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue / view</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -268,6 +273,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
                     <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.checkouts)}</td>
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.sales)}</td> : null}
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(p.cents)}</td> : null}
+                    {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{formatRevenuePerTraffic(revenuePerTraffic(p.cents,p.views,sold),currency)}</td> : null}
                   </tr>
                 ))}
               </tbody>
