@@ -1,4 +1,4 @@
-import { isAiEmailCopy, readAiAnswer } from "@/lib/ai-response";
+import { isAiSequenceDraft, isAiEmailCopy, readAiAnswer } from "@/lib/ai-response";
 import { done, is, part } from "./check";
 part("AI response confirmation");
 const value = { subject: "Subject", body: "Content" };
@@ -9,4 +9,10 @@ is("explicit refusal retains code", readAiAnswer(false, { ok: false, error: "use
 part("AI email result");
 is("valid email accepted", isAiEmailCopy(value), true);
 for (const invalid of [null, [], {}, { subject: 3, body: "Text" }, { subject: "Subject" }, { subject: " ", body: "Text" }, { subject: "Subject", body: " " }]) is("invalid email never replaces current content", isAiEmailCopy(invalid), false);
+part("AI sequence result");
+const step = { delayHours: 0, subject: "Welcome", body: "Content" };
+is("valid sequence accepted", isAiSequenceDraft([step]), true);
+is("maximum valid wait accepted", isAiSequenceDraft([{ ...step, delayHours: 8760 }]), true);
+is("ten steps accepted", isAiSequenceDraft(Array(10).fill(step)), true);
+for (const invalid of [null, {}, [], [null], [step, null], Array(11).fill(step), [{ ...step, delayHours: "24" }], [{ ...step, delayHours: -1 }], [{ ...step, delayHours: 1.5 }], [{ ...step, delayHours: 8761 }], [{ ...step, delayHours: Infinity }], [{ ...step, subject: " " }], [{ ...step, subject: 3 }], [{ ...step, body: " " }], [{ ...step, body: undefined }], [{ ...step, subject: "s".repeat(121) }], [{ ...step, body: "b".repeat(2401) }]]) is("invalid sequence rejected as a whole", isAiSequenceDraft(invalid), false);
 done();
