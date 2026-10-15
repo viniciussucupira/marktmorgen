@@ -355,6 +355,11 @@ export async function advanceBroadcast(
     }
 
     if (!b.listed) {
+      if (b.sent !== 0) {
+        b = { ...b, status: "waiting", note: "The recipient list needs review because this campaign already has recorded progress. Nothing more was sent." };
+        await save(b);
+        return b;
+      }
       const to = await audience(b.listId, b.productId ?? undefined, b.notProductId ?? undefined, whoOf(store, b.who), await keepFor(store, b.narrow));
       let test = b.test;
       if (test) {
@@ -372,7 +377,19 @@ export async function advanceBroadcast(
       const commands: (string | number)[][] = [["DEL", toKey(id)]];
       for (let i = 0; i < to.length; i += 500) commands.push(["RPUSH", toKey(id), ...to.slice(i, i + 500)]);
       commands.push(["EXPIRE", toKey(id), 60 * 86_400]);
-      await redisPipeline(commands);
+      try {
+        const prepared = await redisPipeline(commands);
+        if (!Array.isArray(prepared) || prepared.length !== commands.length || (prepared[0] !== 0 && prepared[0] !== 1) || prepared.at(-1) !== (to.length ? 1 : 0)) throw new Error("Recipient snapshot write is unconfirmed");
+        let count = 0;
+        for (let i = 1; i < commands.length - 1; i += 1) {
+          count += commands[i].length - 2;
+          if (prepared[i] !== count) throw new Error("Recipient snapshot is incomplete");
+        }
+      } catch {
+        b = { ...b, status: "waiting", note: "The recipient list could not be prepared completely. Nothing was sent. It will be checked again automatically." };
+        await save(b);
+        return b;
+      }
       b = { ...b, status: "sending", total: to.length, note: "", listed: true, test };
       await save(b);
     }
