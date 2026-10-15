@@ -6,7 +6,7 @@ import type { RangeData } from "@/lib/stats";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { done, is, part } from "./check";
-const data={from:"2026-10-01",to:"2026-10-02",currency:"usd",sales:"ok",partial:true,elsewhere:0,totals:{visitors:100,views:200,checkouts:20,sales:5,cents:12345},before:null,days:[],channels:[{source:"google",visits:80,sales:4,cents:10000},{source:"email",visits:20,sales:1,cents:2345}],products:[{id:"guide0001",title:"Café Guide",views:150,checkouts:15,sales:4,cents:10000},{id:"course0002",title:"Email Course",views:50,checkouts:5,sales:1,cents:2345}],channelsTotal:17,channelsTruncated:true,productsTotal:18,productsTruncated:true} as RangeData & {products:(RangeData["products"][number]&{title:string})[]};
+const data={from:"2026-10-01",to:"2026-10-02",currency:"usd",sales:"ok",partial:true,elsewhere:0,totals:{visitors:100,views:200,checkouts:20,sales:5,cents:12345},before:null,days:[],channels:[{source:"google",visits:80,sales:4,cents:10000},{source:"email",visits:20,sales:1,cents:2345}],products:[{id:"guide0001",title:"Café Guide",views:150,checkouts:15,sales:4,cents:10000},{id:"course0002",title:"Email Course",views:50,checkouts:5,sales:1,cents:2345}],channelsTotal:17,channelsTruncated:true,productsTotal:18,productsTruncated:true} as Omit<RangeData,"products"> & {products:(RangeData["products"][number]&{title:string})[]};
 const record=(csv:string)=>{const p=parseCsv(csv);return Object.fromEntries(p.header.map((h,i)=>[h,p.rows[0]?.[i]]));};
 part("Search uses loaded rows without changing period totals");
 is("blank search preserves original snapshot",customRangeView(data,"   ")===data,true);
