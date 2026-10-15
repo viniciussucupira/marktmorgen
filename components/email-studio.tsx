@@ -1183,10 +1183,16 @@ function History({
                 aria-busy={busy} disabled={busy}
                 className="mt-2 text-sm font-bold text-ink-soft underline underline-offset-4 hover:text-danger"
                 onClick={async () => {
+                  if (busy) return;
                   setBusy(true);
+                  setError(null);
                   const a = await call({ action: "cancel", id: b.id });
                   setBusy(false);
-                  if (a.ok) toast("Scheduled email canceled.");
+                  if (!a.ok) {
+                    setError("Cancellation of “" + b.subject + "” could not be confirmed. Reload to check its current status. " + message(a));
+                    return;
+                  }
+                  toast("Scheduled email canceled.");
                   refreshHistory();
                 }}
               >
