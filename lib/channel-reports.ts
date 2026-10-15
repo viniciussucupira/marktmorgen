@@ -1,3 +1,4 @@
+import { CUSTOM_RANGE_METRICS, CUSTOM_RANGE_GROUPINGS, customRangeChartRows, effectiveCustomRangeMetric, effectiveCustomRangeGrouping, type CustomRangeMetric, type CustomRangeGrouping } from "@/lib/custom-range-chart";
 import { customRangeOrderLabel, type CustomRangeSort } from "@/lib/custom-range-view";
 import type { RangeData } from "@/lib/stats";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
@@ -166,4 +167,18 @@ export function customRangeComparisonReport(data: RangeData): string {
     ["From (UTC)","To (UTC)","Previous from (UTC)","Previous to (UTC)","Currency","Metric","Unit","Current","Previous","Difference","Change (%)","Current available","Previous available","Paid coverage","Definition"],
     ...metrics.map((m):Cell[]=>[data.from,data.to,previousFrom,previousTo,data.currency.toUpperCase(),m.name,m.unit,m.name==="Gross revenue"?amount(m.current,data.currency):m.current,m.name==="Gross revenue"?amount(m.previous,data.currency):m.previous,m.current===null||m.previous===null?null:m.name==="Gross revenue"?amount(m.current-m.previous,data.currency):m.current-m.previous,m.current===null||m.previous===null||m.previous===0?null:(m.current-m.previous)/m.previous*100,m.current!==null?"Yes":"No",m.previous!==null?"Yes":"No",rangeCoverage(data),note]),
   ]);
+}
+
+/** Export exactly the chart's effective metric and UTC grouping, including explicit fallback metadata. */
+export function customRangeChartReport(data:RangeData,metric:CustomRangeMetric,grouping:CustomRangeGrouping):string {
+ const selected=effectiveCustomRangeMetric(data,metric);
+ const unit=effectiveCustomRangeGrouping(grouping);
+ const label=CUSTOM_RANGE_METRICS.find(item=>item.value===selected)!.label;
+ const requested=CUSTOM_RANGE_METRICS.find(item=>item.value===metric)?.label??String(metric);
+ const groupLabel=CUSTOM_RANGE_GROUPINGS.find(item=>item.value===unit)!.label;
+ const note="Recorded UTC chart values. Weeks start on Monday; boundary groups may be partial and contain only recorded days within the selected period. Visitors are summed daily counts, not distinct people across the group. Paid records include purchases and one-click extras, exclude renewals; revenue is before refunds, fees, ads and other costs, not profit. An unavailable requested paid metric falls back to Visitors, matching the chart; Metric and Unit describe Value. All chart groups are exported independently of channel/product search and list limits.";
+ return csv([
+  ["From (UTC)","To (UTC)","Group from (UTC)","Group to (UTC)","Currency","Grouping","Requested metric","Metric","Unit","Value","Paid coverage","Definition"],
+  ...customRangeChartRows(data,selected,unit).map((row):Cell[]=>[data.from,data.to,row.from,row.to,data.currency.toUpperCase(),groupLabel,requested,label,selected==="cents"?data.currency.toUpperCase():"Count",selected==="cents"?amount(row.value,data.currency):row.value,rangeCoverage(data),note]),
+ ]);
 }
