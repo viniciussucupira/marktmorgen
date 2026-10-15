@@ -36,13 +36,21 @@ export function confirmedMailCopy(answer: MailAnswer): MailCopy | null {
 }
 
 /** Accept only a complete draft result belonging to the draft being edited. */
-export function confirmedDraftId(answer: MailAnswer, expectedId = "", expectedAudience?: unknown): string | null {
-  if (answer.ok !== true || !answer.draft || typeof answer.draft !== "object" || Array.isArray(answer.draft)) return null;
+export function confirmedDraftId(answer: MailAnswer, expectedId = "", expectedAudience?: unknown, expectedContent?: Record<string, unknown>): string | null {
+  if (answer.ok !== true || Object.hasOwn(answer, "error") || !answer.draft || typeof answer.draft !== "object" || Array.isArray(answer.draft)) return null;
   const draft = answer.draft as Record<string, unknown>;
   if (typeof draft.id !== "string" || !/^[0-9a-f]{16}$/.test(draft.id) || (expectedId !== "" && draft.id !== expectedId)) return null;
   if (typeof draft.subject !== "string" || !draft.subject.trim() || typeof draft.body !== "string" || !draft.body.trim()) return null;
   if (!(draft.productId === null || (typeof draft.productId === "string" && draft.productId !== "")) || typeof draft.by !== "string" || !draft.by.trim() || typeof draft.savedAt !== "string" || !Number.isFinite(Date.parse(draft.savedAt))) return null;
   if (expectedAudience !== undefined && !sameDraftAudience(draft.audience, expectedAudience)) return null;
+  if (expectedContent !== undefined) {
+    if (typeof expectedContent.subject !== "string" || typeof expectedContent.body !== "string" || !(expectedContent.productId === null || typeof expectedContent.productId === "string")) return null;
+    // Match saveDraft normalization, including its preserved body line endings.
+    const subject = expectedContent.subject.replace(/\s+/g, " ").trim().slice(0, 150);
+    const body = expectedContent.body.trim().slice(0, 20_000);
+    const productId = expectedContent.productId || null;
+    if (!subject || !body || draft.subject !== subject || draft.body !== body || draft.productId !== productId) return null;
+  }
   return draft.id;
 }
 
