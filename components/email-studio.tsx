@@ -236,6 +236,7 @@ export function EmailStudio(props: {
   trial: boolean;
   products: { id: string; title: string }[];
   broadcasts: BroadcastRow[];
+  broadcastsReadFailed?: boolean;
   /** The store's currency, for what each email sold. */
   currency: string;
   /** The plan above this one, when the store is on Pro and this person may change its plan. */
@@ -313,7 +314,7 @@ export function EmailStudio(props: {
               />
             </AiOn>
             <Drafts readFailed={props.draftsReadFailed ?? false} drafts={props.drafts} products={props.products} open={open} onOpen={openDraft} />
-            <History writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={openDraft} currency={props.currency} />
+            <History readFailed={props.broadcastsReadFailed ?? false} writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={openDraft} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
                 <Flows writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flows={props.flows} readFailed={props.flowsReadFailed ?? false} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} />
@@ -1211,6 +1212,7 @@ function waitWords(hours: number): string {
 }
 
 function History({
+  readFailed,
   broadcasts,
   writeUnconfirmed,
   onWriteUnconfirmed,
@@ -1221,6 +1223,7 @@ function History({
   currency,
 }: {
   broadcasts: BroadcastRow[];
+  readFailed: boolean;
   writeUnconfirmed: boolean;
   onWriteUnconfirmed: () => void;
   flowsReadFailed: boolean;
@@ -1235,13 +1238,26 @@ function History({
   const [refreshing, startRefresh] = useTransition();
   const refreshHistory = () => startRefresh(() => router.refresh());
   const busy = operationBusy || refreshing;
-  const keepBlocked = busy || writeUnconfirmed || flowsReadFailed;
+  const keepBlocked = busy || readFailed || writeUnconfirmed || flowsReadFailed;
   const [error, setError] = useState<string | null>(null);
-  if (!broadcasts.length) return null;
+  if (readFailed) return (
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
+      <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
+      <p role="status" className="mt-3 text-sm text-ink-soft">Campaign history could not be confirmed. A missing row does not mean an earlier send or schedule failed. Reload the history before trying again; your current message stays in the editor.</p>
+      <button type="button" className="btn btn-secondary mt-3" disabled={busy} aria-busy={refreshing} onClick={refreshHistory}>{refreshing ? "Reloading campaign history…" : "Reload campaign history"}</button>
+    </section>
+  );
+  if (!broadcasts.length) return (
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
+      <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
+      <p className="mt-3 text-sm text-ink-soft">No campaigns are recorded in this history. If an earlier attempt was unconfirmed, check before sending it again.</p>
+      <button type="button" className="btn btn-secondary mt-3" disabled={busy} aria-busy={refreshing} onClick={refreshHistory}>{refreshing ? "Reloading campaign history…" : "Reload campaign history"}</button>
+    </section>
+  );
 
   /** A sent email's subject and text, back in the composer to change and send. */
   async function again(b: BroadcastRow) {
-    if (busy) return;
+    if (busy || readFailed) return;
     setBusy(true);
     setError(null);
     const a = await call({ action: "copy", id: b.id });
@@ -1277,6 +1293,7 @@ function History({
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
       <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
+      <button type="button" className="btn btn-secondary mt-3" disabled={busy} aria-busy={refreshing} onClick={refreshHistory}>{refreshing ? "Reloading campaign history…" : "Reload campaign history"}</button>
       <p className="mt-2 text-sm text-ink-soft">
         A visit is a page of your store opened through one of an email&apos;s links, and a sale is one made on that page.
         Nothing in an email reports back, so there is no open rate here, and nothing is kept about who visited. (In sequences,
