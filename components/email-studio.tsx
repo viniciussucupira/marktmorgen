@@ -20,9 +20,9 @@ import { StoreField } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { formatMoney } from "@/lib/money";
 import { MIN_TEST_REACH, TEST_HOURS, TEST_SHARES, type SubjectTest, type TestBy } from "@/lib/mail-test";
-import { type Currency, plainAmount, readMoney } from "@/lib/money";
+import { type Currency, plainAmount } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
-import { type Narrow, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
+import { type Narrow, MAX_SPENT, readSegmentSpend, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -536,11 +536,13 @@ function Compose(props: {
   const [partial, setPartial] = useState(false);
   const [segments, setSegments] = useState<Segment[]>(props.segments);
   const [groupName, setGroupName] = useState("");
-  const minSpent = spentText.trim() ? readMoney(spentText, props.currency as Currency) ?? 0 : 0;
+  const parsedSpent = readSegmentSpend(spentText, props.currency as Currency);
+  const invalidSpent = parsedSpent === null;
+  const minSpent = parsedSpent ?? 0;
   const narrow: Narrow = { minSpent, channel, quietDays };
-  const countKey = JSON.stringify([productId, notProductId, who, minSpent, channel, quietDays, more, countRevision]);
-  const reach = reachResult?.key === countKey ? reachResult.count : null;
-  const reachPending = reachResult?.key !== countKey;
+  const countKey = JSON.stringify([productId, notProductId, who, minSpent, channel, quietDays, more, countRevision, invalidSpent]);
+  const reach = !invalidSpent && reachResult?.key === countKey ? reachResult.count : null;
+  const reachPending = !invalidSpent && reachResult?.key !== countKey;
   const [busy, setBusy] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const locked = busy || aiBusy || refreshingDrafts;
@@ -556,6 +558,7 @@ function Compose(props: {
   useImperativeHandle(props.composerState, () => ({ dirty, busy: locked }), [dirty, locked]);
 
   useEffect(() => {
+    if (invalidSpent) return;
     let live = true;
     call({ action: "count", productId, notProductId, who, narrow: { minSpent, channel, quietDays }, channels: more && channels === null }).then((a) => {
       if (!live) return;
@@ -572,10 +575,10 @@ function Compose(props: {
     };
     // `channels` is asked for once, when the choices are first opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId, notProductId, who, minSpent, channel, quietDays, more, countRevision]);
+  }, [productId, notProductId, who, minSpent, channel, quietDays, more, countRevision, invalidSpent]);
 
   async function group(payload: Record<string, unknown>, done: string) {
-    if (locked) return;
+    if (locked || (payload.action === "segment-save" && invalidSpent)) return;
     setBusy(true);
     setError(null);
     const a = await call(payload);
@@ -855,10 +858,12 @@ function Compose(props: {
                 inputMode="decimal"
                 placeholder={`For example: ${plainAmount(10000, props.currency)}`}
                 value={spentText}
+                aria-invalid={invalidSpent || undefined}
+                aria-describedby="recipient-spend-hint"
                 onChange={(e) => setSpentText(e.target.value)}
               />
-              <span className="field-hint mt-1 block">
-                {spentText.trim() && !minSpent ? "Type an amount without a currency sign, like 100 or 99.50." : `In ${props.currency.toUpperCase()}, everything they paid you, extras included. Empty for any amount.`}
+              <span id="recipient-spend-hint" className="field-hint mt-1 block">
+                {invalidSpent ? `Enter an amount from 0 to ${plainAmount(MAX_SPENT, props.currency)} without a currency sign.` : `In ${props.currency.toUpperCase()}, everything they paid you, extras included. Empty for any amount. Zero sets no minimum.`}
               </span>
             </label>
             <label className="block">
@@ -889,8 +894,8 @@ function Compose(props: {
             </p>
           </div>
         </details>
-        <p className="text-sm font-semibold text-ink" role="status">{reach === null ? (reachPending ? "Checking recipients…" : "The recipient count is unavailable. Check it again before sending or scheduling.") : `${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
-        {reach === null ? <button type="button" className="btn btn-secondary btn-sm" disabled={locked || reachPending} aria-busy={reachPending} onClick={() => setCountRevision(value => value + 1)}>{reachPending ? "Checking recipients…" : "Check recipients again"}</button> : null}
+        <p className="text-sm font-semibold text-ink" role="status">{invalidSpent ? "Correct the spending amount before checking recipients." : reach === null ? (reachPending ? "Checking recipients…" : "The recipient count is unavailable. Check it again before sending or scheduling.") : `${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
+        {reach === null && !invalidSpent ? <button type="button" className="btn btn-secondary btn-sm" disabled={locked || reachPending} aria-busy={reachPending} onClick={() => setCountRevision(value => value + 1)}>{reachPending ? "Checking recipients…" : "Check recipients again"}</button> : null}
         <div className="flex flex-wrap items-end gap-2">
           <label className="min-w-0 flex-1">
             <span className="field-label">Save who this goes to as a group</span>
@@ -899,7 +904,7 @@ function Compose(props: {
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            disabled={busy || !groupName.trim()}
+            disabled={busy || invalidSpent || !groupName.trim()}
             onClick={() => void group({ action: "segment-save", name: groupName, who, productId, notProductId, narrow }, "Group saved.")}
           >
             Save group
