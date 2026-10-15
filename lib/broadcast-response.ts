@@ -35,7 +35,14 @@ export function broadcastAnswer(responseOk: boolean, raw: unknown, input: Record
     // Creation returns the initial test, before any allocation or winner exists.
     if (Object.entries(expectedTest).some(([key, value]) => actualTest[key] !== value)) return unknown;
   }
-  return answer;
+  const noDraft = input.draftId === undefined || input.draftId === "";
+  const draftCleanupConfirmed = noDraft || (
+    typeof input.draftId === "string" && /^[0-9a-f]{16}$/.test(input.draftId) &&
+    typeof input.draftSavedAt === "string" && Number.isFinite(Date.parse(input.draftSavedAt)) &&
+    answer.draftCleanupConfirmed === true
+  );
+  // A confirmed campaign stays confirmed even when its draft cleanup is unknown.
+  return { ...answer, draftCleanupConfirmed };
 }
 
 const CANCEL_REFUSALS = new Set(["unknown", "role", "locked", "store_gone", "none", "signed_out", "origin", "bad_request"]);
