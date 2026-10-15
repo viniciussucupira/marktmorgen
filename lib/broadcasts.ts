@@ -140,6 +140,37 @@ export async function listBroadcasts(listId: string | null, limit = 30): Promise
 }
 
 
+/** Shared strict validation for studio history and executable campaign records. */
+function parseStoredBroadcast(raw: unknown, id: string, listId?: string): Broadcast {
+  const nonnegative = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
+  const association = (value: unknown) => value === null || typeof value === "string" && value.length > 0;
+  const statuses = new Set(["scheduled", "sending", "sent", "waiting", "cancelled", "failed"]);
+  if (typeof raw !== "string") throw new Error("Campaign record is unavailable");
+  const record: unknown = JSON.parse(raw);
+  if (!record || typeof record !== "object" || Array.isArray(record)) throw new Error("Invalid campaign record");
+  const value = record as Record<string, unknown>;
+  const b = parse(raw);
+  if (!b || b.id !== id || typeof b.listId !== "string" || !b.listId.trim() || (listId !== undefined && b.listId !== listId) || typeof b.handle !== "string" || !b.handle.trim() || typeof b.subject !== "string" || !b.subject.trim() || typeof b.body !== "string" || !b.body.trim() || !association(b.productId) || !statuses.has(b.status) || !nonnegative(b.createdAt) || !b.createdAt || !nonnegative(b.sendAt) || !b.sendAt || !nonnegative(b.finishedAt) || !nonnegative(b.total) || !nonnegative(b.sent) || b.sent > b.total || !nonnegative(b.failures) || typeof b.listed !== "boolean" || typeof b.note !== "string") throw new Error("Invalid campaign fields");
+  // These fields were absent in older campaigns; explicit malformed values are not legacy defaults.
+  if (value.who !== undefined && !WHO.includes(value.who as Who) || value.notProductId !== undefined && !association(value.notProductId) || value.tagged !== undefined && typeof value.tagged !== "boolean" || value.test !== undefined && value.test !== null && b.test === null) throw new Error("Invalid campaign options");
+  if (value.narrow !== undefined && value.narrow !== null) {
+    if (typeof value.narrow !== "object" || Array.isArray(value.narrow)) throw new Error("Invalid campaign audience");
+    const narrow = value.narrow as Record<string, unknown>;
+    const normalized = readNarrow(narrow);
+    if (narrow.minSpent !== normalized.minSpent || narrow.channel !== normalized.channel || narrow.quietDays !== normalized.quietDays) throw new Error("Invalid campaign audience fields");
+  }
+  return b;
+}
+
+/** A failed or malformed read is never a confirmed missing campaign. */
+async function readBroadcastForWork(id: string): Promise<Broadcast | null> {
+  if (!isRedisConfigured()) throw new Error("Campaign storage is unavailable");
+  const response = await redisPipeline([["GET", bcKey(id)]]);
+  if (!Array.isArray(response) || response.length !== 1) throw new Error("Campaign read is incomplete");
+  if (response[0] === null) return null;
+  return parseStoredBroadcast(response[0], id);
+}
+
 /** A studio snapshot is all-or-unavailable; missing rows must not look like no campaigns. */
 export async function listBroadcastsStrict(listId: string | null, limit = 30): Promise<Broadcast[]> {
   if (!listId) return [];
@@ -152,27 +183,7 @@ export async function listBroadcastsStrict(listId: string | null, limit = 30): P
   if (!ids.length) return [];
   const rows = await redisPipeline(ids.map(id => ["GET", bcKey(id as string)]));
   if (!Array.isArray(rows) || rows.length !== ids.length) throw new Error("Campaign records are incomplete");
-  const nonnegative = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
-  const association = (value: unknown) => value === null || typeof value === "string" && value.length > 0;
-  const statuses = new Set(["scheduled", "sending", "sent", "waiting", "cancelled", "failed"]);
-  return ids.map((id, i) => {
-    const raw = rows[i];
-    if (typeof raw !== "string") throw new Error("Campaign record is unavailable");
-    const record: unknown = JSON.parse(raw);
-    if (!record || typeof record !== "object" || Array.isArray(record)) throw new Error("Invalid campaign record");
-    const value = record as Record<string, unknown>;
-    const b = parse(raw);
-    if (!b || b.id !== id || b.listId !== listId || typeof b.handle !== "string" || !b.handle.trim() || typeof b.subject !== "string" || !b.subject.trim() || typeof b.body !== "string" || !b.body.trim() || !association(b.productId) || !statuses.has(b.status) || !nonnegative(b.createdAt) || !b.createdAt || !nonnegative(b.sendAt) || !b.sendAt || !nonnegative(b.finishedAt) || !nonnegative(b.total) || !nonnegative(b.sent) || b.sent > b.total || !nonnegative(b.failures) || typeof b.listed !== "boolean" || typeof b.note !== "string") throw new Error("Invalid campaign fields");
-    // These fields were absent in older campaigns; explicit malformed values are not legacy defaults.
-    if (value.who !== undefined && !WHO.includes(value.who as Who) || value.notProductId !== undefined && !association(value.notProductId) || value.tagged !== undefined && typeof value.tagged !== "boolean" || value.test !== undefined && value.test !== null && b.test === null) throw new Error("Invalid campaign options");
-    if (value.narrow !== undefined && value.narrow !== null) {
-      if (typeof value.narrow !== "object" || Array.isArray(value.narrow)) throw new Error("Invalid campaign audience");
-      const narrow = value.narrow as Record<string, unknown>;
-      const normalized = readNarrow(narrow);
-      if (narrow.minSpent !== normalized.minSpent || narrow.channel !== normalized.channel || narrow.quietDays !== normalized.quietDays) throw new Error("Invalid campaign audience fields");
-    }
-    return b;
-  });
+  return ids.map((id, i) => parseStoredBroadcast(rows[i], id as string, listId));
 }
 
 /**
@@ -330,7 +341,7 @@ export async function advanceBroadcast(
   const seconds = () => Math.floor(Date.now() / 1000);
   if (!await takeBroadcastLock(id)) return null;
   try {
-    let b = await readBroadcast(id);
+    let b = await readBroadcastForWork(id);
     if (!b) {
       await redisPipeline([["SREM", QUEUE, id]]);
       return null;
