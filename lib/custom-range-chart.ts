@@ -41,3 +41,17 @@ export function customRangeChartRows(range:RangeData,metric:CustomRangeMetric,gr
  }
  return [...groups.values()];
 }
+
+/** Describe recorded daily values, independently of chart grouping or list filters. */
+export function customRangeChartSummary(range:RangeData,metric:CustomRangeMetric) {
+ const selected=effectiveCustomRangeMetric(range,metric);
+ const rows=customRangeChartRows(range,selected,"day");
+ if(!rows.length)return null;
+ let total=0,peak=rows[0],ties=0;
+ for(const row of rows){
+  total+=row.value;
+  if(row.value>peak.value){peak=row;ties=1;}
+  else if(row.value===peak.value)ties++;
+ }
+ return {metric:selected,days:rows.length,total,average:total/rows.length,peak:{date:peak.from,value:peak.value,ties}};
+}
