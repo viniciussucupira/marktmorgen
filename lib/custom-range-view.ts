@@ -37,15 +37,20 @@ export function customRangeMinimumTraffic(value:unknown):number {
  const parsed=typeof value==="number"?value:typeof value==="string"?Number(value.trim()):NaN;
  return Number.isSafeInteger(parsed)&&parsed>=0?parsed:0;
 }
+/** A paid-count threshold is inactive when payment coverage is unavailable. */
+export function effectiveCustomRangeMinimumPaidRecords(data:RangeData,value:unknown):number {
+ return paidFiguresComplete(data)?customRangeMinimumTraffic(value):0;
+}
 const productName=(row:RangeData["products"][number])=>"title" in row?String(row.title??row.id):row.id;
 /** Search and sort loaded rows without mutating their source or period-wide figures. */
-export function customRangeView<T extends RangeData>(data:T,query:string,sort:CustomRangeSort="recorded",filter:CustomRangeFilter="all",minimumTraffic:number|string=0):T {
+export function customRangeView<T extends RangeData>(data:T,query:string,sort:CustomRangeSort="recorded",filter:CustomRangeFilter="all",minimumTraffic:number|string=0,minimumPaidRecords:number|string=0):T {
  const needle=normalized(query);
  const selected=effectiveCustomRangeSort(data,sort);
  const actualFilter=effectiveCustomRangeFilter(data,filter);
  const minimum=customRangeMinimumTraffic(minimumTraffic);
- const matches=(sales:number,traffic:number)=>traffic>=minimum&&(actualFilter==="all"||(actualFilter==="paid"?sales>0:traffic>0&&sales===0));
- if(!needle&&selected==="recorded"&&actualFilter==="all"&&minimum===0)return data;
+ const paidMinimum=effectiveCustomRangeMinimumPaidRecords(data,minimumPaidRecords);
+ const matches=(sales:number,traffic:number)=>traffic>=minimum&&(paidMinimum===0||sales>=paidMinimum)&&(actualFilter==="all"||(actualFilter==="paid"?sales>0:traffic>0&&sales===0));
+ if(!needle&&selected==="recorded"&&actualFilter==="all"&&minimum===0&&paidMinimum===0)return data;
  const channels=data.channels.filter(row=>matches(row.sales,row.visits)&&normalized(row.source+" "+channelName(row.source)).includes(needle));
  const products=data.products.filter(row=>matches(row.sales,row.views)&&normalized(row.id+" "+productName(row)).includes(needle));
  const direction=selected.endsWith("_asc")?1:-1;

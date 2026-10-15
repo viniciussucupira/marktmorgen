@@ -41,7 +41,7 @@ is("selected product rows exported",products.map(row=>row["Product ID"]),["guide
 is("loaded subset and source total preserved",[channels[0]["Displayed rows"],channels[0]["Recorded rows"]],["2","20"]);
 is("default CSV minimum is zero",records(customRangeChannelsReport(data))[0]["Minimum traffic"],"0");
 is("invalid CSV threshold is normalized",records(customRangeChannelsReport(data,{minimumTraffic:NaN}))[0]["Minimum traffic"],"0");
-is("export explains clearing minimum",channels[0].Definition.includes("remove the traffic minimum"),true);
+is("export explains clearing minimum",channels[0].Definition.includes("remove the traffic and paid-record minimums"),true);
 const partial=customRangeView(incomplete,"","recorded","all",20);
 is("partial export retains blank paid values",records(customRangeProductsReport(partial,{minimumTraffic:20}))[0]["Gross revenue"],"");
 part("Minimum control explains scope and stays independent of financial coverage");
