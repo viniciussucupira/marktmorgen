@@ -160,7 +160,8 @@ export async function readFlows(listId: string | null): Promise<Flow[]> {
 }
 
 async function writeFlows(listId: string, flows: Flow[]): Promise<void> {
-  await redisPipeline([["SET", flowsKey(listId), JSON.stringify(flows)]]);
+  const replies = await redisPipeline([["SET", flowsKey(listId), JSON.stringify(flows)]]);
+  if (!Array.isArray(replies) || replies.length !== 1 || replies[0] !== "OK") throw new Error("Sequence write could not be confirmed");
 }
 
 const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw === "bought" ? raw : undefined);
