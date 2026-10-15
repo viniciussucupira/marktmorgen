@@ -127,17 +127,17 @@ export async function listDrafts(listId: string | null): Promise<Draft[]> {
 
 export type DraftResult =
   | { ok: true; draft: Draft }
-  | { ok: false; reason: "subject" | "body" | "product" | "full" | "unknown" | "list" | "audience" };
+  | { ok: false; reason: "subject" | "body" | "product" | "full" | "unknown" | "list" | "audience" | "draft_conflict" | "draft_busy" };
 
 /**
  * Saves a draft: a new one without `id`, or over the one with it. The text is
  * trimmed to what an email may hold, and the product it is meant for has to
  * be one this store has.
  */
-export async function saveDraft(
+async function saveDraftUnlocked(
   store: Store,
   who: string,
-  input: { id?: string; subject: string; body: string; productId: string; audience?: unknown },
+  input: { id?: string; subject: string; body: string; productId: string; audience?: unknown; expectedSavedAt?: unknown },
 ): Promise<DraftResult> {
   if (!store.listId) return { ok: false, reason: "list" };
   const subject = input.subject.replace(/\s+/g, " ").trim().slice(0, MAX_SUBJECT);
@@ -150,28 +150,31 @@ export async function saveDraft(
   let audience = input.audience === undefined ? undefined : readDraftAudience(input.audience);
   if (audience === null) return { ok: false, reason: "audience" };
   if (audience?.notProductId && !hasProduct(store, audience.notProductId)) return { ok: false, reason: "product" };
+  let savedAt = new Date().toISOString();
   const key = draftsKey(store.listId);
   let id = input.id ?? "";
   if (id) {
     if (!DRAFT_ID.test(id)) return { ok: false, reason: "unknown" };
     const exists = await draftPreflight(["HEXISTS", key, id]);
     if (exists !== 1) return { ok: false, reason: "unknown" };
-    if (input.audience === undefined) {
-      // Older clients must not erase restrictions they do not know how to send.
-      try {
-        const response = await redisPipeline([["HGET", key, id]]);
-        if (!Array.isArray(response) || response.length !== 1) throw new DraftReadUnavailable();
-        const previous = parse(response[0]);
-        if (!previous || previous.id !== id) throw new DraftReadUnavailable();
-        audience = previous.audience;
-      } catch { throw new DraftReadUnavailable(); }
-    }
+    let previous: Draft;
+    try {
+      const response = await redisPipeline([["HGET", key, id]]);
+      if (!Array.isArray(response) || response.length !== 1) throw new DraftReadUnavailable();
+      const parsed = parse(response[0]);
+      if (!parsed || parsed.id !== id || !Number.isFinite(Date.parse(parsed.savedAt))) throw new DraftReadUnavailable();
+      previous = parsed;
+    } catch { throw new DraftReadUnavailable(); }
+    if (input.expectedSavedAt !== undefined && input.expectedSavedAt !== previous.savedAt) return { ok: false, reason: "draft_conflict" };
+    // Under the draft lock, each successful update gets a distinct version even in one millisecond.
+    savedAt = new Date(Math.max(Date.now(), Date.parse(previous.savedAt) + 1)).toISOString();
+    if (input.audience === undefined) audience = previous.audience;
   } else {
     const count = await draftPreflight(["HLEN", key]);
     if (count >= MAX_DRAFTS) return { ok: false, reason: "full" };
     id = randomBytes(8).toString("hex");
   }
-  const draft: Draft = { ...(audience ? { audience } : {}), id, subject, body, productId, by: who.toLowerCase(), savedAt: new Date().toISOString() };
+  const draft: Draft = { ...(audience ? { audience } : {}), id, subject, body, productId, by: who.toLowerCase(), savedAt };
   let acknowledgement: unknown;
   try {
     acknowledgement = await redisPipeline([["HSET", key, id, JSON.stringify(draft)]]);
@@ -185,10 +188,15 @@ export async function saveDraft(
 /** Throws a draft away. True when there was one to throw away. */
 export async function removeDraft(store: Store, id: string): Promise<boolean> {
   if (!store.listId || !DRAFT_ID.test(id)) return false;
-  let response: unknown;
-  try { response = await redisPipeline([["HDEL", draftsKey(store.listId), id]]); } catch { throw new DraftRemovalUnconfirmed(); }
-  if (!Array.isArray(response) || response.length !== 1 || (response[0] !== 0 && response[0] !== 1)) throw new DraftRemovalUnconfirmed();
-  return response[0] === 1;
+  let acquired = false;
+  try {
+    acquired = await claimDraftLock(store.listId, id);
+    if (!acquired) throw new DraftRemovalUnconfirmed();
+    const response = await redisPipeline([["HDEL", draftsKey(store.listId), id]]);
+    if (!Array.isArray(response) || response.length !== 1 || (response[0] !== 0 && response[0] !== 1)) throw new DraftRemovalUnconfirmed();
+    return response[0] === 1;
+  } catch { throw new DraftRemovalUnconfirmed(); }
+  finally { if (acquired) await releaseDraftLock(store.listId, id); }
 }
 
 /** Cleanup cannot undo a confirmed campaign; a lost reply must not invite resending it. */
@@ -196,4 +204,25 @@ export async function finishBroadcastDraft(store: Store, id: string): Promise<bo
   if (!id) return true;
   if (!store.listId || !DRAFT_ID.test(id)) return false;
   try { await removeDraft(store, id); return true; } catch { return false; }
+}
+
+const draftLockKey = (listId: string, id: string) => draftsKey(listId) + ":lock:" + id;
+async function claimDraftLock(listId: string, id: string): Promise<boolean> {
+  const response = await redisPipeline([["SET", draftLockKey(listId, id), "1", "NX", "EX", 90]]);
+  if (!Array.isArray(response) || response.length !== 1 || (response[0] !== "OK" && response[0] !== null)) throw new DraftReadUnavailable();
+  return response[0] === "OK";
+}
+async function releaseDraftLock(listId: string, id: string): Promise<void> {
+  await redisPipeline([["DEL", draftLockKey(listId, id)]]).catch(() => {});
+}
+/** Existing drafts are read, version-checked and written under the same lease as deletion. */
+export async function saveDraft(store: Store, who: string, input: { id?: string; subject: string; body: string; productId: string; audience?: unknown; expectedSavedAt?: unknown }): Promise<DraftResult> {
+  if (!store.listId) return { ok: false, reason: "list" };
+  if (!input.id) return saveDraftUnlocked(store, who, input);
+  if (!DRAFT_ID.test(input.id)) return { ok: false, reason: "unknown" };
+  let acquired: boolean;
+  try { acquired = await claimDraftLock(store.listId, input.id); } catch { throw new DraftReadUnavailable(); }
+  if (!acquired) return { ok: false, reason: "draft_busy" };
+  try { return await saveDraftUnlocked(store, who, input); }
+  finally { await releaseDraftLock(store.listId, input.id); }
 }
