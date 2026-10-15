@@ -12,6 +12,7 @@
  *   nl:mail:bcs:<listId>   the store's broadcasts, newest first
  *   nl:mail:queue          broadcasts waiting or under way
  */
+import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { hasPlaceholder } from "@/lib/mail-body";
 import { randomBytes, randomInt } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -124,7 +125,8 @@ export async function readBroadcast(id: string): Promise<Broadcast | null> {
 }
 
 async function save(b: Broadcast): Promise<void> {
-  await redisPipeline([["SET", bcKey(b.id), JSON.stringify(b), "EX", 400 * 86_400]]);
+  const response = await redisPipeline([["SET", bcKey(b.id), JSON.stringify(b), "EX", 400 * 86_400]]);
+  if (!Array.isArray(response) || response.length !== 1 || response[0] !== "OK") throw new Error("Campaign progress write could not be confirmed");
 }
 
 /** The store's broadcasts, newest first. */
@@ -404,9 +406,18 @@ export async function advanceBroadcast(
       }
       const subject = running && (part === "b" || (part === "rest" && running.winner === "b")) ? running.subjectB : b.subject;
       const campaign = part === "rest" ? broadcastCampaign(id) : variantCampaign(id, part);
-      const [chunk] = await redisPipeline([["LRANGE", toKey(id), b.sent, Math.min(b.sent + BATCH_SIZE, end) - 1]]);
-      const emails = Array.isArray(chunk) ? (chunk as string[]) : [];
-      if (!emails.length) break;
+      let emails: string[];
+      try {
+        const expected = Math.min(BATCH_SIZE, end - b.sent);
+        const response = await redisPipeline([["LRANGE", toKey(id), b.sent, b.sent + expected - 1]]);
+        if (!Number.isSafeInteger(expected) || expected < 1 || !Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0])) throw new Error("Recipient batch is unavailable");
+        const chunk: unknown[] = Array.from(response[0]);
+        if (chunk.length !== expected || chunk.some(email => typeof email !== "string" || email.length > MAX_EMAIL_LENGTH || email !== normaliseEmail(email) || !EMAIL_PATTERN.test(email)) || new Set(chunk).size !== chunk.length) throw new Error("Recipient batch is incomplete or invalid");
+        emails = chunk as string[];
+      } catch {
+        b = { ...b, status: "waiting", note: "The recipient list could not be read completely. Nothing more was sent. It will be checked again automatically." };
+        break;
+      }
       const result = await sendTo(
         store,
         emails,
