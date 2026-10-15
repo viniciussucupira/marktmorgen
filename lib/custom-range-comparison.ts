@@ -1,8 +1,8 @@
 import type { RangeData } from "@/lib/stats";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
-/** A ratio in minor currency units; no payments means no defined average. */
-function revenuePerPaidRecord(cents:number|null|undefined,sales:number|null|undefined):number|null {
- return typeof cents==="number"&&Number.isFinite(cents)&&typeof sales==="number"&&Number.isSafeInteger(sales)&&sales>0?cents/sales:null;
+/** A ratio in minor currency units; a missing or zero count means no defined ratio. */
+function revenuePerCount(cents:number|null|undefined,count:number|null|undefined):number|null {
+ return typeof cents==="number"&&Number.isFinite(cents)&&typeof count==="number"&&Number.isSafeInteger(count)&&count>0?cents/count:null;
 }
 
 /** One comparison model for the displayed table and CSV, with unknown values kept null. */
@@ -20,7 +20,8 @@ export function customRangeComparison(data:RangeData) {
   {name:"Checkouts",unit:"Count",money:false,current:data.totals.checkouts,previous:before?.checkouts??null},
   {name:"Paid records",unit:"Count",money:false,current:known?data.totals.sales:null,previous:known?before?.sales??null:null},
   {name:"Gross revenue",unit:data.currency.toUpperCase(),money:true,current:known?data.totals.cents:null,previous:known?before?.cents??null:null},
-  {name:"Revenue per paid record",unit:data.currency.toUpperCase(),money:true,current:known?revenuePerPaidRecord(data.totals.cents,data.totals.sales):null,previous:known?revenuePerPaidRecord(before?.cents,before?.sales):null},
+  {name:"Revenue per paid record",unit:data.currency.toUpperCase(),money:true,current:known?revenuePerCount(data.totals.cents,data.totals.sales):null,previous:known?revenuePerCount(before?.cents,before?.sales):null},
+  {name:"Revenue per visitor",unit:data.currency.toUpperCase(),money:true,current:known?revenuePerCount(data.totals.cents,data.totals.visitors):null,previous:known?revenuePerCount(before?.cents,before?.visitors):null},
  ];
  return {previousFrom,previousTo,rows:metrics.map(row=>({...row,
   difference:row.current===null||row.previous===null?null:row.current-row.previous,
