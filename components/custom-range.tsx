@@ -242,6 +242,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
                   <th scope="col" className="py-1 font-semibold">Product</th>
                   <th scope="col" className="py-1 pl-3 text-right font-semibold">Views</th>
                   <th scope="col" className="py-1 pl-3 text-right font-semibold">Checkouts</th>
+                  {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th> : null}
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
                 </tr>
               </thead>
@@ -251,6 +252,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
                     <th scope="row" className="py-1.5 pr-3 font-medium text-ink [overflow-wrap:anywhere]">{p.title}</th>
                     <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.views)}</td>
                     <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.checkouts)}</td>
+                    {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.sales)}</td> : null}
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(p.cents)}</td> : null}
                   </tr>
                 ))}
