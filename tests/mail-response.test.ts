@@ -1,4 +1,4 @@
-import { keptWaitHours, mailAnswer } from "@/lib/mail-response";
+import { confirmedMailCopy, keptWaitHours, mailAnswer } from "@/lib/mail-response";
 import { done, is, part } from "./check";
 part("Mail operation response validation");
 is("HTTP failure cannot confirm success", mailAnswer(false, { ok: true }).ok, false);
@@ -27,4 +27,12 @@ is("confirmed refusal stays actionable", mailAnswer(false, { ok: false, error: "
 is("confirmed server error retains its handling", mailAnswer(false, { ok: false, error: "server_error" }, true).error, "server_error");
 is("confirmed mutation result survives", mailAnswer(true, { ok: true, id: "flow" }, true), { ok: true, id: "flow" });
 is("read-only malformed response retains generic handling", mailAnswer(true, null).error, "server_error");
+part("Confirmed email copy");
+const validCopy = { subject: "Original", body: "Original content", productId: null, who: "all" };
+for (const who of ["all", "buyers", "leads"] as const) is("preserves audience " + who, confirmedMailCopy(mailAnswer(true, { ok: true, copy: { ...validCopy, who } })), { ...validCopy, who });
+is("preserves product association", confirmedMailCopy(mailAnswer(true, { ok: true, copy: { ...validCopy, productId: "product" } }))?.productId, "product");
+for (const copy of [undefined, null, [], "text", {}, { ...validCopy, subject: 3 }, { ...validCopy, body: null }, { ...validCopy, productId: undefined }, { ...validCopy, productId: 3 }, { ...validCopy, who: undefined }, { ...validCopy, who: "everyone" }, { ...validCopy, who: ["all"] }]) is("invalid copy cannot replace draft " + JSON.stringify(copy), confirmedMailCopy(mailAnswer(true, { ok: true, copy })), null);
+is("failed HTTP cannot open copy", confirmedMailCopy(mailAnswer(false, { ok: true, copy: validCopy })), null);
+is("refusal cannot open copy", confirmedMailCopy(mailAnswer(true, { ok: false, error: "unknown", copy: validCopy })), null);
+is("empty content stays editable", confirmedMailCopy(mailAnswer(true, { ok: true, copy: { ...validCopy, subject: "", body: "" } }))?.subject, "");
 done();
