@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+import { readAiAnswer } from "@/lib/ai-response";
 import { Icon } from "@/components/icons";
 import { MAX_AI_NOTES } from "@/lib/ai-rules";
 
@@ -12,6 +13,7 @@ import { MAX_AI_NOTES } from "@/lib/ai-rules";
 export const AiOn = createContext<{ on: boolean; left: number }>({ on: false, left: 0 });
 
 const MESSAGES: Record<string, string> = {
+  unconfirmed: "The writing result could not be confirmed. Review your current content and check your writing allowance before trying again.",
   notes: "Write a few words about it first: what it is, who it is for, what is inside.",
   used: "This month's writing help is used up. It starts again on the 1st.",
   slow: "A few at a time: wait a minute, then try again.",
@@ -37,6 +39,7 @@ export function AiAssist<T>({
   allowEmpty = false,
   emptyMessage,
   onBusyChange,
+  validateResult,
 }: {
   /** The line that opens it, like "Write the description for me". */
   title: string;
@@ -58,6 +61,8 @@ export function AiAssist<T>({
   emptyMessage?: string;
   /** Lets a host pause conflicting actions while writing is pending. */
   onBusyChange?: (busy: boolean) => void;
+  /** Optional host-specific result validation before applying any content. */
+  validateResult?: (value: unknown) => value is T;
 }) {
   const { on, left: startLeft } = useContext(AiOn);
   const [notes, setNotes] = useState("");
@@ -65,6 +70,7 @@ export function AiAssist<T>({
   const [error, setError] = useState<string | null>(null);
   const [filled, setFilled] = useState(false);
   const [left, setLeft] = useState(startLeft);
+  const [allowanceKnown, setAllowanceKnown] = useState(true);
   if (!on) return null;
 
   async function run() {
@@ -84,16 +90,20 @@ export function AiAssist<T>({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...payload(), notes }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; value?: T; left?: number; error?: string };
-      if (data.ok && data.value !== undefined) {
-        onResult(data.value);
+      const data = readAiAnswer(response.ok, await response.json().catch(() => null));
+      if (data.ok) {
+        setLeft(data.left);
+        setAllowanceKnown(true);
+        if (validateResult && !validateResult(data.value)) { setError(MESSAGES.unconfirmed); return; }
+        onResult(data.value as T);
         setFilled(true);
-        if (typeof data.left === "number") setLeft(data.left);
         return;
       }
-      setError(data.error === "notes" && emptyMessage ? emptyMessage : (MESSAGES[data.error ?? ""] ?? MESSAGES.failed));
+      if (data.error === "unconfirmed" || !Object.hasOwn(MESSAGES, data.error)) setAllowanceKnown(false);
+      setError(data.error === "notes" && emptyMessage ? emptyMessage : (Object.hasOwn(MESSAGES, data.error) ? MESSAGES[data.error] : MESSAGES.unconfirmed));
     } catch {
-      setError(MESSAGES.failed);
+      setAllowanceKnown(false);
+      setError(MESSAGES.unconfirmed);
     } finally {
       setBusy(false);
       onBusyChange?.(false);
@@ -121,10 +131,10 @@ export function AiAssist<T>({
           />
         </label>
         <div className="flex flex-wrap items-center gap-3">
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => void run()} disabled={busy || left <= 0} aria-busy={busy}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => void run()} disabled={busy || !allowanceKnown || left <= 0} aria-busy={busy}>
             {busy ? "Writing…" : "Write a draft"}
           </button>
-          <span className="text-xs text-ink-soft">{`${left} left this month`}</span>
+          <span className="text-xs text-ink-soft">{allowanceKnown ? `${left} left this month` : "Reload to check your writing allowance before trying again."}</span>
         </div>
         {error ? (
           <p className="notice notice-error text-sm" role="alert">
