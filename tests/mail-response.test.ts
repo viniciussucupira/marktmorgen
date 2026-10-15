@@ -1,4 +1,4 @@
-import { mailAnswer } from "@/lib/mail-response";
+import { keptWaitHours, mailAnswer } from "@/lib/mail-response";
 import { done, is, part } from "./check";
 part("Mail operation response validation");
 is("HTTP failure cannot confirm success", mailAnswer(false, { ok: true }).ok, false);
@@ -9,4 +9,12 @@ is("missing success flag cannot confirm success", mailAnswer(true, { sent: 1 }).
 is("valid success preserves result fields", mailAnswer(true, { ok: true, id: "saved" }), { ok: true, id: "saved" });
 is("known server refusal is preserved", mailAnswer(false, { ok: false, error: "forbidden" }).error, "forbidden");
 is("invalid error shape becomes a recoverable error", mailAnswer(false, { ok: false, error: 3 }).error, "server_error");
+part("Kept email confirmation");
+is("confirmed delay can be announced", keptWaitHours(mailAnswer(true, { ok: true, waitHours: 24 })), 24);
+is("confirmed immediate step remains valid", keptWaitHours(mailAnswer(true, { ok: true, waitHours: 0 })), 0);
+is("confirmed maximum remains valid", keptWaitHours(mailAnswer(true, { ok: true, waitHours: 8760 })), 8760);
+is("missing delay is not a success message", keptWaitHours(mailAnswer(true, { ok: true })), null);
+for (const waitHours of ["24", -1, 1.5, NaN, Infinity, 8761]) is("invalid returned delay " + String(waitHours), keptWaitHours(mailAnswer(true, { ok: true, waitHours })), null);
+is("HTTP failure still cannot announce keeping", keptWaitHours(mailAnswer(false, { ok: true, waitHours: 24 })), null);
+is("refusal cannot announce keeping", keptWaitHours(mailAnswer(true, { ok: false, error: "already", waitHours: 24 })), null);
 done();
