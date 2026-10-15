@@ -550,12 +550,19 @@ async function countTest(store: Store, b: Broadcast): Promise<{ visits: Counted;
 /** Moves every waiting or scheduled broadcast on. For the scheduled job. */
 export async function advanceAll(load: (handle: string) => Promise<Store | null>, deadline: number): Promise<number> {
   if (!isRedisConfigured()) return 0;
-  const [raw] = await redisPipeline([["SMEMBERS", QUEUE]]);
-  const ids = Array.isArray(raw) ? (raw as string[]) : [];
+  const response = await redisPipeline([["SMEMBERS", QUEUE]]);
+  if (!Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0])) throw new Error("Campaign queue is unavailable");
+  const ids: unknown[] = Array.from(response[0]);
+  if (ids.some(id => typeof id !== "string" || !BROADCAST_ID.test(id)) || new Set(ids).size !== ids.length) throw new Error("Campaign queue is invalid");
   let touched = 0;
   for (const id of ids) {
     if (Date.now() > deadline) break;
-    if (await advanceBroadcast(id, load, deadline)) touched += 1;
+    try {
+      if (await advanceBroadcast(id as string, load, deadline)) touched += 1;
+    } catch {
+      // Do not retry uncertain work in this pass or block unrelated campaigns.
+      console.error("Advancing a queued campaign failed", id);
+    }
   }
   return touched;
 }
