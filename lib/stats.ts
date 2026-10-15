@@ -1566,8 +1566,9 @@ export async function readRange(store: Store, from: string, to: string, now = Da
     before.sales = null;
     before.cents = null;
   }
-  out.channels = [...bySource.values()].sort((a, b) => b.cents - a.cents || b.visits - a.visits || a.source.localeCompare(b.source)).slice(0, 15);
-  out.products = [...byProduct.values()].sort((a, b) => b.cents - a.cents || b.views - a.views || a.id.localeCompare(b.id)).slice(0, 15);
+  const paidKnown = out.sales === "ok" && !out.partial;
+  out.channels = [...bySource.values()].sort((a, b) => (paidKnown ? b.cents - a.cents : 0) || b.visits - a.visits || a.source.localeCompare(b.source)).slice(0, 15);
+  out.products = [...byProduct.values()].sort((a, b) => (paidKnown ? b.cents - a.cents : 0) || b.views - a.views || a.id.localeCompare(b.id)).slice(0, 15);
   return out;
 }
 
