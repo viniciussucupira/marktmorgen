@@ -13,6 +13,7 @@
  * store's list, like its broadcasts, so a new address or a new owner address
  * moves nothing.
  */
+import { readDraftSubjectTest, type DraftSubjectTest } from "@/lib/mail-draft-test";
 import { readDraftAudience, type DraftAudience } from "@/lib/mail-draft-audience";
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -50,6 +51,8 @@ export const MAX_DRAFTS = 20;
 export const DRAFT_ID = /^[0-9a-f]{16}$/;
 
 export type Draft = {
+  /** Missing on legacy drafts; null means the test was explicitly disabled. */
+  subjectTest?: DraftSubjectTest | null;
   /** Absent only in drafts saved before audience persistence existed. */
   audience?: DraftAudience;
   id: string;
@@ -72,7 +75,10 @@ function parse(raw: unknown): Draft | null {
     if (typeof value.id !== "string" || !DRAFT_ID.test(value.id)) return null;
     const audience = Object.hasOwn(value, "audience") ? readDraftAudience(value.audience) : undefined;
     if (audience === null) return null;
+    const subjectTest = readDraftSubjectTest(value.subjectTest);
+    if (Object.hasOwn(value, "subjectTest") && subjectTest === undefined) return null;
     return {
+      ...(subjectTest !== undefined ? { subjectTest } : {}),
       ...(audience ? { audience } : {}),
       id: value.id,
       subject: typeof value.subject === "string" ? value.subject.slice(0, MAX_SUBJECT) : "",
@@ -101,8 +107,10 @@ export function parseDraftList(raw: unknown): Draft[] | null {
     if (draft.id !== id || typeof draft.subject !== "string" || typeof draft.body !== "string" || !(draft.productId === null || (typeof draft.productId === "string" && draft.productId !== "")) || typeof draft.by !== "string" || typeof draft.savedAt !== "string" || !Number.isFinite(Date.parse(draft.savedAt))) return null;
     const audience = Object.hasOwn(draft, "audience") ? readDraftAudience(draft.audience) : undefined;
     if (audience === null) return null;
+    const subjectTest = readDraftSubjectTest(draft.subjectTest);
+    if (Object.hasOwn(draft, "subjectTest") && subjectTest === undefined) return null;
     seen.add(id);
-    drafts.push({ ...(audience ? { audience } : {}), id, subject: draft.subject, body: draft.body, productId: draft.productId, by: draft.by, savedAt: draft.savedAt });
+    drafts.push({ ...(subjectTest !== undefined ? { subjectTest } : {}), ...(audience ? { audience } : {}), id, subject: draft.subject, body: draft.body, productId: draft.productId, by: draft.by, savedAt: draft.savedAt });
   }
   return drafts.sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt));
 }
@@ -131,7 +139,7 @@ export async function listDrafts(listId: string | null): Promise<Draft[]> {
 
 export type DraftResult =
   | { ok: true; draft: Draft }
-  | { ok: false; reason: "subject" | "body" | "product" | "full" | "unknown" | "list" | "audience" | "draft_conflict" | "draft_busy" };
+  | { ok: false; reason: "subject" | "body" | "product" | "full" | "unknown" | "list" | "audience" | "draft_test" | "draft_conflict" | "draft_busy" };
 
 /**
  * Saves a draft: a new one without `id`, or over the one with it. The text is
@@ -141,7 +149,7 @@ export type DraftResult =
 async function saveDraftUnlocked(
   store: Store,
   who: string,
-  input: { id?: string; subject: string; body: string; productId: string; audience?: unknown; expectedSavedAt?: unknown },
+  input: { id?: string; subject: string; body: string; productId: string; audience?: unknown; subjectTest?: unknown; expectedSavedAt?: unknown },
 ): Promise<DraftResult> {
   if (!store.listId) return { ok: false, reason: "list" };
   const subject = input.subject.replace(/\s+/g, " ").trim().slice(0, MAX_SUBJECT);
@@ -154,6 +162,8 @@ async function saveDraftUnlocked(
   let audience = input.audience === undefined ? undefined : readDraftAudience(input.audience);
   if (audience === null) return { ok: false, reason: "audience" };
   if (audience?.notProductId && !hasProduct(store, audience.notProductId)) return { ok: false, reason: "product" };
+  let subjectTest = input.subjectTest === undefined ? undefined : readDraftSubjectTest(input.subjectTest);
+  if (input.subjectTest !== undefined && subjectTest === undefined) return { ok: false, reason: "draft_test" };
   let savedAt = new Date().toISOString();
   const key = draftsKey(store.listId);
   let id = input.id ?? "";
@@ -173,12 +183,13 @@ async function saveDraftUnlocked(
     // Under the draft lock, each successful update gets a distinct version even in one millisecond.
     savedAt = new Date(Math.max(Date.now(), Date.parse(previous.savedAt) + 1)).toISOString();
     if (input.audience === undefined) audience = previous.audience;
+    if (input.subjectTest === undefined) subjectTest = previous.subjectTest;
   } else {
     const count = await draftPreflight(["HLEN", key]);
     if (count >= MAX_DRAFTS) return { ok: false, reason: "full" };
     id = randomBytes(8).toString("hex");
   }
-  const draft: Draft = { ...(audience ? { audience } : {}), id, subject, body, productId, by: who.toLowerCase(), savedAt };
+  const draft: Draft = { ...(subjectTest !== undefined ? { subjectTest } : {}), ...(audience ? { audience } : {}), id, subject, body, productId, by: who.toLowerCase(), savedAt };
   let acknowledgement: unknown;
   try {
     acknowledgement = await redisPipeline([["HSET", key, id, JSON.stringify(draft)]]);
@@ -232,7 +243,7 @@ async function releaseDraftLock(listId: string, id: string): Promise<void> {
   await redisPipeline([["DEL", draftLockKey(listId, id)]]).catch(() => {});
 }
 /** Existing drafts are read, version-checked and written under the same lease as deletion. */
-export async function saveDraft(store: Store, who: string, input: { id?: string; subject: string; body: string; productId: string; audience?: unknown; expectedSavedAt?: unknown }): Promise<DraftResult> {
+export async function saveDraft(store: Store, who: string, input: { id?: string; subject: string; body: string; productId: string; audience?: unknown; subjectTest?: unknown; expectedSavedAt?: unknown }): Promise<DraftResult> {
   if (!store.listId) return { ok: false, reason: "list" };
   if (!input.id) return saveDraftUnlocked(store, who, input);
   if (!DRAFT_ID.test(input.id)) return { ok: false, reason: "unknown" };
