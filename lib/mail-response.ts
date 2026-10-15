@@ -1,3 +1,4 @@
+import { sameDraftAudience } from "@/lib/mail-draft-audience";
 import { readNarrow, type Narrow } from "@/lib/segments-rules";
 import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 export type MailAnswer = Record<string, unknown> & { ok?: boolean; error?: string };
@@ -35,12 +36,13 @@ export function confirmedMailCopy(answer: MailAnswer): MailCopy | null {
 }
 
 /** Accept only a complete draft result belonging to the draft being edited. */
-export function confirmedDraftId(answer: MailAnswer, expectedId = ""): string | null {
+export function confirmedDraftId(answer: MailAnswer, expectedId = "", expectedAudience?: unknown): string | null {
   if (answer.ok !== true || !answer.draft || typeof answer.draft !== "object" || Array.isArray(answer.draft)) return null;
   const draft = answer.draft as Record<string, unknown>;
   if (typeof draft.id !== "string" || !/^[0-9a-f]{16}$/.test(draft.id) || (expectedId !== "" && draft.id !== expectedId)) return null;
   if (typeof draft.subject !== "string" || !draft.subject.trim() || typeof draft.body !== "string" || !draft.body.trim()) return null;
   if (!(draft.productId === null || (typeof draft.productId === "string" && draft.productId !== "")) || typeof draft.by !== "string" || !draft.by.trim() || typeof draft.savedAt !== "string" || !Number.isFinite(Date.parse(draft.savedAt))) return null;
+  if (expectedAudience !== undefined && !sameDraftAudience(draft.audience, expectedAudience)) return null;
   return draft.id;
 }
 
