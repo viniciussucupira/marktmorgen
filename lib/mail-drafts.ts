@@ -13,6 +13,7 @@
  * store's list, like its broadcasts, so a new address or a new owner address
  * moves nothing.
  */
+import { readDraftAudience, type DraftAudience } from "@/lib/mail-draft-audience";
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { MAX_MAIL_BODY, MAX_SUBJECT } from "@/lib/mail";
@@ -45,6 +46,8 @@ export const MAX_DRAFTS = 20;
 export const DRAFT_ID = /^[0-9a-f]{16}$/;
 
 export type Draft = {
+  /** Absent only in drafts saved before audience persistence existed. */
+  audience?: DraftAudience;
   id: string;
   subject: string;
   body: string;
@@ -63,7 +66,10 @@ function parse(raw: unknown): Draft | null {
   try {
     const value = JSON.parse(raw) as Partial<Draft>;
     if (typeof value.id !== "string" || !DRAFT_ID.test(value.id)) return null;
+    const audience = Object.hasOwn(value, "audience") ? readDraftAudience(value.audience) : undefined;
+    if (audience === null) return null;
     return {
+      ...(audience ? { audience } : {}),
       id: value.id,
       subject: typeof value.subject === "string" ? value.subject.slice(0, MAX_SUBJECT) : "",
       body: typeof value.body === "string" ? value.body.slice(0, MAX_MAIL_BODY) : "",
@@ -89,8 +95,10 @@ export function parseDraftList(raw: unknown): Draft[] | null {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
     const draft = value as Record<string, unknown>;
     if (draft.id !== id || typeof draft.subject !== "string" || typeof draft.body !== "string" || !(draft.productId === null || (typeof draft.productId === "string" && draft.productId !== "")) || typeof draft.by !== "string" || typeof draft.savedAt !== "string" || !Number.isFinite(Date.parse(draft.savedAt))) return null;
+    const audience = Object.hasOwn(draft, "audience") ? readDraftAudience(draft.audience) : undefined;
+    if (audience === null) return null;
     seen.add(id);
-    drafts.push({ id, subject: draft.subject, body: draft.body, productId: draft.productId, by: draft.by, savedAt: draft.savedAt });
+    drafts.push({ ...(audience ? { audience } : {}), id, subject: draft.subject, body: draft.body, productId: draft.productId, by: draft.by, savedAt: draft.savedAt });
   }
   return drafts.sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt));
 }
@@ -119,7 +127,7 @@ export async function listDrafts(listId: string | null): Promise<Draft[]> {
 
 export type DraftResult =
   | { ok: true; draft: Draft }
-  | { ok: false; reason: "subject" | "body" | "product" | "full" | "unknown" | "list" };
+  | { ok: false; reason: "subject" | "body" | "product" | "full" | "unknown" | "list" | "audience" };
 
 /**
  * Saves a draft: a new one without `id`, or over the one with it. The text is
@@ -129,7 +137,7 @@ export type DraftResult =
 export async function saveDraft(
   store: Store,
   who: string,
-  input: { id?: string; subject: string; body: string; productId: string },
+  input: { id?: string; subject: string; body: string; productId: string; audience?: unknown },
 ): Promise<DraftResult> {
   if (!store.listId) return { ok: false, reason: "list" };
   const subject = input.subject.replace(/\s+/g, " ").trim().slice(0, MAX_SUBJECT);
@@ -139,18 +147,31 @@ export async function saveDraft(
   const productId = input.productId || null;
   if (productId && !hasProduct(store, productId)) return { ok: false, reason: "product" };
 
+  let audience = input.audience === undefined ? undefined : readDraftAudience(input.audience);
+  if (audience === null) return { ok: false, reason: "audience" };
+  if (audience?.notProductId && !hasProduct(store, audience.notProductId)) return { ok: false, reason: "product" };
   const key = draftsKey(store.listId);
   let id = input.id ?? "";
   if (id) {
     if (!DRAFT_ID.test(id)) return { ok: false, reason: "unknown" };
     const exists = await draftPreflight(["HEXISTS", key, id]);
     if (exists !== 1) return { ok: false, reason: "unknown" };
+    if (input.audience === undefined) {
+      // Older clients must not erase restrictions they do not know how to send.
+      try {
+        const response = await redisPipeline([["HGET", key, id]]);
+        if (!Array.isArray(response) || response.length !== 1) throw new DraftReadUnavailable();
+        const previous = parse(response[0]);
+        if (!previous || previous.id !== id) throw new DraftReadUnavailable();
+        audience = previous.audience;
+      } catch { throw new DraftReadUnavailable(); }
+    }
   } else {
     const count = await draftPreflight(["HLEN", key]);
     if (count >= MAX_DRAFTS) return { ok: false, reason: "full" };
     id = randomBytes(8).toString("hex");
   }
-  const draft: Draft = { id, subject, body, productId, by: who.toLowerCase(), savedAt: new Date().toISOString() };
+  const draft: Draft = { ...(audience ? { audience } : {}), id, subject, body, productId, by: who.toLowerCase(), savedAt: new Date().toISOString() };
   let acknowledgement: unknown;
   try {
     acknowledgement = await redisPipeline([["HSET", key, id, JSON.stringify(draft)]]);
