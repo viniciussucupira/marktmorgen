@@ -1,4 +1,4 @@
-import { DraftReadUnavailable, DraftWriteUnconfirmed, saveDraft } from "@/lib/mail-drafts";
+import { DraftRemovalUnconfirmed, removeDraft, DraftReadUnavailable, DraftWriteUnconfirmed, saveDraft } from "@/lib/mail-drafts";
 import type { Store } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -15,7 +15,14 @@ async function main() {
   let applyWrite = false;
   let readReply: unknown = normal;
   let writes = 0;
+  let deleteReply: unknown = normal;
+  let applyDelete = false;
   redis.pipeline = async commands => {
+    if (commands.some(command => command[0] === "HDEL" && command[1] === key) && deleteReply !== normal) {
+      if (applyDelete) await original.call(redis, commands);
+      if (deleteReply instanceof Error) throw deleteReply;
+      return deleteReply as unknown[];
+    }
     writes += commands.filter(command => command[0] === "HSET" && command[1] === key).length;
     if (commands.some(command => (command[0] === "HLEN" || command[0] === "HEXISTS") && command[1] === key) && readReply !== normal) {
       if (readReply instanceof Error) throw readReply;
@@ -83,6 +90,26 @@ async function main() {
     readReply = [0];
     is("confirmed zero permits creation", (await saveDraft(store, "owner@example.com", input)).ok, true);
     is("zero count creation writes one draft", (await original.call(redis, [["HLEN", key]]))[0], 1);
+    await original.call(redis, [["DEL", key], ["HSET", key, first.id, JSON.stringify(first), second.id, JSON.stringify(second)]]);
+    for (const invalid of [[], [null], [true], ["1"], [-1], [2], [1, 0], null, {}, new Error("delete unavailable")]) {
+      deleteReply = invalid;
+      let unconfirmed = false;
+      try { await removeDraft(store, first.id); } catch (error) { unconfirmed = error instanceof DraftRemovalUnconfirmed; }
+      is("removal needs numeric acknowledgement " + String(invalid), unconfirmed, true);
+    }
+    is("unapplied failed removals preserve target", (await original.call(redis, [["HGET", key, first.id]]))[0], JSON.stringify(first));
+    applyDelete = true;
+    deleteReply = [];
+    let removalUnconfirmed = false;
+    try { await removeDraft(store, first.id); } catch (error) { removalUnconfirmed = error instanceof DraftRemovalUnconfirmed; }
+    is("applied removal with lost acknowledgement stays unconfirmed", removalUnconfirmed, true);
+    is("lost removal acknowledgement does not restore target", (await original.call(redis, [["HGET", key, first.id]]))[0], null);
+    applyDelete = false;
+    deleteReply = normal;
+    is("confirmed absent target returns false", await removeDraft(store, first.id), false);
+    await original.call(redis, [["HSET", key, first.id, JSON.stringify(first)]]);
+    is("confirmed removal succeeds", await removeDraft(store, first.id), true);
+    is("removal preserves unrelated draft", (await original.call(redis, [["HGET", key, second.id]]))[0], JSON.stringify(second));
   } finally { redis.pipeline = original; }
   done();
 }
