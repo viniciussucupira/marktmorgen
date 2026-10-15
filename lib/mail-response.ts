@@ -24,3 +24,13 @@ export function confirmedMailCopy(answer: MailAnswer): MailCopy | null {
   if (typeof copy.subject !== "string" || typeof copy.body !== "string" || !(copy.productId === null || typeof copy.productId === "string") || (copy.who !== "all" && copy.who !== "buyers" && copy.who !== "leads")) return null;
   return { subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who as MailCopy["who"] };
 }
+
+/** Accept only a complete draft result belonging to the draft being edited. */
+export function confirmedDraftId(answer: MailAnswer, expectedId = ""): string | null {
+  if (answer.ok !== true || !answer.draft || typeof answer.draft !== "object" || Array.isArray(answer.draft)) return null;
+  const draft = answer.draft as Record<string, unknown>;
+  if (typeof draft.id !== "string" || !/^[0-9a-f]{16}$/.test(draft.id) || (expectedId !== "" && draft.id !== expectedId)) return null;
+  if (typeof draft.subject !== "string" || !draft.subject.trim() || typeof draft.body !== "string" || !draft.body.trim()) return null;
+  if (!(draft.productId === null || (typeof draft.productId === "string" && draft.productId !== "")) || typeof draft.by !== "string" || !draft.by.trim() || typeof draft.savedAt !== "string" || !Number.isFinite(Date.parse(draft.savedAt))) return null;
+  return draft.id;
+}
