@@ -42,6 +42,10 @@ export class DraftRemovalUnconfirmed extends Error {
   constructor() { super("Draft removal could not be confirmed"); this.name = "DraftRemovalUnconfirmed"; }
 }
 
+export class DraftRemovalConflict extends Error {
+  constructor() { super("A newer draft version must not be removed"); this.name = "DraftRemovalConflict"; }
+}
+
 export const MAX_DRAFTS = 20;
 export const DRAFT_ID = /^[0-9a-f]{16}$/;
 
@@ -186,24 +190,36 @@ async function saveDraftUnlocked(
 }
 
 /** Throws a draft away. True when there was one to throw away. */
-export async function removeDraft(store: Store, id: string): Promise<boolean> {
+export async function removeDraft(store: Store, id: string, expectedSavedAt?: unknown): Promise<boolean> {
   if (!store.listId || !DRAFT_ID.test(id)) return false;
   let acquired = false;
   try {
     acquired = await claimDraftLock(store.listId, id);
     if (!acquired) throw new DraftRemovalUnconfirmed();
+    if (expectedSavedAt !== undefined) {
+      if (typeof expectedSavedAt !== "string" || !Number.isFinite(Date.parse(expectedSavedAt))) throw new DraftRemovalConflict();
+      const read = await redisPipeline([["HGET", draftsKey(store.listId), id]]);
+      if (!Array.isArray(read) || read.length !== 1) throw new DraftRemovalUnconfirmed();
+      if (read[0] === null) return false;
+      const current = parse(read[0]);
+      if (!current || current.id !== id || !Number.isFinite(Date.parse(current.savedAt))) throw new DraftRemovalUnconfirmed();
+      if (current.savedAt !== expectedSavedAt) throw new DraftRemovalConflict();
+    }
     const response = await redisPipeline([["HDEL", draftsKey(store.listId), id]]);
     if (!Array.isArray(response) || response.length !== 1 || (response[0] !== 0 && response[0] !== 1)) throw new DraftRemovalUnconfirmed();
     return response[0] === 1;
-  } catch { throw new DraftRemovalUnconfirmed(); }
+  } catch (error) {
+    if (error instanceof DraftRemovalConflict) throw error;
+    throw new DraftRemovalUnconfirmed();
+  }
   finally { if (acquired) await releaseDraftLock(store.listId, id); }
 }
 
 /** Cleanup cannot undo a confirmed campaign; a lost reply must not invite resending it. */
-export async function finishBroadcastDraft(store: Store, id: string): Promise<boolean> {
+export async function finishBroadcastDraft(store: Store, id: string, expectedSavedAt?: unknown): Promise<boolean> {
   if (!id) return true;
   if (!store.listId || !DRAFT_ID.test(id)) return false;
-  try { await removeDraft(store, id); return true; } catch { return false; }
+  try { await removeDraft(store, id, expectedSavedAt); return true; } catch { return false; }
 }
 
 const draftLockKey = (listId: string, id: string) => draftsKey(listId) + ":lock:" + id;
