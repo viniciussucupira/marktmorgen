@@ -1,5 +1,5 @@
 import { customRangeComparison } from "@/lib/custom-range-comparison";
-import { CUSTOM_RANGE_METRICS, CUSTOM_RANGE_GROUPINGS, customRangeChartRows, effectiveCustomRangeMetric, effectiveCustomRangeGrouping, type CustomRangeMetric, type CustomRangeGrouping } from "@/lib/custom-range-chart";
+import { CUSTOM_RANGE_METRICS, CUSTOM_RANGE_GROUPINGS, customRangeChartRows, customRangeChartSummary, effectiveCustomRangeMetric, effectiveCustomRangeGrouping, type CustomRangeMetric, type CustomRangeGrouping } from "@/lib/custom-range-chart";
 import { customRangeOrderLabel, customRangeFilterLabel, customRangeMinimumTraffic, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import type { RangeData } from "@/lib/stats";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
@@ -183,5 +183,20 @@ export function customRangeSelectionReport(data:RangeData,selection:CustomRangeR
  return csv([
   ["From (UTC)","To (UTC)","Currency","List","Matching loaded rows","Traffic unit","Traffic","Paid records","Gross revenue","Paid coverage","Recorded source rows","Source list truncated","Search","Sales filter","Minimum traffic","Order","Definition"],
   ...rows.map((row):Cell[]=>[data.from,data.to,data.currency.toUpperCase(),row.name,row.rows,row.unit,row.traffic,row.paidRecords,amount(row.cents,data.currency),rangeCoverage(data),row.sourceTotal??null,listCoverage(row.truncated),selection.query?.trim()??"",customRangeFilterLabel(data,selection.filter??"all"),customRangeMinimumTraffic(selection.minimumTraffic),customRangeOrderLabel(data,selection.sort??"recorded",row.kind),note+row.scope]),
+ ]);
+}
+
+/** Export daily summary statistics with exact analytical averages before UI rounding. */
+export function customRangeChartSummaryReport(data:RangeData,metric:CustomRangeMetric,grouping:CustomRangeGrouping="day"):string {
+ const summary=customRangeChartSummary(data,metric);
+ const group=effectiveCustomRangeGrouping(grouping);
+ const requested=CUSTOM_RANGE_METRICS.find(item=>item.value===metric)?.label??String(metric);
+ const label=summary?CUSTOM_RANGE_METRICS.find(item=>item.value===summary.metric)!.label:null;
+ const groupLabel=CUSTOM_RANGE_GROUPINGS.find(item=>item.value===group)!.label;
+ const note="Summary uses recorded UTC daily rows regardless of chart grouping or list filters. Recorded zero days enter the average; missing days are not invented. Average equals total / recorded days before display rounding and is an analytical value, not an individual payment amount. Visitors are summed daily counts, not distinct people across the period. Peak ties show the earliest recorded UTC day and their count. Unavailable requested paid metrics fall back to Visitors, matching the chart. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ads. Recorded day count does not certify full calendar coverage.";
+ const value=(n:number)=>summary?.metric==="cents"?amount(n,data.currency):n;
+ return csv([
+  ["From (UTC)","To (UTC)","Currency","Chart grouping","Requested metric","Metric","Unit","Recorded days","Recorded total","Average per recorded day (unrounded)","First highest day (UTC)","Highest daily value","Days tied for highest value","Paid coverage","Definition"],
+  ...(summary?[[data.from,data.to,data.currency.toUpperCase(),groupLabel,requested,label,summary.metric==="cents"?data.currency.toUpperCase():"Count",summary.days,value(summary.total),value(summary.average),summary.peak.date,value(summary.peak.value),summary.peak.ties,rangeCoverage(data),note] as Cell[]]:[]),
  ]);
 }
