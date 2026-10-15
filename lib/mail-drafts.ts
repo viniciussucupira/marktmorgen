@@ -24,6 +24,18 @@ export class DraftWriteUnconfirmed extends Error {
   constructor() { super("Draft write could not be confirmed"); this.name = "DraftWriteUnconfirmed"; }
 }
 
+/** Failed preflight reads must not be treated as an empty draft collection. */
+export class DraftReadUnavailable extends Error {
+  constructor() { super("Draft preflight could not be read"); this.name = "DraftReadUnavailable"; }
+}
+
+async function draftPreflight(command: ["HLEN", string] | ["HEXISTS", string, string]): Promise<number> {
+  let response: unknown;
+  try { response = await redisPipeline([command]); } catch { throw new DraftReadUnavailable(); }
+  if (!Array.isArray(response) || response.length !== 1 || typeof response[0] !== "number" || !Number.isSafeInteger(response[0]) || response[0] < 0 || (command[0] === "HEXISTS" && response[0] > 1)) throw new DraftReadUnavailable();
+  return response[0];
+}
+
 export const MAX_DRAFTS = 20;
 export const DRAFT_ID = /^[0-9a-f]{16}$/;
 
@@ -96,11 +108,11 @@ export async function saveDraft(
   let id = input.id ?? "";
   if (id) {
     if (!DRAFT_ID.test(id)) return { ok: false, reason: "unknown" };
-    const [exists] = await redisPipeline([["HEXISTS", key, id]]);
-    if (Number(exists) !== 1) return { ok: false, reason: "unknown" };
+    const exists = await draftPreflight(["HEXISTS", key, id]);
+    if (exists !== 1) return { ok: false, reason: "unknown" };
   } else {
-    const [count] = await redisPipeline([["HLEN", key]]);
-    if (Number(count) >= MAX_DRAFTS) return { ok: false, reason: "full" };
+    const count = await draftPreflight(["HLEN", key]);
+    if (count >= MAX_DRAFTS) return { ok: false, reason: "full" };
     id = randomBytes(8).toString("hex");
   }
   const draft: Draft = { id, subject, body, productId, by: who.toLowerCase(), savedAt: new Date().toISOString() };
