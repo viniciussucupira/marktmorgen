@@ -127,6 +127,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
   const [sort, setSort] = useState<CustomRangeSort>("recorded");
   const [filter,setFilter] = useState<CustomRangeFilter>("all");
   const [minimumTraffic,setMinimumTraffic]=useState("0");
+  const hasListSelection=query!==""||sort!=="recorded"||filter!=="all"||minimumTraffic!=="0";
   const actualMinimum=customRangeMinimumTraffic(minimumTraffic);
   const minimumInvalid=minimumTraffic.trim()!==""&&actualMinimum===0&&Number(minimumTraffic)!==0;
   const actualFilter=effectiveCustomRangeFilter(r,filter);
@@ -202,6 +203,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
         <p className="mt-1 text-xs text-ink-soft">Search applies to the loaded lists. Period totals and daily results stay the same.{r.channelsTruncated || r.productsTruncated ? " Open all results above to search or filter every recorded row." : ""}</p>
         {query.trim() || actualFilter!=="all" || actualMinimum>0 ? <p className="mt-1 text-xs text-ink-soft" role="status">{view.channels.length} of {r.channels.length} loaded channels and {view.products.length} of {r.products.length} loaded products match.</p> : null}
       </div> : null}
+      {hasListSelection?<button type="button" className="btn btn-secondary mt-3" onClick={()=>{setQuery("");setSort("recorded");setFilter("all");setMinimumTraffic("0");}}>Reset list view</button>:null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
@@ -228,7 +230,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
               </tbody>
             </table>
           </div>
-        ) : null}
+        ) : r.channels.length ? <p className="text-sm text-ink-soft">No loaded channels match the current search and filters. Reset the list view or adjust the filters.{r.channelsTruncated===true?" The loaded channel list is limited.":""}</p> : null}
         {view.products.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
           <ReportDownload csv={customRangeProductsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
@@ -254,7 +256,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
               </tbody>
             </table>
           </div>
-        ) : null}
+        ) : r.products.length ? <p className="text-sm text-ink-soft">No loaded products match the current search and filters. Reset the list view or adjust the filters.{r.productsTruncated===true?" The loaded product list is limited.":""}</p> : null}
       </div>
     </div>
   );
