@@ -8,7 +8,7 @@ import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
-import { confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
+import { confirmedDraftId, confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import { flowConfigurationIssues } from "@/lib/flow-review";
@@ -600,11 +600,13 @@ function Compose(props: {
       setError(message(a));
       return;
     }
-    const saved = a.draft as DraftRow | undefined;
-    if (saved && typeof saved.id === "string" && saved.id) {
-      setDraftId(saved.id);
-      setSavedContent(content);
+    const savedId = confirmedDraftId(a, draftId);
+    if (!savedId) {
+      setError("The draft save could not be confirmed. Your text is still here. Check your saved drafts before saving again; the draft may already exist.");
+      return;
     }
+    setDraftId(savedId);
+    setSavedContent(content);
     toast("Draft saved.");
     router.refresh();
   }
