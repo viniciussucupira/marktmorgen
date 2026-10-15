@@ -34,3 +34,9 @@ export function confirmedDraftId(answer: MailAnswer, expectedId = ""): string | 
   if (!(draft.productId === null || (typeof draft.productId === "string" && draft.productId !== "")) || typeof draft.by !== "string" || !draft.by.trim() || typeof draft.savedAt !== "string" || !Number.isFinite(Date.parse(draft.savedAt))) return null;
   return draft.id;
 }
+
+/** A recipient preview is known only with an explicit nonnegative whole count. */
+export function confirmedRecipientCount(answer: MailAnswer): number | null {
+  const count = answer.count;
+  return answer.ok === true && typeof count === "number" && Number.isSafeInteger(count) && count >= 0 ? count : null;
+}
