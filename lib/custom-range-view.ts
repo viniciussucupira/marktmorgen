@@ -30,14 +30,21 @@ export function customRangeFilterLabel(data:RangeData,filter:string):string {
  const selected=effectiveCustomRangeFilter(data,filter);
  return CUSTOM_RANGE_FILTERS.find(item=>item.value===selected)!.label;
 }
+
+/** Only non-negative whole counts can become a traffic threshold. */
+export function customRangeMinimumTraffic(value:unknown):number {
+ const parsed=typeof value==="number"?value:typeof value==="string"?Number(value.trim()):NaN;
+ return Number.isSafeInteger(parsed)&&parsed>=0?parsed:0;
+}
 const productName=(row:RangeData["products"][number])=>"title" in row?String(row.title??row.id):row.id;
 /** Search and sort loaded rows without mutating their source or period-wide figures. */
-export function customRangeView<T extends RangeData>(data:T,query:string,sort:CustomRangeSort="recorded",filter:CustomRangeFilter="all"):T {
+export function customRangeView<T extends RangeData>(data:T,query:string,sort:CustomRangeSort="recorded",filter:CustomRangeFilter="all",minimumTraffic:number|string=0):T {
  const needle=normalized(query);
  const selected=effectiveCustomRangeSort(data,sort);
  const actualFilter=effectiveCustomRangeFilter(data,filter);
- const matches=(sales:number,traffic:number)=>actualFilter==="all"||(actualFilter==="paid"?sales>0:traffic>0&&sales===0);
- if(!needle&&selected==="recorded"&&actualFilter==="all")return data;
+ const minimum=customRangeMinimumTraffic(minimumTraffic);
+ const matches=(sales:number,traffic:number)=>traffic>=minimum&&(actualFilter==="all"||(actualFilter==="paid"?sales>0:traffic>0&&sales===0));
+ if(!needle&&selected==="recorded"&&actualFilter==="all"&&minimum===0)return data;
  const channels=data.channels.filter(row=>matches(row.sales,row.visits)&&normalized(row.source+" "+channelName(row.source)).includes(needle));
  const products=data.products.filter(row=>matches(row.sales,row.views)&&normalized(row.id+" "+productName(row)).includes(needle));
  const direction=selected.endsWith("_asc")?1:-1;
