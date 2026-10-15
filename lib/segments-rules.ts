@@ -3,6 +3,7 @@
  * money (lib/segments.ts), with nothing that reads a database or a secret,
  * so the studio's composer can import them to draw its choices.
  */
+import { readMoney, type Currency } from "@/lib/money";
 import type { Who } from "@/lib/contacts";
 
 /** Spent at least, in the smallest unit of the store's currency; first found the store through; has not bought in this many days. */
@@ -13,7 +14,7 @@ export const NO_NARROW: Narrow = { minSpent: 0, channel: "", quietDays: 0 };
 export const QUIET_DAYS = [30, 60, 90, 180, 365] as const;
 export const MAX_SEGMENTS = 20;
 export const MAX_SEGMENT_NAME = 60;
-const MAX_SPENT = 100_000_000;
+export const MAX_SPENT = 100_000_000;
 const CHANNEL = /^[a-z0-9][a-z0-9._-]{0,39}$/;
 
 /** A saved group: a name over the composer's choices. */
@@ -35,4 +36,11 @@ export function readNarrow(raw: unknown): Narrow {
 
 export function isNarrowed(narrow: Narrow | null | undefined): narrow is Narrow {
   return Boolean(narrow && (narrow.minSpent > 0 || narrow.channel || narrow.quietDays > 0));
+}
+
+/** Empty/zero means no minimum; malformed or out-of-range text must not broaden an audience. */
+export function readSegmentSpend(raw: string, currency: Currency): number | null {
+  if (!raw.trim()) return 0;
+  const amount = readMoney(raw, currency);
+  return amount !== null && amount <= MAX_SPENT ? amount : null;
 }
