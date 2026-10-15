@@ -9,6 +9,7 @@ import { SITE_URL } from "@/lib/site-url";
 
 const PROBLEMS: Record<string, string> = {
   picture: "That picture could not be used. Try a JPEG, PNG or WebP photo.",
+  processing: "The email is being processed. The picture was not inserted. Wait for it to finish, then add the picture again.",
   changed: "The email changed while the picture was being added. Your current text was kept. Add the picture again to insert it into this version.",
   big: `That file is too large to start from. Choose one under ${Math.round(MAX_SOURCE_BYTES / 1024 / 1024)} MB.`,
   slow: "That is a lot of pictures in an hour. Wait a little and try again.",
@@ -66,6 +67,7 @@ export function MailPictureButton({
       const data: unknown = await response.json().catch(() => null);
       if (!mounted.current) return;
       if (revision.current !== startedAt) return setProblem(PROBLEMS.changed);
+      if (input.current?.closest("fieldset:disabled")) return setProblem(PROBLEMS.processing);
       const url = confirmedMailPictureUrl(response.ok, data);
       if (!url) {
         const error = data && typeof data === "object" && "error" in data ? data.error : null;
