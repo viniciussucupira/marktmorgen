@@ -34,7 +34,10 @@ try {
       logLevel: "error",
       alias: {
         "@": root,
-        "@/lib/redis": join(here, "redis-stub.ts"),
+        // This integration test supplies its own fetch transport and malformed replies.
+        "@/lib/redis": file === "range-traffic-coverage.test.ts"
+          ? join(root, "lib/redis.ts")
+          : join(here, "redis-stub.ts"),
       },
     });
     console.log(`\n=== ${file} ===`);
