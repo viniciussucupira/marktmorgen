@@ -148,7 +148,7 @@ export function CustomRangeResults({ range, marks, currency }: { range: Omit<Ran
         {r.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
             <table className="w-full text-left text-sm">
-              <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from</caption>
+              <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {r.channels.length} of {r.channelsTotal} recorded channels, ordered by {sold ? "revenue" : "visits"}.</span> : null}</caption>
               <thead>
                 <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                   <th scope="col" className="py-1 font-semibold">Channel</th>
@@ -173,7 +173,7 @@ export function CustomRangeResults({ range, marks, currency }: { range: Omit<Ran
         {r.products.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
             <table className="w-full text-left text-sm">
-              <caption id="range-products" className="text-left text-sm font-bold text-ink">Products</caption>
+              <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {r.products.length} of {r.productsTotal} recorded products, ordered by {sold ? "revenue" : "page views"}.</span> : null}</caption>
               <thead>
                 <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                   <th scope="col" className="py-1 font-semibold">Product</th>
