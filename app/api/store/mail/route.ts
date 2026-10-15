@@ -220,8 +220,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "cancel") {
-      const done = await cancelBroadcast(store, text(body.id, 40));
-      return done ? Response.json({ ok: true }) : fail("unknown", 404);
+      const id = text(body.id, 40);
+      const done = await cancelBroadcast(store, id);
+      return done ? Response.json({ ok: true, cancelled: { id, status: "cancelled" } }) : fail("unknown", 404);
     }
 
     if (action === "flow") {
