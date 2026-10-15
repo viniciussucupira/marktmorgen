@@ -558,6 +558,7 @@ function Compose(props: {
   }, [productId, notProductId, who, minSpent, channel, quietDays, more]);
 
   async function group(payload: Record<string, unknown>, done: string) {
+    if (busy) return;
     setBusy(true);
     setError(null);
     const a = await call(payload);
@@ -582,6 +583,7 @@ function Compose(props: {
   }
 
   async function send(payload: Record<string, unknown>, success: string) {
+    if (busy) return false;
     setBusy(true);
     setError(null);
     const a = await call(payload);
@@ -596,6 +598,7 @@ function Compose(props: {
   }
 
   async function keep() {
+    if (busy) return;
     setBusy(true);
     setError(null);
     const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId });
@@ -627,7 +630,8 @@ function Compose(props: {
           </button>
         ) : null}
       </div>
-      <div className="mt-4 space-y-4">
+      {busy ? <p role="status" className="mt-3 text-sm text-ink-soft">Working on your email. Editing is paused until this finishes.</p> : null}
+      <fieldset className="mt-4 min-w-0 space-y-4" disabled={busy} aria-label="Email composition" aria-busy={busy}>
         <AiAssist<{ subject: string; body: string }>
           title="Write a draft with AI"
           hint="Pick what the email is for, and say in a few words what you want it to say. The subject and the email below are filled in for you to read and change."
@@ -986,7 +990,7 @@ function Compose(props: {
           </p>
         )}
         <Feedback error={error} done={null} />
-      </div>
+      </fieldset>
     </section>
   );
 }
