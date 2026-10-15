@@ -673,7 +673,7 @@ function Compose(props: {
       setError(message(a));
       return;
     }
-    const savedId = confirmedDraftId(a, draftId, audience);
+    const savedId = confirmedDraftId(a, draftId, audience, { subject, body, productId });
     if (!savedId) {
       setUncertainDrafts(props.savedDrafts);
       setError("The draft save could not be confirmed. Your text is still here. Check your saved drafts before saving again; the draft may already exist.");
