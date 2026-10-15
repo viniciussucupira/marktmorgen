@@ -1424,6 +1424,11 @@ export type RangeData = {
   channels: { source: string; visits: number; sales: number; cents: number }[];
   /** Each product's page views, checkouts and sales, the biggest first. */
   products: { id: string; views: number; checkouts: number; sales: number; cents: number }[];
+  /** Recorded rows before the display cap, not a claim of complete paid coverage. */
+  channelsTotal?: number;
+  channelsTruncated?: boolean;
+  productsTotal?: number;
+  productsTruncated?: boolean;
   sales: "ok" | "none" | "error";
   /** More sales than one reading covers: the oldest are missing. */
   partial: boolean;
@@ -1566,6 +1571,10 @@ export async function readRange(store: Store, from: string, to: string, now = Da
     before.sales = null;
     before.cents = null;
   }
+  out.channelsTotal = bySource.size;
+  out.productsTotal = byProduct.size;
+  out.channelsTruncated = bySource.size > 15;
+  out.productsTruncated = byProduct.size > 15;
   const paidKnown = out.sales === "ok" && !out.partial;
   out.channels = [...bySource.values()].sort((a, b) => (paidKnown ? b.cents - a.cents : 0) || b.visits - a.visits || a.source.localeCompare(b.source)).slice(0, 15);
   out.products = [...byProduct.values()].sort((a, b) => (paidKnown ? b.cents - a.cents : 0) || b.views - a.views || a.id.localeCompare(b.id)).slice(0, 15);

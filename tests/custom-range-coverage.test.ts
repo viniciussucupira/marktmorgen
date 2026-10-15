@@ -37,4 +37,14 @@ is("unknown previous sales have no zero comparison",tile(unknownBefore,"Sales")?
 is("unknown previous revenue has no zero comparison",tile(unknownBefore,"Revenue")?.includes("days before"),false);
 is("current confirmed money survives unknown paid history",tile(unknownBefore,"Revenue")?.includes("$999"),true);
 is("prior traffic comparison survives unknown paid history",tile(unknownBefore,"Visitors")?.includes("+100%"),true);
+const limited={...range,channelsTotal:17,channelsTruncated:true,productsTotal:18,productsTruncated:true};
+const limitedHtml=render(limited);
+is("partial channels disclose cap and traffic order",limitedHtml.includes("Showing 1 of 17 recorded channels, ordered by visits"),true);
+is("partial products disclose cap and traffic order",limitedHtml.includes("Showing 1 of 18 recorded products, ordered by page views"),true);
+const paidLimited=render({...limited,partial:false});
+is("complete channels disclose revenue order",paidLimited.includes("Showing 1 of 17 recorded channels, ordered by revenue"),true);
+is("complete products disclose revenue order",paidLimited.includes("Showing 1 of 18 recorded products, ordered by revenue"),true);
+is("old snapshot does not invent a total",partial.includes("recorded channels, ordered by"),false);
+is("unlimited list has no cap warning",render({...limited,channelsTruncated:false,productsTruncated:false}).includes("Showing 1 of"),false);
+is("missing totals are not invented",render({...limited,channelsTotal:undefined,productsTotal:undefined}).includes("Showing 1 of"),false);
 done();
