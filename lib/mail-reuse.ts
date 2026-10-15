@@ -34,7 +34,8 @@
  * to buyers of one product who do not own another, say. An email in a
  * sequence carries one condition.
  */
-import { MAX_DELAY_HOURS, MAX_FLOW_NAME, MAX_STEPS, type Flow, type FlowResult, readFlows, saveFlow } from "@/lib/flows";
+import { readFlowListStrict } from "@/lib/flow-list";
+import { MAX_DELAY_HOURS, MAX_FLOW_NAME, MAX_STEPS, type Flow, type FlowResult, saveFlow } from "@/lib/flows";
 import { type Broadcast, readBroadcast } from "@/lib/broadcasts";
 import type { Store } from "@/lib/store";
 import type { StepCondition } from "@/lib/flow-rules";
@@ -141,7 +142,7 @@ export async function keepSending(
   productTitle: (id: string) => Promise<string | null>,
 ): Promise<KeepResult> {
   const broadcast = await readBroadcast(broadcastId);
-  const flows = await readFlows(store.listId);
+  const flows = await readFlowListStrict(store.listId);
   const plan = planKeep(broadcast, store.listId, flows, broadcast?.productId ? await productTitle(broadcast.productId) : null);
   if (!plan.ok) return plan;
   // Every rule a sequence has — the plan, the setup, the product still being
