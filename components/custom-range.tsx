@@ -7,7 +7,7 @@ import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, customRangeMinimumTraffic, effectiveCustomRangeMinimumPaidRecords, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
 import { CUSTOM_RANGE_METRICS, customRangeChartSummary, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
-import { revenuePerTraffic, formatRevenuePerTraffic } from "@/lib/custom-range-efficiency";
+import { revenuePerTraffic, formatRevenuePerTraffic, selectedRevenueShare, formatSelectedRevenueShare } from "@/lib/custom-range-efficiency";
 import { customRangeComparison } from "@/lib/custom-range-comparison";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
@@ -148,6 +148,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
   const actualSort = effectiveCustomRangeSort(r, sort);
   const view = customRangeView(r, query, actualSort, actualFilter, actualMinimum, actualMinimumPaidRecords);
   const sold = paidFiguresComplete(r);
+  const listTotals=customRangeSelectionTotals(view);
   const [chartMetric, setChartMetric] = useState<CustomRangeMetric>("visitors");
   const [chartGrouping, setChartGrouping] = useState<CustomRangeGrouping>("day");
   const tiles = [
@@ -227,7 +228,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
       </div> : null}
       {hasListSelection?<CustomRangeSelectionSummary range={view} currency={currency} selection={{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum,minimumPaidRecords:actualMinimumPaidRecords}} />:null}
       {hasListSelection?<button type="button" className="btn btn-secondary mt-3" onClick={()=>{setQuery("");setSort("recorded");setFilter("all");setMinimumTraffic("0");setMinimumPaidRecords("0");}}>Reset list view</button>:null}
-      {sold ? <p className="mt-3 text-xs text-ink-soft">Revenue / visit and Revenue / view divide each row’s gross revenue by recorded visits or page views, not unique people. Channels exclude one-click extras; products include them. Both exclude renewals and are before refunds, fees and costs. No traffic means unavailable; rows without a defined ratio sort last in either direction. Analytical money uses up to four significant digits; CSV values keep calculated precision.</p> : null}
+      {sold ? <p className="mt-3 text-xs text-ink-soft">Revenue / visit and Revenue / view divide each row’s gross revenue by recorded visits or page views, not unique people. Channels exclude one-click extras; products include them. Both exclude renewals and are before refunds, fees and costs. No traffic means unavailable; rows without a defined ratio sort last in either direction. Analytical money uses up to four significant digits; CSV values keep calculated precision. Revenue share uses each selected loaded list’s total revenue, separately for channels and products, not whole-period revenue. A zero total has no defined share; limited lists describe only the loaded selection.</p> : null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
@@ -241,6 +242,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th> : null}
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue / visit</th> : null}
+                  {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Share of selected revenue</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -251,6 +253,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{count(c.sales)}</td> : null}
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(c.cents)}</td> : null}
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{formatRevenuePerTraffic(revenuePerTraffic(c.cents,c.visits,sold),currency)}</td> : null}
+                    {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{formatSelectedRevenueShare(selectedRevenueShare(c.cents,listTotals.channels.cents,sold))}</td> : null}
                   </tr>
                 ))}
               </tbody>
@@ -270,6 +273,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Sales</th> : null}
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue</th> : null}
                   {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Revenue / view</th> : null}
+                  {sold ? <th scope="col" className="py-1 pl-3 text-right font-semibold">Share of selected revenue</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -281,6 +285,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{count(p.sales)}</td> : null}
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{money(p.cents)}</td> : null}
                     {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{formatRevenuePerTraffic(revenuePerTraffic(p.cents,p.views,sold),currency)}</td> : null}
+                    {sold ? <td className="py-1.5 pl-3 text-right tabular-nums">{formatSelectedRevenueShare(selectedRevenueShare(p.cents,listTotals.products.cents,sold))}</td> : null}
                   </tr>
                 ))}
               </tbody>
