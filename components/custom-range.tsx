@@ -5,6 +5,7 @@ import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, type CustomRangeSort } from "@/lib/custom-range-view";
+import { adjacentCustomRange, type CustomDatePeriod } from "@/lib/custom-range-dates";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -47,13 +48,16 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[] } | null>(null);
 
-  async function show(fullDetails = false) {
+  async function show(fullDetails = false, period?: CustomDatePeriod) {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch(`/api/store/stats/range?${new URLSearchParams({ from: fullDetails && result ? result.range.from : from, to: fullDetails && result ? result.range.to : to, ...(fullDetails ? { details: "all" } : {}) })}`, { cache: "no-store" });
+      const response = await fetch(`/api/store/stats/range?${new URLSearchParams({ from: period?.from ?? (fullDetails && result ? result.range.from : from), to: period?.to ?? (fullDetails && result ? result.range.to : to), ...(fullDetails ? { details: "all" } : {}) })}`, { cache: "no-store" });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; range?: RangeData & { products: Products }; marks?: AutoMark[] };
-      if (data.ok && data.range) setResult({ range: data.range, marks: data.marks ?? [] });
+      if (data.ok && data.range) {
+        setResult({ range: data.range, marks: data.marks ?? [] });
+        if (period) { setFrom(data.range.from); setTo(data.range.to); }
+      }
       else setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
@@ -63,6 +67,8 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
   }
 
   const r = result?.range;
+  const previousPeriod = r ? adjacentCustomRange(r,-1,today) : null;
+  const nextPeriod = r ? adjacentCustomRange(r,1,today) : null;
 
   return (
     <div className="mt-5 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" role="region" aria-labelledby="custom-range" data-custom-range>
@@ -94,13 +100,13 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
           {error}
         </p>
       ) : null}
-      {r ? <CustomRangeResults range={r} marks={result.marks} currency={currency} onShowAll={() => { void show(true); }} busy={busy} /> : null}
+      {r ? <CustomRangeResults range={r} marks={result.marks} currency={currency} onShowAll={() => { void show(true); }} busy={busy} onNavigate={direction=>{const period=direction===-1?previousPeriod:nextPeriod;if(period)void show(false,period);}} canPrevious={previousPeriod!==null} canNext={nextPeriod!==null} /> : null}
     </div>
   );
 }
 
 /** The confirmed results of the requested dates, with paid coverage checked separately. */
-export function CustomRangeResults({ range, marks, currency, onShowAll, busy = false }: { range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; currency: string; onShowAll?: () => void; busy?: boolean }) {
+export function CustomRangeResults({ range, marks, currency, onShowAll, busy = false, onNavigate, canPrevious = false, canNext = false }: { range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; currency: string; onShowAll?: () => void; busy?: boolean; onNavigate?: (direction:-1|1)=>void; canPrevious?:boolean; canNext?:boolean }) {
   const money = (cents: number) => formatMoney(cents, currency);
   const r = range;
   const [query, setQuery] = useState("");
@@ -123,6 +129,11 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, busy = f
 
   return (
     <div className="mt-4" data-range-result>
+      {onNavigate ? <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Move between periods">
+        <button type="button" className="btn btn-secondary" disabled={busy || !canPrevious} onClick={()=>onNavigate(-1)}>Previous period</button>
+        <button type="button" className="btn btn-secondary" disabled={busy || !canNext} onClick={()=>onNavigate(1)}>Next period</button>
+        <p className="w-full text-xs text-ink-soft">Move by the same number of days, within the available history.</p>
+      </div> : null}
       {onShowAll && (r.channelsTruncated === true || r.productsTruncated === true) ? <button type="button" className="btn btn-secondary mb-3" onClick={onShowAll} disabled={busy} aria-busy={busy}>{busy ? "Reading…" : "Show all channels and products"}</button> : null}
       <p className="text-sm font-semibold text-ink">{r.from === r.to ? day(r.from) : `${day(r.from)} to ${day(r.to)}, ${r.days.length} days`}</p>
       <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
