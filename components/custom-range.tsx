@@ -5,7 +5,7 @@ import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, type CustomRangeSort } from "@/lib/custom-range-view";
-import { adjacentCustomRange, type CustomDatePeriod } from "@/lib/custom-range-dates";
+import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -75,6 +75,7 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
       <p id="custom-range" className="text-sm font-bold text-ink">
         Any dates
       </p>
+      <CustomRangePresets today={today} busy={busy} onSelect={period => { void show(false, period); }} />
       <form
         className="mt-2 flex flex-wrap items-end gap-3"
         onSubmit={(event) => {
@@ -103,6 +104,17 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
       {r ? <CustomRangeResults range={r} marks={result.marks} currency={currency} onShowAll={() => { void show(true); }} busy={busy} onNavigate={direction=>{const period=direction===-1?previousPeriod:nextPeriod;if(period)void show(false,period);}} canPrevious={previousPeriod!==null} canNext={nextPeriod!==null} /> : null}
     </div>
   );
+}
+
+/** Direct shortcuts use the same confirmed request flow as period navigation. */
+export function CustomRangePresets({today,busy=false,onSelect}:{today:string;busy?:boolean;onSelect:(period:CustomDatePeriod)=>void}) {
+ return <div className="mt-2" role="group" aria-label="Quick date ranges">
+  <div className="flex flex-wrap gap-2">{CUSTOM_RANGE_PRESETS.map(preset=>{
+   const period=presetCustomRange(preset.value,today);
+   return <button key={preset.value} type="button" className="btn btn-secondary" disabled={busy || !period} onClick={()=>{if(period)onSelect(period);}}>{preset.label}</button>;
+  })}</div>
+  <p className="mt-1 text-xs text-ink-soft">Shortcuts include today in UTC. Today’s numbers may still grow.</p>
+ </div>;
 }
 
 /** The confirmed results of the requested dates, with paid coverage checked separately. */
