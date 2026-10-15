@@ -48,7 +48,7 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
   const [to, setTo] = useState(today);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; fullDetails: boolean } | null>(null);
+  const [result, setResult] = useState<{ range: Omit<RangeData, "products"> & { products: Products }; marks: AutoMark[]; fullDetails: boolean; receivedAt: string } | null>(null);
 
   async function show(fullDetails = false, period?: CustomDatePeriod, keepDraftDates = false) {
     setBusy(true);
@@ -57,7 +57,7 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
       const response = await fetch(`/api/store/stats/range?${new URLSearchParams({ from: period?.from ?? (fullDetails && result ? result.range.from : from), to: period?.to ?? (fullDetails && result ? result.range.to : to), ...(fullDetails ? { details: "all" } : {}) })}`, { cache: "no-store" });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; range?: RangeData & { products: Products }; marks?: AutoMark[] };
       if (data.ok && data.range) {
-        setResult({ range: data.range, marks: data.marks ?? [], fullDetails });
+        setResult({ range: data.range, marks: data.marks ?? [], fullDetails, receivedAt: new Date().toISOString() });
         if (period && !keepDraftDates) { setFrom(data.range.from); setTo(data.range.to); }
       }
       else setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
@@ -98,6 +98,10 @@ export function CustomRange({ today, currency }: { today: string; currency: stri
         </button>
       </form>
       <p className="mt-2 text-xs text-ink-soft">Any days from the last 400, in UTC like every day here, set beside the same number of days just before.</p>
+      <p className="mt-2 text-xs text-ink-soft" role="status" aria-live="polite" aria-atomic="true">
+        {busy ? (result ? "Reading selected dates. The previous report remains visible until the new reading succeeds. " : "Reading selected dates. ") : null}
+        {result ? <>Last report received: <time dateTime={result.receivedAt}>{new Date(result.receivedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "medium", timeZone: "UTC" })} UTC</time>. This is the reading time; data availability is shown below.</> : null}
+      </p>
       {error ? (
         <p className="notice notice-error mt-3" role="alert">
           {error}
