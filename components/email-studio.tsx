@@ -85,15 +85,16 @@ type Answer = MailAnswer;
 
 async function call(payload: Record<string, unknown>): Promise<Answer> {
   const sequenceWrite = ["keep", "flow", "flow-remove", "starters"].includes(String(payload.action));
+  const draftWrite = payload.action === "draft-save";
   try {
     const response = await fetch("/api/store/mail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return mailAnswer(response.ok, await response.json().catch(() => null), sequenceWrite);
+    return mailAnswer(response.ok, await response.json().catch(() => null), sequenceWrite, draftWrite);
   } catch {
-    return mailAnswer(false, null, sequenceWrite);
+    return mailAnswer(false, null, sequenceWrite, draftWrite);
   }
 }
 
@@ -297,6 +298,8 @@ export function EmailStudio(props: {
                 onDone={() => { setOpen(null); setComposeRevision((value) => value + 1); }}
                 onStartNew={() => openDraft(null)}
                 composerState={composerState}
+                savedDrafts={props.drafts}
+                draftsReadFailed={props.draftsReadFailed ?? false}
                 currency={props.currency}
                 segments={props.segments ?? []}
                 preset={open ? undefined : props.preset}
@@ -494,11 +497,16 @@ function Compose(props: {
   onDone: () => void;
   onStartNew: () => void;
   composerState: { current: { dirty: boolean; busy: boolean } | null };
+  savedDrafts: DraftRow[];
+  draftsReadFailed: boolean;
   currency: string;
   segments: Segment[];
   preset?: { who: Who };
 }) {
   const router = useRouter();
+  const [refreshingDrafts, startDraftRefresh] = useTransition();
+  const [uncertainDrafts, setUncertainDrafts] = useState<DraftRow[] | null>(null);
+  const draftSaveBlocked = uncertainDrafts !== null && (uncertainDrafts === props.savedDrafts || props.draftsReadFailed);
   const [subject, setSubject] = useState(props.draft?.subject ?? "");
   const [body, setBody] = useState(props.draft?.body ?? "");
   // The email's box, so a picture goes where the cursor is.
@@ -531,7 +539,7 @@ function Compose(props: {
   const narrow: Narrow = { minSpent, channel, quietDays };
   const [busy, setBusy] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
-  const locked = busy || aiBusy;
+  const locked = busy || aiBusy || refreshingDrafts;
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // What the writing help is asked to write, and about which product.
@@ -601,20 +609,23 @@ function Compose(props: {
   }
 
   async function keep() {
-    if (locked) return;
+    if (locked || draftSaveBlocked) return;
     setBusy(true);
     setError(null);
     const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId });
     setBusy(false);
     if (!a.ok) {
+      if (a.error === "draft_write_unconfirmed") setUncertainDrafts(props.savedDrafts);
       setError(message(a));
       return;
     }
     const savedId = confirmedDraftId(a, draftId);
     if (!savedId) {
+      setUncertainDrafts(props.savedDrafts);
       setError("The draft save could not be confirmed. Your text is still here. Check your saved drafts before saving again; the draft may already exist.");
       return;
     }
+    setUncertainDrafts(null);
     setDraftId(savedId);
     setSavedContent(content);
     toast("Draft saved.");
@@ -931,7 +942,7 @@ function Compose(props: {
           <button
             type="button"
             aria-busy={busy}
-            disabled={busy || !subject.trim() || !body.trim()}
+            disabled={busy || draftSaveBlocked || !subject.trim() || !body.trim()}
             className="btn btn-secondary"
             onClick={() => void keep()}
           >
@@ -996,6 +1007,10 @@ function Compose(props: {
         )}
         <Feedback error={error} done={null} />
       </fieldset>
+      {uncertainDrafts !== null ? <div className="mt-4 space-y-3">
+        <p role="status" className="text-sm text-ink-soft">{draftSaveBlocked ? "Reload saved drafts and check whether this email was saved before saving again. Your current text stays here." : "The saved drafts list was refreshed. Review it before saving again; an earlier save may already be there."}</p>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={locked} aria-busy={refreshingDrafts} onClick={() => startDraftRefresh(() => router.refresh())}>{refreshingDrafts ? "Reloading drafts…" : "Reload saved drafts"}</button>
+      </div> : null}
     </section>
   );
 }
