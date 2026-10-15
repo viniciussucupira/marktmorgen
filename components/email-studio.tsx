@@ -8,7 +8,7 @@ import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
-import { keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
+import { confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import { flowConfigurationIssues } from "@/lib/flow-review";
@@ -1113,8 +1113,8 @@ function History({
     setError(null);
     const a = await call({ action: "copy", id: b.id });
     setBusy(false);
-    const copy = a.ok ? (a.copy as { subject: string; body: string; productId: string | null; who?: Who } | undefined) : undefined;
-    if (!copy) return setError(message(a));
+    const copy = confirmedMailCopy(a);
+    if (!copy) return setError(a.ok ? "The email copy could not be confirmed. Your current draft is unchanged. Try copying again when you are ready." : message(a));
     // No id: it is a new email, not the draft of an old one. The time makes
     // the composer start afresh even when the same email is opened twice.
     onOpen({ id: "", subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who, by: "", savedAt: String(Date.now()) });
