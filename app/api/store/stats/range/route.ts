@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   if (problem) return Response.json({ ok: false, error: problem }, { status: 400 });
   try {
     const [range, titles, marks] = await Promise.all([
-      readRange(store, from, to),
+      readRange(store, from, to, Date.now(), { fullDetails: request.nextUrl.searchParams.get("details") === "all" }),
       readTitles(store).catch(() => new Map<string, string>()),
       readMarks(store, from, to).catch(() => []),
     ]);
