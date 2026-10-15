@@ -80,15 +80,16 @@ const MESSAGES: Record<string, string> = {
 type Answer = MailAnswer;
 
 async function call(payload: Record<string, unknown>): Promise<Answer> {
+  const sequenceWrite = ["keep", "flow", "flow-remove", "starters"].includes(String(payload.action));
   try {
     const response = await fetch("/api/store/mail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return mailAnswer(response.ok, await response.json().catch(() => null));
+    return mailAnswer(response.ok, await response.json().catch(() => null), sequenceWrite);
   } catch {
-    return { ok: false, error: "server_error" };
+    return mailAnswer(false, null, sequenceWrite);
   }
 }
 
