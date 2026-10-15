@@ -486,9 +486,10 @@ export async function advanceBroadcast(
     }
     if (b.status === "sending" && b.sent >= b.total) {
       b = { ...b, status: "sent", finishedAt: Math.floor(Date.now() / 1000) };
-      await redisPipeline([["DEL", toKey(id)]]);
     }
     await save(b);
+    // Keep the snapshot until the terminal progress write is confirmed.
+    if (b.status === "sent") await redisPipeline([["DEL", toKey(id)]]);
     if (b.status === "sent" || b.status === "failed") await redisPipeline([["SREM", QUEUE, id]]);
     return b;
   } finally {
