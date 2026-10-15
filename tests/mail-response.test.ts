@@ -28,7 +28,7 @@ is("confirmed server error retains its handling", mailAnswer(false, { ok: false,
 is("confirmed mutation result survives", mailAnswer(true, { ok: true, id: "flow" }, true), { ok: true, id: "flow" });
 is("read-only malformed response retains generic handling", mailAnswer(true, null).error, "server_error");
 part("Confirmed email copy");
-const validCopy = { subject: "Original", body: "Original content", productId: null, who: "all" };
+const validCopy = { subject: "Original", body: "Original content", productId: null, who: "all", notProductId: null, narrow: null };
 for (const who of ["all", "buyers", "leads"] as const) is("preserves audience " + who, confirmedMailCopy(mailAnswer(true, { ok: true, copy: { ...validCopy, who } })), { ...validCopy, who });
 is("preserves product association", confirmedMailCopy(mailAnswer(true, { ok: true, copy: { ...validCopy, productId: "product" } }))?.productId, "product");
 for (const copy of [undefined, null, [], "text", {}, { ...validCopy, subject: 3 }, { ...validCopy, body: null }, { ...validCopy, productId: undefined }, { ...validCopy, productId: 3 }, { ...validCopy, who: undefined }, { ...validCopy, who: "everyone" }, { ...validCopy, who: ["all"] }]) is("invalid copy cannot replace draft " + JSON.stringify(copy), confirmedMailCopy(mailAnswer(true, { ok: true, copy })), null);
