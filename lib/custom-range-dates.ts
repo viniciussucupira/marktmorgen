@@ -16,3 +16,20 @@ export function adjacentCustomRange(period:CustomDatePeriod,direction:-1|1,today
  if(from<earliest||to>current)return null;
  return {from:new Date(from).toISOString().slice(0,10),to:new Date(to).toISOString().slice(0,10)};
 }
+
+export const CUSTOM_RANGE_PRESETS = [
+ {value:"7d",label:"Last 7 days"},
+ {value:"30d",label:"Last 30 days"},
+ {value:"90d",label:"Last 90 days"},
+ {value:"month",label:"This month"},
+] as const;
+export type CustomRangePreset = typeof CUSTOM_RANGE_PRESETS[number]["value"];
+/** All shortcuts end today, including the current (possibly unfinished) UTC day. */
+export function presetCustomRange(preset:CustomRangePreset,today:string):CustomDatePeriod|null {
+ const current=day(today);
+ if(current===null)return null;
+ if(preset==="month")return {from:today.slice(0,8)+"01",to:today};
+ const days=preset==="7d"?7:preset==="30d"?30:preset==="90d"?90:null;
+ if(days===null)return null;
+ return {from:new Date(current-(days-1)*DAY).toISOString().slice(0,10),to:today};
+}
