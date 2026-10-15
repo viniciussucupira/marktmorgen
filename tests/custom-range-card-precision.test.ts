@@ -17,7 +17,7 @@ for(const [label,metric] of pairs){
  is(label+" real movement is not unchanged",tile(decline,label)?.includes("same as the days before"),false);
 }
 part("Ordinary and extreme changes remain consistent");
-for(const [visitors,expected] of [[112500,"+12.5%"],[87500,"-12.5%"],[100100,"+0.1%"],[0,"-100%"]] as const){
+for(const [visitors,expected] of [[112500,"+12.5%"],[87500,"-12.5%"],[100100,"+0.1%"],[0,"-100%"],[1998000,"+1,898%"]] as const){
  const d={...base,totals:{...base.totals,visitors}};
  is("card percentage "+visitors,tile(d,"Visitors")?.includes(expected+" on the days before"),true);
  is("same comparison percentage "+visitors,tableChange(d,"Visitors"),expected);
