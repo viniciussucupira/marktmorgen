@@ -19,6 +19,11 @@ import { MAX_MAIL_BODY, MAX_SUBJECT } from "@/lib/mail";
 import type { Store } from "@/lib/store";
 import { hasProduct } from "@/lib/catalog";
 
+/** A write may have happened even when its acknowledgement is lost. */
+export class DraftWriteUnconfirmed extends Error {
+  constructor() { super("Draft write could not be confirmed"); this.name = "DraftWriteUnconfirmed"; }
+}
+
 export const MAX_DRAFTS = 20;
 export const DRAFT_ID = /^[0-9a-f]{16}$/;
 
@@ -99,7 +104,13 @@ export async function saveDraft(
     id = randomBytes(8).toString("hex");
   }
   const draft: Draft = { id, subject, body, productId, by: who.toLowerCase(), savedAt: new Date().toISOString() };
-  await redisPipeline([["HSET", key, id, JSON.stringify(draft)]]);
+  let acknowledgement: unknown;
+  try {
+    acknowledgement = await redisPipeline([["HSET", key, id, JSON.stringify(draft)]]);
+  } catch {
+    throw new DraftWriteUnconfirmed();
+  }
+  if (!Array.isArray(acknowledgement) || acknowledgement.length !== 1 || (acknowledgement[0] !== 0 && acknowledgement[0] !== 1)) throw new DraftWriteUnconfirmed();
   return { ok: true, draft };
 }
 
