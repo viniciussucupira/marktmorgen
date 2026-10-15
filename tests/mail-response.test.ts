@@ -17,4 +17,14 @@ is("missing delay is not a success message", keptWaitHours(mailAnswer(true, { ok
 for (const waitHours of ["24", -1, 1.5, NaN, Infinity, 8761]) is("invalid returned delay " + String(waitHours), keptWaitHours(mailAnswer(true, { ok: true, waitHours })), null);
 is("HTTP failure still cannot announce keeping", keptWaitHours(mailAnswer(false, { ok: true, waitHours: 24 })), null);
 is("refusal cannot announce keeping", keptWaitHours(mailAnswer(true, { ok: false, error: "already", waitHours: 24 })), null);
+part("Unconfirmed sequence mutation responses");
+for (const raw of [null, [], {}, { ok: "true" }, { ok: false, error: 3 }]) {
+  is("malformed mutation needs reload " + JSON.stringify(raw), mailAnswer(true, raw, true).error, "flow_write_unconfirmed");
+}
+is("failed HTTP success claim needs reload", mailAnswer(false, { ok: true }, true).error, "flow_write_unconfirmed");
+is("transport failure needs reload", mailAnswer(false, null, true).error, "flow_write_unconfirmed");
+is("confirmed refusal stays actionable", mailAnswer(false, { ok: false, error: "forbidden" }, true).error, "forbidden");
+is("confirmed server error retains its handling", mailAnswer(false, { ok: false, error: "server_error" }, true).error, "server_error");
+is("confirmed mutation result survives", mailAnswer(true, { ok: true, id: "flow" }, true), { ok: true, id: "flow" });
+is("read-only malformed response retains generic handling", mailAnswer(true, null).error, "server_error");
 done();
