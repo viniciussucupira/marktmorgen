@@ -21,7 +21,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { formatMoney } from "@/lib/money";
 import { MIN_TEST_REACH, TEST_HOURS, TEST_SHARES, type SubjectTest, type TestBy } from "@/lib/mail-test";
 import { type Currency, plainAmount } from "@/lib/money";
-import { broadcastAnswer } from "@/lib/broadcast-response";
+import { broadcastAnswer, cancellationAnswer } from "@/lib/broadcast-response";
 import { readMailSchedule } from "@/lib/mail-schedule";
 import { channelName } from "@/lib/channel-names";
 import { type Narrow, MAX_SPENT, readSegmentSpend, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
@@ -37,6 +37,7 @@ const MESSAGES: Record<string, string> = {
   body: "Write the email itself.",
   placeholder: "Part of the template is still in ⟦brackets⟧. Replace each with your own words, or remove it, before it can go out.",
   when: "Pick a time between now and a year from now.",
+  broadcast_cancel_unconfirmed: "The cancellation could not be confirmed. The campaign may still go out. Reload Sent and scheduled to check its current status.",
   broadcast_write_unconfirmed: "The campaign could not be confirmed. Your text is still here. It may already have been created; check Sent and scheduled before trying again.",
   product: "That product is not in your store anymore.",
   empty: "Nobody on your list matches, so there is nobody to send it to yet.",
@@ -96,9 +97,13 @@ async function call(payload: Record<string, unknown>): Promise<Answer> {
       body: JSON.stringify(payload),
     });
     const raw = await response.json().catch(() => null);
-    return payload.action === "broadcast" ? broadcastAnswer(response.ok, raw, payload) : mailAnswer(response.ok, raw, sequenceWrite, draftWrite);
+    if (payload.action === "broadcast") return broadcastAnswer(response.ok, raw, payload);
+    if (payload.action === "cancel") return cancellationAnswer(response.ok, raw, payload.id);
+    return mailAnswer(response.ok, raw, sequenceWrite, draftWrite);
   } catch {
-    return payload.action === "broadcast" ? broadcastAnswer(false, null, payload) : mailAnswer(false, null, sequenceWrite, draftWrite);
+    if (payload.action === "broadcast") return broadcastAnswer(false, null, payload);
+    if (payload.action === "cancel") return cancellationAnswer(false, null, payload.id);
+    return mailAnswer(false, null, sequenceWrite, draftWrite);
   }
 }
 
