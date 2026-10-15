@@ -1,8 +1,8 @@
 import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 export type MailAnswer = Record<string, unknown> & { ok?: boolean; error?: string };
 /** A malformed response or failed HTTP request never confirms a mail operation. */
-export function mailAnswer(responseOk: boolean, raw: unknown, sequenceWrite = false): MailAnswer {
-  const unconfirmed: MailAnswer = { ok: false, error: sequenceWrite ? "flow_write_unconfirmed" : "server_error" };
+export function mailAnswer(responseOk: boolean, raw: unknown, sequenceWrite = false, draftWrite = false): MailAnswer {
+  const unconfirmed: MailAnswer = { ok: false, error: sequenceWrite ? "flow_write_unconfirmed" : draftWrite ? "draft_write_unconfirmed" : "server_error" };
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return unconfirmed;
   const answer = raw as Record<string, unknown>;
   if (responseOk && answer.ok === true) return answer as MailAnswer;
