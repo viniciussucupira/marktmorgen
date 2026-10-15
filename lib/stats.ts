@@ -1464,7 +1464,7 @@ const datesBetween = (from: string, to: string) => {
  * the sales from the creator's own Stripe account, as the 90 days are read.
  * Beside it, the same number of days just before, where they are kept.
  */
-export async function readRange(store: Store, from: string, to: string, now = Date.now()): Promise<RangeData | null> {
+export async function readRange(store: Store, from: string, to: string, now = Date.now(), options: { fullDetails?: boolean } = {}): Promise<RangeData | null> {
   if (!store.statsId || !isRedisConfigured() || rangeProblem(from, to, now)) return null;
   const statsId = store.statsId;
   const dates = datesBetween(from, to);
@@ -1573,11 +1573,11 @@ export async function readRange(store: Store, from: string, to: string, now = Da
   }
   out.channelsTotal = bySource.size;
   out.productsTotal = byProduct.size;
-  out.channelsTruncated = bySource.size > 15;
-  out.productsTruncated = byProduct.size > 15;
+  out.channelsTruncated = !options.fullDetails && bySource.size > 15;
+  out.productsTruncated = !options.fullDetails && byProduct.size > 15;
   const paidKnown = out.sales === "ok" && !out.partial;
-  out.channels = [...bySource.values()].sort((a, b) => (paidKnown ? b.cents - a.cents : 0) || b.visits - a.visits || a.source.localeCompare(b.source)).slice(0, 15);
-  out.products = [...byProduct.values()].sort((a, b) => (paidKnown ? b.cents - a.cents : 0) || b.views - a.views || a.id.localeCompare(b.id)).slice(0, 15);
+  out.channels = [...bySource.values()].sort((a, b) => (paidKnown ? b.cents - a.cents : 0) || b.visits - a.visits || a.source.localeCompare(b.source)).slice(0, options.fullDetails ? undefined : 15);
+  out.products = [...byProduct.values()].sort((a, b) => (paidKnown ? b.cents - a.cents : 0) || b.views - a.views || a.id.localeCompare(b.id)).slice(0, options.fullDetails ? undefined : 15);
   return out;
 }
 

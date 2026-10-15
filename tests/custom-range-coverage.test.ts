@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { done, is, part } from "./check";
 const range={from:"2026-10-01",to:"2026-10-02",currency:"usd",sales:"ok",partial:true,elsewhere:0,totals:{visitors:50,views:100,checkouts:10,sales:2,cents:99900},before:{visitors:25,views:50,checkouts:5,sales:1,cents:5000},days:[{date:"2026-10-01",visitors:30,views:60,checkouts:6,sales:1,cents:50000},{date:"2026-10-02",visitors:20,views:40,checkouts:4,sales:1,cents:49900}],channels:[{source:"google",visits:50,sales:2,cents:99900}],products:[{id:"guide",title:"Guide",views:100,checkouts:10,sales:2,cents:99900}]} as RangeData & {products:(RangeData["products"][number]&{title:string})[]};
-const render=(snapshot:typeof range)=>renderToStaticMarkup(createElement(CustomRangeResults,{range:snapshot,marks:[{day:"2026-10-01",kind:"product",text:"Launch day"}],currency:"usd"}));
+const render=(snapshot:typeof range,busy=false)=>renderToStaticMarkup(createElement(CustomRangeResults,{range:snapshot,marks:[{day:"2026-10-01",kind:"product",text:"Launch day"}],currency:"usd",onShowAll:()=>{},busy}));
 const tile=(html:string,label:string)=>{const start=html.indexOf(">"+label+"</dt>");return start<0?null:html.slice(start,html.indexOf("</div>",start));};
 part("Incomplete paid readings cannot appear as complete results");
 const partial=render(range);
@@ -47,4 +47,8 @@ is("complete products disclose revenue order",paidLimited.includes("Showing 1 of
 is("old snapshot does not invent a total",partial.includes("recorded channels, ordered by"),false);
 is("unlimited list has no cap warning",render({...limited,channelsTruncated:false,productsTruncated:false}).includes("Showing 1 of"),false);
 is("missing totals are not invented",render({...limited,channelsTotal:undefined,productsTotal:undefined}).includes("Showing 1 of"),false);
+is("limited list offers expansion",limitedHtml.includes("Show all channels and products"),true);
+is("full list has no expansion button",render({...limited,channelsTruncated:false,productsTruncated:false}).includes("Show all channels and products"),false);
+is("loading expansion is disabled",render(limited,true).includes('disabled="" aria-busy="true"'),true);
+is("loading expansion has readable status",render(limited,true).includes("Reading…"),true);
 done();

@@ -12,7 +12,7 @@ async function main(){await claimHandle("ranking@example.com","ranking","Ranking
   await recordHit(store,{...hit,kind:"view"},now);
   await recordHit(store,{...hit,kind:"product"},now);
  }
- const read=async()=>{page=0;return (await readRange(store,"2026-10-13","2026-10-14",now))!;};
+ const read=async(fullDetails=false)=>{page=0;return (await readRange(store,"2026-10-13","2026-10-14",now,{fullDetails}))!;};
  const channels=Array.from({length:15},(_,i)=>"rank"+String(15-i).padStart(2,"0"));
  const products=Array.from({length:15},(_,i)=>"prod0000"+String(15-i).padStart(2,"0"));
  part("Unknown paid amounts cannot select the first fifteen rows");
@@ -26,6 +26,14 @@ async function main(){await claimHandle("ranking@example.com","ranking","Ranking
  is("partial paid-only product cannot displace traffic",partial.products.some(r=>r.id==="paidonly0001"),false);
  is("current channel visits remain",partial.channels[0].visits,16);
  is("current product views remain",partial.products[0].views,16);
+ const allPartial=await read(true);
+ is("all partial channels returned",allPartial.channels.length,17);
+ is("all partial products returned",allPartial.products.length,17);
+ is("expanded list flags no longer truncated",[allPartial.channelsTruncated,allPartial.productsTruncated],[false,false]);
+ is("expansion preserves incomplete money",allPartial.partial,true);
+ is("all partial channels retain traffic order",allPartial.channels[0].source,"rank15");
+ is("all partial products retain traffic order",allPartial.products[0].id,"prod000015");
+ is("recorded totals remain unchanged",[allPartial.channelsTotal,allPartial.productsTotal],[17,17]);
  amount=1;const changed=await read();
  is("changing incomplete money does not change channels",changed.channels.map(r=>r.source),channels);
  is("changing incomplete money does not change products",changed.products.map(r=>r.id),products);
@@ -34,6 +42,10 @@ async function main(){await claimHandle("ranking@example.com","ranking","Ranking
  is("complete product ranking retains revenue priority",complete.products[0].id,"paidonly0001");
  is("complete amount preserved",complete.channels[0].cents,900000);
  is("complete paid reading does not imply full list",[complete.partial,complete.channelsTotal,complete.channelsTruncated],[false,17,true]);
+ const allComplete=await read(true);
+ is("all complete channels returned",allComplete.channels.length,17);
+ is("all complete products returned",allComplete.products.length,17);
+ is("all complete ranking retains revenue",[allComplete.channels[0].source,allComplete.products[0].id],["paidonly","paidonly0001"]);
  failed=true;const failure=await read();
  is("failed reading stays explicit",failure.sales,"error");
  is("failed read ranks channels by traffic",failure.channels.map(r=>r.source),channels);
