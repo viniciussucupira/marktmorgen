@@ -401,7 +401,7 @@ export function CustomRangeChartSummary({range,currency,metric,grouping="day"}:{
  const summary=customRangeChartSummary(range,metric);
  if(!summary)return null;
  const label=CUSTOM_RANGE_METRICS.find(item=>item.value===summary.metric)!.label;
- const value=(n:number,average=false)=>summary.metric==="cents"?formatMoney(Math.round(n),currency):n.toLocaleString("en-US",{maximumFractionDigits:average?2:0});
+ const value=(n:number,average=false)=>summary.metric==="cents"?(n!==0&&Math.abs(n)<1?formatRevenuePerTraffic(n,currency):formatMoney(Math.round(n),currency)):n.toLocaleString("en-US",average&&n!==0&&Math.abs(n)<0.01?{maximumSignificantDigits:4}:{maximumFractionDigits:average?2:0});
  return <div className="mt-3" role="region" aria-label="Chart metric summary">
   <p className="text-xs font-semibold text-ink">{label} over {count(summary.days)} recorded UTC days</p>
   <dl className="mt-2 grid gap-3 sm:grid-cols-3">
@@ -409,7 +409,7 @@ export function CustomRangeChartSummary({range,currency,metric,grouping="day"}:{
    <div><dt className="text-xs text-ink-soft">Average per recorded day</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.average,true)}</dd></div>
    <div><dt className="text-xs text-ink-soft">Highest recorded day</dt><dd className="text-lg font-semibold tabular-nums">{value(summary.peak.value)}</dd><dd className="text-xs text-ink-soft">{day(summary.peak.date)}{summary.peak.ties>1?" · "+count(summary.peak.ties)+" days tied; earliest shown.":""}</dd></div>
   </dl>
-  <p className="mt-1 text-xs text-ink-soft">Summary uses daily rows even when the chart is grouped. Averages are rounded for display.{summary.metric==="visitors"?" Visitors are summed daily counts, not distinct people across the period.":""} Values for today can still grow.</p>
+  <p className="mt-1 text-xs text-ink-soft">Summary uses daily rows even when the chart is grouped. Averages are rounded for display; small nonzero averages remain visible with up to four significant digits.{summary.metric==="visitors"?" Visitors are summed daily counts, not distinct people across the period.":""} Values for today can still grow.</p>
   <ReportDownload csv={()=>customRangeChartSummaryReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-summary-"+summary.metric+"-"+range.from+"-to-"+range.to+".csv"}>Download chart summary</ReportDownload>
  </div>;
 }
