@@ -321,6 +321,7 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
  const value=(n:number|null,metric:typeof comparison.rows[number],signed=false)=>n===null?"Unavailable":(signed&&n>0?"+":"")+(metric.money?formatMoney(n,currency):metric.ratio?n.toLocaleString("en-US",{maximumSignificantDigits:4}):count(n));
  const percent=(n:number|null)=>{
   if(n===null)return "—";
+  if(n!==0&&Math.abs(n)<0.1)return (n>0?"+":"")+n.toLocaleString("en-US",{maximumSignificantDigits:4})+"%";
   const rounded=Math.round(n*10)/10;
   return (rounded>0?"+":"")+(rounded===0?0:rounded).toLocaleString("en-US",{maximumFractionDigits:1})+"%";
  };
@@ -340,7 +341,7 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
     </tr>)}</tbody>
    </table>
   </div>
-  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Traffic availability is independent of paid coverage. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Money is rounded for display; ratios per 100 visitors use up to four significant digits, so small nonzero values remain visible. The CSV keeps the calculated precision. The selected end day may still be in progress.</p>
+  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Traffic availability is independent of paid coverage. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Money is rounded for display; ratios per 100 visitors use up to four significant digits, so small nonzero values remain visible. Nonzero percentage changes below 0.1% use up to four significant digits. The CSV keeps the calculated precision. The selected end day may still be in progress.</p>
   <details className="mt-2 text-xs text-ink-soft">
    <summary className="cursor-pointer font-semibold">How metrics are calculated</summary>
    <dl className="mt-2 space-y-2">{comparison.rows.map(row=><div key={row.name}><dt className="font-semibold text-ink">{row.name}</dt><dd>{row.definition}</dd></div>)}</dl>
