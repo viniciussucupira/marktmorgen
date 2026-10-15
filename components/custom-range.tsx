@@ -215,7 +215,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
         <select id="range-sales-filter" className="field mt-1" value={actualFilter} onChange={event=>setFilter(event.target.value as CustomRangeFilter)}>
           {CUSTOM_RANGE_FILTERS.map(item=><option key={item.value} value={item.value} disabled={item.value!=="all"&&!sold}>{item.label}</option>)}
         </select>
-        <p className="mt-1 text-xs text-ink-soft">Traffic without sales means recorded visits or views with zero recorded purchases in this reading. Sales filters require a complete purchase reading.</p>
+        <p className="mt-1 text-xs text-ink-soft">Traffic without sales means recorded visits or views with zero recorded purchases in this reading. Sales without recorded traffic means recorded purchases with zero visits or views in the selected dates; this does not establish why traffic is absent. Sales filters require a complete purchase reading.</p>
         <label className="field-label mt-3" htmlFor="range-minimum-traffic">Minimum visits / views</label>
         <input id="range-minimum-traffic" type="number" min={0} step={1} max={Number.MAX_SAFE_INTEGER} className="field mt-1" value={minimumTraffic} onChange={event=>setMinimumTraffic(event.target.value)} aria-describedby="range-minimum-help" aria-invalid={minimumInvalid} />
         <p id="range-minimum-help" className="mt-1 text-xs text-ink-soft">Channels use visits; products use page views. Zero or an empty field applies no minimum.</p>

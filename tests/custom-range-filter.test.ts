@@ -52,8 +52,8 @@ is("old CSV callers use default filter",records(customRangeProductsReport(data))
 const render=(snapshot=data)=>renderToStaticMarkup(createElement(CustomRangeResults,{range:snapshot,marks:[],currency:"usd"}));
 const selector=(html:string)=>{const at=html.indexOf('<select id="range-sales-filter"');return html.slice(at,html.indexOf("</select>",at));};
 is("filter has accessible label",render().includes('for="range-sales-filter"'),true);
-is("all three options visible",["All loaded rows","With sales","Traffic without sales"].every(label=>selector(render()).includes(label)),true);
+is("all four options visible",["All loaded rows","With sales","Traffic without sales","Sales without recorded traffic"].every(label=>selector(render()).includes(label)),true);
 is("complete filter options enabled",selector(render()).includes('disabled=""'),false);
-is("partial filter options disabled",(selector(render({...data,partial:true})).match(/disabled=""/g)??[]).length,2);
+is("partial filter options disabled",(selector(render({...data,partial:true})).match(/disabled=""/g)??[]).length,3);
 is("scope and coverage explained",render().includes("recorded visits or views with zero recorded purchases")&&render().includes("require a complete purchase reading"),true);
 done();
