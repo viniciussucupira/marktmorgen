@@ -58,6 +58,7 @@ const MESSAGES: Record<string, string> = {
   full: "A store keeps 20 drafts at most. Send or delete one first.",
   list: "This store has no list yet, so there is nowhere to keep a draft.",
   role: "Your role on this store does not include this.",
+  draft_remove_unconfirmed: "The draft removal could not be confirmed. Reload your saved drafts to check whether it was removed before trying again.",
   draft_read_unavailable: "Your saved drafts could not be checked before saving. Your text is still here. Try saving again in a moment.",
   draft_write_unconfirmed: "The draft save could not be confirmed. Your text is still here. Check your saved drafts before saving again; the draft may already exist.",
   flow_write_unconfirmed: "The sequence change could not be confirmed. Reload the saved sequences and check the result before trying again. The change may already have happened.",
@@ -1003,6 +1004,9 @@ function Drafts({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [refreshing, startRefresh] = useTransition();
+  const locked = busy !== null || refreshing;
+  const [error, setError] = useState<string | null>(null);
   if (!drafts.length) return null;
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="drafts-title">
@@ -1022,6 +1026,7 @@ function Drafts({
                 type="button"
                 className="inline-flex min-h-11 -my-2.5 items-center text-sm font-bold text-violet-deep underline underline-offset-4"
                 aria-current={open?.id === d.id ? "true" : undefined}
+                disabled={locked}
                 onClick={() => {
                   onOpen(d);
                   document.getElementById("compose-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1031,18 +1036,23 @@ function Drafts({
               </button>
               <button
                 type="button"
-                disabled={busy !== null}
-                aria-busy={busy === d.id}
+                disabled={locked}
+                aria-busy={busy === d.id || refreshing}
                 className="inline-flex min-h-11 -my-2.5 items-center text-sm font-bold text-ink-soft underline underline-offset-4 hover:text-danger"
                 onClick={async () => {
-                  if (!window.confirm("Delete this draft?")) return;
+                  if (locked || !window.confirm("Delete this draft?")) return;
+                  setError(null);
                   setBusy(d.id);
                   const a = await call({ action: "draft-remove", id: d.id });
                   setBusy(null);
+                  if (!a.ok) {
+                    setError("Removal of “" + d.subject + "” could not be confirmed. Reload your saved drafts to check its current status. " + message(a));
+                    return;
+                  }
                   if (a.ok) {
                     toast("Draft deleted.");
                     if (open?.id === d.id) onOpen(null);
-                    router.refresh();
+                    startRefresh(() => router.refresh());
                   }
                 }}
               >
@@ -1052,6 +1062,8 @@ function Drafts({
           </li>
         ))}
       </ul>
+      {refreshing ? <p role="status" className="mt-3 text-sm text-ink-soft">Loading saved drafts…</p> : null}
+      <Feedback error={error} done={null} />
     </section>
   );
 }
