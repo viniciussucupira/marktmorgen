@@ -24,6 +24,9 @@ export const CUSTOM_RANGE_PRESETS = [
  {value:"90d",label:"Last 90 days"},
  {value:"month",label:"This month"},
  {value:"last-month",label:"Last month"},
+ {value:"7d-closed",label:"Last 7 completed days"},
+ {value:"30d-closed",label:"Last 30 completed days"},
+ {value:"90d-closed",label:"Last 90 completed days"},
 ] as const;
 export type CustomRangePreset = typeof CUSTOM_RANGE_PRESETS[number]["value"];
 /** Relative dates use UTC; closed shortcuts end before today, independently of paid coverage. */
@@ -36,6 +39,8 @@ export function presetCustomRange(preset:CustomRangePreset,today:string):CustomD
   return {from:end.slice(0,8)+"01",to:end};
  }
  if(preset==="month")return {from:today.slice(0,8)+"01",to:today};
+ const completedDays=preset==="7d-closed"?7:preset==="30d-closed"?30:preset==="90d-closed"?90:null;
+ if(completedDays!==null)return {from:new Date(current-completedDays*DAY).toISOString().slice(0,10),to:new Date(current-DAY).toISOString().slice(0,10)};
  const days=preset==="7d"?7:preset==="30d"?30:preset==="90d"?90:null;
  if(days===null)return null;
  return {from:new Date(current-(days-1)*DAY).toISOString().slice(0,10),to:today};

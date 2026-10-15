@@ -45,11 +45,11 @@ is("unknown shortcut rejected",presetCustomRange("bad" as CustomRangePreset,toda
 const shortcuts=(busy=false,date=today)=>renderToStaticMarkup(createElement(CustomRangePresets,{today:date,busy,onSelect:()=>{}}));
 const quick=shortcuts();
 is("shortcuts form a labeled group",quick.includes('role="group" aria-label="Quick date ranges"'),true);
-is("all six shortcuts visible",["Yesterday","Last 7 days","Last 30 days","Last 90 days","This month","Last month"].every(label=>quick.includes(label)),true);
-is("shortcuts explicitly avoid form submission",(quick.match(/type="button"/g)??[]).length,6);
+is("all nine shortcuts visible",["Yesterday","Last 7 days","Last 30 days","Last 90 days","This month","Last month","Last 7 completed days","Last 30 completed days","Last 90 completed days"].every(label=>quick.includes(label)),true);
+is("shortcuts explicitly avoid form submission",(quick.match(/type="button"/g)??[]).length,9);
 is("shortcuts enabled when idle",quick.includes('disabled=""'),false);
-is("all shortcuts disabled while reading",(shortcuts(true).match(/disabled=""/g)??[]).length,6);
-is("invalid calendar disables all shortcuts",(shortcuts(false,"bad").match(/disabled=""/g)??[]).length,6);
+is("all shortcuts disabled while reading",(shortcuts(true).match(/disabled=""/g)??[]).length,9);
+is("invalid calendar disables all shortcuts",(shortcuts(false,"bad").match(/disabled=""/g)??[]).length,9);
 is("unfinished current day disclosed",quick.includes("include today in UTC")&&quick.includes("may still grow"),true);
 is("shortcuts included in actual report form",renderToStaticMarkup(createElement(CustomRange,{today,currency:"usd"})).includes('aria-label="Quick date ranges"'),true);
 
@@ -66,5 +66,5 @@ is("thirty-one day month retained",presetCustomRange("last-month","2026-08-31"),
 is("invalid completed-day anchor rejected",presetCustomRange("yesterday","2026-02-30"),null);
 is("invalid completed-month anchor rejected",presetCustomRange("last-month","wrong"),null);
 is("closed shortcuts remain earlier than today",["yesterday","last-month"].every(p=>presetCustomRange(p as CustomRangePreset,today)!.to<today),true);
-is("completed date explanation visible",quick.includes("Yesterday and Last month use completed UTC dates"),true);
+is("completed date explanation visible",quick.includes("completed-day shortcuts exclude today and use completed UTC dates"),true);
 done();
