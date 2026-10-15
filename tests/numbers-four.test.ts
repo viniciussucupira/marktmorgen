@@ -50,6 +50,7 @@ const DAY = 86_400_000;
 
 let sessions: Record<string, unknown>[] = [];
 let sessionsHaveMore = false;
+let cappedPage = 0;
 const emails: { to: string; subject: string; text: string }[] = [];
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
   const url = new URL(String(input));
@@ -67,7 +68,10 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   }
   if (path === "/checkout/sessions") {
     const since = Number(url.searchParams.get("created[gte]") ?? 0);
-    return json({ object: "list", data: sessions.filter((s) => Number(s.created) >= since), has_more: sessionsHaveMore });
+    if (!url.searchParams.has("starting_after")) cappedPage = 0;
+    const page = ++cappedPage;
+    const rows = sessions.filter((s) => Number(s.created) >= since);
+    return json({ object: "list", data: sessionsHaveMore ? rows.map(row=>({...row,id:String(row.id)+"_page"+page})) : rows, has_more: sessionsHaveMore });
   }
   return json({ object: "list", data: [], has_more: false });
 }) as typeof fetch;
