@@ -49,7 +49,7 @@ is("overlap explicitly explained",html.includes("overlap; do not add them togeth
 is("purchase scope differs explicitly",html.includes("Channel purchases exclude one-click extras; product purchases include them"),true);
 is("gross definition explicit",html.includes("before refunds, fees and ad spend"),true);
 const partial=render({...data,partial:true});
-is("partial paid cells unavailable",(partial.match(/Unavailable/g)??[]).length,4);
+is("partial paid cells unavailable",(partial.match(/Unavailable/g)??[]).length,6);
 is("partial summary leaks no money",partial.includes("$"),false);
 is("partial traffic visible",partial.includes(">120</td>")&&partial.includes(">200</td>"),true);
 part("Selected CSV rows agree with independent list totals");

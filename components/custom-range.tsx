@@ -364,18 +364,19 @@ export function CustomRangeSelectionSummary({range,currency,selection}:{range:Ra
   <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Matching loaded row totals">
    <table className="w-full text-left text-sm">
     <caption className="mb-1 text-left text-sm font-semibold text-ink">Matching loaded rows</caption>
-    <thead><tr><th scope="col" className="py-1">List</th><th scope="col" className="py-1 pl-3 text-right">Rows</th><th scope="col" className="py-1 pl-3 text-right">Traffic</th><th scope="col" className="py-1 pl-3 text-right">Paid records</th><th scope="col" className="py-1 pl-3 text-right">Gross revenue</th></tr></thead>
+    <thead><tr><th scope="col" className="py-1">List</th><th scope="col" className="py-1 pl-3 text-right">Rows</th><th scope="col" className="py-1 pl-3 text-right">Traffic</th><th scope="col" className="py-1 pl-3 text-right">Paid records</th><th scope="col" className="py-1 pl-3 text-right">Gross revenue</th><th scope="col" className="py-1 pl-3 text-right">Revenue / visit or view</th></tr></thead>
     <tbody>{rows.map(row=><tr key={row.name} className="border-b border-line/60">
      <th scope="row" className="py-1.5 font-medium">{row.name}</th>
      <td className="py-1.5 pl-3 text-right tabular-nums">{count(row.rows)}</td>
      <td className="py-1.5 pl-3 text-right tabular-nums">{count(row.traffic)}</td>
      <td className="py-1.5 pl-3 text-right tabular-nums">{row.paidRecords===null?"Unavailable":count(row.paidRecords)}</td>
      <td className="py-1.5 pl-3 text-right tabular-nums">{row.cents===null?"Unavailable":formatMoney(row.cents,currency)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{formatRevenuePerTraffic(revenuePerTraffic(row.cents,row.traffic,row.cents!==null),currency)}</td>
     </tr>)}</tbody>
    </table>
   </div>
   <p className="mt-2 text-xs text-ink-soft">Totals cover matching loaded rows, not the whole period. Channels and products overlap; do not add them together.{range.channelsTruncated||range.productsTruncated?" Some loaded lists are limited.":""}</p>
-  <p className="mt-1 text-xs text-ink-soft">Channel purchases exclude one-click extras; product purchases include them. Both exclude renewals. Gross revenue is before refunds, fees and ad spend.</p>
+  <p className="mt-1 text-xs text-ink-soft">Channel purchases exclude one-click extras; product purchases include them. Both exclude renewals. Gross revenue is before refunds, fees and ad spend. Revenue / visit or view divides each selected list’s total gross revenue by its total recorded traffic, not the average of row ratios. No traffic or unknown revenue means unavailable. Channels use visits; products use page views. Analytical money uses up to four significant digits; CSV values keep calculated precision.</p>
   {selection?<ReportDownload csv={()=>customRangeSelectionReport(range,selection)} filename={"marktmorgen-custom-selection-"+range.from+"-to-"+range.to+".csv"}>Download selection totals</ReportDownload>:null}
  </div>;
 }
