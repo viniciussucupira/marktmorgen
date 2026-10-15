@@ -332,7 +332,7 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
     </tr>)}</tbody>
    </table>
   </div>
-  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Visitors are summed daily counts. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Revenue per paid record divides gross revenue by the paid records in each period, not by buyers; no paid records means unavailable. Money is rounded for display; the CSV keeps the calculated precision. The selected end day may still be in progress.</p>
+  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Visitor totals are estimates across each period, not sums of daily counts. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Revenue per paid record divides gross revenue by the paid records in each period, not by buyers; no paid records means unavailable. Revenue per visitor divides gross revenue by the recorded visitor estimate for each period, not matched buyers; no visitors means unavailable. Money is rounded for display; the CSV keeps the calculated precision. The selected end day may still be in progress.</p>
  </details>;
 }
 
