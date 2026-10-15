@@ -318,7 +318,7 @@ export function CustomRangeChart({range,currency,metric="visitors",grouping="day
 export function CustomRangeComparison({range,currency}:{range:RangeData;currency:string}) {
  const comparison=customRangeComparison(range);
  const dates=(from:string,to:string)=>from===to?day(from):day(from)+" to "+day(to);
- const value=(n:number|null,money:boolean,signed=false)=>n===null?"Unavailable":(signed&&n>0?"+":"")+(money?formatMoney(n,currency):count(n));
+ const value=(n:number|null,metric:typeof comparison.rows[number],signed=false)=>n===null?"Unavailable":(signed&&n>0?"+":"")+(metric.money?formatMoney(n,currency):metric.ratio?n.toLocaleString("en-US",{maximumSignificantDigits:4}):count(n));
  const percent=(n:number|null)=>{
   if(n===null)return "—";
   const rounded=Math.round(n*10)/10;
@@ -333,14 +333,14 @@ export function CustomRangeComparison({range,currency}:{range:RangeData;currency
     <thead><tr><th scope="col" className="py-1">Metric</th><th scope="col" className="py-1 pl-3 text-right">Selected days</th><th scope="col" className="py-1 pl-3 text-right">Previous days</th><th scope="col" className="py-1 pl-3 text-right">Difference</th><th scope="col" className="py-1 pl-3 text-right">Change</th></tr></thead>
     <tbody>{comparison.rows.map(row=><tr key={row.name} className="border-b border-line/60">
      <th scope="row" className="py-1.5 pr-3 font-medium">{row.name}</th>
-     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.current,row.money)}</td>
-     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.previous,row.money)}</td>
-     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.difference,row.money,true)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.current,row)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.previous,row)}</td>
+     <td className="py-1.5 pl-3 text-right tabular-nums">{value(row.difference,row,true)}</td>
      <td className="py-1.5 pl-3 text-right tabular-nums">{percent(row.change)}</td>
     </tr>)}</tbody>
    </table>
   </div>
-  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Traffic availability is independent of paid coverage. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Money is rounded for display; the CSV keeps the calculated precision. The selected end day may still be in progress.</p>
+  <p className="mt-2 text-xs text-ink-soft">Difference is selected minus previous. A dash means no percentage is available because a reading is missing or the previous value is zero. Traffic availability is independent of paid coverage. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ad spend. Money is rounded for display; ratios per 100 visitors use up to four significant digits, so small nonzero values remain visible. The CSV keeps the calculated precision. The selected end day may still be in progress.</p>
   <details className="mt-2 text-xs text-ink-soft">
    <summary className="cursor-pointer font-semibold">How metrics are calculated</summary>
    <dl className="mt-2 space-y-2">{comparison.rows.map(row=><div key={row.name}><dt className="font-semibold text-ink">{row.name}</dt><dd>{row.definition}</dd></div>)}</dl>
