@@ -9,7 +9,7 @@ import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore,
 import { useRouter } from "next/navigation";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { isAiEmailCopy, isAiSequenceDraft } from "@/lib/ai-response";
-import { confirmedDraftId, confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
+import { confirmedRecipientCount, confirmedDraftId, confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
 import { flowConfigurationIssues } from "@/lib/flow-review";
@@ -524,7 +524,8 @@ function Compose(props: {
   const [share, setShare] = useState<number>(TEST_SHARES[0]);
   const [hours, setHours] = useState<number>(TEST_HOURS[1]);
   const [by, setBy] = useState<TestBy>("visits");
-  const [reach, setReach] = useState<number>(props.counts.mailable);
+  const [countRevision, setCountRevision] = useState(0);
+  const [reachResult, setReachResult] = useState<{ key: string; count: number | null } | null>(null);
   // Spent at least, first found the store through, has not bought in these
   // days (lib/segments.ts), and the groups saved under a name.
   const [spentText, setSpentText] = useState("");
@@ -537,6 +538,9 @@ function Compose(props: {
   const [groupName, setGroupName] = useState("");
   const minSpent = spentText.trim() ? readMoney(spentText, props.currency as Currency) ?? 0 : 0;
   const narrow: Narrow = { minSpent, channel, quietDays };
+  const countKey = JSON.stringify([productId, notProductId, who, minSpent, channel, quietDays, more, countRevision]);
+  const reach = reachResult?.key === countKey ? reachResult.count : null;
+  const reachPending = reachResult?.key !== countKey;
   const [busy, setBusy] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const locked = busy || aiBusy || refreshingDrafts;
@@ -555,8 +559,10 @@ function Compose(props: {
     let live = true;
     call({ action: "count", productId, notProductId, who, narrow: { minSpent, channel, quietDays }, channels: more && channels === null }).then((a) => {
       if (!live) return;
-      if (a.ok) {
-        setReach(Number(a.count) || 0);
+      const count = confirmedRecipientCount(a);
+      setReachResult({ key: countKey, count });
+      setConfirming(false);
+      if (count !== null) {
         if (Array.isArray(a.channels)) setChannels(a.channels.filter((c): c is string => typeof c === "string"));
         if (typeof a.partial === "boolean") setPartial(a.partial);
       } else if (a.error === "stripe") setError(message(a));
@@ -566,7 +572,7 @@ function Compose(props: {
     };
     // `channels` is asked for once, when the choices are first opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId, notProductId, who, minSpent, channel, quietDays, more]);
+  }, [productId, notProductId, who, minSpent, channel, quietDays, more, countRevision]);
 
   async function group(payload: Record<string, unknown>, done: string) {
     if (locked) return;
@@ -594,7 +600,7 @@ function Compose(props: {
   }
 
   async function send(payload: Record<string, unknown>, success: string) {
-    if (locked) return false;
+    if (locked || (payload.action === "broadcast" && (reach === null || reach === 0))) return false;
     setBusy(true);
     setError(null);
     const a = await call(payload);
@@ -744,7 +750,7 @@ function Compose(props: {
                 <p className="text-sm text-ink-soft">
                   {`It needs at least ${MIN_TEST_REACH} people and a link to your store in the email. Emails here carry no tracking pixel, so opens are not counted, and a small difference on a small list is mostly chance.`}
                 </p>
-                {reach < MIN_TEST_REACH ? (
+                {reach !== null && reach < MIN_TEST_REACH ? (
                   <p className="notice notice-error" role="status">
                     {`This goes to ${n(reach)} ${reach === 1 ? "person" : "people"}, which is too few to compare two subjects. Uncheck the box, or choose a bigger group.`}
                   </p>
@@ -883,7 +889,8 @@ function Compose(props: {
             </p>
           </div>
         </details>
-        <p className="text-sm font-semibold text-ink" role="status">{`${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
+        <p className="text-sm font-semibold text-ink" role="status">{reach === null ? (reachPending ? "Checking recipients…" : "The recipient count is unavailable. Check it again before sending or scheduling.") : `${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
+        {reach === null ? <button type="button" className="btn btn-secondary btn-sm" disabled={locked || reachPending} aria-busy={reachPending} onClick={() => setCountRevision(value => value + 1)}>{reachPending ? "Checking recipients…" : "Check recipients again"}</button> : null}
         <div className="flex flex-wrap items-end gap-2">
           <label className="min-w-0 flex-1">
             <span className="field-label">Save who this goes to as a group</span>
@@ -948,7 +955,7 @@ function Compose(props: {
           >
             {draftId ? "Save the draft" : "Save as a draft"}
           </button>
-          {!props.canSend ? null : confirming ? (
+          {!props.canSend ? null : confirming && reach !== null ? (
             <>
               <button
                 type="button"
@@ -991,7 +998,7 @@ function Compose(props: {
           ) : (
             <button
               type="button"
-              disabled={busy || !subject.trim() || !body.trim() || reach === 0 || (later && !at) || (testing && (!subjectB.trim() || reach < MIN_TEST_REACH))}
+              disabled={busy || !subject.trim() || !body.trim() || reach === null || reach === 0 || (later && !at) || (testing && (!subjectB.trim() || reach < MIN_TEST_REACH))}
               className="btn btn-primary"
               onClick={() => setConfirming(true)}
             >
