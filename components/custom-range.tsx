@@ -4,7 +4,7 @@ import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyR
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
-import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, customRangeMinimumTraffic, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
+import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, customRangeMinimumTraffic, effectiveCustomRangeMinimumPaidRecords, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
 import { CUSTOM_RANGE_METRICS, customRangeChartSummary, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
 import { revenuePerTraffic, formatRevenuePerTraffic } from "@/lib/custom-range-efficiency";
@@ -138,12 +138,15 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
   const [sort, setSort] = useState<CustomRangeSort>("recorded");
   const [filter,setFilter] = useState<CustomRangeFilter>("all");
   const [minimumTraffic,setMinimumTraffic]=useState("0");
-  const hasListSelection=query!==""||sort!=="recorded"||filter!=="all"||minimumTraffic!=="0";
+  const [minimumPaidRecords,setMinimumPaidRecords]=useState("0");
+  const actualMinimumPaidRecords=effectiveCustomRangeMinimumPaidRecords(r,minimumPaidRecords);
+  const minimumPaidInvalid=paidFiguresComplete(r)&&minimumPaidRecords.trim()!==""&&actualMinimumPaidRecords===0&&Number(minimumPaidRecords)!==0;
+  const hasListSelection=query!==""||sort!=="recorded"||filter!=="all"||minimumTraffic!=="0"||minimumPaidRecords!=="0";
   const actualMinimum=customRangeMinimumTraffic(minimumTraffic);
   const minimumInvalid=minimumTraffic.trim()!==""&&actualMinimum===0&&Number(minimumTraffic)!==0;
   const actualFilter=effectiveCustomRangeFilter(r,filter);
   const actualSort = effectiveCustomRangeSort(r, sort);
-  const view = customRangeView(r, query, actualSort, actualFilter, actualMinimum);
+  const view = customRangeView(r, query, actualSort, actualFilter, actualMinimum, actualMinimumPaidRecords);
   const sold = paidFiguresComplete(r);
   const [chartMetric, setChartMetric] = useState<CustomRangeMetric>("visitors");
   const [chartGrouping, setChartGrouping] = useState<CustomRangeGrouping>("day");
@@ -215,16 +218,20 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
         <input id="range-minimum-traffic" type="number" min={0} step={1} max={Number.MAX_SAFE_INTEGER} className="field mt-1" value={minimumTraffic} onChange={event=>setMinimumTraffic(event.target.value)} aria-describedby="range-minimum-help" aria-invalid={minimumInvalid} />
         <p id="range-minimum-help" className="mt-1 text-xs text-ink-soft">Channels use visits; products use page views. Zero or an empty field applies no minimum.</p>
         {minimumInvalid?<p className="mt-1 text-xs text-danger" role="alert">Enter a whole number of zero or more. No minimum is applied until the value is valid.</p>:null}
+        <label className="field-label mt-3" htmlFor="range-minimum-paid">Minimum paid records</label>
+        <input id="range-minimum-paid" type="number" min={0} step={1} max={Number.MAX_SAFE_INTEGER} className="field mt-1" value={sold?minimumPaidRecords:"0"} onChange={event=>setMinimumPaidRecords(event.target.value)} disabled={!sold} aria-describedby="range-minimum-paid-help" aria-invalid={minimumPaidInvalid} />
+        <p id="range-minimum-paid-help" className="mt-1 text-xs text-ink-soft">Payment records, not distinct buyers. Channels exclude one-click extras; products include them. Zero or an empty field applies no minimum. Requires a complete purchase reading.</p>
+        {minimumPaidInvalid?<p className="mt-1 text-xs text-danger" role="alert">Enter a whole number of zero or more. No paid-record minimum is applied until the value is valid.</p>:null}
         <p className="mt-1 text-xs text-ink-soft">Search applies to the loaded lists. Period totals and daily results stay the same.{r.channelsTruncated || r.productsTruncated ? " Open all results above to search or filter every recorded row." : ""}</p>
-        {query.trim() || actualFilter!=="all" || actualMinimum>0 ? <p className="mt-1 text-xs text-ink-soft" role="status">{view.channels.length} of {r.channels.length} loaded channels and {view.products.length} of {r.products.length} loaded products match.</p> : null}
+        {query.trim() || actualFilter!=="all" || actualMinimum>0 || actualMinimumPaidRecords>0 ? <p className="mt-1 text-xs text-ink-soft" role="status">{view.channels.length} of {r.channels.length} loaded channels and {view.products.length} of {r.products.length} loaded products match.</p> : null}
       </div> : null}
-      {hasListSelection?<CustomRangeSelectionSummary range={view} currency={currency} selection={{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum}} />:null}
-      {hasListSelection?<button type="button" className="btn btn-secondary mt-3" onClick={()=>{setQuery("");setSort("recorded");setFilter("all");setMinimumTraffic("0");}}>Reset list view</button>:null}
+      {hasListSelection?<CustomRangeSelectionSummary range={view} currency={currency} selection={{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum,minimumPaidRecords:actualMinimumPaidRecords}} />:null}
+      {hasListSelection?<button type="button" className="btn btn-secondary mt-3" onClick={()=>{setQuery("");setSort("recorded");setFilter("all");setMinimumTraffic("0");setMinimumPaidRecords("0");}}>Reset list view</button>:null}
       {sold ? <p className="mt-3 text-xs text-ink-soft">Revenue / visit and Revenue / view divide each row’s gross revenue by recorded visits or page views, not unique people. Channels exclude one-click extras; products include them. Both exclude renewals and are before refunds, fees and costs. No traffic means unavailable; rows without a defined ratio sort last in either direction. Analytical money uses up to four significant digits; CSV values keep calculated precision.</p> : null}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         {view.channels.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-channels">
-          <ReportDownload csv={()=>customRangeChannelsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
+          <ReportDownload csv={()=>customRangeChannelsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum,minimumPaidRecords:actualMinimumPaidRecords})} filename={"marktmorgen-custom-channels-"+r.from+"-to-"+r.to+".csv"}>Download displayed channels</ReportDownload>
             <table className="w-full text-left text-sm">
               <caption id="range-channels" className="text-left text-sm font-bold text-ink">Where they came from{r.channelsTruncated === true && r.channelsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.channels.length} of {r.channelsTotal} recorded channels, ordered by {customRangeOrderLabel(r,actualSort,"channels").toLowerCase()}.</span> : null}</caption>
               <thead>
@@ -252,7 +259,7 @@ export function CustomRangeResults({ range, marks, currency, onShowAll, onRefres
         ) : r.channels.length ? <p className="text-sm text-ink-soft">No loaded channels match the current search and filters. Reset the list view or adjust the filters.{r.channelsTruncated===true?" The loaded channel list is limited.":""}</p> : null}
         {view.products.length ? (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby="range-products">
-          <ReportDownload csv={()=>customRangeProductsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
+          <ReportDownload csv={()=>customRangeProductsReport(view,{query,sort:actualSort,filter:actualFilter,minimumTraffic:actualMinimum,minimumPaidRecords:actualMinimumPaidRecords})} filename={"marktmorgen-custom-products-"+r.from+"-to-"+r.to+".csv"}>Download displayed products</ReportDownload>
             <table className="w-full text-left text-sm">
               <caption id="range-products" className="text-left text-sm font-bold text-ink">Products{r.productsTruncated === true && r.productsTotal != null ? <span className="mt-1 block text-xs font-normal text-ink-soft">Showing {view.products.length} of {r.productsTotal} recorded products, ordered by {customRangeOrderLabel(r,actualSort,"products").toLowerCase()}.</span> : null}</caption>
               <thead>
