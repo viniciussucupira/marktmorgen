@@ -58,6 +58,7 @@ const MESSAGES: Record<string, string> = {
   full: "A store keeps 20 drafts at most. Send or delete one first.",
   list: "This store has no list yet, so there is nowhere to keep a draft.",
   role: "Your role on this store does not include this.",
+  flow_write_unconfirmed: "The sequence change could not be confirmed. Reload the saved sequences and check the result before trying again. The change may already have happened.",
   starters_nothing: "Your store already has a sequence for each of those moments. They are under Sequences.",
   keep_unsent: "Only an email that has finished going out can be kept sending.",
   keep_excludes:
@@ -1429,6 +1430,9 @@ function Flows({
   const stepBoxes = useRef<(HTMLTextAreaElement | null)[]>([]);
   const [operationBusy, setBusy] = useState(false);
   const busy = operationBusy || refreshing;
+  const [uncertainList, setUncertainList] = useState<FlowRow[] | null>(null);
+  const writeUnconfirmed = uncertainList === flows;
+  const locked = busy || writeUnconfirmed;
   const [error, setError] = useState<string | null>(null);
 
   if (readFailed) return (
@@ -1453,7 +1457,7 @@ function Flows({
         : `Starts when someone who agreed to hear from you gets ${products.find((p) => p.id === f.productId)?.title ?? "a product"}`;
 
   function openDraft(flow: FlowRow | null) {
-    if (busy || draft !== null) return;
+    if (locked || draft !== null) return;
     const opened = toDraft(flow, products);
     const others = flows.filter(other => other.id !== flow?.id);
     const next = { ...opened, steps: opened.steps.map(step => step.kind === "start" && !others.some(other => other.id === step.actionFlow) ? { ...step, actionFlow: "" } : step) };
@@ -1463,7 +1467,7 @@ function Flows({
   }
 
   async function save() {
-    if (!draft || busy || invalidWait) return;
+    if (!draft || locked || invalidWait) return;
     setBusy(true);
     setError(null);
     const a = await call({
@@ -1493,6 +1497,7 @@ function Flows({
     });
     setBusy(false);
     if (!a.ok) {
+      if (a.error === "flow_write_unconfirmed") setUncertainList(flows);
       setError(message(a));
       return;
     }
@@ -1558,14 +1563,17 @@ function Flows({
           </p>
           <button
             type="button"
-            aria-busy={busy} disabled={busy}
+            aria-busy={busy} disabled={locked}
             className="btn btn-secondary mt-3"
             onClick={async () => {
               setBusy(true);
               setError(null);
               const a = await call({ action: "starters" });
               setBusy(false);
-              if (!a.ok) return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
+              if (!a.ok) {
+                if (a.error === "flow_write_unconfirmed") setUncertainList(flows);
+                return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
+              }
               const made = Array.isArray(a.made) ? a.made.length : 0;
               toast(made === 1 ? "Written. It is below, switched off, for you to read." : "Written. Both are below, switched off, for you to read.");
               refreshFlows();
@@ -1575,6 +1583,7 @@ function Flows({
           </button>
         </div>
       ) : null}
+      {writeUnconfirmed ? <div className="notice notice-warn mt-4"><p role="status">Check the saved sequences before another change. A lost confirmation does not mean the change was undone; if you are editing, your draft is kept while you reload.</p><button type="button" className="btn btn-secondary mt-3" disabled={busy} onClick={() => { setError(null); refreshFlows(); }}>Reload saved sequences</button></div> : null}
       {refreshing ? <p role="status" className="mt-4 text-sm text-ink-soft">Updating sequences… Wait for the latest list before making another change.</p> : null}
       {!draft ? <Feedback error={error} done={null} /> : null}
       {flows.length ? (
@@ -1616,7 +1625,7 @@ function Flows({
                 <button
                   type="button"
                   className="text-ink-soft underline underline-offset-4 hover:text-violet-deep"
-                  disabled={busy || draft !== null}
+                  disabled={locked || draft !== null}
                   onClick={() => {
                     openDraft(f);
                   }}
@@ -1625,7 +1634,7 @@ function Flows({
                 </button>
                 <button
                   type="button"
-                  aria-busy={busy} disabled={busy || draft !== null}
+                  aria-busy={busy} disabled={locked || draft !== null}
                   className="text-ink-soft underline underline-offset-4 hover:text-danger"
                   onClick={async () => {
                     setBusy(true);
@@ -1633,6 +1642,7 @@ function Flows({
                     const a = await call({ action: "flow-remove", id: f.id });
                     setBusy(false);
                     if (!a.ok) {
+                      if (a.error === "flow_write_unconfirmed") setUncertainList(flows);
                       setError("Removal of “" + f.name + "” could not be confirmed. Reload to check its current status. " + message(a));
                       return;
                     }
@@ -2074,7 +2084,7 @@ function Flows({
             <span>On. Switched off, nobody new starts it, and those already in it get none of its emails that are still to come.</span>
           </label>
           <div className="flex flex-wrap items-center gap-3">
-            <button type="submit" aria-busy={busy} disabled={busy || invalidWait} className="btn btn-primary">Save the sequence</button>
+            <button type="submit" aria-busy={busy} disabled={locked || invalidWait} className="btn btn-primary">Save the sequence</button>
             <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" onClick={() => setDraft(null)}>
               Close
             </button>
@@ -2083,7 +2093,7 @@ function Flows({
           </fieldset>
         </form>
       ) : flows.length < 10 ? (
-        <button type="button" className="btn btn-secondary mt-5" disabled={busy} onClick={() => openDraft(null)}>
+        <button type="button" className="btn btn-secondary mt-5" disabled={locked} onClick={() => openDraft(null)}>
           New sequence
         </button>
       ) : null}
