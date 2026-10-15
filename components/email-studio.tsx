@@ -1305,6 +1305,8 @@ function History({
  * not lose what was chosen (lib/flow-rules.ts).
  */
 type StepDraft = {
+  /** Local editor identity, never included in the saved sequence payload. */
+  editorKey: string;
   id?: string;
   /** An email, or a step that acts instead (lib/flow-rules.ts, FlowAction). */
   kind: "email" | "tag" | "untag" | "start" | "webhook" | "field" | "deal" | "note" | "notify";
@@ -1363,7 +1365,7 @@ const STEP_IF_WORDS: { value: StepIf | ""; label: string }[] = [
 ];
 
 function blankStep(wait: string, unit: "hours" | "days", firstProduct: string): StepDraft {
-  return { kind: "email", actionTag: "", actionFlow: "", actionField: "", actionValue: "", actionStage: "", actionTitle: "", actionText: "", wait, unit, subject: "", body: "", when: "", whenProduct: firstProduct, whenTag: "", otherwise: "skip" };
+  return { editorKey: crypto.randomUUID(), kind: "email", actionTag: "", actionFlow: "", actionField: "", actionValue: "", actionStage: "", actionTitle: "", actionText: "", wait, unit, subject: "", body: "", when: "", whenProduct: firstProduct, whenTag: "", otherwise: "skip" };
 }
 
 /** What a step that acts does, as one line reads it: "gives the label “warm”". */
@@ -1403,6 +1405,7 @@ function actionOf(s: StepDraft): FlowAction | null {
 function stepToDraft(s: FlowStep, firstProduct: string): StepDraft {
   const when = s.when;
   return {
+    editorKey: crypto.randomUUID(),
     id: s.id,
     kind: s.action ? s.action.do : "email",
     actionTag: s.action && "tag" in s.action ? s.action.tag : "",
@@ -1631,8 +1634,8 @@ function Flows({
   // before it any more, so what the form shows is always what is saved.
   const settle = (steps: StepDraft[]): StepDraft[] =>
     steps.map((x, j) => ((x.when === "clicked" || x.when === "unclicked") && (j === 0 || steps[j - 1].kind !== "email") ? { ...x, when: "" } : x));
-  const setStep = (i: number, change: Partial<StepDraft>) =>
-    draft && setDraft({ ...draft, steps: settle(draft.steps.map((s, j) => (j === i ? { ...s, ...change } : s))) });
+  const setStep = (editorKey: string, change: Partial<StepDraft>) =>
+    setDraft(current => current ? { ...current, steps: settle(current.steps.map(step => step.editorKey === editorKey ? { ...step, ...change } : step)) } : current);
 
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="flows-title">
@@ -1900,26 +1903,22 @@ function Flows({
               </label>
             }
             payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : "", tag: draft.trigger === "tagged" ? draft.triggerTag : "", count: requestedCount })}
-            onResult={(written) =>
-              setDraft((current) => {
-                if (!current) return current;
-                const steps: StepDraft[] = written.map((w) => ({
-                  ...(w.delayHours > 0 && w.delayHours % 24 === 0
-                    ? blankStep(String(w.delayHours / 24), "days", products[0]?.id ?? "")
-                    : blankStep(String(w.delayHours), "hours", products[0]?.id ?? "")),
-                  subject: w.subject,
-                  body: w.body,
-                }));
-                // Emails still empty are replaced; the creator's own are kept, and these follow them.
-                // A step that acts has no words of its own, and is kept too.
-                return { ...current, steps: appendSequenceDraft(current.steps, steps) };
-              })
-            }
+            onResult={(written) => {
+              const steps: StepDraft[] = written.map((w) => ({
+                ...(w.delayHours > 0 && w.delayHours % 24 === 0
+                  ? blankStep(String(w.delayHours / 24), "days", products[0]?.id ?? "")
+                  : blankStep(String(w.delayHours), "hours", products[0]?.id ?? "")),
+                subject: w.subject,
+                body: w.body,
+              }));
+              // Emails still empty are replaced; the creator's own and action steps are kept.
+              setDraft(current => current ? { ...current, steps: appendSequenceDraft(current.steps, steps) } : current);
+            }}
             done="The emails are in the sequence below. Read each one, change what you like, then save it."
           /> : <p role="status" className="text-sm text-ink-soft">AI writes at least 3 emails at a time. This sequence has {availableSlots} free {availableSlots === 1 ? "step" : "steps"}. Remove steps to make room before generating.</p>}
           <ol className="space-y-4">
             {draft.steps.map((s, i) => (
-              <li key={i} className="rounded-[var(--r-sm)] bg-sand p-4">
+              <li key={s.editorKey} className="rounded-[var(--r-sm)] bg-sand p-4">
                 <div className="flex flex-wrap items-end justify-between gap-2">
                   <p className="text-sm font-bold text-ink">{s.kind === "email" ? `Email ${i + 1}` : `Step ${i + 1}`}</p>
                   <label className="block">
@@ -1931,7 +1930,7 @@ function Flows({
                       onChange={(e) => {
                         const v = e.target.value;
                         const kind = v === "tag" || v === "untag" || v === "start" || v === "webhook" || v === "field" || v === "deal" || v === "note" || v === "notify" ? v : "email";
-                        setStep(i, {
+                        setStep(s.editorKey, {
                           kind,
                           actionFlow: s.actionFlow || otherFlows[0]?.id || "",
                           actionField: s.actionField || automation.fields[0]?.id || "",
@@ -1958,12 +1957,12 @@ function Flows({
                       className="field mt-1 w-24"
                       inputMode="numeric"
                       value={s.wait}
-                      onChange={(e) => setStep(i, { wait: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) })}
+                      onChange={(e) => setStep(s.editorKey, { wait: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) })}
                     />
                   </label>
                   <label className="block">
                     <span className="sr-only">Hours or days</span>
-                    <select className="field w-28" value={s.unit} onChange={(e) => setStep(i, { unit: e.target.value === "days" ? "days" : "hours" })}>
+                    <select className="field w-28" value={s.unit} onChange={(e) => setStep(s.editorKey, { unit: e.target.value === "days" ? "days" : "hours" })}>
                       <option value="hours">hours</option>
                       <option value="days">days</option>
                     </select>
@@ -1977,7 +1976,7 @@ function Flows({
                       maxLength={MAX_CONDITION_TAG}
                       value={s.actionTag}
                       placeholder="interested"
-                      onChange={(e) => setStep(i, { actionTag: e.target.value })}
+                      onChange={(e) => setStep(s.editorKey, { actionTag: e.target.value })}
                     />
                     {s.kind === "tag" ? (
                       <span className="mt-1 block text-sm text-ink-soft">
@@ -1988,7 +1987,7 @@ function Flows({
                 ) : s.kind === "start" ? (
                   <label className="mt-3 block">
                     <span className="text-sm text-ink-soft">The sequence to start</span>
-                    <select className="field mt-1" value={s.actionFlow} onChange={(e) => setStep(i, { actionFlow: e.target.value })} required>
+                    <select className="field mt-1" value={s.actionFlow} onChange={(e) => setStep(s.editorKey, { actionFlow: e.target.value })} required>
                       {s.actionFlow ? null : <option value="">A sequence that was removed: choose another</option>}
                       {otherFlows.map((f) => (
                         <option key={f.id} value={f.id}>{f.name}</option>
@@ -2000,7 +1999,7 @@ function Flows({
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <label className="block">
                       <span className="text-sm text-ink-soft">The field</span>
-                      <select className="field mt-1" value={s.actionField} onChange={(e) => setStep(i, { actionField: e.target.value, actionValue: "" })}>
+                      <select className="field mt-1" value={s.actionField} onChange={(e) => setStep(s.editorKey, { actionField: e.target.value, actionValue: "" })}>
                         {automation.fields.map((f) => (
                           <option key={f.id} value={f.id}>{f.name}</option>
                         ))}
@@ -2011,7 +2010,7 @@ function Flows({
                       return field?.type === "choice" ? (
                         <label className="block">
                           <span className="text-sm text-ink-soft">Set to</span>
-                          <select className="field mt-1" value={s.actionValue} onChange={(e) => setStep(i, { actionValue: e.target.value })}>
+                          <select className="field mt-1" value={s.actionValue} onChange={(e) => setStep(s.editorKey, { actionValue: e.target.value })}>
                             <option value="">Choose one</option>
                             {field.options.map((o) => (
                               <option key={o} value={o}>{o}</option>
@@ -2027,7 +2026,7 @@ function Flows({
                             inputMode={field?.type === "number" ? "decimal" : undefined}
                             maxLength={200}
                             value={s.actionValue}
-                            onChange={(e) => setStep(i, { actionValue: e.target.value })}
+                            onChange={(e) => setStep(s.editorKey, { actionValue: e.target.value })}
                           />
                         </label>
                       );
@@ -2038,7 +2037,7 @@ function Flows({
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <label className="block">
                       <span className="text-sm text-ink-soft">The stage</span>
-                      <select className="field mt-1" value={s.actionStage} onChange={(e) => setStep(i, { actionStage: e.target.value })}>
+                      <select className="field mt-1" value={s.actionStage} onChange={(e) => setStep(s.editorKey, { actionStage: e.target.value })}>
                         {automation.stages.map((st) => (
                           <option key={st.id} value={st.id}>{st.name}</option>
                         ))}
@@ -2046,14 +2045,14 @@ function Flows({
                     </label>
                     <label className="block">
                       <span className="text-sm text-ink-soft">A new deal&apos;s title (optional)</span>
-                      <input className="field mt-1" maxLength={90} value={s.actionTitle} placeholder={draft.name} onChange={(e) => setStep(i, { actionTitle: e.target.value })} />
+                      <input className="field mt-1" maxLength={90} value={s.actionTitle} placeholder={draft.name} onChange={(e) => setStep(s.editorKey, { actionTitle: e.target.value })} />
                     </label>
                     <span className="block text-sm text-ink-soft sm:col-span-2">Their open deal moves to this stage; with none open, a new one is made for them on your deals board.</span>
                   </div>
                 ) : s.kind === "note" ? (
                   <label className="mt-3 block">
                     <span className="text-sm text-ink-soft">The note</span>
-                    <input className="field mt-1" maxLength={300} value={s.actionText} placeholder="Asked about coaching" onChange={(e) => setStep(i, { actionText: e.target.value })} />
+                    <input className="field mt-1" maxLength={300} value={s.actionText} placeholder="Asked about coaching" onChange={(e) => setStep(s.editorKey, { actionText: e.target.value })} />
                     <span className="mt-1 block text-sm text-ink-soft">Written on their page in your studio, with the sequence and the step it came from.</span>
                   </label>
                 ) : s.kind === "notify" ? (
@@ -2068,13 +2067,13 @@ function Flows({
                 <>
                 <label className="mt-3 block">
                   <span className="text-sm text-ink-soft">Subject</span>
-                  <input className="field mt-1" maxLength={150} value={s.subject} onChange={(e) => setStep(i, { subject: e.target.value })} />
+                  <input className="field mt-1" maxLength={150} value={s.subject} onChange={(e) => setStep(s.editorKey, { subject: e.target.value })} />
                 </label>
                 <div className="mt-3">
                   <MailBodyEditor
                     body={s.body}
                     rows={6}
-                    onChange={(next) => setStep(i, { body: next })}
+                    onChange={(next) => setStep(s.editorKey, { body: next })}
                     boxRef={(el) => {
                       stepBoxes.current[i] = el;
                     }}
@@ -2095,7 +2094,7 @@ function Flows({
                       onChange={(e) => {
                         const when = STEP_IF_WORDS.find((w) => w.value === e.target.value)?.value ?? "";
                         // A condition on a course names a course: the first, when the product chosen is not one.
-                        setStep(i, isCourseIf(when) && !courses.includes(s.whenProduct) ? { when, whenProduct: courses[0] ?? s.whenProduct } : { when });
+                        setStep(s.editorKey, isCourseIf(when) && !courses.includes(s.whenProduct) ? { when, whenProduct: courses[0] ?? s.whenProduct } : { when });
                       }}
                     >
                       {STEP_IF_WORDS.filter(
@@ -2111,7 +2110,7 @@ function Flows({
                   {s.when === "has" || s.when === "lacks" ? (
                     <label className="block min-w-0 flex-1">
                       <span className="text-sm text-ink-soft">Product</span>
-                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(i, { whenProduct: e.target.value })}>
+                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(s.editorKey, { whenProduct: e.target.value })}>
                         {products.map((p) => (
                           <option key={p.id} value={p.id}>{p.title}</option>
                         ))}
@@ -2121,7 +2120,7 @@ function Flows({
                   {isCourseIf(s.when) ? (
                     <label className="block min-w-0 flex-1">
                       <span className="text-sm text-ink-soft">Course</span>
-                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(i, { whenProduct: e.target.value })}>
+                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(s.editorKey, { whenProduct: e.target.value })}>
                         {products
                           .filter((p) => courses.includes(p.id))
                           .map((p) => (
@@ -2133,7 +2132,7 @@ function Flows({
                   {s.when === "tag" || s.when === "untagged" ? (
                     <label className="block min-w-0 flex-1">
                       <span className="text-sm text-ink-soft">Label, from an import or a sequence</span>
-                      <input className="field mt-1" maxLength={MAX_CONDITION_TAG} value={s.whenTag} onChange={(e) => setStep(i, { whenTag: e.target.value })} />
+                      <input className="field mt-1" maxLength={MAX_CONDITION_TAG} value={s.whenTag} onChange={(e) => setStep(s.editorKey, { whenTag: e.target.value })} />
                     </label>
                   ) : null}
                 </div>
@@ -2146,7 +2145,7 @@ function Flows({
                 {s.when ? (
                   <label className="mt-2 block">
                     <span className="text-sm text-ink-soft">Everyone else</span>
-                    <select className="field mt-1" value={s.otherwise} onChange={(e) => setStep(i, { otherwise: e.target.value === "end" ? "end" : "skip" })}>
+                    <select className="field mt-1" value={s.otherwise} onChange={(e) => setStep(s.editorKey, { otherwise: e.target.value === "end" ? "end" : "skip" })}>
                       <option value="skip">{s.kind === "email" ? "Skips this email and goes on to the next" : "Skips this step and goes on to the next"}</option>
                       <option value="end">Leaves the sequence here</option>
                     </select>
@@ -2157,11 +2156,11 @@ function Flows({
                     type="button"
                     className="mt-2 text-sm font-bold text-ink-soft underline underline-offset-4 hover:text-danger"
                     onClick={() =>
-                      setDraft({
-                        ...draft,
+                      setDraft(current => current ? {
+                        ...current,
                         // The email that becomes the first has no email before it to read.
-                        steps: settle(draft.steps.filter((_, j) => j !== i)),
-                      })
+                        steps: settle(current.steps.filter(step => step.editorKey !== s.editorKey)),
+                      } : current)
                     }
                   >
                     {s.kind === "email" ? "Remove this email" : "Remove this step"}
