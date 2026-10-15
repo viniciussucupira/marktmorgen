@@ -59,3 +59,15 @@ export function confirmedRecipientCount(answer: MailAnswer): number | null {
   const count = answer.count;
   return answer.ok === true && typeof count === "number" && Number.isSafeInteger(count) && count >= 0 ? count : null;
 }
+
+const REMOVAL_REFUSALS = new Set(["unknown", "draft_remove_conflict", "role", "locked", "store_gone", "none", "signed_out", "origin", "bad_request"]);
+/** Confirm deletion only for the exact draft version selected in the list. */
+export function draftRemovalAnswer(responseOk: boolean, raw: unknown, id: unknown, expectedSavedAt: unknown): MailAnswer {
+  const unknown: MailAnswer = { ok: false, error: "draft_remove_unconfirmed" };
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return unknown;
+  const answer = raw as MailAnswer;
+  if (answer.ok === false && typeof answer.error === "string" && REMOVAL_REFUSALS.has(answer.error) && !Object.hasOwn(answer, "removed")) return answer;
+  if (!responseOk || answer.ok !== true || Object.hasOwn(answer, "error") || typeof id !== "string" || !/^[0-9a-f]{16}$/.test(id) || typeof expectedSavedAt !== "string" || !Number.isFinite(Date.parse(expectedSavedAt)) || !answer.removed || typeof answer.removed !== "object" || Array.isArray(answer.removed)) return unknown;
+  const removed = answer.removed as Record<string, unknown>;
+  return removed.id === id && removed.savedAt === expectedSavedAt ? answer : unknown;
+}
