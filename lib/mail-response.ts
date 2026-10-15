@@ -1,3 +1,4 @@
+import { readNarrow, type Narrow } from "@/lib/segments-rules";
 import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 export type MailAnswer = Record<string, unknown> & { ok?: boolean; error?: string };
 /** A malformed response or failed HTTP request never confirms a mail operation. */
@@ -16,13 +17,21 @@ export function keptWaitHours(answer: MailAnswer): number | null {
   return answer.ok === true && typeof wait === "number" && Number.isInteger(wait) && wait >= 0 && wait <= MAX_FLOW_WAIT_HOURS ? wait : null;
 }
 
-export type MailCopy = { subject: string; body: string; productId: string | null; who: "all" | "buyers" | "leads" };
+export type MailCopy = { subject: string; body: string; productId: string | null; who: "all" | "buyers" | "leads"; notProductId: string | null; narrow: Narrow | null };
 /** A copy must retain its content and audience before replacing the composer. */
 export function confirmedMailCopy(answer: MailAnswer): MailCopy | null {
   if (answer.ok !== true || !answer.copy || typeof answer.copy !== "object" || Array.isArray(answer.copy)) return null;
   const copy = answer.copy as Record<string, unknown>;
   if (typeof copy.subject !== "string" || typeof copy.body !== "string" || !(copy.productId === null || typeof copy.productId === "string") || (copy.who !== "all" && copy.who !== "buyers" && copy.who !== "leads")) return null;
-  return { subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who as MailCopy["who"] };
+  if (!(copy.notProductId === null || typeof copy.notProductId === "string" && copy.notProductId.length > 0)) return null;
+  let narrow: Narrow | null = null;
+  if (copy.narrow !== null) {
+    if (!copy.narrow || typeof copy.narrow !== "object" || Array.isArray(copy.narrow)) return null;
+    const raw = copy.narrow as Record<string, unknown>;
+    narrow = readNarrow(raw);
+    if (raw.minSpent !== narrow.minSpent || raw.channel !== narrow.channel || raw.quietDays !== narrow.quietDays) return null;
+  }
+  return { subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who as MailCopy["who"], notProductId: copy.notProductId, narrow };
 }
 
 /** Accept only a complete draft result belonging to the draft being edited. */
