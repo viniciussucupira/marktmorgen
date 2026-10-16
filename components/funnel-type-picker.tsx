@@ -47,6 +47,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [type, setType] = useState<FunnelType | null>(null);
   const [name, setName] = useState("");
   const [picked, setPicked] = useState<Record<string, string>>({});
+  const [reviewing, setReviewing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recovery, setRecovery] = useState<"setup" | "forms" | null>(null);
@@ -67,6 +68,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
 
   function choose(next: FunnelType) {
     setMade(null);
+    setReviewing(false);
     setRecovery(null);
     setType(next);
     setName(next.label);
@@ -86,7 +88,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   }
 
   async function build() {
-    if (!type || busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
+    if (!type || !reviewing || busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
     setBusy(true);
     setRecovery(null);
     setError(null);
@@ -98,7 +100,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; funnel?: { id?: unknown }; pages?: { id: string; title: string }[] };
       if (response.ok && data?.ok === true) {
-        toast("Funnel made.");
+        toast("Funnel draft created.");
         const id = data.funnel?.id;
         const pages = Array.isArray(data.pages) ? data.pages.filter(page => page && typeof page.id === "string" && /^[a-f0-9]{10}$/.test(page.id) && typeof page.title === "string") : [];
         setMade({ pages, funnelId: typeof id === "string" && FUNNEL_ID.test(id) ? id : null, drafts: draftSelections });
@@ -144,7 +146,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
 
       {made ? (
         <div className="notice notice-success mt-6" role="status">
-          <p className="font-semibold text-ink">Funnel created. Review it before sharing.</p>
+          <p className="font-semibold text-ink">Funnel draft created. Its address is disabled.</p>
           {made.pages.length ? (
             <>
               <p className="mt-1 text-sm text-ink-soft">Write these pages and let them out, and visitors walk through them:</p>
@@ -160,7 +162,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
             </>
           ) : null}
           {made.drafts.length ? <div className="mt-4 text-sm"><p className="font-semibold">Products that were drafts at setup:</p><ul className="mt-2 list-disc space-y-1 pl-5">{made.drafts.map(draft => <li key={draft}>{draft}</li>)}</ul><p className="mt-2">Review their current status and publish them before sharing the funnel.</p><a className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={productsHref}>Review products</a></div> : null}
-          <p className="mt-4 text-sm text-ink-soft">After preparing the pages and products, review the saved checks and test the customer journey before sharing.</p>
+          <p className="mt-4 text-sm text-ink-soft">Prepare the pages and products, review the saved checks, and test the customer journey. Enable the funnel in its settings only when it is ready.</p>
           <a className="btn btn-secondary mt-4" href={reviewHref}>{made.funnelId ? "Review the new funnel" : "Review funnels"}</a>
         </div>
       ) : null}
@@ -196,7 +198,9 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
       {type ? (
         <fieldset disabled={busy} className="mt-6 min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-6">
           <legend className="sr-only">Funnel setup</legend>
-          <p className="font-semibold text-ink">{type.label}</p>
+          <p className="text-xs font-semibold text-ink-soft">{reviewing ? "Step 3 of 3 · Review" : "Step 2 of 3 · Products"}</p>
+          <p className="mt-1 font-semibold text-ink">{type.label}</p>
+          <div hidden={reviewing}>
           <label className="mt-4 block">
             <span className="field-label">Name, for you</span>
             <input className="field mt-2" value={name} maxLength={MAX_FUNNEL_NAME} onChange={(e) => setName(e.target.value)} />
@@ -241,6 +245,26 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
           ) : null}
           {draftSelections.length > 0 ? <div className="notice notice-warn mt-4 text-sm" role="status"><p className="font-semibold">Some selected products are still drafts.</p><ul className="mt-2 list-disc space-y-1 pl-5">{draftSelections.map(selection => <li key={selection}>{selection}</li>)}</ul><p className="mt-2">You can create this setup, but publish these products and review the funnel before sharing it.</p><a className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={productsHref}>Review products</a></div> : null}
           {selectionIssues.length > 0 || repeated || capacityIssue ? <div className="notice notice-warn mt-4 text-sm" role="status"><p className="font-semibold">Complete the setup before creating the funnel.</p><ul className="mt-2 list-disc space-y-1 pl-5">{selectionIssues.map(issue => <li key={issue}>{issue}</li>)}{repeated ? <li>{MESSAGES.slot_twice}</li> : null}{capacityIssue ? <li>{capacityIssue}</li> : null}</ul></div> : null}
+          </div>
+          {reviewing ? (
+            <section aria-label="Review your funnel" className="mt-4">
+              <h3 className="font-semibold text-ink">{name.trim()}</h3>
+              <p className="mt-2 text-sm text-ink-soft">Your customer journey, in order:</p>
+              <ol className="mt-3 space-y-3">
+                {type.slots.filter(slot => slot.kind !== "target").map((slot, index) => {
+                  const product = products.find(item => item.id === picked[slot.key]);
+                  return <li key={slot.key} className="rounded-xl border border-line p-3">
+                    <p className="text-sm font-semibold">{index + 1}. {slot.kind === "page" ? slot.title : product?.title}</p>
+                    <p className="mt-1 text-xs text-ink-soft">{slot.kind === "page"
+                      ? `New hidden page · ${slot.blocks.join(", ")}${slot.form ? " · includes a new form" : ""}`
+                      : product?.draft ? "Existing product · draft; publish it before sharing" : "Existing product · keep its current settings"}</p>
+                  </li>;
+                })}
+              </ol>
+              <p className="notice notice-warn mt-4 text-sm">This creates a disabled funnel and hidden, unfinished pages. Existing products keep their current visibility. Review page copy, forms, delivery and checkout before enabling the funnel. No email campaign or post-purchase offer is created by this setup.</p>
+              <p className="mt-3 text-sm text-ink-soft">{pagesOf(type).length} new pages · {pagesOf(type).filter(page => page.form && page.blocks.includes("form")).length} new forms · 1 new funnel</p>
+            </section>
+          ) : null}
           {error ? (
             <p className="notice notice-error mt-4" role="alert">
               {error}
@@ -252,9 +276,10 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
             {recovery === "setup" ? <a className="underline" href={`/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}`}>Review funnels</a> : null}
           </nav> : null}
           <div className="mt-5 flex flex-wrap gap-3">
-            <button type="button" className="btn btn-primary" onClick={() => void build()} disabled={busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || Boolean(capacityIssue)} aria-busy={busy}>
-              {busy ? "Making it…" : "Make the funnel"}
+            <button type="button" className="btn btn-primary" onClick={() => reviewing ? void build() : setReviewing(true)} disabled={busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || Boolean(capacityIssue)} aria-busy={busy}>
+              {busy ? "Creating draft…" : reviewing ? "Create disabled funnel" : "Review funnel"}
             </button>
+            {reviewing && !recovery ? <button type="button" className="btn btn-secondary" onClick={() => setReviewing(false)} disabled={busy}>Back to products</button> : null}
             <button type="button" className="btn btn-secondary" onClick={() => setType(null)} disabled={busy}>
               {recovery === "setup" ? "Close setup" : "Cancel setup"}
             </button>
