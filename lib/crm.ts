@@ -14,6 +14,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import {
   type CrmField,
+  CRM_ID,
   type Deal,
   DEFAULT_STAGES,
   DEAL_ID,
@@ -24,6 +25,24 @@ import {
   parseFields,
   parseStages,
 } from "@/lib/crm-rules";
+
+export class CrmDealReadUnavailable extends Error {
+  constructor() { super("CRM deal preflight could not be confirmed"); this.name = "CrmDealReadUnavailable"; }
+}
+export class CrmDealWriteUnconfirmed extends Error {
+  constructor() { super("CRM deal change could not be confirmed"); this.name = "CrmDealWriteUnconfirmed"; }
+}
+
+export class CrmValueWriteUnconfirmed extends Error {
+  constructor() { super("CRM contact value change could not be confirmed"); this.name = "CrmValueWriteUnconfirmed"; }
+}
+
+export class CrmSchemaReadUnavailable extends Error {
+  constructor() { super("CRM configuration preflight could not be confirmed"); this.name = "CrmSchemaReadUnavailable"; }
+}
+export class CrmSchemaWriteUnconfirmed extends Error {
+  constructor() { super("CRM configuration change could not be confirmed"); this.name = "CrmSchemaWriteUnconfirmed"; }
+}
 
 const fieldsKey = (statsId: string) => `nl:crm:fields:${statsId}`;
 const valuesKey = (statsId: string, field: string) => `nl:crm:v:${statsId}:${field}`;
@@ -48,9 +67,24 @@ export async function readFields(statsId: string | null): Promise<CrmField[]> {
 
 /** Saves the fields; the answers kept for a field that is gone go with it. */
 export async function writeFields(statsId: string, fields: CrmField[]): Promise<CrmField[]> {
-  const before = await readFields(statsId);
-  const gone = before.filter((f) => !fields.some((n) => n.id === f.id));
-  await redisPipeline([["SET", fieldsKey(statsId), JSON.stringify(fields)], ...gone.map((f) => ["DEL", valuesKey(statsId, f.id)])]);
+  let before: CrmField[];
+  try {
+    const response = await redisPipeline([["GET", fieldsKey(statsId)]]);
+    if (!Array.isArray(response) || response.length !== 1) throw new CrmSchemaReadUnavailable();
+    if (response[0] === null) before = [];
+    else {
+      if (typeof response[0] !== "string") throw new CrmSchemaReadUnavailable();
+      const raw: unknown = JSON.parse(response[0]);
+      if (!Array.isArray(raw)) throw new CrmSchemaReadUnavailable();
+      before = parseFields(raw);
+      if (before.length !== raw.length) throw new CrmSchemaReadUnavailable();
+    }
+  } catch { throw new CrmSchemaReadUnavailable(); }
+  const gone = before.filter(f => !fields.some(n => n.id === f.id));
+  try {
+    const response = await redisPipeline([["SET", fieldsKey(statsId), JSON.stringify(fields)], ...gone.map(f => ["DEL", valuesKey(statsId, f.id)])]);
+    if (!Array.isArray(response) || response.length !== 1 + gone.length || response[0] !== "OK" || Array.from(response).slice(1).some(value => value !== 0 && value !== 1)) throw new CrmSchemaWriteUnconfirmed();
+  } catch { throw new CrmSchemaWriteUnconfirmed(); }
   return fields;
 }
 
@@ -66,7 +100,10 @@ export async function setValue(statsId: string, person: string, field: CrmField,
   if (!PERSON.test(person)) return false;
   const value = fieldValue(field, raw);
   if (value === null) return false;
-  await redisPipeline([value ? ["HSET", valuesKey(statsId, field.id), person, value] : ["HDEL", valuesKey(statsId, field.id), person]]);
+  try {
+    const response = await redisPipeline([value ? ["HSET", valuesKey(statsId, field.id), person, value] : ["HDEL", valuesKey(statsId, field.id), person]]);
+    if (!Array.isArray(response) || response.length !== 1 || (response[0] !== 0 && response[0] !== 1)) throw new CrmValueWriteUnconfirmed();
+  } catch { throw new CrmValueWriteUnconfirmed(); }
   return true;
 }
 
@@ -93,11 +130,34 @@ export async function readStages(statsId: string | null): Promise<Stage[]> {
 
 /** Saves the stages; a deal in a stage that is gone moves to the first open one. */
 export async function writeStages(statsId: string, stages: Stage[]): Promise<Stage[]> {
-  await redisPipeline([["SET", stagesKey(statsId), JSON.stringify(stages)]]);
-  const first = stages.find((s) => s.kind === "open") ?? stages[0];
-  const deals = await readDeals(statsId, stages.concat(DEFAULT_STAGES));
-  const moved = deals.filter((d) => !stages.some((s) => s.id === d.stage)).map((d) => ({ ...d, stage: first.id }));
-  if (moved.length) await redisPipeline(moved.map((d) => ["HSET", dealsKey(statsId), d.id, JSON.stringify(d)]));
+  const first = stages.find(s => s.kind === "open");
+  if (!first) throw new CrmSchemaReadUnavailable();
+  const moved: { id: string; record: Record<string, unknown> }[] = [];
+  try {
+    const response = await redisPipeline([["HGETALL", dealsKey(statsId)]]);
+    if (!Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0]) || response[0].length % 2 !== 0) throw new CrmSchemaReadUnavailable();
+    const flat: unknown[] = response[0];
+    const seen = new Set<string>();
+    for (let i = 0; i < flat.length; i += 2) {
+      const id = flat[i];
+      if (typeof id !== "string" || !DEAL_ID.test(id) || seen.has(id) || typeof flat[i + 1] !== "string") throw new CrmSchemaReadUnavailable();
+      const raw: unknown = JSON.parse(flat[i + 1] as string);
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new CrmSchemaReadUnavailable();
+      const record = raw as Record<string, unknown>;
+      if (record.id !== id || typeof record.stage !== "string" || !CRM_ID.test(record.stage)) throw new CrmSchemaReadUnavailable();
+      seen.add(id);
+      // Preserve every saved field; moving stages must not normalize away unrelated data.
+      if (!stages.some(stage => stage.id === record.stage)) moved.push({ id, record: { ...record, stage: first.id } });
+    }
+  } catch { throw new CrmSchemaReadUnavailable(); }
+  try {
+    const saved = await redisPipeline([["SET", stagesKey(statsId), JSON.stringify(stages)]]);
+    if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new CrmSchemaWriteUnconfirmed();
+    if (moved.length) {
+      const response = await redisPipeline(moved.map(({ id, record }) => ["HSET", dealsKey(statsId), id, JSON.stringify(record)]));
+      if (!Array.isArray(response) || response.length !== moved.length || Array.from(response).some(value => value !== 0 && value !== 1)) throw new CrmSchemaWriteUnconfirmed();
+    }
+  } catch { throw new CrmSchemaWriteUnconfirmed(); }
   return stages;
 }
 
@@ -111,15 +171,25 @@ export async function readDeals(statsId: string | null, stages: readonly Stage[]
     .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
+/** Capacity and save share one Redis operation, including alongside form conversions. */
+export const SAVE_CRM_DEAL = `-- marktmorgen:crm-deal-save:v1
+if redis.call("HEXISTS", KEYS[1], ARGV[1]) == 0 and redis.call("HLEN", KEYS[1]) >= tonumber(ARGV[3]) then return 0 end
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
+return 1`;
+
 /** Saves a deal. False when the store already has as many as it may and this one is new. */
 export async function writeDeal(statsId: string, deal: Deal): Promise<boolean> {
-  const [exists, count] = await redisPipeline([
-    ["HEXISTS", dealsKey(statsId), deal.id],
-    ["HLEN", dealsKey(statsId)],
-  ]);
-  if (Number(exists) !== 1 && Number(count) >= MAX_DEALS) return false;
-  await redisPipeline([["HSET", dealsKey(statsId), deal.id, JSON.stringify(deal)]]);
-  return true;
+  let preflight: unknown;
+  try {
+    preflight = await redisPipeline([["HEXISTS", dealsKey(statsId), deal.id], ["HLEN", dealsKey(statsId)]]);
+  } catch { throw new CrmDealReadUnavailable(); }
+  if (!Array.isArray(preflight) || preflight.length !== 2 || (preflight[0] !== 0 && preflight[0] !== 1) || typeof preflight[1] !== "number" || !Number.isSafeInteger(preflight[1]) || preflight[1] < preflight[0]) throw new CrmDealReadUnavailable();
+  if (preflight[0] === 0 && preflight[1] >= MAX_DEALS) return false;
+  try {
+    const saved = await redisPipeline([["EVAL", SAVE_CRM_DEAL, 1, dealsKey(statsId), deal.id, JSON.stringify(deal), MAX_DEALS]]);
+    if (!Array.isArray(saved) || saved.length !== 1 || (saved[0] !== 0 && saved[0] !== 1)) throw new CrmDealWriteUnconfirmed();
+    return saved[0] === 1;
+  } catch { throw new CrmDealWriteUnconfirmed(); }
 }
 
 export async function readDeal(statsId: string, id: string, stages: readonly Stage[]): Promise<Deal | null> {
@@ -130,8 +200,11 @@ export async function readDeal(statsId: string, id: string, stages: readonly Sta
 
 export async function dropDeal(statsId: string, id: string): Promise<boolean> {
   if (!DEAL_ID.test(id)) return false;
-  const [n] = await redisPipeline([["HDEL", dealsKey(statsId), id]]);
-  return Number(n) === 1;
+  try {
+    const removed = await redisPipeline([["HDEL", dealsKey(statsId), id]]);
+    if (!Array.isArray(removed) || removed.length !== 1 || (removed[0] !== 0 && removed[0] !== 1)) throw new CrmDealWriteUnconfirmed();
+    return removed[0] === 1;
+  } catch { throw new CrmDealWriteUnconfirmed(); }
 }
 
 /** Everything kept here for a store that is being deleted. */

@@ -9,7 +9,7 @@
  * affiliates and its pages do.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { type FormDef, type FormResponse, FORM_ID, KEPT_RESPONSES, MAX_FORMS, parseForm } from "@/lib/forms";
+import { type FormDef, type FormResponse, FORM_RESPONSE_ID, FORM_ID, KEPT_RESPONSES, MAX_FORMS, parseForm } from "@/lib/forms";
 
 const formsKey = (statsId: string) => `nl:forms:${statsId}`;
 const responsesKey = (statsId: string, formId: string) => `nl:form:r:${statsId}:${formId}`;
@@ -76,7 +76,7 @@ function parseResponse(raw: unknown): FormResponse | null {
   try {
     const value = JSON.parse(raw) as Partial<FormResponse>;
     if (typeof value.at !== "number" || !value.answers || typeof value.answers !== "object") return null;
-    return { at: value.at, page: typeof value.page === "string" ? value.page : "", answers: value.answers, outcome: typeof value.outcome === "string" ? value.outcome : "", joined: value.joined === true };
+    return { ...(typeof value.id === "string" && FORM_RESPONSE_ID.test(value.id) ? { id: value.id } : {}), at: value.at, page: typeof value.page === "string" ? value.page : "", answers: value.answers, outcome: typeof value.outcome === "string" ? value.outcome : "", joined: value.joined === true };
   } catch {
     return null;
   }
