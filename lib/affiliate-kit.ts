@@ -17,6 +17,7 @@ import { readAbout } from "@/lib/product-about";
 import { readPage } from "@/lib/sales-page-store";
 import { pageShown } from "@/lib/sales-page";
 import { factsFor } from "@/lib/answers";
+import { confirmedAiReservation } from "@/lib/ai-quota";
 import { aiAllowance, aiMonthKey, isAiConfigured, writeAffiliatePosts } from "@/lib/ai";
 import { storeBase } from "@/lib/purchase-email";
 import { productSegment } from "@/lib/product-slug";
@@ -53,14 +54,18 @@ export async function draftKit(store: Store, affiliate: Affiliate, productId: st
   const day = dayKey(store, affiliate, now);
   const month = monthKey(store, now);
   const jobs = aiMonthKey(store, now);
-  const [today, , thisMonth, , storeMonth] = await redisPipeline([
-    ["INCR", day],
-    ["EXPIRE", day, 2 * 86_400],
-    ["INCR", month],
-    ["EXPIRE", month, 40 * 86_400],
-    ["INCR", jobs],
-    ["EXPIRE", jobs, 40 * 86_400],
-  ]);
+  let counters: number[];
+  try {
+    const reply = await redisPipeline([
+      ["INCR", day], ["EXPIRE", day, 2 * 86_400],
+      ["INCR", month], ["EXPIRE", month, 40 * 86_400],
+      ["INCR", jobs], ["EXPIRE", jobs, 40 * 86_400],
+    ]);
+    const reservation = confirmedAiReservation(reply, [1, 1, 1]);
+    if (!reservation) return { ok: false, reason: "failed" };
+    counters = reservation;
+  } catch { return { ok: false, reason: "failed" }; }
+  const [today, thisMonth, storeMonth] = counters;
   const giveBack = () => redisPipeline([["DECR", day], ["DECR", month], ["DECR", jobs]]).catch(() => null);
   if (Number(today) > KIT_PER_DAY) {
     await giveBack();

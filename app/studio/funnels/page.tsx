@@ -1,3 +1,5 @@
+import { funnelRepairActions } from "@/lib/funnel-review-actions";
+import { readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
 import type { Metadata } from "next";
 import { BUMP_CHOICES, idsOfKind, readCards, readListings, readProduct } from "@/lib/catalog";
 import Link from "next/link";
@@ -13,7 +15,7 @@ import { imageUrl } from "@/lib/product-image";
 import { FunnelEditor } from "@/components/funnel-editor";
 import { offerableAfterPaying } from "@/lib/bundles";
 import { PageFunnelEditor, type SavedFunnel, type StepChoice } from "@/components/page-funnel-editor";
-import { readFunnelCounts, readPageFunnels, stepStates } from "@/lib/page-funnel-store";
+import { readFunnelCountsStrict, readPageFunnels, stepStates } from "@/lib/page-funnel-store";
 import { MAX_SITE_PAGES, pageOut } from "@/lib/site-page-rules";
 import { FunnelTypePicker, type TypeProduct } from "@/components/funnel-type-picker";
 import { MAX_PAGE_FUNNELS } from "@/lib/page-funnel";
@@ -103,19 +105,27 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
       .filter((p) => !calls.has(p.id))
       .map((p) => ({ kind: "product" as const, id: p.id, title: p.title, note: drafts.has(p.id) ? "draft" : free.has(p.id) ? "free" : "" })),
   ];
+  const loadedFunnels = await readPageFunnels(store.statsId).then(
+    funnels => ({ funnels, failed: false }),
+    () => ({ funnels: [], failed: true }),
+  );
+  const savedFunnelsFailed = loadedFunnels.failed;
+  const pageFunnels = loadedFunnels.funnels;
   const savedFunnels: SavedFunnel[] = await Promise.all(
-    (await readPageFunnels(store.statsId).catch(() => [])).map(async (funnel) => {
-      const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCounts(store.statsId, funnel)]);
+    pageFunnels.map(async (funnel) => {
+      const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCountsStrict(store.statsId, funnel).catch(() => null)]);
       return {
         funnel,
+        countsAvailable: counts !== null,
+        paymentIssues: await readFunnelPaymentChecks(store, funnel).catch(() => null),
         steps: states.map((state, i) => ({
           title: state.title,
           open: state.open,
           why: state.why,
           free: state.free,
           product: state.step.kind === "product",
-          seen: counts[i]?.seen ?? 0,
-          done: counts[i]?.done ?? 0,
+          seen: counts?.[i]?.seen ?? 0,
+          done: counts?.[i]?.done ?? 0,
         })),
       };
     }),
@@ -143,7 +153,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
           Pages walked in order from one address, and the offers a buyer meets right after paying.
         </p>
 
-        <div className="mt-8">
+        {!savedFunnelsFailed ? <div className="mt-8">
           <FunnelTypePicker
             products={typeProducts}
             pagesLeft={Math.max(0, MAX_SITE_PAGES - store.sitePages.length)}
@@ -151,10 +161,10 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
             funnelsLeft={Math.max(0, MAX_PAGE_FUNNELS - savedFunnels.length)}
             sid={store.sid}
           />
-        </div>
+        </div> : null}
 
         <div className="mt-8">
-          <PageFunnelEditor saved={savedFunnels} choices={choices} base={funnelBase} />
+          <PageFunnelEditor readFailed={savedFunnelsFailed} saved={savedFunnels} choices={choices} base={funnelBase} repairActions={funnelRepairActions(store, view.role)} />
         </div>
 
         <h2 className="mt-14 text-xl font-semibold tracking-[-0.02em] text-ink">Offers after they pay</h2>

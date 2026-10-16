@@ -34,7 +34,8 @@
  *   - Ordinary sequences afterward (lib/flows.ts): edited, paused or deleted
  *     like any other, and counted in the same month of emails.
  */
-import { type Flow, type FlowResult, readFlows, saveFlow } from "@/lib/flows";
+import { readFlowListStrict } from "@/lib/flow-list";
+import { type Flow, type FlowResult, saveFlow } from "@/lib/flows";
 import { idsOfKind, productIds, readCards } from "@/lib/catalog";
 import { storeBase } from "@/lib/purchase-email";
 import { productLink } from "@/lib/checkout-recovery";
@@ -169,7 +170,7 @@ export type StartersResult =
 
 /** Makes the starter sequences this store does not have yet, switched off. */
 export async function setUpStarters(store: Store): Promise<StartersResult> {
-  const flows = await readFlows(store.listId);
+  const flows = await readFlowListStrict(store.listId);
   // Sold for money and on the store: a draft product is not something to
   // send people to. The store's own order is the creator's own priority.
   const hidden = new Set(idsOfKind(store, "hidden"));

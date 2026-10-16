@@ -1,3 +1,5 @@
+import { readFlowListStrict } from "@/lib/flow-list";
+import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 /**
  * Automatic sequences: emails that go out by themselves, a set time after
  * somebody joins the list, gets one of the creator's products, or is given a
@@ -56,7 +58,7 @@ import { courseProgress } from "@/lib/learn";
 
 export const MAX_FLOWS = 10;
 export const MAX_STEPS = 10;
-export const MAX_DELAY_HOURS = 365 * 24;
+export const MAX_DELAY_HOURS = MAX_FLOW_WAIT_HOURS;
 export const MAX_FLOW_NAME = 80;
 
 export type FlowStep = {
@@ -157,8 +159,21 @@ export async function readFlows(listId: string | null): Promise<Flow[]> {
   }
 }
 
+export class FlowWriteUnconfirmed extends Error {
+  constructor() {
+    super("Sequence write could not be confirmed");
+    this.name = "FlowWriteUnconfirmed";
+  }
+}
+
 async function writeFlows(listId: string, flows: Flow[]): Promise<void> {
-  await redisPipeline([["SET", flowsKey(listId), JSON.stringify(flows)]]);
+  let replies: unknown;
+  try {
+    replies = await redisPipeline([["SET", flowsKey(listId), JSON.stringify(flows)]]);
+  } catch {
+    throw new FlowWriteUnconfirmed();
+  }
+  if (!Array.isArray(replies) || replies.length !== 1 || replies[0] !== "OK") throw new FlowWriteUnconfirmed();
 }
 
 const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw === "bought" ? raw : undefined);
@@ -196,7 +211,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
   if (rawSteps.length === 0 || rawSteps.length > MAX_STEPS) return { ok: false, reason: "steps" };
   const known = (id: string) => hasProduct(store, id);
-  const flows = await readFlows(store.listId);
+  const flows = await readFlowListStrict(store.listId);
   const id = typeof raw.id === "string" && FLOW_ID.test(raw.id) ? raw.id : null;
   // Another of the store's sequences, never this one: starting itself would do nothing.
   const isFlow = (flowId: string) => flowId !== id && flows.some((f) => f.id === flowId);
@@ -242,7 +257,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
 
 export async function removeFlow(store: Store, id: string): Promise<FlowResult> {
   if (!store.listId) return { ok: false, reason: "unknown" };
-  const flows = await readFlows(store.listId);
+  const flows = await readFlowListStrict(store.listId);
   if (!flows.some((f) => f.id === id)) return { ok: false, reason: "unknown" };
   const next = flows.filter((f) => f.id !== id);
   await writeFlows(store.listId, next);

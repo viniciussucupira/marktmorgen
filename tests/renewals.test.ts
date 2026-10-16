@@ -17,7 +17,9 @@ import { done, is, part } from "./check";
 
 const NOW = Date.UTC(2026, 9, 11, 12);
 const at = (daysAgo: number) => Math.floor((NOW - daysAgo * 86_400_000) / 1000);
+let invoiceNumber = 0;
 const invoice = (over: Record<string, unknown>) => ({
+  id: `in_test_renewal_${++invoiceNumber}`,
   object: "invoice",
   status: "paid",
   billing_reason: "subscription_cycle",

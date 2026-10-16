@@ -182,3 +182,17 @@ export async function readFunnelCounts(statsId: string | null, funnel: PageFunne
   const replies = await redisPipeline(commands).catch(() => [] as unknown[]);
   return funnel.steps.map((_, i) => ({ seen: Number(replies[i * 2] ?? 0) || 0, done: Number(replies[i * 2 + 1] ?? 0) || 0 }));
 }
+
+/** Studio review: a failed, incomplete or malformed count read stays unknown. */
+export async function readFunnelCountsStrict(statsId: string | null, funnel: PageFunnel): Promise<{ seen: number; done: number }[]> {
+  if (!statsId || !isRedisConfigured()) throw new Error("funnel counts unavailable");
+  const commands = funnel.steps.flatMap((_, i) => [["PFCOUNT", seenKey(statsId, funnel, i)], ["PFCOUNT", doneKey(statsId, funnel, i)]]);
+  const replies = await redisPipeline(commands);
+  if (replies.length !== commands.length) throw new Error("incomplete funnel counts");
+  const counts = replies.map(reply => {
+    const value = typeof reply === "number" ? reply : typeof reply === "string" && /^\d+$/.test(reply) ? Number(reply) : Number.NaN;
+    if (!Number.isSafeInteger(value) || value < 0) throw new Error("invalid funnel count");
+    return value;
+  });
+  return funnel.steps.map((_, i) => ({ seen: counts[i * 2], done: counts[i * 2 + 1] }));
+}

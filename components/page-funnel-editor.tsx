@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import type { FunnelRepairAction } from "@/lib/funnel-review-actions";
+import { funnelRate, reviewFunnel } from "@/lib/funnel-review";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -22,6 +24,10 @@ export type StepChoice = { kind: PageFunnelStep["kind"]; id: string; title: stri
 /** One saved funnel, with its steps as the store stands and how many people each reached. */
 export type SavedFunnel = {
   funnel: PageFunnel;
+  /** False distinguishes unknown reads from confirmed zero activity. */
+  countsAvailable?: boolean;
+  /** Null means the saved payment configuration could not be checked. */
+  paymentIssues?: string[] | null;
   steps: { title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number; done: number }[];
 };
 
@@ -45,7 +51,10 @@ const key = (step: Pick<PageFunnelStep, "kind" | "id">) => `${step.kind}:${step.
 
 /** "120 people", "1 person". */
 const people = (n: number) => `${n.toLocaleString("en-US")} ${n === 1 ? "person" : "people"}`;
-const share = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : "–");
+const share = (part: number, whole: number) => {
+  const rate = funnelRate(part, whole);
+  return rate === null ? "rate unavailable" : `${rate}% of estimated opens`;
+};
 
 /**
  * The studio's funnels of pages (lib/page-funnel.ts): each with its address,
@@ -57,18 +66,26 @@ export function PageFunnelEditor({
   saved,
   choices,
   base,
+  repairActions = [],
+  readFailed = false,
 }: {
   saved: SavedFunnel[];
   choices: StepChoice[];
   /** The funnels' addresses start with this: https://marktmorgen.com/@chef/go/ */
   base: string;
+  repairActions?: FunnelRepairAction[];
+  readFailed?: boolean;
 }) {
   const router = useRouter();
+  const [refreshing, startRefresh] = useTransition();
+  const refreshChecks = () => startRefresh(() => router.refresh());
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
-  useLeaveGuard(draft !== null && !busy);
+  const original = draft?.id ? saved.find(item => item.funnel.id === draft.id)?.funnel : null;
+  const dirty = draft !== null && (!original || draft.name !== original.name || draft.slug !== original.slug || draft.on !== original.on || JSON.stringify(draft.steps) !== JSON.stringify(original.steps));
+  useLeaveGuard(dirty);
 
   const pages = choices.filter((c) => c.kind === "page");
   const products = choices.filter((c) => c.kind === "product");
@@ -151,6 +168,14 @@ export function PageFunnelEditor({
     );
   }
 
+  if (readFailed) return (
+    <section aria-labelledby="page-funnels-title" className="card min-w-0 p-5 sm:p-8">
+      <h2 id="page-funnels-title" className="text-lg font-semibold">Pages in order</h2>
+      <p className="notice notice-warn mt-4 text-sm" role="alert">Your saved funnels could not be loaded. Their availability and the remaining creation limit are unknown. Reload before creating or editing a page funnel.</p>
+      <button type="button" className="btn btn-secondary mt-4" onClick={refreshChecks} disabled={refreshing || busy} aria-busy={refreshing}>{refreshing ? "Reloading…" : "Reload funnels"}</button>
+    </section>
+  );
+
   return (
     <section aria-labelledby="page-funnels-title" className="card min-w-0 p-5 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -162,12 +187,15 @@ export function PageFunnelEditor({
             {`Your own pages and your products' pages, one after another, from one address. Each step leads to the next: a page's buttons, the page after a free sign-up, and the thank-you page after paying, once its offers are answered. Up to ${MAX_FUNNEL_PAGES} steps in a funnel and ${MAX_PAGE_FUNNELS} funnels in a store.`}
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        <button type="button" className="btn btn-secondary" onClick={refreshChecks} disabled={refreshing || busy || draft !== null || removing !== null} aria-busy={refreshing}>{refreshing ? "Refreshing…" : "Refresh checks"}</button>
         {draft === null && saved.length < MAX_PAGE_FUNNELS ? (
-          <button type="button" className="btn btn-primary" onClick={() => start(null)} disabled={choices.length === 0}>
+          <button type="button" className="btn btn-primary" onClick={() => start(null)} disabled={refreshing || busy || removing !== null || choices.length === 0}>
             <Icon name="plus" size={18} />
             New funnel
           </button>
         ) : null}
+        </div>
       </div>
 
       {choices.length === 0 ? (
@@ -184,9 +212,10 @@ export function PageFunnelEditor({
       ) : null}
 
       <ul className="mt-6 space-y-4">
-        {saved.map(({ funnel, steps }) => {
-          const first = steps.find((s) => s.open)?.seen ?? 0;
-          const last = [...steps].reverse().find((s) => s.open);
+        {saved.map(({ funnel, steps, paymentIssues, countsAvailable }) => {
+          const review = reviewFunnel(countsAvailable === false ? steps.map(step => ({ ...step, seen: Number.NaN, done: Number.NaN })) : steps);
+
+
           return (
             <li key={funnel.id} className="rounded-2xl border border-line bg-white p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -213,7 +242,7 @@ export function PageFunnelEditor({
                     <Icon name="copy" size={16} />
                     Copy address
                   </button>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => start(funnel)} disabled={draft !== null}>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => start(funnel)} disabled={refreshing || busy || draft !== null || removing !== null}>
                     Edit
                   </button>
                   {removing === funnel.id ? (
@@ -222,18 +251,30 @@ export function PageFunnelEditor({
                       <button type="button" className="btn btn-danger btn-sm" disabled={busy} onClick={() => send({ action: "remove", id: funnel.id }, "Funnel removed.")}>
                         Yes, remove
                       </button>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(null)}>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(null)} disabled={busy}>
                         Keep it
                       </button>
                     </span>
                   ) : (
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(funnel.id)} disabled={draft !== null}>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(funnel.id)} disabled={refreshing || busy || draft !== null || removing !== null}>
                       Remove
                     </button>
                   )}
                 </div>
               </div>
 
+              <details className="mt-4 rounded-xl bg-paper p-4 ring-1 ring-line">
+                <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-ink"><Icon name="chevron-down" size={16} className="shrink-0" />{!review.ready || review.issues.length > 0 || paymentIssues == null || paymentIssues.length > 0 ? "Review: needs attention" : "Review: saved checks passed"}</summary>
+                <div id={`funnel-review-${funnel.id}`} tabIndex={-1} className="scroll-mt-24">
+                {review.issues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{review.issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">Every configured step is currently available. This does not verify payment-provider health, delivery or page copy.</p>}
+                <h3 className="mt-3 text-sm font-semibold text-ink">Payments, free sign-up and delivery</h3>
+                {paymentIssues == null ? <p className="mt-2 text-sm text-ink-soft">This configuration could not be checked. Review pages, forms, payment and delivery before sharing the funnel.</p> : paymentIssues.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">{paymentIssues.map((issue, i) => <li key={i}>{issue}</li>)}</ul> : <p className="mt-2 text-sm text-ink-soft">No blocker found in the saved page and offer configuration.</p>}
+                <p className="mt-2 text-xs text-ink-mute">This does not contact Stripe, open a checkout, test file storage or external links, or verify that a sign-up email arrives. Test those paths as a buyer.</p>
+                {review.observation ? <p className="mt-3 text-sm text-ink-soft">{review.observation}</p> : null}
+                {repairActions.length > 0 && (review.issues.length > 0 || paymentIssues == null || paymentIssues.length > 0) ? <nav aria-label={"Corrections for " + funnel.name} className="mt-3 flex flex-wrap gap-2">{repairActions.map(action => <a key={action.href} className="btn btn-secondary btn-sm" href={action.href}>{action.label}</a>)}</nav> : null}
+                <a className="btn btn-secondary btn-sm mt-3" href={base + funnel.slug} target="_blank" rel="noopener noreferrer">Open as a visitor</a>
+                </div>
+              </details>
               <ol className="mt-4 space-y-2">
                 {steps.map((step, index) => (
                   <li key={`${funnel.id}-${index}`} className="flex items-start gap-3 rounded-[12px] bg-paper px-3 py-2.5 text-sm ring-1 ring-line">
@@ -247,8 +288,8 @@ export function PageFunnelEditor({
                       </p>
                       {step.open ? (
                         <p className="mt-0.5 text-ink-soft">
-                          {`${people(step.seen)} opened it`}
-                          {step.product ? ` · ${step.done.toLocaleString("en-US")} ${step.free ? "signed up" : "paid"} (${share(step.done, step.seen)})` : ""}
+                          {countsAvailable === false ? "Counts unavailable. Reload before comparing results." : <>{`${people(step.seen)} opened it`}
+                          {step.product ? ` · ${step.done.toLocaleString("en-US")} ${step.free ? "signed up" : "paid"} (${share(step.done, step.seen)})` : ""}</>}
                         </p>
                       ) : (
                         <p className="mt-0.5 font-semibold text-ink">{step.why}</p>
@@ -258,9 +299,7 @@ export function PageFunnelEditor({
                 ))}
               </ol>
               <p className="mt-3 text-xs text-ink-mute">
-                {last && first > 0
-                  ? `${share(last.seen, first)} of the people who opened the first step reached the last. `
-                  : ""}
+                Counts are independent estimates for each step. They do not identify the same people moving between steps. {" "}
                 {`Counted since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed: each person once a step, never you or your team.`}
               </p>
             </li>
@@ -269,7 +308,8 @@ export function PageFunnelEditor({
       </ul>
 
       {draft ? (
-        <div className="mt-6 rounded-2xl border-2 border-violet-brand/40 bg-white p-4 sm:p-6">
+        <fieldset disabled={busy} className="mt-6 min-w-0 rounded-2xl border-2 border-violet-brand/40 bg-white p-4 sm:p-6">
+          <legend className="sr-only">Funnel settings</legend>
           <p className="font-semibold text-ink">{draft.id ? "Edit the funnel" : "A new funnel"}</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="block" htmlFor="pf-name">
@@ -397,7 +437,7 @@ export function PageFunnelEditor({
               Cancel
             </button>
           </div>
-        </div>
+        </fieldset>
       ) : null}
 
       {error && !draft ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}

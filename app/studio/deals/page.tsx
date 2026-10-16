@@ -1,3 +1,4 @@
+import { dealActionFilter } from "@/lib/crm-deal-filter";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -5,6 +6,8 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { DealsBoard } from "@/components/deals-board";
+import { readTeam } from "@/lib/team";
+import { can } from "@/lib/team-roles";
 import { readDeals, readFields, readStages } from "@/lib/crm";
 
 export const metadata: Metadata = {
@@ -29,7 +32,9 @@ export default async function StudioDealsPage({ searchParams }: Params) {
   const { view } = found;
   const { store } = view;
   const [fields, stages] = await Promise.all([readFields(store.statsId), readStages(store.statsId)]);
-  const deals = await readDeals(store.statsId, stages);
+  const [deals, team] = await Promise.all([readDeals(store.statsId, stages), readTeam(store.sid)]);
+  const assignees = [store.email, ...team.members.filter(m => can(m.role, "orders")).map(m => m.email)];
+  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -52,7 +57,7 @@ export default async function StudioDealsPage({ searchParams }: Params) {
             .
           </p>
           <div className="mt-8">
-            <DealsBoard deals={deals} stages={stages} fields={fields} currency={store.currency} />
+            <DealsBoard key={(store.sid || store.handle) + ":" + dealActionFilter(query.followup)} deals={deals} stages={stages} fields={fields} currency={store.currency} assignees={assignees} today={today} initialFilter={dealActionFilter(query.followup)} />
           </div>
         </main>
       </StudioStorePin>

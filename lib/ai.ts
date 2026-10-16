@@ -13,6 +13,7 @@
  *   nl:ai:<statsId>:<YYYY-MM>   writing jobs a store asked for this month
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { confirmedAiReservation } from "@/lib/ai-quota";
 import { timed } from "@/lib/fetch-timeout";
 import { inTrial } from "@/lib/mail";
 import type { Store } from "@/lib/store";
@@ -234,12 +235,17 @@ const block = (value: unknown, max: number) =>
  */
 export async function counted<T>(store: Store, now: number, run: () => Promise<T | null>, jobs = 1): Promise<AiResult<T>> {
   if (!isAiConfigured() || !store.statsId || !isRedisConfigured()) return { ok: false, reason: "off" };
-  const key = monthKey(store, new Date(now));
-  const [used] = await redisPipeline([
-    ["INCRBY", key, jobs],
-    ["EXPIRE", key, 40 * 86_400],
-  ]);
+  if (!Number.isSafeInteger(jobs) || jobs < 1 || !Number.isFinite(now) || !Number.isFinite(new Date(now).getTime())) return { ok: false, reason: "notes" };
   const allowance = aiAllowance(store, now);
+  if (jobs > allowance) return { ok: false, reason: "used" };
+  const key = monthKey(store, new Date(now));
+  let used: number;
+  try {
+    const reply = await redisPipeline([["INCRBY", key, jobs], ["EXPIRE", key, 40 * 86_400]]);
+    const reservation = confirmedAiReservation(reply, [jobs]);
+    if (!reservation) return { ok: false, reason: "failed" };
+    used = reservation[0];
+  } catch { return { ok: false, reason: "failed" }; }
   if (Number(used) > allowance) {
     await redisPipeline([["DECRBY", key, jobs]]).catch(() => {});
     return { ok: false, reason: "used" };

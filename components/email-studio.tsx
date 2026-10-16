@@ -2,23 +2,33 @@
 
 import { AiAssist, AiOn } from "@/components/ai-assist";
 import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
-import { DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
+import { appendSequenceDraft, sequenceDraftSlots, DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useLeaveGuard } from "@/components/leave-guard";
+import { isAiEmailCopy, isAiSequenceDraft } from "@/lib/ai-response";
+import { confirmedRecipientCount, confirmedDraftId, draftRemovalAnswer, confirmedMailCopy, keptWaitHours, mailAnswer, type MailAnswer } from "@/lib/mail-response";
 import { toast } from "@/components/toast";
 import { MailAccent, MailBodyEditor } from "@/components/mail-designer";
+import { flowConfigurationIssues } from "@/lib/flow-review";
 import type { Flow, FlowCounts, FlowStep } from "@/lib/flows";
-import { type FlowAction, MAX_CONDITION_TAG, type StepCondition, type StepIf, isCourseIf } from "@/lib/flow-rules";
+import { flowWaitHours, type FlowAction, MAX_CONDITION_TAG, type StepCondition, type StepIf, isCourseIf } from "@/lib/flow-rules";
 import type { MailSettings } from "@/lib/store";
 import { StoreField } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { formatMoney } from "@/lib/money";
 import { MIN_TEST_REACH, TEST_HOURS, TEST_SHARES, type SubjectTest, type TestBy } from "@/lib/mail-test";
-import { type Currency, plainAmount, readMoney } from "@/lib/money";
+import { type Currency, plainAmount } from "@/lib/money";
+import { mailAudienceWords, type MailAudienceSelection } from "@/lib/mail-audience-summary";
+import { campaignHistoryView, HISTORY_STATUSES, type HistoryStatus } from "@/lib/broadcast-history-view";
+import { broadcastAnswer, cancellationAnswer } from "@/lib/broadcast-response";
+import type { DraftSubjectTest } from "@/lib/mail-draft-test";
+import { subjectTestPreview, type SubjectTestPreview } from "@/lib/mail-test-preview";
+import { readMailSchedule } from "@/lib/mail-schedule";
 import { channelName } from "@/lib/channel-names";
-import { type Narrow, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
+import { type Narrow, MAX_SPENT, readSegmentSpend, QUIET_DAYS, type Segment } from "@/lib/segments-rules";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -31,6 +41,8 @@ const MESSAGES: Record<string, string> = {
   body: "Write the email itself.",
   placeholder: "Part of the template is still in ⟦brackets⟧. Replace each with your own words, or remove it, before it can go out.",
   when: "Pick a time between now and a year from now.",
+  broadcast_cancel_unconfirmed: "The cancellation could not be confirmed. The campaign may still go out. Reload Sent and scheduled to check its current status.",
+  broadcast_write_unconfirmed: "The campaign could not be confirmed. Your text is still here. It may already have been created; check Sent and scheduled before trying again.",
   product: "That product is not in your store anymore.",
   empty: "Nobody on your list matches, so there is nobody to send it to yet.",
   test_subject: "Write a second subject line that is different from the first, or uncheck the test.",
@@ -52,9 +64,18 @@ const MESSAGES: Record<string, string> = {
   send: "The email service did not take it just now. Nothing was sent; try again in a moment.",
   signed_out: "Your session ended. Log in again.",
   unavailable: "Email is not switched on yet, so nothing was sent.",
+  draft_remove_conflict: "A newer version of this draft was saved. It was not deleted. Reload saved drafts and review the latest version before deleting it.",
+  draft_conflict: "A newer version of this draft was saved. Your text is still here. Keep a copy of it, then reload saved drafts and open the latest version before saving again.",
+  draft_busy: "This draft is being changed. Your text is still here. Try saving again shortly.",
+  draft_test: "The subject test settings could not be saved. Review the second subject, share, wait and selection criterion.",
+  audience: "The audience filters could not be saved. Review the recipient choices and try again.",
   full: "A store keeps 20 drafts at most. Send or delete one first.",
   list: "This store has no list yet, so there is nowhere to keep a draft.",
   role: "Your role on this store does not include this.",
+  draft_remove_unconfirmed: "The draft removal could not be confirmed. Reload your saved drafts to check whether it was removed before trying again.",
+  draft_read_unavailable: "Your saved drafts could not be checked before saving. Your text is still here. Try saving again in a moment.",
+  draft_write_unconfirmed: "The draft save could not be confirmed. Your text is still here. Check your saved drafts before saving again; the draft may already exist.",
+  flow_write_unconfirmed: "The sequence change could not be confirmed. Reload the saved sequences and check the result before trying again. The change may already have happened.",
   starters_nothing: "Your store already has a sequence for each of those moments. They are under Sequences.",
   keep_unsent: "Only an email that has finished going out can be kept sending.",
   keep_excludes:
@@ -73,18 +94,27 @@ const MESSAGES: Record<string, string> = {
   server_error: "Something went wrong on our side. Try again in a moment.",
 };
 
-type Answer = Record<string, unknown> & { ok?: boolean; error?: string };
+type Answer = MailAnswer;
 
 async function call(payload: Record<string, unknown>): Promise<Answer> {
+  const sequenceWrite = ["keep", "flow", "flow-remove", "starters"].includes(String(payload.action));
+  const draftWrite = payload.action === "draft-save";
   try {
     const response = await fetch("/api/store/mail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return (await response.json().catch(() => ({ ok: false, error: "server_error" }))) as Answer;
+    const raw = await response.json().catch(() => null);
+    if (payload.action === "broadcast") return broadcastAnswer(response.ok, raw, payload);
+    if (payload.action === "cancel") return cancellationAnswer(response.ok, raw, payload.id);
+    if (payload.action === "draft-remove") return draftRemovalAnswer(response.ok, raw, payload.id, payload.expectedSavedAt);
+    return mailAnswer(response.ok, raw, sequenceWrite, draftWrite);
   } catch {
-    return { ok: false, error: "server_error" };
+    if (payload.action === "broadcast") return broadcastAnswer(false, null, payload);
+    if (payload.action === "cancel") return cancellationAnswer(false, null, payload.id);
+    if (payload.action === "draft-remove") return draftRemovalAnswer(false, null, payload.id, payload.expectedSavedAt);
+    return mailAnswer(false, null, sequenceWrite, draftWrite);
   }
 }
 
@@ -117,7 +147,7 @@ type BroadcastRow = {
   test: SubjectTest | null;
 };
 type Money = { sales: number; cents: number };
-type FlowRow = Flow & { stats: FlowCounts; money: Money | null };
+type FlowRow = Flow & { stats: FlowCounts; statsAvailable?: boolean; money: Money | null };
 
 /** "3 sales · $117.00 from its links in the last 90 days", in the store's own currency. */
 function soldWords(money: Money, currency: string): string {
@@ -165,6 +195,35 @@ function narrowWords(narrow: Narrow, currency: string): string {
   return `Only those who ${parts.join(", ")}.`;
 }
 
+/** Shared wording keeps saved drafts, history and the final review consistent. */
+function AudienceSummary({ audience, products, currency }: {
+  audience: MailAudienceSelection & { narrow?: Narrow | null };
+  products: readonly { id: string; title: string }[];
+  currency: string;
+}) {
+  const narrow = audience.narrow;
+  const narrowed = narrow && Boolean(narrow.minSpent || narrow.channel || narrow.quietDays);
+  return <div className="mt-1 break-words text-sm text-ink-soft">
+    <p><span className="font-semibold">Audience criteria: </span>{mailAudienceWords(audience, products)}</p>
+    {narrowed ? <p className="mt-1">{narrowWords(narrow, currency)}</p> : null}
+  </div>;
+}
+
+/** A preview describes allocation, never a forecast or a statistically proven winner. */
+function SubjectTestReview({ preview }: { preview: SubjectTestPreview | null }) {
+  if (!preview || preview.state !== "ready") return null;
+  return <div className="mt-3 space-y-2 break-words text-sm text-ink-soft">
+    <p className="font-semibold text-ink">Subject test estimate for the currently confirmed audience</p>
+    <dl className="space-y-1">
+      <div><dt className="font-semibold">First subject (A) · {n(preview.a)} people</dt><dd>{preview.subjectA}</dd></div>
+      <div><dt className="font-semibold">Second subject (B) · {n(preview.b)} people</dt><dd>{preview.subjectB}</dd></div>
+    </dl>
+    <p>{n(preview.rest)} people wait for the selected subject. The {hoursWords(preview.hours)} comparison window starts after the test emails finish going out.</p>
+    <p>{preview.by === "sales" ? "Sales per email decide; visits decide if sales are tied or unavailable." : "Visits to the store per email decide."} If the available counts do not distinguish the subjects, the first subject is used. This does not establish statistical significance.</p>
+    <p>The audience is checked again when sending starts, so these numbers can change. If fewer than {n(MIN_TEST_REACH)} people remain, the first subject is used without a test.</p>
+  </div>;
+}
+
 function keepable(b: Pick<BroadcastRow, "who" | "productId" | "notProductId" | "narrow">): boolean {
   // Chosen by spending, a channel or quiet days: a sequence cannot choose that way (lib/mail-reuse.ts).
   if (b.narrow) return false;
@@ -176,6 +235,7 @@ function hoursWords(hours: number): string {
   return hours === 24 ? "a day" : `${hours} hours`;
 }
 export type DraftRow = {
+  subjectTest?: DraftSubjectTest | null;
   id: string;
   subject: string;
   body: string;
@@ -184,6 +244,8 @@ export type DraftRow = {
   savedAt: string;
   /** Set when a sent email is written again, so it starts addressed to the same people. */
   who?: Who;
+  notProductId?: string | null;
+  narrow?: Narrow | null;
 };
 type Who = "all" | "buyers" | "leads";
 
@@ -222,6 +284,7 @@ export function EmailStudio(props: {
   trial: boolean;
   products: { id: string; title: string }[];
   broadcasts: BroadcastRow[];
+  broadcastsReadFailed?: boolean;
   /** The store's currency, for what each email sold. */
   currency: string;
   /** The plan above this one, when the store is on Pro and this person may change its plan. */
@@ -229,7 +292,9 @@ export function EmailStudio(props: {
   /** Whether anything on the store is sold for money. */
   sells: boolean;
   flows: FlowRow[];
+  flowsReadFailed?: boolean;
   drafts: DraftRow[];
+  draftsReadFailed?: boolean;
   canSend: boolean;
   canSettings: boolean;
   canExport: boolean;
@@ -241,6 +306,8 @@ export function EmailStudio(props: {
   segments?: Segment[];
   /** The products that are courses (lib/catalog.ts, "course"). */
   courses?: string[];
+  /** Paid products in the selected store catalog, for sequence ending checks. */
+  paidProducts?: string[];
   /** The store's forms that ask for an address, its own fields and its deal stages, for the sequences (lib/flows.ts). */
   automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
   /** Who a new email goes to, when opened from "Worth knowing" (lib/insights.ts). */
@@ -249,34 +316,59 @@ export function EmailStudio(props: {
   accent?: string;
 }) {
   const ready = props.mail !== null;
+  const [broadcastUnconfirmed, setBroadcastUnconfirmed] = useState(false);
+  const [draftCleanupUnconfirmed, setDraftCleanupUnconfirmed] = useState(false);
   // The draft open in the composer; a new key starts the composer afresh.
   const [open, setOpen] = useState<DraftRow | null>(null);
+  const [composeRevision, setComposeRevision] = useState(0);
+  const composerState = useRef<{ dirty: boolean; busy: boolean } | null>(null);
+  const openDraft = (draft: DraftRow | null) => {
+    if (draft && open?.id === draft.id && open.savedAt === draft.savedAt) return;
+    if (composerState.current?.busy) {
+      toast("Wait for the current email operation to finish before opening another email.");
+      return;
+    }
+    if (composerState.current?.dirty && !window.confirm("You have email changes that are not saved. Discard them and open another email?")) return;
+    setOpen(draft);
+    setComposeRevision((value) => value + 1);
+  };
+  const [uncertainList, setUncertainList] = useState<FlowRow[] | null>(null);
+  const writeUnconfirmed = uncertainList === props.flows;
+  const onWriteUnconfirmed = () => setUncertainList(props.flows);
   return (
     <MailAccent.Provider value={props.accent ?? "#4c1d95"}>
     <div className="mt-8 grid items-start gap-x-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
       <div className="min-w-0">
         {ready ? (
           <>
+            {draftCleanupUnconfirmed ? <p role="status" className="mb-4 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink-soft">Your campaign was created, but clearing its saved draft could not be confirmed. Check Sent and scheduled before sending that draft again.</p> : null}
             <AiOn value={props.ai ?? { on: false, left: 0 }}>
               <Compose
-                key={open ? `${open.id}-${open.savedAt}` : "new"}
+                key={`${composeRevision}-${open ? `${open.id}-${open.savedAt}` : "new"}`}
                 email={props.email}
                 products={props.products}
                 links={props.links ?? {}}
                 counts={props.counts}
                 canSend={props.canSend}
+                broadcastUnconfirmed={broadcastUnconfirmed}
+                onBroadcastUnconfirmed={() => setBroadcastUnconfirmed(true)}
+                onDraftCleanupUnconfirmed={() => setDraftCleanupUnconfirmed(true)}
                 draft={open}
-                onDone={() => setOpen(null)}
+                onDone={() => { setOpen(null); setComposeRevision((value) => value + 1); }}
+                onStartNew={() => openDraft(null)}
+                composerState={composerState}
+                savedDrafts={props.drafts}
+                draftsReadFailed={props.draftsReadFailed ?? false}
                 currency={props.currency}
                 segments={props.segments ?? []}
                 preset={open ? undefined : props.preset}
               />
             </AiOn>
-            <Drafts drafts={props.drafts} products={props.products} open={open} onOpen={setOpen} />
-            <History broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={setOpen} currency={props.currency} />
+            <Drafts currency={props.currency} readFailed={props.draftsReadFailed ?? false} drafts={props.drafts} products={props.products} open={open} onOpen={openDraft} />
+            <History readFailed={props.broadcastsReadFailed ?? false} writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={openDraft} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
-                <Flows flows={props.flows} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} automation={props.automation} />
+                <Flows writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flows={props.flows} readFailed={props.flowsReadFailed ?? false} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} />
               </AiOn>
             ) : null}
           </>
@@ -454,6 +546,9 @@ function ListCard({
 }
 
 function Compose(props: {
+  broadcastUnconfirmed: boolean;
+  onBroadcastUnconfirmed: () => void;
+  onDraftCleanupUnconfirmed: () => void;
   email: string;
   products: { id: string; title: string }[];
   links: Record<string, string>;
@@ -462,54 +557,91 @@ function Compose(props: {
   /** A draft opened into the composer, or null for a new email. */
   draft: DraftRow | null;
   onDone: () => void;
+  onStartNew: () => void;
+  composerState: { current: { dirty: boolean; busy: boolean } | null };
+  savedDrafts: DraftRow[];
+  draftsReadFailed: boolean;
   currency: string;
   segments: Segment[];
   preset?: { who: Who };
 }) {
   const router = useRouter();
+  const [refreshingDrafts, startDraftRefresh] = useTransition();
+  const [uncertainDrafts, setUncertainDrafts] = useState<DraftRow[] | null>(null);
+  const draftSaveBlocked = uncertainDrafts !== null && (uncertainDrafts === props.savedDrafts || props.draftsReadFailed);
   const [subject, setSubject] = useState(props.draft?.subject ?? "");
   const [body, setBody] = useState(props.draft?.body ?? "");
   // The email's box, so a picture goes where the cursor is.
   const bodyBox = useRef<HTMLTextAreaElement>(null);
   const [productId, setProductId] = useState(props.draft?.productId ?? "");
-  const [notProductId, setNotProductId] = useState("");
+  const [notProductId, setNotProductId] = useState(props.draft?.notProductId ?? "");
   // Everybody, only people who have bought something, or only those who have not yet.
   const [who, setWho] = useState<Who>(props.draft?.who ?? props.preset?.who ?? "all");
   const [draftId, setDraftId] = useState(props.draft?.id ?? "");
+  const [draftSavedAt, setDraftSavedAt] = useState(props.draft?.savedAt ?? "");
   const [later, setLater] = useState(false);
   const [at, setAt] = useState("");
+  const [scheduleNow, setScheduleNow] = useState(() => Date.now());
+  const scheduledAt = later ? readMailSchedule(at, scheduleNow) : null;
+  const invalidSchedule = later && scheduledAt === null;
+  useEffect(() => {
+    if (!later) return;
+    const tick = () => setScheduleNow(Date.now());
+    const timer = window.setInterval(tick, 30_000);
+    window.addEventListener("focus", tick);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", tick); };
+  }, [later]);
   // A second subject line tried on part of the list (lib/mail-test.ts).
-  const [testing, setTesting] = useState(false);
-  const [subjectB, setSubjectB] = useState("");
-  const [share, setShare] = useState<number>(TEST_SHARES[0]);
-  const [hours, setHours] = useState<number>(TEST_HOURS[1]);
-  const [by, setBy] = useState<TestBy>("visits");
-  const [reach, setReach] = useState<number>(props.counts.mailable);
+  const [testing, setTesting] = useState(Boolean(props.draft?.subjectTest));
+  const [subjectB, setSubjectB] = useState(props.draft?.subjectTest?.subjectB ?? "");
+  const [share, setShare] = useState<number>(props.draft?.subjectTest?.share ?? TEST_SHARES[0]);
+  const [hours, setHours] = useState<number>(props.draft?.subjectTest?.hours ?? TEST_HOURS[1]);
+  const [by, setBy] = useState<TestBy>(props.draft?.subjectTest?.by ?? "visits");
+  const [countRevision, setCountRevision] = useState(0);
+  const [reachResult, setReachResult] = useState<{ key: string; count: number | null } | null>(null);
   // Spent at least, first found the store through, has not bought in these
   // days (lib/segments.ts), and the groups saved under a name.
-  const [spentText, setSpentText] = useState("");
-  const [channel, setChannel] = useState("");
-  const [quietDays, setQuietDays] = useState(0);
-  const [more, setMore] = useState(false);
+  const [spentText, setSpentText] = useState(props.draft?.narrow?.minSpent ? plainAmount(props.draft.narrow.minSpent, props.currency) : "");
+  const [channel, setChannel] = useState(props.draft?.narrow?.channel ?? "");
+  const [quietDays, setQuietDays] = useState(props.draft?.narrow?.quietDays ?? 0);
+  const [more, setMore] = useState(Boolean(props.draft?.narrow && (props.draft.narrow.minSpent || props.draft.narrow.channel || props.draft.narrow.quietDays)));
   const [channels, setChannels] = useState<string[] | null>(null);
   const [partial, setPartial] = useState(false);
   const [segments, setSegments] = useState<Segment[]>(props.segments);
   const [groupName, setGroupName] = useState("");
-  const minSpent = spentText.trim() ? readMoney(spentText, props.currency as Currency) ?? 0 : 0;
+  const parsedSpent = readSegmentSpend(spentText, props.currency as Currency);
+  const invalidSpent = parsedSpent === null;
+  const minSpent = parsedSpent ?? 0;
   const narrow: Narrow = { minSpent, channel, quietDays };
+  const countKey = JSON.stringify([productId, notProductId, who, minSpent, channel, quietDays, more, countRevision, invalidSpent]);
+  const reach = !invalidSpent && reachResult?.key === countKey ? reachResult.count : null;
+  const testPreview = testing ? subjectTestPreview(subject, { subjectB, share, hours, by }, reach) : null;
+  const invalidTest = testing && testPreview?.state !== "ready";
+  const reachPending = !invalidSpent && reachResult?.key !== countKey;
   const [busy, setBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const locked = busy || aiBusy || refreshingDrafts;
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // What the writing help is asked to write, and about which product.
   const [goal, setGoal] = useState<EmailGoal>("announce");
   const [about, setAbout] = useState("");
+  const draftSubjectTest: DraftSubjectTest | null = testing ? { subjectB, share, hours, by } : null;
+  const content = JSON.stringify([subject, body, productId, who, notProductId, spentText, channel, quietDays, draftSubjectTest]);
+  const [savedContent, setSavedContent] = useState(content);
+  const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || later || at !== "";
+  useLeaveGuard(dirty || aiBusy);
+  useImperativeHandle(props.composerState, () => ({ dirty, busy: locked }), [dirty, locked]);
 
   useEffect(() => {
+    if (invalidSpent) return;
     let live = true;
     call({ action: "count", productId, notProductId, who, narrow: { minSpent, channel, quietDays }, channels: more && channels === null }).then((a) => {
       if (!live) return;
-      if (a.ok) {
-        setReach(Number(a.count) || 0);
+      const count = confirmedRecipientCount(a);
+      setReachResult({ key: countKey, count });
+      setConfirming(false);
+      if (count !== null) {
         if (Array.isArray(a.channels)) setChannels(a.channels.filter((c): c is string => typeof c === "string"));
         if (typeof a.partial === "boolean") setPartial(a.partial);
       } else if (a.error === "stripe") setError(message(a));
@@ -519,9 +651,10 @@ function Compose(props: {
     };
     // `channels` is asked for once, when the choices are first opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId, notProductId, who, minSpent, channel, quietDays, more]);
+  }, [productId, notProductId, who, minSpent, channel, quietDays, more, countRevision, invalidSpent]);
 
   async function group(payload: Record<string, unknown>, done: string) {
+    if (locked || (payload.action === "segment-save" && invalidSpent)) return;
     setBusy(true);
     setError(null);
     const a = await call(payload);
@@ -546,30 +679,54 @@ function Compose(props: {
   }
 
   async function send(payload: Record<string, unknown>, success: string) {
+    if (locked || (payload.action === "broadcast" && (props.broadcastUnconfirmed || reach === null || reach === 0 || invalidTest))) return false;
+    if (payload.action === "broadcast" && later) {
+      const sendAt = readMailSchedule(at, Date.now());
+      if (sendAt === null) {
+        setError(MESSAGES.when);
+        setConfirming(false);
+        setScheduleNow(Date.now());
+        return false;
+      }
+      payload = { ...payload, sendAt };
+    }
     setBusy(true);
     setError(null);
     const a = await call(payload);
     setBusy(false);
     setConfirming(false);
     if (!a.ok) {
+      if (payload.action === "broadcast" && a.error === "broadcast_write_unconfirmed") props.onBroadcastUnconfirmed();
       setError(message(a));
       return false;
     }
+    if (payload.action === "broadcast" && a.draftCleanupConfirmed === false) props.onDraftCleanupUnconfirmed();
     toast(success);
     return true;
   }
 
   async function keep() {
+    if (locked || draftSaveBlocked || invalidSpent) return;
     setBusy(true);
     setError(null);
-    const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId });
+    const audience = { who, notProductId: notProductId || null, narrow: minSpent || channel || quietDays ? narrow : null };
+    const a = await call({ action: "draft-save", id: draftId || undefined, subject, body, productId, audience, subjectTest: draftSubjectTest, expectedSavedAt: draftId ? draftSavedAt : undefined });
     setBusy(false);
     if (!a.ok) {
+      if (a.error === "draft_write_unconfirmed") setUncertainDrafts(props.savedDrafts);
       setError(message(a));
       return;
     }
-    const saved = a.draft as DraftRow | undefined;
-    if (saved) setDraftId(saved.id);
+    const savedId = confirmedDraftId(a, draftId, audience, { subject, body, productId }, draftSubjectTest);
+    if (!savedId) {
+      setUncertainDrafts(props.savedDrafts);
+      setError("The draft save could not be confirmed. Your text is still here. Check your saved drafts before saving again; the draft may already exist.");
+      return;
+    }
+    setUncertainDrafts(null);
+    setDraftId(savedId);
+    setDraftSavedAt((a.draft as { savedAt: string }).savedAt);
+    setSavedContent(content);
     toast("Draft saved.");
     router.refresh();
   }
@@ -581,14 +738,17 @@ function Compose(props: {
           {draftId ? "Draft" : "New email"}
         </h2>
         {draftId ? (
-          <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" onClick={props.onDone}>
+          <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" disabled={locked} onClick={props.onStartNew}>
             Start a new one instead
           </button>
         ) : null}
       </div>
-      <div className="mt-4 space-y-4">
+      {locked ? <p role="status" className="mt-3 text-sm text-ink-soft">Working on your email. Editing is paused until this finishes.</p> : null}
+      <fieldset className="mt-4 min-w-0 space-y-4" disabled={locked} aria-label="Email composition" aria-busy={locked}>
         <AiAssist<{ subject: string; body: string }>
           title="Write a draft with AI"
+          onBusyChange={setAiBusy}
+          validateResult={isAiEmailCopy}
           hint="Pick what the email is for, and say in a few words what you want it to say. The subject and the email below are filled in for you to read and change."
           placeholder="The recipe pack is out: 40 weeknight dinners, $27, and the first 10 pages are free to read on the page."
           extra={
@@ -650,7 +810,8 @@ function Compose(props: {
               <div className="mt-3 space-y-4 rounded-[var(--r-md)] bg-sand p-4">
                 <label className="block">
                   <span className="field-label">Second subject</span>
-                  <input className="field mt-2" maxLength={150} value={subjectB} onChange={(e) => setSubjectB(e.target.value)} />
+                  <input className="field mt-2" maxLength={150} value={subjectB} aria-invalid={testPreview?.state === "subject" || undefined} aria-describedby="subject-test-hint" onChange={(e) => setSubjectB(e.target.value)} />
+                  <span id="subject-test-hint" className="field-hint mt-1 block">{testPreview?.state === "subject" ? "Write two nonempty subjects that remain different after spaces and capitalization are normalized." : "The second subject must differ from the first."}</span>
                 </label>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <label className="block">
@@ -683,7 +844,8 @@ function Compose(props: {
                 <p className="text-sm text-ink-soft">
                   {`It needs at least ${MIN_TEST_REACH} people and a link to your store in the email. Emails here carry no tracking pixel, so opens are not counted, and a small difference on a small list is mostly chance.`}
                 </p>
-                {reach < MIN_TEST_REACH ? (
+                <SubjectTestReview preview={testPreview} />
+                {reach !== null && reach < MIN_TEST_REACH ? (
                   <p className="notice notice-error" role="status">
                     {`This goes to ${n(reach)} ${reach === 1 ? "person" : "people"}, which is too few to compare two subjects. Uncheck the box, or choose a bigger group.`}
                   </p>
@@ -788,22 +950,24 @@ function Compose(props: {
                 inputMode="decimal"
                 placeholder={`For example: ${plainAmount(10000, props.currency)}`}
                 value={spentText}
+                aria-invalid={invalidSpent || undefined}
+                aria-describedby="recipient-spend-hint"
                 onChange={(e) => setSpentText(e.target.value)}
               />
-              <span className="field-hint mt-1 block">
-                {spentText.trim() && !minSpent ? "Type an amount without a currency sign, like 100 or 99.50." : `In ${props.currency.toUpperCase()}, everything they paid you, extras included. Empty for any amount.`}
+              <span id="recipient-spend-hint" className="field-hint mt-1 block">
+                {invalidSpent ? `Enter an amount from 0 to ${plainAmount(MAX_SPENT, props.currency)} without a currency sign.` : `In ${props.currency.toUpperCase()}, everything they paid you, extras included. Empty for any amount. Zero sets no minimum.`}
               </span>
             </label>
             <label className="block">
               <span className="field-label">First found you through</span>
               <select className="field mt-2" value={channel} onChange={(e) => setChannel(e.target.value)}>
                 <option value="">Anywhere</option>
-                {(channels ?? (channel ? [channel] : [])).map((c) => (
+                {[...new Set([...(channels ?? []), ...(channel ? [channel] : [])])].map((c) => (
                   <option key={c} value={c}>{channelName(c)}</option>
                 ))}
               </select>
               <span className="field-hint mt-1 block">
-                {channels === null ? "Reading where your buyers came from…" : channels.length ? "Where they were when they first bought." : "Nobody has bought yet, so there is no channel to choose."}
+                {channels === null ? "Reading where your buyers came from…" : channel && !channels.includes(channel) ? "The original channel is kept even though it is not in the current list. Keep it or choose another." : channels.length ? "Where they were when they first bought." : "Nobody has bought yet, so there is no channel to choose."}
               </span>
             </label>
             <label className="block">
@@ -822,7 +986,8 @@ function Compose(props: {
             </p>
           </div>
         </details>
-        <p className="text-sm font-semibold text-ink" role="status">{`${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
+        <p className="text-sm font-semibold text-ink" role="status">{invalidSpent ? "Correct the spending amount before checking recipients." : reach === null ? (reachPending ? "Checking recipients…" : "The recipient count is unavailable. Check it again before sending or scheduling.") : `${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
+        {reach === null && !invalidSpent ? <button type="button" className="btn btn-secondary btn-sm" disabled={locked || reachPending} aria-busy={reachPending} onClick={() => setCountRevision(value => value + 1)}>{reachPending ? "Checking recipients…" : "Check recipients again"}</button> : null}
         <div className="flex flex-wrap items-end gap-2">
           <label className="min-w-0 flex-1">
             <span className="field-label">Save who this goes to as a group</span>
@@ -831,7 +996,7 @@ function Compose(props: {
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            disabled={busy || !groupName.trim()}
+            disabled={busy || invalidSpent || !groupName.trim()}
             onClick={() => void group({ action: "segment-save", name: groupName, who, productId, notProductId, narrow }, "Group saved.")}
           >
             Save group
@@ -855,19 +1020,31 @@ function Compose(props: {
           <legend className="field-label">When</legend>
           <div className="mt-2 flex flex-wrap gap-4 text-sm">
             <label className="flex items-center gap-2">
-              <input type="radio" name="when" checked={!later} onChange={() => setLater(false)} /> Now
+              <input type="radio" name="when" checked={!later} onChange={() => { setLater(false); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} /> Now
             </label>
             <label className="flex items-center gap-2">
-              <input type="radio" name="when" checked={later} onChange={() => setLater(true)} /> At a time I choose
+              <input type="radio" name="when" checked={later} onChange={() => { setLater(true); setScheduleNow(Date.now()); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} /> At a time I choose
             </label>
           </div>
           {later ? (
             <label className="mt-3 block">
               <span className="sr-only">Date and time, in your own time zone</span>
-              <input type="datetime-local" className="field" value={at} onChange={(e) => setAt(e.target.value)} />
+              <input type="datetime-local" className="field" value={at} aria-invalid={at !== "" && invalidSchedule || undefined} aria-describedby="mail-schedule-hint" onChange={(e) => { setAt(e.target.value); setScheduleNow(Date.now()); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} />
+              <span id="mail-schedule-hint" className="field-hint mt-1 block">{at !== "" && invalidSchedule ? "Choose a future date and time, within the next 365 days." : "In your device’s time zone. Choose a future time within the next 365 days; it is checked again before scheduling."}</span>
             </label>
           ) : null}
         </fieldset>
+        ) : null}
+        {confirming && reach !== null ? (
+          <div id="mail-send-review" role="status" className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
+            <p>Review <strong>{subject.trim() || "this email"}</strong> for {n(reach)} {reach === 1 ? "person" : "people"}.{" "}
+            {later ? scheduledAt === null ? "Choose a valid future time before confirming." : (
+              <>Scheduled for <time dateTime={new Date(scheduledAt).toISOString()} className="font-semibold">{new Date(scheduledAt).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</time> ({Intl.DateTimeFormat().resolvedOptions().timeZone}).</>
+            ) : "Sending starts after you confirm."}</p>
+            <AudienceSummary audience={{ who, productId: productId || null, notProductId, narrow }} products={props.products} currency={props.currency} />
+            <SubjectTestReview preview={testPreview} />
+            <p className="mt-2">Eligibility is checked again when sending starts.</p>
+          </div>
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -881,20 +1058,21 @@ function Compose(props: {
           <button
             type="button"
             aria-busy={busy}
-            disabled={busy || !subject.trim() || !body.trim()}
+            disabled={busy || draftSaveBlocked || invalidSpent || !subject.trim() || !body.trim()}
             className="btn btn-secondary"
             onClick={() => void keep()}
           >
             {draftId ? "Save the draft" : "Save as a draft"}
           </button>
-          {!props.canSend ? null : confirming ? (
+          {!props.canSend ? null : confirming && reach !== null ? (
             <>
               <button
                 type="button"
-                aria-busy={busy} disabled={busy}
+                aria-busy={busy} disabled={busy || props.broadcastUnconfirmed || invalidSchedule || invalidTest || !subject.trim() || !body.trim()}
+                aria-describedby="mail-send-review"
                 className="btn btn-primary"
                 onClick={async () => {
-                  const sendAt = later && at ? new Date(at).getTime() : undefined;
+                  const sendAt = later ? scheduledAt ?? undefined : undefined;
                   const ok = await send(
                     {
                       action: "broadcast",
@@ -906,6 +1084,7 @@ function Compose(props: {
                       narrow,
                       sendAt,
                       draftId: draftId || undefined,
+                      draftSavedAt: draftId ? draftSavedAt : undefined,
                       test: testing ? { subjectB, share, hours, by } : undefined,
                     },
                     later ? "Your email is scheduled." : "Your email is on its way.",
@@ -930,9 +1109,13 @@ function Compose(props: {
           ) : (
             <button
               type="button"
-              disabled={busy || !subject.trim() || !body.trim() || reach === 0 || (later && !at) || (testing && (!subjectB.trim() || reach < MIN_TEST_REACH))}
+              disabled={busy || props.broadcastUnconfirmed || !subject.trim() || !body.trim() || reach === null || reach === 0 || invalidSchedule || invalidTest}
               className="btn btn-primary"
-              onClick={() => setConfirming(true)}
+              onClick={() => {
+                if (props.broadcastUnconfirmed || invalidTest) return;
+                if (later && readMailSchedule(at, Date.now()) === null) { setScheduleNow(Date.now()); setError(MESSAGES.when); return; }
+                setConfirming(true);
+              }}
             >
               {later ? "Schedule" : "Send"}
             </button>
@@ -944,45 +1127,72 @@ function Compose(props: {
             schedule it from this page.
           </p>
         )}
+        {props.broadcastUnconfirmed ? <p role="status" className="text-sm text-ink-soft">Sending and scheduling are paused on this page because the last campaign could not be confirmed. Save your text as a draft, then reload this page and check Sent and scheduled before trying again; the campaign may already exist.</p> : null}
         <Feedback error={error} done={null} />
-      </div>
+      </fieldset>
+      {uncertainDrafts !== null ? <div className="mt-4 space-y-3">
+        <p role="status" className="text-sm text-ink-soft">{draftSaveBlocked ? "Reload saved drafts and check whether this email was saved before saving again. Your current text stays here." : "The saved drafts list was refreshed. Review it before saving again; an earlier save may already be there."}</p>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={locked} aria-busy={refreshingDrafts} onClick={() => startDraftRefresh(() => router.refresh())}>{refreshingDrafts ? "Reloading drafts…" : "Reload saved drafts"}</button>
+      </div> : null}
     </section>
   );
 }
 
 /** The store's drafts: open one into the composer, or throw it away. */
 function Drafts({
+  currency,
+  readFailed,
   drafts,
   products,
   open,
   onOpen,
 }: {
+  currency: string;
   drafts: DraftRow[];
+  readFailed: boolean;
   products: { id: string; title: string }[];
   open: DraftRow | null;
   onOpen: (draft: DraftRow | null) => void;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [refreshing, startRefresh] = useTransition();
+  const locked = busy !== null || refreshing;
+  const [error, setError] = useState<string | null>(null);
+  if (readFailed) return (
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="drafts-title">
+      <h2 id="drafts-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Drafts</h2>
+      <p role="status" className="mt-3 text-sm text-ink-soft">Saved drafts are unavailable. Reload to check them before opening or deleting a draft. Your current email stays in the composer.</p>
+      <button type="button" className="btn btn-secondary mt-3" disabled={locked} aria-busy={refreshing} onClick={() => startRefresh(() => router.refresh())}>
+        {refreshing ? "Reloading drafts…" : "Reload saved drafts"}
+      </button>
+    </section>
+  );
   if (!drafts.length) return null;
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="drafts-title">
       <h2 id="drafts-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Drafts</h2>
+      <button type="button" className="btn btn-secondary mt-3" disabled={locked} aria-busy={refreshing} onClick={() => startRefresh(() => router.refresh())}>
+        {refreshing ? "Reloading drafts…" : "Reload saved drafts"}
+      </button>
       <ul className="mt-4 divide-y divide-line">
         {drafts.map((d) => (
           <li key={d.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
-            <span className="min-w-0">
+            <div className="min-w-0">
               <span className="block break-words font-semibold text-ink">{d.subject}</span>
               <span className="block text-sm text-ink-soft">
-                {`${d.productId ? `To those who got ${products.find((p) => p.id === d.productId)?.title ?? "a product"}` : "To everyone you can write to"} · saved by ${d.by || "someone"}, `}
+                {`Saved by ${d.by || "someone"}, `}
                 <When seconds={Math.floor(new Date(d.savedAt).getTime() / 1000)} />
               </span>
-            </span>
+              <AudienceSummary audience={d} products={products} currency={currency} />
+              {d.subjectTest ? <p className="mt-1 text-sm text-ink-soft">Subject test draft saved · {d.subjectTest.share}% · {hoursWords(d.subjectTest.hours)} · {d.subjectTest.by === "sales" ? "sales" : "visits"}. Review both subjects and the current audience before sending.</p> : null}
+            </div>
             <span className="flex items-center gap-4">
               <button
                 type="button"
                 className="inline-flex min-h-11 -my-2.5 items-center text-sm font-bold text-violet-deep underline underline-offset-4"
                 aria-current={open?.id === d.id ? "true" : undefined}
+                disabled={locked}
                 onClick={() => {
                   onOpen(d);
                   document.getElementById("compose-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -992,18 +1202,23 @@ function Drafts({
               </button>
               <button
                 type="button"
-                disabled={busy !== null}
-                aria-busy={busy === d.id}
+                disabled={locked}
+                aria-busy={busy === d.id || refreshing}
                 className="inline-flex min-h-11 -my-2.5 items-center text-sm font-bold text-ink-soft underline underline-offset-4 hover:text-danger"
                 onClick={async () => {
-                  if (!window.confirm("Delete this draft?")) return;
+                  if (locked || !window.confirm("Delete this draft?")) return;
+                  setError(null);
                   setBusy(d.id);
-                  const a = await call({ action: "draft-remove", id: d.id });
+                  const a = await call({ action: "draft-remove", id: d.id, expectedSavedAt: d.savedAt });
                   setBusy(null);
+                  if (!a.ok) {
+                    setError("Removal of “" + d.subject + "” could not be confirmed. Reload your saved drafts to check its current status. " + message(a));
+                    return;
+                  }
                   if (a.ok) {
                     toast("Draft deleted.");
                     if (open?.id === d.id) onOpen(null);
-                    router.refresh();
+                    startRefresh(() => router.refresh());
                   }
                 }}
               >
@@ -1013,6 +1228,8 @@ function Drafts({
           </li>
         ))}
       </ul>
+      {refreshing ? <p role="status" className="mt-3 text-sm text-ink-soft">Loading saved drafts…</p> : null}
+      <Feedback error={error} done={null} />
     </section>
   );
 }
@@ -1067,13 +1284,21 @@ function waitWords(hours: number): string {
 }
 
 function History({
+  readFailed,
   broadcasts,
+  writeUnconfirmed,
+  onWriteUnconfirmed,
+  flowsReadFailed,
   products,
   canSend,
   onOpen,
   currency,
 }: {
   broadcasts: BroadcastRow[];
+  readFailed: boolean;
+  writeUnconfirmed: boolean;
+  onWriteUnconfirmed: () => void;
+  flowsReadFailed: boolean;
   products: { id: string; title: string }[];
   canSend: boolean;
   /** Puts a sent email back in the composer, as a new one. */
@@ -1081,44 +1306,98 @@ function History({
   currency: string;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [operationBusy, setBusy] = useState(false);
+  const [refreshing, startRefresh] = useTransition();
+  const refreshHistory = () => startRefresh(() => router.refresh());
+  const busy = operationBusy || refreshing;
+  const keepBlocked = busy || readFailed || writeUnconfirmed || flowsReadFailed;
   const [error, setError] = useState<string | null>(null);
-  if (!broadcasts.length) return null;
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<HistoryStatus>("all");
+  if (readFailed) return (
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
+      <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
+      <p role="status" className="mt-3 text-sm text-ink-soft">Campaign history could not be confirmed. A missing row does not mean an earlier send or schedule failed. Reload the history before trying again; your current message stays in the editor.</p>
+      <button type="button" className="btn btn-secondary mt-3" disabled={busy} aria-busy={refreshing} onClick={refreshHistory}>{refreshing ? "Reloading campaign history…" : "Reload campaign history"}</button>
+    </section>
+  );
+  if (!broadcasts.length) return (
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
+      <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
+      <p className="mt-3 text-sm text-ink-soft">No campaigns are recorded in this history. If an earlier attempt was unconfirmed, check before sending it again.</p>
+      <button type="button" className="btn btn-secondary mt-3" disabled={busy} aria-busy={refreshing} onClick={refreshHistory}>{refreshing ? "Reloading campaign history…" : "Reload campaign history"}</button>
+    </section>
+  );
+
+  const view = campaignHistoryView(broadcasts, query, status);
+  const filtered = Boolean(query.trim()) || status !== "all";
 
   /** A sent email's subject and text, back in the composer to change and send. */
   async function again(b: BroadcastRow) {
+    if (busy || readFailed) return;
     setBusy(true);
     setError(null);
     const a = await call({ action: "copy", id: b.id });
     setBusy(false);
-    const copy = a.ok ? (a.copy as { subject: string; body: string; productId: string | null; who?: Who } | undefined) : undefined;
-    if (!copy) return setError(message(a));
+    const copy = confirmedMailCopy(a);
+    if (!copy) return setError(a.ok ? "The email copy could not be confirmed. Your current draft is unchanged. Try copying again when you are ready." : message(a));
     // No id: it is a new email, not the draft of an old one. The time makes
     // the composer start afresh even when the same email is opened twice.
-    onOpen({ id: "", subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who, by: "", savedAt: String(Date.now()) });
+    onOpen({ id: "", subject: copy.subject, body: copy.body, productId: copy.productId, who: copy.who, notProductId: copy.notProductId, narrow: copy.narrow, by: "", savedAt: String(Date.now()) });
     document.getElementById("compose-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   /** The email joins a sequence, and goes by itself to everybody who arrives from now on. */
   async function keep(b: BroadcastRow) {
+    if (keepBlocked) return;
     setBusy(true);
     setError(null);
     const a = await call({ action: "keep", id: b.id });
     setBusy(false);
-    if (!a.ok) return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
-    toast(`Done. ${keptWords(b, products)} from now on gets this email ${waitWords(Number(a.waitHours))} later. It is under Sequences, switched on.`);
-    router.refresh();
+    if (!a.ok) {
+      if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
+      return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
+    }
+    const waitHours = keptWaitHours(a);
+    if (waitHours === null) {
+      onWriteUnconfirmed();
+      setError(MESSAGES.flow_write_unconfirmed);
+      return;
+    }
+    toast(`Done. ${keptWords(b, products)} from now on gets this email ${waitWords(waitHours)} later. It is under Sequences, switched on.`);
+    refreshHistory();
   }
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
       <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
+      <button type="button" className="btn btn-secondary mt-3" disabled={busy} aria-busy={refreshing} onClick={refreshHistory}>{refreshing ? "Reloading campaign history…" : "Reload campaign history"}</button>
       <p className="mt-2 text-sm text-ink-soft">
         A visit is a page of your store opened through one of an email&apos;s links, and a sale is one made on that page.
         Nothing in an email reports back, so there is no open rate here, and nothing is kept about who visited. (In sequences,
         readers who allowed it are counted as having used a link or not, only to choose their next email.)
       </p>
+      {writeUnconfirmed || flowsReadFailed ? <div className="notice notice-warn mt-4"><p role="status">Reload and check the saved sequences before keeping another email sending. An unconfirmed change may already have happened.</p><button type="button" className="btn btn-secondary mt-3" disabled={busy} onClick={() => { setError(null); refreshHistory(); }}>Reload saved sequences from history</button></div> : null}
+      <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,auto)]">
+        <label className="text-sm font-semibold text-ink" htmlFor="history-search">
+          Search campaign subjects
+          <input id="history-search" type="search" className="input mt-1 w-full" value={query} maxLength={150} disabled={busy} aria-describedby="history-scope history-results" onChange={e => setQuery(e.target.value)} placeholder="Find a campaign…" />
+        </label>
+        <label className="text-sm font-semibold text-ink" htmlFor="history-status">
+          Campaign status
+          <select id="history-status" className="input mt-1 w-full" value={status} disabled={busy} aria-describedby="history-scope history-results" onChange={e => setStatus(e.target.value as HistoryStatus)}>
+            {HISTORY_STATUSES.map(value => <option key={value} value={value}>{value === "all" ? "All statuses" : STATUS[value]} ({n(view.counts[value])})</option>)}
+          </select>
+        </label>
+      </div>
+      <p id="history-scope" className="mt-2 text-sm text-ink-soft">Search and status counts cover only the campaigns loaded in this history. Status counts are before search.</p>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <p id="history-results" role="status" className="text-sm text-ink-soft">Showing {n(view.rows.length)} of {n(broadcasts.length)} loaded campaigns.</p>
+        {filtered ? <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => { setQuery(""); setStatus("all"); }}>Clear history filters</button> : null}
+      </div>
+      {!view.rows.length ? <p className="mt-4 text-sm text-ink-soft">No loaded campaigns match these filters. Clear the filters to see the loaded history.</p> : null}
+      <p className="mt-2 text-sm text-ink-soft">Audience summaries describe saved criteria, not individual recipients or delivery. Product titles use the current catalog.</p>
       <ul className="mt-4 divide-y divide-line">
-        {broadcasts.map((b) => (
+        {view.rows.map((b) => (
           <li key={b.id} className="py-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="min-w-0 break-words font-semibold text-ink">{b.subject}</p>
@@ -1129,7 +1408,7 @@ function History({
                 <>
                   {"Goes out "}
                   <When seconds={b.sendAt} />
-                  {` to ${n(b.total)}${b.productId ? ` who got ${products.find((p) => p.id === b.productId)?.title ?? "a product"}` : ""}`}
+                  {` to ${n(b.total)} ${b.total === 1 ? "person" : "people"}`}
                 </>
               ) : (
                 <>
@@ -1143,7 +1422,7 @@ function History({
                 </>
               )}
             </p>
-            {b.narrow ? <p className="mt-1 text-sm text-ink-soft">{narrowWords(b.narrow, currency)}</p> : null}
+            <AudienceSummary audience={b} products={products} currency={currency} />
             {b.note ? <p className="mt-1 text-sm text-ink-soft">{b.note}</p> : null}
             {b.test ? <TestLine test={b.test} status={b.status} /> : null}
             {/* Said only for an email whose links were tagged: for an older
@@ -1157,11 +1436,17 @@ function History({
                 aria-busy={busy} disabled={busy}
                 className="mt-2 text-sm font-bold text-ink-soft underline underline-offset-4 hover:text-danger"
                 onClick={async () => {
+                  if (busy) return;
                   setBusy(true);
+                  setError(null);
                   const a = await call({ action: "cancel", id: b.id });
                   setBusy(false);
-                  if (a.ok) toast("Scheduled email canceled.");
-                  router.refresh();
+                  if (!a.ok) {
+                    setError("Cancellation of “" + b.subject + "” could not be confirmed. Reload to check its current status. " + message(a));
+                    return;
+                  }
+                  toast("Scheduled email canceled.");
+                  refreshHistory();
                 }}
               >
                 Cancel it
@@ -1182,7 +1467,7 @@ function History({
                 {canSend && keepable(b) ? (
                   <button
                     type="button"
-                    aria-busy={busy} disabled={busy}
+                    aria-busy={busy} disabled={keepBlocked}
                     className="inline-flex min-h-11 items-center text-left text-sm font-bold text-ink underline underline-offset-4"
                     onClick={() => keep(b)}
                   >
@@ -1205,6 +1490,8 @@ function History({
  * not lose what was chosen (lib/flow-rules.ts).
  */
 type StepDraft = {
+  /** Local editor identity, never included in the saved sequence payload. */
+  editorKey: string;
   id?: string;
   /** An email, or a step that acts instead (lib/flow-rules.ts, FlowAction). */
   kind: "email" | "tag" | "untag" | "start" | "webhook" | "field" | "deal" | "note" | "notify";
@@ -1263,7 +1550,7 @@ const STEP_IF_WORDS: { value: StepIf | ""; label: string }[] = [
 ];
 
 function blankStep(wait: string, unit: "hours" | "days", firstProduct: string): StepDraft {
-  return { kind: "email", actionTag: "", actionFlow: "", actionField: "", actionValue: "", actionStage: "", actionTitle: "", actionText: "", wait, unit, subject: "", body: "", when: "", whenProduct: firstProduct, whenTag: "", otherwise: "skip" };
+  return { editorKey: crypto.randomUUID(), kind: "email", actionTag: "", actionFlow: "", actionField: "", actionValue: "", actionStage: "", actionTitle: "", actionText: "", wait, unit, subject: "", body: "", when: "", whenProduct: firstProduct, whenTag: "", otherwise: "skip" };
 }
 
 /** What a step that acts does, as one line reads it: "gives the label “warm”". */
@@ -1303,6 +1590,7 @@ function actionOf(s: StepDraft): FlowAction | null {
 function stepToDraft(s: FlowStep, firstProduct: string): StepDraft {
   const when = s.when;
   return {
+    editorKey: crypto.randomUUID(),
     id: s.id,
     kind: s.action ? s.action.do : "email",
     actionTag: s.action && "tag" in s.action ? s.action.tag : "",
@@ -1370,7 +1658,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
       productId: first,
       triggerTag: "",
       formId: "",
-      active: true,
+      active: false,
       steps: [blankStep("0", "hours", first)],
       goal: "",
       goalProduct: first,
@@ -1392,28 +1680,56 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
 
 function Flows({
   flows,
+  writeUnconfirmed,
+  onWriteUnconfirmed,
+  readFailed = false,
   products,
   currency,
   sells,
   courses = [],
+  paidProducts,
   automation = { forms: [], fields: [], stages: [] },
 }: {
   flows: FlowRow[];
+  writeUnconfirmed: boolean;
+  onWriteUnconfirmed: () => void;
+  readFailed?: boolean;
   products: { id: string; title: string }[];
   currency: string;
   automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
   /** The products that are courses, for "finishes a course" and the conditions on one. */
   courses?: string[];
+  paidProducts?: string[];
   /** Whether the store sells anything for money, so a first purchase can happen at all. */
   sells: boolean;
 }) {
   const router = useRouter();
+  const [refreshing, startRefresh] = useTransition();
+  const refreshFlows = () => startRefresh(() => router.refresh());
   const [draft, setDraft] = useState<FlowDraft | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const overCapacity = (draft?.steps.length ?? 0) > 10;
+  const availableSlots = sequenceDraftSlots(draft?.steps ?? []);
+  const availableCounts = SEQUENCE_DRAFT_COUNTS.filter(count => count <= availableSlots);
+  const invalidWait = draft?.steps.some(step => flowWaitHours(step.wait, step.unit) === null) ?? false;
+  const [draftBaseline, setDraftBaseline] = useState<string | null>(null);
+  useLeaveGuard(aiBusy || (draft !== null && JSON.stringify(draft) !== draftBaseline));
   const [draftCount, setDraftCount] = useState<number>(DEFAULT_SEQUENCE_DRAFT);
+  const requestedCount = availableCounts.some(count => count === draftCount) ? draftCount : (availableCounts[0] ?? DEFAULT_SEQUENCE_DRAFT);
   // Each step's box, so a picture goes where the cursor is.
   const stepBoxes = useRef<(HTMLTextAreaElement | null)[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [operationBusy, setBusy] = useState(false);
+  const busy = operationBusy || refreshing || aiBusy;
+  const locked = busy || writeUnconfirmed;
   const [error, setError] = useState<string | null>(null);
+
+  if (readFailed) return (
+    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="flows-title">
+      <h2 id="flows-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sequences</h2>
+      <p role="status" className="mt-2 text-ink-soft">Your sequences could not be loaded. This does not mean the list is empty. Reload before creating or changing a sequence.</p>
+      <button type="button" className="btn btn-secondary mt-4" disabled={refreshing} aria-busy={refreshing} onClick={refreshFlows}>{refreshing ? "Reloading sequences…" : "Reload sequences"}</button>
+    </section>
+  );
 
   const triggerWords = (f: FlowRow) =>
     f.trigger === "joined"
@@ -1428,8 +1744,18 @@ function Flows({
         ? "Starts the first time someone who agreed to hear from you buys anything"
         : `Starts when someone who agreed to hear from you gets ${products.find((p) => p.id === f.productId)?.title ?? "a product"}`;
 
+  function openDraft(flow: FlowRow | null) {
+    if (locked || draft !== null) return;
+    const opened = toDraft(flow, products);
+    const others = flows.filter(other => other.id !== flow?.id);
+    const next = { ...opened, steps: opened.steps.map(step => step.kind === "start" && !others.some(other => other.id === step.actionFlow) ? { ...step, actionFlow: "" } : step) };
+    setDraftBaseline(JSON.stringify(next));
+    setError(null);
+    setDraft(next);
+  }
+
   async function save() {
-    if (!draft) return;
+    if (!draft || locked || invalidWait || overCapacity) return;
     setBusy(true);
     setError(null);
     const a = await call({
@@ -1447,7 +1773,7 @@ function Flows({
           const action = actionOf(s);
           return {
             id: s.id,
-            delayHours: (Number(s.wait) || 0) * (s.unit === "days" ? 24 : 1),
+            delayHours: flowWaitHours(s.wait, s.unit)!,
             subject: action ? "" : s.subject,
             body: action ? "" : s.body,
             ...(action ? { action } : {}),
@@ -1459,13 +1785,25 @@ function Flows({
     });
     setBusy(false);
     if (!a.ok) {
+      if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
       setError(message(a));
       return;
     }
     setDraft(null);
     toast("Sequence saved.");
-    router.refresh();
+    refreshFlows();
   }
+
+  const draftIssues = draft ? flowConfigurationIssues({
+    id: draft.id ?? "", name: draft.name, trigger: draft.trigger, active: draft.active, createdAt: 0,
+    productId: draft.productId, tag: draft.triggerTag, formId: draft.formId,
+    goal: draft.goal === "any" ? { any: true } : draft.goal === "product" ? { productId: draft.goalProduct } : undefined,
+    steps: draft.steps.map((step, index) => {
+      const action = actionOf(step);
+      const when = conditionOf(step);
+      return { id: step.id ?? "draft-step-" + index, delayHours: flowWaitHours(step.wait, step.unit) ?? NaN, subject: step.subject, body: step.body, ...(action ? { action } : {}), ...(when ? { when } : {}) };
+    }),
+  }, { products, courses, paidProducts, flows, ...automation }) : [];
 
   // Which of the two starter sequences this store has no sequence for yet.
   // The after-a-purchase one is made only by a store that sells something,
@@ -1481,8 +1819,8 @@ function Flows({
   // before it any more, so what the form shows is always what is saved.
   const settle = (steps: StepDraft[]): StepDraft[] =>
     steps.map((x, j) => ((x.when === "clicked" || x.when === "unclicked") && (j === 0 || steps[j - 1].kind !== "email") ? { ...x, when: "" } : x));
-  const setStep = (i: number, change: Partial<StepDraft>) =>
-    draft && setDraft({ ...draft, steps: settle(draft.steps.map((s, j) => (j === i ? { ...s, ...change } : s))) });
+  const setStep = (editorKey: string, change: Partial<StepDraft>) =>
+    setDraft(current => current ? { ...current, steps: settle(current.steps.map(step => step.editorKey === editorKey ? { ...step, ...change } : step)) } : current);
 
   return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="flows-title">
@@ -1513,24 +1851,29 @@ function Flows({
           </p>
           <button
             type="button"
-            aria-busy={busy} disabled={busy}
+            aria-busy={busy} disabled={locked}
             className="btn btn-secondary mt-3"
             onClick={async () => {
               setBusy(true);
               setError(null);
               const a = await call({ action: "starters" });
               setBusy(false);
-              if (!a.ok) return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
+              if (!a.ok) {
+                if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
+                return setError(a.error === "too_many" ? MESSAGES.too_many_flows : message(a));
+              }
               const made = Array.isArray(a.made) ? a.made.length : 0;
               toast(made === 1 ? "Written. It is below, switched off, for you to read." : "Written. Both are below, switched off, for you to read.");
-              router.refresh();
+              refreshFlows();
             }}
           >
             Write them for me
           </button>
-          <Feedback error={error} done={null} />
         </div>
       ) : null}
+      {writeUnconfirmed ? <div className="notice notice-warn mt-4"><p role="status">Check the saved sequences before another change. A lost confirmation does not mean the change was undone; if you are editing, your draft is kept while you reload.</p><button type="button" className="btn btn-secondary mt-3" disabled={busy} onClick={() => { setError(null); refreshFlows(); }}>Reload saved sequences</button></div> : null}
+      {refreshing ? <p role="status" className="mt-4 text-sm text-ink-soft">Updating sequences… Wait for the latest list before making another change.</p> : null}
+      {!draft ? <Feedback error={error} done={null} /> : null}
       {flows.length ? (
         <ul className="mt-4 space-y-3">
           {flows.map((f) => (
@@ -1540,6 +1883,10 @@ function Flows({
                 <span className="tag">{f.active ? "On" : "Paused"}</span>
               </div>
               <p className="mt-1 text-sm text-ink-soft">{`${triggerWords(f)} · ${stepCount(f.steps)}`}</p>
+              {(() => {
+                const issues = flowConfigurationIssues(f, { products, courses, paidProducts, flows, ...automation });
+                return issues.length ? <div className="notice notice-warn mt-3 text-sm"><p className="font-semibold">Review saved configuration</p><ul className="mt-2 list-disc space-y-1 pl-5">{issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul><p className="mt-2">Edit this sequence to review its references. No live delivery or action has been tested.</p></div> : null;
+              })()}
               {f.goal ? <p className="mt-1 text-sm text-ink-soft" data-flow-goal>{`${goalWords(f, products)}.`}</p> : null}
               {f.steps.some((step) => step.when || step.action) ? (
                 <ul className="mt-1 text-sm text-ink-soft" data-flow-steps>
@@ -1552,7 +1899,7 @@ function Flows({
                   )}
                 </ul>
               ) : null}
-              <p className="mt-1 text-sm text-ink-soft">
+              {f.statsAvailable === false ? <p role="status" className="mt-1 text-sm text-ink-soft">Sequence activity is unavailable. Reload to try again.</p> : <p className="mt-1 text-sm text-ink-soft">
                 {[
                   `${n(f.stats.started)} started`,
                   `${n(f.stats.sent)} emails sent`,
@@ -1560,34 +1907,35 @@ function Flows({
                   ...(f.steps.some((s) => s.when) || f.stats.skipped ? [`${n(f.stats.skipped)} skipped by a condition`] : []),
                   ...(f.steps.some((s) => s.action) || f.stats.acted ? [`${n(f.stats.acted)} ${f.stats.acted === 1 ? "action" : "actions"} done`] : []),
                 ].join(" · ")}
-              </p>
+              </p>}
               {f.money ? <p className="mt-1 text-sm font-semibold text-ink">{soldWords(f.money, currency)}</p> : null}
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
                 <button
                   type="button"
                   className="text-ink-soft underline underline-offset-4 hover:text-violet-deep"
+                  disabled={locked || draft !== null}
                   onClick={() => {
-                    const opened = toDraft(f, products);
-                    // A step that starts a sequence since removed is shown as needing a new choice, not as one it is not.
-                    const others = flows.filter((o) => o.id !== f.id);
-                    setDraft({
-                      ...opened,
-                      steps: opened.steps.map((x) => (x.kind === "start" && !others.some((o) => o.id === x.actionFlow) ? { ...x, actionFlow: "" } : x)),
-                    });
+                    openDraft(f);
                   }}
                 >
                   Edit
                 </button>
                 <button
                   type="button"
-                  aria-busy={busy} disabled={busy}
+                  aria-busy={busy} disabled={locked || draft !== null}
                   className="text-ink-soft underline underline-offset-4 hover:text-danger"
                   onClick={async () => {
                     setBusy(true);
+                    setError(null);
                     const a = await call({ action: "flow-remove", id: f.id });
                     setBusy(false);
-                    if (a.ok) toast("Sequence removed.");
-                    router.refresh();
+                    if (!a.ok) {
+                      if (a.error === "flow_write_unconfirmed") onWriteUnconfirmed();
+                      setError("Removal of “" + f.name + "” could not be confirmed. Reload to check its current status. " + message(a));
+                      return;
+                    }
+                    toast("Sequence removed.");
+                    refreshFlows();
                   }}
                 >
                   Remove
@@ -1606,6 +1954,8 @@ function Flows({
             save();
           }}
         >
+          <fieldset disabled={busy} className="min-w-0 space-y-4">
+          <legend className="sr-only">Sequence configuration</legend>
           <label className="block">
             <span className="field-label">Name, for you</span>
             <input className="field mt-2" maxLength={80} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
@@ -1719,43 +2069,41 @@ function Flows({
               Checked before each email. Someone who buys while in it gets none of the emails still to come.
             </p>
           </div>
-          <AiAssist<DraftedStep[]>
+          {overCapacity ? <p role="status" className="text-sm text-danger">This sequence has more than 10 steps. Remove steps before saving; none have been discarded.</p> : null}
+          {availableCounts.length ? <AiAssist<DraftedStep[]>
             title="Write the emails with AI"
+            validateResult={(value): value is DraftedStep[] => isAiSequenceDraft(value) && value.length <= requestedCount && value.length <= availableSlots}
+            onBusyChange={setAiBusy}
             hint="For the moment chosen above, from what your store sells: its products' names, summaries, prices and links, and anything you add here. Only your store's own links are kept. The emails fill the sequence below for you to read and change; nothing is saved or sent until you save it."
             placeholder="Optional: what these emails should say, or the tone. For example: share my three favorite weeknight tricks before mentioning the meal planner."
             allowEmpty
             extra={
               <label className="flex flex-wrap items-center gap-2 text-sm text-ink">
                 <span className="font-semibold">How many emails</span>
-                <select className="field w-auto" value={draftCount} onChange={(e) => setDraftCount(Number(e.target.value))}>
-                  {SEQUENCE_DRAFT_COUNTS.map((n) => (
+                <select className="field w-auto" value={requestedCount} onChange={(e) => setDraftCount(Number(e.target.value))}>
+                  {availableCounts.map((n) => (
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
               </label>
             }
-            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : "", tag: draft.trigger === "tagged" ? draft.triggerTag : "", count: draftCount })}
-            onResult={(written) =>
-              setDraft((current) => {
-                if (!current) return current;
-                const steps: StepDraft[] = written.map((w) => ({
-                  ...(w.delayHours > 0 && w.delayHours % 24 === 0
-                    ? blankStep(String(w.delayHours / 24), "days", products[0]?.id ?? "")
-                    : blankStep(String(w.delayHours), "hours", products[0]?.id ?? "")),
-                  subject: w.subject,
-                  body: w.body,
-                }));
-                // Emails still empty are replaced; the creator's own are kept, and these follow them.
-                // A step that acts has no words of its own, and is kept too.
-                const kept = current.steps.filter((x) => x.kind !== "email" || x.subject.trim() || x.body.trim());
-                return { ...current, steps: [...kept, ...steps].slice(0, 10) };
-              })
-            }
+            payload={() => ({ kind: "sequence", trigger: draft.trigger, productId: draft.trigger === "product" || draft.trigger === "finished" ? draft.productId : "", tag: draft.trigger === "tagged" ? draft.triggerTag : "", count: requestedCount })}
+            onResult={(written) => {
+              const steps: StepDraft[] = written.map((w) => ({
+                ...(w.delayHours > 0 && w.delayHours % 24 === 0
+                  ? blankStep(String(w.delayHours / 24), "days", products[0]?.id ?? "")
+                  : blankStep(String(w.delayHours), "hours", products[0]?.id ?? "")),
+                subject: w.subject,
+                body: w.body,
+              }));
+              // Emails still empty are replaced; the creator's own and action steps are kept.
+              setDraft(current => current ? { ...current, steps: appendSequenceDraft(current.steps, steps) } : current);
+            }}
             done="The emails are in the sequence below. Read each one, change what you like, then save it."
-          />
+          /> : <p role="status" className="text-sm text-ink-soft">AI writes at least 3 emails at a time. This sequence has {availableSlots} free {availableSlots === 1 ? "step" : "steps"}. Remove steps to make room before generating.</p>}
           <ol className="space-y-4">
             {draft.steps.map((s, i) => (
-              <li key={i} className="rounded-[var(--r-sm)] bg-sand p-4">
+              <li key={s.editorKey} className="rounded-[var(--r-sm)] bg-sand p-4">
                 <div className="flex flex-wrap items-end justify-between gap-2">
                   <p className="text-sm font-bold text-ink">{s.kind === "email" ? `Email ${i + 1}` : `Step ${i + 1}`}</p>
                   <label className="block">
@@ -1767,7 +2115,7 @@ function Flows({
                       onChange={(e) => {
                         const v = e.target.value;
                         const kind = v === "tag" || v === "untag" || v === "start" || v === "webhook" || v === "field" || v === "deal" || v === "note" || v === "notify" ? v : "email";
-                        setStep(i, {
+                        setStep(s.editorKey, {
                           kind,
                           actionFlow: s.actionFlow || otherFlows[0]?.id || "",
                           actionField: s.actionField || automation.fields[0]?.id || "",
@@ -1794,12 +2142,12 @@ function Flows({
                       className="field mt-1 w-24"
                       inputMode="numeric"
                       value={s.wait}
-                      onChange={(e) => setStep(i, { wait: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) })}
+                      onChange={(e) => setStep(s.editorKey, { wait: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) })}
                     />
                   </label>
                   <label className="block">
                     <span className="sr-only">Hours or days</span>
-                    <select className="field w-28" value={s.unit} onChange={(e) => setStep(i, { unit: e.target.value === "days" ? "days" : "hours" })}>
+                    <select className="field w-28" value={s.unit} onChange={(e) => setStep(s.editorKey, { unit: e.target.value === "days" ? "days" : "hours" })}>
                       <option value="hours">hours</option>
                       <option value="days">days</option>
                     </select>
@@ -1813,7 +2161,7 @@ function Flows({
                       maxLength={MAX_CONDITION_TAG}
                       value={s.actionTag}
                       placeholder="interested"
-                      onChange={(e) => setStep(i, { actionTag: e.target.value })}
+                      onChange={(e) => setStep(s.editorKey, { actionTag: e.target.value })}
                     />
                     {s.kind === "tag" ? (
                       <span className="mt-1 block text-sm text-ink-soft">
@@ -1824,7 +2172,7 @@ function Flows({
                 ) : s.kind === "start" ? (
                   <label className="mt-3 block">
                     <span className="text-sm text-ink-soft">The sequence to start</span>
-                    <select className="field mt-1" value={s.actionFlow} onChange={(e) => setStep(i, { actionFlow: e.target.value })} required>
+                    <select className="field mt-1" value={s.actionFlow} onChange={(e) => setStep(s.editorKey, { actionFlow: e.target.value })} required>
                       {s.actionFlow ? null : <option value="">A sequence that was removed: choose another</option>}
                       {otherFlows.map((f) => (
                         <option key={f.id} value={f.id}>{f.name}</option>
@@ -1836,7 +2184,7 @@ function Flows({
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <label className="block">
                       <span className="text-sm text-ink-soft">The field</span>
-                      <select className="field mt-1" value={s.actionField} onChange={(e) => setStep(i, { actionField: e.target.value, actionValue: "" })}>
+                      <select className="field mt-1" value={s.actionField} onChange={(e) => setStep(s.editorKey, { actionField: e.target.value, actionValue: "" })}>
                         {automation.fields.map((f) => (
                           <option key={f.id} value={f.id}>{f.name}</option>
                         ))}
@@ -1847,7 +2195,7 @@ function Flows({
                       return field?.type === "choice" ? (
                         <label className="block">
                           <span className="text-sm text-ink-soft">Set to</span>
-                          <select className="field mt-1" value={s.actionValue} onChange={(e) => setStep(i, { actionValue: e.target.value })}>
+                          <select className="field mt-1" value={s.actionValue} onChange={(e) => setStep(s.editorKey, { actionValue: e.target.value })}>
                             <option value="">Choose one</option>
                             {field.options.map((o) => (
                               <option key={o} value={o}>{o}</option>
@@ -1863,7 +2211,7 @@ function Flows({
                             inputMode={field?.type === "number" ? "decimal" : undefined}
                             maxLength={200}
                             value={s.actionValue}
-                            onChange={(e) => setStep(i, { actionValue: e.target.value })}
+                            onChange={(e) => setStep(s.editorKey, { actionValue: e.target.value })}
                           />
                         </label>
                       );
@@ -1874,7 +2222,7 @@ function Flows({
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <label className="block">
                       <span className="text-sm text-ink-soft">The stage</span>
-                      <select className="field mt-1" value={s.actionStage} onChange={(e) => setStep(i, { actionStage: e.target.value })}>
+                      <select className="field mt-1" value={s.actionStage} onChange={(e) => setStep(s.editorKey, { actionStage: e.target.value })}>
                         {automation.stages.map((st) => (
                           <option key={st.id} value={st.id}>{st.name}</option>
                         ))}
@@ -1882,14 +2230,14 @@ function Flows({
                     </label>
                     <label className="block">
                       <span className="text-sm text-ink-soft">A new deal&apos;s title (optional)</span>
-                      <input className="field mt-1" maxLength={90} value={s.actionTitle} placeholder={draft.name} onChange={(e) => setStep(i, { actionTitle: e.target.value })} />
+                      <input className="field mt-1" maxLength={90} value={s.actionTitle} placeholder={draft.name} onChange={(e) => setStep(s.editorKey, { actionTitle: e.target.value })} />
                     </label>
                     <span className="block text-sm text-ink-soft sm:col-span-2">Their open deal moves to this stage; with none open, a new one is made for them on your deals board.</span>
                   </div>
                 ) : s.kind === "note" ? (
                   <label className="mt-3 block">
                     <span className="text-sm text-ink-soft">The note</span>
-                    <input className="field mt-1" maxLength={300} value={s.actionText} placeholder="Asked about coaching" onChange={(e) => setStep(i, { actionText: e.target.value })} />
+                    <input className="field mt-1" maxLength={300} value={s.actionText} placeholder="Asked about coaching" onChange={(e) => setStep(s.editorKey, { actionText: e.target.value })} />
                     <span className="mt-1 block text-sm text-ink-soft">Written on their page in your studio, with the sequence and the step it came from.</span>
                   </label>
                 ) : s.kind === "notify" ? (
@@ -1904,13 +2252,13 @@ function Flows({
                 <>
                 <label className="mt-3 block">
                   <span className="text-sm text-ink-soft">Subject</span>
-                  <input className="field mt-1" maxLength={150} value={s.subject} onChange={(e) => setStep(i, { subject: e.target.value })} />
+                  <input className="field mt-1" maxLength={150} value={s.subject} onChange={(e) => setStep(s.editorKey, { subject: e.target.value })} />
                 </label>
                 <div className="mt-3">
                   <MailBodyEditor
                     body={s.body}
                     rows={6}
-                    onChange={(next) => setStep(i, { body: next })}
+                    onChange={(next) => setStep(s.editorKey, { body: next })}
                     boxRef={(el) => {
                       stepBoxes.current[i] = el;
                     }}
@@ -1931,7 +2279,7 @@ function Flows({
                       onChange={(e) => {
                         const when = STEP_IF_WORDS.find((w) => w.value === e.target.value)?.value ?? "";
                         // A condition on a course names a course: the first, when the product chosen is not one.
-                        setStep(i, isCourseIf(when) && !courses.includes(s.whenProduct) ? { when, whenProduct: courses[0] ?? s.whenProduct } : { when });
+                        setStep(s.editorKey, isCourseIf(when) && !courses.includes(s.whenProduct) ? { when, whenProduct: courses[0] ?? s.whenProduct } : { when });
                       }}
                     >
                       {STEP_IF_WORDS.filter(
@@ -1947,7 +2295,7 @@ function Flows({
                   {s.when === "has" || s.when === "lacks" ? (
                     <label className="block min-w-0 flex-1">
                       <span className="text-sm text-ink-soft">Product</span>
-                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(i, { whenProduct: e.target.value })}>
+                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(s.editorKey, { whenProduct: e.target.value })}>
                         {products.map((p) => (
                           <option key={p.id} value={p.id}>{p.title}</option>
                         ))}
@@ -1957,7 +2305,7 @@ function Flows({
                   {isCourseIf(s.when) ? (
                     <label className="block min-w-0 flex-1">
                       <span className="text-sm text-ink-soft">Course</span>
-                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(i, { whenProduct: e.target.value })}>
+                      <select className="field mt-1" value={s.whenProduct} onChange={(e) => setStep(s.editorKey, { whenProduct: e.target.value })}>
                         {products
                           .filter((p) => courses.includes(p.id))
                           .map((p) => (
@@ -1969,7 +2317,7 @@ function Flows({
                   {s.when === "tag" || s.when === "untagged" ? (
                     <label className="block min-w-0 flex-1">
                       <span className="text-sm text-ink-soft">Label, from an import or a sequence</span>
-                      <input className="field mt-1" maxLength={MAX_CONDITION_TAG} value={s.whenTag} onChange={(e) => setStep(i, { whenTag: e.target.value })} />
+                      <input className="field mt-1" maxLength={MAX_CONDITION_TAG} value={s.whenTag} onChange={(e) => setStep(s.editorKey, { whenTag: e.target.value })} />
                     </label>
                   ) : null}
                 </div>
@@ -1982,7 +2330,7 @@ function Flows({
                 {s.when ? (
                   <label className="mt-2 block">
                     <span className="text-sm text-ink-soft">Everyone else</span>
-                    <select className="field mt-1" value={s.otherwise} onChange={(e) => setStep(i, { otherwise: e.target.value === "end" ? "end" : "skip" })}>
+                    <select className="field mt-1" value={s.otherwise} onChange={(e) => setStep(s.editorKey, { otherwise: e.target.value === "end" ? "end" : "skip" })}>
                       <option value="skip">{s.kind === "email" ? "Skips this email and goes on to the next" : "Skips this step and goes on to the next"}</option>
                       <option value="end">Leaves the sequence here</option>
                     </select>
@@ -1993,11 +2341,11 @@ function Flows({
                     type="button"
                     className="mt-2 text-sm font-bold text-ink-soft underline underline-offset-4 hover:text-danger"
                     onClick={() =>
-                      setDraft({
-                        ...draft,
+                      setDraft(current => current ? {
+                        ...current,
                         // The email that becomes the first has no email before it to read.
-                        steps: settle(draft.steps.filter((_, j) => j !== i)),
-                      })
+                        steps: settle(current.steps.filter(step => step.editorKey !== s.editorKey)),
+                      } : current)
                     }
                   >
                     {s.kind === "email" ? "Remove this email" : "Remove this step"}
@@ -2015,20 +2363,23 @@ function Flows({
               Add a step
             </button>
           ) : null}
+          {draftIssues.length ? <div className="notice notice-warn text-sm"><p className="font-semibold">Review this configuration before activating</p><ul className="mt-2 list-disc space-y-1 pl-5">{draftIssues.map((issue, index) => <li key={index}>{issue}</li>)}</ul><p className="mt-2">These are reference checks. Saving still uses server validation; delivery and action execution have not been tested.</p></div> : null}
+          {!draft.id ? <p className="text-sm text-ink-soft">New sequences start paused. Review the content, trigger and actions, then switch On when ready to save an active sequence.</p> : null}
           <label className="flex items-center gap-2 text-sm text-ink">
             <input type="checkbox" checked={draft.active} onChange={(e) => setDraft({ ...draft, active: e.target.checked })} />
             <span>On. Switched off, nobody new starts it, and those already in it get none of its emails that are still to come.</span>
           </label>
           <div className="flex flex-wrap items-center gap-3">
-            <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-primary">Save the sequence</button>
+            <button type="submit" aria-busy={busy} disabled={locked || invalidWait || overCapacity} className="btn btn-primary">Save the sequence</button>
             <button type="button" className="text-sm font-bold text-ink-soft underline underline-offset-4" onClick={() => setDraft(null)}>
               Close
             </button>
           </div>
           <Feedback error={error} done={null} />
+          </fieldset>
         </form>
       ) : flows.length < 10 ? (
-        <button type="button" className="btn btn-secondary mt-5" onClick={() => setDraft(toDraft(null, products))}>
+        <button type="button" className="btn btn-secondary mt-5" disabled={locked} onClick={() => openDraft(null)}>
           New sequence
         </button>
       ) : null}

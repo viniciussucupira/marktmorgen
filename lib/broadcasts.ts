@@ -12,6 +12,7 @@
  *   nl:mail:bcs:<listId>   the store's broadcasts, newest first
  *   nl:mail:queue          broadcasts waiting or under way
  */
+import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { hasPlaceholder } from "@/lib/mail-body";
 import { randomBytes, randomInt } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -80,6 +81,15 @@ export type Broadcast = {
   test: SubjectTest | null;
 };
 
+/** Creation may have been partially written even when its acknowledgement is lost. */
+export class BroadcastWriteUnconfirmed extends Error {
+  constructor() { super("Campaign creation could not be confirmed"); this.name = "BroadcastWriteUnconfirmed"; }
+}
+
+export class BroadcastCancellationUnconfirmed extends Error {
+  constructor() { super("Campaign cancellation could not be confirmed"); this.name = "BroadcastCancellationUnconfirmed"; }
+}
+
 export const MAX_SCHEDULE_DAYS = 365;
 const QUEUE = "nl:mail:queue";
 const bcKey = (id: string) => `nl:mail:bc:${id}`;
@@ -115,7 +125,8 @@ export async function readBroadcast(id: string): Promise<Broadcast | null> {
 }
 
 async function save(b: Broadcast): Promise<void> {
-  await redisPipeline([["SET", bcKey(b.id), JSON.stringify(b), "EX", 400 * 86_400]]);
+  const response = await redisPipeline([["SET", bcKey(b.id), JSON.stringify(b), "EX", 400 * 86_400]]);
+  if (!Array.isArray(response) || response.length !== 1 || response[0] !== "OK") throw new Error("Campaign progress write could not be confirmed");
 }
 
 /** The store's broadcasts, newest first. */
@@ -126,6 +137,53 @@ export async function listBroadcasts(listId: string | null, limit = 30): Promise
   if (!list.length) return [];
   const rows = await redisPipeline(list.map((id) => ["GET", bcKey(id)]));
   return rows.map(parse).filter((b): b is Broadcast => b !== null);
+}
+
+
+/** Shared strict validation for studio history and executable campaign records. */
+function parseStoredBroadcast(raw: unknown, id: string, listId?: string): Broadcast {
+  const nonnegative = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
+  const association = (value: unknown) => value === null || typeof value === "string" && value.length > 0;
+  const statuses = new Set(["scheduled", "sending", "sent", "waiting", "cancelled", "failed"]);
+  if (typeof raw !== "string") throw new Error("Campaign record is unavailable");
+  const record: unknown = JSON.parse(raw);
+  if (!record || typeof record !== "object" || Array.isArray(record)) throw new Error("Invalid campaign record");
+  const value = record as Record<string, unknown>;
+  const b = parse(raw);
+  if (!b || b.id !== id || typeof b.listId !== "string" || !b.listId.trim() || (listId !== undefined && b.listId !== listId) || typeof b.handle !== "string" || !b.handle.trim() || typeof b.subject !== "string" || !b.subject.trim() || typeof b.body !== "string" || !b.body.trim() || !association(b.productId) || !statuses.has(b.status) || !nonnegative(b.createdAt) || !b.createdAt || !nonnegative(b.sendAt) || !b.sendAt || !nonnegative(b.finishedAt) || !nonnegative(b.total) || !nonnegative(b.sent) || b.sent > b.total || !nonnegative(b.failures) || typeof b.listed !== "boolean" || typeof b.note !== "string") throw new Error("Invalid campaign fields");
+  // These fields were absent in older campaigns; explicit malformed values are not legacy defaults.
+  if (value.who !== undefined && !WHO.includes(value.who as Who) || value.notProductId !== undefined && !association(value.notProductId) || value.tagged !== undefined && typeof value.tagged !== "boolean" || value.test !== undefined && value.test !== null && b.test === null) throw new Error("Invalid campaign options");
+  if (value.narrow !== undefined && value.narrow !== null) {
+    if (typeof value.narrow !== "object" || Array.isArray(value.narrow)) throw new Error("Invalid campaign audience");
+    const narrow = value.narrow as Record<string, unknown>;
+    const normalized = readNarrow(narrow);
+    if (narrow.minSpent !== normalized.minSpent || narrow.channel !== normalized.channel || narrow.quietDays !== normalized.quietDays) throw new Error("Invalid campaign audience fields");
+  }
+  return b;
+}
+
+/** A failed or malformed read is never a confirmed missing campaign. */
+async function readBroadcastForWork(id: string): Promise<Broadcast | null> {
+  if (!isRedisConfigured()) throw new Error("Campaign storage is unavailable");
+  const response = await redisPipeline([["GET", bcKey(id)]]);
+  if (!Array.isArray(response) || response.length !== 1) throw new Error("Campaign read is incomplete");
+  if (response[0] === null) return null;
+  return parseStoredBroadcast(response[0], id);
+}
+
+/** A studio snapshot is all-or-unavailable; missing rows must not look like no campaigns. */
+export async function listBroadcastsStrict(listId: string | null, limit = 30): Promise<Broadcast[]> {
+  if (!listId) return [];
+  if (!isRedisConfigured()) throw new Error("Campaign storage is unavailable");
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new Error("Invalid campaign history limit");
+  const response = await redisPipeline([["LRANGE", listKey(listId), 0, limit - 1]]);
+  if (!Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0])) throw new Error("Campaign index is unavailable");
+  const ids: unknown[] = response[0];
+  if (ids.length > limit || Array.from(ids).some(id => typeof id !== "string" || !BROADCAST_ID.test(id)) || new Set(ids).size !== ids.length) throw new Error("Campaign index is incomplete");
+  if (!ids.length) return [];
+  const rows = await redisPipeline(ids.map(id => ["GET", bcKey(id as string)]));
+  if (!Array.isArray(rows) || rows.length !== ids.length) throw new Error("Campaign records are incomplete");
+  return ids.map((id, i) => parseStoredBroadcast(rows[i], id as string, listId));
 }
 
 /**
@@ -224,21 +282,51 @@ export async function createBroadcast(
     tagged: true,
     test,
   };
-  await save(broadcast);
-  await redisPipeline([
-    ["LPUSH", listKey(store.listId), broadcast.id],
-    ["SADD", QUEUE, broadcast.id],
-  ]);
+  try {
+    const saved = await redisPipeline([["SET", bcKey(broadcast.id), JSON.stringify(broadcast), "EX", 400 * 86_400]]);
+    if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new BroadcastWriteUnconfirmed();
+    const indexed = await redisPipeline([
+      ["LPUSH", listKey(store.listId), broadcast.id],
+      ["SADD", QUEUE, broadcast.id],
+    ]);
+    if (!Array.isArray(indexed) || indexed.length !== 2 || typeof indexed[0] !== "number" || !Number.isSafeInteger(indexed[0]) || indexed[0] < 1 || (indexed[1] !== 0 && indexed[1] !== 1)) throw new BroadcastWriteUnconfirmed();
+  } catch {
+    // Do not retry or roll back: any of these writes may already have happened.
+    throw new BroadcastWriteUnconfirmed();
+  }
   return { ok: true, broadcast };
 }
 
 /** Stops a broadcast that has not started. One under way is not stopped halfway. */
 export async function cancelBroadcast(store: Store, id: string): Promise<boolean> {
-  const b = await readBroadcast(id);
-  if (!b || b.listId !== store.listId || b.status !== "scheduled") return false;
-  await save({ ...b, status: "cancelled", finishedAt: Math.floor(Date.now() / 1000) });
-  await redisPipeline([["SREM", QUEUE, id]]);
-  return true;
+  if (!BROADCAST_ID.test(id) || !store.listId) return false;
+  let acquired = false;
+  try {
+    acquired = await takeBroadcastLock(id);
+    if (!acquired) return false;
+    // Read only after acquiring the same lock used by the sender.
+    const b = await readBroadcast(id);
+    if (!b || b.id !== id || b.listId !== store.listId || b.status !== "scheduled" || b.sent !== 0 || b.listed !== false) return false;
+    const cancelled = { ...b, status: "cancelled", finishedAt: Math.floor(Date.now() / 1000) };
+    const saved = await redisPipeline([["SET", bcKey(id), JSON.stringify(cancelled), "EX", 400 * 86_400]]);
+    if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new BroadcastCancellationUnconfirmed();
+    const removed = await redisPipeline([["SREM", QUEUE, id]]);
+    if (!Array.isArray(removed) || removed.length !== 1 || (removed[0] !== 0 && removed[0] !== 1)) throw new BroadcastCancellationUnconfirmed();
+    return true;
+  } catch {
+    // Either write may have happened: do not retry or restore a scheduled state.
+    throw new BroadcastCancellationUnconfirmed();
+  } finally {
+    if (acquired) await redisPipeline([["DEL", lockKey(id)]]).catch(() => {});
+  }
+}
+
+/** Only an explicit lock acknowledgement permits a reader to become a writer. */
+async function takeBroadcastLock(id: string): Promise<boolean> {
+  if (!BROADCAST_ID.test(id)) return false;
+  const reply = await redisPipeline([["SET", lockKey(id), "1", "NX", "EX", 90]]);
+  if (!Array.isArray(reply) || reply.length !== 1 || (reply[0] !== "OK" && reply[0] !== null)) throw new Error("Campaign lock could not be confirmed");
+  return reply[0] === "OK";
 }
 
 /**
@@ -251,10 +339,9 @@ export async function advanceBroadcast(
   deadline: number,
 ): Promise<Broadcast | null> {
   const seconds = () => Math.floor(Date.now() / 1000);
-  const [got] = await redisPipeline([["SET", lockKey(id), "1", "NX", "EX", 90]]);
-  if (got === null) return null;
+  if (!await takeBroadcastLock(id)) return null;
   try {
-    let b = await readBroadcast(id);
+    let b = await readBroadcastForWork(id);
     if (!b) {
       await redisPipeline([["SREM", QUEUE, id]]);
       return null;
@@ -279,6 +366,11 @@ export async function advanceBroadcast(
     }
 
     if (!b.listed) {
+      if (b.sent !== 0) {
+        b = { ...b, status: "waiting", note: "The recipient list needs review because this campaign already has recorded progress. Nothing more was sent." };
+        await save(b);
+        return b;
+      }
       const to = await audience(b.listId, b.productId ?? undefined, b.notProductId ?? undefined, whoOf(store, b.who), await keepFor(store, b.narrow));
       let test = b.test;
       if (test) {
@@ -296,7 +388,19 @@ export async function advanceBroadcast(
       const commands: (string | number)[][] = [["DEL", toKey(id)]];
       for (let i = 0; i < to.length; i += 500) commands.push(["RPUSH", toKey(id), ...to.slice(i, i + 500)]);
       commands.push(["EXPIRE", toKey(id), 60 * 86_400]);
-      await redisPipeline(commands);
+      try {
+        const prepared = await redisPipeline(commands);
+        if (!Array.isArray(prepared) || prepared.length !== commands.length || (prepared[0] !== 0 && prepared[0] !== 1) || prepared.at(-1) !== (to.length ? 1 : 0)) throw new Error("Recipient snapshot write is unconfirmed");
+        let count = 0;
+        for (let i = 1; i < commands.length - 1; i += 1) {
+          count += commands[i].length - 2;
+          if (prepared[i] !== count) throw new Error("Recipient snapshot is incomplete");
+        }
+      } catch {
+        b = { ...b, status: "waiting", note: "The recipient list could not be prepared completely. Nothing was sent. It will be checked again automatically." };
+        await save(b);
+        return b;
+      }
       b = { ...b, status: "sending", total: to.length, note: "", listed: true, test };
       await save(b);
     }
@@ -330,9 +434,18 @@ export async function advanceBroadcast(
       }
       const subject = running && (part === "b" || (part === "rest" && running.winner === "b")) ? running.subjectB : b.subject;
       const campaign = part === "rest" ? broadcastCampaign(id) : variantCampaign(id, part);
-      const [chunk] = await redisPipeline([["LRANGE", toKey(id), b.sent, Math.min(b.sent + BATCH_SIZE, end) - 1]]);
-      const emails = Array.isArray(chunk) ? (chunk as string[]) : [];
-      if (!emails.length) break;
+      let emails: string[];
+      try {
+        const expected = Math.min(BATCH_SIZE, end - b.sent);
+        const response = await redisPipeline([["LRANGE", toKey(id), b.sent, b.sent + expected - 1]]);
+        if (!Number.isSafeInteger(expected) || expected < 1 || !Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0])) throw new Error("Recipient batch is unavailable");
+        const chunk: unknown[] = Array.from(response[0]);
+        if (chunk.length !== expected || chunk.some(email => typeof email !== "string" || email.length > MAX_EMAIL_LENGTH || email !== normaliseEmail(email) || !EMAIL_PATTERN.test(email)) || new Set(chunk).size !== chunk.length) throw new Error("Recipient batch is incomplete or invalid");
+        emails = chunk as string[];
+      } catch {
+        b = { ...b, status: "waiting", note: "The recipient list could not be read completely. Nothing more was sent. It will be checked again automatically." };
+        break;
+      }
       const result = await sendTo(
         store,
         emails,
@@ -384,9 +497,10 @@ export async function advanceBroadcast(
     }
     if (b.status === "sending" && b.sent >= b.total) {
       b = { ...b, status: "sent", finishedAt: Math.floor(Date.now() / 1000) };
-      await redisPipeline([["DEL", toKey(id)]]);
     }
     await save(b);
+    // Keep the snapshot until the terminal progress write is confirmed.
+    if (b.status === "sent") await redisPipeline([["DEL", toKey(id)]]);
     if (b.status === "sent" || b.status === "failed") await redisPipeline([["SREM", QUEUE, id]]);
     return b;
   } finally {
@@ -436,12 +550,19 @@ async function countTest(store: Store, b: Broadcast): Promise<{ visits: Counted;
 /** Moves every waiting or scheduled broadcast on. For the scheduled job. */
 export async function advanceAll(load: (handle: string) => Promise<Store | null>, deadline: number): Promise<number> {
   if (!isRedisConfigured()) return 0;
-  const [raw] = await redisPipeline([["SMEMBERS", QUEUE]]);
-  const ids = Array.isArray(raw) ? (raw as string[]) : [];
+  const response = await redisPipeline([["SMEMBERS", QUEUE]]);
+  if (!Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0])) throw new Error("Campaign queue is unavailable");
+  const ids: unknown[] = Array.from(response[0]);
+  if (ids.some(id => typeof id !== "string" || !BROADCAST_ID.test(id)) || new Set(ids).size !== ids.length) throw new Error("Campaign queue is invalid");
   let touched = 0;
   for (const id of ids) {
     if (Date.now() > deadline) break;
-    if (await advanceBroadcast(id, load, deadline)) touched += 1;
+    try {
+      if (await advanceBroadcast(id as string, load, deadline)) touched += 1;
+    } catch {
+      // Do not retry uncertain work in this pass or block unrelated campaigns.
+      console.error("Advancing a queued campaign failed", id);
+    }
   }
   return touched;
 }

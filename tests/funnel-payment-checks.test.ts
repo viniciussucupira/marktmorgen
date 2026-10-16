@@ -1,0 +1,121 @@
+import { paidStepProblem, freeStepProblem, planStepProblem, bumpStepProblems, readFunnelPaymentChecks } from "@/lib/funnel-payment-checks";
+import type { Listing, Store } from "@/lib/store";
+import { readListings } from "@/lib/catalog";
+import { store as redis } from "./redis-stub";
+import { done, is, part } from "./check";
+process.env.STRIPE_SECRET_KEY = "sk_test_local_configuration_only";
+const store = { currency: "usd", stripeAccountId: "acct_test", stripeChargesEnabled: true, subscriptionActive: true, suspended: false } as unknown as Store;
+const product = { id: "offer1", title: "Offer", priceCents: 1000, hidden: false, call: null, course: null, podcast: null, shipping: null, options: [], recurring: null, bundle: null, bumps: [], stock: null, pwyw: null, link: "https://example.com/delivery", file: null } as unknown as Listing;
+part("Paid funnel configuration follows the existing sale rules");
+is("zero configured quantity blocks a one-off offer", paidStepProblem(store, { ...product, stock: 0 }, 0)?.includes("configured quantity of zero"), true);
+is("positive configured quantity does not claim live stock", paidStepProblem(store, { ...product, stock: 2 }, 0), null);
+is("unlimited offers remain unchanged", paidStepProblem(store, { ...product, stock: null }, 0), null);
+is("ready link offer", paidStepProblem(store, product, 0), null);
+is("disabled payments found", paidStepProblem({ ...store, stripeChargesEnabled: false }, product, 0)?.includes("Payments are unavailable"), true);
+is("expired subscription found", paidStepProblem({ ...store, subscriptionActive: false }, product, 0)?.includes("Payments are unavailable"), true);
+is("missing delivery found", paidStepProblem(store, { ...product, link: null }, 0)?.includes("delivery"), true);
+is("empty course found", paidStepProblem(store, { ...product, link: null, course: { id: "course1", lessons: 0 } } as Listing, 0)?.includes("delivery"), true);
+is("course with lessons", paidStepProblem(store, { ...product, link: null, course: { id: "course1", lessons: 2 } } as Listing, 0), null);
+is("free sign-up is not claimed to be checked", paidStepProblem(store, { ...product, priceCents: 0 }, 0), null);
+is("draft availability is checked separately", paidStepProblem(store, { ...product, hidden: true }, 0), null);
+const bundle = { ...product, link: null, bundle: ["a", "b", "c", "d"], pick: 3 } as Listing;
+is("bundle needs enough deliverable choices", paidStepProblem(store, bundle, 2)?.includes("enough deliverable"), true);
+is("bundle with enough choices", paidStepProblem(store, bundle, 3), null);
+is("whole bundle needs at least two", paidStepProblem(store, { ...bundle, pick: null }, 1)?.includes("enough deliverable"), true);
+
+part("Free sign-up uses the public eligibility rule");
+process.env.RESEND_API_KEY = "re_test_configuration_only";
+const freeStore = { ...store, listId: "list1" } as Store;
+const free = { ...product, priceCents: 0 };
+is("configured free delivery", freeStepProblem(freeStore, free), null);
+is("no mailing list", freeStepProblem({ ...freeStore, listId: null }, free)?.includes("Free sign-up"), true);
+is("no free delivery", freeStepProblem(freeStore, { ...free, link: null })?.includes("Free sign-up"), true);
+is("free subscription inactive", freeStepProblem({ ...freeStore, subscriptionActive: false }, free)?.includes("Free sign-up"), true);
+is("paid product excluded from free review", freeStepProblem(freeStore, product), null);
+part("PayPal-only offers follow the public eligibility rule");
+process.env.PAYPAL_PARTNER_CLIENT_ID = "test-client";
+process.env.PAYPAL_PARTNER_SECRET = "test-secret";
+process.env.PAYPAL_PARTNER_MERCHANT_ID = "TEST123456";
+process.env.PAYPAL_BN_CODE = "test-code";
+const paypalStore = { ...store, stripeChargesEnabled: false, currency: "usd", paypalSeller: { merchant: "TEST123456" } } as unknown as Store;
+const paypalOffer = { ...product, stock: null, keys: null, pwyw: null };
+is("PayPal-only offer is available", paidStepProblem(paypalStore, paypalOffer, 0), null);
+is("unsupported PayPal offer stays unavailable", paidStepProblem(paypalStore, { ...paypalOffer, stock: 2 } as unknown as Listing, 0)?.includes("not sellable"), true);
+is("PayPal does not bypass missing delivery", paidStepProblem(paypalStore, { ...paypalOffer, link: null }, 0)?.includes("delivery"), true);
+
+part("Saved funnel plans explain why installments disappeared");
+const installment = { ...product, plan: { payments: 3, interval: "month", amountCents: 400 } } as Listing;
+is("valid installment plan", planStepProblem(store, installment), null);
+is("installments require Stripe even when PayPal can sell up front", planStepProblem(paypalStore, installment)?.includes("requires an available Stripe"), true);
+is("PayPal up-front purchase remains eligible", paidStepProblem(paypalStore, installment, 0), null);
+is("expired plan blocks configured installments", planStepProblem({ ...store, subscriptionActive: false }, installment)?.includes("store plan"), true);
+is("no installments means no provider warning", planStepProblem(paypalStore, product), null);
+is("no plan remains quiet", planStepProblem(store, product), null);
+is("price increase explains short installments", planStepProblem(store, { ...installment, priceCents: 1500 })?.includes("less than the "), true);
+is("up-front checkout remains eligible", paidStepProblem(store, { ...installment, priceCents: 1500 }, 0), null);
+is("recurring product explains incompatible plan", planStepProblem(store, { ...installment, recurring: { interval: "month" } } as Listing)?.includes("only goes on a product sold once"), true);
+is("chosen price explains suppressed plan", planStepProblem(store, { ...installment, pwyw: { minCents: 100 } } as unknown as Listing)?.includes("no fixed price"), true);
+is("hidden product availability remains separate", planStepProblem(store, { ...installment, hidden: true, priceCents: 1500 }), null);
+const option = { id: "commercial1", label: "Commercial", priceCents: 1500, file: null, link: "https://example.com/commercial", details: [], best: false };
+const priced = { ...installment, options: [option], plan: { ...installment.plan!, options: { personal1: 400 } } } as Listing;
+is("missing option names affected price", planStepProblem(store, priced)?.includes("no payment for the \u201cCommercial\u201d price"), true);
+is("option payments too small", planStepProblem(store, { ...priced, plan: { ...priced.plan!, options: { commercial1: 400 } } })?.includes("less than the \u201cCommercial\u201d price"), true);
+is("all eligible prices covered", planStepProblem(store, { ...priced, plan: { ...priced.plan!, options: { commercial1: 500 } } }), null);
+
+part("Saved checkout add-ons explain suppressed offers");
+const extra = { ...product, id: "extra1", title: "Extra pack" };
+const withBump = { ...product, bumps: [{ productId: extra.id, priceCents: 500, pitch: "Add extra pack" }] };
+is("eligible add-on remains quiet", bumpStepProblems(withBump, [extra]), []);
+is("no add-on remains quiet", bumpStepProblems(product, []), []);
+is("removed add-on gives correction", bumpStepProblems(withBump, [])[0]?.includes("no longer in your store"), true);
+is("changed target price explains disappearance", bumpStepProblems(withBump, [{ ...extra, priceCents: 400 }])[0]?.includes("charges more for Extra pack"), true);
+is("missing target delivery names affected product", bumpStepProblems(withBump, [{ ...extra, link: null }])[0]?.includes("behind Extra pack to hand over"), true);
+is("limited target explains own checkout requirement", bumpStepProblems(withBump, [{ ...extra, stock: 2 }])[0]?.includes("only its own checkout counts"), true);
+is("buyer-chosen price explains suppression", bumpStepProblems({ ...withBump, pwyw: { minCents: 100 } } as unknown as Listing, [extra])[0]?.includes("only thing in its checkout"), true);
+is("hidden main product is reviewed separately", bumpStepProblems({ ...withBump, hidden: true }, []), []);
+is("main purchase remains eligible with missing add-on", paidStepProblem(store, withBump, 0), null);
+
+async function main() {
+  const catalogStore = { ...store, catalog: { id: null, inline: null, items: [{ id: product.id }], head: [product] } } as unknown as Store;
+  is("configured paid step checked", await readFunnelPaymentChecks(catalogStore, { steps: [{ kind: "product", id: product.id }] }), []);
+  is("ordinary pages do not read unrelated products", await readFunnelPaymentChecks(catalogStore, { steps: [{ kind: "page", id: "page1" }] }), []);
+  is("foreign product cannot become a ready step", (await readFunnelPaymentChecks(catalogStore, { steps: [{ kind: "product", id: "foreign1" }] }))[0]?.includes("could not be found"), true);
+  const broken = { ...catalogStore, catalog: { ...catalogStore.catalog, get head(): Listing[] { throw new Error("storage unavailable"); } } } as Store;
+  let unknown = false;
+  try { await readFunnelPaymentChecks(broken, { steps: [{ kind: "product", id: product.id }] }); } catch { unknown = true; }
+  is("failed reads remain unknown", unknown, true);
+  const short = { ...installment, priceCents: 1500 };
+  const planStore = { ...catalogStore, catalog: { ...catalogStore.catalog, head: [short] } } as Store;
+  const planIssues = await readFunnelPaymentChecks(planStore, { steps: [{ kind: "page", id: "page1" }, { kind: "product", id: short.id }] });
+  is("saved funnel locates plan warning at correct step", planIssues.length === 1 && planIssues[0].startsWith("Step 2, Offer:") && planIssues[0].includes("payment plan"), true);
+  const addOnStore = { ...catalogStore, catalog: { ...catalogStore.catalog, items: [{ id: withBump.id }, { id: extra.id }], head: [withBump, { ...extra, priceCents: 400 }] } } as Store;
+  const addOnIssues = await readFunnelPaymentChecks(addOnStore, { steps: [{ kind: "product", id: withBump.id }] });
+  is("saved review loads configured add-on outside funnel", addOnIssues.length === 1 && addOnIssues[0].startsWith("Step 1, Offer:") && addOnIssues[0].includes("Extra pack"), true);
+  const foreignAddOnStore = { ...addOnStore, catalog: { ...addOnStore.catalog, items: [{ id: withBump.id }] } } as Store;
+  is("add-on outside selected store cannot appear ready", (await readFunnelPaymentChecks(foreignAddOnStore, { steps: [{ kind: "product", id: withBump.id }] }))[0]?.includes("no longer in your store"), true);
+  const externalStore = { ...catalogStore, catalog: { ...catalogStore.catalog, id: "review-catalog", head: [] } } as Store;
+  const originalPipeline = redis.pipeline;
+  const rejectsReview = async () => {
+    try { await readFunnelPaymentChecks(externalStore, { steps: [{ kind: "product", id: product.id }] }); return false; } catch { return true; }
+  };
+  try {
+    redis.pipeline = async () => [];
+    is("incomplete catalog reply leaves review unknown", await rejectsReview(), true);
+    is("public catalog reader retains tolerant behavior", await readListings(externalStore, [product.id]), []);
+    const unreadBundle = { ...product, link: null, bundle: ["bundle-a", "bundle-b"], pick: null };
+    const unreadBundleStore = { ...externalStore, catalog: { ...externalStore.catalog, items: [{ id: product.id }, { id: "bundle-a" }, { id: "bundle-b" }], head: [unreadBundle] } } as Store;
+    let bundleUnknown = false;
+    try { await readFunnelPaymentChecks(unreadBundleStore, { steps: [{ kind: "product", id: product.id }] }); } catch { bundleUnknown = true; }
+    is("incomplete bundle member reads keep review unknown", bundleUnknown, true);
+    redis.pipeline = async () => ["broken"];
+    is("invalid catalog record leaves review unknown", await rejectsReview(), true);
+    redis.pipeline = async () => [JSON.stringify({ ...product, id: "wrong" })];
+    is("mismatched catalog id leaves review unknown", await rejectsReview(), true);
+    redis.pipeline = async () => [null];
+    is("confirmed missing catalog record remains a correction", (await readFunnelPaymentChecks(externalStore, { steps: [{ kind: "product", id: product.id }] }))[0]?.includes("could not be found"), true);
+    redis.pipeline = async () => [JSON.stringify(product)];
+    is("valid external catalog record remains eligible", await readFunnelPaymentChecks(externalStore, { steps: [{ kind: "product", id: product.id }] }), []);
+  } finally { redis.pipeline = originalPipeline; }
+  done();
+}
+void main();

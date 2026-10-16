@@ -13,6 +13,7 @@
  */
 import { NextRequest } from "next/server";
 import { FUNNEL_TYPES, choicesOf, freeSlug, funnelType, pagesOf, slotProblem } from "@/lib/funnel-types";
+import { MAX_FORMS } from "@/lib/forms";
 import { MAX_FUNNEL_PAGES } from "@/lib/page-funnel";
 import { SITE_KINDS, SLUG_PATTERN, slugProblem } from "@/lib/site-page-rules";
 import { readPageFunnels } from "@/lib/page-funnel-store";
@@ -102,6 +103,37 @@ async function main(): Promise<void> {
   is("a kind that is not one", (await (await send({ action: "from-type", type: "summit", products: {} })).json()).error, "type");
   is("a call asked for and a paid product given", (await (await send({ action: "from-type", type: "book", products: { book: "nope" } })).json()).error, "slot_missing");
   is("an application asks for no product: its page asks the questions", choicesOf(funnelType("application")!).length, 0);
+  part("Capacity and partial setup failures");
+  const recoveryOwner = "recovery@example.com";
+  await claimHandle(recoveryOwner, "recoverystore", "Recovery", "");
+  await ensureStatsId(recoveryOwner);
+  const recoveryStore = (await storeForEmail(recoveryOwner))!;
+  const recoverySession = await openSession(recoveryOwner);
+  const recover = () => POST(new NextRequest("https://marktmorgen.com/api/store/page-funnels", { method: "POST", headers: { "content-type": "application/json", cookie: `${SESSION_COOKIE}=${recoverySession}` }, body: JSON.stringify({ action: "from-type", type: "application", name: "Recovery", products: {} }) }));
+  const formKey = `nl:forms:${recoveryStore.statsId}`;
+  for (let i = 0; i < MAX_FORMS; i++) await redis.pipeline([["HSET", formKey, String(i), "malformed"]]);
+  const fullForms = await (await recover()).json();
+  is("full form hash is refused before any page or funnel is saved", [fullForms.error, (await storeForEmail(recoveryOwner))!.sitePages.length, (await readPageFunnels(recoveryStore.statsId)).length], ["forms_full", 0, 0]);
+  for (let i = 0; i < MAX_FORMS; i++) await redis.pipeline([["HDEL", formKey, String(i)]]);
+  const pipeline = redis.pipeline;
+  try {
+    redis.pipeline = async commands => commands.some(c => c[0] === "HLEN" && c[1] === formKey) ? [null] : pipeline(commands);
+    const unknownCapacity = await (await recover()).json();
+    is("unknown capacity refuses setup without saving pages", [unknownCapacity.error, (await storeForEmail(recoveryOwner))!.sitePages.length], ["server_error", 0]);
+  } finally { redis.pipeline = pipeline; }
+  try {
+    redis.pipeline = async commands => {
+      if (commands.some(c => c[0] === "SET" && String(c[1]).startsWith(`nl:product:page:${recoveryStore.statsId}:`))) throw new Error("Injected page write failure");
+      return pipeline(commands);
+    };
+    const partial = await (await recover()).json();
+    is("page write failure reports possible partial setup, never success", [partial.ok, partial.error, (await storeForEmail(recoveryOwner))!.sitePages.length, (await readPageFunnels(recoveryStore.statsId)).length], [false, "setup_incomplete", 1, 0]);
+  } finally { redis.pipeline = pipeline; }
+  try {
+    redis.pipeline = async commands => commands.some(c => c[0] === "HEXISTS" && c[1] === formKey) ? [0, MAX_FORMS] : pipeline(commands);
+    const raced = await (await recover()).json();
+    is("capacity changed after preflight cannot silently create a broken funnel", [raced.ok, raced.error, (await readPageFunnels(recoveryStore.statsId)).length], [false, "setup_incomplete", 0]);
+  } finally { redis.pipeline = pipeline; }
   done();
 }
 

@@ -10,17 +10,18 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { listCounts } from "@/lib/contacts";
-import { listBroadcasts } from "@/lib/broadcasts";
+import { listBroadcastsStrict } from "@/lib/broadcasts";
 import { broadcastMoney, flowMoney, readMailRevenue, readMailVisits } from "@/lib/mail-revenue";
 import { sellsSomething } from "@/lib/mail-starters";
-import { flowStats, readFlows } from "@/lib/flows";
+import { readFlowStatsStrict } from "@/lib/flow-stats";
+import { readFlowListStrict } from "@/lib/flow-list";
 import { inTrial, monthlyAllowance, usedThisMonth } from "@/lib/mail";
 import { healthId, pauseWords, pausedFor } from "@/lib/mail-health";
 import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
 import { EmailStudio } from "@/components/email-studio";
 import { readForms } from "@/lib/form-store";
 import { readFields, readStages } from "@/lib/crm";
-import { listDrafts } from "@/lib/mail-drafts";
+import { listDraftsStrict } from "@/lib/mail-drafts";
 import { can } from "@/lib/team-roles";
 import { trialOffered } from "@/lib/billing";
 import { listSegments } from "@/lib/segments";
@@ -45,24 +46,27 @@ export default async function StudioEmailPage({ searchParams }: Params) {
   const { store } = view;
 
   const allowance = monthlyAllowance(store);
-  const [counts, used, broadcasts, flows, listings, drafts, pause] = await Promise.all([
+  const [counts, used, loadedBroadcasts, loadedFlows, listings, loadedDrafts, pause] = await Promise.all([
     listCounts(store.listId),
     usedThisMonth(store.listId),
-    listBroadcasts(store.listId),
-    readFlows(store.listId),
+    listBroadcastsStrict(store.listId).catch(() => null),
+    readFlowListStrict(store.listId).catch(() => null),
     // The names of the products a flow or a broadcast can be about: one
     // command, where reading every card was one per product (lib/catalog.ts).
     readTitles(store),
-    listDrafts(store.listId),
+    listDraftsStrict(store.listId).catch(() => null),
     // Whether this store's list email is waiting out a week because too many
     // of its addresses bounced or reported it (lib/mail-health.ts).
     pausedFor(healthId(store)),
   ]);
+  const broadcasts = loadedBroadcasts ?? [];
+  const flows = loadedFlows ?? [];
+  const drafts = loadedDrafts ?? [];
   const role = view.role;
   // What each email sold, from the creator's own Stripe account, cached for
   // ten minutes (lib/mail-revenue.ts). Asked only when something was sent.
   const [stats, revenue, visits] = await Promise.all([
-    flowStats(flows),
+    readFlowStatsStrict(flows).catch(() => null),
     broadcasts.length || flows.length ? readMailRevenue(store) : Promise.resolve(null),
     // And how many times its links opened a page of the store, from the
     // store's own count of visits by tag: nothing in the email reports back.
@@ -153,7 +157,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             canSend={can(role, "send")}
             canSettings={can(role, "settings")}
             canExport={can(role, "export")}
-            drafts={drafts.map(({ id, subject, body, productId, by, savedAt }) => ({ id, subject, body, productId, by, savedAt }))}
+            drafts={drafts.map(({ id, subject, body, productId, by, savedAt, audience, subjectTest }) => ({ id, subject, body, productId, by, savedAt, subjectTest, ...audience }))}
             name={store.name}
             mail={store.mail}
             counts={counts}
@@ -174,6 +178,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
                 : null
             }
             products={[...listings].map(([id, title]) => ({ id, title }))}
+            broadcastsReadFailed={loadedBroadcasts === null}
             broadcasts={broadcasts.map((b) => ({
               id: b.id,
               subject: b.subject,
@@ -194,12 +199,15 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             }))}
             currency={store.currency}
             sells={sellsSomething(store)}
-            flows={flows.map((f) => ({ ...f, stats: stats.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0, acted: 0 }, money: flowMoney(revenue, f.id) }))}
+            flowsReadFailed={loadedFlows === null}
+            draftsReadFailed={loadedDrafts === null}
+            flows={flows.map((f) => ({ ...f, statsAvailable: stats?.has(f.id) ?? false, stats: stats?.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0, acted: 0 }, money: flowMoney(revenue, f.id) }))}
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
             ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
             segments={await listSegments(store.listId).catch(() => [])}
             preset={typeof query.who === "string" && (WHO as readonly string[]).includes(query.who) ? { who: query.who as Who } : undefined}
             courses={idsOfKind(store, "course")}
+            paidProducts={idsOfKind(store, "paid")}
             automation={{
               forms: (await readForms(store.statsId).catch(() => [])).filter((f) => f.fields.some((x) => x.type === "email")).map((f) => ({ id: f.id, name: f.name })),
               fields: (await readFields(store.statsId).catch(() => [])).map((f) => ({ id: f.id, name: f.name, type: f.type, options: f.options })),

@@ -33,6 +33,7 @@ import {
   funnelHere,
   funnelVisitor,
   readFunnelCounts,
+  readFunnelCountsStrict,
   readPageFunnels,
   stepStates,
   writePageFunnel,
@@ -181,6 +182,31 @@ async function main(): Promise<void> {
   await hit({ h: "chef", k: "f", f: funnel.id, t: "g", id: "notastep01" });
   await hit({ h: "chef", k: "f", f: funnel.id, t: "g", id: "videopage1" }, `${SESSION_COOKIE}=${await openSession(OWNER)}`);
   is("through the page's own beacon: once, not a page that is no step, and never the owner", (await readFunnelCounts(statsId, funnel))[2].seen, 2);
+
+  part("Studio count reads preserve uncertainty");
+  is("strict counts preserve confirmed activity", await readFunnelCountsStrict(statsId, funnel), await readFunnelCounts(statsId, funnel));
+  let missingCountStore = false;
+  try { await readFunnelCountsStrict(null, funnel); } catch { missingCountStore = true; }
+  is("no store counter id stays unknown", missingCountStore, true);
+  const originalPipeline = redis.pipeline;
+  try {
+    redis.pipeline = async () => { throw new Error("counter storage unavailable"); };
+    let failedRead = false;
+    try { await readFunnelCountsStrict(statsId, funnel); } catch { failedRead = true; }
+    is("failed count read never becomes zero", failedRead, true);
+    redis.pipeline = async () => [0];
+    let incompleteRead = false;
+    try { await readFunnelCountsStrict(statsId, funnel); } catch { incompleteRead = true; }
+    is("partial count response stays unknown", incompleteRead, true);
+    for (const invalid of [null, undefined, "", "invalid", -1, 1.5, Infinity, Number.NaN, true, Number.MAX_SAFE_INTEGER + 1]) {
+      redis.pipeline = async commands => commands.map(() => invalid);
+      let invalidRead = false;
+      try { await readFunnelCountsStrict(statsId, funnel); } catch { invalidRead = true; }
+      is("malformed count rejected: " + String(invalid), invalidRead, true);
+    }
+    redis.pipeline = async commands => commands.map(() => "0");
+    is("confirmed numeric-string zero remains valid", (await readFunnelCountsStrict(statsId, funnel))[0], { seen: 0, done: 0 });
+  } finally { redis.pipeline = originalPipeline; }
 
   part("Removing one");
   is("gone, and a second removal finds nothing", [await dropPageFunnel(statsId, funnel.id), await dropPageFunnel(statsId, funnel.id)], [true, false]);

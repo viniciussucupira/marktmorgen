@@ -12,10 +12,10 @@ import { MAX_IMPORT, WHO, type Who, audience, importContacts, listCounts, readAd
 import { MAX_MAIL_BODY, MAX_SUBJECT, fromLine, monthlyAllowance, render, reserve, release } from "@/lib/mail";
 import { sendBatch } from "@/lib/email";
 import { healthId, startRamp } from "@/lib/mail-health";
-import { advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
+import { BroadcastCancellationUnconfirmed, BroadcastWriteUnconfirmed, advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
 import { buyerLedger, isNarrowed, keeps, ledgerChannels, readNarrow, removeSegment, saveSegment } from "@/lib/segments";
-import { removeFlow, saveFlow } from "@/lib/flows";
-import { removeDraft, saveDraft } from "@/lib/mail-drafts";
+import { FlowWriteUnconfirmed, removeFlow, saveFlow } from "@/lib/flows";
+import { DraftRemovalConflict, DraftRemovalUnconfirmed, DraftReadUnavailable, DraftWriteUnconfirmed, finishBroadcastDraft, removeDraft, saveDraft } from "@/lib/mail-drafts";
 import { copyOf, keepSending } from "@/lib/mail-reuse";
 import { setUpStarters } from "@/lib/mail-starters";
 import { readListings } from "@/lib/catalog";
@@ -183,13 +183,17 @@ export async function POST(request: NextRequest) {
         subject: text(body.subject, 400),
         body: text(body.body, MAX_MAIL_BODY * 2),
         productId: text(body.productId, 40),
+        audience: body.audience,
+        subjectTest: body.subjectTest,
+        expectedSavedAt: body.expectedSavedAt,
       });
-      return result.ok ? Response.json({ ok: true, draft: result.draft }) : fail(result.reason);
+      return result.ok ? Response.json({ ok: true, draft: result.draft }) : fail(result.reason, result.reason === "draft_conflict" || result.reason === "draft_busy" ? 409 : 400);
     }
 
     if (action === "draft-remove") {
-      const done = await removeDraft(store, text(body.id, 40));
-      return done ? Response.json({ ok: true }) : fail("unknown", 404);
+      const id = text(body.id, 40);
+      const done = await removeDraft(store, id, body.expectedSavedAt);
+      return done ? Response.json({ ok: true, removed: { id, savedAt: typeof body.expectedSavedAt === "string" ? body.expectedSavedAt : null } }) : fail("unknown", 404);
     }
 
     if (action === "broadcast") {
@@ -209,18 +213,20 @@ export async function POST(request: NextRequest) {
       const id = created.broadcast.id;
       // A draft that has now been sent or scheduled is done with.
       const fromDraft = text(body.draftId, 40);
-      if (fromDraft) await removeDraft(store, fromDraft);
+      const draftCleanupConfirmed = await finishBroadcastDraft(store, fromDraft, body.draftSavedAt);
+      if (!draftCleanupConfirmed) console.error("A confirmed campaign draft cleanup could not be confirmed");
       if (created.broadcast.sendAt <= Math.floor(Date.now() / 1000) + 60) {
         // Starts as soon as the studio has its answer; the scheduled job
         // finishes anything this run does not.
         after(() => advanceBroadcast(id, storeForHandle, Date.now() + 50_000).then(() => undefined));
       }
-      return Response.json({ ok: true, broadcast: created.broadcast });
+      return Response.json({ ok: true, broadcast: created.broadcast, draftCleanupConfirmed });
     }
 
     if (action === "cancel") {
-      const done = await cancelBroadcast(store, text(body.id, 40));
-      return done ? Response.json({ ok: true }) : fail("unknown", 404);
+      const id = text(body.id, 40);
+      const done = await cancelBroadcast(store, id);
+      return done ? Response.json({ ok: true, cancelled: { id, status: "cancelled" } }) : fail("unknown", 404);
     }
 
     if (action === "flow") {
@@ -257,6 +263,13 @@ export async function POST(request: NextRequest) {
     return fail("invalid");
   } catch (error) {
     console.error("an email action failed", error);
+    if (error instanceof BroadcastCancellationUnconfirmed) return fail("broadcast_cancel_unconfirmed", 502);
+    if (error instanceof BroadcastWriteUnconfirmed) return fail("broadcast_write_unconfirmed", 502);
+    if (error instanceof FlowWriteUnconfirmed) return fail("flow_write_unconfirmed", 502);
+    if (error instanceof DraftWriteUnconfirmed) return fail("draft_write_unconfirmed", 502);
+    if (error instanceof DraftReadUnavailable) return fail("draft_read_unavailable", 503);
+    if (error instanceof DraftRemovalConflict) return fail("draft_remove_conflict", 409);
+    if (error instanceof DraftRemovalUnconfirmed) return fail("draft_remove_unconfirmed", 502);
     return fail("server_error", 500);
   }
 }

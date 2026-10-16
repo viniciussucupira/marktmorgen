@@ -49,7 +49,8 @@ export function StudioStorePin({ sid, children }: { sid: string; children: React
   // as soon as it appears must already carry the store.
   useState(() => pinTo(sid));
   if (typeof window !== "undefined" && pinned !== sid) pinTo(sid);
-  return <StoreContext.Provider value={sid}>{children}</StoreContext.Provider>;
+  // A new store must not inherit drafts, selections or dialog state from the previous one.
+  return <StoreContext.Provider key={sid} value={sid}>{children}</StoreContext.Provider>;
 }
 
 /** The id of the store this studio page is for, or "" outside one. */
