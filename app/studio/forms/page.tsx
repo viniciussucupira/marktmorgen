@@ -5,6 +5,7 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { FormsEditor, type SavedForm } from "@/components/forms-editor";
+import { formOpportunityRef } from "@/lib/form-opportunity";
 import { readForms, readResponses } from "@/lib/form-store";
 import { readCards } from "@/lib/catalog";
 import { readTeam } from "@/lib/team";
@@ -40,12 +41,12 @@ export default async function StudioFormsPage({ searchParams }: Params) {
   const forms = await readForms(store.statsId);
   const canCreateDeals = reads && can(view.role, "orders");
   const [dealStages, team] = canCreateDeals ? await Promise.all([readStages(store.statsId), readTeam(store.sid)]) : [[], null];
-  const existingDeals = canCreateDeals ? (await readDeals(store.statsId, dealStages)).map(({ id, title, email, stage }) => ({ id, title, email, stage })) : [];
+  const existingDeals = canCreateDeals ? (await readDeals(store.statsId, dealStages)).map(({ id, title, email, stage, formResponseRef }) => ({ id, title, email, stage, formResponseRef })) : [];
   const dealAssignees = team ? [...new Set([store.email, ...team.members.filter(member => can(member.role, "orders")).map(member => member.email)])] : [];
   const saved: SavedForm[] = await Promise.all(
     forms.map(async (form) => {
       const { responses, total } = reads ? await readResponses(store.statsId, form.id, SHOWN) : { responses: [], total: 0 };
-      return { form, total, latest: responses };
+      return { form, total, latest: responses.map(response => ({ ...response, opportunityRef: canCreateDeals && store.statsId ? formOpportunityRef(store.statsId, form.id, response) : undefined })) };
     }),
   );
   const cards = await readCards(store);
