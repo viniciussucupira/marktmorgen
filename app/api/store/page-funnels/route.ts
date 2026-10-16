@@ -10,6 +10,7 @@ import { emptyBlock, parsePage } from "@/lib/sales-page";
 import { writePage } from "@/lib/sales-page-store";
 import { MAX_SITE_PAGES, type SitePage, siteKey, slugProblem } from "@/lib/site-page-rules";
 import { choicesOf, freeSlug, funnelType, pagesOf, slotProblem } from "@/lib/funnel-types";
+import { readFunnelPageCopy } from "@/lib/funnel-page-copy";
 import { newFormId, parseForm } from "@/lib/forms";
 import { canAddForms, writeForm } from "@/lib/form-store";
 
@@ -23,12 +24,12 @@ import { canAddForms, writeForm } from "@/lib/form-store";
  *
  * `{ action: "from-type", type, name, products: { <slot>: <product id> } }`
  * builds one from a funnel type (lib/funnel-types.ts): the store's own pages
- * the type needs, made empty and kept back until the creator lets them out,
+ * the type needs, optionally with author-written pageCopy, kept back until the creator lets them out,
  * and the funnel walking them and the chosen products in the type's order.
  * Making pages needs the permission to change the public page as well.
  */
 export async function POST(request: NextRequest) {
-  const guarded = await guardStoreWrite(request, "products", 12_000);
+  const guarded = await guardStoreWrite(request, "products", 20_000);
   if (!guarded.ok) return guarded.response;
   const { store, body } = guarded;
   if (!store.statsId) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
       if (existing.length >= MAX_PAGE_FUNNELS) return Response.json({ ok: false, error: "full" }, { status: 400 });
       const name = text(body.name, MAX_FUNNEL_NAME).replace(/\s+/g, " ").trim() || type.label;
       const pages = pagesOf(type);
+      const pageCopy = readFunnelPageCopy(body.pageCopy, type);
+      if (!pageCopy) return Response.json({ ok: false, error: "page_copy" }, { status: 400 });
       if (store.sitePages.length + pages.length > MAX_SITE_PAGES) return Response.json({ ok: false, error: "pages_full" }, { status: 400 });
 
       // Each product chosen is the store's, once, and the kind the role asks for.
@@ -86,8 +89,16 @@ export async function POST(request: NextRequest) {
         if (!saved.ok || !saved.store.statsId) return Response.json({ ok: false, error: "setup_incomplete" }, { status: 500 });
         for (const { slot, page } of made) {
           const blocks = slot.blocks.map((kind) => emptyBlock(kind));
+          const copy = pageCopy[slot.key];
           const hero = blocks[0];
-          if (hero?.kind === "hero") Object.assign(hero, { headline: slot.title, media: "none" });
+          if (hero?.kind === "hero") Object.assign(hero, { headline: copy?.headline || slot.title, media: "none" });
+          if (copy?.intro) {
+            const intro = emptyBlock("text");
+            if (intro.kind === "text") {
+              intro.body = copy.intro;
+              blocks.splice(1, 0, intro);
+            }
+          }
           // The form the page asks, made with it: questions only, nothing claimed (lib/funnel-types.ts).
           const asks = blocks.find((block) => block.kind === "form");
           if (slot.form && asks?.kind === "form") {
