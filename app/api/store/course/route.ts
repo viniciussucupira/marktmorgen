@@ -270,7 +270,8 @@ export async function POST(request: NextRequest) {
           await dropQuiz(course.id, lessonId);
           return Response.json({ ok: true, course: result.course });
         }
-        const read = readQuiz(body.quiz);
+        const existingQuiz = await readQuizFor(course.id, lessonId);
+        const read = readQuiz(body.quiz, existingQuiz);
         if (!read.ok) {
           // Which question, and what is wrong with it, so the studio can say so.
           const at = "at" in read ? read.at : null;

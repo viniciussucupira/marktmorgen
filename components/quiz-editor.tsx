@@ -5,6 +5,7 @@ import { toast } from "@/components/toast";
 import type { Course } from "@/lib/course";
 import {
   DEFAULT_PASS_PERCENT,
+  DEFAULT_ATTEMPTS,
   MAX_ATTEMPTS,
   MAX_CHOICES,
   MAX_CHOICE_LENGTH,
@@ -42,7 +43,7 @@ function problemText(problem: { reason?: string; at?: number | null } | undefine
     case "pass":
       return "Type a pass mark from 1 to 100 percent.";
     case "attempts":
-      return `Type how many tries a student gets, from 1 to ${MAX_ATTEMPTS}, or leave it empty for no limit.`;
+      return `Type how many tries a student gets, from 1 to ${MAX_ATTEMPTS}.`;
     case "question":
       return `Question ${n}: write the question.`;
     case "choices":
@@ -82,7 +83,7 @@ export function QuizEditor({
   async function open() {
     setError(null);
     if (!setup) {
-      setDraft({ passPercent: String(DEFAULT_PASS_PERCENT), attempts: "", required: false, questions: [blankQuestion()] });
+      setDraft({ passPercent: String(DEFAULT_PASS_PERCENT), attempts: String(DEFAULT_ATTEMPTS), required: false, questions: [blankQuestion()] });
       return;
     }
     setLoading(true);
@@ -96,7 +97,7 @@ export function QuizEditor({
       }
       setDraft({
         passPercent: String(quiz.passPercent),
-        attempts: quiz.attempts ? String(quiz.attempts) : "",
+        attempts: String(quiz.attempts),
         required: quiz.required,
         questions: quiz.questions.map((q) => ({ ...q, choices: [...q.choices], correct: [...q.correct] })),
       });
@@ -143,7 +144,7 @@ export function QuizEditor({
             {[
               `${setup.questions} ${setup.questions === 1 ? "question" : "questions"}`,
               `pass mark ${setup.passPercent}%`,
-              setup.attempts ? `${setup.attempts} ${setup.attempts === 1 ? "try" : "tries"}` : "unlimited tries",
+              setup.attempts ? `${setup.attempts} ${setup.attempts === 1 ? "try" : "tries"}` : "existing quiz: no attempt cap",
               setup.required ? "must be passed to go on" : "optional",
             ].join(" · ")}
           </p>
@@ -198,12 +199,12 @@ export function QuizEditor({
           <input
             className="field mt-2"
             inputMode="numeric"
-            placeholder="No limit"
+            placeholder={String(DEFAULT_ATTEMPTS)}
             value={draft.attempts}
             onChange={(e) => setDraft({ ...draft, attempts: e.target.value.replace(/[^0-9]/g, "").slice(0, 2) })}
             aria-describedby={`${prefix}-tries`}
           />
-          <span id={`${prefix}-tries`} className="mt-1 block text-xs text-ink-soft">{`1 to ${MAX_ATTEMPTS}, or empty for no limit. You can give a student their tries back from the list of students.`}</span>
+          <span id={`${prefix}-tries`} className="mt-1 block text-xs text-ink-soft">{`1 to ${MAX_ATTEMPTS} tries. ${setup?.attempts === 0 ? "This existing quiz can keep 0 or an empty field to preserve its original setting." : `Empty uses ${DEFAULT_ATTEMPTS}.`}You can restore tries from the student list.`}</span>
         </label>
       </div>
       <label className="mt-3 flex min-h-11 cursor-pointer items-start gap-3 text-sm text-ink">

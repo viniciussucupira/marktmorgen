@@ -40,8 +40,9 @@ export const MAX_EXPLANATION_LENGTH = 600;
 export const MIN_PASS_PERCENT = 1;
 export const MAX_PASS_PERCENT = 100;
 export const DEFAULT_PASS_PERCENT = 70;
-/** Tries a student gets. 0 is as many as they like. */
+/** New quizzes always have a finite attempt limit. Stored legacy zero remains readable. */
 export const MAX_ATTEMPTS = 10;
+export const DEFAULT_ATTEMPTS = 3;
 
 export type QuestionKind = "single" | "multiple";
 
@@ -137,10 +138,11 @@ export function parseQuiz(raw: unknown): Quiz | null {
     const questions = Array.isArray(value.questions)
       ? value.questions.map(parseQuestion).filter((q): q is Question => q !== null).slice(0, MAX_QUESTIONS)
       : [];
-    if (questions.length === 0) return null;
+    const attempts = wholeIn(value.attempts, 0, MAX_ATTEMPTS);
+    if (questions.length === 0 || attempts === null) return null;
     return {
       passPercent: wholeIn(value.passPercent, MIN_PASS_PERCENT, MAX_PASS_PERCENT) ?? DEFAULT_PASS_PERCENT,
-      attempts: wholeIn(value.attempts, 0, MAX_ATTEMPTS) ?? 0,
+      attempts,
       required: value.required === true,
       questions,
     };
@@ -158,17 +160,17 @@ export type QuizProblem =
  * cannot be kept: which question, and why, so the creator is taken to it
  * rather than told "invalid".
  */
-export function readQuiz(raw: unknown): { ok: true; quiz: Quiz } | ({ ok: false } & QuizProblem) {
+export function readQuiz(raw: unknown, existing: Quiz | null = null): { ok: true; quiz: Quiz } | ({ ok: false } & QuizProblem) {
   if (!raw || typeof raw !== "object") return { ok: false, reason: "empty" };
   const value = raw as Record<string, unknown>;
   const passPercent = wholeIn(value.passPercent, MIN_PASS_PERCENT, MAX_PASS_PERCENT);
   if (passPercent === null) return { ok: false, reason: "pass" };
-  // Left empty, or not sent at all, is no limit.
+  // Only a persisted legacy quiz can keep zero. Client input cannot grant it.
   const rawAttempts =
     value.attempts === undefined || value.attempts === null || (typeof value.attempts === "string" && value.attempts.trim() === "")
-      ? 0
+      ? (existing?.attempts === 0 ? 0 : DEFAULT_ATTEMPTS)
       : value.attempts;
-  const attempts = wholeIn(rawAttempts, 0, MAX_ATTEMPTS);
+  const attempts = wholeIn(rawAttempts, existing?.attempts === 0 ? 0 : 1, MAX_ATTEMPTS);
   if (attempts === null) return { ok: false, reason: "attempts" };
   const list = Array.isArray(value.questions) ? value.questions : [];
   if (list.length === 0) return { ok: false, reason: "empty" };
