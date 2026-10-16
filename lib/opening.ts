@@ -8,8 +8,8 @@
  * no plan can be started (app/api/billing/checkout/route.ts refuses, and the
  * studio shows no button that would be refused).
  *
- * A store that already pays is left exactly as it is: changing, canceling
- * and keeping a subscription do not read this.
+ * Canceling and keeping an existing subscription do not read this. Changing
+ * to a new plan does: an unreviewed commercial release cannot be bypassed.
  *
  * The server and browser read the same answer. Requesting opening is not
  * enough: the per-customer, after-tax margin review must also be complete.

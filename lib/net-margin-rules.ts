@@ -29,11 +29,11 @@ export function assessCustomerWorstCase(value:CustomerWorstCase|null):MarginAsse
  if(value.allCostsBounded!==true||value.allTaxesReviewed!==true)return stopped("unbounded");
  if(value.revenueCollected!==true)return stopped("uncollected");
  const gross=BigInt(value.collectedRevenueCents!);
- if(gross===0n)return stopped("no_revenue");
- const costs=CUSTOMER_COST_CATEGORIES.reduce((total,key)=>total+BigInt(value.costCeilings[key]!),0n);
+ if(gross===BigInt(0))return stopped("no_revenue");
+ const costs=CUSTOMER_COST_CATEGORIES.reduce((total,key)=>total+BigInt(value.costCeilings[key]!),BigInt(0));
  const net=gross-BigInt(value.refundableRevenueCents!)-BigInt(value.taxesCeilingCents!)-costs;
  if(net>BigInt(Number.MAX_SAFE_INTEGER)||net< -BigInt(Number.MAX_SAFE_INTEGER))return stopped("invalid");
- const ratio=Number(net*10_000n/gross);
- const approved=net*10_000n>=gross*BigInt(MINIMUM_NET_MARGIN_BPS);
+ const ratio=Number(net*BigInt(10_000)/gross);
+ const approved=net*BigInt(10_000)>=gross*BigInt(MINIMUM_NET_MARGIN_BPS);
  return {approved,reason:approved?"approved":"below_floor",netCents:Number(net),marginBps:Number.isSafeInteger(ratio)?ratio:null};
 }
