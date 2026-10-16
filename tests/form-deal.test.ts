@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { formDealDraft } from "@/lib/form-deal";
+import { formDealDraft, matchingFormDeals, formDealMatchKey } from "@/lib/form-deal";
 import { parseForm } from "@/lib/forms";
 import { readResponses, writeForm } from "@/lib/form-store";
 import { claimHandle, ensureStatsId, ensureStoreId, setSitePages, storeForEmail } from "@/lib/store";
@@ -22,6 +22,14 @@ async function main() {
   is("invalid email is left empty for review", formDealDraft(form, { at: 0, page: "", answers: { email1: "not an address" }, outcome: "", joined: false }).email, "");
   const long = formDealDraft(form, { at: 1, page: "", answers: { detail: "x".repeat(2000) }, outcome: "", joined: false });
   is("a long response is bounded and truncation is explicit", [long.note.length, long.truncated], [500, true]);
+
+  part("Existing opportunity review");
+  const knownDeals = [{ id: "deal000001", title: "First project", email: "Lead@Example.com", stage: "lead00" }, { id: "deal000002", title: "Another project", email: "other@example.com", stage: "won000" }];
+  const matches = matchingFormDeals("  lead@example.com  ", knownDeals);
+  is("email matching is normalized and does not match other contacts", matches.map(deal => deal.id), ["deal000001"]);
+  is("blank or invalid email does not match unnamed opportunities", [matchingFormDeals("", [...knownDeals, { ...knownDeals[0], email: "" }]).length, matchingFormDeals("invalid", knownDeals).length], [0, 0]);
+  is("the acknowledgment changes when email or matching opportunities change", [formDealMatchKey("lead@example.com", matches) === formDealMatchKey("LEAD@example.com", matches), formDealMatchKey("lead@example.com", matches) === formDealMatchKey("other@example.com", matches), formDealMatchKey("lead@example.com", matches) === formDealMatchKey("lead@example.com", knownDeals)], [true, false, false]);
+  is("a closed opportunity remains visible for review", matchingFormDeals("other@example.com", knownDeals).map(deal => deal.id), ["deal000002"]);
 
   part("Submission to reviewed CRM deal");
   const owner = "formcrm@example.com";
