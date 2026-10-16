@@ -13,3 +13,17 @@ export function formDealDraft(form: FormDef, response: FormResponse) {
   const fullNote = [source, ...details].join("\n");
   return { title: form.name.slice(0, MAX_DEAL_TITLE), email: typeof email === "string" ? email.trim().toLowerCase() : "", note: fullNote.slice(0, MAX_DEAL_NOTE), truncated: fullNote.length > MAX_DEAL_NOTE };
 }
+
+export type FormDealMatch = { id: string; title: string; email: string; stage: string };
+
+/** Snapshot matches by contact, not proof that two responses describe the same sale. */
+export function matchingFormDeals(email: string, deals: readonly FormDealMatch[]): FormDealMatch[] {
+  const address = email.trim().toLowerCase();
+  if (!address || !/^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/.test(address)) return [];
+  return deals.filter(deal => deal.email.trim().toLowerCase() === address);
+}
+
+/** Acknowledgment applies only to this email and this set of existing opportunities. */
+export function formDealMatchKey(email: string, matches: readonly FormDealMatch[]): string {
+  return matches.length ? JSON.stringify([email.trim().toLowerCase(), matches.map(deal => deal.id).sort()]) : "";
+}
