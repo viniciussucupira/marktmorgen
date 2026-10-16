@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         if (!eligible) return refuse("assignee");
       }
       const now = Math.floor(Date.now() / 1000);
-      const deal = parseDeal({ ...existing, ...raw, ...follow.value, id: existing?.id ?? newCrmId(10), createdAt: existing?.createdAt ?? now, updatedAt: now }, stages);
+      const deal = parseDeal({ ...existing, ...raw, ...follow.value, formResponseRef: existing?.formResponseRef, id: existing?.id ?? newCrmId(10), createdAt: existing?.createdAt ?? now, updatedAt: now }, stages);
       if (!deal) return refuse(typeof raw.title === "string" && raw.title.trim() ? "stage" : "title");
       if (!(await writeDeal(statsId, deal))) return refuse("full");
       return Response.json({ ok: true, deal });
