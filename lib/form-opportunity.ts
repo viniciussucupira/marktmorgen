@@ -3,6 +3,8 @@ import type { FormResponse } from "@/lib/forms";
 import { MAX_DEALS, parseDeal, type Deal, type Stage } from "@/lib/crm-rules";
 import { redisPipeline } from "@/lib/redis";
 
+export const MAX_CONVERTIBLE_FORM_RESPONSES = 50;
+
 /** Legacy responses have no ID: equal content at the same second is one conversion identity. */
 export function formOpportunityRef(statsId: string, formId: string, response: FormResponse): string {
   const answers = Object.entries(response.answers).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
