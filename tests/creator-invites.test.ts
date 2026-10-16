@@ -174,7 +174,7 @@ async function main(): Promise<void> {
   is("previous acceptances can finish before expiry", mayRecordAcceptedInvite(LEGACY_INVITE_RECORDING_UNTIL - 1), true);
   is("the grace cannot run forever", mayRecordAcceptedInvite(LEGACY_INVITE_RECORDING_UNTIL), false);
   is("invalid clocks cannot grant a referral", mayRecordAcceptedInvite(NaN), false);
-  is("expired grace refuses a new record", await recordInvite({ sid: "f".repeat(32), email: "late@example.com" }, code, LEGACY_INVITE_RECORDING_UNTIL), "paused");
+  is("expired grace refuses a new record", await recordInvite({ sid: "f".repeat(32), email: "late@example.com", extra: false }, code, LEGACY_INVITE_RECORDING_UNTIL), "paused");
   const no = await accept(req, { params: Promise.resolve({ code: "zzzzzzzz" }) });
   is("a code nobody has sets nothing", no.headers.get("set-cookie"), null);
 
