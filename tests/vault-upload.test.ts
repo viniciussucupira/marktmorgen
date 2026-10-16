@@ -70,7 +70,7 @@ async function main() {
   const progress: number[] = [];
   const kept = await vaultUpload(file(25), "p", "a.zip", { door: w.door, put: w.put, wait: w.wait, onProgress: (p) => progress.push(Math.round(p)) });
   is("it resolves with the file as the store measured it", kept, { pathname: "vault/f/p/0011223344556677-a.zip", bytes: 25, contentType: "application/zip" });
-  is("our door was told what the file is before a byte went", of(w, "open")[0], { action: "open", ownerId: "p", name: "a.zip", bytes: 25, type: "application/zip" });
+  is("our door was told what the file is before a byte went", of(w, "open")[0], { action: "open", ownerId: "p", name: "a.zip", bytes: 25, type: "application/zip", multipart: true });
   is("each piece went once, in its own size", w.puts.map((p) => [p.number, p.bytes]).sort((a, b) => a[0] - b[0]), [[1, 10], [2, 10], [3, 5]]);
   is("and what the store answered for each is handed back in order", of(w, "done")[0].etags, ['"etag-1"', '"etag-2"', '"etag-3"']);
   is("the creator sees it start at nothing and end at 100", [progress[0], progress[progress.length - 1]], [0, 100]);
@@ -86,6 +86,16 @@ async function main() {
   w = world();
   await vaultUpload(file(7), "p", "a.zip", { door: w.door, put: async (url, piece, type, onSent) => ({ ...(await w.put(url, piece, type, onSent)), etag: null }), wait: w.wait });
   is("in one piece, and no list of answers is needed to close it", [w.puts.length, of(w, "done")[0].etags], [1, []]);
+
+
+  part("One-part multipart negotiation");
+  const onePart = { ok: true, upload: { pathname: "vault/f/p/0011223344556677-a.zip", pieces: 1, pieceBytes: PIECE, multipart: true } };
+  w = world({ open: onePart });
+  await vaultUpload(file(7), "p", "a.zip", { door: w.door, put: w.put, wait: w.wait });
+  is("a negotiated one-part session returns its ETag for completion", of(w, "done")[0].etags, ['"etag-1"']);
+  w = world({ open: onePart });
+  const missingEtag = await reasonOf(vaultUpload(file(7), "p", "a.zip", { door: w.door, put: async (url, piece, type, sent) => ({ ...(await w.put(url, piece, type, sent)), etag: null }), pauses: [], wait: w.wait }));
+  is("a successful PUT without its required ETag cannot complete", [missingEtag, of(w, "done").length, of(w, "abort").length], ["upload_stopped", 0, 1]);
 
   part("A piece fails, and is sent again");
   w = world({ trouble: (number, nth) => (number === 2 && nth < 2 ? 0 : null) });

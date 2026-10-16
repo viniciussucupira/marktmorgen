@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       if (!fits(held, bytes, standing)) return fail(storageRefusal(standing));
       await rememberFolderOwner(folder, ref);
 
-      const opened = await openVaultUpload({ folder, ownerId, name: safeFileName(text(body.name, 200)), bytes, type });
+      const opened = await openVaultUpload({ folder, ownerId, name: safeFileName(text(body.name, 200)), bytes, type, multipart: body.multipart === true });
       if (!opened.ok) return fail(opened.reason === "off" ? "off" : opened.reason === "invalid" ? "invalid" : "files_unavailable", opened.reason === "off" ? 404 : opened.reason === "invalid" ? 400 : 503);
       return Response.json({ ok: true, upload: opened.upload }, { headers: { "Cache-Control": "no-store" } });
     }
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "abort") {
-      await abortVaultUpload(pathname);
+      if (!(await abortVaultUpload(pathname))) return fail("files_unavailable", 503);
       return Response.json({ ok: true });
     }
 

@@ -238,6 +238,30 @@ async function main() {
   await send(whole.url, small, whole.type);
   is("closed, it is the file the store measured", await closeVaultUpload(one.upload.pathname, []), { ok: true, file: { pathname: one.upload.pathname, bytes: 5000, contentType: "application/pdf" } });
 
+
+  part("A negotiated small file uses a revocable session");
+  const session = await openVaultUpload({ folder: FOLDER, ownerId: "82f9fc6354", name: "Session.pdf", bytes: 7, type: "application/pdf", multipart: true });
+  if (!session.ok) throw new Error("Small multipart session did not open");
+  const [sessionPart] = (await signPieces(session.upload.pathname, [1])) ?? [];
+  is("one part is signed against an upload ID, never the bare object", [session.upload.pieces, session.upload.multipart, new URL(sessionPart.url).searchParams.has("uploadId"), sessionPart.type], [1, true, true, null]);
+  const sessionBytes = bytesOf(7);
+  const sessionEtag = (await send(sessionPart.url, sessionBytes))!;
+  is("one part cannot complete without its ETag", await closeVaultUpload(session.upload.pathname, []), { ok: false, reason: "invalid" });
+  is("completion joins and verifies the small file", await closeVaultUpload(session.upload.pathname, [sessionEtag]), { ok: true, file: { pathname: session.upload.pathname, bytes: 7, contentType: "application/pdf" } });
+  await deleteVault([session.upload.pathname]);
+  is("an old part URL cannot resurrect the completed then deleted file", (await fetch(sessionPart.url, { method: "PUT", body: sessionBytes as BodyInit })).status, 404);
+  is("the completed file stays deleted", objects.has(session.upload.pathname), false);
+  const cancelled = await openVaultUpload({ folder: FOLDER, ownerId: "82f9fc6354", name: "Cancel.pdf", bytes: 7, type: "application/pdf", multipart: true });
+  if (!cancelled.ok) throw new Error("Cancel session did not open");
+  const [cancelPart] = (await signPieces(cancelled.upload.pathname, [1])) ?? [];
+  service = "down";
+  is("an unreachable provider does not falsely confirm cancellation", await abortVaultUpload(cancelled.upload.pathname), false);
+  service = "up";
+  is("a failed cancellation keeps the session available to retry", (await signPieces(cancelled.upload.pathname, [1]))?.length, 1);
+  is("a retry confirms cancellation at the provider", await abortVaultUpload(cancelled.upload.pathname), true);
+  is("a part URL from an aborted session cannot create a file", (await fetch(cancelPart.url, { method: "PUT", body: sessionBytes as BodyInit })).status, 404);
+  is("the cancelled file does not exist", objects.has(cancelled.upload.pathname), false);
+
   part("A file of text, which the store squeezes on its way out");
   const notes = bytesOf(3000, 23);
   const text = await openVaultUpload({ folder: FOLDER, ownerId: "82f9fc6354", name: "Notes.txt", bytes: notes.byteLength, type: "text/plain" });
