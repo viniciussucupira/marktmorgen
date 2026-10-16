@@ -1,3 +1,4 @@
+import { confirmedProfitRevenue } from "@/lib/profit-revenue";
 import { TIERS, type Tier, type Cycle } from "@/lib/plan";
 import { assessProfitPortfolio, type ProfitAssessment } from "@/lib/profit-policy";
 
@@ -42,6 +43,8 @@ export function assessProfitCoverage(raw: unknown, nowSeconds = Math.floor(Date.
     const key = identity(item.scope,item.reference,item.scenario);
     const required = expected.get(key);
     if (!required) { reasons.push("unexpected_scenario"); continue; }
+    const retained = confirmedProfitRevenue(item.revenueBasis,item.period,nowSeconds);
+    if (retained === null || retained !== item.retainedRevenueCents) reasons.push("revenue_basis_unconfirmed:"+key);
     if (item.currency !== fixed.currency || item.period !== fixed.period) reasons.push("fixed_cost_basis_mismatch");
     const allocated = object(item.costs) ? item.costs.allocatedFixedCosts : null;
     if (!object(allocated) || !money(allocated.cents) || allocated.cents < fixed.cents) reasons.push("fixed_cost_understated:"+key);
