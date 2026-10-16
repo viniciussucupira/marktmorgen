@@ -8,7 +8,7 @@ export const PROFIT_COST_CATEGORIES = [
 export type ProfitCostCategory = typeof PROFIT_COST_CATEGORIES[number];
 export type ProfitCostBound = { cents: number; evidence: string };
 export type ProfitScenario = {
-  scope: "customer" | "company";
+  scope: "plan" | "customer" | "company";
   reference: string;
   scenario: string;
   currency: string;
@@ -35,7 +35,7 @@ const text = (value: unknown): value is string => typeof value === "string" && v
 export function assessProfitScenario(raw: unknown, nowSeconds = Math.floor(Date.now() / 1_000)): ProfitAssessment {
   const unknown = (reason: string): ProfitAssessment => ({ status: "unverified", reason });
   if (!object(raw) || !Number.isSafeInteger(nowSeconds) || nowSeconds < 0) return unknown("invalid_scenario");
-  if ((raw.scope !== "customer" && raw.scope !== "company") || !text(raw.reference) || !text(raw.scenario) || !text(raw.period) || raw.currency !== "USD") return unknown("invalid_identity");
+  if ((raw.scope !== "plan" && raw.scope !== "customer" && raw.scope !== "company") || !text(raw.reference) || !text(raw.scenario) || !text(raw.period) || raw.currency !== "USD") return unknown("invalid_identity");
   if (!money(raw.retainedRevenueCents)) return unknown("invalid_revenue");
   if (raw.fullEntitlementBoundConfirmed !== true) return unknown("unbounded_entitlements");
   if (raw.taxesConfirmed !== true) return unknown("taxes_unconfirmed");
