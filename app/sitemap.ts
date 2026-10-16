@@ -29,6 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/", priority: 1 },
     { path: "/blog", priority: 0.8 },
     { path: "/platform", priority: 0.8 },
+    { path: "/grow-sales", priority: 0.8 },
     { path: "/mission", priority: 0.6 },
     { path: "/products", priority: 0.6 },
     { path: "/help", priority: 0.6 },
