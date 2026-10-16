@@ -270,7 +270,9 @@ export async function POST(request: NextRequest) {
           await dropQuiz(course.id, lessonId);
           return Response.json({ ok: true, course: result.course });
         }
-        const existingQuiz = await readQuizFor(course.id, lessonId);
+        const hadQuiz = !!findLesson(course, lessonId)?.lesson.quiz;
+        const existingQuiz = hadQuiz ? await readQuizFor(course.id, lessonId) : null;
+        if (hadQuiz && !existingQuiz) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
         const read = readQuiz(body.quiz, existingQuiz);
         if (!read.ok) {
           // Which question, and what is wrong with it, so the studio can say so.
