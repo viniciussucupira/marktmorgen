@@ -60,7 +60,7 @@ export function customRangeChartSummary(range:RangeData,metric:CustomRangeMetric
  let run:{days:number;from:string;to:string}|null=null;
  for(const row of rows){
   if(!(row.value>0)){run=null;continue;}
-  const consecutive=run!==null&&Date.parse(row.from+"T00:00:00Z")-Date.parse(run.to+"T00:00:00Z")===86_400_000;
+  const consecutive:boolean=run!==null&&Date.parse(row.from+"T00:00:00Z")-Date.parse(run.to+"T00:00:00Z")===86_400_000;
   run=consecutive&&run?{days:run.days+1,from:run.from,to:row.to}:{days:1,from:row.from,to:row.to};
   if(!longestStreak||run.days>longestStreak.days)longestStreak={...run};
  }
