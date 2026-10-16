@@ -567,8 +567,10 @@ export default function TermsPage() {
         </p>
         <p>
           We may withhold or reverse credit earned through abuse, such as
-          invites to accounts you control. Pausing new invitations does not
-          cancel existing recorded referral terms or credit already earned.
+          invites to accounts you control, and we may change or end this
+          program for payments made after we give notice; credit already added
+          stays yours. This pause alone does not change the rates or earned
+          credit of existing invitations.
         </p>
       </LegalSection>
 
