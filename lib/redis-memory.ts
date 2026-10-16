@@ -102,7 +102,16 @@ export class MemoryRedis {
 
     switch (name) {
       case "EVAL": {
-        // Models only the create-once form conversion script. Not a Lua interpreter.
+        // Models only the explicitly supported application scripts. Not a Lua interpreter.
+        if (key.startsWith("-- marktmorgen:crm-deal-save:v1\n") && args[0] === "1" && args.length === 5) {
+          const target = args[1];
+          this.live(target);
+          const held = this.data.get(target);
+          if (held !== undefined && !(held instanceof Map)) throw new Error("WRONGTYPE");
+          if (held instanceof Map && !held.has(args[2]) && held.size >= Number(args[4])) return 0;
+          this.hash(target).set(args[2], args[3]);
+          return 1;
+        }
         if (!key.startsWith("-- marktmorgen:form-opportunity:v1\n") || args[0] !== "1" || args.length !== 5) throw new Error("MemoryRedis: unsupported EVAL");
         const target = args[1];
         this.live(target);
