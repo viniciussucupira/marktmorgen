@@ -23,7 +23,7 @@ import {
   type KeySource,
   canHaveKeys,
   sampleKey,
-} from "@/lib/licence-keys";
+} from "@/lib/licence-key-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 
 const MESSAGES: Record<string, string> = {

@@ -1,3 +1,4 @@
+import { AI_MONTHLY } from "@/lib/ai-rules";
 /**
  * Posts about a product, drafted with AI (lib/ai.ts, writePosts;
  * components/ai-posts.tsx). The model is played by a stand-in for `fetch`.
@@ -5,7 +6,7 @@
  * under every honesty rule, with no link of its own; a link it writes anyway
  * is taken out, since the studio adds the tagged one; each post is kept to
  * its length; it is one of the month's jobs; an answer missing a post
- * changes nothing and is not counted.
+ * changes nothing but its attempt stays counted.
  */
 import { readFileSync } from "node:fs";
 import { claimHandle, ensureStatsId, setLanguage, setSubscription, storeForEmail } from "@/lib/store";
@@ -42,12 +43,12 @@ async function main(): Promise<void> {
   is("a link the model wrote is taken out", posts?.x.includes("http"), false);
   is("each kept to its length", (posts?.x.length ?? 0) <= 260, true);
   is("the caption says the link is in the bio", posts?.instagram.includes("bio"), true);
-  is("one of the month's jobs", result.ok ? result.left : null, 99);
+  is("one of the month's jobs", result.ok ? result.left : null, AI_MONTHLY.creator - 1);
 
   part("What changes nothing");
   reply = JSON.stringify({ x: "Only one." });
   const missing = await writePosts(store, { facts: "Product: x" });
-  is("an answer missing a post is refused and not counted", [missing.ok, await aiLeft(store)], [false, 99]);
+  is("an unusable response is refused but its started attempt is counted", [missing.ok, await aiLeft(store)], [false, AI_MONTHLY.creator - 2]);
 
   part("Where the link comes from");
   const panel = readFileSync("components/ai-posts.tsx", "utf8");

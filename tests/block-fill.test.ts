@@ -64,7 +64,7 @@ async function main(): Promise<void> {
   part("Never a new fact");
   reply = JSON.stringify({ heading: "", items: ["Ten lessons", "Join 2,000 home cooks"] });
   const invented = await fillBlock(store, { block: emptyBlock("benefits", "bene0002"), facts, language: "English" });
-  is("a number nobody gave: thrown away, and not counted", [invented.ok, invented.ok ? "" : invented.reason], [false, "failed"]);
+  is("a number nobody gave: thrown away, with its attempt still counted", [invented.ok, invented.ok ? "" : invented.reason], [false, "failed"]);
 
   part("Questions only with answers");
   reply = JSON.stringify({ heading: "Questions", items: [{ q: "How long are the lessons?", a: "" }, { q: "What is it about?", a: "Holding a knife, the claw grip and onions." }] });

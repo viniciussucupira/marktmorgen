@@ -11,7 +11,7 @@ const FAILED = "It could not be saved just now. Try again in a moment.";
 /**
  * Answers to visitors' questions on product pages (lib/answers-rules.ts):
  * switched on here, with the creator's own notes for them, how many of the
- * month's answers were given, and the questions their pages could not answer.
+ * month's AI attempts were used, and the questions their pages could not answer.
  */
 export function AnswersEditor({
   setting,
@@ -98,7 +98,7 @@ export function AnswersEditor({
         <button type="button" className="btn btn-primary" onClick={() => void post({ on, facts: facts.trim() }, "save", on ? "Saved. The box is on your product pages." : "Saved. The box is off.")} disabled={busy !== null || !changed} aria-busy={busy === "save"}>
           {busy === "save" ? "Saving…" : "Save"}
         </button>
-        <p className="text-sm text-ink-soft">{`${used.toLocaleString("en-US")} of ${allowance.toLocaleString("en-US")} answers given this month. Past that the box closes by itself until next month; nothing is charged.`}</p>
+        <p className="text-sm text-ink-soft">{`${used.toLocaleString("en-US")} of ${allowance.toLocaleString("en-US")} AI attempts used this month. Failed or timed-out requests count; cached replies do not. At the limit, new requests pause until next month. No per-answer overage is charged.`}</p>
       </div>
       {error ? (
         <p className="notice notice-error mt-3" role="alert">

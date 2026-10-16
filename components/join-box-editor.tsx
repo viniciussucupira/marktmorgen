@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
-import { MAX_JOIN_HEADING, MAX_JOIN_LINE, type StoreJoin } from "@/lib/store";
+import { MAX_JOIN_HEADING, MAX_JOIN_LINE, type StoreJoin } from "@/lib/store-field-rules";
 import { joinWords } from "@/lib/buyer-words/join";
 
 /**

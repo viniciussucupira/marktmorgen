@@ -6,7 +6,7 @@
  *     creator reads it, channels by their names, and nothing about a buyer;
  *   - a figure the answer names is shown only if it is in those numbers;
  *   - the answer says which days and which part of the panel to open;
- *   - each question is one of the month's AI jobs, given back when no answer
+ *   - each question is one of the month's AI jobs, retained when no answer
  *     comes; the weekly summary is one too, and the email goes without it
  *     when none is left.
  */
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
 
   reply = null;
   const failed = await askNumbers(store, "How are things?", data);
-  is("no answer: nothing counted", [failed.ok, await aiLeft(store)], [false, before - 2]);
+  is("no answer: the started attempt stays counted", [failed.ok, await aiLeft(store)], [false, before - 3]);
 
   part("The weekly summary");
   reply = "Visitors rose to 120 from 90. Instagram brought most of the money.";

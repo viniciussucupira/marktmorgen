@@ -1,13 +1,15 @@
+import {CURRENT_UPLOAD_BUDGET_POLICY as testUploadFunding} from "@/lib/upload-budget-policy";
+import {fundedCustomerScenario,zeroFixedCompanyFixture} from './margin-test-fixtures';
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
 import { commercialMarginReady, commercialPlansMayOpen, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, REQUIRED_MARGIN_SCENARIOS, BASE_PLAN_REVENUE_CEILINGS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { done, is } from "./check";
 const zeroCosts=()=>Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,0])) as Record<typeof CUSTOMER_COST_CATEGORIES[number],number>;
-const scenario=(changes:Partial<CustomerWorstCase>={}):CustomerWorstCase=>({collectedRevenueCents:10000,refundableRevenueCents:0,taxesCeilingCents:1000,costCeilings:{...zeroCosts(),infrastructure:3000},allCostsBounded:true,allTaxesReviewed:true,revenueCollected:true,...changes});
+const scenario=(changes:Partial<CustomerWorstCase>={}):CustomerWorstCase=>({...fundedCustomerScenario(),...changes});
 is("owner floor is sixty percent",MINIMUM_NET_MARGIN_BPS,6000);
 is("exact sixty percent passes",assessCustomerWorstCase(scenario()),{approved:true,reason:"approved",netCents:6000,marginBps:6000});
-is("one cent below floor fails",assessCustomerWorstCase(scenario({costCeilings:{...zeroCosts(),infrastructure:3001}})).approved,false);
-is("higher than floor passes",assessCustomerWorstCase(scenario({taxesCeilingCents:500})).approved,true);
+is("one cent below floor fails",assessCustomerWorstCase(scenario({costCeilings:{...zeroCosts(),infrastructure:1725}})).approved,false);
+is("higher than floor passes",assessCustomerWorstCase(scenario({taxesCeilingCents:2475,costCeilings:{...zeroCosts(),infrastructure:1000}})).approved,true);
 is("missing complete input never passes",assessCustomerWorstCase(null).approved,false);
 for(const key of CUSTOMER_COST_CATEGORIES){
  const costs={...zeroCosts(),[key]:null};
@@ -31,11 +33,12 @@ is("fixed costs included even with one customer",assessCustomerWorstCase(scenari
 is("cost sum overflow fails safely",assessCustomerWorstCase(scenario({costCeilings:Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,Number.MAX_SAFE_INTEGER]))})).approved,false);
 for(const gross of [1,3,10,101,1000,10001,1000000]){
  for(const cost of [Math.floor(gross*0.4),Math.floor(gross*0.4)+1]){
-  const result=assessCustomerWorstCase(scenario({collectedRevenueCents:gross,taxesCeilingCents:0,costCeilings:{...zeroCosts(),other:cost}}));
-  is("exact boundary not display rounding",result.approved,(gross-cost)*100>=gross*60);
+  const tax=Math.ceil(Math.max(0,gross-cost)*0.275);
+  const result=assessCustomerWorstCase(scenario({collectedRevenueCents:gross,taxesCeilingCents:tax,costCeilings:{...zeroCosts(),other:cost}}));
+  is("exact boundary not display rounding",result.approved,(gross-cost-tax)*100>=gross*60);
  }
 }
-const review=():CommercialMarginReview=>({priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",singleCustomerFixedCostsVerified:true,prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return [key,scenario({collectedRevenueCents:gross,taxesCeilingCents:Math.floor(gross*0.1),costCeilings:{...zeroCosts(),infrastructure:Math.floor(gross*0.3)}})];}))});
+const review=():CommercialMarginReview=>({companyBase:{monthlyFixedCostsCeilingCents:0,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: zero fixed costs",fixedTaxEvidence:"TEST ONLY: zero fixed taxes",reviewedPayingCustomers:1},priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",singleCustomerFixedCostsVerified:true,prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return [key,fundedCustomerScenario(gross,Math.floor(gross*.65))];}))});
 is("hypothetical complete passing review passes calculation",commercialMarginReady(review()),true);
 is("absent real review stays closed",commercialMarginReady(),false);
 is("requesting launch cannot bypass missing review",commercialPlansMayOpen(true),false);
@@ -53,4 +56,14 @@ is("cost and limit evidence required",commercialMarginReady({...review(),costAnd
 is("isolated-customer fixed costs must be reviewed",commercialMarginReady({...review(),singleCustomerFixedCostsVerified:false}),false);
 is("postpaid unlimited consumption cannot be certified",commercialMarginReady({...review(),prepaidUsageEnforced:false}),false);
 is("published commission menu cannot launch before fee collection is proven",commercialPlansMayOpen(true,review()),false);
+
+if(!testUploadFunding)throw new Error("Synthetic upload funding fixture missing");
+const originalUploadSlots=testUploadFunding.fundedStores.creator;
+testUploadFunding.fundedStores.creator=0;
+is("a paid cohort is not approved without upload capacity for its possible plan mix",commercialMarginReady(review()),false);
+testUploadFunding.fundedStores.creator=originalUploadSlots;
+const originalUploadMonth=testUploadFunding.month;
+testUploadFunding.month="2000-01";
+is("an expired resource budget cannot approve a paid release",commercialMarginReady(review()),false);
+testUploadFunding.month=originalUploadMonth;
 done();

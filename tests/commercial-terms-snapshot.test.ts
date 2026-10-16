@@ -1,19 +1,21 @@
+import {fundedCustomerScenario,zeroFixedCompanyFixture} from './margin-test-fixtures';
 import { BASE_PLAN_REVENUE_CEILINGS, CURRENT_COMMERCIAL_TERMS, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, commercialMarginReady, REQUIRED_MARGIN_SCENARIOS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { CUSTOMER_COST_CATEGORIES } from "@/lib/net-margin-rules";
 import { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
 import { STORAGE_BRAKE_BYTES as UPLOAD_STORAGE_BYTES } from "@/lib/storage-quota";
+import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { VISITS_INCLUDED } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED } from "@/lib/order-rules";
 import { done, is } from "./check";
-const scenario = { collectedRevenueCents: 10000, refundableRevenueCents: 0, taxesCeilingCents: 1000, costCeilings: Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key => [key, key === "infrastructure" ? 3000 : 0])), allCostsBounded: true, allTaxesReviewed: true, revenueCollected: true };
+const scenario = fundedCustomerScenario();
 const review = (): CommercialMarginReview => ({
- priceAndRightsSnapshot: CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,
+ companyBase:{monthlyFixedCostsCeilingCents:0,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: zero fixed costs",fixedTaxEvidence:"TEST ONLY: zero fixed taxes",reviewedPayingCustomers:1},priceAndRightsSnapshot: CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,
  taxEvidence: "TEST ONLY: hypothetical taxes",
  costAndLimitEvidence: "TEST ONLY: hypothetical funded limits",
  singleCustomerFixedCostsVerified: true,
  prepaidUsageEnforced: true,
- scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => { const gross = BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000; return [key, { ...scenario, collectedRevenueCents: gross, taxesCeilingCents: Math.floor(gross * 0.1), costCeilings: Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(category => [category, category === "infrastructure" ? Math.floor(gross * 0.3) : 0])) }]; })),
+ scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => { const gross = BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000; return [key, fundedCustomerScenario(gross,Math.floor(gross*.65))]; })),
 });
 is("hypothetical current review passes calculation", commercialMarginReady(review()), true);
 is("actual review remains absent", commercialMarginReady(), false);
@@ -33,6 +35,8 @@ function checkLeaves(value: unknown, path: string[] = []) {
  parent[path[path.length - 1]] = typeof value === "number" ? value + 1 : typeof value === "boolean" ? !value : String(value) + " changed";
  is("old review rejected after " + path.join(".") + " changes", commercialMarginReady({ ...review(), priceAndRightsSnapshot: JSON.stringify(changed) }), false);
 }
+is("review captures enforced AI request limits", CURRENT_COMMERCIAL_TERMS.ai.requestLimits, AI_REQUEST_LIMITS);
+is("review captures allowed provider models", CURRENT_COMMERCIAL_TERMS.ai.supportedModels, SUPPORTED_AI_MODELS);
 checkLeaves(CURRENT_COMMERCIAL_TERMS);
 const legacy = JSON.stringify({ prices: CURRENT_COMMERCIAL_TERMS.prices, commission: CURRENT_COMMERCIAL_TERMS.commission, trialDays: CURRENT_COMMERCIAL_TERMS.trialDays });
 is("partial legacy contract cannot approve current rights", commercialMarginReady({ ...review(), priceAndRightsSnapshot: legacy }), false);

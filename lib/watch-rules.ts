@@ -1,42 +1,12 @@
-/**
- * Lesson video, and what a plan covers of it: the rules.
- *
- * A file that is sold costs nothing to send (lib/vault-rules.ts). A lesson's
- * video does: the video service charges for every gigabyte it sends
- * (lib/stream.ts), a course is watched by the hour, and a student who paid
- * the creator is never cut off. That left one cost here with no ceiling, and
- * a $29 store with a few thousand students watching could cost more than it
- * pays.
- *
- * So video is priced rather than limited, by the one measure of it that is
- * neither a guess of ours nor a thing a page view can inflate: the time
- * students spent watching, as the video service's own player counts it.
- *
- *   - Every plan covers VIDEO_HOURS_INCLUDED hours watched in a calendar
- *     month, across the whole store.
- *   - An hour past that is VIDEO_CENTS_PER_HOUR_OVER cents, to the second,
- *     added to the creator's next invoice by the daily job
- *     (lib/watch-billing.ts). Nobody is cut off and nothing is asked of the
- *     creator.
- *   - A store with no plan that can be charged has nothing to add an hour
- *     to. Its video plays for the hours it has, by where it stands
- *     (lib/plan-standing.ts: a plan's hours in the free trial, a few before
- *     a plan and after one), and pauses there until the plan is paid or the
- *     month turns (lib/learn.ts).
- *
- * Why these figures. An hour watched at the largest size kept is at most
- * 2.5 gigabytes (lib/stream-rules.ts), and a player fetches a little ahead
- * of what is watched; with a quarter added for that, an hour costs us about
- * a cent and a half at the video service's rate. Four hundred hours is about
- * six dollars, which every plan carries with its margin whole
- * (tests/plan-margin.test.ts), and three cents is about twice what the hour costs.
- * The two services built for nothing but video charge five to six cents for
- * the same hour (their price pages, read October 6, 2026; lib/stream.ts).
- *
- * Nothing here touches the network or a secret: the pages that publish these
- * figures read the same ones the bill is made from.
+/** Legacy watched-time billing rules.
+ * These are usage and invoice allowances, not verified provider-byte limits.
+ * Retries, buffering, replayed links and encoding can cost more than watched time.
+ * The existing allowance and postpaid overage price do not establish the owner
+ * requirement of 60% net profit after all costs and taxes. Paid release remains
+ * subject to the commercial review and enforceable supplier ceilings.
+ * File delivery can still incur storage, request and application costs even
+ * where the storage provider does not charge Internet egress bandwidth.
  */
-
 /** Hours of video watched that every plan covers, per store, per calendar month. */
 export const VIDEO_HOURS_INCLUDED = 400;
 /** What an hour watched past that costs the creator, in cents. */

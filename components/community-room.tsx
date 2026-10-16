@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type ChatRefusal, MAX_CHAT_TEXT } from "@/lib/community-chat";
+import { type ChatRefusal, MAX_CHAT_TEXT } from "@/lib/community-chat-rules";
 import { AWAY_AFTER_MS, IDLE_MS, LIVE_MS, type Pace, askEvery, paceFor } from "@/lib/chat-pace";
 import type { RoomWords } from "@/lib/buyer-words/community";
 

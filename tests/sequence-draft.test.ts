@@ -9,7 +9,7 @@
  *     1 to 14 days after the one before;
  *   - the writer is handed the moment, the store's products with their prices
  *     and links, and the creator's words, in the store's language, and is
- *     counted as one job; a reply with nothing usable is not counted.
+ *     counted as one job; a reply with nothing usable retains its started attempt.
  */
 import { keepOwnLinks, readDraftedSteps } from "@/lib/sequence-draft";
 import { writeSequence } from "@/lib/ai";
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
   is("counted as one job", before - (await aiLeft(store)), 1);
   reply = "Sorry, I cannot.";
   const failed = await writeSequence(store, input);
-  is("a reply with nothing usable fails, and is not counted", [failed.ok ? "written" : failed.reason, before - (await aiLeft(store))], ["failed", 1]);
+  is("a reply with nothing usable fails, and its attempt stays counted", [failed.ok ? "written" : failed.reason, before - (await aiLeft(store))], ["failed", 2]);
 
   done();
 }

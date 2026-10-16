@@ -250,8 +250,8 @@ export function gumroadSums(live = COMMISSION_PLANS_PUBLISHED) {
     hundred: `Gumroad leaves you ${whole(gumroad(100))}. Your own Stripe leaves you ${whole(ours(100))}. The difference is ${whole(big(100))}, in one month.`,
     fiveHundred: `Gumroad leaves you ${whole(gumroad(500))}. Your own Stripe leaves you ${whole(ours(500))}. The difference is ${whole(big(500))}, in one month, and it comes back every month.`,
     gap: live
-      ? `The gap widens because ours shrinks as you grow and theirs does not: Gumroad takes $3.20 of every sale at any size, and our share is ${percent(COMMISSION_BPS.creator)} on the first plan, ${percent(COMMISSION_BPS.pro)} on the next, and nothing on Scale.`
-      : "The gap widens for no clever reason. A percentage grows with you and a fixed price does not. $3.20 a sale is nothing at five sales and a salary at five hundred.",
+      ? `These examples stay below Gumroad’s $20,000 monthly paid-sales threshold: its standard fee on a $27 direct sale is $3.20 before processing. New direct sales after that threshold have a 5% + $0.50 fee, with processing still separate. Our share is ${percent(COMMISSION_BPS.creator)} on the first plan, ${percent(COMMISSION_BPS.pro)} on the next, and nothing on Scale.`
+      : "These examples use Gumroad’s standard direct-sale fee. After $20,000 in paid sales that month, its fee on new direct sales falls to 5% + $0.50, with processing separate. Compare both subscriptions and the relevant sales tier.",
     stay: `If you sell a handful of files a month, stay on Gumroad. A percentage of a small number is smaller than ${live ? "our plan and its share" : dollars(p.creator.month)}, and the tax work they do is real work you would otherwise do badly or not at all. We are not going to pretend otherwise to win a sale that would leave you worse off.`,
     move: `Move when the cut becomes a number you notice, and when being your own merchant reads as ownership rather than exposure. For a $27 file that is somewhere around ${evenWord} sales a month, and it is different for everybody.`,
   };

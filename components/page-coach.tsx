@@ -20,7 +20,7 @@ type Review = {
 const MESSAGES: Record<string, string> = {
   used: "This month's writing help is used up. It starts again on the 1st.",
   slow: "A few at a time: wait a minute, then try again.",
-  failed: "The review did not come back just now. Nothing was changed, and it was not counted. Try again in a moment.",
+  failed: "The review did not come back just now. Your content was not changed. Started attempts count toward the monthly allowance. Try again in a moment.",
   off: "The writing help is not available right now.",
   forbidden: "Your role on this store cannot do this.",
   unknown: "That product is no longer in your store. Reload the page.",

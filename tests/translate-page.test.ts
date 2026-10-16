@@ -97,7 +97,7 @@ async function main(): Promise<void> {
   const bad = await translatePage(store, { page, language: "French" });
   mode = "caps";
   const after = await translatePage(store, { page, language: "French" });
-  is("an answer with a string missing is refused and not counted", [bad.ok, after.ok ? after.left : null], [false, before - 1]);
+  is("an answer with a string missing is refused but its attempt stays counted", [bad.ok, after.ok ? after.left : null], [false, before - 2]);
   asked.length = 0;
   const huge = parsePage({ blocks: Array.from({ length: MAX_TRANSLATE_PARTS + 2 }, (_, i) => ({ id: `huge${String(i).padStart(4, "0")}`, kind: "text", heading: "", body: "w".repeat(TRANSLATE_PART_CHARS) })) });
   const refused = await translatePage(store, { page: huge, language: "Dutch" });

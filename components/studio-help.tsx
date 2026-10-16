@@ -38,10 +38,10 @@ export function StudioHelp({ left: startLeft }: { left: number }) {
           ? "This month's AI help is used up; it starts again on the 1st. The help center is always open."
           : data.error === "slow"
             ? "A few questions a minute at most. Ask again in a moment."
-            : "No answer just now, and it was not counted. Try again, or open the help center.",
+            : "No answer just now. Started attempts count toward the monthly allowance. Try again, or open the help center.",
       );
     } catch {
-      setNote("No answer just now, and it was not counted. Try again, or open the help center.");
+      setNote("No answer just now. Started attempts count toward the monthly allowance. Try again, or open the help center.");
     } finally {
       setBusy(false);
     }

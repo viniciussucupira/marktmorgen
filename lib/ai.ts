@@ -13,7 +13,9 @@
  *   nl:ai:<statsId>:<YYYY-MM>   writing jobs a store asked for this month
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { isAiBudgetConfigured, reserveAiSpend } from "@/lib/ai-spend";
 import { timed } from "@/lib/fetch-timeout";
+import { boundedAiRequest, isSupportedAiModel } from "@/lib/ai-request-rules";
 import { inTrial } from "@/lib/mail";
 import type { Store } from "@/lib/store";
 import { LANGUAGES } from "@/lib/store-language";
@@ -55,13 +57,19 @@ function apiKey(): string | null {
 }
 
 export function isAiConfigured(): boolean {
-  return apiKey() !== null;
+  return isAiBudgetConfigured() && apiKey() !== null && isSupportedAiModel(model()) && isSupportedAiModel(answerModel());
 }
 
 /** The model asked. A deployment may name another in AI_MODEL. */
 function model(): string {
   const named = process.env.AI_MODEL?.trim();
   return named && /^claude-[a-z0-9.-]{3,60}$/.test(named) ? named : "claude-sonnet-5-5";
+}
+
+function jobCount(value: unknown): number | null {
+  if (typeof value !== "number" && (typeof value !== "string" || !/^\d+$/.test(value))) return null;
+  const count = Number(value);
+  return Number.isSafeInteger(count) && count >= 0 ? count : null;
 }
 
 const monthKey = (store: Store, now: Date) => `nl:ai:${store.statsId}:${now.toISOString().slice(0, 7)}`;
@@ -79,7 +87,9 @@ export function aiAllowance(store: Store, now = Date.now()): number {
 export async function aiLeft(store: Store, now = Date.now()): Promise<number> {
   if (!store.statsId || !isRedisConfigured()) return 0;
   const [used] = await redisPipeline([["GET", monthKey(store, new Date(now))]]);
-  return Math.max(0, aiAllowance(store, now) - (Number(used) || 0));
+  if (used === null) return aiAllowance(store, now);
+  const count = jobCount(used);
+  return count === null ? 0 : Math.max(0, aiAllowance(store, now) - count);
 }
 
 /**
@@ -136,12 +146,13 @@ export function answerModel(): string {
 }
 
 /** One question to the model, counted against the store's month. The answer's text, or null. */
-async function ask(system: string, prompt: string, maxTokens: number): Promise<string | null> {
-  return askModel(system, prompt, maxTokens, model());
+async function ask(store: Store, system: string, prompt: string, maxTokens: number): Promise<string | null> {
+  return askModel(store, system, prompt, maxTokens, model());
 }
 
-/** One question to a named model, uncounted: whoever calls it counts it. The answer's text, or null. */
+/** One named-model call: reserve its monetary ceiling here; callers also count jobs. The answer's text, or null. */
 export async function askModel(
+  store: Store,
   system: string,
   prompt: string | unknown[],
   maxTokens: number,
@@ -150,11 +161,17 @@ export async function askModel(
 ): Promise<string | null> {
   const key = apiKey();
   if (!key) return null;
+  const bounded = boundedAiRequest(system, prompt, maxTokens, named);
+  if (!bounded.ok) {
+    console.error("AI request refused before provider call", bounded.reason);
+    return null;
+  }
+  if (!store?.statsId || !(await reserveAiSpend(store.statsId, inTrial(store, Date.now() / 1000) ? "trial" : store.tier, named))) return null;
   const response = await timed(timeoutMs, (signal) =>
     fetch(API, {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: named, max_tokens: maxTokens, system, messages: [{ role: "user", content: prompt }] }),
+      body: bounded.body,
       cache: "no-store",
       signal,
     }),
@@ -194,7 +211,7 @@ export async function describePicture(
       { type: "image", source: { type: "base64", media_type: input.mediaType, data: Buffer.from(input.bytes).toString("base64") } },
       { type: "text", text: `The product this picture is on the page of: ${input.productTitle}` },
     ];
-    const answer = await askModel(system, content, 200, model());
+    const answer = await askModel(store, system, content, 200, model());
     const sentence = answer ? line(answer.replace(/^["“]|["”]$/g, ""), 150) : "";
     return sentence || null;
   });
@@ -224,23 +241,27 @@ const block = (value: unknown, max: number) =>
     .slice(0, max);
 
 /**
- * Takes one job from the month, runs it, and gives the job back if it failed,
- * so a store never pays a job for an answer it did not get.
+ * Reserves requests before provider work, including started attempts that fail.
  */
 /**
  * One job of the month's — or `jobs` of them, for work as large as several
  * (a whole page translated, lib/page-translate.ts) — taken before the model
- * is asked and given back if it does not answer.
+ * is asked. Started attempts stay counted because provider work may be billable.
  */
 export async function counted<T>(store: Store, now: number, run: () => Promise<T | null>, jobs = 1): Promise<AiResult<T>> {
   if (!isAiConfigured() || !store.statsId || !isRedisConfigured()) return { ok: false, reason: "off" };
+  if (!Number.isSafeInteger(jobs) || jobs <= 0) return { ok: false, reason: "notes" };
+  const allowance = aiAllowance(store, now);
+  if (!Number.isSafeInteger(allowance) || allowance < 0) return { ok: false, reason: "off" };
+  if (jobs > allowance) return { ok: false, reason: "used" };
   const key = monthKey(store, new Date(now));
   const [used] = await redisPipeline([
     ["INCRBY", key, jobs],
     ["EXPIRE", key, 40 * 86_400],
   ]);
-  const allowance = aiAllowance(store, now);
-  if (Number(used) > allowance) {
+  const count = jobCount(used);
+  if (count === null || count < jobs) return { ok: false, reason: "off" };
+  if (count > allowance) {
     await redisPipeline([["DECRBY", key, jobs]]).catch(() => {});
     return { ok: false, reason: "used" };
   }
@@ -250,10 +271,9 @@ export async function counted<T>(store: Store, now: number, run: () => Promise<T
   } catch (error) {
     console.error("a writing job failed", error);
   }
-  if (value === null) {
-    await redisPipeline([["DECRBY", key, jobs]]).catch(() => {});
-    return { ok: false, reason: "failed" };
-  }
+  // Provider work may cost money even when the response is unusable.
+  // Only a refused reservation is returned; a started attempt stays counted.
+  if (value === null) return { ok: false, reason: "failed" };
   return { ok: true, value, left: Math.max(0, allowance - Number(used)) };
 }
 
@@ -293,7 +313,7 @@ export async function translatePage(store: Store, input: { page: SalesPage; lang
     async () => {
       const answers = await Promise.all(
         parts.map(async (part) => {
-          const answer = await askModel(system, JSON.stringify(part), 3_000, answerModel());
+          const answer = await askModel(store, system, JSON.stringify(part), 3_000, answerModel());
           const list = answer ? jsonIn(answer)?.t : null;
           if (!Array.isArray(list) || list.length !== part.length || list.some((w) => typeof w !== "string")) return null;
           return list as string[];
@@ -335,7 +355,7 @@ export async function writeBio(
     ]
       .filter(Boolean)
       .join("\n");
-    const answer = await ask(system, prompt, 600);
+    const answer = await ask(store, system, prompt, 600);
     const json = answer ? jsonIn(answer) : null;
     const lines = Array.isArray(json?.lines) ? (json.lines as unknown[]).map((l) => line(l, 160).replace(/^["“”']+|["“”']+$/g, "").trim()).filter(Boolean) : [];
     const unique = [...new Set(lines)].slice(0, 3);
@@ -371,7 +391,7 @@ export async function answerHelp(
   if (passages.length === 0 && !options.translate) return { ok: false, reason: "notes" };
   return counted(store, now, async () => {
     if (options.translate) {
-      const english = await askModel("Put the user's question into plain English, as a question about using an online store builder. Return only the question.", asked, 120, answerModel());
+      const english = await askModel(store, "Put the user's question into plain English, as a question about using an online store builder. Return only the question.", asked, 120, answerModel());
       passages = english ? find(line(english, 400)) : [];
       if (passages.length === 0) return { answer: HELP_NOT_COVERED, sources: [] };
     }
@@ -382,7 +402,7 @@ export async function answerHelp(
       'Return only a JSON object: {"answer": string, "used": [the numbers of the help answers you used]}.',
     ].join("\n\n");
     const prompt = [`The question: ${asked}`, "", "The help center's answers:", ...passages.map((p, i) => `[${i + 1}] ${p.q}\n${block(p.a, 2_500)}`)].join("\n\n");
-    const reply = await askModel(system, prompt, 700, answerModel());
+    const reply = await askModel(store, system, prompt, 700, answerModel());
     const json = reply ? jsonIn(reply) : null;
     const answer = block(json?.answer, 1_200);
     if (!answer) return null;
@@ -425,7 +445,7 @@ export async function writeStoreSetup(store: Store, input: { about: string; sell
       'Return only a JSON object: {"bios": [string], "products": [{"title": string, "summary": string, "kind": string, "price": string}], "faq": [{"q": string, "a": string}]}.',
     ].join("\n\n");
     const prompt = [`Store: ${line(store.name, 60)}`, `\nWhat the creator does, and for whom:\n${about}`, selling ? `\nWhat they sell or want to sell:\n${selling}` : ""].filter(Boolean).join("\n");
-    const answer = await ask(system, prompt, 2_500);
+    const answer = await ask(store, system, prompt, 2_500);
     const json = answer ? jsonIn(answer) : null;
     if (!json) return null;
     const bios = [...new Set((Array.isArray(json.bios) ? json.bios : []).map((b: unknown) => line(b, 160).replace(/^["“”']+|["“”']+$/g, "").trim()).filter(Boolean))].slice(0, 3) as string[];
@@ -483,7 +503,7 @@ export async function writeKitPitch(
     ]
       .filter(Boolean)
       .join("\n");
-    const answer = await ask(system, prompt, 900);
+    const answer = await ask(store, system, prompt, 900);
     const json = answer ? jsonIn(answer) : null;
     const pitches = Array.isArray(json?.pitches) ? (json.pitches as unknown[]).map((p) => block(p, 700).replace(/^["“”']+|["“”']+$/g, "").trim()).filter(Boolean) : [];
     const unique = [...new Set(pitches)].slice(0, 3);
@@ -515,7 +535,7 @@ export async function writeStoreFaq(
       'Return only a JSON object: {"items": [{"q": string, "a": string}]}.',
     ].join("\n\n");
     const prompt = [`The facts about the store:\n${facts}`, notes ? `\nWhat the creator wants covered:\n${notes}` : ""].filter(Boolean).join("\n");
-    const answer = await ask(system, prompt, 1_500);
+    const answer = await ask(store, system, prompt, 1_500);
     const json = answer ? jsonIn(answer) : null;
     const items = Array.isArray(json?.items)
       ? (json.items as unknown[])
@@ -561,7 +581,7 @@ export async function replyToReview(
     ]
       .filter(Boolean)
       .join("\n");
-    const answer = await ask(system, prompt, 500);
+    const answer = await ask(store, system, prompt, 500);
     const json = answer ? jsonIn(answer) : null;
     const reply = block(json?.reply, input.maxLength);
     return reply || null;
@@ -593,7 +613,7 @@ export async function writePosts(store: Store, input: { facts: string }, now = D
         '"linkedin": at most 700 characters, short paragraphs, plain and useful, no hashtags.',
       ].join("\n"),
     ].join("\n\n");
-    const answer = await ask(system, `Everything the product's page says:\n${block(input.facts, 6_000)}`, 1_200);
+    const answer = await ask(store, system, `Everything the product's page says:\n${block(input.facts, 6_000)}`, 1_200);
     const json = answer ? jsonIn(answer) : null;
     if (!json) return null;
     const posts: ProductPosts = { x: block(json.x, 260), instagram: block(json.instagram, 900), linkedin: block(json.linkedin, 1_000) };
@@ -634,7 +654,7 @@ export async function writeBlogPost(store: Store, input: { notes: string; produc
     ]
       .filter(Boolean)
       .join("\n");
-    const answer = await ask(system, prompt, 3_000);
+    const answer = await ask(store, system, prompt, 3_000);
     const json = answer ? jsonIn(answer) : null;
     const title = line(json?.title, 120);
     const body = block(json?.body, 20_000).replace(/\*\*(.+?)\*\*/g, "$1");
@@ -670,7 +690,7 @@ export async function writeProduct(
     ]
       .filter((l) => l !== "")
       .join("\n");
-    const answer = await ask(system, prompt, 1_500);
+    const answer = await ask(store, system, prompt, 1_500);
     const json = answer ? jsonIn(answer) : null;
     const summary = line(json?.summary, MAX_SUMMARY_LENGTH);
     const about = block(json?.about, MAX_ABOUT_LENGTH);
@@ -695,7 +715,7 @@ export async function writeOutline(
       `At most ${MAX_AI_MODULES} modules, each with 2 to ${MAX_AI_LESSONS} lessons. Titles are short (at most 70 characters), concrete and in the order someone learns them. Start where a beginner of this course would start, end with putting it all together.`,
     ].join("\n\n");
     const prompt = [`Course: ${line(input.title, MAX_TITLE) || "(no name yet)"}`, "", "What the creator wants it to cover, and for whom:", notes].join("\n");
-    const answer = await ask(system, prompt, 1_500);
+    const answer = await ask(store, system, prompt, 1_500);
     const json = answer ? jsonIn(answer) : null;
     const raw = Array.isArray(json?.modules) ? json.modules : [];
     const modules = raw
@@ -745,7 +765,7 @@ export async function writeQuiz(
     ]
       .filter((part) => part !== "")
       .join("\n");
-    const answer = await ask(system, prompt, 4_000);
+    const answer = await ask(store, system, prompt, 4_000);
     const json = answer ? jsonIn(answer) : null;
     const questions = shuffleAnswers(readDrafted(json?.questions, count));
     return questions.length ? questions : null;
@@ -787,7 +807,7 @@ export async function writeFeedback(
     ]
       .filter((part) => part !== "")
       .join("\n");
-    const reply = await ask(system, prompt, 1_500);
+    const reply = await ask(store, system, prompt, 1_500);
     const json = reply ? jsonIn(reply) : null;
     const feedback = block(json?.feedback, MAX_FEEDBACK);
     return feedback || null;
@@ -828,7 +848,7 @@ export async function writeEmail(
     ]
       .filter((l) => l !== "")
       .join("\n");
-    const answer = await ask(system, prompt, 1_500);
+    const answer = await ask(store, system, prompt, 1_500);
     const json = answer ? jsonIn(answer) : null;
     const subject = line(json?.subject, MAX_SUBJECT);
     const body = block(json?.body, MAX_EMAIL_BODY);
@@ -893,7 +913,7 @@ export async function writeSequence(
     ]
       .filter((part) => part !== "")
       .join("\n\n");
-    const answer = await ask(system, prompt, 6_000);
+    const answer = await ask(store, system, prompt, 6_000);
     const json = answer ? jsonIn(answer) : null;
     const steps = readDraftedSteps(json?.emails, count, links);
     return steps.length ? steps : null;
@@ -947,7 +967,7 @@ export async function writePitch(
     ]
       .filter((l, i, all) => l !== "" || (i > 0 && all[i - 1] !== ""))
       .join("\n");
-    const answer = await ask(system, prompt, 700);
+    const answer = await ask(store, system, prompt, 700);
     const json = answer ? jsonIn(answer) : null;
     const subject = line(json?.subject, MAX_PITCH_SUBJECT);
     const body = block(json?.body, MAX_PITCH_BODY);
@@ -1005,7 +1025,7 @@ export const REFUND_WORDS = /refund|money.?back|guarantee|reembols|devoluci|devo
  * (lib/ai-rules.ts).
  */
 
-async function readPdfFacts(pdf: Uint8Array): Promise<string | null> {
+async function readPdfFacts(store: Store, pdf: Uint8Array): Promise<string | null> {
   const system = [
     "You read the first pages of a product a creator sells, given as a PDF.",
     "List only what these pages actually show. Never add a chapter, a number, a result or a claim that is not on them, and never guess at the pages you were not given.",
@@ -1015,7 +1035,7 @@ async function readPdfFacts(pdf: Uint8Array): Promise<string | null> {
     { type: "document", source: { type: "base64", media_type: "application/pdf", data: Buffer.from(pdf).toString("base64") } },
     { type: "text", text: `These are the first ${READ_PDF_PAGES} pages at most.` },
   ];
-  const answer = await askModel(system, content, 1_500, answerModel());
+  const answer = await askModel(store, system, content, 1_500, answerModel());
   const json = answer ? jsonIn(answer) : null;
   if (!json) return null;
   const parts = (Array.isArray(json.parts) ? json.parts : [])
@@ -1048,7 +1068,7 @@ export async function writePage(
   if (!notes && !about && !summary && !pdf) return { ok: false, reason: "notes" };
   return counted(store, now, async () => {
     // What the product's own first pages hold, when the creator asked for them to be read.
-    const fileFacts = pdf ? await readPdfFacts(pdf) : null;
+    const fileFacts = pdf ? await readPdfFacts(store, pdf) : null;
     if (pdf && !fileFacts && !notes && !about && !summary) return null;
     const free = input.kind === "free";
     const system = [
@@ -1084,7 +1104,7 @@ export async function writePage(
     ]
       .filter((l) => l !== "")
       .join("\n");
-    const answer = await ask(system, prompt, 3_000);
+    const answer = await ask(store, system, prompt, 3_000);
     const json = answer ? jsonIn(answer) : null;
     if (!json) return null;
     const list = (value: unknown) => (Array.isArray(value) ? value : []);
@@ -1170,7 +1190,7 @@ export async function reviewPage(
     ]
       .filter(Boolean)
       .join("\n");
-    const answer = await ask(system, prompt, 2_500);
+    const answer = await ask(store, system, prompt, 2_500);
     const json = answer ? jsonIn(answer) : null;
     if (!json) return null;
     const list = (value: unknown) => (Array.isArray(value) ? value : []);
@@ -1226,7 +1246,7 @@ export async function rewriteBlock(
       "Return only a JSON object with exactly the same keys as the section given, the same number of list items or fewer, in the same order.",
     ].join("\n\n");
     const prompt = [`The page, for context:\n${input.facts}`, `\nThe section to rewrite (${before.kind}):\n${JSON.stringify(words)}`].join("\n");
-    const answer = await ask(system, prompt, 2_000);
+    const answer = await ask(store, system, prompt, 2_000);
     const json = answer ? jsonIn(answer) : null;
     if (!json) return null;
     const merged = parsePage({ blocks: [{ ...before, ...pickWords(before, json), id: before.id, kind: before.kind }] }).blocks[0];
@@ -1259,7 +1279,7 @@ export async function writeTestHeadline(
       'Return only a JSON object: {"headline": string, "sub": string}.',
     ].join("\n\n");
     const prompt = [`The page, for context:\n${input.facts}`, `\nThe current headline: ${headline}`, `The line under it: ${line(input.sub, 300)}`].join("\n");
-    const reply = await ask(system, prompt, 400);
+    const reply = await ask(store, system, prompt, 400);
     const json = reply ? jsonIn(reply) : null;
     const next = { headline: line(json?.headline, MAX_HEADLINE_WORDS), sub: line(json?.sub, 300) };
     if (!next.headline || next.headline.toLowerCase() === headline.toLowerCase()) return null;
@@ -1314,7 +1334,7 @@ export async function fillBlock(
       "The heading is short and plain.",
       `Return only a JSON object shaped ${want.shape}.`,
     ].join("\n\n");
-    const answer = await ask(system, `The facts:\n${input.facts}`, 2_000);
+    const answer = await ask(store, system, `The facts:\n${input.facts}`, 2_000);
     const json = answer ? jsonIn(answer) : null;
     if (!json) return null;
     const written = parsePage({ blocks: [{ ...empty, ...json, id: input.block.id, kind: input.block.kind, ...(input.block.screens ? { screens: input.block.screens } : {}) }] }).blocks[0];
@@ -1397,7 +1417,7 @@ export async function writeAffiliatePosts(store: Store, input: { facts: string; 
   ].join("\n\n");
   const note = block(input.note, 400);
   const prompt = [`Everything the product's page says:\n${block(input.facts, 6_000)}`, note ? `The affiliate's own note about who they share with and how they know it:\n${note}` : "The affiliate gave no note: say nothing about having used it."].join("\n\n");
-  const answer = await ask(system, prompt, 1_000);
+  const answer = await ask(store, system, prompt, 1_000);
   const json = answer ? jsonIn(answer) : null;
   if (!json) return null;
   const posts = { x: block(json.x, 230), instagram: block(json.instagram, 800), linkedin: block(json.linkedin, 900) };

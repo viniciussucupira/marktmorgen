@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node tests/run.mjs",
-    "test:local": "node tests/e2e/run.mjs"
+    "test:local": "node tests/e2e/run.mjs",
+    "test:client": "node tests/client-bundles.mjs"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",

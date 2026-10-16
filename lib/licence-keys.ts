@@ -51,6 +51,8 @@
  * <store> is the store's statsId, which follows it through a new address and
  * a new sign-in email.
  */
+import { MAX_UPLOAD_KEYS, MAX_POOL_KEYS, MIN_KEY_LENGTH, MAX_KEY_LENGTH, KEY_ALPHABET, MAX_KEY_FILE_BYTES, sampleKey, type IssuedKey, type KeyCounts } from "@/lib/licence-key-rules";
+export { MAX_UPLOAD_KEYS, MAX_POOL_KEYS, MIN_KEY_LENGTH, MAX_KEY_LENGTH, KEY_ALPHABET, MAX_KEY_FILE_BYTES, sampleKey, type IssuedKey, type KeyCounts } from "@/lib/licence-key-rules";
 import { saleHandles } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { NIMBUS_FROM, sendEmail } from "@/lib/email";
@@ -95,14 +97,14 @@ export {
 export type { KeySource, KeySetup, SetupProblem } from "@/lib/key-setup";
 
 /** The most keys one upload may hold, and the most a pool may hold waiting. */
-export const MAX_UPLOAD_KEYS = 10_000;
-export const MAX_POOL_KEYS = 10_000;
-export const MIN_KEY_LENGTH = 4;
-export const MAX_KEY_LENGTH = 100;
+
+
+
+
 /** Letters and digits nobody confuses with another, so a key can be typed from a screenshot. */
-export const KEY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
 /** The biggest file of keys the studio reads. */
-export const MAX_KEY_FILE_BYTES = 1_200_000;
+
 
 /**
  * One made key, from the shape the creator chose, drawn from the system's
@@ -122,9 +124,7 @@ export function generateKey(setup: Pick<KeySetup, "prefix" | "groups" | "groupLe
 }
 
 /** What a made key looks like, for the studio to show before anything is sold. */
-export function sampleKey(setup: Pick<KeySetup, "prefix" | "groups" | "groupLength">): string {
-  return [setup.prefix, ...Array.from({ length: setup.groups }, () => "X".repeat(setup.groupLength))].filter(Boolean).join("-");
-}
+
 
 export type KeyList = {
   keys: string[];
@@ -188,17 +188,7 @@ const warnedKey = (store: Store, product: Pick<Listing, "id">) => `${base(store,
 /** Keys go to Redis in batches this size, well under any request limit. */
 const BATCH = 1_000;
 
-export type IssuedKey = {
-  key: string;
-  /** The sale it went to: a checkout (cs_…) or a one-click payment (pi_…). */
-  reference: string;
-  email: string;
-  at: number;
-  /** When it was marked revoked; 0 while it is good. */
-  revokedAt: number;
-  /** Who revoked it: the creator, or a refund in full read from Stripe. */
-  revokedBy: "creator" | "refund" | "";
-};
+
 
 type Info = { r: string; e: string; at: number; v?: number; w?: "refund" };
 
@@ -304,14 +294,7 @@ async function settle(store: Store, product: Listing, reference: string, email: 
   return { state: "issued", key, revoked: false };
 }
 
-export type KeyCounts = {
-  /** Keys in the pool, not yet given. 0 for made keys. */
-  left: number;
-  issued: number;
-  revoked: number;
-  /** Sales paid while the pool was empty, still waiting for a key. */
-  waiting: number;
-};
+
 
 export async function keyCounts(store: Store, product: Listing): Promise<KeyCounts> {
   if (!store.statsId || !isRedisConfigured()) return { left: 0, issued: 0, revoked: 0, waiting: 0 };

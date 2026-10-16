@@ -8,7 +8,8 @@ import { Icon, type IconName } from "@/components/icons";
 import { FeatureVisual, type VisualKey } from "@/components/feature-visuals";
 import { Faq, HeroFlow, Pricing, RevealOnScroll, SoldMarquee } from "@/components/home-parts";
 import { HomeData } from "@/components/structured-data";
-import { HOME_QUESTIONS } from "@/lib/home-faq";
+import { homeQuestions } from "@/lib/home-faq";
+import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import { PUBLISHED_PRICE_CENTS as PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 import { isDomainsConfigured } from "@/lib/domains";
 import { PLANS_ON_SALE } from "@/lib/opening";
@@ -181,6 +182,7 @@ const CREATORS = [
 
 
 export default function Home() {
+  const questions = homeQuestions(paypalSalesConfigured());
   return (
     <div className="min-h-screen bg-paper text-ink">
       <RevealOnScroll />
@@ -545,7 +547,7 @@ export default function Home() {
               </p>
             </div>
             <div className="reveal">
-              <Faq />
+              <Faq questions={questions} />
             </div>
           </div>
         </section>
@@ -629,7 +631,7 @@ export default function Home() {
       </main>
 
       <SiteFooter />
-      <HomeData questions={HOME_QUESTIONS} />
+      <HomeData questions={questions} />
     </div>
   );
 }

@@ -23,8 +23,9 @@ export const STUDIO_MESSAGES: Record<string, string> = {
   storage_setup: PLANS_ON_SALE
     ? `A store without a plan holds up to ${SETUP_GB} GB, and this file does not fit in what is left. Start your plan to add more: the free trial holds ${TRIAL_GB} GB.`
     : `A store holds up to ${SETUP_GB} GB until its plan starts, and this file does not fit in what is left. Plans are not on sale yet; until they are, delete a file you do not need to make room.`,
-  uploads_pending: "Other uploads are using the remaining space. Finish or cancel them before trying again. If an earlier upload was interrupted, try again later.",
   upload_refresh: "Reload this page before uploading your file again.",
+  upload_budget_unavailable: "New uploads are paused right now. Existing files and downloads are not changed by this pause.",
+  uploads_pending: "Other uploads are using the remaining space. Finish or cancel them before trying again. If an earlier upload was interrupted, try again later.",
   upload_stopped: "The upload stopped before the end, and could not go on. Check your connection and upload the file again.",
   slow_down: "That is a lot of uploads in one hour. Try again a little later.",
   files_unavailable: "Files cannot be taken in just now. Try again in a few minutes.",

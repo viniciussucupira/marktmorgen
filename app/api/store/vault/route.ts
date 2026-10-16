@@ -1,3 +1,4 @@
+import { reserveStoreUpload, reserveUploadControl } from "@/lib/upload-budget";
 import { openReservedVault, closeReservedVault, abortReservedVault } from "@/lib/vault-storage";
 import type { NextRequest } from "next/server";
 import { readKind } from "@/lib/catalog";
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       const standing = standingOf(store);
       quotaRefusal = storageRefusal(standing);
       if (body.multipart !== true) return fail("upload_refresh", 409);
+      if (!(await reserveStoreUpload(store, bytes, "r2"))) return fail("upload_budget_unavailable", 503);
       await rememberFolderOwner(folder, ref);
 
       const opened = await openReservedVault({ folder, ownerId, name: safeFileName(text(body.name, 200)), bytes, type, multipart: true }, storageBrakeFor(standing));
@@ -85,6 +87,7 @@ export async function POST(request: NextRequest) {
       const numbers = Array.isArray(body.numbers) ? body.numbers.filter((n): n is number => Number.isInteger(n)) : [];
       if (!numbers.length || numbers.length > PIECES_PER_ASK) return fail("invalid");
       if (!(await withinLimit("vault-sign", folder, ASKS_PER_HOUR, 3600))) return fail("slow_down", 429);
+      if (!(await reserveUploadControl(store))) return fail("upload_budget_unavailable", 503);
       const pieces = await signPieces(pathname, numbers);
       if (!pieces) return fail("unknown", 404);
       return Response.json({ ok: true, pieces }, { headers: { "Cache-Control": "no-store" } });
@@ -92,6 +95,8 @@ export async function POST(request: NextRequest) {
 
     if (action === "done") {
       const etags = Array.isArray(body.etags) ? body.etags.filter((e): e is string => typeof e === "string") : [];
+      // Completion was authorized with the original upload. Do not strand it
+      // because the current admission budget is paused or the month changed.
       const closed = await closeReservedVault(pathname, etags);
       if (!closed.ok) {
         const status = closed.reason === "unknown" ? 404 : closed.reason === "unavailable" ? 503 : closed.reason === "off" ? 404 : 400;

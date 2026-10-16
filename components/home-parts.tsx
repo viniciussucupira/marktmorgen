@@ -1,11 +1,14 @@
 "use client";
 
 import { AI_MONTHLY } from "@/lib/ai-rules";
+import { MAX_OPTIONS } from "@/lib/product-option";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import { listSizeWords } from "@/lib/contact-rules";
 import { HOME_QUESTIONS } from "@/lib/home-faq";
+import { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
+import { uploadAllowanceWords } from "@/lib/upload-budget-policy";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, centsWords } from "@/lib/watch-rules";
 import { VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
@@ -413,7 +416,7 @@ const INCLUDED = [
   "Up to 2,000 products: files, courses, memberships, paid calls and live sessions",
   "Sales pages and landing pages built from blocks, and reviews only buyers can write",
   "A community for your buyers, with spaces, posts, comments, moderation and live events members RSVP to",
-  "Up to three prices on any product, bundles of 2 to 20 products, pay what you want, discount codes and payment plans",
+  `Up to ${MAX_OPTIONS} prices on any product, bundles of 2 to 20 products, pay what you want, discount codes and payment plans`,
   "15 currencies, and Apple Pay, Google Pay, Klarna and the other ways to pay you switch on in Stripe",
   "Offers before and after paying: a box at checkout, and up to five one-click offers after",
   "An affiliate program with a page for each affiliate, paid from your own PayPal in one press or on payday by itself",
@@ -647,6 +650,8 @@ function PlanCard({
         </ul>
       </details>
 
+      <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>
+
       <div className="mt-auto pt-8">
         {/*
           The plan and the rhythm travel with the press.
@@ -763,8 +768,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
         <p className="flex gap-2 text-ink-soft">
           <Icon name="download" size={18} className="mt-0.5 shrink-0 text-violet-deep" />
           <span>
-            <strong className="font-semibold text-ink">200 GB of downloads a month.</strong> Written here rather than in the
-            terms, and nothing is cut off if you pass it.
+            <strong className="font-semibold text-ink">Up to {STORAGE_BRAKE_BYTES / (1024 ** 3)} GB of stored files and videos.</strong> Uploads pause when there is no room left.
           </span>
         </p>
       </div>
@@ -772,11 +776,11 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
   );
 }
 
-export function Faq() {
+export function Faq({ questions = HOME_QUESTIONS }: { questions?: typeof HOME_QUESTIONS } = {}) {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <ul className="divide-y divide-line border-y border-line">
-      {HOME_QUESTIONS.map((item, i) => {
+      {questions.map((item, i) => {
         const isOpen = open === i;
         return (
           <li key={item.q}>

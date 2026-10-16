@@ -367,7 +367,7 @@ export async function suggestReply(store: Store, id: string, now = Date.now()): 
       "Return only the answer.",
     ].join("\n\n");
     const prompt = [faq ? `The store's questions and answers:\n\n${faq}` : "The store has written no questions and answers.", `The conversation, oldest first:\n\n${transcript}`].join("\n\n---\n\n");
-    const answer = await askModel(system, prompt, 500, answerModel());
+    const answer = await askModel(store, system, prompt, 500, answerModel());
     const text = answer ? messageText(answer) : "";
     return text || null;
   });

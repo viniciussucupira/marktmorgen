@@ -160,7 +160,7 @@ export const PAGES: TopicPage[] = [
     title: "Side by side",
     highlight: "with Gumroad",
     intro:
-      "Every number here was read on Gumroad's own pricing page and help center in September 2026, and the page says where each one came from. When they change one, this page changes.",
+      "Fees checked against Gumroad’s pricing page and official help text on October 16, 2026. Other operational details below were checked in September 2026 and may change; confirm eligibility and terms before switching.",
     badge: PROOF,
     accent: "from-mint-brand to-violet-brand",
     blocks: [
@@ -172,8 +172,8 @@ export const PAGES: TopicPage[] = [
         kind: "facts",
         title: "Gumroad's own numbers",
         items: [
-          { value: "10% + $0.50", label: "Gumroad's fee on a direct sale", tone: "bg-pink-brand/10 text-pink-brand" },
-          { value: "30%", label: "On a sale that comes through Discover", tone: "bg-amber-brand/15 text-amber-brand" },
+          { value: "10% + $0.50", label: "Standard direct-sale fee, before separate processing", tone: "bg-pink-brand/10 text-pink-brand" },
+          { value: "30%", label: "Discover fee, including payment processing", tone: "bg-amber-brand/15 text-amber-brand" },
           { value: "$100", label: "Minimum balance before they pay you", tone: "bg-violet-brand/10 text-violet-deep" },
           { value: "7 days", label: "A sale waits in their balance on weekly, monthly and quarterly payouts", tone: "bg-sky-brand/15 text-sky-brand" },
         ],
@@ -181,13 +181,13 @@ export const PAGES: TopicPage[] = [
       {
         kind: "table",
         title: "The part that decides",
-        note: "Sources: Gumroad's pricing page and their help center articles 'Gumroad's fees', 'Getting paid by Gumroad', 'Connect your Stripe account to Gumroad' and 'Sales tax on Gumroad', all re-read on September 28, 2026.",
+        note: "Sources: Gumroad's pricing page and their help center articles 'Gumroad's fees', 'Getting paid by Gumroad', 'Connect your Stripe account to Gumroad' and 'Sales tax on Gumroad', read on September 28, 2026. Direct, Discover and high-volume fee conditions re-checked on October 16, 2026.",
         head: ["", "Gumroad", "Marktmorgen"],
         rows: [
-          ["Cut of each sale", "10% + $0.50 direct, 30% via Discover", feeWords().short],
-          ["Card fee on top of that", "2.9% + $0.30 for card processing. Their own fees page says the 10% + $0.50 does not include credit card processing", "Stripe processing fees, plus the published plan share"],
+          ["Cut of each sale", "10% + $0.50 direct; new direct sales become 5% + $0.50 after $20,000 in paid sales that calendar month. Discover: 30%. Custom account fees can differ", feeWords().short],
+          ["Card fee on top of that", "Direct sales add card processing at 2.9% + $0.30, or PayPal fees. Discover’s 30% includes processing", "Stripe processing fees, plus the published plan share"],
           ["Monthly price", "None", monthlyRow()],
-          ["Whose payment account", "Theirs. New sellers can no longer connect their own Stripe", "Your own Stripe, from the first sale"],
+          ["Whose payment account", "Gumroad is the merchant of record. New connections to a seller’s own Stripe are restricted; check current country eligibility", "Your own Stripe, from the first sale"],
           ["When the money reaches you", "Into their balance, then paid out on the schedule you pick there, with a 7-day hold on weekly, monthly and quarterly payouts", "In your own Stripe balance at the moment of sale, then paid out on your Stripe schedule"],
           ["Minimum to be paid", "$100, higher in some countries", "Whatever your own Stripe is set to"],
           ["Instant payout", "United States only, 3% fee, after a first payout and 60 days of processing", "Not needed — the account is already yours"],
@@ -205,7 +205,7 @@ export const PAGES: TopicPage[] = [
       },
       {
         kind: "steps",
-        title: "The same $27 file, on both",
+        title: "A $27 direct-sale example before the volume discount",
         items: [
           { title: "On Gumroad", body: "10% of $27 is $2.70, plus $0.50, so $3.20 goes to Gumroad. Their own fees page says that figure does not include credit card processing, so card processing at 2.9% + $0.30 — about $1.08 — comes out as well. You keep $22.72." },
           { title: "On Marktmorgen", body: feeWords().gumroad.ours },
@@ -215,8 +215,8 @@ export const PAGES: TopicPage[] = [
       },
       {
         kind: "note",
-        title: "If you sell less than that, use Gumroad",
-        body: "We are not going to pretend otherwise. Under about nine $27 sales a month, a percentage of almost nothing is cheaper than a monthly price, and Gumroad is also the merchant of record and collects and remits sales tax worldwide, which is real work and real risk taken off you. Come back when the cut starts to hurt.",
+        title: "Compare the work behind each payment",
+        body: "Gumroad includes merchant-of-record administration for the indirect taxes it is responsible for. With Marktmorgen, you remain the seller and manage your own payment account and applicable registrations and filings. Compare those responsibilities as well as the subscription, sales share and payment fees. The example excludes refunds, currency conversion and other account-specific charges.",
       },
       {
         kind: "note",
@@ -256,7 +256,7 @@ export const PAGES: TopicPage[] = [
         note: "Sources: Beacons' pricing page and their help center articles 'Beacons Products Transaction Fees' and 'When will I receive my payout from Product/Store Sales?', read on September 18, 2026. Plan prices, the fee quoted below and the rows on order bumps, memberships and courses re-checked on their pricing page and help center on September 28, 2026.",
         head: ["", "Beacons", "Marktmorgen"],
         rows: [
-          ["Cut of each sale", "9% on the free and $10 plans. 0% from the $30 plan up", "0%, on every plan"],
+          ["Cut of each sale", "9% on the free and $10 plans. 0% from the $30 plan up", feeWords().short],
           ["Monthly price", "$0, $10, $30 and $100", monthlyRow()],
           ["Whose payment account", "Your own Stripe or PayPal", "Your own Stripe"],
           ["Ways to be paid", "Stripe or PayPal", PAYPAL ? "Stripe or PayPal, both paying straight into your own account" : "Stripe, with the ways to pay you switch on in it. No PayPal yet: it is built and waits on PayPal approving us as a platform"],
@@ -410,7 +410,7 @@ export const PAGES: TopicPage[] = [
           ["Store page on a phone", "Yes", "Yes, and faster (93\u201394 against 46\u201359 on PageSpeed, October 5, 2026)"],
           ["Themes and colors", "Yes, limited", "Yes \u2014 four themes, ten colors or any color of your own, five pairings of letters, and your photo. Every color is checked for contrast before your page uses it"],
           ["A line about you on the page", "A short profile bio, and no separate About Me page", "Every store, under your name"],
-          ["Products on one store", "Unlimited", "Up to 2,000 products and 100 links, 24 products a page on the store and search in your studio — Stan is ahead here"],
+          ["Products on one store", "No numeric cap stated", "Up to 2,000 products and 100 links, 24 products a page on the store and search in your studio — Stan is ahead here"],
           ["Sections on the store", "Yes — named sections, dragged into order and hidden when empty (their help center, read October 7, 2026)", "Yes — up to 20 headings, each starting at a product you pick, and one line of your own news across the top"],
           ["Product pictures", "Yes — thumbnails shown as Button, Callout or Preview", "Yes — a picture on each product, shown as Button, Callout or Preview, the same three"],
           ["Several prices for one product", "Not available", "Up to 50 on one product, each with its own file or link, compared side by side with one marked as your pick"],
@@ -533,7 +533,7 @@ export const PAGES: TopicPage[] = [
           { title: "Can I sign up and sell today?", body: "Yes. You take your store address, put what you sell on the page, connect your own Stripe account, and a buyer can pay for it — on your account, " + feeWords().onTop + `. Until Stripe clears your account, your page says plainly that it cannot take a payment, so nobody's time is wasted. Taking payments needs the ${PLAN_AT.creator} plan, and its first 14 days are free.` },
           { title: "Who holds the money from my sales?", body: feeWords().whoHolds },
           { title: "What happens if Marktmorgen closes?", body: "Your Stripe account, your customers and your files were never ours. Your list downloads from your studio at any time, and a shutdown comes with at least 30 days' notice in writing." },
-          { title: "Who is behind this?", body: "A small independent studio, working in public. Support is in English, in writing, and a person answers it." },
+          { title: "Who is behind this?", body: "Marktmorgen’s creator also handles support, in English and in writing." },
           { title: "Can my store look like mine?", body: "Yes. Put up your photo, pick one of four themes, a color \u2014 one of ten, or your own \u2014 and one of five pairings of letters, and the studio shows the page before you save it. Every color is checked so the words on your page stay easy to read." },
           { title: "What do I do if something breaks?", body: "You write to support and a person answers. If a sale is affected, you have the Stripe dashboard as the source of truth, independently of us." },
         ],

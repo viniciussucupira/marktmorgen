@@ -397,8 +397,8 @@ test("a store nobody can charge cannot watch past the hours it has", () => {
   // so the hours themselves are the limit there: its video is paused at
   // them (lib/plan-standing.ts has the figures, tests/plan-standing.test.ts
   // holds them).
-  const learn = readFileSync(join(process.cwd(), "lib/learn.ts"), "utf8");
-  assert.match(learn, /limit !== null && folder && \(await watchedIn\(folder\)\) >= limit/, "the pause for a store with no plan to charge must stay");
+  // Admission failure and exact-limit behavior are exercised through the real
+  // lessonVideo function in video-admission.test.ts. Check the route wiring here.
   const page = readFileSync(join(process.cwd(), "app/[handle]/course/[product]/[lesson]/page.tsx"), "utf8");
   assert.match(page, /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/, "and the lesson page must be the one that asks what the store's hours are");
 });

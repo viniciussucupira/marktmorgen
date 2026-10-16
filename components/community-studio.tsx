@@ -24,7 +24,7 @@ import {
   MAX_WELCOME,
 } from "@/lib/community-text";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
-import { MAX_SLOW } from "@/lib/community-chat";
+import { MAX_SLOW } from "@/lib/community-chat-rules";
 import { LEVELS, MAX_LEVEL, type Reward, levelOf } from "@/lib/community-levels";
 
 export type QueueRow = {

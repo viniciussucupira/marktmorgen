@@ -55,10 +55,10 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq }: { currency: 
           ? "This month's writing help is used up. It starts again on the 1st."
           : data.error === "notes"
             ? "Say in a sentence or two what you make and for whom."
-            : "The writing help did not answer just now. Nothing was changed, and it was not counted.",
+            : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.",
       );
     } catch {
-      setNote("The writing help did not answer just now. Nothing was changed, and it was not counted.");
+      setNote("The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.");
     } finally {
       setDrafting(false);
     }

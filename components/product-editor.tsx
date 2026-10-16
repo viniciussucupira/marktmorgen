@@ -31,7 +31,7 @@ import {
   MAX_TITLE_LENGTH,
   isFree,
   type Product,
-} from "@/lib/store";
+} from "@/lib/store-field-rules";
 import { type Currency, fieldPrefix, formatMoney, moneyField, priceExample, priceBounds, rangeWords, readMoney } from "@/lib/money";
 import { StoreCurrency, useStoreCurrency } from "@/components/store-currency";
 import { AiAssist, AiOn } from "@/components/ai-assist";

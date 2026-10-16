@@ -93,6 +93,26 @@ export async function watchedIn(folder: string, month = monthKey()): Promise<num
   }
 }
 
+/** Admission reads must distinguish an acknowledged unused month from a failed
+ * lookup. The forgiving watchedIn reader is only for displays/billing history;
+ * its zero fallback is never permission to issue a limited playback token.
+ * A missing monthly key is the existing meter's representation of no recorded
+ * usage; this reader does not prove meter freshness or protect against key loss.
+ */
+export async function watchedForAdmission(folder: string, month = monthKey()): Promise<number | null> {
+  if (!isRedisConfigured() || !FOLDER_PATTERN.test(folder) || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null;
+  try {
+    const results = await redisPipeline([["GET", secondsKey(folder, month)]]);
+    if (results.length !== 1) return null;
+    const raw = results[0];
+    if (raw === null) return 0;
+    if (typeof raw !== "string" && typeof raw !== "number") return null;
+    if (typeof raw === "string" && !/^(0|[1-9][0-9]*)$/.test(raw)) return null;
+    const seconds = Number(raw);
+    return Number.isSafeInteger(seconds) && seconds >= 0 ? seconds : null;
+  } catch { return null; }
+}
+
 /** The stores whose video was watched at all in a month. */
 export async function watchedFolders(month = monthKey()): Promise<string[]> {
   if (!isRedisConfigured()) return [];
