@@ -14,7 +14,7 @@ export function formDealDraft(form: FormDef, response: FormResponse) {
   return { title: form.name.slice(0, MAX_DEAL_TITLE), email: typeof email === "string" ? email.trim().toLowerCase() : "", note: fullNote.slice(0, MAX_DEAL_NOTE), truncated: fullNote.length > MAX_DEAL_NOTE };
 }
 
-export type FormDealMatch = { id: string; title: string; email: string; stage: string };
+export type FormDealMatch = { formResponseRef?: string; id: string; title: string; email: string; stage: string };
 
 /** Snapshot matches by contact, not proof that two responses describe the same sale. */
 export function matchingFormDeals(email: string, deals: readonly FormDealMatch[]): FormDealMatch[] {
