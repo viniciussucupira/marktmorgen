@@ -171,6 +171,12 @@ export async function readDeals(statsId: string | null, stages: readonly Stage[]
     .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
+/** Capacity and save share one Redis operation, including alongside form conversions. */
+export const SAVE_CRM_DEAL = `-- marktmorgen:crm-deal-save:v1
+if redis.call("HEXISTS", KEYS[1], ARGV[1]) == 0 and redis.call("HLEN", KEYS[1]) >= tonumber(ARGV[3]) then return 0 end
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
+return 1`;
+
 /** Saves a deal. False when the store already has as many as it may and this one is new. */
 export async function writeDeal(statsId: string, deal: Deal): Promise<boolean> {
   let preflight: unknown;
@@ -180,10 +186,10 @@ export async function writeDeal(statsId: string, deal: Deal): Promise<boolean> {
   if (!Array.isArray(preflight) || preflight.length !== 2 || (preflight[0] !== 0 && preflight[0] !== 1) || typeof preflight[1] !== "number" || !Number.isSafeInteger(preflight[1]) || preflight[1] < preflight[0]) throw new CrmDealReadUnavailable();
   if (preflight[0] === 0 && preflight[1] >= MAX_DEALS) return false;
   try {
-    const saved = await redisPipeline([["HSET", dealsKey(statsId), deal.id, JSON.stringify(deal)]]);
+    const saved = await redisPipeline([["EVAL", SAVE_CRM_DEAL, 1, dealsKey(statsId), deal.id, JSON.stringify(deal), MAX_DEALS]]);
     if (!Array.isArray(saved) || saved.length !== 1 || (saved[0] !== 0 && saved[0] !== 1)) throw new CrmDealWriteUnconfirmed();
+    return saved[0] === 1;
   } catch { throw new CrmDealWriteUnconfirmed(); }
-  return true;
 }
 
 export async function readDeal(statsId: string, id: string, stages: readonly Stage[]): Promise<Deal | null> {
