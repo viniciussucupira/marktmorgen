@@ -38,6 +38,7 @@ const MESSAGES: Record<string, string> = {
   fields: "Each field needs a name of its own, and a choice needs at least two options.",
   stages: "Keep at least one open stage, one won and one lost, each with a name.",
   server_error: "The change could not be confirmed. Check the saved CRM data before trying again.",
+  crm_schema_read_unavailable: "The saved CRM configuration could not be checked before this change. Your current work is still here. Try again shortly.",
   crm_deal_read_unavailable: "Saved deals could not be checked before this change. Your current work is still here. Try again shortly.",
   crm_write_unconfirmed: "The change could not be confirmed and may already have happened. Keep a copy of unsaved work, then reload this page and check the saved CRM data before trying again.",
   ...STUDIO_MESSAGES,
