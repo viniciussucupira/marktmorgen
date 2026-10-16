@@ -266,9 +266,11 @@ async function collectionFor(config: Config, folder: string): Promise<string | n
  */
 export async function streamHeld(folder: string): Promise<number | null> {
   const config = streamConfig();
-  if (!config || !isRedisConfigured()) return 0;
+  if (!config) return 0;
+  if (!isRedisConfigured()) return null;
   const [known] = await redisPipeline([["GET", collectionKey(folder)]]);
-  if (typeof known !== "string" || !STREAM_ID_PATTERN.test(known)) return 0;
+  if (known === null) return 0;
+  if (typeof known !== "string" || !STREAM_ID_PATTERN.test(known)) return null;
   const answer = await ask(config, "GET", `/collections/${known}`);
   if (answer.status === 404) return 0;
   const size = field(answer.data, "totalSize");

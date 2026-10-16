@@ -113,21 +113,32 @@ export async function listFiles(prefix: string): Promise<string[]> {
 }
 
 /**
- * How many bytes a store keeps in both file stores together. Stops after a
- * sane number of pages, which reports less than the truth: the safe
- * direction, for a figure that can only ever stop an upload. Throws when the
- * host's store cannot be read; a count from the other that cannot be read is
- * left out, as the video service's is (lib/storage-quota.ts).
+ * Complete bytes in both file stores. Throws on unavailable, invalid or
+ * incomplete listings: a partial total cannot authorize another upload.
  */
 export async function filesHeld(folder: string): Promise<number> {
   let bytes = 0;
   let cursor: string | undefined;
+  const seen = new Set<string>();
+  const paths = new Set<string>();
+  let complete = false;
   for (let page = 0; page < 20; page += 1) {
     const answer = await blob.list({ prefix: `stores/${folder}/`, limit: 1000, cursor });
-    for (const entry of answer.blobs) bytes += typeof entry.size === "number" ? entry.size : 0;
-    if (!answer.hasMore || !answer.cursor) break;
+    if (!answer || !Array.isArray(answer.blobs) || typeof answer.hasMore !== "boolean") throw new Error("invalid storage listing");
+    for (const entry of answer.blobs) {
+      if (!entry || typeof entry.pathname !== "string" || !entry.pathname.startsWith(`stores/${folder}/`) ||
+          paths.has(entry.pathname) || !Number.isSafeInteger(entry.size) || entry.size < 0) throw new Error("invalid storage entry");
+      paths.add(entry.pathname);
+      bytes += entry.size;
+      if (!Number.isSafeInteger(bytes)) throw new Error("invalid storage total");
+    }
+    if (!answer.hasMore) { complete = true; break; }
+    if (!answer.cursor || seen.has(answer.cursor)) throw new Error("incomplete storage listing");
+    seen.add(answer.cursor);
     cursor = answer.cursor;
   }
-  bytes += (await vaultHeld(folder).catch(() => null)) ?? 0;
-  return bytes;
+  if (!complete) throw new Error("storage listing exceeded page limit");
+  const vault = await vaultHeld(folder);
+  if (vault === null || !Number.isSafeInteger(vault) || vault < 0 || !Number.isSafeInteger(bytes + vault)) throw new Error("incomplete vault measurement");
+  return bytes + vault;
 }

@@ -17,3 +17,13 @@ A free period with positive cost and no revenue is loss-making. A full refund af
 Tax status must be reviewed for the actual company and owner in every relevant jurisdiction; the legal label LLC does not establish zero tax. The review must supply evidence for tax ceilings, real vendor costs, enforced resource caps and prepaid usage, and include all fixed costs in the isolated-customer case. Do not insert a guessed tax percentage or assume future commissions cover a loss.
 
 The price/rights snapshot binds a review to current plan prices, commission mode, trial/refund days and email allowances. Changes to other entitlements, suppliers, tax treatment or cost enforcement also require a fresh reviewed model and evidence; the snapshot alone is not exhaustive verification.
+
+## Storage measurement safeguard
+
+New uploads require a complete, valid measurement of file storage and lesson video storage. Provider errors, unknown sizes, repeated files/cursors and pagination exhaustion cannot create apparent free space. Upload doors return a temporary provider-unavailable response instead of a quota-full response. Confirmed empty storage still permits uploads. Existing content and downloads are not removed by this check.
+
+This is not a prepaid ledger or a proof of the 60% floor. Concurrent uploads, outstanding upload tokens, recurring storage costs, free entitlements and deferred consumption billing still require funded limits. A successful size measurement alone does not certify a customer or a plan.
+
+## Company and owner scope
+
+The intended company is a Delaware single-member LLC; its sole owner is Brazilian and resides in Brazil. The owner's requirement covers all applicable US and Brazilian taxes, including taxes attributable to the owner under the actual structure. No exemption or rate is inferred from these facts. The review must demonstrate both the consolidated company's minimum 60% after-tax net margin and every individual customer's minimum, with full entitlements consumed. The `company_all_costs` scenario is mandatory in addition to the isolated-customer scenario; a consolidated profit never offsets a failing customer.

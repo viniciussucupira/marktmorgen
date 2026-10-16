@@ -5,7 +5,7 @@ import { PLAN_PRICES, COMMISSION_BPS, COMMISSION_LIVE, TRIAL_DAYS, REFUND_DAYS, 
 import { assessCustomerWorstCase, type CustomerWorstCase } from "@/lib/net-margin-rules";
 export const REQUIRED_MARGIN_SCENARIOS=[
  "creator_month_full","creator_year_full","pro_month_full","pro_year_full","scale_month_full","scale_year_full",
- "video_overage","visits_overage","orders_overage","free_trial","full_refund","non_payment","post_cancellation","single_customer_all_fixed_costs",
+ "video_overage","visits_overage","orders_overage","free_trial","full_refund","non_payment","post_cancellation","single_customer_all_fixed_costs","company_all_costs",
 ] as const;
 export type MarginScenario=typeof REQUIRED_MARGIN_SCENARIOS[number];
 export const CURRENT_PRICE_AND_RIGHTS_SNAPSHOT=JSON.stringify({prices:PLAN_PRICES,commission:COMMISSION_BPS,commissionLive:COMMISSION_LIVE,trialDays:TRIAL_DAYS,refundDays:REFUND_DAYS,proEmails:PRO_MONTHLY_EMAILS,scaleEmails:SCALE_MONTHLY_EMAILS});

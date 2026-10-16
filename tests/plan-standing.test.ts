@@ -55,8 +55,8 @@ async function main(): Promise<void> {
   is("which is twelve cents a month at the dearest rate a file is kept at", ((SETUP_STORAGE_BYTES / GB) * 0.023).toFixed(3), "0.115");
   is("and a trial that keeps all it may costs us little over a dollar a month", (TRIAL_STORAGE_BYTES / GB) * 0.023 < 1.2, true);
   const empty = await storageUsed("0123456789abcdef0123456789abcdef", storageBrakeFor("none"));
-  is("an empty store is measured against its own figure", [empty.bytes, empty.brake, empty.left, empty.full], [0, 5 * GB, 5 * GB, false]);
-  is("a file that fits is taken", fits(empty, 5 * GB, "none"), true);
+  is("unavailable storage is not treated as an empty store", [empty.brake, empty.available, empty.left], [5 * GB, false, 0]);
+  is("unavailable storage cannot authorize an upload", fits(empty, 5 * GB, "none"), false);
   is("one that would take a store with no plan past its figure is not", fits(empty, 5 * GB + 1, "none"), false);
   const half = { bytes: 3 * GB, brake: 5 * GB, left: 2 * GB, full: false };
   is("it is what is left that a file has to fit in", [fits(half, 2 * GB, "ended"), fits(half, 2 * GB + 1, "ended"), fits({ ...half, brake: 50 * GB, left: 47 * GB }, 5 * GB, "trial")], [true, false, true]);
