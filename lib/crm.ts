@@ -128,11 +128,19 @@ export async function readStages(statsId: string | null): Promise<Stage[]> {
   return parseStages(json(raw)) ?? DEFAULT_STAGES;
 }
 
+/** Move only the exact snapshot reviewed; never resurrect a deleted opportunity. */
+export const MOVE_CRM_DEAL = `-- marktmorgen:crm-deal-move:v1
+local current = redis.call("HGET", KEYS[1], ARGV[1])
+if not current then return 0 end
+if current ~= ARGV[2] then return -1 end
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[3])
+return 1`;
+
 /** Saves the stages; a deal in a stage that is gone moves to the first open one. */
 export async function writeStages(statsId: string, stages: Stage[]): Promise<Stage[]> {
   const first = stages.find(s => s.kind === "open");
   if (!first) throw new CrmSchemaReadUnavailable();
-  const moved: { id: string; record: Record<string, unknown> }[] = [];
+  const moved: { id: string; before: string; record: Record<string, unknown> }[] = [];
   try {
     const response = await redisPipeline([["HGETALL", dealsKey(statsId)]]);
     if (!Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0]) || response[0].length % 2 !== 0) throw new CrmSchemaReadUnavailable();
@@ -147,14 +155,14 @@ export async function writeStages(statsId: string, stages: Stage[]): Promise<Sta
       if (record.id !== id || typeof record.stage !== "string" || !CRM_ID.test(record.stage)) throw new CrmSchemaReadUnavailable();
       seen.add(id);
       // Preserve every saved field; moving stages must not normalize away unrelated data.
-      if (!stages.some(stage => stage.id === record.stage)) moved.push({ id, record: { ...record, stage: first.id } });
+      if (!stages.some(stage => stage.id === record.stage)) moved.push({ id, before: flat[i + 1] as string, record: { ...record, stage: first.id } });
     }
   } catch { throw new CrmSchemaReadUnavailable(); }
   try {
     const saved = await redisPipeline([["SET", stagesKey(statsId), JSON.stringify(stages)]]);
     if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new CrmSchemaWriteUnconfirmed();
     if (moved.length) {
-      const response = await redisPipeline(moved.map(({ id, record }) => ["HSET", dealsKey(statsId), id, JSON.stringify(record)]));
+      const response = await redisPipeline(moved.map(({ id, before, record }) => ["EVAL", MOVE_CRM_DEAL, 1, dealsKey(statsId), id, before, JSON.stringify(record)]));
       if (!Array.isArray(response) || response.length !== moved.length || Array.from(response).some(value => value !== 0 && value !== 1)) throw new CrmSchemaWriteUnconfirmed();
     }
   } catch { throw new CrmSchemaWriteUnconfirmed(); }
