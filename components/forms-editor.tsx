@@ -66,7 +66,7 @@ const blank = (): FormDef => ({
  * answers it has kept and the newest of them, a file of all of them, and an
  * editor for its questions, its results and what a person reads after.
  */
-export function FormsEditor({ saved, products, exportBase, dealStages = [], sid = "" }: { dealStages?: Stage[]; sid?: string; saved: SavedForm[]; products: { id: string; title: string }[]; /** The download's address, the form's id added at its end. */ exportBase: string }) {
+export function FormsEditor({ saved, products, exportBase, dealStages = [], sid = "", currency = "USD", dealAssignees = [] }: { currency?: string; dealAssignees?: string[]; dealStages?: Stage[]; sid?: string; saved: SavedForm[]; products: { id: string; title: string }[]; /** The download's address, the form's id added at its end. */ exportBase: string }) {
   const router = useRouter();
   const [dealDraft, setDealDraft] = useState<{ form: FormDef; response: FormResponse } | null>(null);
   const [draft, setDraft] = useState<FormDef | null>(null);
@@ -225,7 +225,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
         ))}
       </ul>
 
-      {dealDraft ? <FormResponseDeal form={dealDraft.form} response={dealDraft.response} stages={dealStages} sid={sid} onClose={() => setDealDraft(null)} /> : null}
+      {dealDraft ? <FormResponseDeal form={dealDraft.form} response={dealDraft.response} stages={dealStages} sid={sid} currency={currency} assignees={dealAssignees} onClose={() => setDealDraft(null)} /> : null}
 
       {error && !draft ? (
         <p className="notice notice-error mt-4" role="alert">
