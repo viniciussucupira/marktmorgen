@@ -27,3 +27,11 @@ This is not a prepaid ledger or a proof of the 60% floor. Concurrent uploads, ou
 ## Company and owner scope
 
 The intended company is a Delaware single-member LLC; its sole owner is Brazilian and resides in Brazil. The owner's requirement covers all applicable US and Brazilian taxes, including taxes attributable to the owner under the actual structure. No exemption or rate is inferred from these facts. The review must demonstrate both the consolidated company's minimum 60% after-tax net margin and every individual customer's minimum, with full entitlements consumed. The `company_all_costs` scenario is mandatory in addition to the isolated-customer scenario; a consolidated profit never offsets a failing customer.
+
+## Per-upload capacity
+
+A newly authorized file must fit entirely in the confirmed remaining storage, including on paid plans. The fallback Blob token and its URL options use the same maximum: the lesser of the per-file limit and confirmed remaining bytes. Invalid or unavailable capacity cannot authorize an upload. Existing files are not deleted by this rule.
+
+This closes the single-upload overshoot only. Concurrent requests may still read the same remaining capacity; outstanding authorizations and multipart uploads still need a reservation lifecycle backed by provider-confirmed completion or cancellation. No expiry timer alone proves that a provider stopped an upload. These safeguards do not certify the 60% after-tax margin.
+
+Video admission currently checks declared source bytes. The application's video-upload signature does not bind that byte count, and encoded variants may require additional storage. This admission check is not provider-enforced video capacity or a verified worst-case cost ceiling. These gaps must be resolved before commercial margin certification.

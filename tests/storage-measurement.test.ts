@@ -13,13 +13,13 @@ async function main():Promise<void>{
  resetStorageAnswers();
  let held=await storageUsed(folder,100);
  is("confirmed empty storage remains available",[held.bytes,held.left,held.available],[0,100,true]);
- is("confirmed free space authorizes upload",fits(held,50,"none"),true);
+ is("confirmed free space authorizes upload",fits(held,50),true);
  resetStorageAnswers(); answers.pages=[page(10,true,"next"),page(20)]; answers.vault=30;answers.video=40;
  held=await storageUsed(folder,200);
  is("all providers and pages contribute",[held.bytes,held.left,held.available],[100,100,true]);
  for(const state of ["paid","trial","none","ended"] as const){
   resetStorageAnswers();answers.fail=true;held=await storageUsed(folder,100);
-  is("failed provider blocks "+state, fits(held,1,state),false);
+  is("failed provider blocks "+state, fits(held,1),false);
   is("failure is unavailable, not full", [held.available,held.full,held.left],[false,false,0]);
  }
  for(const bad of [null,-1,NaN,Infinity,0.5,Number.MAX_SAFE_INTEGER+1]){

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const standing = standingOf(store);
     const held = await storageUsed(folder, storageBrakeFor(standing));
     if (held.available === false) return Response.json({ ok: false, error: "video_unavailable" }, { status: 503 });
-    if (!fits(held, bytes, standing)) return Response.json({ ok: false, error: storageRefusal(standing) }, { status: 400 });
+    if (!fits(held, bytes)) return Response.json({ ok: false, error: storageRefusal(standing) }, { status: 400 });
     await rememberFolderOwner(folder, ref);
 
     const opened = await openUpload({ folder, lessonId, name: safeFileName(text(body.name, 200)), bytes, type });
