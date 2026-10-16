@@ -471,6 +471,27 @@ async function main() {
   is("neither remains stored", [videos.has(abandoned.door.id), videos.has(broken.door.id)], [false, false]);
   is("confirmed deletion clears the queue", redis.run(["SMEMBERS", "nl:stream:gone"]), []);
 
+  part("Unconfirmed cleanup persistence cannot discard a video");
+  const uncertain = await openUpload(input, NOW);
+  if (!uncertain.ok) throw new Error("no test door");
+  const originalPipeline = redis.pipeline;
+  redis.pipeline = async (commands) => commands.some((command) => command[0] === "SADD" && command[1] === "nl:stream:gone")
+    ? [undefined]
+    : originalPipeline(commands);
+  const askedBeforeUnknownQueue = asked.length;
+  let refusedCleanup = false;
+  try {
+    await dropStream(uncertain.door.pathname);
+  } catch {
+    refusedCleanup = true;
+  } finally {
+    redis.pipeline = originalPipeline;
+  }
+  is("unconfirmed queue persistence refuses cleanup", refusedCleanup, true);
+  is("the video remains discoverable locally", (await streamRecord(uncertain.door.pathname))?.id, uncertain.door.id);
+  is("no provider deletion was attempted", asked.length, askedBeforeUnknownQueue);
+  await dropStream(uncertain.door.pathname);
+
   part("The announcements' address does not exist without the key they are signed with");
   delete process.env.BUNNY_STREAM_READ_KEY;
   is("not found", (await announce(announcement)).status, 404);
