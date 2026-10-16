@@ -1,6 +1,7 @@
 /** Client-safe release policy. No secrets, tax rates inferred from residence, or optimistic defaults.
  * Paid plans remain closed until every individual worst case is reviewed and passes the owner's floor.
  */
+import { assessMinimumCustomerBase, CUSTOMER_BASE_RULES, type CustomerBaseReview } from "@/lib/customer-base-rules";
 import { PLAN_PRICES, COMMISSION_BPS, COMMISSION_LIVE, COMMISSION_PLANS_PUBLISHED, PUBLISHED_PLAN_PRICES, TRIAL_DAYS, REFUND_DAYS, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { SHARE_PROVED_IN_TEST_MODE } from "@/lib/platform-share";
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
@@ -36,7 +37,8 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 4,
+ schemaVersion: 5,
+ customerBaseRules: CUSTOMER_BASE_RULES,
  quizzes: { newQuizPolicy: QUIZ_USAGE_POLICY, submissionsPerStoreUtcMonth: QUIZ_MONTHLY_SUBMISSIONS, legacyQuizzesExempt: true },
  basePlanRevenueCeilings: BASE_PLAN_REVENUE_CEILINGS,
  minimumNetMarginBps: MINIMUM_NET_MARGIN_BPS,
@@ -62,6 +64,7 @@ export const CURRENT_COMMERCIAL_TERMS = {
 export const CURRENT_PRICE_AND_RIGHTS_SNAPSHOT = JSON.stringify(CURRENT_COMMERCIAL_TERMS);
 export type CommercialMarginReview={
  priceAndRightsSnapshot:string;
+ companyBase:CustomerBaseReview|null;
  taxEvidence:string;
  costAndLimitEvidence:string;
  singleCustomerFixedCostsVerified:boolean;
@@ -74,6 +77,10 @@ export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
  if(!review.taxEvidence?.trim()||!review.costAndLimitEvidence?.trim())return false;
  if(review.singleCustomerFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
+ const company = assessMinimumCustomerBase(
+  Object.keys(BASE_PLAN_REVENUE_CEILINGS).map(key=>({months:key.includes("_year_")?12:1,scenario:review.scenarios[key as MarginScenario]??null})), review.companyBase??null,
+ );
+ if(!company.reviewedBaseSufficient)return false;
  return REQUIRED_MARGIN_SCENARIOS.every(key=>{
   const scenario=review.scenarios[key]??null;
   const ceiling=BASE_PLAN_REVENUE_CEILINGS[key];

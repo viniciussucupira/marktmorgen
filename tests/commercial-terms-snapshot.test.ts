@@ -8,7 +8,7 @@ import { ORDERS_INCLUDED } from "@/lib/order-rules";
 import { done, is } from "./check";
 const scenario = { collectedRevenueCents: 10000, refundableRevenueCents: 0, taxesCeilingCents: 1000, costCeilings: Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key => [key, key === "infrastructure" ? 3000 : 0])), allCostsBounded: true, allTaxesReviewed: true, revenueCollected: true };
 const review = (): CommercialMarginReview => ({
- priceAndRightsSnapshot: CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,
+ companyBase:{monthlyFixedCostsCeilingCents:0,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: zero fixed costs",fixedTaxEvidence:"TEST ONLY: zero fixed taxes",reviewedPayingCustomers:1},priceAndRightsSnapshot: CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,
  taxEvidence: "TEST ONLY: hypothetical taxes",
  costAndLimitEvidence: "TEST ONLY: hypothetical funded limits",
  singleCustomerFixedCostsVerified: true,

@@ -35,7 +35,7 @@ for(const gross of [1,3,10,101,1000,10001,1000000]){
   is("exact boundary not display rounding",result.approved,(gross-cost)*100>=gross*60);
  }
 }
-const review=():CommercialMarginReview=>({priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",singleCustomerFixedCostsVerified:true,prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return [key,scenario({collectedRevenueCents:gross,taxesCeilingCents:Math.floor(gross*0.1),costCeilings:{...zeroCosts(),infrastructure:Math.floor(gross*0.3)}})];}))});
+const review=():CommercialMarginReview=>({companyBase:{monthlyFixedCostsCeilingCents:0,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: zero fixed costs",fixedTaxEvidence:"TEST ONLY: zero fixed taxes",reviewedPayingCustomers:1},priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",singleCustomerFixedCostsVerified:true,prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return [key,scenario({collectedRevenueCents:gross,taxesCeilingCents:Math.floor(gross*0.1),costCeilings:{...zeroCosts(),infrastructure:Math.floor(gross*0.3)}})];}))});
 is("hypothetical complete passing review passes calculation",commercialMarginReady(review()),true);
 is("absent real review stays closed",commercialMarginReady(),false);
 is("requesting launch cannot bypass missing review",commercialPlansMayOpen(true),false);
