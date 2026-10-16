@@ -17,7 +17,7 @@ export const STUDIO_MESSAGES: Record<string, string> = {
   locked: "You got in without your second step, so this is locked until two-step login turns off. The date is at the top of your studio.",
   store_gone: "This store was deleted, or you are no longer on its team. Reload the page to see your stores.",
   // What an upload of a file that is sold can be told (lib/sold-file-upload.ts).
-  storage_full: "Your store is holding as much as one store can hold. Delete a file you no longer sell to make room — nothing already bought is affected.",
+  storage_full: "This file does not fit within your store's remaining storage. Delete a file you no longer sell to make room — nothing already bought is affected.",
   // The same, for a store that is not on a paid plan yet (lib/plan-standing.ts).
   storage_trial: `During the free trial a store holds up to ${TRIAL_GB} GB, and this file does not fit in what is left. It becomes ${PAID_GB} GB with your first payment. Until then, delete a file you do not need to make room.`,
   storage_setup: PLANS_ON_SALE

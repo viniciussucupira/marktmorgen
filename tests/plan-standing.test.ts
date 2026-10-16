@@ -32,12 +32,12 @@ async function main(): Promise<void> {
   const trial = { subscriptionActive: true, subscriptionId: "sub_Trial00001", stripeCustomerId: "cus_Trial00001", trialEnds: NOW + 86_400, planEndedAt: "" };
   const paid = { ...trial, trialEnds: NOW - 86_400 };
   const ended = { ...paid, subscriptionActive: false, planEndedAt: "2026-10-01T00:00:00.000Z" };
-  is("a store that never started a plan", standingOf(never, NOW));
-  is("one inside a plan's free days", standingOf(trial, NOW));
-  is("one that pays", standingOf(paid, NOW));
-  is("one whose plan is over", standingOf(ended, NOW));
-  is("a plan that is not running has ended, even where the day was never written down", standingOf({ ...ended, planEndedAt: "" }, NOW));
-  is("the store this site runs itself pays nobody and stands as paid", standingOf({ ...never, subscriptionActive: true }, NOW));
+  is("a store that never started a plan", standingOf(never, NOW), "none");
+  is("one inside a plan's free days", standingOf(trial, NOW), "trial");
+  is("one that pays", standingOf(paid, NOW), "paid");
+  is("one whose plan is over", standingOf(ended, NOW), "ended");
+  is("a plan that is not running has ended, even where the day was never written down", standingOf({ ...ended, planEndedAt: "" }, NOW), "ended");
+  is("the store this site runs itself pays nobody and stands as paid", standingOf({ ...never, subscriptionActive: true }, NOW), "paid");
   is("only a store that pays, with a subscription behind it, can have an hour added to an invoice", [canBeCharged(paid, NOW), canBeCharged(trial, NOW), canBeCharged(ended, NOW), canBeCharged({ ...never, subscriptionActive: true }, NOW)], [true, false, false, false]);
 
   part("How long its video may be watched in a month");
