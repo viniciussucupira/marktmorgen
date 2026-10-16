@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { formDealDraft } from "@/lib/form-deal";
 import { crmAnswer } from "@/lib/crm-response";
-import { MAX_DEAL_NOTE, MAX_DEAL_TITLE, type Stage } from "@/lib/crm-rules";
+import { fieldPrefix, readMoney, type Currency } from "@/lib/money";
+import { MAX_DEAL_CENTS, MAX_DEAL_NOTE, MAX_DEAL_TITLE, readFollowUp, type Stage } from "@/lib/crm-rules";
 import type { FormDef, FormResponse } from "@/lib/forms";
 
-export function FormResponseDeal({ form, response, stages, sid, onClose }: { form: FormDef; response: FormResponse; stages: Stage[]; sid: string; onClose: () => void }) {
-  const [draft, setDraft] = useState(() => ({ ...formDealDraft(form, response), stage: stages.find(stage => stage.kind === "open")?.id ?? "", nextAction: "Review form response" }));
+export function FormResponseDeal({ form, response, stages, sid, currency, assignees, onClose }: { currency: string; assignees: string[]; form: FormDef; response: FormResponse; stages: Stage[]; sid: string; onClose: () => void }) {
+  const [draft, setDraft] = useState(() => ({ ...formDealDraft(form, response), stage: stages.find(stage => stage.kind === "open")?.id ?? "", nextAction: "Review form response", value: "", dueDate: "", assignee: "" }));
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uncertain, setUncertain] = useState(false);
@@ -18,10 +19,15 @@ export function FormResponseDeal({ form, response, stages, sid, onClose }: { for
   async function save() {
     if (busy || saved || uncertain || !draft.title.trim() || !draft.stage) return;
     if (draft.email.trim() && !/^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/.test(draft.email.trim())) { setError("Enter a valid contact email or leave it empty."); return; }
+    const cents = draft.value.trim() ? readMoney(draft.value, currency as Currency) : 0;
+    if (cents === null || cents > MAX_DEAL_CENTS) { setError("Enter a valid estimated value in the store currency, or leave it empty."); return; }
+    const follow = readFollowUp(draft);
+    if (!follow.ok) { setError(follow.error === "date" ? "Choose a real calendar date." : "Write a next action before setting its date."); return; }
+    if (draft.assignee && !assignees.includes(draft.assignee)) { setError("Choose an eligible teammate or leave the opportunity unassigned."); return; }
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/store/crm", { method: "POST", headers: { "Content-Type": "application/json", ...(sid ? { "x-nimbus-store": sid } : {}) }, body: JSON.stringify({ action: "deal", deal: { title: draft.title, email: draft.email, note: draft.note, stage: draft.stage, nextAction: draft.nextAction, cents: 0 } }) });
+      const response = await fetch("/api/store/crm", { method: "POST", headers: { "Content-Type": "application/json", ...(sid ? { "x-nimbus-store": sid } : {}) }, body: JSON.stringify({ action: "deal", deal: { title: draft.title, email: draft.email, note: draft.note, stage: draft.stage, ...follow.value, cents } }) });
       const answer = crmAnswer(response.ok, await response.json().catch(() => null));
       if (answer.ok) { setSaved(true); return; }
       if (answer.error === "crm_write_unconfirmed") { setUncertain(true); setError("Creation could not be confirmed and may already have happened. Check Deals before creating another opportunity."); }
@@ -33,13 +39,18 @@ export function FormResponseDeal({ form, response, stages, sid, onClose }: { for
     <h3 className="text-lg font-semibold">Review this response as an opportunity</h3>
     {saved ? <p className="notice notice-success mt-4" role="status">Opportunity created. Continue tracking it in Deals.</p> : <fieldset disabled={busy || uncertain} className="mt-4 space-y-4">
       <legend className="sr-only">Opportunity details</legend>
-      <p className="text-sm text-ink-soft">Review the submitted information before saving. This creates a deal with no estimated value; it does not send email or subscribe anyone to marketing.</p>
+      <p className="text-sm text-ink-soft">Review the submitted information before saving. Set an estimate and a dated next action when useful. This does not send email or subscribe anyone to marketing.</p>
       <label className="block"><span className="field-label">Opportunity name</span><input className="field mt-2" maxLength={MAX_DEAL_TITLE} value={draft.title} onChange={event => setDraft({ ...draft, title: event.target.value })} /></label>
       <label className="block"><span className="field-label">Contact email (optional)</span><input className="field mt-2" type="email" maxLength={254} value={draft.email} onChange={event => setDraft({ ...draft, email: event.target.value })} /></label>
       <label className="block"><span className="field-label">Stage</span><select className="field mt-2" value={draft.stage} onChange={event => setDraft({ ...draft, stage: event.target.value })}>{stages.filter(stage => stage.kind === "open").map(stage => <option key={stage.id} value={stage.id}>{stage.name}</option>)}</select></label>
+      <label className="block"><span className="field-label">Estimated value ({fieldPrefix(currency)}, optional)</span><input className="field mt-2" inputMode="decimal" maxLength={16} value={draft.value} onChange={event => setDraft({ ...draft, value: event.target.value })} placeholder="0" /></label>
+      <p className="text-xs text-ink-soft">An internal sales estimate, not a charge or recorded revenue. Leave empty if unknown.</p>
       <label className="block"><span className="field-label">Response summary</span><textarea className="field mt-2" rows={6} maxLength={MAX_DEAL_NOTE} value={draft.note} onChange={event => setDraft({ ...draft, note: event.target.value })} /></label>
       {draft.truncated ? <p className="text-xs text-ink-soft">The response exceeds the {MAX_DEAL_NOTE}-character deal note limit. Only its beginning is included here. Keep the relevant details; the original response remains in Forms.</p> : null}
       <label className="block"><span className="field-label">Next action</span><input className="field mt-2" maxLength={200} value={draft.nextAction} onChange={event => setDraft({ ...draft, nextAction: event.target.value })} /></label>
+      <label className="block"><span className="field-label">Next action date (optional)</span><input className="field mt-2" type="date" value={draft.dueDate} onChange={event => setDraft({ ...draft, dueDate: event.target.value })} /></label>
+      <label className="block"><span className="field-label">Responsible teammate</span><select className="field mt-2" value={draft.assignee} onChange={event => setDraft({ ...draft, assignee: event.target.value })}><option value="">Unassigned</option>{assignees.map(email => <option key={email} value={email}>{email}</option>)}</select></label>
+      <p className="text-xs text-ink-soft">Dated actions appear in the CRM follow-up queues. Assignment does not send a notification.</p>
     </fieldset>}
     {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
     <div className="mt-5 flex flex-wrap gap-3">
