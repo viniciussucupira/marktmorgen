@@ -59,10 +59,15 @@ def main():
     if not match or "${" in match.group(1):
         raise RuntimeError("Expected one static application Lua script")
     script = match.group(1)
+    crm_source = (root / "lib/crm.ts").read_text(encoding="utf-8")
+    crm_match = re.search(r"export const SAVE_CRM_DEAL = `([^`]+)`;", crm_source)
+    if not crm_match or "${" in crm_match.group(1):
+        raise RuntimeError("Expected one static CRM save script")
+    save_script = crm_match.group(1)
     rules = (root / "lib/crm-rules.ts").read_text(encoding="utf-8")
     cap = int(re.search(r"export const MAX_DEALS = ([\d_]+);", rules).group(1).replace("_", ""))
     prefix = "marktmorgen:integration:form-opportunity:" + uuid.uuid4().hex + ":"
-    keys = [prefix + suffix for suffix in ("race", "capacity", "wrongtype")]
+    keys = [prefix + suffix for suffix in ("race", "capacity", "wrongtype", "mixed")]
     redis = Redis()
     try:
         assert redis.command("PING") == "PONG"
@@ -104,6 +109,39 @@ def main():
             raise AssertionError("Wrong-type storage must refuse the script")
         assert redis.command("GET", keys[2]) == "wrong-type"
         print("PASS: wrong-type storage is preserved and refuses conversion")
+        try:
+            redis.command("EVAL", save_script, 1, keys[2], "manual", "not-saved", cap)
+        except RuntimeError as error:
+            assert "WRONGTYPE" in str(error)
+        else:
+            raise AssertionError("Wrong-type storage must refuse manual saves")
+        assert redis.command("GET", keys[2]) == "wrong-type"
+        print("PASS: wrong-type storage refuses manual saves without replacement")
+        near_capacity = []
+        for index in range(cap - 1):
+            near_capacity.extend(["entry-" + str(index), "existing"])
+        redis.command("HSET", keys[3], *near_capacity)
+        def mixed_save(index):
+            client = Redis()
+            try:
+                if index % 2 == 0:
+                    return client.command("EVAL", save_script, 1, keys[3], "manual-" + str(index), "manual", cap)
+                reply = client.command("EVAL", script, 1, keys[3], "form-" + str(index), "form", cap)
+                return 1 if reply[0] == 1 else 0
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            mixed = list(pool.map(mixed_save, range(64)))
+        assert sum(mixed) == 1, mixed
+        assert redis.command("HLEN", keys[3]) == cap
+        assert redis.command("EVAL", save_script, 1, keys[3], "entry-0", "updated", cap) == 1
+        assert redis.command("HGET", keys[3], "entry-0") == "updated"
+        assert redis.command("HLEN", keys[3]) == cap
+        print("PASS: 64 mixed manual/form creations share the last slot and allow updates")
+        redis.command("HDEL", keys[3], "entry-0")
+        assert redis.command("EVAL", save_script, 1, keys[3], "replacement", "new", cap) == 1
+        assert redis.command("HLEN", keys[3]) == cap
+        print("PASS: deletion frees exactly one reusable slot")
     finally:
         assert all(key.startswith(prefix) for key in keys)
         redis.command("DEL", *keys)
