@@ -56,6 +56,9 @@ export function customRangeChartSummary(range:RangeData,metric:CustomRangeMetric
   if(row.value>peak.value){peak=row;ties=1;}
   else if(row.value===peak.value)ties++;
  }
+ const values=rows.map(row=>row.value).sort((a,b)=>a-b);
+ const middle=Math.floor(values.length/2);
+ const median=values.length%2?values[middle]:values[middle-1]+(values[middle]-values[middle-1])/2;
  const activeDays=rows.filter(row=>row.value>0).length;
- return {metric:selected,days:rows.length,activeDays,activeDayShare:activeDays/rows.length*100,zeroDays:rows.filter(row=>row.value===0).length,total,average:total/rows.length,peak:{date:peak.from,value:peak.value,ties}};
+ return {metric:selected,days:rows.length,activeDays,activeDayShare:activeDays/rows.length*100,zeroDays:rows.filter(row=>row.value===0).length,total,average:total/rows.length,median,peak:{date:peak.from,value:peak.value,ties}};
 }
