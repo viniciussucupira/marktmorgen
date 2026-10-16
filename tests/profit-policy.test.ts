@@ -28,6 +28,7 @@ for(const key of PROFIT_COST_CATEGORIES){
 for(const bad of [-1,NaN,Infinity,0.1,"0",null,Number.MAX_SAFE_INTEGER+1]){
   const raw=scenario();(raw.costs.ai as {cents:unknown}).cents=bad;
   is("invalid cost cannot pass",assessProfitScenario(raw,now).status,"unverified");
+  raw.costs.ai.cents=0;
   (raw as unknown as {retainedRevenueCents:unknown}).retainedRevenueCents=bad;
   is("invalid revenue cannot pass",assessProfitScenario(raw,now).status,"unverified");
 }
@@ -49,4 +50,6 @@ is("different periods are not silently compared",assessProfitPortfolio({...portf
 const refund={...scenario(),scenario:"full-refund",retainedRevenueCents:0};
 is("refunded customer cannot disappear into profitable average",assessProfitPortfolio({...portfolio,scenarios:[customer,refund,company]},now).meetsPolicy,false);
 for(const raw of [null,{},[],{scenarios:[]}])is("missing portfolio cannot pass",assessProfitPortfolio(raw,now).meetsPolicy,false);
+const sparse=[customer,company];sparse.length=3;
+is("missing array entries cannot hide unassessed scenarios",assessProfitPortfolio({...portfolio,scenarios:sparse},now).meetsPolicy,false);
 done();
