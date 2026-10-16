@@ -46,6 +46,8 @@ try {
       stdio: "inherit",
       env: {
         ...process.env,
+        // Synthetic supplier bounds for mocked providers; never a production policy.
+        AI_SUPPLIER_SPEND_POLICY: JSON.stringify({ period: new Date().toISOString().slice(0, 7), currency: "USD", unit: "microUSD", budgetMicroUsd: 1_000_000_000_000, validUntil: Date.now() + 86_400_000, evidence: "Synthetic test budget", boundsConfirmed: true, models: ["claude-sonnet-5-5", "claude-haiku-5-5"].map(model => ({ model, maxOutputTokens: 1_000_000, maxRequestBytes: 32_000_000, upperBoundMicroUsd: 1, evidence: "Mock provider, not real cost" })) }),
         // A deployment's own secret, which the VAPID keys are derived from
         // (lib/web-push.ts). A fixed one here, so a test that needs push to
         // exist gets the same key pair every run and never reaches anything
