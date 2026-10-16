@@ -179,23 +179,13 @@ export const PLAN_NAMES: Record<Tier, string> = {
 };
 
 /**
- * What each plan is called where somebody is choosing between them.
- *
- * "Marktmorgen" and "Marktmorgen Pro" name the seller, not the plan: told
- * only that, a creator still has to read two columns of features to work out
- * which one is their own business. A title has one job in front of somebody
- * deciding — to say what this plan is for — and "Pro" does the opposite of
- * that, because it describes the person rather than the plan and implies the
- * cheaper one is for amateurs.
- *
- * So the chooser reads these, and the small print under the button names the
- * plan the way the invoice will name it, from PLAN_NAMES above. One file, so
- * the two can never drift apart.
+ * Customer-facing plan names specified by the owner. Internal tier keys and
+ * existing Stripe billing identities remain separate in PLAN_NAMES.
  */
 export const PLAN_TITLES: Record<Tier, string> = {
-  creator: "Storefront",
-  pro: "Storefront & Email",
-  scale: "Storefront & Email for a big list",
+  creator: "Store",
+  pro: "Studio",
+  scale: "Scale",
 };
 
 /**
