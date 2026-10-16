@@ -41,3 +41,9 @@ Video admission currently checks declared source bytes. The application's video-
 The owner's approved menu is Store: USD 22/month plus 6.25% of sales; Studio: USD 149/month plus 2.75%; Scale: USD 349/month plus 0%. Annual subscriptions cost ten monthly payments: USD 220, USD 1,490 and USD 3,490. The sales percentage is unchanged on annual billing.
 
 Publication is separate from activation. Public quotes use `PUBLISHED_PLAN_PRICES` and published commission wording. Existing subscription-only prices and actual fee collection retain their operational configuration. Publishing this menu does not reprice a subscription, enable application fees or open commercial checkout. Launch requires both the margin review and proven commission collection. Neither these prices nor projected commissions certify the owner's minimum 60% after-tax net margin.
+
+## Base-plan revenue ceilings
+
+The six full-usage subscription scenarios must use collected platform revenue no higher than the approved subscription price for that tier and billing period. Annual scenarios use the actual ten-month annual price, not twelve monthly payments. A hypothetical review cannot create extra revenue, assume a creator's sales volume, or count hoped-for commissions or overages to cover the base plan's worst case. Lower collections still have to pass the same 60% rule after refunds, costs and taxes.
+
+This bounds the model's revenue input; it does not establish real collections or make free periods, refunds, unpaid overages or isolated-customer fixed costs profitable. Those scenarios and their evidence remain mandatory. No validated real review exists, and paid activation remains closed.

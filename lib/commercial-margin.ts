@@ -20,11 +20,23 @@ export const REQUIRED_MARGIN_SCENARIOS=[
  "video_overage","visits_overage","orders_overage","free_trial","full_refund","non_payment","post_cancellation","single_customer_all_fixed_costs","company_all_costs",
 ] as const;
 export type MarginScenario=typeof REQUIRED_MARGIN_SCENARIOS[number];
+/** Base-plan worst cases cannot rely on future sales, overages or twelve monthly
+ * payments for an annual subscription. Only the approved subscription can fund them.
+ */
+export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>> = {
+ creator_month_full: PUBLISHED_PLAN_PRICES.creator.month,
+ creator_year_full: PUBLISHED_PLAN_PRICES.creator.year,
+ pro_month_full: PUBLISHED_PLAN_PRICES.pro.month,
+ pro_year_full: PUBLISHED_PLAN_PRICES.pro.year,
+ scale_month_full: PUBLISHED_PLAN_PRICES.scale.month,
+ scale_year_full: PUBLISHED_PLAN_PRICES.scale.year,
+};
 /** Bind a review to actual priced rights, including free and post-cancellation use.
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 2,
+ schemaVersion: 3,
+ basePlanRevenueCeilings: BASE_PLAN_REVENUE_CEILINGS,
  minimumNetMarginBps: MINIMUM_NET_MARGIN_BPS,
  costCategories: CUSTOMER_COST_CATEGORIES,
  scenarios: REQUIRED_MARGIN_SCENARIOS,
@@ -60,7 +72,12 @@ export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
  if(!review.taxEvidence?.trim()||!review.costAndLimitEvidence?.trim())return false;
  if(review.singleCustomerFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
- return REQUIRED_MARGIN_SCENARIOS.every(key=>assessCustomerWorstCase(review.scenarios[key]??null).approved);
+ return REQUIRED_MARGIN_SCENARIOS.every(key=>{
+  const scenario=review.scenarios[key]??null;
+  const ceiling=BASE_PLAN_REVENUE_CEILINGS[key];
+  if(ceiling!==undefined && (!scenario || typeof scenario.collectedRevenueCents!=="number" || scenario.collectedRevenueCents>ceiling))return false;
+  return assessCustomerWorstCase(scenario).approved;
+ });
 }
 export function commercialPlansMayOpen(requested:boolean,review:CommercialMarginReview|null=CURRENT_COMMERCIAL_MARGIN_REVIEW):boolean{
  const commissionReady=!COMMISSION_PLANS_PUBLISHED||(COMMISSION_LIVE&&SHARE_PROVED_IN_TEST_MODE);
