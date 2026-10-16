@@ -1,0 +1,51 @@
+import { NextRequest } from "next/server";
+import { formDealDraft } from "@/lib/form-deal";
+import { parseForm } from "@/lib/forms";
+import { readResponses, writeForm } from "@/lib/form-store";
+import { claimHandle, ensureStatsId, ensureStoreId, setSitePages, storeForEmail } from "@/lib/store";
+import { SESSION_COOKIE, openSession } from "@/lib/auth";
+import { DEFAULT_STAGES } from "@/lib/crm-rules";
+import { readDeals } from "@/lib/crm";
+import { listCounts } from "@/lib/contacts";
+import { POST as submitForm } from "@/app/api/store/form/route";
+import { POST as saveCrm } from "@/app/api/store/crm/route";
+import { store as redis } from "./redis-stub";
+import { done, is, part } from "./check";
+
+async function main() {
+  redis.clear();
+  process.env.UPSTASH_REDIS_REST_URL ??= "http://stub";
+  const form = parseForm({ id: "formlead01", name: "Project application", fields: [{ id: "email1", type: "email", label: "Email", required: true }, { id: "detail", type: "long", label: "Project", required: true }], offerList: false })!;
+  part("Reviewable copy");
+  const draft = formDealDraft(form, { at: 1_800_000_000, page: "pagelead01", answers: { email1: "LEAD@example.com", detail: "A new website" }, outcome: "", joined: false });
+  is("prefill uses submitted email and source, never an invented value", [draft.title, draft.email, draft.note.includes("Project: A new website"), draft.note.startsWith("Form: Project application"), draft.truncated], ["Project application", "lead@example.com", true, true, false]);
+  is("invalid email is left empty for review", formDealDraft(form, { at: 0, page: "", answers: { email1: "not an address" }, outcome: "", joined: false }).email, "");
+  const long = formDealDraft(form, { at: 1, page: "", answers: { detail: "x".repeat(2000) }, outcome: "", joined: false });
+  is("a long response is bounded and truncation is explicit", [long.note.length, long.truncated], [500, true]);
+
+  part("Submission to reviewed CRM deal");
+  const owner = "formcrm@example.com";
+  await claimHandle(owner, "formcrmshop", "Form CRM", "");
+  await ensureStatsId(owner);
+  await ensureStoreId(owner);
+  await setSitePages(owner, [{ id: "pagelead01", slug: "apply", title: "Apply", nav: false, target: "", from: 0 }]);
+  const store = (await storeForEmail(owner))!;
+  await writeForm(store.statsId!, form);
+  const beforeCounts = await listCounts(store.listId);
+  const body = new URLSearchParams({ handle: store.handle, form: form.id, page: "pagelead01", q_email1: "lead@example.com", q_detail: "A new website" });
+  const submitted = await submitForm(new NextRequest("https://marktmorgen.com/api/store/form", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: body.toString() }));
+  const responses = await readResponses(store.statsId, form.id);
+  is("public submission stores one response and redirects", [submitted.status, responses.total], [303, 1]);
+  is("submission alone creates no CRM opportunity", (await readDeals(store.statsId, DEFAULT_STAGES)).length, 0);
+  const prefill = formDealDraft(form, responses.responses[0]);
+  const session = await openSession(owner);
+  const created = await saveCrm(new NextRequest("https://marktmorgen.com/api/store/crm", { method: "POST", headers: { "content-type": "application/json", "x-nimbus-store": store.sid, cookie: SESSION_COOKIE + "=" + session }, body: JSON.stringify({ action: "deal", deal: { title: prefill.title, email: prefill.email, note: prefill.note, stage: "lead00", cents: 0, nextAction: "Review form response" } }) }));
+  const saved = await created.json();
+  const deals = await readDeals(store.statsId, DEFAULT_STAGES);
+  is("explicit reviewed save creates the opportunity in this store", [saved.ok, deals.length, deals[0]?.email, deals[0]?.cents, deals[0]?.nextAction, deals[0]?.note.includes("A new website")], [true, 1, "lead@example.com", 0, "Review form response", true]);
+  is("creating a deal does not change the marketing list", await listCounts(store.listId), beforeCounts);
+  const denied = await saveCrm(new NextRequest("https://marktmorgen.com/api/store/crm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "deal", deal: { title: "Unauthorized", stage: "lead00" } }) }));
+  is("signed-out creation is refused without another deal", [denied.status, (await readDeals(store.statsId, DEFAULT_STAGES)).length], [401, 1]);
+  done();
+}
+main().catch(error => { console.error(error); process.exit(1); });
