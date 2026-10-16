@@ -4,6 +4,7 @@ import { isBillingConfigured, switchPlan } from "@/lib/billing";
 import { PRO_ON_SALE, parseCycle, parseTier } from "@/lib/plan";
 import { setSubscription } from "@/lib/store";
 import { limited } from "@/lib/request-guard";
+import { PLANS_ON_SALE } from "@/lib/opening";
 
 /**
  * Moves the creator's own subscription to another plan or billing cycle.
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
   const { ref, store, origin, studio } = creator;
 
   if (!isBillingConfigured()) return away(origin, studio("billing=unavailable"));
+  if (!PLANS_ON_SALE) return away(origin, studio("billing=not-open"));
   if (!store.subscriptionId) return away(origin, studio("billing=none"));
 
   let fields: FormData | null = null;

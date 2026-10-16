@@ -11,10 +11,13 @@
  * A store that already pays is left exactly as it is: changing, canceling
  * and keeping a subscription do not read this.
  *
- * One constant, in a file that imports nothing, so the server and the menu
- * in the browser read the same answer. Opening is changing it to `true`.
+ * The server and browser read the same answer. Requesting opening is not
+ * enough: the per-customer, after-tax margin review must also be complete.
  */
-export const PLANS_ON_SALE: boolean = false;
+import { commercialPlansMayOpen } from "@/lib/commercial-margin";
+
+const OPENING_REQUESTED: boolean = false;
+export const PLANS_ON_SALE: boolean = commercialPlansMayOpen(OPENING_REQUESTED);
 
 /** What every public page says at its top while plans are not on sale. */
 export const PREVIEW_LINE =
