@@ -1,4 +1,4 @@
-import { CURRENT_COMMERCIAL_TERMS, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, commercialMarginReady, REQUIRED_MARGIN_SCENARIOS, type CommercialMarginReview } from "@/lib/commercial-margin";
+import { BASE_PLAN_REVENUE_CEILINGS, CURRENT_COMMERCIAL_TERMS, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, commercialMarginReady, REQUIRED_MARGIN_SCENARIOS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { CUSTOMER_COST_CATEGORIES } from "@/lib/net-margin-rules";
 import { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
 import { STORAGE_BRAKE_BYTES as UPLOAD_STORAGE_BYTES } from "@/lib/storage-quota";
@@ -13,7 +13,7 @@ const review = (): CommercialMarginReview => ({
  costAndLimitEvidence: "TEST ONLY: hypothetical funded limits",
  singleCustomerFixedCostsVerified: true,
  prepaidUsageEnforced: true,
- scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => [key, scenario])),
+ scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => { const gross = BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000; return [key, { ...scenario, collectedRevenueCents: gross, taxesCeilingCents: Math.floor(gross * 0.1), costCeilings: Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(category => [category, category === "infrastructure" ? Math.floor(gross * 0.3) : 0])) }]; })),
 });
 is("hypothetical current review passes calculation", commercialMarginReady(review()), true);
 is("actual review remains absent", commercialMarginReady(), false);

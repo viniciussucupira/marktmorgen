@@ -1,5 +1,5 @@
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
-import { commercialMarginReady, commercialPlansMayOpen, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, REQUIRED_MARGIN_SCENARIOS, type CommercialMarginReview } from "@/lib/commercial-margin";
+import { commercialMarginReady, commercialPlansMayOpen, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, REQUIRED_MARGIN_SCENARIOS, BASE_PLAN_REVENUE_CEILINGS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { done, is } from "./check";
 const zeroCosts=()=>Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,0])) as Record<typeof CUSTOMER_COST_CATEGORIES[number],number>;
@@ -35,7 +35,7 @@ for(const gross of [1,3,10,101,1000,10001,1000000]){
   is("exact boundary not display rounding",result.approved,(gross-cost)*100>=gross*60);
  }
 }
-const review=():CommercialMarginReview=>({priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",singleCustomerFixedCostsVerified:true,prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>[key,scenario()]))});
+const review=():CommercialMarginReview=>({priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",singleCustomerFixedCostsVerified:true,prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return [key,scenario({collectedRevenueCents:gross,taxesCeilingCents:Math.floor(gross*0.1),costCeilings:{...zeroCosts(),infrastructure:Math.floor(gross*0.3)}})];}))});
 is("hypothetical complete passing review passes calculation",commercialMarginReady(review()),true);
 is("absent real review stays closed",commercialMarginReady(),false);
 is("requesting launch cannot bypass missing review",commercialPlansMayOpen(true),false);
@@ -44,7 +44,7 @@ is("no launch request stays closed even with passing fixture",commercialPlansMay
 for(const key of REQUIRED_MARGIN_SCENARIOS){
  const r=review();delete r.scenarios[key];
  is("missing worst-case scenario "+key+" blocks release",commercialMarginReady(r),false);
- const bad=review();bad.scenarios[key]=scenario({costCeilings:{...zeroCosts(),other:9000}});
+ const bad=review();bad.scenarios[key]={...bad.scenarios[key]!,costCeilings:{...zeroCosts(),other:Math.ceil(bad.scenarios[key]!.collectedRevenueCents!*0.9)}};
  is("one unprofitable "+key+" is not cross-subsidized",commercialMarginReady(bad),false);
 }
 is("price change invalidates old review",commercialMarginReady({...review(),priceAndRightsSnapshot:"old prices"}),false);
