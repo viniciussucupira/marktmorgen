@@ -50,7 +50,9 @@ export async function POST(request: NextRequest) {
   const quiz = await readQuizFor(course.id, lessonId);
   if (!quiz || !found.lesson.quiz) return away(`${base}/${lessonId}`);
 
-  const result = await submitQuiz(course.id, lessonId, who, quiz, readAnswers(quiz, form));
+  const result = await submitQuiz(course.id, lessonId, who, quiz, readAnswers(quiz, form), store.sid);
+  if (!result.ok && result.reason === "usage_limit") return new Response("This store has reached its monthly quiz submission allowance. It resets at the start of the next UTC month.", { status: 429, headers: { "Cache-Control": "no-store" } });
+  if (!result.ok && result.reason === "unavailable") return new Response("Quiz submissions are temporarily unavailable. Please try again later.", { status: 503, headers: { "Cache-Control": "no-store" } });
   if (result.ok && result.grade.passed) {
     await markLesson(course.id, access.learner.email, lessonId, true);
     await noteIfFinished(store, product.id, course.id, access.learner.email);

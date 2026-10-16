@@ -16,6 +16,7 @@ import {
   type Quiz,
   type QuizSetup,
 } from "@/lib/quiz";
+import { QUIZ_MONTHLY_SUBMISSIONS } from "@/lib/quiz-usage-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { AiAssist } from "@/components/ai-assist";
 import { DEFAULT_QUIZ_DRAFT, type DraftedQuestion, QUIZ_DRAFT_COUNTS } from "@/lib/quiz-draft";
@@ -183,6 +184,7 @@ export function QuizEditor({
       }}
     >
       <p className="field-label">Quiz</p>
+      {!setup || setup.usagePolicy ? <p className="mt-2 text-sm text-ink-soft">{`This quiz shares a limit of ${QUIZ_MONTHLY_SUBMISSIONS.toLocaleString("en-US")} submissions per store per UTC month with other new quizzes. Restoring tries or deleting a quiz does not restore the monthly allowance. Reserved submissions may count even if a response fails.`}</p> : null}
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="field-label">Pass mark (%)</span>
