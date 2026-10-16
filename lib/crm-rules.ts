@@ -51,6 +51,8 @@ export type StageKind = "open" | "won" | "lost";
 export type Stage = { id: string; name: string; kind: StageKind };
 
 export type Deal = {
+  /** Server-owned identity for a conversion from a retained form response. */
+  formResponseRef?: string;
   id: string;
   title: string;
   /** Who it is with, when the creator says; "" for nobody named yet. */
@@ -167,7 +169,7 @@ export function parseDeal(raw: unknown, stages: readonly Stage[]): Deal | null {
       : "";
   const at = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? v : 0);
   const follow = readFollowUp(value);
-  return { id, title, email: EMAIL.test(email) ? email : "", cents, stage, note, ...(follow.ok ? follow.value : {}), createdAt: at(value.createdAt), updatedAt: at(value.updatedAt) };
+  return { ...(typeof value.formResponseRef === "string" && /^[a-f0-9]{64}$/.test(value.formResponseRef) ? { formResponseRef: value.formResponseRef } : {}), id, title, email: EMAIL.test(email) ? email : "", cents, stage, note, ...(follow.ok ? follow.value : {}), createdAt: at(value.createdAt), updatedAt: at(value.updatedAt) };
 }
 
 /** Each stage's deals, how many and what they are worth, in the stages' order. */
