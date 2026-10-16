@@ -58,7 +58,7 @@ export function assessProfitPortfolio(raw: unknown, nowSeconds = Math.floor(Date
   if (!object(raw) || !Array.isArray(raw.scenarios) || !raw.scenarios.length) return { meetsPolicy: false, reasons: ["missing_scenarios"], assessments: [] };
   const reasons: string[] = [];
   if (raw.coverageConfirmed !== true) reasons.push("customer_and_lifecycle_coverage_unconfirmed");
-  const assessments = raw.scenarios.map(item => assessProfitScenario(item, nowSeconds));
+  const assessments = Array.from(raw.scenarios, item => assessProfitScenario(item, nowSeconds));
   if (assessments.some(item => item.status !== "meets_floor")) reasons.push("scenario_not_proven");
   if (!raw.scenarios.some(item => object(item) && item.scope === "customer")) reasons.push("missing_customer_scenarios");
   if (!raw.scenarios.some(item => object(item) && item.scope === "company")) reasons.push("missing_company_scenarios");
