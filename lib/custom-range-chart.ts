@@ -70,3 +70,15 @@ export function customRangeChartSummary(range:RangeData,metric:CustomRangeMetric
  const activeDays=rows.filter(row=>row.value>0).length;
  return {metric:selected,days:rows.length,activeDays,activeDayShare:activeDays/rows.length*100,zeroDays:rows.filter(row=>row.value===0).length,total,average:total/rows.length,median,longestStreak,peak:{date:peak.from,value:peak.value,ties}};
 }
+
+/** Compare observed UTC weekdays; absent weekdays have no invented zero totals or averages. */
+export function customRangeWeekdays(range:RangeData,metric:CustomRangeMetric) {
+ const selected=effectiveCustomRangeMetric(range,metric);
+ const groups=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(name=>({name,days:0,total:0}));
+ for(const row of customRangeChartRows(range,selected,"day")){
+  const index=(new Date(row.from+"T00:00:00Z").getUTCDay()+6)%7;
+  groups[index].days++;
+  groups[index].total+=row.value;
+ }
+ return {metric:selected,rows:groups.map(row=>({...row,total:row.days?row.total:null,average:row.days?row.total/row.days:null}))};
+}

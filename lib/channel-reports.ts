@@ -1,6 +1,6 @@
 import { revenuePerTraffic, selectedRevenueShare } from "@/lib/custom-range-efficiency";
 import { customRangeComparison } from "@/lib/custom-range-comparison";
-import { CUSTOM_RANGE_METRICS, CUSTOM_RANGE_GROUPINGS, customRangeChartRows, customRangeChartSummary, effectiveCustomRangeMetric, effectiveCustomRangeGrouping, type CustomRangeMetric, type CustomRangeGrouping } from "@/lib/custom-range-chart";
+import { CUSTOM_RANGE_METRICS, CUSTOM_RANGE_GROUPINGS, customRangeChartRows, customRangeChartSummary, customRangeWeekdays, effectiveCustomRangeMetric, effectiveCustomRangeGrouping, type CustomRangeMetric, type CustomRangeGrouping } from "@/lib/custom-range-chart";
 import { customRangeOrderLabel, customRangeFilterLabel, customRangeMinimumTraffic, effectiveCustomRangeMinimumPaidRecords, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import type { RangeData } from "@/lib/stats";
 import { paidFiguresComplete } from "@/lib/paid-coverage";
@@ -201,5 +201,19 @@ export function customRangeChartSummaryReport(data:RangeData,metric:CustomRangeM
  return csv([
   ["From (UTC)","To (UTC)","Currency","Chart grouping","Requested metric","Metric","Unit","Recorded days","Recorded total","Average per recorded day (unrounded)","First highest day (UTC)","Highest daily value","Days tied for highest value","Paid coverage","Definition","Days with activity","Recorded days with zero activity","Active-day share (%)","Median per recorded day (unrounded)","Longest activity sequence (days)","Sequence from (UTC)","Sequence to (UTC)"],
   ...(summary?[[data.from,data.to,data.currency.toUpperCase(),groupLabel,requested,label,summary.metric==="cents"?data.currency.toUpperCase():"Count",summary.days,value(summary.total),value(summary.average),summary.peak.date,value(summary.peak.value),summary.peak.ties,rangeCoverage(data),note,summary.activeDays,summary.zeroDays,summary.activeDayShare,value(summary.median),summary.longestStreak?.days??0,summary.longestStreak?.from??null,summary.longestStreak?.to??null] as Cell[]]:[]),
+ ]);
+}
+
+/** Export weekday totals and analytical means with observed-day denominators and explicit missing values. */
+export function customRangeWeekdayReport(data:RangeData,metric:CustomRangeMetric):string {
+ const report=customRangeWeekdays(data,metric);
+ const label=CUSTOM_RANGE_METRICS.find(item=>item.value===report.metric)!.label;
+ const requested=CUSTOM_RANGE_METRICS.find(item=>item.value===metric)?.label??String(metric);
+ const money=report.metric==="cents";
+ const value=(n:number|null)=>money?amount(n,data.currency):n;
+ const note="Observed UTC weekdays, Monday to Sunday, independent of chart grouping, accumulation and list filters. Each average is that weekday total / its recorded days; confirmed zero days count and missing dates do not. A weekday with no observations has blank total and average, not zero. Unequal observed-day counts and a current day still in progress can affect comparisons. Visitors sum daily counts, not distinct people across weekdays. Paid records include one-click extras and exclude renewals; revenue is before refunds, fees and ads. Unavailable paid metrics fall back to Visitors; Metric and Unit identify the exported values. Analytical averages retain calculated precision. Not a forecast or proof that a weekday causes better results.";
+ return csv([
+  ["From (UTC)","To (UTC)","Currency","Requested metric","Metric","Unit","Weekday (UTC)","Recorded days","Recorded total","Average per recorded day (unrounded)","Paid coverage","Definition"],
+  ...(report.rows.some(row=>row.days>0)?report.rows.map((row):Cell[]=>[data.from,data.to,data.currency.toUpperCase(),requested,label,money?data.currency.toUpperCase():"Count",row.name,row.days,value(row.total),value(row.average),rangeCoverage(data),note]):[]),
  ]);
 }

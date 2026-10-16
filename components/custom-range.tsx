@@ -1,12 +1,12 @@
 "use client";
 
-import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyReport, customRangeComparisonReport, customRangeChartReport, customRangeSelectionReport, customRangeChartSummaryReport, type CustomRangeReportSelection } from "@/lib/channel-reports";
+import { customRangeChannelsReport, customRangeProductsReport, customRangeDailyReport, customRangeComparisonReport, customRangeChartReport, customRangeSelectionReport, customRangeChartSummaryReport, customRangeWeekdayReport, type CustomRangeReportSelection } from "@/lib/channel-reports";
 import { ReportDownload } from "@/components/report-download";
 
 import { paidFiguresComplete } from "@/lib/paid-coverage";
 import { customRangeView, customRangeOrderLabel, effectiveCustomRangeSort, CUSTOM_RANGE_FILTERS, effectiveCustomRangeFilter, customRangeMinimumTraffic, effectiveCustomRangeMinimumPaidRecords, customRangeSelectionTotals, type CustomRangeFilter, type CustomRangeSort } from "@/lib/custom-range-view";
 import { adjacentCustomRange, presetCustomRange, CUSTOM_RANGE_PRESETS, type CustomDatePeriod } from "@/lib/custom-range-dates";
-import { CUSTOM_RANGE_METRICS, customRangeChartSummary, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
+import { CUSTOM_RANGE_METRICS, customRangeChartSummary, customRangeWeekdays, effectiveCustomRangeMetric, CUSTOM_RANGE_GROUPINGS, effectiveCustomRangeGrouping, customRangeChartRows, type CustomRangeGrouping, type CustomRangeMetric } from "@/lib/custom-range-chart";
 import { revenuePerTraffic, formatRevenuePerTraffic, selectedRevenueShare, formatSelectedRevenueShare } from "@/lib/custom-range-efficiency";
 import { customRangeComparison } from "@/lib/custom-range-comparison";
 import { useState } from "react";
@@ -401,6 +401,7 @@ export function CustomRangeChartSummary({range,currency,metric,grouping="day"}:{
  const summary=customRangeChartSummary(range,metric);
  if(!summary)return null;
  const label=CUSTOM_RANGE_METRICS.find(item=>item.value===summary.metric)!.label;
+ const weekdays=customRangeWeekdays(range,metric);
  const value=(n:number,average=false)=>summary.metric==="cents"?(n!==0&&Math.abs(n)<1?formatRevenuePerTraffic(n,currency):formatMoney(Math.round(n),currency)):n.toLocaleString("en-US",average&&n!==0&&Math.abs(n)<0.01?{maximumSignificantDigits:4}:{maximumFractionDigits:average?2:0});
  return <div className="mt-3" role="region" aria-label="Chart metric summary">
   <p className="text-xs font-semibold text-ink">{label} over {count(summary.days)} recorded UTC days</p>
@@ -415,6 +416,18 @@ export function CustomRangeChartSummary({range,currency,metric,grouping="day"}:{
    <p className="mt-1 text-xs text-ink-soft">{summary.longestStreak?day(summary.longestStreak.from)+" to "+day(summary.longestStreak.to)+" (UTC).":"No recorded days with positive activity."} Counts consecutive recorded UTC days with positive values for the selected metric. Zero days and missing dates break the sequence; the earliest longest sequence is shown. Grouping and accumulation do not change it.</p>
   </details>
   <p className="mt-1 text-xs text-ink-soft">Summary uses daily rows even when the chart is grouped. The median is the middle recorded daily value, or the midpoint of the two middle values; zero days count and missing days are excluded. Averages are rounded for display; small nonzero averages remain visible with up to four significant digits.{summary.metric==="visitors"?" Visitors are summed daily counts, not distinct people across the period.":""} Values for today can still grow.</p>
+  <details className="mt-2 text-sm">
+   <summary className="cursor-pointer font-semibold text-ink">Compare weekdays (UTC)</summary>
+   <div className="mt-2 overflow-x-auto" tabIndex={0} role="region" aria-label="Weekday activity">
+    <table className="w-full text-left text-sm">
+     <caption className="text-left text-xs text-ink-soft">{label} by recorded UTC weekday</caption>
+     <thead><tr><th scope="col" className="py-1">Weekday</th><th scope="col" className="py-1 pl-3 text-right">Recorded days</th><th scope="col" className="py-1 pl-3 text-right">Recorded total</th><th scope="col" className="py-1 pl-3 text-right">Average per recorded day</th></tr></thead>
+     <tbody>{weekdays.rows.map(row=><tr key={row.name} className="border-b border-line/60"><th scope="row" className="py-1.5 font-medium">{row.name}</th><td className="py-1.5 pl-3 text-right tabular-nums">{count(row.days)}</td><td className="py-1.5 pl-3 text-right tabular-nums">{row.total===null?"Unavailable":value(row.total)}</td><td className="py-1.5 pl-3 text-right tabular-nums">{row.average===null?"Unavailable":value(row.average,true)}</td></tr>)}</tbody>
+    </table>
+   </div>
+   <p className="mt-1 text-xs text-ink-soft">Each average divides that weekday’s total by its recorded days, including confirmed zero days. Missing dates are excluded; a weekday without observations is unavailable. Compare the day counts too: the samples may differ and today can still grow. These patterns do not establish that a weekday causes better results.</p>
+   <ReportDownload csv={()=>customRangeWeekdayReport(range,metric)} filename={"marktmorgen-custom-weekdays-"+summary.metric+"-"+range.from+"-to-"+range.to+".csv"}>Download weekday results</ReportDownload>
+  </details>
   <ReportDownload csv={()=>customRangeChartSummaryReport(range,metric,grouping)} filename={"marktmorgen-custom-chart-summary-"+summary.metric+"-"+range.from+"-to-"+range.to+".csv"}>Download chart summary</ReportDownload>
  </div>;
 }
