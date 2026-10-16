@@ -15,7 +15,7 @@ async function main() {
   for (const attempts of [0, "0", -1, 11, 1.5, "no limit"]) is("invalid or unbounded limit rejected", readQuiz({ ...input, attempts }).ok, false);
   is("minimum accepted", quiz(1).attempts, 1);
   is("maximum accepted", quiz(MAX_ATTEMPTS).attempts, MAX_ATTEMPTS);
-  const legacy = { ...quiz(3), attempts: 0 };
+  const legacy = { ...quiz(3), usagePolicy: undefined, attempts: 0 };
   part("Existing settings");
   is("legacy stored zero remains readable", parseQuiz(JSON.stringify(legacy))?.attempts, 0);
   for (const attempts of [undefined, null, -1, 11, "bad"]) is("invalid stored attempts do not become unbounded", parseQuiz(JSON.stringify({ ...legacy, attempts })), null);
@@ -28,11 +28,11 @@ async function main() {
   is("finite limit survives storage", (await readQuizFor("a".repeat(32), "lesson000001"))?.attempts, 2);
   part("Actual submissions respect the limit");
   const wrong = { [finite.questions[0].id]: [1] };
-  is("first try accepted", (await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong)).ok, true);
-  is("second try accepted", (await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong)).ok, true);
-  const blocked = await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong);
+  is("first try accepted", (await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32))).ok, true);
+  is("second try accepted", (await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32))).ok, true);
+  const blocked = await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32));
   is("third try rejected", blocked.ok ? "accepted" : blocked.reason, "no_tries");
-  const fresh = await submitQuiz("a".repeat(32), "lesson000001", "another", finite, wrong);
+  const fresh = await submitQuiz("a".repeat(32), "lesson000001", "another", finite, wrong, "b".repeat(32));
   is("another learner has their own allowance", fresh.ok ? fresh.attempt.used : null, 1);
   await saveQuiz("a".repeat(32), "legacy000001", legacy);
   const old = (await readQuizFor("a".repeat(32), "legacy000001"))!;

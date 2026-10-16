@@ -15,6 +15,7 @@ import { TOP_HEIGHT, MOST_KEPT_BYTES, UPLOAD_WINDOW_SECONDS, ABANDONED_AFTER_MS,
 import { MAX_LEADS, MAX_IMPORT } from "@/lib/contact-rules";
 import { CLOSING_DAYS, RECHECK_DAYS } from "@/lib/plan-closing-rules";
 import { PAUSE_MONTHS, PAID_MONTHS_BEFORE_PAUSE, PAUSE_EVERY_DAYS } from "@/lib/plan-pause-rules";
+import { QUIZ_USAGE_POLICY, QUIZ_MONTHLY_SUBMISSIONS } from "@/lib/quiz-usage-rules";
 export const REQUIRED_MARGIN_SCENARIOS=[
  "creator_month_full","creator_year_full","pro_month_full","pro_year_full","scale_month_full","scale_year_full",
  "video_overage","visits_overage","orders_overage","free_trial","full_refund","non_payment","post_cancellation","single_customer_all_fixed_costs","company_all_costs",
@@ -35,7 +36,8 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 3,
+ schemaVersion: 4,
+ quizzes: { newQuizPolicy: QUIZ_USAGE_POLICY, submissionsPerStoreUtcMonth: QUIZ_MONTHLY_SUBMISSIONS, legacyQuizzesExempt: true },
  basePlanRevenueCeilings: BASE_PLAN_REVENUE_CEILINGS,
  minimumNetMarginBps: MINIMUM_NET_MARGIN_BPS,
  costCategories: CUSTOMER_COST_CATEGORIES,

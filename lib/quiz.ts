@@ -27,6 +27,8 @@
  *
  * Pure rules at the top, storage at the bottom.
  */
+import { reserveQuizSubmission } from "@/lib/quiz-usage";
+import { QUIZ_USAGE_POLICY } from "@/lib/quiz-usage-rules";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type Course, ITEM_ID_PATTERN, lessonsInOrder, newItemId } from "@/lib/course";
 
@@ -60,6 +62,7 @@ export type Question = {
 
 /** The whole quiz, as stored for one lesson. */
 export type Quiz = {
+  usagePolicy?: typeof QUIZ_USAGE_POLICY;
   passPercent: number;
   /** Tries a student gets; 0 is no limit. */
   attempts: number;
@@ -70,6 +73,7 @@ export type Quiz = {
 
 /** The part of a quiz the lesson carries, so the outline needs no second read. */
 export type QuizSetup = {
+  usagePolicy?: typeof QUIZ_USAGE_POLICY;
   questions: number;
   passPercent: number;
   attempts: number;
@@ -78,6 +82,7 @@ export type QuizSetup = {
 
 export function setupOf(quiz: Quiz): QuizSetup {
   return {
+    ...(quiz.usagePolicy ? { usagePolicy: quiz.usagePolicy } : {}),
     questions: quiz.questions.length,
     passPercent: quiz.passPercent,
     attempts: quiz.attempts,
@@ -111,7 +116,8 @@ export function parseSetup(raw: unknown): QuizSetup | null {
   const passPercent = wholeIn(value.passPercent, MIN_PASS_PERCENT, MAX_PASS_PERCENT);
   const attempts = wholeIn(value.attempts, 0, MAX_ATTEMPTS);
   if (questions === null || passPercent === null || attempts === null) return null;
-  return { questions, passPercent, attempts, required: value.required === true };
+  if (value.usagePolicy !== undefined && value.usagePolicy !== QUIZ_USAGE_POLICY) return null;
+  return { questions, passPercent, attempts, required: value.required === true, ...(value.usagePolicy === QUIZ_USAGE_POLICY ? { usagePolicy: QUIZ_USAGE_POLICY } : {}) };
 }
 
 function parseQuestion(raw: unknown): Question | null {
@@ -139,8 +145,9 @@ export function parseQuiz(raw: unknown): Quiz | null {
       ? value.questions.map(parseQuestion).filter((q): q is Question => q !== null).slice(0, MAX_QUESTIONS)
       : [];
     const attempts = wholeIn(value.attempts, 0, MAX_ATTEMPTS);
-    if (questions.length === 0 || attempts === null) return null;
+    if (questions.length === 0 || attempts === null || (value.usagePolicy !== undefined && value.usagePolicy !== QUIZ_USAGE_POLICY)) return null;
     return {
+      ...(value.usagePolicy === QUIZ_USAGE_POLICY ? { usagePolicy: QUIZ_USAGE_POLICY } : {}),
       passPercent: wholeIn(value.passPercent, MIN_PASS_PERCENT, MAX_PASS_PERCENT) ?? DEFAULT_PASS_PERCENT,
       attempts,
       required: value.required === true,
@@ -207,7 +214,9 @@ export function readQuiz(raw: unknown, existing: Quiz | null = null): { ok: true
       explanation: cleanParagraph(entry.explanation, MAX_EXPLANATION_LENGTH),
     });
   }
-  return { ok: true, quiz: { passPercent, attempts, required: value.required === true, questions } };
+  return { ok: true, quiz: { passPercent, attempts, required: value.required === true, questions,
+    ...(!existing || existing.usagePolicy === QUIZ_USAGE_POLICY ? { usagePolicy: QUIZ_USAGE_POLICY } : {}),
+  } };
 }
 
 /** What a student picked, question by question, as positions of choices. */
@@ -354,7 +363,7 @@ export async function attemptOf(courseId: string, lessonId: string, who: string)
 
 export type SubmitResult =
   | { ok: true; grade: Grade; attempt: Attempt }
-  | { ok: false; reason: "no_tries" | "passed" };
+  | { ok: false; reason: "no_tries" | "passed" | "usage_limit" | "unavailable" };
 
 /**
  * Marks a try and keeps it.
@@ -370,11 +379,18 @@ export async function submitQuiz(
   who: string,
   quiz: Quiz,
   answers: Answers,
+  storeSid?: string,
 ): Promise<SubmitResult> {
   const before = await attemptOf(courseId, lessonId, who);
   if (before.passed) return { ok: false, reason: "passed" };
+  if (quiz.attempts > 0 && before.used >= quiz.attempts) return { ok: false, reason: "no_tries" };
+  if (quiz.usagePolicy === QUIZ_USAGE_POLICY) {
+    const reserved = await reserveQuizSubmission(storeSid ?? "");
+    if (reserved !== "ok") return { ok: false, reason: reserved };
+  }
   const [count] = await redisPipeline([["INCR", triesKey(courseId, lessonId, who)]]);
-  const used = Number(count);
+  if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 1) return { ok: false, reason: "unavailable" };
+  const used = count;
   if (quiz.attempts > 0 && used > quiz.attempts) {
     await redisPipeline([["DECR", triesKey(courseId, lessonId, who)]]);
     return { ok: false, reason: "no_tries" };
