@@ -56,6 +56,8 @@ export type InsightContext = {
   may?: { settings?: boolean; page?: boolean; draft?: boolean };
   /** The products that have a sales page, where a headline can be tested; the others are offered one. */
   pages?: string[];
+  /** Published products already read for the numbers; no extra catalog request. */
+  promotionProducts?: import("@/lib/promotion-plan").PromotionProduct[];
 };
 
 type Window = "d7" | "d30" | "d90";

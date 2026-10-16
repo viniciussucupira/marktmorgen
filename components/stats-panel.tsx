@@ -15,6 +15,7 @@ import { channelCashflows, cashflowStatus } from "@/lib/channel-cashflow";
 import { creativeResultsReport } from "@/lib/channel-reports";
 import { ReportDownload } from "@/components/report-download";
 import { CampaignResultsPanel } from "@/components/campaign-results";
+import { PromotionPlanner } from "@/components/promotion-planner";
 import { PaymentComparisonPanel } from "@/components/payment-comparison";
 import { PaymentMixPanel } from "@/components/payment-mix";
 import { DailyCashflowPanel } from "@/components/daily-cashflow";
@@ -651,6 +652,10 @@ export function StatsPanel({
 
       {salesKnown && data.days.length ? (
         <SalesGoalCard goal={goal} byDay={goalMoneyByDay(data)} today={data.days[data.days.length - 1].date} currency={data.currency ?? "usd"} />
+      ) : null}
+
+      {range !== "all" && insightContext?.promotionProducts?.length ? (
+        <PromotionPlanner key={range} data={data} range={range} products={insightContext.promotionProducts} />
       ) : null}
 
       {range !== "all" && insights.length ? (
