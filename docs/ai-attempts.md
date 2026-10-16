@@ -1,0 +1,11 @@
+# Bounded AI retry attempts
+
+A failed model result previously returned its successful-result quota without retaining a separate attempt count. A provider may charge for a failed, malformed or lost response. Two quota-controlled entry paths now reserve nonrefundable weighted attempts before executing their callbacks: counted in lib/ai.ts and draftKit in lib/affiliate-kit.ts. Both use the same store/month counter.
+
+The attempt ceiling is twice the current result allowance, including trial allowance. It is an operational retry cap, not a supplier-price calculation or a proof of the 60% net-profit requirement. A successful draft consumes both counters; a failed result returns the existing result quota but retains attempts. A user can therefore exhaust attempts before exhausting results after repeated failures. This behavior needs customer-facing allowance/help review before release. No live plan or published entitlement is changed by this draft.
+
+Every attempt reservation needs an exact numeric counter and confirmed expiry. Unknown replies or transport failures authorize no callback, retain any possibly applied reservation and are not retried or decremented. Over-limit reservations also remain counted, conservatively. Concurrent increments serialize in Redis; pipelines do not make the counter increment and expiry transactional. Failed expiry blocks work. Counter TTL is 40 days and the key includes the calendar month, following the existing job quota. This relies on Redis counter durability; data loss/deletion and provider bypasses remain separate concerns.
+
+Coverage: counted writing/translation jobs and the affiliate kit. It does not cover every direct askModel caller, visitor-answer quotas, global supplier spend, account-wide aggregation across stores, fixed supplier costs or owner/company taxes. Weighted job units are not necessarily provider request counts or dollars. The multiplier provides retry room but is not derived from a certified cost model. Server time is passed by existing trusted application entry points; do not accept arbitrary client timestamps or allowances.
+
+Before production: verify user-facing retry-limit messaging, every paid entry point and the monetary-budget design. No commission switch, price, payout, email send, deployment or actual provider request was activated during the synthetic tests.
