@@ -33,6 +33,10 @@ export class CrmDealWriteUnconfirmed extends Error {
   constructor() { super("CRM deal change could not be confirmed"); this.name = "CrmDealWriteUnconfirmed"; }
 }
 
+export class CrmValueWriteUnconfirmed extends Error {
+  constructor() { super("CRM contact value change could not be confirmed"); this.name = "CrmValueWriteUnconfirmed"; }
+}
+
 export class CrmSchemaReadUnavailable extends Error {
   constructor() { super("CRM configuration preflight could not be confirmed"); this.name = "CrmSchemaReadUnavailable"; }
 }
@@ -96,7 +100,10 @@ export async function setValue(statsId: string, person: string, field: CrmField,
   if (!PERSON.test(person)) return false;
   const value = fieldValue(field, raw);
   if (value === null) return false;
-  await redisPipeline([value ? ["HSET", valuesKey(statsId, field.id), person, value] : ["HDEL", valuesKey(statsId, field.id), person]]);
+  try {
+    const response = await redisPipeline([value ? ["HSET", valuesKey(statsId, field.id), person, value] : ["HDEL", valuesKey(statsId, field.id), person]]);
+    if (!Array.isArray(response) || response.length !== 1 || (response[0] !== 0 && response[0] !== 1)) throw new CrmValueWriteUnconfirmed();
+  } catch { throw new CrmValueWriteUnconfirmed(); }
   return true;
 }
 
