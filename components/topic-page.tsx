@@ -6,7 +6,7 @@ import { SiteNav } from "@/components/site-nav";
 import { FeatureVisual } from "@/components/feature-visuals";
 import { JsonLd } from "@/components/structured-data";
 import { PAGES, type Block, type TopicPage } from "@/lib/site-pages";
-import { PLAN_PRICES, TRIAL_DAYS } from "@/lib/plan";
+import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, TRIAL_DAYS } from "@/lib/plan";
 import { PLANS_ON_SALE, startWords } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";
 

@@ -18,6 +18,8 @@ import {
   type Tier,
   PLAN_NAMES,
   PLAN_PRICES,
+  PRICES_WITHOUT_COMMISSION,
+  COMMISSION_LIVE,
   PRICE_CENTS,
   TRIAL_DAYS,
   isSharedPrice,
@@ -133,7 +135,7 @@ const PRODUCT_IDS: Record<Tier, string> = {
   scale: "nimbus_labs_scale",
 };
 const PRODUCT_DESCRIPTIONS: Record<Tier, string> = {
-  creator: feeWords().storeProduct,
+  creator: feeWords(COMMISSION_LIVE).storeProduct,
   pro: "Everything in Marktmorgen, and what costs us money to run for you.",
   scale: "Everything in Marktmorgen Pro, with three times the email to your list.",
 };
@@ -496,7 +498,7 @@ export function planOf(subscription: Record<string, unknown>): { tier: Tier; cyc
   const meta = subscription.metadata as Record<string, string> | null | undefined;
   // An unnamed price is read by what it charges: at or above a plan's price
   // is that plan, the dearest first.
-  const paysFor = (plan: Tier) => amountCents > 0 && amountCents >= PLAN_PRICES[plan][cycle];
+  const paysFor = (plan: Tier) => amountCents > 0 && amountCents >= Math.min(PLAN_PRICES[plan][cycle], PRICES_WITHOUT_COMMISSION[plan][cycle]);
   const tier: Tier =
     meta?.tier === "scale" || paysFor("scale") ? "scale" : meta?.tier === "pro" || paysFor("pro") ? "pro" : "creator";
   return { tier, cycle, amountCents, shared: isSharedPrice(tier, cycle, amountCents) };

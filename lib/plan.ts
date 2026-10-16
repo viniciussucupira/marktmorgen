@@ -23,8 +23,8 @@ export const TIERS: readonly Tier[] = ["creator", "pro", "scale"];
 export type Cycle = "month" | "year";
 
 /**
- * The prices on sale today, in cents: a subscription and nothing taken from a
- * sale. They stay until COMMISSION_LIVE below is switched on.
+ * Historical subscription-only prices. Preserve existing subscriptions and
+ * recognize their tiers even after the published offer changes.
  */
 export const PRICES_WITHOUT_COMMISSION: Record<Tier, Record<Cycle, number>> = {
   creator: { month: 2900, year: 30000 },
@@ -35,54 +35,9 @@ export const PRICES_WITHOUT_COMMISSION: Record<Tier, Record<Cycle, number>> = {
 };
 
 /**
- * The prices decided on October 12, 2026, in cents, which go with a share of
- * each sale (COMMISSION_BPS). The rule they were set by is the owner's: the
- * most profit there can be, and no account that can ever cost more than it
- * brings in. No floor taken from what another store charges.
- *
- * How they were found. A thousand creators were drawn with monthly sales
- * spread the way creator income is (lognormal, median $20, a long tail, and
- * three in ten who have not sold yet), each willing to pay up to a base amount
- * plus a share of what they sell, with five guesses at how large a share they
- * tolerate, weighted. Each creator takes whichever plan costs them least, or
- * none if every plan costs more than they will pay. The menu that leaves the
- * most after every card fee and what each account costs to run was found by
- * search, one, two, three and four plans, and then held against twelve
- * variations of those guesses. Three plans is the most: a fourth added 0.01%.
- *
- * The search put the three plans at $22 + 6.35% / $144 + 2.79% / $356;
- * these round figures earn $4 less in a thousand creators, and more than it
- * does when the guesses are made pessimistic, which is the case worth being
- * right in.
- *
- * And the other half of the rule held $22 to a cost, not the price to a
- * floor. A store that pays one month, reaches every limit in it, cancels and
- * leaves all a paid plan may keep here until its closing day cost more than
- * $22 leaves while that day was sixty days off ($24.72 against $21.06). The
- * day was brought to thirty (lib/plan-closing-rules.ts), which makes that
- * store $20.12, rather than the price raised to $26, which would have cost
- * 2.3% of the profit on every creator to pay for one that hardly exists.
- *
- * Who is on which, since a creator takes the cheapest: Store below about
- * $3,630 of sales a month (22 + 6.25% meets 149 + 2.75% there), Studio from
- * there to about $7,270 (where 149 + 2.75% reaches 349), Scale above it.
- *
- * What moving each figure does, everything else held, on the expected profit
- * (the model's own run, a thousand creators, $30,100 a month at these):
- * Store at $20 loses 1.3% and at $24 loses 0.5% — below, every account pays
- * less; above, creators with small sales leave. Store's share at 5.25% loses
- * 0.8% and at 7.25% loses 0.3%, and above it a growing store also leaves for
- * Studio sooner. Studio's $149 moved by $20, or its 2.75% by half a point,
- * loses under 0.1%, because the creators it would lose land on one of the
- * other two. Scale at $299 loses 0.25% and at $399 0.1%, and a share taken on
- * Scale loses 0.5% at half a point and 1.1% at one, because Scale is for the
- * creator a share would drive away. The prices on sale today earn 7% less.
- *
- * Every other account, paid by the month or the year, refunded, paused or
- * closed, is added up against these in tests/plan-margin.test.ts. A store
- * with no sales pays only the subscription, so that is the account that pays
- * least, and every sale only adds to it. The yearly prices are ten months for
- * twelve.
+ * Owner-approved offer: Store $22 + 6.25%, Studio $149 + 2.75%,
+ * Scale $349 + 0%. Annual subscriptions cost ten monthly payments.
+ * These prices are not proof of the required 60% after-tax net margin.
  */
 export const PRICES_WITH_COMMISSION: Record<Tier, Record<Cycle, number>> = {
   creator: { month: 2200, year: 22000 },
@@ -119,8 +74,19 @@ export const COMMISSION_BPS: Record<Tier, number> = { creator: 625, pro: 275, sc
  */
 export const COMMISSION_LIVE = false;
 
+/** The approved offer is published independently of unvalidated fee collection. */
+export const COMMISSION_PLANS_PUBLISHED = true;
+
 /** Every price we charge, in cents: the set that is on sale. */
 export const PLAN_PRICES: Record<Tier, Record<Cycle, number>> = COMMISSION_LIVE ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
+
+/** Approved public offer; publishing it does not change existing billing. */
+export const PUBLISHED_PLAN_PRICES = PRICES_WITH_COMMISSION;
+export const PUBLISHED_PRICE_CENTS = PUBLISHED_PLAN_PRICES.creator.month;
+export const PUBLISHED_YEAR_PRICE_CENTS = PUBLISHED_PLAN_PRICES.creator.year;
+export function publishedYearSaving(tier: Tier): number {
+  return PUBLISHED_PLAN_PRICES[tier].month * 12 - PUBLISHED_PLAN_PRICES[tier].year;
+}
 
 /**
  * Whether a subscription to us is at the prices that go with a share of each
@@ -165,6 +131,13 @@ export function priceWords(tier: Tier, cycle: Cycle): string {
   return `$${dollars} a ${cycle}`;
 }
 
+/** Subscription quote for the published offer, independent of live billing. */
+export function publishedPriceWords(tier: Tier, cycle: Cycle): string {
+  const cents = PUBLISHED_PLAN_PRICES[tier][cycle];
+  const dollars = (cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 });
+  return `$${dollars} a ${cycle}`;
+}
+
 /**
  * What each plan is called on an invoice, at Stripe, and in the studio.
  *
@@ -193,9 +166,9 @@ export const PLAN_NAMES: Record<Tier, string> = {
  * the two can never drift apart.
  */
 export const PLAN_TITLES: Record<Tier, string> = {
-  creator: "Storefront",
-  pro: "Storefront & Email",
-  scale: "Storefront & Email for a big list",
+  creator: "Store",
+  pro: "Studio",
+  scale: "Scale",
 };
 
 /**

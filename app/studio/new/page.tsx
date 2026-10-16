@@ -6,7 +6,7 @@ import { Logo } from "@/components/logo";
 import { HandleForm } from "@/components/handle-form";
 import { SESSION_COOKIE, emailForSession } from "@/lib/auth";
 import { MAX_STORES_PER_ACCOUNT, accountStores } from "@/lib/store";
-import { TRIAL_DAYS, priceWords } from "@/lib/plan";
+import { TRIAL_DAYS, publishedPriceWords as priceWords } from "@/lib/plan";
 
 export const metadata: Metadata = {
   title: "New store — Marktmorgen",

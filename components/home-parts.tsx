@@ -11,15 +11,15 @@ import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, centsWords } from "@/l
 import { VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER } from "@/lib/order-rules";
 import {
-  PLAN_NAMES,
-  PLAN_PRICES,
+  COMMISSION_BPS,
+  PUBLISHED_PLAN_PRICES as PLAN_PRICES,
   PLAN_TITLES,
   PRO_MONTHLY_EMAILS,
   REFUND_DAYS,
   TRIAL_DAYS,
   TRIAL_MONTHLY_EMAILS,
   type Tier,
-  yearSaving,
+  publishedYearSaving as yearSaving,
   SCALE_MONTHLY_EMAILS,
   TIERS,
 } from "@/lib/plan";
@@ -464,8 +464,8 @@ const CREATOR_GROUPS: PlanGroup[] = [
   },
   {
     icon: "bank",
-    title: "Keep all of what you sell",
-    body: "Buyers pay into your own Stripe account, in 15 currencies, by card, Apple Pay, Google Pay or Klarna. We take none of it.",
+    title: "Your own payment account",
+    body: `Buyers pay into your own Stripe account, in 15 currencies. ${feeWords().takes}`,
   },
   {
     icon: "users",
@@ -479,7 +479,7 @@ function proGroups(domains: boolean): PlanGroup[] {
     {
       icon: "check",
       title: `Everything in ${PLAN_TITLES.creator}`,
-      body: "Every line of the plan beside this one, unchanged. Pro adds to it; it replaces nothing.",
+      body: "Every line of the plan beside this one, unchanged. Studio adds to it; it replaces nothing.",
     },
     {
       icon: "mail",
@@ -536,7 +536,7 @@ function PlanTerms({ tier, yearly }: { tier: Tier; yearly: boolean }) {
       `Ask within ${REFUND_DAYS} days of your first payment and it comes back in full, for any reason or none. A yearly plan is refunded for the months you have not started, at any time, less Stripe's card fee.`,
     ],
     ["Cancelling", "Two clicks in your studio, any time. Inside the trial, the card is never charged."],
-    ["Fees", feeWords().feesRow],
+    ["Fees", `${COMMISSION_BPS[tier] / 100}% of each sale. Stripe charges its own processing fee separately.`],
   ];
   return (
     <dl className="mt-6 divide-y divide-line border-t border-line text-[0.8125rem] leading-relaxed">
@@ -602,6 +602,7 @@ function PlanCard({
         </span>
         <span className="text-ink-mute">{yearly ? "a year" : "a month"}</span>
       </p>
+      <p className="mt-2 font-semibold text-violet-deep">{`${COMMISSION_BPS[tier] / 100}% of sales`}</p>
       <p className="mt-2 min-h-[1.5rem] text-[0.9375rem] text-ink-soft">
         {yearly
           ? `One payment of $${year / 100}, once a year — $${monthlyEquivalent(year)} a month, $${saving} less than paying monthly.`
@@ -666,7 +667,7 @@ function PlanCard({
         <PlanTerms tier={tier} yearly={yearly} />
         {/* Named here the way the receipt will name it. */}
         <p className="mt-4 text-[0.8125rem] leading-relaxed text-ink-mute">
-          {`Pressing this sends a login link to your email; nothing is charged from it. On your receipts the plan is called ${PLAN_NAMES[tier]}.`}
+          Pressing this sends a login link to your email. Paid plans are not on sale yet.
         </p>
       </div>
     </div>
@@ -707,14 +708,14 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
         four lines of terms, so the only difference a reader finds between
         them is the actual difference between them.
       */}
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+      <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
         <PlanCard
           tier="creator"
           bestFor={"For selling what you make to the audience you already reach — wherever you reach them now."}
           groups={CREATOR_GROUPS}
           perks={INCLUDED}
           featured
-          cta="Start your store"
+          cta="Start on Store"
           yearly={yearly}
         />
         <PlanCard
@@ -723,35 +724,22 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           groups={proGroups(domains)}
           perks={proPerks}
           featured={false}
-          cta={"Start on Storefront & Email"}
+          cta="Start on Studio"
           yearly={yearly}
         />
-      </div>
-      {/*
-        The plan above these two, as a line and not a third card.
-
-        Nobody choosing where to start is choosing this: it is the same
-        product as the card on the right with a larger number of emails, for a
-        list that has outgrown it. Drawn as a card it would turn "which of
-        these two is my business" into a table to study. So it is said once,
-        with its price, where somebody who already has a big list will find
-        it, and offered again inside the studio on the day a month runs out.
-      */}
-      <div className="card-flat mt-6 flex flex-col gap-5 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
-        <p className="flex gap-3 text-[0.9375rem] text-ink-soft">
-          <Icon name="ladder" size={18} className="mt-0.5 shrink-0 text-violet-deep" />
-          <span>
-            <strong className="block font-semibold text-ink">
-              {`For a bigger list: $${((yearly ? PLAN_PRICES.scale.year : PLAN_PRICES.scale.month) / 100).toLocaleString("en-US")} ${yearly ? "a year" : "a month"}`}
-            </strong>
-            <span className="mt-1 block">
-              {`Everything in ${PLAN_TITLES.pro}, with up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, ${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits to your store a month instead of ${VISITS_INCLUDED.pro.toLocaleString("en-US")}, ${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month instead of ${ORDERS_INCLUDED.pro.toLocaleString("en-US")}, and ${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts instead of ${AI_MONTHLY.pro}. Start on it, or move up from your studio the day you need it and back whenever you like. On your receipts it is called ${PLAN_NAMES.scale}.`}
-            </span>
-          </span>
-        </p>
-        <Link href={`/signin?plan=scale&billing=${yearly ? "year" : "month"}`} className="btn btn-secondary shrink-0">
-          Start with a big list
-        </Link>
+        <PlanCard
+          tier="scale"
+          bestFor="For an established business with a larger list and no percentage fee on sales."
+          groups={[
+            { icon: "check", title: "Everything in Studio", body: "The same selling tools and email features, with larger allowances." },
+            { icon: "mail", title: "More room to grow", body: `Up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails, ${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits and ${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month.` },
+            { icon: "percent", title: "0% platform fee on sales", body: "Stripe charges its own processing fees separately." },
+          ]}
+          perks={[`Everything in ${PLAN_TITLES.pro}`, `${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month`, `${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits a month`, `${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month`, `${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts a month`]}
+          featured={false}
+          cta="Start on Scale"
+          yearly={yearly}
+        />
       </div>
       {/*
         What is true of every plan, and belongs to neither card: the two

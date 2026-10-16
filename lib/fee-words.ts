@@ -4,7 +4,10 @@
  * subscription and nothing more, and the one true the day the share of each
  * sale is switched on (lib/plan.ts COMMISSION_LIVE).
  *
- * They live here so that the switch changes every one of them at once. A
+ * The default describes the published offer, not fee-collection readiness.
+ * Pass false for a historical subscription-only account. Publishing an offer
+ * never enables collection; platform-share.ts still checks COMMISSION_LIVE.
+ * They live here so that the published menu changes every one of them at once. A
  * page that wrote "0% of your sales" in its own words would go on saying it
  * after the switch, which is a price advertised that the checkout does not
  * charge — the thing this whole site is built not to do. So no other file
@@ -15,7 +18,7 @@
  * import it, as they import lib/plan.ts.
  */
 import { perOrderWords } from "@/lib/order-rules";
-import { COMMISSION_BPS, COMMISSION_LIVE, PLAN_PRICES, PRICES_WITH_COMMISSION, PRICES_WITHOUT_COMMISSION, type Tier } from "@/lib/plan";
+import { COMMISSION_BPS, COMMISSION_PLANS_PUBLISHED, PUBLISHED_PLAN_PRICES as PLAN_PRICES, PRICES_WITH_COMMISSION, PRICES_WITHOUT_COMMISSION, type Tier } from "@/lib/plan";
 
 /** "6.25%", "2.75%". */
 function percent(bps: number): string {
@@ -28,7 +31,7 @@ function dollars(cents: number): string {
 }
 
 /** What a plan takes from each sale, in words: "6.25% of each sale", or "nothing from a sale". */
-export function shareOfSaleWords(tier: Tier, live = COMMISSION_LIVE): string {
+export function shareOfSaleWords(tier: Tier, live = COMMISSION_PLANS_PUBLISHED): string {
   const bps = live ? COMMISSION_BPS[tier] : 0;
   return bps > 0 ? `${percent(bps)} of each sale` : "nothing from a sale";
 }
@@ -36,7 +39,7 @@ export function shareOfSaleWords(tier: Tier, live = COMMISSION_LIVE): string {
 export type FeeWords = ReturnType<typeof feeWords>;
 
 /** Every sentence about what is taken from a sale. */
-export function feeWords(live = COMMISSION_LIVE) {
+export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
   const store = percent(COMMISSION_BPS.creator);
   const studio = percent(COMMISSION_BPS.pro);
   const p = live ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
@@ -191,21 +194,21 @@ export const PLAN_AT: Record<Tier, string> = {
 };
 
 /** The same, with what it takes from a sale when it takes something: "$22 + 6.25% of each sale". */
-export function planPriceWords(tier: Tier, cycle: "month" | "year" = "month", live = COMMISSION_LIVE): string {
+export function planPriceWords(tier: Tier, cycle: "month" | "year" = "month", live = COMMISSION_PLANS_PUBLISHED): string {
   const p = live ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
   const bps = live ? COMMISSION_BPS[tier] : 0;
   return `${dollars(p[tier][cycle])} a ${cycle}${bps > 0 ? ` + ${percent(bps)} of each sale` : ""}`;
 }
 
 /** A comparison table's row about our monthly price. */
-export function monthlyRow(live = COMMISSION_LIVE): string {
+export function monthlyRow(live = COMMISSION_PLANS_PUBLISHED): string {
   if (!live) return `${dollars(PRICES_WITHOUT_COMMISSION.creator.month)} and ${dollars(PRICES_WITHOUT_COMMISSION.pro.month)}, free for the first 14 days`;
   const p = PRICES_WITH_COMMISSION;
   return `${dollars(p.creator.month)} + ${percent(COMMISSION_BPS.creator)} of each sale, ${dollars(p.pro.month)} + ${percent(COMMISSION_BPS.pro)}, or ${dollars(p.scale.month)}, free for the first 14 days`;
 }
 
 /** A comparison table's row about our yearly price. */
-export function yearlyRow(live = COMMISSION_LIVE): string {
+export function yearlyRow(live = COMMISSION_PLANS_PUBLISHED): string {
   if (!live) return `${dollars(PRICES_WITHOUT_COMMISSION.creator.year)} and ${dollars(PRICES_WITHOUT_COMMISSION.pro.year)} a year`;
   const p = PRICES_WITH_COMMISSION;
   return `${dollars(p.creator.year)}, ${dollars(p.pro.year)} or ${dollars(p.scale.year)} a year, with the same share of each sale`;
@@ -224,7 +227,7 @@ export function yearSavingWords(tier: Tier): string {
  * $1.08 on top. Here: the card fee, the plan a creator of that size would
  * choose, and its share of each sale.
  */
-export function gumroadSums(live = COMMISSION_LIVE) {
+export function gumroadSums(live = COMMISSION_PLANS_PUBLISHED) {
   const card = 1.08;
   const gumroad = (n: number) => n * (27 - 3.2 - card);
   const tiers: Tier[] = ["creator", "pro", "scale"];
