@@ -16,7 +16,7 @@ A free period with positive cost and no revenue is loss-making. A full refund af
 
 Tax status must be reviewed for the actual company and owner in every relevant jurisdiction; the legal label LLC does not establish zero tax. The review must supply evidence for tax ceilings, real vendor costs, enforced resource caps and prepaid usage, and include all fixed costs in the isolated-customer case. Do not insert a guessed tax percentage or assume future commissions cover a loss.
 
-The price/rights snapshot binds a review to current plan prices, commission mode, trial/refund days and email allowances. Changes to other entitlements, suppliers, tax treatment or cost enforcement also require a fresh reviewed model and evidence; the snapshot alone is not exhaustive verification.
+The price/rights snapshot now binds a review to operational and published prices, commission publication/collection/proof, the margin floor and required scenarios, trial/refund days, email/contact limits, AI allowances, storage/file ceilings, video allowances and overages, traffic/live-room allowances and overages, order allowances and overages, and pause/closure retention terms. It reads the same client-safe constants as those features. A change to a captured condition invalidates an earlier review automatically. Other entitlements, supplier prices, tax treatment and enforcement changes still require a fresh reviewed model and evidence; the snapshot is not exhaustive verification or a prepaid usage ledger.
 
 ## Storage measurement safeguard
 

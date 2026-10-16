@@ -31,6 +31,8 @@
 import { filesHeld } from "@/lib/file-store";
 import { SETUP_STORAGE_BYTES, type Standing, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { streamHeld } from "@/lib/stream";
+import { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
+export { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
 
 const GB = 1024 * 1024 * 1024;
 
@@ -54,7 +56,7 @@ const GB = 1024 * 1024 * 1024;
  * It is the same on both plans on purpose: a brake that differs by plan is a
  * plan limit wearing a disguise, and would end up on the pricing page.
  */
-export const STORAGE_BRAKE_BYTES = 200 * GB;
+// The value lives in storage-rules so client-safe commercial review reads the same ceiling.
 
 export type StorageUse = { bytes: number; brake: number; left: number; full: boolean; available: boolean };
 
