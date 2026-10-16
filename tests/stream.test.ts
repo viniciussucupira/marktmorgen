@@ -324,10 +324,10 @@ async function main() {
   is("every size of every video", await streamHeld(FOLDER), 90_000_000);
   is("a store with nothing there keeps nothing", await streamHeld(OTHER_FOLDER), 0);
   const collectionKey=`nl:stream:col:${FOLDER}`;
-  const collection=redis.get(collectionKey);
-  redis.set(collectionKey,"invalid-id");
+  const collection=redis.run(["GET",collectionKey]);
+  redis.run(["SET",collectionKey,"invalid-id"]);
   is("invalid collection reference is unknown, not empty",await streamHeld(FOLDER),null);
-  if(collection!==undefined) redis.set(collectionKey,collection);
+  if(typeof collection==="string") redis.run(["SET",collectionKey,collection]);
   service = "down";
   is("and a count that cannot be read is said to be unknown, not zero", await streamHeld(FOLDER), null);
   service = "up";
