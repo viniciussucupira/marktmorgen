@@ -280,13 +280,13 @@ async function main(): Promise<void> {
   await savePodcast({
     id: podcastId,
     episodes: [
-      { id: "episode00001", title: "One", notes: "", pathname: kept(ana.folder, show.product.id, "one.mp3", GB / 5, "audio/mpeg").pathname, bytes: GB / 5, contentType: "audio/mpeg", at: 1_780_000_000 },
-      { id: "episode00002", title: "Two", notes: "", pathname: kept(ana.folder, show.product.id, "two.mp3", GB / 5, "audio/mpeg").pathname, bytes: GB / 5, contentType: "audio/mpeg", at: 1_780_600_000 },
+      { id: "episode00001", title: "One", notes: "", pathname: kept(ana.folder, show.product.id, "one.mp3", Math.floor(GB / 5), "audio/mpeg").pathname, bytes: Math.floor(GB / 5), contentType: "audio/mpeg", at: 1_780_000_000 },
+      { id: "episode00002", title: "Two", notes: "", pathname: kept(ana.folder, show.product.id, "two.mp3", Math.floor(GB / 5), "audio/mpeg").pathname, bytes: Math.floor(GB / 5), contentType: "audio/mpeg", at: 1_780_600_000 },
     ],
   });
   is("a podcast", (await setProductPodcast(ana.email, show.product.id, { id: podcastId, episodes: 2 })).ok, true);
   // And what no record names: a copy stamped for a buyer, a video no lesson has any more.
-  objects.set(`vault/${ana.folder}/${guide}/stamped/order-1.pdf`, GB / 10);
+  objects.set(`vault/${ana.folder}/${guide}/stamped/order-1.pdf`, Math.floor(GB / 10));
   const stray: Video = { guid: guid(), collectionId: ana.collection, totalWatchTime: 0, storageSize: 2 * GB };
   videos.set(stray.guid, stray);
   const anaKeeps = await hands.measure(ana.folder);
