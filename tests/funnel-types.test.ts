@@ -13,6 +13,8 @@
  */
 import { NextRequest } from "next/server";
 import { FUNNEL_TYPES, choicesOf, freeSlug, funnelType, pagesOf, slotProblem } from "@/lib/funnel-types";
+import { readForm } from "@/lib/form-store";
+import { readAnswers } from "@/lib/forms";
 import { MAX_FORMS } from "@/lib/forms";
 import { MAX_FUNNEL_PAGES } from "@/lib/page-funnel";
 import { SITE_KINDS, SLUG_PATTERN, slugProblem } from "@/lib/site-page-rules";
@@ -120,6 +122,31 @@ async function main(): Promise<void> {
   const launchMade = await launchResponse.json() as { pages: { id: string }[] };
   const launchPages = await Promise.all(launchMade.pages.map((page: { id: string }) => readPage(copyStore.statsId, siteKey(page.id))));
   is("each launch page keeps its own copy in the original journey order", launchPages.map(page => [page.blocks[0].kind === "hero" ? page.blocks[0].headline : "", page.blocks[1].kind === "text" ? page.blocks[1].body : "", page.hidden]), [["Lesson 1", "Introduction 1", true], ["Lesson 2", "Introduction 2", true], ["Lesson 3", "Introduction 3", true]]);
+
+  part("Editable funnel form questions");
+  const formOwner = "formdraft@example.com";
+  await claimHandle(formOwner, "formdraftshop", "Form Draft", "");
+  await ensureStatsId(formOwner);
+  const formSession = await openSession(formOwner);
+  const sendFormDraft = (formDrafts: unknown) => POST(new NextRequest("https://marktmorgen.com/api/store/page-funnels", { method: "POST", headers: { "content-type": "application/json", cookie: SESSION_COOKIE + "=" + formSession }, body: JSON.stringify({ action: "from-type", type: "application", name: "Application", products: {}, formDrafts }) }));
+  const question = { type: "short", label: "Your project", required: true };
+  const draft = { fields: [question], offerList: false };
+  for (const bad of [null, [], { nope: draft }, { apply: { ...draft, fields: [] } }, { apply: { ...draft, fields: Array.from({ length: 13 }, () => question) } }, { apply: { ...draft, offerList: true } }, { apply: { ...draft, offerList: "true" } }, { apply: { ...draft, fields: [{ ...question, label: " " }] } }, { apply: { ...draft, fields: [{ ...question, label: "x".repeat(161) }] } }, { apply: { ...draft, fields: [{ ...question, type: "password" }] } }, { apply: { ...draft, fields: [{ ...question, required: "true" }] } }, { apply: { ...draft, outcomes: [] } }]) {
+    const response = await sendFormDraft(bad);
+    is("invalid form draft is rejected before setup writes", [response.status, (await response.json()).error, (await storeForEmail(formOwner))!.sitePages.length], [400, "form_draft", 0]);
+  }
+  const formMade = await (await sendFormDraft({ apply: { fields: [{ type: "email", label: "Contact email", required: true }, { type: "long", label: "  Project details  ", required: false }], offerList: false } })).json();
+  const formStore = (await storeForEmail(formOwner))!;
+  const formPage = await readPage(formStore.statsId, siteKey(formMade.pages[0].id));
+  const formBlock = formPage.blocks.find(block => block.kind === "form");
+  const savedForm = await readForm(formStore.statsId, formBlock?.kind === "form" ? formBlock.form : "");
+  if (!savedForm) throw new Error("Custom form was not attached to the page");
+  is("custom questions, required settings and subscription choice survive setup", [savedForm.fields.map(field => [field.type, field.label, field.required]), savedForm.offerList, formPage.hidden], [[["email", "Contact email", true], ["long", "Project details", false]], false, true]);
+  is("the generated form enforces the configured required question", readAnswers(savedForm, () => []).ok, false);
+  const consentMade = await (await sendFormDraft({ apply: { fields: [{ type: "email", label: "Email", required: false }], offerList: true } })).json();
+  const consentPage = await readPage(formStore.statsId, siteKey(consentMade.pages[0].id));
+  const consentBlock = consentPage.blocks.find(block => block.kind === "form");
+  is("email subscription is offered only when explicitly selected in a draft with email", (await readForm(formStore.statsId, consentBlock?.kind === "form" ? consentBlock.form : ""))?.offerList, true);
 
   part("Refused");
   for (let i = 0; i < 6; i += 1) await send({ action: "from-type", type: "launch", name: `Launch ${i}`, products: { offer: course.product.id } });
