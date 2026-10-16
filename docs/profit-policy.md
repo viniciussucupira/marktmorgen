@@ -1,15 +1,15 @@
 # Net profit floor: 60% for every customer
 
-Owner requirement: the platform and each individual customer must retain at least 60% net profit after all applicable taxes and every attributable cost, even at full simultaneous entitlement usage. No profitable average may compensate for a failing customer. USD is the accounting currency for this policy.
+Owner requirement: the platform and each individual customer must retain at least 60% net profit after all applicable company AND personal owner taxes and every attributable cost, even at full simultaneous entitlement usage. No profitable average may compensate for a failing customer. USD is the accounting currency for this policy.
 
-Business context confirmed by the owner: a single-member Delaware LLC is planned, not yet formed; the sole owner resides in Brazil. Entity tax elections, actual operations, customer locations, nexus, owner taxation and compliance costs have not been established. Do not assume that a Delaware LLC means zero tax. Distinguish the company's net profit from the owner's after-tax distributions; report both when applicable rather than counting or omitting the same tax twice. An accountant familiar with both jurisdictions must establish the applicable tax treatment before financial approval.
+Business context confirmed by the owner: a single-member Delaware LLC is planned, not yet formed; the sole owner is Brazilian and resides in Brazil. Entity tax elections, actual operations, customer locations, nexus, owner taxation and compliance costs have not been established. Do not assume that a Delaware LLC means zero tax. The owner clarified that the 60% floor applies AFTER personal taxes attributable to this American business too, explicitly including personal taxes charged by the Brazilian government in relation to this American company, as well as any other applicable owner tax. Record company taxes and owner taxes separately, avoid double counting, and apply the same 60% combined floor to each plan/customer stress case and the company. Higher margins are allowed; there is no exception below 60%. An accountant familiar with both jurisdictions must establish the applicable tax treatment before financial approval.
 
 ## Definition
 
 For the same customer, currency and assessment horizon:
 
 - R = revenue actually collected and retained after discounts, credits, refunds and reversals, before taxes and costs. Do not count gross merchandise sales belonging to creators as platform revenue, uncollected commissions, future renewals, unpaid overages or refundable prepaid balances.
-- C = all attributable costs, including taxes, payment/billing/FX fees, maximum simultaneous infrastructure/AI/email/storage/video consumption, support, acquisition/affiliate commissions, allocated fixed operating costs, accounting/compliance, disputes and the full trial/cancellation/data-retention lifecycle. Avoid double counting refunded principal in both reduced R and costs; nonreturned fees remain costs.
+- C = all attributable costs, including company taxes AND owner personal taxes attributable to this business, payment/billing/FX fees, maximum simultaneous infrastructure/AI/email/storage/video consumption, support, acquisition/affiliate commissions, allocated fixed operating costs, accounting/compliance, disputes and the full trial/cancellation/data-retention lifecycle. Avoid double counting refunded principal in both reduced R and costs; nonreturned fees remain costs.
 - Net margin = (R - C) / R. The exact acceptance condition is R > 0 and 5C <= 2R. Costs may be at most 40% of retained revenue. Costs are rounded up and spend ceilings down to integer cents.
 
 Revenue after processor fees is not the denominator: fees and taxes are costs. This is stricter than the old contribution tests. Tax rates on profit cannot simply be added to revenue-based fee rates; supply tax amounts calculated for the actual structure and scenario. BRL obligations need an evidenced conservative USD conversion and FX costs before assessment.
@@ -26,7 +26,7 @@ Fixed costs must be tested with the company serving only one customer, the minim
 
 ## Implemented assessment
 
-lib/profit-policy.ts checks declared cost ceilings using exact integer arithmetic. Every cost category, including confirmed zero exposure, needs evidence. Unbounded entitlements, unconfirmed taxes, expired evidence, invalid money and overflow remain unverified. Zero retained revenue never receives a passing margin. Portfolio assessment requires both customer and company scenarios, confirmed population/lifecycle coverage, unique scenarios and the same currency/horizon; any individual failure blocks the portfolio.
+lib/profit-policy.ts checks declared cost ceilings using exact integer arithmetic. Every cost category, including confirmed zero exposure, needs evidence. Company taxes use taxes; personal owner taxes use the separate mandatory ownerTaxes category. Both taxesConfirmed and ownerTaxesConfirmed must explicitly be true; missing or unknown personal taxation cannot pass. Unbounded entitlements, unconfirmed taxes, expired evidence, invalid money and overflow remain unverified. Zero retained revenue never receives a passing margin. Portfolio assessment requires both customer and company scenarios, confirmed population/lifecycle coverage, unique scenarios and the same currency/horizon; any individual failure blocks the portfolio.
 
 This is a read-only assessment of supplied assumptions, NOT proof that supplier prices, tax calculations, coverage declarations or usage bounds are true. It does not enforce runtime spending, change subscriptions, charge customers, change contractual terms or certify the existing plans. The coverage declaration is a review attestation, not automatic discovery of missing customers or scenarios.
 
@@ -35,7 +35,7 @@ Run: node scripts/audit-profit.mjs <portfolio.json>
 Exit 0 means all supplied, attested bounds meet the arithmetic rule; exit 1 means policy not proven; exit 2 means assessment could not run. No credentials are needed. Scenario results correspond to input order. Input shape:
 
 - coverageConfirmed: true only after all customers and lifecycle scenarios were reviewed.
-- scenarios: nonempty array, with scope (customer/company), reference, scenario, currency USD, period, retainedRevenueCents, fullEntitlementBoundConfirmed, taxesConfirmed, validUntil (Unix seconds) and costs.
+- scenarios: nonempty array, with scope (customer/company), reference, scenario, currency USD, period, retainedRevenueCents, fullEntitlementBoundConfirmed, taxesConfirmed, ownerTaxesConfirmed, validUntil (Unix seconds) and costs.
 - costs: every key from PROFIT_COST_CATEGORIES, each with nonnegative safe-integer cents and a nonempty evidence reference. Amounts are worst-case ceilings for the same period, not average invoices.
 
 Required review scenarios include every plan monthly/yearly, all discounts/coupons/affiliate credits, 100% simultaneous consumption across all stores, provider fallback and price/FX stress, trial without conversion, full/partial refund, chargeback, failed collection, cancellation, paused/downgraded accounts, post-closure storage/deletion, minimum-price sales and any new feature/add-on. Evaluate annual and monthly horizons separately with correctly recognized costs and revenue; do not mix twelve months of revenue with one month of cost.
@@ -59,3 +59,9 @@ Required review scenarios include every plan monthly/yearly, all discounts/coupo
 - Stripe: https://support.stripe.com/questions/understanding-fees-for-refunded-payments — original payment processing/Connect/FX fees are not returned on refunds under its described terms; verify the actual contracted fee schedule.
 
 These references identify questions and cost categories. They do not establish the planned LLC's effective tax rates or provide financial certification.
+
+## Confirmed AI quota reservations
+
+The counted writing path and affiliate kit now require complete numeric increment acknowledgements and confirmed expiry for every reserved counter before calling the provider. Invalid weights, malformed replies and lost reservation responses authorize no model work; uncertain reservations are neither blindly decremented nor retried. Confirmed over-limit reservations retain their existing release behavior.
+
+This is quota confirmation, not a monetary spend ledger or a proof of the 60% floor. Failed model work still follows the existing returned-job policy, which can incur provider cost on repeated failures. Per-store quotas do not establish an account-wide/customer-wide monetary ceiling, provider model pricing is not bounded here, and usage billed later is still exposed to nonpayment. Those remain release blockers for any financial guarantee.
