@@ -13,7 +13,7 @@ function fixture(){
   for(const scenario of cases)add("customer","client-a",scenario,"creator","month");
   add("company","customer:client-a","single_customer_maximum_usage","creator","month");
   add("company","company","all_customers_maximum_usage");
-  return {coverageConfirmed:true,customers:[{reference:"client-a",plan:"creator",cycle:"month"}],scenarios};
+  return {coverageConfirmed:true,fixedCostFloor:{cents:0,evidence:"SYNTHETIC verified zero",validUntil:2000,currency:"USD",period:"synthetic-horizon"},customers:[{reference:"client-a",plan:"creator",cycle:"month"}],scenarios};
 }
 part("All six published plan/cycle combinations and customer/company stress cases are required");
 const complete=fixture();is("fixture includes all 57 required combinations",complete.scenarios.length,57);
@@ -48,4 +48,20 @@ raw=fixture();raw.scenarios[0].period="different-period";
 is("incomparable periods remain rejected",assessProfitCoverage(raw,1000).meetsPolicy,false);
 is("empty input rejected",assessProfitCoverage(null,1000).meetsPolicy,false);
 is("unknown coverage cannot pass",assessProfitCoverage({...fixture(),coverageConfirmed:"true"},1000).meetsPolicy,false);
+part("Isolated stress includes the whole company fixed-cost floor");
+const funded=fixture();funded.fixedCostFloor.cents=1000;
+for(const row of funded.scenarios)(row.costs as Record<string,{cents:number}>).allocatedFixedCosts.cents=1000;
+is("evidenced whole-company floor can be covered",assessProfitCoverage(funded,1000).meetsPolicy,true);
+for(let i=0;i<funded.scenarios.length;i++){
+  const changed=structuredClone(funded),row=changed.scenarios[i];
+  (row.costs as Record<string,{cents:number}>).allocatedFixedCosts.cents=999;
+  const result=assessProfitCoverage(changed,1000);
+  is("every individual or company case must cover full fixed costs",result.meetsPolicy,false);
+  is("understated row is identified",result.reasons.includes("fixed_cost_understated:"+JSON.stringify([row.scope,row.reference,row.scenario])),true);
+}
+for(const fixedCostFloor of [undefined,null,{}, {...funded.fixedCostFloor,cents:-1},{...funded.fixedCostFloor,cents:0.5},{...funded.fixedCostFloor,cents:"1000"},{...funded.fixedCostFloor,evidence:""},{...funded.fixedCostFloor,validUntil:1000},{...funded.fixedCostFloor,currency:"BRL"}])is("unknown or invalid fixed costs never pass",assessProfitCoverage({...funded,fixedCostFloor},1000).meetsPolicy,false);
+is("fixed cost horizon must match the scenarios",assessProfitCoverage({...funded,fixedCostFloor:{...funded.fixedCostFloor,period:"another-horizon"}},1000).meetsPolicy,false);
+const expensive=structuredClone(funded);expensive.fixedCostFloor.cents=4001;
+for(const row of expensive.scenarios)(row.costs as Record<string,{cents:number}>).allocatedFixedCosts.cents=4001;
+is("covering fixed costs alone cannot waive sixty percent",assessProfitCoverage(expensive,1000).meetsPolicy,false);
 done();
