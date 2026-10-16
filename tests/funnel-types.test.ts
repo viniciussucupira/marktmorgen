@@ -84,6 +84,7 @@ async function main(): Promise<void> {
     true,
     "guide-funnel",
   ]);
+  is("new funnel starts disabled rather than exposing an unfinished journey", funnels[0]?.on, false);
   const blocks = await readPage(store.statsId, siteKey(page.id));
   is("the page: out of the menu, empty under its title, and kept from visitors", [page.slug, page.nav, page.from, blocks.hidden, blocks.blocks.map((b) => b.kind), blocks.blocks[0].kind === "hero" ? blocks.blocks[0].headline : ""], [
     "all-set",
