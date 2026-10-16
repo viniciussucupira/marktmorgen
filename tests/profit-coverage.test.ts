@@ -5,7 +5,7 @@ import { done, is, part } from "./check";
 const cases=["full_entitlement","maximum_discount","refund","nonpayment","trial","cancellation","post_closure"];
 function fixture(){
   const scenarios:Record<string,unknown>[]=[];
-  const add=(scope:string,reference:string,scenario:string,plan?:string,cycle?:string)=>scenarios.push({scope,reference,scenario,plan,cycle,currency:"USD",period:"synthetic-horizon",retainedRevenueCents:10000,fullEntitlementBoundConfirmed:true,taxesConfirmed:true,ownerTaxesConfirmed:true,validUntil:2000,costs:Object.fromEntries(PROFIT_COST_CATEGORIES.map(key=>[key,{cents:0,evidence:"SYNTHETIC matrix fixture, not certified costs"}]))});
+  const add=(scope:string,reference:string,scenario:string,plan?:string,cycle?:string)=>scenarios.push({scope,reference,scenario,plan,cycle,currency:"USD",period:"synthetic-horizon",retainedRevenueCents:10000,revenueBasis:{subscriptionsCents:10000,usageCents:0,platformCommissionsCents:0,refundsAndCreditsCents:0,refundableBalanceCents:0,collectedConfirmed:true,currency:"USD",period:"synthetic-horizon",validUntil:2000,evidence:"SYNTHETIC platform receipts"},fullEntitlementBoundConfirmed:true,taxesConfirmed:true,ownerTaxesConfirmed:true,validUntil:2000,costs:Object.fromEntries(PROFIT_COST_CATEGORIES.map(key=>[key,{cents:0,evidence:"SYNTHETIC matrix fixture, not certified costs"}]))});
   for(const plan of ["creator","pro","scale"])for(const cycle of ["month","year"]){
     for(const scenario of cases)add("plan",plan+":"+cycle,scenario,plan,cycle);
     add("company","offer:"+plan+":"+cycle,"single_customer_maximum_usage",plan,cycle);
@@ -64,4 +64,6 @@ is("fixed cost horizon must match the scenarios",assessProfitCoverage({...funded
 const expensive=structuredClone(funded);expensive.fixedCostFloor.cents=4001;
 for(const row of expensive.scenarios)(row.costs as Record<string,{cents:number}>).allocatedFixedCosts.cents=4001;
 is("covering fixed costs alone cannot waive sixty percent",assessProfitCoverage(expensive,1000).meetsPolicy,false);
+part("Every required row needs matching evidenced platform revenue");
+for(let i=0;i<funded.scenarios.length;i++){const changed=structuredClone(funded);changed.scenarios[i].retainedRevenueCents=10001;is("inflated revenue cannot hide in any matrix row",assessProfitCoverage(changed,1000).meetsPolicy,false);}
 done();
