@@ -10,6 +10,7 @@ import { emptyBlock, parsePage } from "@/lib/sales-page";
 import { writePage } from "@/lib/sales-page-store";
 import { MAX_SITE_PAGES, type SitePage, siteKey, slugProblem } from "@/lib/site-page-rules";
 import { choicesOf, freeSlug, funnelType, pagesOf, slotProblem } from "@/lib/funnel-types";
+import { readFunnelFormDrafts } from "@/lib/funnel-form-draft";
 import { readFunnelPageCopy } from "@/lib/funnel-page-copy";
 import { newFormId, parseForm } from "@/lib/forms";
 import { canAddForms, writeForm } from "@/lib/form-store";
@@ -53,6 +54,8 @@ export async function POST(request: NextRequest) {
       if (existing.length >= MAX_PAGE_FUNNELS) return Response.json({ ok: false, error: "full" }, { status: 400 });
       const name = text(body.name, MAX_FUNNEL_NAME).replace(/\s+/g, " ").trim() || type.label;
       const pages = pagesOf(type);
+      const formDrafts = readFunnelFormDrafts(body.formDrafts, type);
+      if (!formDrafts) return Response.json({ ok: false, error: "form_draft" }, { status: 400 });
       const pageCopy = readFunnelPageCopy(body.pageCopy, type);
       if (!pageCopy) return Response.json({ ok: false, error: "page_copy" }, { status: 400 });
       if (store.sitePages.length + pages.length > MAX_SITE_PAGES) return Response.json({ ok: false, error: "pages_full" }, { status: 400 });
@@ -102,11 +105,13 @@ export async function POST(request: NextRequest) {
           // The form the page asks, made with it: questions only, nothing claimed (lib/funnel-types.ts).
           const asks = blocks.find((block) => block.kind === "form");
           if (slot.form && asks?.kind === "form") {
+            const draft = formDrafts[slot.key];
+            const fields = draft?.fields ?? slot.form.fields;
             const form = parseForm({
               id: newFormId(),
               name: `${slot.form.name}: ${name}`.slice(0, 60),
-              fields: slot.form.fields.map((field) => ({ id: newFormId(6), options: [], ...field })),
-              offerList: slot.form.fields.some((field) => field.type === "email"),
+              fields: fields.map((field) => ({ id: newFormId(6), options: [], ...field })),
+              offerList: draft ? draft.offerList : slot.form.fields.some((field) => field.type === "email"),
               updatedAt: Math.floor(Date.now() / 1000),
             });
             if (!form || !(await writeForm(saved.store.statsId, form))) throw new Error("Required funnel form could not be saved");
