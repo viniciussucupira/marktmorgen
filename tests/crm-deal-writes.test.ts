@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { CrmDealReadUnavailable, CrmDealWriteUnconfirmed, dropDeal, writeDeal } from "@/lib/crm";
-import { MAX_DEALS, type Deal } from "@/lib/crm-rules";
+import { DEFAULT_STAGES, MAX_DEALS, type Deal } from "@/lib/crm-rules";
+import { createFormOpportunity } from "@/lib/form-opportunity";
 import { crmAnswer } from "@/lib/crm-response";
 import { claimHandle, ensureStatsId, storeForEmail } from "@/lib/store";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
@@ -15,8 +16,8 @@ async function main() {
   let preflight:unknown=normal, writeReply:unknown=normal, removeReply:unknown=normal, applied=false, writes=0;
   redis.pipeline=async commands=>{
     if(commands.some(c=>c[0]==="HEXISTS" && c[1]===key) && preflight!==normal){if(preflight instanceof Error)throw preflight;return preflight as unknown[];}
-    const action=commands.find(c=>(c[0]==="HSET" || c[0]==="HDEL") && c[1]===key);
-    if(action){writes++;const reply=action[0]==="HSET"?writeReply:removeReply;if(reply!==normal){if(applied)await original.call(redis,commands);if(reply instanceof Error)throw reply;return reply as unknown[];}}
+    const action=commands.find(c=>(c[0]==="HDEL" && c[1]===key) || (c[0]==="EVAL" && c[3]===key));
+    if(action){writes++;const reply=action[0]==="EVAL"?writeReply:removeReply;if(reply!==normal){if(applied)await original.call(redis,commands);if(reply instanceof Error)throw reply;return reply as unknown[];}}
     return original.call(redis,commands);
   };
   const reset=async()=>{preflight=normal;writeReply=normal;removeReply=normal;applied=false;writes=0;await original.call(redis,[["DEL",key]]);};
@@ -53,6 +54,20 @@ async function main() {
     const saved=JSON.parse(rows[0]);removeReply=[];writes=0;const removed=await call({action:"undeal",id:saved.id});
     is("uncertain deletion is explicit HTTP 502",[removed.status,removed.answer.error],[502,"crm_write_unconfirmed"]);is("deleted record stays absent",(await original.call(redis,[["HGET",key,saved.id]]))[0],null);is("route does not repeat deletion",writes,1);
   }finally{redis.pipeline=original;}
+  part("Concurrent manual saves and form conversions share the same capacity");
+  const raceStore = "crm-capacity-race", raceKey = "nl:crm:deals:" + raceStore;
+  for (let i = 0; i < MAX_DEALS - 1; i++) await redis.pipeline([["HSET", raceKey, "f" + String(i).padStart(9, "0"), "existing"]]);
+  const outcomes = await Promise.all(Array.from({ length: 64 }, async (_, i) => {
+    if (i % 2 === 0) return await writeDeal(raceStore, { ...deal, id: "m" + String(i).padStart(9, "0") }) ? "created" : "full";
+    const ref = String(i).padStart(10, "0") + "a".repeat(54);
+    return (await createFormOpportunity(raceStore, ref, deal, DEFAULT_STAGES)).state;
+  }));
+  is("only one of 64 competing manual/form creations can occupy the last slot", [outcomes.filter(result => result === "created").length, outcomes.filter(result => result === "full").length, (await redis.pipeline([["HLEN", raceKey]]))[0]], [1, 63, MAX_DEALS]);
+  is("existing records remain editable at capacity", await writeDeal(raceStore, { ...deal, id: "f000000000", title: "Edited at capacity" }), true);
+  is("editing at capacity leaves the count unchanged", (await redis.pipeline([["HLEN", raceKey]]))[0], MAX_DEALS);
+  await redis.pipeline([["HDEL", raceKey, "f000000000"]]);
+  is("deleting a record frees one slot for a new manual deal", await writeDeal(raceStore, { ...deal, id: "replacement".slice(0, 10) }), true);
+  is("capacity remains bounded after slot reuse", (await redis.pipeline([["HLEN", raceKey]]))[0], MAX_DEALS);
   done();
 }
 void main();
