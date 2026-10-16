@@ -15,7 +15,7 @@
  *     answered from memory and costs nothing; a changed page is read again;
  *   - what the page does not say is said plainly, and the question is kept
  *     for the creator with the product and nothing about who asked;
- *   - an answer that did not come costs the store nothing; one that came in
+ *   - a failed provider attempt stays counted; one that came in
  *     no shape that can be shown (what an attempt to give the model orders
  *     gets) is never shown, and is not put on the creator's list;
  *   - past the month's number the box is closed and the model is not asked.
@@ -121,7 +121,7 @@ async function main(): Promise<void> {
   const before = await answersUsed(store);
   reply = null;
   is("a model that is down gives no answer", (await ask("How many recipes?")).ok, false);
-  is("and costs the store nothing", await answersUsed(store), before);
+  is("and retains the started attempt", await answersUsed(store), before + 1);
   is("a question too short to be one is not sent", [(await ask("?")).ok, asked.length], [false, 6]);
 
   part("Past the month's number");
@@ -134,6 +134,18 @@ async function main(): Promise<void> {
   is("the model is not asked, and the count does not move", [asked.length, await answersUsed(store, now)], [6, answersAllowance(store, now)]);
   const kept = await ask("Is it a PDF?", { now });
   is("an answer already in memory is still given", kept.ok, true);
+
+  part("Repeated provider failures stop at the allowance");
+  const quotaKey = `nl:ask:${store.statsId}:${new Date(now).toISOString().slice(0, 7)}`;
+  redis.run(["SET", quotaKey, String(answersAllowance(store, now) - 1)]);
+  reply = null;
+  const priorCalls = asked.length;
+  is("last available attempt can fail", (await ask("A new question while the model is down?", { now })).ok, false);
+  const exhausted = await ask("Another new question while it is down?", { now });
+  is("no second provider call after the failed final attempt", [exhausted.ok ? "answered" : exhausted.reason, asked.length, await answersUsed(store, now)], ["closed", priorCalls + 1, answersAllowance(store, now)]);
+  redis.run(["SET", quotaKey, "-2"]);
+  const invalid = await ask("A question with an invalid quota counter?", { now });
+  is("negative counter does not authorize a paid call", [invalid.ok ? "answered" : invalid.reason, asked.length], ["closed", priorCalls + 1]);
 
   part("What the site says about it");
   const { readFileSync } = await import("node:fs");

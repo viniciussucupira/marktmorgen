@@ -195,8 +195,8 @@ export type Answered =
 
 /**
  * Answers one question about one product. Counted against the store's month
- * only when the model was really asked: an answer from memory, a question
- * too short to be one and an answer that failed cost the store nothing.
+ * when a model request starts, including failures and timeouts. Cached
+ * answers and invalid questions do not start a model request.
  */
 export async function answerQuestion(input: {
   store: Store;
@@ -222,13 +222,7 @@ export async function answerQuestion(input: {
     } catch {}
   }
 
-  // Taken from the month before the model is asked, and given back if no answer came.
-  const key = monthKey(store.statsId, new Date(now));
-  const [used] = await redisPipeline([["INCR", key], ["EXPIRE", key, 40 * 86_400]]);
-  if (Number(used) > answersAllowance(store, now)) {
-    await redisPipeline([["DECR", key]]).catch(() => {});
-    return { ok: false, reason: "closed" };
-  }
+  if (!(await takeAnswer(store, now))) return { ok: false, reason: "closed" };
   let text: string | null = null;
   try {
     text = await askModel(SYSTEM, `The facts:\n\n${facts}\n\nThe visitor's question:\n${question}`, 350, answerModel(), ANSWER_TIMEOUT_MS);
@@ -236,8 +230,7 @@ export async function answerQuestion(input: {
     console.error("answering a visitor's question failed", error);
   }
   if (text === null) {
-    // No answer came at all: the store is not counted one.
-    await redisPipeline([["DECR", key]]).catch(() => {});
+    // The request may have consumed provider resources. Keep its reserved attempt.
     return { ok: false, reason: "failed" };
   }
   // The model answered, but not in the shape asked for: what it does when a
@@ -273,15 +266,17 @@ export async function answerQuestion(input: {
 export async function takeAnswer(store: Store, now = Date.now()): Promise<boolean> {
   if (!store.statsId) return false;
   const key = monthKey(store.statsId, new Date(now));
-  const [used] = await redisPipeline([["INCR", key], ["EXPIRE", key, 40 * 86_400]]);
-  if (Number(used) > answersAllowance(store, now)) {
+  const [used, expires] = await redisPipeline([["INCR", key], ["EXPIRE", key, 40 * 86_400]]);
+  const count = typeof used === "number" ? used : typeof used === "string" && /^[1-9]\d*$/.test(used) ? Number(used) : NaN;
+  if (!Number.isSafeInteger(count) || count < 1 || (expires !== 1 && expires !== "1")) return false;
+  if (count > answersAllowance(store, now)) {
     await redisPipeline([["DECR", key]]).catch(() => {});
     return false;
   }
   return true;
 }
 
-/** Gives an answer back to the month, when no answer came. */
+/** Releases a reservation only before a provider request starts; never after a failed request. */
 export async function giveAnswerBack(store: Store, now = Date.now()): Promise<void> {
   if (!store.statsId) return;
   await redisPipeline([["DECR", monthKey(store.statsId, new Date(now))]]).catch(() => {});

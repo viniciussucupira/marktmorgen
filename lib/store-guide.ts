@@ -16,7 +16,7 @@
  */
 import { createHash } from "node:crypto";
 import { answerModel, askModel, jsonIn } from "@/lib/ai";
-import { STORE_PAGE, answersOn, deliveryWords, giveAnswerBack, keepAnswer, keptAnswer, priceWords, takeAnswer } from "@/lib/answers";
+import { STORE_PAGE, answersOn, deliveryWords, keepAnswer, keptAnswer, priceWords, takeAnswer } from "@/lib/answers";
 import { MAX_FACTS_CHARS, questionKey, readQuestion } from "@/lib/answers-rules";
 import type { Listing, Store } from "@/lib/store";
 
@@ -105,7 +105,7 @@ export async function guideVisitor(input: { store: Store; products: Listing[]; g
     console.error("guiding a visitor failed", error);
   }
   if (text === null) {
-    await giveAnswerBack(store, now);
+    // A timeout or provider failure can still incur a charge; retain the attempt.
     return { ok: false, reason: "failed" };
   }
   const json = jsonIn(text);
