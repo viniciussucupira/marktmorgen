@@ -96,13 +96,14 @@ async function main(): Promise<void> {
   const open = async () => {
     checkouts.length = 0;
     const store = (await storeForEmail(OWNER))!;
-    await createCheckout(store, (await readProduct(store, club.product.id))!, "https://marktmorgen.com", "", { via: { aff: SARA, rate: 30 } });
+    await createCheckout(store, (await readProduct(store, club.product.id))!, "https://marktmorgen.com", "", { via: { aff: SARA, rate: 30 }, cameFrom: { source: "instagram", medium: "post", campaign: "launch", content: "story-a" } });
     return checkouts[0];
   };
   await setAffiliateSetting(OWNER, { ...NO_AFFILIATES, enabled: true, percent: 30 });
   is("not credited where the creator does not credit memberships", (await open()).get("subscription_data[metadata][via]"), null);
   await setAffiliateSetting(OWNER, { ...NO_AFFILIATES, enabled: true, percent: 30, recurring: 3, bonuses: [{ sales: 2, cents: 5000 }] });
   const sent = await open();
+  is("post tags travel on the checkout and subscription", [sent.get("metadata[utm_content]"), sent.get("subscription_data[metadata][utm_source]"), sent.get("subscription_data[metadata][utm_campaign]"), sent.get("subscription_data[metadata][utm_content]")], ["story-a","instagram","launch","story-a"]);
   is("the affiliate, the share and the months ride on the subscription", [
     sent.get("subscription_data[metadata][via]"),
     sent.get("subscription_data[metadata][via_rate]"),
@@ -119,7 +120,7 @@ async function main(): Promise<void> {
     ["HSET", `nl:aff:${statsId}:people`, TOM, person(TOM, "tom@example.com", "tom")],
   ]);
   const sold = NOW - 100 * DAY;
-  const terms = { product: club.product.id, via: SARA, via_rate: "30", via_months: "3", via_at: String(sold) };
+  const terms = { product: club.product.id, via: SARA, via_rate: "30", via_months: "3", via_at: String(sold), utm_source: "instagram", utm_campaign: "launch", utm_content: "story-a" };
   invoices = [
     invoice("in_First0000001", sold + 60, 2000, terms, { billing_reason: "subscription_create" }),
     invoice("in_Month0000002", sold + 31 * DAY, 2000, terms),
@@ -132,6 +133,7 @@ async function main(): Promise<void> {
   ];
   refunds = [{ status: "succeeded", payment_intent: "pi_in_Month0000002", amount: 1000 }];
   let book = await readBook(store);
+  is("renewals retain the original subscription promotion", book.lines.find(line => line.ref === "in_Month0000002")?.promotion, {source:"instagram",campaign:"launch",content:"story-a"});
   const lines = (aff: string) => book.lines.filter((l) => l.aff === aff && l.how !== "bonus").map((l) => [l.ref, l.commission, l.status]);
   is("within three months, a partly refunded one on what was kept, a plan's every payment, never their own", lines(SARA).sort(), [
     ["in_First0000001", 600, "earned"],

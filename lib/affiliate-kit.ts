@@ -8,6 +8,8 @@
  *   nl:affkit:<statsId>:<YYYY-MM>                  drafts the store's affiliates asked for that month
  *   nl:ai:<statsId>:<YYYY-MM>                      the store's month of writing jobs, which each draft is one of (lib/ai.ts)
  */
+import { randomUUID } from "node:crypto";
+import { affiliateCampaignLink } from "@/lib/affiliate-promotion";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Store } from "@/lib/store";
 import { type Affiliate, affiliatesOn } from "@/lib/affiliates";
@@ -84,12 +86,14 @@ export async function draftKit(store: Store, affiliate: Affiliate, productId: st
   }
   const link = productAffiliateLink(store, product, affiliate.code);
   const full = DISCLOSURE[store.language] ?? DISCLOSURE.en;
+  const variant = `kit-${randomUUID().replaceAll("-", "")}`;
+  const tagged = (source: string) => affiliateCampaignLink(link, affiliate.code, source, `affiliate-${affiliate.code}`, "post", variant);
   return {
     ok: true,
     posts: {
-      x: finishPost(posts.x, link, DISCLOSURE_SHORT[store.language] ?? DISCLOSURE_SHORT.en),
-      instagram: finishPost(posts.instagram, link, full),
-      linkedin: finishPost(posts.linkedin, link, full),
+      x: finishPost(posts.x, tagged("x"), DISCLOSURE_SHORT[store.language] ?? DISCLOSURE_SHORT.en),
+      instagram: finishPost(posts.instagram, tagged("instagram"), full),
+      linkedin: finishPost(posts.linkedin, tagged("linkedin"), full),
     },
     left: Math.max(0, KIT_PER_DAY - Number(today)),
   };

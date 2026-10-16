@@ -352,6 +352,12 @@ export async function createCheckout(
     if (extras.cameFrom.source) body.set("metadata[utm_source]", extras.cameFrom.source);
     if (extras.cameFrom.medium) body.set("metadata[utm_medium]", extras.cameFrom.medium);
     if (extras.cameFrom.campaign) body.set("metadata[utm_campaign]", extras.cameFrom.campaign);
+    if (extras.cameFrom.content) body.set("metadata[utm_content]", extras.cameFrom.content);
+    if (recurring) {
+      for (const [key, value] of Object.entries(extras.cameFrom)) {
+        if (value) body.set(`subscription_data[metadata][utm_${key}]`, value);
+      }
+    }
   }
   for (const [key, value] of Object.entries(extras.channel ?? {})) {
     body.set(`metadata[${key}]`, value);

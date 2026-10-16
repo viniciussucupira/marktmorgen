@@ -63,6 +63,9 @@ async function main(): Promise<void> {
   const before = await aiLeft(store);
   const result = await draftKit(store, affiliate(), plan.product.id, "My followers are busy parents; I have cooked from it for a month.");
   const link = productAffiliateLink(store, plan.product, "fanlink");
+  const urls = result.ok ? Object.values(result.posts).map(post => new URL(post.match(/https:\/\/\S+/)?.[0] ?? "")) : [];
+  is("each drafted post identifies its channel and affiliate", urls.map(url => [url.searchParams.get("utm_source"),url.searchParams.get("via")]), [["x","fanlink"],["instagram","fanlink"],["linkedin","fanlink"]]);
+  is("one kit identifies its post variants without buyer identifiers", urls.length === 3 && new Set(urls.map(url => url.searchParams.get("utm_content"))).size === 1 && urls.every(url => /^kit-[a-f0-9]{32}$/.test(url.searchParams.get("utm_content") ?? "")), true);
   is("three posts, each with the link to the product and the line in the store's language", [
     result.ok,
     result.ok && link.includes("/p/") && link.endsWith("?via=fanlink"),
@@ -79,7 +82,8 @@ async function main(): Promise<void> {
   ], [true, true, true, true]);
   is("one of the store's writing jobs for the month", (await aiLeft(store)) , before - 1);
   asked = [];
-  await draftKit(store, affiliate(), plan.product.id, "");
+  const secondKit = await draftKit(store, affiliate(), plan.product.id, "");
+  is("a different kit has a different post identifier", secondKit.ok && !secondKit.posts.x.includes(urls[0].searchParams.get("utm_content") ?? "no-variant"), true);
   is("with no note, it is told to say nothing about having used it", asked[0]?.prompt.includes("say nothing about having used it"), true);
 
   part("Only where it should");
