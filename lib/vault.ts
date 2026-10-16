@@ -410,13 +410,20 @@ export async function listVault(prefix: string, cursor?: string): Promise<{ file
   if (cursor) url.searchParams.set("continuation-token", cursor);
   const answer = await ask(config, "GET", url.toString());
   if (answer.status !== 200) return null;
+  const truncated = tag(answer.text, "IsTruncated");
+  if (!answer.text.includes("<ListBucketResult") || !answer.text.includes("</ListBucketResult>") || (truncated !== "true" && truncated !== "false")) return null;
   const files: { pathname: string; bytes: number }[] = [];
-  for (const entry of answer.text.match(/<Contents>[\s\S]*?<\/Contents>/g) ?? []) {
+  const entries = answer.text.match(/<Contents>[\s\S]*?<\/Contents>/g) ?? [];
+  if ((answer.text.match(/<Contents>/g) ?? []).length !== entries.length) return null;
+  for (const entry of entries) {
     const pathname = tag(entry, "Key");
-    const bytes = Number(tag(entry, "Size") ?? "");
-    if (pathname && Number.isFinite(bytes)) files.push({ pathname, bytes });
+    const size = tag(entry, "Size");
+    const bytes = size && /^\d+$/.test(size) ? Number(size) : NaN;
+    if (!pathname || !pathname.startsWith(prefix) || !Number.isSafeInteger(bytes) || bytes < 0) return null;
+    files.push({ pathname, bytes });
   }
-  const more = tag(answer.text, "IsTruncated") === "true" ? tag(answer.text, "NextContinuationToken") : null;
+  const more = truncated === "true" ? tag(answer.text, "NextContinuationToken") : null;
+  if (truncated === "true" && !more) return null;
   return { files, cursor: more };
 }
 
@@ -425,12 +432,21 @@ export async function vaultHeld(folder: string): Promise<number | null> {
   if (!vaultConfig()) return 0;
   let bytes = 0;
   let cursor: string | undefined;
+  const seen = new Set<string>();
+  const paths = new Set<string>();
   for (let page = 0; page < 20; page += 1) {
     const answer = await listVault(`vault/${folder}/`, cursor);
     if (!answer) return null;
-    for (const file of answer.files) bytes += file.bytes;
-    if (!answer.cursor) break;
+    for (const file of answer.files) {
+      if (paths.has(file.pathname) || !Number.isSafeInteger(file.bytes) || file.bytes < 0) return null;
+      paths.add(file.pathname);
+      bytes += file.bytes;
+      if (!Number.isSafeInteger(bytes)) return null;
+    }
+    if (!answer.cursor) return bytes;
+    if (seen.has(answer.cursor)) return null;
+    seen.add(answer.cursor);
     cursor = answer.cursor;
   }
-  return bytes;
+  return null;
 }

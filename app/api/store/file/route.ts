@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
         // is at its figure and cannot hold one to what is left of it.
         const standing = standingOf(store);
         const held = await storageUsed(folder, storageBrakeFor(standing));
+        if (held.available === false) throw new Error("files_unavailable");
         if (held.full) throw new Error(storageRefusal(standing));
 
         // The one moment this store's folder and its owner are both in hand.

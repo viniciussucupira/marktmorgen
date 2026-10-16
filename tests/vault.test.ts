@@ -53,6 +53,7 @@ const uploads = new Map<string, { key: string; type: string; parts: Map<number, 
 const asked: string[] = [];
 /** The store as a whole: there, or not answering. */
 let service: "up" | "down" = "up";
+let listingOverride: ((url: URL) => string) | null = null;
 let made = 0;
 /**
  * Whether the store compresses a file of text on its way out, as the real
@@ -90,6 +91,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const body = init?.body === undefined || init.body === null ? new Uint8Array() : typeof init.body === "string" ? new TextEncoder().encode(init.body) : new Uint8Array(init.body as ArrayBuffer);
 
   if (!key) {
+    if (listingOverride) return xml(listingOverride(url));
     // A listing: a folder's files, a page at a time.
     const all = [...objects.keys()].filter((k) => k.startsWith(url.searchParams.get("prefix") ?? "")).sort();
     const from = Number(url.searchParams.get("continuation-token") ?? "0");
@@ -313,6 +315,34 @@ async function main() {
   service = "down";
   is("and a count that cannot be read is said to be unknown, not zero", await vaultHeld(FOLDER), null);
   service = "up";
+
+  part("Incomplete storage listings never authorize new storage");
+  const bucket=(body:string)=>`<ListBucketResult>${body}</ListBucketResult>`;
+  for(const bad of [
+    "<Error/>",
+    "<ListBucketResult><IsTruncated>false</IsTruncated>",
+    bucket("<IsTruncated>false</IsTruncated><Contents><Key>broken</Key>"),
+    bucket(""),
+    bucket("<IsTruncated>maybe</IsTruncated>"),
+    bucket("<IsTruncated>true</IsTruncated>"),
+    ...["", "-1", "NaN", "1.5", "9007199254740992"].map(size=>bucket(`<IsTruncated>false</IsTruncated><Contents><Key>vault/${FOLDER}/bad</Key><Size>${size}</Size></Contents>`)),
+    bucket("<IsTruncated>false</IsTruncated><Contents><Key>outside/folder</Key><Size>1</Size></Contents>"),
+  ]){
+    listingOverride=()=>bad;
+    is("malformed page is unavailable",await vaultHeld(FOLDER),null);
+  }
+  listingOverride=()=>bucket("<IsTruncated>true</IsTruncated><NextContinuationToken>same</NextContinuationToken>");
+  is("repeated cursor is incomplete",await vaultHeld(FOLDER),null);
+  listingOverride=()=>bucket(`<IsTruncated>false</IsTruncated><Contents><Key>vault/${FOLDER}/same</Key><Size>1</Size></Contents><Contents><Key>vault/${FOLDER}/same</Key><Size>1</Size></Contents>`);
+  is("duplicate file is not a complete measurement",await vaultHeld(FOLDER),null);
+  listingOverride=(url)=>bucket(`<IsTruncated>true</IsTruncated><NextContinuationToken>${Number(url.searchParams.get("continuation-token")??0)+1}</NextContinuationToken>`);
+  is("page cap is not a completed listing",await vaultHeld(FOLDER),null);
+  listingOverride=(url)=>{
+    const page=Number(url.searchParams.get("continuation-token")??0);
+    return bucket(`<IsTruncated>${page<19}</IsTruncated>${page<19?`<NextContinuationToken>${page+1}</NextContinuationToken>`:""}`);
+  };
+  is("final page at page cap is complete",await vaultHeld(FOLDER),0);
+  listingOverride=null;
 
   part("A creator removes a file");
   await deleteFile([pathname, copy]);

@@ -35,6 +35,11 @@ try {
       alias: {
         "@": root,
         "@/lib/redis": join(here, "redis-stub.ts"),
+        ...(file === "storage-measurement.test.ts" ? {
+          "@/lib/blob": join(here, "storage-provider-stub.ts"),
+          "@/lib/vault": join(here, "storage-provider-stub.ts"),
+          "@/lib/stream": join(here, "storage-provider-stub.ts"),
+        } : {}),
       },
     });
     console.log(`\n=== ${file} ===`);

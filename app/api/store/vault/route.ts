@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
       // What a store may keep goes by where it stands with its plan (lib/plan-standing.ts).
       const standing = standingOf(store);
       const held = await storageUsed(folder, storageBrakeFor(standing));
+      if (held.available === false) return fail("files_unavailable", 503);
       if (!fits(held, bytes, standing)) return fail(storageRefusal(standing));
       await rememberFolderOwner(folder, ref);
 
