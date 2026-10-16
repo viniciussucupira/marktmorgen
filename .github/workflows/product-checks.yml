@@ -29,3 +29,25 @@ jobs:
         run: npm test
       - name: Production build and route types
         run: npm run build
+
+  form-opportunity-redis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - "16379:6379"
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Actual Redis Lua conversion checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_form_opportunity_redis.py
