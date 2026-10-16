@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import { formOpportunityRef, createFormOpportunity } from "@/lib/form-opportunity";
+import { formOpportunityRef, createFormOpportunity, readFormOpportunity } from "@/lib/form-opportunity";
 import { parseForm, type FormResponse } from "@/lib/forms";
-import { addResponse, writeForm } from "@/lib/form-store";
+import { addResponse, writeForm, dropForm } from "@/lib/form-store";
 import { claimHandle, ensureStatsId, ensureStoreId, storeForEmail } from "@/lib/store";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { DEFAULT_STAGES, MAX_DEALS, type Deal } from "@/lib/crm-rules";
@@ -73,7 +73,22 @@ async function main() {
   let collisionRefused = false; try { await createFormOpportunity("collision", collidingRef, fixture, DEFAULT_STAGES); } catch { collisionRefused = true; }
   is("identifier collisions never return or overwrite an unrelated deal", [collisionRefused, (await readDeals("collision", DEFAULT_STAGES))[0].formResponseRef], [true, "b".repeat(64)]);
   for (let i = 0; i < 50; i++) await addResponse(statsId, form.id, { ...response, at: response.at + 100 + i });
-  is("conversion verification is bounded to the current visible response window", [(await (await send()).json()).error, (await readDeals(statsId, DEFAULT_STAGES)).length], ["response_gone", 2]);
+  is("unconverted responses outside the visible window remain unavailable", [(await (await send(formOpportunityRef(statsId, form.id, third))).json()).error, (await readDeals(statsId, DEFAULT_STAGES)).length], ["response_gone", 2]);
+  const oldRetry = await (await send(ref, { title: "", stage: "removed" })).json();
+  is("committed conversions remain recoverable after the source ages out without replaying draft edits", [oldRetry.state, oldRetry.deal?.note, oldRetry.deal?.stage, (await readDeals(statsId, DEFAULT_STAGES)).length], ["existing", "Later work", "won000", 2]);
+  is("recovery remains scoped to the store", await readFormOpportunity("different-store", ref, DEFAULT_STAGES), null);
+  for (const malformed of [[], [undefined], [123], ["{"], [JSON.stringify(fixture)]]) {
+    let refused = false;
+    try {
+      redis.pipeline = async commands => commands.some(command => command[0] === "HGET" && command[1] === key) ? malformed : original.call(redis, commands);
+      await readFormOpportunity(statsId, ref, DEFAULT_STAGES);
+    } catch { refused = true; } finally { redis.pipeline = original; }
+    is("unconfirmed or conflicting reads never claim recovery", refused, true);
+  }
+  await dropForm(statsId, form.id);
+  const afterRemoval = await (await send()).json();
+  is("removing the source form does not hide a committed opportunity", [afterRemoval.state, afterRemoval.deal?.formResponseRef], ["existing", ref]);
+  is("a removed form cannot create an opportunity from an unknown reference", (await (await send("c".repeat(64))).json()).error, "unknown");
   done();
 }
 main().catch(error => { console.error(error); process.exit(1); });
