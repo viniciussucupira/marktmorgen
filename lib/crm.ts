@@ -25,6 +25,13 @@ import {
   parseStages,
 } from "@/lib/crm-rules";
 
+export class CrmDealReadUnavailable extends Error {
+  constructor() { super("CRM deal preflight could not be confirmed"); this.name = "CrmDealReadUnavailable"; }
+}
+export class CrmDealWriteUnconfirmed extends Error {
+  constructor() { super("CRM deal change could not be confirmed"); this.name = "CrmDealWriteUnconfirmed"; }
+}
+
 const fieldsKey = (statsId: string) => `nl:crm:fields:${statsId}`;
 const valuesKey = (statsId: string, field: string) => `nl:crm:v:${statsId}:${field}`;
 const stagesKey = (statsId: string) => `nl:crm:stages:${statsId}`;
@@ -113,12 +120,16 @@ export async function readDeals(statsId: string | null, stages: readonly Stage[]
 
 /** Saves a deal. False when the store already has as many as it may and this one is new. */
 export async function writeDeal(statsId: string, deal: Deal): Promise<boolean> {
-  const [exists, count] = await redisPipeline([
-    ["HEXISTS", dealsKey(statsId), deal.id],
-    ["HLEN", dealsKey(statsId)],
-  ]);
-  if (Number(exists) !== 1 && Number(count) >= MAX_DEALS) return false;
-  await redisPipeline([["HSET", dealsKey(statsId), deal.id, JSON.stringify(deal)]]);
+  let preflight: unknown;
+  try {
+    preflight = await redisPipeline([["HEXISTS", dealsKey(statsId), deal.id], ["HLEN", dealsKey(statsId)]]);
+  } catch { throw new CrmDealReadUnavailable(); }
+  if (!Array.isArray(preflight) || preflight.length !== 2 || (preflight[0] !== 0 && preflight[0] !== 1) || typeof preflight[1] !== "number" || !Number.isSafeInteger(preflight[1]) || preflight[1] < preflight[0]) throw new CrmDealReadUnavailable();
+  if (preflight[0] === 0 && preflight[1] >= MAX_DEALS) return false;
+  try {
+    const saved = await redisPipeline([["HSET", dealsKey(statsId), deal.id, JSON.stringify(deal)]]);
+    if (!Array.isArray(saved) || saved.length !== 1 || (saved[0] !== 0 && saved[0] !== 1)) throw new CrmDealWriteUnconfirmed();
+  } catch { throw new CrmDealWriteUnconfirmed(); }
   return true;
 }
 
@@ -130,8 +141,11 @@ export async function readDeal(statsId: string, id: string, stages: readonly Sta
 
 export async function dropDeal(statsId: string, id: string): Promise<boolean> {
   if (!DEAL_ID.test(id)) return false;
-  const [n] = await redisPipeline([["HDEL", dealsKey(statsId), id]]);
-  return Number(n) === 1;
+  try {
+    const removed = await redisPipeline([["HDEL", dealsKey(statsId), id]]);
+    if (!Array.isArray(removed) || removed.length !== 1 || (removed[0] !== 0 && removed[0] !== 1)) throw new CrmDealWriteUnconfirmed();
+    return removed[0] === 1;
+  } catch { throw new CrmDealWriteUnconfirmed(); }
 }
 
 /** Everything kept here for a store that is being deleted. */
