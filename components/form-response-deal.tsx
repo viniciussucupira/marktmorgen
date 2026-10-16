@@ -34,7 +34,7 @@ export function FormResponseDeal({ form, response, responseRef, stages, sid, cur
     try {
       const response = await fetch("/api/store/form-opportunity", { method: "POST", headers: { "Content-Type": "application/json", ...(sid ? { "x-nimbus-store": sid } : {}) }, body: JSON.stringify({ form: form.id, responseRef, deal: { title: draft.title, email: draft.email, note: draft.note, stage: draft.stage, ...follow.value, cents } }) });
       const data = await response.json().catch(() => null);
-      if (response.status === 409 && data?.ok === false && data.error === "response_gone" && !data.deal) { setError("This response is no longer retained. Reload Forms before creating an opportunity."); return; }
+      if (response.status === 409 && data?.ok === false && data.error === "response_gone" && !data.deal) { setError("This response is no longer available for conversion. Reload Forms before creating an opportunity."); return; }
       const answer = crmAnswer(response.ok, data);
       if (answer.ok && (data.state === "created" || data.state === "existing") && data.deal?.formResponseRef === responseRef) { setAlreadyCreated(data.state === "existing"); setSaved(true); return; }
       if (answer.ok) { setUncertain(true); setError("Creation could not be confirmed. Check Deals before trying again."); return; }
