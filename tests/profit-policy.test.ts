@@ -1,7 +1,7 @@
 import { assessProfitPortfolio, assessProfitScenario, MINIMUM_NET_MARGIN_BPS, PROFIT_COST_CATEGORIES, type ProfitScenario } from "@/lib/profit-policy";
 import { done, is, part } from "./check";
 const now=1_000;
-const scenario=(): ProfitScenario => ({scope:"customer",reference:"synthetic-client",scenario:"all-entitlements",currency:"USD",period:"synthetic-month",retainedRevenueCents:10_000,fullEntitlementBoundConfirmed:true,taxesConfirmed:true,ownerTaxesConfirmed:true,validUntil:2_000,costs:Object.fromEntries(PROFIT_COST_CATEGORIES.map(key=>[key,{cents:0,evidence:"synthetic confirmed zero exposure"}])) as ProfitScenario["costs"]});
+const scenario=(): ProfitScenario => ({scope:"customer",reference:"synthetic-client",scenario:"all-entitlements",currency:"USD",period:"synthetic-month",retainedRevenueCents:10_000,fullEntitlementBoundConfirmed:true,taxesConfirmed:true,ownerTaxesConfirmed:true,validUntil:2_000,costs:Object.fromEntries(PROFIT_COST_CATEGORIES.map(key=>[key,{cents:0,evidence:"synthetic confirmed zero exposure",currency:"USD",period:"synthetic-month",validUntil:2000}])) as ProfitScenario["costs"]});
 part("Sixty percent after every declared cost, with conservative cent rounding");
 is("floor cannot be configured below sixty percent",MINIMUM_NET_MARGIN_BPS,6000);
 for (const revenue of [1,2,3,4,5,99,100,101,9999,10000,Number.MAX_SAFE_INTEGER]) {
@@ -56,4 +56,13 @@ is("refunded customer cannot disappear into profitable average",assessProfitPort
 for(const raw of [null,{},[],{scenarios:[]}])is("missing portfolio cannot pass",assessProfitPortfolio(raw,now).meetsPolicy,false);
 const sparse=[customer,company];sparse.length=3;
 is("missing array entries cannot hide unassessed scenarios",assessProfitPortfolio({...portfolio,scenarios:sparse},now).meetsPolicy,false);
+part("Each cost evidence has its own valid currency, horizon and expiry");
+for(const category of PROFIT_COST_CATEGORIES){
+  for(const change of [{validUntil:undefined},{validUntil:null},{validUntil:1000},{validUntil:999},{validUntil:1000.5},{validUntil:Infinity},{validUntil:"2000"},{currency:"BRL"},{currency:undefined},{period:"another-month"},{period:undefined}]){
+    const raw=scenario();Object.assign(raw.costs[category],change);is("invalid individual evidence cannot hide behind a valid scenario",assessProfitScenario(raw,now).status,"unverified");
+  }
+}
+const expiresFirst=scenario();expiresFirst.costs.ownerTaxes.validUntil=1500;
+is("personal tax evidence is valid strictly before its own expiry",assessProfitScenario(expiresFirst,1499).status,"meets_floor");
+is("personal tax evidence expires before the scenario deadline",assessProfitScenario(expiresFirst,1500).status,"unverified");
 done();
