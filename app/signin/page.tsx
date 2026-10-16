@@ -9,7 +9,7 @@ import { isConnectConfigured } from "@/lib/stripe-connect";
 import { PLAN_TITLES as PLAN_NAMES, TRIAL_DAYS, parseTier, publishedPriceWords as priceWords } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { formatMoney } from "@/lib/money";
-import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
+import { INVITE_PROGRAM_OPEN, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
 import { feeWords } from "@/lib/fee-words";
 
 /** Somebody who came back to a store they have: by Log in, or sent here to log in again. */
@@ -34,9 +34,13 @@ export async function generateMetadata({
 }
 
 const NOTICES: Record<string, { title: string; body: string; tone?: "success" }> = {
+  "invite-paused": {
+    title: "New creator invitations are paused",
+    body: "No new invite was accepted. Existing invitation credits and previously accepted invites keep their original terms and expiry. You can continue to your account below.",
+  },
   "invite-accepted": {
-    title: "Your invite is saved on this browser",
-    body: `Type your email below, open the link we send, and take your store address. The invite counts for that store: ${INVITE_HOLD_DAYS} days after your first payment, ${formatMoney(INVITE_BONUS_CENTS, "usd")} of credit goes on your plan.`,
+    title: INVITE_PROGRAM_OPEN ? "Your invite is saved on this browser" : "Previously accepted invitations",
+    body: INVITE_PROGRAM_OPEN ? `Type your email below, open the link we send, and take your store address. The invite counts for that store: ${INVITE_HOLD_DAYS} days after your first payment, ${formatMoney(INVITE_BONUS_CENTS, "usd")} of credit goes on your plan.` : "If you previously accepted an invite on this browser, its original terms and expiry still apply. No new invitations are being accepted.",
     tone: "success",
   },
   expired: {

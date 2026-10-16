@@ -14,7 +14,7 @@ import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS } from "@/
 import { ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER, countWords, partsWords } from "@/lib/traffic-rules";
 import { ROOM_GRANT_MINUTES } from "@/lib/chat-pace";
 import { STORAGE_BRAKE_BYTES, storageWords } from "@/lib/storage-quota";
-import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
+import { INVITE_PROGRAM_OPEN, INVITE_PAUSE_NOTICE, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { feeWords, planPriceWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {
@@ -546,8 +546,9 @@ export default function TermsPage() {
       </LegalSection>
 
       <LegalSection title="7. Creator invites" id="invites">
+        {!INVITE_PROGRAM_OPEN ? <p>{INVITE_PAUSE_NOTICE} Previously accepted browser invitations retain their original 60-day expiry. The terms below describe existing invitations, not a new offer.</p> : null}
         <p>
-          Your studio gives you a link to invite other creators. When someone
+          Under the invitation offer, your studio provided a link to invite other creators. When someone
           accepts your invite and then makes the first store of a new
           account, that store counts as invited by you. It does not count if
           the account belongs to you, if it had paid us before it was invited,
@@ -566,9 +567,8 @@ export default function TermsPage() {
         </p>
         <p>
           We may withhold or reverse credit earned through abuse, such as
-          invites to accounts you control, and we may change or end this
-          program for payments made after we give notice; credit already added
-          stays yours.
+          invites to accounts you control. Pausing new invitations does not
+          cancel existing recorded referral terms or credit already earned.
         </p>
       </LegalSection>
 

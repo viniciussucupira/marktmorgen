@@ -10,6 +10,8 @@ import { Icon } from "@/components/icons";
 import { type InvitedState, inviteView } from "@/lib/creator-invites";
 import { creditOnPlan } from "@/lib/creator-invite-credit";
 import {
+  INVITE_PROGRAM_OPEN,
+  INVITE_PAUSE_NOTICE,
   INVITE_BONUS_CENTS,
   INVITE_HOLD_DAYS,
   INVITE_SHARE_PERCENT,
@@ -76,9 +78,9 @@ export default async function StudioInvitePage({ searchParams }: Params) {
       <StudioStorePin sid={store.sid}>
         <main id="content" className="container-page pb-20 pt-10 sm:pt-14">
           <p className="eyebrow">Invite creators</p>
-          <h1 className="t-h2 mt-3">{`${INVITE_SHARE_PERCENT}% of what they pay goes on your plan`}</h1>
+          <h1 className="t-h2 mt-3">{INVITE_PROGRAM_OPEN ? `${INVITE_SHARE_PERCENT}% of what they pay goes on your plan` : "Your existing invitation credits"}</h1>
           <p className="mt-3 max-w-2xl text-ink-soft">
-            {`Send your link to a creator who is not on Marktmorgen yet. For every payment they make to us, for as long as they pay, ${INVITE_SHARE_PERCENT}% of it goes on your own plan as credit. Two creators who stay on the same plan as yours pay for it. They get ${money(INVITE_BONUS_CENTS)} of credit after their first payment, too.`}
+            {INVITE_PROGRAM_OPEN ? `Send your link to a creator who is not on Marktmorgen yet. For every payment they make to us, for as long as they pay, ${INVITE_SHARE_PERCENT}% of it goes on your own plan as credit. Two creators who stay on the same plan as yours pay for it. They get ${money(INVITE_BONUS_CENTS)} of credit after their first payment, too.` : INVITE_PAUSE_NOTICE}
           </p>
 
           {view === null ? (
@@ -88,7 +90,7 @@ export default async function StudioInvitePage({ searchParams }: Params) {
           ) : (
             <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
               <div className="min-w-0 space-y-6">
-                <section aria-labelledby="link-title" className="card p-6 sm:p-8">
+                {INVITE_PROGRAM_OPEN ? <section aria-labelledby="link-title" className="card p-6 sm:p-8">
                   <h2 id="link-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
                     Your invite link
                   </h2>
@@ -97,7 +99,7 @@ export default async function StudioInvitePage({ searchParams }: Params) {
                     It opens a page that says you sent it and what they get. It counts when they accept it and then make their
                     first store.
                   </p>
-                </section>
+                </section> : <p className="notice notice-info">{INVITE_PAUSE_NOTICE} Previously accepted invites retain their original browser expiry; no new acceptances are issued.</p>}
 
                 <section aria-labelledby="credit-title" className="card p-6 sm:p-8">
                   <h2 id="credit-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
@@ -136,7 +138,7 @@ export default async function StudioInvitePage({ searchParams }: Params) {
                 </h2>
                 {view.invited.length === 0 ? (
                   <p className="mt-2 text-sm text-ink-soft">
-                    Nobody yet. Each creator appears here the moment they make their store with your invite.
+                    No recorded invitations yet. Previously accepted invites can still appear when their first store is created within the original acceptance window.
                   </p>
                 ) : (
                   <ul className="mt-4 divide-y divide-line">
@@ -170,7 +172,7 @@ export default async function StudioInvitePage({ searchParams }: Params) {
               </section>
                 <section aria-labelledby="how-title" className="card p-6 sm:p-8">
                   <h2 id="how-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
-                    How it works
+                    Existing invitation terms
                   </h2>
                   <ul className="mt-4 space-y-3 text-sm leading-relaxed text-ink-soft">
                     {[

@@ -52,6 +52,18 @@ export const INVITE_HOLD_DAYS = REFUND_DAYS + 7;
 /** How long an accepted invite waits for its creator to make their store. */
 export const INVITE_COOKIE_DAYS = 60;
 
+/** New offers are paused until a fully funded replacement is reviewed. */
+export const INVITE_PROGRAM_OPEN = false;
+export const INVITE_PAUSE_NOTICE = "New creator invitations are paused. Existing invitation credits and recorded referral terms are preserved.";
+/** Old cookies contain only a code, not an acceptance timestamp. Allow the full
+ * original 60-day lifetime after the final possible pre-pause issue date.
+ * Deploy this pause before 17 October 2026 UTC. No cookie is renewed by the pause.
+ */
+export const LEGACY_INVITE_RECORDING_UNTIL = Date.UTC(2026, 11, 16);
+export function mayRecordAcceptedInvite(now = Date.now()): boolean {
+  return Number.isFinite(now) && now >= 0 && (INVITE_PROGRAM_OPEN || now < LEGACY_INVITE_RECORDING_UNTIL);
+}
+
 export const INVITE_COOKIE = "nl_invite";
 
 /** Eight letters and digits, lower case, with nothing that reads as something else. */
