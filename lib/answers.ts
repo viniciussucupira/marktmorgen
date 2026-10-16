@@ -3,6 +3,7 @@
  * (the rules, and why, are in lib/answers-rules.ts).
  *
  *   nl:ask:<statsId>:<YYYY-MM>     answers a store's visitors were given this month
+ *   nl:ask-attempt:<statsId>:<YYYY-MM> nonrefundable provider attempts
  *   nl:ask:a:<hash>                an answer already given to this question about this page, for a day
  *   nl:ask:missed:<statsId>        list: the newest questions a page did not answer, for the creator
  *
@@ -18,6 +19,7 @@
 import { SHIP_REGIONS, activeShipping } from "@/lib/shipping";
 import { createHash } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { confirmedAiReservation } from "@/lib/ai-quota";
 import { answerModel, askModel, isAiConfigured, jsonIn } from "@/lib/ai";
 import { inTrial } from "@/lib/mail";
 import { formatMoney } from "@/lib/money";
@@ -195,8 +197,9 @@ export type Answered =
 
 /**
  * Answers one question about one product. Counted against the store's month
- * only when the model was really asked: an answer from memory, a question
- * too short to be one and an answer that failed cost the store nothing.
+ * only when the model was really asked. Cache hits and invalid questions
+ * consume no result quota. Failed provider work returns the result quota,
+ * but its separate attempt reservation remains counted.
  */
 export async function answerQuestion(input: {
   store: Store;
@@ -222,13 +225,7 @@ export async function answerQuestion(input: {
     } catch {}
   }
 
-  // Taken from the month before the model is asked, and given back if no answer came.
-  const key = monthKey(store.statsId, new Date(now));
-  const [used] = await redisPipeline([["INCR", key], ["EXPIRE", key, 40 * 86_400]]);
-  if (Number(used) > answersAllowance(store, now)) {
-    await redisPipeline([["DECR", key]]).catch(() => {});
-    return { ok: false, reason: "closed" };
-  }
+  if (!(await takeAnswer(store, now))) return { ok: false, reason: "closed" };
   let text: string | null = null;
   try {
     text = await askModel(SYSTEM, `The facts:\n\n${facts}\n\nThe visitor's question:\n${question}`, 350, answerModel(), ANSWER_TIMEOUT_MS);
@@ -237,7 +234,7 @@ export async function answerQuestion(input: {
   }
   if (text === null) {
     // No answer came at all: the store is not counted one.
-    await redisPipeline([["DECR", key]]).catch(() => {});
+    await giveAnswerBack(store, now);
     return { ok: false, reason: "failed" };
   }
   // The model answered, but not in the shape asked for: what it does when a
@@ -267,18 +264,38 @@ export async function answerQuestion(input: {
 
 /**
  * Takes one answer from the store's month before the model is asked; false
- * when the month is used up (and nothing was taken). Shared with the store
+ * when quota or attempt capacity is unavailable. Unknown reservations stay
+ * counted and authorize no provider work. Shared with the store
  * page's guide (lib/store-guide.ts), which draws on the same allowance.
  */
 export async function takeAnswer(store: Store, now = Date.now()): Promise<boolean> {
-  if (!store.statsId) return false;
-  const key = monthKey(store.statsId, new Date(now));
-  const [used] = await redisPipeline([["INCR", key], ["EXPIRE", key, 40 * 86_400]]);
-  if (Number(used) > answersAllowance(store, now)) {
-    await redisPipeline([["DECR", key]]).catch(() => {});
+  if (!store.statsId || !isRedisConfigured() || !Number.isFinite(now) || !Number.isFinite(new Date(now).getTime())) return false;
+  const allowance = answersAllowance(store, now);
+  if (!Number.isSafeInteger(allowance) || allowance < 1 || !Number.isSafeInteger(allowance * 2)) return false;
+  const date = new Date(now);
+  const key = monthKey(store.statsId, date);
+  let used: number;
+  try {
+    const reply = await redisPipeline([["INCR", key], ["EXPIRE", key, 40 * 86_400]]);
+    const confirmed = confirmedAiReservation(reply, [1]);
+    if (!confirmed) return false;
+    used = confirmed[0];
+  } catch { return false; }
+  if (used > allowance) {
+    await giveAnswerBack(store, now);
     return false;
   }
-  return true;
+  // Separate from result quota: a failed or lost model response can cost money.
+  // Shared by product answers and the store guide; never decremented or retried.
+  const attempts = `nl:ask-attempt:${store.statsId}:${date.toISOString().slice(0, 7)}`;
+  let allowed = false;
+  try {
+    const reply = await redisPipeline([["INCR", attempts], ["EXPIRE", attempts, 40 * 86_400]]);
+    const confirmed = confirmedAiReservation(reply, [1]);
+    allowed = confirmed !== null && confirmed[0] <= allowance * 2;
+  } catch { /* Unknown reservation permits no model call. */ }
+  if (!allowed) await giveAnswerBack(store, now);
+  return allowed;
 }
 
 /** Gives an answer back to the month, when no answer came. */
