@@ -8,14 +8,14 @@ import { SiteNav } from "@/components/site-nav";
 import { SESSION_COOKIE, emailForSession } from "@/lib/auth";
 import { storeForEmail } from "@/lib/store";
 import { inviterFor } from "@/lib/creator-invites";
-import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE_DAYS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
+import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE_DAYS, INVITE_HOLD_DAYS, INVITE_PROGRAM_OPEN, INVITE_PAUSE_NOTICE } from "@/lib/creator-invite-rules";
 import { formatMoney } from "@/lib/money";
 import { TRIAL_DAYS, publishedPriceWords as priceWords } from "@/lib/plan";
 import { feeWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {
-  title: "You're invited — Marktmorgen",
-  description: "A creator invited you to Marktmorgen: sell digital products, courses, memberships and calls from one link, " + feeWords().inviteMeta + ".",
+  title: INVITE_PROGRAM_OPEN ? "You're invited — Marktmorgen" : "Creator invitations — Marktmorgen",
+  description: INVITE_PROGRAM_OPEN ? "A creator invited you to Marktmorgen: sell digital products, courses, memberships and calls from one link, " + feeWords().inviteMeta + "." : INVITE_PAUSE_NOTICE,
   robots: { index: false, follow: false },
 };
 
@@ -27,6 +27,20 @@ export const metadata: Metadata = {
 export default async function InvitePage({ params }: { params: Promise<{ code: string }> }) {
   const code = (await params).code.toLowerCase();
   if (!INVITE_CODE_PATTERN.test(code)) notFound();
+  if (!INVITE_PROGRAM_OPEN) return (
+    <div className="flex min-h-screen flex-col bg-paper text-ink">
+      <SiteNav />
+      <main id="content" className="container-narrow flex-1 py-16">
+        <p className="eyebrow">Creator invitations</p>
+        <h1 className="t-h1 mt-5">New invitations are paused</h1>
+        <p className="t-lead mt-6">{INVITE_PAUSE_NOTICE}</p>
+        <p className="mt-4 text-ink-soft">If you previously accepted an invite on this browser, you can still finish creating your first store within its original 60-day window. Opening this page does not renew that window.</p>
+        <Link href="/signin" className="btn btn-primary mt-6">Continue to your account</Link>
+        <Link href="/studio/invite" className="link ml-4">View existing credits</Link>
+      </main>
+      <SiteFooter />
+    </div>
+  );
   const inviter = await inviterFor(code).catch(() => null);
   if (!inviter) notFound();
 

@@ -38,7 +38,7 @@ import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { normaliseEmail } from "@/lib/auth";
 import { type Store, storeForId } from "@/lib/store";
-import { INVITE_CODE_ALPHABET, INVITE_CODE_PATTERN, currentInviteTerms, readInviteTerms, type InviteTerms } from "@/lib/creator-invite-rules";
+import { INVITE_CODE_ALPHABET, INVITE_CODE_PATTERN, currentInviteTerms, readInviteTerms, INVITE_PROGRAM_OPEN, mayRecordAcceptedInvite, type InviteTerms } from "@/lib/creator-invite-rules";
 
 const SID_PATTERN = /^[0-9a-f]{32}$/;
 
@@ -134,19 +134,20 @@ export async function inviterFor(code: string): Promise<Store | null> {
   return storeForId(sid);
 }
 
-export type RecordResult = "recorded" | "no_code" | "own" | "already";
+export type RecordResult = "recorded" | "no_code" | "own" | "already" | "paused";
 
 /**
  * Writes down who invited a store that was just made: the account's first.
  * Called by the route that makes it, with the code from the invite cookie.
  */
 export async function recordInvite(store: Pick<Store, "sid" | "email" | "extra">, code: string, now = Date.now()): Promise<RecordResult> {
+  if (!mayRecordAcceptedInvite(now)) return "paused";
   if (store.extra || !SID_PATTERN.test(store.sid)) return "already";
   const inviter = await inviterFor(code);
   if (!inviter?.sid) return "no_code";
   if (inviter.sid === store.sid || normaliseEmail(inviter.email) === normaliseEmail(store.email)) return "own";
   const at = Math.floor(now / 1000);
-  const [set] = await redisPipeline([["SET", byKey(store.sid), JSON.stringify({ r: inviter.sid, at, terms: currentInviteTerms() }), "NX"]]);
+  const [set] = await redisPipeline([["SET", byKey(store.sid), JSON.stringify({ r: inviter.sid, at, terms: INVITE_PROGRAM_OPEN ? currentInviteTerms() : readInviteTerms(undefined) }), "NX"]]);
   if (set === null) return "already";
   await redisPipeline([
     ["ZADD", listKey(inviter.sid), at, store.sid],

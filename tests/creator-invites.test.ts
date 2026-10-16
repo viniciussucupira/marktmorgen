@@ -16,7 +16,7 @@
 import { claimHandle, createStore, setSubscription, storeForEmail } from "@/lib/store";
 import { inviteCode, inviteView, inviterFor, recordInvite, creditKey, OWED_KEY, byKey, parseBy } from "@/lib/creator-invites";
 import { INVITE_STRIPE_VERSION, paidOn, settleInvites } from "@/lib/creator-invite-credit";
-import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE, INVITE_HOLD_DAYS, inviteShare, currentInviteTerms, readInviteTerms } from "@/lib/creator-invite-rules";
+import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE, INVITE_HOLD_DAYS, INVITE_PROGRAM_OPEN, LEGACY_INVITE_RECORDING_UNTIL, mayRecordAcceptedInvite, inviteShare, currentInviteTerms, readInviteTerms } from "@/lib/creator-invite-rules";
 import { GET as accept } from "@/app/invite/[code]/accept/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -39,7 +39,7 @@ const PAST = INVITE_HOLD_DAYS + 4;
 const LONG_PAST = INVITE_HOLD_DAYS + 8;
 /** When the invites were accepted: before every payment above. */
 const INVITED = LONG_PAST + 15;
-const NOW = Date.now();
+const NOW = Date.UTC(2026, 9, 16, 12);
 const nowS = Math.floor(NOW / 1000);
 
 type Txn = { id: string; amount: number; currency: string; metadata: Record<string, string> };
@@ -167,8 +167,14 @@ async function main(): Promise<void> {
   part("Accepting an invite keeps it; a bad one keeps nothing");
   const req = { nextUrl: { protocol: "https:" } } as never;
   const yes = await accept(req, { params: Promise.resolve({ code }) });
-  is("it goes on to sign-up", yes.headers.get("location"), "/signin?status=invite-accepted");
-  is("with the code kept", (yes.headers.get("set-cookie") ?? "").startsWith(`${INVITE_COOKIE}=${code};`), true);
+  is("new acceptances are paused", INVITE_PROGRAM_OPEN, false);
+  is("it explains the pause at sign-up", yes.headers.get("location"), "/signin?status=invite-paused");
+  is("no new invite cookie is issued", (yes.headers.get("set-cookie") ?? "").includes(INVITE_COOKIE), false);
+  is("existing cookies are not overwritten or cleared", yes.headers.get("set-cookie"), null);
+  is("previous acceptances can finish before expiry", mayRecordAcceptedInvite(LEGACY_INVITE_RECORDING_UNTIL - 1), true);
+  is("the grace cannot run forever", mayRecordAcceptedInvite(LEGACY_INVITE_RECORDING_UNTIL), false);
+  is("invalid clocks cannot grant a referral", mayRecordAcceptedInvite(NaN), false);
+  is("expired grace refuses a new record", await recordInvite({ sid: "f".repeat(32), email: "late@example.com", extra: false }, code, LEGACY_INVITE_RECORDING_UNTIL), "paused");
   const no = await accept(req, { params: Promise.resolve({ code: "zzzzzzzz" }) });
   is("a code nobody has sets nothing", no.headers.get("set-cookie"), null);
 

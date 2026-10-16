@@ -258,11 +258,11 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
-        q: "Do I get anything for inviting another creator?",
+        q: "Are creator invitations available?",
         a: [
-          `Yes: ${INVITE_SHARE_PERCENT}% of every payment they make to us, for as long as they pay, on any plan, monthly or yearly. Your invite link is in your studio, under Invite creators. It counts when they accept it and then make their first store, and not for an account that paid us before, or one of your own.`,
-          `It is credit on your own Marktmorgen plan, not cash. It is added ${INVITE_HOLD_DAYS} days after each of their payments, once its refund window has closed, and Stripe takes it off your next bills by itself; two creators on the same plan as yours pay for it, and anything left over stays on your account. If you have not started your plan yet, it waits until you do.`,
-          `The creator you invite gets ${formatMoney(INVITE_BONUS_CENTS, "usd")} of credit on their own plan ${INVITE_HOLD_DAYS} days after their first payment. For comparison, Stan pays 20% of each payment in cash, only while you pay Stan too, and names no bonus for the creator invited, in its help center article 'What is Stan's Referral Program?', read on September 30, 2026.`,
+          "New creator invitations are paused. Existing invitation credits and recorded referral terms are preserved.",
+          `Existing invitations retain their accepted terms, including the ${INVITE_SHARE_PERCENT}% recurring credit and ${formatMoney(INVITE_BONUS_CENTS, "usd")} first-payment credit where applicable. Credit is added after ${INVITE_HOLD_DAYS} days and remains account credit rather than cash.`,
+          "An invite previously accepted in this browser can still be completed within its original 60-day lifetime. The pause does not renew that cookie. You can view recorded invitations and credits in your studio.",
         ],
       },
     ],

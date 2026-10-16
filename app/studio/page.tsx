@@ -90,7 +90,7 @@ import { StoreLanguageEditor } from "@/components/store-language-editor";
 import { RecoveryEditor } from "@/components/recovery-editor";
 import { ApiKeyEditor } from "@/components/api-key-editor";
 import { listKeys } from "@/lib/api-keys";
-import { INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
+import { INVITE_SHARE_PERCENT, INVITE_PROGRAM_OPEN } from "@/lib/creator-invite-rules";
 import { SaveOfferEditor } from "@/components/save-offer-editor";
 import { PauseEditor } from "@/components/pause-editor";
 import { DunningEditor } from "@/components/dunning-editor";
@@ -1160,7 +1160,7 @@ export default async function StudioPage({
                   : []),
                 // The credit lands on the plan, so whoever may handle the plan (lib/creator-invites.ts).
                 ...(billingReady && may("billing")
-                  ? [{ href: studioPath(store, "", "invite"), title: "Invite creators", text: `${INVITE_SHARE_PERCENT}% of every payment they make goes on your plan.`, icon: "percent" as const }]
+                  ? [{ href: studioPath(store, "", "invite"), title: INVITE_PROGRAM_OPEN ? "Invite creators" : "Invitation credits", text: INVITE_PROGRAM_OPEN ? `${INVITE_SHARE_PERCENT}% of every payment they make goes on your plan.` : "View existing credits. New invitations are paused.", icon: "percent" as const }]
                   : []),
                 // Everyone on the store, for their own devices (lib/phone-alerts.ts).
                 { href: studioPath(store, "", "phone"), title: "Phone notifications", text: "A buzz for sales, bookings, community reports, affiliate applications and live events, on your own devices.", icon: "phone" as const },

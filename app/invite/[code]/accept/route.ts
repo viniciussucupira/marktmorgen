@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { inviterFor } from "@/lib/creator-invites";
-import { INVITE_CODE_PATTERN, INVITE_COOKIE, INVITE_COOKIE_DAYS } from "@/lib/creator-invite-rules";
+import { INVITE_CODE_PATTERN, INVITE_COOKIE, INVITE_COOKIE_DAYS, INVITE_PROGRAM_OPEN } from "@/lib/creator-invite-rules";
 
 /**
  * "Accept the invite": keeps the code on this browser so the store made next
@@ -11,6 +11,7 @@ import { INVITE_CODE_PATTERN, INVITE_COOKIE, INVITE_COOKIE_DAYS } from "@/lib/cr
  * store is gone, sets nothing either and leads back to the page that says so.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ code: string }> }) {
+  if (!INVITE_PROGRAM_OPEN) return new Response(null, { status: 303, headers: { Location: "/signin?status=invite-paused", "Cache-Control": "no-store" } });
   const code = (await params).code.toLowerCase();
   const inviter = INVITE_CODE_PATTERN.test(code) ? await inviterFor(code).catch(() => null) : null;
   if (!inviter) {
