@@ -7,6 +7,8 @@ import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { FUNNEL_TYPES, type FunnelType, choicesOf, pagesOf, slotProblem } from "@/lib/funnel-types";
+import { FunnelFormSetup } from "@/components/funnel-form-setup";
+import { readFunnelFormDrafts, type FunnelFormDraft } from "@/lib/funnel-form-draft";
 import { MAX_FUNNEL_INTRO, type FunnelPageCopy } from "@/lib/funnel-page-copy";
 import { MAX_HEADLINE } from "@/lib/sales-page";
 import { FUNNEL_ID, MAX_FUNNEL_NAME } from "@/lib/page-funnel";
@@ -24,6 +26,7 @@ const MESSAGES: Record<string, string> = {
   slot_paid: "That step needs a paid product.",
   slot_call: "Choose one of your calls for the booking, and no call for the other steps.",
   slot_twice: "Each product can fill one step.",
+  form_draft: "Complete each form question and check its email subscription setting before creating the funnel.",
   page_copy: "Check the page titles and introductions, then try again.",
   forms_full: "This store has no room for the required forms. Review Forms before trying again.",
   setup_incomplete: "We could not confirm completion. Some pages, forms or a funnel may already exist. Review them before creating another funnel.",
@@ -50,6 +53,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [type, setType] = useState<FunnelType | null>(null);
   const [name, setName] = useState("");
   const [picked, setPicked] = useState<Record<string, string>>({});
+  const [formDrafts, setFormDrafts] = useState<Record<string, FunnelFormDraft>>({});
   const [pageCopy, setPageCopy] = useState<Record<string, FunnelPageCopy>>({});
   const [reviewing, setReviewing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,6 +61,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [recovery, setRecovery] = useState<"setup" | "forms" | null>(null);
   const [made, setMade] = useState<{ pages: { title: string; id: string }[]; funnelId: string | null; drafts: string[] } | null>(null);
   useLeaveGuard(type !== null);
+  const formDraftsValid = !type || readFunnelFormDrafts(formDrafts, type) !== null;
   const slots = type ? choicesOf(type) : [];
   const selected = slots.map(slot => picked[slot.key] || "").filter(Boolean);
   const repeated = new Set(selected).size !== selected.length;
@@ -76,6 +81,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
     setRecovery(null);
     setType(next);
     setName(next.label);
+    setFormDrafts(Object.fromEntries(pagesOf(next).filter(page => page.form && page.blocks.includes("form")).map(page => [page.key, { fields: page.form!.fields.map(field => ({ ...field })), offerList: false }])));
     setPageCopy(Object.fromEntries(pagesOf(next).map(page => [page.key, { headline: page.title, intro: "" }])));
     setError(null);
     // The first product that fits each step, each product once.
@@ -93,7 +99,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   }
 
   async function build() {
-    if (!type || !reviewing || busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
+    if (!type || !reviewing || !formDraftsValid || busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
     setBusy(true);
     setRecovery(null);
     setError(null);
@@ -101,7 +107,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
       const response = await fetch("/api/store/page-funnels", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "from-type", type: type.id, name, products: picked, pageCopy }),
+        body: JSON.stringify({ action: "from-type", type: type.id, name, products: picked, pageCopy, formDrafts }),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; funnel?: { id?: unknown }; pages?: { id: string; title: string }[] };
       if (response.ok && data?.ok === true) {
@@ -272,6 +278,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
                         <textarea className="field mt-2" rows={3} maxLength={MAX_FUNNEL_INTRO} value={pageCopy[slot.key]?.intro ?? ""} onChange={event => setPageCopy(current => ({ ...current, [slot.key]: { headline: current[slot.key]?.headline ?? slot.title, intro: event.target.value } }))} placeholder="Describe what visitors will find on this page. Use facts you can support." />
                       </label>
                       <p className="text-xs text-ink-soft">{pageCopy[slot.key]?.intro.length ?? 0}/{MAX_FUNNEL_INTRO} characters. Saved as editable page text. Add videos, answers and other details in the page editor.</p>
+                      {slot.form && formDrafts[slot.key] ? <FunnelFormSetup value={formDrafts[slot.key]} onChange={next => setFormDrafts(current => ({ ...current, [slot.key]: next }))} /> : null}
                     </div> : null}
                   </li>;
                 })}
@@ -280,6 +287,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
               <p className="mt-3 text-sm text-ink-soft">{pagesOf(type).length} new pages · {pagesOf(type).filter(page => page.form && page.blocks.includes("form")).length} new forms · 1 new funnel</p>
             </section>
           ) : null}
+          {reviewing && !formDraftsValid ? <p className="notice notice-warn mt-4 text-sm" role="status">{MESSAGES.form_draft}</p> : null}
           {error ? (
             <p className="notice notice-error mt-4" role="alert">
               {error}
@@ -291,7 +299,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
             {recovery === "setup" ? <a className="underline" href={`/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}`}>Review funnels</a> : null}
           </nav> : null}
           <div className="mt-5 flex flex-wrap gap-3">
-            <button type="button" className="btn btn-primary" onClick={() => reviewing ? void build() : setReviewing(true)} disabled={busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || Boolean(capacityIssue)} aria-busy={busy}>
+            <button type="button" className="btn btn-primary" onClick={() => reviewing ? void build() : setReviewing(true)} disabled={busy || (reviewing && !formDraftsValid) || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || Boolean(capacityIssue)} aria-busy={busy}>
               {busy ? "Creating draft…" : reviewing ? "Create disabled funnel" : "Review funnel"}
             </button>
             {reviewing && !recovery ? <button type="button" className="btn btn-secondary" onClick={() => setReviewing(false)} disabled={busy}>Back to products</button> : null}
