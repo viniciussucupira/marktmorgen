@@ -72,6 +72,8 @@ async function main() {
   await redis.pipeline([["HSET", "nl:crm:deals:collision", fixture.id, JSON.stringify(fixture)]]);
   let collisionRefused = false; try { await createFormOpportunity("collision", collidingRef, fixture, DEFAULT_STAGES); } catch { collisionRefused = true; }
   is("identifier collisions never return or overwrite an unrelated deal", [collisionRefused, (await readDeals("collision", DEFAULT_STAGES))[0].formResponseRef], [true, "b".repeat(64)]);
+  for (let i = 0; i < 50; i++) await addResponse(statsId, form.id, { ...response, at: response.at + 100 + i });
+  is("conversion verification is bounded to the current visible response window", [(await (await send()).json()).error, (await readDeals(statsId, DEFAULT_STAGES)).length], ["response_gone", 2]);
   done();
 }
 main().catch(error => { console.error(error); process.exit(1); });
