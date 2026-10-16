@@ -2,7 +2,8 @@
 
 import { useLeaveGuard } from "@/components/leave-guard";
 import { dealActionFilter, filterDeals, type DealActionFilter } from "@/lib/crm-deal-filter";
-import { useState } from "react";
+import { crmAnswer, type CrmAnswer } from "@/lib/crm-response";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -36,16 +37,17 @@ const MESSAGES: Record<string, string> = {
   unknown: "That is already gone. Reload the page.",
   fields: "Each field needs a name of its own, and a choice needs at least two options.",
   stages: "Keep at least one open stage, one won and one lost, each with a name.",
-  server_error: "Something went wrong. Nothing was changed. Try again.",
+  server_error: "The change could not be confirmed. Check the saved CRM data before trying again.",
+  crm_write_unconfirmed: "The change could not be confirmed and may already have happened. Keep a copy of unsaved work, then reload this page and check the saved CRM data before trying again.",
   ...STUDIO_MESSAGES,
 };
 
-async function call(body: Record<string, unknown>): Promise<{ ok?: boolean; error?: string }> {
+async function call(body: Record<string, unknown>): Promise<CrmAnswer> {
   try {
     const response = await fetch("/api/store/crm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    return (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+    return crmAnswer(response.ok, await response.json().catch(() => null));
   } catch {
-    return { error: "server_error" };
+    return crmAnswer(false, null);
   }
 }
 
@@ -67,6 +69,9 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
   const money = (cents: number) => formatMoney(cents, currency);
   const [draft, setDraft] = useState<DealDraft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [refreshing, startRefresh] = useTransition();
+  const [writeUnconfirmed, setWriteUnconfirmed] = useState(false);
+  const locked = busy || refreshing;
   const [error, setError] = useState<string | null>(null);
   const [stageDraft, setStageDraft] = useState<Stage[] | null>(null);
   const [fieldDraft, setFieldDraft] = useState<(CrmField & { optionsText: string })[] | null>(null);
@@ -83,6 +88,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
   const won = totals.filter((t) => t.stage.kind === "won");
 
   async function run(body: Record<string, unknown>, done: string, after?: () => void) {
+    if (locked || writeUnconfirmed) return;
     setBusy(true);
     setError(null);
     const answer = await call(body);
@@ -90,14 +96,15 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
     if (answer.ok) {
       toast(done);
       after?.();
-      router.refresh();
+      startRefresh(() => router.refresh());
       return;
     }
-    setError(MESSAGES[answer.error ?? ""] ?? MESSAGES.server_error);
+    if (answer.error === "crm_write_unconfirmed") setWriteUnconfirmed(true);
+    setError(MESSAGES[answer.error] ?? MESSAGES.server_error);
   }
 
   function saveDeal() {
-    if (!draft) return;
+    if (!draft || locked || writeUnconfirmed) return;
     const cents = draft.value.trim() ? readMoney(draft.value, currency as Currency) : 0;
     if (cents === null) {
       setError("Type what it is worth as a number, like 1500 or 1500.50.");
@@ -120,6 +127,8 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
 
   return (
     <div className="space-y-8">
+      {locked ? <p className="notice" role="status">{refreshing ? "Loading the latest CRM data…" : "Saving your CRM change. Editing is paused until this finishes."}</p> : null}
+      {writeUnconfirmed ? <p className="notice notice-warn" role="status">{MESSAGES.crm_write_unconfirmed} CRM changes are paused on this page until you reload.</p> : null}
       {editing ? <p className="notice notice-warn" role="status">Save or cancel the open editor before starting another edit, moving a deal or removing one.</p> : null}
       <section aria-labelledby="deals-title" className="card min-w-0 p-5 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -132,7 +141,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
             </p>
           </div>
           {draft === null ? (
-            <button type="button" className="btn btn-primary" disabled={busy || editing} onClick={() => { setError(null); setDraft({ id: "", title: "", email: "", value: "", stage: firstOpen, note: "", nextAction: "", dueDate: "", assignee: "" }); }}>
+            <button type="button" className="btn btn-primary" disabled={locked || editing || writeUnconfirmed} onClick={() => { setError(null); setDraft({ id: "", title: "", email: "", value: "", stage: firstOpen, note: "", nextAction: "", dueDate: "", assignee: "" }); }}>
               <Icon name="plus" size={18} />
               New deal
             </button>
@@ -147,7 +156,8 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
         <p className="mt-2 text-xs text-ink-mute">Dates use the calendar day shown here, {today} (UTC). Won and lost deals are left out of action filters. Nothing is sent automatically.</p>
 
         {draft ? (
-          <div className="mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+          <fieldset disabled={locked} aria-busy={locked} className="min-w-0 mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+            <legend className="sr-only">Deal details</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="field-label">What it is</span>
@@ -198,14 +208,14 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
               </p>
             ) : null}
             <div className="mt-5 flex flex-wrap gap-3">
-              <button type="button" className="btn btn-primary" disabled={busy} onClick={saveDeal}>
+              <button type="button" className="btn btn-primary" disabled={locked || writeUnconfirmed} onClick={saveDeal}>
                 {busy ? "Saving…" : "Save deal"}
               </button>
-              <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => { setDraft(null); setError(null); }}>
+              <button type="button" className="btn btn-secondary" disabled={locked} onClick={() => { setDraft(null); setError(null); }}>
                 Cancel
               </button>
             </div>
-          </div>
+          </fieldset>
         ) : null}
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -241,7 +251,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
                           <select
                             className="field"
                             value={deal.stage}
-                            disabled={busy || editing}
+                            disabled={locked || editing || writeUnconfirmed}
                             onChange={(e) => void run({ action: "deal", deal: { ...deal, stage: e.target.value } }, "Deal moved.")}
                           >
                             {stages.map((s) => (
@@ -254,12 +264,12 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          disabled={busy || editing}
+                          disabled={locked || editing || writeUnconfirmed}
                           onClick={() => { setError(null); setDraft(draftFromDeal(deal, currency)); }}
                         >
                           Edit
                         </button>
-                        <button type="button" className="btn btn-secondary btn-sm" disabled={busy || editing} onClick={() => void run({ action: "undeal", id: deal.id }, "Deal removed.")} aria-label={`Remove ${deal.title}`}>
+                        <button type="button" className="btn btn-secondary btn-sm" disabled={locked || editing || writeUnconfirmed} onClick={() => void run({ action: "undeal", id: deal.id }, "Deal removed.")} aria-label={`Remove ${deal.title}`}>
                           <Icon name="minus" size={16} />
                         </button>
                       </div>
@@ -269,7 +279,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
             </section>
           ))}
         </div>
-        {error && !draft ? (
+        {error && !draft && !stageDraft && !fieldDraft ? (
           <p className="notice notice-error mt-4" role="alert">
             {error}
           </p>
@@ -277,7 +287,8 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
 
         <div className="mt-6">
           {stageDraft ? (
-            <div className="rounded-2xl border border-line bg-white p-4 sm:p-6">
+            <fieldset disabled={locked} aria-busy={locked} className="min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-6">
+            <legend className="sr-only">Deal stages</legend>
               <p className="font-semibold text-ink">Stages, in order</p>
               <ol className="mt-3 space-y-2">
                 {stageDraft.map((stage, i) => (
@@ -302,16 +313,17 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
               ) : null}
               <p className="mt-3 text-xs text-ink-soft">A deal in a stage you remove moves to the first open stage.</p>
               <div className="mt-4 flex flex-wrap gap-3">
-                <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void run({ action: "stages", stages: stageDraft }, "Stages saved.", () => setStageDraft(null))}>
+                <button type="button" className="btn btn-primary" disabled={locked || writeUnconfirmed} onClick={() => void run({ action: "stages", stages: stageDraft }, "Stages saved.", () => setStageDraft(null))}>
                   Save stages
                 </button>
-                <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => setStageDraft(null)}>
+                <button type="button" className="btn btn-secondary" disabled={locked} onClick={() => setStageDraft(null)}>
                   Cancel
                 </button>
               </div>
-            </div>
+            {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
+          </fieldset>
           ) : (
-            <button type="button" className="btn btn-secondary btn-sm" disabled={busy || editing} onClick={() => setStageDraft(structuredClone(stages))}>
+            <button type="button" className="btn btn-secondary btn-sm" disabled={locked || editing || writeUnconfirmed} onClick={() => setStageDraft(structuredClone(stages))}>
               Change the stages
             </button>
           )}
@@ -326,7 +338,8 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
           {`Up to ${MAX_CRM_FIELDS} things you keep about each person: their company, a date, which offer interests them. Filled in on each person's page under Buyers, and written into your list's file as columns of their own. Removing a field removes every answer to it.`}
         </p>
         {fieldDraft ? (
-          <div className="mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+          <fieldset disabled={locked} aria-busy={locked} className="min-w-0 mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+            <legend className="sr-only">Custom fields</legend>
             <ol className="space-y-3">
               {fieldDraft.map((field, i) => (
                 <li key={field.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto]">
@@ -363,7 +376,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
               <button
                 type="button"
                 className="btn btn-primary"
-                disabled={busy}
+                disabled={locked || writeUnconfirmed}
                 onClick={() =>
                   void run(
                     { action: "fields", fields: fieldDraft.map(({ optionsText, ...f }) => ({ ...f, options: f.type === "choice" ? optionsText.split(",").map((o) => o.trim()).filter(Boolean) : [] })) },
@@ -374,11 +387,12 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
               >
                 Save fields
               </button>
-              <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => setFieldDraft(null)}>
+              <button type="button" className="btn btn-secondary" disabled={locked} onClick={() => setFieldDraft(null)}>
                 Cancel
               </button>
             </div>
-          </div>
+          {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
+          </fieldset>
         ) : (
           <>
             {fields.length ? (
@@ -388,7 +402,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
                 ))}
               </ul>
             ) : null}
-            <button type="button" className="btn btn-secondary btn-sm mt-4" disabled={busy || editing} onClick={() => setFieldDraft(fields.map((f) => ({ ...f, optionsText: f.options.join(", ") })))}>
+            <button type="button" className="btn btn-secondary btn-sm mt-4" disabled={locked || editing || writeUnconfirmed} onClick={() => setFieldDraft(fields.map((f) => ({ ...f, optionsText: f.options.join(", ") })))}>
               {fields.length ? "Change the fields" : "Add your first field"}
             </button>
           </>
