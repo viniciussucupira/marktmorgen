@@ -8,20 +8,21 @@ import { fieldPrefix, readMoney, type Currency } from "@/lib/money";
 import { MAX_DEAL_CENTS, MAX_DEAL_NOTE, MAX_DEAL_TITLE, readFollowUp, type Stage } from "@/lib/crm-rules";
 import type { FormDef, FormResponse } from "@/lib/forms";
 
-export function FormResponseDeal({ form, response, stages, sid, currency, assignees, existingDeals, onClose }: { existingDeals: FormDealMatch[]; currency: string; assignees: string[]; form: FormDef; response: FormResponse; stages: Stage[]; sid: string; onClose: () => void }) {
+export function FormResponseDeal({ form, response, responseRef, stages, sid, currency, assignees, existingDeals, onClose }: { responseRef: string; existingDeals: FormDealMatch[]; currency: string; assignees: string[]; form: FormDef; response: FormResponse; stages: Stage[]; sid: string; onClose: () => void }) {
   const [draft, setDraft] = useState(() => ({ ...formDealDraft(form, response), stage: stages.find(stage => stage.kind === "open")?.id ?? "", nextAction: "Review form response", value: "", dueDate: "", assignee: "" }));
   const [acknowledgedMatches, setAcknowledgedMatches] = useState("");
   const matches = matchingFormDeals(draft.email, existingDeals);
   const matchKey = formDealMatchKey(draft.email, matches);
   const needsAcknowledgment = matches.length > 0 && acknowledgedMatches !== matchKey;
   const [busy, setBusy] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(() => existingDeals.some(deal => deal.formResponseRef === responseRef));
+  const [alreadyCreated, setAlreadyCreated] = useState(() => existingDeals.some(deal => deal.formResponseRef === responseRef));
   const [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState("");
   const dealsHref = "/studio/deals" + (sid ? "?store=" + encodeURIComponent(sid) : "");
   useLeaveGuard(!saved);
-  async function save() {
-    if (busy || saved || uncertain || needsAcknowledgment || !draft.title.trim() || !draft.stage) return;
+  async function save(recover = false) {
+    if (busy || saved || (uncertain && !recover) || needsAcknowledgment || !draft.title.trim() || !draft.stage) return;
     if (draft.email.trim() && !/^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/.test(draft.email.trim())) { setError("Enter a valid contact email or leave it empty."); return; }
     const cents = draft.value.trim() ? readMoney(draft.value, currency as Currency) : 0;
     if (cents === null || cents > MAX_DEAL_CENTS) { setError("Enter a valid estimated value in the store currency, or leave it empty."); return; }
@@ -31,9 +32,12 @@ export function FormResponseDeal({ form, response, stages, sid, currency, assign
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/store/crm", { method: "POST", headers: { "Content-Type": "application/json", ...(sid ? { "x-nimbus-store": sid } : {}) }, body: JSON.stringify({ action: "deal", deal: { title: draft.title, email: draft.email, note: draft.note, stage: draft.stage, ...follow.value, cents } }) });
-      const answer = crmAnswer(response.ok, await response.json().catch(() => null));
-      if (answer.ok) { setSaved(true); return; }
+      const response = await fetch("/api/store/form-opportunity", { method: "POST", headers: { "Content-Type": "application/json", ...(sid ? { "x-nimbus-store": sid } : {}) }, body: JSON.stringify({ form: form.id, responseRef, deal: { title: draft.title, email: draft.email, note: draft.note, stage: draft.stage, ...follow.value, cents } }) });
+      const data = await response.json().catch(() => null);
+      if (response.status === 409 && data?.ok === false && data.error === "response_gone" && !data.deal) { setError("This response is no longer retained. Reload Forms before creating an opportunity."); return; }
+      const answer = crmAnswer(response.ok, data);
+      if (answer.ok && (data.state === "created" || data.state === "existing") && data.deal?.formResponseRef === responseRef) { setAlreadyCreated(data.state === "existing"); setSaved(true); return; }
+      if (answer.ok) { setUncertain(true); setError("Creation could not be confirmed. Check Deals before trying again."); return; }
       if (answer.error === "crm_write_unconfirmed") { setUncertain(true); setError("Creation could not be confirmed and may already have happened. Check Deals before creating another opportunity."); }
       else setError(answer.error === "full" ? "The store has reached its deal limit. Review Deals before adding more." : "The opportunity could not be created. Check your access, the selected stage and the saved CRM data before trying again.");
     } catch { setUncertain(true); setError("Creation could not be confirmed and may already have happened. Check Deals before creating another opportunity."); }
@@ -41,7 +45,7 @@ export function FormResponseDeal({ form, response, stages, sid, currency, assign
   }
   return <section aria-label="Create opportunity from form response" className="card mt-6 p-5 sm:p-8">
     <h3 className="text-lg font-semibold">Review this response as an opportunity</h3>
-    {saved ? <p className="notice notice-success mt-4" role="status">Opportunity created. Continue tracking it in Deals.</p> : <fieldset disabled={busy || uncertain} className="mt-4 space-y-4">
+    {saved ? <p className="notice notice-success mt-4" role="status">{alreadyCreated ? "This response already has an opportunity. Its saved details were kept." : "Opportunity created."} Continue tracking it in Deals.</p> : <fieldset disabled={busy || uncertain} className="mt-4 space-y-4">
       <legend className="sr-only">Opportunity details</legend>
       <p className="text-sm text-ink-soft">Review the submitted information before saving. Set an estimate and a dated next action when useful. This does not send email or subscribe anyone to marketing.</p>
       <label className="block"><span className="field-label">Opportunity name</span><input className="field mt-2" maxLength={MAX_DEAL_TITLE} value={draft.title} onChange={event => setDraft({ ...draft, title: event.target.value })} /></label>
@@ -66,6 +70,7 @@ export function FormResponseDeal({ form, response, stages, sid, currency, assign
     {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
     <div className="mt-5 flex flex-wrap gap-3">
       {!saved ? <button type="button" className="btn btn-primary" disabled={busy || uncertain || needsAcknowledgment || !draft.title.trim() || !draft.stage} onClick={() => void save()} aria-busy={busy}>{busy ? "Creating opportunity…" : "Create opportunity"}</button> : null}
+      {uncertain ? <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void save(true)}>Retry this conversion</button> : null}
       <a className="btn btn-secondary" href={dealsHref}>Open Deals</a>
       <button type="button" className="btn btn-secondary" disabled={busy || uncertain} onClick={onClose}>{saved ? "Close" : "Cancel"}</button>
     </div>
