@@ -1,7 +1,7 @@
 /** Conservative assessment of declared, evidenced cost ceilings; never a billing authorization. */
 export const MINIMUM_NET_MARGIN_BPS = 6_000;
 export const PROFIT_COST_CATEGORIES = [
-  "taxes", "paymentFees", "ai", "email", "computeAndDatabase", "storageAndTransfer",
+  "taxes", "ownerTaxes", "paymentFees", "ai", "email", "computeAndDatabase", "storageAndTransfer",
   "video", "supportAndOperations", "allocatedFixedCosts", "acquisitionAndCommissions",
   "fraudAndDisputes", "lifecycleAndOther",
 ] as const;
@@ -19,6 +19,8 @@ export type ProfitScenario = {
   fullEntitlementBoundConfirmed: boolean;
   /** Jurisdiction-specific taxes, including taxes on income/profit, have been assessed. */
   taxesConfirmed: boolean;
+  /** Personal taxes attributable to the business, explicitly including Brazilian personal taxes on this American business. */
+  ownerTaxesConfirmed: boolean;
   validUntil: number;
   costs: Record<ProfitCostCategory, ProfitCostBound>;
 };
@@ -37,6 +39,7 @@ export function assessProfitScenario(raw: unknown, nowSeconds = Math.floor(Date.
   if (!money(raw.retainedRevenueCents)) return unknown("invalid_revenue");
   if (raw.fullEntitlementBoundConfirmed !== true) return unknown("unbounded_entitlements");
   if (raw.taxesConfirmed !== true) return unknown("taxes_unconfirmed");
+  if (raw.ownerTaxesConfirmed !== true) return unknown("owner_taxes_unconfirmed");
   if (!money(raw.validUntil) || raw.validUntil <= nowSeconds) return unknown("expired_cost_evidence");
   if (!object(raw.costs)) return unknown("missing_costs");
   let total = BigInt(0);
