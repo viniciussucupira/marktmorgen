@@ -7,3 +7,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+
+## Owner requirement: customer-level net margin
+
+Every customer, including a single isolated customer using all entitlements, must meet a minimum 60% net margin after all applicable taxes and all costs. Do not use average customer consumption or cross-subsidies to pass an unprofitable customer. Include annual discounts, overages, free periods, refunds, non-payment and post-cancellation costs. Unknown taxes or unbounded costs do not count as zero. Paid commercial release stays closed while the review in lib/commercial-margin.ts is absent or fails. Existing operating-margin tests are not proof of all-tax net margin. Do not claim that this requirement is satisfied merely because a guard or a calculator was added.

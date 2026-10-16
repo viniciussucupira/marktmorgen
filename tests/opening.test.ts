@@ -17,12 +17,13 @@
  */
 import { readFileSync } from "node:fs";
 import { NextRequest } from "next/server";
+import { POST as switchBilling } from "@/app/api/billing/switch/route";
 import { POST as checkout } from "@/app/api/billing/checkout/route";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { HOME_QUESTIONS } from "@/lib/home-faq";
 import { PLANS_ON_SALE, PREVIEW_LINE, PREVIEW_LINK, startWords } from "@/lib/opening";
 import { TRIAL_DAYS } from "@/lib/plan";
-import { claimHandle, storeForEmail } from "@/lib/store";
+import { claimHandle, setSubscription, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -64,6 +65,21 @@ async function main(): Promise<void> {
     is("not open: sent back to the studio, told why", [pressed.status, where.includes("/studio"), where.includes("billing=not-open")], [303, true, true]);
     is("Stripe is asked for nothing", asked.filter((a) => a.includes("stripe")), []);
     is("and the store is exactly as it was", JSON.stringify(await storeForEmail("owner@example.com")), before);
+  }
+
+  if (!PLANS_ON_SALE) {
+    part("A closed commercial release cannot be bypassed by switching plans");
+    await setSubscription("owner@example.com", { active:true, customerId:"cus_MarginOwner0001", subscriptionId:"sub_MarginOwner0001", tier:"creator", cycle:"month", trialEnds:0 });
+    const beforeSwitch=JSON.stringify(await storeForEmail("owner@example.com"));
+    asked.length=0;
+    const switched=await switchBilling(new NextRequest(`https://${HOST}/api/billing/switch?store=${shop.sid}`,{
+      method:"POST",
+      headers:{host:HOST,origin:`https://${HOST}`,cookie:`${SESSION_COOKIE}=${session}`,"content-type":"application/x-www-form-urlencoded"},
+      body:"tier=pro&cycle=year",
+    }));
+    is("switch stays closed",[switched.status,(switched.headers.get("location")??"").includes("billing=not-open")],[303,true]);
+    is("switch asks Stripe for nothing",asked.filter(a=>a.includes("stripe")),[]);
+    is("existing subscription record unchanged",JSON.stringify(await storeForEmail("owner@example.com")),beforeSwitch);
   }
 
   part("What the studio shows in its place");
