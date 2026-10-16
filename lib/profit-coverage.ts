@@ -4,6 +4,7 @@ import { assessProfitPortfolio, type ProfitAssessment } from "@/lib/profit-polic
 export const REQUIRED_PROFIT_CASES = ["full_entitlement", "maximum_discount", "refund", "nonpayment", "trial", "cancellation", "post_closure"] as const;
 const CYCLES: readonly Cycle[] = ["month", "year"];
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
+const money = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 const text = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
 const offer = (plan: unknown, cycle: unknown) => TIERS.includes(plan as Tier) && CYCLES.includes(cycle as Cycle);
 const identity = (scope: unknown, reference: unknown, scenario: unknown) => JSON.stringify([scope, reference, scenario]);
@@ -15,6 +16,8 @@ export function assessProfitCoverage(raw: unknown, nowSeconds = Math.floor(Date.
   if (!object(raw) || raw.coverageConfirmed !== true) return fail("customer_inventory_unconfirmed");
   if (!Array.isArray(raw.customers) || !raw.customers.length) return fail("missing_customer_inventory");
   if (!Array.isArray(raw.scenarios)) return fail("missing_scenarios");
+  const fixed = raw.fixedCostFloor;
+  if (!object(fixed) || !money(fixed.cents) || !text(fixed.evidence) || !money(fixed.validUntil) || fixed.validUntil <= nowSeconds || fixed.currency !== "USD" || !text(fixed.period)) return fail("fixed_cost_floor_unverified");
   const customers = new Map<string, {plan: unknown; cycle: unknown}>();
   for (const item of raw.customers) {
     if (!object(item) || !text(item.reference) || !offer(item.plan,item.cycle) || customers.has(item.reference)) return fail("invalid_customer_inventory");
@@ -39,6 +42,9 @@ export function assessProfitCoverage(raw: unknown, nowSeconds = Math.floor(Date.
     const key = identity(item.scope,item.reference,item.scenario);
     const required = expected.get(key);
     if (!required) { reasons.push("unexpected_scenario"); continue; }
+    if (item.currency !== fixed.currency || item.period !== fixed.period) reasons.push("fixed_cost_basis_mismatch");
+    const allocated = object(item.costs) ? item.costs.allocatedFixedCosts : null;
+    if (!object(allocated) || !money(allocated.cents) || allocated.cents < fixed.cents) reasons.push("fixed_cost_understated:"+key);
     if (seen.has(key)) reasons.push("duplicate_scenario");
     seen.add(key);
     if (required.plan !== undefined && (item.plan !== required.plan || item.cycle !== required.cycle)) reasons.push("scenario_terms_mismatch");
