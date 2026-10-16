@@ -28,7 +28,9 @@ import {
 import { AFFILIATE_CODE_PATTERN } from "@/lib/affiliate-setting";
 import { AffiliateLinkBox } from "@/components/affiliate-link-box";
 import { AffiliateKit } from "@/components/affiliate-kit";
-import { kitProduct } from "@/lib/affiliate-kit";
+import { AffiliateCampaignLinks } from "@/components/affiliate-campaign-links";
+import { AffiliatePromotionResults } from "@/components/affiliate-promotion-results";
+import { kitProduct, productAffiliateLink } from "@/lib/affiliate-kit";
 import { isAiConfigured } from "@/lib/ai";
 
 type Params = {
@@ -121,12 +123,13 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
   // Only products with a rate of their own can differ, so only those are read.
   // The products an approved affiliate may have posts drafted about (lib/affiliate-kit.ts).
   const kitProducts =
-    affiliate && affiliate.status === "approved" && isAiConfigured()
+    affiliate && affiliate.status === "approved" && on
       ? recordListings(store)
           .filter((listing) => kitProduct(store, affiliate, listing))
           .slice(0, 60)
           .map((listing) => ({ id: listing.id, title: listing.title }))
       : [];
+  const promotionProducts = affiliate ? kitProducts.map(product => ({ ...product, url: productAffiliateLink(store, product, affiliate.code) })) : [];
   const different = (await readListings(store, Object.keys(terms.rates)))
     .filter((p) => !p.hidden && p.priceCents > 0 && p.recurring === null && commissionRate(terms, p.id) !== terms.percent)
     .map((p) => ({ title: p.title, rate: commissionRate(terms, p.id) }));
@@ -253,7 +256,8 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                       <p className="st-muted mt-2 text-sm">{a.recruitNote(store.affiliates.secondTier, store.name)}</p>
                     </>
                   ) : null}
-                  <AffiliateKit handle={store.handle} language={store.language} products={kitProducts} />
+                  <AffiliateCampaignLinks products={promotionProducts} />
+                  <AffiliateKit handle={store.handle} language={store.language} products={isAiConfigured() ? kitProducts : []} />
                   {/*
                     A code of the store's own, given to this affiliate
                     (lib/affiliate-codes.ts). It is the only thing on this page
@@ -359,6 +363,7 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                     </p>
                   ) : null}
 
+                  <AffiliatePromotionResults book={book} />
                   <h2 className="mt-8 text-lg font-semibold">{a.salesHead}</h2>
                   {book.lines.length === 0 ? (
                     <p className="st-muted mt-2 text-sm">{a.noneYet}</p>

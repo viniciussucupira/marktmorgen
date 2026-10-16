@@ -77,6 +77,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { affiliatePromotionFrom, readAffiliatePromotion, type AffiliatePromotion } from "@/lib/affiliate-promotion";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
 import { SITE_URL } from "@/lib/site-url";
@@ -227,6 +228,8 @@ export type Referral = {
   self: boolean;
   /** What credited it: a click, a code, or the buyer being theirs already. */
   how: Credit;
+  /** Optional campaign labels recorded at checkout; absent on older records. */
+  promotion?: AffiliatePromotion | null;
 };
 
 /**
@@ -417,6 +420,7 @@ function parseReferral(raw: unknown): Referral | null {
       currency: readCurrencyCode(value.currency),
       rate: n(value.rate),
       self: value.self === true,
+      ...(readAffiliatePromotion(value.promotion) ? { promotion: readAffiliatePromotion(value.promotion) } : {}),
       // Sales written down before a code or a bond could credit anybody have
       // neither field, and every one of those came from a click. `byCode` is
       // read for the ones written in between.
@@ -1256,7 +1260,7 @@ export async function creditPayPalSale(store: Store, paid: Paid, title: string):
     currency: readCurrencyCode(paid.currency),
   };
   if (paid.via && affiliatesOn(store) && paid.via.rate > 0) {
-    await writeReferral(store, { ...sale, aff: paid.via.aff, rate: paid.via.rate, self: await isSelf(store, paid.via.aff, paid.email), how: "click" });
+    await writeReferral(store, { ...sale, aff: paid.via.aff, rate: paid.via.rate, self: await isSelf(store, paid.via.aff, paid.email), promotion: affiliatePromotionFrom(paid.meta) ?? undefined, how: "click" });
     await rememberBuyer(store, paid.email, paid.via.aff, store.affiliates.rule).catch((error) => console.error("remembering an affiliate's buyer failed", error));
   }
   await notePartners(store, { ...sale, buyer: paid.email });
@@ -1413,6 +1417,7 @@ export async function noteSession(
     currency,
     rate,
     self: await isSelf(store, aff, buyer),
+    promotion: affiliatePromotionFrom(meta) ?? undefined,
     how,
   });
 
@@ -1464,6 +1469,7 @@ export async function noteCharge(store: Store, pi: Record<string, unknown>): Pro
     currency: readCurrencyCode(pi.currency),
     rate: Number(meta.via_rate) || 0,
     self: await isSelf(store, aff, buyer),
+    promotion: affiliatePromotionFrom(meta) ?? undefined,
     // An offer taken after paying follows the order it rides on, and that
     // order is only ever reached through a link.
     how: "click",
@@ -1796,6 +1802,7 @@ async function recurringReferrals(store: Store, everyone: Affiliate[], since: nu
       rate: Number(meta.via_rate) || 0,
       self: Boolean(affiliate && buyer) && canonicalEmail(affiliate!.email) === canonicalEmail(buyer),
       how: "recurring",
+      promotion: affiliatePromotionFrom(meta) ?? undefined,
     });
   }
   return { lines, complete };
@@ -1949,6 +1956,9 @@ export function bookCsv(book: Book, all: Affiliate[]): string {
     "payout",
     "payout_reference",
     "currency",
+    "campaign_channel",
+    "campaign_name",
+    "post_variant",
   ];
   const rows: (string | number)[][] = [
     ...book.lines.map((l) => [
@@ -1966,6 +1976,9 @@ export function bookCsv(book: Book, all: Affiliate[]): string {
       "",
       "",
       l.currency.toUpperCase(),
+      l.promotion?.source ?? "",
+      l.promotion?.campaign ?? "",
+      l.promotion?.content ?? "",
     ]),
     ...book.payouts.map((p) => [
       "payout",
@@ -1982,6 +1995,7 @@ export function bookCsv(book: Book, all: Affiliate[]): string {
       plainAmount(p.cents, p.currency),
       p.reference,
       p.currency.toUpperCase(),
+      "", "", "",
     ]),
   ];
   return [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n";

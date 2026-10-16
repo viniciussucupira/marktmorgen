@@ -67,7 +67,7 @@ export function cameFrom(referer: string | null, ownHost: string): CameFrom {
 
 /** Whether anything was found worth writing down. */
 export function hasSource(from: CameFrom): boolean {
-  return Boolean(from.source || from.medium || from.campaign);
+  return Boolean(from.source || from.medium || from.campaign || from.content);
 }
 
 /** What a sale with no tag on it is called in a report. */
