@@ -60,6 +60,17 @@ async function main() {
   is("creating a deal does not change the marketing list", await listCounts(store.listId), beforeCounts);
   const denied = await saveCrm(new NextRequest("https://marktmorgen.com/api/store/crm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "deal", deal: { title: "Unauthorized", stage: "lead00" } }) }));
   is("signed-out creation is refused without another deal", [denied.status, (await readDeals(store.statsId, DEFAULT_STAGES)).length], [401, 1]);
+  part("Server-owned submission identity");
+  const now = Date.now;
+  const repeatedBody = new URLSearchParams(body); repeatedBody.set("id", "a".repeat(32));
+  try {
+    Date.now = () => 1_800_000_000_000;
+    await Promise.all([0, 1].map(() => submitForm(new NextRequest("https://marktmorgen.com/api/store/form", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: repeatedBody.toString() }))));
+  } finally { Date.now = now; }
+  const latest = (await readResponses(store.statsId, form.id)).responses.slice(0, 2);
+  is("identical same-second public submissions receive distinct persisted IDs", [latest.length, latest.every(response => /^[a-f0-9]{32}$/.test(response.id ?? "")), new Set(latest.map(response => response.id)).size, latest[0]?.at === latest[1]?.at], [2, true, 2, true]);
+  is("the public sender cannot choose either submission identity", latest.some(response => response.id === "a".repeat(32)), false);
+  is("distinct submission IDs do not create CRM opportunities automatically", (await readDeals(store.statsId, DEFAULT_STAGES)).length, 1);
   done();
 }
 main().catch(error => { console.error(error); process.exit(1); });
