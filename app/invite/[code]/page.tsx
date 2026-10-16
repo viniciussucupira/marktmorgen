@@ -10,7 +10,7 @@ import { storeForEmail } from "@/lib/store";
 import { inviterFor } from "@/lib/creator-invites";
 import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE_DAYS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
 import { formatMoney } from "@/lib/money";
-import { TRIAL_DAYS, priceWords } from "@/lib/plan";
+import { TRIAL_DAYS, publishedPriceWords as priceWords } from "@/lib/plan";
 import { feeWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {

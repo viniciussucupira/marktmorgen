@@ -58,7 +58,7 @@ export type TopicPage = {
   blocks: Block[];
   /** The drawing of the real screen shown beside the heading. */
   visual?: VisualKey;
-  /** The plan it comes with: on $29 (and so on Pro too), or on Pro only. */
+  /** The plan it comes with: on $29 (and so on Studio too), or on Studio only. */
   plan?: "creator" | "pro";
   /** Where a feature sits in the menu and on the features page. */
   group?: "sell" | "paid" | "deliver" | "grow";
@@ -124,7 +124,7 @@ export const PAGES: TopicPage[] = [
           ["Pay what you want", "Not in their help center", `Yes: a minimum of at least $1 and a suggested price, on the ${PLAN_AT.creator} plan`],
           ["Free trial on a membership", "Not in their help center", "1 to 90 days, with the card taken at the start and nothing charged until it ends"],
           ["A line about you on the page", "A short profile bio, and no separate About Me page", "On every store, under your name"],
-          ["Your own domain", "Not available", DOMAINS ? `Yes, on the ${PLAN_AT.pro} Pro plan, with the certificate handled for you` : "Not available"],
+          ["Your own domain", "Not available", DOMAINS ? `Yes, on the ${PLAN_AT.pro} Studio plan, with the certificate handled for you` : "Not available"],
           ["Changing your store address", "Any time. Their help center says old links are forwarded on a best-effort basis, cannot be guaranteed, and advises resending them", "Any time. Old addresses stay with the store and keep working until you choose to let one go. A store holds up to 10 addresses at once, its current one included"],
           ["Customer area for all purchases", "A login for courses only. Other purchases show in a Purchases tab inside the creator's community, if there is one","A buyer's purchases from a store, up to the 40 most recent, listed on one page the buyer reaches with an emailed link: downloads, links, courses and booked calls. No account and no password"],
           ["Several stores in one account", "Not in one account. Several accounts, each with its own email and its own subscription", "Up to five in one account, each with its own address, Stripe account and plan"],
@@ -184,8 +184,8 @@ export const PAGES: TopicPage[] = [
         note: "Sources: Gumroad's pricing page and their help center articles 'Gumroad's fees', 'Getting paid by Gumroad', 'Connect your Stripe account to Gumroad' and 'Sales tax on Gumroad', all re-read on September 28, 2026.",
         head: ["", "Gumroad", "Marktmorgen"],
         rows: [
-          ["Cut of each sale", "10% + $0.50 direct, 30% via Discover", "0%"],
-          ["Card fee on top of that", "2.9% + $0.30 for card processing. Their own fees page says the 10% + $0.50 does not include credit card processing", "Stripe's 2.9% + $0.30, and nothing else"],
+          ["Cut of each sale", "10% + $0.50 direct, 30% via Discover", feeWords().short],
+          ["Card fee on top of that", "2.9% + $0.30 for card processing. Their own fees page says the 10% + $0.50 does not include credit card processing", "Stripe processing fees, plus the published plan share"],
           ["Monthly price", "None", monthlyRow()],
           ["Whose payment account", "Theirs. New sellers can no longer connect their own Stripe", "Your own Stripe, from the first sale"],
           ["When the money reaches you", "Into their balance, then paid out on the schedule you pick there, with a 7-day hold on weekly, monthly and quarterly payouts", "In your own Stripe balance at the moment of sale, then paid out on your Stripe schedule"],
@@ -221,7 +221,7 @@ export const PAGES: TopicPage[] = [
       {
         kind: "note",
         title: "Where Gumroad is ahead of us today",
-        body: `A marketplace that can send you buyers;${DOMAINS ? "" : " your own domain;"} a Zapier app; and a mobile app. We have none of those. We now have fair prices by country (their purchasing power parity, worked out the same way), affiliates (paid from your own PayPal, not by us), license keys, PDF stamping and reviews from buyers, webhooks that Zapier can catch instead of an app of our own, and a public API, which on our side reads and changes nothing. Email to your list we have on our ${PLAN_AT.pro} Pro plan; Gumroad includes it at no extra charge. They have been doing this since 2011 and it shows.`,
+        body: `A marketplace that can send you buyers;${DOMAINS ? "" : " your own domain;"} a Zapier app; and a mobile app. We have none of those. We now have fair prices by country (their purchasing power parity, worked out the same way), affiliates (paid from your own PayPal, not by us), license keys, PDF stamping and reviews from buyers, webhooks that Zapier can catch instead of an app of our own, and a public API, which on our side reads and changes nothing. Email to your list we have on our ${PLAN_AT.pro} Studio plan; Gumroad includes it at no extra charge. They have been doing this since 2011 and it shows.`,
       },
     ],
   },
@@ -261,7 +261,7 @@ export const PAGES: TopicPage[] = [
           ["Whose payment account", "Your own Stripe or PayPal", "Your own Stripe"],
           ["Ways to be paid", "Stripe or PayPal", PAYPAL ? "Stripe or PayPal, both paying straight into your own account" : "Stripe, with the ways to pay you switch on in it. No PayPal yet: it is built and waits on PayPal approving us as a platform"],
           ["When the money reaches you", "At the moment of sale, into your own account", "At the moment of sale, into your own account"],
-          ["Card fee", "Stripe's 2.9% + $0.30, on top of their 9%", "Stripe's 2.9% + $0.30, and nothing else"],
+          ["Card fee", "Stripe's 2.9% + $0.30, on top of their 9%", "Stripe processing fees, plus the published plan share"],
           ["What you are buying", "A whole suite: link in bio, websites, media kit, email, an affiliate network, AI tools", "One store, built to sell: files, courses, memberships, calls, a community for your buyers, and a media kit for brands"],
           ["A free plan", "Yes, and you can sell on it", "None"],
           ["Order bumps and upsells", "Order bumps on every plan, the free one included", "Yes \u2014 up to three boxes the buyer checks at checkout, and one click after paying on the same card"],
@@ -286,7 +286,7 @@ export const PAGES: TopicPage[] = [
       {
         kind: "note",
         title: "Where Beacons is ahead of us, and it is not close",
-        body: `For $30 they give you 0% and, with it, websites, a media kit that updates itself, email marketing, an affiliate network of 12,000 brands and a pile of AI tools. We give you a store page with courses, memberships, calls, a community, an affiliate program of your own, the checkout tools and a media kit whose numbers you type yourself, and on our ${PLAN_AT.pro} Pro plan email to your list, but none of the other extras. A dollar a month is not a reason to choose us, and we are not going to pretend it is.`,
+        body: `For $30 they give you 0% and, with it, websites, a media kit that updates itself, email marketing, an affiliate network of 12,000 brands and a pile of AI tools. We give you a store page with courses, memberships, calls, a community, an affiliate program of your own, the checkout tools and a media kit whose numbers you type yourself, and on our ${PLAN_AT.pro} Studio plan email to your list, but none of the other extras. Compare the subscription and sales fee together; the cheaper option depends on your sales.`,
       },
       {
         kind: "note",
@@ -416,7 +416,7 @@ export const PAGES: TopicPage[] = [
           ["Several prices for one product", "Not available", "Up to 50 on one product, each with its own file or link, compared side by side with one marked as your pick"],
           ["Sales pages for a product", "A checkout page for each product, with a description and a video, which can be made a private landing page on every plan. Funnels of several pages on the $99 plan", `Yes, on the ${PLAN_AT.creator} plan: up to 30 blocks per product \u2014 hero, video from YouTube, Vimeo or Loom, your own pictures, benefits, what is inside, who it is and is not for, how it works, a comparison table, bonuses, numbers counted by the store, about you, questions, guarantee, a countdown to a real deadline, buttons and reviews, from six templates or an AI draft \u2014 with its own search title and description and a share picture drawn for it`],
           ["Reviews", "Added by the creator. Their help center says customers cannot write one", "Written only by paying buyers, checked on your Stripe account. You can answer or hide one, never edit or delete it; hidden reviews still count in the average, and a full refund takes the stars out"],
-          ["Your own domain", "Not available", DOMAINS ? `Yes, on the ${PLAN_AT.pro} Pro plan, with the certificate handled for you` : "Not available"],
+          ["Your own domain", "Not available", DOMAINS ? `Yes, on the ${PLAN_AT.pro} Studio plan, with the certificate handled for you` : "Not available"],
           ["Custom code on the page", "Explicitly not supported", "Not available"],
           ["Selling on your own website", "Not available: the checkout is only at stan.store/<name>", "One product at a time, as a card with its picture, price, rating and buy button that opens Stripe's checkout in a new tab, or as a plain button in your color. Pasted into any page that takes HTML. The whole store cannot be put inside another site"],
           ["Several stores in one account", "Not in one account. Several accounts, each with its own email and its own subscription", "Up to five in one account, each with its own address, Stripe account and plan, switched at the top of the studio"],
@@ -443,7 +443,7 @@ export const PAGES: TopicPage[] = [
           ["Packages of sessions", "Not in their help center: a coaching call product books one call per purchase (article 15, read September 30, 2026)", "Yes \u2014 2 to 20 sessions of a weekly call at one price, with a time limit you choose or none, paid once and booked one at a time from the buyer's own link, each with the reminders, meeting link and moves of any booking. Not for live sessions on dates"],
           ["Live webinars", "Yes", "Yes \u2014 live sessions on dates you set, up to 50 dates per product and 1 to 500 seats each, held in a Google Meet made on your connected Google Calendar, on the meeting service whose link you give, or in a Jitsi Meet room made for each session. And free live events for your community's members. No streaming or recording built in"],
           ["Lead magnets", "Yes", "Yes \u2014 anything priced at 0 is given for an email address, each address confirmed by its owner, and the list downloads as a CSV at any time"],
-          ["Community", "Yes, one per account, with webinars inside it", `Yes, one per store, on the ${PLAN_AT.creator} plan: up to 20 spaces, each for the whole community or for the buyers of some products, posts with a picture that can be edited, polls, comments, likes, @mentions, pinned posts, a live room, private messages, notifications on a computer or phone, an opt-in member directory, reports and moderation, open only to the buyers you choose. Announcements by email on Pro`],
+          ["Community", "Yes, one per account, with webinars inside it", `Yes, one per store, on the ${PLAN_AT.creator} plan: up to 20 spaces, each for the whole community or for the buyers of some products, posts with a picture that can be edited, polls, comments, likes, @mentions, pinned posts, a live room, private messages, notifications on a computer or phone, an opt-in member directory, reports and moderation, open only to the buyers you choose. Announcements by email on Studio`],
           ["Questions and a welcome for new members", "Not among the community features in their help center, read September 30, 2026", `Yes, on the ${PLAN_AT.creator} plan: up to three questions every member answers once before their first post or comment, read only by you, and a welcome message sent privately from you on their first visit`],
           ["Points, levels and a leaderboard", "Not in their help center, read September 30, 2026", `Yes, on the ${PLAN_AT.creator} plan: one point for every like a member's post or comment gets, 9 levels shown beside every name, a leaderboard for 7 days, 30 days and all time, spaces that open for posting at a level, and a course of yours handed over free at a level`],
           ["Search in the community", "Not in their help center, read September 30, 2026", "Yes — one box across posts and comments, course lessons, events, the member directory, the room and a member's own messages, each result shown only to somebody who may open it. What is said inside a video is not searched"],
@@ -459,7 +459,7 @@ export const PAGES: TopicPage[] = [
         title: "Checkout and money",
         head: ["", "Stan", "Marktmorgen"],
         rows: [
-          ["Cut of each sale", "0%", "0%"],
+          ["Cut of each sale", "0%", feeWords().short],
           ["Whose Stripe account", "One managed by the platform", "Yours"],
           ["Getting paid", "Manual cash-out, $10 minimum", "Your Stripe payout schedule"],
           ["PayPal", "Yes, for every creator", PAYPAL ? feeWords().paypal : "Built, and off until PayPal approves us as a platform. Until then, Stan is ahead here"],
@@ -483,7 +483,7 @@ export const PAGES: TopicPage[] = [
         title: "Marketing",
         head: ["", "Stan", "Marktmorgen"],
         rows: [
-          ["Email broadcasts and flows", "Yes, on the $99 plan only", `Yes, on the ${PLAN_AT.pro} Pro plan: one-off emails, emails scheduled for later and sequences that send themselves, with steps that give or take off a label and start another sequence, up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} a month, only to people who agreed`],
+          ["Email broadcasts and flows", "Yes, on the $99 plan only", `Yes, on the ${PLAN_AT.pro} Studio plan: one-off emails, emails scheduled for later and sequences that send themselves, with steps that give or take off a label and start another sequence, up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} a month, only to people who agreed`],
           ["Abandoned-checkout email", "Yes \u2014 a flow with an abandoned-cart trigger, on the $99 plan", `One reminder per checkout, on the ${PLAN_AT.creator} plan, only to buyers who asked for it: on Stripe's page where Stripe offers its box (accounts in the United States), or on the page a buyer returns to after leaving the checkout, in every country. Off until you switch it on. Not for calls or live sessions`],
           ["Instagram auto-DM", "Yes, on the $29 plan", "Not available"],
           ["Funnels up to 20 pages", "Yes, on the $99 plan, since June 2026 \u2014 landing pages, checkout and upsells", `Yes, on the ${PLAN_AT.creator} plan: up to 20 of your own pages and products' pages in order from one address, counted step by step, with a box at checkout and up to five one-click offers after paying, each with a path for yes and for no. The thank-you page is the store's own, with a button to the next step`],
@@ -506,7 +506,7 @@ export const PAGES: TopicPage[] = [
       {
         kind: "note",
         title: "Where things stand today",
-        body: `Today you can log in without a password, take a store address that is yours, write what you sell with its price, upload the file each one delivers, connect your own Stripe account, and be paid on it — the buyer's card is charged on your account, ${feeWords().onTop}, and the file goes out the second Stripe confirms. The demo store is still there to try first, with a test card. Our own subscription is live: ${planPriceWords("creator")}, or ${planPriceWords("pro")} on Pro with email to your list, free for the first 14 days, and it is what switches your page's checkout on. Everything marked as not available is exactly that — not promised, not dated. A line only changes when you can open it and try it.`,
+        body: `Today you can log in without a password, take a store address that is yours, write what you sell with its price, upload the file each one delivers, connect your own Stripe account, and be paid on it — the buyer's card is charged on your account, ${feeWords().onTop}, and the file goes out the second Stripe confirms. The demo store is still there to try first, with a test card. Our planned subscription is: ${planPriceWords("creator")}, or ${planPriceWords("pro")} on Studio with email to your list, free for the first 14 days, and it is what switches your page's checkout on. Everything marked as not available is exactly that — not promised, not dated. A line only changes when you can open it and try it.`,
       },
       {
         kind: "note",

@@ -5,7 +5,7 @@ import { RevealOnScroll } from "@/components/home-parts";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteNav } from "@/components/site-nav";
 import { isBillingConfigured } from "@/lib/billing";
-import { PLAN_PRICES, PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS, YEAR_PRICE_CENTS } from "@/lib/plan";
+import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, PUBLISHED_PRICE_CENTS as PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS, PUBLISHED_YEAR_PRICE_CENTS as YEAR_PRICE_CENTS } from "@/lib/plan";
 import { isConnectConfigured } from "@/lib/stripe-connect";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { isDomainsConfigured } from "@/lib/domains";
@@ -92,9 +92,9 @@ const BUILT = [
   "Links to everywhere else you are — the channel, the podcast, the booking page — with no price and no checkout on them",
   "Discount codes a buyer types at checkout, made as coupons on your own Stripe account",
   "Free products given for an email address, each address confirmed by its owner, and the list downloadable from your studio at any time",
-  "Email to your list, on Pro: one-off emails now or at a time you choose, and sequences that send themselves after someone joins or buys — only to people who agreed, with a one-click unsubscribe in every one",
+  "Email to your list, on Studio: one-off emails now or at a time you choose, and sequences that send themselves after someone joins or buys — only to people who agreed, with a one-click unsubscribe in every one",
   "Every store installs to the home screen on iPhone and Android as an app of its own, with its name, its icon and its color",
-  "A community for your buyers, open only to the buyers of the products you choose: up to 20 spaces, each for the whole community or for the buyers of some products, posts with a picture that can be edited, polls, comments, likes, @mentions, pinned posts, an opt-in member directory, reports and moderation — with announcements emailed to members who asked, on Pro",
+  "A community for your buyers, open only to the buyers of the products you choose: up to 20 spaces, each for the whole community or for the buyers of some products, posts with a picture that can be edited, polls, comments, likes, @mentions, pinned posts, an opt-in member directory, reports and moderation — with announcements emailed to members who asked, on Studio",
   "A live room in the community, with a cooldown, links on or off and a creator-only mode, and private messages to you, and between members if you allow it, with first messages that wait to be accepted if you choose",
   "Notifications when somebody mentions a member, comments on their post or answers their comment: in the community, and on their computer or phone when they allow it (on iPhone, once the page is on the home screen, as Apple requires)",
   "One search box across posts and comments, course lessons, events, the member directory, the room and a member's own messages, each result shown only to somebody who may open it",
@@ -116,7 +116,7 @@ const BUILT = [
   "Security you can check: single-use sign-in links that expire in 15 minutes, “Log out of all devices,” an email when your Stripe account, domain or webhooks change, a strict Content-Security-Policy on store pages and the studio, forged requests refused, and limits on checkouts, bookings and emails",
   "Sales pages of up to 30 blocks for any product, with video from YouTube, Vimeo or Loom, their own search title and description and a share picture drawn for them, and landing pages that give something free for an email and show a paid product next",
   "Funnels of up to 20 pages walked in order from one address — your own pages and your products' pages — counted step by step, with “No thanks, continue” on every paid step",
-  "Reviews only buyers can write, checked on your own Stripe account, that you can answer and hide but never edit, with hidden ones still counted in the average and one email that asks for them on Pro",
+  "Reviews only buyers can write, checked on your own Stripe account, that you can answer and hide but never edit, with hidden ones still counted in the average and one email that asks for them on Studio",
   "15 currencies for a store, and the ways to pay you switch on in your own Stripe account — Apple Pay, Google Pay, Link, Klarna, Afterpay, Affirm, iDEAL, Bancontact and more",
   "Mailchimp, Kit, beehiiv and MailerLite built in: the people who agree to hear from you, sent to your own list there",
   "Up to five stores in one account, each with its own plan, and a team of up to five per store as Admin, Editor or Support, with an activity log",
@@ -150,17 +150,17 @@ const ORDERS_LINE =
  * The line about our own income, which belongs to whether billing can reach
  * Stripe from this deployment rather than to whether we have written the code.
  */
-const BILLING_LINE = `The subscription that pays us: $${PRICE_CENTS / 100} a month or $${YEAR_PRICE_CENTS / 100} a year, or $${PLAN_PRICES.pro.month / 100} and $${PLAN_PRICES.pro.year / 100} on Pro, or $${PLAN_PRICES.scale.month / 100} and $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} on Scale for a bigger list, free for the first ${TRIAL_DAYS} days, with an email a week before the first charge, canceled in two clicks from your studio`;
+const BILLING_LINE = `The subscription that pays us: $${PRICE_CENTS / 100} a month or $${YEAR_PRICE_CENTS / 100} a year, or $${PLAN_PRICES.pro.month / 100} and $${PLAN_PRICES.pro.year / 100} on Studio, or $${PLAN_PRICES.scale.month / 100} and $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} on Scale for a bigger list, free for the first ${TRIAL_DAYS} days, with an email a week before the first charge, canceled in two clicks from your studio`;
 
 /**
  * The same line while plans are not on sale (lib/opening.ts): the code is
  * there and nobody can press it, which this page counts as not built.
  */
-const BILLING_CLOSED_LINE = `Starting a paid plan: the subscription is written, at $${PRICE_CENTS / 100} a month or $${YEAR_PRICE_CENTS / 100} a year and $${PLAN_PRICES.pro.month / 100} or $${PLAN_PRICES.pro.year / 100} on Pro, and $${PLAN_PRICES.scale.month / 100} or $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} on Scale for a bigger list, and it is not on sale until Marktmorgen opens`;
+const BILLING_CLOSED_LINE = `Starting a paid plan: the subscription is written, at $${PRICE_CENTS / 100} a month or $${YEAR_PRICE_CENTS / 100} a year and $${PLAN_PRICES.pro.month / 100} or $${PLAN_PRICES.pro.year / 100} on Studio, and $${PLAN_PRICES.scale.month / 100} or $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} on Scale for a bigger list, and it is not on sale until Marktmorgen opens`;
 
 /** The store on its own domain: built, and live where this deployment can add domains. */
 const DOMAIN_LINE =
-  "Your store on your own domain, on Pro: type it in the studio, add the one record we show you, and the certificate is handled for you";
+  "Your store on your own domain, on Studio: type it in the studio, add the one record we show you, and the certificate is handled for you";
 
 const NOT_BUILT = [
   "PayPal at checkout: Stripe offers it only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein, and does not support it for the direct charges every sale here is made with",
@@ -184,7 +184,7 @@ const RELEASES: { date: string; items: string }[] = [
   { date: "September 19, 2026", items: "Creator stores: an @address of your own, products and prices, the file each one delivers, and your own Stripe account connected." },
   { date: "September 20, 2026", items: "Memberships, discount codes, and several prices on one product in every store." },
   { date: "September 21, 2026", items: "Free products for an email address, members who cancel on their own, and canceling the Marktmorgen plan from the studio." },
-  { date: "September 22, 2026", items: "Paid calls, courses, numbers and ad pixels, offers before and after paying, payment plans, sales tax, yearly plans, email to your list and your own domain on Pro, and buyers getting any purchase again by email." },
+  { date: "September 22, 2026", items: "Paid calls, courses, numbers and ad pixels, offers before and after paying, payment plans, sales tax, yearly plans, email to your list and your own domain on Studio, and buyers getting any purchase again by email." },
   { date: "September 26, 2026", items: "Up to 200 products with pictures and pages of their own, questions at checkout, pay what you want, free trials and fixed-length memberships, group calls and live sessions with reminders and self-serve moves, a confirmation email for every purchase, every store installable as its own app, 43 Stripe countries, and one reminder after an unpaid checkout. Then a community for your buyers, funnels of offers after paying, an affiliate program, calendar sync, webhooks, course quizzes and certificates, license keys, stamped PDFs, longer windows and exports for your numbers, and memberships whose access ends when they do." },
   { date: "September 27, 2026", items: "Up to 2,000 products, a private video room for each booking, up to five stores in one account and a team with roles for each, passkeys, 15 currencies and more ways to pay, sales and landing pages, reviews only buyers can write, Mailchimp, Kit, beehiiv and MailerLite built in, and notifications on your phone. Then live events in the community, bundles, drafts, moving your list, products and past buyers from another platform, and Google Meet links made on your own Google Calendar." },
   { date: "October 5, 2026", items: "The demo store became an ordinary store, made and drawn by the same code as every creator's, and product pictures reach a phone at the phone's own size. Then Outreach: one short email to a business that could sponsor you, sell for you or buy from you, written from what you say and opened as a draft in your own mailbox." },
@@ -235,7 +235,7 @@ export default function MissionPage() {
                 <span className="serif font-normal text-[#cfc4ff]">to be paid for their work</span>
               </h1>
               <p className="t-lead mt-6 max-w-2xl text-white/80">
-                Each sale of something you made should cost you the card fee and nothing more. That is the whole idea, and
+                The subscription and the plan's share of sales should both be clear before you choose. That is the whole idea, and
                 everything we build is judged against it.
               </p>
             </div>
@@ -249,7 +249,7 @@ export default function MissionPage() {
               {[
                 { value: String(built.length), label: "features built and working", tone: "mint" },
                 { value: String(notBuilt.length), label: "named, and not built yet", tone: "plain" },
-                { value: "0%", label: "of your sales, on every plan", tone: "plain" },
+                { value: "3", label: "plans with their fees stated", tone: "plain" },
               ].map((s) => (
                 <div
                   key={s.label}

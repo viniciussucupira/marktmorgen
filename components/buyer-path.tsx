@@ -36,7 +36,7 @@ const STEPS: Step[] = [
   // behaviour the site no longer has.
   { key: "pay", icon: "card", title: "Paid on Stripe", caption: "Stripe's own checkout, on the creator's own account, at the price on the page." },
   { key: "file", icon: "download", title: "Delivered", caption: "As soon as Stripe confirms the payment, the file is on the screen. Lost later? The buyer gets it back by email." },
-  { key: "money", icon: "bank", title: "In your Stripe", caption: "The sale sits in the creator's own Stripe dashboard. Marktmorgen takes nothing from it." },
+  { key: "money", icon: "bank", title: "In your Stripe", caption: "The sale sits in the creator's own Stripe dashboard. The plan's published sales fee and Stripe processing fees apply." },
 ];
 
 function Screen({ step }: { step: string }) {

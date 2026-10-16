@@ -166,7 +166,7 @@ import { ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, ordersIncluded, ordersOwed
 import { ordersIn } from "@/lib/orders";
 import { SETUP_VISITS, TRIAL_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor, visitsIncluded, visitsOwedCents, visitsWords } from "@/lib/traffic-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
-import { canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
+import { COMMISSION_LIVE, canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { type Permission, type Role, ROLE_NAMES, ROLE_SUMMARIES, can } from "@/lib/team-roles";
@@ -2327,7 +2327,7 @@ export default async function StudioPage({
                   <p className="mt-1 text-ink-soft">
                     {`${ordersWords(ordered)} counted of the ${countWords(orderRoom)} ${
                       standing === "paid" ? "your plan covers" : "a free trial has before free copies stop"
-                    }. An order is a purchase confirmed, an offer taken after paying, a place taken in a purchase for several people, or a free copy sent.${feeWords().ordersShared}`}
+                    }. An order is a purchase confirmed, an offer taken after paying, a place taken in a purchase for several people, or a free copy sent.${feeWords(COMMISSION_LIVE && store.shared).ordersShared}`}
                   </p>
                   {standing === "paid" && store && ordered > orderRoom ? (
                     <p className="mt-4 notice notice-warn">
@@ -2356,7 +2356,7 @@ export default async function StudioPage({
                   What you pay us
                 </p>
                 <p className="mt-2 text-ink-soft">
-                  {feeWords().studioPay} Two things are charged by
+                  {feeWords(COMMISSION_LIVE && store.shared).studioPay} Two things are charged by
                   use, and only if you reach them: visits to your store past
                   the visits your plan covers, and lesson video watched past
                   its hours. Both are shown above as they are counted.

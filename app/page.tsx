@@ -9,7 +9,7 @@ import { FeatureVisual, type VisualKey } from "@/components/feature-visuals";
 import { Faq, HeroFlow, Pricing, RevealOnScroll, SoldMarquee } from "@/components/home-parts";
 import { HomeData } from "@/components/structured-data";
 import { HOME_QUESTIONS } from "@/lib/home-faq";
-import { PLAN_PRICES, PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
+import { PUBLISHED_PRICE_CENTS as PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 import { isDomainsConfigured } from "@/lib/domains";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";
@@ -520,9 +520,9 @@ export default function Home() {
         <section id="pricing" className="surface-sand section scroll-mt-20">
           <div className="container-page">
             <div className="reveal mx-auto mt-10 max-w-2xl text-center">
-              <h2 className="t-h2 balance">Two plans to start on, and one question between them.</h2>
+              <h2 className="t-h2 balance">Three plans, with the monthly price and sales fee shown together.</h2>
               <p className="mt-5 text-ink-soft">
-                {`Do you sell from here, or sell and write to your own list from here? That is the whole difference: $${PRICE} a month for the store and everything that sells from it, $${PLAN_PRICES.pro.month / 100} if your list lives here too. Neither takes a cent of what you sell.`}
+                {feeWords().costLine}
               </p>
             </div>
             <div className="reveal mx-auto mt-12 max-w-5xl">

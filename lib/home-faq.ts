@@ -5,7 +5,7 @@
  * page writes them down twice: once for a reader, once in the form a search
  * engine reads. One list, so the two can never say different things.
  */
-import { PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
+import { PUBLISHED_PRICE_CENTS as PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";

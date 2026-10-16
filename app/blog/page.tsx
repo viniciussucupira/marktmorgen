@@ -10,7 +10,7 @@ import {
   formatPostDate,
   postsSorted,
 } from "@/lib/blog";
-import { PRICE_CENTS, TRIAL_DAYS } from "@/lib/plan";
+import { PUBLISHED_PRICE_CENTS as PRICE_CENTS, TRIAL_DAYS } from "@/lib/plan";
 import { feeWords } from "@/lib/fee-words";
 
 export const metadata: Metadata = {

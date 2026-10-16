@@ -511,8 +511,8 @@ export default function TermsPage() {
           price will not apply to a period you have already paid for.
         </p>
         <p>
-          There are three plans. Marktmorgen, at {planPriceWords("creator")} or {planPriceWords("creator", "year")},
-          includes everything you need to sell. Marktmorgen Pro, at {planPriceWords("pro")} or{" "}
+          There are three plans. Store, at {planPriceWords("creator")} or {planPriceWords("creator", "year")},
+          includes everything you need to sell. Studio, at {planPriceWords("pro")} or{" "}
           {planPriceWords("pro", "year")}, adds email to your list{domains ? " and your store on a domain you own" : ""},
           with up to {PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month,
           counted together for one-off emails, sequences, community
@@ -521,8 +521,8 @@ export default function TermsPage() {
           trial a store may send up to {TRIAL_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, and the full
           number opens with the first payment. Emails not sent in a month do
           not carry over, and emails beyond a month&apos;s allowance wait for
-          the next month. Marktmorgen Scale, at {planPriceWords("scale")} or {planPriceWords("scale", "year")},
-          is Marktmorgen Pro with up to{" "}
+          the next month. Scale, at {planPriceWords("scale")} or {planPriceWords("scale", "year")},
+          is Studio with up to{" "}
           {SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, counted
           the same way.
         </p>

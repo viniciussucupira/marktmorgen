@@ -6,7 +6,7 @@
 // code, not against a plan.
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MAX_AUTO_MINUTES, dollars } from "@/lib/auto-captions-rules";
 import { isDomainsConfigured } from "@/lib/domains";
-import { PLAN_PRICES, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
+import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { EXPECTATION, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
@@ -15,7 +15,7 @@ import { PLAN_AT, feeWords } from "@/lib/fee-words";
 
 /** Whether stores can be put on their own domain on this deployment. */
 const DOMAINS = isDomainsConfigured();
-/** What Pro and the trial send in a month, as the pages say it: read from the limit the code enforces, never typed. */
+/** What Studio and the trial send in a month, as the pages say it: read from the limit the code enforces, never typed. */
 const PRO_EMAILS = PRO_MONTHLY_EMAILS.toLocaleString("en-US");
 const TRIAL_EMAILS = TRIAL_MONTHLY_EMAILS.toLocaleString("en-US");
 
@@ -67,7 +67,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "clock", title: "Coming soon, with a waitlist", body: "Mark a paid product coming soon and its card and page take email addresses instead of payments, each confirmed from the inbox. When you put it on sale, everyone who confirmed gets one email with its link and price, and a note from you if you write one. The box to hear more from you starts empty." },
           { icon: "calendar", title: "Pre-orders, paid today", body: "Sell it before it is ready: a product coming soon can take pre-orders, with the day it is expected and your word that you refund every pre-order in full if it does not come out. Buyers pay at once and get a receipt with the day. The moment you put it on sale, each one is handed over and its buyer is emailed the way in. Pre-orders stop by themselves after the expected day." },
           { icon: "eye", title: "A page for each product", body: "At /@you/p/<product>: the picture, a long description of up to 5,000 characters, and a title and preview card of its own for search engines and shared links. Or a sales page you build from blocks.", href: "/platform/sales-pages" },
-          { icon: "sparkle", title: "A description written with AI", body: "Type a few words about a product and a draft of its short and long description is written into the boxes, in your store's language, from only what you typed: no invented reviews, numbers, results or deadlines. Nothing is saved until you press Save. 20 drafts a month on the free trial, 100 on Creator, 400 on Pro and 1,000 on Scale, shared by all the writing help." },
+          { icon: "sparkle", title: "A description written with AI", body: "Type a few words about a product and a draft of its short and long description is written into the boxes, in your store's language, from only what you typed: no invented reviews, numbers, results or deadlines. Nothing is saved until you press Save. 20 drafts a month on the free trial, 100 on Store, 400 on Studio and 1,000 on Scale, shared by all the writing help." },
           { icon: "star", title: "Stars from real buyers", body: "Reviews only people who paid can write, with the average on the product's card and page.", href: "/platform/reviews" },
           { icon: "gift", title: "Free things, for an email", body: "Set a price of zero and it is handed out for a confirmed email address that joins your list." },
           { icon: "link", title: "Links with no price", body: "Your channel, your podcast, your booking page — each with a plain icon for the kind of place it leads to, or a small picture of your own in its place (a show's cover, your face), and that site's address printed under it. Group them under headings of your own; put one in the spotlight, larger and in your color; give one a start and an end, for a launch or a live, and it appears and goes by itself; and play a YouTube, Vimeo or Loom video, or a song, album, playlist or podcast from Spotify, SoundCloud, Apple Music or Apple Podcasts, right on the page, loaded only when a visitor presses play. Your studio counts each link's clicks." },
@@ -116,7 +116,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           { q: "Can I change my store address later?", a: "Yes, from your studio, whenever you want. The addresses your store holds keep working and send people to the current one, up to ten at once. An address you let go of stops working, and after 30 days anyone may take it." },
           { q: "Is the page up before I connect Stripe?", a: "Yes. The page, the editor and your address are free and stay free; without a plan, the page is shown for 500 visits a month. Taking a card needs two things: Stripe has cleared your account, and your plan or its 14-day trial is running. Until then the page says plainly that it cannot take a payment." },
-          { q: "Can I use my own domain?", a: DOMAINS ? `Yes, on the ${PLAN_AT.pro} Pro plan. You add one record where you bought the domain, and the certificate is made for you. Your marktmorgen.com address keeps working as well.` : "Not yet. It is planned for the Pro plan, and this page will say so on the day it works." },
+          { q: "Can I use my own domain?", a: DOMAINS ? `Yes, on the ${PLAN_AT.pro} Studio plan. You add one record where you bought the domain, and the certificate is made for you. Your marktmorgen.com address keeps working as well.` : "Not yet. It is planned for the Studio plan, and this page will say so on the day it works." },
           { q: "How do I see what the page looks like before I save?", a: "The studio shows the page with your photo, theme, color and letters as you change them, before anything is saved." },
           { q: "Is there a limit on how many people can visit?", a: `Your plan covers a number of visits a month: 3,000 on the ${PLAN_AT.creator} plan, 10,000 on the ${PLAN_AT.pro} plan and 50,000 on the ${PLAN_AT.scale} plan. A visit is one person opening your store on one day, however many pages they look at, and you are never counted. Past your plan's figure it is $0.50 for each thousand visits, on your next invoice, and your store is never taken down for being busy. Your studio shows the count as it grows.` },
           { q: "Can one account run more than one store?", a: "Yes, up to five, each with its own address, products, Stripe account and plan. You switch between them at the top of your studio." }
@@ -651,8 +651,8 @@ export const FEATURE_PAGES: TopicPage[] = [
     title: "Write to the people",
     highlight: "who asked to hear from you",
     intro:
-      `One-off emails, emails for later and sequences that send themselves, under your name, to everyone who agreed. Up to ${PRO_EMAILS} a month on Pro.`,
-    badge: { label: "Working today, on Pro", tone: "live" as const },
+      `One-off emails, emails for later and sequences that send themselves, under your name, to everyone who agreed. Up to ${PRO_EMAILS} a month on Studio.`,
+    badge: { label: "Working today, on Studio", tone: "live" as const },
     accent: "from-violet-brand to-sky-brand",
     visual: "email",
     plan: "pro",
@@ -721,10 +721,10 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about email",
         items: [
-          { q: `Why is email on Pro and not on the ${PLAN_AT.creator} plan?`, a: `Because every email sent costs us money, and the ${PLAN_AT.creator} plan is priced to cover a store, not a mailing list. Stan puts email on its $99 plan as well — read on its pricing page on September 20, 2026.` },
+          { q: `Why is email on Studio and not on the ${PLAN_AT.creator} plan?`, a: `Because every email sent costs us money, and the ${PLAN_AT.creator} plan is priced to cover a store, not a mailing list. Stan puts email on its $99 plan as well — read on its pricing page on September 20, 2026.` },
           { q: "Can I import the list I already have?", a: "Yes, on every plan, from a CSV file of up to 50,000 rows, as long as those people agreed to hear from you. You confirm that each time, a consent column in the file narrows it further, and anyone who unsubscribed here stays unsubscribed. Nobody is emailed because of the import." },
-          { q: `What if my list needs more than ${PRO_EMAILS} emails a month?`, a: `Move up to Scale from your studio: the same plan with up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, at $${PLAN_PRICES.scale.month / 100} a month or $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} a year. You are charged the difference for the rest of the period you already paid for, and you can go back to Pro whenever you like. Without it, an email that passes the month's number waits and goes out by itself when the month turns.` },
-          { q: `Can I email people on the ${PLAN_AT.creator} plan at all?`, a: `Your list downloads as a CSV on every plan, and on the ${PLAN_AT.creator} plan your store can send the people who agree straight to your own Mailchimp, Kit, beehiiv or MailerLite. Writing to them from Marktmorgen is what Pro adds.` },
+          { q: `What if my list needs more than ${PRO_EMAILS} emails a month?`, a: `Move up to Scale from your studio: the same plan with up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, at $${PLAN_PRICES.scale.month / 100} a month or $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} a year. You are charged the difference for the rest of the period you already paid for, and you can go back to Studio whenever you like. Without it, an email that passes the month's number waits and goes out by itself when the month turns.` },
+          { q: `Can I email people on the ${PLAN_AT.creator} plan at all?`, a: `Your list downloads as a CSV on every plan, and on the ${PLAN_AT.creator} plan your store can send the people who agree straight to your own Mailchimp, Kit, beehiiv or MailerLite. Writing to them from Marktmorgen is what Studio adds.` },
         ],
       },
     ],
@@ -737,8 +737,8 @@ export const FEATURE_PAGES: TopicPage[] = [
     highlight: "on your own domain",
     intro: DOMAINS
       ? "shop.yourname.com or yourname.com, with the certificate made and renewed for you. Your marktmorgen.com address keeps working as well."
-      : "shop.yourname.com or yourname.com, on the Pro plan. It is not switched on here yet, and this page says so rather than pretending.",
-    badge: DOMAINS ? { label: "Working today, on Pro", tone: "live" as const } : { label: "Coming to Pro", tone: "building" as const },
+      : "shop.yourname.com or yourname.com, on the Studio plan. It is not switched on here yet, and this page says so rather than pretending.",
+    badge: DOMAINS ? { label: "Working today, on Studio", tone: "live" as const } : { label: "Coming to Studio", tone: "building" as const },
     accent: "from-sky-brand to-mint-brand",
     visual: "domain",
     plan: "pro",
@@ -750,7 +750,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "how",
         title: "Three steps, most of them waiting",
         items: [
-          { title: "Type the domain you own", body: "In your studio, on Pro. A domain you already have, bought wherever you like." },
+          { title: "Type the domain you own", body: "In your studio, on Studio. A domain you already have, bought wherever you like." },
           { title: "Add one record", body: "The studio shows exactly what to add where you bought it — usually one record, sometimes a second to prove it is yours." },
           { title: "Press Check again", body: "When the record shows up, usually within minutes, your store opens on the domain with its own certificate." },
         ],
@@ -762,7 +762,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "globe", title: "The whole store moves with it", body: "Its pages keep their short paths on your domain: the thank-you page, courses, bookings and getting a purchase again." },
           { icon: "link", title: "Old links keep working", body: "marktmorgen.com/@yourname stays up, so nothing you shared before breaks." },
           { icon: "lock", title: "The certificate is handled", body: "Made for you when the record shows up, and renewed for you." },
-          { icon: "door", title: "If Pro ends", body: "Visitors to the domain are sent to your marktmorgen.com address, so no buyer meets a dead page." },
+          { icon: "door", title: "If Studio ends", body: "Visitors to the domain are sent to your marktmorgen.com address, so no buyer meets a dead page." },
         ],
       },
       {
@@ -946,7 +946,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "lock", title: "Private messages", body: "Members write to you privately, and to each other if you allow it. You can have a first message wait until the person it is sent to accepts it, and anyone can decline and not hear from that person again." },
           { icon: "eye", title: "One search box", body: "Posts and every comment under them, the lessons of the courses a member has, the events, the people in the directory, the room and the member's own messages. Each result is shown only to somebody who may open it." },
           { icon: "sparkle", title: "Mentions and notifications", body: "Members mention each other with @. They are told when somebody mentions them, comments on their post or answers their comment, in the community and, if they allow it, as a notification on their computer or phone." },
-          { icon: "mail", title: "Announcements", body: "Posts labeled as yours. On Pro they can also go by email to the members who checked the box for it, with a one-click unsubscribe." },
+          { icon: "mail", title: "Announcements", body: "Posts labeled as yours. On Studio they can also go by email to the members who checked the box for it, with a one-click unsubscribe." },
           { icon: "video", title: "Live events", body: "Workshops and Q&As on the community's calendar, with RSVPs, reminders, a private video room in the page and replays.", href: "/platform/live-events" },
           { icon: "door", title: "Welcoming new members", body: "Up to three questions every member answers once, before their first post or comment, read only by you. And a welcome message sent privately from you on their first visit, when private messages are on." },
           { icon: "users", title: "A member directory they opt into", body: "Members choose the name they are seen by and whether to be listed. Their email address is never shown to other members." },
@@ -987,7 +987,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { q: "Can members see each other's email addresses?", a: "No. Other members see only the name someone chose, and the directory lists only those who asked to be listed. You see members' addresses in your studio, because they are your buyers." },
           { q: "What happens after a refund?", a: "A payment you refund in full on your Stripe account stops opening the community, within five minutes." },
           { q: "Can buyers I bring over from another platform get in?", a: "Yes. A buyer you import for a product that opens the community is let in, like anyone who bought it here." },
-          { q: "Does Stan have this?", a: `Yes. Stan has a community, and its help center, read on September 27, 2026, adds webinars to it as a product members sign up for, with Zoom or Google Meet links made automatically. Ours holds live events members RSVP to, in a private video room, at your own link or in a Google Meet made on your Google Calendar, with no Zoom link made for you yet. Ours is on the ${PLAN_AT.creator} plan; emailing announcements needs Pro.` },
+          { q: "Does Stan have this?", a: `Yes. Stan has a community, and its help center, read on September 27, 2026, adds webinars to it as a product members sign up for, with Zoom or Google Meet links made automatically. Ours holds live events members RSVP to, in a private video room, at your own link or in a Google Meet made on your Google Calendar, with no Zoom link made for you yet. Ours is on the ${PLAN_AT.creator} plan; emailing announcements needs Studio.` },
         ],
       },
     ],
@@ -1060,7 +1060,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about live events",
         items: [
-          { q: "Which plan is it on?", a: `Every plan, the ${PLAN_AT.creator} one included, with the community. The reminders and the emails about a move or a cancellation are sent on every plan and are not counted in Pro's monthly emails.` },
+          { q: "Which plan is it on?", a: `Every plan, the ${PLAN_AT.creator} one included, with the community. The reminders and the emails about a move or a cancellation are sent on every plan and are not counted in Studio's monthly emails.` },
           { q: "Can someone who is not a member get the link?", a: "Not from us. Emails, calendar files and the feed point to the event's page, and the page shows the way in only from 15 minutes before, only to a member who may come, checked again on every visit. A member whose membership lapsed, or who was refunded or taken out, loses it with the rest of the community." },
           { q: "How does this compare with Stan?", a: "Stan adds webinars to its community as a product members sign up for on its landing page, with Zoom or Google Meet links made automatically, according to its help center, read on September 27, 2026. Ours are events members RSVP to, with reminders, a cap, a room in the page or a Google Meet made on your Google Calendar, and replays, with no Zoom link made for you yet." },
         ],
@@ -1679,7 +1679,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "chart", title: "Where readers stop", body: "Each block of your page shows the share of visitors who read down to it, measured on one visitor in eight and shown once 30 are, so you can see which block to rewrite or move up. No cookie, nothing about who." },
           { icon: "chart", title: "Two headlines, tested", body: "Write a second headline and half your visitors see each. Once both have been seen 200 times and one brings clearly more people to the checkout (95% confidence), your page shows the winner to everybody by itself. Only words change: everyone pays the same price." },
           { icon: "layout", title: "Two whole pages, tested", body: "Make version B from the page itself and change anything in it: blocks, their order, words, pictures, video. Half your visitors read each, and once one brings clearly more of them to the checkout (95% confidence), it becomes the page for everybody by itself. On the page you already have, with no separate page builder to pay for." },
-          { icon: "chat", title: "Buyers' questions, answered from your page", body: "Switch it on and every product page gets a box: \u201cA question before you buy?\u201d The visitor is answered in seconds, in their own language, only from what that page says and from the notes you write for it. It never states a price, a refund, a deadline or a result that is not on your page, and it says the answer is automatic. What your page could not answer is told plainly and listed in your studio, with nothing about who asked, so you can see what the page is missing. 500 answers a month on Creator, 2,000 on Pro, 6,000 on Scale; past that the box closes until the month turns, and nothing is charged." },
+          { icon: "chat", title: "Buyers' questions, answered from your page", body: "Switch it on and every product page gets a box: \u201cA question before you buy?\u201d The visitor is answered in seconds, in their own language, only from what that page says and from the notes you write for it. It never states a price, a refund, a deadline or a result that is not on your page, and it says the answer is automatic. What your page could not answer is told plainly and listed in your studio, with nothing about who asked, so you can see what the page is missing. 500 answers a month on Store, 2,000 on Studio, 6,000 on Scale; past that the box closes until the month turns, and nothing is charged." },
           { icon: "sparkle", title: "A whole page drafted with AI", body: "From the product's name, price and description, plus anything you add. It never writes your story or a guarantee you did not give, never invents reviews, numbers, results or deadlines, and never puts a price on a button. Nothing is saved until you press Save. It counts as one of your monthly drafts." },
           { icon: "globe", title: "Search and sharing", body: "An address in words from the product's name — /p/knife-skills-… — that follows a rename without breaking a link shared before. A title of up to 70 characters and a description of up to 160 for search engines, and a share picture drawn for you from the product's picture, name, price and stars." },
         ],
@@ -1758,7 +1758,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "star", title: "Replies to reviews", body: "A public reply drafted from the buyer's own review, in their language. For a low rating it owns the problem without arguing or promising anything you did not.", href: "/platform/reviews" },
           { icon: "link", title: "Posts that bring visitors", body: "A post for X, an Instagram caption and a LinkedIn post about a product or the whole store, each with the right tagged link, so your numbers show which one brought the sale." },
           { icon: "notebook", title: "Blog posts", body: "A useful post on a topic you give, with headings and lists, mentioning one of your products only where it fits, for your store's blog.", href: "/platform/store-page" },
-          { icon: "mail", title: "Emails to your list, on Pro", body: "A subject and a body to announce a product, remind people about one, teach something useful or share news, from a few words. Or a whole sequence of 3 to 7, for when someone joins, gets a product or first buys.", href: "/platform/email" },
+          { icon: "mail", title: "Emails to your list, on Studio", body: "A subject and a body to announce a product, remind people about one, teach something useful or share news, from a few words. Or a whole sequence of 3 to 7, for when someone joins, gets a product or first buys.", href: "/platform/email" },
           { icon: "chat", title: "Answers for your visitors", body: "Switch it on and visitors' questions on a product's page are answered only from what the page says; a question it cannot answer is shown to you, to answer on the page." },
           { icon: "info", title: "Your store's questions and answers", body: "The questions visitors ask before buying anything from you, answered only from what your store says, for your store page and for search engines.", href: "/platform/store-page" },
           { icon: "target", title: "Help to choose, on your store page", body: "With three products or more, a visitor says what they want and sees which of yours fit, and why, from your titles, summaries, prices and notes only. What they looked for and you do not sell yet reaches your studio.", href: "/platform/store-page" },
@@ -1768,7 +1768,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do",
         items: [
-          `It has a monthly allowance: ${AI_MONTHLY.trial} drafts during the free trial, ${AI_MONTHLY.creator} on Creator, ${AI_MONTHLY.pro} on Pro and ${AI_MONTHLY.scale.toLocaleString("en-US")} on Scale. A draft that fails is not counted; translating a long page takes one for every 4,000 characters, said before it runs.`,
+          `It has a monthly allowance: ${AI_MONTHLY.trial} drafts during the free trial, ${AI_MONTHLY.creator} on Store, ${AI_MONTHLY.pro} on Studio and ${AI_MONTHLY.scale.toLocaleString("en-US")} on Scale. A draft that fails is not counted; translating a long page takes one for every 4,000 characters, said before it runs.`,
           "It does not post, send or publish anything by itself, and it never writes in your buyers' names.",
           "It does not make images or videos.",
           "It does not rewrite what other people said: reviews and things said elsewhere are shown in their own words.",
@@ -1822,7 +1822,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "ban", title: "A refund takes its stars back", body: "A payment refunded in full takes that review's stars out of the average. Its words stay, marked as refunded." },
           { icon: "chat", title: "Your answer, in public", body: "Up to 1,000 characters under any review. AI can draft it from the review itself, in the buyer's language: thanking them, answering what they said, and for a low rating owning it without arguing or promising anything you did not. You read it, change it and post it." },
           { icon: "user", title: "Their email is never shown", body: "Only the name they chose. Each review keeps its order reference, so you can find the payment in your Stripe dashboard." },
-          { icon: "mail", title: "One email that asks, on Pro", body: "Off until you switch it on: each buyer is asked once per order, 3 to 30 days after buying, never offering anything in return. It counts in your monthly emails.", href: "/platform/email" },
+          { icon: "mail", title: "One email that asks, on Studio", body: "Off until you switch it on: each buyer is asked once per order, 3 to 30 days after buying, never offering anything in return. It counts in your monthly emails.", href: "/platform/email" },
           { icon: "camera", title: "A photo from the buyer", body: "A buyer can add one photo to their review: what they made, cooked or printed with what you sold. It is shrunk on their device before it is sent, kept with the review, and shown beside it. You cannot add or swap one, but you can take a photo off a review, and the review stays." },
           { icon: "star", title: "Stars where buyers decide", body: "The average on the product's card, on its page and on the preview image a shared link shows. Ten reviews on the page, the rest on a page of their own." },
         ],
@@ -1833,7 +1833,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           "You cannot edit or delete a buyer's review, or add one of your own. Only its buyer can change or delete it; deleting the whole product deletes its reviews.",
           "Booked calls and free products are not reviewed.",
-          `The email that asks for reviews needs Pro, as email to your list does. On the ${PLAN_AT.creator} plan, buyers review from their thank-you page and their list of purchases.`,
+          `The email that asks for reviews needs Studio, as email to your list does. On the ${PLAN_AT.creator} plan, buyers review from their thank-you page and their list of purchases.`,
           "One photo per review, no videos, and no reviews imported from another platform.",
           "Up to 2,000 reviews per product.",
         ],
@@ -1962,7 +1962,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about email platforms",
         items: [
-          { q: "Do I still need Pro?", a: "No. Connecting a platform is on every plan. Pro is for writing to your list from Marktmorgen itself." },
+          { q: "Do I still need Studio?", a: "No. Connecting a platform is on every plan. Studio is for writing to your list from Marktmorgen itself." },
           { q: "What starts on the platform?", a: "Whatever you set up there. On Kit, people are added to the form you pick, which starts what you attached to it." },
         ],
       },
@@ -2035,7 +2035,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about Outreach",
         items: [
-          { q: "Does it cost extra?", a: `No. It is on every plan. Each email written uses one of the month's writing drafts: ${AI_MONTHLY.trial} on the free trial, ${AI_MONTHLY.creator} on Creator and ${AI_MONTHLY.pro} on Pro.` },
+          { q: "Does it cost extra?", a: `No. It is on every plan. Each email written uses one of the month's writing drafts: ${AI_MONTHLY.trial} on the free trial, ${AI_MONTHLY.creator} on Store and ${AI_MONTHLY.pro} on Studio.` },
           { q: "Will businesses answer?", a: EXPECTATION },
           { q: `Why only ${PITCHES_PER_DAY} a day?`, a: "A mailbox that writes to many strangers in a day gets marked as spam, and then stops reaching the people who asked to hear from you. A few specific emails do better than many." },
           { q: "What does the business see?", a: "An email from you, from your own address, with your name, your store and your postal address under it, the page where you found their address, and a link to stop it." },
@@ -2367,7 +2367,7 @@ export const CREATOR_PAGES: TopicPage[] = [
         items: [
           { icon: "calendar", title: "Calls in their time zone", body: "Set your hours once, in your own time zone; each client sees the free times in theirs, and both of you get the invitation.", href: "/platform/calls" },
           { icon: "calendar", title: "Programs in installments", body: "Two to twelve payments: the program opens after the first, and the plan ends by itself after the last.", href: "/platform/checkout" },
-          { icon: "refresh", title: "A sequence after each sale", body: "On Pro, a few emails in the days after someone buys — what to do first, and when to book the call.", href: "/platform/email" },
+          { icon: "refresh", title: "A sequence after each sale", body: "On Studio, a few emails in the days after someone buys — what to do first, and when to book the call.", href: "/platform/email" },
           { icon: "users", title: "A monthly group", body: "A membership that hands over the meeting link, which members cancel themselves.", href: "/platform/memberships" },
         ],
       },
@@ -2566,7 +2566,7 @@ export const CREATOR_PAGES: TopicPage[] = [
           { icon: "file", title: "Files up to 5 GB", body: "ZIP, PNG, SVG, video and more. Anything heavier is sold as a link to where you keep it.", href: "/platform/instant-delivery" },
           { icon: "list", title: "Limited editions that are real", body: "The count shown is the true one, and the last copy is never sold twice.", href: "/platform/checkout" },
           { icon: "target", title: "Pixels for your ads", body: `Meta, Google, TikTok and Pinterest, with each purchase and its amount, on the ${PLAN_AT.creator} plan.`, href: "/platform/insights" },
-          { icon: "globe", title: "Your own domain", body: "shop.yourstudio.com on Pro, with the certificate made for you.", href: "/platform/domain" },
+          { icon: "globe", title: "Your own domain", body: "shop.yourstudio.com on Studio, with the certificate made for you.", href: "/platform/domain" },
           { icon: "key", title: "License keys", body: "A unique key with each sale, for plugins and apps, checked by your software through a public address.", href: "/platform/license-keys" },
           { icon: "file", title: "Stamped PDFs", body: "The buyer's email on every page of a guide or a color book, so anyone thinking of sharing it thinks twice.", href: "/platform/pdf-stamping" },
           { icon: "star", title: "Reviews from real buyers", body: "Stars and words only people who paid can leave, on the product's card and its page.", href: "/platform/reviews" },

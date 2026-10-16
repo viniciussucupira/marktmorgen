@@ -69,6 +69,7 @@ import { StoreField, useStudioHref, useStudioStore } from "@/components/studio-s
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { productSegment } from "@/lib/product-slug";
 import { feeWords } from "@/lib/fee-words";
+import { COMMISSION_LIVE } from "@/lib/plan";
 
 /** The sentences about amounts, in the store's own currency (lib/money.ts). */
 const optionPrice = (currency: Currency) => `Type an amount ${rangeWords(currency)}, like ${priceExample(currency, 39)}.`;
@@ -2278,7 +2279,7 @@ export function ProductEditor({
             </strong>{" "}
             What you write here is on your page the moment you save it, and a
             buyer can pay for it right away, on your own Stripe account.
-            {feeWords().editor}
+            {feeWords(COMMISSION_LIVE).editor}
           </>
         )}{" "}
         Your file is kept private to your store, and it is never named or

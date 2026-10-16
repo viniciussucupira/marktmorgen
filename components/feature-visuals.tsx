@@ -1,3 +1,4 @@
+import { COMMISSION_BPS } from "@/lib/plan";
 import { Icon, type IconName } from "@/components/icons";
 import { BumpDemo, OptionsDemo } from "@/components/feature-demos";
 
@@ -155,8 +156,8 @@ function StripeVisual() {
           <Row icon="receipt" title="Your bank" sub="On the payout schedule you set at Stripe" />
         </div>
         <p className="mt-4 flex items-center justify-between rounded-[var(--r-md)] bg-sand px-4 py-3 text-[12.5px] text-ink-soft">
-          <span>Taken by Marktmorgen from the sale</span>
-          <span className="text-[15px] font-semibold text-ink">$0</span>
+          <span>Planned Store fee on this sale</span>
+          <span className="text-[15px] font-semibold text-ink">{`${(Math.floor(2700 * COMMISSION_BPS.creator / 10000) / 100).toFixed(2)}`}</span>
         </p>
       </div>
     </Window>
@@ -384,7 +385,7 @@ const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
   delivery: "What the buyer sees after paying, and how they get it back later.",
-  stripe: "The path of one sale. Marktmorgen is not on it.",
+  stripe: "Illustration for Store, before Stripe processing fees; paid plans are not on sale yet.",
   course: "A student's view of a course, with a module that opens on a later day.",
   membership: "A membership on a store page, with the way out under it.",
   calls: "Booking a paid call. Dates and times are an example.",

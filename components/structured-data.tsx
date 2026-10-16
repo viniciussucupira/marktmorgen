@@ -7,7 +7,7 @@
  * that exists only in this file is a claim nobody can check, and search engines
  * treat that as a reason to distrust the rest of it.
  */
-import { PLAN_PRICES, PLAN_NAMES, TIERS, TRIAL_DAYS, type Tier } from "@/lib/plan";
+import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, PLAN_TITLES as PLAN_NAMES, TIERS, TRIAL_DAYS, type Tier } from "@/lib/plan";
 import { SITE_URL } from "@/lib/site-url";
 import type { BlogPost } from "@/lib/blog";
 import { feeWords } from "@/lib/fee-words";

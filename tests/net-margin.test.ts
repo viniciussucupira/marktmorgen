@@ -52,4 +52,5 @@ is("tax evidence required",commercialMarginReady({...review(),taxEvidence:" "}),
 is("cost and limit evidence required",commercialMarginReady({...review(),costAndLimitEvidence:""}),false);
 is("isolated-customer fixed costs must be reviewed",commercialMarginReady({...review(),singleCustomerFixedCostsVerified:false}),false);
 is("postpaid unlimited consumption cannot be certified",commercialMarginReady({...review(),prepaidUsageEnforced:false}),false);
+is("published commission menu cannot launch before fee collection is proven",commercialPlansMayOpen(true,review()),false);
 done();

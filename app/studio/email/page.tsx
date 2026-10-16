@@ -16,7 +16,7 @@ import { sellsSomething } from "@/lib/mail-starters";
 import { flowStats, readFlows } from "@/lib/flows";
 import { inTrial, monthlyAllowance, usedThisMonth } from "@/lib/mail";
 import { healthId, pauseWords, pausedFor } from "@/lib/mail-health";
-import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
+import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, publishedPriceWords as priceWords, publishedYearSaving as yearSaving } from "@/lib/plan";
 import { EmailStudio } from "@/components/email-studio";
 import { readForms } from "@/lib/form-store";
 import { readFields, readStages } from "@/lib/crm";

@@ -6,7 +6,7 @@ import { RevealOnScroll } from "@/components/home-parts";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteNav } from "@/components/site-nav";
 import { PAGES, type TopicPage } from "@/lib/site-pages";
-import { PLAN_PRICES, TRIAL_DAYS } from "@/lib/plan";
+import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, TRIAL_DAYS } from "@/lib/plan";
 import { startWords } from "@/lib/opening";
 
 export const metadata: Metadata = {

@@ -35,3 +35,9 @@ A newly authorized file must fit entirely in the confirmed remaining storage, in
 This closes the single-upload overshoot only. Concurrent requests may still read the same remaining capacity; outstanding authorizations and multipart uploads still need a reservation lifecycle backed by provider-confirmed completion or cancellation. No expiry timer alone proves that a provider stopped an upload. These safeguards do not certify the 60% after-tax margin.
 
 Video admission currently checks declared source bytes. The application's video-upload signature does not bind that byte count, and encoded variants may require additional storage. This admission check is not provider-enforced video capacity or a verified worst-case cost ceiling. These gaps must be resolved before commercial margin certification.
+
+## Approved published offer
+
+The owner's approved menu is Store: USD 22/month plus 6.25% of sales; Studio: USD 149/month plus 2.75%; Scale: USD 349/month plus 0%. Annual subscriptions cost ten monthly payments: USD 220, USD 1,490 and USD 3,490. The sales percentage is unchanged on annual billing.
+
+Publication is separate from activation. Public quotes use `PUBLISHED_PLAN_PRICES` and published commission wording. Existing subscription-only prices and actual fee collection retain their operational configuration. Publishing this menu does not reprice a subscription, enable application fees or open commercial checkout. Launch requires both the margin review and proven commission collection. Neither these prices nor projected commissions certify the owner's minimum 60% after-tax net margin.

@@ -6,7 +6,7 @@ import { SignInForm } from "@/components/signin-form";
 import { PasskeySignIn } from "@/components/passkey-signin";
 import { ToastOnLoad } from "@/components/toast";
 import { isConnectConfigured } from "@/lib/stripe-connect";
-import { PLAN_NAMES, TRIAL_DAYS, parseTier, priceWords } from "@/lib/plan";
+import { PLAN_TITLES as PLAN_NAMES, TRIAL_DAYS, parseTier, publishedPriceWords as priceWords } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { formatMoney } from "@/lib/money";
 import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
