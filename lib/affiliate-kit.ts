@@ -18,6 +18,7 @@ import { readPage } from "@/lib/sales-page-store";
 import { pageShown } from "@/lib/sales-page";
 import { factsFor } from "@/lib/answers";
 import { confirmedAiReservation } from "@/lib/ai-quota";
+import { reserveAiAttempt } from "@/lib/ai-attempts";
 import { aiAllowance, aiMonthKey, isAiConfigured, writeAffiliatePosts } from "@/lib/ai";
 import { storeBase } from "@/lib/purchase-email";
 import { productSegment } from "@/lib/product-slug";
@@ -75,6 +76,11 @@ export async function draftKit(store: Store, affiliate: Affiliate, productId: st
   if (Number(thisMonth) > kitMonthly(allowance) || Number(storeMonth) > allowance) {
     await giveBack();
     return { ok: false, reason: "month" };
+  }
+  const attempt = await reserveAiAttempt(store.statsId, now.getTime(), allowance);
+  if (attempt !== "reserved") {
+    await giveBack();
+    return { ok: false, reason: attempt === "exhausted" ? "month" : "failed" };
   }
   let posts: AffiliatePosts | null = null;
   try {
