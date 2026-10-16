@@ -4,7 +4,7 @@ import { done,is,part } from "./check";
 const make=(revenue=10000,cost=4001)=>({scope:"customer",reference:"test-client",scenario:"full_entitlement",plan:"creator",cycle:"month",currency:"USD",period:"test",retainedRevenueCents:revenue,revenueBasis:{subscriptionsCents:revenue,usageCents:0,platformCommissionsCents:0,refundsAndCreditsCents:0,refundableBalanceCents:0,collectedConfirmed:true,currency:"USD",period:"test",validUntil:2000,evidence:"SYNTHETIC receipts"},fullEntitlementBoundConfirmed:true,taxesConfirmed:true,ownerTaxesConfirmed:true,validUntil:2000,costs:Object.fromEntries(PROFIT_COST_CATEGORIES.map(key=>[key,{cents:key==="ai"?cost:0,evidence:"SYNTHETIC cost",currency:"USD",period:"test",validUntil:2000}]))});
 const input=(row:ReturnType<typeof make>)=>({coverageConfirmed:true,customers:[{reference:"test-client",plan:"creator",cycle:"month"}],fixedCostFloor:{cents:0,evidence:"SYNTHETIC zero",validUntil:2000,currency:"USD",period:"test"},scenarios:[row]});
 part("Diagnostics identify cases without claiming missing coverage is approved");
-let result=profitAuditReport(input(make()),1000),row=result.diagnostics[0];
+let result=profitAuditReport(input(make()),1000);const row=result.diagnostics[0];
 is("partial matrix remains refused",result.meetsPolicy,false);
 is("row identity is preserved",[row.scope,row.reference,row.scenario,row.plan,row.cycle],["customer","test-client","full_entitlement","creator","month"]);
 is("one-cent cost excess is explicit",[row.arithmeticStatus,row.excessCostCents,row.costHeadroomCents],["below_floor",1,-1]);
