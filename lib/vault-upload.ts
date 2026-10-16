@@ -6,7 +6,7 @@
  * the upload to be opened, then, a few pieces at a time, for an address for
  * each piece; it sends each piece to its address and keeps what the store
  * answers for it (the piece's `ETag`), and at the end hands those back so
- * the pieces can be joined. A file of one piece goes up whole, the same way.
+ * the pieces can be joined. A file of one piece uses a session too when the server supports it.
  *
  * A piece that fails is sent again after a pause that grows. Its address is
  * asked for afresh each time, because an address is good for an hour and a
@@ -37,7 +37,7 @@ export class VaultUploadError extends Error {
 type DoorAnswer = {
   ok?: boolean;
   error?: string;
-  upload?: { pathname: string; pieces: number; pieceBytes: number };
+  upload?: { pathname: string; pieces: number; pieceBytes: number; multipart?: boolean };
   pieces?: { number: number; url: string; type: string | null }[];
   file?: VaultFile;
 };
@@ -90,10 +90,12 @@ export async function vaultUpload(file: File | Blob, ownerId: string, name: stri
   const wait = options.wait ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const pauses = options.pauses ?? PIECE_PAUSES_MS;
 
-  const opened = await door({ action: "open", ownerId, name, bytes: file.size, type: file.type });
+  const opened = await door({ action: "open", ownerId, name, bytes: file.size, type: file.type, multipart: true });
   if (opened.error === "off") return null;
   if (!opened.ok || !opened.upload) throw new VaultUploadError(opened.error ?? "server_error");
   const { pathname, pieces, pieceBytes } = opened.upload;
+  // Older servers ignore the negotiation and keep their single-PUT protocol.
+  const needsEtags = opened.upload.multipart === true || pieces > 1;
 
   const sent = new Array<number>(pieces).fill(0);
   const told = () => options.onProgress?.(file.size === 0 ? 100 : Math.min(100, (sent.reduce((a, b) => a + b, 0) / file.size) * 100));
@@ -134,7 +136,7 @@ export async function vaultUpload(file: File | Blob, ownerId: string, name: stri
         // Our own door said no to signing: that is an answer, not a dropped line.
         if (thrown instanceof VaultUploadError && thrown.reason !== "server_error" && thrown.reason !== "files_unavailable") throw thrown;
       }
-      if (answer.status >= 200 && answer.status < 300 && (answer.etag || pieces === 1)) {
+      if (answer.status >= 200 && answer.status < 300 && (answer.etag || !needsEtags)) {
         etags[number - 1] = answer.etag ?? "whole";
         sent[number - 1] = piece.size;
         told();
@@ -171,7 +173,7 @@ export async function vaultUpload(file: File | Blob, ownerId: string, name: stri
     throw thrown;
   }
 
-  const closed = await door({ action: "done", pathname, etags: pieces > 1 ? etags : [] });
+  const closed = await door({ action: "done", pathname, etags: needsEtags ? etags : [] });
   if (!closed.ok || !closed.file) throw new VaultUploadError(closed.error ?? "server_error");
   options.onProgress?.(100);
   return closed.file;

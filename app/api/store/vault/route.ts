@@ -1,3 +1,4 @@
+import { openReservedVault, closeReservedVault, abortReservedVault } from "@/lib/vault-storage";
 import type { NextRequest } from "next/server";
 import { readKind } from "@/lib/catalog";
 import { ITEM_ID_PATTERN, findLesson, readCourses } from "@/lib/course";
@@ -5,10 +6,10 @@ import { rememberFolderOwner } from "@/lib/delivery";
 import { ALLOWED_CONTENT_TYPES, MAX_FILE_BYTES, safeFileName } from "@/lib/product-file";
 import { withinLimit } from "@/lib/request-guard";
 import { storageRefusal, standingOf } from "@/lib/plan-standing";
-import { fits, storageBrakeFor, storageUsed } from "@/lib/storage-quota";
+import { storageBrakeFor } from "@/lib/storage-quota";
 import { ownsDeliveryId, storeFolder, storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { abortVaultUpload, closeVaultUpload, isVaultConfigured, openVaultUpload, signPieces } from "@/lib/vault";
+import { isVaultConfigured, signPieces } from "@/lib/vault";
 import { PIECES_PER_ASK, readVaultPath } from "@/lib/vault-rules";
 
 /** Uploads one store may open in an hour, and times it may ask for addresses: a full catalog, moved in one sitting. */
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
   const action = text(body.action, 10);
   const fail = (error: string, status = 400) => Response.json({ ok: false, error }, { status });
 
+  let quotaRefusal = "storage_full";
   try {
     const store = await storeForEmail(ref);
     if (!store) return fail("none");
@@ -67,12 +69,11 @@ export async function POST(request: NextRequest) {
       if (!(await withinLimit("vault-open", folder, OPENS_PER_HOUR, 3600))) return fail("slow_down", 429);
       // What a store may keep goes by where it stands with its plan (lib/plan-standing.ts).
       const standing = standingOf(store);
-      const held = await storageUsed(folder, storageBrakeFor(standing));
-      if (held.available === false) return fail("files_unavailable", 503);
-      if (!fits(held, bytes)) return fail(storageRefusal(standing));
+      quotaRefusal = storageRefusal(standing);
+      if (body.multipart !== true) return fail("upload_refresh", 409);
       await rememberFolderOwner(folder, ref);
 
-      const opened = await openVaultUpload({ folder, ownerId, name: safeFileName(text(body.name, 200)), bytes, type });
+      const opened = await openReservedVault({ folder, ownerId, name: safeFileName(text(body.name, 200)), bytes, type, multipart: true }, storageBrakeFor(standing));
       if (!opened.ok) return fail(opened.reason === "off" ? "off" : opened.reason === "invalid" ? "invalid" : "files_unavailable", opened.reason === "off" ? 404 : opened.reason === "invalid" ? 400 : 503);
       return Response.json({ ok: true, upload: opened.upload }, { headers: { "Cache-Control": "no-store" } });
     }
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     if (action === "done") {
       const etags = Array.isArray(body.etags) ? body.etags.filter((e): e is string => typeof e === "string") : [];
-      const closed = await closeVaultUpload(pathname, etags);
+      const closed = await closeReservedVault(pathname, etags);
       if (!closed.ok) {
         const status = closed.reason === "unknown" ? 404 : closed.reason === "unavailable" ? 503 : closed.reason === "off" ? 404 : 400;
         return fail(closed.reason === "unavailable" ? "files_unavailable" : closed.reason, status);
@@ -100,12 +101,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "abort") {
-      await abortVaultUpload(pathname);
+      if (!(await abortReservedVault(pathname))) return fail("files_unavailable", 503);
       return Response.json({ ok: true });
     }
 
     return fail("invalid");
   } catch (error) {
+    if (error instanceof Error && error.message === "storage_limit") return fail(quotaRefusal);
+    if (error instanceof Error && (error.message === "storage_pending" || error.message === "storage_busy")) return fail("uploads_pending", 409);
+    if (error instanceof Error && error.message === "busy") return fail("slow_down", 429);
+    if (error instanceof Error && error.message.startsWith("storage_")) return fail("files_unavailable", 503);
     console.error("a file upload's door failed", error);
     return fail("server_error", 500);
   }

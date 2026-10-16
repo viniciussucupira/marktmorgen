@@ -136,6 +136,7 @@ function tag(xml: string, name: string): string | null {
 
 /** An upload that was opened: what its pieces are signed for, and what the finished file is held to. */
 type Upload = {
+  reservation?: string;
   pathname: string;
   /** The store's id for an upload in pieces; empty for a file sent whole. */
   uploadId: string;
@@ -153,7 +154,7 @@ async function readUpload(pathname: string): Promise<Upload | null> {
   try {
     const value = JSON.parse(raw) as Partial<Upload>;
     if (value.pathname !== pathname || typeof value.bytes !== "number" || !(value.bytes > 0)) return null;
-    return { pathname, uploadId: typeof value.uploadId === "string" ? value.uploadId : "", bytes: value.bytes, type: typeof value.type === "string" ? value.type : "", at: typeof value.at === "number" ? value.at : 0 };
+    return { reservation: typeof value.reservation === "string" ? value.reservation : undefined, pathname, uploadId: typeof value.uploadId === "string" ? value.uploadId : "", bytes: value.bytes, type: typeof value.type === "string" ? value.type : "", at: typeof value.at === "number" ? value.at : 0 };
   } catch {
     return null;
   }
@@ -164,6 +165,8 @@ export type OpenedUpload = {
   /** How many pieces the file goes up in. One means it goes whole, to the address of piece 1. */
   pieces: number;
   pieceBytes: number;
+  /** Even a single piece needs its ETag when the browser negotiated multipart. */
+  multipart?: true;
 };
 
 /**
@@ -180,7 +183,10 @@ export async function openVaultUpload(input: {
   name: string;
   bytes: number;
   type: string;
-}): Promise<{ ok: true; upload: OpenedUpload } | { ok: false; reason: "off" | "invalid" | "unavailable" }> {
+  /** Opt in for clients that can complete a one-part multipart session. */
+  multipart?: boolean;
+  reservation?: string;
+}): Promise<{ ok: true; upload: OpenedUpload; sessionId: string } | { ok: false; reason: "off" | "invalid" | "unavailable" }> {
   const config = vaultConfig();
   if (!config || !isRedisConfigured()) return { ok: false, reason: "off" };
   if (!Number.isInteger(input.bytes) || input.bytes <= 0) return { ok: false, reason: "invalid" };
@@ -189,19 +195,19 @@ export async function openVaultUpload(input: {
 
   const pieces = pieceCount(input.bytes);
   let uploadId = "";
-  if (pieces > 1) {
+  if (pieces > 1 || input.multipart) {
     const made = await ask(config, "POST", `${objectUrl(config, pathname)}?uploads=`, { headers: { "content-type": input.type } });
     uploadId = made.status === 200 ? (tag(made.text, "UploadId") ?? "") : "";
     if (!uploadId || !/^[A-Za-z0-9._~+/=-]{1,1024}$/.test(uploadId)) return { ok: false, reason: "unavailable" };
   }
-  const record: Upload = { pathname, uploadId, bytes: input.bytes, type: input.type, at: Date.now() };
+  const record: Upload = { reservation: input.reservation, pathname, uploadId, bytes: input.bytes, type: input.type, at: Date.now() };
   await redisPipeline([["SET", uploadKey(pathname), JSON.stringify(record), "EX", UPLOAD_SECONDS]]);
-  return { ok: true, upload: { pathname, pieces, pieceBytes: PIECE_BYTES } };
+  return { ok: true, sessionId: uploadId, upload: { pathname, pieces, pieceBytes: PIECE_BYTES, ...(input.multipart ? { multipart: true as const } : {}) } };
 }
 
 /**
  * Addresses for the browser to send these pieces to. Each is good for an
- * hour and for one request: that piece of that upload, of exactly the size
+ * hour: that piece of that upload, of exactly the size
  * the piece has in a file of the size the upload was opened for. A piece of
  * any other size no longer matches the signature and is refused by the
  * store itself.
@@ -282,15 +288,24 @@ export async function closeVaultUpload(
   return { ok: true, file: { pathname, bytes: found.bytes, contentType: found.contentType || upload.type } };
 }
 
-/** Gives up an upload: its pieces are thrown away at the store, and it is forgotten here. */
-export async function abortVaultUpload(pathname: string): Promise<void> {
+/** Forgets an upload only after the provider confirms its cancellation. */
+export async function abortVaultUpload(pathname: string): Promise<boolean> {
   const config = vaultConfig();
-  if (!config || !isRedisConfigured()) return;
+  if (!config || !isRedisConfigured()) return false;
   const upload = await readUpload(pathname);
-  if (!upload) return;
-  if (upload.uploadId) await ask(config, "DELETE", `${objectUrl(config, pathname)}?uploadId=${encodeURIComponent(upload.uploadId)}`);
-  else await ask(config, "DELETE", objectUrl(config, pathname));
+  if (!upload) return true;
+  const url = upload.uploadId
+    ? `${objectUrl(config, pathname)}?uploadId=${encodeURIComponent(upload.uploadId)}`
+    : objectUrl(config, pathname);
+  const answer = await ask(config, "DELETE", url);
+  if (![200, 204].includes(answer.status)) {
+    // A missing session may belong to an ambiguous completion. Only a
+    // positively observed completed object can then replace reserved bytes.
+    const completed = answer.status === 404 ? await headVault(pathname) : null;
+    if (!completed || completed === "unreachable") return false;
+  }
   await redisPipeline([["DEL", uploadKey(pathname)]]);
+  return true;
 }
 
 // -------------------------------------------------------------------- files
@@ -449,4 +464,19 @@ export async function vaultHeld(folder: string): Promise<number | null> {
     cursor = answer.cursor;
   }
   return null;
+}
+
+export async function vaultReservationId(pathname: string): Promise<string | undefined> {
+  return (await readUpload(pathname))?.reservation;
+}
+
+/** Cancels a known multipart session even after the short-lived upload record expires. */
+export async function retireVaultSession(pathname: string, uploadId: string): Promise<boolean> {
+  const config = vaultConfig();
+  if (!config || !readVaultPath(pathname) || !/^[A-Za-z0-9._~+\/=-]{1,1024}$/.test(uploadId)) return false;
+  const answer = await ask(config, "DELETE", objectUrl(config, pathname) + "?uploadId=" + encodeURIComponent(uploadId));
+  if ([200, 204].includes(answer.status)) return true;
+  if (answer.status !== 404) return false;
+  const completed = await headVault(pathname);
+  return completed !== null && completed !== "unreachable";
 }
