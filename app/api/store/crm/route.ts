@@ -4,7 +4,7 @@ import { ensureStatsId } from "@/lib/store";
 import { DEAL_ID, newCrmId, readFollowUp, parseDeal, parseFields, parseStages } from "@/lib/crm-rules";
 import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
-import { CrmSchemaReadUnavailable, CrmSchemaWriteUnconfirmed, CrmDealReadUnavailable, CrmDealWriteUnconfirmed, dropDeal, readDeal, readFields, readStages, setValue, writeDeal, writeFields, writeStages } from "@/lib/crm";
+import { CrmValueWriteUnconfirmed, CrmSchemaReadUnavailable, CrmSchemaWriteUnconfirmed, CrmDealReadUnavailable, CrmDealWriteUnconfirmed, dropDeal, readDeal, readFields, readStages, setValue, writeDeal, writeFields, writeStages } from "@/lib/crm";
 
 /** Ten fields of ten choices, or a deal with its note, as JSON. */
 const MAX_BODY_BYTES = 20_000;
@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
     }
     return refuse("invalid");
   } catch (error) {
+    if (error instanceof CrmValueWriteUnconfirmed) return refuse("crm_write_unconfirmed", 502);
     if (error instanceof CrmSchemaReadUnavailable) return refuse("crm_schema_read_unavailable", 503);
     if (error instanceof CrmSchemaWriteUnconfirmed) return refuse("crm_write_unconfirmed", 502);
     if (error instanceof CrmDealReadUnavailable) return refuse("crm_deal_read_unavailable", 503);
