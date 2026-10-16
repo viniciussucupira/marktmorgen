@@ -7,6 +7,7 @@ import { StudioStorePin } from "@/components/studio-store-pin";
 import { FormsEditor, type SavedForm } from "@/components/forms-editor";
 import { readForms, readResponses } from "@/lib/form-store";
 import { readCards } from "@/lib/catalog";
+import { readStages } from "@/lib/crm";
 import { can } from "@/lib/team-roles";
 
 export const metadata: Metadata = {
@@ -36,6 +37,7 @@ export default async function StudioFormsPage({ searchParams }: Params) {
   const { store } = view;
   const reads = can(view.role, "export");
   const forms = await readForms(store.statsId);
+  const dealStages = reads && can(view.role, "orders") ? await readStages(store.statsId) : [];
   const saved: SavedForm[] = await Promise.all(
     forms.map(async (form) => {
       const { responses, total } = reads ? await readResponses(store.statsId, form.id, SHOWN) : { responses: [], total: 0 };
@@ -64,7 +66,7 @@ export default async function StudioFormsPage({ searchParams }: Params) {
             next step.
           </p>
           <div className="mt-8">
-            <FormsEditor saved={saved} products={products} exportBase={`/api/store/forms/export?${sid ? `store=${sid}&` : ""}id=`} />
+            <FormsEditor sid={sid} dealStages={dealStages} saved={saved} products={products} exportBase={`/api/store/forms/export?${sid ? `store=${sid}&` : ""}id=`} />
           </div>
           {!reads && forms.length ? <p className="mt-4 text-sm text-ink-soft">Your role does not see the answers: they can hold people&apos;s addresses and words.</p> : null}
         </main>
