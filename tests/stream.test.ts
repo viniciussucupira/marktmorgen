@@ -79,6 +79,7 @@ const collections = new Map<string, string>();
 const asked: string[] = [];
 /** The service as a whole: there, busy, or not answering. */
 let service: "up" | "busy" | "down" = "up";
+let failDeletes = false;
 let made = 0;
 const guid = () => {
   made += 1;
@@ -92,7 +93,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (url.origin !== STREAM_API_ORIGIN) return json({}, 404);
   asked.push(`${method} ${url.pathname}`);
   if (service === "down") throw new TypeError("fetch failed");
-  if (service === "busy") return json({ message: "busy" }, 503);
+  if (service === "busy" || (failDeletes && method === "DELETE")) return json({ message: "busy" }, 503);
   if ((init?.headers as Record<string, string>).AccessKey !== API_KEY) return json({}, 401);
   const path = url.pathname.replace(`/library/${LIBRARY}`, "");
   if (method === "POST" && path === "/collections") {
@@ -450,6 +451,25 @@ async function main() {
   service = "up";
   counts = await sweep(Date.now() + 5_000, NOW + 10 * MINUTE);
   is("until the five-minute job tries again, so nothing is kept, and paid for, because of one bad minute", [counts.deleted, videos.has(fifth.door.id)], [1, false]);
+
+  part("Deletion failures retain durable cleanup intent");
+  const abandoned = await openUpload(input, NOW);
+  const broken = await openUpload(input, NOW);
+  if (!abandoned.ok || !broken.ok) throw new Error("no test door");
+  videos.get(broken.door.id)!.status = 5;
+  failDeletes = true;
+  await lookAt(abandoned.door.id, NOW + ABANDONED_AFTER_MS + MINUTE);
+  await claimUpload(broken.door.pathname, FOLDER, LESSON, NOW + MINUTE);
+  is("an abandoned upload is detached locally", await streamRecord(abandoned.door.pathname), null);
+  is("both failed deletions remain queued", (redis.run(["SMEMBERS", "nl:stream:gone"]) as string[]).sort(), [abandoned.door.id, broken.door.id].sort());
+  is("both still exist at the provider", [videos.has(abandoned.door.id), videos.has(broken.door.id)], [true, true]);
+  await sweep(Date.now() + 5_000, NOW + ABANDONED_AFTER_MS + 2 * MINUTE);
+  is("a repeated outage retains both cleanup entries", (redis.run(["SMEMBERS", "nl:stream:gone"]) as string[]).length, 2);
+  failDeletes = false;
+  const recovered = await sweep(Date.now() + 5_000, NOW + ABANDONED_AFTER_MS + 3 * MINUTE);
+  is("the job deletes both after provider recovery", recovered.deleted, 2);
+  is("neither remains stored", [videos.has(abandoned.door.id), videos.has(broken.door.id)], [false, false]);
+  is("confirmed deletion clears the queue", redis.run(["SMEMBERS", "nl:stream:gone"]), []);
 
   part("The announcements' address does not exist without the key they are signed with");
   delete process.env.BUNNY_STREAM_READ_KEY;

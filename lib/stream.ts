@@ -157,6 +157,14 @@ const captionsKey = (id: string) => `nl:stream:cap:${id}`;
 const DUE = "nl:stream:due";
 const GONE = "nl:stream:gone";
 
+/** Persist deletion intent before contacting the provider or forgetting local records. */
+async function removeProviderVideo(config: Config, id: string, ms = STREAM_TIMEOUT_MS): Promise<void> {
+  const [queued] = await redisPipeline([["SADD", GONE, id]]);
+  if (queued !== 0 && queued !== 1) throw new Error("Video deletion could not be queued");
+  const answer = await ask(config, "DELETE", `/videos/${id}`, undefined, ms);
+  if (answer.status === 200 || answer.status === 404) await redisPipeline([["SREM", GONE, id]]);
+}
+
 function parseRecord(raw: unknown): StreamRecord | null {
   if (typeof raw !== "string") return null;
   try {
@@ -332,9 +340,8 @@ export async function dropAllStreams(folder: string, until = Number.POSITIVE_INF
     // Out of time: not seen through, and said so. The rest is there to be
     // listed the next time.
     if (Date.now() > until) return null;
+    await removeProviderVideo(config, id);
     await redisPipeline([["DEL", recordKey(id), captionsKey(id)], ["ZREM", DUE, id]]);
-    const answer = await ask(config, "DELETE", `/videos/${id}`);
-    if (answer.status !== 200 && answer.status !== 404) await redisPipeline([["SADD", GONE, id]]);
   }
   return videos.length;
 }
@@ -372,7 +379,7 @@ export async function openUpload(
 
   const pathname = streamPath(input.folder, input.lessonId, id);
   if (!readStreamPath(pathname)) {
-    await ask(config, "DELETE", `/videos/${id}`);
+    await removeProviderVideo(config, id);
     return { ok: false, reason: "unavailable" };
   }
   const record: StreamRecord = {
@@ -442,7 +449,7 @@ export async function lookAt(id: string, now = Date.now(), ms = STREAM_TIMEOUT_M
     return record;
   }
   if (unclaimed) {
-    await ask(config, "DELETE", `/videos/${id}`, undefined, ms);
+    await removeProviderVideo(config, id, ms);
     await redisPipeline([["DEL", recordKey(id), captionsKey(id)], ["ZREM", DUE, id]]);
     return null;
   }
@@ -495,7 +502,7 @@ export async function lookAt(id: string, now = Date.now(), ms = STREAM_TIMEOUT_M
   };
   if (state === "failed" && answer.status !== 404) {
     // What could not be made into a video is not kept, or paid for.
-    await ask(config, "DELETE", `/videos/${id}`, undefined, ms);
+    await removeProviderVideo(config, id, ms);
   }
   await redisPipeline([
     ["SET", recordKey(id), JSON.stringify(next)],
@@ -607,10 +614,13 @@ export async function dropStream(pathname: string): Promise<boolean> {
   const parts = readStreamPath(pathname);
   if (!parts) return false;
   if (!isRedisConfigured()) return true;
-  await redisPipeline([["DEL", recordKey(parts.id), captionsKey(parts.id)], ["ZREM", DUE, parts.id]]);
   const config = streamConfig();
-  const answer = config ? await ask(config, "DELETE", `/videos/${parts.id}`) : { status: 0, data: null };
-  if (answer.status !== 200 && answer.status !== 404) await redisPipeline([["SADD", GONE, parts.id]]);
+  if (config) await removeProviderVideo(config, parts.id);
+  else {
+    const [queued] = await redisPipeline([["SADD", GONE, parts.id]]);
+    if (queued !== 0 && queued !== 1) throw new Error("Video deletion could not be queued");
+  }
+  await redisPipeline([["DEL", recordKey(parts.id), captionsKey(parts.id)], ["ZREM", DUE, parts.id]]);
   return true;
 }
 
