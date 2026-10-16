@@ -6,7 +6,7 @@ import { FORM_ID } from "@/lib/forms";
 import { readStages } from "@/lib/crm";
 import { MAX_DEAL_CENTS, MAX_DEAL_NOTE, MAX_DEAL_TITLE, parseDeal, readFollowUp } from "@/lib/crm-rules";
 import { readTeam } from "@/lib/team";
-import { createFormOpportunity, formOpportunityRef } from "@/lib/form-opportunity";
+import { MAX_CONVERTIBLE_FORM_RESPONSES, createFormOpportunity, formOpportunityRef } from "@/lib/form-opportunity";
 
 /** Explicit reviewed conversion only; no marketing enrollment or messaging. */
 export async function POST(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     const form = await readForm(store.statsId, body.form);
     if (!form) return refuse("unknown", 404);
-    const { responses } = await readResponses(store.statsId, form.id);
+    const { responses } = await readResponses(store.statsId, form.id, MAX_CONVERTIBLE_FORM_RESPONSES);
     const response = responses.find(response => formOpportunityRef(store.statsId!, form.id, response) === body.responseRef);
     if (!response) return refuse("response_gone", 409);
     const raw = body.deal && typeof body.deal === "object" && !Array.isArray(body.deal) ? body.deal as Record<string, unknown> : {};
