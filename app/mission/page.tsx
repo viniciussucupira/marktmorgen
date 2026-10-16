@@ -235,7 +235,7 @@ export default function MissionPage() {
                 <span className="serif font-normal text-[#cfc4ff]">to be paid for their work</span>
               </h1>
               <p className="t-lead mt-6 max-w-2xl text-white/80">
-                The subscription and the plan's share of sales should both be clear before you choose. That is the whole idea, and
+                The subscription and the plan&apos;s share of sales should both be clear before you choose. That is the whole idea, and
                 everything we build is judged against it.
               </p>
             </div>
