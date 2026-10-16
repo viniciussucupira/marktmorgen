@@ -2,6 +2,7 @@ import { BASE_PLAN_REVENUE_CEILINGS, CURRENT_COMMERCIAL_TERMS, CURRENT_PRICE_AND
 import { CUSTOMER_COST_CATEGORIES } from "@/lib/net-margin-rules";
 import { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
 import { STORAGE_BRAKE_BYTES as UPLOAD_STORAGE_BYTES } from "@/lib/storage-quota";
+import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { VISITS_INCLUDED } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED } from "@/lib/order-rules";
@@ -33,6 +34,8 @@ function checkLeaves(value: unknown, path: string[] = []) {
  parent[path[path.length - 1]] = typeof value === "number" ? value + 1 : typeof value === "boolean" ? !value : String(value) + " changed";
  is("old review rejected after " + path.join(".") + " changes", commercialMarginReady({ ...review(), priceAndRightsSnapshot: JSON.stringify(changed) }), false);
 }
+is("review captures enforced AI request limits", CURRENT_COMMERCIAL_TERMS.ai.requestLimits, AI_REQUEST_LIMITS);
+is("review captures allowed provider models", CURRENT_COMMERCIAL_TERMS.ai.supportedModels, SUPPORTED_AI_MODELS);
 checkLeaves(CURRENT_COMMERCIAL_TERMS);
 const legacy = JSON.stringify({ prices: CURRENT_COMMERCIAL_TERMS.prices, commission: CURRENT_COMMERCIAL_TERMS.commission, trialDays: CURRENT_COMMERCIAL_TERMS.trialDays });
 is("partial legacy contract cannot approve current rights", commercialMarginReady({ ...review(), priceAndRightsSnapshot: legacy }), false);
