@@ -136,6 +136,7 @@ function tag(xml: string, name: string): string | null {
 
 /** An upload that was opened: what its pieces are signed for, and what the finished file is held to. */
 type Upload = {
+  reservation?: string;
   pathname: string;
   /** The store's id for an upload in pieces; empty for a file sent whole. */
   uploadId: string;
@@ -153,7 +154,7 @@ async function readUpload(pathname: string): Promise<Upload | null> {
   try {
     const value = JSON.parse(raw) as Partial<Upload>;
     if (value.pathname !== pathname || typeof value.bytes !== "number" || !(value.bytes > 0)) return null;
-    return { pathname, uploadId: typeof value.uploadId === "string" ? value.uploadId : "", bytes: value.bytes, type: typeof value.type === "string" ? value.type : "", at: typeof value.at === "number" ? value.at : 0 };
+    return { reservation: typeof value.reservation === "string" ? value.reservation : undefined, pathname, uploadId: typeof value.uploadId === "string" ? value.uploadId : "", bytes: value.bytes, type: typeof value.type === "string" ? value.type : "", at: typeof value.at === "number" ? value.at : 0 };
   } catch {
     return null;
   }
@@ -184,7 +185,8 @@ export async function openVaultUpload(input: {
   type: string;
   /** Opt in for clients that can complete a one-part multipart session. */
   multipart?: boolean;
-}): Promise<{ ok: true; upload: OpenedUpload } | { ok: false; reason: "off" | "invalid" | "unavailable" }> {
+  reservation?: string;
+}): Promise<{ ok: true; upload: OpenedUpload; sessionId: string } | { ok: false; reason: "off" | "invalid" | "unavailable" }> {
   const config = vaultConfig();
   if (!config || !isRedisConfigured()) return { ok: false, reason: "off" };
   if (!Number.isInteger(input.bytes) || input.bytes <= 0) return { ok: false, reason: "invalid" };
@@ -198,9 +200,9 @@ export async function openVaultUpload(input: {
     uploadId = made.status === 200 ? (tag(made.text, "UploadId") ?? "") : "";
     if (!uploadId || !/^[A-Za-z0-9._~+/=-]{1,1024}$/.test(uploadId)) return { ok: false, reason: "unavailable" };
   }
-  const record: Upload = { pathname, uploadId, bytes: input.bytes, type: input.type, at: Date.now() };
+  const record: Upload = { reservation: input.reservation, pathname, uploadId, bytes: input.bytes, type: input.type, at: Date.now() };
   await redisPipeline([["SET", uploadKey(pathname), JSON.stringify(record), "EX", UPLOAD_SECONDS]]);
-  return { ok: true, upload: { pathname, pieces, pieceBytes: PIECE_BYTES, ...(input.multipart ? { multipart: true as const } : {}) } };
+  return { ok: true, sessionId: uploadId, upload: { pathname, pieces, pieceBytes: PIECE_BYTES, ...(input.multipart ? { multipart: true as const } : {}) } };
 }
 
 /**
@@ -446,4 +448,16 @@ export async function vaultHeld(folder: string, requireComplete = false): Promis
   }
   // More pages remain: a partial count cannot authorize another upload.
   return requireComplete ? null : bytes;
+}
+
+export async function vaultReservationId(pathname: string): Promise<string | undefined> {
+  return (await readUpload(pathname))?.reservation;
+}
+
+/** Cancels a known multipart session even after the short-lived upload record expires. */
+export async function retireVaultSession(pathname: string, uploadId: string): Promise<boolean> {
+  const config = vaultConfig();
+  if (!config || !readVaultPath(pathname) || !/^[A-Za-z0-9._~+\/=-]{1,1024}$/.test(uploadId)) return false;
+  const answer = await ask(config, "DELETE", objectUrl(config, pathname) + "?uploadId=" + encodeURIComponent(uploadId));
+  return [200, 204, 404].includes(answer.status);
 }

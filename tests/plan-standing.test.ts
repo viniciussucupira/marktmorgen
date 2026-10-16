@@ -72,7 +72,12 @@ async function main(): Promise<void> {
   is("a store is not told to start a plan while none can be started", STUDIO_MESSAGES.storage_setup.includes("Start your plan"), PLANS_ON_SALE);
   for (const [name, path] of [["files", "app/api/store/vault/route.ts"], ["lesson videos", "app/api/store/stream/route.ts"]] as const) {
     const door = read(path);
+    if (name === "files") {
+      const reserved = read("lib/vault-storage.ts");
+      is("R2 admission measures complete usage under a reservation", [/openReservedVault/.test(door), /storageBrakeFor\(standing\)/.test(door), /storageUsed\(input.folder, limit, true\)/.test(reserved), /reserveStorage/.test(reserved), /storageRefusal\(standing\)/.test(door)], [true, true, true, true, true]);
+    } else {
     is(`the door for ${name} measures a store against its own figure and holds a file to what is left`, [/storageUsed\(folder, storageBrakeFor\(standing\), true\)/.test(door), /!fits\(held, bytes, standing\)/.test(door), /storageRefusal\(standing\)/.test(door)], [true, true, true]);
+    }
   }
 
   part("The day a plan ends is written down once");
