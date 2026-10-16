@@ -6,7 +6,7 @@ export const PROFIT_COST_CATEGORIES = [
   "fraudAndDisputes", "lifecycleAndOther",
 ] as const;
 export type ProfitCostCategory = typeof PROFIT_COST_CATEGORIES[number];
-export type ProfitCostBound = { cents: number; evidence: string };
+export type ProfitCostBound = { cents: number; evidence: string; currency: string; period: string; validUntil: number };
 export type ProfitScenario = {
   scope: "plan" | "customer" | "company";
   reference: string;
@@ -47,6 +47,7 @@ export function assessProfitScenario(raw: unknown, nowSeconds = Math.floor(Date.
     if (!Object.hasOwn(raw.costs, category)) return unknown("missing_cost:" + category);
     const line = raw.costs[category];
     if (!object(line) || !money(line.cents) || !text(line.evidence)) return unknown("unverified_cost:" + category);
+    if (line.currency !== raw.currency || line.period !== raw.period || !money(line.validUntil) || line.validUntil <= nowSeconds) return unknown("unverified_cost_evidence:" + category);
     total += BigInt(line.cents);
   }
   if (total > BigInt(Number.MAX_SAFE_INTEGER)) return unknown("cost_overflow");
