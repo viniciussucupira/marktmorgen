@@ -1290,6 +1290,9 @@ export default async function StudioPage({
                     reminders: current ? current.recovery.enabled : undefined,
                     may: { settings: may("settings"), page: may("page"), draft: may("draft") },
                     pages: statListings.filter((l) => l.page).map((l) => l.id),
+                    promotionProducts: current && (may("page") || may("draft"))
+                      ? statListings.filter((product) => !product.hidden).map((product) => ({ id: product.id, title: product.title, url: `${storeBase(current)}/p/${productSegment(product)}` }))
+                      : [],
                   }}
                   weeklyAi={may("settings") && isAiConfigured() && store ? store.weeklyAi : undefined}
                   weeklyTeam={
