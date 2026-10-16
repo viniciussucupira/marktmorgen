@@ -35,7 +35,7 @@ import {
 } from "@/lib/forms";
 
 /** One saved form, with how many answers it has kept and the newest of them. */
-export type SavedForm = { form: FormDef; total: number; latest: FormResponse[] };
+export type SavedForm = { form: FormDef; total: number; latest: (FormResponse & { opportunityRef?: string })[] };
 
 const MESSAGES: Record<string, string> = {
   name: "Give the form a name. Only you see it.",
@@ -69,7 +69,7 @@ const blank = (): FormDef => ({
  */
 export function FormsEditor({ saved, products, exportBase, dealStages = [], sid = "", currency = "USD", dealAssignees = [], existingDeals = [] }: { existingDeals?: FormDealMatch[]; currency?: string; dealAssignees?: string[]; dealStages?: Stage[]; sid?: string; saved: SavedForm[]; products: { id: string; title: string }[]; /** The download's address, the form's id added at its end. */ exportBase: string }) {
   const router = useRouter();
-  const [dealDraft, setDealDraft] = useState<{ form: FormDef; response: FormResponse } | null>(null);
+  const [dealDraft, setDealDraft] = useState<{ form: FormDef; response: FormResponse; responseRef: string } | null>(null);
   const [draft, setDraft] = useState<FormDef | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -214,7 +214,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                           </td>
                         ))}
                         {form.outcomes.length ? <td className="py-2 pr-4">{form.outcomes.find((o) => o.id === r.outcome)?.title ?? ""}</td> : null}
-                        {dealStages.some(stage => stage.kind === "open") ? <td className="py-2 pr-4"><button type="button" className="btn btn-secondary btn-sm" disabled={draft !== null || dealDraft !== null} onClick={() => setDealDraft({ form, response: r })}>Review as opportunity</button></td> : null}
+                        {dealStages.some(stage => stage.kind === "open") ? <td className="py-2 pr-4"><button type="button" className="btn btn-secondary btn-sm" disabled={draft !== null || dealDraft !== null || !r.opportunityRef} onClick={() => r.opportunityRef && setDealDraft({ form, response: r, responseRef: r.opportunityRef })}>{r.opportunityRef && existingDeals.some(deal => deal.formResponseRef === r.opportunityRef) ? "View opportunity" : "Review as opportunity"}</button></td> : null}
                       </tr>
                     ))}
                   </tbody>
@@ -226,7 +226,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
         ))}
       </ul>
 
-      {dealDraft ? <FormResponseDeal form={dealDraft.form} response={dealDraft.response} stages={dealStages} sid={sid} currency={currency} assignees={dealAssignees} existingDeals={existingDeals} onClose={() => setDealDraft(null)} /> : null}
+      {dealDraft ? <FormResponseDeal form={dealDraft.form} response={dealDraft.response} responseRef={dealDraft.responseRef} stages={dealStages} sid={sid} currency={currency} assignees={dealAssignees} existingDeals={existingDeals} onClose={() => setDealDraft(null)} /> : null}
 
       {error && !draft ? (
         <p className="notice notice-error mt-4" role="alert">
