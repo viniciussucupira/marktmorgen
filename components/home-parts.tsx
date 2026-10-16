@@ -723,7 +723,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           groups={proGroups(domains)}
           perks={proPerks}
           featured={false}
-          cta={"Start on Storefront & Email"}
+          cta={`Start on ${PLAN_TITLES.pro}`}
           yearly={yearly}
         />
       </div>
