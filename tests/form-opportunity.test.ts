@@ -89,6 +89,17 @@ async function main() {
   const afterRemoval = await (await send()).json();
   is("removing the source form does not hide a committed opportunity", [afterRemoval.state, afterRemoval.deal?.formResponseRef], ["existing", ref]);
   is("a removed form cannot create an opportunity from an unknown reference", (await (await send("c".repeat(64))).json()).error, "unknown");
+  part("Distinct submission identities");
+  const identifiedA = { ...response, id: "1".repeat(32) };
+  const identifiedB = { ...response, id: "2".repeat(32) };
+  const refA = formOpportunityRef(statsId, form.id, identifiedA);
+  const refB = formOpportunityRef(statsId, form.id, identifiedB);
+  is("equal answers in the same second remain distinct for different server IDs", refA === refB, false);
+  is("a stored submission keeps its identity independently of answer key order", refA, formOpportunityRef(statsId, form.id, { ...identifiedA, answers: { second: "b", first: "a" } }));
+  is("server IDs are scoped by store and form", [refA === formOpportunityRef("other-store", form.id, identifiedA), refA === formOpportunityRef(statsId, "otherform0", identifiedA)], [false, false]);
+  is("invalid IDs retain the legacy fingerprint", formOpportunityRef(statsId, form.id, { ...response, id: "invalid" }), ref);
+  const distinct = await Promise.all([createFormOpportunity("distinct-submissions", refA, kept, DEFAULT_STAGES), createFormOpportunity("distinct-submissions", refB, kept, DEFAULT_STAGES)]);
+  is("identical distinct submissions can create separate reviewed opportunities", [distinct.map(result => result.state), (await readDeals("distinct-submissions", DEFAULT_STAGES)).length], [["created", "created"], 2]);
   done();
 }
 main().catch(error => { console.error(error); process.exit(1); });
