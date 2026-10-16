@@ -1,12 +1,12 @@
 # Create-once opportunities from form responses
 
-The reviewed conversion endpoint is POST /api/store/form-opportunity. It requires orders and export access to the pinned store, an existing form and a response among the newest 50 shown in Forms. The same shared limit bounds the verification read; this endpoint does not fetch all 2,000 retained responses per click. It never enrolls contacts or sends email.
+The reviewed conversion endpoint is POST /api/store/form-opportunity. It requires orders and export access to the pinned store. Creating a new opportunity requires an existing form and a response among the newest 50 shown in Forms. A retry first reads the exact identity-bearing opportunity in that store, so a committed conversion remains recoverable after the response ages out, the form is removed, or the original draft stage or assignee changes. The same shared limit bounds the verification read; this endpoint does not fetch all 2,000 retained responses per click. It never enrolls contacts or sends email.
 
 The server fingerprints the store ID, form ID and stored response. The first ten hex characters choose the existing CRM-compatible deal ID; the full 64-character reference is stored on the deal as formResponseRef. A short-ID collision is refused when the full reference differs. Ordinary CRM edits preserve this server-owned field and cannot reassign it from submitted input.
 
 A single-key Lua script checks whether the deal already exists, checks the CRM hash capacity, and performs one HSET only when absent. It returns the existing record on replay without overwriting work done afterward. There is no non-atomic fallback. A lost reply is uncertain; retrying the same conversion uses the same identity. Capacity includes malformed hash entries. This endpoint enforces capacity atomically with respect to its own conversions; unrelated legacy CRM writes retain their previous capacity behavior.
 
-There is no second receipt table, lock lease or new unbounded history. The existing MAX_DEALS limit is unchanged. A deleted opportunity can be created again from its still-retained response, because deletion removes the identity-bearing record. A response outside this current 50-response conversion window cannot start or replay a conversion through this endpoint; an existing opportunity remains in Deals.
+There is no second receipt table, lock lease or new unbounded history. The existing MAX_DEALS limit is unchanged. A deleted opportunity can be created again from its still-retained response, because deletion removes the identity-bearing record. A response outside this current 50-response conversion window cannot start a new conversion. An existing opportunity can still be recovered through the exact full response reference, without replaying draft changes or reading the response history. Invalid storage replies and identity conflicts fail closed.
 
 ## Scope and limitations
 
