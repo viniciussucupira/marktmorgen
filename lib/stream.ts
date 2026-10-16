@@ -395,11 +395,15 @@ export async function openUpload(
     height: 0,
     settled: false,
   };
-  await redisPipeline([
+  const [saved, scheduled] = await redisPipeline([
     ["SET", recordKey(id), JSON.stringify(record)],
     // Looked at again only to be taken away, if no lesson is told of it.
     ["ZADD", DUE, now + ABANDONED_AFTER_MS + 60_000, id],
   ]);
+  if (saved !== "OK" || (scheduled !== 0 && scheduled !== 1)) {
+    await removeProviderVideo(config, id);
+    return { ok: false, reason: "unavailable" };
+  }
   const expires = Math.floor(now / 1000) + UPLOAD_WINDOW_SECONDS;
   const signature = createHash("sha256").update(`${config.library}${config.key}${expires}${id}`).digest("hex");
   return { ok: true, door: { endpoint: UPLOAD_ENDPOINT, library: config.library, id, expires, signature, pathname } };

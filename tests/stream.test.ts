@@ -492,6 +492,22 @@ async function main() {
   is("no provider deletion was attempted", asked.length, askedBeforeUnknownQueue);
   await dropStream(uncertain.door.pathname);
 
+  part("A new upload needs confirmed tracking before receiving its signature");
+  redis.pipeline = async (commands) => {
+    const result = await originalPipeline(commands);
+    return commands.some((command) => command[0] === "SET" && String(command[1]).startsWith("nl:stream:v:"))
+      ? [undefined, undefined] : result;
+  };
+  const storedBeforeUnconfirmedDoor = videos.size;
+  let unconfirmedDoor;
+  try {
+    unconfirmedDoor = await openUpload(input, NOW);
+  } finally {
+    redis.pipeline = originalPipeline;
+  }
+  is("missing tracking acknowledgement never publishes an upload signature", unconfirmedDoor, { ok: false, reason: "unavailable" });
+  is("the empty provider video is removed", videos.size, storedBeforeUnconfirmedDoor);
+
   part("The announcements' address does not exist without the key they are signed with");
   delete process.env.BUNNY_STREAM_READ_KEY;
   is("not found", (await announce(announcement)).status, 404);
