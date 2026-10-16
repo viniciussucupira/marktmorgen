@@ -14,9 +14,9 @@
  *   - a creator not paying us yet keeps what they earned until they start.
  */
 import { claimHandle, createStore, setSubscription, storeForEmail } from "@/lib/store";
-import { inviteCode, inviteView, inviterFor, recordInvite, creditKey, OWED_KEY } from "@/lib/creator-invites";
+import { inviteCode, inviteView, inviterFor, recordInvite, creditKey, OWED_KEY, byKey, parseBy } from "@/lib/creator-invites";
 import { INVITE_STRIPE_VERSION, paidOn, settleInvites } from "@/lib/creator-invite-credit";
-import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE, INVITE_HOLD_DAYS, inviteShare } from "@/lib/creator-invite-rules";
+import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE, INVITE_HOLD_DAYS, inviteShare, currentInviteTerms, readInviteTerms } from "@/lib/creator-invite-rules";
 import { GET as accept } from "@/app/invite/[code]/accept/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -150,6 +150,20 @@ async function main(): Promise<void> {
   is("Cal, invited by Ana", await recordInvite(cal, code, NOW - INVITED * DAY * 1000), "recorded");
   is("Eve, invited by Dan", await recordInvite(eve, danCode, NOW - INVITED * DAY * 1000), "recorded");
 
+  part("Terms stay with the invitation");
+  const beaRecord = JSON.parse(String(redis.run(["GET", byKey(bea.sid)])));
+  is("new invites snapshot the offered terms", beaRecord.terms, currentInviteTerms());
+  is("legacy records retain their original bonus", parseBy(JSON.stringify({ r: ana.sid, at: 1 }))?.terms?.bonusCents, 2900);
+  is("unknown versions are not legacy offers", readInviteTerms({ version: 2, sharePercent: 50, bonusCents: 2900 }), null);
+  is("invalid stored terms do not earn credit", parseBy(JSON.stringify({ r: ana.sid, at: 1, terms: null })), null);
+  is("fractional bonuses are rejected", readInviteTerms({ version: 1, sharePercent: 10, bonusCents: 0.5 }), null);
+  is("snapshot controls the share", inviteShare(9900, { version: 1, sharePercent: 25, bonusCents: 500 }), 2475);
+  // Simulate an invitation recorded before snapshots, and a different future offer.
+  delete beaRecord.terms;
+  redis.run(["SET", byKey(bea.sid), JSON.stringify(beaRecord)]);
+  const eveRecord = JSON.parse(String(redis.run(["GET", byKey(eve.sid)])));
+  redis.run(["SET", byKey(eve.sid), JSON.stringify({ ...eveRecord, terms: { version: 1, sharePercent: 25, bonusCents: 500 } })]);
+
   part("Accepting an invite keeps it; a bad one keeps nothing");
   const req = { nextUrl: { protocol: "https:" } } as never;
   const yes = await accept(req, { params: Promise.resolve({ code }) });
@@ -195,7 +209,7 @@ async function main(): Promise<void> {
   is("the payment inside its refund window is not read yet", redis.run(["EXISTS", creditKey("in_BeaRecent1")]), 0);
   is("Cal had paid us before: nothing for anyone", (balance.get("cus_Cal0001") ?? []).length, 0);
   is("Dan is not paying us yet: his credit waits", balance.has("cus_Dan0001"), false);
-  is("Eve still gets hers", (balance.get("cus_Eve0001") ?? []).map((t) => t.amount), [-INVITE_BONUS_CENTS]);
+  is("Eve still gets hers", (balance.get("cus_Eve0001") ?? []).map((t) => t.amount), [-500]);
   is("each request carried its credit's own key", keys.every((k) => k.startsWith("nimbus-invite-")), true);
 
   part("Nothing twice");
@@ -215,7 +229,7 @@ async function main(): Promise<void> {
   part("Later");
   await setSubscription("dan@example.com", { customerId: "cus_Dan0001", subscriptionId: "sub_Dan0001", active: true });
   await settleInvites(Date.now() + 60_000, NOW + 12 * DAY * 1000);
-  is("Dan started paying: what he earned is on his plan", (balance.get("cus_Dan0001") ?? []).map((t) => t.amount), [-4950]);
+  is("Dan started paying: what he earned is on his plan", (balance.get("cus_Dan0001") ?? []).map((t) => t.amount), [-2475]);
   is("Bea's recent payment, out of its window, earned Ana her half", (balance.get("cus_Ana0001") ?? []).map((t) => t.amount), [-1450, -1450]);
   is("and Bea's own credit is not given twice", (balance.get("cus_Bea0001") ?? []).length, 1);
 

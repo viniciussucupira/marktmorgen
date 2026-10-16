@@ -38,7 +38,7 @@ import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { normaliseEmail } from "@/lib/auth";
 import { type Store, storeForId } from "@/lib/store";
-import { INVITE_CODE_ALPHABET, INVITE_CODE_PATTERN } from "@/lib/creator-invite-rules";
+import { INVITE_CODE_ALPHABET, INVITE_CODE_PATTERN, currentInviteTerms, readInviteTerms, type InviteTerms } from "@/lib/creator-invite-rules";
 
 const SID_PATTERN = /^[0-9a-f]{32}$/;
 
@@ -52,14 +52,16 @@ export const mineKey = (sid: string) => `nl:ref:mine:${sid}`;
 export const OWED_KEY = "nl:ref:owed";
 
 /** Who invited a store. `back` once the job found it had paid us before. */
-export type InvitedBy = { r: string; at: number; back?: boolean };
+export type InvitedBy = { r: string; at: number; back?: boolean; terms?: InviteTerms };
 
 export function parseBy(raw: unknown): InvitedBy | null {
   if (typeof raw !== "string") return null;
   try {
     const v = JSON.parse(raw) as Partial<InvitedBy>;
     if (typeof v.r !== "string" || !SID_PATTERN.test(v.r) || typeof v.at !== "number") return null;
-    return { r: v.r, at: v.at, ...(v.back === true ? { back: true } : {}) };
+    const terms = readInviteTerms(v.terms);
+    if (!terms) return null;
+    return { r: v.r, at: v.at, terms, ...(v.back === true ? { back: true } : {}) };
   } catch {
     return null;
   }
@@ -144,7 +146,7 @@ export async function recordInvite(store: Pick<Store, "sid" | "email" | "extra">
   if (!inviter?.sid) return "no_code";
   if (inviter.sid === store.sid || normaliseEmail(inviter.email) === normaliseEmail(store.email)) return "own";
   const at = Math.floor(now / 1000);
-  const [set] = await redisPipeline([["SET", byKey(store.sid), JSON.stringify({ r: inviter.sid, at }), "NX"]]);
+  const [set] = await redisPipeline([["SET", byKey(store.sid), JSON.stringify({ r: inviter.sid, at, terms: currentInviteTerms() }), "NX"]]);
   if (set === null) return "already";
   await redisPipeline([
     ["ZADD", listKey(inviter.sid), at, store.sid],

@@ -58,10 +58,27 @@ export const INVITE_COOKIE = "nl_invite";
 export const INVITE_CODE_PATTERN = /^[a-hj-km-np-z2-9]{8}$/;
 export const INVITE_CODE_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 
+/** Terms are captured when an invite is recorded, never recalculated from a later offer. */
+export type InviteTerms = { version: 1; sharePercent: number; bonusCents: number };
+
+export function currentInviteTerms(): InviteTerms {
+  return { version: 1, sharePercent: INVITE_SHARE_PERCENT, bonusCents: INVITE_BONUS_CENTS };
+}
+
+/** Missing terms identify the original offer. Invalid snapshots must not become that offer. */
+export function readInviteTerms(raw: unknown): InviteTerms | null {
+  if (raw === undefined) return { version: 1, sharePercent: 50, bonusCents: 2900 };
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const t = raw as Partial<InviteTerms>;
+  if (t.version !== 1 || !Number.isInteger(t.sharePercent) || t.sharePercent! < 0 || t.sharePercent! > 100 ||
+      !Number.isSafeInteger(t.bonusCents) || t.bonusCents! < 0 || t.bonusCents! > 1_000_000) return null;
+  return { version: 1, sharePercent: t.sharePercent!, bonusCents: t.bonusCents! };
+}
+
 /** The share of one payment, in cents, rounded down. */
-export function inviteShare(paidCents: number): number {
-  if (!Number.isFinite(paidCents) || paidCents <= 0) return 0;
-  return Math.floor((paidCents * INVITE_SHARE_PERCENT) / 100);
+export function inviteShare(paidCents: number, terms: InviteTerms = currentInviteTerms()): number {
+  if (!Number.isSafeInteger(paidCents) || paidCents <= 0 || !readInviteTerms(terms)) return 0;
+  return Math.floor((paidCents * terms.sharePercent) / 100);
 }
 
 /** Where an invite link leads. */

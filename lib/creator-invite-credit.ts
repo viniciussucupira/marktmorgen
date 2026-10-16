@@ -45,7 +45,7 @@ import {
   parseBy,
   parseCredit,
 } from "@/lib/creator-invites";
-import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, inviteShare } from "@/lib/creator-invite-rules";
+import { INVITE_HOLD_DAYS, inviteShare, readInviteTerms } from "@/lib/creator-invite-rules";
 
 export const INVITE_STRIPE_VERSION = "2026-08-26.dahlia";
 
@@ -111,6 +111,8 @@ async function earnFrom(sid: string, nowSeconds: number): Promise<number> {
   const [rawBy] = await redisPipeline([["GET", byKey(sid)]]);
   const by = parseBy(rawBy);
   if (!by || by.back) return 0;
+  const terms = readInviteTerms(by.terms);
+  if (!terms) return 0;
   const store = await storeForId(sid);
   if (!store) return 0;
   const customer = await customerFor(store);
@@ -150,7 +152,7 @@ async function earnFrom(sid: string, nowSeconds: number): Promise<number> {
     const paidAt = num(inv.status_transitions?.paid_at);
     const cur = typeof inv.currency === "string" ? inv.currency : "usd";
     const paid = num(inv.amount_paid) > 0 ? paidOn(inv, await refundedOn(inv)) : 0;
-    const cents = inviteShare(paid);
+    const cents = inviteShare(paid, terms);
     const share: Credit = { id, kind: "share", to: by.r, from: sid, cents, cur, at: paidAt, state: cents > 0 ? "owed" : "none" };
     const [took] = await redisPipeline([["SET", creditKey(id), JSON.stringify(share), "NX"]]);
     if (took === null) continue;
@@ -158,9 +160,9 @@ async function earnFrom(sid: string, nowSeconds: number): Promise<number> {
     if (cents > 0) writes.push(["SADD", OWED_KEY, id]);
     wrote += 1;
 
-    if (paid > 0) {
+    if (paid > 0 && terms.bonusCents > 0) {
       const bonusId = `bonus_${sid}`;
-      const bonus: Credit = { id: bonusId, kind: "bonus", to: sid, from: sid, cents: INVITE_BONUS_CENTS, cur, at: paidAt, state: "owed" };
+      const bonus: Credit = { id: bonusId, kind: "bonus", to: sid, from: sid, cents: terms.bonusCents, cur, at: paidAt, state: "owed" };
       const [gotBonus] = await redisPipeline([["SET", creditKey(bonusId), JSON.stringify(bonus), "NX"]]);
       if (gotBonus !== null) {
         writes.push(["ZADD", mineKey(sid), paidAt, bonusId], ["SADD", OWED_KEY, bonusId]);
