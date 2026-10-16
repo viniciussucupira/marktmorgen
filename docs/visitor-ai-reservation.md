@@ -1,0 +1,11 @@
+# Public AI reservation and retry protection
+
+Product questions (answerQuestion) and store product recommendations (guideVisitor) now share takeAnswer as their authorization path. Both require exact numeric result counters and confirmed expiry before proceeding. Missing, malformed or lost reservation responses authorize no model call, are not retried and are not blindly decremented.
+
+After a confirmed available result slot, takeAnswer reserves a separate nl:ask-attempt:<store>:<month> counter. Both public paths share a ceiling of twice the current public-answer allowance, separate from creator-writing attempts. This preserves separate feature quotas: a public-answer allowance must not authorize more creator-writing work. Attempt counters are never decremented, including provider failure or a lost reservation reply. A known result slot is returned if the attempt reservation is unavailable. Existing provider failures still return result quota; no provider response does not prove zero supplier cost. Cached responses consume neither new result quota nor attempts and remain usable after exhaustion.
+
+The limit is a conservative retry bound, not a dollar budget or proof of 60% final net profit. The factor of two is an operational allowance, not a certified cost calculation. Exhaustion or unknown state uses the existing closed response; before release, review customer-facing allowance and help text to explain that repeated failures can exhaust attempt capacity while successful-answer quota remains. No change is deployed by this draft.
+
+Counters use the existing 40-day expiry and trusted server calendar month. Redis increments serialize, but increment/expiry pipelines are not transactions. A failed expiry authorizes no provider work. Counter durability, global/account spending, full provider pricing, media/token bounds and all taxes remain outside this protection. No ledger or exact-once provider execution guarantee is claimed. Direct askModel callers must not bypass the guarded entry points.
+
+Validation uses synthetic provider and Redis responses: both public paths, malformed and applied-but-lost acknowledgements, no blind rollback/retry, shared failures, concurrent exhaustion, cache reuse and invalid context. No real model call, subscription, charge, email or production setting is changed.
