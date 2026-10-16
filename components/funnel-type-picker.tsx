@@ -7,6 +7,8 @@ import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { FUNNEL_TYPES, type FunnelType, choicesOf, pagesOf, slotProblem } from "@/lib/funnel-types";
+import { MAX_FUNNEL_INTRO, type FunnelPageCopy } from "@/lib/funnel-page-copy";
+import { MAX_HEADLINE } from "@/lib/sales-page";
 import { FUNNEL_ID, MAX_FUNNEL_NAME } from "@/lib/page-funnel";
 
 /** A product a type can be built with, as the studio knows it. */
@@ -22,6 +24,7 @@ const MESSAGES: Record<string, string> = {
   slot_paid: "That step needs a paid product.",
   slot_call: "Choose one of your calls for the booking, and no call for the other steps.",
   slot_twice: "Each product can fill one step.",
+  page_copy: "Check the page titles and introductions, then try again.",
   forms_full: "This store has no room for the required forms. Review Forms before trying again.",
   setup_incomplete: "We could not confirm completion. Some pages, forms or a funnel may already exist. Review them before creating another funnel.",
   server_error: "Something went wrong before setup started. Try again.",
@@ -31,7 +34,7 @@ const MESSAGES: Record<string, string> = {
 /**
  * Funnels to start from (lib/funnel-types.ts): pick a kind, choose the
  * store's own products for its steps, and the funnel is made with the pages
- * it needs, empty and kept from visitors until they are written.
+ * it needs, with optional starting copy and kept from visitors until ready.
  */
 export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLeft, sid }: {
   products: TypeProduct[];
@@ -47,6 +50,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [type, setType] = useState<FunnelType | null>(null);
   const [name, setName] = useState("");
   const [picked, setPicked] = useState<Record<string, string>>({});
+  const [pageCopy, setPageCopy] = useState<Record<string, FunnelPageCopy>>({});
   const [reviewing, setReviewing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +76,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
     setRecovery(null);
     setType(next);
     setName(next.label);
+    setPageCopy(Object.fromEntries(pagesOf(next).map(page => [page.key, { headline: page.title, intro: "" }])));
     setError(null);
     // The first product that fits each step, each product once.
     const used = new Set<string>();
@@ -96,7 +101,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
       const response = await fetch("/api/store/page-funnels", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "from-type", type: type.id, name, products: picked }),
+        body: JSON.stringify({ action: "from-type", type: type.id, name, products: picked, pageCopy }),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; funnel?: { id?: unknown }; pages?: { id: string; title: string }[] };
       if (response.ok && data?.ok === true) {
@@ -132,8 +137,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
             Start from a kind of funnel
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
-            Pick one, choose your products for its steps, and the funnel is made with the pages it needs. Those pages start empty and
-            stay hidden from visitors until you write them and let them out; until then the funnel goes past them.
+            Pick one, choose your products for its steps, and the funnel is made with the pages it needs. Add starting copy during review. New pages stay hidden and the funnel stays disabled until you prepare and enable them.
           </p>
         </div>
         {!open ? (
@@ -149,7 +153,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
           <p className="font-semibold text-ink">Funnel draft created. Its address is disabled.</p>
           {made.pages.length ? (
             <>
-              <p className="mt-1 text-sm text-ink-soft">Write these pages and let them out, and visitors walk through them:</p>
+              <p className="mt-1 text-sm text-ink-soft">Finish these page drafts, then make them visible when ready:</p>
               <ul className="mt-2 space-y-1 text-sm">
                 {made.pages.map((page) => (
                   <li key={page.id}>
@@ -240,7 +244,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
             <p className="mt-4 text-sm text-ink-soft">
               {`It makes ${pagesOf(type).length} ${pagesOf(type).length === 1 ? "page" : "pages"} of your own (${pagesOf(type)
                 .map((p) => p.title)
-                .join(", ")}), empty and hidden from visitors until you write them. A draft product is passed over until you publish it.`}
+                .join(", ")}), hidden from visitors while you prepare them. Add starting copy in the next step. A draft product is passed over until you publish it.`}
             </p>
           ) : null}
           {draftSelections.length > 0 ? <div className="notice notice-warn mt-4 text-sm" role="status"><p className="font-semibold">Some selected products are still drafts.</p><ul className="mt-2 list-disc space-y-1 pl-5">{draftSelections.map(selection => <li key={selection}>{selection}</li>)}</ul><p className="mt-2">You can create this setup, but publish these products and review the funnel before sharing it.</p><a className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={productsHref}>Review products</a></div> : null}
@@ -258,6 +262,17 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
                     <p className="mt-1 text-xs text-ink-soft">{slot.kind === "page"
                       ? `New hidden page · ${slot.blocks.join(", ")}${slot.form ? " · includes a new form" : ""}`
                       : product?.draft ? "Existing product · draft; publish it before sharing" : "Existing product · keep its current settings"}</p>
+                    {slot.kind === "page" ? <div className="mt-4 space-y-3">
+                      <label className="block">
+                        <span className="field-label">Page headline</span>
+                        <input className="field mt-2" maxLength={MAX_HEADLINE} value={pageCopy[slot.key]?.headline ?? slot.title} onChange={event => setPageCopy(current => ({ ...current, [slot.key]: { headline: event.target.value, intro: current[slot.key]?.intro ?? "" } }))} />
+                      </label>
+                      <label className="block">
+                        <span className="field-label">Introduction (optional)</span>
+                        <textarea className="field mt-2" rows={3} maxLength={MAX_FUNNEL_INTRO} value={pageCopy[slot.key]?.intro ?? ""} onChange={event => setPageCopy(current => ({ ...current, [slot.key]: { headline: current[slot.key]?.headline ?? slot.title, intro: event.target.value } }))} placeholder="Describe what visitors will find on this page. Use facts you can support." />
+                      </label>
+                      <p className="text-xs text-ink-soft">{pageCopy[slot.key]?.intro.length ?? 0}/{MAX_FUNNEL_INTRO} characters. Saved as editable page text. Add videos, answers and other details in the page editor.</p>
+                    </div> : null}
                   </li>;
                 })}
               </ol>
