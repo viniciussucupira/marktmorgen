@@ -5,7 +5,7 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { FormsEditor, type SavedForm } from "@/components/forms-editor";
-import { formOpportunityRef } from "@/lib/form-opportunity";
+import { MAX_CONVERTIBLE_FORM_RESPONSES, formOpportunityRef } from "@/lib/form-opportunity";
 import { readForms, readResponses } from "@/lib/form-store";
 import { readCards } from "@/lib/catalog";
 import { readTeam } from "@/lib/team";
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
 /** How many answers of each form the studio lists; the file has all of them. */
-const SHOWN = 50;
+const SHOWN = MAX_CONVERTIBLE_FORM_RESPONSES;
 
 /**
  * The store's forms, surveys and quizzes (lib/forms.ts), and their answers.
