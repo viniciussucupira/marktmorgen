@@ -18,7 +18,7 @@ async function main(){
   redis.pipeline=async commands=>{
     const read=commands.find(c=>c[0]==="GET" && c[1]===fk() || c[0]==="HGETALL" && c[1]===dk());
     if(read){const result=read[0]==="GET"?fieldRead:dealRead;if(result!==normal){if(result instanceof Error)throw result;return result as unknown[];}}
-    const write=commands.find(c=>c[0]==="SET" && [fk(),sk()].includes(String(c[1])) || c[0]==="HSET" && c[1]===dk());
+    const write=commands.find(c=>c[0]==="SET" && [fk(),sk()].includes(String(c[1])) || c[0]==="EVAL" && c[3]===dk());
     if(write){writes.push(commands.map(c=>String(c[0])));const result=write[1]===fk()?fieldReply:write[1]===sk()?stageReply:moveReply;
       if(result!==normal){if(apply)await original.call(redis,firstOnly?commands.slice(0,1):commands);if(result instanceof Error)throw result;return result as unknown[];}}
     return original.call(redis,commands);
@@ -44,7 +44,7 @@ async function main(){
       await seed();stageReply=value;is("stage SET must be confirmed",await fails(()=>writeStages(sid,DEFAULT_STAGES),CrmSchemaWriteUnconfirmed),true);is("no migration after uncertain stage SET",writes,[["SET"]]);
     }
     for(const value of [[],["0"],[2],[0,0],new Error("migration reply lost")]){
-      await seed();moveReply=value;is("opportunity moves must be confirmed",await fails(()=>writeStages(sid,DEFAULT_STAGES),CrmSchemaWriteUnconfirmed),true);is("migration is attempted once",writes,[["SET"],["HSET"]]);
+      await seed();moveReply=value;is("opportunity moves must be confirmed",await fails(()=>writeStages(sid,DEFAULT_STAGES),CrmSchemaWriteUnconfirmed),true);is("migration is attempted once",writes,[["SET"],["EVAL"]]);
     }
     part("Applied or partial changes are not rolled back or repeated");
     await seed();fieldReply=[];apply=true;firstOnly=true;is("partly applied field pipeline remains uncertain",await fails(()=>writeFields(sid,nextFields),CrmSchemaWriteUnconfirmed),true);is("applied field definitions remain",JSON.parse(String((await original.call(redis,[["GET",fk()]]))[0])),nextFields);is("unapplied cleanup remains untouched",(await original.call(redis,[["HGET",vk(),"person"]]))[0],"answer");is("partial pipeline is not retried",writes.length,1);
@@ -60,6 +60,29 @@ async function main(){
     await seed();fieldRead=[];const readFailure=await call({action:"fields",fields:nextFields});is("API identifies schema preflight failure",[readFailure.status,readFailure.body.error],[503,"crm_schema_read_unavailable"]);is("client can retry a prewrite read failure",crmAnswer(false,readFailure.body),{ok:false,error:"crm_schema_read_unavailable"});is("prewrite refusal changes no schema",writes,[]);
     await seed();stageReply=[];const writeFailure=await call({action:"stages",stages:DEFAULT_STAGES});is("API identifies uncertain schema change",[writeFailure.status,writeFailure.body.error],[502,"crm_write_unconfirmed"]);is("client uses uncertain-write recovery",crmAnswer(false,writeFailure.body),{ok:false,error:"crm_write_unconfirmed"});
   }finally{redis.pipeline=original;}
+  part("Stage migration preserves concurrent deletions and edits");
+  await seed();
+  try {
+    redis.pipeline = async commands => {
+      if (commands.some(c => c[0] === "EVAL" && c[3] === dk())) await original.call(redis, [["HDEL", dk(), oldDeal.id]]);
+      return original.call(redis, commands);
+    };
+    is("deletion during migration does not prevent saving stages", await writeStages(sid, DEFAULT_STAGES), DEFAULT_STAGES);
+    is("migration never recreates the deleted opportunity", (await original.call(redis, [["HGET", dk(), oldDeal.id]]))[0], null);
+    is("migration does not increase opportunity count after deletion", (await original.call(redis, [["HLEN", dk()]]))[0], 1);
+  } finally { redis.pipeline = original; }
+  await seed();
+  const concurrentEdit = { ...oldDeal, note: "Updated by another session", cents: 98765, futureMetadata: { source: "edited", tags: ["new"] } };
+  try {
+    redis.pipeline = async commands => {
+      if (commands.some(c => c[0] === "EVAL" && c[3] === dk())) await original.call(redis, [["HSET", dk(), oldDeal.id, JSON.stringify(concurrentEdit)]]);
+      return original.call(redis, commands);
+    };
+    is("a changed snapshot makes migration explicitly unconfirmed", await fails(() => writeStages(sid, DEFAULT_STAGES), CrmSchemaWriteUnconfirmed), true);
+    is("migration preserves every concurrent edit", JSON.parse(String((await original.call(redis, [["HGET", dk(), oldDeal.id]]))[0])), concurrentEdit);
+  } finally { redis.pipeline = original; }
+  await writeStages(sid, DEFAULT_STAGES);
+  is("explicit retry moves the latest record without reverting its edits", JSON.parse(String((await original.call(redis, [["HGET", dk(), oldDeal.id]]))[0])), { ...concurrentEdit, stage: "lead00" });
   done();
 }
 void main();
