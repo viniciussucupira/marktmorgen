@@ -75,3 +75,11 @@ Each of all six published plan/cycle combinations requires plan-scope rows with 
 Missing combinations, duplicates, unregistered rows, mismatched terms and any failing numeric assessment block the matrix. The consolidated all-customers row must model maximum simultaneous use and all costs, not an average customer. The single-customer company rows include the fixed company costs when there is only that customer.
 
 The matrix validates coverage identities and declared bounds, not accounting truth. A scenario name such as refund does not prove that refunds and retained revenue were actually calculated correctly. Full refunds or trials with zero retained revenue still fail; synthetic positive-revenue fixtures only test matrix behavior. No existing offer is certified, no runtime spending gate is added here, and previously passing CLI inputs without the complete matrix now fail. Run monthly/yearly recognition horizons separately while stress-testing each offer in the chosen horizon.
+
+## Whole-company fixed-cost floor
+
+The coverage input now requires fixedCostFloor with cents, evidence, validUntil (Unix seconds), currency USD and period matching every scenario. Omitted, malformed or expired floors fail. A zero floor still needs explicit evidence; it is not the default. It must include the complete evidenced company fixed operating/compliance cost for that horizon, including the single-customer case.
+
+Every required plan/customer/company stress row must put at least this entire amount in costs.allocatedFixedCosts. This is deliberately conservative counterfactual stress testing: each plan and customer is tested as if it alone had to support the company, in every lifecycle scenario. It is not a ledger allocation method and does not mean multiplying the same fixed bill by the number of customers in actual consolidated accounting. The consolidated scenario includes the actual whole-company cost once, plus all other applicable costs.
+
+A cheap per-customer allocation cannot replace the full floor in an isolated scenario. Matching the floor does not waive the 60% after-all-taxes rule, including Brazilian personal owner taxes. The tool cannot verify whether the supplied floor/evidence is true; reconciliation to actual invoices and legally determined obligations remains required, and no existing offer is financially certified.
