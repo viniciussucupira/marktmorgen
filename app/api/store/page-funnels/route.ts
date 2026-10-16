@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       let slug = funnelSlugFrom(name) || "funnel";
       for (let n = 2; funnelSlugProblem(slug, existing) !== null && n < 100; n += 1) slug = `${(funnelSlugFrom(name) || "funnel").slice(0, 36)}-${n}`;
       setupStarted = true;
-      const kept = await writePageFunnel(statsId, { id: newFunnelId(), name, slug, steps, on: true, since: Math.floor(Date.now() / 1000) }, existing);
+      const kept = await writePageFunnel(statsId, { id: newFunnelId(), name, slug, steps, on: false, since: Math.floor(Date.now() / 1000) }, existing);
       return Response.json({ ok: true, funnel: kept, pages: made.map((m) => ({ id: m.page.id, title: m.page.title, slug: m.page.slug })) });
     }
 
