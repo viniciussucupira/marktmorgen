@@ -1,5 +1,5 @@
 export type CrmAnswer = { ok: true } | { ok: false; error: string };
-const REFUSALS = new Set(["title", "followup", "date", "assignee", "stage", "full", "unknown", "fields", "stages", "value", "invalid", "role", "origin", "signed_out", "locked", "store_gone", "none", "unavailable", "bad_request", "forbidden", "crm_deal_read_unavailable"]);
+const REFUSALS = new Set(["title", "followup", "date", "assignee", "stage", "full", "unknown", "fields", "stages", "value", "invalid", "role", "origin", "signed_out", "locked", "store_gone", "none", "unavailable", "bad_request", "forbidden", "crm_deal_read_unavailable", "crm_schema_read_unavailable"]);
 /** Transport or ambiguous replies cannot prove that a CRM write did not happen. */
 export function crmAnswer(responseOk: boolean, raw: unknown): CrmAnswer {
   const uncertain: CrmAnswer = { ok: false, error: "crm_write_unconfirmed" };
