@@ -1,5 +1,7 @@
 "use client";
 
+import { FormResponseDeal } from "@/components/form-response-deal";
+import type { Stage } from "@/lib/crm-rules";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -64,8 +66,9 @@ const blank = (): FormDef => ({
  * answers it has kept and the newest of them, a file of all of them, and an
  * editor for its questions, its results and what a person reads after.
  */
-export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[]; products: { id: string; title: string }[]; /** The download's address, the form's id added at its end. */ exportBase: string }) {
+export function FormsEditor({ saved, products, exportBase, dealStages = [], sid = "" }: { dealStages?: Stage[]; sid?: string; saved: SavedForm[]; products: { id: string; title: string }[]; /** The download's address, the form's id added at its end. */ exportBase: string }) {
   const router = useRouter();
+  const [dealDraft, setDealDraft] = useState<{ form: FormDef; response: FormResponse } | null>(null);
   const [draft, setDraft] = useState<FormDef | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +133,7 @@ export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[
           </p>
         </div>
         {draft === null && saved.length < MAX_FORMS ? (
-          <button type="button" className="btn btn-primary" onClick={() => { setError(null); setDraft(blank()); }}>
+          <button type="button" className="btn btn-primary" disabled={dealDraft !== null} onClick={() => { setError(null); setDraft(blank()); }}>
             <Icon name="plus" size={18} />
             New form
           </button>
@@ -166,7 +169,7 @@ export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[
                     Download
                   </a>
                 ) : null}
-                <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setError(null); setDraft(structuredClone(form)); }} disabled={draft !== null}>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setError(null); setDraft(structuredClone(form)); }} disabled={draft !== null || dealDraft !== null}>
                   Edit
                 </button>
                 {removing === form.id ? (
@@ -197,6 +200,7 @@ export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[
                         </th>
                       ))}
                       {form.outcomes.length ? <th className="py-2 pr-4 font-semibold">Result</th> : null}
+                      {dealStages.some(stage => stage.kind === "open") ? <th scope="col" className="py-2 pr-4 font-semibold">CRM</th> : null}
                     </tr>
                   </thead>
                   <tbody>
@@ -209,6 +213,7 @@ export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[
                           </td>
                         ))}
                         {form.outcomes.length ? <td className="py-2 pr-4">{form.outcomes.find((o) => o.id === r.outcome)?.title ?? ""}</td> : null}
+                        {dealStages.some(stage => stage.kind === "open") ? <td className="py-2 pr-4"><button type="button" className="btn btn-secondary btn-sm" disabled={draft !== null || dealDraft !== null} onClick={() => setDealDraft({ form, response: r })}>Review as opportunity</button></td> : null}
                       </tr>
                     ))}
                   </tbody>
@@ -219,6 +224,8 @@ export function FormsEditor({ saved, products, exportBase }: { saved: SavedForm[
           </li>
         ))}
       </ul>
+
+      {dealDraft ? <FormResponseDeal form={dealDraft.form} response={dealDraft.response} stages={dealStages} sid={sid} onClose={() => setDealDraft(null)} /> : null}
 
       {error && !draft ? (
         <p className="notice notice-error mt-4" role="alert">
