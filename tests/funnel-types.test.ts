@@ -97,6 +97,30 @@ async function main(): Promise<void> {
   const again = await (await send({ action: "from-type", type: "lead-magnet", name: "Guide funnel", products: { freebie: guide.product.id, offer: course.product.id } })).json();
   is("made again: its own page and its own address", [again.ok, (await storeForEmail(OWNER))!.sitePages.map((p) => p.slug), (await readPageFunnels(store.statsId)).map((f) => f.slug).sort()], [true, ["all-set", "all-set-2"], ["guide-funnel", "guide-funnel-2"]]);
 
+  part("Author-written page copy");
+  const copyOwner = "pagecopy@example.com";
+  await claimHandle(copyOwner, "pagecopyshop", "Page Copy", "");
+  await ensureStatsId(copyOwner);
+  const copySession = await openSession(copyOwner);
+  const copySend = (pageCopy: unknown) => POST(new NextRequest("https://marktmorgen.com/api/store/page-funnels", { method: "POST", headers: { "content-type": "application/json", cookie: SESSION_COOKIE + "=" + copySession }, body: JSON.stringify({ action: "from-type", type: "application", name: "Application", products: {}, pageCopy }) }));
+  for (const bad of [null, [], { unknown: { headline: "Hi", intro: "" } }, { apply: { headline: "x".repeat(121), intro: "" } }, { apply: { headline: "Hi", intro: "x".repeat(601) } }, { apply: { headline: "Hi", intro: 1 } }, { apply: { headline: "Hi", intro: "", hidden: false } }]) {
+    const response = await copySend(bad);
+    is("invalid page copy is refused before creating pages", [response.status, (await response.json()).error, (await storeForEmail(copyOwner))!.sitePages.length], [400, "page_copy", 0]);
+  }
+  const intro = "Tell us about your project.\n<script>alert(1)</script>";
+  const copyMade = await (await copySend({ apply: { headline: "  Discuss your project  ", intro } })).json();
+  const copyStore = (await storeForEmail(copyOwner))!;
+  const copyPage = await readPage(copyStore.statsId, siteKey(copyStore.sitePages[0].id));
+  is("author copy is saved as ordinary editable blocks, with form and hidden state retained", [copyMade.ok, copyPage.hidden, copyPage.blocks[0].kind === "hero" ? copyPage.blocks[0].headline : "", copyPage.blocks[1].kind === "text" ? copyPage.blocks[1].body : "", copyPage.blocks.some(block => block.kind === "form" && Boolean(block.form)), (await readPageFunnels(copyStore.statsId))[0]?.on], [true, true, "Discuss your project", intro, true, false]);
+
+  const launchProduct = await addProduct(copyOwner, "Launch product", "", "20", null);
+  if (!launchProduct.ok) throw new Error("Launch fixture unavailable");
+  const launchCopy = Object.fromEntries([1, 2, 3].map(n => ["video-" + n, { headline: "Lesson " + n, intro: "Introduction " + n }]));
+  const launchResponse = await POST(new NextRequest("https://marktmorgen.com/api/store/page-funnels", { method: "POST", headers: { "content-type": "application/json", cookie: SESSION_COOKIE + "=" + copySession }, body: JSON.stringify({ action: "from-type", type: "launch", name: "Launch", products: { offer: launchProduct.product.id }, pageCopy: launchCopy }) }));
+  const launchMade = await launchResponse.json() as { pages: { id: string }[] };
+  const launchPages = await Promise.all(launchMade.pages.map((page: { id: string }) => readPage(copyStore.statsId, siteKey(page.id))));
+  is("each launch page keeps its own copy in the original journey order", launchPages.map(page => [page.blocks[0].kind === "hero" ? page.blocks[0].headline : "", page.blocks[1].kind === "text" ? page.blocks[1].body : "", page.hidden]), [["Lesson 1", "Introduction 1", true], ["Lesson 2", "Introduction 2", true], ["Lesson 3", "Introduction 3", true]]);
+
   part("Refused");
   for (let i = 0; i < 6; i += 1) await send({ action: "from-type", type: "launch", name: `Launch ${i}`, products: { offer: course.product.id } });
   const crowded = await (await send({ action: "from-type", type: "launch", name: "One more", products: { offer: course.product.id } })).json();
