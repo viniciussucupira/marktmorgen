@@ -14,7 +14,7 @@ import {
 } from "@/lib/product-file";
 import { ITEM_ID_PATTERN, findLesson, readCourses } from "@/lib/course";
 import { storageRefusal, standingOf } from "@/lib/plan-standing";
-import { storageBrakeFor, storageUsed } from "@/lib/storage-quota";
+import { maximumUploadBytes, storageBrakeFor, storageUsed } from "@/lib/storage-quota";
 import { rememberFolderOwner } from "@/lib/delivery";
 import { isVaultConfigured } from "@/lib/vault";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
@@ -106,12 +106,13 @@ export async function POST(request: NextRequest) {
           It sits far above any real store and is not a plan limit.
         */
         // By where the store stands with its plan (lib/plan-standing.ts).
-        // This door is not told the file's size, so it stops a store that
-        // is at its figure and cannot hold one to what is left of it.
+        // The browser does not supply a trusted file size. Limit both parts
+        // of the signed authorization to the confirmed room that remains.
         const standing = standingOf(store);
         const held = await storageUsed(folder, storageBrakeFor(standing));
         if (held.available === false) throw new Error("files_unavailable");
-        if (held.full) throw new Error(storageRefusal(standing));
+        const maximumSizeInBytes = maximumUploadBytes(held, MAX_FILE_BYTES);
+        if (maximumSizeInBytes <= 0) throw new Error(storageRefusal(standing));
 
         // The one moment this store's folder and its owner are both in hand.
         // Kept so the allowance notice can reach them without anybody
@@ -126,12 +127,12 @@ export async function POST(request: NextRequest) {
             pathname,
             operations: ["put"],
             allowedContentTypes: ALLOWED_CONTENT_TYPES,
-            maximumSizeInBytes: MAX_FILE_BYTES,
+            maximumSizeInBytes,
             validUntil: Date.now() + UPLOAD_WINDOW_MS,
           }),
           urlOptions: {
             allowedContentTypes: ALLOWED_CONTENT_TYPES,
-            maximumSizeInBytes: MAX_FILE_BYTES,
+            maximumSizeInBytes,
             validUntil: Date.now() + UPLOAD_WINDOW_MS,
             // Two files of the same name never fight, and an upload can never
             // quietly replace something that is already selling.

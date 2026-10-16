@@ -56,7 +56,7 @@ const GB = 1024 * 1024 * 1024;
  */
 export const STORAGE_BRAKE_BYTES = 200 * GB;
 
-export type StorageUse = { bytes: number; brake: number; left: number; full: boolean; available?: boolean };
+export type StorageUse = { bytes: number; brake: number; left: number; full: boolean; available: boolean };
 
 /**
  * What a store is holding, read from storage itself.
@@ -98,16 +98,23 @@ export function storageBrakeFor(standing: Standing): number {
 }
 
 /**
- * Whether a file of `bytes` may be taken in.
- *
- * A store that pays is stopped once it is at the brake, as it always was:
- * the brake is far above it, and the file that crosses it is let through. A
- * store that does not pay is held to its figure, so the file has to fit in
- * what is left. An unavailable measurement cannot authorize an upload.
+ * Maximum bytes one upload may authorize against a confirmed measurement.
+ * The signature and its URL options must use this same ceiling.
+ * This does not reserve capacity against simultaneous or in-flight uploads.
  */
-export function fits(held: StorageUse, bytes: number, standing: Standing): boolean {
-  if (held.available === false || held.full) return false;
-  return standing === "paid" || bytes <= held.left;
+export function maximumUploadBytes(held: StorageUse, perFileMaximum: number): number {
+  if (held.available !== true || held.full ||
+      !Number.isSafeInteger(perFileMaximum) || perFileMaximum <= 0 ||
+      !Number.isSafeInteger(held.bytes) || held.bytes < 0 ||
+      !Number.isSafeInteger(held.brake) || held.brake <= 0 ||
+      !Number.isSafeInteger(held.left) || held.left < 0 ||
+      held.left !== Math.max(0, held.brake - held.bytes)) return 0;
+  return Math.min(perFileMaximum, held.left);
+}
+
+/** A new file must fit entirely, including on a paid plan. Existing files are untouched. */
+export function fits(held: StorageUse, bytes: number): boolean {
+  return Number.isSafeInteger(bytes) && bytes > 0 && maximumUploadBytes(held, bytes) === bytes;
 }
 
 /** "480 GB", "1.4 TB", "5 GB", "900 MB". */

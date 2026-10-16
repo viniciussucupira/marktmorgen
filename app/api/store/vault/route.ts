@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       const standing = standingOf(store);
       const held = await storageUsed(folder, storageBrakeFor(standing));
       if (held.available === false) return fail("files_unavailable", 503);
-      if (!fits(held, bytes, standing)) return fail(storageRefusal(standing));
+      if (!fits(held, bytes)) return fail(storageRefusal(standing));
       await rememberFolderOwner(folder, ref);
 
       const opened = await openVaultUpload({ folder, ownerId, name: safeFileName(text(body.name, 200)), bytes, type });

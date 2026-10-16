@@ -32,12 +32,12 @@ async function main(): Promise<void> {
   const trial = { subscriptionActive: true, subscriptionId: "sub_Trial00001", stripeCustomerId: "cus_Trial00001", trialEnds: NOW + 86_400, planEndedAt: "" };
   const paid = { ...trial, trialEnds: NOW - 86_400 };
   const ended = { ...paid, subscriptionActive: false, planEndedAt: "2026-10-01T00:00:00.000Z" };
-  is("a store that never started a plan", standingOf(never, NOW), "none");
-  is("one inside a plan's free days", standingOf(trial, NOW), "trial");
-  is("one that pays", standingOf(paid, NOW), "paid");
-  is("one whose plan is over", standingOf(ended, NOW), "ended");
-  is("a plan that is not running has ended, even where the day was never written down", standingOf({ ...ended, planEndedAt: "" }, NOW), "ended");
-  is("the store this site runs itself pays nobody and stands as paid", standingOf({ ...never, subscriptionActive: true }, NOW), "paid");
+  is("a store that never started a plan", standingOf(never, NOW));
+  is("one inside a plan's free days", standingOf(trial, NOW));
+  is("one that pays", standingOf(paid, NOW));
+  is("one whose plan is over", standingOf(ended, NOW));
+  is("a plan that is not running has ended, even where the day was never written down", standingOf({ ...ended, planEndedAt: "" }, NOW));
+  is("the store this site runs itself pays nobody and stands as paid", standingOf({ ...never, subscriptionActive: true }, NOW));
   is("only a store that pays, with a subscription behind it, can have an hour added to an invoice", [canBeCharged(paid, NOW), canBeCharged(trial, NOW), canBeCharged(ended, NOW), canBeCharged({ ...never, subscriptionActive: true }, NOW)], [true, false, false, false]);
 
   part("How long its video may be watched in a month");
@@ -56,14 +56,14 @@ async function main(): Promise<void> {
   is("and a trial that keeps all it may costs us little over a dollar a month", (TRIAL_STORAGE_BYTES / GB) * 0.023 < 1.2, true);
   const empty = await storageUsed("0123456789abcdef0123456789abcdef", storageBrakeFor("none"));
   is("unavailable storage is not treated as an empty store", [empty.brake, empty.available, empty.left], [5 * GB, false, 0]);
-  is("unavailable storage cannot authorize an upload", fits(empty, 5 * GB, "none"), false);
-  is("one that would take a store with no plan past its figure is not", fits(empty, 5 * GB + 1, "none"), false);
-  const half = { bytes: 3 * GB, brake: 5 * GB, left: 2 * GB, full: false };
-  is("it is what is left that a file has to fit in", [fits(half, 2 * GB, "ended"), fits(half, 2 * GB + 1, "ended"), fits({ ...half, brake: 50 * GB, left: 47 * GB }, 5 * GB, "trial")], [true, false, true]);
-  const over = { bytes: 80 * GB, brake: 5 * GB, left: 0, full: true };
-  is("a store that held more when its plan ended cannot add to it", [fits(over, 1, "ended"), over.full], [false, true]);
-  const nearly = { bytes: 199 * GB, brake: STORAGE_BRAKE_BYTES, left: GB, full: false };
-  is("a store that pays is stopped at the brake and not before it, as it always was", [fits(nearly, 5 * GB, "paid"), fits({ ...nearly, bytes: 200 * GB, left: 0, full: true }, 1, "paid")], [true, false]);
+  is("unavailable storage cannot authorize an upload", fits(empty, 5 * GB), false);
+  is("one that would take a store with no plan past its figure is not", fits(empty, 5 * GB + 1), false);
+  const half = { bytes: 3 * GB, brake: 5 * GB, left: 2 * GB, full: false, available: true };
+  is("it is what is left that a file has to fit in", [fits(half, 2 * GB), fits(half, 2 * GB + 1), fits({ ...half, brake: 50 * GB, left: 47 * GB }, 5 * GB)], [true, false, true]);
+  const over = { bytes: 80 * GB, brake: 5 * GB, left: 0, full: true, available: true };
+  is("a store that held more when its plan ended cannot add to it", [fits(over, 1), over.full], [false, true]);
+  const nearly = { bytes: 199 * GB, brake: STORAGE_BRAKE_BYTES, left: GB, full: false, available: true };
+  is("paid uploads must fit the confirmed remaining room", [fits(nearly, GB), fits(nearly, 5 * GB), fits({ ...nearly, bytes: 200 * GB, left: 0, full: true }, 1)], [true, false, false]);
 
   part("What an upload is told");
   is("each standing has its own word", [storageRefusal("paid"), storageRefusal("trial"), storageRefusal("none"), storageRefusal("ended")], ["storage_full", "storage_trial", "storage_setup", "storage_setup"]);
@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   is("a store is not told to start a plan while none can be started", STUDIO_MESSAGES.storage_setup.includes("Start your plan"), PLANS_ON_SALE);
   for (const [name, path] of [["files", "app/api/store/vault/route.ts"], ["lesson videos", "app/api/store/stream/route.ts"]] as const) {
     const door = read(path);
-    is(`the door for ${name} measures a store against its own figure and holds a file to what is left`, [/storageUsed\(folder, storageBrakeFor\(standing\)\)/.test(door), /!fits\(held, bytes, standing\)/.test(door), /storageRefusal\(standing\)/.test(door)], [true, true, true]);
+    is(`the door for ${name} measures a store against its own figure and holds a file to what is left`, [/storageUsed\(folder, storageBrakeFor\(standing\)\)/.test(door), /!fits\(held, bytes\)/.test(door), /storageRefusal\(standing\)/.test(door)], [true, true, true]);
   }
 
   part("The day a plan ends is written down once");
