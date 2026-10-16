@@ -34,7 +34,15 @@ try {
       logLevel: "error",
       alias: {
         "@": root,
-        "@/lib/redis": join(here, "redis-stub.ts"),
+        "@/lib/redis": ["ai-spend.test.ts", "ai-spend-provider.test.ts"].includes(file)
+          ? join(here, "ai-spend-redis.ts") : join(here, "redis-stub.ts"),
+        // Content regression tests isolate monetary admission; spend tests exercise the real guard.
+        ...(["ai-spend.test.ts", "ai-spend-provider.test.ts"].includes(file) ? {} : {
+          "@/lib/ai-spend": join(here, "ai-spend-regression-stub.ts"),
+        }),
+        ...(file === "ai-spend-provider.test.ts" ? {
+          "@/lib/ai-spend-policy": join(here, "ai-spend-approved-policy.ts"),
+        } : {}),
         ...(file === "storage-measurement.test.ts" ? {
           "@/lib/blob": join(here, "storage-provider-stub.ts"),
           "@/lib/vault": join(here, "storage-provider-stub.ts"),

@@ -100,7 +100,7 @@ export async function guideVisitor(input: { store: Store; products: Listing[]; g
   if (!(await takeAnswer(store, now))) return { ok: false, reason: "closed" };
   let text: string | null = null;
   try {
-    text = await askModel(SYSTEM, `The catalog:\n\n${facts}\n\nWhat the visitor is looking for:\n${goal}`, 400, answerModel(), GUIDE_TIMEOUT_MS);
+    text = await askModel(store, SYSTEM, `The catalog:\n\n${facts}\n\nWhat the visitor is looking for:\n${goal}`, 400, answerModel(), GUIDE_TIMEOUT_MS);
   } catch (error) {
     console.error("guiding a visitor failed", error);
   }

@@ -231,7 +231,7 @@ export async function answerQuestion(input: {
   }
   let text: string | null = null;
   try {
-    text = await askModel(SYSTEM, `The facts:\n\n${facts}\n\nThe visitor's question:\n${question}`, 350, answerModel(), ANSWER_TIMEOUT_MS);
+    text = await askModel(store, SYSTEM, `The facts:\n\n${facts}\n\nThe visitor's question:\n${question}`, 350, answerModel(), ANSWER_TIMEOUT_MS);
   } catch (error) {
     console.error("answering a visitor's question failed", error);
   }

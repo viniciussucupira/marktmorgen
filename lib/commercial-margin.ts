@@ -4,6 +4,7 @@
 import { PLAN_PRICES, COMMISSION_BPS, COMMISSION_LIVE, COMMISSION_PLANS_PUBLISHED, PUBLISHED_PLAN_PRICES, TRIAL_DAYS, REFUND_DAYS, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { SHARE_PROVED_IN_TEST_MODE } from "@/lib/platform-share";
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
+import { AI_SPEND_RULES, CURRENT_AI_SPEND_POLICY } from "@/lib/ai-spend-policy";
 import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY, AI_PER_MINUTE, MAX_AI_NOTES, READ_PDF_PAGES, READ_PDF_JOBS } from "@/lib/ai-rules";
 import { VIDEO_HOURS_INCLUDED, VIDEO_CENTS_PER_HOUR_OVER } from "@/lib/watch-rules";
@@ -50,7 +51,7 @@ export const CURRENT_COMMERCIAL_TERMS = {
  trialDays: TRIAL_DAYS,
  refundDays: REFUND_DAYS,
  email: { trial: TRIAL_MONTHLY_EMAILS, pro: PRO_MONTHLY_EMAILS, scale: SCALE_MONTHLY_EMAILS, maxLeads: MAX_LEADS, maxImport: MAX_IMPORT },
- ai: { requestLimits: AI_REQUEST_LIMITS, supportedModels: SUPPORTED_AI_MODELS, monthly: AI_MONTHLY, perMinute: AI_PER_MINUTE, maxNotes: MAX_AI_NOTES, pdfPages: READ_PDF_PAGES, pdfJobs: READ_PDF_JOBS },
+ ai: { spendRules: AI_SPEND_RULES, spendPolicy: CURRENT_AI_SPEND_POLICY, requestLimits: AI_REQUEST_LIMITS, supportedModels: SUPPORTED_AI_MODELS, monthly: AI_MONTHLY, perMinute: AI_PER_MINUTE, maxNotes: MAX_AI_NOTES, pdfPages: READ_PDF_PAGES, pdfJobs: READ_PDF_JOBS },
  storage: { paidBytes: STORAGE_BRAKE_BYTES, trialBytes: TRIAL_STORAGE_BYTES, setupBytes: SETUP_STORAGE_BYTES, maxFileBytes: MAX_FILE_BYTES, maxStampBytes: MAX_STAMP_BYTES },
  video: { includedHours: VIDEO_HOURS_INCLUDED, setupSeconds: SETUP_VIDEO_SECONDS, overageCentsPerHour: VIDEO_CENTS_PER_HOUR_OVER, topHeight: TOP_HEIGHT, maxKeptBytes: MOST_KEPT_BYTES, uploadWindowSeconds: UPLOAD_WINDOW_SECONDS, abandonedAfterMs: ABANDONED_AFTER_MS, giveUpAfterMs: GIVE_UP_AFTER_MS },
  traffic: { included: VISITS_INCLUDED, setup: SETUP_VISITS, trial: TRIAL_VISITS, overageCentsPerThousand: VISIT_CENTS_PER_THOUSAND_OVER, roomLiveParts: ROOM_LIVE_PARTS, roomIdleParts: ROOM_IDLE_PARTS },

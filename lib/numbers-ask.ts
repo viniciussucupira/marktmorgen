@@ -237,7 +237,7 @@ export async function askNumbers(store: Store, question: string, data: StatsData
       "Write in the language of the question. At most 90 words, plain sentences, no markdown, no headings. Be direct: the answer first, then one short line on what it suggests doing, only if the numbers clearly support it.",
       `Return only a JSON object: {"answer": string, "used": [{"label": short name of a figure, "value": the figure exactly as it appears in the JSON}], "window": "d7" | "d30" | "d90", "section": one of ${SECTIONS.map((s) => `"${s}"`).join(", ")} or ""}. "used" lists at most 4 figures, each copied exactly. "section" is the part of the Numbers panel that shows them: funnel (visits to checkout to sale), channels, revenue-source, attribution (each channel by last visit, first visit and what buyers said), products, posts, ads, reach (how far down the store page people get), buyers, insights, payment-mix (recorded payment shares and channel concentration), payment-comparison (equal consecutive UTC payment periods by channel).`,
     ].join("\n\n");
-    const reply = await askModel(system, `The question: ${asked}\n\nThe numbers:\n${context}`, 600, answerModel());
+    const reply = await askModel(store, system, `The question: ${asked}\n\nThe numbers:\n${context}`, 600, answerModel());
     const json = reply ? jsonIn(reply) : null;
     const answer = line(json?.answer, 900);
     if (!answer) return null;
@@ -270,7 +270,7 @@ export async function weeklySummary(store: Store, data: StatsData, now = Date.no
       "Write in American English, 2 to 4 plain sentences, at most 70 words, no markdown, no greeting, no sign-off: what changed most, where the money came from, and one thing worth a look, only if the numbers clearly show it. If almost nothing happened, say so in one sentence.",
       "Return only the sentences.",
     ].join("\n\n");
-    const reply = await askModel(system, context, 300, answerModel());
+    const reply = await askModel(store, system, context, 300, answerModel());
     const text = (reply ?? "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim().slice(0, 600);
     return text || null;
   });
