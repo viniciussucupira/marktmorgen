@@ -25,8 +25,10 @@ async function main() {
   if (!product.ok) throw Error("missing fixture product");
   await setAffiliateSetting(owner, parseAffiliateSetting({ enabled: true, percent: 30, days: 30 }));
   const store = (await storeForEmail(owner))!;
+  const statsId = store.statsId;
+  if (!statsId) throw Error("missing fixture stats identity");
   const now = Date.UTC(2026, 0, 15), allowance = aiAllowance(store, now);
-  const key = aiAttemptKey(store.statsId, now), quota = aiMonthKey(store, new Date(now));
+  const key = aiAttemptKey(statsId, now), quota = aiMonthKey(store, new Date(now));
   const affiliate: Affiliate = { id: "aaaaaaaaaaaa", email: "test@example.com", code: "test", status: "approved", appliedAt: 1, decidedAt: 1, note: "", rate: null, paypal: "", share: null, cleared: null, by: null };
   const original = redis.pipeline;
   const normal = Symbol("normal");
@@ -81,14 +83,14 @@ async function main() {
 
     part("Concurrent weighted attempts and scope boundaries");
     await reset();
-    const results = await Promise.all(Array.from({ length: 30 }, () => reserveAiAttempt(store.statsId, now, 10, 3)));
+    const results = await Promise.all(Array.from({ length: 30 }, () => reserveAiAttempt(statsId, now, 10, 3)));
     is("six weighted attempts fit, excess cannot run", [results.filter(x => x === "reserved").length, results.filter(x => x === "exhausted").length], [6, 24]);
     is("another store has its own counter", await reserveAiAttempt("anotherStore", now, 10, 3), "reserved");
-    is("a new month has its own counter", await reserveAiAttempt(store.statsId, Date.UTC(2026, 1, 1), 10, 3), "reserved");
+    is("a new month has its own counter", await reserveAiAttempt(statsId, Date.UTC(2026, 1, 1), 10, 3), "reserved");
     await reset();
-    for (const args of [["", now, 10, 1], ["bad:key", now, 10, 1], [store.statsId, NaN, 10, 1], [store.statsId, now, 0, 1], [store.statsId, now, 1.5, 1], [store.statsId, now, Number.MAX_SAFE_INTEGER, 1], [store.statsId, now, 10, 0], [store.statsId, now, 10, 1.5]] as const) is("invalid reservation denied", await reserveAiAttempt(args[0], args[1], args[2], args[3]), "unavailable");
+    for (const args of [["", now, 10, 1], ["bad:key", now, 10, 1], [statsId, NaN, 10, 1], [statsId, now, 0, 1], [statsId, now, 1.5, 1], [statsId, now, Number.MAX_SAFE_INTEGER, 1], [statsId, now, 10, 0], [statsId, now, 10, 1.5]] as const) is("invalid reservation denied", await reserveAiAttempt(args[0], args[1], args[2], args[3]), "unavailable");
     is("invalid inputs never write", reservations, 0);
-    is("oversized work refused before writes", await reserveAiAttempt(store.statsId, now, 10, 21), "exhausted");
+    is("oversized work refused before writes", await reserveAiAttempt(statsId, now, 10, 21), "exhausted");
     is("oversized writes nothing", reservations, 0);
   } finally { redis.pipeline = original; }
   done();
