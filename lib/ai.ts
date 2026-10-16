@@ -14,6 +14,7 @@
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { confirmedAiReservation } from "@/lib/ai-quota";
+import { isAiSupplierSpendConfigured, reserveAiSupplierSpend } from "@/lib/ai-supplier-spend";
 import { reserveAiAttempt } from "@/lib/ai-attempts";
 import { timed } from "@/lib/fetch-timeout";
 import { inTrial } from "@/lib/mail";
@@ -57,7 +58,7 @@ function apiKey(): string | null {
 }
 
 export function isAiConfigured(): boolean {
-  return apiKey() !== null;
+  return apiKey() !== null && isAiSupplierSpendConfigured();
 }
 
 /** The model asked. A deployment may name another in AI_MODEL. */
@@ -152,11 +153,15 @@ export async function askModel(
 ): Promise<string | null> {
   const key = apiKey();
   if (!key) return null;
+  let body: string;
+  try { body = JSON.stringify({ model: named, max_tokens: maxTokens, system, messages: [{ role: "user", content: prompt }] }); }
+  catch { return null; }
+  if (!(await reserveAiSupplierSpend({ model: named, maxOutputTokens: maxTokens, requestBytes: Buffer.byteLength(body, "utf8") }))) return null;
   const response = await timed(timeoutMs, (signal) =>
     fetch(API, {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: named, max_tokens: maxTokens, system, messages: [{ role: "user", content: prompt }] }),
+      body,
       cache: "no-store",
       signal,
     }),
