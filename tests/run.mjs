@@ -35,6 +35,10 @@ try {
       alias: {
         "@": root,
         "@/lib/redis": join(here, "redis-stub.ts"),
+        ...(file === "video-admission.test.ts" ? {
+          "@/lib/redis": join(here, "video-admission-redis.ts"),
+          "@/lib/stream": join(here, "video-admission-stream.ts"),
+        } : {}),
         ...(file === "storage-measurement.test.ts" ? {
           "@/lib/blob": join(here, "storage-provider-stub.ts"),
           "@/lib/vault": join(here, "storage-provider-stub.ts"),

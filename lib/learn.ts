@@ -41,7 +41,7 @@ import { purchaseRefunded } from "@/lib/refunds";
 import { folderFromPathname, recordDelivery } from "@/lib/delivery";
 import { playerFor } from "@/lib/stream";
 import { isStreamPath } from "@/lib/stream-rules";
-import { opened, watchedIn } from "@/lib/watch";
+import { opened, watchedForAdmission } from "@/lib/watch";
 import type { ProductFile } from "@/lib/product-file";
 import type { Listing, Store } from "@/lib/store";
 import { readKind, readListing } from "@/lib/catalog";
@@ -593,7 +593,12 @@ export async function lessonVideo(file: ProductFile, limit: number | null = null
   }
   try {
     const folder = folderFromPathname(file.pathname);
-    if (limit !== null && folder && (await watchedIn(folder)) >= limit) return { kind: "paused" };
+    if (limit !== null) {
+      if (!Number.isSafeInteger(limit) || limit < 0 || !folder) return null;
+      const watched = await watchedForAdmission(folder);
+      if (watched === null) return null;
+      if (watched >= limit) return { kind: "paused" };
+    }
     const player = await playerFor(file.pathname);
     if (!player) return null;
     if (player.state === "failed") return { kind: "failed" };
