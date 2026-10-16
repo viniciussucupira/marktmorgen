@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto";
-import type { FormResponse } from "@/lib/forms";
+import { FORM_RESPONSE_ID, type FormResponse } from "@/lib/forms";
 import { MAX_DEALS, parseDeal, type Deal, type Stage } from "@/lib/crm-rules";
 import { redisPipeline } from "@/lib/redis";
 
 export const MAX_CONVERTIBLE_FORM_RESPONSES = 50;
 
-/** Legacy responses have no ID: equal content at the same second is one conversion identity. */
+/** New responses use a server identity; legacy records keep their original content fingerprint. */
 export function formOpportunityRef(statsId: string, formId: string, response: FormResponse): string {
+  if (response.id && FORM_RESPONSE_ID.test(response.id)) return createHash("sha256").update(JSON.stringify([statsId, formId, "response-v1", response.id])).digest("hex");
   const answers = Object.entries(response.answers).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
   return createHash("sha256").update(JSON.stringify([statsId, formId, response.at, response.page, answers, response.outcome, response.joined])).digest("hex");
 }
