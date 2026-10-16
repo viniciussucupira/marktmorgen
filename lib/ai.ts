@@ -14,6 +14,7 @@
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { confirmedAiReservation } from "@/lib/ai-quota";
+import { reserveAiAttempt } from "@/lib/ai-attempts";
 import { timed } from "@/lib/fetch-timeout";
 import { inTrial } from "@/lib/mail";
 import type { Store } from "@/lib/store";
@@ -249,6 +250,11 @@ export async function counted<T>(store: Store, now: number, run: () => Promise<T
   if (Number(used) > allowance) {
     await redisPipeline([["DECRBY", key, jobs]]).catch(() => {});
     return { ok: false, reason: "used" };
+  }
+  const attempt = await reserveAiAttempt(store.statsId, now, allowance, jobs);
+  if (attempt !== "reserved") {
+    await redisPipeline([["DECRBY", key, jobs]]).catch(() => {});
+    return { ok: false, reason: attempt === "exhausted" ? "used" : "failed" };
   }
   let value: T | null = null;
   try {
