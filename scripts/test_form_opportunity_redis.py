@@ -64,10 +64,14 @@ def main():
     if not crm_match or "${" in crm_match.group(1):
         raise RuntimeError("Expected one static CRM save script")
     save_script = crm_match.group(1)
+    move_match = re.search(r"export const MOVE_CRM_DEAL = `([^`]+)`;", crm_source)
+    if not move_match or "${" in move_match.group(1):
+        raise RuntimeError("Expected one static CRM migration script")
+    move_script = move_match.group(1)
     rules = (root / "lib/crm-rules.ts").read_text(encoding="utf-8")
     cap = int(re.search(r"export const MAX_DEALS = ([\d_]+);", rules).group(1).replace("_", ""))
     prefix = "marktmorgen:integration:form-opportunity:" + uuid.uuid4().hex + ":"
-    keys = [prefix + suffix for suffix in ("race", "capacity", "wrongtype", "mixed")]
+    keys = [prefix + suffix for suffix in ("race", "capacity", "wrongtype", "mixed", "migration")]
     redis = Redis()
     try:
         assert redis.command("PING") == "PONG"
@@ -142,6 +146,16 @@ def main():
         assert redis.command("EVAL", save_script, 1, keys[3], "replacement", "new", cap) == 1
         assert redis.command("HLEN", keys[3]) == cap
         print("PASS: deletion frees exactly one reusable slot")
+        assert redis.command("EVAL", move_script, 1, keys[4], "deleted", "old", "moved") == 0
+        assert redis.command("HLEN", keys[4]) == 0
+        print("PASS: stage migration cannot resurrect deleted records")
+        redis.command("HSET", keys[4], "edited", "concurrent-edit")
+        assert redis.command("EVAL", move_script, 1, keys[4], "edited", "stale-snapshot", "stale-moved") == -1
+        assert redis.command("HGET", keys[4], "edited") == "concurrent-edit"
+        assert redis.command("EVAL", move_script, 1, keys[4], "edited", "concurrent-edit", "latest-moved") == 1
+        assert redis.command("HGET", keys[4], "edited") == "latest-moved"
+        assert redis.command("HLEN", keys[4]) == 1
+        print("PASS: stale stage migration preserves edits and a fresh retry moves them")
     finally:
         assert all(key.startswith(prefix) for key in keys)
         redis.command("DEL", *keys)
