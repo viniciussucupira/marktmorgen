@@ -12,7 +12,7 @@ const MESSAGES: Record<string, string> = {
   long: `This page is too long to translate at once. Translate a shorter page, or remove a few blocks first.`,
   used: "Not enough of this month's writing help is left for this page. It starts again on the 1st.",
   slow: "A few at a time: wait a minute, then try again.",
-  failed: "The translation did not come back just now. Nothing was changed, and it was not counted. Try again in a moment.",
+  failed: "The translation did not come back just now. Your content was not changed. Started attempts count toward the monthly allowance. Try again in a moment.",
   off: "The writing help is not available right now.",
   forbidden: "Your role on this store cannot do this.",
 };

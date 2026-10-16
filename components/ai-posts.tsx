@@ -47,10 +47,10 @@ export function AiPosts({ productId, url, page, what = "page" }: { productId?: s
           ? "This month's writing help is used up. It starts again on the 1st."
           : data.error === "notes"
             ? "Add a product or a line about your store first: the posts are written from them."
-            : "The writing help did not answer just now. Nothing was changed, and it was not counted.",
+            : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.",
       );
     } catch {
-      setNote("The writing help did not answer just now. Nothing was changed, and it was not counted.");
+      setNote("The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.");
     } finally {
       setBusy(false);
     }
@@ -84,7 +84,7 @@ export function AiPosts({ productId, url, page, what = "page" }: { productId?: s
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => void write()} disabled={busy || left <= 0} aria-busy={busy}>
           {busy ? "Writing…" : posts ? "Write three more" : "Write three posts"}
         </button>
-        <span className="text-xs text-ink-soft">{`${left} left this month`}</span>
+        <span className="text-xs text-ink-soft">{`${left} left this month. Started attempts count, even if they fail.`}</span>
       </div>
       {note ? (
         <p className="notice notice-error mt-2 text-sm" role="alert">

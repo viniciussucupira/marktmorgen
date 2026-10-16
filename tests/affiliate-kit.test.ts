@@ -11,7 +11,7 @@
  *     creator allows it;
  *   - three a day each, and a quarter of the store's month for its
  *     affiliates together, each draft one of the store's own writing jobs;
- *     one that fails is given back.
+ *     started attempts stay counted even when they fail.
  */
 import { addProduct, claimHandle, ensureStatsId, setAffiliateSetting, setLanguage, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { parseAffiliateSetting } from "@/lib/affiliate-setting";
@@ -96,7 +96,7 @@ async function main(): Promise<void> {
   answerWith = null;
   const beforeFail = await aiLeft(store);
   const failed = await draftKit(store, affiliate({ id: "cccccccccccc", code: "failer" }), plan.product.id, "");
-  is("a draft that fails is given back", [failed.ok ? "drafted" : failed.reason, await aiLeft(store)], ["failed", beforeFail]);
+  is("a failed attempt stays reserved against the store month", [failed.ok ? "drafted" : failed.reason, await aiLeft(store)], ["failed", beforeFail - 1]);
   answerWith = JSON.stringify({ x: "A week of dinners, planned.", instagram: "Busy weeknights?", linkedin: "Planning dinners is work." });
 
   part("Within limits");
@@ -114,7 +114,7 @@ async function main(): Promise<void> {
       if (r.reason === "month") break;
     }
   }
-  is("a quarter of the store's month for its affiliates together, then no more", [3 + other, last], [quarter, "month"]);
+  is("a quarter of the store's month for its affiliates together, then no more", [4 + other, last], [quarter, "month"]);
   is("a quarter is at least a few drafts on the smallest allowance", kitMonthly(20) >= 5, true);
 
   done();

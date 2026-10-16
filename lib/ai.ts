@@ -64,6 +64,12 @@ function model(): string {
   return named && /^claude-[a-z0-9.-]{3,60}$/.test(named) ? named : "claude-sonnet-5-5";
 }
 
+function jobCount(value: unknown): number | null {
+  if (typeof value !== "number" && (typeof value !== "string" || !/^\d+$/.test(value))) return null;
+  const count = Number(value);
+  return Number.isSafeInteger(count) && count >= 0 ? count : null;
+}
+
 const monthKey = (store: Store, now: Date) => `nl:ai:${store.statsId}:${now.toISOString().slice(0, 7)}`;
 
 /** The key a store's month of writing jobs is counted under, for work counted elsewhere against the same month (lib/affiliate-kit.ts). */
@@ -79,7 +85,9 @@ export function aiAllowance(store: Store, now = Date.now()): number {
 export async function aiLeft(store: Store, now = Date.now()): Promise<number> {
   if (!store.statsId || !isRedisConfigured()) return 0;
   const [used] = await redisPipeline([["GET", monthKey(store, new Date(now))]]);
-  return Math.max(0, aiAllowance(store, now) - (Number(used) || 0));
+  if (used === null) return aiAllowance(store, now);
+  const count = jobCount(used);
+  return count === null ? 0 : Math.max(0, aiAllowance(store, now) - count);
 }
 
 /**
@@ -224,23 +232,27 @@ const block = (value: unknown, max: number) =>
     .slice(0, max);
 
 /**
- * Takes one job from the month, runs it, and gives the job back if it failed,
- * so a store never pays a job for an answer it did not get.
+ * Reserves requests before provider work, including started attempts that fail.
  */
 /**
  * One job of the month's — or `jobs` of them, for work as large as several
  * (a whole page translated, lib/page-translate.ts) — taken before the model
- * is asked and given back if it does not answer.
+ * is asked. Started attempts stay counted because provider work may be billable.
  */
 export async function counted<T>(store: Store, now: number, run: () => Promise<T | null>, jobs = 1): Promise<AiResult<T>> {
   if (!isAiConfigured() || !store.statsId || !isRedisConfigured()) return { ok: false, reason: "off" };
+  if (!Number.isSafeInteger(jobs) || jobs <= 0) return { ok: false, reason: "notes" };
+  const allowance = aiAllowance(store, now);
+  if (!Number.isSafeInteger(allowance) || allowance < 0) return { ok: false, reason: "off" };
+  if (jobs > allowance) return { ok: false, reason: "used" };
   const key = monthKey(store, new Date(now));
   const [used] = await redisPipeline([
     ["INCRBY", key, jobs],
     ["EXPIRE", key, 40 * 86_400],
   ]);
-  const allowance = aiAllowance(store, now);
-  if (Number(used) > allowance) {
+  const count = jobCount(used);
+  if (count === null || count < jobs) return { ok: false, reason: "off" };
+  if (count > allowance) {
     await redisPipeline([["DECRBY", key, jobs]]).catch(() => {});
     return { ok: false, reason: "used" };
   }
@@ -250,10 +262,9 @@ export async function counted<T>(store: Store, now: number, run: () => Promise<T
   } catch (error) {
     console.error("a writing job failed", error);
   }
-  if (value === null) {
-    await redisPipeline([["DECRBY", key, jobs]]).catch(() => {});
-    return { ok: false, reason: "failed" };
-  }
+  // Provider work may cost money even when the response is unusable.
+  // Only a refused reservation is returned; a started attempt stays counted.
+  if (value === null) return { ok: false, reason: "failed" };
   return { ok: true, value, left: Math.max(0, allowance - Number(used)) };
 }
 

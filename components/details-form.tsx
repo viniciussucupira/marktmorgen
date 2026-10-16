@@ -64,10 +64,10 @@ export function DetailsForm({
           ? "Add a product first, or write a few words about your store in the box."
           : data.error === "used"
             ? "This month's writing help is used up. It starts again on the 1st."
-            : "The writing help did not answer just now. Nothing was changed, and it was not counted.",
+            : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.",
       );
     } catch {
-      setAiNote("The writing help did not answer just now. Nothing was changed, and it was not counted.");
+      setAiNote("The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.");
     } finally {
       setWriting(false);
     }
