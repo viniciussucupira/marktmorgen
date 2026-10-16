@@ -56,9 +56,17 @@ export function customRangeChartSummary(range:RangeData,metric:CustomRangeMetric
   if(row.value>peak.value){peak=row;ties=1;}
   else if(row.value===peak.value)ties++;
  }
+ let longestStreak:{days:number;from:string;to:string}|null=null;
+ let run:{days:number;from:string;to:string}|null=null;
+ for(const row of rows){
+  if(!(row.value>0)){run=null;continue;}
+  const consecutive=run!==null&&Date.parse(row.from+"T00:00:00Z")-Date.parse(run.to+"T00:00:00Z")===86_400_000;
+  run=consecutive&&run?{days:run.days+1,from:run.from,to:row.to}:{days:1,from:row.from,to:row.to};
+  if(!longestStreak||run.days>longestStreak.days)longestStreak={...run};
+ }
  const values=rows.map(row=>row.value).sort((a,b)=>a-b);
  const middle=Math.floor(values.length/2);
  const median=values.length%2?values[middle]:values[middle-1]+(values[middle]-values[middle-1])/2;
  const activeDays=rows.filter(row=>row.value>0).length;
- return {metric:selected,days:rows.length,activeDays,activeDayShare:activeDays/rows.length*100,zeroDays:rows.filter(row=>row.value===0).length,total,average:total/rows.length,median,peak:{date:peak.from,value:peak.value,ties}};
+ return {metric:selected,days:rows.length,activeDays,activeDayShare:activeDays/rows.length*100,zeroDays:rows.filter(row=>row.value===0).length,total,average:total/rows.length,median,longestStreak,peak:{date:peak.from,value:peak.value,ties}};
 }
