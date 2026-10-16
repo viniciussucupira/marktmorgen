@@ -32,3 +32,16 @@ export async function createFormOpportunity(statsId: string, ref: string, draft:
   if (!saved || saved.id !== id || saved.formResponseRef !== ref) throw new Error("Form opportunity identity conflict");
   return { state: code === 1 ? "created" : "existing", deal: saved };
 }
+
+/** Recover a committed conversion even after its source leaves the recent-response window. */
+export async function readFormOpportunity(statsId: string, ref: string, stages: readonly Stage[]): Promise<Deal | null> {
+  if (!statsId || !/^[a-f0-9]{64}$/.test(ref)) throw new Error("Invalid form opportunity identity");
+  const id = ref.slice(0, 10);
+  const result = await redisPipeline([["HGET", "nl:crm:deals:" + statsId, id]]);
+  if (!Array.isArray(result) || result.length !== 1) throw new Error("Form opportunity read unconfirmed");
+  if (result[0] === null) return null;
+  if (typeof result[0] !== "string") throw new Error("Form opportunity read unconfirmed");
+  const saved = parseDeal(JSON.parse(result[0]), stages);
+  if (!saved || saved.id !== id || saved.formResponseRef !== ref) throw new Error("Form opportunity identity conflict");
+  return saved;
+}
