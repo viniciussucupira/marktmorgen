@@ -7,7 +7,9 @@
 import type { Tier } from '@/lib/plan';
 import { SETUP_STORAGE_BYTES, TRIAL_STORAGE_BYTES, type Standing } from '@/lib/plan-standing';
 const GiB=1024*1024*1024;
-export const PAID_STORAGE_BYTES = Object.freeze({ creator:8*GiB, pro:64*GiB, scale:128*GiB }) satisfies Record<Tier,number>;
+/** 8, 64 and 128 GB until 18 October 2026, lowered (never the prices) so every plan keeps the owner's 60%
+ * with what a store keeps after its plan ends, until its closing day, priced (tests/plan-cost-registry.ts). */
+export const PAID_STORAGE_BYTES = Object.freeze({ creator:5*GiB, pro:40*GiB, scale:80*GiB }) satisfies Record<Tier,number>;
 /** Conservative default when a caller has not supplied a paid tier. */
 export const STORAGE_BRAKE_BYTES=PAID_STORAGE_BYTES.creator;
 export function paidStorageBytes(tier: Tier='creator'):number {

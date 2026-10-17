@@ -14,6 +14,7 @@ import {
   send,
   unblock,
 } from "@/lib/community-dm";
+import { restingAway, takeBuyerAction } from "@/lib/buyer-actions";
 
 /** A member key, or the creator. */
 const WHO = /^(creator|[0-9a-f]{12,64})$/;
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
 
   // Off here means off: no page, no form and no back door.
   if (!config.dm.on) return back(home, "dmoff");
+  // One of the store's buyer actions, or the creator's studio requests, before anything is written (lib/buyer-actions.ts).
+  if (!(await takeBuyerAction(store, owner ? "owner" : "buyer"))) return restingAway(origin, store);
 
   if (action === "send") {
     const to = field("to", 70);

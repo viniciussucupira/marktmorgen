@@ -21,8 +21,21 @@
  * one counted past the number paid for is given back before anything is
  * handed over. Two people pressing at the same instant for the last place
  * leave one of them told that every place is taken.
+ *
+ * Each place taken is one of the store's orders in the month it is taken
+ * (lib/orders.ts). The checkout held room for every place for a day
+ * (lib/order-admission.ts, OPEN_HOURS), and a place taken in that day uses
+ * it. Since 18 October 2026 a place taken later is admitted then, like any
+ * new order, before anything is handed over: when the store's month has no
+ * room, nothing is taken, and the person is told the store is resting and
+ * that their place is kept for them. The emails that hand out places are
+ * the store's access emails (lib/store-allowance-rules.ts), counted before
+ * they go.
  */
 import { countOrder } from "@/lib/orders";
+import { ADMITTED_FIELD, OPEN_HOURS, admitOrders, settleAdmitted } from "@/lib/order-admission";
+import { allowanceFor } from "@/lib/store-allowance-rules";
+import { allowanceUsed } from "@/lib/store-allowance";
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -66,6 +79,8 @@ export type Group = {
   items?: string[] | null;
   /** Once taken back by a refund, in seconds. */
   revoked?: number;
+  /** The hour its checkout held room for every place in (lib/order-admission.ts), when it was counted there. */
+  h?: number;
 };
 
 const groupKey = (id: string) => `nl:grp:${id}`;
@@ -188,7 +203,9 @@ export async function settleGroup(input: {
   const pi = typeof intent === "string" ? intent : typeof intent?.id === "string" ? intent.id : "";
   // A bundle hands over what it held when it was paid for, to every place.
   const items = bundleFromMeta(session.metadata ?? null, "bundle");
-  const paid: Group = { ...group, session: sessionId, pi, paid: now(), items: items.length ? items : null };
+  // The hour its checkout was admitted in, which held room for every place for a day (takePlace).
+  const admittedHour = Number(session.metadata?.[ADMITTED_FIELD] ?? "");
+  const paid: Group = { ...group, session: sessionId, pi, paid: now(), items: items.length ? items : null, ...(Number.isSafeInteger(admittedHour) && admittedHour > 0 ? { h: admittedHour } : {}) };
   await saveGroup(paid, GROUP_KEPT_SECONDS);
   await redisPipeline([
     ...(pi ? [["SET", piKey(pi), group.id, "EX", GROUP_KEPT_SECONDS] as (string | number)[]] : []),
@@ -212,6 +229,8 @@ async function sendReceipt(input: {
   group: Group;
   lead: string;
   idempotencyKey?: string;
+  /** Sent again, from the studio: one of the store's own emails (lib/store-allowance-rules.ts), not the order's. */
+  again?: boolean;
 }): Promise<boolean> {
   const { store, session, product, group } = input;
   const title = groupTitle(product, group);
@@ -220,7 +239,7 @@ async function sendReceipt(input: {
   const amount = typeof session.amount_total === "number" ? session.amount_total : product.priceCents * group.people;
   const currency = typeof session.currency === "string" && session.currency ? session.currency : store.currency;
   const g = givingWords(store.language);
-  return sendEmail({ meter: { by: "order" },
+  return sendEmail({ meter: input.again ? { by: "store", store, kind: "email" } : { by: "order" },
     from: input.from,
     to: buyer,
     subject: g.groupReceiptSubject(group.people, title).slice(0, 200),
@@ -253,7 +272,7 @@ async function sendReceipt(input: {
 export async function resendGroupReceipt(input: { store: Store; session: Session; product: Listing; base: string; from: string }): Promise<boolean> {
   const group = await openGroup(input.store, input.session.metadata?.group ?? "");
   if (!group || group.p !== input.product.id) return false;
-  return sendReceipt({ ...input, group, lead: givingWords(input.store.language).resentReceipt(input.store.name) });
+  return sendReceipt({ ...input, group, lead: givingWords(input.store.language).resentReceipt(input.store.name), again: true });
 }
 
 type Member = { e: string; at: number };
@@ -275,7 +294,7 @@ function values(raw: unknown): unknown[] {
   return [];
 }
 
-export type Asked = "sent" | "email" | "gone" | "full" | "slow" | "unavailable";
+export type Asked = "sent" | "email" | "gone" | "full" | "slow" | "unavailable" | "resting";
 
 /**
  * Somebody typed an address on a purchase's page: sends that address the
@@ -315,10 +334,13 @@ export async function askPlace(input: {
   const [sentRaw] = await redisPipeline([["INCR", mailKey(group.id)]]);
   if (Number(sentRaw) === 1) await redisPipeline([["EXPIRE", mailKey(group.id), 86_400]]);
   if (Number(sentRaw) > group.people * 3 + 10) return "slow";
+  // The email is one of the store's access emails, taken as it is sent
+  // (lib/email.ts); when the month's are used, the person is told so here.
+  if ((await allowanceUsed(store, "transactional")) >= allowanceFor(store, "transactional")) return "resting";
 
   if (has) {
     const link = (await input.ordersLink(email)) ?? `${base}/orders`;
-    const sent = await sendEmail({ meter: { by: "order" },
+    const sent = await sendEmail({ meter: { by: "store", store, kind: "transactional" },
       from: input.from,
       to: email,
       subject: g.placeAgainSubject(title).slice(0, 200),
@@ -338,7 +360,7 @@ export async function askPlace(input: {
 
   const token = randomBytes(32).toString("hex");
   await redisPipeline([["SET", tokenKey(token), JSON.stringify({ g: group.id, e: email }), "EX", PLACE_LINK_SECONDS]]);
-  const sent = await sendEmail({ meter: { by: "order" },
+  const sent = await sendEmail({ meter: { by: "store", store, kind: "transactional" },
     from: input.from,
     to: email,
     subject: g.takePlaceSubject(title).slice(0, 200),
@@ -360,8 +382,13 @@ export async function askPlace(input: {
 
 export type Taken =
   | { outcome: "taken" | "already" | "has"; email: string; group: Group }
-  | { outcome: "full"; email: string; group: Group }
+  | { outcome: "full" | "resting"; email: string; group: Group }
   | { outcome: "gone" };
+
+/** Whether the room its checkout held for its places is still held now (lib/order-admission.ts). */
+export function placesHeld(group: Pick<Group, "h">, nowMs = Date.now()): boolean {
+  return typeof group.h === "number" && Math.floor(nowMs / 3_600_000) - group.h < OPEN_HOURS - 1;
+}
 
 /**
  * Opens the link from a place's email: takes a place for its address, once.
@@ -403,6 +430,19 @@ export async function takePlace(input: {
     await giveBack();
     return { outcome: "full", email, group };
   }
+  // One of the store's orders this month: inside the room its checkout held
+  // when that is still held, admitted now otherwise, before anything is
+  // handed over (lib/order-admission.ts).
+  const held = placesHeld(group);
+  let hour: number | null = held ? group.h ?? null : null;
+  if (!held) {
+    const admitted = await admitOrders(store, 1);
+    if (!admitted.ok) {
+      await giveBack();
+      return { outcome: "resting", email, group };
+    }
+    hour = admitted.hour;
+  }
   await redisPipeline([
     ["EXPIRE", membersKey(group.id), GROUP_KEPT_SECONDS],
     ["EXPIRE", takenKey(group.id), GROUP_KEPT_SECONDS],
@@ -412,6 +452,7 @@ export async function takePlace(input: {
   if (!given) {
     // It reached this address another way in the same instant.
     await giveBack();
+    if (!held && hour !== null) await settleAdmitted(store, hour);
     return { outcome: "has", email, group };
   }
   // The doors that read what an address was given are opened for this store.
@@ -422,6 +463,8 @@ export async function takePlace(input: {
   // Each place taken is one of the month's orders (lib/orders.ts). The
   // purchase was paid, so it is covered wherever its sale paid a share.
   await countOrder(store, `place:${group.id}:${who}`, group.paid ? 1 : 0);
+  // Counted now, so what was held for it is given back (lib/order-admission.ts).
+  if (hour !== null) await settleAdmitted(store, hour);
   return { outcome: "taken", email, group };
 }
 

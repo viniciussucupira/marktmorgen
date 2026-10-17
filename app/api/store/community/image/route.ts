@@ -3,6 +3,8 @@ import { get } from "@/lib/blob";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { communityViewer } from "@/lib/community-access";
 import { COMMUNITY_FILE_PATTERN, communityFolder, communityImageType } from "@/lib/community-image";
+import { PICTURE_REQUEST_UNITS, takeBuyerRead } from "@/lib/buyer-actions";
+import { speech } from "@/lib/buyer-words";
 
 /**
  * Serves a post's picture to somebody who may read the community, and to
@@ -28,6 +30,10 @@ export async function GET(request: NextRequest) {
     if (!store?.community) return missing();
     const viewer = await communityViewer(store, request.cookies);
     if (viewer.state !== "in") return missing(403);
+    // PICTURE_REQUEST_UNITS of the store's public requests on the buyers' side: its bytes pass through us (lib/buyer-actions.ts).
+    if (!(await takeBuyerRead(store, PICTURE_REQUEST_UNITS))) {
+      return new Response(speech(store).w.restingTitle, { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+    }
     const found = await get(`community/${communityFolder(store.community.id)}/${file}`, { access: "private" });
     if (!found || found.statusCode !== 200 || !found.stream) return missing();
     return new Response(found.stream, {

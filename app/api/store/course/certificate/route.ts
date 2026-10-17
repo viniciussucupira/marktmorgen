@@ -9,6 +9,7 @@ import { passedQuizzes } from "@/lib/quiz";
 import { hasFinished, issueCertificate } from "@/lib/certificate";
 import { limited } from "@/lib/request-guard";
 import { readCourseListing } from "@/lib/catalog";
+import { restingAway, takeBuyerAction } from "@/lib/buyer-actions";
 
 /**
  * "Get my certificate": issues a student's certificate of completion under
@@ -39,6 +40,8 @@ export async function POST(request: NextRequest) {
   const access = await courseAccess(store, product, await cookies());
   const course = await readCourse(product.course.id);
   if (access.state !== "open" || access.learner.owner || !course?.certificate) return away(base);
+  // A certificate asked for is one of the store's buyer actions (lib/buyer-actions.ts).
+  if (!(await takeBuyerAction(store))) return restingAway(origin, store);
 
   const who = emailKey(access.learner.email);
   const [done, passed] = await Promise.all([doneLessons(course.id, access.learner.email), passedQuizzes(course.id, who)]);

@@ -8,10 +8,14 @@
  * nothing. Nothing else here costs anything once a plan has ended.
  *
  * So what such a store keeps past the room of a store with no plan has a
- * date on it, and the date is said three times before it comes.
+ * date on it, and the date is said three times before it comes. Since 18
+ * October 2026 that room is none for a plan that ends from that day on
+ * (lib/plan-closing-rules.ts, keptRoomFor): everything such a store keeps
+ * has the date, students' hand-ins and community pictures included, so no
+ * store goes on costing us for ever once nobody pays for it.
  *
- *   - Nothing happens to a store that keeps no more than a store with no
- *     plan may. It is a store with no plan, and stays as it is.
+ *   - Nothing happens to a store that keeps no more than its room: none
+ *     for a plan ended from 18 October 2026, a store with no plan's before.
  *   - One that keeps more has CLOSING_DAYS from the day its plan ended. Its
  *     owner is written to when the plan ends, WARN_MONTH_DAYS before the
  *     date and WARN_WEEK_DAYS before it, each time with the figures, the
@@ -52,7 +56,10 @@ import { editCourse, filesInCourse, readCourse, saveCourse } from "@/lib/course"
 import { bytesWords } from "@/lib/delivery";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { deleteFile, listFiles } from "@/lib/file-store";
-import { CLOSING_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, keptRoomFor } from "@/lib/plan-closing-rules";
+import { communityFolder } from "@/lib/community-image";
+import { forgetPictures, picturesKept } from "@/lib/community-files";
+import { PICTURE_BYTES } from "@/lib/community-picture-rules";
 import { ENDED_INDEX, SETUP_STORAGE_BYTES, standingOf } from "@/lib/plan-standing";
 import { editPodcast, readPodcast, savePodcast } from "@/lib/podcast";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -129,31 +136,39 @@ const dateWords = (ms: number) => new Date(ms).toLocaleDateString("en-US", { yea
 
 /** The three notices before, and the one after. */
 function letter(kind: "ended" | "month" | "week" | "removed", store: Store, held: number, endedAt: number, day: number, now: number): { subject: string; text: string } {
-  const room = storageWords(SETUP_STORAGE_BYTES);
+  const roomBytes = keptRoomFor(endedAt);
+  const room = storageWords(roomBytes);
   // Written the way the room is, so the two can be told apart at a glance;
   // a store a hair over its room is not said to keep exactly its room.
   const kept = storageWords(held) === room ? `a little over ${room}` : storageWords(held);
   const what = [
     "What is removed: the files your products hand over, your lessons' videos and",
-    "downloads, and your podcast's episodes. After that day your buyers can no",
-    "longer download those files or watch those videos.",
+    "downloads, your podcast's episodes, the files your students handed in and the",
+    "pictures in your community's posts. After that day your buyers can no longer",
+    "download those files or watch those videos.",
     "",
     "What stays: your store and its page, your products and their prices, your",
     "lessons' text and quizzes, your contacts and your orders. A product whose",
     "file was removed is off sale until you give it one again.",
   ];
-  const ways = [
-    "Two things stop it, either one:",
-    "",
-    `  - start a plan again, and everything stays exactly as it is; or`,
-    `  - delete files or lessons you no longer need until your store keeps ${room} or less.`,
-  ];
+  const ways = roomBytes > 0
+    ? [
+        "Two things stop it, either one:",
+        "",
+        `  - start a plan again, and everything stays exactly as it is; or`,
+        `  - delete files or lessons you no longer need until your store keeps ${room} or less.`,
+      ]
+    : [
+        "Starting a plan again stops it, and everything stays exactly as it is. If you",
+        "would rather not, download from your studio what you want to keep before then.",
+      ];
+  const over = roomBytes > 0 ? `keeping more than the ${room} a store with no plan may keep` : "keeping files";
   if (kind === "removed") {
     return {
       subject: `The files ${store.name} kept have been removed`,
       text: [
         `Your Marktmorgen plan for ${store.name} ended on ${dateWords(endedAt)}, and your store was`,
-        `keeping more than the ${room} a store with no plan may keep. As our notices said`,
+        `${over}. As our notices said`,
         "they would be, the files and lesson videos it kept have now been removed.",
         "",
         "Your store is still yours: its page, your products and their prices, your",
@@ -187,8 +202,9 @@ function letter(kind: "ended" | "month" | "week" | "removed", store: Store, held
     text: [
       ...head,
       "",
-      `A store with no plan may keep ${room} of files and lesson videos. Yours keeps`,
-      `${kept}. On ${dateWords(day)}, ${CLOSING_DAYS} days after your plan ended, what your store`,
+      ...(roomBytes > 0
+        ? [`A store with no plan may keep ${room} of files and lesson videos. Yours keeps`, `${kept}. On ${dateWords(day)}, ${CLOSING_DAYS} days after your plan ended, what your store`]
+        : [`A store whose plan has ended keeps its files until a set day. Yours keeps`, `${storageWords(held)}. On ${dateWords(day)}, ${CLOSING_DAYS} days after your plan ended, what your store`]),
       "keeps will be removed.",
       "",
       ...ways,
@@ -225,10 +241,13 @@ export type Hands = {
   list: (prefix: string) => Promise<string[]>;
   /** Deletes files. Throws when one could not be. */
   remove: (pathnames: string[]) => Promise<void>;
+  /** The bytes a community's pictures are counted at (lib/community-files.ts), which sit outside the store's folders. */
+  pictures?: (communityId: string) => Promise<number>;
 };
 
 const HANDS: Hands = {
   measure: async (folder) => (await storageUsed(folder, SETUP_STORAGE_BYTES)).bytes,
+  pictures: async (community) => (await picturesKept(communityFolder(community))) * PICTURE_BYTES,
   list: listFiles,
   remove: deleteFile,
 };
@@ -338,10 +357,14 @@ export async function removeStored(key: string, hands: Pick<Hands, "list" | "rem
   } catch (error) {
     failed("what its records named could not all be deleted", error);
   }
-  // And whatever else is in the store's own folders, in either file store.
-  for (const prefix of [`vault/${folder}/`, `stores/${folder}/`]) {
+  // And whatever else is in the store's own folders, in either file store,
+  // and its community's pictures (since 18 October 2026), which the
+  // community's posts then show without.
+  const pictures = store.community ? `community/${communityFolder(store.community.id)}/` : "";
+  for (const prefix of [`vault/${folder}/`, `stores/${folder}/`, ...(pictures ? [pictures] : [])]) {
     try {
       await removeAll(await hands.list(prefix));
+      if (prefix === pictures && store.community) await forgetPictures(communityFolder(store.community.id));
     } catch (error) {
       failed(`what was left under ${prefix.split("/")[0]}/`, error);
     }
@@ -407,8 +430,8 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   if (state.fit && now - state.fit < RECHECK_DAYS * DAY_MS) return { key, state: "fits" };
 
   const folder = await storeFolder(storeRef(store));
-  const held = await hands.measure(folder);
-  if (held <= SETUP_STORAGE_BYTES) {
+  const held = (await hands.measure(folder)) + (store.community && hands.pictures ? await hands.pictures(store.community.id) : 0);
+  if (held <= keptRoomFor(endedAt)) {
     // It fits, so whatever it was told no longer stands. Should it ever keep
     // more again (a copy stamped for a buyer is kept in its folder too), it
     // is told from the start, and has its week from that notice.
@@ -460,8 +483,8 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
 
   const done = await removeStored(key, hands, until);
   if (!done.clean) return { key, state: "held", note: `removed ${done.files}, and something could not be removed` };
-  const after = await hands.measure(folder);
-  if (after > SETUP_STORAGE_BYTES) return { key, state: "held", note: `removed ${done.files} and it still keeps ${bytesWords(after)}` };
+  const after = (await hands.measure(folder)) + (store.community && hands.pictures ? await hands.pictures(store.community.id) : 0);
+  if (after > keptRoomFor(endedAt)) return { key, state: "held", note: `removed ${done.files} and it still keeps ${bytesWords(after)}` };
   await save({ ...state, removed: now });
   if (await send("removed", now, 0)) await save({ ...state, removed: now, said: now });
   return { key, state: "removed", note: `${done.files} files` };

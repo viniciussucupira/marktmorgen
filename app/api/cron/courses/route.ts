@@ -8,12 +8,14 @@ import { sendDripEmails } from "@/lib/learn";
 import { SITE_URL } from "@/lib/site-url";
 import { staleTaskUploads } from "@/lib/assignment";
 import { deleteFile } from "@/lib/file-store";
+import { sweepCommunityUploads } from "@/lib/community-files";
 
 /**
  * Run on a schedule by Vercel: tells each student when a module of their
  * course opens for them. Once per student and module, one run at a time.
  * And deletes files students uploaded for an assignment and never handed
- * in (lib/assignment.ts), a day on.
+ * in (lib/assignment.ts), and community pictures never put in a post
+ * (lib/community-files.ts), a day on.
  */
 export async function GET(request: NextRequest) {
   // Vercel sends the secret with every scheduled run, compared here in
@@ -31,7 +33,8 @@ export async function GET(request: NextRequest) {
     const counts = await sendDripEmails(storeForHandle, readCourse, SITE_URL);
     const stale = await staleTaskUploads().catch(() => [] as string[]);
     if (stale.length) await deleteFile(stale).catch((error: unknown) => console.error("could not delete unused assignment uploads", error));
-    return Response.json({ ok: true, ...counts, unusedUploads: stale.length }, { headers: { "Cache-Control": "no-store" } });
+    const pictures = await sweepCommunityUploads().catch(() => 0);
+    return Response.json({ ok: true, ...counts, unusedUploads: stale.length, unusedPictures: pictures }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("sending course emails failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

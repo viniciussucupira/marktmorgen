@@ -10,7 +10,12 @@ import { AI_PLANS_WORDS, aiAllowanceWords } from "@/lib/ai-rules";
 import { BUYER_RESERVE_BPS, EXTRA_REQUESTS, REQUESTS_PER_VISIT, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, countWords, publicVisitLimit } from "@/lib/traffic-rules";
 import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
-import { SETUP_VIDEO_SECONDS } from "@/lib/plan-standing";
+import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
+import { PAID_STORAGE_BYTES, storageBrakeFor } from "@/lib/storage-rules";
+import { storageWords } from "@/lib/storage-quota";
+import { CLOSING_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { TASK_ROOM_BYTES } from "@/lib/assignment-rules";
+import { COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
 import { CALL_ORDER_UNITS, ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
 import { API_WRITE_UNITS, allowanceListWords } from "@/lib/store-allowance-rules";
 import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
@@ -334,7 +339,8 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "What else does my plan cover each month?",
         a: [
           `On ${PLAN_TITLES.creator}: ${allowanceListWords("creator")}. On ${PLAN_TITLES.pro}: ${allowanceListWords("pro")}. On ${PLAN_TITLES.scale}: ${allowanceListWords("scale")}.`,
-          `A studio request is any page of your studio you open (each counts as ${STUDIO_PAGE_UNITS}), any save, and the studio's own refreshing. An API request is one made with one of your keys; a contact added or a product given counts as ${API_WRITE_UNITS}. Store emails are what your store's own tools send outside your monthly emails and your orders: inbox notices and replies, a purchase sent again, reminders, offers and notices to members. Access emails hand buyers what they already have, such as the link to their purchases.`,
+          `A studio request is any page of your studio you open (each counts as ${STUDIO_PAGE_UNITS}), any save, and the studio's own refreshing. An API request is one made with one of your keys; a contact added or a product given counts as ${API_WRITE_UNITS}. Store emails are what your store's own tools send outside your monthly emails and your orders: inbox notices and replies, a purchase sent again, reminders, offers and notices to members. Access emails hand buyers what they already have, such as the link to their purchases or a place in a purchase made for several people. Buyer actions are what your buyers do inside what they bought, other than opening its pages: a community post, comment, like, message, RSVP or picture, a lesson comment, a hand-in, a lesson marked done, a certificate. What you do there yourself counts as studio requests, and deleting what one wrote is not counted. A webhook delivery is each try to send one of your webhooks, retries and tests included.`,
+          "When your buyer actions are used, your buyers can still open everything they have; what they would write waits for your next billing month, and they are told your store is resting for now. A webhook past the figure is not sent and shows in your studio as not sent, with the reason. A place in a purchase for several people taken after its first day is one of that month's orders, so when the month's orders are used, the person is told so and their place stays open for them.",
           "When one is used, that use is refused with a plain message until your next billing month, or at once on a larger plan. Nothing is ever billed past a figure. Changing your plan, canceling it, deleting your store and downloading your sales always work.",
           `Free trials and stores without a paid plan share a limited number of places each calendar month (${countWords(FREE_POOL_BASE_STORES)}, and one more for every ${countWords(PAID_STORES_PER_FREE_STORE)} paying stores). If they are taken, such a store is told so, and what it asked for waits until the next month or until its plan is paid.`,
         ],
@@ -342,17 +348,18 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "How much can my store hold?",
         a: [
-          "Paid storage is up to 8 GB on Store, 64 GB on Studio and 128 GB on Scale, for files and lesson videos combined. A free trial has up to 50 GB, capped by the chosen plan: 8 GB on Store and 50 GB on Studio or Scale. A store with no plan, before one starts or after it ends, holds 5 GB.",
+          `Paid storage is up to ${storageWords(PAID_STORAGE_BYTES.creator)} on ${PLAN_TITLES.creator}, ${storageWords(PAID_STORAGE_BYTES.pro)} on ${PLAN_TITLES.pro} and ${storageWords(PAID_STORAGE_BYTES.scale)} on ${PLAN_TITLES.scale}, for files and lesson videos combined. A free trial has up to ${storageWords(TRIAL_STORAGE_BYTES)}, capped by the chosen plan: ${storageWords(storageBrakeFor("trial", "creator"))} on ${PLAN_TITLES.creator}, ${storageWords(storageBrakeFor("trial", "pro"))} on ${PLAN_TITLES.pro} and ${storageWords(storageBrakeFor("trial", "scale"))} on ${PLAN_TITLES.scale}. A store with no plan, before one starts, holds ${storageWords(SETUP_STORAGE_BYTES)}.`,
+          `Files your students hand in have room of their own: ${storageWords(TASK_ROOM_BYTES.creator)} on ${PLAN_TITLES.creator}, ${storageWords(TASK_ROOM_BYTES.pro)} on ${PLAN_TITLES.pro} and ${storageWords(TASK_ROOM_BYTES.scale)} on ${PLAN_TITLES.scale}. Your community keeps up to ${COMMUNITY_PICTURES.creator.toLocaleString("en-US")}, ${COMMUNITY_PICTURES.pro.toLocaleString("en-US")} or ${COMMUNITY_PICTURES.scale.toLocaleString("en-US")} pictures in its posts; deleting a post with a picture makes room for another.`,
           "Past its figure a store is asked to delete something before adding more. While a plan runs, nothing already there stops working and nothing already sold is touched.",
         ],
       },
       {
         q: "What happens to my files if my plan ends?",
         a: [
-          "Your store stays: its page, your products and their prices, your lessons' text and quizzes, your contacts and your orders. Your buyers go on downloading what they bought. A store that keeps 5 GB or less of files and lesson videos is not touched at all, and cannot add past that until a plan is started again.",
-          "A store that keeps more than 5 GB has a date. 30 days after your plan ended, what it keeps is removed: the files your products hand over, your lessons' videos and downloads, and your podcast's episodes. From that day your buyers can no longer download those files or watch those videos.",
-          "We email you when the plan ends, 14 days before that day and 7 days before it, each time with the date, and nothing is removed sooner than a week after the last of those emails. Your studio shows the date too.",
-          "Two things stop it, either one: start a plan again, or delete enough for your store to keep 5 GB or less. If the day passes, you can put a file back on each product and a video back on each lesson once a plan is started again.",
+          "Your store stays: its page, your products and their prices, your lessons' text and quizzes, your contacts and your orders. Your buyers go on downloading what they bought until the day below.",
+          `What your store keeps has a date. ${CLOSING_DAYS} days after your plan ended, it is removed: the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts. From that day your buyers can no longer download those files or watch those videos.`,
+          `We email you when the plan ends, ${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it, each time with the date, and nothing is removed sooner than a week after the last of those emails. Your studio shows the date too. Starting a plan again before then stops it; if the day passes, you can put a file back on each product and a video back on each lesson once a plan is started again.`,
+          `A plan that ended before ${new Date(KEEP_NOTHING_FROM).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })} keeps the rule it ended under: a store that keeps ${storageWords(SETUP_STORAGE_BYTES)} or less is not touched, and one that keeps more than ${storageWords(SETUP_STORAGE_BYTES)} has a date, which deleting enough to keep ${storageWords(SETUP_STORAGE_BYTES)} or less also stops.`,
         ],
       },
       {

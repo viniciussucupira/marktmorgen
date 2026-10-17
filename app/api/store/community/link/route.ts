@@ -5,6 +5,7 @@ import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { requestCommunityLink } from "@/lib/community-access";
 import { clientIp } from "@/lib/visit";
 import { limited } from "@/lib/request-guard";
+import { restingAway, takeBuyerRead } from "@/lib/buyer-actions";
 
 /** "Send me a link": a member coming into the community on this device. */
 export async function POST(request: NextRequest) {
@@ -23,6 +24,8 @@ export async function POST(request: NextRequest) {
   const store = handle ? await storeForHandle(handle) : null;
   if (!store?.community) return new Response("Not found.", { status: 404 });
 
+  // One of the store's public requests on the buyers' side (lib/buyer-actions.ts); the email it sends is an access email.
+  if (!(await takeBuyerRead(store))) return restingAway(origin, store);
   let result: string;
   try {
     result = await requestCommunityLink({ store, email, ip: clientIp(request), origin: linkOrigin(request, store) });

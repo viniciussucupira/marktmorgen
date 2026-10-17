@@ -7,6 +7,8 @@ import { heldBack, passedQuizzes } from "@/lib/quiz";
 import { plain, serveFile } from "@/lib/serve-file";
 import { readCourseListing } from "@/lib/catalog";
 import { coursesWords } from "@/lib/buyer-words/courses";
+import { takePublicRequest } from "@/lib/traffic";
+import { speech } from "@/lib/buyer-words";
 
 /**
  * A lesson's download: a worksheet, the slides. Handed over only to someone
@@ -39,5 +41,7 @@ export async function GET(request: NextRequest) {
       }
     }
   }
+  // One of the store's public requests: on the buyers' side, or the public's for a lesson anyone may preview (lib/buyer-actions.ts).
+  if (!(await takePublicRequest(store, found.lesson.preview ? "public" : "buyer"))) return plain(503, speech(store).w.restingTitle);
   return serveFile(file);
 }

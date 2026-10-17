@@ -11,6 +11,7 @@ import { readCourseListing } from "@/lib/catalog";
 import { addComment, commentsOn, deleteComment, readComment, setHidden } from "@/lib/lesson-comments";
 import { COMMENTS_PER_DAY, COMMENTS_PER_MINUTE, COMMENT_ID_PATTERN, CREATOR_AUTHOR } from "@/lib/lesson-comments-rules";
 import { tellCreator, tellStudent } from "@/lib/lesson-comment-notify";
+import { restingAway, takeBuyerAction } from "@/lib/buyer-actions";
 
 /**
  * Comments under a lesson, from the lesson page itself: a plain form, no
@@ -58,6 +59,10 @@ export async function POST(request: NextRequest) {
     if (heldBack(course, passed).has(lessonId)) return new Response(null, { status: 303, headers: { Location: base } });
   }
   if (!(await commentsOn(course.id))) return back("off");
+  // Each act here is one of the store's buyer actions, or the creator's
+  // studio requests (lib/buyer-actions.ts); a student deleting their own
+  // comment is not: it can only follow one that was.
+  if (!(action === "delete" && !owner) && !(await takeBuyerAction(store, owner ? "owner" : "buyer"))) return restingAway(origin, store);
 
   if (action === "delete" || action === "hide" || action === "show") {
     const id = field("id", 20);

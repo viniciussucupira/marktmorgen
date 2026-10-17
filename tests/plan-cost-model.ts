@@ -14,6 +14,7 @@ import { AUTOMATIC_AI_STORE_MICRO_USD } from "@/lib/ai-spend-policy";
 import { uploadWorstCostMicroUsd } from "@/lib/upload-budget-policy";
 import { visitCost } from "./traffic-cost";
 import { COST_LINES, ORDER_COST, hourCost } from "./plan-cost-registry";
+export { PER_PAYMENT_LINES, perPaymentCost } from "./plan-cost-registry";
 
 export {
   GB, STORAGE_PER_GB, FILE_DELIVERY_PER_GB, STREAM_STORAGE_PER_GB, STREAM_DELIVERY_PER_GB, FETCHED_AHEAD, PER_EMAIL,

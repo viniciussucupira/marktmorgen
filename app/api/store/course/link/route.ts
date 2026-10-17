@@ -6,6 +6,7 @@ import { requestCourseLink } from "@/lib/learn";
 import { clientIp } from "@/lib/visit";
 import { limited } from "@/lib/request-guard";
 import { readCourseListing } from "@/lib/catalog";
+import { restingAway, takeBuyerRead } from "@/lib/buyer-actions";
 
 /** "Send me a link": a student opening the course on another device. */
 export async function POST(request: NextRequest) {
@@ -27,6 +28,8 @@ export async function POST(request: NextRequest) {
   const product = await readCourseListing(store, productId);
   if (!store || !product) return new Response("Not found.", { status: 404 });
 
+  // One of the store's public requests on the buyers' side (lib/buyer-actions.ts); the email it sends is an access email.
+  if (!(await takeBuyerRead(store))) return restingAway(origin, store);
   let result: string;
   try {
     result = await requestCourseLink({ store, product, email, ip: clientIp(request), origin: linkOrigin(request, store) });

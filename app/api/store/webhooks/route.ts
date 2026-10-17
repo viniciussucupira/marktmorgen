@@ -43,7 +43,10 @@ export async function POST(request: NextRequest) {
     }
     if (action === "test") {
       const result = await sendTest(store, id);
-      if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "limited" ? 429 : 404 });
+      if (!result.ok) {
+        if (result.reason === "used") return Response.json({ ok: false, error: "used", message: result.message }, { status: 429 });
+        return Response.json({ ok: false, error: result.reason }, { status: result.reason === "limited" ? 429 : 404 });
+      }
       return Response.json({
         ok: true,
         delivered: result.delivery.state === "delivered",

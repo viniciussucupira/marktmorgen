@@ -21,6 +21,10 @@ import { EXPECTATION, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from
 import type { TopicPage } from "@/lib/site-pages";
 import { PLAN_AT, feeWords } from "@/lib/fee-words";
 import { TEAM_LIMITS, teamLimitWords } from "@/lib/team-scheduling-rules";
+import { STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
+import { COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
+import { TASK_ROOM_BYTES } from "@/lib/assignment-rules";
+import { storageWords } from "@/lib/storage-quota";
 
 /** Whether stores can be put on their own domain on this deployment. */
 const DOMAINS = isDomainsConfigured();
@@ -992,6 +996,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           "Search does not listen to what is said inside a video: only titles and written text are searched. Private messages are searched in a member's 30 most recent conversations.",
           "One community per store.",
           "Up to 10,000 posts and 50,000 members in one community.",
+          `Each billing month covers a number of buyer actions (posts, comments, likes, messages, RSVPs, pictures): ${STORE_ALLOWANCES.creator.buyer.toLocaleString("en-US")} on the ${PLAN_AT.creator} plan, ${STORE_ALLOWANCES.pro.buyer.toLocaleString("en-US")} on the ${PLAN_AT.pro} plan and ${STORE_ALLOWANCES.scale.buyer.toLocaleString("en-US")} on the ${PLAN_AT.scale} plan; past them members can still read everything, and what they would write waits for the next month. A community keeps up to ${COMMUNITY_PICTURES.creator.toLocaleString("en-US")}, ${COMMUNITY_PICTURES.pro.toLocaleString("en-US")} or ${COMMUNITY_PICTURES.scale.toLocaleString("en-US")} pictures in its posts.`,
           "No app-store app. It opens in the browser, and in your store's app on the home screen.",
         ],
       },
@@ -1407,6 +1412,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           "There is no Marktmorgen app in Zapier's directory. In Zapier, use its Webhooks by Zapier trigger, Catch Hook.",
           "Webhooks only send. To read your store from your own tools, use an API key: the API reads your list, members, a course's students, your affiliates and your bookings. A key made to write also adds people who agreed to your list, changes their labels and gives or takes back products, for Zapier, Make or your own server. The developers page lists every address.",
           "Up to five addresses per store, https only, and redirects are not followed.",
+          `Each billing month covers a number of deliveries, every try, retry and test counted: ${STORE_ALLOWANCES.creator.webhook.toLocaleString("en-US")} on the ${PLAN_AT.creator} plan, ${STORE_ALLOWANCES.pro.webhook.toLocaleString("en-US")} on the ${PLAN_AT.pro} plan and ${STORE_ALLOWANCES.scale.webhook.toLocaleString("en-US")} on the ${PLAN_AT.scale} plan. Past them a message is not sent, and the log says so.`,
         ],
       },
       {
@@ -1467,7 +1473,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           "Quiz questions are multiple choice, with one right answer or several. Written answers and files are what an assignment is for.",
           "One quiz or one assignment per lesson, not both. A quiz holds up to 20 questions.",
           "The AI reply draft (" + AI_PLANS_WORDS + ") reads what a student wrote; it does not open the files they hand in.",
-          "A store's students keep up to 2 GB of handed-in files together, thousands of documents. Past that they hand in text until old work is removed with its assignment.",
+          `A store's students keep up to ${storageWords(TASK_ROOM_BYTES.creator)} of handed-in files together on the ${PLAN_AT.creator} plan, ${storageWords(TASK_ROOM_BYTES.pro)} on the ${PLAN_AT.pro} plan and ${storageWords(TASK_ROOM_BYTES.scale)} on the ${PLAN_AT.scale} plan. Past that they hand in text until old work is removed with its assignment.`,
           "A student who used all their tries asks you for more by replying to their purchase email.",
         ],
       },

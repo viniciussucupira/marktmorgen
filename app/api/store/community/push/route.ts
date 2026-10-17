@@ -3,6 +3,7 @@ import { fromAnotherSite } from "@/lib/studio-route";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { communityViewer } from "@/lib/community-access";
 import { deviceCount, forgetDevice, rememberDevice, renewDevice } from "@/lib/community-push";
+import { restingJson, takeBuyerAction } from "@/lib/buyer-actions";
 
 /**
  * A member turning notifications on, or off, on one device.
@@ -33,6 +34,8 @@ export async function POST(request: NextRequest) {
   const id = store.community.id;
   const who = viewer.key;
   const action = text(body.action, 20);
+  // A device added is one of the store's buyer actions, or the creator's studio requests (lib/buyer-actions.ts); one taken off is not.
+  if ((action === "on" || action === "renew") && !(await takeBuyerAction(store, viewer.owner ? "owner" : "buyer"))) return restingJson();
 
   if (action === "on") {
     const result = await rememberDevice(id, who, body.subscription);

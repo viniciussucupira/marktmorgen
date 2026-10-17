@@ -7,6 +7,7 @@ import { within } from "@/lib/community";
 import { communityViewer } from "@/lib/community-access";
 import { ITEM_ID } from "@/lib/community-text";
 import { cancelRsvp, mayAttend, readEvent, rsvp } from "@/lib/community-events";
+import { restingAway, takeBuyerAction } from "@/lib/buyer-actions";
 
 /** The most a form here may weigh: four short fields. */
 const MAX_FORM_BYTES = 2_000;
@@ -50,6 +51,8 @@ export async function POST(request: NextRequest) {
     if (viewer.state !== "in") return back(home, viewer.state === "off" ? "off" : "out");
     if (viewer.owner) return back(page, "host");
     if (!viewer.member) return back(page, "full");
+    // One of the store's buyer actions, before the event is read (lib/buyer-actions.ts).
+    if (!(await takeBuyerAction(store))) return restingAway(origin, store);
     const id = store.community.id;
     const event = await readEvent(id, eventId);
     if (!event) return back(`${home}/events`, "gone");

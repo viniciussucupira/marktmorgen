@@ -25,7 +25,11 @@
 import { addOption, addProduct, claimHandle, ensureStatsId, setProductLink, setStripeAccount, setSubscription, storeForEmail, type Listing } from "@/lib/store";
 import { readListing, readProduct } from "@/lib/catalog";
 import { MAX_PEOPLE, canGroup, payable, placesWords, readPeople } from "@/lib/group-rules";
-import { askPlace, groupJob, groupTitle, openGroup, placesTaken, readGroup, revokeRefundedGroups, settleGroup, startGroup, takePlace } from "@/lib/group-buy";
+import { askPlace, groupJob, groupTitle, openGroup, placesHeld, placesTaken, readGroup, revokeRefundedGroups, settleGroup, startGroup, takePlace } from "@/lib/group-buy";
+import { ADMITTED_FIELD, OPEN_HOURS } from "@/lib/order-admission";
+import { allowanceWindow } from "@/lib/allowance-window";
+import { paidOrdersLimitFor } from "@/lib/order-rules";
+import { storeFolder, storeRef } from "@/lib/store";
 import { deliveredIds } from "@/lib/bundle-rules";
 import { grantImported, importedFor } from "@/lib/imported-purchases";
 import { purchasesFor } from "@/lib/buyer-orders";
@@ -226,6 +230,31 @@ async function main(): Promise<void> {
   is("someone takes a place", (await take(tokenFor("gil@example.com"))).outcome, "taken");
   const theirs = await purchasesFor({ ...store, stripeAccountId: null }, "gil@example.com");
   is("and opens that option, and no other", theirs.map((p) => [p.title, p.option, p.place, p.main?.link]), [["Meal Planner", "5 weeks", true, "https://example.com/five-weeks"]]);
+
+  part("Each place is one of the month's orders (18 October 2026)");
+  const folder = await storeFolder(storeRef(store));
+  const openKey = `nl:orders:open:${folder}`;
+  const hourNow = Math.floor(Date.now() / 3_600_000);
+  // A purchase whose checkout held room for its places this hour (lib/order-admission.ts).
+  const heldGroup = await startGroup(store, product, "2");
+  if (!heldGroup.ok) throw new Error("no held purchase");
+  await redis.pipeline([["HSET", openKey, String(hourNow), 3]]);
+  await settleGroup({ store, session: { ...session, id: "cs_test_" + "w".repeat(24), payment_intent: "pi_Group000004", metadata: { ...meta, group: heldGroup.group.id, [ADMITTED_FIELD]: String(hourNow) } }, product, base: BASE, from: FROM });
+  const heldNow = (await readGroup(heldGroup.group.id))!;
+  is("it knows the hour its checkout held room in, and that the room is held", [heldNow.h, placesHeld(heldNow), placesHeld(heldNow, (hourNow + OPEN_HOURS) * 3_600_000)], [hourNow, true, false]);
+  await askPlace({ store, id: heldGroup.group.id, email: "hal@example.com", product, base: BASE, from: FROM, ordersLink: async () => null });
+  is("a place taken in that day uses what was held, and gives it back as it is counted", [(await take(tokenFor("hal@example.com"))).outcome, Number((await redis.pipeline([["HGET", openKey, String(hourNow)]]))[0])], ["taken", 2]);
+  // Later: the hold is long gone, and the month's orders are all used.
+  const lateGroup = await startGroup(store, product, "2");
+  if (!lateGroup.ok) throw new Error("no late purchase");
+  await settleGroup({ store, session: { ...session, id: "cs_test_" + "x".repeat(24), payment_intent: "pi_Group000005", metadata: { ...meta, group: lateGroup.group.id, [ADMITTED_FIELD]: String(hourNow - 2 * OPEN_HOURS) } }, product, base: BASE, from: FROM });
+  await redis.pipeline([["DEL", openKey], ["SET", `nl:orders:n:${folder}:${allowanceWindow(store)!.id}`, paidOrdersLimitFor(store)!]]);
+  await askPlace({ store, id: lateGroup.group.id, email: "ida@example.com", product, base: BASE, from: FROM, ordersLink: async () => null });
+  const late = await take(tokenFor("ida@example.com"));
+  is("taken after its day, a place is admitted like a new order: with none left, nothing is handed over and the place stays open", [late.outcome, await placesTaken(lateGroup.group.id), (await importedFor(store, "ida@example.com")).length], ["resting", 0, 0]);
+  await redis.pipeline([["SET", `nl:orders:n:${folder}:${allowanceWindow(store)!.id}`, 0]]);
+  await askPlace({ store, id: lateGroup.group.id, email: "ida@example.com", product, base: BASE, from: FROM, ordersLink: async () => null });
+  is("with room in the month, the same person takes it", [(await take(tokenFor("ida@example.com"))).outcome, await placesTaken(lateGroup.group.id)], ["taken", 1]);
 
   done();
 }

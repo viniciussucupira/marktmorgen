@@ -18,4 +18,5 @@ export type ChatRefusal =
   | "full"
   | "name"
   | "out"
+  | "resting"
   | "unknown";

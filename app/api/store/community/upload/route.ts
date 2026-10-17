@@ -5,7 +5,9 @@ import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { IMAGE_CONTENT_TYPES, MAX_IMAGE_BYTES } from "@/lib/product-image";
 import { within } from "@/lib/community";
 import { communityViewer } from "@/lib/community-access";
-import { noteCommunityUpload } from "@/lib/community-files";
+import { noteCommunityUpload, takePicturePlace } from "@/lib/community-files";
+import { takeBuyerAction } from "@/lib/buyer-actions";
+import { picturesLimitFor } from "@/lib/community-picture-rules";
 import { ownsCommunityImage } from "@/lib/community-image";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
 
@@ -50,6 +52,11 @@ export async function POST(request: NextRequest) {
         if (viewer.state !== "in" || !viewer.canWrite) throw new Error("signed_out");
         if (!ownsCommunityImage(pathname, store.community.id)) throw new Error("invalid");
         if (!viewer.owner && !(await within(store.community.id, viewer.key, "upload"))) throw new Error("slow");
+        // A door is one of the store's buyer actions (or the creator's studio
+        // requests), and takes one of the pictures its community may keep
+        // (lib/community-picture-rules.ts), before it is given.
+        if (!(await takeBuyerAction(store, viewer.owner ? "owner" : "buyer"))) throw new Error("resting");
+        if (!(await takePicturePlace(pathname, picturesLimitFor(store)))) throw new Error("pictures");
 
         // Only the member given this door may put the picture in a post.
         await noteCommunityUpload(pathname, viewer.key);
@@ -68,11 +75,11 @@ export async function POST(request: NextRequest) {
     return Response.json(answer);
   } catch (error) {
     const reason = error instanceof Error ? error.message : "server_error";
-    const known = ["signed_out", "unknown", "invalid", "slow"].includes(reason);
+    const known = ["signed_out", "unknown", "invalid", "slow", "resting", "pictures"].includes(reason);
     if (!known) console.error("signing a community picture upload failed", error);
     return Response.json(
       { ok: false, error: known ? reason : "server_error" },
-      { status: reason === "signed_out" ? 401 : reason === "slow" ? 429 : known ? 400 : 500 },
+      { status: reason === "signed_out" ? 401 : reason === "slow" ? 429 : reason === "resting" ? 503 : reason === "pictures" ? 409 : known ? 400 : 500 },
     );
   }
 }

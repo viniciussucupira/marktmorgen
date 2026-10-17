@@ -119,7 +119,7 @@ test("a store's public side rests at its requests as at its visits, and what buy
 });
 
 test("a plan's figures are published from the same numbers", () => {
-  assert.equal(allowanceListWords("creator"), `${STORE_ALLOWANCES.creator.studio.toLocaleString("en-US")} studio requests, ${STORE_ALLOWANCES.creator.api.toLocaleString("en-US")} API requests, ${STORE_ALLOWANCES.creator.inbox} inbox messages, ${STORE_ALLOWANCES.creator.email} store emails, ${STORE_ALLOWANCES.creator.transactional} access emails and ${STORE_ALLOWANCES.creator.integration} calls to connected services`);
+  assert.equal(allowanceListWords("creator"), `${STORE_ALLOWANCES.creator.studio.toLocaleString("en-US")} studio requests, ${STORE_ALLOWANCES.creator.api.toLocaleString("en-US")} API requests, ${STORE_ALLOWANCES.creator.inbox} inbox messages, ${STORE_ALLOWANCES.creator.email} store emails, ${STORE_ALLOWANCES.creator.transactional} access emails, ${STORE_ALLOWANCES.creator.integration} calls to connected services, ${STORE_ALLOWANCES.creator.buyer} buyer actions and ${STORE_ALLOWANCES.creator.webhook} webhook deliveries`);
   assert.doesNotMatch(allowanceListWords("scale"), /unlimited/i);
 });
 

@@ -17,6 +17,8 @@
  * The lesson carries only the few switches the outline needs; the prompt is
  * kept apart (lib/assignment.ts), as a quiz's questions are. Browser-safe.
  */
+import type { Tier } from "@/lib/plan";
+import { type PlanFields, standingOf } from "@/lib/plan-standing";
 
 /** What the lesson record keeps about its assignment. */
 export type TaskSetup = {
@@ -37,13 +39,27 @@ export const MAX_FEEDBACK = 3_000;
 export const MAX_TASK_FILE_BYTES = 10 * 1024 * 1024;
 /**
  * What a store's students may keep handed in, all together, by the files'
- * own sizes (lib/assignment.ts): 2 GB, about five cents a month to keep at
- * the dearest rate a file is kept at (tests/plan-margin.test.ts). Thousands
- * of documents. Past it, students hand in text, and files again once the
- * creator removes an assignment and the work kept for it. Said on the
- * feature's page (lib/feature-pages.ts).
+ * own sizes (lib/assignment.ts), by plan. Kept with the store's files but
+ * outside what its plan's storage holds the creator to, so each plan's worst
+ * month prices it on its own (tests/plan-cost-registry.ts, line task-files).
+ * 2 GB for every plan until 18 October 2026, when it was set by plan to keep
+ * Store at the owner's 60% with the uses priced that day. Past it, students
+ * hand in text, and files again once the creator removes an assignment and
+ * the work kept for it. Said on the feature's page (lib/feature-pages.ts).
  */
-export const MAX_STORE_TASK_BYTES = 2 * 1024 * 1024 * 1024;
+const MiB = 1024 * 1024;
+export const TASK_ROOM_BYTES: Record<Tier, number> = { creator: 250 * MiB, pro: 1024 * MiB, scale: 2048 * MiB };
+/** A free trial's students: enough to try an assignment with. A store with no plan running takes no new files. */
+export const TRIAL_TASK_ROOM_BYTES = 50 * MiB;
+/** The most any plan holds, for the pages that speak of all of them. */
+export const MAX_STORE_TASK_BYTES = Math.max(...Object.values(TASK_ROOM_BYTES));
+
+/** The room this store's students have right now. */
+export function taskRoomFor(store: PlanFields & { tier?: Tier }, nowSeconds = Date.now() / 1000): number {
+  const standing = standingOf(store, nowSeconds);
+  if (standing === "paid") return TASK_ROOM_BYTES[store.tier ?? "creator"] ?? TASK_ROOM_BYTES.creator;
+  return standing === "trial" ? TRIAL_TASK_ROOM_BYTES : 0;
+}
 /** The kinds of file a student may hand in. */
 export const TASK_FILE_TYPES: Record<string, string> = {
   "application/pdf": "pdf",

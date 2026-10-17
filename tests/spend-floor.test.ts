@@ -14,8 +14,10 @@
  * nothing), and Stripe's card and Billing fees on the charge. One window is
  * one payment: since that day every allowance follows the store's billing
  * month (lib/allowance-window.ts), so a monthly plan is one window and an
- * annual plan twelve, for ten monthly prices. What the registry lists as
- * OPEN is not in the sum and not certified here.
+ * annual plan twelve, for ten monthly prices. And, once a payment, what that
+ * payment can leave behind after its plan ends (the registry's
+ * PER_PAYMENT_LINES: everything the store keeps, until its closing day). What
+ * the registry lists as OPEN is not in the sum and not certified here.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -27,7 +29,7 @@ import { currentUploadBudgetPolicy, uploadWorstCostMicroUsd } from "@/lib/upload
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
 import { ANSWER_MICRO_USD, WRITING_JOB_MICRO_USD } from "@/lib/spend-cost-table";
-import { BILLING_RATE, aiCeilingUsd, uploadOpsUsd, worstCost, worstLines } from "./plan-cost-model";
+import { BILLING_RATE, aiCeilingUsd, perPaymentCost, uploadOpsUsd, worstCost, worstLines } from "./plan-cost-model";
 
 const months = (cycle: Cycle) => (cycle === "year" ? 12 : 1);
 function sum(tier: Tier, cycle: Cycle) {
@@ -36,9 +38,10 @@ function sum(tier: Tier, cycle: Cycle) {
   const stripe = paid * (0.029 + BILLING_RATE) + 0.3;
   const monthly = worstCost(tier);
   const ai = aiCeilingUsd(tier), uploads = uploadOpsUsd(tier);
-  const total = stripe + months(cycle) * monthly;
+  const after = perPaymentCost(tier);
+  const total = stripe + months(cycle) * monthly + after;
   const other = monthly - ai - uploads;
-  return { paid, allowed, stripe, other, ai, uploads, total, room: allowed - total };
+  return { paid, allowed, stripe, other, ai, uploads, after, total, room: allowed - total };
 }
 
 test("each plan's AI ceiling is its published writing jobs and answers at the priced units", () => {
@@ -57,7 +60,7 @@ for (const tier of TIERS) for (const cycle of ["month", "year"] as const) {
   const name = `${tier}, ${cycle}`;
   test(`${name}: every allowance used in full, the AI and upload ceilings included, keeps 60% after tax`, () => {
     const row = sum(tier, cycle);
-    console.log(`${name}: paid $${row.paid.toFixed(2)}, costs allowed $${row.allowed.toFixed(4)}; Stripe $${row.stripe.toFixed(4)} + ${months(cycle)} x ($${row.other.toFixed(4)} other + $${row.ai.toFixed(4)} AI + $${row.uploads.toFixed(4)} uploads) = $${row.total.toFixed(4)}; room $${row.room.toFixed(4)}`);
+    console.log(`${name}: paid $${row.paid.toFixed(2)}, costs allowed $${row.allowed.toFixed(4)}; Stripe $${row.stripe.toFixed(4)} + ${months(cycle)} x ($${row.other.toFixed(4)} other + $${row.ai.toFixed(4)} AI + $${row.uploads.toFixed(4)} uploads) + $${row.after.toFixed(4)} kept after the plan ends = $${row.total.toFixed(4)}; room $${row.room.toFixed(4)}`);
     assert.ok(row.total <= row.allowed, `${name} costs $${row.total.toFixed(4)} against $${row.allowed.toFixed(4)} allowed`);
   });
 }

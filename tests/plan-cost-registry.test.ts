@@ -10,7 +10,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { COST_LINES, EMAIL_SITES, KIND_LINES, NOT_A_COST, OPEN, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
+import { COST_LINES, EMAIL_SITES, KIND_LINES, NOT_A_COST, OPEN, PER_PAYMENT_LINES, PICTURE_READ, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
+import { laterPageCost } from "./traffic-cost";
+import { PICTURE_REQUEST_UNITS } from "@/lib/buyer-actions";
 import { ALLOWANCE_KINDS, API_WRITE_UNITS, NON_PAYING_ALLOWANCES, STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
 import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
 import { CALL_ORDER_UNITS } from "@/lib/order-rules";
@@ -54,7 +56,7 @@ const openIds = new Set(OPEN.map((item) => item.id));
 
 test("every line has a unique id, a figure for every plan, and sources that hold what it names", () => {
   assert.equal(ids.size, COST_LINES.length);
-  for (const line of COST_LINES) {
+  for (const line of [...COST_LINES, ...PER_PAYMENT_LINES]) {
     for (const tier of TIERS) {
       const usd = line.monthlyUsd(tier);
       assert.ok(Number.isFinite(usd) && usd >= 0, `${line.id}, ${tier}: ${usd}`);
@@ -85,7 +87,7 @@ test("every counter in the code is classified: counted in a line, an account or 
 test("every exported limit or cost constant in lib/ is cited by a line, an open item or NOT_A_COST", () => {
   const metered = /(_PER_(DAY|HOUR|MINUTE|MONTH|30_DAYS|STORE|SHARE|TEN_MINUTES)|DAILY|MONTHLY|_INCLUDED|^WORST_|WORST_|ALLOWANCES?$|_LIMITS$|_BY_TIER)/;
   const cited = new Set([
-    ...COST_LINES.flatMap((line) => line.sources.flatMap((s) => s.names)),
+    ...[...COST_LINES, ...PER_PAYMENT_LINES].flatMap((line) => line.sources.flatMap((s) => s.names)),
     ...OPEN.flatMap((item) => item.names ?? []),
     ...Object.keys(NOT_A_COST),
   ]);
@@ -131,7 +133,7 @@ test("every store figure taken in the code is a kind a line prices", () => {
   const taken = new Set<string>();
   for (const file of code) for (const m of read(file).matchAll(/\btakeAllowance\([^,]+,\s*"([a-z]+)"/g)) taken.add(m[1]);
   for (const kind of taken) assert.ok((ALLOWANCE_KINDS as readonly string[]).includes(kind), `takeAllowance with "${kind}", which no line prices`);
-  for (const kind of ["studio", "api", "inbox", "integration"]) assert.ok(taken.has(kind) || kind === "integration", `nothing takes ${kind}`);
+  for (const kind of ["studio", "api", "inbox", "integration", "buyer", "webhook"]) assert.ok(taken.has(kind) || kind === "integration", `nothing takes ${kind}`);
 });
 
 test("every email sent names a meter, and each file only the meters it may use", () => {
@@ -154,6 +156,10 @@ test("the units a figure is taken in cost at least what they stand for", () => {
   assert.ok(API_WRITE_UNITS * UNIT_COST.api >= request("write", 60, 20_000));
   // A booked call is CALL_ORDER_UNITS orders: its confirmation to buyer and host and its two reminders are four emails.
   assert.ok(CALL_ORDER_UNITS * 2 >= 4);
+  // A community picture is PICTURE_REQUEST_UNITS public requests, each priced as a later page: more than its megabyte through us costs.
+  assert.ok(PICTURE_REQUEST_UNITS * laterPageCost() >= PICTURE_READ, `${PICTURE_REQUEST_UNITS} x ${laterPageCost()} < ${PICTURE_READ}`);
+  // A buyer action is priced above a webhook's try and a call out: it waits as long, and does more.
+  assert.ok(UNIT_COST.buyer >= UNIT_COST.integration && UNIT_COST.buyer >= UNIT_COST.webhook);
 });
 
 test("a store that pays nothing has less of everything than a free trial, and the trial's worst window is priced", () => {
@@ -169,4 +175,15 @@ test("the billing period and every figure the owner named on October 17, 2026 ha
   const open = new Set(OPEN.map((item) => item.id));
   for (const id of ["billing-period", "public-requests", "studio-requests", "transactional-email", "rest-api", "inbox", "creator-email", "integrations", "calls", "free-and-trial"]) assert.ok(!open.has(id), id);
   for (const id of ["public-requests", "studio", "transactional-email", "store-email", "rest-api", "inbox", "integrations", "free-share"]) assert.ok(ids.has(id), id);
+});
+
+test("the uses the owner named on October 18, 2026 have left the open list, and only the database's bytes remain", () => {
+  const open = OPEN.map((item) => item.id);
+  for (const id of ["buyer-actions", "group-places", "webhooks", "retained-files"]) assert.ok(!open.includes(id), id);
+  for (const id of ["buyer-actions", "webhooks", "task-files", "community-pictures"]) assert.ok(ids.has(id), id);
+  assert.ok(PER_PAYMENT_LINES.some((line) => line.id === "retained-files"));
+  // Nothing may join it: a new per-use cost gets a figure enforced in code and a line here, never an open item.
+  assert.deepEqual(open, ["database-storage"], "the open list may only shrink");
+  // No scope of a counter may point at an open item any more.
+  for (const [scope, kind] of Object.entries(SCOPES)) assert.ok(!("open" in kind), `${scope} is still open`);
 });

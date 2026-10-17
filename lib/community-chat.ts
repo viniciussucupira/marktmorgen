@@ -238,6 +238,8 @@ export function refusalWords(reason: ChatRefusal, slow: number, wait?: number): 
       return "Your place here has ended, so this no longer takes messages.";
     case "empty":
       return "There was nothing to send.";
+    case "resting":
+      return "This store is resting for now, so nothing can be written here until it opens again.";
     case "unknown":
       return "That did not send. Try again in a moment.";
   }

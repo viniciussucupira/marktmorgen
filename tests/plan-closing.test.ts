@@ -35,11 +35,16 @@ import { readAllListings, readListing } from "@/lib/catalog";
 import { type Course, readCourse, saveCourse } from "@/lib/course";
 import { deleteFile, listFiles } from "@/lib/file-store";
 import { CLOSING_DAYS, type Hands, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closeEnded, closeOne, closingOf, noticeFor, removalDay } from "@/lib/plan-closing";
+import { KEEP_NOTHING_FROM, keptRoomFor } from "@/lib/plan-closing-rules";
+import { communityFolder } from "@/lib/community-image";
+import { picturesKept, takePicturePlace } from "@/lib/community-files";
+import { PICTURE_BYTES } from "@/lib/community-picture-rules";
+import { HELP_SECTIONS } from "@/lib/help-content";
 import { ENDED_INDEX, SETUP_STORAGE_BYTES } from "@/lib/plan-standing";
 import { readPodcast, savePodcast } from "@/lib/podcast";
 import type { ProductFile } from "@/lib/product-file";
 import { storageWords } from "@/lib/storage-quota";
-import { addOption, addProduct, claimHandle, setProductCourse, setProductFile, setProductPodcast, setSubscription, storeFolder, storeForEmail } from "@/lib/store";
+import { addOption, addProduct, claimHandle, setCommunity, setProductCourse, setProductFile, setProductPodcast, setSubscription, storeFolder, storeForEmail } from "@/lib/store";
 import { STREAM_API_ORIGIN, streamPath } from "@/lib/stream-rules";
 import { vaultPath } from "@/lib/vault-rules";
 import { store as redis } from "./redis-stub";
@@ -220,8 +225,17 @@ async function quietly<T>(work: () => Promise<T>): Promise<{ answer: T; complain
   }
 }
 
+/** The clock every part runs on: set back to before KEEP_NOTHING_FROM for the rule most parts check, forward for the one that replaced it. */
+const realNow = Date.now.bind(Date);
+const clockAt = (ms: number) => {
+  const shift = ms - realNow();
+  Date.now = () => realNow() + shift;
+};
+
 async function main(): Promise<void> {
   redis.clear();
+  // A plan that ended before 18 October 2026 keeps a store with no plan's room (lib/plan-closing-rules.ts).
+  clockAt(Date.UTC(2026, 9, 10, 12, 0, 0));
   for (const [name, value] of [
     ["R2_ACCOUNT_ID", ACCOUNT],
     ["R2_ACCESS_KEY_ID", "a-stand-in-access-key-id"],
@@ -317,7 +331,7 @@ async function main(): Promise<void> {
   is("it says the plan ended and that nothing has been removed", [one.subject, one.text.includes(`ended on ${dateWords(A)}`), one.text.includes("nothing has been removed")], ["Ana Studio: what happens to your files now that your plan has ended", true, true]);
   is("it gives the room, what the store keeps, and the day", [one.text.includes(`may keep ${storageWords(SETUP_STORAGE_BYTES)} of files`), one.text.includes("Yours keeps\n11 GB."), one.text.includes(`On ${dateWords(A + C * DAY)}, ${CLOSING_DAYS} days after your plan ended`)], [true, true, true]);
   is("the two ways out", [one.text.includes("start a plan again, and everything stays exactly as it is"), one.text.includes(`until your store keeps ${storageWords(SETUP_STORAGE_BYTES)} or less`)], [true, true]);
-  is("what goes and what stays", [one.text.includes("your buyers can no\nlonger download those files or watch those videos"), one.text.includes("What stays: your store and its page, your products and their prices"), one.text.includes("your contacts and your orders")], [true, true, true]);
+  is("what goes and what stays", [one.text.includes("After that day your buyers can no longer\ndownload those files or watch those videos"), one.text.includes("What stays: your store and its page, your products and their prices"), one.text.includes("your contacts and your orders")], [true, true, true]);
   is("and that two more notices come first, the last at least a week before", one.text.includes("We will write to you again 14 days before that day and 7 days before it. Nothing is removed without a notice at least a week old."), true);
   is("the same day again, nobody is written to twice", [(await closeOne(ana.email, A + 3 * 60_000, hands)).state, sent.length], ["waiting", 1]);
 
@@ -520,12 +534,53 @@ async function main(): Promise<void> {
   is("every day, after the check of every store's plan", [at("/api/cron/plans"), at("/api/cron/closing")], ["0 9 * * *", "30 9 * * *"]);
   const terms = read("app/terms/page.tsx");
   is("the Terms give the days, from where the job reads them", [/\{CLOSING_DAYS\} days after the plan ended/.test(terms), /\{WARN_MONTH_DAYS\} days before that day and \{WARN_WEEK_DAYS\} days before it/.test(terms), /storageWords\(SETUP_STORAGE_BYTES\)/.test(terms), /from "@\/lib\/plan-closing-rules"/.test(terms)], [true, true, true, true]);
-  is("what is removed, what is kept, and what it means for buyers", [/the files its products hand over, its lessons&rsquo; videos and downloads, and its\s+podcast&rsquo;s episodes/.test(terms), /buyers can no longer download those files or watch those videos/.test(terms), /never removed sooner than a week after the last of those emails/.test(terms), /its page, its products and their\s+prices, its lessons&rsquo; text and quizzes, its contacts and its\s+orders are kept/.test(terms)], [true, true, true, true]);
-  const help = read("lib/help-content.ts");
+  is("what is removed, what is kept, and what it means for buyers", [/the files its products hand over, its lessons&rsquo; videos and downloads, its\s+podcast&rsquo;s episodes, the files its students handed in and the pictures in its community&rsquo;s posts/.test(terms), /buyers can no longer download those files or watch those videos/.test(terms), /never removed sooner than a week after the last of those emails/.test(terms), /its page, its products and their\s+prices, its lessons&rsquo; text and quizzes, its contacts and its\s+orders are kept/.test(terms)], [true, true, true, true]);
+  const help = JSON.stringify(HELP_SECTIONS);
   is("the help pages say the same", [help.includes(`${CLOSING_DAYS} days after your plan ended`), help.includes(`${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it`), help.includes(`keeps more than ${storageWords(SETUP_STORAGE_BYTES)} has a date`)], [true, true, true]);
   is("and the privacy policy says when such files are deleted", read("app/privacy/page.tsx").includes(`deleted ${CLOSING_DAYS} days after the plan`), true);
   const studio = read("app/studio/page.tsx");
-  is("and the studio shows a store past its room the day, counted the way the job counts it", [/closingOf\(store\)/.test(studio), /keptNow > SETUP_STORAGE_BYTES/.test(studio), /dayWords\(closing\.day\)/.test(studio)], [true, true, true]);
+  is("and the studio shows a store past its room the day, counted the way the job counts it", [/closingOf\(store\)/.test(studio), /keptNow > keptRoom/.test(studio), /keptRoomFor\(closingAt\.endedAt\)/.test(studio), /dayWords\(closing\.day\)/.test(studio)], [true, true, true, true]);
+
+  part("A plan that ends from October 18, 2026 keeps nothing past its day");
+  clockAt(Date.UTC(2026, 9, 20, 12, 0, 0));
+  is("the room it keeps with no date is none, and the old room before that day", [keptRoomFor(KEEP_NOTHING_FROM), keptRoomFor(KEEP_NOTHING_FROM - 1)], [0, SETUP_STORAGE_BYTES]);
+  const zoe = await storeWith("zoe");
+  await productWith(zoe, "Small", 10 * 1024 * 1024);
+  const withCommunity = await setCommunity(zoe.email, true);
+  const cf = communityFolder(withCommunity!.community!.id);
+  // Two pictures in its community's posts, each counted when its door was given (lib/community-files.ts).
+  const pictures = new Map<string, number>();
+  for (const name of ["a1b2c3d4e5f6a7b8.jpg", "b1b2c3d4e5f6a7b8.jpg"]) {
+    const path = `community/${cf}/${name}`;
+    pictures.set(path, 400_000);
+    await takePicturePlace(path, 10);
+  }
+  const zoeHands: Hands = {
+    ...hands,
+    pictures: async (id) => (await picturesKept(communityFolder(id))) * PICTURE_BYTES,
+    list: async (prefix) => (prefix.startsWith("community/") ? [...pictures.keys()].filter((path) => path.startsWith(prefix)) : hands.list(prefix)),
+    remove: async (paths) => {
+      const others = paths.filter((path) => !pictures.delete(path));
+      if (others.length) await hands.remove(others);
+    },
+  };
+  await endPlan(zoe.email);
+  const Z = await endedAt(zoe.email);
+  is("it ended on that day or after", Z >= KEEP_NOTHING_FROM, true);
+  const zoeFirst = await closeOne(zoe.email, Z + 60_000, zoeHands);
+  const zoeLetter = mailTo(zoe.email)[0];
+  is("ten megabytes and two pictures are not a store that fits: it is written to", [zoeFirst.state, zoeFirst.note], ["told", "ended"]);
+  is("its letter gives the day, and one way out, and says what goes", [
+    zoeLetter.text.includes(`On ${dateWords(Z + C * DAY)}, ${CLOSING_DAYS} days after your plan ended`),
+    zoeLetter.text.includes("Starting a plan again stops it"),
+    zoeLetter.text.includes("delete files or lessons"),
+    zoeLetter.text.includes("the files your students handed in and the\npictures in your community's posts"),
+  ], [true, true, false, true]);
+  await closeOne(zoe.email, Z + M * DAY, zoeHands);
+  await closeOne(zoe.email, Z + W * DAY, zoeHands);
+  const zoeGone = await closeOne(zoe.email, Z + (C + 1) * DAY, zoeHands);
+  is("on its day everything goes, its community's pictures with it", [zoeGone.state, [...objects.keys()].filter((path) => path.startsWith(`vault/${zoe.folder}/`)).length, pictures.size, await picturesKept(cf)], ["removed", 0, 0, 0]);
+  is("and the letter after says so", mailTo(zoe.email).at(-1)!.subject, "The files Zoe Studio kept have been removed");
 
   done();
 }

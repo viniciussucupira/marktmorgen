@@ -1755,7 +1755,7 @@ export async function setSubscription(
     // The day a plan is first seen to be over is written down once, and
     // wiped when a plan runs again. A store that never started one has none.
     const had = store.subscriptionActive || store.subscriptionId !== null || subscriptionId !== null;
-    const planEndedAt = fields.active ? "" : store.planEndedAt || (had ? new Date().toISOString() : "");
+    const planEndedAt = fields.active ? "" : store.planEndedAt || (had ? new Date(Date.now()).toISOString() : "");
 
     const saved = await save({
       ...store,
