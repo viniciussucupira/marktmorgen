@@ -310,28 +310,132 @@ export async function importContacts(
   return { added, already: emails.length - added, full };
 }
 
-/** One row of a file of contacts, already read (lib/imports.ts). */
-export type ImportedContact = { email: string; name: string; tags: string[] };
+/**
+ * One row of a file of contacts, already read (lib/imports.ts). `consent` is
+ * what the file and the creator together say about email (lib/clickfunnels-csv.ts):
+ * absent or "agreed" for someone the creator confirmed agreed, the rule every
+ * import had; "none" for a contact with no recorded consent; "unsubscribed"
+ * or "undeliverable" for one who left, or could not be written to, where the
+ * file came from.
+ */
+export type ImportedContact = { email: string; name: string; tags: string[]; consent?: "agreed" | "none" | "unsubscribed" | "undeliverable" };
 
 /**
  * What became of one row: put on the list as someone who agreed ("added"),
- * already on it as someone who agreed ("already"), someone who unsubscribed
- * and is left alone ("left"), or no room on the list ("full").
+ * already on it ("already"), someone who unsubscribed and is left alone
+ * ("left"), no room on the list ("full"), put on it as a contact who may not
+ * be emailed ("contact"), or somebody the creator could email until now whose
+ * opt-out elsewhere is kept here too ("stopped").
  */
-export type ContactOutcome = "added" | "already" | "left" | "full";
+export type ContactOutcome = "added" | "already" | "left" | "full" | "contact" | "stopped";
 
 /**
- * Brings in one chunk of a file of contacts the creator confirmed agreed to
- * hear from them, in two round trips. The rules are importContacts's, with
- * the file's names and labels kept:
+ * What one row would become, decided from what the list holds for its
+ * address now; the same decision for a dry run and for the import itself.
+ * `next` is what the import writes, or null when it writes nothing.
+ */
+export function decideContact(
+  before: Contact | null,
+  row: ImportedContact,
+  now: string,
+): { outcome: Exclude<ContactOutcome, "full">; next: Contact | null; fresh: boolean } {
+  if (before?.unsub) return { outcome: "left", next: null, fresh: false };
+  const consent = row.consent ?? "agreed";
+  const name = before?.name || row.name.slice(0, MAX_CONTACT_NAME);
+  const tags = readTags([...(before?.tags ?? []), ...row.tags]);
+  if (consent === "unsubscribed" || consent === "undeliverable") {
+    // Their opt-out where they were is kept: taken off as if they had used
+    // the link here, so no later import puts them back; only their own tick
+    // on one of the creator's pages can (upsertContact).
+    const base: Contact = before
+      ? { ...before, name, tags }
+      : { agreed: false, agreedAt: "", firstAt: now, lastAt: now, titles: [], ids: [], source: "import", unsub: false, unsubAt: "", t: "", name, tags, importedAt: now };
+    const { clicks: _left, ...kept } = base;
+    void _left;
+    const next: Contact = { ...kept, unsub: true, unsubAt: now, ...(consent === "undeliverable" ? { gone: "bounced" as const } : {}) };
+    return { outcome: before ? (before.agreed ? "stopped" : "already") : "contact", next, fresh: !before };
+  }
+  if (consent === "none") {
+    if (before) {
+      const changed = name !== before.name || tags.length !== before.tags.length;
+      return { outcome: "already", next: changed ? { ...before, name, tags } : null, fresh: false };
+    }
+    return {
+      outcome: "contact",
+      next: { agreed: false, agreedAt: "", firstAt: now, lastAt: now, titles: [], ids: [], source: "import", unsub: false, unsubAt: "", t: "", name, tags, importedAt: now },
+      fresh: true,
+    };
+  }
+  if (before?.agreed) {
+    // Already agreeing: only a missing name or new labels are written.
+    const changed = name !== before.name || tags.length !== before.tags.length;
+    return { outcome: "already", next: changed ? { ...before, name, tags } : null, fresh: false };
+  }
+  return {
+    outcome: "added",
+    next: {
+      agreed: true,
+      agreedAt: now,
+      firstAt: before?.firstAt || now,
+      lastAt: now,
+      titles: before?.titles ?? [],
+      ids: before?.ids ?? [],
+      source: before?.source || "import",
+      unsub: false,
+      unsubAt: "",
+      t: before?.t ?? "",
+      name,
+      tags,
+      importedAt: now,
+    },
+    fresh: !before,
+  };
+}
+
+/**
+ * What a chunk of rows would become, read from the list but written nowhere:
+ * the dry run of importContactRows, and how many new addresses the list still
+ * has room for.
+ */
+export async function previewContactRows(
+  listId: string | null,
+  rows: ImportedContact[],
+): Promise<{ outcomes: { outcome: Exclude<ContactOutcome, "full">; fresh: boolean }[]; room: number }> {
+  const now = new Date().toISOString();
+  const decide = (before: Contact | null, row: ImportedContact) => {
+    const { outcome, fresh } = decideContact(before, row, now);
+    return { outcome, fresh };
+  };
+  if (!rows.length) return { outcomes: [], room: MAX_LEADS };
+  // A store whose list is made when its first import starts: everything is new.
+  if (!isRedisConfigured() || !listId) return { outcomes: rows.map((row) => decide(null, row)), room: MAX_LEADS };
+  const key = leadsKey(listId);
+  const [size, found] = await redisPipeline([
+    ["HLEN", key],
+    ["HMGET", key, ...rows.map((r) => r.email)],
+  ]);
+  const existing = Array.isArray(found) ? found : [];
+  return {
+    outcomes: rows.map((row, i) => decide(parseContact(existing[i]), row)),
+    room: Math.max(0, MAX_LEADS - (Number(size) || 0)),
+  };
+}
+
+/**
+ * Brings in one chunk of a file of contacts, in two round trips. The rules
+ * are importContacts's, with the file's names and labels kept, and what each
+ * row says about consent (decideContact):
  *
  *   - nobody who unsubscribed is put back, whatever the file says;
  *   - somebody already on the list who agreed keeps everything; the file
  *     only fills in a name they did not have and adds its labels;
  *   - somebody on the list who never agreed (they asked for something free
- *     and left the box empty) is marked as agreeing now, from the import;
+ *     and left the box empty) is marked as agreeing now, from the import,
+ *     only when the creator confirmed it for this row;
  *   - somebody new is added as agreeing, marked as brought by an import on
- *     this date.
+ *     this date, or, without that confirmation, as a contact who may not be
+ *     emailed;
+ *   - somebody the file says left where they were is kept as having left here.
  *
  * Nobody is emailed because of any of it: no welcome, no sequence.
  *
@@ -352,43 +456,22 @@ export async function importContactRows(listId: string, rows: ImportedContact[])
   const existing = Array.isArray(found) ? found : [];
   // Each write, with the fingerprint of what its address held when read.
   const writes: { email: string; value: string; was: string; row: number }[] = [];
-  const write = (i: number, value: string) => {
-    const raw = existing[i];
-    writes.push({ email: rows[i].email, value, was: typeof raw === "string" ? sha1(raw) : "", row: i });
-  };
   let newlyAgreed = 0;
+  let newlyLeft = 0;
   const outcomes = rows.map((row, i): ContactOutcome => {
     const before = parseContact(existing[i]);
-    if (before?.unsub) return "left";
-    if (!before && room <= 0) return "full";
-    if (!before) room -= 1;
-    const name = before?.name || row.name.slice(0, MAX_CONTACT_NAME);
-    const tags = readTags([...(before?.tags ?? []), ...row.tags]);
-    if (before?.agreed) {
-      // Already agreeing: only a missing name or new labels are written.
-      if (name !== before.name || tags.length !== before.tags.length) {
-        write(i, JSON.stringify({ ...before, name, tags }));
-      }
-      return "already";
+    const decided = decideContact(before, row, now);
+    if (decided.fresh) {
+      if (room <= 0) return "full";
+      room -= 1;
     }
-    const next: Contact = {
-      agreed: true,
-      agreedAt: now,
-      firstAt: before?.firstAt || now,
-      lastAt: now,
-      titles: before?.titles ?? [],
-      ids: before?.ids ?? [],
-      source: before?.source || "import",
-      unsub: false,
-      unsubAt: "",
-      t: before?.t ?? "",
-      name,
-      tags,
-      importedAt: now,
-    };
-    write(i, JSON.stringify(next));
-    newlyAgreed += 1;
-    return "added";
+    if (decided.next) {
+      const raw = existing[i];
+      writes.push({ email: row.email, value: JSON.stringify(decided.next), was: typeof raw === "string" ? sha1(raw) : "", row: i });
+    }
+    if (decided.outcome === "added") newlyAgreed += 1;
+    if (decided.outcome === "stopped") newlyLeft += 1;
+    return decided.outcome;
   });
   if (!writes.length) return outcomes;
   const written = await casWrite(key, writes);
@@ -399,10 +482,15 @@ export async function importContactRows(listId: string, rows: ImportedContact[])
     lost.forEach((w, i) => {
       const contact = parseContact(Array.isArray(now) ? now[i] : null);
       if (outcomes[w.row] === "added") newlyAgreed -= 1;
+      if (outcomes[w.row] === "stopped") newlyLeft -= 1;
       outcomes[w.row] = contact?.unsub ? "left" : "already";
     });
   }
-  if (newlyAgreed > 0) await redisPipeline([["INCRBY", agreedKey(listId), newlyAgreed]]);
+  const counters: (string | number)[][] = [];
+  if (newlyAgreed > 0) counters.push(["INCRBY", agreedKey(listId), newlyAgreed]);
+  // Somebody who agreed and has now left counts with those who left, as an unsubscribe does.
+  if (newlyLeft > 0) counters.push(["INCRBY", unsubKey(listId), newlyLeft]);
+  if (counters.length) await redisPipeline(counters);
   return outcomes;
 }
 

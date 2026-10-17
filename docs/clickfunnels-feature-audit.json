@@ -1169,10 +1169,10 @@
       "source": "S25",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "CSV mapping/import workflow is documented.",
-      "evidencePath": "lib/imports.ts",
+      "evidencePath": "lib/clickfunnels-csv.ts",
       "marktmorgenEvidence": "C/U",
-      "current": "Bounded CSV contacts/products/member imports exist.",
-      "improvement": "Add a ClickFunnels adapter with dry run, consent and row-level repair."
+      "current": "Bounded CSV contacts/products/past-buyer imports with a ClickFunnels adapter (header names, Subscribed/Unsubscribed/Undeliverable consent, paid-order status), a server-side dry run that writes nothing, title-based product idempotency and row-level repair reports (docs/clickfunnels-import.md). Authenticated journey with real ClickFunnels exports unverified.",
+      "improvement": "Verify against real exports; add members/subscriptions and multi-price products."
     },
     {
       "id": "F56",
@@ -1181,10 +1181,10 @@
       "source": "S21",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Sharing copies within the vendor; not a universal cross-platform format.",
-      "evidencePath": "lib/imports.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Complete ClickFunnels page/workflow converter unestablished.",
-      "improvement": "Map owned assets into safe native blocks; report unsupported content."
+      "evidencePath": "lib/clickfunnels-funnel.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Owner-saved published pages converted into native blocks with a dropped-content report; creator-assigned roles map pages, order forms, order bumps, upsells and downsells to hidden pages, a disabled page funnel, checkout boxes and offers after paying, with a dry-run plan and repeat-safe save (docs/clickfunnels-import.md). No vendor file export exists; pictures, design, workflows and courses are not converted.",
+      "improvement": "Picture upload from a complete page save; workflow and course mapping; verification with real saved pages."
     },
     {
       "id": "F57",

@@ -109,6 +109,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I move from ClickFunnels?",
+        a: [
+          "Yes, from “Move from ClickFunnels” under “Moving from another platform” in your studio, in four steps: the Products, Contacts and Orders files ClickFunnels lets you export, and your funnel's pages, each saved from your own browser as “Webpage, HTML Only”. ClickFunnels' column names are matched for you. Each file and each funnel is checked first in a dry run that saves nothing and lists what every row and page will become, then imported; running the same import again makes nothing twice.",
+          "Contacts ClickFunnels marks Subscribed can be emailed here once you confirm they agreed; everyone else comes in as a contact you cannot email, and those marked Unsubscribed or Undeliverable stay unsubscribed here. Paid orders give past buyers what they bought; refunded, failed, canceled and pending ones are left out. Each saved page's headings, text, buttons, YouTube, Vimeo and Loom videos and form become one of your store's own pages, kept from visitors until you let it out, and the pages a funnel, switched off. A page you say was an order form becomes your product's own checkout, its order bumps boxes at that checkout, and pages you say were upsells or downsells offers after paying.",
+          "What it does not do: we never sign in to ClickFunnels or fetch your pages, and pictures, design, scripts, tracking, countdown timers, workflows, courses and memberships are not brought over. Every page lists what was left out and why.",
+        ],
+      },
+      {
         q: "Is it open, or is this a waiting list?",
         a: [
           "Open. You can take an address and be selling the same day.",
