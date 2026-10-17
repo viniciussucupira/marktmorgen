@@ -511,6 +511,46 @@
       "path": "lib/opening.ts",
       "sha": "4ab980740258a46ac0fed7ff809ecbc67285a2e2",
       "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/upsell.ts",
+      "sha": "dfd07bbd3e3bc7715820e5dd596c8bc5c8021d9c",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/plans.ts",
+      "sha": "466b2ebef86a245daceb2c384401815e86476321",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/fair-price.ts",
+      "sha": "8f4df1190429bcf182e6a4eb41abf7c82de28030",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/certificate.ts",
+      "sha": "3bd068d996f8c9a664f222dad0a4bf096e9ac1a1",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/community-access.ts",
+      "sha": "af76007ace7b6ba60b8364093f4f8fa55e0b3f49",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/membership-access.ts",
+      "sha": "e9fce8030a0ca1fb485c0e21a1435f3a99fc9b0a",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "app/api/mcp/route.ts",
+      "sha": "57640f1991dae978d76134883e87eb249e87afad",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/team-roles.ts",
+      "sha": "802ec15a6b2d9362802e55ef0b9d445808ed5fd3",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
     }
   ],
   "features": [
@@ -642,9 +682,16 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Page SDK checkout documents bumps.",
       "evidencePath": "lib/product-extras.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Checkout and offer modules exist; full bump journey untested.",
-      "improvement": "Test explicit opt-in, prices, discounts, currency and refunds end to end."
+      "marktmorgenEvidence": "D",
+      "current": "Up to three checkout boxes, each opted into by the buyer, charged as its own line at the creator's price, taxed like the product, earning its own affiliate share and handed over with the order, and closed with it by a full refund of the order.",
+      "improvement": "Measure box conversion and refund rates per box; keep discounts and currency on the order's own rules.",
+      "testEvidence": [
+        "tests/offer-journeys.test.ts",
+        "tests/several-bumps.test.ts",
+        "tests/product-extras.test.ts",
+        "tests/checkout-tax-journey.test.ts",
+        "tests/affiliate-commission.test.ts"
+      ]
     },
     {
       "id": "F12",
@@ -653,10 +700,14 @@
       "source": "S05",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Post-checkout OTO pages and acceptance/decline paths.",
-      "evidencePath": "app/studio/funnels/page.tsx",
-      "marktmorgenEvidence": "C/U",
-      "current": "Post-payment offer editor exists.",
-      "improvement": "Expose eligibility and tax restrictions before the creator configures offers."
+      "evidencePath": "lib/upsell.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Up to five one-click offers after paying, answerable only from the paying browser within the hour, charged once per offer (idempotency key), never skipped to, with downsell paths, declined-card stop, bank confirmation and lost-answer settlement; off when tax is on.",
+      "improvement": "Expose eligibility and tax restrictions before the creator configures offers.",
+      "testEvidence": [
+        "tests/upsell-journey.test.ts",
+        "tests/offer-journeys.test.ts"
+      ]
     },
     {
       "id": "F13",
@@ -677,10 +728,15 @@
       "source": "S28",
       "clickfunnelsEvidence": "V-index",
       "clickfunnels": "Subscription and payment-plan documentation is indexed.",
-      "evidencePath": "lib/stripe-connect.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Creator-account payment integrations exist.",
-      "improvement": "Reconcile retries, upgrades, cancellation and access grants."
+      "evidencePath": "lib/plans.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Payment plans and fixed-length memberships end after their last paid period (trial-aware, never set twice); membership doors follow Stripe's state with a past-due grace.",
+      "improvement": "Show retries, upgrades and the end date to the buyer in one place.",
+      "testEvidence": [
+        "tests/payment-plan-end.test.ts",
+        "tests/access-revocation.test.ts",
+        "tests/plan-pause.test.ts"
+      ]
     },
     {
       "id": "F15",
@@ -690,9 +746,14 @@
       "clickfunnelsEvidence": "V-index",
       "clickfunnels": "Tax and workspace-currency controls are documented.",
       "evidencePath": "lib/tax.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Stripe Tax readiness checks exist.",
-      "improvement": "Preserve final-price visibility, correct registrations and refund consistency."
+      "marktmorgenEvidence": "D",
+      "current": "Stripe Tax on only when Stripe reports active; every charged line (product, boxes, cart, membership, shipping) carries the store's inclusive/exclusive choice; tax IDs and invoices optional; no currency conversion.",
+      "improvement": "Preserve final-price visibility, correct registrations and refund consistency.",
+      "testEvidence": [
+        "tests/checkout-tax-journey.test.ts",
+        "tests/tax-documents.test.ts",
+        "tests/shipping.test.ts"
+      ]
     },
     {
       "id": "F16",
@@ -701,10 +762,13 @@
       "source": "S28",
       "clickfunnelsEvidence": "U",
       "clickfunnels": "Arbitrary country-price parity not verified.",
-      "evidencePath": "lib/tax.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Optional country price lists not established.",
-      "improvement": "Allow transparent country override with approved signed price IDs."
+      "evidencePath": "lib/fair-price.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Fair prices by country: a percentage off from World Bank price levels or set by the creator per country, on chosen products, applied at checkout through the creator's own Stripe coupons. Arbitrary per-country price lists are not offered.",
+      "improvement": "Add explicit per-country price lists only with signed prices and refund/renewal consistency.",
+      "testEvidence": [
+        "tests/fair-price.test.ts"
+      ]
     },
     {
       "id": "F17",
@@ -714,9 +778,14 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Workflows can react to abandoned carts.",
       "evidencePath": "lib/checkout-recovery.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Restricted consented reminder exists.",
-      "improvement": "Expand only after region, provider, stop-condition and cost validation."
+      "marktmorgenEvidence": "D",
+      "current": "One reminder per abandoned checkout, only with Stripe's recorded opt-in and the creator's postal address; stop link and one-click unsubscribe; none after a purchase, a stop, a list unsubscribe or a bounce; refused sends retried.",
+      "improvement": "Expand only after region, provider, stop-condition and cost validation.",
+      "testEvidence": [
+        "tests/checkout-recovery-journey.test.ts",
+        "tests/cart-reminder.test.ts",
+        "tests/call-reminder.test.ts"
+      ]
     },
     {
       "id": "F18",
@@ -738,9 +807,14 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "One variant page per funnel step is documented.",
       "evidencePath": "lib/headline-test-rules.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Revenue-based headline decision logic exists.",
-      "improvement": "Audit repeated looks, traffic imbalance and refund maturity before automation."
+      "marktmorgenEvidence": "D",
+      "current": "Headline and whole-page A/B tests split by a cookie set only where consent is not required, counted per version, with paid sales read from Stripe once per checkout.",
+      "improvement": "Audit repeated looks, traffic imbalance and refund maturity before automation.",
+      "testEvidence": [
+        "tests/page-variant.test.ts",
+        "tests/headline-test.test.ts",
+        "tests/money-tests.test.ts"
+      ]
     },
     {
       "id": "F20",
@@ -750,9 +824,13 @@
       "clickfunnelsEvidence": "U",
       "clickfunnels": "A universal statistical guarantee was not established.",
       "evidencePath": "lib/headline-test-rules.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Threshold and win-chance constants exist.",
-      "improvement": "Document inference policy and insufficient-data states; no guaranteed uplift."
+      "marktmorgenEvidence": "D",
+      "current": "Explicit insufficient-data states: money needs 200 views and 10 paid sales per version and a 97.5% chance; sign-ups need 200 views, at least 5 expected sign-ups per version and 95% significance. No repeated-look correction or refund maturity yet.",
+      "improvement": "Add a repeated-look (sequential) correction and refund maturity before automatic winners; no guaranteed uplift.",
+      "testEvidence": [
+        "tests/experiment-insufficient-data.test.ts",
+        "tests/money-tests.test.ts"
+      ]
     },
     {
       "id": "F21",
@@ -810,9 +888,16 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Templates, audiences, topics and sending setup.",
       "evidencePath": "lib/broadcasts.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Existing broadcast/sequence infrastructure is present.",
-      "improvement": "Unify testing, final audience confirmation and suppression at send time."
+      "marktmorgenEvidence": "D",
+      "current": "Immediate and scheduled broadcasts with a written recipient snapshot, idempotent batches and cancellation; unsubscribes, bounces and complaints since the snapshot are excluded at each batch.",
+      "improvement": "Unify testing and final audience confirmation in one review step.",
+      "testEvidence": [
+        "tests/broadcast-send-time-suppression.test.ts",
+        "tests/broadcast-recipient-snapshot.test.ts",
+        "tests/broadcast-recipient-batch.test.ts",
+        "tests/broadcast-cancellation.test.ts",
+        "tests/mail-schedule.test.ts"
+      ]
     },
     {
       "id": "F26",
@@ -834,9 +919,15 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Topics, verified sending addresses and trial limits.",
       "evidencePath": "lib/mail.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Consent checks and send restrictions exist.",
-      "improvement": "Preserve opt-out by topic where supported; bound every recipient attempt."
+      "marktmorgenEvidence": "D",
+      "current": "Consent required; one-click unsubscribe; bounce and complaint suppression at send time; automatic pause past bounce/complaint lines; the month's allowance reserved before each batch.",
+      "improvement": "Preserve opt-out by topic where supported; bound every recipient attempt.",
+      "testEvidence": [
+        "tests/broadcast-send-time-suppression.test.ts",
+        "tests/mail-health.test.ts",
+        "tests/sender-ceiling.test.ts",
+        "tests/mail-reservation.test.ts"
+      ]
     },
     {
       "id": "F28",
@@ -941,10 +1032,15 @@
       "source": "S23",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Downloadable completion certificates are documented.",
-      "evidencePath": "lib/course-finish.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Completion notes exist; certificate equivalence unverified.",
-      "improvement": "Audit first; add original certificates only with complete completion/access tests."
+      "evidencePath": "lib/certificate.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Certificates of completion when every lesson and required quiz is done, one per student per course (double press safe), verifiable page, PDF and LinkedIn links, withdrawal by the creator. A refund does not withdraw an issued certificate by itself.",
+      "improvement": "Offer withdrawal of certificates after a full refund in the refund flow.",
+      "testEvidence": [
+        "tests/certificate-issue.test.ts",
+        "tests/certificate-pdf.test.ts",
+        "tests/certificate-share.test.ts"
+      ]
     },
     {
       "id": "F37",
@@ -965,10 +1061,13 @@
       "source": "S12",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Manual, product and workflow-based grants.",
-      "evidencePath": "lib/community.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Community access is checked separately.",
-      "improvement": "Reconcile subscription/refund effects before expanding access automations."
+      "evidencePath": "lib/community-access.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Community access read from the creator's Stripe account per address: paid, unrefunded purchases, running memberships and one-click offers while their payment stands; never across stores and never on a guess when Stripe cannot be asked.",
+      "improvement": "Reconcile chargebacks (lost disputes) with access, as refunds are.",
+      "testEvidence": [
+        "tests/access-revocation.test.ts"
+      ]
     },
     {
       "id": "F39",
@@ -977,10 +1076,14 @@
       "source": "S12",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Products/memberships can control community access.",
-      "evidencePath": "lib/stripe-connect.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Membership and recurring payment paths exist.",
-      "improvement": "Keep cancellation, dunning, grace periods and export transparent."
+      "evidencePath": "lib/membership-access.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Membership doors open while Stripe says active, trialing or past due (retry grace) and close when canceled, unpaid, expired or paused by the member.",
+      "improvement": "Keep cancellation, dunning, grace periods and export transparent.",
+      "testEvidence": [
+        "tests/access-revocation.test.ts",
+        "tests/membership-pause.test.ts"
+      ]
     },
     {
       "id": "F40",
@@ -1050,9 +1153,13 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Direct and recruiting-parent commissions are supported.",
       "evidencePath": "lib/affiliates.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Two-level configuration exists.",
-      "improvement": "Test effective terms, self-referral prevention and refund reversals."
+      "marktmorgenEvidence": "D",
+      "current": "Two-level commissions on the terms of the day the recruit joined, capped, never on own purchases, and reversed with refunds and chargebacks.",
+      "improvement": "Present effective terms to both affiliates on one page.",
+      "testEvidence": [
+        "tests/affiliate-tier.test.ts",
+        "tests/affiliate-reversals.test.ts"
+      ]
     },
     {
       "id": "F46",
@@ -1062,9 +1169,13 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Custom link identifiers and export-based code analysis.",
       "evidencePath": "lib/affiliate-codes.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Discount-code ownership and attribution exist.",
-      "improvement": "Keep coupon ownership, collisions and refund attribution auditable."
+      "marktmorgenEvidence": "D",
+      "current": "A creator's own Stripe promotion codes given to one affiliate at a time; sales with the code credited to them, refunds and chargebacks reversed.",
+      "improvement": "Keep coupon ownership, collisions and refund attribution auditable.",
+      "testEvidence": [
+        "tests/affiliate-attribution.test.ts",
+        "tests/affiliate-reversals.test.ts"
+      ]
     },
     {
       "id": "F47",
@@ -1074,9 +1185,13 @@
       "clickfunnelsEvidence": "U",
       "clickfunnels": "A custom referral identifier does not prove discount-coupon attribution.",
       "evidencePath": "lib/affiliate-codes.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Coupon-owner attribution functions exist.",
-      "improvement": "Verify coupon-only purchases and consent-safe link/coupon precedence."
+      "marktmorgenEvidence": "D",
+      "current": "Coupon-only purchases credited to the code's affiliate at today's share; a followed link always takes precedence; removed affiliates and own purchases earn nothing.",
+      "improvement": "Show the link/code precedence to affiliates on their own page.",
+      "testEvidence": [
+        "tests/affiliate-reversals.test.ts",
+        "tests/affiliate-attribution.test.ts"
+      ]
     },
     {
       "id": "F48",
@@ -1086,9 +1201,13 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Manual or individual PayPal payment; bulk PayPal unsupported in this guide.",
       "evidencePath": "lib/paypal-payouts.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Creator-owned PayPal batches and auto-pay configuration exist.",
-      "improvement": "Prove duplicate-safe settlement, approvals, balances and provider permissions."
+      "marktmorgenEvidence": "D",
+      "current": "Creator-owned PayPal batches with PayPal's idempotency key, a balance check, success-only settlement, failures back to owed and payday automation, tested against a stand-in shaped by PayPal's published API, not live PayPal.",
+      "improvement": "Confirm provider permissions with a live sandbox review before promoting.",
+      "testEvidence": [
+        "tests/paypal-payouts.test.ts",
+        "tests/affiliate-payouts.test.ts"
+      ]
     },
     {
       "id": "F49",
@@ -1109,10 +1228,14 @@
       "source": "S28",
       "clickfunnelsEvidence": "V-index",
       "clickfunnels": "Assets and commission-management articles are indexed.",
-      "evidencePath": "lib/affiliate-kit.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Affiliate book and materials modules exist.",
-      "improvement": "Use substantiated assets and event-linked refund/dispute reversal."
+      "evidencePath": "lib/affiliates.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Drafted affiliate posts with disclosure and limits; refunds and chargebacks (held or lost disputes) reverse commissions in the book, payouts and the affiliate's page; unread disputes block payout batches.",
+      "improvement": "Use substantiated assets and event-linked refund/dispute reversal.",
+      "testEvidence": [
+        "tests/affiliate-reversals.test.ts",
+        "tests/affiliate-kit.test.ts"
+      ]
     },
     {
       "id": "F51",
@@ -1194,9 +1317,14 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Management API, tokens/OAuth and resource operations.",
       "evidencePath": "lib/api-keys.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Scoped keys and bounded write helpers exist.",
-      "improvement": "Version contracts and keep tenant permissions at every boundary."
+      "marktmorgenEvidence": "D",
+      "current": "Hashed per-store keys, read-only unless made to write, revocable at once, opening only their own store (a per-key rate limit exists but is not covered by these tests); written fields only; keys revoked when a store is deleted.",
+      "improvement": "Version contracts and keep tenant permissions at every boundary.",
+      "testEvidence": [
+        "tests/api.test.ts",
+        "tests/api-write.test.ts",
+        "tests/store-deletion.test.ts"
+      ]
     },
     {
       "id": "F58",
@@ -1206,9 +1334,12 @@
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Event delivery is separate from management and page APIs.",
       "evidencePath": "lib/webhooks.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Bounded signed-event delivery structure exists.",
-      "improvement": "Test signing, retry/replay, delivery receipts and key rotation."
+      "marktmorgenEvidence": "D",
+      "current": "Signed (HMAC-SHA256 over timestamp and body) event delivery to up to five public https endpoints, once per event, retried on a published schedule with fresh signatures and the same event id, no redirects, isolated per store; forgotten with a deleted store.",
+      "improvement": "Add secret rotation and manual replay from the delivery log.",
+      "testEvidence": [
+        "tests/webhooks-delivery.test.ts"
+      ]
     },
     {
       "id": "F59",
@@ -1229,10 +1360,15 @@
       "source": "S14",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Scoped human-authorized AI workspace connector.",
-      "evidencePath": "lib/api-keys.ts",
-      "marktmorgenEvidence": "U",
-      "current": "A native Marktmorgen MCP surface was not established.",
-      "improvement": "Expose audited read tools first; require approvals for costly/external effects."
+      "evidencePath": "app/api/mcp/route.ts",
+      "marktmorgenEvidence": "D",
+      "current": "A read-only MCP server (Streamable HTTP, JSON-RPC) behind the API key door: numbers, channels, funnel, products, buyers in numbers only, memberships, emails and affiliates, without names or addresses.",
+      "improvement": "Require approvals before adding any tool with costly or external effects.",
+      "testEvidence": [
+        "tests/numbers-three.test.ts",
+        "tests/mcp-tools.test.ts",
+        "tests/mcp-channel-coverage.test.ts"
+      ]
     },
     {
       "id": "F61",
@@ -1265,10 +1401,15 @@
       "source": "S28",
       "clickfunnelsEvidence": "V-index",
       "clickfunnels": "Team roles and two-factor help articles are indexed.",
-      "evidencePath": "lib/two-step.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Team-role and two-step controls exist.",
-      "improvement": "Test least privilege, recovery and tenant isolation across complete tasks."
+      "evidencePath": "lib/team-roles.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Owner, admin, editor and support roles from one table, enforced per store (a store one is not on is never handed over), removal effective at once, two-step login with recovery and a lock on sensitive actions after recovery.",
+      "improvement": "Test least privilege on every route, not only those that move money or buyers' data.",
+      "testEvidence": [
+        "tests/team-roles.test.ts",
+        "tests/two-step.test.ts",
+        "tests/recovery-address.test.ts"
+      ]
     },
     {
       "id": "F64",
@@ -1278,9 +1419,12 @@
       "clickfunnelsEvidence": "V-index",
       "clickfunnels": "Audit logs and export/history are documented.",
       "evidencePath": "lib/api-keys.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Complete lifecycle assurance unverified.",
-      "improvement": "Test access/export/deletion, backup restore and audit retention."
+      "marktmorgenEvidence": "C/U",
+      "current": "Team activity log, exports behind the export permission and deletion of empty extra stores that forgets their integrations, webhooks and API keys (tested); buyer-data deletion requests, backup restore and retention schedules not established.",
+      "improvement": "Test buyer-data access/deletion requests, backup restore and audit retention.",
+      "testEvidence": [
+        "tests/store-deletion.test.ts"
+      ]
     },
     {
       "id": "F65",
@@ -1496,5 +1640,19 @@
     ],
     "minimumAfterAllCostsAndTaxesMargin": 0.6,
     "status": "Not certified; do not activate commercial entitlements from this report"
+  },
+  "evidenceCounts": {
+    "D": 27,
+    "C/U": 31,
+    "U": 12
+  },
+  "verification": {
+    "reviewedAt": "2026-10-17 UTC",
+    "note": "Journey verification pass: D only where tests/*.test.ts listed in testEvidence pass on the synthetic Redis and mocked providers of the repository's harness. Code links stay pinned to sourceRevision; test files are cited by repository path. Not live-provider, browser or load evidence. previousCounts are main's just before this pass (D 5, C/U 48, U 17 at the original snapshot; F56 moved to C/U in #519).",
+    "previousCounts": {
+      "D": 5,
+      "C/U": 49,
+      "U": 16
+    }
   }
 }

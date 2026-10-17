@@ -842,6 +842,29 @@ export async function watchStripe(deadline: number): Promise<{ stores: number; e
   return counts;
 }
 
+/**
+ * Forgets everything a deleted store kept here (added 17 October 2026): its
+ * endpoints with their addresses and signing secrets, its place in the
+ * five-minute job, its Stripe anchor and its delivery log with the bodies
+ * of what was sent. Deliveries still waiting are dropped from the queue, so
+ * nothing more is sent anywhere on its behalf. Safe to call twice.
+ */
+export async function forgetStoreWebhooks(statsId: string | null): Promise<void> {
+  if (!statsId || !isRedisConfigured()) return;
+  const [rawLog] = await redisPipeline([["LRANGE", logKey(statsId), 0, -1]]);
+  const ids = Array.isArray(rawLog) ? (rawLog as unknown[]).map(String).filter((id) => DELIVERY_ID_PATTERN.test(id)) : [];
+  await redisPipeline([
+    ["DEL", cfgKey(statsId)],
+    ["SREM", STORES_KEY, statsId],
+    ["DEL", anchorKey(statsId)],
+    ["DEL", logKey(statsId)],
+    ...ids.flatMap((id) => [
+      ["DEL", deliveryKey(id)],
+      ["ZREM", QUEUE_KEY, `${statsId}|${id}`],
+    ]),
+  ]);
+}
+
 /** Keeps the handle the job looks a store up by current, from the studio. */
 export async function keepHandle(store: Store): Promise<void> {
   if (!store.statsId || !isRedisConfigured()) return;
