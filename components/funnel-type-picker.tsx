@@ -21,6 +21,7 @@ const MESSAGES: Record<string, string> = {
   type: "That kind of funnel is not offered any more. Reload the page.",
   forbidden: "Your role cannot make the store's pages, which this funnel needs. Ask the store's owner or an admin.",
   full: "This store already has as many funnels as it can. Remove one to add another.",
+  pages_changed: "The store’s pages changed while this draft was being prepared. Review Pages, then reload before creating the funnel.",
   pages_full: "This funnel makes pages of its own, and the store has no room for them. Remove a page under Pages first.",
   slot_missing: "Choose a product for every step.",
   slot_free: "That step needs a free product: the one they sign up for.",

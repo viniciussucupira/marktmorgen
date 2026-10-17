@@ -213,7 +213,9 @@ async function main(): Promise<void> {
     }
     for (const reply of [0, 1, "0", "1"]) {
       redis.pipeline = async () => [reply];
-      is("confirmed save accepts Redis acknowledgement " + JSON.stringify(reply), (await writePageFunnel(statsId, funnel, [funnel])).id, funnel.id);
+      let accepted = false;
+      try { accepted = (await writePageFunnel(statsId, funnel, [funnel])).id === funnel.id; } catch {}
+      is("only an explicit successful atomic save is accepted " + JSON.stringify(reply), accepted, reply === 1);
       is("confirmed deletion interprets Redis acknowledgement " + JSON.stringify(reply), await dropPageFunnel(statsId, funnel.id), reply === 1 || reply === "1");
     }
   } finally { redis.pipeline = originalMutationPipeline; }
