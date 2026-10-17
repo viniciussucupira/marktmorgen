@@ -18,6 +18,7 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
   const [variant, setVariant] = useState("");
   const [copied, setCopied] = useState("");
   const linkInput = useRef<HTMLInputElement>(null);
+  const copyRequest = useRef(0);
   const product = plan.products.find(item => item.id === selected) ?? plan.products[0];
   const channel = source || plan.channel;
   const medium = promotionMedium(channel, mediumOverride);
@@ -25,8 +26,9 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
   if (!product) return null;
   async function copy() {
     if (!link) return;
-    const result = await copyCampaignLink(link, () => linkInput.current, text => navigator.clipboard.writeText(text));
-    if (result === "stale" || linkInput.current?.value !== link) return;
+    const request = ++copyRequest.current;
+    const result = await copyCampaignLink(link, () => request === copyRequest.current ? linkInput.current : null, text => navigator.clipboard.writeText(text));
+    if (request !== copyRequest.current || result === "stale" || linkInput.current?.value !== link) return;
     setCopied(result === "copied" ? link : result === "selected" ? "selected:" + link : "failed:" + link);
   }
   return <section className="mt-5 rounded-[16px] bg-gradient-to-br from-violet-50 to-emerald-50 p-4 ring-1 ring-line" aria-labelledby={id + "-title"}>
