@@ -2,7 +2,7 @@ import { readFlowListStrict } from "@/lib/flow-list";
 import { FLOW_TRIGGERS, type FlowTrigger, MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
 import { MAX_FLOWS, MAX_STEPS, activeFlowLimit, dailyRunLimit, startableFlows } from "@/lib/flow-limits";
 import { END, afterIndex, checkRoutes, elseIndex } from "@/lib/flow-paths";
-import { type Settled, admitRuns, claimAttempts, forgetRuns, noteRuns, openRuns, readRun, releaseHold, settleAttempts } from "@/lib/flow-runs";
+import { type Settled, admitRuns, claimAttempts, forgetHeldCommand, forgetIndexCommand, forgetPersonCommands, noteRuns, openRuns, personOf, readRun, releaseHold, runPeople, settleAttempts } from "@/lib/flow-runs";
 import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
 /**
@@ -304,8 +304,76 @@ export async function removeFlow(store: Store, id: string): Promise<FlowResult> 
   if (!flows.some((f) => f.id === id)) return { ok: false, reason: "unknown" };
   const next = flows.filter((f) => f.id !== id);
   await writeFlows(store.listId, next);
-  await forgetRuns(store.listId, id);
+  // Its runs, their history, starts and queued steps: nothing of the people in it is kept.
+  await purgeFlow(store, flows.find((f) => f.id === id)!).catch((error) => console.error("erasing a removed workflow's runs failed", error));
   return { ok: true, flows: next };
+}
+
+/**
+ * Where one person's steps of one workflow can be waiting: the queue and its
+ * lease, under each address the store has had and at each step. One ZREM
+ * per key, however many.
+ */
+function queuedOf(store: Store, flow: Pick<Flow, "id">, emails: string[]): (string | number)[][] {
+  if (!store.listId || !emails.length) return [];
+  const handles = [...new Set([store.handle, ...(store.previousHandles ?? [])])];
+  const members: string[] = [];
+  for (const email of emails) for (const handle of handles) for (let i = 0; i < MAX_STEPS; i += 1) members.push(`${store.listId}|${handle}|${flow.id}|${i}|${email}`);
+  const out: (string | number)[][] = [];
+  for (let i = 0; i < members.length; i += 1000) out.push(["ZREM", QUEUE, ...members.slice(i, i + 1000)], ["ZREM", LEASE, ...members.slice(i, i + 1000)]);
+  return out;
+}
+
+/** Confirms a pipeline of deletions was answered in full; anything else is not an erasure. */
+async function erase(commands: (string | number)[][]): Promise<void> {
+  for (let i = 0; i < commands.length; i += 500) {
+    const chunk = commands.slice(i, i + 500);
+    const reply = await redisPipeline(chunk);
+    if (!Array.isArray(reply) || reply.length !== chunk.length) throw new FlowWriteUnconfirmed();
+  }
+}
+
+/**
+ * Erases one person from every workflow of this store (at most MAX_FLOWS):
+ * each run's record and history, its place in the run and held indexes, the
+ * start that kept them from starting twice, and any step of theirs still
+ * waiting in the queue. For a person who asks to be deleted, or a contact
+ * the creator deletes. Throws when it cannot be confirmed.
+ */
+export async function forgetWorkflowPerson(store: Store, rawEmail: string): Promise<{ flows: number }> {
+  const email = normaliseEmail(rawEmail);
+  if (!store.listId || !email) return { flows: 0 };
+  const flows = await readFlowListStrict(store.listId);
+  const person = personOf(email);
+  const commands: (string | number)[][] = [];
+  for (const flow of flows) commands.push(...forgetPersonCommands(store.listId, flow.id, person), ["DEL", enrolledKey(flow.id, email)], ...queuedOf(store, flow, [email]));
+  await erase(commands);
+  return { flows: flows.length };
+}
+
+/** Erases every run of one workflow, and everything kept for the people in it. */
+async function purgeFlow(store: Store, flow: Flow): Promise<void> {
+  if (!store.listId) return;
+  const people = await runPeople(flow.id);
+  const commands: (string | number)[][] = [];
+  for (const { person, email } of people) {
+    commands.push(...forgetPersonCommands(store.listId, flow.id, person), ["DEL", `nl:mail:enr:${flow.id}:${person}`]);
+    if (email) commands.push(...queuedOf(store, flow, [email]));
+  }
+  commands.push(forgetIndexCommand(flow.id), ["DEL", statsKey(flow.id)]);
+  await erase(commands);
+}
+
+/**
+ * Everything workflows kept for a store that is being deleted: every run of
+ * every workflow (at most MAX_FLOWS), the people in them, their queued steps,
+ * the store's held runs and the workflows themselves.
+ */
+export async function forgetStoreWorkflows(store: Store): Promise<void> {
+  if (!store.listId || !isRedisConfigured()) return;
+  const flows = await readFlowListStrict(store.listId);
+  for (const flow of flows) await purgeFlow(store, flow);
+  await erase([forgetHeldCommand(store.listId), ["DEL", flowsKey(store.listId)]]);
 }
 
 /**

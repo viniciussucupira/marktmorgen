@@ -39,14 +39,12 @@ export const TRIAL_DAILY_RUNS = 50;
 export const MAX_RUN_EVENTS = 2 + MAX_STEPS * 3;
 /** Runs listed per workflow in the studio, most recent first. */
 export const RUNS_LISTED = 50;
-/** Runs remembered per workflow for that list; older ones age out of the list, never out of a run's own record early. */
-export const RUNS_INDEXED = 200;
 /** How long a run and its history are kept: as long as the start itself is remembered. */
 export const RUN_KEEP_SECONDS = 400 * 86_400;
 
 /** Ceilings for the margin review's per-run arithmetic. */
 export const RUN_START_COMMANDS = 8;
-export const HISTORY_COMMANDS_PER_STEP = 8;
+export const HISTORY_COMMANDS_PER_STEP = 9;
 export const QUEUE_COMMANDS_PER_STEP = 6;
 export const WORST_COMMANDS_PER_RUN = RUN_START_COMMANDS + MAX_STEPS * (HISTORY_COMMANDS_PER_STEP + QUEUE_COMMANDS_PER_STEP);
 

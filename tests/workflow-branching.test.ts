@@ -20,7 +20,7 @@
  */
 import { afterIndex, checkRoutes, elseIndex, previewRun } from "@/lib/flow-paths";
 import { MAX_STEPS, TRIAL_ACTIVE_FLOWS, activeFlowLimit, dailyRunLimit, startableFlows } from "@/lib/flow-limits";
-import { enroll, readFlows, resolveHeldRun, saveFlow, sendDueSteps, setFlowActive } from "@/lib/flows";
+import { enroll, forgetStoreWorkflows, forgetWorkflowPerson, readFlows, removeFlow, resolveHeldRun, saveFlow, sendDueSteps, setFlowActive } from "@/lib/flows";
 import { listHeld, listRuns, personOf, readRun, runsToday } from "@/lib/flow-runs";
 import { leadsKey, upsertContact } from "@/lib/contacts";
 import { addProduct, claimHandle, ensureListId, ensureStatsId, setMailSettings, setStripeAccount, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
@@ -230,6 +230,46 @@ async function main(): Promise<void> {
   }
   is("Studio switches on ten at most; the eleventh is refused", [outcomes.filter((o) => o === "on").length, outcomes.at(-1)], [8, "active_limit"]);
   is("saving one switched on is refused the same way", (await saveFlow(store, { ...(await readFlows(list)).find((f) => !f.active)!, active: true } as unknown as Record<string, unknown>)), { ok: false, reason: "active_limit" });
+
+  part("Erased: a person mid-run leaves nothing behind in any workflow");
+  // Every key, and every value, that mentions an address or its key.
+  const holding = (needle: string) => {
+    const data = (redis as unknown as { data: Map<string, unknown> }).data;
+    const text = (v: unknown): string => (v instanceof Map ? JSON.stringify([...v.entries()]) : v instanceof Set ? JSON.stringify([...v]) : JSON.stringify(v));
+    // The in-memory double keeps an empty container after a read of a missing key; Redis keeps none.
+    const empty = (v: unknown) => (v instanceof Map || v instanceof Set ? v.size === 0 : Array.isArray(v) && v.length === 0);
+    return [...data.entries()].filter(([key, value]) => !empty(value) && (key.includes(needle) || text(value).includes(needle))).map(([key]) => key).sort();
+  };
+  const live = () => [...(redis as unknown as { data: Map<string, unknown> }).data.entries()].filter(([, v]) => !(v instanceof Map || v instanceof Set ? v.size === 0 : Array.isArray(v) && v.length === 0)).map(([k]) => k);
+  // The contact's own row and its unsubscribe token belong to the list, not to the workflows.
+  const listOwned = (key: string) => key === leadsKey(list) || key.startsWith("nl:mail:unsub:");
+  // A new day's runs (the ceiling test above used today's).
+  await redisPipeline([["DEL", `nl:wf:day:${list}:${new Date(Date.now()).toISOString().slice(0, 10)}`]]);
+  await upsertContact(list, "fay@example.com", { agreed: true, explicit: true, source: "free" });
+  const mid = await saveFlow(store, { name: "Mid", trigger: "tagged", tag: "mid", steps: [{ id: id(31), delayHours: 0, subject: "Mid one", body: "1" }, { id: id(32), delayHours: 48, subject: "Mid two", body: "2" }] });
+  const midId = mid.ok ? mid.flows.find((f) => f.name === "Mid")!.id : "";
+  await redisPipeline([["SET", `nl:mail:flows:${list}`, JSON.stringify((await readFlows(list)).map((f) => (f.id === midId ? { ...f, active: true } : { ...f, active: false })))]]);
+  await enroll(store, "fay@example.com", { joined: false, tag: "mid" });
+  await enroll(store, "fay@example.com", { joined: false, tag: "lost" });
+  await run();
+  const fay = personOf("fay@example.com");
+  is("mid-run: her first email went, the second is waiting, and her run is recorded", [to("Mid one").includes("fay@example.com"), (await readRun(midId, fay))?.run.status], [true, "running"]);
+  is("before erasure, workflow keys hold her address", holding("fay@example.com").filter((k) => !listOwned(k)).length > 0, true);
+  is("erased from every workflow of the store", (await forgetWorkflowPerson(store, " Fay@Example.com ")).flows, (await readFlows(list)).length);
+  is("afterward no key outside her list row holds her address", holding("fay@example.com").filter((k) => !listOwned(k)), []);
+  is("nor her run key, start or held entry", holding(fay), []);
+  await later(48);
+  is("and her waiting step never goes out", to("Mid two"), []);
+
+  part("Erased: a workflow removed, and a store deleted");
+  await upsertContact(list, "gus@example.com", { agreed: true, explicit: true, source: "free" });
+  await enroll(store, "gus@example.com", { joined: false, tag: "mid" });
+  await run();
+  is("a run is recorded for him", (await readRun(midId, personOf("gus@example.com")))?.run.status, "running");
+  is("removing the workflow erases its runs", [(await removeFlow(store, midId)).ok, holding("gus@example.com").filter((k) => !listOwned(k)), holding(midId).filter((k) => k !== `nl:mail:flows:${list}`)], [true, [], []]);
+  await forgetStoreWorkflows(store);
+  is("deleting the store erases every workflow, run, start and hold", live().filter((k) => k.startsWith("nl:wf:run:") || k.startsWith("nl:wf:log:") || k.startsWith("nl:wf:runs:") || k.startsWith("nl:wf:held:") || k.startsWith("nl:mail:enr:") || k === `nl:mail:flows:${list}`), []);
+  is("and no queued step of the store is left", ((await redisPipeline([["ZRANGEBYSCORE", "nl:mail:flowq", 0, "+inf"]]))[0] as string[]).filter((m) => m.startsWith(`${list}|`)), []);
 
   done();
 }

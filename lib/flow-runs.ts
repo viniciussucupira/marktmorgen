@@ -25,7 +25,8 @@
  *
  *   nl:wf:run:<flowId>:<person>   hash: email, status, step, note, startedAt, updatedAt, open
  *   nl:wf:log:<flowId>:<person>   list of JSON events, oldest first, at most MAX_RUN_EVENTS
- *   nl:wf:runs:<flowId>           zset: person → last change, the newest RUNS_INDEXED
+ *   nl:wf:runs:<flowId>           zset: person → last change, every run of the last 400 days
+ *                                 (complete, so a person or a store can be erased in full)
  *   nl:wf:held:<listId>           zset: "<flowId>|<person>" → when it was held
  *   nl:wf:day:<listId>:<date>     hash: started, refused (UTC day), three days
  *
@@ -36,7 +37,7 @@
 import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { MAX_RUN_EVENTS, RUNS_INDEXED, RUN_KEEP_SECONDS } from "@/lib/flow-limits";
+import { MAX_RUN_EVENTS, RUN_KEEP_SECONDS } from "@/lib/flow-limits";
 
 export type RunStatus = "running" | "waiting" | "held" | "done" | "goal" | "ended" | "left" | "failed";
 export const RUN_STATUSES: readonly RunStatus[] = ["running", "waiting", "held", "done", "goal", "ended", "left", "failed"];
@@ -146,7 +147,8 @@ export async function openRuns(flowId: string, emails: string[], nowSeconds = Ma
       ["ZADD", indexKey(flowId), nowSeconds, person],
     );
   }
-  commands.push(["ZREMRANGEBYRANK", indexKey(flowId), 0, -(RUNS_INDEXED + 1)], ["EXPIRE", indexKey(flowId), RUN_KEEP_SECONDS]);
+  // Runs whose records have aged out leave the index too; everything younger stays, so it can be erased.
+  commands.push(["ZREMRANGEBYSCORE", indexKey(flowId), 0, nowSeconds - RUN_KEEP_SECONDS], ["EXPIRE", indexKey(flowId), RUN_KEEP_SECONDS]);
   await redisPipeline(commands);
 }
 
@@ -209,7 +211,9 @@ export async function settleAttempts(listId: string, flowId: string, index: numb
     // A wait is a status, not an event: a month that runs out is not written down forty times.
     if (o.state !== "deferred") commands.push(["RPUSH", log, event({ at: nowSeconds, step: index, stepId, kind, state: o.state, note: o.note })]);
     commands.push(["HSET", run, "email", normaliseEmail(o.email), "status", status, "step", o.state === "deferred" ? index : o.to, "note", o.state === "deferred" ? o.note.slice(0, 300) : "", "updatedAt", nowSeconds]);
-    if (TERMINAL.has(status)) commands.push(["EXPIRE", run, RUN_KEEP_SECONDS], ["EXPIRE", log, RUN_KEEP_SECONDS], ["ZADD", indexKey(flowId), nowSeconds, person]);
+    // In the index at every write, so a run started before history existed can be found and erased too.
+    commands.push(["ZADD", indexKey(flowId), nowSeconds, person]);
+    if (TERMINAL.has(status)) commands.push(["EXPIRE", run, RUN_KEEP_SECONDS], ["EXPIRE", log, RUN_KEEP_SECONDS]);
   }
   await redisPipeline(commands);
 }
@@ -227,8 +231,9 @@ export async function noteRuns(
     commands.push(
       ["RPUSH", logKey(flowId, person), event({ at: nowSeconds, step: e.index, stepId: e.stepId, kind: e.kind, state: e.state, note: e.note })],
       ["HSET", runKey(flowId, person), "email", normaliseEmail(e.email), "status", e.status, "step", e.to, "note", "", "updatedAt", nowSeconds],
+      ["ZADD", indexKey(flowId), nowSeconds, person],
     );
-    if (TERMINAL.has(e.status)) commands.push(["EXPIRE", runKey(flowId, person), RUN_KEEP_SECONDS], ["EXPIRE", logKey(flowId, person), RUN_KEEP_SECONDS], ["ZADD", indexKey(flowId), nowSeconds, person]);
+    if (TERMINAL.has(e.status)) commands.push(["EXPIRE", runKey(flowId, person), RUN_KEEP_SECONDS], ["EXPIRE", logKey(flowId, person), RUN_KEEP_SECONDS]);
   }
   await redisPipeline(commands);
 }
@@ -326,14 +331,35 @@ export async function releaseHold(listId: string, flowId: string, person: string
   return true;
 }
 
-/** Everything kept for a workflow's runs that is indexed: for a workflow being removed. Runs not in the index age out by themselves. */
-export async function forgetRuns(listId: string, flowId: string): Promise<void> {
-  const people = await redisPipeline([["ZREVRANGE", indexKey(flowId), 0, -1]]).catch(() => null);
-  const list = replied(people, 1) && Array.isArray(people[0]) ? (people[0] as unknown[]).filter((p): p is string => typeof p === "string" && PERSON_KEY.test(p)) : [];
-  const held = await listHeld(listId, 500).catch(() => []);
-  await redisPipeline([
-    ...list.map((person) => ["DEL", runKey(flowId, person), logKey(flowId, person)]),
-    ...held.filter((h) => h.flowId === flowId).map((h) => ["ZREM", heldKey(listId), `${flowId}|${h.person}`]),
-    ["DEL", indexKey(flowId)],
-  ]).catch(() => {});
+/** The commands that erase one person's run of one workflow: its record, its history and both indexes. */
+export function forgetPersonCommands(listId: string, flowId: string, person: string): (string | number)[][] {
+  return [
+    ["DEL", runKey(flowId, person), logKey(flowId, person)],
+    ["ZREM", indexKey(flowId), person],
+    ["ZREM", heldKey(listId), `${flowId}|${person}`],
+  ];
 }
+
+/**
+ * Every person with a run of this workflow in the last 400 days, with the
+ * address their run holds ("" when it holds none): for erasing a workflow
+ * or a store whole. Read in pages; throws when a page cannot be read.
+ */
+export async function runPeople(flowId: string, page = 500): Promise<{ person: string; email: string }[]> {
+  const reply = await redisPipeline([["ZREVRANGE", indexKey(flowId), 0, -1]]).catch(() => null);
+  if (!replied(reply, 1) || !Array.isArray(reply[0])) throw new FlowRunUnavailable();
+  const people = (reply[0] as unknown[]).filter((p): p is string => typeof p === "string" && PERSON_KEY.test(p));
+  const out: { person: string; email: string }[] = [];
+  for (let i = 0; i < people.length; i += page) {
+    const chunk = people.slice(i, i + page);
+    const emails = await redisPipeline(chunk.map((person) => ["HGET", runKey(flowId, person), "email"])).catch(() => null);
+    if (!replied(emails, chunk.length)) throw new FlowRunUnavailable();
+    chunk.forEach((person, j) => out.push({ person, email: typeof emails[j] === "string" ? (emails[j] as string) : "" }));
+  }
+  return out;
+}
+
+/** The index of a workflow's runs, once every run in it has been erased. */
+export const forgetIndexCommand = (flowId: string): (string | number)[] => ["DEL", indexKey(flowId)];
+/** A store's held runs, all of them: for a store being deleted. */
+export const forgetHeldCommand = (listId: string): (string | number)[] => ["DEL", heldKey(listId)];

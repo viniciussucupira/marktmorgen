@@ -320,6 +320,18 @@ export function WorkflowRuns({ flowId, steps, request }: { flowId: string; steps
     else setError(RUN_ERRORS[a.error ?? ""] ?? RUN_ERRORS.flow_runs_unavailable);
   }
 
+  async function erasePerson() {
+    if (!open) return;
+    setBusy(true);
+    setError(null);
+    const a = await request({ action: "flow-forget", email: open.run.email });
+    setBusy(false);
+    if (!a.ok) return setError(RUN_ERRORS[a.error ?? ""] ?? "The erasure could not be confirmed. Try again in a moment.");
+    const gone = open.run.person;
+    setOpen(null);
+    setRuns((list) => list?.filter((r) => r.person !== gone) ?? list);
+  }
+
   async function resolve(choice: "continue" | "retry" | "end") {
     if (!open) return;
     setBusy(true);
@@ -379,6 +391,15 @@ export function WorkflowRuns({ flowId, steps, request }: { flowId: string; steps
               </li>
             ))}
           </ol>
+          {open.run.email ? (
+            <p className="mt-3 text-sm text-ink-soft">
+              Asked to be deleted?{" "}
+              <button type="button" className="font-bold underline underline-offset-4 hover:text-danger" disabled={busy} onClick={erasePerson}>
+                Erase {open.run.email} from every workflow
+              </button>
+              : their runs, history and waiting steps in all your workflows. This does not remove their address from your list itself.
+            </p>
+          ) : null}
           {open.run.status === "held" ? (
             <div className="notice notice-warn mt-3 text-sm">
               <p className="font-semibold">What should happen with this step?</p>

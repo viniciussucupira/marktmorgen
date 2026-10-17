@@ -13,9 +13,19 @@ Added 17 October 2026 on top of the existing sequence engine (`lib/flows.ts`); t
 
 ## Run history and uncertain outcomes
 
-`lib/flow-runs.ts` keeps one record per (workflow, person) for 400 days: status, current step and an event list capped by `MAX_RUN_EVENTS`. Before an email is handed to the sender or an action runs, the attempt is claimed with `HSETNX` on the run (`attempted`). The outcome then clears it: `confirmed`, `failed`, or `deferred` (allowance, daily sending room, pause: nothing was sent and the step is queued again). When the provider may have taken an email but the answer was lost (`sendTo` now returns those addresses as `uncertain`), or an action's write cannot be confirmed, the attempt stays open and the run is **held**. A run that finds its own attempt still open, because a job stopped between the attempt and the outcome, is held too. Nothing held is retried by itself. The studio lists held runs, and the creator chooses once (`resolveHeldRun`, only one `HDEL` wins): it went through, continue; try again, which may deliver twice; or end the run.
+`lib/flow-runs.ts` keeps one record per (workflow, person) for up to 400 days, or until it is erased (below): status, current step and an event list capped by `MAX_RUN_EVENTS`. Before an email is handed to the sender or an action runs, the attempt is claimed with `HSETNX` on the run (`attempted`). The outcome then clears it: `confirmed`, `failed`, or `deferred` (allowance, daily sending room, pause: nothing was sent and the step is queued again). When the provider may have taken an email but the answer was lost (`sendTo` now returns those addresses as `uncertain`), or an action's write cannot be confirmed, the attempt stays open and the run is **held**. A run that finds its own attempt still open, because a job stopped between the attempt and the outcome, is held too. Nothing held is retried by itself. The studio lists held runs, and the creator chooses once (`resolveHeldRun`, only one `HDEL` wins): it went through, continue; try again, which may deliver twice; or end the run.
 
 The next step is queued before the attempt is cleared. If clearing fails, the next step finds the attempt open and holds the run instead of repeating anything.
+
+## Erasure
+
+The run index (`nl:wf:runs:<flowId>`) lists every run of the last 400 days; it is not trimmed, so every record can be found and deleted. Three paths erase:
+
+- **One person** (`forgetWorkflowPerson`, studio action `flow-forget`, the "Erase … from every workflow" button in a run's history): for each of the store's workflows (at most 20), it deletes the run record (which holds the address), its history, its index and held entries, the start record, and any of their steps still waiting in the queue or its lease, under every address the store has had and at every step position. The deletion counts only when every reply comes back; otherwise the studio says it could not be confirmed. The person's row on the creator's list is not part of this; there is no in-code contact deletion yet (see below).
+- **A workflow removed** (`removeFlow`): every run of that workflow, with the same keys per person, plus its index and counters.
+- **A store deleted** (`app/api/store/stores`, `forgetStoreWorkflows`): every workflow's runs as above, the store's held list and the workflows themselves.
+
+The abandoned-checkout claim (`nl:wf:abandoned:<checkout session id>`, 2 days) holds the Stripe session id, never an address. `tests/workflow-branching.test.ts` erases a person mid-run and checks that no key or value outside their list row (`nl:store:leads:*` and their unsubscribe token) mentions their address or its key, and that their waiting step never goes out. It also checks the workflow-removal and store-deletion paths.
 
 ## Limits (enforced in code, shown in the studio)
 
@@ -30,11 +40,11 @@ Runs past the daily ceiling are refused before any record is written, their star
 
 ## Cost reasoning
 
-Emails draw on the existing monthly allowance and its supplier reservation; nothing here adds an email that bypasses it. Owner notices use the platform sender once per group of people. Webhook events reuse the store's endpoints (at most 5) and the existing seven-try retry ceiling. The non-email cost is Redis commands. `WORST_COMMANDS_PER_RUN` (8 to start, plus 20 steps × (8 history + 6 queue/contact) = 288) is a review ceiling, not a measured average. At Upstash's published $0.20 per 100,000 commands (baseline doc C06), the daily run ceiling gives about $5.36 a month for Studio (300 × 31 × 288) and $10.71 for Scale. The figures are inputs for the margin review. They are not proof that any plan meets the 60% after-tax floor.
+Emails draw on the existing monthly allowance and its supplier reservation; nothing here adds an email that bypasses it. Owner notices use the platform sender once per group of people. Webhook events reuse the store's endpoints (at most 5) and the existing seven-try retry ceiling. The non-email cost is Redis commands. `WORST_COMMANDS_PER_RUN` (8 to start, plus 20 steps × (9 history + 6 queue/contact) = 308) is a review ceiling, not a measured average. At Upstash's published $0.20 per 100,000 commands (baseline doc C06), the daily run ceiling gives about $5.73 a month for Studio (300 × 31 × 308) and $11.46 for Scale. Erasure adds a bounded number of commands per request (per workflow: 5 deletions plus 2 queue removals). The figures are inputs for the margin review. They are not proof that any plan meets the 60% after-tax floor.
 
 ## Verification
 
-`tests/workflow-branching.test.ts` (52 checks) covers routes, preview determinism, plan limits, save validation, explicit activation, IF/ELSE delivery, label goals, step history, the daily ceiling, a lost provider answer that is held rather than resent, an attempt left open by a stopped job, and the creator's one-time resolution. Existing sequence tests were updated only where new workflows now need an explicit switch on. Everything runs against the in-memory Redis double and a stand-in email provider. No real messages, Stripe accounts or customer records are used.
+`tests/workflow-branching.test.ts` (62 checks) covers erasure (above), routes, preview determinism, plan limits, save validation, explicit activation, IF/ELSE delivery, label goals, step history, the daily ceiling, a lost provider answer that is held rather than resent, an attempt left open by a stopped job, and the creator's one-time resolution. Existing sequence tests were updated only where new workflows now need an explicit switch on. Everything runs against the in-memory Redis double and a stand-in email provider. No real messages, Stripe accounts or customer records are used.
 
 ## Not included
 
@@ -42,4 +52,4 @@ Emails draw on the existing monthly allowance and its supplier reservation; noth
 - Granting or revoking course or community access from a workflow. Access is derived from Stripe purchases and refunds (`lib/community-access.ts`, `lib/learn.ts`), and audit item F38 asks for subscription/refund reconciliation before access automations.
 - A drag-and-drop canvas. The editor stays a list of steps with branch targets and a step map. The preview shows the path.
 - Page-visit triggers and split-test steps beyond the existing A/B halves.
-- Erasing run history when a person is deleted. It ages out with the 400-day start record, the same as before.
+- Deleting a contact's row from the creator's list. No such path exists in code today: an unsubscribe keeps the row, marked, and a deletion request goes to support. Workflow data is erased in code by `flow-forget`; the list row, its unsubscribe token and other modules' records (link-use records, CRM values, notes) still need a single erasure path that calls `forgetWorkflowPerson`.

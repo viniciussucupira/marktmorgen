@@ -14,7 +14,7 @@ import { sendBatch } from "@/lib/email";
 import { healthId, startRamp } from "@/lib/mail-health";
 import { BroadcastCancellationUnconfirmed, BroadcastWriteUnconfirmed, advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
 import { buyerLedger, isNarrowed, keeps, ledgerChannels, readNarrow, removeSegment, saveSegment } from "@/lib/segments";
-import { FLOW_ID, FlowWriteUnconfirmed, RESOLVE_CHOICES, type ResolveChoice, removeFlow, resolveHeldRun, saveFlow, setFlowActive } from "@/lib/flows";
+import { FLOW_ID, FlowWriteUnconfirmed, RESOLVE_CHOICES, type ResolveChoice, forgetWorkflowPerson, removeFlow, resolveHeldRun, saveFlow, setFlowActive } from "@/lib/flows";
 import { readFlowListStrict } from "@/lib/flow-list";
 import { FlowRunUnavailable, PERSON_KEY, listRuns, readRun } from "@/lib/flow-runs";
 import { RUNS_LISTED } from "@/lib/flow-limits";
@@ -59,6 +59,8 @@ const MAIL_PERMISSIONS: Record<string, Permission> = {
   "flow-resolve": "send",
   // One person of the list, read to preview their path: as private as the runs.
   "flow-sample": "send",
+  // Erasing one person from every workflow, for a deletion request.
+  "flow-forget": "send",
   // A sent email written again is a new draft; kept sending, it reaches the list.
   copy: "draft",
   keep: "send",
@@ -86,6 +88,7 @@ const MAIL_PERMISSIONS: Record<string, Permission> = {
  *   { action: "flow-run", id, run }           one run's history, step by step
  *   { action: "flow-resolve", id, run, choice }   a held run: "continue" | "retry" | "end"
  *   { action: "flow-sample", email, courses }  one person of the list, for the preview
+ *   { action: "flow-forget", email }          erases that person from every workflow's runs
  *   { action: "copy", id }   a sent email's subject and text, to write again
  *   { action: "starters" }   the welcome and the after-a-first-purchase sequences, written
  *                            and left switched off, where the store has none (lib/mail-starters.ts)
@@ -278,6 +281,13 @@ export async function POST(request: NextRequest) {
       if (resolved !== "ok") return fail(resolved === "unknown" ? "unknown" : resolved === "paused" ? "run_paused" : "run_not_held", resolved === "unknown" ? 404 : 409);
       const found = await readRun(id, run);
       return Response.json({ ok: true, ...(found ?? {}) });
+    }
+
+    if (action === "flow-forget") {
+      const address = normaliseEmail(text(body.email, 320));
+      if (!address) return fail("email");
+      const erased = await forgetWorkflowPerson(store, address);
+      return Response.json({ ok: true, erased: erased.flows });
     }
 
     if (action === "flow-sample") {
