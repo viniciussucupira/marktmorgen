@@ -8,7 +8,7 @@ import { done, is, part } from "./check";
 const form = parseForm({ id: "reviewform", name: "Project <application>", fields: [{ id: "email1", type: "email", label: "Email", required: true }], offerList: false })!;
 const response = { at: 1800000000, page: "", answers: { email1: "lead@example.com" }, outcome: "", joined: false };
 const responseRef = "a".repeat(64);
-const props = { form, response, responseRef, stages: DEFAULT_STAGES, sid: "store123", currency: "USD", assignees: ["owner@example.com"], existingDeals: [], onClose() {} };
+const props = { form, response, responseRef, stages: DEFAULT_STAGES, sid: "store123", currency: "USD", assignees: ["owner@example.com"], existingDeals: [], existingDealsAvailable: true, onClose() {} };
 part("Reviewed form opportunity interface");
 const review = renderToStaticMarkup(createElement(FormResponseDeal, props));
 is("review exposes the editable estimate and contact", review.includes("Estimated value") && review.includes("Contact email (optional)"), true);
@@ -21,4 +21,7 @@ is("existing contact opportunity is disclosed before creation", matching.include
 is("known email match blocks unacknowledged creation", /<button[^>]*disabled=""[^>]*>Create opportunity<\/button>/.test(matching), true);
 const saved = renderToStaticMarkup(createElement(FormResponseDeal, { ...props, existingDeals: [{ id: "deal000001", title: "Existing", email: "lead@example.com", stage: "won000", formResponseRef: responseRef }] }));
 is("an existing conversion is recognized on opening", saved.includes("already has an opportunity") && !saved.includes(">Create opportunity</button>"), true);
+const unavailable = renderToStaticMarkup(createElement(FormResponseDeal, { ...props, existingDealsAvailable: false }));
+is("unknown CRM records do not imply there are no matching opportunities", unavailable.includes("Existing opportunities could not be checked"), true);
+is("unknown CRM data blocks creation and retains the draft", /<button[^>]*disabled=""[^>]*>Create opportunity<\/button>/.test(unavailable) && unavailable.includes("Your draft remains here"), true);
 done();

@@ -179,6 +179,43 @@ export async function readDeals(statsId: string | null, stages: readonly Stage[]
     .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
+export type OpportunityReviewData = { available: boolean; stages: Stage[]; deals: Deal[] };
+
+/** A complete link/contact review read; unknown storage never means no opportunities. */
+export async function readOpportunityReview(statsId: string | null): Promise<OpportunityReviewData> {
+  const unavailable: OpportunityReviewData = { available: false, stages: [], deals: [] };
+  if (!statsId || !isRedisConfigured()) return unavailable;
+  try {
+    const replies = await redisPipeline([["GET", stagesKey(statsId)], ["HGETALL", dealsKey(statsId)]]);
+    if (!Array.isArray(replies) || replies.length !== 2 || !Array.isArray(replies[1]) || replies[1].length % 2 !== 0) return unavailable;
+    let stages: Stage[];
+    if (replies[0] === null) stages = DEFAULT_STAGES;
+    else {
+      if (typeof replies[0] !== "string") return unavailable;
+      const raw = json(replies[0]);
+      const parsed = parseStages(raw);
+      if (!Array.isArray(raw) || !parsed || parsed.length !== raw.length) return unavailable;
+      stages = parsed;
+    }
+    const deals: Deal[] = [], seen = new Set<string>();
+    const pairs: unknown[] = replies[1];
+    for (let i = 0; i < pairs.length; i += 2) {
+      const id = pairs[i], value = pairs[i + 1];
+      if (typeof id !== "string" || !DEAL_ID.test(id) || seen.has(id) || typeof value !== "string") return unavailable;
+      const record = json(value);
+      const deal = parseDeal(record, stages);
+      if (!deal || deal.id !== id || !record || typeof record !== "object" || Array.isArray(record)) return unavailable;
+      const raw = record as Record<string, unknown>;
+      const ref = raw.formResponseRef;
+      if (ref !== undefined && ref !== null && ref !== "" && (typeof ref !== "string" || !/^[a-f0-9]{64}$/.test(ref))) return unavailable;
+      if (raw.email !== undefined && (typeof raw.email !== "string" || (raw.email.trim() && !deal.email))) return unavailable;
+      seen.add(id);
+      deals.push(deal);
+    }
+    return { available: true, stages, deals: deals.sort((a, b) => b.updatedAt - a.updatedAt) };
+  } catch { return unavailable; }
+}
+
 /** Capacity and save share one Redis operation, including alongside form conversions. */
 export const SAVE_CRM_DEAL = `-- marktmorgen:crm-deal-save:v1
 if redis.call("HEXISTS", KEYS[1], ARGV[1]) == 0 and redis.call("HLEN", KEYS[1]) >= tonumber(ARGV[3]) then return 0 end

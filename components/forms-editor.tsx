@@ -2,7 +2,7 @@
 
 import { FormAnswers } from "@/components/form-answers";
 import { FormResponseDeal } from "@/components/form-response-deal";
-import type { FormDealMatch } from "@/lib/form-deal";
+import { mergeFormOpportunities, type FormDealMatch } from "@/lib/form-deal";
 import type { Stage } from "@/lib/crm-rules";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -67,8 +67,11 @@ const blank = (): FormDef => ({
  * answers it has kept and the newest of them, a file of all of them, and an
  * editor for its questions, its results and what a person reads after.
  */
-export function FormsEditor({ saved, products, exportBase, dealStages = [], sid = "", currency = "USD", dealAssignees = [], existingDeals = [] }: { existingDeals?: FormDealMatch[]; currency?: string; dealAssignees?: string[]; dealStages?: Stage[]; sid?: string; saved: SavedForm[]; products: { id: string; title: string }[]; /** The download's address, the form's id added at its end. */ exportBase: string }) {
+export function FormsEditor({ saved, products, exportBase, dealStages = [], sid = "", currency = "USD", dealAssignees = [], existingDeals = [], existingDealsAvailable = false }: { existingDealsAvailable?: boolean; existingDeals?: FormDealMatch[]; currency?: string; dealAssignees?: string[]; dealStages?: Stage[]; sid?: string; saved: SavedForm[]; products: { id: string; title: string }[]; /** The download's address, the form's id added at its end. */ exportBase: string }) {
   const router = useRouter();
+  const [recorded, setRecorded] = useState<{ sid: string; deals: FormDealMatch[] }>({ sid, deals: [] });
+  const knownDeals = mergeFormOpportunities(existingDeals, recorded.sid === sid ? recorded.deals : []);
+  const rememberOpportunity = (deal: FormDealMatch) => setRecorded(current => ({ sid, deals: [...(current.sid === sid ? current.deals.filter(item => item.id !== deal.id) : []), deal] }));
   const [dealDraft, setDealDraft] = useState<{ form: FormDef; response: FormResponse; responseRef: string } | null>(null);
   const [draft, setDraft] = useState<FormDef | null>(null);
   const [busy, setBusy] = useState(false);
@@ -190,13 +193,13 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
               </div>
             </div>
             {open === form.id ? (
-              <FormAnswers form={form} latest={latest} total={total} canReview={dealStages.some(stage => stage.kind === "open")} blocked={draft !== null || dealDraft !== null} existingDeals={existingDeals} onReview={response => response.opportunityRef && setDealDraft({ form, response, responseRef: response.opportunityRef })} />
+              <FormAnswers form={form} latest={latest} total={total} canReview={dealStages.some(stage => stage.kind === "open")} blocked={draft !== null || dealDraft !== null} existingDeals={knownDeals} existingDealsAvailable={existingDealsAvailable} onReview={response => response.opportunityRef && setDealDraft({ form, response, responseRef: response.opportunityRef })} />
             ) : null}
           </li>
         ))}
       </ul>
 
-      {dealDraft ? <FormResponseDeal form={dealDraft.form} response={dealDraft.response} responseRef={dealDraft.responseRef} stages={dealStages} sid={sid} currency={currency} assignees={dealAssignees} existingDeals={existingDeals} onClose={() => setDealDraft(null)} /> : null}
+      {dealDraft ? <FormResponseDeal form={dealDraft.form} response={dealDraft.response} responseRef={dealDraft.responseRef} stages={dealStages} sid={sid} currency={currency} assignees={dealAssignees} existingDeals={knownDeals} existingDealsAvailable={existingDealsAvailable} onRecorded={rememberOpportunity} onClose={() => setDealDraft(null)} /> : null}
 
       {error && !draft ? (
         <p className="notice notice-error mt-4" role="alert">

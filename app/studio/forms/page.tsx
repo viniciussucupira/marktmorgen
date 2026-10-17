@@ -9,7 +9,7 @@ import { MAX_CONVERTIBLE_FORM_RESPONSES, formOpportunityRef } from "@/lib/form-o
 import { readForms, readResponses } from "@/lib/form-store";
 import { readCards } from "@/lib/catalog";
 import { readTeam } from "@/lib/team";
-import { readDeals, readStages } from "@/lib/crm";
+import { readOpportunityReview, type OpportunityReviewData } from "@/lib/crm";
 import { can } from "@/lib/team-roles";
 
 export const metadata: Metadata = {
@@ -39,9 +39,13 @@ export default async function StudioFormsPage({ searchParams }: Params) {
   const { store } = view;
   const reads = can(view.role, "export");
   const forms = await readForms(store.statsId);
-  const canCreateDeals = reads && can(view.role, "orders");
-  const [dealStages, team] = canCreateDeals ? await Promise.all([readStages(store.statsId), readTeam(store.sid)]) : [[], null];
-  const existingDeals = canCreateDeals ? (await readDeals(store.statsId, dealStages)).map(({ id, title, email, stage, formResponseRef }) => ({ id, title, email, stage, formResponseRef })) : [];
+  const canCreateDeals = reads && can(view.role, "orders") && forms.length > 0;
+  const emptyReview: OpportunityReviewData = { available: false, stages: [], deals: [] };
+  const [reviewData, team] = canCreateDeals
+    ? await Promise.all([readOpportunityReview(store.statsId), readTeam(store.sid).catch(() => null)])
+    : [emptyReview, null] as const;
+  const dealStages = reviewData.stages;
+  const existingDeals = reviewData.deals.map(({ id, title, email, stage, formResponseRef }) => ({ id, title, email, stage, formResponseRef }));
   const dealAssignees = team ? [...new Set([store.email, ...team.members.filter(member => can(member.role, "orders")).map(member => member.email)])] : [];
   const saved: SavedForm[] = await Promise.all(
     forms.map(async (form) => {
@@ -70,8 +74,9 @@ export default async function StudioFormsPage({ searchParams }: Params) {
             Ask your questions on one of your own pages: add a Form block to it under Pages. On a page that is a step of a funnel, sending the form leads on to the
             next step.
           </p>
+          {canCreateDeals && !reviewData.available && saved.some(item => item.total > 0) ? <p className="notice notice-warn mt-6" role="status">Opportunities could not be checked. Answers and exports remain available; reload Forms before creating another opportunity. <a className="underline" href={`/studio/deals?store=${encodeURIComponent(sid)}`}>Open Deals</a></p> : null}
           <div className="mt-8">
-            <FormsEditor existingDeals={existingDeals} currency={store.currency} dealAssignees={dealAssignees} sid={sid} dealStages={dealStages} saved={saved} products={products} exportBase={`/api/store/forms/export?${sid ? `store=${sid}&` : ""}id=`} />
+            <FormsEditor key={sid} existingDealsAvailable={reviewData.available} existingDeals={existingDeals} currency={store.currency} dealAssignees={dealAssignees} sid={sid} dealStages={dealStages} saved={saved} products={products} exportBase={`/api/store/forms/export?${sid ? `store=${sid}&` : ""}id=`} />
           </div>
           {!reads && forms.length ? <p className="mt-4 text-sm text-ink-soft">Your role does not see the answers: they can hold people&apos;s addresses and words.</p> : null}
         </main>
