@@ -1,3 +1,5 @@
+import { consumeAiCallBudget, hasAiCallBudget, withAiCallBudget } from '@/lib/ai-call-budget';
+import { AI_ENTITLEMENT_RULES } from '@/lib/ai-entitlement-rules';
 /**
  * The writing help in the studio (lib/ai-rules.ts), on the server: asking the
  * model, counting what each store uses, and reading back only what fits.
@@ -166,7 +168,11 @@ export async function askModel(
     console.error("AI request refused before provider call", bounded.reason);
     return null;
   }
-  if (!store?.statsId || !(await reserveAiSpend(store.statsId, aiBudgetScopeFor(store), named))) return null;
+  if (!store?.statsId) return null;
+  // Standalone visitor calls get one slot; counted writing jobs share theirs.
+  if (!hasAiCallBudget()) return withAiCallBudget(store.statsId, 1, () => askModel(store, system, prompt, maxTokens, named, timeoutMs));
+  if (!consumeAiCallBudget(store.statsId)) return null;
+  if (!(await reserveAiSpend(store.statsId, aiBudgetScopeFor(store), named))) return null;
   const response = await timed(timeoutMs, (signal) =>
     fetch(API, {
       method: "POST",
@@ -267,7 +273,7 @@ export async function counted<T>(store: Store, now: number, run: () => Promise<T
   }
   let value: T | null = null;
   try {
-    value = await run();
+    value = await withAiCallBudget(store.statsId, jobs * AI_ENTITLEMENT_RULES.writingCallsPerJob, run);
   } catch (error) {
     console.error("a writing job failed", error);
   }

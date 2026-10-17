@@ -62,7 +62,7 @@ export async function reserveAiSpend(
   statsId: string, tier: AiBudgetTier, model: string,
   policy: AiSpendPolicy | null = CURRENT_AI_SPEND_POLICY,
 ): Promise<boolean> {
-  if (!isAiBudgetConfigured(policy) || !isRedisConfigured() || !/^[A-Za-z0-9_-]{1,128}$/.test(statsId)
+  if (!isAiBudgetConfigured(policy) || !isRedisConfigured() || typeof statsId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(statsId)
     || !(AI_BUDGET_TIERS as readonly string[]).includes(tier) || !(SUPPORTED_AI_MODELS as readonly string[]).includes(model)) return false;
   const charge = policy.requestMicroUsd[model as keyof typeof policy.requestMicroUsd];
   if (policy.fundedStores[tier] === 0 || charge > policy.storeMicroUsd[tier] || charge > policy.companyMicroUsd) return false;

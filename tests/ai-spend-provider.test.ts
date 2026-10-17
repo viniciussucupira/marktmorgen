@@ -1,3 +1,4 @@
+import { withAiCallBudget } from '@/lib/ai-call-budget';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { askModel } from '../lib/ai';
@@ -21,3 +22,5 @@ test('unfunded setup and ended accounts never spend a paid allocation',async()=>
     finally{globalThis.fetch=old;}
   }
 });
+
+test('the provider cannot exceed the shared job call envelope even with spare money',async()=>{start();let calls=0;const old=globalThis.fetch;globalThis.fetch=async()=>{calls++;return Response.json({content:[{type:'text',text:'A draft'}]});};try{const results=await withAiCallBudget('one',2,async()=>Promise.all(Array.from({length:20},()=>askModel(store,'system','prompt',100,'claude-sonnet-5-5'))));assert.equal(results?.filter(Boolean).length,2);assert.equal(calls,2);assert.equal(ledger.get(key)?.get('company'),'200');assert.equal(ledger.get(key)?.get('store:one'),'200');}finally{globalThis.fetch=old;}});

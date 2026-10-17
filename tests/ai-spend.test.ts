@@ -89,3 +89,5 @@ test('annual AI cost aggregates twelve full months before rounding cents',()=>{
   assert.equal(aiStoreCostCents(null,'creator',1),null);
   assert.equal(aiStoreCostCents(policy(),'trial',1),null);
 });
+
+test('non-string attribution cannot become a shared account through coercion',async()=>{reset();seed(key,'test_review',aiSpendPolicySnapshot(policy()));for(const id of [undefined,null,42,{toString:()=> 'one'}])assert.equal(await reserveAiSpend(id as unknown as string,'creator','claude-sonnet-5-5',policy()),false);assert.equal(calls.length,0);assert.equal(ledger.get(key)?.get('company'),'0');});

@@ -8,10 +8,11 @@ import type { AiBudgetTier, AiSpendPolicy } from '@/lib/ai-spend-policy';
  * This is a request-count envelope, not proof of model prices or tax treatment.
  */
 export const AI_ENTITLEMENT_RULES = {
-  schema: 1,
+  schema: 2,
   writingCallsPerJob: 2,
   visitorCallsPerAttempt: 1,
   failedAttempts: 'retained',
+  callEnvelope: 'async-job-shared-counter-owner-bound-no-reset-after-completion',
   writing: AI_MONTHLY,
   visitor: ANSWERS_MONTHLY,
   request: AI_REQUEST_LIMITS,

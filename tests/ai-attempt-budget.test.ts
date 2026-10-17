@@ -1,3 +1,4 @@
+import { consumeAiCallBudget } from '@/lib/ai-call-budget';
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { counted, aiAllowance, aiLeft, aiMonthKey } from "@/lib/ai";
@@ -63,3 +64,5 @@ test("unknown allowance displays no remaining jobs", async () => {
     assert.equal(await aiLeft(store, now), 0);
   }
 });
+
+test('counted weighted writing jobs enforce two provider attempts per reserved job',async()=>{for(const jobs of [1,3]){const store=customer('envelope-'+jobs);const result=await counted(store,now,async()=>{const attempts=await Promise.all(Array.from({length:30},async()=>{await Promise.resolve();return consumeAiCallBudget(store.statsId!);}));return attempts.filter(Boolean).length;},jobs);assert.equal(result.ok&&result.value,jobs*2);assert.equal(await aiLeft(store,now),aiAllowance(store,now)-jobs);}});
