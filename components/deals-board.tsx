@@ -5,7 +5,7 @@ import { dealActionFilter, filterDeals, type DealActionFilter } from "@/lib/crm-
 import { dealOrder, orderDeals, dealWorklistCsv, type DealOrder, type DealView } from "@/lib/crm-deal-worklist";
 import { DealAgenda } from "@/components/deal-agenda";
 import { crmAnswer, type CrmAnswer } from "@/lib/crm-response";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -72,6 +72,9 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
   const router = useRouter();
   const money = (cents: number) => formatMoney(cents, currency);
   const [draft, setDraft] = useState<DealDraft | null>(null);
+  const dealNameInput = useRef<HTMLInputElement>(null);
+  const activeDealId = draft?.id;
+  useEffect(() => { if (activeDealId !== undefined) dealNameInput.current?.focus(); }, [activeDealId]);
   const [busy, setBusy] = useState(false);
   const [refreshing, startRefresh] = useTransition();
   const [writeUnconfirmed, setWriteUnconfirmed] = useState(false);
@@ -91,6 +94,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
   const totals = boardTotals(stages, deals);
   const visibleDeals = orderDeals(scopedDeals.filter(d => !visibleIds || visibleIds.has(d.id)), order);
   const columns = boardTotals(stages, visibleDeals);
+  const selectionChanged = !!search || responsible !== "all" || filter !== "all" || order !== (view === "agenda" ? "due" : "current");
   const open = totals.filter((t) => t.stage.kind === "open");
   const won = totals.filter((t) => t.stage.kind === "won");
 
@@ -189,7 +193,10 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
               <option value="oldest">Longest without an update</option>
             </select>
           </label>
-          <button type="button" className="btn btn-secondary btn-sm" disabled={!visibleDeals.length || locked || writeUnconfirmed} onClick={downloadWorklist}>Download selected deals</button>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn btn-secondary btn-sm" disabled={!visibleDeals.length || locked || writeUnconfirmed} onClick={downloadWorklist}>Download selected deals</button>
+            {selectionChanged ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setSearch(""); setResponsible("all"); setFilter("all"); setOrder(view === "agenda" ? "due" : "current"); }}>Clear selection</button> : null}
+          </div>
         </div>
         <p className="mt-2 text-xs text-ink-mute" role="status">{`Showing ${visibleDeals.length.toLocaleString("en-US")} of ${deals.length.toLocaleString("en-US")} loaded deals. The CSV follows these filters and the ${view === "agenda" ? "order across all stages" : "order within each stage"}. Recorded values are opportunity estimates, not confirmed revenue.`}</p>
 
@@ -199,7 +206,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="field-label">What it is</span>
-                <input className="field mt-2" maxLength={MAX_DEAL_TITLE} value={draft.title} placeholder="Six coaching sessions for Dana" onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
+                <input ref={dealNameInput} className="field mt-2" maxLength={MAX_DEAL_TITLE} value={draft.title} placeholder="Six coaching sessions for Dana" onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
               </label>
               <label className="block">
                 <span className="field-label">Their email (optional)</span>
