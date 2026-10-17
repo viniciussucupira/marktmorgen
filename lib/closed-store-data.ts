@@ -2,11 +2,13 @@
  * A closed store's records in the database, deleted (added 18 October 2026).
  *
  * A store whose plan ended closes on its closing day (lib/plan-closing.ts):
- * its files that day, and, once its tax records are written
- * (lib/closing-archive.ts), every record it keeps here, so a store that pays
- * nothing stops costing anything. Before this, a closed store's records
- * stayed for ever, a little each month with no payment behind it, and
- * closed stores only ever add up.
+ * its files that day, and every record it keeps here within
+ * ERASE_WITHIN_DAYS, so a store that pays nothing stops costing anything.
+ * Before this, a closed store's records stayed for ever, a little each month
+ * with no payment behind it, and closed stores only ever add up. Nothing of
+ * it is copied anywhere first: its sales are on its owner's own Stripe
+ * account, and its owner was offered all of it as one file
+ * (lib/store-export.ts).
  *
  * What goes, and what is kept, is said family by family in CLOSING
  * (lib/data-families.ts), and tests/closing-families.test.ts fails for a
@@ -14,20 +16,23 @@
  *
  *   1. prepare: what is found only through the store's own record, while it
  *      can still be read (its team, its keys for the API, its webhooks, its
- *      email platform, its phones, its calendar hosts' claims, its PDFs'
- *      previews, and what each sale of the last fifteen months left under the
- *      sale's own reference, read back from its tax records); then the store
- *      record itself, its addresses held back from anyone else for a month.
+ *      email platform, its phones, its calendar hosts' claims); then the
+ *      store record itself, its addresses held back from anyone else for a
+ *      month. Its PDFs' previews go on its closing day, with its files.
  *      From then on no page, checkout or job finds the store, so nothing new
  *      is written for it.
  *   2. the walk: the whole database, a page at a time. A key of a family
  *      CLOSING says is erased, named by one of the store's own ids, is
  *      deleted, and what the family's follower finds through it first (the
  *      stop links its contacts were sent, the certificates its courses gave,
- *      its buyers' place in their library across stores...). A list of the
+ *      the tokens its listeners' feeds open by...). A list of the
  *      company's that names stores loses this store's members. Nothing else
  *      is touched: a key that names no closing store is passed over, and a
- *      person's records across stores lose only this store's part.
+ *      person's records across stores lose only this store's part. A
+ *      buyer's library, the lists a person joined and an affiliate's hub
+ *      (lib/joined-stores.ts) are not walked person by person: what names the
+ *      store in them points at nothing once it is gone, is never shown, and
+ *      runs out with the quarter it was written in (CLOSING, "lapses").
  *   3. finish: the closing record says when, and its owner is emailed.
  *
  * Stores are deleted together: those that came due since the last walk
@@ -39,12 +44,17 @@
  *   nl:closed:batch   hash        a store's key -> what the walk needs of it (JSON), while its walk runs
  *   nl:closed:walk    hash        cursor, started, finished
  *
- * What the walk costs is the company's, bounded by its schedule: one walk a
+ * Reading the database is the company's, bounded by its schedule: one walk a
  * day at the most, WALK_COUNT keys a command (docs/funded-exposure-review.md).
+ * What is done for each store, its deletes in DEL_BATCH keys a command and
+ * what its followers read, is priced once for each store, against its own
+ * payments (tests/plan-cost-registry.ts, closure), and the renewals it stops
+ * with the orders that sold them (ORDER_COST).
  */
 import { onAccount } from "@/lib/stripe-account";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { CLOSING, type Closing, closingFamilyOf } from "@/lib/data-families";
+import { DEL_BATCH, FOLLOW_BATCH, RENEWALS_AT_ONCE } from "@/lib/plan-closing-rules";
 import { idsIn } from "@/lib/data-recount";
 import { readAllListings } from "@/lib/catalog";
 import { readCourses } from "@/lib/course";
@@ -59,17 +69,9 @@ import { forgetStoreSync } from "@/lib/email-sync";
 import { forgetStorePhones } from "@/lib/phone-alerts";
 import { claimsKey, hostId } from "@/lib/host-claims";
 import { MAX_PREVIEW_PAGES, previewKey } from "@/lib/pdf-preview";
-import { copyKey, problemKey } from "@/lib/pdf-stamp";
-import { giftKeys } from "@/lib/gifts";
-import { groupKeys } from "@/lib/group-buy";
-import { piKey as preorderPiKey } from "@/lib/preorders";
-import { subKey as adsSubKey } from "@/lib/ad-events";
-import { movedKey } from "@/lib/call-records";
-import { confirmedKey } from "@/lib/calls";
-import { doneKey as shippedKey } from "@/lib/shipments";
+import { problemKey } from "@/lib/pdf-stamp";
 import { tokenKey as unsubTokenKey, parseContact } from "@/lib/contacts";
 import { keyIndex as linkKeyIndex, linkKeyOf } from "@/lib/mail-clicks";
-import { forgetLibraryPerson } from "@/lib/buyer-library";
 import { unsubKey as communityUnsubKey } from "@/lib/community-mail";
 import { tokenKey as chatTokenKey } from "@/lib/inbox";
 import { linkKey as inviteLinkKey } from "@/lib/move-members";
@@ -82,10 +84,7 @@ import { broadcastKeys } from "@/lib/broadcasts";
 import { paypalOrderKeys } from "@/lib/paypal-sales";
 import { calendarKeys } from "@/lib/calendar-sync";
 import { packageKeys } from "@/lib/call-packages";
-import { emailsKey as affiliateEmailsKey } from "@/lib/affiliates";
-import { forgetAffiliateStore } from "@/lib/affiliate-hub";
 import { passKeyOfHash } from "@/lib/learn";
-import { type RecordHands, R2_RECORDS, readMonths, recentMonths } from "@/lib/closing-archive";
 
 export const DUE_KEY = "nl:closed:due";
 export const BATCH_KEY = "nl:closed:batch";
@@ -168,57 +167,25 @@ export async function unmarkDue(ref: string): Promise<void> {
 }
 
 /**
- * What each sale of the store's last fifteen months left here under its own
- * reference, not the store's: a gift's and a group purchase's records, a
- * pre-order's payment, a membership's ad cookies, a shipment's link, a
- * call's moves and confirmation, a PayPal order, a buyer's stamped copy.
- * Found from the store's tax records, which hold every reference.
- */
-export async function referencedKeys(store: Store, files: { pathname: string; addedAt: string }[], now: number, hands: RecordHands = R2_RECORDS): Promise<string[]> {
-  const lines = hands.ready() ? await readMonths(store, recentMonths(now), hands) : [];
-  const keys = new Set<string>();
-  const pdfs = files.filter((f) => /\.pdf$/i.test(f.pathname));
-  for (const line of lines) {
-    const refs = [line.id, line.pi].filter((r): r is string => Boolean(r));
-    for (const key of giftKeys(line.g ?? "", line.pi ?? "")) keys.add(key);
-    for (const key of groupKeys(line.gr ?? "", line.pi ?? "")) keys.add(key);
-    if (line.pi) keys.add(preorderPiKey(line.pi));
-    if (line.sub) keys.add(adsSubKey(line.sub));
-    if (line.k === "p") for (const key of paypalOrderKeys(line.id)) keys.add(key);
-    else {
-      keys.add(shippedKey(line.id));
-      keys.add(movedKey(line.id));
-      keys.add(confirmedKey(line.id));
-    }
-    for (const ref of refs) for (const file of pdfs) keys.add(copyKey(ref, file));
-  }
-  return [...keys];
-}
-
-/**
  * On a closing store's day, before its files go (lib/plan-closing.ts): what
- * its files and each of its sales left here under their own names, not the
- * store's, which only its products' files and its tax records can find: its
- * PDFs' previews and problem notes, and, for each sale of the last fifteen
- * months, a gift's or a group purchase's records, a pre-order's payment, a
- * membership's ad cookies, a shipment's link, a call's moves and
- * confirmation, a PayPal order and a buyer's stamped copies. Safe to run
- * again. Answers how many keys it deleted.
+ * its files left here under their own names, not the store's, which only its
+ * products' files can find: its PDFs' previews and problem notes. A buyer's
+ * stamped copy is a file in the store's folder, and goes with it. Safe to
+ * run again. Answers how many keys it deleted.
  */
-export async function deleteSalesTraces(store: Store, now = Date.now(), hands: RecordHands = R2_RECORDS): Promise<number> {
+export async function deleteSalesTraces(store: Store): Promise<number> {
   const { files } = await marksOf(store);
   const keys: string[] = [];
   for (const file of files.filter((f) => /\.pdf$/i.test(f.pathname))) {
     for (let pages = 1; pages <= MAX_PREVIEW_PAGES; pages += 1) keys.push(previewKey(file, pages));
     keys.push(problemKey(file.pathname));
   }
-  keys.push(...(await referencedKeys(store, files, now, hands)));
   await del(keys);
   return keys.length;
 }
 
 async function del(keys: string[]): Promise<void> {
-  for (let i = 0; i < keys.length; i += 200) await redisPipeline([["DEL", ...keys.slice(i, i + 200)]]);
+  for (let i = 0; i < keys.length; i += DEL_BATCH) await redisPipeline([["DEL", ...keys.slice(i, i + DEL_BATCH)]]);
 }
 
 /**
@@ -309,12 +276,18 @@ function namesStore(member: string, owners: Owners): boolean {
 }
 
 /**
- * What a key of the store leads to that is named by a token, not by the
- * store, read from the key itself: each family's own record of it. The
+ * What keys of the store lead to that are named by a token, not by the
+ * store, read from the keys themselves: each family's own record of it. The
  * keys found must be of a family whose rule names this one (`via`), or they
- * are not deleted.
+ * are not deleted. A follower is handed every key of its family the page
+ * found for one store at once, so a family with a key for each buyer (a
+ * conversation, a listener's feed, an address's records) is read a thousand
+ * keys at a command (MGET, SUNION), not a key at a time: what it costs is
+ * priced with the store (tests/plan-cost-registry.ts, closure).
  */
-type Follower = { match: (key: string) => boolean; find: (key: string, entry: Batched) => Promise<string[]> };
+type Follower = { match: (key: string) => boolean; find: (keys: string[], entry: Batched) => Promise<string[]> };
+
+const READ_BATCH = FOLLOW_BATCH;
 
 async function scanAll(command: "HSCAN" | "SSCAN" | "ZSCAN", key: string, each: (flat: string[]) => Promise<void> | void): Promise<void> {
   let cursor = "0";
@@ -354,11 +327,28 @@ async function membersOf(key: string): Promise<string[]> {
   } else if (type === "hash") await scanAll("HSCAN", key, (flat) => void out.push(...flat.filter((_, i) => i % 2 === 0)));
   return out;
 }
-/** A string key's value; "" for a key of another kind, which no follower reads as one. */
-async function stringOf(key: string): Promise<string> {
-  if ((await typeOf(key)) !== "string") return "";
-  const [raw] = await redisPipeline([["GET", key]]);
-  return typeof raw === "string" ? raw : "";
+/** String keys' values, READ_BATCH at a command; "" for a key that is gone or of another kind, which no follower reads as one. */
+async function stringsOf(keys: string[]): Promise<string[]> {
+  const out: string[] = [];
+  for (let i = 0; i < keys.length; i += READ_BATCH) {
+    const [values] = await redisPipeline([["MGET", ...keys.slice(i, i + READ_BATCH)]]);
+    for (const value of Array.isArray(values) ? values : []) out.push(typeof value === "string" ? value : "");
+  }
+  return out;
+}
+/** Every member of these sets, READ_BATCH at a command; a key of another kind is read on its own, by its kind. */
+async function unionOf(keys: string[]): Promise<string[]> {
+  const out = new Set<string>();
+  for (let i = 0; i < keys.length; i += READ_BATCH) {
+    const some = keys.slice(i, i + READ_BATCH);
+    try {
+      const [members] = await redisPipeline([["SUNION", ...some]]);
+      for (const member of Array.isArray(members) ? members : []) out.add(String(member));
+    } catch {
+      for (const key of some) for (const member of await membersOf(key)) out.add(member);
+    }
+  }
+  return [...out];
 }
 async function hashValues(key: string): Promise<[string, string][]> {
   const out: [string, string][] = [];
@@ -368,17 +358,24 @@ async function hashValues(key: string): Promise<[string, string][]> {
   });
   return out;
 }
+/** A field of each value of these hashes, each hash on its own: families with one such key a store or a course. */
+async function fieldsOf(keys: string[], name: string): Promise<string[]> {
+  const out: string[] = [];
+  for (const key of keys) for (const [, raw] of await hashValues(key)) out.push(fieldOf(raw, name));
+  return out.filter(Boolean);
+}
 
 export const FOLLOWERS: Readonly<Record<string, Follower>> = {
-  // The list: each contact's stop link and the key its links carry, and, across stores, their library of this store.
+  // The list: each contact's stop link and the key its links carry.
   "nl:store:leads:": {
     match: (key) => /^nl:store:leads:[0-9a-f]{32}$/.test(key),
-    find: async (key, entry) => {
+    find: async (keys) => {
       const out: string[] = [];
-      for (const [email, raw] of await hashValues(key)) {
-        const token = parseContact(raw)?.t;
-        if (token) out.push(unsubTokenKey(token), linkKeyIndex(linkKeyOf(token)));
-        if (entry.sid) await forgetLibraryPerson(entry.sid, email);
+      for (const key of keys) {
+        for (const [, raw] of await hashValues(key)) {
+          const token = parseContact(raw)?.t;
+          if (token) out.push(unsubTokenKey(token), linkKeyIndex(linkKeyOf(token)));
+        }
       }
       return out;
     },
@@ -386,86 +383,73 @@ export const FOLLOWERS: Readonly<Record<string, Follower>> = {
   // A community's members: the link in their announcements that stops them.
   "nl:cm:": {
     match: (key) => /^nl:cm:[^:]+:m$/.test(key),
-    find: async (key) => (await hashValues(key)).map(([, raw]) => fieldOf(raw, "t")).filter(Boolean).map(communityUnsubKey),
+    find: async (keys) => (await fieldsOf(keys, "t")).map(communityUnsubKey),
   },
   // A conversation in the inbox: what its visitor's chat opens.
   "nl:inbox:": {
     match: (key) => /^nl:inbox:[^:]+:c:[^:]+$/.test(key),
-    find: async (key) => {
-      const token = fieldOf(await stringOf(key), "token");
-      return token ? [chatTokenKey(token)] : [];
-    },
+    find: async (keys) => (await stringsOf(keys)).map((raw) => fieldOf(raw, "token")).filter(Boolean).map(chatTokenKey),
   },
   // Members invited over from another platform: each invite's link.
   "nl:mv:": {
     match: (key) => /^nl:mv:[^:]+$/.test(key),
-    find: async (key) => (await hashValues(key)).map(([, raw]) => fieldOf(raw, "t")).filter(Boolean).map(inviteLinkKey),
+    find: async (keys) => (await fieldsOf(keys, "t")).map(inviteLinkKey),
   },
   // Pitches: the stop link in each one's footer.
   "nl:outreach:": {
     match: (key) => /^nl:outreach:[^:]+:pitches$/.test(key),
-    find: async (key) => (await hashValues(key)).map(([, raw]) => fieldOf(raw, "stop")).filter(Boolean).map(pitchStopKey),
+    find: async (keys) => (await fieldsOf(keys, "stop")).map(pitchStopKey),
   },
   // A listener's private feed: the token it opens by.
   "nl:pod:by:": {
     match: () => true,
-    find: async (key) => {
-      const token = await stringOf(key);
-      return token ? [feedTokenKey(token)] : [];
-    },
+    find: async (keys) => (await stringsOf(keys)).filter(Boolean).map(feedTokenKey),
   },
   // The records made for one address: every link the store emailed them.
   "nl:erase:ix:": {
     match: () => true,
-    find: async (key) => (await membersOf(key)).filter((k) => k.startsWith("nl:")),
+    find: async (keys) => (await unionOf(keys)).filter((k) => k.startsWith("nl:")),
   },
   // A course's certificates, kept by their own id.
   "nl:course:": {
     match: (key) => /:certs:all$/.test(key),
-    find: async (key) => (await membersOf(key)).filter((id) => /^[A-Za-z0-9_-]{6,64}$/.test(id)).map(certKey),
+    find: async (keys) => (await unionOf(keys)).filter((id) => /^[A-Za-z0-9_-]{6,64}$/.test(id)).map(certKey),
   },
   "nl:slink:store:": {
     match: () => true,
-    find: async (key) => (await membersOf(key)).filter((code) => /^[A-Za-z0-9_-]{1,64}$/.test(code)).map(shortLinkKey),
+    find: async (keys) => (await unionOf(keys)).filter((code) => /^[A-Za-z0-9_-]{1,64}$/.test(code)).map(shortLinkKey),
   },
   "nl:fshares:": {
     match: () => true,
-    find: async (key) => (await hashValues(key)).map(([, raw]) => fieldOf(raw, "hash")).filter((h) => /^[0-9a-f]{16,64}$/.test(h)).map(shareLookupKey),
+    find: async (keys) => (await fieldsOf(keys, "hash")).filter((h) => /^[0-9a-f]{16,64}$/.test(h)).map(shareLookupKey),
   },
   "nl:mail:bcs:": {
     match: () => true,
-    find: async (key) => (await membersOf(key)).filter((id) => /^[A-Za-z0-9_-]{6,64}$/.test(id)).flatMap(broadcastKeys),
+    find: async (keys) => (await unionOf(keys)).filter((id) => /^[A-Za-z0-9_-]{6,64}$/.test(id)).flatMap(broadcastKeys),
   },
+  // A store's PayPal sales: a sorted set, one a store.
   "nl:ppsell:sales:": {
     match: () => true,
-    find: async (key) => (await membersOf(key)).flatMap(paypalOrderKeys),
-  },
-  "nl:cal:cfg:": {
-    match: () => true,
-    find: async (key) => {
-      const raw = await stringOf(key);
-      return raw ? calendarKeys(json(raw)) : [];
-    },
-  },
-  "nl:learn:passes:": {
-    match: () => true,
-    find: async (key) => (await membersOf(key)).filter((h) => /^[0-9a-f]{64}$/.test(h)).map(passKeyOfHash),
-  },
-  "nl:pkg:s:": {
-    match: () => true,
-    find: async (key) => {
+    find: async (keys) => {
       const out: string[] = [];
-      for (const checkout of await membersOf(key)) out.push(...packageKeys(checkout, fieldOf(await stringOf(packageKeys(checkout, "")[0]), "token")));
+      for (const key of keys) for (const order of await membersOf(key)) out.push(...paypalOrderKeys(order));
       return out;
     },
   },
-  // Its affiliates: across stores, the hub of their programs loses this one.
-  "nl:aff:": {
-    match: (key) => /:emails$/.test(key),
-    find: async (key, entry) => {
-      if (key !== affiliateEmailsKey(entry.statsId ?? "")) return [];
-      for (const email of await membersOf(key)) await forgetAffiliateStore(entry.sid, email);
-      return [];
+  "nl:cal:cfg:": {
+    match: () => true,
+    find: async (keys) => (await stringsOf(keys)).flatMap((raw) => (raw ? calendarKeys(json(raw)) : [])),
+  },
+  "nl:learn:passes:": {
+    match: () => true,
+    find: async (keys) => (await unionOf(keys)).filter((h) => /^[0-9a-f]{64}$/.test(h)).map(passKeyOfHash),
+  },
+  "nl:pkg:s:": {
+    match: () => true,
+    find: async (keys) => {
+      const checkouts = await unionOf(keys);
+      const tokens = await stringsOf(checkouts.map((checkout) => packageKeys(checkout, "")[0]));
+      return checkouts.flatMap((checkout, i) => packageKeys(checkout, fieldOf(tokens[i] ?? "", "token")));
     },
   },
 };
@@ -500,6 +484,8 @@ export type WalkReport = { started: boolean; stores: number; pages: number; dele
  */
 export async function walkPage(keys: string[], batch: Map<string, Batched>, owners: Owners): Promise<{ deleted: number; pruned: number }> {
   const doomed = new Set<string>();
+  // The keys each follower is handed, by store and family: read together, once the page is sorted.
+  const followed = new Map<string, { family: string; owner: string; keys: string[] }>();
   let pruned = 0;
   for (const key of keys) {
     const family = closingFamilyOf(key);
@@ -509,15 +495,18 @@ export async function walkPage(keys: string[], batch: Map<string, Batched>, owne
       pruned += await pruneIndex(key, owners);
       continue;
     }
-    if (rule.how !== "erase" && rule.how !== "archive") continue;
+    if (rule.how !== "erase") continue;
     const owner = ownerOfKey(key, rule, owners);
     if (!owner) continue;
-    const follower = FOLLOWERS[family];
-    if (follower?.match(key)) {
-      const entry = batch.get(owner)!;
-      for (const found of await follower.find(key, entry)) if (followable(found, family)) doomed.add(found);
+    if (FOLLOWERS[family]?.match(key)) {
+      const group = followed.get(`${owner}|${family}`) ?? { family, owner, keys: [] };
+      group.keys.push(key);
+      followed.set(`${owner}|${family}`, group);
     }
     doomed.add(key);
+  }
+  for (const { family, owner, keys: found } of followed.values()) {
+    for (const key of await FOLLOWERS[family].find(found, batch.get(owner)!)) if (followable(key, family)) doomed.add(key);
   }
   await del([...doomed]);
   return { deleted: doomed.size, pruned };
@@ -608,6 +597,8 @@ export async function eraseClosed(deadline: number, finish: Finisher, now = Date
  * on the creator's own Stripe account: once the store is closed nothing it
  * sold can be reached, so nothing it sold may be charged again. Each ends at
  * the end of the period already paid, and the creator decides any refund.
+ * RENEWALS_AT_ONCE at a time, so a store that sold many is not a long wait
+ * (each was priced with the order that sold it, tests/plan-cost-registry.ts).
  * Bounded by `until`; answers whether every one was reached.
  */
 export async function stopRenewals(store: Store, until: number): Promise<{ done: boolean; stopped: number; subs: string[] }> {
@@ -621,14 +612,19 @@ export async function stopRenewals(store: Store, until: number): Promise<{ done:
       const query = encodeURIComponent(`metadata['store']:'${handle}'`);
       const found = (await onAccount("GET", account, `/subscriptions/search?limit=100&query=${query}${page ? `&page=${encodeURIComponent(page)}` : ""}`)) as Record<string, unknown>;
       const rows = Array.isArray(found.data) ? (found.data as Record<string, unknown>[]) : [];
+      const toStop: string[] = [];
       for (const sub of rows) {
         const id = typeof sub.id === "string" ? sub.id : "";
         const status = typeof sub.status === "string" ? sub.status : "";
         if (!id || ["canceled", "incomplete_expired"].includes(status)) continue;
         out.subs.push(id);
-        if (sub.cancel_at_period_end === true) continue;
-        await onAccount("POST", account, `/subscriptions/${encodeURIComponent(id)}`, new URLSearchParams({ cancel_at_period_end: "true", "metadata[store_closed]": "yes" }), undefined, `closed:${id}`);
-        out.stopped += 1;
+        if (sub.cancel_at_period_end !== true) toStop.push(id);
+      }
+      for (let i = 0; i < toStop.length; i += RENEWALS_AT_ONCE) {
+        if (Date.now() > until) return { ...out, done: false };
+        await Promise.all(toStop.slice(i, i + RENEWALS_AT_ONCE).map((id) =>
+          onAccount("POST", account, `/subscriptions/${encodeURIComponent(id)}`, new URLSearchParams({ cancel_at_period_end: "true", "metadata[store_closed]": "yes" }), undefined, `closed:${id}`)));
+        out.stopped += Math.min(RENEWALS_AT_ONCE, toStop.length - i);
       }
       page = typeof found.next_page === "string" ? found.next_page : "";
       if (found.has_more !== true || !page) break;

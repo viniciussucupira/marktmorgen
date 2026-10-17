@@ -3,7 +3,6 @@ import { cronAllowed } from "@/lib/request-guard";
 import { withCutoff } from "@/lib/fetch-timeout";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { closeEnded } from "@/lib/plan-closing";
-import { expireRecords } from "@/lib/closing-archive";
 
 export const maxDuration = 60;
 
@@ -18,8 +17,7 @@ export const maxDuration = 60;
  * day, and never sooner than a week after the last of those, what it keeps
  * is removed, once Stripe itself has said that day that the store has no
  * plan, and a store that closes is put in line for the deletion of its
- * records (app/api/cron/closed-data). Then the tax records of closed stores
- * whose years are over are deleted.
+ * records (app/api/cron/closed-data).
  *
  * A job of its own, with the whole minute to itself, because removing what
  * a large store keeps is many requests, and whatever is not finished is
@@ -37,13 +35,7 @@ async function run(request: NextRequest): Promise<Response> {
   const [got] = await redisPipeline([["SET", "nl:closing:lock", "1", "NX", "EX", 120]]);
   if (got === null) return Response.json({ ok: true, busy: true });
   try {
-    const looked = await closeEnded(Date.now() + 40_000);
-    // Closed stores' tax records whose time is up (lib/closing-archive.ts): a listing a year, nothing most days.
-    const expired = await expireRecords(Date.now(), Date.now() + 5_000).catch((error: unknown) => {
-      console.error("deleting closed stores' old tax records failed", error);
-      return { deleted: 0, done: false };
-    });
-    if (expired.deleted) console.log(`plan-closing: ${expired.deleted} closed stores' tax records past their years deleted`);
+    const looked = await closeEnded(Date.now() + 45_000);
     const count = (state: string) => looked.filter((row) => row.state === state).length;
     const counts = { looked: looked.length, told: count("told"), waiting: count("waiting"), removed: count("removed"), held: count("held"), running: count("running") };
     if (counts.told || counts.removed || counts.held) {

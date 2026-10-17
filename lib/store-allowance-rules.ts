@@ -74,7 +74,9 @@ export const STORE_ALLOWANCES: Record<Tier, Record<AllowanceKind, number>> = {
 export const NON_PAYING_ALLOWANCES: Record<Exclude<Standing, "paid">, Record<AllowanceKind, number>> = {
   trial: { studio: 1_000, api: 100, inbox: 30, email: 30, transactional: 40, integration: 20, buyer: 50, webhook: 50 },
   none: { studio: 300, api: 0, inbox: 20, email: 25, transactional: 20, integration: 5, buyer: 20, webhook: 0 },
-  ended: { studio: 100, api: 0, inbox: 0, email: 0, transactional: 20, integration: 0, buyer: 20, webhook: 0 },
+  // A store whose plan ended keeps a trial's studio figure (since 18 October 2026, when it was 100) so its whole store
+  // downloads before it closes, however large (lib/store-export.ts): no more than a trial's, which nonPayingWorst prices.
+  ended: { studio: 1_000, api: 0, inbox: 0, email: 0, transactional: 20, integration: 0, buyer: 20, webhook: 0 },
 };
 
 /** The figure this store has for one kind in its window. */

@@ -741,30 +741,6 @@ export async function readPayPalSales(statsId: string | null, since: number, lim
   return { sales, partial };
 }
 
-/**
- * The PayPal sales a store was paid between `since` and `until` (seconds,
- * `until` not included), oldest first, at most `limit`; `partial` when there
- * were more. For a closed store's tax records (lib/closing-archive.ts).
- */
-export async function readPayPalBetween(statsId: string | null, since: number, until: number, limit: number): Promise<{ sales: Paid[]; partial: boolean }> {
-  if (!statsId || !isRedisConfigured() || !(until > since)) return { sales: [], partial: false };
-  const [orders] = await redisPipeline([["ZRANGEBYSCORE", salesKey(statsId), String(Math.max(0, since)), `(${until}`, "LIMIT", "0", String(limit + 1)]]);
-  const list = (Array.isArray(orders) ? (orders as string[]) : []).filter((o) => ORDER_ID.test(o));
-  if (!list.length) return { sales: [], partial: false };
-  const read = await redisPipeline([["MGET", ...list.slice(0, limit).map(paidKey)]]);
-  const rows = Array.isArray(read[0]) ? (read[0] as unknown[]) : [];
-  const sales: Paid[] = [];
-  for (const raw of rows) {
-    try {
-      const paid = typeof raw === "string" ? (JSON.parse(raw) as Paid) : null;
-      if (paid && paid.store === statsId && typeof paid.order === "string") sales.push(paid);
-    } catch {
-      // Left out, not guessed at.
-    }
-  }
-  return { sales, partial: list.length > limit };
-}
-
 /** The keys a PayPal order kept, by the order: for a closed store's deletion (lib/closed-store-data.ts). */
 export const paypalOrderKeys = (order: string): string[] => (ORDER_ID.test(order) ? [orderKey(order), paidKey(order)] : []);
 

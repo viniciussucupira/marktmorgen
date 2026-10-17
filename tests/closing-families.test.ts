@@ -3,14 +3,16 @@
  * October 2026; lib/data-families.ts, CLOSING), and what it says fits how
  * tests/store-data-registry.ts says the family is bounded. A new family
  * fails here until it says whether it is erased, found through a token,
- * gone by itself, archived, detached, an index or the company's.
+ * gone by itself, a person's record that lapses, detached, an index or the
+ * company's.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { CLOSING, COUNTED_FAMILIES, ELSEWHERE_FAMILIES, closingFamilyOf } from "@/lib/data-families";
+import { CLOSING, COUNTED_FAMILIES, ELSEWHERE_FAMILIES, FOLLOWED_FAMILIES, closingFamilyOf } from "@/lib/data-families";
 import { FOLLOWERS, followable, ownerOfKey } from "@/lib/closed-store-data";
+import { PERSON_RECORD_MONTHS } from "@/lib/joined-stores";
 import { FAMILIES } from "./store-data-registry";
 
 const prefixOf = (name: string) => name.slice(0, name.lastIndexOf("@"));
@@ -28,6 +30,12 @@ const TIMED_IN_CODE: Record<string, [string, string]> = {
   "nl:call:confirmed:": ["lib/calls.ts", "CONFIRMED_SECONDS"],
   "nl:adsrv:ctx:": ["lib/ad-events.ts", "CTX_SECONDS"],
   "nl:adsrv:sent:": ["lib/ad-events.ts", "SENT_SECONDS"],
+};
+/** A person's records across stores that hold a store's id among others and run out by the quarter (lib/joined-stores.ts), and the file that writes them. */
+const PERSON_RECORDS: Record<string, string> = {
+  "nl:lib:": "lib/buyer-library.ts",
+  "nl:lib:joined:": "lib/joined-stores.ts",
+  "nl:affhub:": "lib/affiliate-hub.ts",
 };
 /** The store's records kept in one list for every store, from which the walk takes the store's members. */
 const STORE_LISTS: Record<string, string> = {
@@ -49,14 +57,18 @@ test("what each says fits how the registry bounds it", () => {
     const company = families.every((f) => f.company);
     const parts = families.flatMap((f) => f.parts ?? []);
     const longest = Math.max(0, ...parts.map((p) => ("per" in p ? p.days : 0)));
-    if (company) {
+    if (rule.how === "lapses") {
+      assert.ok(Object.hasOwn(PERSON_RECORDS, prefix), `${prefix}: only a person's record across stores lapses: say so in PERSON_RECORDS`);
+      assert.ok(rule.days >= PERSON_RECORD_MONTHS * 31, `${prefix}: kept up to ${PERSON_RECORD_MONTHS} months, said gone within ${rule.days} days`);
+      assert.match(readFileSync(join(process.cwd(), PERSON_RECORDS[prefix]), "utf8"), /personWrite\(/, `${prefix}: ${PERSON_RECORDS[prefix]} writes it some other way than by the quarter`);
+    } else if (company) {
       assert.ok(["company", "index", "detach"].includes(rule.how), `${prefix}: the company's, so it is kept, an index or detached, not ${rule.how}`);
     } else if (rule.how === "company") {
       assert.ok(Object.hasOwn(KEPT_AS_COMPANY, prefix), `${prefix}: the store's, kept by the company: say why in KEPT_AS_COMPANY`);
     } else if (rule.how === "index") {
       assert.ok(Object.hasOwn(STORE_LISTS, prefix), `${prefix}: the store's, kept in a list of every store's: say so in STORE_LISTS`);
     } else {
-      assert.ok(["erase", "token", "expires", "archive", "detach"].includes(rule.how), `${prefix}: the store's, so it goes, not ${rule.how}`);
+      assert.ok(["erase", "token", "expires", "detach"].includes(rule.how), `${prefix}: the store's, so it goes, not ${rule.how}`);
     }
     if (rule.how === "expires") {
       assert.ok(rule.days >= longest, `${prefix}: kept ${longest} days by the registry, said gone within ${rule.days}`);
@@ -75,10 +87,11 @@ test("what each says fits how the registry bounds it", () => {
       const via = rule.via;
       if (STEPS.has(via)) continue;
       assert.ok(Object.hasOwn(FOLLOWERS, via), `${prefix}: reached through ${via}, which has no follower in lib/closed-store-data.ts`);
-      assert.ok(["erase", "archive"].includes(CLOSING[via]?.how), `${prefix}: its follower's family ${via} is not erased`);
+      assert.equal(CLOSING[via]?.how, "erase", `${prefix}: its follower's family ${via} is not erased`);
     }
   }
-  for (const family of Object.keys(FOLLOWERS)) assert.ok(["erase", "archive"].includes(CLOSING[family]?.how), `${family}: a follower runs on keys the walk deletes`);
+  for (const family of Object.keys(FOLLOWERS)) assert.equal(CLOSING[family]?.how, "erase", `${family}: a follower runs on keys the walk deletes`);
+  assert.deepEqual(Object.keys(FOLLOWERS).sort(), [...FOLLOWED_FAMILIES].sort(), "lib/data-families.ts FOLLOWED_FAMILIES names every follower, so what they read is priced (tests/plan-cost-registry.ts, closure)");
 });
 
 test("a key belongs to its longest family, and the walk takes only what names a closing store", () => {
@@ -93,6 +106,6 @@ test("a key belongs to its longest family, and the walk takes only what names a 
   assert.equal(ownerOfKey(`nl:stats:${"b".repeat(32)}:closing-shop`, CLOSING["nl:stats:"], owners), null, "an address in a family named by ids is not a match");
   assert.equal(CLOSING[closingFamilyOf(`nl:free:in:2026-10:${"a".repeat(32)}`)].how, "company", "the company's record of a store is kept even when the store's id names it");
   assert.equal(followable("nl:mail:unsub:" + "c".repeat(40), "nl:store:leads:"), true);
-  assert.equal(followable("nl:lib:" + "c".repeat(40), "nl:store:leads:"), false, "a person's library across stores is never deleted, only detached");
+  assert.equal(followable("nl:lib:2026q4:" + "c".repeat(40), "nl:store:leads:"), false, "a person's library across stores is never deleted: it lapses by the quarter");
   assert.equal(followable(`nl:blog:body:${"b".repeat(32)}:p1`, "nl:erase:ix:"), false, "a follower deletes only the token families it is named for");
 });

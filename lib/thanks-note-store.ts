@@ -15,12 +15,33 @@ const noteKey = (statsId: string, productId: string) => `nl:product:note:${stats
 export async function readThanksNote(statsId: string | null, productId: string): Promise<ThanksNote | null> {
   if (!statsId || !isRedisConfigured()) return null;
   const [raw] = await redisPipeline([["GET", noteKey(statsId, productId)]]);
+  return noteOf(raw);
+}
+
+function noteOf(raw: unknown): ThanksNote | null {
   if (typeof raw !== "string" || raw.length > 20_000) return null;
   try {
     return parseNote(JSON.parse(raw));
   } catch {
     return null;
   }
+}
+
+/** Values of many keys, a hundred at a command (MGET): what the whole export reads (lib/store-export.ts). */
+async function readMany(keys: string[]): Promise<unknown[]> {
+  const out: unknown[] = [];
+  for (let i = 0; i < keys.length; i += 100) {
+    const [raw] = await redisPipeline([["MGET", ...keys.slice(i, i + 100)]]);
+    const values = Array.isArray(raw) ? raw : [];
+    for (let n = 0; n < Math.min(100, keys.length - i); n += 1) out.push(values[n] ?? null);
+  }
+  return out;
+}
+
+/** The notes of many products, in their order, a hundred at a command. */
+export async function readThanksNotes(statsId: string | null, productIds: string[]): Promise<(ThanksNote | null)[]> {
+  if (!statsId || !isRedisConfigured()) return productIds.map(() => null);
+  return (await readMany(productIds.map((id) => noteKey(statsId, id)))).map(noteOf);
 }
 
 /** Writes a note, or forgets it (null), after taking its room in the store's data room (DataRoomError when it does not fit). */

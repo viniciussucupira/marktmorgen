@@ -2,8 +2,7 @@
  * A store closing, end to end (added 18 October 2026), against whichever
  * Redis "@/lib/redis" is built with: the in-memory one in
  * tests/closed-store.test.ts, a real one in scripts/test_closed_store_redis.py.
- * The file store the tax records go to is an in-memory stand-in for R2 in
- * both: never the real bucket.
+ * The file store is an in-memory stand-in in both: never the real bucket.
  *
  * Two stores: one that closes, one that stays, sharing a buyer. The closing
  * one has every key family of the registry: what its own code writes (people
@@ -16,27 +15,28 @@
  * keys under its own ids. Then the first one's plan ends, its three notices
  * go out, its day comes, and the walk runs. What must be true after:
  *
- *   - in the file store, only its tax records, under its folder, with its
- *     sales and never a buyer's address;
+ *   - in the file store, nothing of it: nothing is copied anywhere, its
+ *     sales stay on its own Stripe account;
  *   - in the database, no key or value naming it but the company's records
  *     the registry declares, and keys of families gone by themselves within
- *     the days CLOSING declares, each with its expiry set;
- *   - the other store exactly as it was, the shared buyer's library listing
+ *     the days CLOSING declares, each with its expiry set: what each sale
+ *     left under its own reference, and its id in the shared buyer's
+ *     library, which points at nothing;
+ *   - the other store exactly as it was, the shared buyer's library showing
  *     it alone, every company list keeping its members;
- *   - its memberships' renewals stopped at Stripe, its owner told four times;
- *   - and, on January 1 of the year after the last kept year, nothing left.
+ *   - its memberships' renewals stopped at Stripe, its owner told three times;
+ *   - every key it made under a name no longer than the cost registry prices
+ *     a name at (tests/plan-cost-registry.ts, KEY_NAME_BYTES).
  */
 import { createHash } from "node:crypto";
 import { redisPipeline } from "@/lib/redis";
 import { CLOSING, closingFamilyOf, closingOf as ruleOf } from "@/lib/data-families";
-import { claimHandle, setProductFile, setSubscription, storeFolder, storeForEmail, storeRef } from "@/lib/store";
+import { claimHandle, setProductFile, setSubscription, storeFolder, storeForEmail, storeForId, storeRef } from "@/lib/store";
 import { readListing } from "@/lib/catalog";
 import { memberStores } from "@/lib/team";
 import { normaliseEmail } from "@/lib/auth";
 import { closeEnded, closeOne, finishClosed, type Hands } from "@/lib/plan-closing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
-import { type RecordHands, type MonthRecord, type StoreRecord, expireRecords, recordFolder, unpack } from "@/lib/closing-archive";
-import { RECORDS_PREFIX } from "@/lib/vault-rules";
 import { eraseClosed } from "@/lib/closed-store-data";
 import { storesKnownFor } from "@/lib/buyer-library";
 import { rememberAffiliate } from "@/lib/affiliate-hub";
@@ -63,6 +63,7 @@ import { vaultPath } from "@/lib/vault-rules";
 import type { ProductFile } from "@/lib/product-file";
 import { type World, makeWorld, seedPerson, snapshot } from "./erasure-world";
 import { ROOM } from "./data-room";
+import { KEY_NAME_BYTES } from "./plan-cost-registry";
 
 export type Check = (what: string, got: unknown, want: unknown) => void;
 export type Sent = { to: string; subject: string; text: string };
@@ -117,28 +118,6 @@ export function standIns(stripe: StripeWorld, sent: Sent[], passThrough: ((input
   }) as typeof fetch;
 }
 
-/** An in-memory stand-in for the R2 bucket's records, the way lib/closing-archive.ts asks for them. */
-export function memoryRecords(): RecordHands & { objects: Map<string, Uint8Array> } {
-  const objects = new Map<string, Uint8Array>();
-  return {
-    objects,
-    ready: () => true,
-    put: async (pathname, bytes) => {
-      objects.set(pathname, bytes);
-      return true;
-    },
-    get: async (pathname, limit) => {
-      const bytes = objects.get(pathname);
-      return bytes && bytes.byteLength <= limit ? bytes : null;
-    },
-    list: async (prefix) => ({ files: [...objects].filter(([path]) => path.startsWith(prefix)).map(([pathname, bytes]) => ({ pathname, bytes: bytes.byteLength })), cursor: null }),
-    remove: async (paths) => {
-      for (const path of paths) objects.delete(path);
-      return true;
-    },
-  };
-}
-
 /** The ids a store's keys and values carry, by which what is left of it is found. */
 function marksOf(world: World, folder: string): string[] {
   const s = world.store;
@@ -165,8 +144,8 @@ async function everyFamily(world: World, tag: string): Promise<void> {
   const s = world.store;
   for (const [prefix, rule] of Object.entries(CLOSING)) {
     if (prefix.includes("*") || prefix.includes("YYYY") || prefix.endsWith("{")) continue;
-    if (rule.how === "erase" || rule.how === "archive") {
-      const key = rule.how === "erase" && rule.by === "handle" ? `${prefix}${s.handle}` : `${prefix}${s.statsId}:probe-${tag}`;
+    if (rule.how === "erase") {
+      const key = rule.by === "handle" ? `${prefix}${s.handle}` : `${prefix}${s.statsId}:probe-${tag}`;
       await redisPipeline([["SET", key, JSON.stringify({ s: s.statsId, probe: tag })]]);
     } else if (rule.how === "index" && prefix !== "nl:plan:ended") {
       // (The stores whose plan ended are read by the daily job as stores: a probe there would be looked at as one.)
@@ -222,7 +201,13 @@ async function reachedThroughRecords(world: World, tag: string, pdf: ProductFile
   return made;
 }
 
-/** A sale on the store's Stripe account, and what it left here under its own references. */
+/** The days a family's keys that name no store are kept at the most, as CLOSING declares them. */
+function keptDays(key: string): number {
+  const rule = ruleOf(key);
+  return rule?.how === "expires" || rule?.how === "lapses" ? rule.days : rule && "rest" in rule ? rule.rest ?? 0 : 0;
+}
+
+/** A sale on the store's Stripe account, and what it left here under its own references, each kept no longer than its family declares. */
 async function soldThrough(world: World, stripe: StripeWorld, tag: string, pdf: ProductFile, at: number): Promise<string[]> {
   const s = world.store;
   const session = `cs_test_${sha(`${tag}:session`).slice(0, 30)}`;
@@ -232,7 +217,7 @@ async function soldThrough(world: World, stripe: StripeWorld, tag: string, pdf: 
   stripe.sessions.push({ id: session, account: s.stripeAccountId, object: "checkout.session", status: "complete", payment_status: "paid", created: Math.floor(at / 1000), amount_total: 4_900, currency: "usd", payment_intent: pi, subscription: sub, customer_details: { email: "tess.taylor@example.com", name: "Tess Taylor", address: { country: "US" } }, total_details: { amount_tax: 0, amount_discount: 0 }, metadata: { store: s.handle, product: world.plain, gift } });
   stripe.memberships.push({ id: sub, account: s.stripeAccountId, status: "active", cancel_at_period_end: false, metadata: { store: s.handle } });
   const keys = [...giftKeys(gift, pi), preorderPiKey(pi), adsSubKey(sub), shippedKey(session), movedKey(session), confirmedKey(session), copyKey(session, pdf), copyKey(pi, pdf)];
-  for (const key of keys) await redisPipeline([["SET", key, JSON.stringify({ s: s.sid, e: "tess.taylor@example.com" }), "EX", 300 * 86_400]]);
+  for (const key of keys) await redisPipeline([["SET", key, JSON.stringify({ s: s.sid, e: "tess.taylor@example.com" }), "EX", Math.min(300, keptDays(key)) * 86_400]]);
   return keys;
 }
 
@@ -250,7 +235,6 @@ async function pdfOn(world: World, files: Map<string, number>): Promise<ProductF
 }
 
 export async function runClosingJourney(is: Check, sent: Sent[], stripe: StripeWorld): Promise<void> {
-  const records = memoryRecords();
   const files = new Map<string, number>();
   const hands: Hands = {
     measure: async (folder) => [...files].filter(([path]) => path.startsWith(`vault/${folder}/`)).reduce((sum, [, n]) => sum + n, 0),
@@ -306,9 +290,11 @@ export async function runClosingJourney(is: Check, sent: Sent[], stripe: StripeW
   const touched = [...before.keys()].filter((key) => alone.has(key) && alone.get(key) !== before.get(key) && !fixture(key));
   const ofClosing = [...before.keys()].filter(isNew);
   const families = new Set(ofClosing.map((key) => closingFamilyOf(key)));
-  const erasable = Object.entries(CLOSING).filter(([p, r]) => (r.how === "erase" || r.how === "archive") && !p.includes("*")).map(([p]) => p);
+  const erasable = Object.entries(CLOSING).filter(([p, r]) => r.how === "erase" && !p.includes("*")).map(([p]) => p);
   is(`the closing store has a key in every family the walk erases (${erasable.length})`, erasable.filter((p) => !families.has(p)), []);
   is(`and its records are many (${ofClosing.length}), some of them in what the other store keeps too (${touched.length})`, [ofClosing.length > 400, touched.length > 3], [true, true]);
+  const longest = ofClosing.reduce((most, key) => (key.length > most.length ? key : most), "");
+  is(`every key it made has a name no longer than the registry prices (${KEY_NAME_BYTES}): ${longest}`, [longest.length <= KEY_NAME_BYTES, longest.length > 40], [true, true]);
   const namesClosing = (key: string, value: string) => closingMarks.some((m) => key.includes(m) || value.includes(m)) || key.split(":").includes(close.store.handle) || value.includes(`"${close.store.handle}"`);
 
   // ---------------------------------------------------------------- its plan ends, and its notices go out
@@ -320,15 +306,18 @@ export async function runClosingJourney(is: Check, sent: Sent[], stripe: StripeW
   is("its plan ended after October 18, 2026, so the whole store closes", E, ended);
   const M = CLOSING_DAYS - WARN_MONTH_DAYS, W = CLOSING_DAYS - WARN_WEEK_DAYS;
   const told = [];
-  for (const day of [0, M, W]) told.push((await closeOne(CLOSER, E + day * DAY + 60_000, hands, Number.POSITIVE_INFINITY, records)).note);
+  for (const day of [0, M, W]) told.push((await closeOne(CLOSER, E + day * DAY + 60_000, hands, Number.POSITIVE_INFINITY)).note);
   is("three notices, on their days", told, ["ended", "month", "week"]);
   const notices = sent.filter((m) => m.to === CLOSER);
-  is("each names the day, what goes, what is kept and where to download everything", notices.map((m) => [m.text.includes("your store closes"), m.text.includes("everything else it keeps with us is"), m.text.includes("What we keep:"), m.text.includes("/studio#closing")]), [[true, true, true, true], [true, true, true, true], [true, true, true, true]]);
-  is("before the day nothing is touched", [(await closeOne(CLOSER, E + (CLOSING_DAYS - 1) * DAY, hands, Number.POSITIVE_INFINITY, records)).state, files.size, stripe.posted.length], ["waiting", 2, 0]);
-  is("and its months before the plan ended are already in its records", [...records.objects.keys()].map((p) => p.split("/").pop()), ["2026-10.json.gz"]);
+  is(
+    "each names the day, what goes, that no copy of its sales is kept, its students' certificates and where to download everything",
+    notices.map((m) => [m.text.includes("your store closes"), m.text.includes("everything else it keeps with us is"), m.text.includes("We keep no copy of your sales"), m.text.includes("course certificates"), m.text.includes("/studio#closing")]),
+    [[true, true, true, true, true], [true, true, true, true, true], [true, true, true, true, true]],
+  );
+  is("before the day nothing is touched", [(await closeOne(CLOSER, E + (CLOSING_DAYS - 1) * DAY, hands, Number.POSITIVE_INFINITY)).state, files.size, stripe.posted.length], ["waiting", 2, 0]);
 
   // ---------------------------------------------------------------- its day
-  const day = await closeOne(CLOSER, E + CLOSING_DAYS * DAY + 60_000, hands, Number.POSITIVE_INFINITY, records);
+  const day = await closeOne(CLOSER, E + CLOSING_DAYS * DAY + 60_000, hands, Number.POSITIVE_INFINITY);
   is("on its day its files go and it is put in line for the walk", [day.state, [...files.keys()].some((p) => p.includes(closeFolder)), [...files.keys()].some((p) => p.includes(keepFolder))], ["removed", false, true]);
   is("its memberships' renewals are stopped at the end of what was paid, on its own Stripe account only", stripe.posted.map((p) => [p.account, p.body.includes("cancel_at_period_end=true")]), [[close.store.stripeAccountId, true], [close.store.stripeAccountId, true]]);
 
@@ -339,16 +328,7 @@ export async function runClosingJourney(is: Check, sent: Sent[], stripe: StripeW
   const after = await snapshot();
 
   // ---------------------------------------------------------------- the file store
-  const folder = recordFolder(close.store);
-  const paths = [...records.objects.keys()].sort();
-  is("only the closing store's tax records are in the file store, under its folder", paths.every((p) => p.startsWith(RECORDS_PREFIX) && p.split("/")[3] === folder), true);
-  is("by the year each is deleted: its months and its own record", paths.map((p) => p.slice(RECORDS_PREFIX.length).replace(folder, "…")), ["2034/…/2026-10.json.gz", "2034/…/2026-11.json.gz", "2034/…/store.json.gz"]);
-  const months = paths.filter((p) => !p.endsWith("store.json.gz")).map((p) => unpack<MonthRecord>(records.objects.get(p)!));
-  const lines = months.flatMap((m) => m.lines);
-  is("every sale is there, with its references, amount, currency and country", lines.map((l) => [l.k, l.a, l.c, l.co ?? "", Boolean(l.pi), Boolean(l.g)]).sort(), [["c", 4900, "usd", "US", true, true], ["c", 4900, "usd", "US", true, true], ["p", 900, "usd", "", false, false]]);
-  is("and no buyer's address or name", JSON.stringify(months).includes("@") || JSON.stringify(months).includes("Tess"), false);
-  const own = unpack<StoreRecord>(records.objects.get(paths.find((p) => p.endsWith("store.json.gz"))!)!);
-  is("its own record says whose it was, and when it closed", [own.store.owner, own.store.handle, own.store.stripeAccount, own.lines, own.closedAt > E], [CLOSER, "closing-shop", close.store.stripeAccountId, 3, true]);
+  is("nothing of it is in the file store: nothing was copied anywhere", [...files.keys()].filter((p) => p.includes(closeFolder)), []);
 
   // ---------------------------------------------------------------- the database
   const ttlOf = new Map<string, number>();
@@ -360,36 +340,35 @@ export async function runClosingJourney(is: Check, sent: Sent[], stripe: StripeW
   const company = suspects.filter((key) => ruleOf(key)?.how === "company");
   console.log(`  (kept as the company's: ${company.map((key) => key.replace(/[0-9a-f]{24,}/g, "…")).join(", ")})`);
   const byThemselves = suspects.filter((key) => {
-    const rule = ruleOf(key);
-    const days = rule?.how === "expires" ? rule.days : rule && "rest" in rule ? rule.rest ?? 0 : 0;
+    const days = keptDays(key);
     const ttl = ttlOf.get(key) ?? -1;
-    return rule?.how !== "company" && days > 0 && ttl > 0 && ttl <= days * 86_400;
+    return ruleOf(key)?.how !== "company" && days > 0 && ttl > 0 && ttl <= days * 86_400;
   });
   console.log(`  (gone by themselves later: ${byThemselves.length}, of ${[...new Set(byThemselves.map((key) => closingFamilyOf(key)))].join(", ")})`);
   is("of what the closed store made, and of what names it, only the company's records and what is gone by itself within its days are left", suspects.filter((key) => !company.includes(key) && !byThemselves.includes(key)), []);
-  is("and what is left by itself that holds an address is gone within sixty days", byThemselves.filter((key) => (after.get(key) ?? "").includes("@") && (ttlOf.get(key) ?? 0) > 60 * 86_400), []);
-  is("what was reached only through its records is gone", [...reachedClosing, ...soldClosing].filter((key) => after.has(key)), []);
+  is("and what is left by itself that holds an address, but what a sale left under its own reference, is gone within sixty days", byThemselves.filter((key) => !soldClosing.includes(key) && (after.get(key) ?? "").includes("@") && (ttlOf.get(key) ?? 0) > 60 * 86_400), []);
+  is("what was reached only through its records is gone", reachedClosing.filter((key) => after.has(key)), []);
+  is("what each sale left under its own reference is left to run out, within its family's days", soldClosing.filter((key) => !byThemselves.includes(key) && after.has(key)), []);
   is("the store is gone, and its address is held back from anybody else", [await storeForEmail(CLOSER), (await claimHandle("stranger@example.com", "closing-shop", "Not Theirs", "")).ok], [null, false]);
 
   // ---------------------------------------------------------------- the other store
-  const changed = [...alone.keys()].filter((key) => !fixture(key) && ruleOf(key)?.how !== "company" && after.get(key) !== alone.get(key));
+  // A person's record across stores keeps the closed store's id until its quarter runs out, pointing at nothing (CLOSING, lapses).
+  const lapsing = (key: string) => ruleOf(key)?.how === "lapses";
+  const withoutClosed = (value: string | undefined) => JSON.stringify((JSON.parse(value ?? "[]") as string[]).filter((m) => m !== close.store.sid).sort());
+  is("a person's records the other store is in keep it, and gain only the closed store's id", [...alone.keys()].filter((key) => lapsing(key) && withoutClosed(after.get(key)) !== withoutClosed(alone.get(key))), []);
+  const changed = [...alone.keys()].filter((key) => !fixture(key) && ruleOf(key)?.how !== "company" && !lapsing(key) && after.get(key) !== alone.get(key));
   for (const key of changed.slice(0, 5)) console.log("    CHANGED", key, "\n      was", alone.get(key)?.slice(0, 200), "\n      now", after.get(key)?.slice(0, 200));
   is("everything the other store had before the closing store came is exactly as it was, the lists both were in included", changed, []);
-  is("the shared buyer's library lists the other store alone", await storesKnownFor(tess), [keep.store.sid]);
+  const library = await storesKnownFor(tess);
+  is("the shared buyer's library shows the other store alone: the closed one's id points at nothing", [(await Promise.all(library.map((sid) => storeForId(sid)))).filter(Boolean).map((s) => s!.handle), library.includes(close.store.sid), await storeForId(close.store.sid)], [["keep-shop"], true, null]);
   is("the shared helper is on the other store's team alone", (await memberStores("helper@example.com")).map((m) => m.store.handle), ["keep-shop"]);
   is("and everything reached through the other store's records is there", [...reachedKeeping, ...soldKeeping].filter((key) => !after.has(key)), []);
   is("its files are where they were", [...files.keys()].filter((p) => p.includes(keepFolder)).length, 1);
   is("its owner was never written to", sent.filter((m) => m.to === KEEPER).length, 0);
 
-  // ---------------------------------------------------------------- told, once
+  // ---------------------------------------------------------------- told three times, and done
   const closed = sent.filter((m) => m.to === CLOSER);
-  is("the closed store's owner is told it is done, once", [closed.length, closed.at(-1)?.subject], [4, "closing-shop has closed, and what it kept has been deleted"]);
-  is("a walk again finds nothing to do", [(await eraseClosed(Date.now() + 60_000, finishClosed, E + (CLOSING_DAYS + 2) * DAY)).deleted, sent.filter((m) => m.to === CLOSER).length], [0, 4]);
-  is("and the daily job does not look at it again", (await closeEnded(Date.now() + 20_000, E + (CLOSING_DAYS + 2) * DAY, hands, records)).filter((row) => row.key === CLOSER), []);
-
-  // ---------------------------------------------------------------- and in the end
-  await expireRecords(Date.UTC(2033, 11, 31), Date.now() + 20_000, records);
-  is("its records are kept through the last day of their seventh year", records.objects.size, 3);
-  await expireRecords(Date.UTC(2034, 0, 1), Date.now() + 20_000, records);
-  is("and deleted on January 1 after it", records.objects.size, 0);
+  is("the closed store's owner was told three times before its day, and not written to again", [closed.length, closed.at(-1)?.subject.endsWith("closing-shop closes")], [3, true]);
+  is("a walk again finds nothing to do", [(await eraseClosed(Date.now() + 60_000, finishClosed, E + (CLOSING_DAYS + 2) * DAY)).deleted, sent.filter((m) => m.to === CLOSER).length], [0, 3]);
+  is("and the daily job does not look at it again", (await closeEnded(Date.now() + 20_000, E + (CLOSING_DAYS + 2) * DAY, hands)).filter((row) => row.key === CLOSER), []);
 }

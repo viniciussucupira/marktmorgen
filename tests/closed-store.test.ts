@@ -1,9 +1,8 @@
 /**
  * A store closing, end to end, in the in-memory Redis (added 18 October
  * 2026): the journey of tests/closing-journey.ts, which
- * scripts/test_closed_store_redis.py runs against a real Redis too. The tax
- * records go to an in-memory stand-in for the file store, never the real
- * bucket.
+ * scripts/test_closed_store_redis.py runs against a real Redis too. The file
+ * store is an in-memory stand-in, never the real bucket.
  */
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";

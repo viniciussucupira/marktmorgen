@@ -11,7 +11,7 @@ import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords } from "@/
 import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
-import { CLOSING_DAYS, CLOSING_RECORD_YEARS, ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, ERASE_WITHIN_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { RELEASE_QUARANTINE_DAYS } from "@/lib/store";
 import { CALL_ORDER_UNITS, ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
 import { API_WRITE_UNITS, allowanceListWords } from "@/lib/store-allowance-rules";
@@ -687,32 +687,33 @@ export default function TermsPage() {
           buyer already paid for; any refund remains the creator&rsquo;s
           decision. Within {ERASE_WITHIN_DAYS} days, and usually the same day,
           everything else the store keeps with us is deleted: its page and
-          settings, products and prices, pages, posts, courses, community,
-          contacts, forms and their answers, numbers, and its buyers&rsquo;
-          access to what they bought from it. Its address is held back from
+          settings, products and prices, pages, posts, courses and the
+          certificates they gave, community, contacts, forms and their
+          answers, numbers, and its buyers&rsquo; access to what they bought
+          from it. Its address is held back from
           anyone else for {RELEASE_QUARANTINE_DAYS} days. Your account and sign-in stay until you
           delete them, and you may open a new store.
         </p>
         <p>
           <strong className="text-black">Download what you want to keep before that day.</strong>{" "}
-          After the plan ends, the studio offers your whole store as one file,
-          up to {ENDED_STORE_EXPORTS} times: your products and their pages,
-          posts, courses with every lesson&rsquo;s text, forms and their
-          answers, contacts and a summary of your orders. Files and videos
-          download from their own pages. Your list, your sales and your
-          affiliates also download as files at any time.
+          The studio offers your whole store as one file, while your plan
+          runs and after it ends until the closing day, counted in the
+          studio&rsquo;s use like any other request. It holds your products
+          and their pages, posts,
+          courses with every lesson&rsquo;s text, forms and their answers,
+          contacts and your orders as a spreadsheet. Files and videos
+          download from their own pages. Your students can download their
+          course certificates until the closing day, and not after.
         </p>
         <p>
           <strong className="text-black">What we keep after a store closes.</strong>{" "}
-          For {CLOSING_RECORD_YEARS} years after the end of the year of each
-          sale, a compressed record of the store&rsquo;s sales (when each was
-          paid, its payment&rsquo;s references, the product, the amount and
-          currency, the tax and discount Stripe counted, and the buyer&rsquo;s
-          country; never a buyer&rsquo;s name or address), with the
-          store&rsquo;s ids, name and addresses, its owner&rsquo;s sign-in
-          address and its plan, because tax law may require us to keep it.
-          Then it is deleted. Your sales and your buyers&rsquo; payments stay
-          on your own Stripe account, which is yours to keep.
+          No copy of the store&rsquo;s sales. The store sells on your own
+          Stripe account, which holds every sale, refund and payout and is
+          yours to keep: those are your records as the seller. Our own
+          records of the store are our invoices for its plan and any fee we
+          charged, which stay in our billing records for as long as the law
+          requires, and a note of the dates the store ended and closed, kept
+          for about a year.
         </p>
         <p>
           <strong className="text-black">If you bought from a creator&rsquo;s store.</strong>{" "}
@@ -721,8 +722,10 @@ export default function TermsPage() {
           no longer be downloaded or opened here, and renewals of what you
           subscribe to there stop at the end of the period you paid for. The
           creator is told {CLOSING_DAYS} days ahead and asked to give buyers
-          another way to what they bought. Download the files you want to
-          keep. A refund is a matter between you and the creator (section 9).
+          another way to what they bought. Download the files and course
+          certificates you want to keep before then. The store leaves your
+          library on Marktmorgen when it closes; nothing else in it changes.
+          A refund is a matter between you and the creator (section 9).
         </p>
         <p>
           A plan that ended before{" "}

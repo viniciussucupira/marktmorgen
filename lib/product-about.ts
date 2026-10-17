@@ -43,6 +43,23 @@ export async function readAbout(statsId: string | null, productId: string): Prom
   return typeof raw === "string" ? raw.slice(0, MAX_ABOUT_LENGTH) : "";
 }
 
+/** Values of many keys, a hundred at a command (MGET): what the whole export reads (lib/store-export.ts). */
+async function readMany(keys: string[]): Promise<unknown[]> {
+  const out: unknown[] = [];
+  for (let i = 0; i < keys.length; i += 100) {
+    const [raw] = await redisPipeline([["MGET", ...keys.slice(i, i + 100)]]);
+    const values = Array.isArray(raw) ? raw : [];
+    for (let n = 0; n < Math.min(100, keys.length - i); n += 1) out.push(values[n] ?? null);
+  }
+  return out;
+}
+
+/** The long descriptions of many products, in their order, a hundred at a command. */
+export async function readAbouts(statsId: string | null, productIds: string[]): Promise<string[]> {
+  if (!statsId || !isRedisConfigured()) return productIds.map(() => "");
+  return (await readMany(productIds.map((id) => aboutKey(statsId, id)))).map((raw) => (typeof raw === "string" ? raw.slice(0, MAX_ABOUT_LENGTH) : ""));
+}
+
 /**
  * Writes a description, or forgets it when it is empty, after taking its
  * room in the store's data room (DataRoomError when it does not fit).

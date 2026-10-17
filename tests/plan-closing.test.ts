@@ -36,7 +36,6 @@ import { type Course, readCourse, saveCourse } from "@/lib/course";
 import { deleteFile, listFiles } from "@/lib/file-store";
 import { CLOSING_DAYS, type Hands, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closeEnded, closeOne, closingOf, finishClosed, noticeFor, removalDay } from "@/lib/plan-closing";
 import { eraseClosed } from "@/lib/closed-store-data";
-import { memoryRecords } from "./closing-journey";
 import { KEEP_NOTHING_FROM, keptRoomFor } from "@/lib/plan-closing-rules";
 import { communityFolder } from "@/lib/community-image";
 import { picturesKept, takePicturePlace } from "@/lib/community-files";
@@ -540,7 +539,7 @@ async function main(): Promise<void> {
   is("what is removed, what is kept, and what it means for buyers", [
     /the files\s+its products hand over, its lessons&rsquo; videos and downloads, its\s+podcast&rsquo;s episodes, the files its students handed in and the\s+pictures in its community&rsquo;s posts/.test(terms),
     /everything else the store keeps with us is deleted/.test(terms),
-    /a compressed record of the\s+store&rsquo;s sales/.test(terms),
+    /No copy of the store&rsquo;s sales/.test(terms),
     /can\s+no longer be downloaded or opened here/.test(terms),
     /a store never closes sooner\s+than a week after the last of those emails/.test(terms),
     /keeps the rule it ended under: the store and its records stay/.test(terms),
@@ -586,16 +585,16 @@ async function main(): Promise<void> {
     zoeLetter.text.includes("delete files or lessons"),
     zoeLetter.text.includes("the files your students handed in and the\n    pictures in your community's posts"),
   ], [true, true, false, true]);
-  // Its tax records go to a stand-in for the file store (tests/closing-journey.ts holds them, and what the walk deletes, in full).
-  const records = memoryRecords();
-  await closeOne(zoe.email, Z + M * DAY, zoeHands, Number.POSITIVE_INFINITY, records);
-  await closeOne(zoe.email, Z + W * DAY, zoeHands, Number.POSITIVE_INFINITY, records);
-  const zoeGone = await closeOne(zoe.email, Z + (C + 1) * DAY, zoeHands, Number.POSITIVE_INFINITY, records);
+  // What the walk deletes is held in full by tests/closing-journey.ts.
+  await closeOne(zoe.email, Z + M * DAY, zoeHands);
+  await closeOne(zoe.email, Z + W * DAY, zoeHands);
+  const zoeGone = await closeOne(zoe.email, Z + (C + 1) * DAY, zoeHands);
   is("on its day its files go, its community's pictures with them, and the store closes", [zoeGone.state, [...objects.keys()].filter((path) => path.startsWith(`vault/${zoe.folder}/`)).length, pictures.size, await picturesKept(cf)], ["removed", 0, 0, 0]);
-  is("its records are kept for tax, and nothing it sold is charged again: it had no Stripe account to stop", [[...records.objects.keys()].length, stripeAsked.filter((asked) => asked.startsWith("POST")).length], [1, 0]);
+  is("nothing it sold is charged again: it had no Stripe account to stop", stripeAsked.filter((asked) => asked.startsWith("POST")).length, 0);
+  const told = mailTo(zoe.email).length;
   const walked = await eraseClosed(Date.now() + 20_000, finishClosed, Z + (C + 1) * DAY + 3_600_000);
   is("the walk deletes its records, and nobody else's", [walked.done, walked.finished, await storeForEmail(zoe.email), (await storeForEmail(ana.email))?.handle, (await storeForEmail(ben.email))?.handle], [true, 1, null, "ana", "ben"]);
-  is("and the letter after says so", mailTo(zoe.email).at(-1)!.subject, "Zoe Studio has closed, and what it kept has been deleted");
+  is("and its owner, told three times before, is not written to again", [told, mailTo(zoe.email).length], [3, 3]);
 
   done();
 }

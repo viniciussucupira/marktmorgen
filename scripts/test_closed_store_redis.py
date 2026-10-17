@@ -6,17 +6,17 @@ command to Redis on loopback port 16379, in a database of its own that is
 empty when the check starts and flushed when it ends (the server of
 scripts/test_contact_erasure_redis.py). No application credentials or
 production host configuration are read; Stripe and the email sender are stood
-in for inside the journey, and the file store the tax records go to is an
-in-memory stand-in, never the real bucket.
+in for inside the journey, and the file store is an in-memory stand-in, never
+the real bucket.
 
 Checked there: a store with a key in every family the registry erases, people
 in every part of it, members in every company list, records found only
 through its own and records each sale left under its own reference, closes;
-after its day only its declared tax records are in the file store, and no key
-or value in the database names it but the company's declared records and
-keys gone by themselves within their declared days; another store sharing a
-buyer and a helper is exactly as it was; and on January 1 after the last kept
-year the records are gone.
+after its day nothing of it is in the file store, and no key or value in the
+database names it but the company's declared records and keys gone by
+themselves within their declared days (what each sale left under its own
+reference, its id in a buyer's library); another store sharing a buyer and a
+helper is exactly as it was, and the buyer's library shows it alone.
 """
 import os
 from pathlib import Path

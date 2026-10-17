@@ -134,8 +134,11 @@ export function countedInRoom(key: string): boolean {
  *            lib/closed-store-data.ts), and otherwise gone within `rest` days.
  *   expires  names no store and holds none of its content: gone by itself
  *            within `days`.
- *   archive  the store's PayPal sales: copied into its tax records
- *            (lib/closing-archive.ts) before the walk deletes them.
+ *   lapses   a person's own record across stores (lib/joined-stores.ts),
+ *            in which the store's id is one member among others: not taken
+ *            out buyer by buyer, because once the store is gone the id
+ *            points at nothing and is never shown; it runs out by itself
+ *            within `days` of being written, priced with what wrote it.
  *   detach   one person's or one account's, across stores: only this
  *            store's member is taken out (by the step `via`).
  *   index    a list of the company's that names stores: this store's
@@ -148,7 +151,7 @@ export type Closing =
   | { how: "erase"; rest?: number; by?: "handle" }
   | { how: "token"; via: string; rest?: number }
   | { how: "expires"; days: number }
-  | { how: "archive" }
+  | { how: "lapses"; days: number }
   | { how: "detach"; via: string }
   | { how: "index" }
   | { how: "company"; rest?: number };
@@ -161,7 +164,8 @@ const D = (via: string): Closing => ({ how: "detach", via });
 const I: Closing = { how: "index" };
 const C: Closing = { how: "company" };
 const Cr = (rest: number): Closing => ({ how: "company", rest });
-const A: Closing = { how: "archive" };
+/** A person's record across stores: the quarter written in and twelve after (lib/joined-stores.ts, QUARTERS_KEPT), at most 31 days a month. */
+const L: Closing = { how: "lapses", days: 13 * 3 * 31 };
 
 export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:": E, // a meter's records (lib/usage-billing.ts), named by the store's folder; "nl:" alone is no key
@@ -176,7 +180,7 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:ab:": E, "nl:ab:paid:": X(40),
   "nl:adsrv:": E, "nl:adsrv:ctx:": X(4), "nl:adsrv:last:": E, "nl:adsrv:sent:": X(3), "nl:adsrv:sub:": X(400),
   "nl:aff:": E, "nl:aff:link:": X(1), "nl:aff:payday:": E, "nl:aff:payday:lock": C, "nl:aff:seen:": X(2), "nl:aff:session:": X(30),
-  "nl:affhub:": D("nl:aff:"), "nl:affhub:link:": Cr(1), "nl:affkit:": E,
+  "nl:affhub:": L, "nl:affhub:link:": Cr(1), "nl:affkit:": E,
   "nl:ai-spend:v2:{": C, "nl:ai-spend:v2:{YYYY-MM}": C, "nl:ai:": E,
   "nl:alert:": E, "nl:alert:seen:": Cr(2), "nl:allow:": E,
   "nl:api:k:": T("prepare"), "nl:api:keys:": E,
@@ -246,7 +250,7 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:learn:enr:": E, "nl:learn:link:": X(1), "nl:learn:paid:": E, "nl:learn:pass:": T("nl:learn:passes:", 90), "nl:learn:passes:": E,
   "nl:learn:rate:addr:": X(1), "nl:learn:rate:ip:": X(1),
   "nl:leave:": E,
-  "nl:lib:": D("nl:store:leads:"), "nl:lib:joined:": D("nl:store:leads:"), "nl:lib:link:": X(1),
+  "nl:lib:": L, "nl:lib:joined:": L, "nl:lib:link:": X(1),
   "nl:listed:": X(8),
   // ---------------------------------------------------------------- m
   "nl:mail-check:last": C, "nl:mail-check:lock": C,
@@ -280,8 +284,8 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:plans:lock": C, "nl:plans:pending": I,
   "nl:pod:": E, "nl:pod:by:": E, "nl:pod:n:": X(2), "nl:pod:ok:": E, "nl:pod:t:": T("nl:pod:by:"),
   "nl:pp:": E, "nl:pp:item:": X(400), "nl:pp:open:": E, "nl:pp:stores": I,
-  "nl:ppsell:o:": T("nl:ppsell:sales:", 30), "nl:ppsell:own:": A, "nl:ppsell:paid:": T("nl:ppsell:sales:"), "nl:ppsell:pending:": A,
-  "nl:ppsell:refunded:": A, "nl:ppsell:sales:": A, "nl:ppsell:watch:": A,
+  "nl:ppsell:o:": T("nl:ppsell:sales:", 30), "nl:ppsell:own:": E, "nl:ppsell:paid:": T("nl:ppsell:sales:"), "nl:ppsell:pending:": E,
+  "nl:ppsell:refunded:": E, "nl:ppsell:sales:": E, "nl:ppsell:watch:": E,
   "nl:pre:": E, "nl:pre:give:": X(1), "nl:pre:jobs": I, "nl:pre:pi:": X(430),
   "nl:preview:": T("prepare", 400),
   "nl:product:about:": E, "nl:product:note:": E, "nl:product:page:": E, "nl:product:pages:": E, "nl:product:pics:": E,
@@ -346,6 +350,16 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:yearask:": E, "nl:yearask:count:": E, "nl:yearask:cursor": C,
   "nl:yearly-offer:": C, "nl:yearly:link:": X(30), "nl:yearly:price:": E,
 };
+
+/**
+ * The families whose keys a closing store's follower reads before the walk
+ * deletes them (lib/closed-store-data.ts, FOLLOWERS): named here so what they
+ * read can be priced without the walk (tests/plan-cost-registry.ts, closure).
+ */
+export const FOLLOWED_FAMILIES = [
+  "nl:cal:cfg:", "nl:cm:", "nl:course:", "nl:erase:ix:", "nl:fshares:", "nl:inbox:", "nl:learn:passes:", "nl:mail:bcs:",
+  "nl:mv:", "nl:outreach:", "nl:pkg:s:", "nl:pod:by:", "nl:ppsell:sales:", "nl:slink:store:", "nl:store:leads:",
+] as const;
 
 /** The family a key belongs to, by the longest name it starts with; "" for none. */
 export function closingFamilyOf(key: string): string {

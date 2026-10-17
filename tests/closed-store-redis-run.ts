@@ -2,8 +2,8 @@
  * The closing journey (tests/closing-journey.ts) against a real Redis,
  * built with the real "@/lib/redis" by scripts/test_closed_store_redis.py,
  * which serves Upstash's REST pipeline in front of a dedicated, empty Redis
- * database and tears it down after. The tax records go to an in-memory
- * stand-in for the file store, never the real bucket. Not a *.test.ts: npm
+ * database and tears it down after. The file store is an in-memory
+ * stand-in, never the real bucket. Not a *.test.ts: npm
  * test does not run it, the product checks' Redis job does.
  */
 import { type Sent, type StripeWorld, runClosingJourney, standIns } from "./closing-journey";

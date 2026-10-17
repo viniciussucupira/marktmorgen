@@ -1,5 +1,5 @@
 import { PAST_CALL_DAYS } from "@/lib/store-data-rules";
-import { CLOSING_DAYS, CLOSING_RECORD_YEARS, ERASE_WITHIN_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, ERASE_WITHIN_DAYS } from "@/lib/plan-closing-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
@@ -1600,8 +1600,7 @@ export default function PrivacyPage() {
           When a creator&apos;s store closes, what it kept about you as its
           buyer is deleted with it, and so is your access to what you bought
           there (section 6, when a store closes). The payment itself stays on
-          the creator&apos;s own Stripe account, and the record of the sale
-          we keep for tax names no buyer.
+          the creator&apos;s own Stripe account; we keep no copy of it.
         </p>
         <p>
           Two things stay ours in that situation: the security of the systems
@@ -1680,28 +1679,27 @@ export default function PrivacyPage() {
           within {ERASE_WITHIN_DAYS} days, usually the same day, everything
           else it kept with us is deleted: its page, products, pages, posts,
           courses, community, contacts and their lists, forms and their
-          answers, numbers, settings, and its buyers&apos; access, their
-          library entry for that store and every other record of theirs
-          that belonged to it. Records a person has across stores (their
-          library, their sign-in, the stores they are an affiliate of) lose
-          only that store. Links and one-way marks that store already sent
-          out, which name no store and hold nothing of it, are deleted by
-          themselves within the days each is kept for: 60 at the most for a
-          link that carries an address, or, only where our file store could
-          not be read when the store closed, 400 for a gift&apos;s or a group
-          purchase&apos;s record. What we keep, as our own record
-          under our legal obligations (GDPR article 6(1)(c)), is a
-          compressed record of the store&apos;s sales of the last{" "}
-          {CLOSING_RECORD_YEARS} full years and the year it closed: when each
-          was paid, its payment&apos;s references, the product, the amount and
-          currency, the tax and discount Stripe counted and the buyer&apos;s
-          country, never a buyer&apos;s name or address; and the store&apos;s
-          ids, addresses and name, its owner&apos;s sign-in address, its
-          Stripe account&apos;s id and its plan. Each year&apos;s sales are
-          deleted on January 1 once {CLOSING_RECORD_YEARS} full years have
-          passed since the end of that year, and the store&apos;s own record
-          with the last of them. It is kept in our file store (Cloudflare R2)
-          and used for nothing but tax and legal questions. The store&apos;s
+          answers, numbers, settings, its courses&apos; certificates, and its
+          buyers&apos; access and every other record of theirs that belonged
+          to it. Records a person has across stores lose only that store, and
+          their sign-in is not touched: a buyer&apos;s library, the lists a
+          person joined and an affiliate&apos;s page of the stores they
+          promote stop showing the store at once, because it no longer
+          exists; its id stays in them, pointing at nothing, until the
+          quarter it was written in has run out, three years and a quarter at
+          the most, and is then deleted by itself. Links and marks that store
+          already sent out, and what one of its sales left under the
+          sale&apos;s own reference rather than the store&apos;s (a
+          gift&apos;s or a group purchase&apos;s record, a pre-order&apos;s
+          payment, a shipment&apos;s or a call&apos;s marks), cannot be found
+          once the store is gone and are deleted by themselves within the
+          days each is kept for: 430 at the most. We keep no copy of the
+          store&apos;s sales: every sale, refund and payout is on the
+          creator&apos;s own Stripe account. What we keep, as our own record
+          under our legal obligations (GDPR article 6(1)(c)), is our invoices
+          for the store&apos;s plan and any fee we charged, in our billing
+          records and on our own Stripe account, and a note of the dates the
+          store ended and closed, kept for about a year. The store&apos;s
           address is held back from anybody else for 30 days.
         </p>
         <p>

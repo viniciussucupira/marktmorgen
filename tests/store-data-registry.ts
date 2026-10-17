@@ -75,12 +75,19 @@ import { LOG_SIZE as SYNC_LOG } from "@/lib/email-sync";
 import { MAX_DEVICES } from "@/lib/phone-alerts";
 import { MAX_FEEDS } from "@/lib/calendar-sync";
 import { MAX_PRODUCTS } from "@/lib/catalog-rules";
+import { CLOSING, FOLLOWED_FAMILIES } from "@/lib/data-families";
+import { CLOSING_DAYS } from "@/lib/plan-closing-rules";
+import { NON_PAYING_ALLOWANCES } from "@/lib/store-allowance-rules";
+import { TRIAL_EXTRA_REQUESTS, TRIAL_VISITS } from "@/lib/traffic-rules";
+import { TRIAL_ORDERS } from "@/lib/order-rules";
+import { TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
+import { TRIAL_DAILY_RUNS } from "@/lib/flow-limits";
 
 const KB = 1_024;
 /** A key with its name and a small value: what most links and records of a few fields weigh, rounded up. */
 const KEY = 256;
 /** A mark: a key of under 80 characters holding a word, a count or a time. */
-const MARK = 160;
+export const MARK = 160;
 
 /** What a figure of the store's window counts, by plan: the units a `per` part is written by. */
 export type Unit = "order" | "call" | "request" | "studio" | "api" | "inbox" | "own" | "access" | "store" | "monthly" | "integration" | "buyer" | "webhook" | "run" | "row" | "ai" | "quiz" | "upload" | "day";
@@ -203,7 +210,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:inbound:seen:@app/api/mail/inbound/route.ts": company("Inbound mail already handled", "The email provider's notices, kept a few days: the company's."),
   "nl:sns:seen:@app/api/mail/ses/route.ts": company("Amazon's notices already handled", "The email provider's notices, kept a few days: the company's."),
   "nl:course:@app/api/store/course/route.ts": short("A course's lock while the studio changes it", "studio", 1),
-  "nl:rl:export:@app/api/store/export/route.ts": { what: "Downloads of a store's sales, counted a day; and its whole downloads once its plan ended", parts: [per("studio", 1, KEY, "Downloads counted ten minutes at a time."), capped(KEY, "One count of whole downloads for an ended plan, sixty days.")] },
+  "nl:rl:export:@app/api/store/export/route.ts": short("Downloads of a store's sales, counted a day", "studio", 1),
   "nl:rl:licence:@app/api/store/licence/route.ts": short("A license check's count per connection", "request", 1, KEY, REQ("license")),
   "nl:pod:@app/api/store/podcast/route.ts": short("A podcast's lock while the studio changes it", "studio", 1),
 
@@ -216,7 +223,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:stats:@lib/ad-spend.ts": { what: "What the creator spent on ads", parts: [capped(MAX_SPEND_ENTRIES * 512, "MAX_SPEND_ENTRIES entries, the oldest let go.", src("lib/ad-spend-rules.ts", "MAX_SPEND_ENTRIES"))] },
   "nl:aff:@lib/affiliate-bond.ts": { what: "Which affiliate a buyer belongs to", parts: [kept(MARK, "A field per buyer, written with a sale, kept for good.")] },
   "nl:aff:@lib/affiliate-codes.ts": { what: "Discount codes given to affiliates", room: ["lib/affiliate-codes.ts"] },
-  "nl:affhub:@lib/affiliate-hub.ts": company("The stores an address is an affiliate of", "Per affiliate across stores, three years: written with an affiliate record (capped by MAX_AFFILIATES per store, below)."),
+  "nl:affhub:@lib/affiliate-hub.ts": company("The stores an address is an affiliate of", "Per affiliate across stores, in the set of the quarter it was noted in, kept QUARTERS_KEPT quarters at the most: written with an affiliate record (capped by MAX_AFFILIATES per store, below); what a closed store leaves in it is priced with its closing (tests/plan-cost-registry.ts, closure)."),
   "nl:affhub:link:@lib/affiliate-hub.ts": company("An emailed link to an affiliate's page, a day", "Per affiliate across stores, behind a per-address limit."),
   "nl:affkit:@lib/affiliate-kit.ts": short("An affiliate kit's counts, by the day and the window", "ai", 40),
   "nl:aff:payday:@lib/affiliate-payday.ts": short("A store's monthly payday claimed", "day", 40),
@@ -264,8 +271,8 @@ export const FAMILIES: Record<string, Family> = {
   "nl:mail:bc:@lib/broadcasts.ts": { what: "Broadcasts and who each goes to", room: ["lib/broadcasts.ts"], parts: [per("studio", 1, KEY, "A broadcast's lock while it sends, minutes.")] },
   "nl:mail:bcs:@lib/broadcasts.ts": { what: "A store's broadcasts, newest first", room: ["lib/broadcasts.ts"] },
   "nl:mail:queue@lib/broadcasts.ts": company("Broadcasts waiting or under way", "One set for every store, each member gone when its broadcast is done; a store's are counted with its broadcasts."),
-  "nl:lib:@lib/buyer-library.ts": { what: "The stores an address bought from", parts: [kept(MARK, "A store's id in its buyer's set, three years: counted as for good.")] },
-  "nl:lib:joined:@lib/joined-stores.ts": company("The stores an address joined the list of", "A person's, across stores: one member a store, three years."),
+  "nl:lib:@lib/buyer-library.ts": { what: "The stores an address bought from", parts: [kept(MARK, "A store's id in its buyer's set of the quarter, kept QUARTERS_KEPT quarters at the most (lib/joined-stores.ts): counted as for good, and its whole life priced with its order besides (tests/plan-cost-registry.ts, ORDER_LIBRARY), since it outlives a store that closes.")] },
+  "nl:lib:joined:@lib/joined-stores.ts": company("The stores an address joined the list of", "A person's, across stores: one member a store, in the set of the quarter it joined in, kept QUARTERS_KEPT quarters at the most."),
   "nl:lib:link:@lib/buyer-library.ts": short("A library link, a day", "access", 1, LINK_BYTES, MAIL("library")),
   "nl:listed:@lib/buyer-list.ts": short("An order put on the list", "order", 8, MARK),
   "nl:orders:link:@lib/buyer-orders.ts": short("A buyer's purchases link, a day", "access", 1, LINK_BYTES, MAIL("orders")),
@@ -292,7 +299,6 @@ export const FAMILIES: Record<string, Family> = {
   "nl:closed:walk@lib/closed-store-data.ts": company("Where the walk that deletes closed stores' records is", "One key, the company's job."),
   "nl:*@lib/closed-store-data.ts": company("The pattern the walk reads the database by", "Not a key: a pattern."),
   // The families whose keys a closing store's follower reads before the walk deletes them: names, not keys.
-  "nl:aff:@lib/closed-store-data.ts": follower("nl:aff:"),
   "nl:cal:cfg:@lib/closed-store-data.ts": follower("nl:cal:cfg:"),
   "nl:cm:@lib/closed-store-data.ts": follower("nl:cm:"),
   "nl:course:@lib/closed-store-data.ts": follower("nl:course:"),
@@ -874,6 +880,90 @@ export function reservePeakBytes(tier: Tier): number {
  */
 export function afterEndByteMonths(tier: Tier, days: number): number {
   return sum(tier, (part, t) => ("capped" in part ? part.capped(t) * days : "per" in part ? partPeak(part, t) * Math.min(days, Math.max(1, Math.ceil(part.days))) : 0)) / 30;
+}
+
+/**
+ * What a window keeps of a part for the whole life of what it writes, in
+ * byte-months: each unit's bytes for its days. A window's share of the
+ * database line (partAverage, a month of what is kept on average) is never
+ * less than this (tests/closing-cost.test.ts), so what each window writes is
+ * paid for to its end, after the plan's end and the store's closing too.
+ */
+export function lifetimeByteMonths(part: Part, tier: Tier): number {
+  if (!("per" in part)) return 0;
+  return (UNITS[part.per](tier) * part.bytes * Math.max(1, Math.ceil(part.days))) / 30;
+}
+
+/** What everything capped keeps for the `days` after a plan ends, in byte-months: kept until the closing day, with no expiry of its own. */
+export function cappedByteMonths(tier: Tier, days: number): number {
+  return sum(tier, (part, t) => ("capped" in part ? part.capped(t) * days : 0)) / 30;
+}
+
+/**
+ * The units of a free trial, the most a store that pays nothing has of each
+ * (lib/store-allowance-rules.ts, NON_PAYING_ALLOWANCES: a store whose plan
+ * ended has less of every one), over the 32 UTC days a month touches. What
+ * a store writes once its plan has ended, until its closing day, is under it.
+ */
+export const TRIAL_UNITS: Record<Unit, number> = {
+  order: TRIAL_ORDERS,
+  call: Math.floor(TRIAL_ORDERS / CALL_ORDER_UNITS),
+  request: REQUESTS_PER_VISIT * TRIAL_VISITS + TRIAL_EXTRA_REQUESTS,
+  studio: NON_PAYING_ALLOWANCES.trial.studio + ESSENTIAL_PER_DAY * 32,
+  api: NON_PAYING_ALLOWANCES.trial.api,
+  inbox: NON_PAYING_ALLOWANCES.trial.inbox,
+  own: NON_PAYING_ALLOWANCES.trial.email,
+  access: NON_PAYING_ALLOWANCES.trial.transactional,
+  store: NON_PAYING_ALLOWANCES.trial.email + NON_PAYING_ALLOWANCES.trial.transactional,
+  monthly: TRIAL_MONTHLY_EMAILS,
+  integration: NON_PAYING_ALLOWANCES.trial.integration,
+  buyer: NON_PAYING_ALLOWANCES.trial.buyer,
+  webhook: NON_PAYING_ALLOWANCES.trial.webhook,
+  run: TRIAL_DAILY_RUNS * 32,
+  // A store that pays nothing imports and takes quizzes at Store's figures (tests/plan-cost-registry.ts, nonPayingWorst).
+  row: IMPORT_ALLOWANCES.creator.rows,
+  ai: 0,
+  quiz: QUIZ_MONTHLY_SUBMISSIONS,
+  upload: 0,
+  day: 32,
+};
+
+/** The most a part keeps at one time at a free trial's units. */
+export function trialPartPeak(part: Part, tier: Tier): number {
+  if ("capped" in part) return part.capped(tier);
+  if (!("per" in part)) return 0;
+  return TRIAL_UNITS[part.per] * part.bytes * windowsOver(Math.max(1, Math.ceil(part.days)));
+}
+
+const prefixOf = (name: string) => name.slice(0, name.lastIndexOf("@"));
+/** Each part's family entry, for what becomes of it when a store closes. */
+const FAMILY_OF = new Map<Part, string>(Object.entries(FAMILIES).flatMap(([name, family]) => (family.parts ?? []).map((part): [Part, string] => [part, name])));
+const deletes = (name: string) => {
+  const rule = CLOSING[prefixOf(name)];
+  return Boolean(rule && (rule.how === "erase" || rule.how === "token"));
+};
+
+/** What a part still keeps on a store's closing day, at least CLOSING_DAYS after its plan ended: what its paid windows wrote of a part kept longer than that (at `tier`, or for a free trial at its units), and whatever it wrote since its plan ended, at a free trial's units. */
+function keptAtClosing(part: Part, tier: Tier, trial: boolean): number {
+  if ("capped" in part) return part.capped(tier);
+  if (!("per" in part)) return 0;
+  const paid = part.days > CLOSING_DAYS ? (trial ? trialPartPeak(part, tier) : partPeak(part, tier)) : 0;
+  return paid + trialPartPeak(part, tier);
+}
+
+/**
+ * What a closing store's walk deletes outside its room at the most, in bytes
+ * (lib/closed-store-data.ts): everything capped, and each part of a family
+ * it deletes (CLOSING: erase, token) still kept on its closing day.
+ */
+export function closingBytes(tier: Tier, trial = false): number {
+  return sum(tier, (part, t) => (deletes(FAMILY_OF.get(part) ?? "") ? keptAtClosing(part, t, trial) : 0));
+}
+
+/** What a closing store's followers read outside its room at the most, in bytes: what the families they read (FOLLOWED_FAMILIES) still keep on its closing day. */
+export function followedBytes(tier: Tier, trial = false): number {
+  const followed = new Set<string>(FOLLOWED_FAMILIES);
+  return sum(tier, (part, t) => (followed.has(prefixOf(FAMILY_OF.get(part) ?? "")) ? keptAtClosing(part, t, trial) : 0));
 }
 
 /** The parts an order keeps for good, which ORDER_DATA_BYTES must hold. */

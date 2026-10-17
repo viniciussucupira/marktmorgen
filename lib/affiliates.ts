@@ -140,7 +140,7 @@ export function affiliateCookieName(handle: string): string {
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const peopleKey = (id: string) => `nl:aff:${id}:people`;
-export const emailsKey = (id: string) => `nl:aff:${id}:emails`;
+const emailsKey = (id: string) => `nl:aff:${id}:emails`;
 const codesKey = (id: string) => `nl:aff:${id}:codes`;
 const clicksKey = (id: string) => `nl:aff:${id}:clicks`;
 const paidClicksKey = (id: string) => `nl:aff:${id}:paid`;

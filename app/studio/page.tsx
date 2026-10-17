@@ -163,7 +163,7 @@ import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closingOf } from "@/lib/plan-closing";
-import { CLOSING_RECORD_YEARS, ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, closesStore, keptRoomFor } from "@/lib/plan-closing-rules";
+import { ERASE_WITHIN_DAYS, closesStore, keptRoomFor } from "@/lib/plan-closing-rules";
 import { MAX_LEADS, listSize } from "@/lib/free";
 import { readableSize } from "@/lib/product-file";
 import {
@@ -2166,10 +2166,10 @@ export default async function StudioPage({
                 <p className="mt-4 notice notice-warn">
                   {`Your plan ended on ${dayWords(closing.endedAt)}. `}
                   <strong>{`On ${dayWords(closing.day)} your store closes`}</strong>
-                  {`: its files are removed (the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts), the renewals of the memberships and payment plans you sold through it are stopped at Stripe at the end of the period already paid, and within ${ERASE_WITHIN_DAYS} days, usually the same day, everything else it keeps with us is deleted: its page, products, pages, posts, courses, community, contacts, forms, numbers and your buyers' access to what they bought.`}
+                  {`: its files are removed (the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts), the renewals of the memberships and payment plans you sold through it are stopped at Stripe at the end of the period already paid, and within ${ERASE_WITHIN_DAYS} days, usually the same day, everything else it keeps with us is deleted: its page, products, pages, posts, courses and the certificates they gave, community, contacts, forms, numbers and your buyers' access to what they bought.`}
                 </p>
                 <p className="mt-4 text-ink-soft">
-                  {`We keep only a compressed record of your store's sales for ${CLOSING_RECORD_YEARS} years after the year of each sale, which tax law may require (when, the amount and currency, the buyer's country and the payment's references, never a buyer's name or address), and then delete it. Your account and sign-in stay, and your sales stay on your own Stripe account. Starting a plan again before that day stops all of it.`}
+                  {`We keep no copy of your sales: every sale, refund and payout is on your own Stripe account, and stays there. Your account and sign-in stay. Tell your students to download their course certificates before that day: they can until then, and not after. Starting a plan again before that day stops all of it.`}
                 </p>
                 {/* A GET form, not a link: a link may be prefetched, and each prefetch would read the whole store. */}
                 <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -2181,7 +2181,7 @@ export default async function StudioPage({
                     </button>
                   </form>
                   <span className="text-sm text-ink-soft">
-                    {`One file: your products and their pages, posts, courses with every lesson's text, forms and their answers, contacts and a summary of your orders. Up to ${ENDED_STORE_EXPORTS} times before your store closes. Files and videos download from their own pages.`}
+                    {`One file: your products and their pages, posts, courses with every lesson's text, forms and their answers, contacts and your orders as a spreadsheet, until your store closes. Files and videos download from their own pages.`}
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-ink-soft">

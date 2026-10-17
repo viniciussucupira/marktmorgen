@@ -45,7 +45,6 @@ import {
   PIECE_BYTES,
   PIECE_SECONDS,
   UPLOAD_SECONDS,
-  isRecordPath,
   isVaultPath,
   pieceCount,
   pieceSize,
@@ -371,11 +370,6 @@ export function vaultUrl(pathname: string, seconds: number, saveAs?: string): st
 export async function readVault(pathname: string, limit: number): Promise<Uint8Array | null> {
   const config = vaultConfig();
   if (!config || !isVaultPath(pathname)) return null;
-  return readWhole(config, pathname, limit);
-}
-
-/** A small file read whole, as bytes, refusing to hold more than `limit`. */
-async function readWhole(config: Config, pathname: string, limit: number): Promise<Uint8Array | null> {
   const url = objectUrl(config, pathname);
   const headers = signV4({ method: "GET", url, headers: { "x-amz-content-sha256": EMPTY_HASH }, payloadHash: EMPTY_HASH, region: REGION, service: SERVICE, key: config.key });
   try {
@@ -418,38 +412,6 @@ export async function writeVault(pathname: string, bytes: Uint8Array, contentTyp
   if (!config || !isVaultPath(pathname)) return false;
   const answer = await ask(config, "PUT", objectUrl(config, pathname), { body: bytes, headers: { "content-type": contentType }, ms: VAULT_WRITE_TIMEOUT_MS });
   return answer.status === 200;
-}
-
-/**
- * A closed store's tax record (lib/closing-archive.ts), written whole. Only
- * a path under RECORDS_PREFIX: nothing here can write over a file a store
- * sells, and nothing a store's folder holds is a record.
- */
-export async function writeRecord(pathname: string, bytes: Uint8Array): Promise<boolean> {
-  const config = vaultConfig();
-  if (!config || !isRecordPath(pathname)) return false;
-  const answer = await ask(config, "PUT", objectUrl(config, pathname), { body: bytes, headers: { "content-type": "application/gzip" }, ms: VAULT_WRITE_TIMEOUT_MS });
-  return answer.status === 200;
-}
-
-/** Reads a closed store's tax record whole, at most `limit` bytes. Null when it is missing or out of reach. */
-export async function readRecord(pathname: string, limit: number): Promise<Uint8Array | null> {
-  const config = vaultConfig();
-  if (!config || !isRecordPath(pathname)) return null;
-  return readWhole(config, pathname, limit);
-}
-
-/** Deletes closed stores' tax records. True when every one is gone, or was never there. */
-export async function deleteRecords(pathnames: string[]): Promise<boolean> {
-  const config = vaultConfig();
-  if (!config) return false;
-  let all = true;
-  for (const pathname of pathnames) {
-    if (!isRecordPath(pathname)) continue;
-    const answer = await ask(config, "DELETE", objectUrl(config, pathname));
-    if (answer.status !== 204 && answer.status !== 200 && answer.status !== 404) all = false;
-  }
-  return all;
 }
 
 /** One page of what is kept under a prefix: each file's path and size, and where to go on from. */

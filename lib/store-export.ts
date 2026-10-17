@@ -10,24 +10,28 @@
  * members' as much as the creator's.
  *
  * Written out as it is read, a part at a time, so a large store is never
- * held whole in memory. What it reads is the store's data room, so what it
- * costs is counted the way the room is: while a plan runs it is taken from
- * the store's studio figure at exportUnits of its size (tests/closing-cost.test.ts
- * holds the units to the cost), and once a plan has ended a store may take
- * ENDED_STORE_EXPORTS of them (lib/plan-closing-rules.ts), priced with the
- * rest of what a closing store costs (docs/funded-exposure-review.md).
+ * held whole in memory. What it reads is the store's data room and its
+ * sales on its Stripe account, so what it costs is counted the way the room
+ * is, with the wait for Stripe's pages: while a plan runs it is taken from
+ * the store's studio figure at exportUnits of its size
+ * (tests/closing-cost.test.ts holds the units to the cost), and once a plan
+ * has ended it is taken the same way from the studio figure a store whose
+ * plan ended keeps to take its data away (lib/store-allowance-rules.ts,
+ * NON_PAYING_ALLOWANCES.ended), in the share of stores that pay nothing:
+ * that figure holds the export of the largest store there can be
+ * (tests/closing-cost.test.ts).
  */
 import { readAllListings } from "@/lib/catalog";
 import { readBodies, readCourses } from "@/lib/course";
 import { listAsCsv, listSize } from "@/lib/free";
 import { dataUsed } from "@/lib/store-data";
 import { readForms, readResponses } from "@/lib/form-store";
-import { readAbout } from "@/lib/product-about";
-import { readPage } from "@/lib/sales-page-store";
-import { salesCsv, readsSales } from "@/lib/stats";
+import { readAbouts } from "@/lib/product-about";
+import { readPages } from "@/lib/sales-page-store";
+import { EXPORT_PAGES, salesCsv, readsSales } from "@/lib/stats";
 import { allPosts, readPost } from "@/lib/store-blog";
 import { type Store } from "@/lib/store";
-import { readThanksNote } from "@/lib/thanks-note-store";
+import { readThanksNotes } from "@/lib/thanks-note-store";
 
 /**
  * What an export reads: every byte the store's data room counts at the
@@ -36,15 +40,27 @@ import { readThanksNote } from "@/lib/thanks-note-store";
  * form's answers), the contacts a thousand at a command, and its fixed part.
  */
 export type ExportShape = { bytes: number; commands: number };
-/** Commands a product, a lesson (its text read a hundred at a command), a post and a form take at the most; and the fixed part, the catalog's pages included. */
-export const EXPORT_COMMANDS = { product: 3, lesson: 0.01, post: 2, form: 1, fixed: 60 };
-/** One studio unit is twenty commands and fifty kilobytes through the database (tests/plan-cost-registry.ts, UNIT_COST); an export is counted at less than both. */
+/** Commands a product (its page, long description and note, each read a hundred at a command), a lesson (its text, the same), a post and a form take at the most; and the fixed part, the catalog's pages included. */
+export const EXPORT_COMMANDS = { product: 0.03, lesson: 0.01, post: 2, form: 1, fixed: 60 };
+/**
+ * One studio unit is twenty commands and fifty kilobytes through the
+ * database at a studio request's time (tests/plan-cost-registry.ts,
+ * UNIT_COST); an export is counted at fewer commands, and at a megabyte of
+ * what it reads, which costs about half a unit: the bytes moved and the time
+ * to write them out (tests/closing-cost.test.ts holds it).
+ */
 export const EXPORT_COMMANDS_PER_UNIT = 16;
-export const EXPORT_BYTES_PER_UNIT = 40_000;
+export const EXPORT_BYTES_PER_UNIT = 1_000_000;
+/** The pages of the store's sales read from its Stripe account at the most: its checkouts' and its one-click extras' (lib/stats.ts, salesCsv). */
+export const EXPORT_STRIPE_PAGES = 2 * EXPORT_PAGES;
+/** How long one of those pages is waited for at the most, held at 2 GB: a review ceiling. */
+export const EXPORT_PAGE_SECONDS = 2;
+/** The studio units that wait takes, whatever the store's size (tests/closing-cost.test.ts holds them to it). */
+export const EXPORT_WAIT_UNITS = 20;
 
 /** The studio units a whole export of this shape takes (tests/closing-cost.test.ts holds them to its cost). */
 export function exportUnits(shape: ExportShape): number {
-  return 1 + Math.ceil(Math.max(0, shape.commands) / EXPORT_COMMANDS_PER_UNIT) + Math.ceil(Math.max(0, shape.bytes) / EXPORT_BYTES_PER_UNIT);
+  return 1 + EXPORT_WAIT_UNITS + Math.ceil(Math.max(0, shape.commands) / EXPORT_COMMANDS_PER_UNIT) + Math.ceil(Math.max(0, shape.bytes) / EXPORT_BYTES_PER_UNIT);
 }
 
 /** What exporting this store reads, counted before it is read: the room's bytes, and its products, lessons, posts, forms and contacts. */
@@ -60,7 +76,7 @@ export async function exportShape(store: Store): Promise<ExportShape> {
   const contacts = (await listSize(store)).total;
   return {
     bytes: used?.used ?? 0,
-    commands: Math.ceil(EXPORT_COMMANDS.fixed + EXPORT_COMMANDS.product * listings.length + EXPORT_COMMANDS.lesson * lessons + courses.size + EXPORT_COMMANDS.post * posts + EXPORT_COMMANDS.form * forms + contacts / 1000),
+    commands: Math.ceil(EXPORT_COMMANDS.fixed + 3 * Math.ceil(listings.length / 100) + EXPORT_COMMANDS.lesson * lessons + courses.size + EXPORT_COMMANDS.post * posts + EXPORT_COMMANDS.form * forms + contacts / 1000),
   };
 }
 
@@ -77,17 +93,13 @@ export function storeExport(store: Store, now = Date.now()): ReadableStream<Uint
     async () => `{"exportedAt":${JSON.stringify(new Date(now).toISOString())},"store":${JSON.stringify({ handle: store.handle, name: store.name, bio: store.bio, links: store.links, createdAt: store.createdAt, currency: store.currency })}`,
     async () => {
       const listings = await readAllListings(store);
-      const out: unknown[] = [];
-      for (const listing of listings) {
-        out.push({
-          product: listing,
-          page: statsId ? await readPage(statsId, listing.id).catch(() => null) : null,
-          about: statsId ? await readAbout(statsId, listing.id).catch(() => "") : "",
-          thanks: statsId ? await readThanksNote(statsId, listing.id).catch(() => null) : null,
-        });
-      }
-      const ids = listings.flatMap((l) => (l.course ? [l.course.id] : []));
-      const courses = ids.length ? await readCourses(ids) : new Map();
+      const ids = listings.map((listing) => listing.id);
+      const pages = await readPages(statsId, ids).catch(() => ids.map(() => null));
+      const abouts = await readAbouts(statsId, ids).catch(() => ids.map(() => ""));
+      const notes = await readThanksNotes(statsId, ids).catch(() => ids.map(() => null));
+      const out = listings.map((listing, i) => ({ product: listing, page: statsId ? pages[i] : null, about: abouts[i] ?? "", thanks: notes[i] ?? null }));
+      const courseIds = listings.flatMap((l) => (l.course ? [l.course.id] : []));
+      const courses = courseIds.length ? await readCourses(courseIds) : new Map();
       const withText: unknown[] = [];
       for (const course of courses.values()) {
         const lessons = await readBodies(course.id, course.modules.flatMap((unit: { lessons: { id: string }[] }) => unit.lessons.map((lesson) => lesson.id)));
