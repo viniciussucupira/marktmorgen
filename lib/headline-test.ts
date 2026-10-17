@@ -22,7 +22,8 @@
  *   - A view is counted when the page is drawn for a visitor with a group,
  *     and a checkout when one is opened from it. One small hash per test.
  *   - The winner is decided by arithmetic, not by a hunch: both versions seen
- *     at least MIN_VIEWS times, and the difference in checkouts per view
+ *     at least MIN_VIEWS times, enough checkouts for the test to hold
+ *     (MIN_EXPECTED_SIGNUPS), and the difference in checkouts per view
  *     significant at 95% (a two-proportion z-test). Until then both run; after
  *     it, everybody sees the winner until the creator keeps it or ends the
  *     test. Nothing is written to decide it: it is worked out on each read.

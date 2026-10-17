@@ -15,6 +15,13 @@
  *
  * The chance is worked from each version's visitors, the money they paid and
  * the sum of its squares, as a difference of two means (normal approximation).
+ *
+ * Measured in sign-ups (a free product), the comparison is a two-proportion
+ * z-test, which is only sound when each version would be expected to have at
+ * least MIN_EXPECTED_SIGNUPS sign-ups at the rate both have together — the
+ * textbook condition for that approximation (added 17 October 2026). Before,
+ * 200 views each with 0 sign-ups against 5 was called a win, a split that
+ * chance alone makes about one time in sixteen; now it is "still running".
  */
 /** Each version must have been seen this many times before a winner is called. */
 export const MIN_VIEWS = 200;
@@ -35,6 +42,12 @@ export type Counts = { va: number; vb: number; ca: number; cb: number; sa?: numb
 export type Measure = "money" | "checkouts";
 /** Each version must have this many paid sales before money decides. */
 export const MIN_SALES = 10;
+/**
+ * Sign-ups each version would be expected to have, at the two versions'
+ * rate together, before sign-ups decide. With equal traffic it is 10 sign-ups
+ * between the two, at least.
+ */
+export const MIN_EXPECTED_SIGNUPS = 5;
 /** The chance one version must have of bringing more per visitor to win. */
 export const WIN_CHANCE = 0.975;
 
@@ -98,6 +111,8 @@ export function winner(counts: Counts, measure: Measure = "checkouts"): Version 
   const pa = counts.ca / counts.va;
   const pb = counts.cb / counts.vb;
   const pooled = (counts.ca + counts.cb) / (counts.va + counts.vb);
+  // Too few sign-ups for the normal approximation to say anything yet.
+  if (pooled * Math.min(counts.va, counts.vb) < MIN_EXPECTED_SIGNUPS) return null;
   const se = Math.sqrt(pooled * (1 - pooled) * (1 / counts.va + 1 / counts.vb));
   if (se === 0) return null;
   const z = (pb - pa) / se;
@@ -124,6 +139,12 @@ export function daysLeft(counts: Counts, measure: Measure, now = Date.now()): nu
   const perDay = (counts.va + counts.vb) / 2 / days;
   if (perDay <= 0) return null;
   let need = MIN_VIEWS;
+  if (measure === "checkouts") {
+    // Enough views for the sign-ups each version is expected to need, at
+    // the rate seen so far; with none yet, the views are the least it takes.
+    const rate = (counts.ca + counts.cb) / (counts.va + counts.vb);
+    if (rate > 0) need = Math.max(MIN_VIEWS, Math.ceil(MIN_EXPECTED_SIGNUPS / rate));
+  }
   if (measure === "money") {
     const sold = (counts.sa ?? 0) + (counts.sb ?? 0);
     if (sold === 0) return null;
