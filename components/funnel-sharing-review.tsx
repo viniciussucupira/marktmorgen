@@ -9,10 +9,11 @@ import type { FunnelStepEditorLink } from "@/lib/funnel-editor-links";
 export type FunnelPaymentReview = { available: boolean; paymentsHref: string | null; billingHref: string | null };
 
 /** A read-only checklist, with navigation controlled by the editor's existing save guards. */
-export function FunnelSharingReview({ issues, editors, paymentReview, locked, settingsDisabled, onSettings, onNavigate }: {
+export function FunnelSharingReview({ issues, editors, paymentReview, formsHref, locked, settingsDisabled, onSettings, onNavigate }: {
   issues: readonly FunnelLaunchIssue[];
   editors: readonly (FunnelStepEditorLink | null | undefined)[];
   paymentReview?: FunnelPaymentReview;
+  formsHref?: string | null;
   locked: boolean;
   settingsDisabled: boolean;
   onSettings: () => void;
@@ -25,12 +26,14 @@ export function FunnelSharingReview({ issues, editors, paymentReview, locked, se
                   {issues.length ? `Before sharing: ${issues.length} item${issues.length === 1 ? "" : "s"} to review` : "Review before sharing"}
                 </summary>
                 <p className="mt-2 text-xs text-ink-soft">
-                  Saved visibility, selected forms on visible pages and store payment availability only. Test form submissions, consent, each offer, checkout and delivery as a customer. These checks do not verify them or change publication settings.
+                  Checks cover saved visibility, selected forms, missing or draft quiz recommendations on visible pages, and store payment availability. Test form submissions, consent, each offer, checkout and delivery as a customer. These checks do not verify them or change publication settings.
                 </p>
                 {issues.length ? (
                   <ul className="mt-3 space-y-3">
                     {issues.map((issue, index) => {
-                      const editor = issue.stepIndex === undefined ? null : editors[issue.stepIndex];
+                      const editor = issue.formId
+                        ? formsHref ? { href: `${formsHref}#form-review-${encodeURIComponent(issue.formId)}`, label: "Review quiz" } : null
+                        : issue.stepIndex === undefined ? null : editors[issue.stepIndex];
                       return (
                         <li key={`${issue.code}-${index}`} className="text-sm">
                           <p className="font-semibold text-ink">{issue.title}</p>
