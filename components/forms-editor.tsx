@@ -43,7 +43,7 @@ const MESSAGES: Record<string, string> = {
   full: `A store can have ${MAX_FORMS} forms. Remove one to add another.`,
   unknown: "That form is already gone. Reload the page.",
   invalid: "Something in the form could not be read. Reload the page and try again.",
-  server_error: "Something went wrong. Nothing was changed. Try again.",
+  server_error: "Saving could not be confirmed. Review the saved forms before trying again.",
   ...STUDIO_MESSAGES,
 };
 

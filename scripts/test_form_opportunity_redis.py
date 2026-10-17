@@ -68,10 +68,17 @@ def main():
     if not move_match or "${" in move_match.group(1):
         raise RuntimeError("Expected one static CRM migration script")
     move_script = move_match.group(1)
+    form_source = (root / "lib/form-store.ts").read_text(encoding="utf-8")
+    form_match = re.search(r"export const SAVE_FORM = `([^`]+)`;", form_source)
+    if not form_match or "${" in form_match.group(1):
+        raise RuntimeError("Expected one static form save script")
+    form_script = form_match.group(1)
+    form_rules = (root / "lib/forms.ts").read_text(encoding="utf-8")
+    form_cap = int(re.search(r"export const MAX_FORMS = ([\d_]+);", form_rules).group(1).replace("_", ""))
     rules = (root / "lib/crm-rules.ts").read_text(encoding="utf-8")
     cap = int(re.search(r"export const MAX_DEALS = ([\d_]+);", rules).group(1).replace("_", ""))
     prefix = "marktmorgen:integration:form-opportunity:" + uuid.uuid4().hex + ":"
-    keys = [prefix + suffix for suffix in ("race", "capacity", "wrongtype", "mixed", "migration")]
+    keys = [prefix + suffix for suffix in ("race", "capacity", "wrongtype", "mixed", "migration", "forms")]
     redis = Redis()
     try:
         assert redis.command("PING") == "PONG"
@@ -156,6 +163,24 @@ def main():
         assert redis.command("HGET", keys[4], "edited") == "latest-moved"
         assert redis.command("HLEN", keys[4]) == 1
         print("PASS: stale stage migration preserves edits and a fresh retry moves them")
+        near_form_cap = []
+        for index in range(form_cap - 1):
+            near_form_cap.extend(["existing-" + str(index), "existing"])
+        redis.command("HSET", keys[5], *near_form_cap)
+        def save_form(index):
+            client = Redis()
+            try:
+                return client.command("EVAL", form_script, 1, keys[5], "form-" + str(index), "draft", form_cap)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            form_replies = list(pool.map(save_form, range(64)))
+        assert sum(form_replies) == 1
+        assert redis.command("HLEN", keys[5]) == form_cap
+        assert redis.command("EVAL", form_script, 1, keys[5], "existing-0", "edited", form_cap) == 1
+        assert redis.command("HLEN", keys[5]) == form_cap
+        assert redis.command("HGET", keys[5], "existing-0") == "edited"
+        print("PASS: concurrent form saves share the final slot and permit edits at capacity")
     finally:
         assert all(key.startswith(prefix) for key in keys)
         redis.command("DEL", *keys)
