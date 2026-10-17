@@ -132,7 +132,7 @@ const en = {
   nextPayment: (date: string) => `Next payment: ${date}.`,
   waitingNote: (amount: string) => `${amount} of what you are owed is still inside that wait, and is not payable yet.`,
   refundsUnchecked:
-    "Refunds could not all be checked just now, so a sale refunded recently may still show as earning. It is corrected the next time this page opens.",
+    "Refunds and chargebacks could not all be checked just now, so a sale refunded or disputed recently may still show as earning. It is corrected the next time this page opens.",
   salesHead: "Sales through your link",
   noneYet: "None yet.",
   aProduct: "A product",
