@@ -2,6 +2,9 @@
 
 import { useEffect } from "react";
 
+// One navigation confirmation covers every dirty editor on the page.
+const checkedNavigation = new WeakSet<MouseEvent>();
+
 const ASK = "You have changes that are not saved. Leave without saving them?";
 
 /**
@@ -26,6 +29,8 @@ export function useLeaveGuard(dirty: boolean): void {
       const to = new URL(link.href, window.location.href);
       if (to.origin !== window.location.origin) return;
       if (to.pathname === window.location.pathname && to.search === window.location.search) return;
+      if (checkedNavigation.has(event)) return;
+      checkedNavigation.add(event);
       if (!window.confirm(ASK)) {
         event.preventDefault();
         event.stopPropagation();
