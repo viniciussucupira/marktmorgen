@@ -8,7 +8,8 @@ import { StudioStorePin } from "@/components/studio-store-pin";
 import { DealsBoard } from "@/components/deals-board";
 import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
-import { readDeals, readFields, readStages } from "@/lib/crm";
+import { readFields, readOpportunityReview } from "@/lib/crm";
+import { DealsUnavailable } from "@/components/deals-unavailable";
 
 export const metadata: Metadata = {
   title: "Deals and fields — Marktmorgen",
@@ -31,9 +32,10 @@ export default async function StudioDealsPage({ searchParams }: Params) {
   }
   const { view } = found;
   const { store } = view;
-  const [fields, stages] = await Promise.all([readFields(store.statsId), readStages(store.statsId)]);
-  const [deals, team] = await Promise.all([readDeals(store.statsId, stages), readTeam(store.sid)]);
-  const assignees = [store.email, ...team.members.filter(m => can(m.role, "orders")).map(m => m.email)];
+  const [loadedFields, inventory, team] = await Promise.all([readFields(store.statsId).catch(() => null), readOpportunityReview(store.statsId), readTeam(store.sid).catch(() => null)]);
+  const fields = loadedFields ?? [];
+  const available = inventory.available && loadedFields !== null && team !== null;
+  const assignees = [store.email, ...(team?.members ?? []).filter(m => can(m.role, "orders")).map(m => m.email)];
   const today = new Date().toISOString().slice(0, 10);
 
   return (
@@ -57,7 +59,7 @@ export default async function StudioDealsPage({ searchParams }: Params) {
             .
           </p>
           <div className="mt-8">
-            <DealsBoard key={(store.sid || store.handle) + ":" + dealActionFilter(query.followup)} deals={deals} stages={stages} fields={fields} currency={store.currency} assignees={assignees} today={today} initialFilter={dealActionFilter(query.followup)} />
+            {available ? <DealsBoard key={(store.sid || store.handle) + ":" + dealActionFilter(query.followup)} deals={inventory.deals} stages={inventory.stages} fields={fields} currency={store.currency} assignees={assignees} today={today} initialFilter={dealActionFilter(query.followup)} /> : <DealsUnavailable storeId={store.sid} buyersHref={studioPath(store, "", "people")} fields={fields} followup={dealActionFilter(query.followup)} />}
           </div>
         </main>
       </StudioStorePin>
