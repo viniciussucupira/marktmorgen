@@ -114,6 +114,7 @@ const MESSAGES: Record<string, string> = {
   shape: "Something in the page could not be read. Reload the studio and try again.",
   same_version: "Version B shows just what version A does, or one of them has no blocks. Change something in version B, or end the test.",
   too_big: "The page is too long to save. Shorten some of the text.",
+  placeholder: "This page still has parts marked ⟦like this⟧ for you to write. Replace each one with your own words, or keep the page hidden, before saving. Nothing was saved.",
   next: "After a sign-up, only another product that costs money can be shown.",
   unknown: "That product is no longer in your store. Reload the page.",
   store_full: "Your store is full. Remove something before adding more.",

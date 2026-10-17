@@ -32,11 +32,13 @@ import { imageType, ownsImagePath } from "@/lib/product-image";
 import { imageFolder } from "@/lib/store";
 import { findLesson, readBody, readCourse } from "@/lib/course";
 import { DEFAULT_QUIZ_DRAFT, QUIZ_DRAFT_COUNTS } from "@/lib/quiz-draft";
+import { funnelType } from "@/lib/funnel-types";
+import { readFunnelAsk, readFunnelFacts, writeFunnelDraft, writeFunnelResearch } from "@/lib/funnel-ai";
 
 const KINDS: ProductKind[] = ["download", "link", "course", "membership", "call", "bundle"];
 
 /**
- * The writing help (lib/ai.ts): `{ kind: "product" | "page" | "review" | "block" | "fill" | "alt" | "translate" | "bio" | "faq" | "kit" | "setup" | "reply" | "posts" | "blog" | "outline" | "email" | "quiz" | "feedback" | "sequence", … }`.
+ * The writing help (lib/ai.ts): `{ kind: "product" | "page" | "review" | "block" | "fill" | "alt" | "translate" | "bio" | "faq" | "kit" | "setup" | "reply" | "posts" | "blog" | "outline" | "email" | "quiz" | "feedback" | "sequence" | "funnel" | "funnel-research", … }`.
  * It writes into the studio's own boxes and saves nothing: whatever comes back
  * is the creator's to read, change and keep, or not.
  *
@@ -46,7 +48,7 @@ const KINDS: ProductKind[] = ["download", "link", "course", "membership", "call"
 export async function POST(request: NextRequest) {
   // A review or a translation sends the page being edited, which may be long, and
   // twice as long with a second version being tested (lib/sales-page.ts, MAX_PAGE_BYTES).
-  const guarded = await guardStoreWrite(request, (body) => (body.kind === "email" || body.kind === "sequence" ? "draft" : body.kind === "bio" || body.kind === "faq" || body.kind === "kit" || body.kind === "setup" || body.kind === "blog" || (body.kind === "posts" && !body.product) ? "page" : body.kind === "reply" ? "reviews" : "products"), 280_000);
+  const guarded = await guardStoreWrite(request, (body) => (body.kind === "email" || body.kind === "sequence" ? "draft" : body.kind === "bio" || body.kind === "faq" || body.kind === "kit" || body.kind === "setup" || body.kind === "blog" || body.kind === "funnel" || body.kind === "funnel-research" || (body.kind === "posts" && !body.product) ? "page" : body.kind === "reply" ? "reviews" : "products"), 280_000);
   if (!guarded.ok) return guarded.response;
   const { body, store } = guarded;
   const fail = (error: string, status = 400) => Response.json({ ok: false, error }, { status });
@@ -323,6 +325,18 @@ export async function POST(request: NextRequest) {
         count,
       }),
     );
+  }
+  if (body.kind === "funnel" || body.kind === "funnel-research") {
+    // A whole funnel, or who it is for (lib/funnel-ai.ts): the products of its
+    // steps are read here, from the store's own records, and checked as the
+    // guided setup checks them; nothing is saved here.
+    const type = funnelType(text(body.type, 40));
+    if (!type) return fail("type");
+    const read = await readFunnelFacts(store, type, body.products && typeof body.products === "object" && !Array.isArray(body.products) ? (body.products as Record<string, unknown>) : {});
+    if (!read.ok) return Response.json({ ok: false, error: read.error, slot: read.slot }, { status: 400 });
+    const ask = readFunnelAsk(body);
+    if (body.kind === "funnel") return answer(writeFunnelDraft(store, read.facts, ask, body.emails === true));
+    return answer(writeFunnelResearch(store, read.facts, ask));
   }
   if (body.kind === "email") {
     const goal = EMAIL_GOALS.some((g) => g.id === body.goal) ? (body.goal as EmailGoal) : "update";

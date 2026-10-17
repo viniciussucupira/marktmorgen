@@ -7,6 +7,7 @@ import { claimPictures, dropPage, readPage, releasePictures, writePage } from "@
 import { del } from "@/lib/blob";
 import { ownsImagePath } from "@/lib/product-image";
 import { isStoredPicture } from "@/lib/picture-check";
+import { hasPlaceholder } from "@/lib/mail-body";
 import { MAX_SITE_PAGES, SITE_KINDS, SITE_PAGE_ID, SITE_STARTERS, type SitePage, outFrom, siteKey, siteTitle, slugFrom, slugProblem } from "@/lib/site-page-rules";
 
 /** Thirty full blocks as JSON, with room to spare; a page is held to MAX_PAGE_BYTES. */
@@ -103,6 +104,9 @@ export async function POST(request: NextRequest) {
       if (problem) return refuse(problem);
       if (page.blocks.some((block) => !SITE_KINDS.includes(block.kind))) return refuse("kind");
       if (oversized(page)) return refuse("too_big");
+      // A part left ⟦like this⟧ for the creator to write (lib/funnel-ai-rules.ts) is a
+      // direction, never words shown to visitors: kept while hidden, refused once shown or scheduled.
+      if (outFrom(page) !== -1 && hasPlaceholder(JSON.stringify(page.blocks))) return refuse("placeholder");
       if (!store.statsId) {
         // A store written before it had one is given its id with the list.
         const marked = await setSitePages(ref, pages);

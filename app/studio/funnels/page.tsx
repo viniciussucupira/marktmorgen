@@ -28,6 +28,8 @@ import { FunnelSharePanel } from "@/components/funnel-share-panel";
 import { listShares } from "@/lib/funnel-share-store";
 import { shareLimitsFor } from "@/lib/funnel-share-rules";
 import { FUNNEL_STARTERS } from "@/lib/funnel-starters";
+import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { monthlyAllowance } from "@/lib/mail";
 
 export const metadata: Metadata = {
   title: "Funnels — Marktmorgen",
@@ -150,6 +152,15 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
   // Copying, sharing and bringing in funnels (lib/funnel-bundle.ts): the store's links, never their codes.
   const canShare = can(view.role, "page");
   const shares = canShare ? await listShares(store.statsId).then((list) => list.map((entry) => ({ id: entry.id, name: entry.name, funnelId: entry.funnelId, createdAt: entry.createdAt, expiresAt: entry.expiresAt, hint: entry.hint }))).catch(() => null) : null;
+  // Writing with AI where it is on (lib/ai.ts), and whether a drafted follow-up can be saved as a switched-off sequence.
+  const aiOn = isAiConfigured() && can(view.role, "page") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
+  const sequences = !can(view.role, "send")
+    ? { canSave: false, note: "Your role cannot save sequences. Copy these emails for someone who can, or into a broadcast draft." }
+    : !store.listId || !store.mail
+      ? { canSave: false, note: "Set up email in the Email Studio to save these as a sequence. Copy them for now." }
+      : monthlyAllowance(store) === 0
+        ? { canSave: false, note: "Your plan does not include sending email yet. Copy these emails for later." }
+        : { canSave: true, note: "" };
   const funnelBase =
     store.domain?.liveAt && canUseDomain(store) ? `https://${store.domain.name}/go/` : `${SITE_URL}/@${store.handle}/go/`;
 
@@ -179,6 +190,8 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
             canMakePages={can(view.role, "page")}
             funnelsLeft={Math.max(0, MAX_PAGE_FUNNELS - savedFunnels.length)}
             sid={store.sid}
+            ai={aiOn}
+            sequences={sequences}
           />
         </div>
 

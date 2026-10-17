@@ -12,6 +12,7 @@ import { MAX_SITE_PAGES, type SitePage, siteKey, slugProblem } from "@/lib/site-
 import { choicesOf, freeSlug, funnelType, pagesOf, slotProblem } from "@/lib/funnel-types";
 import { readFunnelFormDrafts } from "@/lib/funnel-form-draft";
 import { readFunnelPageCopy } from "@/lib/funnel-page-copy";
+import { readFunnelBlockCopy } from "@/lib/funnel-ai-rules";
 import { newFormId, parseForm } from "@/lib/forms";
 import { canAddForms, writeForm } from "@/lib/form-store";
 
@@ -25,7 +26,7 @@ import { canAddForms, writeForm } from "@/lib/form-store";
  *
  * `{ action: "from-type", type, name, products: { <slot>: <product id> } }`
  * builds one from a funnel type (lib/funnel-types.ts): the store's own pages
- * the type needs, optionally with author-written pageCopy, kept back until the creator lets them out,
+ * the type needs, optionally with author-written pageCopy and a draft's blockCopy (lib/funnel-ai-rules.ts), kept back until the creator lets them out,
  * and the funnel walking them and the chosen products in the type's order.
  * Making pages needs the permission to change the public page as well.
  */
@@ -58,6 +59,9 @@ export async function POST(request: NextRequest) {
       if (!formDrafts) return Response.json({ ok: false, error: "form_draft" }, { status: 400 });
       const pageCopy = readFunnelPageCopy(body.pageCopy, type);
       if (!pageCopy) return Response.json({ ok: false, error: "page_copy" }, { status: 400 });
+      // A draft's words for the page's other blocks (lib/funnel-ai-rules.ts), held to each block's limits.
+      const blockCopy = readFunnelBlockCopy(body.blockCopy, type);
+      if (!blockCopy) return Response.json({ ok: false, error: "page_copy" }, { status: 400 });
       if (store.sitePages.length + pages.length > MAX_SITE_PAGES) return Response.json({ ok: false, error: "pages_full" }, { status: 400 });
 
       // Each product chosen is the store's, once, and the kind the role asks for.
@@ -80,6 +84,7 @@ export async function POST(request: NextRequest) {
       // The pages, at addresses of their own, out of the menu: they belong to the funnel.
       const taken = new Set(store.sitePages.map((page) => page.slug));
       const made: { slot: (typeof pages)[number]; page: SitePage }[] = [];
+      const formsMade: Record<string, string> = {};
       for (const slot of pages) {
         let slug = freeSlug(slot.slug, taken);
         if (slugProblem(slug, store.sitePages) === "reserved") slug = freeSlug(`${slot.slug}-page`, taken);
@@ -96,12 +101,26 @@ export async function POST(request: NextRequest) {
           const copy = pageCopy[slot.key];
           const hero = blocks[0];
           if (hero?.kind === "hero") Object.assign(hero, { headline: copy?.headline || slot.title, media: "none" });
+          let introBlock: (typeof blocks)[number] | null = null;
           if (copy?.intro) {
             const intro = emptyBlock("text");
+            introBlock = intro;
             if (intro.kind === "text") {
               intro.body = copy.intro;
               blocks.splice(1, 0, intro);
             }
+          }
+          const words = blockCopy[slot.key];
+          if (words) {
+            // The type's own blocks, never the introduction added above them.
+            const first = <K extends (typeof blocks)[number]["kind"]>(kind: K) => blocks.find((block) => block.kind === kind && block !== introBlock) as Extract<(typeof blocks)[number], { kind: K }> | undefined;
+            const top = first("hero"), text = first("text"), steps = first("steps"), fit = first("fit"), faq = first("faq"), cta = first("cta");
+            if (words.sub && top) top.sub = words.sub;
+            if (words.text && text) Object.assign(text, { heading: words.text.heading, body: words.text.body });
+            if (words.steps && steps) Object.assign(steps, { heading: words.steps.heading, items: words.steps.items });
+            if (words.fit && fit) Object.assign(fit, { yes: words.fit.yes, no: words.fit.no });
+            if (words.faq && faq) faq.items = words.faq;
+            if (words.cta && cta) cta.label = words.cta;
           }
           // The form the page asks, made with it: questions only, nothing claimed (lib/funnel-types.ts).
           const asks = blocks.find((block) => block.kind === "form");
@@ -117,6 +136,7 @@ export async function POST(request: NextRequest) {
             });
             if (!form || !(await writeForm(saved.store.statsId, form))) throw new Error("Required funnel form could not be saved");
             asks.form = form.id;
+            formsMade[slot.key] = form.id;
           }
           await writePage(saved.store.statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true });
         }
@@ -131,7 +151,7 @@ export async function POST(request: NextRequest) {
       for (let n = 2; funnelSlugProblem(slug, existing) !== null && n < 100; n += 1) slug = `${(funnelSlugFrom(name) || "funnel").slice(0, 36)}-${n}`;
       setupStarted = true;
       const kept = await writePageFunnel(statsId, { id: newFunnelId(), name, slug, steps, on: false, since: Math.floor(Date.now() / 1000) }, existing);
-      return Response.json({ ok: true, funnel: kept, pages: made.map((m) => ({ id: m.page.id, title: m.page.title, slug: m.page.slug })) });
+      return Response.json({ ok: true, funnel: kept, pages: made.map((m) => ({ id: m.page.id, title: m.page.title, slug: m.page.slug })), forms: formsMade });
     }
 
     const read = readFunnelInput(body.funnel, existing, Math.floor(Date.now() / 1000));
