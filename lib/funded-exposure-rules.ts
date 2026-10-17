@@ -31,3 +31,13 @@ export function assessFundedExposure(review:FundedExposureReview|null,now=new Da
  if(required>BigInt(Number.MAX_SAFE_INTEGER))return fail('invalid');
  return {approved:BigInt(budget)>=required,reason:BigInt(budget)>=required?'approved':'underfunded',requiredBudgetCents:Number(required),monthlyBudgetCents:budget};
 }
+
+/** Canonical immutable-value copy used for funding bindings and reservations. */
+export function fundedExposureDetails(review:FundedExposureReview|null,now=new Date()):{month:string;budgetCents:number;snapshot:string;allocations:Record<ExposureScope,{slots:number;cents:number}>}|null {
+ const copy={month:own(review,'month'),evidence:own(review,'evidence'),admissionLimitsEnforced:own(review,'admissionLimitsEnforced'),monthlyBudgetCents:own(review,'monthlyBudgetCents'),cases:Object.fromEntries(EXPOSURE_SCOPES.map(scope=>{const item=own(own(review,'cases'),scope),raw=own(item,'worstCase'),costs=own(raw,'costCeilings');return [scope,{maximumMonthlyCases:own(item,'maximumMonthlyCases'),worstCase:{collectedRevenueCents:own(raw,'collectedRevenueCents'),refundableRevenueCents:own(raw,'refundableRevenueCents'),taxesCeilingCents:own(raw,'taxesCeilingCents'),costCeilings:Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,own(costs,key)])),allCostsBounded:own(raw,'allCostsBounded'),allTaxesReviewed:own(raw,'allTaxesReviewed'),revenueCollected:own(raw,'revenueCollected')}}];}))} as FundedExposureReview;
+ if(!assessFundedExposure(copy,now).approved)return null;
+ const allocations={} as Record<ExposureScope,{slots:number;cents:number}>;
+ for(const scope of EXPOSURE_SCOPES){const item=copy.cases[scope],unit=item.worstCase!,a=assessCustomerWorstCase(unit);const net=a.netCents===null?-BigInt(unit.taxesCeilingCents!)-CUSTOMER_COST_CATEGORIES.reduce((sum,key)=>sum+BigInt(unit.costCeilings[key]!),BigInt(0)):BigInt(a.netCents);if(net< -BigInt(Number.MAX_SAFE_INTEGER))return null;allocations[scope]={slots:item.maximumMonthlyCases!,cents:net<BigInt(0)?Number(-net):0};}
+ const snapshot=JSON.stringify([FUNDED_EXPOSURE_RULES,copy.month,copy.evidence,copy.monthlyBudgetCents,EXPOSURE_SCOPES.map(scope=>{const item=copy.cases[scope],u=item.worstCase!;return [scope,item.maximumMonthlyCases,u.collectedRevenueCents,u.refundableRevenueCents,u.taxesCeilingCents,CUSTOMER_COST_CATEGORIES.map(key=>[key,u.costCeilings[key]]),u.allCostsBounded,u.allTaxesReviewed,u.revenueCollected];})]);
+ return {month:copy.month,budgetCents:copy.monthlyBudgetCents!,snapshot,allocations};
+}

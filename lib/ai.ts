@@ -1,3 +1,4 @@
+import { reserveFundedExposure } from '@/lib/exposure-budget';
 import { consumeAiCallBudget, hasAiCallBudget, withAiCallBudget } from '@/lib/ai-call-budget';
 import { AI_ENTITLEMENT_RULES } from '@/lib/ai-entitlement-rules';
 /**
@@ -172,7 +173,10 @@ export async function askModel(
   // Standalone visitor calls get one slot; counted writing jobs share theirs.
   if (!hasAiCallBudget()) return withAiCallBudget(store.statsId, 1, () => askModel(store, system, prompt, maxTokens, named, timeoutMs));
   if (!consumeAiCallBudget(store.statsId)) return null;
-  if (!(await reserveAiSpend(store.statsId, aiBudgetScopeFor(store), named))) return null;
+  const scope=aiBudgetScopeFor(store);
+  const exposure=scope==='trial'?'trial':scope==='setup'?'setup':scope==='ended'?'post_cancellation':null;
+  if(exposure&&!(await reserveFundedExposure(store.statsId,exposure)))return null;
+  if (!(await reserveAiSpend(store.statsId, scope, named))) return null;
   const response = await timed(timeoutMs, (signal) =>
     fetch(API, {
       method: "POST",

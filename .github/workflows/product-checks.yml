@@ -63,3 +63,7 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_ai_spend_redis.py
+      - name: Actual Redis company exposure reservation checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_exposure_budget_redis.py

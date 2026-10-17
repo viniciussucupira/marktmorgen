@@ -1,3 +1,4 @@
+import { CURRENT_EXPOSURE_BUDGET_POLICY, exposureBudgetConfiguration, EXPOSURE_ADMISSION_RULES } from '@/lib/exposure-budget-policy';
 import { assessFundedExposure, FUNDED_EXPOSURE_RULES, type FundedExposureReview } from '@/lib/funded-exposure-rules';
 import { AI_ENTITLEMENT_RULES, aiEntitlementsFunded } from '@/lib/ai-entitlement-rules';
 import { CURRENT_UPLOAD_BUDGET_POLICY, UPLOAD_BUDGET_RULES, isUploadBudgetConfigured } from "@/lib/upload-budget-policy";
@@ -44,12 +45,13 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 15,
+ schemaVersion: 16,
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: CURRENT_UPLOAD_BUDGET_POLICY },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
  customerBaseRules: CUSTOMER_BASE_RULES,
  fundedExposureRules: FUNDED_EXPOSURE_RULES,
+ exposureAdmissionRules: EXPOSURE_ADMISSION_RULES,
  invitations: { open: INVITE_PROGRAM_OPEN, legacySharePercent: INVITE_SHARE_PERCENT, legacyBonusCents: INVITE_BONUS_CENTS, legacyRecordingUntil: LEGACY_INVITE_RECORDING_UNTIL },
  quizzes: { newQuizPolicy: QUIZ_USAGE_POLICY, submissionsPerStoreUtcMonth: QUIZ_MONTHLY_SUBMISSIONS, legacyQuizzesExempt: true },
  basePlanRevenueCeilings: BASE_PLAN_REVENUE_CEILINGS,
@@ -128,5 +130,6 @@ export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT
 }
 export function commercialPlansMayOpen(requested:boolean,review:CommercialMarginReview|null=CURRENT_COMMERCIAL_MARGIN_REVIEW):boolean{
  const commissionReady=!COMMISSION_PLANS_PUBLISHED||(COMMISSION_LIVE&&SHARE_PROVED_IN_TEST_MODE);
- return requested===true&&commissionReady&&commercialMarginReady(review);
+ const exposureReady=review!==null&&exposureBudgetConfiguration(CURRENT_EXPOSURE_BUDGET_POLICY,{termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:review.fundedExposure})!==null;
+ return requested===true&&commissionReady&&exposureReady&&commercialMarginReady(review);
 }

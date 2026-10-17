@@ -18,6 +18,18 @@ export function testAliases(file,root,here){
  if(file==='ai-spend-provider.test.ts')aliases['@/lib/ai-spend-policy']=join(here,'ai-spend-approved-policy.ts');
  if(['video-admission.test.ts','video-tier.test.ts'].includes(file)){aliases['@/lib/redis']=join(here,'video-admission-redis.ts');aliases['@/lib/stream']=join(here,'video-admission-stream.ts');}
  if(file==='storage-measurement.test.ts')for(const name of ['blob','vault','stream'])aliases['@/lib/'+name]=join(here,'storage-provider-stub.ts');
+ if(['exposure-budget.test.ts','exposure-provider.test.ts'].includes(file))aliases['@/lib/redis']=join(here,'exposure-budget-redis.ts');
+ if(file==='exposure-provider.test.ts'){
+  aliases['@/lib/ai-spend']=join(here,'exposure-ai-spend-stub.ts');
+  aliases['@/lib/exposure-budget-policy']=join(here,'exposure-budget-approved-policy.ts');
+  aliases['@/lib/commercial-margin']=join(here,'exposure-commercial-context.ts');
+ }
+ if(file==='exposure-release.test.ts'){
+  aliases['@/lib/plan']=join(here,'exposure-release-plan.ts');
+  aliases['@/lib/platform-share']=join(here,'exposure-release-share.ts');
+  aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
+  aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
+ }
  return aliases;
 }
 export function testEnvironment(env){return{...env,NIMBUS_DATA_KEY:env.NIMBUS_DATA_KEY??'tests-only-not-a-real-deployment-secret'};}
