@@ -199,6 +199,25 @@ async function main(): Promise<void> {
   await hit({ h: "chef", k: "f", f: funnel.id, t: "g", id: "videopage1" }, `${SESSION_COOKIE}=${await openSession(OWNER)}`);
   is("through the page's own beacon: once, not a page that is no step, and never the owner", (await readFunnelCounts(statsId, funnel))[2].seen, 2);
 
+  part("Storage must confirm funnel mutations");
+  const originalMutationPipeline = redis.pipeline;
+  try {
+    for (const replies of [[], [null], [undefined], [true], [false], [""], [2], [-1], [1.5], ["invalid"], [{ error: "unavailable" }], [1, 1]]) {
+      redis.pipeline = async () => replies;
+      let saveFailed = false;
+      let removeFailed = false;
+      try { await writePageFunnel(statsId, funnel, [funnel]); } catch { saveFailed = true; }
+      try { await dropPageFunnel(statsId, funnel.id); } catch { removeFailed = true; }
+      is("unconfirmed save is rejected: " + JSON.stringify(replies), saveFailed, true);
+      is("unconfirmed deletion is rejected: " + JSON.stringify(replies), removeFailed, true);
+    }
+    for (const reply of [0, 1, "0", "1"]) {
+      redis.pipeline = async () => [reply];
+      is("confirmed save accepts Redis acknowledgement " + JSON.stringify(reply), (await writePageFunnel(statsId, funnel, [funnel])).id, funnel.id);
+      is("confirmed deletion interprets Redis acknowledgement " + JSON.stringify(reply), await dropPageFunnel(statsId, funnel.id), reply === 1 || reply === "1");
+    }
+  } finally { redis.pipeline = originalMutationPipeline; }
+
   part("Removing one");
   is("gone, and a second removal finds nothing", [await dropPageFunnel(statsId, funnel.id), await dropPageFunnel(statsId, funnel.id)], [true, false]);
   is("and its address leads to the store", await go("/@chef/go/launch"), [307, "https://marktmorgen.com/@chef"]);

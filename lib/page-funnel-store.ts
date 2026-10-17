@@ -66,6 +66,15 @@ export async function readPageFunnel(statsId: string | null, id: string): Promis
   }
 }
 
+/** A single-field mutation must have exactly one explicit Redis acknowledgement. */
+function confirmedMutation(replies: unknown[]): 0 | 1 {
+  if (replies.length !== 1) throw new Error("Funnel mutation acknowledgement missing");
+  const value = replies[0];
+  if (value === 0 || value === "0") return 0;
+  if (value === 1 || value === "1") return 1;
+  throw new Error("Funnel mutation acknowledgement invalid");
+}
+
 /** Keeps a funnel, new or changed. A new one is given an id no other funnel of the store has. */
 export async function writePageFunnel(statsId: string, funnel: PageFunnel, existing: readonly PageFunnel[]): Promise<PageFunnel> {
   let id = funnel.id;
@@ -73,14 +82,15 @@ export async function writePageFunnel(statsId: string, funnel: PageFunnel, exist
   if (isNew && existing.length >= MAX_PAGE_FUNNELS) throw new Error("too many funnels");
   while (isNew && existing.some((f) => f.id === id)) id = newFunnelId();
   const kept = { ...funnel, id };
-  await redisPipeline([["HSET", funnelsKey(statsId), id, JSON.stringify(kept)]]);
+  const replies = await redisPipeline([["HSET", funnelsKey(statsId), id, JSON.stringify(kept)]]);
+  confirmedMutation(replies);
   return kept;
 }
 
 /** Removes a funnel. Its numbers go with it, by their own expiry. */
 export async function dropPageFunnel(statsId: string, id: string): Promise<boolean> {
-  const [removed] = await redisPipeline([["HDEL", funnelsKey(statsId), id]]);
-  return Number(removed) > 0;
+  const replies = await redisPipeline([["HDEL", funnelsKey(statsId), id]]);
+  return confirmedMutation(replies) === 1;
 }
 
 /** What one step is, as the store stands: its title, where it is, and whether it can be shown. */
