@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -11,7 +11,8 @@ import { FunnelFormSetup } from "@/components/funnel-form-setup";
 import { readFunnelFormDrafts, type FunnelFormDraft } from "@/lib/funnel-form-draft";
 import { MAX_FUNNEL_INTRO, type FunnelPageCopy } from "@/lib/funnel-page-copy";
 import { MAX_HEADLINE } from "@/lib/sales-page";
-import { FUNNEL_ID, MAX_FUNNEL_NAME } from "@/lib/page-funnel";
+import { readFunnelSetupResult } from "@/lib/funnel-setup-response";
+import { MAX_FUNNEL_NAME } from "@/lib/page-funnel";
 
 /** A product a type can be built with, as the studio knows it. */
 export type TypeProduct = { id: string; title: string; free: boolean; call: boolean; draft: boolean };
@@ -56,6 +57,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   const [formDrafts, setFormDrafts] = useState<Record<string, FunnelFormDraft>>({});
   const [pageCopy, setPageCopy] = useState<Record<string, FunnelPageCopy>>({});
   const [reviewing, setReviewing] = useState(false);
+  const requestActive = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recovery, setRecovery] = useState<"setup" | "forms" | null>(null);
@@ -99,30 +101,28 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
   }
 
   async function build() {
-    if (!type || !reviewing || !formDraftsValid || busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
+    if (!type || !reviewing || !formDraftsValid || requestActive.current || busy || recovery === "setup" || !name.trim() || selectionIssues.length > 0 || repeated || capacityIssue) return;
+    requestActive.current = true;
     setBusy(true);
     setRecovery(null);
     setError(null);
     try {
       const response = await fetch("/api/store/page-funnels", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(sid ? { "x-nimbus-store": sid } : {}) },
+        headers: { "Content-Type": "application/json", "x-nimbus-store": sid },
         body: JSON.stringify({ action: "from-type", type: type.id, name, products: picked, pageCopy, formDrafts }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; funnel?: { id?: unknown; on?: unknown }; pages?: { id: string; title: string }[] };
-      const id = data.funnel?.id;
-      const pages = Array.isArray(data.pages) ? data.pages : [];
-      const confirmed = response.ok && data?.ok === true && typeof id === "string" && FUNNEL_ID.test(id) && data.funnel?.on === false
-        && Array.isArray(data.pages) && pages.length === pagesOf(type).length
-        && pages.every(page => page && typeof page.id === "string" && /^[a-f0-9]{10}$/.test(page.id) && typeof page.title === "string");
-      if (confirmed) {
+      const data: unknown = await response.json().catch(() => null);
+      const result = response.ok ? readFunnelSetupResult(data, pagesOf(type).length) : null;
+      if (result) {
         toast("Funnel draft created.");
-        setMade({ pages, funnelId: typeof id === "string" && FUNNEL_ID.test(id) ? id : null, drafts: draftSelections });
+        setMade({ ...result, drafts: draftSelections });
         setType(null);
         router.refresh();
         return;
       }
-      const errorCode = typeof data?.error === "string" && Object.hasOwn(MESSAGES, data.error) ? data.error : null;
+      const rawError = data && typeof data === "object" && "error" in data ? data.error : null;
+      const errorCode = data && typeof data === "object" && "ok" in data && data.ok === false && typeof rawError === "string" && Object.hasOwn(MESSAGES, rawError) ? rawError : null;
       const uncertain = errorCode === "setup_incomplete" || !errorCode;
       setRecovery(uncertain ? "setup" : errorCode === "forms_full" ? "forms" : null);
       setError(uncertain ? MESSAGES.setup_incomplete : MESSAGES[errorCode!]);
@@ -130,11 +130,12 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
       setRecovery("setup");
       setError(MESSAGES.setup_incomplete);
     } finally {
+      requestActive.current = false;
       setBusy(false);
     }
   }
 
-  const reviewHref = `/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}${made?.funnelId ? `#funnel-review-${made.funnelId}` : ""}`;
+  const reviewHref = `/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}`;
   const productsHref = `/studio${sid ? `?store=${encodeURIComponent(sid)}` : ""}#products`;
   const pagesHref = (id: string) => `/studio/site?${sid ? `store=${encodeURIComponent(sid)}&` : ""}page=${encodeURIComponent(id)}`;
 
@@ -175,8 +176,8 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
             </>
           ) : null}
           {made.drafts.length ? <div className="mt-4 text-sm"><p className="font-semibold">Products that were drafts at setup:</p><ul className="mt-2 list-disc space-y-1 pl-5">{made.drafts.map(draft => <li key={draft}>{draft}</li>)}</ul><p className="mt-2">Review their current status and publish them before sharing the funnel.</p><a className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={productsHref}>Review products</a></div> : null}
-          <p className="mt-4 text-sm text-ink-soft">Prepare the pages and products, review the saved checks, and test the customer journey. Enable the funnel in its settings only when it is ready.</p>
-          <a className="btn btn-secondary mt-4" href={reviewHref}>{made.funnelId ? "Review the new funnel" : "Review funnels"}</a>
+          <p className="mt-4 text-sm text-ink-soft">Prepare the pages and products, review its settings, and test the customer journey. Enable the funnel in its settings only when it is ready.</p>
+          <a className="btn btn-secondary mt-4" href={reviewHref}>{made.funnelId ? "Review funnel settings" : "Review funnels"}</a>
         </div>
       ) : null}
 
