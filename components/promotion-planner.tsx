@@ -1,11 +1,12 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { StatsData } from "@/lib/stats";
 import { promotionChoices, promotionLink, type PromotionProduct, type PromotionWindow } from "@/lib/promotion-plan";
 import { CAMPAIGN_MEDIA, POST_PLACES, type CampaignMedium } from "@/lib/share-links";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
+import { copyCampaignLink } from "@/lib/campaign-copy";
 
 export function PromotionPlanner({ data, range, products }: { data: StatsData; range: PromotionWindow; products: PromotionProduct[] }) {
   const id = useId();
@@ -16,14 +17,16 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
   const [medium, setMedium] = useState<CampaignMedium>("post");
   const [variant, setVariant] = useState("");
   const [copied, setCopied] = useState("");
+  const linkInput = useRef<HTMLInputElement>(null);
   const product = plan.products.find(item => item.id === selected) ?? plan.products[0];
   const channel = source || plan.channel;
   const link = product ? promotionLink(product, channel, campaign, medium, variant) : "";
   if (!product) return null;
   async function copy() {
     if (!link) return;
-    try { await navigator.clipboard.writeText(link); setCopied(link); }
-    catch { setCopied("failed"); }
+    const result = await copyCampaignLink(link, () => linkInput.current, text => navigator.clipboard.writeText(text));
+    if (result === "stale" || linkInput.current?.value !== link) return;
+    setCopied(result === "copied" ? link : result === "selected" ? "selected:" + link : "failed:" + link);
   }
   return <section className="mt-5 rounded-[16px] bg-gradient-to-br from-violet-50 to-emerald-50 p-4 ring-1 ring-line" aria-labelledby={id + "-title"}>
     <h3 id={id + "-title"} className="text-sm font-bold text-ink">Prepare your next promotion</h3>
@@ -44,7 +47,7 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
     <p className="mt-1 text-xs text-ink-soft">{product.figures ? <>
       {product.figures.views.toLocaleString("en-US")} page views
       {plan.known ? " · " + formatMoney(product.figures.cents, data.currency) + " gross revenue" : ""} in the selected period.
-    </> : "No product figures are available in this period."} {plan.channelEvidence ? <>The suggested channel, {channelName(plan.channel)}, is based on store-wide {plan.known ? "gross revenue" : "visits"}; it does not prove this product sold through that channel.</> : "No channel is suggested by measured results; Instagram is the editable starting choice."}</p>
+    </> : "No product figures are available in this period."} {plan.channelEvidence ? <>The suggested channel, {channelName(plan.channel)}, is based on store-wide {plan.channelBasis === "sales" ? "gross revenue" : "visits"}; it does not prove this product sold through that channel.</> : "No channel is suggested by measured results; Instagram is the editable starting choice."}</p>
     <div className="mt-3 grid gap-3 sm:grid-cols-2">
       <label className="text-xs font-semibold text-ink-soft" htmlFor={id + "-campaign"}>Campaign name
         <input id={id + "-campaign"} className="field mt-1 w-full" maxLength={60} value={campaign} onChange={event => { setCampaign(event.target.value); setCopied(""); }} />
@@ -59,13 +62,13 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
       </label>
     </div>
     <label className="mt-3 block text-xs font-semibold text-ink-soft" htmlFor={id + "-link"}>Your campaign link
-      <input id={id + "-link"} className="field mt-1 w-full" readOnly value={link} onFocus={event => event.currentTarget.select()} />
+      <input ref={linkInput} id={id + "-link"} aria-describedby={id + "-copy-status"} className="field mt-1 w-full" readOnly value={link} onFocus={event => event.currentTarget.select()} />
     </label>
     {!link ? <p className="mt-1 text-xs text-ink-soft">Enter a campaign name with letters or numbers to create the link.</p> : null}
     <div className="mt-3 flex flex-wrap gap-2">
       <button type="button" className="btn btn-primary" disabled={!link} onClick={() => void copy()}>Copy campaign link</button>
       <button type="button" className="btn btn-secondary" onClick={() => document.getElementById("numbers-posts")?.scrollIntoView({ behavior: "smooth", block: "start" })}>See campaign results</button>
     </div>
-    <p className="mt-2 text-xs text-ink-soft" role="status">{copied === link && link ? "Campaign link copied." : copied === "failed" ? "Select the campaign link above and copy it." : "Share this link, then review its recorded visits and payments in Campaigns. Results are not guaranteed; gross revenue excludes refunds, fees and other costs."}</p>
+    <p id={id + "-copy-status"} className="mt-2 text-xs text-ink-soft" role="status">{copied === link && link ? "Campaign link copied." : copied === "selected:" + link ? "The campaign link is selected. Copy it using your keyboard or device menu." : copied === "failed:" + link ? "Select the campaign link above and copy it." : "Share this link, then review its recorded visits and payments in Campaigns. Results are not guaranteed; gross revenue excludes refunds, fees and other costs."}</p>
   </section>;
 }
