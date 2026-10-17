@@ -585,7 +585,7 @@ export const PER_PAYMENT_LINES: CostLine[] = [
     monthlyUsd: (tier) => ((paidStorageBytes(tier) + TASK_ROOM_BYTES[tier] + COMMUNITY_PICTURES[tier] * PICTURE_BYTES) / GB) * STORAGE_PER_GB * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30),
     sources: [
       { file: "lib/plan-closing-rules.ts", names: ["CLOSING_DAYS", "KEEP_NOTHING_FROM", "keptRoomFor"] },
-      { file: "lib/plan-closing.ts", names: ["if (held <= keptRoomFor(endedAt))", "communityFolder(store.community.id)", "removeStored"] },
+      { file: "lib/plan-closing.ts", names: ["if (!closes && held <= keptRoomFor(endedAt))", "communityFolder(store.community.id)", "removeStored"] },
     ],
     basis: "All a plan may keep, kept for its closing days and the week a late last notice adds, once after the payment that was the last. A plan that ended before 18 October 2026 keeps the old rule (a store with no plan's room, with no date): a legacy exposure of docs/funded-exposure-review.md, when no plan could yet be bought.",
   },
@@ -598,8 +598,9 @@ export const PER_PAYMENT_LINES: CostLine[] = [
       { file: "lib/plan-closing-rules.ts", names: ["CLOSING_DAYS"] },
       { file: "tests/store-data-registry.ts", names: ["afterEndByteMonths", "partPeak"] },
       { file: "docs/funded-exposure-review.md", names: ["What a store keeps in the database after its closing day"] },
+      { file: "lib/closed-store-data.ts", names: ["eraseClosed", "WALK_GAP_MS"] },
     ],
-    basis: "The room full, and every record outside it at the most it holds at once, for the closing days and the week a late last notice adds, each record only as long as it is kept. What the room holds past the closing day is kept for a store's buyers and is not priced here: docs/funded-exposure-review.md says so, for the owner.",
+    basis: "The room full, and every record outside it at the most it holds at once, for the closing days and the week a late last notice adds, each record only as long as it is kept. Since 18 October 2026 a store closes on its day and its records are deleted the same day (lib/closed-store-data.ts); what is left after, its tax records in R2 and what goes by itself, is a post-cancellation exposure for each closure (tests/closing-cost.test.ts, docs/funded-exposure-review.md).",
   },
 ];
 
@@ -656,6 +657,7 @@ export const NOT_A_COST: Record<string, string> = {
   OPENS_PER_DAY: "A daily burst limit on one numbers link: each opening is one of the store's public requests (line public-requests).",
   MAX_RANGES_PER_DAY: "How many time ranges a host may set on one day of the week: a setting, not a use.",
   NON_PAYING_ALLOWANCES: "The figures of a store that pays nothing: in nonPayingWorst (line free-share).",
+  ARCHIVE_LINES_PER_MONTH: "A closed store's tax records, a month at a time: kept once its plan has ended, priced for each closure as a post-cancellation exposure (tests/closing-cost.test.ts, docs/funded-exposure-review.md), not in a paying window.",
 };
 
 /** What a scope of a counter in the code is: counted in a line, an abuse guard, or open. */

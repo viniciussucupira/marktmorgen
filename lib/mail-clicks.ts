@@ -42,7 +42,7 @@ export const STEP_CAMPAIGN = /^s-[0-9a-f]{16}-[0-9a-f]{16}$/;
 export const LINK_PARAM = "mk";
 
 const KEY_SECONDS = 400 * 86_400;
-const keyIndex = (key: string) => `nl:mail:mk:${key}`;
+export const keyIndex = (key: string) => `nl:mail:mk:${key}`;
 const person = (email: string) => createHash("sha256").update(`nimbus-clk:${normaliseEmail(email)}`).digest("hex").slice(0, 32);
 const usedKey = (listId: string, email: string) => `nl:mail:clk:${listId}:${person(email)}`;
 

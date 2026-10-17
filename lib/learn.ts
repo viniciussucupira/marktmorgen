@@ -100,6 +100,8 @@ export function buyerFingerprint(secret: string): string {
 
 type Pass = { e: string; k: string; c: string[] | "all" };
 const passKey = (token: string) => `nl:learn:pass:${sha(token)}`;
+/** A pass's key by the hash a buyer's list of passes keeps of it: for a closed store (lib/closed-store-data.ts). */
+export const passKeyOfHash = (hash: string) => `nl:learn:pass:${hash}`;
 /**
  * The passes one address holds in one store, by the hash their keys are
  * made from (added 17 October 2026), so deleting the person can find them:

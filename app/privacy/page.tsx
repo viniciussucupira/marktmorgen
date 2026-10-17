@@ -1,4 +1,5 @@
 import { PAST_CALL_DAYS } from "@/lib/store-data-rules";
+import { CLOSING_DAYS, CLOSING_RECORD_YEARS, ERASE_WITHIN_DAYS } from "@/lib/plan-closing-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
@@ -21,7 +22,7 @@ export default function PrivacyPage() {
   // Named only while the files creators sell are kept there (lib/vault.ts).
   const cloudflare = isVaultConfigured();
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 17, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="October 18, 2026">
       <p>
         Marktmorgen (“Marktmorgen,” “we,” “us,” or “our”) is operated by
         Solrenning, an independent software studio. This Privacy Policy
@@ -947,8 +948,10 @@ export default function PrivacyPage() {
           student&apos;s email address and when it was issued or withdrawn.
           Its page shows the name, the course, the creator and the date to
           anyone who has its address, is kept out of search engines, and never
-          shows the email address. Certificates are kept for good, so the page
-          goes on proving what it says; a withdrawn one says it was withdrawn.
+          shows the email address. Certificates are kept for as long as the
+          store that issued them is open, so the page goes on proving what it
+          says; a withdrawn one says it was withdrawn. When the store closes
+          (section 6), its certificates go with it.
           A student who wants theirs withdrawn asks the creator.
         </p>
         <p id="assignments">
@@ -1594,6 +1597,13 @@ export default function PrivacyPage() {
           says; the creator is told it was done.
         </p>
         <p>
+          When a creator&apos;s store closes, what it kept about you as its
+          buyer is deleted with it, and so is your access to what you bought
+          there (section 6, when a store closes). The payment itself stays on
+          the creator&apos;s own Stripe account, and the record of the sale
+          we keep for tax names no buyer.
+        </p>
+        <p>
           Two things stay ours in that situation: the security of the systems
           the data sits in, and the legal obligations we have to keep records
           of our own, such as fraud prevention and anything the law requires us
@@ -1662,6 +1672,38 @@ export default function PrivacyPage() {
           ended before October 18, 2026, only where the store keeps more than a
           store with no plan may (Terms of Service, section 8).
         </p>
+        <p id="closed-stores">
+          <strong className="text-black">When a store closes.</strong> A
+          store whose plan ended on or after October 18, 2026 closes{" "}
+          {CLOSING_DAYS} days after its plan ended, after the three emails
+          above (Terms of Service, section 8). Its files go that day, and
+          within {ERASE_WITHIN_DAYS} days, usually the same day, everything
+          else it kept with us is deleted: its page, products, pages, posts,
+          courses, community, contacts and their lists, forms and their
+          answers, numbers, settings, and its buyers&apos; access, their
+          library entry for that store and every other record of theirs
+          that belonged to it. Records a person has across stores (their
+          library, their sign-in, the stores they are an affiliate of) lose
+          only that store. Links and one-way marks that store already sent
+          out, which name no store and hold nothing of it, are deleted by
+          themselves within the days each is kept for: 60 at the most for a
+          link that carries an address, or, only where our file store could
+          not be read when the store closed, 400 for a gift&apos;s or a group
+          purchase&apos;s record. What we keep, as our own record
+          under our legal obligations (GDPR article 6(1)(c)), is a
+          compressed record of the store&apos;s sales of the last{" "}
+          {CLOSING_RECORD_YEARS} full years and the year it closed: when each
+          was paid, its payment&apos;s references, the product, the amount and
+          currency, the tax and discount Stripe counted and the buyer&apos;s
+          country, never a buyer&apos;s name or address; and the store&apos;s
+          ids, addresses and name, its owner&apos;s sign-in address, its
+          Stripe account&apos;s id and its plan. Each year&apos;s sales are
+          deleted on January 1 once {CLOSING_RECORD_YEARS} full years have
+          passed since the end of that year, and the store&apos;s own record
+          with the last of them. It is kept in our file store (Cloudflare R2)
+          and used for nothing but tax and legal questions. The store&apos;s
+          address is held back from anybody else for 30 days.
+        </p>
         <p>
           A creator&apos;s list is kept for as long as their store exists, or
           until the creator deletes a person from it, or the person deletes
@@ -1689,8 +1731,8 @@ export default function PrivacyPage() {
           kept while the community exists, until the author or the creator
           deletes them. An affiliate program&apos;s records, license keys and
           the list of who holds them are kept with the store&apos;s records.
-          Certificates are kept for good, so their pages keep proving what
-          they say. Webhook deliveries are kept for up to seven days, and the
+          Certificates are kept while the store that issued them is open, so
+          their pages keep proving what they say. Webhook deliveries are kept for up to seven days, and the
           mark that an event was sent for 30 days. A calendar reading is kept
           for up to six hours, and the calendar address until the creator
           removes it.

@@ -24,7 +24,7 @@ import { type BundleOutline, type FunnelBundle } from "@/lib/funnel-bundle";
 import { MAX_SHARE_DAYS, MAX_SHARE_NAME, SHARE_CODE, SHARE_ID } from "@/lib/funnel-share-rules";
 
 const listKey = (statsId: string) => `nl:fshares:${statsId}`;
-const lookupKey = (hash: string) => `nl:fshare:${hash}`;
+export const lookupKey = (hash: string) => `nl:fshare:${hash}`;
 const countKey = (id: string, what: string) => `nl:fshare:n:${id}:${what}`;
 const hashOf = (code: string) => createHash("sha256").update(code).digest("hex");
 

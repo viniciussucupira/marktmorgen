@@ -60,7 +60,7 @@ const KEEP = KEEP_DAYS * 86_400;
 const indexKey = (statsId: string) => `nl:inbox:${statsId}:all`;
 const convKey = (statsId: string, id: string) => `nl:inbox:${statsId}:c:${id}`;
 const msgKey = (statsId: string, id: string) => `nl:inbox:${statsId}:m:${id}`;
-const tokenKey = (token: string) => `nl:inbox:tok:${token}`;
+export const tokenKey = (token: string) => `nl:inbox:tok:${token}`;
 
 type Kept = Conversation & { token: string; b?: number; bm?: string };
 

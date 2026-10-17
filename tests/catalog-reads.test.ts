@@ -48,7 +48,8 @@ test("no page draws itself by reading every product in the store", () => {
   // the file off every product a store has, once, and is not a page; and the
   // one-time count of what stores keep, lib/data-recount.ts, which reads each
   // store's products once for the ids its keys are named by.)
-  const allowed = new Set(["lib/catalog.ts", "app/api/store/product/route.ts", "lib/imports.ts", "lib/plan-closing.ts", "lib/data-recount.ts"]);
+  // The closing of a store (once, from a job) and its whole export (counted from the studio figure by its size) read every product by design.
+  const allowed = new Set(["lib/catalog.ts", "app/api/store/product/route.ts", "lib/imports.ts", "lib/plan-closing.ts", "lib/data-recount.ts", "lib/closed-store-data.ts", "lib/store-export.ts"]);
   const offenders = walk("app")
     .concat(walk("lib"), walk("components"))
     .filter((file) => !allowed.has(file))

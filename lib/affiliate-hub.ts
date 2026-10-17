@@ -61,6 +61,13 @@ export async function rememberAffiliate(sid: string, email: string): Promise<voi
 }
 
 /** The ids of the stores an address is an affiliate of. */
+/** Forgets that this address is an affiliate of the store with this id: the store closed (lib/closed-store-data.ts). */
+export async function forgetAffiliateStore(sid: string, email: string): Promise<number> {
+  if (!/^[0-9a-f]{32}$/.test(sid) || !isRedisConfigured()) return 0;
+  const [n] = await redisPipeline([["SREM", hubKey(email), sid]]);
+  return Number(n) || 0;
+}
+
 export async function storesPromoted(email: string): Promise<string[]> {
   if (!isRedisConfigured()) return [];
   const [ids] = await redisPipeline([["SMEMBERS", hubKey(email)]]);

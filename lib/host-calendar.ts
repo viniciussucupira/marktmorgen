@@ -68,6 +68,8 @@ const cfgKey = (host: string) => `nl:hostcal:cfg:${host}`;
 const goodKey = (host: string) => `nl:hostcal:good:${host}`;
 const errKey = (host: string) => `nl:hostcal:err:${host}`;
 const lockKey = (host: string) => `nl:hostcal:lock:${host}`;
+/** Every key a host's calendar keeps, by the host: for a store that closes, when it was the host's last (lib/closed-store-data.ts). */
+export const hostCalendarKeys = (host: string): string[] => [cfgKey(host), goodKey(host), errKey(host), lockKey(host)];
 const icsContext = (host: string) => `hostcal|${host}|ics`;
 
 function parseConfig(raw: unknown): Config | null {

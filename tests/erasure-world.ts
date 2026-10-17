@@ -61,17 +61,19 @@ const hex = (n: number) => randomBytes(n).toString("hex");
 const second = () => Math.floor(Date.now() / 1000);
 
 /** A store on a paying plan, with a course, a plain product, a community, a form, a field and a sequence. */
-export async function makeWorld(handle = "erase-shop"): Promise<World> {
-  await claimHandle(OWNER, handle, "Erase Shop", "");
-  await ensureStoreId(OWNER);
-  await ensureStatsId(OWNER);
-  await ensureListId(OWNER);
-  await setStripeAccount(OWNER, "acct_1TestErase00001", true);
+export async function makeWorld(handle = "erase-shop", owner = OWNER): Promise<World> {
+  await claimHandle(owner, handle, handle === "erase-shop" ? "Erase Shop" : handle, "");
+  await ensureStoreId(owner);
+  await ensureStatsId(owner);
+  await ensureListId(owner);
+  // Another owner's store has Stripe ids of its own, as two creators' stores do.
+  const tag = owner === OWNER ? "Erase00001" : `T${sha(owner).slice(0, 9)}`;
+  await setStripeAccount(owner, `acct_1Test${tag}`, true);
   const now = second();
-  await setSubscription(OWNER, { customerId: "cus_Erase00001", subscriptionId: "sub_Erase00001", active: true, tier: "pro", period: { start: now - 10 * 86_400, end: now + 20 * 86_400, renews: true } });
-  await setMailSettings(OWNER, { fromName: "Erase Shop", address: "1 Main St, Portland, OR 97201" });
-  const made = await addProduct(OWNER, "The Course", "Lessons.", "49", null);
-  const plain = await addProduct(OWNER, "The Guide", "A file.", "9", null);
+  await setSubscription(owner, { customerId: `cus_${tag}`, subscriptionId: `sub_${tag}`, active: true, tier: "pro", period: { start: now - 10 * 86_400, end: now + 20 * 86_400, renews: true } });
+  await setMailSettings(owner, { fromName: handle === "erase-shop" ? "Erase Shop" : handle, address: "1 Main St, Portland, OR 97201" });
+  const made = await addProduct(owner, "The Course", "Lessons.", "49", null);
+  const plain = await addProduct(owner, "The Guide", "A file.", "9", null);
   if (!made.ok || !plain.ok) throw new Error("no products");
   let course = emptyCourse();
   for (const title of ["One", "Two"]) {
@@ -80,12 +82,12 @@ export async function makeWorld(handle = "erase-shop"): Promise<World> {
     course = added.course;
   }
   await saveCourse(course, ROOM);
-  const set = await setProductCourse(OWNER, made.product.id, { id: course.id, lessons: 2 });
+  const set = await setProductCourse(owner, made.product.id, { id: course.id, lessons: 2 });
   if (!set.ok) throw new Error("not a course");
-  let store = (await storeForEmail(OWNER))!;
+  let store = (await storeForEmail(owner))!;
 
   // The community (lib/community.ts).
-  store = (await setCommunity(OWNER, true))!;
+  store = (await setCommunity(owner, true))!;
   const communityId = store.community!.id;
   await saveConfig(communityId, { ...freshConfig(store.name), access: [made.product.id] });
 
@@ -100,7 +102,7 @@ export async function makeWorld(handle = "erase-shop"): Promise<World> {
   await writeFields(store.statsId as string, [field]);
   const flow = await saveFlow(store, { name: "Welcome", trigger: "joined", active: true, steps: [{ delayHours: 48, subject: "Hello", body: "Hi there." }] }, { activate: true });
   if (!flow.ok) throw new Error(`no flow: ${JSON.stringify(flow)}`);
-  store = (await storeForEmail(OWNER))!;
+  store = (await storeForEmail(owner))!;
 
   return {
     store,

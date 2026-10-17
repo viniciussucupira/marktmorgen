@@ -49,7 +49,7 @@ const QUEUE = "nl:cm:mailq";
 const jobKey = (id: string) => `nl:cm:mail:${id}`;
 const toKey = (id: string) => `nl:cm:mail:${id}:to`;
 const lockKey = (id: string) => `nl:cm:mail:${id}:lock`;
-const unsubKey = (token: string) => `nl:cm:unsub:${token}`;
+export const unsubKey = (token: string) => `nl:cm:unsub:${token}`;
 const JOB_ID = /^[0-9a-f]{24}$/;
 
 export type AnnouncementJob = {

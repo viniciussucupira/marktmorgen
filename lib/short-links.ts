@@ -33,7 +33,7 @@ const ALPHABET = CODE_LETTERS;
 
 type Kept = ShortLink & { sid: string; statsId: string };
 
-const linkKey = (code: string) => `nl:slink:${code}`;
+export const linkKey = (code: string) => `nl:slink:${code}`;
 const storeKey = (statsId: string) => `nl:slink:store:${statsId}`;
 
 function parse(raw: unknown): Kept | null {
