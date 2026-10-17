@@ -23,7 +23,17 @@ export function remainingResourceCostCents(
   otherCostCeilings: readonly (number | null)[],
 ): number | null {
   const maximum = maximumPretaxCostCents(revenueCents, combinedProfitTaxBps);
-  if (maximum === null || !otherCostCeilings.length || otherCostCeilings.some(n => n === null || !Number.isSafeInteger(n) || n < 0)) return null;
-  const remaining = BigInt(maximum) - otherCostCeilings.reduce<bigint>((sum, n) => sum + BigInt(n!), BigInt(0));
-  return remaining < BigInt(0) ? null : Number(remaining);
+  if (maximum === null || !Array.isArray(otherCostCeilings) || !otherCostCeilings.length) return null;
+  let remaining = BigInt(maximum);
+  // Array.some/reduce skip holes. Every cost must be an explicit own entry;
+  // missing slots, inherited values and accessors are not reviewed data.
+  for (let index = 0; index < otherCostCeilings.length; index += 1) {
+    const entry = Object.getOwnPropertyDescriptor(otherCostCeilings, index);
+    if (!entry || !Object.prototype.hasOwnProperty.call(entry, 'value')) return null;
+    const cost = entry.value;
+    if (typeof cost !== 'number' || !Number.isSafeInteger(cost) || cost < 0) return null;
+    remaining -= BigInt(cost);
+    if (remaining < BigInt(0)) return null;
+  }
+  return Number(remaining);
 }
