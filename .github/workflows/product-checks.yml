@@ -55,3 +55,7 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_upload_budget_redis.py
+      - name: Actual Redis AI spending admission checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_ai_spend_redis.py
