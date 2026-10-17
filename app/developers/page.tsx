@@ -54,7 +54,7 @@ export default function DevelopersPage() {
 
       <LegalSection title="Keys">
         <p>
-          {`Make a key in your studio, under API keys. It is shown once, when you make it, and never again: we keep only a fingerprint of it. A store can have ${MAX_KEYS} keys; each shows when it was last used, and revoking one refuses the very next request made with it.`}
+          {`Make a key in your studio, under API keys. It is shown once, when you make it, and never again: we keep only a fingerprint of it. A store can have ${MAX_KEYS} keys; each shows when it was last used, and revoking one refuses the very next request made with it. Deleting a store revokes all of its keys and removes its webhook endpoints with it.`}
         </p>
         <p>
           A key reads, and changes nothing, unless you check &quot;It can also write&quot; when you make it. That choice is

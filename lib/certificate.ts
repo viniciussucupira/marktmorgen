@@ -169,13 +169,6 @@ export async function issueCertificate(input: {
   const name = cleanName(input.name);
   if (!name) return { ok: false, reason: "name" };
   const id = newCertificateId();
-  const [claimed] = await redisPipeline([["HSETNX", indexKey(input.course.id), input.who, id]]);
-  if (Number(claimed) !== 1) {
-    const existing = await certificateOf(input.course.id, input.who);
-    if (existing) return { ok: true, certificate: existing, fresh: false };
-    // The slot pointed at a certificate that was withdrawn or lost: take it.
-    await redisPipeline([["HSET", indexKey(input.course.id), input.who, id]]);
-  }
   const certificate: Certificate = {
     id,
     store: input.store,
@@ -188,10 +181,23 @@ export async function issueCertificate(input: {
     issuedAt: Math.floor(Date.now() / 1000),
     withdrawnAt: 0,
   };
-  await redisPipeline([
-    ["SET", certKey(id), JSON.stringify(certificate)],
-    ["SADD", allKey(input.course.id), id],
-  ]);
+  // The record is written before the student's slot is claimed (changed
+  // 17 October 2026). Claiming first left a moment in which the slot named
+  // a certificate not yet written, and a second press arriving then read it
+  // as lost, took the slot and issued a second certificate beside the first.
+  await redisPipeline([["SET", certKey(id), JSON.stringify(certificate)]]);
+  const [claimed] = await redisPipeline([["HSETNX", indexKey(input.course.id), input.who, id]]);
+  if (Number(claimed) !== 1) {
+    const existing = await certificateOf(input.course.id, input.who);
+    if (existing) {
+      // This press made nothing that stands: its record goes, the standing one is the answer.
+      await redisPipeline([["DEL", certKey(id)]]);
+      return { ok: true, certificate: existing, fresh: false };
+    }
+    // The slot pointed at a certificate that was withdrawn: take it.
+    await redisPipeline([["HSET", indexKey(input.course.id), input.who, id]]);
+  }
+  await redisPipeline([["SADD", allKey(input.course.id), id]]);
   return { ok: true, certificate, fresh: true };
 }
 

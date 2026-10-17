@@ -24,7 +24,7 @@ import { SharePanel } from "@/components/share-panel";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { BlockRewrite } from "@/components/block-rewrite";
 import { type CourseOutline, insideFromCourse } from "@/lib/course-outline-items";
-import { MIN_SALES, MIN_VIEWS, WIN_CHANCE, type Counts, chanceBBetter, daysLeft, perVisitor, rate, winner } from "@/lib/headline-test-rules";
+import { MIN_EXPECTED_SIGNUPS, MIN_SALES, MIN_VIEWS, WIN_CHANCE, type Counts, chanceBBetter, daysLeft, perVisitor, rate, winner } from "@/lib/headline-test-rules";
 import { formatMoney } from "@/lib/money";
 import { type BlockContext, type FeaturedCard, HeroView, PageSections } from "@/components/sales-blocks";
 import { RatingLine, ReviewsSection } from "@/components/review-list";
@@ -1102,7 +1102,7 @@ export function PageEditor({
                     {other
                       ? "A second version of the whole page is being tested, and a page runs one test at a time. Write a different headline in version B instead."
                       : product.free
-                        ? `Half your visitors see this one, half see the second. Once each has been seen ${MIN_VIEWS} times and one brings clearly more sign-ups, your page shows that one to everybody by itself. Only the words change.`
+                        ? `Half your visitors see this one, half see the second. Once each has been seen ${MIN_VIEWS} times, there are at least ${MIN_EXPECTED_SIGNUPS * 2} sign-ups between them and one brings clearly more, your page shows that one to everybody by itself. Only the words change.`
                         : `Half your visitors see this one, half see the second. Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more money per visitor, your page shows that one to everybody by itself. Only the words change: never the price.`}
                   </span>
                 </span>
@@ -1955,7 +1955,7 @@ export function PageEditor({
               {other === null ? (
                 <>
                   <p className="mt-1 text-xs text-ink-soft">
-                    {`Make version B from this page and change anything in it: blocks, their order, words, pictures, video. Half your visitors see each version. ${product.free ? `Once each has been seen ${MIN_VIEWS} times and one brings clearly more sign-ups` : `Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more money per visitor`}, your page shows that one to everybody by itself. The price and what is sold stay the same for everyone.`}
+                    {`Make version B from this page and change anything in it: blocks, their order, words, pictures, video. Half your visitors see each version. ${product.free ? `Once each has been seen ${MIN_VIEWS} times, there are at least ${MIN_EXPECTED_SIGNUPS * 2} sign-ups between them and one brings clearly more` : `Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more money per visitor`}, your page shows that one to everybody by itself. The price and what is sold stay the same for everyone.`}
                   </p>
                   <button type="button" onClick={startPageTest} className="btn btn-secondary btn-sm mt-3">
                     Make version B
@@ -2735,7 +2735,7 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
       : `${name}: seen ${times(views, "time")}, ${times(checkouts, "sign-up")} (${rate(checkouts, views)}%).`;
   const chance = sold ? chanceBBetter(counts) : null;
   const days = won ? null : daysLeft(counts, measure);
-  const enough = sold ? `${MIN_VIEWS} views and ${MIN_SALES} paid sales` : `${MIN_VIEWS} views`;
+  const enough = sold ? `${MIN_VIEWS} views and ${MIN_SALES} paid sales` : `${MIN_VIEWS} views, with ${MIN_EXPECTED_SIGNUPS * 2} sign-ups between them`;
   return (
     <div className="text-sm text-ink" data-test-results>
       <p>{line(a, counts.va, counts.ca, counts.sa ?? 0, counts.ra ?? 0)}</p>

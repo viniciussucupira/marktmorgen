@@ -25,7 +25,10 @@
  *     still counted, and each sale is written once;
  *   - what it earns is worked out when it is shown, against the refunds on
  *     the creator's Stripe account, so a refunded sale earns nothing and a
- *     partly refunded one earns on what was kept;
+ *     partly refunded one earns on what was kept. A chargeback counts the
+ *     same way (added 17 October 2026): while the bank holds the disputed
+ *     money, and for good once the dispute is lost, that money was not kept,
+ *     so it earns nothing; a dispute the creator wins earns again;
  *   - a membership or a payment plan, where the creator credits them (added
  *     12 October 2026, lib/affiliate-setting.ts recurring), carries the
  *     affiliate on its subscription, and each of its paid invoices is read
@@ -118,6 +121,14 @@ const CLICK_IP_LIMIT = 30;
 const RATE_WINDOW_SECONDS = 60 * 60;
 /** How many pages of a hundred refunds are read when the book is opened. */
 const REFUND_PAGES = 10;
+/** And of a hundred disputes, which are far fewer. */
+const DISPUTE_PAGES = 3;
+/**
+ * The states of a Stripe dispute in which the money is not the creator's:
+ * held by the bank while it is answered or reviewed, or taken back for good.
+ * An inquiry (warning_*) takes nothing, and a dispute won gives it back.
+ */
+const DISPUTE_TAKES = new Set(["needs_response", "under_review", "lost"]);
 
 /** The cookie an affiliate's own browser is signed in with, one per store. */
 export function affiliateCookieName(handle: string): string {
@@ -1536,7 +1547,7 @@ export type Book = {
   currency: string;
   /** How many sales and payouts are in another currency, and so not in the totals. */
   elsewhere: number;
-  /** False when Stripe could not be asked about refunds, or not all of them. */
+  /** False when Stripe could not be asked about refunds and disputes, or not all of them. */
   refundsChecked: boolean;
   /** False when the invoices of memberships and plans could not all be read. */
   invoicesChecked: boolean;
@@ -1563,6 +1574,37 @@ async function refundsSince(store: Store, since: number): Promise<{ byIntent: Ma
       const pi = typeof refund.payment_intent === "string" ? refund.payment_intent : "";
       const amount = typeof refund.amount === "number" ? refund.amount : 0;
       if (pi) byIntent.set(pi, (byIntent.get(pi) ?? 0) + amount);
+    }
+    const last = rows[rows.length - 1];
+    if (listed.has_more !== true || !last || typeof last.id !== "string") return { byIntent, complete: true };
+    after = last.id;
+  }
+  return { byIntent, complete: false };
+}
+
+/**
+ * What chargebacks have taken, by payment, on the creator's account, from the
+ * oldest sale on the book on: the disputed amount of every dispute the bank
+ * is holding or the buyer won (DISPUTE_TAKES). Read beside the refunds, so a
+ * sale charged back earns its affiliate nothing, as a sale refunded does.
+ */
+export async function disputesSince(store: Store, since: number): Promise<{ byIntent: Map<string, number>; complete: boolean }> {
+  const byIntent = new Map<string, number>();
+  if (!store.stripeAccountId) return { byIntent, complete: false };
+  let after = "";
+  for (let page = 0; page < DISPUTE_PAGES; page += 1) {
+    const listed = await onAccount(
+      "GET",
+      store.stripeAccountId,
+      `/disputes?limit=100&created[gte]=${since}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
+    );
+    const rows = Array.isArray(listed.data) ? (listed.data as Record<string, unknown>[]) : [];
+    for (const dispute of rows) {
+      if (typeof dispute.status !== "string" || !DISPUTE_TAKES.has(dispute.status)) continue;
+      const raw = dispute.payment_intent;
+      const pi = typeof raw === "string" ? raw : raw && typeof raw === "object" && typeof (raw as { id?: unknown }).id === "string" ? (raw as { id: string }).id : "";
+      const amount = typeof dispute.amount === "number" && dispute.amount > 0 ? dispute.amount : 0;
+      if (pi && amount) byIntent.set(pi, (byIntent.get(pi) ?? 0) + amount);
     }
     const last = rows[rows.length - 1];
     if (listed.has_more !== true || !last || typeof last.id !== "string") return { byIntent, complete: true };
@@ -1668,6 +1710,19 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
     } catch (error) {
       console.error("reading refunds for the affiliate book failed", error);
       refundsChecked = false;
+    }
+    // A chargeback takes the money back as a refund does (disputesSince).
+    // Judged with the refunds: when either could not be read in full, what
+    // is owed is not known (refundsChecked), and no payout is made on it.
+    if (store.stripeAccountId) {
+      try {
+        const disputed = await disputesSince(store, since);
+        for (const [pi, cents] of disputed.byIntent) refunds.set(pi, (refunds.get(pi) ?? 0) + cents);
+        refundsChecked = refundsChecked && disputed.complete;
+      } catch (error) {
+        console.error("reading disputes for the affiliate book failed", error);
+        refundsChecked = false;
+      }
     }
   }
   const settled = everything.map((r) => settleLine(r, r.pi ? refunds.get(r.pi) ?? 0 : 0));
