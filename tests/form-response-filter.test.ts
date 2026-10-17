@@ -50,3 +50,17 @@ test("search treats markup as plain words",()=>{
 test("filters cannot include responses that were not loaded",()=>{
   const loaded=responses.slice(0,1);assert.equal(filterFormResponses(form,loaded,"Ana","").length,0);
 });
+
+test("opportunity link filtering composes with text and quiz filters",()=>{
+  const refs=new Set([responses[0].opportunityRef]);
+  assert.deepEqual(filterFormResponses(form,responses,"example.com","ready0",{available:true,filter:"linked",refs}),[responses[0]]);
+  assert.deepEqual(filterFormResponses(form,responses,"","",{available:true,filter:"unlinked",refs}),responses.slice(1));
+});
+test("an unavailable CRM read pauses opportunity filtering without fabricating unlinked answers",()=>{
+  assert.deepEqual(filterFormResponses(form,responses,"","",{available:false,filter:"unlinked",refs:new Set()}),responses);
+  assert.deepEqual(filterFormResponses(form,responses,"","",{available:false,filter:"linked",refs:new Set()}),responses);
+});
+test("opportunity filtering retains the stable response and source reference used by conversion",()=>{
+  const selected=filterFormResponses(form,responses,"","",{available:true,filter:"linked",refs:new Set([responses[0].opportunityRef])});
+  assert.equal(selected[0],responses[0]);assert.equal(selected[0].opportunityRef,responses[0].opportunityRef);
+});

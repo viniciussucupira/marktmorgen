@@ -2,20 +2,23 @@
 
 import { useState } from "react";
 import { answerText, responsesCsv, type FormDef, type FormResponse } from "@/lib/forms";
-import { filterFormResponses, NO_CURRENT_FORM_RESULT } from "@/lib/form-response-filter";
+import { filterFormResponses, NO_CURRENT_FORM_RESULT, type FormOpportunityFilter } from "@/lib/form-response-filter";
 import type { FormDealMatch } from "@/lib/form-deal";
 
 type ResponseRow = FormResponse & { opportunityRef?: string };
 
-export function FormAnswers({ form, latest, total, canReview, blocked, existingDeals, onReview }: {
+export function FormAnswers({ form, latest, total, canReview, blocked, existingDeals, existingDealsAvailable = false, onReview }: {
   form: FormDef; latest: ResponseRow[]; total: number; canReview: boolean; blocked: boolean;
-  existingDeals: FormDealMatch[]; onReview: (response: ResponseRow) => void;
+  existingDeals: FormDealMatch[]; existingDealsAvailable?: boolean; onReview: (response: ResponseRow) => void;
 }) {
   const [query, setQuery] = useState("");
   const [outcome, setOutcome] = useState("");
-  const filtered = filterFormResponses(form, latest, query, outcome);
+  const [opportunityFilter, setOpportunityFilter] = useState<FormOpportunityFilter>("all");
+  const linkedRefs = new Set(existingDeals.flatMap(deal => deal.formResponseRef ? [deal.formResponseRef] : []));
+  const activeOpportunity = canReview && existingDealsAvailable ? opportunityFilter : "all";
+  const filtered = filterFormResponses(form, latest, query, outcome, { available: canReview && existingDealsAvailable, filter: activeOpportunity, refs: linkedRefs });
   const activeOutcome = outcome === NO_CURRENT_FORM_RESULT || form.outcomes.some(item => item.id === outcome) ? outcome : "";
-  const changed = !!query || !!activeOutcome;
+  const changed = !!query || !!activeOutcome || opportunityFilter !== "all";
   function download() {
     if (!filtered.length) return;
     const file = new Blob(["\uFEFF", responsesCsv(form, filtered)], { type: "text/csv;charset=utf-8" });
@@ -30,7 +33,7 @@ export function FormAnswers({ form, latest, total, canReview, blocked, existingD
   }
   return (
     <div className="mt-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="block" htmlFor={`form-answer-search-${form.id}`}>
           <span className="field-label">Search loaded answers</span>
           <input id={`form-answer-search-${form.id}`} type="search" className="field mt-2" value={query} maxLength={200} placeholder="Name, email or words in an answer" onChange={event => setQuery(event.target.value)} />
@@ -45,12 +48,24 @@ export function FormAnswers({ form, latest, total, canReview, blocked, existingD
             </select>
           </label>
         ) : null}
+        {canReview ? (
+          <label className="block" htmlFor={`form-answer-opportunity-${form.id}`}>
+            <span className="field-label">Opportunity link</span>
+            <select id={`form-answer-opportunity-${form.id}`} className="field mt-2" value={activeOpportunity} disabled={!existingDealsAvailable} onChange={event => setOpportunityFilter(event.target.value as FormOpportunityFilter)}>
+              <option value="all">All loaded answers</option>
+              <option value="linked">With linked opportunity</option>
+              <option value="unlinked">Without linked opportunity</option>
+            </select>
+          </label>
+        ) : null}
       </div>
+      {canReview && !existingDealsAvailable ? <p className="notice notice-warn mt-3" role="status">Opportunity links could not be checked. Their filter and new opportunity creation are paused. Search, quiz filters and exports remain available.</p> : null}
+      {canReview && existingDealsAvailable ? <p className="mt-2 text-xs text-ink-soft">Links reflect the opportunities loaded with this page. Other opportunities may share the same contact.</p> : null}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-ink-soft" role="status">{`Showing ${filtered.length.toLocaleString("en-US")} of ${latest.length.toLocaleString("en-US")} loaded answers.`}</p>
         <div className="flex flex-wrap gap-2">
           <button type="button" className="btn btn-secondary btn-sm" disabled={!filtered.length} onClick={download}>Download shown answers</button>
-          {changed ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setQuery(""); setOutcome(""); }}>Clear filters</button> : null}
+          {changed ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setQuery(""); setOutcome(""); setOpportunityFilter("all"); }}>Clear filters</button> : null}
         </div>
       </div>
       {!filtered.length ? <p className="mt-3 rounded-xl bg-paper p-3 text-sm text-ink-soft">No loaded answers match this selection. Clear the filters or download all answers from the form card.</p> : (
@@ -70,7 +85,7 @@ export function FormAnswers({ form, latest, total, canReview, blocked, existingD
                   <td className="py-2 pr-4 whitespace-nowrap">{new Date(response.at * 1000).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
                   {form.fields.map(field => <td key={field.id} className="max-w-[18rem] py-2 pr-4 break-words">{answerText(field, response.answers[field.id])}</td>)}
                   {form.outcomes.length ? <td className="py-2 pr-4">{form.outcomes.find(item => item.id === response.outcome)?.title ?? ""}</td> : null}
-                  {canReview ? <td className="py-2 pr-4"><button type="button" className="btn btn-secondary btn-sm" disabled={blocked || !response.opportunityRef} onClick={() => response.opportunityRef && onReview(response)}>{response.opportunityRef && existingDeals.some(deal => deal.formResponseRef === response.opportunityRef) ? "View opportunity" : "Review as opportunity"}</button></td> : null}
+                  {canReview ? <td className="py-2 pr-4"><button type="button" className="btn btn-secondary btn-sm" disabled={blocked || !existingDealsAvailable || !response.opportunityRef} onClick={() => response.opportunityRef && onReview(response)}>{response.opportunityRef && linkedRefs.has(response.opportunityRef) ? "View opportunity" : "Review as opportunity"}</button></td> : null}
                 </tr>
               ))}
             </tbody>
