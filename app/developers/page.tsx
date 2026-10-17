@@ -476,6 +476,17 @@ export default function DevelopersPage() {
           read them, with your own Stripe key. To be told about each one as it happens, add a webhook in your studio.
         </p>
       </LegalSection>
+
+      <LegalSection title="Checkout on your own website">
+        <p>
+          To sell from your own site, no key is needed or allowed in a web page: the{" "}
+          <Link href="/developers/checkout-script" className="text-black underline underline-offset-2 hover:no-underline">
+            checkout script
+          </Link>{" "}
+          opens a product&apos;s card or your sign-up form over your page, by a link that names only your store and the
+          product, and tells your page and your webhooks what happened.
+        </p>
+      </LegalSection>
     </LegalPage>
   );
 }

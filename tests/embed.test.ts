@@ -62,10 +62,18 @@ async function main(): Promise<void> {
   part("The card page");
   const page = read("app/embed/[handle]/[product]/page.tsx");
   is("counts no visit, sets no cookie, reads no session", /countHit|cookies\(|setCookie|readSession|currentUser/.test(page), false);
+  // Opened by the checkout script (?mm=, tests/embed-sdk.test.ts) it is counted
+  // as a visit by lib/embed-open.ts; pasted as a frame, it still counts nothing.
+  is("only an open by the checkout script is counted, and elsewhere", /const open: ScriptOpen \| null = mode && store \? await readScriptOpen\(store, mode, query\) : null;/.test(page), true);
   const links = page.match(/<a\s[^>]*>/g) ?? [];
-  is("every link opens a new tab", links.length > 0 && links.every((tag) => /target="_blank" rel="noopener"/.test(tag)), true);
+  is("every link opens a new tab in a frame, and stays in the tab only as a page", links.length > 0 && links.every((tag) => /\{\.\.\.aside\}/.test(tag)), true);
+  is("which is the one way out of each", /const aside = open\?\.mode === "page" \? \{ target: "_top" \} : \{ target: "_blank", rel: "noopener" \};/.test(page), true);
   is("and so does its checkout", /<form action="\/api\/store\/checkout" method="post" target="_blank" rel="noopener"/.test(page), true);
-  is("which is told only which product, never a price", (page.match(/<input type="hidden" name="(\w+)"/g) ?? []).map((tag) => tag.match(/name="(\w+)"/)?.[1]), ["handle", "product"]);
+  is(
+    "which is told only which product, never a price, and the listed site it came from",
+    (page.match(/<input type="hidden" name="(\w+)"/g) ?? []).map((tag) => tag.match(/name="(\w+)"/)?.[1]),
+    ["handle", "product", "site", "return"],
+  );
   is("and is kept out of search", /robots: \{ index: false, follow: false \}/.test(page), true);
 
   done();

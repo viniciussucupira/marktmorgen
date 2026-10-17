@@ -6,6 +6,7 @@ import { JOIN_TOKEN, confirmJoin, readJoinToken } from "@/lib/store-join";
 import { enroll } from "@/lib/flows";
 import { queuePerson } from "@/lib/email-sync";
 import { allowedBy, newLeadId, sendServerLead, sendsFromServer } from "@/lib/ad-events";
+import { emitEvent } from "@/lib/webhooks";
 
 /** The button on the page an emailed sign-up link opens: the address joins the creator's list. */
 export async function POST(request: NextRequest) {
@@ -38,6 +39,19 @@ export async function POST(request: NextRequest) {
         lead = id;
         after(() => sendServerLead(store, request, { id, email: result.grant.e, product: "email-list" }).catch((error) => console.error("sending a lead failed", error)));
       }
+      // The creator's webhooks hear of it once, however often the button is pressed.
+      const grant = result.grant;
+      after(() =>
+        emitEvent(store, "list.joined", `join|${grant.e}|${grant.at}`, {
+          email: grant.e,
+          // The second box: they allowed their link use in sequences to be seen (lib/mail-clicks.ts).
+          allowed_link_tracking: grant.k === true,
+          form: grant.f ?? null,
+          // The creator's own site it was asked from, through the checkout script (lib/embed-sites.ts).
+          site: grant.w ?? null,
+          requested_at: grant.at || null,
+        }).catch((error) => console.error("queueing the list.joined webhook failed", error)),
+      );
       const at = Date.now();
       after(() =>
         queuePerson(store, { source: "free", email: result.grant.e, products: [], consent: true, seed: `join|${result.grant.e}|${result.grant.at}`, at }).catch((error) =>

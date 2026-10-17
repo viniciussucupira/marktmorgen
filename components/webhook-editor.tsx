@@ -14,6 +14,7 @@ const EVENTS: { key: WebhookEvent; label: string; hint: string }[] = [
   { key: "membership.started", label: "Membership started", hint: "Someone joined a membership" },
   { key: "membership.canceled", label: "Membership canceled", hint: "Set to end, or ended" },
   { key: "lead.captured", label: "Lead captured", hint: "Someone confirmed their address for a free product" },
+  { key: "list.joined", label: "List joined", hint: "Someone confirmed their address to join your email list" },
   { key: "call.booked", label: "Call booked", hint: "A call or a seat in a session, paid" },
   { key: "call.moved", label: "Call moved", hint: "A buyer moved their booking" },
   { key: "refund.issued", label: "Refund issued", hint: "A refund on your Stripe account" },

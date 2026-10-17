@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { forVisitor } from "@/lib/visitor";
 import { connection } from "next/server";
+import { headers } from "next/headers";
+import { SITE_URL } from "@/lib/site-url";
 import { cache } from "react";
 import { type Listing, type Store, normaliseHandle, storeForPage } from "@/lib/store";
 import { readListing, readListings } from "@/lib/catalog";
@@ -17,6 +19,9 @@ import { CARD_COVER_FROM, CARD_HEIGHTS, placeFrom, tagged } from "@/lib/embed-ru
 import { PriceTag, pageAction, productPath } from "@/components/store-product";
 import { RatingLine } from "@/components/review-list";
 import { speech } from "@/lib/buyer-words";
+import { scriptMode, withTags } from "@/lib/embed-sites";
+import { type ScriptOpen, readScriptOpen } from "@/lib/embed-open";
+import { EmbedMessenger } from "@/components/embed-messenger";
 
 type Params = {
   params: Promise<{ handle: string; product: string }>;
@@ -37,6 +42,17 @@ type Params = {
  *
  * It sets no cookie, counts no visit and asks for no session: it is drawn on
  * every page of the creator's site that holds it, read or not.
+ *
+ * The same card is what the checkout script opens (lib/embed-sdk.ts), with
+ * ?mm=overlay in a frame over the creator's page or ?mm=page as a page of its
+ * own. That is a person who pressed a link, so it is counted as a visit and
+ * may rest like the store's pages (lib/embed-open.ts); in a frame it shows its
+ * buy button, and tells the page what happened, only on a site the creator
+ * listed (lib/embed-sites.ts), and a plain link to the product's page on any
+ * other. As a page, its buy button goes to Stripe in the same tab.
+ *
+ * Once a creator lists their sites, a card pasted anywhere else shows the
+ * plain link too; with no list it is drawn wherever it is pasted, as before.
  */
 const load = cache(async (raw: string, id: string): Promise<{ store: Store | null; product: Listing | null }> => {
   let decoded = "";
@@ -67,25 +83,48 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
  * Its picture runs across the top in a frame tall enough for it, and sits
  * beside the title in one that is not (lib/embed-rules.ts, CARD_HEIGHTS).
  */
-const SEE_THROUGH =
-  "html,body{background:transparent!important;min-height:0!important;height:100%;margin:0}" +
+const CARD_RULES =
   `.em-cover{display:none}@media (min-height:${CARD_COVER_FROM}px){.em-cover{display:block}.em-thumb{display:none}}` +
   // The summary gets whole lines only: as many as the card has room for
   // under its title, never one cut through the middle.
   ".em-sum{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:var(--lines,2)}" +
   `@media (max-height:${CARD_COVER_FROM - 1}px){.em-sum[data-picture]{-webkit-line-clamp:1}}`;
+const SEE_THROUGH = `html,body{background:transparent!important;min-height:0!important;height:100%;margin:0}${CARD_RULES}`;
+/** As a page of its own (?mm=page) the card sits in a box of its own height, the picture across its top. */
+const ON_A_PAGE = ".em-cover{display:block}.em-thumb{display:none}.em-sum{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:var(--lines,2)}";
 
 /** Past about this many characters a title takes two lines on the card, and the summary gives one up. */
 const LONG_TITLE = 30;
 
+/** Whether a card pasted with the frame code (not the script) is on a page that may show it: anywhere until the creator lists sites, then those (and this site's own studio preview). */
+async function pastedAllowed(store: Store): Promise<boolean> {
+  if (!store.embedSites.length) return true;
+  const referer = (await headers()).get("referer");
+  if (!referer) return false;
+  try {
+    const origin = new URL(referer).origin.toLowerCase();
+    return origin === new URL(SITE_URL).origin || store.embedSites.includes(origin);
+  } catch {
+    return false;
+  }
+}
+
 export default async function EmbedCard({ params, searchParams }: Params) {
   await connection();
   const { handle, product: id } = await params;
-  const place = placeFrom((await searchParams).utm_source);
+  const query = await searchParams;
+  const place = placeFrom(query.utm_source);
+  const mode = scriptMode(query.mm);
   const loaded = await load(handle, id);
   const product = loaded.product;
   // With the visitor's country, for a fair price for it (lib/fair-price.ts).
   const store = loaded.store ? await forVisitor(loaded.store) : null;
+  // Opened by the checkout script: counted, and what it may show (lib/embed-open.ts).
+  const open: ScriptOpen | null = mode && store ? await readScriptOpen(store, mode, query) : null;
+  // The card's own links, tagged as the code that opened it was.
+  const tag = (url: string) => (open ? withTags(url, open.tags, { via: open.via }) : tagged(url, place));
+  // As a page of its own, links stay in the tab; in a frame, they open a new one.
+  const aside = open?.mode === "page" ? { target: "_top" } : { target: "_blank", rel: "noopener" };
 
   if (!store || !product) {
     return (
@@ -95,7 +134,7 @@ export default async function EmbedCard({ params, searchParams }: Params) {
           {store ? (
             <>
               {`${speech(store).w.noLongerOnSale} `}
-              <a href={tagged(`/@${store.handle}`, place)} target="_blank" rel="noopener" className="font-semibold underline underline-offset-4">
+              <a href={tag(`/@${store.handle}`)} {...aside} className="font-semibold underline underline-offset-4">
                 {speech(store).w.seeStore(store.name)}
               </a>
             </>
@@ -118,46 +157,64 @@ export default async function EmbedCard({ params, searchParams }: Params) {
   const soon = coming.soon;
   const count = noKeys ? 0 : stock;
   const remaining = count !== null && canSellProduct(store, product) ? count : null;
-  const { action, label } = pageAction(store, product, remaining, selling, related, soon, preorderDay(store, product, coming.soon, coming.day));
-  const page = tagged(productPath(store, product), place);
+  const computed = pageAction(store, product, remaining, selling, related, soon, preorderDay(store, product, coming.soon, coming.day));
+  const page = tag(productPath(store, product));
+  // A card the script opened on a site the creator did not list, past the
+  // store's visits or past the opens one connection gets, and one pasted
+  // somewhere its creator's list leaves out, buys nothing here: its button is
+  // a plain link to the product's own page. So is a card with an affiliate's
+  // code, which the product's page takes under the store's consent rules.
+  const plain = open ? !open.live || Boolean(open.via) : !(await pastedAllowed(store));
+  const { action, label } = plain && computed.action.kind === "checkout" ? { action: { kind: "link" as const, href: productPath(store, product) }, label: computed.label } : computed;
   // A product page link with the place on it, and the part of the page it was meant for.
-  const into = (href: string) => (href.startsWith("#") ? `${page}${href}` : tagged(href, place));
+  const into = (href: string) => (href.startsWith("#") ? `${page.split("#")[0]}${href}` : tag(href));
   const testMode = selling && sellsInTestMode(store);
   const { w, num, lang } = speech(store);
   const note = testMode
     ? w.cardTestMode
     : action.kind === "checkout"
-      ? w.cardCheckout
-      : action.kind === "link"
+      ? open?.mode === "page" ? "" : w.cardCheckout
+      : action.kind === "link" && open?.mode !== "page"
         ? w.cardOpens(store.name)
         : "";
   const image = product.image;
+  const height = image ? CARD_HEIGHTS.picture : CARD_HEIGHTS.plain;
+  // Told what happened only on a listed site, and only while it may buy here.
+  const messaging = open?.mode === "overlay" && open.live && open.site ? open.site : null;
+  // Which product, never a price; and, from the script, the listed site it
+  // was bought on and where to send the buyer back to, which the checkout
+  // checks against the store's list again (app/api/store/checkout).
+  const fields =
+    action.kind === "checkout" ? (
+      <>
+        <input type="hidden" name="handle" value={action.handle} />
+        <input type="hidden" name="product" value={action.product} />
+        {open?.site ? <input type="hidden" name="site" value={open.site} /> : null}
+        {open?.back ? <input type="hidden" name="return" value={open.back} /> : null}
+        <button type="submit" className="btn st-btn btn-block">
+          {label}
+        </button>
+      </>
+    ) : null;
 
-  return (
-    <div
-      lang={lang.locale}
-      className={`st-page st-theme-${store.look.theme} h-screen`}
-      style={{ ...(lookStyle(store.look) as React.CSSProperties), background: "transparent" }}
-      data-card-height={image ? CARD_HEIGHTS.picture : CARD_HEIGHTS.plain}
-    >
-      <style>{SEE_THROUGH}</style>
+  const card = (
       <article className="st-card flex h-full flex-col overflow-hidden p-4" style={{ boxShadow: "none" }}>
         {image ? (
-          <a href={page} target="_blank" rel="noopener" tabIndex={-1} className="em-cover -mx-4 -mt-4 mb-4 h-[160px] shrink-0 overflow-hidden" style={{ background: "var(--st-item)" }}>
+          <a href={page} {...aside} tabIndex={-1} className="em-cover -mx-4 -mt-4 mb-4 h-[160px] shrink-0 overflow-hidden" style={{ background: "var(--st-item)" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={imageUrl(image)} alt={image.alt} width={image.width} height={image.height} className="h-full w-full object-cover" decoding="async" />
           </a>
         ) : null}
         <div className="flex items-start gap-3">
           {image ? (
-            <a href={page} target="_blank" rel="noopener" tabIndex={-1} className="em-thumb shrink-0">
+            <a href={page} {...aside} tabIndex={-1} className="em-thumb shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={imageUrl(image)} alt={image.alt} width={64} height={64} className="h-16 w-16 rounded-2xl object-cover" decoding="async" />
             </a>
           ) : null}
           <div className="min-w-0 flex-1">
             <h1 className="font-display line-clamp-2 text-[1.0625rem] font-semibold leading-snug">
-              <a href={page} target="_blank" rel="noopener" className="st-title-link">
+              <a href={page} {...aside} className="st-title-link">
                 {product.title}
               </a>
             </h1>
@@ -185,15 +242,19 @@ export default async function EmbedCard({ params, searchParams }: Params) {
           ) : null}
         </div>
         {action.kind === "checkout" ? (
-          <form action="/api/store/checkout" method="post" target="_blank" rel="noopener" className="mt-3" data-checkout="">
-            <input type="hidden" name="handle" value={action.handle} />
-            <input type="hidden" name="product" value={action.product} />
-            <button type="submit" className="btn st-btn btn-block">
-              {label}
-            </button>
-          </form>
+          // As a page, Stripe's checkout opens in the same tab; in a frame, in a
+          // new one (Stripe's page is never drawn inside a frame).
+          open?.mode === "page" ? (
+            <form action="/api/store/checkout" method="post" target="_top" className="mt-3" data-checkout="">
+              {fields}
+            </form>
+          ) : (
+            <form action="/api/store/checkout" method="post" target="_blank" rel="noopener" className="mt-3" data-checkout="">
+              {fields}
+            </form>
+          )
         ) : action.kind === "link" ? (
-          <a href={into(action.href)} target="_blank" rel="noopener" className="btn st-btn btn-block mt-3">
+          <a href={into(action.href)} {...aside} className="btn st-btn btn-block mt-3">
             {label}
           </a>
         ) : (
@@ -201,6 +262,29 @@ export default async function EmbedCard({ params, searchParams }: Params) {
         )}
         {note ? <p className="st-muted mt-2 truncate text-center text-xs">{note}</p> : null}
       </article>
+  );
+
+  if (open?.mode === "page") {
+    return (
+      <div lang={lang.locale} className={`st-page st-theme-${store.look.theme} flex min-h-screen items-center justify-center px-4 py-10`} style={lookStyle(store.look) as React.CSSProperties}>
+        <style>{ON_A_PAGE}</style>
+        <main id="content" className="w-full max-w-[400px]" style={{ height }}>
+          {card}
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      lang={lang.locale}
+      className={`st-page st-theme-${store.look.theme} h-screen`}
+      style={{ ...(lookStyle(store.look) as React.CSSProperties), background: "transparent" }}
+      data-card-height={height}
+    >
+      <style>{SEE_THROUGH}</style>
+      {card}
+      {messaging ? <EmbedMessenger to={messaging} height={height} /> : null}
     </div>
   );
 }

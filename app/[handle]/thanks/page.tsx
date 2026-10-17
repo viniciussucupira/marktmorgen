@@ -68,6 +68,8 @@ import { speech } from "@/lib/buyer-words";
 import { LANGUAGES } from "@/lib/store-language";
 import { HeardAsk } from "@/components/heard-ask";
 import { heardOff } from "@/lib/heard";
+import { listedReturn, listedSite, purchaseReturn } from "@/lib/embed-sites";
+import { eventIdFor } from "@/lib/webhooks";
 
 export async function generateMetadata({ params }: Pick<Params, "params">): Promise<Metadata> {
   const { handle } = await params;
@@ -711,6 +713,17 @@ export default async function ThanksPage({ params, searchParams }: Params) {
   }
   const funnelNext = funnelHereNow?.next && !offer ? funnelHereNow.next : null;
 
+  // Bought through the checkout script on one of the creator's own sites
+  // (lib/embed-sites.ts): the way back there, with the mark that lets the
+  // script on that page say a purchase was made, and the order's id, which is
+  // the sale.completed webhook's. Only to a site still on the store's list.
+  const embedMeta = order.state === "paid" ? (((order.record.metadata ?? {}) as Record<string, string>).embed_site ?? "") : "";
+  const embedTo = embedMeta ? listedReturn(store.embedSites, embedMeta) ?? listedSite(store.embedSites, embedMeta) : null;
+  const embedBack =
+    embedTo && order.state === "paid" && sessionId && store.statsId && !offer
+      ? purchaseReturn(embedTo.includes("/", 8) ? embedTo : `${embedTo}/`, order.product.id, eventIdFor(store.statsId, "sale.completed", sessionId))
+      : null;
+
   return (
     <div
       lang={lang}
@@ -1193,6 +1206,11 @@ export default async function ThanksPage({ params, searchParams }: Params) {
             </>
           )}
 
+          {embedBack ? (
+            <a href={embedBack} className="btn st-btn mt-8">
+              {t.backTo(new URL(embedBack).hostname)}
+            </a>
+          ) : null}
           <div className="mt-8">
             {/* Paid for from the cart: it is emptied (components/store-cart.tsx). */}
             {order.state === "paid" && (order.record.metadata as Record<string, string> | null)?.cart === "yes" ? <ClearCart handle={store.handle} /> : null}

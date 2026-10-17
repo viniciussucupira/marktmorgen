@@ -234,6 +234,12 @@ export async function createCheckout(
     /** The page test and version the buyer was shown (lib/headline-test.ts abMeta), so a paid sale counts for it. */
     ab?: string;
     /**
+     * Bought through the checkout script on one of the creator's listed sites
+     * (lib/embed-sites.ts): the address to send the buyer back to, or the
+     * site itself when none was given. Checked against the list by the route.
+     */
+    embedSite?: string;
+    /**
      * Bought for somebody else (lib/gifts.ts): paid at once, with nothing
      * added at checkout and no offer after it, and handed to the recipient.
      */
@@ -665,6 +671,14 @@ export async function createCheckout(
   // The share of the sale, when the store's plan has one. A choose-your-price
   // line is still at its floor here, which is the least it can be.
   applyShare(body, store, { recurring, least: leastPaid(linesTotal(body).cents, mayComeOff) });
+
+  // Where the receipt page sends the buyer back to, and the sale.completed
+  // webhook's source: written last, and only while Stripe's fifty metadata
+  // fields have room (one is kept for choose-your-price, below), so it can
+  // never be what stops a sale.
+  if (extras.embedSite && /^https:\/\//.test(extras.embedSite) && [...body.keys()].filter((key) => key.startsWith("metadata[")).length < 49) {
+    body.set("metadata[embed_site]", extras.embedSite.slice(0, 300));
+  }
 
   const open = async (fresh: boolean) => {
     if (pwyw) {

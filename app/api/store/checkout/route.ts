@@ -31,6 +31,7 @@ import { pageShown, runningTest } from "@/lib/sales-page";
 import { noteCheckoutTrouble } from "@/lib/checkout-trouble";
 import { markFromReferer } from "@/lib/page-funnel";
 import { funnelHere } from "@/lib/page-funnel-store";
+import { listedReturn, listedSite } from "@/lib/embed-sites";
 
 /** The checkout this browser last opened for a limited product. */
 const HOLD_COOKIE = "nl_stock_hold";
@@ -76,6 +77,11 @@ export async function POST(request: NextRequest) {
   let people = "";
   // The buyer pressed a pre-order's button (lib/preorders.ts).
   let wantsPreorder = false;
+  // Opened by the checkout script on the creator's own site (lib/embed-sites.ts):
+  // which site, and where to send the buyer back to. Checked against the
+  // store's list below; never trusted as sent.
+  let siteAsked = "";
+  let returnAsked = "";
   try {
     const form = await (await limited(request, 8_000)).formData();
     const h = form.get("handle");
@@ -105,6 +111,8 @@ export async function POST(request: NextRequest) {
     giftMessage = read("gift_message", 2_000);
     people = read("people", 12);
     wantsPreorder = form.get("preorder") === "yes";
+    siteAsked = read("site", 300);
+    returnAsked = read("return", 700);
   } catch {
     return new Response("Bad request", { status: 400 });
   }
@@ -253,6 +261,7 @@ export async function POST(request: NextRequest) {
         // button was pressed on like the tags above (lib/page-funnel.ts).
         funnel: funnel ?? undefined,
         ab,
+        embedSite: listedReturn(store.embedSites, returnAsked) ?? listedSite(store.embedSites, siteAsked) ?? undefined,
       }),
     );
     if (!held.ok) return away(`/@${store.handle}?status=${held.reason}`);
