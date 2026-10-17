@@ -1,4 +1,4 @@
-import {fundedCustomerScenario,zeroFixedCompanyFixture} from './margin-test-fixtures';
+import {fundedCustomerScenario,fundedCustomerWithAi,zeroFixedCompanyFixture} from './margin-test-fixtures';
 import { BASE_PLAN_REVENUE_CEILINGS, CURRENT_COMMERCIAL_TERMS, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, commercialMarginReady, REQUIRED_MARGIN_SCENARIOS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { CUSTOMER_COST_CATEGORIES } from "@/lib/net-margin-rules";
 import { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
@@ -16,7 +16,7 @@ const review = (): CommercialMarginReview => ({
  costAndLimitEvidence: "TEST ONLY: hypothetical funded limits",
  singleCustomerFixedCostsVerified: true,
  prepaidUsageEnforced: true,
- scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => { const gross = BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000; return [key, fundedCustomerScenario(gross,Math.floor(gross*.65))]; })),
+ scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => { const gross = BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000; return [key, fundedCustomerWithAi(gross,Math.floor(gross*.65))]; })),
 });
 is("hypothetical current review passes calculation", commercialMarginReady(review()), true);
 is("actual review remains absent", commercialMarginReady(), false);

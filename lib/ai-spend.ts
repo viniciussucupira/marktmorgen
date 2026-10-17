@@ -1,7 +1,7 @@
 import { standingOf, type PlanFields } from '@/lib/plan-standing';
 import type { Tier } from '@/lib/plan';
 import { isRedisConfigured, redisPipeline } from '@/lib/redis';
-import { AI_BUDGET_TIERS, aiSpendPolicySnapshot, AI_SPEND_RULES, CURRENT_AI_SPEND_POLICY, type AiBudgetTier, type AiSpendPolicy } from '@/lib/ai-spend-policy';
+import { AI_BUDGET_TIERS, aiSpendPolicySnapshot, isAiSpendPolicyValid, CURRENT_AI_SPEND_POLICY, type AiBudgetTier, type AiSpendPolicy } from '@/lib/ai-spend-policy';
 import { SUPPORTED_AI_MODELS } from '@/lib/ai-request-rules';
 
 /** Acquisition and ended accounts never consume a paid-tier allocation. */
@@ -10,17 +10,8 @@ export function aiBudgetScopeFor(store: PlanFields & { tier: Tier }, nowSeconds 
   return standing === 'paid' ? store.tier : standing === 'none' ? 'setup' : standing;
 }
 
-const integer = (n: unknown): n is number => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0 && n <= AI_SPEND_RULES.maxInteger;
 export function isAiBudgetConfigured(policy: AiSpendPolicy | null = CURRENT_AI_SPEND_POLICY, now = new Date()): policy is AiSpendPolicy {
-  if (!policy || !Number.isFinite(now.getTime()) || policy.month !== now.toISOString().slice(0, 7)
-    || typeof policy.reviewId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(policy.reviewId)
-    || typeof policy.evidence !== 'string' || !policy.evidence.trim()
-    || !integer(policy.companyMicroUsd) || policy.companyMicroUsd <= 0
-    || !policy.storeMicroUsd || !AI_BUDGET_TIERS.every(tier => integer(policy.storeMicroUsd[tier]))
-    || !policy.fundedStores || !AI_BUDGET_TIERS.every(tier => integer(policy.fundedStores[tier]))
-    || !policy.requestMicroUsd || !SUPPORTED_AI_MODELS.every(model => integer(policy.requestMicroUsd[model]) && policy.requestMicroUsd[model] > 0)) return false;
-  const total = AI_BUDGET_TIERS.reduce((sum, tier) => sum + BigInt(policy.storeMicroUsd[tier]) * BigInt(policy.fundedStores[tier]), BigInt(0));
-  return AI_BUDGET_TIERS.some(tier => policy.fundedStores[tier] > 0) && total <= BigInt(policy.companyMicroUsd);
+  return isAiSpendPolicyValid(policy, now);
 }
 
 /** A single hash keeps both counters in the same Redis cluster slot. Read and

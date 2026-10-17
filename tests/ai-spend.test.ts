@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { aiBudgetScopeFor, isAiBudgetConfigured, reserveAiSpend, RESERVE_AI_SPEND } from '../lib/ai-spend';
-import { CURRENT_AI_SPEND_POLICY, aiSpendPolicySnapshot, type AiSpendPolicy } from '../lib/ai-spend-policy';
+import { CURRENT_AI_SPEND_POLICY, aiSpendPolicySnapshot, aiStoreCostCents, type AiSpendPolicy } from '../lib/ai-spend-policy';
 import { reset, seed, ledger, calls, settings } from './ai-spend-redis';
 const month = new Date().toISOString().slice(0,7);
 const key = 'nl:ai-spend:v1:' + month;
@@ -79,4 +79,13 @@ test('setup, trial and ended stores are attributed to their own acquisition allo
   assert.equal(aiBudgetScopeFor({...base,subscriptionActive:true,trialEnds:101},100),'trial');
   assert.equal(aiBudgetScopeFor({...base,subscriptionActive:true},100),'creator');
   assert.equal(aiBudgetScopeFor({...base,tier:'pro',subscriptionActive:true},100),'pro');
+});
+
+test('annual AI cost aggregates twelve full months before rounding cents',()=>{
+  const p={...policy(),companyMicroUsd:10001,storeMicroUsd:{...policy().storeMicroUsd,creator:10001}};
+  assert.equal(aiStoreCostCents(p,'creator',1),2);
+  assert.equal(aiStoreCostCents(p,'creator',12),13);
+  assert.equal(aiStoreCostCents(p,'creator',2),null);
+  assert.equal(aiStoreCostCents(null,'creator',1),null);
+  assert.equal(aiStoreCostCents(policy(),'trial',1),null);
 });

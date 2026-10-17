@@ -18,7 +18,7 @@ Reservation month is the server's current UTC month, not a historical date suppl
 
 ## Verification
 
-21 admission/policy tests and 6 real askModel transport-path tests use a Redis contract double and mocked provider responses. The actual application Lua is also exercised by scripts/test_ai_spend_redis.py against the disposable local Redis in CI: concurrent company bounds, store ceilings, changed or missing policy bindings, inconsistent/corrupt counters and unavailable ledgers. Production Redis remains untested. Existing writing regressions use an approving monetary-gate test double to isolate their content behavior. These tests are not a live-provider billing or full application build.
+22 admission/policy tests and 6 real askModel transport-path tests use a Redis contract double and mocked provider responses. The actual application Lua is also exercised by scripts/test_ai_spend_redis.py against the disposable local Redis in CI: concurrent company bounds, store ceilings, changed or missing policy bindings, inconsistent/corrupt counters and unavailable ledgers. Production Redis remains untested. Existing writing regressions use an approving monetary-gate test double to isolate their content behavior. These tests are not a live-provider billing or full application build.
 
 Official references checked 2026-10-16:
 - [Redis atomic Lua execution](https://redis.io/docs/latest/develop/programmability/eval-intro/)
@@ -35,3 +35,9 @@ A store's first successful reservation atomically takes one funded slot for its 
 These AI admission slots do not themselves admit a paid subscription. Future commercial enrollment must provision funded capacity for the complete promised benefits before a contract is offered. Existing customer obligations, other resources and all taxes still require review; no policy is active and this does not establish the 60% net margin.
 
 Paid tiers, active trials, setup accounts and ended subscriptions have separate scopes. A setup/ended account cannot consume paid slots. Zero acquisition allowances explicitly disable those calls; unknown allocations do not become free spending. No production policy has been supplied.
+
+## Commercial review binding
+
+The commercial gate also requires a current, valid AI policy and enough funded paid-tier allocations for the reviewed possible plan mix. Each paid customer's declared AI cost must cover the entire configured monthly ceiling; annual cases include twelve full monthly allocations even though annual revenue is only ten monthly prices. Microdollars are aggregated before rounding upward to cents. Zero paid-tier capacity cannot stand in for funding included AI.
+
+These checks bind the supplied budget to the cost model. They do not establish supplier price accuracy, maximum requests per promised AI job, future funding migrations, customer enrollment reservations, existing rights, refunds or all applicable taxes. The production funding policy and commercial review remain null; paid release stays closed.
