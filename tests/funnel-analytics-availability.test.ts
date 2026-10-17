@@ -1,6 +1,6 @@
 import { readFunnelCounts, readFunnelCountsStrict, countFunnelStep, countFunnelDone } from "@/lib/page-funnel-store";
 import { store as redis } from "./redis-stub";
-import { funnelCompletionMetric, funnelStepMetrics } from "@/lib/funnel-metrics";
+import { funnelReachRatioMetric, funnelStepMetrics } from "@/lib/funnel-metrics";
 import { done, is, part } from "./check";
 
 process.env.NIMBUS_DATA_KEY = "tests-only-not-a-real-deployment-secret";
@@ -50,12 +50,13 @@ async function main() {
   for (const missing of [null, -1, NaN, Infinity, 1.5]) {
     is("unavailable visits never display zero: " + missing, funnelStepMetrics({ ...product, seen: missing, done: 0 }), "Counts unavailable. Reload to try again.");
     is("unavailable conversions never display zero: " + missing, funnelStepMetrics({ ...product, seen: 2, done: missing }), "Counts unavailable. Reload to try again.");
-    is("missing first step suppresses completion: " + missing, funnelCompletionMetric(missing, 1), "");
-    is("missing last step suppresses completion: " + missing, funnelCompletionMetric(2, missing), "");
+    is("missing first step suppresses completion: " + missing, funnelReachRatioMetric(missing, 1), "");
+    is("missing last step suppresses completion: " + missing, funnelReachRatioMetric(2, missing), "");
   }
-  is("empty denominator suppresses completion", funnelCompletionMetric(0, 0), "");
-  is("confirmed zero completion remains visible", funnelCompletionMetric(10, 0), "0% of the people who opened the first step reached the last. ");
-  is("confirmed completion", funnelCompletionMetric(4, 1), "25% of the people who opened the first step reached the last. ");
+  is("empty denominator suppresses completion", funnelReachRatioMetric(0, 0), "");
+  is("confirmed zero completion remains visible", funnelReachRatioMetric(10, 0), "Last-step opens compared with first-step opens: 0%. ");
+  is("confirmed completion", funnelReachRatioMetric(4, 1), "Last-step opens compared with first-step opens: 25%. ");
+  is("different entry points may produce a ratio above 100% without a false completion claim", funnelReachRatioMetric(2, 3), "Last-step opens compared with first-step opens: 150%. ");
   done();
 }
 void main();
