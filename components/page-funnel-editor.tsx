@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import type { FunnelStepEditorLink } from "@/lib/funnel-editor-links";
 import { FunnelSharingReview, type FunnelPaymentReview } from "@/components/funnel-sharing-review";
-import { funnelLaunchIssues } from "@/lib/funnel-launch-review";
+import { funnelLaunchIssues, type FunnelLaunchIssue } from "@/lib/funnel-launch-review";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -28,6 +28,7 @@ export type StepChoice = { kind: PageFunnelStep["kind"]; id: string; title: stri
 /** One saved funnel, with its steps as the store stands and how many people each reached. */
 export type SavedFunnel = {
   funnel: PageFunnel;
+  pageIssues?: FunnelLaunchIssue[];
   steps: { editor?: FunnelStepEditorLink | null; title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number | null; done: number | null }[];
 };
 
@@ -210,8 +211,8 @@ export function PageFunnelEditor({
       ) : null}
 
       <ul className="mt-6 space-y-4">
-        {saved.map(({ funnel, steps }) => {
-          const launchIssues = funnelLaunchIssues(funnel.on, steps, paymentReview?.available ?? null);
+        {saved.map(({ funnel, steps, pageIssues = [] }) => {
+          const launchIssues = [...funnelLaunchIssues(funnel.on, steps, paymentReview?.available ?? null), ...pageIssues];
           const first = steps.find((s) => s.open)?.seen ?? null;
           const last = [...steps].reverse().find((s) => s.open);
           return (

@@ -6,7 +6,7 @@ const show = (change: Partial<Parameters<typeof FunnelSharingReview>[0]> = {}) =
   issues: [], editors: [], locked: false, settingsDisabled: false, onSettings() {}, onNavigate() {}, ...change,
 }));
 const clean = show();
-is("review includes manual verification scope", clean.includes("Test forms, consent, each offer, checkout and delivery as a customer"), true);
+is("review includes manual verification scope", clean.includes("Test form submissions, consent, each offer, checkout and delivery as a customer"), true);
 is("no-issue state does not certify customer journey", clean.includes("A successful customer journey still needs to be tested"), true);
 const paymentIssue = { code: "payments" as const, title: "Payments unavailable", detail: "The owner should review payments." };
 const owner = show({ issues: [paymentIssue], paymentReview: { available: false, paymentsHref: "/studio?store=chosen#stripe", billingHref: "/studio?store=chosen#billing" } });

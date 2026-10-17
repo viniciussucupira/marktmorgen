@@ -25,7 +25,7 @@ export function FunnelSharingReview({ issues, editors, paymentReview, locked, se
                   {issues.length ? `Before sharing: ${issues.length} item${issues.length === 1 ? "" : "s"} to review` : "Review before sharing"}
                 </summary>
                 <p className="mt-2 text-xs text-ink-soft">
-                  Saved visibility and store payment availability only. Test forms, consent, each offer, checkout and delivery as a customer. These checks do not verify them or change publication settings.
+                  Saved visibility, selected forms on visible pages and store payment availability only. Test form submissions, consent, each offer, checkout and delivery as a customer. These checks do not verify them or change publication settings.
                 </p>
                 {issues.length ? (
                   <ul className="mt-3 space-y-3">
