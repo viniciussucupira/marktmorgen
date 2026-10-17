@@ -1185,6 +1185,10 @@ export default async function StudioPage({
                   : []),
                 // Everyone on the store, for their own devices (lib/phone-alerts.ts).
                 { href: studioPath(store, "", "phone"), title: "Phone notifications", text: "A buzz for sales, bookings, community reports, affiliate applications and live events, on your own devices.", icon: "phone" as const },
+                // Everyone on the store, for their own calendar as a team host (lib/host-calendar.ts).
+                ...(callProducts.length > 0
+                  ? [{ href: studioPath(store, "", "calendar"), title: "Your calendar", text: "Your own busy times, kept out of the team calls you host.", icon: "calendar" as const }]
+                  : []),
                 ...(PRO_ON_SALE && may("draft")
                   ? [{ href: studioPath(store, "", "email"), title: "Email", text: "One-off emails and sequences to your list.", icon: "mail" as const, tag: "Pro" }]
                   : []),

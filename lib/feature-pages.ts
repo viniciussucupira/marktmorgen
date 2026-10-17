@@ -19,6 +19,7 @@ import { workflowLimitWords } from "@/lib/flow-limits";
 import { EXPECTATION, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
 import type { TopicPage } from "@/lib/site-pages";
 import { PLAN_AT, feeWords } from "@/lib/fee-words";
+import { TEAM_LIMITS, teamLimitWords } from "@/lib/team-scheduling-rules";
 
 /** Whether stores can be put on their own domain on this deployment. */
 const DOMAINS = isDomainsConfigured();
@@ -401,6 +402,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "video", title: "Or a private video room", body: "Switch it on and each booking gets its own Jitsi Meet room, a link nobody can guess, with nothing to set up. A group call or a live session has one room per time, shared by everyone booked into it." },
           { icon: "shield", title: "Never booked twice", body: "A time being paid for is held, so two people can never pay for the same time, or for the last seat." },
           { icon: "users", title: "Group calls", body: "Up to 50 people at each time. Buyers see how many seats are left." },
+          { icon: "users", title: "Team event types", body: `One call booked with whoever on your team is free, shared out evenly (round robin), or only when all of them are (collective). Each host has their own hours in their own time zone, their own gap, notice and cap of team calls a day, and nobody is held twice for the same time, on any store. ${PLAN_AT.creator} plan: ${teamLimitWords(TEAM_LIMITS.creator)}; ${PLAN_AT.pro} plan: ${teamLimitWords(TEAM_LIMITS.pro)}; ${PLAN_AT.scale} plan: ${teamLimitWords(TEAM_LIMITS.scale)}.` },
           { icon: "gift", title: "Packages of sessions", body: "Sell 2 to 20 sessions at one price, with 30 days to a year to use them, or no limit. The buyer pays once and books each session from their own link whenever they like, with the reminders, meeting link and moves of any booking. Their purchases show how many are left." },
           { icon: "video", title: "Live sessions on dates", body: "Up to 50 dates per product, each with 1 to 500 seats, its own length and its own link. Sales close when you say, up to 72 hours before." },
           { icon: "mail", title: "Reminders", body: "A day and an hour before, to every buyer in their time zone, with the link to join. You get one per time, listing everyone booked." },
@@ -421,7 +423,9 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do yet",
         items: [
-          "Your calendars are read for busy times, and only calls set to Google Meet are written to your connected Google Calendar. Other bookings reach your calendar as a feed you subscribe to, and a new busy time can take about ten minutes to close a slot.",
+          "Your calendars are read for busy times, and only calls set to Google Meet, and team calls whose host connected their own Google Calendar, are written into Google Calendar. Other bookings reach your calendar as a feed you subscribe to, and a new busy time can take about ten minutes to close a slot.",
+          "Two-way Google Calendar sync for team hosts is built and switches on once Google approves the added permissions for our app; until then, hosts add their calendar's private iCal address, which is read the same way but writes nothing.",
+          "A team call has one person per time, keeps its host when the buyer moves it, and sends its booking email and reminders to one address: yours when you host it, otherwise its host's. A host's daily cap counts team calls only.",
           "Buyers move a booking themselves, but canceling is a reply to their confirmation email, which reaches you; a refund is made from your Stripe dashboard.",
           "Zoom links are not made for you yet. Connecting Zoom opens to every store once Zoom approves our app; until then, for Zoom, you type your own link. Stan creates Zoom links automatically.",
           "On a free personal Google account, Google ends meetings of three or more people after 60 minutes.",
@@ -439,6 +443,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { q: "Is sales tax added to calls?", a: "When you switch Stripe Tax on, it is added to calls as it is to everything else, on your own account." },
           { q: "Where is the video room, and who runs it?", a: "At meet.jit.si, the free Jitsi Meet service run by 8x8, not by us. Its link is in the booking and reminder emails, the calendar file, your bookings feed and the buyer's list of purchases. Open it a few minutes early: the first person in may be asked to sign in to Jitsi (with a Google account, for example) to start the meeting." },
           { q: "What if a buyer picks a time and leaves without paying?", a: "The time is held for them while Stripe's page is open, about half an hour, and goes back on sale when it closes. With checkout reminders on, a buyer who agreed on that page to hear from you gets one email: the time they picked, that it was not kept, and a link to the times still open, at today's price. It is sent only while a time is left to book, never twice in a week, and never once they have booked." },
+          { q: "How do team event types work?", a: "Under a call with weekly hours and one person per time, choose Make it a team event, pick round robin or collective, and tick who hosts it: you and anyone on your store's team. Each host gets their own hours, time zone, gap between calls, notice and a cap of team calls a day, read on their own clock, daylight saving included. Round robin gives each booking to the free host with the fewest bookings of it so far. Each host sets their own calendar once, under Your calendar in the studio: a private iCal address, or their Google Calendar for two-way sync once it is switched on. A host whose calendar was last read more than 20 minutes ago, or cannot be read, is left out until it can be, so nobody is booked over a meeting we could not see; the other hosts' times stay open. Every hold and booking takes its hosts' time in one step, so the same person can never be held twice for one time, even by two stores." },
           { q: "How are Google Meet links made?", a: "Connect your own Google Calendar under Video calls in your studio, then choose Google Meet (automatic) under Where the call happens. Each booking gets an event with a Meet link on your primary calendar, with the buyer on its guest list; a group call or a live session has one event per time, with up to 200 guests who do not see one another. Google emails nobody: buyers get the link in our booking email, reminders and calendar file. A moved booking moves its event, and a full refund deletes a one-to-one call's event or takes the buyer off a group's guest list. If a meeting cannot be made, the booking gets your own link or a Jitsi Meet room, and we keep trying for a few hours. If a Meet link is made more than two hours before the call, it is emailed to those booked, up to 20 people." },
         ],
       },
@@ -1337,7 +1342,8 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do",
         items: [
-          "It is not a two-way sync. Only calls set to Google Meet are written into your calendar, on a Google Calendar you connect under Video calls; other bookings reach it through the feed you subscribe to, which your calendar app refreshes on its own schedule.",
+          "For your own calls it is not a two-way sync. Only calls set to Google Meet are written into your calendar, on a Google Calendar you connect under Video calls; other bookings reach it through the feed you subscribe to, which your calendar app refreshes on its own schedule.",
+          "Hosts of team calls set their own calendar under Your calendar: a private iCal address, or their own Google Calendar for two-way sync (busy times read from the calendars they pick, bookings written to the one they choose), which switches on once Google approves the added permissions for our app.",
           "A new busy time can take about ten minutes to close a slot.",
           "Up to three calendars, read 120 days ahead.",
           "Busy times are read only through a private iCal address, not through a Google or Microsoft connection. A calendar that cannot give one cannot be read.",

@@ -66,7 +66,7 @@ const FEED_ID_PATTERN = /^[0-9a-f]{16}$/;
 
 type Feed = { id: string; url: string; addedAt: string };
 type Config = { handle: string; feeds: Feed[]; token: string | null; tokenAt: string };
-type Reading = { at: number; busy: [number, number][]; events: number; unsupported: number; truncated: boolean };
+export type Reading = { at: number; busy: [number, number][]; events: number; unsupported: number; truncated: boolean };
 
 const cfgKey = (statsId: string) => `nl:cal:cfg:${statsId}`;
 const tokenKey = (token: string) => `nl:cal:tok:${createHash("sha256").update(`nimbus-cal:${token}`).digest("hex").slice(0, 40)}`;
@@ -147,7 +147,7 @@ export function providerOf(url: string): string {
  * Fetches and reads one calendar. Throws a SafeFetchError, or an Error with a
  * sentence for the creator, when it cannot be read.
  */
-async function readFeed(url: string, fallbackTz: string, now: number, fetchOptions: FetchHooks = {}): Promise<Reading> {
+export async function readFeed(url: string, fallbackTz: string, now: number, fetchOptions: FetchHooks = {}): Promise<Reading> {
   const answer = await safeFetch(url, {
     maxBytes: FEED_MAX_BYTES,
     timeoutMs: FEED_TIMEOUT_MS,

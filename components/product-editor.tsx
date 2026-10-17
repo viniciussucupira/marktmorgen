@@ -8,6 +8,7 @@ import { hasContent, preorderProblem } from "@/lib/preorder-rules";
 import type { WaitlistView } from "@/lib/waitlist";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TeamEventEditor } from "@/components/team-event-editor";
 import { CallEditor, type MeetAccount } from "@/components/call-editor";
 import { CourseToggle } from "@/components/course-toggle";
 import { BundleToggle } from "@/components/bundle-toggle";
@@ -2066,6 +2067,7 @@ export function ProductEditor({
                   the options rather than sitting above them unused.
                 */}
                 {product.course || product.bundle || product.shipping ? null : <CallEditor product={product} email={email} meetings={meetings} />}
+                {product.call?.kind === "weekly" && product.call.seats === 1 ? <TeamEventEditor product={product} /> : null}
                 {product.call?.kind === "weekly" ? (
                   <PackageEditor productId={product.id} singleCents={product.priceCents} currency={currency} initial={product.callPackage ?? null} />
                 ) : null}

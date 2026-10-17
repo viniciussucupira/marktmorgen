@@ -40,6 +40,7 @@ import { MEET_STORES, callRefunded, dropScope, dueScopes, retryRecord } from "@/
 import { type PaidCall, isCallProduct, paidCalls, tellNewLink } from "@/lib/calls";
 import { eventStillWants, readEventScope } from "@/lib/event-meetings";
 import type { Store } from "@/lib/store";
+import { isClaimId, isHostId, releaseClaim } from "@/lib/host-claims";
 
 const BATCH = 40;
 const REFUND_STORES = 20;
@@ -207,6 +208,9 @@ async function refundsOf(store: Store, callsId: string, deadline: number): Promi
         if (Number.isFinite(start) && (await callRefunded(store, { session: session.id, product: meta.product ?? "", start, email: typeof details.email === "string" ? details.email : null }))) {
           handled += 1;
         }
+        // A team booking refunded in full gives its hosts their time back, on every store.
+        const hosts = (meta.hosts ?? "").split(",").filter(isHostId);
+        if (hosts.length && isClaimId(meta.claim)) await releaseClaim(hosts, meta.claim).catch(() => {});
       }
       await redisPipeline([
         ["SADD", seenKey(callsId), id],

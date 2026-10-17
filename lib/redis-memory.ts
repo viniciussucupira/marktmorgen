@@ -183,6 +183,7 @@ export class MemoryRedis {
           this.hash(target).set(args[2], args[3]);
           return 1;
         }
+        if (key.startsWith("-- marktmorgen:host-claim:v1\n")) return this.hostClaim(args);
         if (!key.startsWith("-- marktmorgen:form-opportunity:v1\n") || args[0] !== "1" || args.length !== 5) throw new Error("MemoryRedis: unsupported EVAL");
         const target = args[1];
         this.live(target);
@@ -220,6 +221,16 @@ export class MemoryRedis {
         const ends = this.until.get(key);
         if (ends === undefined) return -1;
         return Math.max(0, Math.ceil((ends - this.now()) / 1000));
+      }
+      case "PEXPIRE":
+        if (!this.data.has(key)) return 0;
+        this.until.set(key, this.now() + Number(args[0]));
+        return 1;
+      case "PTTL": {
+        if (!this.data.has(key)) return -2;
+        const ends = this.until.get(key);
+        if (ends === undefined) return -1;
+        return Math.max(0, ends - this.now());
       }
       case "INCRBY":
       case "DECRBY": {
@@ -595,6 +606,58 @@ export class MemoryRedis {
       default:
         throw new Error(`MemoryRedis does not implement ${name}`);
     }
+  }
+
+  /**
+   * The host claim script (lib/host-claims.ts, CLAIM_HOST_TIMES), modelled
+   * step for step: the same refusals, in the same order, writing nothing
+   * unless every host's time is free. scripts/test_host_claims_redis.py runs
+   * the script itself against a real Redis.
+   */
+  private hostClaim(args: string[]): unknown {
+    const count = Number(args[0]);
+    const keys = args.slice(1, 1 + count);
+    const argv = args.slice(1 + count);
+    const [now, s, e] = argv.slice(0, 3).map(Number);
+    const claim = argv[3];
+    const hold = Number(argv[4]);
+    const ref = argv[5];
+    if (!Number.isFinite(now) || !Number.isFinite(s) || !Number.isFinite(e) || e <= s || !Number.isFinite(hold) || claim === "" || argv.length !== 6 + 4 * keys.length || keys.length === 0) return [-3, 0];
+    for (let i = 0; i < keys.length; i += 1) {
+      this.live(keys[i]);
+      const held = this.data.get(keys[i]);
+      if (held !== undefined && !(held instanceof Map)) return [-3, i + 1];
+    }
+    const drops: string[][] = [];
+    for (let i = 0; i < keys.length; i += 1) {
+      const [gap, d0, d1, cap] = argv.slice(6 + i * 4, 10 + i * 4).map(Number);
+      if (![gap, d0, d1, cap].every(Number.isFinite) || gap < 0) return [-3, i + 1];
+      const held = this.data.get(keys[i]);
+      const stale: string[] = [];
+      let today = 0;
+      for (const [field, raw] of held instanceof Map ? held : new Map<string, string>()) {
+        const m = /^(\d+)\|(\d+)\|(\d+)\|/.exec(raw);
+        if (!m) return [-3, i + 1];
+        const [a, b, u] = [Number(m[1]), Number(m[2]), Number(m[3])];
+        if ((u > 0 && u < now) || b < now - 172_800_000) stale.push(field);
+        else if (field !== claim) {
+          if (s < b + gap && e + gap > a) return [-1, i + 1];
+          if (a >= d0 && a < d1) today += 1;
+        }
+      }
+      if (today >= cap) return [-2, i + 1];
+      drops.push(stale);
+    }
+    const keep = e - now + 172_800_000;
+    keys.forEach((k, i) => {
+      const hash = this.hash(k);
+      for (const field of drops[i]) hash.delete(field);
+      hash.set(claim, `${s}|${e}|${hold}|${ref}`);
+      const ends = this.until.get(k);
+      const left = ends === undefined ? -1 : ends - this.now();
+      if (left < keep) this.until.set(k, this.now() + keep);
+    });
+    return [1, 0];
   }
 
   /** The shape lib/redis.ts exports: one reply per command, in order. */
