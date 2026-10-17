@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { FORM_ID, newFormId, parseForm } from "@/lib/forms";
+import { FORM_ID, badPoints, newFormId, parseForm, tierIssueText, tierIssues } from "@/lib/forms";
 import { dropForm, readForm, writeForm } from "@/lib/form-store";
 import { setSitePages } from "@/lib/store";
 
@@ -11,10 +11,14 @@ const MAX_BODY_BYTES = 60_000;
  * A store's forms, surveys and quizzes (lib/forms.ts): part of its public
  * pages, so what the "page" permission may change.
  *
- *   { form: { id?, name, fields, button, doneHeading, doneBody, outcomes, offerList } }   saves one
+ *   { form: { id?, name, fields, button, doneHeading, doneBody, outcomes, offerList, scoring?, categories? } }   saves one
  *   { action: "remove", id }                                                                 removes it and its answers
  *
- * A result's product is kept only when it is one of the store's.
+ * A result's product is kept only when it is one of the store's. A scored
+ * quiz is saved only when every option's points are a whole number from 0 to
+ * MAX_POINTS and its score ranges cover every possible total exactly once
+ * (lib/forms.ts, tierIssues): otherwise nothing is saved, and the reasons
+ * come back in words.
  */
 export async function POST(request: NextRequest) {
   const guarded = await guardStoreWrite(request, "page", MAX_BODY_BYTES);
@@ -43,6 +47,9 @@ export async function POST(request: NextRequest) {
     if (asked && !existing) return Response.json({ ok: false, error: "unknown" }, { status: 404 });
     const form = parseForm({ ...raw, id: existing?.id ?? newFormId(), updatedAt: Math.floor(Date.now() / 1000) });
     if (!form) return Response.json({ ok: false, error: text(raw.name, 60).trim() ? "fields" : "name" }, { status: 400 });
+    if (badPoints(raw)) return Response.json({ ok: false, error: "points" }, { status: 400 });
+    const issues = tierIssues(form);
+    if (issues.length) return Response.json({ ok: false, error: "tiers", issues: issues.map((issue) => tierIssueText(form, issue)) }, { status: 400 });
     // A result points at one of this store's products, or at none.
     const known = new Set(store.catalog.items.map((item) => item.id));
     form.outcomes = form.outcomes.map((o) => (o.product && !known.has(o.product) ? { ...o, product: "" } : o));

@@ -42,7 +42,7 @@ import {
 } from "@/lib/sales-page";
 import { MAX_SITE_PAGES, MAX_SITE_TITLE, SITE_KINDS, SLUG_PATTERN, MAX_SLUG, type SitePage } from "@/lib/site-page-rules";
 import { MAX_FUNNEL_NAME, MAX_FUNNEL_PAGES, type PageFunnelStep } from "@/lib/page-funnel";
-import { MAX_FORMS, newFormId, parseForm, type FormDef } from "@/lib/forms";
+import { MAX_FORMS, newFormId, parseForm, tierIssues, type FormDef } from "@/lib/forms";
 
 export const BUNDLE_FORMAT = "marktmorgen-funnel";
 /** The version of the format written now. A file of a later version is refused with a word of its own, so an older app never half-reads it. */
@@ -335,13 +335,14 @@ export function readBundle(raw: unknown, options: { maxBytes: number; own?: bool
   for (const entry of top.forms) {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) return { ok: false, error: "forms" };
     const row = entry as Record<string, unknown>;
-    if (!onlyKeys(row, ["ref", "name", "fields", "button", "doneHeading", "doneBody", "outcomes", "offerList"])) return { ok: false, error: "shape" };
+    // A scored quiz (lib/forms.ts) also carries its scoring, categories, points and score ranges.
+    if (!onlyKeys(row, ["ref", "name", "fields", "button", "doneHeading", "doneBody", "outcomes", "offerList", "scoring", "categories"])) return { ok: false, error: "shape" };
     if (typeof row.ref !== "string" || !FORM_REF.test(row.ref) || forms.some((f) => f.ref === row.ref)) return { ok: false, error: "forms" };
     const outcomes = Array.isArray(row.outcomes) ? row.outcomes : [];
     const refs: string[] = [];
     for (const outcome of outcomes) {
       const o = outcome && typeof outcome === "object" ? (outcome as Record<string, unknown>) : null;
-      if (!o || !onlyKeys(o, ["id", "title", "body", "product"])) return { ok: false, error: "forms" };
+      if (!o || !onlyKeys(o, ["id", "title", "body", "product", "min", "max"])) return { ok: false, error: "forms" };
       const ref = typeof o.product === "string" ? o.product : "";
       if (ref && !productRefs.has(ref)) return { ok: false, error: "products" };
       refs.push(ref);
@@ -352,7 +353,7 @@ export function readBundle(raw: unknown, options: { maxBytes: number; own?: bool
       if (!f || !onlyKeys(f, ["id", "type", "label", "required", "options"])) return { ok: false, error: "forms" };
       for (const option of Array.isArray(f.options) ? f.options : []) {
         const o = option && typeof option === "object" ? (option as Record<string, unknown>) : null;
-        if (!o || !onlyKeys(o, ["id", "label", "outcome", "next"])) return { ok: false, error: "forms" };
+        if (!o || !onlyKeys(o, ["id", "label", "outcome", "next", "points", "category"])) return { ok: false, error: "forms" };
       }
     }
     const parsed = parseForm({ ...row, id: "aaaaaaaaaa", outcomes: outcomes.map((o) => ({ ...(o as object), product: "" })) });
@@ -362,7 +363,11 @@ export function readBundle(raw: unknown, options: { maxBytes: number; own?: bool
       parsed.fields.length !== fields.length ||
       parsed.outcomes.length !== outcomes.length ||
       parsed.fields.some((f, i) => f.options.length !== (Array.isArray((fields[i] as { options?: unknown }).options) ? ((fields[i] as { options: unknown[] }).options.length) : 0)) ||
-      (row.offerList === true) !== parsed.offerList
+      (row.offerList === true) !== parsed.offerList ||
+      (row.scoring === "points") !== (parsed.scoring === "points") ||
+      (parsed.categories?.length ?? 0) !== (Array.isArray(row.categories) ? row.categories.length : 0) ||
+      // A scored quiz arrives whole: every score with exactly one result, as the studio requires.
+      tierIssues(parsed).length > 0
     ) {
       return { ok: false, error: "forms" };
     }

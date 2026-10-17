@@ -7,6 +7,7 @@ import { speech } from "@/lib/buyer-words";
 import { formWords } from "@/lib/buyer-words/form";
 import { funnelWords } from "@/lib/buyer-words/funnel";
 import { readForm } from "@/lib/form-store";
+import { branches, readScoreQuery } from "@/lib/forms";
 import { readListing } from "@/lib/catalog";
 import { productPath } from "@/components/store-product";
 import { funnelMark } from "@/lib/page-funnel";
@@ -33,7 +34,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
  * the list's email is on its way when they asked for it; and, on a step of a
  * funnel, the way on to the next one. Nothing here is personal: the result
  * is named in the address, and anyone who opens it sees what a quiz says
- * for that result, nothing of anybody's answers.
+ * for that result, nothing of anybody's answers. A scored quiz's total
+ * comes the same way (lib/forms.ts, readScoreQuery), and is shown only when
+ * this result's range holds it, with the range itself, so a person sees why
+ * this is their result; "of N" only when no answer skips a question, as N is
+ * then the most anybody could score.
  */
 export default async function FormDonePage({ params, searchParams }: Params) {
   const { handle, form: formId } = await params;
@@ -47,6 +52,8 @@ export default async function FormDonePage({ params, searchParams }: Params) {
   const w = formWords(store.language);
   const { lang } = speech(store);
   const outcome = form.outcomes.find((o) => o.id === pick(query.r)) ?? null;
+  const score = readScoreQuery(form, outcome, pick(query.s), pick(query.c));
+  const whole = !branches(form);
   const product = outcome?.product ? await readListing(store, outcome.product).catch(() => null) : null;
   const shown = product && !product.hidden ? product : null;
   const page = store.sitePages.find((p) => p.id === pick(query.p)) ?? null;
@@ -61,6 +68,29 @@ export default async function FormDonePage({ params, searchParams }: Params) {
               <p className="st-price text-sm">{w.result}</p>
               <h1 className="font-display mt-2 text-3xl font-semibold leading-tight sm:text-4xl">{outcome.title}</h1>
               {outcome.body ? <PlainText text={outcome.body} className="st-muted mt-4 text-lg" /> : null}
+              {score ? (
+                <div className="mt-6" data-quiz-score={score.total}>
+                  <p className="text-lg font-semibold">{`${w.yourScore}: ${w.points(score.total, whole ? score.top : null)}`}</p>
+                  {typeof outcome.min === "number" && typeof outcome.max === "number" ? <p className="st-muted mt-1 text-sm">{w.covers(outcome.min, outcome.max)}</p> : null}
+                  {score.categories.length ? (
+                    <ul className="mt-4 space-y-3">
+                      {score.categories.map((c) => (
+                        <li key={c.id}>
+                          <div className="flex items-baseline justify-between gap-3 text-sm">
+                            <span className="font-semibold">{c.name}</span>
+                            <span className="st-muted">{w.points(c.points, whole ? c.top : null)}</span>
+                          </div>
+                          {whole && c.top > 0 ? (
+                            <div className="mt-1 h-2 overflow-hidden rounded-full" style={{ background: "var(--st-accent-soft)" }} aria-hidden="true">
+                              <div className="h-full rounded-full" style={{ width: `${Math.round((c.points / c.top) * 100)}%`, background: "var(--st-accent)" }} />
+                            </div>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : (
             <>

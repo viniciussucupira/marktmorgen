@@ -29,7 +29,7 @@ export function parseFlowList(raw: unknown): Flow[] | null {
     if (typeof flow.trigger !== "string" || !(FLOW_TRIGGERS as readonly string[]).includes(flow.trigger as string) || typeof flow.active !== "boolean") return null;
     if (flow.productId !== null && typeof flow.productId !== "string") return null;
     if (typeof flow.createdAt !== "number" || !Number.isFinite(flow.createdAt)) return null;
-    if ((flow.tag !== undefined && typeof flow.tag !== "string") || (flow.formId !== undefined && typeof flow.formId !== "string")) return null;
+    if ((flow.tag !== undefined && typeof flow.tag !== "string") || (flow.formId !== undefined && typeof flow.formId !== "string") || (flow.formOutcome !== undefined && typeof flow.formOutcome !== "string")) return null;
     if (flow.goal !== undefined && (!record(flow.goal) || ("any" in flow.goal ? flow.goal.any !== true : "tag" in flow.goal ? typeof flow.goal.tag !== "string" : typeof flow.goal.productId !== "string"))) return null;
     if (!Array.isArray(flow.steps)) return null;
     const steps = new Set<string>();

@@ -928,6 +928,19 @@ export default function PrivacyPage() {
           sent for 30 days so it is never sent twice, and each delivery, with
           the answer the address gave, for up to seven days.
         </p>
+        <p id="store-forms">
+          <strong className="text-black">Forms and quizzes on a store&apos;s pages.</strong>{" "}
+          When someone sends a creator&apos;s form, we keep their answers, when they
+          sent them, the page they came from and, for a quiz, the result they were
+          shown. For a scored quiz we also keep the total and each category&apos;s
+          score, worked out from the points the creator gave each answer; nothing
+          else goes into it. The newest 2,000 responses of each form are kept, for
+          the creator, and are deleted with the form, or when the person is deleted
+          from the store, found by the email address in their answers. The result
+          page&apos;s web address names the result and the score, never the
+          person&apos;s answers or email address. The creator is the controller of
+          these answers.
+        </p>
         <p id="license-keys">
           <strong className="text-black">License keys.</strong> When a creator
           sells a product with license keys, we keep each key with the sale it
@@ -1823,7 +1836,8 @@ export default function PrivacyPage() {
           <p>
             What is deleted: your place on the store&apos;s list and every link
             in its emails to you; what its team noted about you (its fields,
-            notes and deals); your form answers, inbox conversations, reviews
+            notes and deals); your form answers with their quiz results and
+            scores, inbox conversations, reviews
             and their photos, and waitlist places; your way through its
             sequences and workflows, and any email still waiting to reach you;
             your progress, quiz results, handed-in work and its files, lesson

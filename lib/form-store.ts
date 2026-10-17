@@ -3,7 +3,9 @@
  * rules).
  *
  *   nl:forms:<statsId>             hash  form id -> the form
- *   nl:form:r:<statsId>:<form id>  list  its responses, newest first, KEPT_RESPONSES at most
+ *   nl:form:r:<statsId>:<form id>  list  its responses, newest first, KEPT_RESPONSES at most;
+ *                                         a scored quiz's total and category scores are kept
+ *                                         inside each response, so they go wherever it goes
  *
  * Under the store's own stats id, so they move with the store, as its
  * affiliates and its pages do.
@@ -103,7 +105,18 @@ function parseResponse(raw: unknown): FormResponse | null {
   try {
     const value = JSON.parse(raw) as Partial<FormResponse>;
     if (typeof value.at !== "number" || !value.answers || typeof value.answers !== "object") return null;
-    return { ...(typeof value.id === "string" && FORM_RESPONSE_ID.test(value.id) ? { id: value.id } : {}), at: value.at, page: typeof value.page === "string" ? value.page : "", answers: value.answers, outcome: typeof value.outcome === "string" ? value.outcome : "", joined: value.joined === true };
+    const score = typeof value.score === "number" && Number.isInteger(value.score) && value.score >= 0 ? value.score : null;
+    const scores = value.scores && typeof value.scores === "object" && !Array.isArray(value.scores) ? Object.fromEntries(Object.entries(value.scores).filter(([k, v]) => /^[a-z0-9]{6}$/.test(k) && Number.isInteger(v) && (v as number) >= 0)) : null;
+    return {
+      ...(typeof value.id === "string" && FORM_RESPONSE_ID.test(value.id) ? { id: value.id } : {}),
+      at: value.at,
+      page: typeof value.page === "string" ? value.page : "",
+      answers: value.answers,
+      outcome: typeof value.outcome === "string" ? value.outcome : "",
+      joined: value.joined === true,
+      // A scored quiz's total and categories, kept with the answers and deleted with them (forgetFormsPerson).
+      ...(score !== null ? { score, ...(scores ? { scores: scores as Record<string, number> } : {}) } : {}),
+    };
   } catch {
     return null;
   }

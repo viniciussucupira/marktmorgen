@@ -817,7 +817,8 @@ function FormView({ block, form, ctx }: { block: Extract<PageBlock, { kind: "for
         {form.fields.map((field) => (
           <FormQuestion key={field.id} field={field} form={form} ctx={ctx} />
         ))}
-        {branches(form) && !ctx.preview ? <FormBranching form={{ id: form.id, fields: form.fields, outcomes: form.outcomes }} /> : null}
+        {/* Only what the branching needs reaches the browser: a scored quiz's points and ranges stay on the server. */}
+        {branches(form) && !ctx.preview ? <FormBranching form={{ id: form.id, fields: form.fields.map((f) => ({ ...f, options: f.options.map(({ id, label, outcome, next }) => ({ id, label, outcome, ...(next ? { next } : {}) })) })), outcomes: form.outcomes.map(({ id, title, body, product }) => ({ id, title, body, product })) }} /> : null}
         {form.offerList && target?.listOpen ? (
           <label className="sp-form-option">
             <input type="checkbox" name="consent" value="yes" disabled={ctx.preview} />

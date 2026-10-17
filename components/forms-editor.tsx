@@ -10,6 +10,7 @@ import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { QuizCategories, QuizScoringCheck } from "@/components/quiz-scoring";
 import {
   FIELD_TYPES,
   MAX_BUTTON,
@@ -24,6 +25,8 @@ import {
   MAX_OUTCOME_BODY,
   MAX_OUTCOME_TITLE,
   MAX_OUTCOMES,
+  MAX_POINTS,
+  MAX_SCORE,
   KEPT_RESPONSES,
   type FieldType,
   type FormDef,
@@ -31,6 +34,9 @@ import {
   type FormOutcome,
   type FormResponse,
   END,
+  evenRanges,
+  isScored,
+  maxScore,
   newFormId,
 } from "@/lib/forms";
 
@@ -43,6 +49,8 @@ const MESSAGES: Record<string, string> = {
   full: `A store can have ${MAX_FORMS} forms. Remove one to add another.`,
   unknown: "That form is already gone. Reload the page.",
   invalid: "Something in the form could not be read. Reload the page and try again.",
+  points: `Each option's points must be a whole number from 0 to ${MAX_POINTS}.`,
+  tiers: "The score ranges do not cover every total exactly once yet:",
   server_error: "Saving could not be confirmed. Review the saved forms before trying again.",
   ...STUDIO_MESSAGES,
 };
@@ -107,7 +115,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
     setError(null);
     try {
       const response = await fetch("/api/store/forms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; issues?: string[] };
       if (data.ok) {
         toast(done);
         setDraft(null);
@@ -115,7 +123,8 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      const said = MESSAGES[data.error ?? ""] ?? MESSAGES.server_error;
+      setError(data.error === "tiers" && Array.isArray(data.issues) ? `${said} ${data.issues.join(" ")}` : said);
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -124,6 +133,36 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
   }
 
   const hasEmail = draft?.fields.some((f) => f.type === "email") ?? false;
+  const scoredDraft = draft ? isScored(draft) : false;
+
+  /** Switches a draft between results by pointing answers and results by score, keeping what each needs. */
+  function setScoring(on: boolean) {
+    setDraft((d) => {
+      if (!d) return d;
+      if (!on) {
+        // Back to results by pointing answers: the points, categories and ranges are let go.
+        return {
+          id: d.id, name: d.name, button: d.button, doneHeading: d.doneHeading, doneBody: d.doneBody, offerList: d.offerList, updatedAt: d.updatedAt,
+          outcomes: d.outcomes.map((o) => ({ id: o.id, title: o.title, body: o.body, product: o.product })),
+          fields: d.fields.map((f) => ({ ...f, options: f.options.map((o) => ({ id: o.id, label: o.label, outcome: o.outcome, ...(o.next ? { next: o.next } : {}) })) })),
+        };
+      }
+      const fields = d.fields.map((f) => ({ ...f, options: f.options.map((o) => ({ ...o, outcome: "", points: o.points ?? 0 })) }));
+      const next: FormDef = { ...d, scoring: "points", categories: d.categories ?? [], fields };
+      const ranges = evenRanges(maxScore(next).total, d.outcomes.length);
+      return { ...next, outcomes: d.outcomes.map((o, i) => ({ ...o, min: o.min ?? ranges[i].min, max: o.max ?? ranges[i].max })) };
+    });
+  }
+  const spread = () =>
+    setDraft((d) => {
+      if (!d) return d;
+      const ranges = evenRanges(maxScore(d).total, d.outcomes.length);
+      return { ...d, outcomes: d.outcomes.map((o, i) => ({ ...o, ...ranges[i] })) };
+    });
+  const numberIn = (value: string, max: number) => {
+    const n = Math.floor(Number(value));
+    return Number.isFinite(n) ? Math.min(max, Math.max(0, n)) : 0;
+  };
 
   return (
     <section aria-labelledby="forms-title" className="card min-w-0 p-5 sm:p-8">
@@ -133,7 +172,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
             Forms, surveys and quizzes
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
-            {`Questions you ask on one of your own pages, with a Form block: an application before a call, a survey, a quiz with results. Up to ${MAX_FIELDS} questions, and the newest ${KEPT_RESPONSES.toLocaleString("en-US")} answers of each kept for you, as a file too.`}
+            {`Questions you ask on one of your own pages, with a Form block: an application before a call, a survey, a quiz with results, chosen by answers or by score. Up to ${MAX_FIELDS} questions, and the newest ${KEPT_RESPONSES.toLocaleString("en-US")} answers of each kept for you, as a file too.`}
           </p>
         </div>
         {draft === null && saved.length < MAX_FORMS ? (
@@ -157,7 +196,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">
                   {form.name}
-                  {form.outcomes.length ? <span className="tag">Quiz</span> : null}
+                  {isScored(form) ? <span className="tag">Scored quiz</span> : form.outcomes.length ? <span className="tag">Quiz</span> : null}
                 </p>
                 <p className="mt-1 text-sm text-ink-soft">{`${form.fields.length} ${form.fields.length === 1 ? "question" : "questions"} · ${total.toLocaleString("en-US")} ${total === 1 ? "answer" : "answers"} kept`}</p>
               </div>
@@ -234,7 +273,8 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                       value={field.type}
                       onChange={(e) => {
                         const type = e.target.value as FieldType;
-                        setField(i, { type, options: hasOptions(type) ? (field.options.length >= 2 ? field.options : [{ id: piece(), label: "", outcome: "" }, { id: piece(), label: "", outcome: "" }]) : [] });
+                        const fresh = () => ({ id: piece(), label: "", outcome: "", ...(scoredDraft ? { points: 0 } : {}) });
+                        setField(i, { type, options: hasOptions(type) ? (field.options.length >= 2 ? field.options : [fresh(), fresh()]) : [] });
                       }}
                     >
                       {FIELD_TYPES.map((t) => (
@@ -258,7 +298,39 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                           placeholder={`Option ${k + 1}`}
                           onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, label: e.target.value } : o)) })}
                         />
-                        {draft.outcomes.length ? (
+                        {scoredDraft ? (
+                          <>
+                            <label className="flex items-center gap-2 text-sm text-ink-soft">
+                              Points
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                className="field w-20"
+                                aria-label={`Points for option ${k + 1}`}
+                                min={0}
+                                max={MAX_POINTS}
+                                step={1}
+                                value={option.points ?? 0}
+                                onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, points: numberIn(e.target.value, MAX_POINTS) } : o)) })}
+                              />
+                            </label>
+                            {draft.categories?.length ? (
+                              <select
+                                className="field w-auto"
+                                aria-label={`Category of option ${k + 1}`}
+                                value={option.category ?? ""}
+                                onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, category: e.target.value } : o)) })}
+                              >
+                                <option value="">In no category</option>
+                                {draft.categories.map((c, n) => (
+                                  <option key={c.id} value={c.id}>
+                                    {c.name || `Category ${n + 1}`}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : null}
+                          </>
+                        ) : draft.outcomes.length ? (
                           <select
                             className="field w-auto"
                             aria-label={`Result option ${k + 1} points at`}
@@ -286,7 +358,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                                 {`Then skip to question ${i + 3 + n}${f.label ? `: ${f.label.slice(0, 40)}` : ""}`}
                               </option>
                             ))}
-                            <option value={END}>{draft.outcomes.length ? "Then end, with its result" : "Then end the form"}</option>
+                            <option value={END}>{scoredDraft ? "Then end, with the result for their score" : draft.outcomes.length ? "Then end, with its result" : "Then end the form"}</option>
                           </select>
                         ) : null}
                         <button
@@ -301,7 +373,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                       </div>
                     ))}
                     {field.options.length < MAX_OPTIONS ? (
-                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => setField(i, { options: [...field.options, { id: piece(), label: "", outcome: "" }] })}>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => setField(i, { options: [...field.options, { id: piece(), label: "", outcome: "", ...(scoredDraft ? { points: 0 } : {}) }] })}>
                         <Icon name="plus" size={16} />
                         Add an option
                       </button>
@@ -334,9 +406,25 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
           ) : null}
 
           <p className="field-label mt-8">Results, for a quiz (optional)</p>
-          <p className="mt-1 text-sm text-ink-soft">
-            Each option of a choice can point at a result. A person sees the result the most of their answers point at, the first in this list on a tie. Leave this empty for a form or a survey.
-          </p>
+          <fieldset className="mt-2">
+            <legend className="text-sm font-semibold text-ink">How a result is chosen</legend>
+            <label className="mt-2 flex min-h-11 items-start gap-3 text-sm text-ink">
+              <input type="radio" className="mt-1" name="form-scoring" checked={!scoredDraft} onChange={() => setScoring(false)} />
+              <span>
+                By the answers that point at it
+                <span className="block text-ink-soft">Each option of a choice can point at a result. A person sees the result the most of their answers point at, the first in this list on a tie.</span>
+              </span>
+            </label>
+            <label className="flex min-h-11 items-start gap-3 text-sm text-ink">
+              <input type="radio" className="mt-1" name="form-scoring" checked={scoredDraft} onChange={() => setScoring(true)} />
+              <span>
+                By score
+                <span className="block text-ink-soft">{`Each option of a choice carries 0 to ${MAX_POINTS} points. A person's total is the sum of the options they chose, and they see the result whose range holds it, with their score.`}</span>
+              </span>
+            </label>
+          </fieldset>
+          <p className="mt-2 text-sm text-ink-soft">Leave the results empty for a form or a survey.</p>
+          {scoredDraft ? <QuizCategories categories={draft.categories ?? []} onChange={(categories) => patch({ categories, fields: draft.fields.map((f) => ({ ...f, options: f.options.map((o) => (o.category && !categories.some((c) => c.id === o.category) ? { ...o, category: "" } : o)) })) })} /> : null}
           <ol className="mt-3 space-y-3">
             {draft.outcomes.map((outcome, i) => (
               <li key={outcome.id} className="rounded-2xl bg-paper p-4 ring-1 ring-line">
@@ -344,6 +432,18 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                   <span className="field-label">{`Result ${i + 1}`}</span>
                   <input className="field mt-2" value={outcome.title} maxLength={MAX_OUTCOME_TITLE} placeholder="You are just starting out" onChange={(e) => setOutcome(i, { title: e.target.value })} />
                 </label>
+                {scoredDraft ? (
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:max-w-xs">
+                    <label className="block">
+                      <span className="field-label">Lowest total</span>
+                      <input type="number" inputMode="numeric" className="field mt-2" min={0} max={MAX_SCORE} step={1} value={outcome.min ?? 0} onChange={(e) => setOutcome(i, { min: numberIn(e.target.value, MAX_SCORE) })} />
+                    </label>
+                    <label className="block">
+                      <span className="field-label">Highest total</span>
+                      <input type="number" inputMode="numeric" className="field mt-2" min={0} max={MAX_SCORE} step={1} value={outcome.max ?? 0} onChange={(e) => setOutcome(i, { max: numberIn(e.target.value, MAX_SCORE) })} />
+                    </label>
+                  </div>
+                ) : null}
                 <label className="mt-3 block">
                   <span className="field-label">What it says (optional)</span>
                   <textarea className="field mt-2" rows={3} value={outcome.body} maxLength={MAX_OUTCOME_BODY} onChange={(e) => setOutcome(i, { body: e.target.value })} />
@@ -375,11 +475,12 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
             ))}
           </ol>
           {draft.outcomes.length < MAX_OUTCOMES ? (
-            <button type="button" className="btn btn-secondary mt-3" onClick={() => patch({ outcomes: [...draft.outcomes, { id: piece(), title: "", body: "", product: "" }] })}>
+            <button type="button" className="btn btn-secondary mt-3" onClick={() => patch({ outcomes: [...draft.outcomes, { id: piece(), title: "", body: "", product: "", ...(scoredDraft ? { min: 0, max: 0 } : {}) }] })}>
               <Icon name="plus" size={18} />
               Add a result
             </button>
           ) : null}
+          {scoredDraft ? <QuizScoringCheck form={draft} onSpread={spread} /> : null}
 
           <p className="field-label mt-8">After sending</p>
           <div className="mt-2 grid gap-3 sm:grid-cols-2">

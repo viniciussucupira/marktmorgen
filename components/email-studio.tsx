@@ -314,7 +314,7 @@ export function EmailStudio(props: {
   /** Paid products in the selected store catalog, for sequence ending checks. */
   paidProducts?: string[];
   /** The store's forms that ask for an address, its own fields and its deal stages, for the sequences (lib/flows.ts). */
-  automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
+  automation?: { forms: { id: string; name: string; outcomes?: { id: string; title: string }[] }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
   /** The plan's workflow limits and today's runs (lib/flow-limits.ts, lib/flow-runs.ts). */
   workflowLimits?: WorkflowLimits;
   /** Who may be made responsible for a deal: the owner and teammates who can see orders. */
@@ -1538,6 +1538,8 @@ type FlowDraft = {
   triggerTag: string;
   /** The form that starts it, for "form". */
   formId: string;
+  /** For "form" on a quiz: the one result that starts it, or "" for everyone who sends it. */
+  formOutcome: string;
   active: boolean;
   steps: StepDraft[];
   /** When it ends early: never, once they have bought anything, once they get one product, or once they carry a label. */
@@ -1719,6 +1721,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
       productId: first,
       triggerTag: "",
       formId: "",
+      formOutcome: "",
       active: false,
       steps: [blankStep("0", "hours", first)],
       goal: "",
@@ -1733,6 +1736,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
     productId: flow.productId ?? first,
     triggerTag: flow.tag ?? "",
     formId: flow.formId ?? "",
+    formOutcome: flow.formOutcome ?? "",
     active: flow.active,
     steps: flow.steps.map((s) => stepToDraft(s, first)),
     goal: !flow.goal ? "" : "any" in flow.goal ? "any" : "tag" in flow.goal ? "tag" : "product",
@@ -1774,7 +1778,7 @@ function Flows({
   readFailed?: boolean;
   products: { id: string; title: string }[];
   currency: string;
-  automation?: { forms: { id: string; name: string }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
+  automation?: { forms: { id: string; name: string; outcomes?: { id: string; title: string }[] }[]; fields: { id: string; name: string; type: string; options: string[] }[]; stages: { id: string; name: string }[] };
   /** The products that are courses, for "finishes a course" and the conditions on one. */
   courses?: string[];
   paidProducts?: string[];
@@ -1819,7 +1823,7 @@ function Flows({
       : f.trigger === "tagged"
         ? `Starts when a sequence gives someone the label “${f.tag ?? ""}”`
       : f.trigger === "form"
-        ? `Starts when someone on your list sends the form “${automation.forms.find((x) => x.id === f.formId)?.name ?? "a form no longer in your store"}”`
+        ? `Starts when someone on your list sends the form “${automation.forms.find((x) => x.id === f.formId)?.name ?? "a form no longer in your store"}”${f.formOutcome ? ` and gets the result “${automation.forms.find((x) => x.id === f.formId)?.outcomes?.find((o) => o.id === f.formOutcome)?.title ?? "a result no longer in the form"}”` : ""}`
       : f.trigger === "finished"
         ? `Starts when someone who agreed to hear from you finishes ${products.find((p) => p.id === f.productId)?.title ?? "a course"}`
       : f.trigger === "started"
@@ -1853,6 +1857,7 @@ function Flows({
         productId: productTrigger(draft.trigger) ? draft.productId : null,
         tag: draft.trigger === "tagged" ? draft.triggerTag : null,
         formId: draft.trigger === "form" ? draft.formId : null,
+        formOutcome: draft.trigger === "form" ? draft.formOutcome : "",
         // A new workflow is saved paused whatever is sent; switching on is its own step.
         active: draft.id ? draft.active : false,
         steps: draft.steps.map((s) => {
@@ -1905,7 +1910,7 @@ function Flows({
   }) : [];
   const draftIssues = draft ? flowConfigurationIssues({
     id: draft.id ?? "", name: draft.name, trigger: draft.trigger, active: draft.active, createdAt: 0,
-    productId: draft.productId, tag: draft.triggerTag, formId: draft.formId,
+    productId: draft.productId, tag: draft.triggerTag, formId: draft.formId, ...(draft.trigger === "form" && draft.formOutcome ? { formOutcome: draft.formOutcome } : {}),
     goal: goalOf(draft) ?? undefined,
     steps: draftSteps,
   }, { products, courses, paidProducts, flows, ...automation, assignees }) : [];
@@ -2155,13 +2160,27 @@ function Flows({
           {draft.trigger === "form" ? (
             <label className="block">
               <span className="field-label">Which form</span>
-              <select className="field mt-2" value={draft.formId} onChange={(e) => setDraft({ ...draft, formId: e.target.value })}>
+              <select className="field mt-2" value={draft.formId} onChange={(e) => setDraft({ ...draft, formId: e.target.value, formOutcome: "" })}>
                 {automation.forms.map((f) => (
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
               </select>
               <span className="mt-2 block text-sm text-ink-soft">
                 Only forms that ask for an email address. Someone already on your list starts it when they send the form; someone who checks the box to hear from you starts it once they confirm by email.
+              </span>
+            </label>
+          ) : null}
+          {draft.trigger === "form" && automation.forms.find((f) => f.id === draft.formId)?.outcomes?.length ? (
+            <label className="block">
+              <span className="field-label">Which quiz result</span>
+              <select className="field mt-2" value={draft.formOutcome} onChange={(e) => setDraft({ ...draft, formOutcome: e.target.value })}>
+                <option value="">Any result, or none</option>
+                {automation.forms.find((f) => f.id === draft.formId)?.outcomes?.map((o) => (
+                  <option key={o.id} value={o.id}>{o.title}</option>
+                ))}
+              </select>
+              <span className="mt-2 block text-sm text-ink-soft">
+                Start it only for people who got one result, as a follow-up written for them. In a scored quiz the result is the one whose score range holds their total.
               </span>
             </label>
           ) : null}
