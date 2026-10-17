@@ -1,6 +1,8 @@
 # Minimum net margin policy
 
-The owner's floor is 60% for every individual customer, including one customer using all included resources and the isolated-customer case carrying fixed business costs. It is not a blended gross or operating margin.
+The owner's floor is 60% for every individual paying customer using all included resources. It is not a blended gross or operating margin.
+
+**Current rule (16 Oct 2026, the owner's own wording, see AGENTS.md):** fixed costs are computed separately as the minimum number of paying customers needed to cover them, and the trial, refund, non-payment and post-cancellation cases are funded exposures with calculated maxima and occurrence caps (docs/funded-exposure-review.md). Where the paragraphs below still mention one isolated customer carrying all fixed costs or each free/refund case earning 60% on its own, that is the earlier, stricter wording, replaced by this rule; it never relaxes the per-customer 60% test or the company-wide 60% at the minimum base.
 
 The conservative denominator in `assessCustomerWorstCase` is the platform's collected gross fee revenue, never the creator's sales volume. Deduct the maximum refundable amount, every explicit cost ceiling and the reviewed ceiling for all applicable taxes. Test the exact integer inequality `net * 10000 >= gross * 6000`; rounding a result up to 60% does not pass.
 
