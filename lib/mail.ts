@@ -390,6 +390,13 @@ export type SendOutcome = {
   stopped: "allowance" | "day" | "sender" | "paused" | "portion" | "retry" | "refused" | null;
   /** Why and until when, for a send stopped as "paused" (lib/mail-health.ts). */
   pause?: Pause;
+  /**
+   * Addresses of a batch that was handed to the provider when the answer
+   * came back as "retry": it may have been sent before the answer was lost.
+   * Also in `rest`. Sequences hold these runs instead of sending again
+   * (lib/flow-runs.ts); a broadcast retries under the same batch key.
+   */
+  uncertain?: string[];
 };
 
 /** What a send that met the sender's ceiling says in the studio. */
@@ -446,7 +453,7 @@ export async function sendTo(
     if (outcome !== "sent") {
       // Dispatch may have succeeded before its acknowledgement was lost.
       // Keep attempted capacity reserved; retries consume new capacity.
-      return { done, rest: emails.slice(i), stopped: outcome };
+      return { done, rest: emails.slice(i), stopped: outcome, ...(outcome === "retry" ? { uncertain: messages.map((m) => m.to) } : {}) };
     }
     if (messages.length < chunk.length) await release(store, chunk.length - messages.length);
     // What a bounce or a complaint is later measured against.

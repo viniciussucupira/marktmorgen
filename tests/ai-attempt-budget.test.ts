@@ -7,11 +7,16 @@ import { store as redis } from "./redis-stub";
 
 process.env.ANTHROPIC_API_KEY = "sk-ant-" + "x".repeat(40);
 const now = Date.UTC(2026, 9, 16);
-const customer = (id: string, tier: Store["tier"] = "creator") =>
+const customer = (id: string, tier: Store["tier"] = "pro") =>
   ({ statsId: id, tier, trialEnds: 0 } as Store);
 
 test("concurrent failed attempts cannot exceed any tier's monthly allowance", async () => {
-  for (const tier of ["creator", "pro", "scale"] as const) {
+  // Store includes no writing jobs: every attempt is refused before it is counted.
+  const plain = customer("parallel-creator", "creator");
+  assert.equal(aiAllowance(plain, now), 0);
+  assert.deepEqual(await counted(plain, now, async () => { throw new Error("must not run"); }), {ok: false, reason: "used"});
+  assert.equal(redis.run(["GET", aiMonthKey(plain, new Date(now))]), null);
+  for (const tier of ["pro", "scale"] as const) {
     const store = customer("parallel-" + tier, tier);
     const allowance = aiAllowance(store, now);
     let runs = 0;

@@ -38,7 +38,7 @@ async function main(): Promise<void> {
   const owner = "faq@example.com";
   await claimHandle(owner, "faqshop", "Faq Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   await setFaq(owner, [{ q: "How do I pay?", a: "With a card, on Stripe's page." }]);
   let store = (await storeForEmail(owner))!;
   is("saved", store.faq, [{ q: "How do I pay?", a: "With a card, on Stripe's page." }]);
@@ -49,7 +49,7 @@ async function main(): Promise<void> {
   const before = await aiLeft(store);
   const drafted = await writeStoreFaq(store, { facts: "Store: Faq Shop\nWhat it sells:\n- Bread Book: $19. A download.", notes: "" });
   store = (await storeForEmail(owner))!;
-  is("held to the rules, and counted once", [drafted, before - (await aiLeft(store))], [{ ok: true, value: [{ q: "How do files arrive?", a: "By email, right after paying. See" }], left: 99 }, 1]);
+  is("held to the rules, and counted once", [drafted, before - (await aiLeft(store))], [{ ok: true, value: [{ q: "How do files arrive?", a: "By email, right after paying. See" }], left: 39 }, 1]);
   is("told only the facts, under the rules on refunds and guarantees", [asked[0].messages[0].content.includes("Bread Book"), /Never state a refund/.test(asked[0].system)], [true, true]);
   done();
 }

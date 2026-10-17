@@ -11,6 +11,9 @@
  *   membership.canceled  a membership set to end, or ended
  *   lead.captured        someone confirmed their address for a free product
  *                        (the link in the email was used)
+ *   list.joined          someone confirmed their address to join the store's
+ *                        list, from its sign-up box, one of its forms or the
+ *                        checkout script on the creator's own site
  *   call.booked          a call or a seat in a session booked and paid
  *   call.moved           a buyer moved their booking
  *   refund.issued        a refund made on the creator's Stripe account
@@ -62,6 +65,7 @@ export const WEBHOOK_EVENTS = [
   "membership.started",
   "membership.canceled",
   "lead.captured",
+  "list.joined",
   "call.booked",
   "call.moved",
   "refund.issued",
@@ -162,6 +166,27 @@ function parseDelivery(raw: unknown): Delivery | null {
 async function readConfig(statsId: string): Promise<Config | null> {
   const [raw] = await redisPipeline([["GET", cfgKey(statsId)]]);
   return parseConfig(raw);
+}
+
+/** The source fields of a sale.completed message, read off the order's metadata; null where it carries none. */
+export function sourceOf(meta: Record<string, string | undefined>): Record<string, string | null> {
+  const field = (name: string) => (typeof meta[name] === "string" && meta[name] ? (meta[name] as string) : null);
+  let site: string | null = null;
+  const embed = field("embed_site");
+  if (embed) {
+    try {
+      site = new URL(embed).origin;
+    } catch {
+      site = null;
+    }
+  }
+  return {
+    utm_source: field("utm_source"),
+    utm_medium: field("utm_medium"),
+    utm_campaign: field("utm_campaign"),
+    utm_content: field("utm_content"),
+    site,
+  };
 }
 
 /** The id of an event, the same every time the same thing is noticed. */
@@ -593,6 +618,10 @@ async function fromStripe(store: Store, event: StripeEvent, lookups: { left: num
       currency: str(object.currency) ?? "usd",
       buyer,
       paid_at: iso(event.created),
+      // Where the sale came from, as the checkout wrote it on the order: the
+      // utm tags of the page the button was on, and the creator's own site it
+      // was bought on through the checkout script (lib/embed-sites.ts).
+      source: sourceOf(meta),
     }, created);
     if (membership) {
       await emitEvent(store, "membership.started", str(object.subscription) ?? session, {

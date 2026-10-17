@@ -1,5 +1,10 @@
 import { readFlowListStrict } from "@/lib/flow-list";
-import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
+import { FLOW_TRIGGERS, type FlowTrigger, MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
+import { MAX_FLOWS, MAX_STEPS, activeFlowLimit, dailyRunLimit, startableFlows } from "@/lib/flow-limits";
+import { END, afterIndex, checkRoutes, elseIndex } from "@/lib/flow-paths";
+import { type Settled, admitRuns, claimAttempts, forgetHeldCommand, forgetIndexCommand, forgetPersonCommands, noteRuns, openRuns, personOf, readRun, releaseHold, runPeople, settleAttempts } from "@/lib/flow-runs";
+import { readTeam } from "@/lib/team";
+import { can } from "@/lib/team-roles";
 /**
  * Automatic sequences: emails that go out by themselves, a set time after
  * somebody joins the list, gets one of the creator's products, or is given a
@@ -13,6 +18,16 @@ import { MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
  * edit takes effect on the next email, not the one after. A sequence can end
  * early for somebody once they buy, and an email can go only to some of the
  * people in it (lib/flow-rules.ts); both are read at that same moment.
+ *
+ * From 17 October 2026 a sequence is a workflow: a step can branch (IF/ELSE,
+ * forward only, lib/flow-paths.ts), a step can only wait or make a teammate
+ * responsible for a deal, a workflow can end when somebody gets a label, and
+ * it can start when somebody opens a course or leaves a checkout they agreed
+ * to hear about. Every run keeps its history (lib/flow-runs.ts): each step
+ * attempted, confirmed, failed or uncertain, and an uncertain one holds the
+ * run instead of being repeated. The numbers that bound all this are in
+ * lib/flow-limits.ts: steps, workflows, active workflows and runs a day.
+ * New workflows are saved paused; switching one on is its own action.
  *
  *   nl:mail:flows:<listId>              the store's sequences (JSON)
  *   nl:mail:flowq                       steps due, scored by when
@@ -47,7 +62,7 @@ import {
 } from "@/lib/flow-rules";
 import { changeLabels, readTags } from "@/lib/contacts";
 import { type ActionContext } from "@/lib/flow-rules";
-import { readFields, readStages, readDeals, setValue, writeDeal } from "@/lib/crm";
+import { CrmDealReadUnavailable, readFields, readStages, readDeals, setValue, writeDeal } from "@/lib/crm";
 import { newCrmId } from "@/lib/crm-rules";
 import { personKey } from "@/lib/person-key";
 import { readForm } from "@/lib/form-store";
@@ -56,8 +71,7 @@ import { SITE_URL } from "@/lib/site-url";
 import { usedLinkIn } from "@/lib/mail-clicks";
 import { courseProgress } from "@/lib/learn";
 
-export const MAX_FLOWS = 10;
-export const MAX_STEPS = 10;
+export { MAX_FLOWS, MAX_STEPS };
 export const MAX_DELAY_HOURS = MAX_FLOW_WAIT_HOURS;
 export const MAX_FLOW_NAME = 80;
 
@@ -71,8 +85,12 @@ export type FlowStep = {
   action?: FlowAction;
   /** Sent only to those this holds for (lib/flow-rules.ts); absent for everyone. */
   when?: StepCondition;
-  /** For those it does not hold for: skip to the next email, or leave the sequence. */
+  /** For those it does not hold for: skip to the next email, leave the sequence, or jump to `jump`. */
   otherwise?: Otherwise;
+  /** The later step those it does not hold for go to, when `otherwise` is "jump" (lib/flow-paths.ts). */
+  jump?: string;
+  /** After this step: a later step to go to, or "end". Absent for the next step in the list. */
+  next?: string;
 };
 export type Flow = {
   id: string;
@@ -83,9 +101,12 @@ export type Flow = {
    * "tagged": a step of a sequence gave them the label `tag`; "finished":
    * did every lesson of the course `productId` is (added 12 October 2026,
    * lib/course-finish.ts); "form": sent the store's form `formId` with their
-   * address in it, while on the list (added 13 October 2026).
+   * address in it, while on the list (added 13 October 2026); "started":
+   * opened the course `productId` is for the first time; "abandoned": left a
+   * checkout of `productId` unpaid after agreeing, on Stripe's page, to hear
+   * from the creator, while also on the list (both added 17 October 2026).
    */
-  trigger: "joined" | "product" | "bought" | "tagged" | "finished" | "form";
+  trigger: FlowTrigger;
   productId: string | null;
   /** The label that starts it, for "tagged". */
   tag?: string;
@@ -142,7 +163,13 @@ function cleanStep(raw: unknown, known: (productId: string) => boolean, isFlow: 
   const step: FlowStep = { id: typeof value.id === "string" && FLOW_ID.test(value.id) ? value.id : newId(), delayHours: delay, subject, body, ...(action ? { action } : {}) };
   if (when) {
     step.when = when;
-    step.otherwise = value.otherwise === "end" ? "end" : "skip";
+    step.otherwise = value.otherwise === "end" ? "end" : value.otherwise === "jump" ? "jump" : "skip";
+    // Where a jump goes is checked against the whole workflow once every step is read (checkRoutes).
+    if (step.otherwise === "jump") step.jump = typeof value.jump === "string" ? value.jump : "";
+  }
+  if (value.next !== undefined && value.next !== null && value.next !== "") {
+    if (typeof value.next !== "string" || (value.next !== END && !FLOW_ID.test(value.next))) return null;
+    step.next = value.next;
   }
   return step;
 }
@@ -180,23 +207,29 @@ const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw =
 
 export type FlowResult =
   | { ok: true; flows: Flow[] }
-  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "form" | "steps" | "step" | "goal" | "too_many" | "unknown" | "setup" | "plan" | "placeholder" };
+  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "form" | "steps" | "step" | "route" | "goal" | "too_many" | "active_limit" | "unknown" | "setup" | "plan" | "placeholder" };
 
-/** Adds a sequence, or replaces one with the same id. Checked whole every time. */
-export async function saveFlow(store: Store, raw: Record<string, unknown>): Promise<FlowResult> {
+/**
+ * Adds a sequence, or replaces one with the same id. Checked whole every time.
+ * A new one is saved paused unless the caller is an explicit "switch it on"
+ * (`activate`, as "Keep sending it" is); an existing one keeps the on or off
+ * the creator chose in the editor. Either way, switching on counts against
+ * the plan's number of active workflows (lib/flow-limits.ts).
+ */
+export async function saveFlow(store: Store, raw: Record<string, unknown>, opts: { activate?: boolean } = {}): Promise<FlowResult> {
   if (monthlyAllowance(store) === 0) return { ok: false, reason: "plan" };
   if (!store.listId || !store.mail) return { ok: false, reason: "setup" };
   const name = typeof raw.name === "string" ? raw.name.replace(/\s+/g, " ").trim().slice(0, MAX_FLOW_NAME) : "";
   if (!name) return { ok: false, reason: "name" };
-  const trigger =
-    raw.trigger === "joined" || raw.trigger === "product" || raw.trigger === "bought" || raw.trigger === "tagged" || raw.trigger === "finished" || raw.trigger === "form" ? raw.trigger : null;
+  const trigger = FLOW_TRIGGERS.find((t) => t === raw.trigger) ?? null;
   if (!trigger) return { ok: false, reason: "trigger" };
   const courses = new Set(idsOfKind(store, "course"));
   const isCourse = (id: string) => courses.has(id);
-  const productId = (trigger === "product" || trigger === "finished") && typeof raw.productId === "string" ? raw.productId : null;
-  if (trigger === "product" && !(productId && hasProduct(store, productId))) return { ok: false, reason: "product" };
-  // Finishing is something only a course can be done to.
-  if (trigger === "finished" && !(productId && hasProduct(store, productId) && isCourse(productId))) return { ok: false, reason: "product" };
+  const aboutProduct = trigger === "product" || trigger === "finished" || trigger === "started" || trigger === "abandoned";
+  const productId = aboutProduct && typeof raw.productId === "string" ? raw.productId : null;
+  if ((trigger === "product" || trigger === "abandoned") && !(productId && hasProduct(store, productId))) return { ok: false, reason: "product" };
+  // Finishing and opening are things only a course can be done to.
+  if ((trigger === "finished" || trigger === "started") && !(productId && hasProduct(store, productId) && isCourse(productId))) return { ok: false, reason: "product" };
   const tag = trigger === "tagged" ? cleanTag(raw.tag) : "";
   if (trigger === "tagged" && !tag) return { ok: false, reason: "tag" };
   // A form of the store's own that asks for an address: without one, nobody it starts could be written to.
@@ -207,8 +240,12 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
   }
   // The store's fields and stages, for a step that sets one or moves a deal (lib/crm.ts).
   const [crmFields, stages] = await Promise.all([readFields(store.statsId), readStages(store.statsId)]);
-  const ctx: ActionContext = { field: (fid) => crmFields.find((f) => f.id === fid), isStage: (sid) => stages.some((st) => st.id === sid) };
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
+  // Who may be made responsible for a deal: the owner, or a teammate who can see orders, as on the deals board.
+  const assigns = rawSteps.some((s) => s && typeof s === "object" && (s as { action?: { do?: unknown } }).action?.do === "assign");
+  const team = assigns ? await readTeam(store.sid) : null;
+  const assignees = new Set(team ? [store.email.toLowerCase(), ...team.members.filter((m) => can(m.role, "orders")).map((m) => m.email.toLowerCase())] : []);
+  const ctx: ActionContext = { field: (fid) => crmFields.find((f) => f.id === fid), isStage: (sid) => stages.some((st) => st.id === sid), isAssignee: (email) => assignees.has(email) };
   if (rawSteps.length === 0 || rawSteps.length > MAX_STEPS) return { ok: false, reason: "steps" };
   const known = (id: string) => hasProduct(store, id);
   const flows = await readFlowListStrict(store.listId);
@@ -220,18 +257,24 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
     const step = cleanStep(s, known, isFlow, isCourse, ctx);
     // A condition on the email before needs an email before it.
     const before = steps.at(-1);
-    if (!step || (readsEmailBefore(step.when) && (!before || before.action))) return { ok: false, reason: "step" };
+    if (!step || (readsEmailBefore(step.when) && (!before || before.action)) || steps.some((s) => s.id === step.id)) return { ok: false, reason: "step" };
     steps.push(step);
   }
+  // Every branch goes forward to a step of this workflow, so no run can loop (lib/flow-paths.ts).
+  if (checkRoutes(steps) !== null) return { ok: false, reason: "route" };
   // A template's part left to write is a direction, never words sent in the creator's name (lib/mail-body.ts).
   if (hasPlaceholder(JSON.stringify(steps))) return { ok: false, reason: "placeholder" };
   const goal = readGoal(raw.goal, known);
   if (goal === "bad") return { ok: false, reason: "goal" };
   const startsPaid = Boolean(productId) && idsOfKind(store, "paid").includes(productId as string);
-  if (goalClash(trigger, productId, goal, startsPaid)) return { ok: false, reason: "goal" };
+  if (goalClash(trigger, productId, goal, startsPaid, tag)) return { ok: false, reason: "goal" };
+  // Reminding somebody about a checkout must stop once they buy: an abandoned checkout needs an end.
+  if (trigger === "abandoned" && !(goal && ("any" in goal || "productId" in goal))) return { ok: false, reason: "goal" };
   const at = id ? flows.findIndex((f) => f.id === id) : -1;
   if (id && at < 0) return { ok: false, reason: "unknown" };
   if (!id && flows.length >= MAX_FLOWS) return { ok: false, reason: "too_many" };
+  const active = at >= 0 ? raw.active === true : opts.activate === true;
+  if (active && !(at >= 0 && flows[at].active) && flows.filter((f) => f.active && f.id !== id).length >= activeFlowLimit(store)) return { ok: false, reason: "active_limit" };
   // Where a written-for-you sequence came from stays with it through an edit.
   const starter = starterOf(raw.starter) ?? (at >= 0 ? flows[at].starter : undefined);
   const flow: Flow = {
@@ -242,7 +285,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>): Prom
     ...(tag ? { tag } : {}),
     ...(formId ? { formId } : {}),
     steps,
-    active: raw.active === true,
+    active,
     createdAt: at >= 0 ? flows[at].createdAt : Math.floor(Date.now() / 1000),
     ...(raw.kept === true || (at >= 0 && flows[at].kept === true) ? { kept: true } : {}),
     ...(starter ? { starter } : {}),
@@ -260,6 +303,94 @@ export async function removeFlow(store: Store, id: string): Promise<FlowResult> 
   const flows = await readFlowListStrict(store.listId);
   if (!flows.some((f) => f.id === id)) return { ok: false, reason: "unknown" };
   const next = flows.filter((f) => f.id !== id);
+  await writeFlows(store.listId, next);
+  // Its runs, their history, starts and queued steps: nothing of the people in it is kept.
+  await purgeFlow(store, flows.find((f) => f.id === id)!).catch((error) => console.error("erasing a removed workflow's runs failed", error));
+  return { ok: true, flows: next };
+}
+
+/**
+ * Where one person's steps of one workflow can be waiting: the queue and its
+ * lease, under each address the store has had and at each step. One ZREM
+ * per key, however many.
+ */
+function queuedOf(store: Store, flow: Pick<Flow, "id">, emails: string[]): (string | number)[][] {
+  if (!store.listId || !emails.length) return [];
+  const handles = [...new Set([store.handle, ...(store.previousHandles ?? [])])];
+  const members: string[] = [];
+  for (const email of emails) for (const handle of handles) for (let i = 0; i < MAX_STEPS; i += 1) members.push(`${store.listId}|${handle}|${flow.id}|${i}|${email}`);
+  const out: (string | number)[][] = [];
+  for (let i = 0; i < members.length; i += 1000) out.push(["ZREM", QUEUE, ...members.slice(i, i + 1000)], ["ZREM", LEASE, ...members.slice(i, i + 1000)]);
+  return out;
+}
+
+/** Confirms a pipeline of deletions was answered in full; anything else is not an erasure. */
+async function erase(commands: (string | number)[][]): Promise<void> {
+  for (let i = 0; i < commands.length; i += 500) {
+    const chunk = commands.slice(i, i + 500);
+    const reply = await redisPipeline(chunk);
+    if (!Array.isArray(reply) || reply.length !== chunk.length) throw new FlowWriteUnconfirmed();
+  }
+}
+
+/**
+ * Erases one person from every workflow of this store (at most MAX_FLOWS):
+ * each run's record and history, its place in the run and held indexes, the
+ * start that kept them from starting twice, and any step of theirs still
+ * waiting in the queue. For a person who asks to be deleted, or a contact
+ * the creator deletes. Throws when it cannot be confirmed.
+ */
+export async function forgetWorkflowPerson(store: Store, rawEmail: string): Promise<{ flows: number }> {
+  const email = normaliseEmail(rawEmail);
+  if (!store.listId || !email) return { flows: 0 };
+  const flows = await readFlowListStrict(store.listId);
+  const person = personOf(email);
+  const commands: (string | number)[][] = [];
+  for (const flow of flows) commands.push(...forgetPersonCommands(store.listId, flow.id, person), ["DEL", enrolledKey(flow.id, email)], ...queuedOf(store, flow, [email]));
+  await erase(commands);
+  return { flows: flows.length };
+}
+
+/** Erases every run of one workflow, and everything kept for the people in it. */
+async function purgeFlow(store: Store, flow: Flow): Promise<void> {
+  if (!store.listId) return;
+  const people = await runPeople(flow.id);
+  const commands: (string | number)[][] = [];
+  for (const { person, email } of people) {
+    commands.push(...forgetPersonCommands(store.listId, flow.id, person), ["DEL", `nl:mail:enr:${flow.id}:${person}`]);
+    if (email) commands.push(...queuedOf(store, flow, [email]));
+  }
+  commands.push(forgetIndexCommand(flow.id), ["DEL", statsKey(flow.id)]);
+  await erase(commands);
+}
+
+/**
+ * Everything workflows kept for a store that is being deleted: every run of
+ * every workflow (at most MAX_FLOWS), the people in them, their queued steps,
+ * the store's held runs and the workflows themselves.
+ */
+export async function forgetStoreWorkflows(store: Store): Promise<void> {
+  if (!store.listId || !isRedisConfigured()) return;
+  const flows = await readFlowListStrict(store.listId);
+  for (const flow of flows) await purgeFlow(store, flow);
+  await erase([forgetHeldCommand(store.listId), ["DEL", flowsKey(store.listId)]]);
+}
+
+/**
+ * Switches a saved workflow on or off: the one explicit step that activates
+ * it. On counts against the plan's number of active workflows. Off ends the
+ * runs in it at their next step, as pausing always has.
+ */
+export async function setFlowActive(store: Store, id: string, active: boolean): Promise<FlowResult> {
+  if (monthlyAllowance(store) === 0) return { ok: false, reason: "plan" };
+  if (!store.listId) return { ok: false, reason: "unknown" };
+  const flows = await readFlowListStrict(store.listId);
+  const at = flows.findIndex((f) => f.id === id);
+  if (at < 0) return { ok: false, reason: "unknown" };
+  if (flows[at].active === active) return { ok: true, flows };
+  if (active && !flows[at].steps.length) return { ok: false, reason: "steps" };
+  if (active && flows.filter((f) => f.active).length >= activeFlowLimit(store)) return { ok: false, reason: "active_limit" };
+  const next = flows.map((f, i) => (i === at ? { ...f, active } : f));
   await writeFlows(store.listId, next);
   return { ok: true, flows: next };
 }
@@ -305,13 +436,14 @@ export async function flowsStartedFor(flows: Flow[], email: string): Promise<str
  * Starts whichever sequences this event begins, for this person. Never
  * throws: the list must never cost anyone what they asked for.
  */
-export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string; form?: string }): Promise<void> {
+export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string; form?: string; started?: string; abandoned?: string }): Promise<void> {
   try {
     if (!store.listId || monthlyAllowance(store) === 0) return;
     // Whether what they just got is sold for money: the store's own index
     // knows, so "bought" costs no read.
     const paid = Boolean(event.productId) && idsOfKind(store, "paid").includes(event.productId as string);
-    const flows = (await readFlows(store.listId)).filter(
+    // Only as many active workflows as the plan has start anybody (lib/flow-limits.ts).
+    const flows = startableFlows(await readFlows(store.listId), activeFlowLimit(store)).filter(
       (f) =>
         f.active &&
         f.steps.length > 0 &&
@@ -320,6 +452,8 @@ export async function enroll(store: Store, email: string, event: { joined: boole
           (f.trigger === "bought" && paid) ||
           (f.trigger === "tagged" && event.tag && f.tag && sameLabel(f.tag, event.tag)) ||
           (f.trigger === "finished" && event.finished && f.productId === event.finished) ||
+          (f.trigger === "started" && event.started && f.productId === event.started) ||
+          (f.trigger === "abandoned" && event.abandoned && f.productId === event.abandoned) ||
           (f.trigger === "form" && event.form && f.formId === event.form)),
     );
     if (!flows.length) return;
@@ -346,8 +480,17 @@ async function startFlows(store: Store, flows: Flow[], addresses: string[]): Pro
   for (const flow of flows) {
     if (!flow.steps.length) continue;
     const claims = await redisPipeline(addresses.map((address) => ["SET", enrolledKey(flow.id, address), "1", "NX", "EX", 400 * 86_400]));
-    const fresh = addresses.filter((_, i) => claims[i] !== null);
+    const claimed = addresses.filter((_, i) => claims[i] !== null);
+    if (!claimed.length) continue;
+    // The store's runs a day (lib/flow-limits.ts): past it, nobody more is
+    // started today, and their start is given back so a later moment can.
+    const admitted = await admitRuns(store.listId, dailyRunLimit(store), claimed.length, now);
+    const fresh = claimed.slice(0, admitted);
+    const refused = claimed.slice(admitted);
+    if (refused.length) await redisPipeline(refused.map((address) => ["DEL", enrolledKey(flow.id, address)])).catch(() => {});
     if (!fresh.length) continue;
+    // The run's record first, so its first step always finds it.
+    await openRuns(flow.id, fresh, now);
     await redisPipeline([
       ...fresh.map((address) => ["ZADD", QUEUE, now + flow.steps[0].delayHours * 3600, `${store.listId}|${store.handle}|${flow.id}|0|${address}`]),
       ["HINCRBY", statsKey(flow.id), "started", fresh.length],
@@ -357,106 +500,181 @@ async function startFlows(store: Store, flows: Flow[], addresses: string[]): Pro
   return started;
 }
 
+/** What came of an action for one person, for the run's history (lib/flow-runs.ts). */
+type Acted = { email: string; state: "confirmed" | "failed" | "deferred" | "uncertain"; note: string; /** Confirmed, and something was actually changed (not "already had it"): what the "actions done" count counts. */ changed?: boolean };
+const each = (emails: string[], state: Acted["state"], note: string): Acted[] => emails.map((email) => ({ email, state, note }));
+
 /**
  * Carries out a step that acts (lib/flow-rules.ts, FlowAction) for these
- * people. A label is written only over the contact as it still is
- * (lib/contacts.ts, changeLabels), never over an unsubscribe or a purchase
- * noted in the same moment, and given only to somebody with room for one
- * more (a contact keeps ten). Everyone the step labels, whether they had the
- * label already or not, is started on every sequence that starts with it:
- * a run that stopped after writing the label and is tried again starts them
- * all the same, and nobody is started twice. Says how many it did something
- * for.
+ * people, and says what came of it for each. A label is written only over
+ * the contact as it still is (lib/contacts.ts, changeLabels), never over an
+ * unsubscribe or a purchase noted in the same moment, and given only to
+ * somebody with room for one more (a contact keeps ten). Everyone the step
+ * labels, whether they had the label already or not, is started on every
+ * sequence that starts with it, and nobody is started twice. A write whose
+ * answer is lost is "uncertain": the run is held, never repeated by itself.
  */
-async function act(store: Store, flows: Flow[], action: FlowAction, emails: string[], at: { flow: Flow; step: FlowStep; index: number }): Promise<number> {
+async function act(store: Store, flows: Flow[], action: FlowAction, emails: string[], at: { flow: Flow; step: FlowStep; index: number }): Promise<Acted[]> {
   const listId = store.listId;
-  if (!listId || !emails.length) return 0;
+  if (!listId || !emails.length) return [];
+  if (action.do === "wait") return each(emails, "confirmed", "Waited.");
   if (action.do === "webhook") {
     // One event for each person, once each (lib/webhooks.ts keeps the event's own mark): who, and where in which sequence.
-    let told = 0;
+    const out: Acted[] = [];
     for (const email of emails) {
-      told += await emitEvent(store, "sequence.step", `${at.flow.id}:${at.step.id}:${email}`, {
-        sequence: { id: at.flow.id, name: at.flow.name },
-        step: at.index + 1,
-        email,
-      }).then((n) => (n > 0 ? 1 : 0), () => 0);
+      try {
+        const n = await emitEvent(store, "sequence.step", `${at.flow.id}:${at.step.id}:${email}`, {
+          sequence: { id: at.flow.id, name: at.flow.name },
+          step: at.index + 1,
+          email,
+        });
+        out.push(n > 0 ? { email, state: "confirmed", changed: true, note: `Queued for ${n} webhook ${n === 1 ? "endpoint" : "endpoints"}, signed, with retries.` } : { email, state: "failed", note: "Nothing was queued: no webhook endpoint listens for “Sequence step”, or this event was already queued once." });
+      } catch {
+        out.push({ email, state: "uncertain", note: "Whether the webhook event was queued could not be confirmed." });
+      }
     }
-    return told;
+    return out;
   }
   if (action.do === "start") {
-    const target = flows.find((f) => f.id === action.flowId && f.active && f.steps.length > 0);
-    return target ? startFlows(store, [target], emails) : 0;
+    const target = startableFlows(flows, activeFlowLimit(store)).find((f) => f.id === action.flowId && f.active && f.steps.length > 0);
+    if (!target) return each(emails, "failed", "The workflow to start is paused, removed, empty or over your plan's number of active workflows.");
+    try {
+      const started = await startFlows(store, [target], emails);
+      // Which of them were new is not told apart; the count of new starts is kept on the first ones.
+      return each(emails, "confirmed", `Started on “${target.name}”, unless they were in it already or today's runs were used up.`).map((o, i) => ({ ...o, changed: i < started }));
+    } catch {
+      return each(emails, "uncertain", `Whether they were started on “${target.name}” could not be confirmed.`);
+    }
   }
-  if (action.do === "field" || action.do === "deal" || action.do === "note" || action.do === "notify") return actOnPeople(store, action, emails, at);
+  if (action.do === "field" || action.do === "deal" || action.do === "note" || action.do === "notify" || action.do === "assign") return actOnPeople(store, action, emails, at);
   if (action.do === "untag") {
-    const { changed } = await changeLabels(listId, emails, (tags) =>
-      tags.some((t) => sameLabel(t, action.tag)) ? tags.filter((t) => !sameLabel(t, action.tag)) : "same",
-    );
-    return changed.length;
+    try {
+      const { changed, same } = await changeLabels(listId, emails, (tags) =>
+        tags.some((t) => sameLabel(t, action.tag)) ? tags.filter((t) => !sameLabel(t, action.tag)) : "same",
+      );
+      const done = new Set([...changed, ...same]);
+      return emails.map((email) =>
+        changed.includes(email) ? { email, state: "confirmed", changed: true, note: `Label “${action.tag}” taken off.` } : done.has(email) ? { email, state: "confirmed", note: `They did not have the label “${action.tag}”.` } : { email, state: "failed", note: "Their record changed while the label was being written; nothing was changed." },
+      );
+    } catch {
+      return each(emails, "uncertain", "Whether the label was taken off could not be confirmed.");
+    }
   }
-  const { changed, same } = await changeLabels(listId, emails, (tags) => {
-    if (tags.some((t) => sameLabel(t, action.tag))) return "same";
-    const next = readTags([...tags, action.tag]);
-    // Ten labels already: this one has no room, and nothing is taken off to make it.
-    return next.some((t) => sameLabel(t, action.tag)) ? next : "skip";
-  });
+  let changed: string[];
+  let same: string[];
+  try {
+    ({ changed, same } = await changeLabels(listId, emails, (tags) => {
+      if (tags.some((t) => sameLabel(t, action.tag))) return "same";
+      const next = readTags([...tags, action.tag]);
+      // Ten labels already: this one has no room, and nothing is taken off to make it.
+      return next.some((t) => sameLabel(t, action.tag)) ? next : "skip";
+    }));
+  } catch {
+    return each(emails, "uncertain", "Whether the label was given could not be confirmed.");
+  }
   const labeled = [...changed, ...same];
-  const starting = flows.filter((f) => f.active && f.steps.length > 0 && f.trigger === "tagged" && f.tag && sameLabel(f.tag, action.tag));
-  if (labeled.length && starting.length) await startFlows(store, starting, labeled);
-  return changed.length;
+  const starting = startableFlows(flows, activeFlowLimit(store)).filter((f) => f.active && f.steps.length > 0 && f.trigger === "tagged" && f.tag && sameLabel(f.tag, action.tag));
+  // Starting what the label starts is repeat-safe (one start per person per workflow), so a failure here only means fewer starts.
+  if (labeled.length && starting.length) await startFlows(store, starting, labeled).catch((error) => console.error("starting labeled workflows failed", error));
+  return emails.map((email) =>
+    changed.includes(email) ? { email, state: "confirmed", changed: true, note: `Label “${action.tag}” given.` } : same.includes(email) ? { email, state: "confirmed", note: `They already had the label “${action.tag}”.` } : { email, state: "failed", note: "Not given: they already have ten labels, or their record changed while it was written." },
+  );
 }
 
 /**
  * The actions on the store's own people (added 13 October 2026): a field
- * set, a deal put in a stage, a note written, the owner told. Kept under each
- * person's key, never their address (lib/person-key.ts), as the studio keeps
- * them. Says how many it did something for.
+ * set, a deal put in a stage, a note written, the owner told, and (17
+ * October 2026) a teammate made responsible for the person's open deal. Kept
+ * under each person's key, never their address (lib/person-key.ts), as the
+ * studio keeps them.
  */
 async function actOnPeople(
   store: Store,
-  action: Extract<FlowAction, { do: "field" | "deal" | "note" | "notify" }>,
+  action: Extract<FlowAction, { do: "field" | "deal" | "note" | "notify" | "assign" }>,
   emails: string[],
   at: { flow: Flow; step: FlowStep; index: number },
-): Promise<number> {
+): Promise<Acted[]> {
   const statsId = store.statsId;
-  if (!statsId) return 0;
+  if (!statsId) return each(emails, "failed", "This store has no records for people yet.");
   if (action.do === "field") {
     const field = (await readFields(statsId)).find((f) => f.id === action.field);
-    if (!field) return 0;
-    let done = 0;
-    for (const email of emails) if (await setValue(statsId, personKey(statsId, email), field, action.value)) done += 1;
-    return done;
+    if (!field) return each(emails, "failed", "The field was removed from your store.");
+    const out: Acted[] = [];
+    for (const email of emails) {
+      try {
+        out.push((await setValue(statsId, personKey(statsId, email), field, action.value)) ? { email, state: "confirmed", changed: true, note: `“${field.name}” set to “${action.value}”.` } : { email, state: "failed", note: `“${field.name}” does not keep the value “${action.value}” any more.` });
+      } catch {
+        out.push({ email, state: "uncertain", note: `Whether “${field.name}” was set could not be confirmed.` });
+      }
+    }
+    return out;
   }
   if (action.do === "note") {
     // Read when needed: the buyer's page reads the sequences too (lib/buyer-profile.ts), so not at the top.
     const { addPersonNote } = await import("@/lib/buyer-profile");
-    let done = 0;
+    const out: Acted[] = [];
     for (const email of emails) {
-      const kept = await addPersonNote(statsId, personKey(statsId, email), "sequence", `${action.text} (Sequence “${at.flow.name}”, step ${at.index + 1}.)`);
-      if (kept) done += 1;
+      try {
+        const kept = await addPersonNote(statsId, personKey(statsId, email), "sequence", `${action.text} (Sequence “${at.flow.name}”, step ${at.index + 1}.)`);
+        out.push(kept ? { email, state: "confirmed", changed: true, note: "Note written on their page." } : { email, state: "failed", note: "The note could not be written." });
+      } catch {
+        out.push({ email, state: "uncertain", note: "Whether the note was written could not be confirmed." });
+      }
     }
-    return done;
+    return out;
   }
-  if (action.do === "deal") {
+  if (action.do === "deal" || action.do === "assign") {
     const stages = await readStages(statsId);
-    const stage = stages.find((s) => s.id === action.stage);
-    if (!stage) return 0;
-    const deals = await readDeals(statsId, stages);
+    let deals: Awaited<ReturnType<typeof readDeals>>;
+    try {
+      deals = await readDeals(statsId, stages);
+    } catch {
+      // Nothing was written: tried again later, which is safe.
+      return each(emails, "deferred", "Your deals board could not be read; tried again in a few minutes.");
+    }
     const now = Math.floor(Date.now() / 1000);
-    let done = 0;
+    if (action.do === "assign") {
+      // Checked again now: a teammate who left, or lost the role, is never made responsible.
+      const team = await readTeam(store.sid);
+      const eligible = action.assignee === store.email.toLowerCase() || team.members.some((m) => m.email.toLowerCase() === action.assignee && can(m.role, "orders"));
+      if (!eligible) return each(emails, "failed", `${action.assignee} can no longer be responsible for deals in this store.`);
+    }
+    const stage = action.do === "deal" ? stages.find((s) => s.id === action.stage) : undefined;
+    if (action.do === "deal" && !stage) return each(emails, "failed", "The deal stage was removed from your board.");
+    const out: Acted[] = [];
     for (const email of emails) {
       // Their open deal moves; with none open, a new one is made for them.
       const open = deals.find((d) => d.email === email && stages.find((s) => s.id === d.stage)?.kind === "open");
-      const deal = open
-        ? { ...open, stage: stage.id, updatedAt: now }
-        : { id: newCrmId(10), title: (action.title || at.flow.name).slice(0, 90), email, cents: 0, stage: stage.id, note: `Made by the sequence “${at.flow.name}”.`.slice(0, 500), createdAt: now, updatedAt: now };
-      if (open && open.stage === stage.id) continue;
-      if (await writeDeal(statsId, deal)) done += 1;
+      let deal;
+      if (action.do === "assign") {
+        if (!open) {
+          out.push({ email, state: "failed", note: "They have no open deal to make someone responsible for." });
+          continue;
+        }
+        if ((open.assignee ?? "") === action.assignee) {
+          out.push({ email, state: "confirmed", note: `${action.assignee} was already responsible for their deal.` });
+          continue;
+        }
+        deal = { ...open, assignee: action.assignee, updatedAt: now };
+      } else {
+        if (open && open.stage === stage!.id) {
+          out.push({ email, state: "confirmed", note: `Their deal was already in “${stage!.name}”.` });
+          continue;
+        }
+        deal = open
+          ? { ...open, stage: stage!.id, updatedAt: now }
+          : { id: newCrmId(10), title: (action.title || at.flow.name).slice(0, 90), email, cents: 0, stage: stage!.id, note: `Made by the sequence “${at.flow.name}”.`.slice(0, 500), createdAt: now, updatedAt: now };
+      }
+      try {
+        out.push((await writeDeal(statsId, deal)) ? { email, state: "confirmed", changed: true, note: action.do === "assign" ? `${action.assignee} is now responsible for their deal.` : open ? `Deal moved to “${stage!.name}”.` : `New deal made in “${stage!.name}”.` } : { email, state: "failed", note: "Your deals board is full; nothing was added." });
+      } catch (error) {
+        out.push(error instanceof CrmDealReadUnavailable ? { email, state: "deferred", note: "Your deals board could not be read; tried again in a few minutes." } : { email, state: "uncertain", note: "Whether the deal was saved could not be confirmed." });
+      }
     }
-    return done;
+    return out;
   }
   // The owner, told once for everyone who reached the step together: who, and where.
-  if (!isSenderConfigured() || !emails.length) return 0;
+  if (!isSenderConfigured()) return each(emails, "deferred", "Email is not available right now; tried again later.");
   const shown = emails.slice(0, 50);
   const sent = await sendEmail({
     from: NIMBUS_FROM,
@@ -473,8 +691,47 @@ async function actOnPeople(
       "You get this because a step of that sequence tells you. Change it under Email, in your studio.",
     ].join("\n"),
     idempotencyKey: `nimbus-fl-notify:${at.flow.id}:${at.step.id}:${createHash("sha256").update([...emails].sort().join(",")).digest("hex").slice(0, 24)}`,
-  }).catch(() => false);
-  return sent ? emails.length : 0;
+  }).then((ok) => (ok ? "sent" : "no"), () => "unknown");
+  return sent === "sent" ? each(emails, "confirmed", "You were emailed that they reached this step.").map((o) => ({ ...o, changed: true })) : sent === "no" ? each(emails, "failed", "The email to you was not accepted.") : each(emails, "uncertain", "Whether the email to you was sent could not be confirmed.");
+}
+
+export type ResolveChoice = "continue" | "retry" | "end";
+export const RESOLVE_CHOICES: readonly ResolveChoice[] = ["continue", "retry", "end"];
+
+/**
+ * The creator's answer for a run held at a step whose outcome is unknown
+ * (lib/flow-runs.ts): "continue" (it went through: on to the step after),
+ * "retry" (do that step again, knowing it may arrive twice) or "end". Only
+ * one answer is ever taken for a hold.
+ */
+export async function resolveHeldRun(store: Store, flowId: string, person: string, choice: ResolveChoice): Promise<"ok" | "unknown" | "not_held" | "paused"> {
+  if (!store.listId) return "unknown";
+  const flows = await readFlowListStrict(store.listId);
+  const flow = flows.find((f) => f.id === flowId);
+  if (!flow) return "unknown";
+  const found = await readRun(flowId, person);
+  if (!found) return "unknown";
+  const { run } = found;
+  if (run.status !== "held" || !run.open || !run.email) return "not_held";
+  if (choice !== "end" && !flow.active) return "paused";
+  // Where the step is now: an edit may have moved it, or taken it out.
+  const at = flow.steps.findIndex((s) => s.id === run.open.split(":")[1]);
+  const target = choice === "end" ? -1 : choice === "retry" ? at : at >= 0 ? afterIndex(flow.steps, at) : -1;
+  const status = choice === "end" ? "ended" : target < 0 ? "done" : "running";
+  const note =
+    choice === "end"
+      ? "Ended by you."
+      : choice === "retry"
+        ? target < 0 ? "You chose to try it again, but the step is no longer in the workflow, so the run ended." : "Tried again at your request. If the first attempt went through, this may happen twice."
+        : target < 0 ? "Marked as done by you; it was the last step." : `Marked as done by you; going on to step ${target + 1}.`;
+  const now = Math.floor(Date.now() / 1000);
+  if (!(await releaseHold(store.listId, flowId, person, run.open, note, status, target, now))) return "not_held";
+  if (target >= 0) {
+    const due = choice === "retry" ? now : now + flow.steps[target].delayHours * 3600;
+    const reply = await redisPipeline([["ZADD", QUEUE, due, `${store.listId}|${store.handle}|${flowId}|${target}|${run.email}`]]).catch(() => null);
+    if (!Array.isArray(reply) || reply.length !== 1) throw new FlowWriteUnconfirmed();
+  }
+  return "ok";
 }
 
 /**
@@ -550,13 +807,17 @@ export async function sendDueSteps(
     const step = flow?.steps[index];
     if (!flow || !flow.active || !step || monthlyAllowance(store) === 0) {
       counts.dropped += emails.length;
+      // Written in the run's history, so a run that ends this way says why.
+      if (flow) {
+        const note = !flow.active ? "The workflow was paused, so this run ended here." : !step ? "This step was removed from the workflow, so this run ended here." : "Email is not part of this store's plan now, so this run ended here.";
+        await noteRuns(flow.id, emails.map((email) => ({ email, index, stepId: step?.id ?? "", kind: "run", state: "ended" as const, note, to: -1, status: "ended" as const })), now).catch(() => {});
+      }
       return;
     }
     const [rows] = await redisPipeline([["HMGET", leadsKey(listId), ...emails]]);
     const found = Array.isArray(rows) ? rows : [];
-    const following = flow.steps[index + 1];
     // Who is still on the list, and of them, who has reached the sequence's
-    // end and who this email is not for (lib/flow-rules.ts) — read from the
+    // end and who this step is not for (lib/flow-rules.ts) — read from the
     // same rows, so a condition costs no read of its own.
     const paid = flow.goal || step.when ? new Set(idsOfKind(store, "paid")) : new Set<string>();
     // Who used a link in the email before, for a condition on it: only ever
@@ -566,66 +827,131 @@ export async function sendDueSteps(
     // Where each is in a course, for a condition on one: two reads for the
     // whole batch, whatever its size (lib/learn.ts).
     const progress = step.when && isCourseIf(step.when.if) && "productId" in step.when ? await courseProgress(store, step.when.productId, emails) : null;
+    const kind = step.action ? step.action.do : "email";
     const still: string[] = [];
-    const onward: string[] = [];
+    const onward: { email: string; to: number }[] = [];
+    const notes: Parameters<typeof noteRuns>[1] = [];
     let done = 0;
     let left = 0;
     emails.forEach((email, i) => {
       const contact = parseContact(found[i]);
       if (!contact || !mailable(contact)) {
         counts.dropped += 1;
+        notes.push({ email, index, stepId: step.id, kind: "run", state: "ended", note: "No longer on your list: they unsubscribed, an email to them bounced, or they were removed.", to: -1, status: "left" });
         return;
       }
       if (flow.goal && reached(flow.goal, contact, paid)) {
         done += 1;
+        notes.push({ email, index, stepId: step.id, kind: "run", state: "goal", note: "Reached the workflow's goal before this step, so the run ended.", to: -1, status: "goal" });
         return;
       }
       if (step.when && !holds(step.when, { ...contact, used: used.has(email), course: progress?.get(email), half: halfOf(flow.id, email) }, paid)) {
-        if (step.otherwise === "end" || !following) left += 1;
-        else onward.push(email);
+        const to = elseIndex(flow.steps, index);
+        if (to < 0) {
+          left += 1;
+          notes.push({ email, index, stepId: step.id, kind, state: "skipped", note: step.otherwise === "skip" ? "The condition did not hold, and this was the last step." : "The condition did not hold, so the run ended here.", to: -1, status: step.otherwise === "skip" ? "done" : "ended" });
+        } else {
+          onward.push({ email, to });
+          notes.push({ email, index, stepId: step.id, kind, state: "skipped", note: `The condition did not hold; went on to step ${to + 1}.`, to, status: "running" });
+        }
         return;
       }
       still.push(email);
     });
-    // Skipped: on to the next email, its wait counted from now, as if this
-    // one had gone.
-    const moved: (string | number)[][] = onward.map((email) => ["ZADD", QUEUE, now + (following?.delayHours ?? 0) * 3600, `${listId}|${handle}|${flowId}|${index + 1}|${email}`]);
+    // Skipped: on to where the condition sends them, its wait counted from
+    // now, as if this step had been done.
+    const moved: (string | number)[][] = onward.map(({ email, to }) => ["ZADD", QUEUE, now + flow.steps[to].delayHours * 3600, `${listId}|${handle}|${flowId}|${to}|${email}`]);
     if (done) moved.push(["HINCRBY", statsKey(flow.id), "reached", done]);
     if (left + onward.length) moved.push(["HINCRBY", statsKey(flow.id), "skipped", left + onward.length]);
     if (moved.length) await redisPipeline(moved);
+    await noteRuns(flow.id, notes, now).catch((error) => console.error("writing workflow history failed", error));
     if (!still.length) return;
 
-    // A step that acts instead of writing: done for everyone it is for, then
-    // on to the next step, its wait counted from now.
-    if (step.action) {
-      const acted = await act(store, flowsFor.get(listId) ?? [], step.action, still, { flow, step, index });
-      const after: (string | number)[][] = acted ? [["HINCRBY", statsKey(flow.id), "acted", acted]] : [];
-      if (following) {
-        const at = now + following.delayHours * 3600;
-        for (const email of still) after.push(["ZADD", QUEUE, at, `${listId}|${handle}|${flowId}|${index + 1}|${email}`]);
-      }
-      if (after.length) await redisPipeline(after);
+    // The attempt is written down before anything is done (lib/flow-runs.ts).
+    // Whoever already has an attempt open here is held, never tried again.
+    let claim: { claimed: string[]; open: string[] };
+    try {
+      claim = await claimAttempts(flow.id, still, index, step.id, kind, now);
+    } catch {
+      // Nothing was attempted: back in the queue, as before history existed.
+      await redisPipeline(still.map((email) => ["ZADD", QUEUE, now + 600, `${group}|${email}`]));
+      counts.later += still.length;
       return;
     }
-
-    const key = `fl:${flow.id}:${step.id}:${createHash("sha256").update([...still].sort().join(",")).digest("hex").slice(0, 32)}`;
-    const result = await sendTo(store, still, step.subject, step.body, key, { medium: "sequence", campaign: stepCampaign(flow.id, step.id) });
-    if (result.rest.length) {
-      if (result.stopped === "refused") counts.dropped += result.rest.length;
-      else {
-        // Tried again later rather than lost: next month, or once the sender takes it.
-        const later = result.stopped === "allowance" || result.stopped === "day" || result.stopped === "sender" || result.stopped === "paused" ? 6 * 3600 : result.stopped === "portion" ? 900 : 600;
-        await redisPipeline(result.rest.map((email) => ["ZADD", QUEUE, now + later, `${group}|${email}`]));
-        counts.later += result.rest.length;
+    if (claim.open.length) {
+      await settleAttempts(listId, flow.id, index, step.id, kind, claim.open.map((email) => ({ email, state: "uncertain", note: "An earlier attempt at this step has no confirmed outcome, so it was not tried again.", to: index })), now).catch(() => {});
+    }
+    const going = claim.claimed;
+    if (!going.length) return;
+    const to = afterIndex(flow.steps, index);
+    const queueNext = (people: string[]): (string | number)[][] =>
+      to < 0 ? [] : people.map((email) => ["ZADD", QUEUE, now + flow.steps[to].delayHours * 3600, `${listId}|${handle}|${flowId}|${to}|${email}`]);
+    const settled = (people: Acted[]): Settled[] => people.map((p) => ({ ...p, to: p.state === "deferred" ? index : to }));
+    // The next step is queued before the attempt is cleared. If clearing then
+    // fails, the attempt stays open and the next step holds the run rather
+    // than letting anything happen twice; if queueing fails, the run is held here.
+    let queued = false;
+    try {
+      // A step that acts instead of writing: done for everyone it is for, then
+      // on to where it leads, its wait counted from now.
+      if (step.action) {
+        const outcomes = await act(store, flowsFor.get(listId) ?? [], step.action, going, { flow, step, index }).catch((): Acted[] => each(going, "uncertain", "The outcome of this action could not be confirmed."));
+        // Anybody act did not answer for has no known outcome.
+        const answered = new Set(outcomes.map((o) => o.email));
+        const all = [...outcomes, ...each(going.filter((e) => !answered.has(e)), "uncertain", "The outcome of this action could not be confirmed.")];
+        const confirmed = all.filter((o) => o.state === "confirmed" && o.changed).map((o) => o.email);
+        // A failed action is written down and the run goes on: one missing deal does not stop the emails after it.
+        const onwards = all.filter((o) => o.state === "confirmed" || o.state === "failed").map((o) => o.email);
+        const deferred = all.filter((o) => o.state === "deferred").map((o) => o.email);
+        const after: (string | number)[][] = [...queueNext(onwards), ...deferred.map((email) => ["ZADD", QUEUE, now + 600, `${group}|${email}`])];
+        if (confirmed.length) after.push(["HINCRBY", statsKey(flow.id), "acted", confirmed.length]);
+        if (after.length) await redisPipeline(after);
+        queued = true;
+        await settleAttempts(listId, flow.id, index, step.id, kind, settled(all), now);
+        return;
       }
+
+      const key = `fl:${flow.id}:${step.id}:${createHash("sha256").update([...going].sort().join(",")).digest("hex").slice(0, 32)}`;
+      const result = await sendTo(store, going, step.subject, step.body, key, { medium: "sequence", campaign: stepCampaign(flow.id, step.id) }).catch(() => null);
+      if (!result) {
+        queued = true;
+        await settleAttempts(listId, flow.id, index, step.id, kind, going.map((email) => ({ email, state: "uncertain", note: "Sending was interrupted; whether this email went out could not be confirmed.", to: index })), now);
+        return;
+      }
+      const uncertain = new Set(result.uncertain ?? []);
+      const outcomes: Settled[] = [
+        ...result.done.map((email) => ({ email, state: "confirmed" as const, note: "Handed to the sender.", to })),
+        ...[...uncertain].map((email) => ({ email, state: "uncertain" as const, note: "The sender's answer was lost: this email may or may not have gone out, so it is not sent again by itself.", to: index })),
+      ];
+      const rest = result.rest.filter((email) => !uncertain.has(email));
+      const commands: (string | number)[][] = [];
+      if (rest.length) {
+        if (result.stopped === "refused") {
+          counts.dropped += rest.length;
+          outcomes.push(...rest.map((email) => ({ email, state: "failed" as const, note: "The sender refused this email as it is, so the run ended.", to: -1, status: "failed" as const })));
+        } else {
+          // Tried again later rather than lost: next month, or once the sender takes it.
+          const later = result.stopped === "allowance" || result.stopped === "day" || result.stopped === "sender" || result.stopped === "paused" ? 6 * 3600 : result.stopped === "portion" ? 900 : 600;
+          const why =
+            result.stopped === "allowance" ? "Waiting: this month's emails ran out. It goes out when the month turns." : result.stopped === "day" || result.stopped === "portion" || result.stopped === "sender" ? "Waiting for room to send; it goes out by itself." : result.stopped === "paused" ? "Waiting: email to your list is paused for now." : "Waiting to be tried again in a few minutes; it was not sent.";
+          commands.push(...rest.map((email) => ["ZADD", QUEUE, now + later, `${group}|${email}`]));
+          outcomes.push(...rest.map((email) => ({ email, state: "deferred" as const, note: why, to: index })));
+          counts.later += rest.length;
+        }
+      }
+      if (result.done.length) {
+        counts.sent += result.done.length;
+        commands.push(["HINCRBY", statsKey(flow.id), "sent", result.done.length], ...queueNext(result.done));
+      }
+      if (commands.length) await redisPipeline(commands);
+      queued = true;
+      await settleAttempts(listId, flow.id, index, step.id, kind, outcomes, now);
+    } catch (error) {
+      // Something after the attempt could not be confirmed. The attempts stay
+      // open, so nothing is repeated by itself; when nothing was queued after
+      // them either, the runs are held here for the creator to see.
+      console.error("finishing a workflow step failed", error);
+      if (!queued) await settleAttempts(listId, flow.id, index, step.id, kind, going.map((email) => ({ email, state: "uncertain", note: "What happened at this step could not be confirmed.", to: index })), now).catch(() => {});
     }
-    if (!result.done.length) return;
-    counts.sent += result.done.length;
-    const commands: (string | number)[][] = [["HINCRBY", statsKey(flow.id), "sent", result.done.length]];
-    if (following) {
-      const at = now + following.delayHours * 3600;
-      for (const email of result.done) commands.push(["ZADD", QUEUE, at, `${listId}|${handle}|${flowId}|${index + 1}|${email}`]);
-    }
-    await redisPipeline(commands);
   }
 }

@@ -5,7 +5,7 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { InboxStudio } from "@/components/inbox-studio";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { isSenderConfigured } from "@/lib/email";
 import { isHouseStore } from "@/lib/house-store";
 import { openConversation, readInbox } from "@/lib/inbox";
@@ -39,7 +39,7 @@ export default async function StudioInboxPage({ searchParams }: Params) {
   const first = asked && store.statsId ? await openConversation(store.statsId, asked, store) : null;
   const team = store.sid ? await readTeam(store.sid) : { members: [] };
   const people = [store.email, ...team.members.filter((m) => can(m.role, "orders")).map((m) => m.email)];
-  const aiOn = isAiConfigured();
+  const aiOn = aiAvailableFor(store);
   const left = aiOn ? await aiLeft(store) : 0;
   // Why the chat cannot be turned on, when it cannot: the demo store takes no messages, and a store needs its address and our sender.
   const chatBlock = isHouseStore(store) ? "demo" : store.statsId && store.email && !store.suspended && isSenderConfigured() ? "" : "setup";

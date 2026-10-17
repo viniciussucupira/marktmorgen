@@ -2,7 +2,7 @@ import {CONTRACT_FUNDING_RULES,CONTRACT_ADMISSION_COVERAGE,CURRENT_CONTRACT_FUND
 import { CURRENT_EXPOSURE_BUDGET_POLICY, exposureBudgetConfiguration, EXPOSURE_ADMISSION_RULES } from '@/lib/exposure-budget-policy';
 import { assessFundedExposure, FUNDED_EXPOSURE_RULES, type FundedExposureReview } from '@/lib/funded-exposure-rules';
 import { AI_ENTITLEMENT_RULES, aiEntitlementsFunded } from '@/lib/ai-entitlement-rules';
-import { CURRENT_UPLOAD_BUDGET_POLICY, UPLOAD_BUDGET_RULES, isUploadBudgetConfigured } from "@/lib/upload-budget-policy";
+import { AUTOMATIC_UPLOAD_BUDGET_CEILINGS, UPLOAD_BUDGET_RULES, currentUploadBudgetPolicy, isUploadBudgetConfigured } from "@/lib/upload-budget-policy";
 /** Client-safe release policy. No secrets, tax rates inferred from residence, or optimistic defaults.
  * Paid plans remain closed until every individual worst case is reviewed and passes the owner's floor.
  */
@@ -10,7 +10,7 @@ import { assessMinimumCustomerBase, CUSTOMER_BASE_RULES, type CustomerBaseReview
 import { PLAN_PRICES, COMMISSION_BPS, COMMISSION_LIVE, COMMISSION_PLANS_PUBLISHED, PUBLISHED_PLAN_PRICES, TRIAL_DAYS, REFUND_DAYS, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { SHARE_PROVED_IN_TEST_MODE } from "@/lib/platform-share";
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
-import { AI_SPEND_RULES, CURRENT_AI_SPEND_POLICY, aiStoreCostCents, isAiSpendPolicyValid } from "@/lib/ai-spend-policy";
+import { AI_SPEND_RULES, AUTOMATIC_AI_SPEND_CEILINGS, currentAiSpendPolicy, aiStoreCostCents, isAiSpendPolicyValid } from "@/lib/ai-spend-policy";
 import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY, AI_PER_MINUTE, MAX_AI_NOTES, READ_PDF_PAGES, READ_PDF_JOBS } from "@/lib/ai-rules";
 import { VIDEO_HOURS_INCLUDED, VIDEO_CENTS_PER_HOUR_OVER } from "@/lib/watch-rules";
@@ -26,6 +26,7 @@ import { CLOSING_DAYS, RECHECK_DAYS } from "@/lib/plan-closing-rules";
 import { PAUSE_MONTHS, PAID_MONTHS_BEFORE_PAUSE, PAUSE_EVERY_DAYS } from "@/lib/plan-pause-rules";
 import { INVITE_PROGRAM_OPEN, INVITE_SHARE_PERCENT, INVITE_BONUS_CENTS, LEGACY_INVITE_RECORDING_UNTIL } from "@/lib/creator-invite-rules";
 import { QUIZ_USAGE_POLICY, QUIZ_MONTHLY_SUBMISSIONS } from "@/lib/quiz-usage-rules";
+import { WORKFLOW_LIMITS } from "@/lib/flow-limits";
 export const REQUIRED_MARGIN_SCENARIOS=[
  "creator_month_full","creator_year_full","pro_month_full","pro_year_full","scale_month_full","scale_year_full",
  "video_overage","visits_overage","orders_overage",
@@ -48,7 +49,7 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
 export const CURRENT_COMMERCIAL_TERMS = {
  schemaVersion: 17,
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
- uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: CURRENT_UPLOAD_BUDGET_POLICY },
+ uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: AUTOMATIC_UPLOAD_BUDGET_CEILINGS },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
  customerBaseRules: CUSTOMER_BASE_RULES,
  fundedExposureRules: FUNDED_EXPOSURE_RULES,
@@ -56,6 +57,7 @@ export const CURRENT_COMMERCIAL_TERMS = {
  contractFundingRules:CONTRACT_FUNDING_RULES,
  invitations: { open: INVITE_PROGRAM_OPEN, legacySharePercent: INVITE_SHARE_PERCENT, legacyBonusCents: INVITE_BONUS_CENTS, legacyRecordingUntil: LEGACY_INVITE_RECORDING_UNTIL },
  quizzes: { newQuizPolicy: QUIZ_USAGE_POLICY, submissionsPerStoreUtcMonth: QUIZ_MONTHLY_SUBMISSIONS, legacyQuizzesExempt: true },
+ workflows: WORKFLOW_LIMITS,
  basePlanRevenueCeilings: BASE_PLAN_REVENUE_CEILINGS,
  minimumNetMarginBps: MINIMUM_NET_MARGIN_BPS,
  costCategories: CUSTOMER_COST_CATEGORIES,
@@ -69,7 +71,7 @@ export const CURRENT_COMMERCIAL_TERMS = {
  trialDays: TRIAL_DAYS,
  refundDays: REFUND_DAYS,
  email: { admission: "strict-counter-ack-retain-dispatched-attempts-v1", trial: TRIAL_MONTHLY_EMAILS, pro: PRO_MONTHLY_EMAILS, scale: SCALE_MONTHLY_EMAILS, maxLeads: MAX_LEADS, maxImport: MAX_IMPORT },
- ai: { entitlements: AI_ENTITLEMENT_RULES, financialCoverage: "funded-slots-and-customer-ceilings-v1", spendRules: AI_SPEND_RULES, spendPolicy: CURRENT_AI_SPEND_POLICY, requestLimits: AI_REQUEST_LIMITS, supportedModels: SUPPORTED_AI_MODELS, monthly: AI_MONTHLY, perMinute: AI_PER_MINUTE, maxNotes: MAX_AI_NOTES, pdfPages: READ_PDF_PAGES, pdfJobs: READ_PDF_JOBS },
+ ai: { entitlements: AI_ENTITLEMENT_RULES, financialCoverage: "funded-slots-and-customer-ceilings-v1", spendRules: AI_SPEND_RULES, spendPolicy: AUTOMATIC_AI_SPEND_CEILINGS, requestLimits: AI_REQUEST_LIMITS, supportedModels: SUPPORTED_AI_MODELS, monthly: AI_MONTHLY, perMinute: AI_PER_MINUTE, maxNotes: MAX_AI_NOTES, pdfPages: READ_PDF_PAGES, pdfJobs: READ_PDF_JOBS },
  storage: { paidBytesByTier: PAID_STORAGE_BYTES, defaultPaidBytes: STORAGE_BRAKE_BYTES, trialNeverExceedsPaidTier: true, trialBytes: TRIAL_STORAGE_BYTES, setupBytes: SETUP_STORAGE_BYTES, maxFileBytes: MAX_FILE_BYTES, maxStampBytes: MAX_STAMP_BYTES },
  video: { paidHoursByTier: PAID_VIDEO_HOURS, trialSeconds: TRIAL_VIDEO_SECONDS, legacyBillingIncludedHours: VIDEO_HOURS_INCLUDED, setupSeconds: SETUP_VIDEO_SECONDS, overageCentsPerHour: VIDEO_CENTS_PER_HOUR_OVER, topHeight: TOP_HEIGHT, maxKeptBytes: MOST_KEPT_BYTES, uploadWindowSeconds: UPLOAD_WINDOW_SECONDS, abandonedAfterMs: ABANDONED_AFTER_MS, giveUpAfterMs: GIVE_UP_AFTER_MS },
  traffic: { included: VISITS_INCLUDED, setup: SETUP_VISITS, trial: TRIAL_VISITS, overageCentsPerThousand: VISIT_CENTS_PER_THOUSAND_OVER, roomLiveParts: ROOM_LIVE_PARTS, roomIdleParts: ROOM_IDLE_PARTS },
@@ -91,9 +93,9 @@ export type CommercialMarginReview={
 /** No verified all-tax/all-cost review exists yet. Unknown is not zero or permission to sell. */
 export const CURRENT_COMMERCIAL_MARGIN_REVIEW:CommercialMarginReview|null=null;
 export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT_COMMERCIAL_MARGIN_REVIEW):boolean{
- const uploadPolicy=CURRENT_UPLOAD_BUDGET_POLICY;
+ const uploadPolicy=currentUploadBudgetPolicy();
  if(!isUploadBudgetConfigured(uploadPolicy))return false;
- const aiPolicy=CURRENT_AI_SPEND_POLICY;
+ const aiPolicy=currentAiSpendPolicy();
  if(!isAiSpendPolicyValid(aiPolicy)||!aiEntitlementsFunded(aiPolicy))return false;
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
  if(!review.taxEvidence?.trim()||!review.costAndLimitEvidence?.trim())return false;

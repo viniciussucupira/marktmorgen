@@ -50,5 +50,7 @@ test("a sequence can start on the first thing somebody pays for", () => {
   const src = readFileSync(join(process.cwd(), "lib/flows.ts"), "utf8");
   assert.match(src, /f\.trigger === "bought" && paid/);
   assert.match(src, /idsOfKind\(store, "paid"\)\.includes\(event\.productId as string\)/, "a free download is not a purchase");
-  assert.match(src, /raw\.trigger === "bought"/, "and the studio may save one");
+  // Saved triggers are read from one list (lib/flow-rules.ts, FLOW_TRIGGERS), which has "bought".
+  assert.match(src, /FLOW_TRIGGERS\.find\(\(t\) => t === raw\.trigger\)/, "and the studio may save one");
+  assert.match(readFileSync(join(process.cwd(), "lib/flow-rules.ts"), "utf8"), /export const FLOW_TRIGGERS[^\n]*"bought"/);
 });

@@ -19,7 +19,7 @@ import { readAbout } from "@/lib/product-about";
 import { readPage } from "@/lib/sales-page-store";
 import { pageShown } from "@/lib/sales-page";
 import { factsFor } from "@/lib/answers";
-import { aiAllowance, aiMonthKey, isAiConfigured, writeAffiliatePosts } from "@/lib/ai";
+import { aiAllowance, aiAvailableFor, aiMonthKey, writeAffiliatePosts } from "@/lib/ai";
 import { storeBase } from "@/lib/purchase-email";
 import { productSegment } from "@/lib/product-slug";
 import { DISCLOSURE, DISCLOSURE_SHORT, KIT_PER_DAY, MAX_KIT_NOTE, type AffiliatePosts, finishPost, kitMonthly } from "@/lib/affiliate-kit-rules";
@@ -48,7 +48,7 @@ export type KitResult = { ok: true; posts: AffiliatePosts; left: number } | { ok
 
 /** Drafts one affiliate's three posts about one product, within the limits. */
 export async function draftKit(store: Store, affiliate: Affiliate, productId: string, rawNote: string, now = new Date()): Promise<KitResult> {
-  if (!isAiConfigured() || !isRedisConfigured() || !store.statsId || !affiliatesOn(store) || !store.affiliates.kit || affiliate.status !== "approved") return { ok: false, reason: "off" };
+  if (!aiAvailableFor(store) || !isRedisConfigured() || !store.statsId || !affiliatesOn(store) || !store.affiliates.kit || affiliate.status !== "approved") return { ok: false, reason: "off" };
   const product = await readListing(store, productId);
   if (!kitProduct(store, affiliate, product)) return { ok: false, reason: "unknown" };
   const note = rawNote.replace(/\s+/g, " ").trim().slice(0, MAX_KIT_NOTE);

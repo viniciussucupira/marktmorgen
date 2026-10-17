@@ -156,6 +156,7 @@ import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
 import { DEFAULT_LANGUAGE, type LanguageCode, parseLanguage } from "@/lib/store-language";
 import { type AdsServerPlatform, parseAdsServer } from "@/lib/ad-consent";
 import { ATTRIBUTION_DAYS, type AttributionDays, DEFAULT_ATTRIBUTION_DAYS, parseAttributionDays } from "@/lib/attribution-rules";
+import { parseEmbedSites, readEmbedSites } from "@/lib/embed-sites";
 
 // What the rest of the site has always imported from here.
 export { MAX_PRODUCTS, MAX_SUMMARY_LENGTH, MAX_TITLE_LENGTH, StoreFullError };
@@ -517,6 +518,12 @@ export type Store = {
   attributionDays: AttributionDays;
   /** Whether each sale, and each alert (lib/store-alerts.ts), is posted to the store's Slack or Discord channel (lib/chat-summary.ts). Off until turned on. */
   chatSales: boolean;
+  /**
+   * The creator's own websites that may open the store's checkout card and
+   * sign-up form over their pages with the checkout script, and be told what
+   * happened (lib/embed-sites.ts): https origins, at most ten. None until added.
+   */
+  embedSites: string[];
   /**
    * The come-back offer emailed to somebody whose membership ended
    * (lib/winback.ts). Off for every store until its creator sets one.
@@ -910,6 +917,7 @@ function parseStore(raw: unknown): Store | null {
       adsServer: parseAdsServer(value.adsServer),
       attributionDays: parseAttributionDays(value.attributionDays),
       chatSales: value.chatSales === true,
+      embedSites: parseEmbedSites(value.embedSites),
       winback: parseWinBack(value.winback),
       welcomeOffer: parseWelcomeOffer(value.welcomeOffer),
       inbox: parseInboxSetting(value.inbox),
@@ -1112,6 +1120,7 @@ async function freshStore(fields: {
     adsServer: [],
     attributionDays: DEFAULT_ATTRIBUTION_DAYS,
     chatSales: false,
+    embedSites: [],
     winback: { ...NO_WINBACK },
     welcomeOffer: { ...NO_WELCOME_OFFER },
     inbox: { ...NO_INBOX, saved: [] },
@@ -2295,6 +2304,14 @@ export async function setLeaving(email: string, raw: unknown): Promise<{ ok: tru
 /** Whether each sale and each alert is posted to the store's chat (lib/chat-summary.ts). */
 export async function setChatSales(email: string, on: unknown): Promise<Store | null> {
   return patchStore(email, () => ({ chatSales: on === true }));
+}
+
+/** The sites that may open the store's checkout with the checkout script (lib/embed-sites.ts): the whole list, as typed. */
+export async function setEmbedSites(email: string, value: unknown): Promise<{ ok: true; store: Store } | { ok: false; reason: "invalid" | "too_many" | "none"; line?: string }> {
+  const read = readEmbedSites(value);
+  if (!read.ok) return read;
+  const next = await patchStore(email, () => ({ embedSites: read.sites }));
+  return next ? { ok: true, store: next } : { ok: false, reason: "none" };
 }
 
 /** How long after a visit a sale is still credited to it (lib/attribution-rules.ts). */

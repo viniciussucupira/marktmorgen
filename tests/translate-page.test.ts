@@ -79,17 +79,17 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
   const result = await translatePage(store, { page, language: "Spanish" });
   is("by the smaller model, told the language and to add nothing", [asked[0].model, asked[0].system.includes("into Spanish"), asked[0].system.includes("Add nothing and leave nothing out")], [answerModel(), true, true]);
   is("the page back in the new words", result.ok ? [(result.value.blocks[0] as { headline: string }).headline, result.value.seoDescription] : null, ["BAKE BREAD ON SUNDAY", "BREAD FOR THE WEEKEND"]);
-  is("one of the month's jobs for a short page", result.ok ? result.left : null, 99);
+  is("one of the month's jobs for a short page", result.ok ? result.left : null, 39);
 
   const longPage = parsePage({ blocks: Array.from({ length: 3 }, (_, i) => ({ id: `text000${i}`, kind: "text", heading: "", body: "word ".repeat(900) })) });
   asked.length = 0;
   const long = await translatePage(store, { page: longPage, language: "German" });
-  is("a longer page asked in parts at once, each part a job", [asked.length, long.ok ? long.left : null], [translateParts(pageWords(longPage)).length, 99 - translateParts(pageWords(longPage)).length]);
+  is("a longer page asked in parts at once, each part a job", [asked.length, long.ok ? long.left : null], [translateParts(pageWords(longPage)).length, 39 - translateParts(pageWords(longPage)).length]);
 
   part("What changes nothing");
   mode = "short";

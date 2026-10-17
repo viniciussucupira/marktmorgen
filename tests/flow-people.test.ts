@@ -77,7 +77,7 @@ async function main(): Promise<void> {
     readAction({ do: "note", text: "   " }, () => false, ctx),
     readAction({ do: "notify" }, () => false, ctx),
   ], [{ do: "field", field: "lvl001", value: "Pro" }, "bad", "bad", { do: "deal", stage: talking.id, title: "Coaching" }, "bad", "bad", { do: "notify" }]);
-  is("a form that asks for no address cannot start a sequence", (await saveFlow(store, { name: "X", trigger: "form", formId: "noemail001", active: true, steps: [{ delayHours: 0, subject: "a", body: "b" }] })), { ok: false, reason: "form" });
+  is("a form that asks for no address cannot start a sequence", (await saveFlow(store, { name: "X", trigger: "form", formId: "noemail001", active: true, steps: [{ delayHours: 0, subject: "a", body: "b" }] }, { activate: true })), { ok: false, reason: "form" });
   const saved = await saveFlow(store, {
     name: "Applicants",
     trigger: "form",
@@ -90,7 +90,7 @@ async function main(): Promise<void> {
       { delayHours: 0, action: { do: "notify" } },
       { delayHours: 0, subject: "We got your application", body: "Thank you." },
     ],
-  });
+  }, { activate: true });
   is("a sequence that starts with the form, its steps kept", saved.ok ? [saved.flows[0].trigger, saved.flows[0].formId, saved.flows[0].steps.map((s) => s.action?.do ?? "email")] : saved, ["form", "applyform1", ["field", "deal", "note", "notify", "email"]]);
 
   part("Started by the form, for people on the list");

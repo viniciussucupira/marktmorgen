@@ -9,7 +9,7 @@ import { standingOf } from "@/lib/plan-standing";
 import { SITE_URL } from "@/lib/site-url";
 import { claimWeek, readNumbers, weeklyMessage, weeklyOff, weeklyToken } from "@/lib/stats-report";
 import { weeklySummary } from "@/lib/numbers-ask";
-import { isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor } from "@/lib/ai";
 import { readSpends } from "@/lib/ad-spend";
 import { recordSample } from "@/lib/benchmarks";
 import { weeklyMemberToken, weeklyTeam } from "@/lib/stats-report";
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
         continue;
       }
       // A few sentences written from the same numbers, first, where the creator turned it on (lib/numbers-ask.ts).
-      if (store.weeklyAi && data && isAiConfigured()) {
+      if (store.weeklyAi && data && aiAvailableFor(store)) {
         const lead = await weeklySummary(store, data).catch(() => null);
         if (lead) message.text = `In short: ${lead}\n\n${message.text}`;
       }

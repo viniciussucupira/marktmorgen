@@ -1662,6 +1662,15 @@ export default function PrivacyPage() {
           ask for it to be deleted entirely instead, it is.
         </p>
         <p>
+          A creator&apos;s automatic emails and workflows keep a record of each
+          person&apos;s way through each of them: your address, which steps
+          were attempted, done, skipped or could not be confirmed, and when.
+          It is kept for up to 400 days after it starts, and deleted earlier
+          when you ask to be deleted, when the creator erases you from their
+          workflows, removes the workflow, or deletes the store. Deleting it
+          also deletes any of its emails or steps still waiting to reach you.
+        </p>
+        <p>
           A community&apos;s posts, comments, pictures and member records are
           kept while the community exists, until the author or the creator
           deletes them. An affiliate program&apos;s records, license keys and

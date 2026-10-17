@@ -60,7 +60,7 @@ async function main(): Promise<void> {
 
   part("Asked of the writer");
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   await ensureStatsId("owner@example.com");
   await setLanguage("owner@example.com", "de");
   const store = (await storeForEmail("owner@example.com"))!;

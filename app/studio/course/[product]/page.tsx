@@ -2,7 +2,7 @@ import { CourseCommentsStudio, type StudioComment } from "@/components/course-co
 import { commentsOn, markSeen, recentComments } from "@/lib/lesson-comments";
 import { CREATOR_AUTHOR, commentClock } from "@/lib/lesson-comments-rules";
 import type { Metadata } from "next";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -88,7 +88,7 @@ export default async function StudioCoursePage({
   const [talking, recent] = await Promise.all([commentsOn(course.id), recentComments(course.id, 50)]);
   await markSeen(course.id);
   const titles = new Map(lessonsInOrder(course).map(({ lesson }) => [lesson.id, lesson.title]));
-  const aiState = isAiConfigured() ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
+  const aiState = aiAvailableFor(store) ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
   // Work handed in for the course's assignments (lib/assignment.ts): what is waiting, or everything.
   const hasTasks = lessonsInOrder(course).some(({ lesson }) => lesson.task);
   const showingWork = query.work === "all" ? "all" : "waiting";

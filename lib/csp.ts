@@ -44,7 +44,12 @@
  * it reads no session, sets no cookie, and its one button opens Stripe's
  * checkout in a new tab, where the buyer still types their card and presses
  * pay themselves. A site that hid it under something else could at most
- * open a checkout nobody pays. Files handed over by the API
+ * open a checkout nobody pays. The checkout script's card and sign-up form
+ * (?mm=overlay, lib/embed-sdk.ts) are the same pages under /embed/ and are
+ * framed the same way; what they show is decided by the page itself from the
+ * Referer: the buy button, the form's box and the messages to the page only
+ * on one of the creator's listed sites (lib/embed-sites.ts), and a plain
+ * link to the product's page on any other, which no frame can misuse. Files handed over by the API
  * carry their own, stricter policy (lib/request-guard.ts, fileHeaders).
  *
  * Deliberately left out: 'upgrade-insecure-requests', which would break the
@@ -193,7 +198,7 @@ export function isDynamicPage(pathname: string): boolean {
   return /^\/(?:@|%40)/i.test(pathname) || /^\/(studio|signin|unsubscribe)(\/|$)/.test(pathname) || isEmbedPage(pathname);
 }
 
-/** The card a creator pastes into their own site: framed anywhere, and nothing else is. */
+/** The card a creator pastes into their own site, and the checkout script's card and sign-up form (/embed/<store>/join): framed anywhere, and nothing else is. */
 export function isEmbedPage(pathname: string): boolean {
   return /^\/embed\/[^/]+\/[^/]+\/?$/.test(pathname);
 }

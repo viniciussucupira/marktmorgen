@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
   const facts = "Product: Knife Skills\nPrice: $49\nDescription: Ten short video lessons on holding a knife, the claw grip and onions.";
 
@@ -55,7 +55,7 @@ async function main(): Promise<void> {
   is("told the language, the shape and to add nothing", [asked.at(-1)!.system.includes("Write in Spanish"), asked.at(-1)!.system.includes('"items": string[]'), asked.at(-1)!.system.includes("Add no number")], [true, true, true]);
   is("its points, its own id and kind", written.value.kind === "benefits" ? [written.value.id, written.value.items.length] : null, ["bene0001", 3]);
   is("the creator's heading and where it shows stay theirs", written.value.kind === "benefits" ? [written.value.heading, written.value.screens] : null, ["Why it helps", "phone"]);
-  is("it counts as one of the month's jobs", written.left, 99);
+  is("it counts as one of the month's jobs", written.left, 39);
 
   reply = JSON.stringify({ heading: "Lo que recibes", items: ["Diez lecciones en video"] });
   const fresh = await fillBlock(store, { block: emptyBlock("benefits", "bene0003"), facts, language: "Spanish" });

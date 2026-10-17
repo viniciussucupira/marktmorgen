@@ -345,7 +345,13 @@ export const BLOCK_SHOWS: { value: BlockShow | "all"; label: string }[] = [
   { value: "computer", label: "Computers and tablets only" },
 ];
 
-export type PageBlock = { screens?: BlockShow } & (
+/**
+ * A saved section's id (lib/saved-blocks.ts) on each block that came from it,
+ * so a later change to the section can be offered to every page using it.
+ */
+export const SAVED_BLOCK_ID = /^[a-z0-9]{10}$/;
+
+export type PageBlock = { screens?: BlockShow; saved?: string } & (
   | FeatureBlock
   | FitBlock
   | StepsBlock
@@ -848,6 +854,8 @@ function parseBlocks(list: unknown, pictures: Set<string>): PageBlock[] {
     if (!block || seen.has(block.id)) continue;
     const screens = (entry as { screens?: unknown }).screens;
     if (block.kind !== "hero" && (screens === "phone" || screens === "computer")) block.screens = screens;
+    const saved = (entry as { saved?: unknown }).saved;
+    if (block.kind !== "hero" && typeof saved === "string" && SAVED_BLOCK_ID.test(saved)) block.saved = saved;
     if (block.kind === "hero" && blocks.length > 0) continue;
     if (block.kind === "reviews") {
       if (reviews) continue;

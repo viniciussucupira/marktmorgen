@@ -1,5 +1,6 @@
 // Content for every page behind a menu item. One entry per page, so that
 // each menu item opens something different and real.
+import { AI_PLANS_WORDS } from "@/lib/ai-rules";
 import { isDomainsConfigured } from "@/lib/domains";
 import { PRO_MONTHLY_EMAILS } from "@/lib/plan";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
@@ -414,7 +415,7 @@ export const PAGES: TopicPage[] = [
           ["Sections on the store", "Yes — named sections, dragged into order and hidden when empty (their help center, read October 7, 2026)", "Yes — up to 20 headings, each starting at a product you pick, and one line of your own news across the top"],
           ["Product pictures", "Yes — thumbnails shown as Button, Callout or Preview", "Yes — a picture on each product, shown as Button, Callout or Preview, the same three"],
           ["Several prices for one product", "Not available", "Up to 50 on one product, each with its own file or link, compared side by side with one marked as your pick"],
-          ["Sales pages for a product", "A checkout page for each product, with a description and a video, which can be made a private landing page on every plan. Funnels of several pages on the $99 plan", `Yes, on the ${PLAN_AT.creator} plan: up to 30 blocks per product \u2014 hero, video from YouTube, Vimeo or Loom, your own pictures, benefits, what is inside, who it is and is not for, how it works, a comparison table, bonuses, numbers counted by the store, about you, questions, guarantee, a countdown to a real deadline, buttons and reviews, from six templates or an AI draft \u2014 with its own search title and description and a share picture drawn for it`],
+          ["Sales pages for a product", "A checkout page for each product, with a description and a video, which can be made a private landing page on every plan. Funnels of several pages on the $99 plan", `Yes, on the ${PLAN_AT.creator} plan: up to 30 blocks per product \u2014 hero, video from YouTube, Vimeo or Loom, your own pictures, benefits, what is inside, who it is and is not for, how it works, a comparison table, bonuses, numbers counted by the store, about you, questions, guarantee, a countdown to a real deadline, buttons and reviews, from six templates or an AI draft (on ${AI_PLANS_WORDS}) \u2014 with its own search title and description and a share picture drawn for it`],
           ["Reviews", "Added by the creator. Their help center says customers cannot write one", "Written only by paying buyers, checked on your Stripe account. You can answer or hide one, never edit or delete it; hidden reviews still count in the average, and a full refund takes the stars out"],
           ["Your own domain", "Not available", DOMAINS ? `Yes, on the ${PLAN_AT.pro} Studio plan, with the certificate handled for you` : "Not available"],
           ["Custom code on the page", "Explicitly not supported", "Not available"],

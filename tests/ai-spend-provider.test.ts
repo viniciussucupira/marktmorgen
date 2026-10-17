@@ -2,11 +2,11 @@ import { withAiCallBudget } from '@/lib/ai-call-budget';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { askModel } from '../lib/ai';
-import { aiSpendPolicySnapshot } from '../lib/ai-spend-policy';
+import { aiSpendLedgerKey, aiSpendPolicySnapshot } from '../lib/ai-spend-policy';
 import { CURRENT_AI_SPEND_POLICY as fundedPolicy } from './ai-spend-approved-policy';
 import type { Store } from '@/lib/store';
 import { reset, seed, ledger, settings } from './ai-spend-redis';
-const key='nl:ai-spend:v1:'+new Date().toISOString().slice(0,7);
+const key=aiSpendLedgerKey(new Date().toISOString().slice(0,7));
 const store={statsId:'one',tier:'creator',createdAt:1,subscriptionActive:true,subscriptionId:'test-subscription',trialEnds:0,planEndedAt:''} as unknown as Store;
 function start(){reset();seed(key,'test_review',aiSpendPolicySnapshot(fundedPolicy));process.env.ANTHROPIC_API_KEY='sk-ant-'+ 'x'.repeat(30);}
 test('real provider path blocks an unfunded ledger before fetch',async()=>{start();ledger.clear();let calls=0;const old=globalThis.fetch;globalThis.fetch=async()=>{calls++;throw Error('must not call');};try{assert.equal(await askModel(store,'system','prompt',100,'claude-sonnet-5-5'),null);assert.equal(calls,0);}finally{globalThis.fetch=old;}});

@@ -1,7 +1,7 @@
 import { WHO, type Who } from "@/lib/contacts";
 import { lookColours } from "@/lib/store-look";
 import type { Metadata } from "next";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { productLink } from "@/lib/checkout-recovery";
 import { idsOfKind, readTitles } from "@/lib/catalog";
 import { cookies } from "next/headers";
@@ -25,6 +25,9 @@ import { listDraftsStrict } from "@/lib/mail-drafts";
 import { can } from "@/lib/team-roles";
 import { trialOffered } from "@/lib/billing";
 import { listSegments } from "@/lib/segments";
+import { activeFlowLimit, dailyRunLimit } from "@/lib/flow-limits";
+import { listHeld, runsToday } from "@/lib/flow-runs";
+import { readTeam } from "@/lib/team";
 
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
@@ -203,7 +206,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             draftsReadFailed={loadedDrafts === null}
             flows={flows.map((f) => ({ ...f, statsAvailable: stats?.has(f.id) ?? false, stats: stats?.get(f.id) ?? { started: 0, sent: 0, reached: 0, skipped: 0, acted: 0 }, money: flowMoney(revenue, f.id) }))}
             links={Object.fromEntries([...listings].map(([id]) => [id, productLink(store, id)]))}
-            ai={isAiConfigured() && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
+            ai={aiAvailableFor(store) && can(role, "draft") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}
             segments={await listSegments(store.listId).catch(() => [])}
             preset={typeof query.who === "string" && (WHO as readonly string[]).includes(query.who) ? { who: query.who as Who } : undefined}
             courses={idsOfKind(store, "course")}
@@ -213,6 +216,13 @@ export default async function StudioEmailPage({ searchParams }: Params) {
               fields: (await readFields(store.statsId).catch(() => [])).map((f) => ({ id: f.id, name: f.name, type: f.type, options: f.options })),
               stages: (await readStages(store.statsId).catch(() => [])).map((st) => ({ id: st.id, name: st.name })),
             }}
+            workflowLimits={{
+              maxActive: activeFlowLimit(store),
+              dailyRuns: dailyRunLimit(store),
+              runsToday: await runsToday(store.listId),
+              held: can(role, "send") ? ((await listHeld(store.listId, 500).catch(() => null))?.length ?? null) : null,
+            }}
+            assignees={can(role, "send") ? [store.email.toLowerCase(), ...(await readTeam(store.sid).catch(() => ({ members: [] as { email: string; role: Parameters<typeof can>[0] }[] }))).members.filter((m) => can(m.role, "orders")).map((m) => m.email.toLowerCase())] : []}
           />
           </>
         )}

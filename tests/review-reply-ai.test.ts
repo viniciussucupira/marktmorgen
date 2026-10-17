@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
 
   part("What is asked");
@@ -41,7 +41,7 @@ async function main(): Promise<void> {
 
   part("What comes back");
   is("cut to what a reply may hold", result.ok ? result.value.length : null, 1_000);
-  is("one of the month's jobs", result.ok ? result.left : null, 99);
+  is("one of the month's jobs", result.ok ? result.left : null, 39);
   reply = "no";
   const failed = await replyToReview(store, { productTitle: "x", rating: 5, text: "", name: "", maxLength: 1_000 });
   is("stars only is asked as stars only, and an empty answer retains its started attempt", [asked.at(-1)?.prompt.includes("They left stars only, no words."), failed.ok], [true, false]);

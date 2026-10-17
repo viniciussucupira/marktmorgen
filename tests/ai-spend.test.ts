@@ -1,13 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { aiBudgetScopeFor, isAiBudgetConfigured, reserveAiSpend, RESERVE_AI_SPEND } from '../lib/ai-spend';
-import { CURRENT_AI_SPEND_POLICY, aiSpendPolicySnapshot, aiStoreCostCents, type AiSpendPolicy } from '../lib/ai-spend-policy';
+import { aiBudgetScopeFor, isAiBudgetConfigured, reserveAiSpend, RESERVE_AI_SPEND, OPEN_AI_SPEND_LEDGER } from '../lib/ai-spend';
+import { aiSpendLedgerKey, aiSpendPolicySnapshot, aiStoreCostCents, type AiSpendPolicy } from '../lib/ai-spend-policy';
 import { reset, seed, ledger, calls, settings } from './ai-spend-redis';
 const month = new Date().toISOString().slice(0,7);
-const key = 'nl:ai-spend:v1:' + month;
+const key = aiSpendLedgerKey(month);
 function policy(): AiSpendPolicy { return { reviewId:'test_review', month, evidence:'Test fixture only: not approved production prices',requestMicroUsd:{'claude-sonnet-5-5':100,'claude-haiku-5-5':20},storeMicroUsd:{creator:300,pro:500,scale:1000,trial:0,setup:0,ended:0},companyMicroUsd:400,fundedStores:{creator:1,pro:0,scale:0,trial:0,setup:0,ended:0} }; }
 const take = (id='one', p=policy()) => reserveAiSpend(id,'creator','claude-sonnet-5-5',p);
-test('production has no approved spending allocation', async()=>{reset();assert.equal(CURRENT_AI_SPEND_POLICY,null);assert.equal(isAiBudgetConfigured(),false);assert.equal(await reserveAiSpend('one','creator','claude-sonnet-5-5'),false);assert.equal(calls.length,0);});
 test('review must cover current UTC month and all finite integer ceilings',()=>{const p=policy();assert.equal(isAiBudgetConfigured(p),true);assert.equal(isAiBudgetConfigured({...p,month:'2000-01'}),false);assert.equal(isAiBudgetConfigured({...p,reviewId:''}),false);for(const n of [NaN,Infinity,-1,0.1,1e12+1])assert.equal(isAiBudgetConfigured({...p,companyMicroUsd:n}),false);assert.equal(isAiBudgetConfigured({...p,requestMicroUsd:{...p.requestMicroUsd,'claude-haiku-5-5':0}}),false);});
 test('missing or mismatched funding ledger never gets created',async()=>{reset();assert.equal(await take(),false);assert.equal(ledger.size,0);seed(key,'old_review',aiSpendPolicySnapshot(policy()));assert.equal(await take(),false);assert.equal(ledger.get(key)?.get('company'),'0');});
 test('each call reserves both ceilings and full-store use stops exactly at cap',async()=>{reset();seed(key,'test_review',aiSpendPolicySnapshot(policy()));for(let n=0;n<3;n++)assert.equal(await take(),true);assert.equal(await take(),false);assert.equal(ledger.get(key)?.get('store:one'),'300');assert.equal(ledger.get(key)?.get('company'),'300');assert.equal(calls[0].length,1);assert.equal(calls[0][0][0],'EVAL');assert.equal(calls[0][0][2],1);});
@@ -23,7 +22,7 @@ test('corrupt amounts and Redis failures deny without fallback',async()=>{for(co
 test('ambiguous Redis acknowledgments never authorize a provider call',async()=>{for(const response of [[],['1'],[true],[1,1],[null],[0]]){reset();settings({response});assert.equal(await take(),false);}});
 test('invalid attribution or unsupported model cannot spend',async()=>{reset();seed(key,'test_review',aiSpendPolicySnapshot(policy()));assert.equal(await take(''),false);assert.equal(await take('id:other'),false);assert.equal(await reserveAiSpend('one','creator','claude-unreviewed',policy()),false);assert.equal(calls.length,0);});
 test('new review identifiers cannot reset a used ledger',async()=>{reset();seed(key,'test_review',aiSpendPolicySnapshot(policy()));assert.equal(await take(),true);assert.equal(await take('one',{...policy(),reviewId:'different'}),false);assert.equal(ledger.get(key)?.get('company'),'100');});
-test('Lua validates all fields before writes and never expires or refunds reservations',()=>{assert.ok(RESERVE_AI_SPEND.indexOf('storeLimit - store') < RESERVE_AI_SPEND.indexOf("redis.call('HINCRBY'"));assert.match(RESERVE_AI_SPEND,/TTL/);assert.doesNotMatch(RESERVE_AI_SPEND,/EXPIRE|DECRBY|DEL/);});
+test('Lua validates all fields before writes and never expires or refunds reservations',()=>{assert.ok(RESERVE_AI_SPEND.indexOf('storeLimit - store') < RESERVE_AI_SPEND.indexOf("redis.call('HINCRBY'"));assert.match(RESERVE_AI_SPEND,/TTL/);assert.doesNotMatch(RESERVE_AI_SPEND,/EXPIRE|DECRBY|DEL/);assert.doesNotMatch(OPEN_AI_SPEND_LEDGER,/EXPIRE|DECRBY|DEL|HINCRBY|'store:/);});
 
 test('same review identifier cannot silently change any funded ceiling',async()=>{
   const base=policy();

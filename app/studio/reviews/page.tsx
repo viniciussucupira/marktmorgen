@@ -11,7 +11,7 @@ import { canWrite } from "@/lib/mail";
 import { HIDDEN_RULE, type StudioRow, averageText, showsRating, studioReviews, summaries } from "@/lib/reviews";
 import { ReviewAskEditor, ReviewRow, SeenAllButton, type StudioReview } from "@/components/review-studio";
 import { AiOn } from "@/components/ai-assist";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { Stars } from "@/components/review-stars";
 import { imageUrl } from "@/lib/product-image";
 
@@ -43,7 +43,7 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
   const { store } = view;
 
   // The writing help, for a reply drafted from a review (lib/ai.ts, replyToReview).
-  const ai = isAiConfigured() ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
+  const ai = aiAvailableFor(store) ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
   const queue = query.view !== "all";
   const asked = Number(typeof query.page === "string" ? query.page : "1");
   const page = Number.isInteger(asked) && asked >= 1 ? asked : 1;

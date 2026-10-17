@@ -5,7 +5,7 @@ import { ensureStatsId } from "@/lib/store";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { listPitches, readSender } from "@/lib/outreach";
 import { EXPECTATION, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY } from "@/lib/outreach-rules";
 import { storeBase } from "@/lib/purchase-email";
@@ -35,7 +35,7 @@ export default async function StudioOutreachPage({ searchParams }: Params) {
   const loaded = access.store;
   const store = loaded.statsId ? loaded : ((await ensureStatsId(access.ref)) ?? loaded);
 
-  const on = isAiConfigured();
+  const on = aiAvailableFor(store);
   const [sender, pitches, left] = await Promise.all([
     readSender(store).catch(() => null),
     listPitches(store).catch(() => null),
