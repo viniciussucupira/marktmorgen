@@ -509,6 +509,9 @@ export default async function OrdersPage({ params, searchParams }: Params) {
         </div>
 
         <div className="mt-8 text-center">
+          <p className="st-muted mx-auto mb-4 max-w-xl text-sm" data-while-open>
+            {words.whileOpen}
+          </p>
           <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
             {said.w.backTo(store.name)}
           </Link>

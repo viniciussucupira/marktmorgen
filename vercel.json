@@ -10,6 +10,10 @@
       "schedule": "30 9 * * *"
     },
     {
+      "path": "/api/cron/closed-data",
+      "schedule": "45 * * * *"
+    },
+    {
       "path": "/api/cron/reminders",
       "schedule": "0 10 * * *"
     },

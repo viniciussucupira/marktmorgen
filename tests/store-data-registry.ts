@@ -149,6 +149,8 @@ const lock = (what: string): Family => ({ what, company: "A lock a scheduled job
 const company = (what: string, why: string): Family => ({ what, company: why });
 /** A short-lived key a store's unit leaves: a lock, a mark, a link, a rate count. */
 const short = (what: string, unit: Unit, days: number, bytes = KEY, group?: string): Family => ({ what, parts: [per(unit, days, bytes, what, group)] });
+/** A family name lib/closed-store-data.ts reads a closing store's keys of (FOLLOWERS): the family's own entry bounds it. */
+const follower = (family: string): Family => company(`The family ${family}, which a closing store's follower reads`, "Not a key: the name of a family whose keys lib/closed-store-data.ts reads before the walk deletes them; the family's own entry says how they are bounded.");
 /** Counted in the store's data room by these files. */
 const room = (what: string, ...files: string[]): Family => ({ what, room: files });
 
@@ -178,6 +180,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:rl:creators:@app/api/creators/route.ts": company("Applications to the creators' page, per connection", "The company's own sign-up page for creators, not a store's."),
   "nl:aff:payday:lock@app/api/cron/affiliates/route.ts": lock("The affiliates' payday job"),
   "nl:closing:lock@app/api/cron/closing/route.ts": lock("The closing job"),
+  "nl:closed:lock@app/api/cron/closed-data/route.ts": lock("The deletion of closed stores' records"),
   "nl:courses:lock@app/api/cron/courses/route.ts": lock("The courses job"),
   "nl:dc:lock@app/api/cron/discord/route.ts": lock("The Discord job"),
   "nl:imports:lock@app/api/cron/imports/route.ts": lock("The imports job"),
@@ -200,7 +203,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:inbound:seen:@app/api/mail/inbound/route.ts": company("Inbound mail already handled", "The email provider's notices, kept a few days: the company's."),
   "nl:sns:seen:@app/api/mail/ses/route.ts": company("Amazon's notices already handled", "The email provider's notices, kept a few days: the company's."),
   "nl:course:@app/api/store/course/route.ts": short("A course's lock while the studio changes it", "studio", 1),
-  "nl:rl:export:@app/api/store/export/route.ts": short("Downloads of a store's sales, counted a day", "studio", 1),
+  "nl:rl:export:@app/api/store/export/route.ts": { what: "Downloads of a store's sales, counted a day; and its whole downloads once its plan ended", parts: [per("studio", 1, KEY, "Downloads counted ten minutes at a time."), capped(KEY, "One count of whole downloads for an ended plan, sixty days.")] },
   "nl:rl:licence:@app/api/store/licence/route.ts": short("A license check's count per connection", "request", 1, KEY, REQ("license")),
   "nl:pod:@app/api/store/podcast/route.ts": short("A podcast's lock while the studio changes it", "studio", 1),
 
@@ -282,7 +285,30 @@ export const FAMILIES: Record<string, Family> = {
   "nl:meet:rf:@lib/call-meetings.ts": short("Refunds already handled for meetings", "order", 30, MARK),
   "nl:pkg:@lib/call-packages.ts": { what: "A call package bought", parts: [item(KB, "Its record, a year after its last call: counted as for good.", "call")] },
   "nl:pkg:t:@lib/call-packages.ts": { what: "A call package's token", parts: [item(KEY, "One per package, kept with it.", "call")] },
+  "nl:pkg:s:@lib/call-packages.ts": { what: "The packages a store sold, so a closed store finds them (18 October 2026)", parts: [item(160, "A checkout's id in the store's set, one per package.", "call")] },
   "nl:call:moved:@lib/call-records.ts": short("A call moved: its record, kept 200 days by the booking", "call", 200, KB),
+  "nl:closed:batch@lib/closed-store-data.ts": company("What the walk needs of each store it deletes, while it runs", "The company's job: a field a closing store, deleted when its walk is done (lib/closed-store-data.ts)."),
+  "nl:closed:due@lib/closed-store-data.ts": company("Closed stores waiting for the walk that deletes their records", "The company's job: a member a closed store, taken out when its walk begins."),
+  "nl:closed:walk@lib/closed-store-data.ts": company("Where the walk that deletes closed stores' records is", "One key, the company's job."),
+  "nl:*@lib/closed-store-data.ts": company("The pattern the walk reads the database by", "Not a key: a pattern."),
+  // The families whose keys a closing store's follower reads before the walk deletes them: names, not keys.
+  "nl:aff:@lib/closed-store-data.ts": follower("nl:aff:"),
+  "nl:cal:cfg:@lib/closed-store-data.ts": follower("nl:cal:cfg:"),
+  "nl:cm:@lib/closed-store-data.ts": follower("nl:cm:"),
+  "nl:course:@lib/closed-store-data.ts": follower("nl:course:"),
+  "nl:erase:ix:@lib/closed-store-data.ts": follower("nl:erase:ix:"),
+  "nl:fshares:@lib/closed-store-data.ts": follower("nl:fshares:"),
+  "nl:inbox:@lib/closed-store-data.ts": follower("nl:inbox:"),
+  "nl:learn:passes:@lib/closed-store-data.ts": follower("nl:learn:passes:"),
+  "nl:mail:bcs:@lib/closed-store-data.ts": follower("nl:mail:bcs:"),
+  "nl:mv:@lib/closed-store-data.ts": follower("nl:mv:"),
+  "nl:outreach:@lib/closed-store-data.ts": follower("nl:outreach:"),
+  "nl:pkg:s:@lib/closed-store-data.ts": follower("nl:pkg:s:"),
+  "nl:pod:by:@lib/closed-store-data.ts": follower("nl:pod:by:"),
+  "nl:ppsell:sales:@lib/closed-store-data.ts": follower("nl:ppsell:sales:"),
+  "nl:slink:store:@lib/closed-store-data.ts": follower("nl:slink:store:"),
+  "nl:store:leads:@lib/closed-store-data.ts": follower("nl:store:leads:"),
+  "nl:@lib/closed-store-data.ts": company("Not a key: the start of every key a follower may delete", "Read only, to check what is deleted."),
   "nl:call:remindq@lib/call-records.ts": company("Call reminders due", "One sorted set for every store, members gone when sent: each a booked call's, an order's."),
   "nl:call:creator-reminded:@lib/call-reminders.ts": short("The creator reminded of a call", "call", 430, 2 * MARK),
   "nl:call:reminded:@lib/call-reminders.ts": short("A buyer reminded of a call", "call", 430, 2 * MARK),

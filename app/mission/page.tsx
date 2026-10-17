@@ -62,7 +62,7 @@ const BUILT = [
   "Price options on one product — one week, five weeks, the season — up to 50, compared side by side, each handing over its own file or link, and on a course each opening it",
   `A Stripe checkout that charges the creator's account directly, ${feeWords().onTop} — running in test mode on the demo store`,
   "The file delivered the second the payment clears, with a link that expires",
-  "A buyer who loses that link gets everything they bought from the store again, by email, at any time — no account, no password",
+  "A buyer who loses that link gets everything they bought from the store again, by email, at any time while the store is open — no account, no password",
   "A creator account you log in to with an emailed link, and no password at all",
   "Your own store address, live the moment you take it",
   "A change of address that keeps the link already in your bio working, with up to ten addresses held at once",
@@ -188,6 +188,7 @@ const RELEASES: { date: string; items: string }[] = [
   { date: "September 26, 2026", items: "Up to 200 products with pictures and pages of their own, questions at checkout, pay what you want, free trials and fixed-length memberships, group calls and live sessions with reminders and self-serve moves, a confirmation email for every purchase, every store installable as its own app, 43 Stripe countries, and one reminder after an unpaid checkout. Then a community for your buyers, funnels of offers after paying, an affiliate program, calendar sync, webhooks, course quizzes and certificates, license keys, stamped PDFs, longer windows and exports for your numbers, and memberships whose access ends when they do." },
   { date: "September 27, 2026", items: "Up to 2,000 products, a private video room for each booking, up to five stores in one account and a team with roles for each, passkeys, 15 currencies and more ways to pay, sales and landing pages, reviews only buyers can write, Mailchimp, Kit, beehiiv and MailerLite built in, and notifications on your phone. Then live events in the community, bundles, drafts, moving your list, products and past buyers from another platform, and Google Meet links made on your own Google Calendar." },
   { date: "October 5, 2026", items: "The demo store became an ordinary store, made and drawn by the same code as every creator's, and product pictures reach a phone at the phone's own size. Then Outreach: one short email to a business that could sponsor you, sell for you or buy from you, written from what you say and opened as a draft in your own mailbox." },
+  { date: "October 18, 2026", items: "A store whose plan ends closes after 30 days and three emails, with its whole store downloadable as one file first: its files, the renewals of what it sold and every record it kept go, and only a compressed record of its sales is kept for tax, for seven years." },
 ];
 
 /* Facts a creator can check before trusting us with a store. */

@@ -1644,6 +1644,27 @@ export async function deleteStore(email: string): Promise<DeleteResult> {
   return result ?? { ok: false, reason: "none" };
 }
 
+/**
+ * The store record of a store that closed (lib/closed-store-data.ts, added
+ * 18 October 2026): its addresses are held back from anybody else for
+ * RELEASE_QUARANTINE_DAYS, as a deleted store's are, so a link already
+ * shared leads nowhere rather than to a stranger; then the record, its id,
+ * its place among its account's stores and in the company's lists go. Its
+ * owner's account and sign-in stay, and may make a store again. Run after
+ * everything that needed the record has read it.
+ */
+export async function closeStoreRecord(store: Store, extraKeys: string[] = []): Promise<void> {
+  const released = `${RELEASED_PREFIX}${new Date().toISOString()}`;
+  const owner = await ownerKey(storeRef(store));
+  await redisPipeline([
+    ...[store.handle, ...store.previousHandles].map((handle) => ["SET", handleKey(handle), released, "EX", RELEASE_QUARANTINE_DAYS * 24 * 60 * 60]),
+    ["DEL", owner, beforeMoveKeyOf(owner), ...extraKeys],
+    ...(STORE_ID_PATTERN.test(store.sid) ? [["DEL", storeIdKey(store.sid)], ["SREM", await accountKey(store.email), store.sid]] : []),
+    ["ZREM", ENDED_INDEX, storeRef(store)],
+    ["SREM", SHARING_INDEX, storeRef(store)],
+  ]);
+}
+
 export type RenameResult =
   | { ok: true; store: Store }
   | {

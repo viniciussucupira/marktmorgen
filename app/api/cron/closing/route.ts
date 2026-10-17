@@ -3,6 +3,7 @@ import { cronAllowed } from "@/lib/request-guard";
 import { withCutoff } from "@/lib/fetch-timeout";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { closeEnded } from "@/lib/plan-closing";
+import { expireRecords } from "@/lib/closing-archive";
 
 export const maxDuration = 60;
 
@@ -11,11 +12,14 @@ export const maxDuration = 60;
  * line with Stripe (app/api/cron/plans): looks at each store whose plan has
  * ended, and at what it still keeps (lib/plan-closing.ts).
  *
- * A store that keeps no more than a store with no plan may is left as it
- * is. One that keeps more is written to when its plan ends, two weeks before
- * the day and a week before it; on the day, and never sooner than a week
- * after the last of those, what it keeps is removed, once Stripe itself has
- * said that day that the store has no plan.
+ * Every store whose plan ended since 18 October 2026, and one whose plan
+ * ended before that keeps more than a store with no plan may, is written to
+ * when its plan ends, two weeks before the day and a week before it; on the
+ * day, and never sooner than a week after the last of those, what it keeps
+ * is removed, once Stripe itself has said that day that the store has no
+ * plan, and a store that closes is put in line for the deletion of its
+ * records (app/api/cron/closed-data). Then the tax records of closed stores
+ * whose years are over are deleted.
  *
  * A job of its own, with the whole minute to itself, because removing what
  * a large store keeps is many requests, and whatever is not finished is
@@ -33,7 +37,13 @@ async function run(request: NextRequest): Promise<Response> {
   const [got] = await redisPipeline([["SET", "nl:closing:lock", "1", "NX", "EX", 120]]);
   if (got === null) return Response.json({ ok: true, busy: true });
   try {
-    const looked = await closeEnded(Date.now() + 45_000);
+    const looked = await closeEnded(Date.now() + 40_000);
+    // Closed stores' tax records whose time is up (lib/closing-archive.ts): a listing a year, nothing most days.
+    const expired = await expireRecords(Date.now(), Date.now() + 5_000).catch((error: unknown) => {
+      console.error("deleting closed stores' old tax records failed", error);
+      return { deleted: 0, done: false };
+    });
+    if (expired.deleted) console.log(`plan-closing: ${expired.deleted} closed stores' tax records past their years deleted`);
     const count = (state: string) => looked.filter((row) => row.state === state).length;
     const counts = { looked: looked.length, told: count("told"), waiting: count("waiting"), removed: count("removed"), held: count("held"), running: count("running") };
     if (counts.told || counts.removed || counts.held) {

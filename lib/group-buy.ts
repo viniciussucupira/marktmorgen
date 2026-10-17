@@ -89,6 +89,8 @@ const takenKey = (id: string) => `nl:grp:${id}:n`;
 const mailKey = (id: string) => `nl:grp:${id}:mail`;
 const tokenKey = (token: string) => `nl:grp:take:${token}`;
 const piKey = (pi: string) => `nl:grp:pi:${pi}`;
+/** What one purchase for several people keeps, by its id and its payment: for a closed store (lib/closed-store-data.ts). */
+export const groupKeys = (id: string, pi: string): string[] => [...(id ? [groupKey(id), membersKey(id), takenKey(id), mailKey(id)] : []), ...(pi ? [piKey(pi)] : [])];
 const anyKey = (sid: string) => `nl:grp:${sid}:any`;
 const anchorKey = (sid: string) => `nl:grp:${sid}:refunds`;
 const seenKey = (sid: string) => `nl:grp:${sid}:seen`;

@@ -24,7 +24,7 @@ export type Shipped = { at: number; tracking: string };
 
 const SESSION = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
 const KEEP_SECONDS = 400 * 86_400;
-const doneKey = (session: string) => `nl:ship:done:${session}`;
+export const doneKey = (session: string) => `nl:ship:done:${session}`;
 
 /** A tracking link as typed: an https address of at most 500 characters, or "" for none; null when it is not one. */
 export function readTracking(raw: unknown): string | null {

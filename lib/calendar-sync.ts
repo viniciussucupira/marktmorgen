@@ -74,6 +74,12 @@ const busyKey = (feed: string) => `nl:cal:busy:${feed}`;
 const goodKey = (feed: string) => `nl:cal:good:${feed}`;
 const errKey = (feed: string) => `nl:cal:err:${feed}`;
 const lockKey = (feed: string) => `nl:cal:lock:${feed}`;
+/** What a store's calendar keeps beside its settings, from them: for a closed store (lib/closed-store-data.ts). */
+export function calendarKeys(raw: unknown): string[] {
+  const value = (raw && typeof raw === "object" ? raw : {}) as { token?: unknown; feeds?: unknown };
+  const feeds = Array.isArray(value.feeds) ? value.feeds.map((f) => (f && typeof f === "object" ? String((f as { id?: unknown }).id ?? "") : "")).filter((id) => /^[0-9a-f]{8,40}$/.test(id)) : [];
+  return [...(typeof value.token === "string" && value.token ? [tokenKey(value.token)] : []), ...feeds.flatMap((id) => [busyKey(id), goodKey(id), errKey(id), lockKey(id)])];
+}
 const outKey = (statsId: string) => `nl:cal:out:${statsId}`;
 
 function parseConfig(raw: unknown): Config | null {

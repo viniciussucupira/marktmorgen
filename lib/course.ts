@@ -538,6 +538,22 @@ export async function readBody(courseId: string, lessonId: string): Promise<stri
   return typeof raw === "string" ? raw : "";
 }
 
+/** Many lessons' text at once, a hundred to a command: for a store's whole export (lib/store-export.ts). */
+export async function readBodies(courseId: string, lessonIds: string[]): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  const ids = lessonIds.filter((id) => ITEM_ID_PATTERN.test(id));
+  if (!isRedisConfigured() || !COURSE_ID_PATTERN.test(courseId)) return out;
+  for (let i = 0; i < ids.length; i += 100) {
+    const some = ids.slice(i, i + 100);
+    const [raw] = await redisPipeline([["MGET", ...some.map((id) => bodyKey(courseId, id))]]);
+    some.forEach((id, n) => {
+      const value = Array.isArray(raw) ? raw[n] : null;
+      out[id] = typeof value === "string" ? value : "";
+    });
+  }
+  return out;
+}
+
 /** Writes a lesson's text, taking what it grows by first (DataRoomError when it does not fit). */
 export async function saveBody(courseId: string, lessonId: string, text: string, room: DataStore): Promise<void> {
   const next = text.slice(0, MAX_BODY_LENGTH);

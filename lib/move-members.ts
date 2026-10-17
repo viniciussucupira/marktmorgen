@@ -32,7 +32,7 @@ import { giveData, needData } from "@/lib/store-data";
 import { dataBytes } from "@/lib/store-data-rules";
 
 const invitesKey = (statsId: string) => `nl:mv:${statsId}`;
-const linkKey = (token: string) => `nl:mv:link:${token}`;
+export const linkKey = (token: string) => `nl:mv:link:${token}`;
 const DUE_KEY = "nl:mv:due";
 /** The slot invites are counted in, in the store's data room. */
 const INVITES_SLOT = "mv";

@@ -44,7 +44,7 @@ import type { Listing, Store } from "@/lib/store";
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const addressKey = (email: string) => sha(`nimbus-podcast:${normaliseEmail(email)}`).slice(0, 32);
-const tokenKey = (token: string) => `nl:pod:t:${sha(token)}`;
+export const tokenKey = (token: string) => `nl:pod:t:${sha(token)}`;
 const byKey = (sid: string, pid: string, email: string) => `nl:pod:by:${sid}:${pid}:${addressKey(email)}`;
 const okKey = (sid: string, pid: string, email: string) => `nl:pod:ok:${sid}:${pid}:${addressKey(email)}`;
 

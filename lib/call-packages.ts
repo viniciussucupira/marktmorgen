@@ -62,6 +62,14 @@ export type Bought = {
 const sha = (v: string) => createHash("sha256").update(v).digest("hex");
 const pkgKey = (checkout: string) => `nl:pkg:${checkout}`;
 const tokenKey = (token: string) => `nl:pkg:t:${sha(token)}`;
+/**
+ * The packages a store sold (added 18 October 2026): a package with no last
+ * day is kept for as long as it can be used, and is named by its checkout,
+ * not by its store, so a store that closes finds its packages here
+ * (lib/closed-store-data.ts). Kept with the store: a checkout's id a package.
+ */
+export const packagesKey = (statsId: string) => `nl:pkg:s:${statsId}`;
+export const packageKeys = (checkout: string, token: string): string[] => [pkgKey(checkout), `${pkgKey(checkout)}:lock`, ...(token ? [tokenKey(token)] : [])];
 const now = () => Math.floor(Date.now() / 1000);
 /** Kept a year past its last day to book; a package with no limit is kept as long as it can be used. */
 const KEEP_AFTER_SECONDS = 365 * 86_400;
@@ -198,6 +206,7 @@ export async function recordPackage(input: { store: Store; session: Session; pro
   // Counted in the store's room at what they really add (lib/order-data.ts).
   const [fresh] = await orderWrite(store, [["SET", pkgKey(checkout), JSON.stringify(bought), "NX", ...keep(bought)]]);
   if (fresh === null) return readBought(checkout);
+  await orderWrite(store, [["SADD", packagesKey(store.statsId), checkout]]);
   await orderWrite(store, [["SET", tokenKey(token), checkout, ...keep(bought)]]);
   const amount = typeof session.amount_total === "number" ? session.amount_total : 0;
   const currency = typeof session.currency === "string" && session.currency ? session.currency : store.currency;

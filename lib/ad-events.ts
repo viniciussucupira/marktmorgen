@@ -73,7 +73,7 @@ const sentKey = (id: string) => `nl:adsrv:sent:${id}`;
 /** What a renewal's sent mark takes in the store's data room for its forty days. */
 export const RENEWAL_MARK_BYTES = 192;
 const ctxKey = (token: string) => `nl:adsrv:ctx:${token}`;
-const subKey = (sub: string) => `nl:adsrv:sub:${sub}`;
+export const subKey = (sub: string) => `nl:adsrv:sub:${sub}`;
 const context = (statsId: string, platform: ServerPlatform) => `ads-server|${statsId}|${platform}`;
 const SESSION = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
 const CTX_TOKEN = /^[0-9a-f]{24}$/;
@@ -84,6 +84,8 @@ const TOKEN = /^[A-Za-z0-9._\-|]{20,600}$/;
 const TEST_CODE = /^TEST[0-9]{3,10}$/;
 const AD_ACCOUNT = /^\d{6,20}$/;
 const CTX_SECONDS = 4 * 86_400;
+/** How long a sale, renewal or lead is marked as sent, so it is sent once. */
+const SENT_SECONDS = 3 * 86_400;
 /** The platforms' addresses, or a stand-in on this computer for the end-to-end test (tests/e2e/services.mjs). */
 const STAND_IN = /^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.ADS_API_BASE ?? "") ? (process.env.ADS_API_BASE as string) : "";
 const endpoint = (host: string, path: string) => (STAND_IN ? `${STAND_IN}/ads/${host}${path}` : `https://${host}${path}`);
@@ -611,7 +613,7 @@ export async function sendServerPurchase(store: Store, sessionId: unknown, buyer
   const created = typeof session.created === "number" ? session.created : 0;
   if (!ordinary(store, session) || created < now / 1000 - 86400) return "invalid";
   const [claimed, keptRaw] = await redisPipeline([
-    ["SET", sentKey(sessionId), "1", "NX", "EX", 3 * 86400],
+    ["SET", sentKey(sessionId), "1", "NX", "EX", SENT_SECONDS],
     ["GET", ctxKey(CTX_TOKEN.test(session.metadata?.ads ?? "") ? (session.metadata?.ads as string) : "none")],
   ]);
   if (claimed === null) return "already";
@@ -644,7 +646,7 @@ export async function sendPaidOrders(store: Store, rows: AdsSession[], now = Dat
     const buyer = parse<BuyerRequest | null>(kept[i], null);
     // What the checkout kept is gone after four days, and an order that old is no longer worth an ad platform's while.
     if (!buyer) continue;
-    const [claimed] = await redisPipeline([["SET", sentKey(row.id as string), "1", "NX", "EX", 3 * 86400]]);
+    const [claimed] = await redisPipeline([["SET", sentKey(row.id as string), "1", "NX", "EX", SENT_SECONDS]]);
     if (claimed === null) continue;
     const created = typeof row.created === "number" ? row.created : 0;
     const c = conversionOf(store, row, await customerType(store, emailOf(row), row.id as string, created));
@@ -747,7 +749,7 @@ export async function sendServerLead(store: Store, request: Requested, lead: { i
     customer: null,
   };
   if (!targets(store, stored, c).length) return false;
-  const [claimed] = await redisPipeline([["SET", sentKey(lead.id), "1", "NX", "EX", 3 * 86400]]);
+  const [claimed] = await redisPipeline([["SET", sentKey(lead.id), "1", "NX", "EX", SENT_SECONDS]]);
   if (claimed === null) return false;
   const buyer: BuyerRequest = {
     ip: addressOf(request),

@@ -89,6 +89,32 @@ export function isVaultPath(pathname: unknown): boolean {
   return parts.length >= 4 && parts[0] === VAULT_PREFIX && FOLDER_PATTERN.test(parts[1]) && parts.slice(2).every((piece) => KEY_NAME_PATTERN.test(piece));
 }
 
+/**
+ * The tax records a closed store leaves (lib/closing-archive.ts), kept in the
+ * same bucket under a prefix of their own that no store's folder is in, and
+ * by the year they are deleted, so the job that deletes them reads one
+ * prefix a year: records/closed-stores/<year>/<store>/<name>.json.gz.
+ */
+export const RECORDS_PREFIX = "records/closed-stores/";
+const RECORD_PATTERN = /^records\/closed-stores\/(\d{4})\/([0-9a-f]{32})\/(store|\d{4}-\d{2})\.json\.gz$/;
+
+/** The year, the store's folder of records and the name in a record's path; null for any other path. */
+export function readRecordPath(pathname: unknown): { year: number; folder: string; name: string } | null {
+  if (typeof pathname !== "string") return null;
+  const found = RECORD_PATTERN.exec(pathname);
+  return found ? { year: Number(found[1]), folder: found[2], name: found[3] } : null;
+}
+
+/** Whether a path is a closed store's tax record. */
+export function isRecordPath(pathname: unknown): boolean {
+  return readRecordPath(pathname) !== null;
+}
+
+/** The path of one of a closed store's tax records: its month's sales, or "store" for the store itself. */
+export function recordPath(year: number, folder: string, name: string): string {
+  return `${RECORDS_PREFIX}${year}/${folder}/${name}.json.gz`;
+}
+
 /** Whether a path is a file of this store, on this product, option or lesson. */
 export function ownsVaultPath(pathname: unknown, storeFolder: string, ownerId: string): boolean {
   const parts = readVaultPath(pathname);
