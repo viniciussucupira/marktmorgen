@@ -88,3 +88,7 @@ How it is applied, with the two decisions the owner made the same night when ask
 3. **The company as a whole**: the code guarantees the per-customer floor; fixed costs (Delaware tax, registered agent, accountant, domains, tools — shared 50/50 between the two products) are covered from a computed minimum base of paying customers, which must be shown, with 60% consolidated at and above that base; fixed costs are kept as low as possible until then (decision: "Garantir a partir da base mínima").
 
 Unknown taxes, unknown supplier costs and unenforced limits count as failing, never as zero. No guard, calculator or passing test certifies this rule by itself.
+
+## Continuity record
+
+The state at the end of 17 Oct 2026, what was recovered from Codex and what is still open: [docs/continuity-2026-10-17.md](continuity-2026-10-17.md).
