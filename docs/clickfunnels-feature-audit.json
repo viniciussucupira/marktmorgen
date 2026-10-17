@@ -1,0 +1,1500 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-17 UTC",
+  "status": "Public-source and code baseline; authenticated task measurements and financial certification incomplete",
+  "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416",
+  "sources": [
+    {
+      "id": "S01",
+      "title": "Pricing",
+      "url": "https://support.myclickfunnels.com/docs/clickfunnels-pricing/",
+      "updated": "2026-10-12",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S02",
+      "title": "Funnel creation",
+      "url": "https://support.myclickfunnels.com/docs/how-to-create-a-new-funnel/",
+      "updated": "2025-09-10",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S03",
+      "title": "AI building",
+      "url": "https://support.myclickfunnels.com/docs/build-with-ai/",
+      "updated": "2026-09-16",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S04",
+      "title": "Page editor",
+      "url": "https://support.myclickfunnels.com/docs/exploring-features-in-the-clickfunnels-editor/",
+      "updated": "2026-10-15",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S05",
+      "title": "One-click offers",
+      "url": "https://support.myclickfunnels.com/docs/adding-a-one-click-upsell-downsell-oto-page/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S06",
+      "title": "Split tests",
+      "url": "https://support.myclickfunnels.com/docs/managing-ab-split-testing-in-funnel-steps/",
+      "updated": "2025-09-09",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S07",
+      "title": "Workflows",
+      "url": "https://support.myclickfunnels.com/docs/getting-started-with-workflows/",
+      "updated": "2026-10-15",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S08",
+      "title": "Broadcasts",
+      "url": "https://support.myclickfunnels.com/docs/create-and-send-a-new-broadcast/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S09",
+      "title": "Two-tier commissions",
+      "url": "https://support.myclickfunnels.com/docs/affiliate-center-understanding-tier-1-and-tier-2-commission-plan/",
+      "updated": "2025-07-09",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S10",
+      "title": "Survey workflows",
+      "url": "https://support.myclickfunnels.com/docs/getting-started-with-survey-workflows-1/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S11",
+      "title": "Courses",
+      "url": "https://support.myclickfunnels.com/docs/getting-started-with-courses-1/",
+      "updated": "2026-10-15",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S12",
+      "title": "Community",
+      "url": "https://support.myclickfunnels.com/docs/getting-started-with-community-1/",
+      "updated": "2025-05-30",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S13",
+      "title": "Appointments",
+      "url": "https://support.myclickfunnels.com/docs/appointments-how-to-create-and-manage-event-types/",
+      "updated": "2026-10-15",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S14",
+      "title": "Integrations, API, SDK and MCP",
+      "url": "https://support.myclickfunnels.com/docs/which-clickfunnels-integration-should-i-use/",
+      "updated": "2026-09-16",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S15",
+      "title": "Funnel analytics",
+      "url": "https://support.myclickfunnels.com/docs/funnel-analytics-dashboard-overview-1/",
+      "updated": "2026-07-16",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S16",
+      "title": "Contacts",
+      "url": "https://support.myclickfunnels.com/docs/overview-of-the-contacts-page/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S17",
+      "title": "Store",
+      "url": "https://support.myclickfunnels.com/docs/getting-started-with-clickfunnels-store/",
+      "updated": "2025-07-22",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S18",
+      "title": "Affiliate Center",
+      "url": "https://support.myclickfunnels.com/docs/affiliate-center-create-your-affiliate-program-in-clickfunnels/",
+      "updated": "2026-03-24",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S19",
+      "title": "Affiliate payouts",
+      "url": "https://support.myclickfunnels.com/docs/affiliate-center-how-to-setup-and-manage-affiliate-payouts/",
+      "updated": "2025-07-09",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S20",
+      "title": "Custom affiliate codes",
+      "url": "https://support.myclickfunnels.com/docs/affiliate-center-understanding-custom-affiliate-codes/",
+      "updated": "2025-07-09",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S21",
+      "title": "Sharing",
+      "url": "https://support.myclickfunnels.com/docs/how-to-share-and-clone-a-funnel/",
+      "updated": "2026-09-23",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S22",
+      "title": "Blog",
+      "url": "https://support.myclickfunnels.com/docs/getting-started-with-creating-a-blog-in-clickfunnels/",
+      "updated": "2025-04-14",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S23",
+      "title": "Certificates",
+      "url": "https://support.myclickfunnels.com/docs/how-to-enable-and-manage-course-completion-certificates/",
+      "updated": "2025-04-16",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S24",
+      "title": "MessageHub",
+      "url": "https://support.myclickfunnels.com/docs/getting-started-with-messagehub/",
+      "updated": "2025-02-13",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S25",
+      "title": "Contact import",
+      "url": "https://support.myclickfunnels.com/docs/how-to-import-contacts-from-a-csv-file/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S26",
+      "title": "Changelog",
+      "url": "https://changelog.myclickfunnels.com/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S27",
+      "title": "Payments AI fees",
+      "url": "https://docs.payments.ai/en/articles/12735432-pricing-policy",
+      "updated": "2026-04-30",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "S28",
+      "title": "Public help index",
+      "url": "https://support.myclickfunnels.com/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "R01",
+      "title": "G2 user reports",
+      "url": "https://www.g2.com/products/clickfunnels/reviews",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "R02",
+      "title": "Capterra user reports",
+      "url": "https://www.capterra.com/p/156583/ClickFunnels/reviews/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "R03",
+      "title": "Trustpilot user reports",
+      "url": "https://www.trustpilot.com/review/www.clickfunnels.com",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "R04",
+      "title": "Reddit migration discussion",
+      "url": "https://www.reddit.com/r/HighLevel/comments/1wshsdo/same_page_massive_drop_why_did_my_conversion_rate/",
+      "updated": "2026-09-28",
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "C01",
+      "title": "Stripe pricing",
+      "url": "https://stripe.com/pricing",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "C02",
+      "title": "R2 pricing",
+      "url": "https://developers.cloudflare.com/r2/pricing/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "C03",
+      "title": "Bunny Stream pricing",
+      "url": "https://bunny.net/pricing/stream/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "C04",
+      "title": "Resend pricing",
+      "url": "https://resend.com/pricing",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "C05",
+      "title": "SES pricing",
+      "url": "https://aws.amazon.com/ses/pricing/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "C06",
+      "title": "Upstash pricing",
+      "url": "https://upstash.com/pricing/redis",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "C07",
+      "title": "Vercel pricing",
+      "url": "https://vercel.com/pricing",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "L01",
+      "title": "CAN-SPAM guide",
+      "url": "https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "L02",
+      "title": "Reviews and testimonials rule",
+      "url": "https://www.ftc.gov/business-guidance/resources/consumer-reviews-testimonials-rule-questions-answers",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "L03",
+      "title": "GDPR",
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    },
+    {
+      "id": "L04",
+      "title": "CCPA regulations",
+      "url": "https://cppa.ca.gov/regulations/",
+      "updated": null,
+      "accessed": "2026-10-17 UTC"
+    }
+  ],
+  "codeEvidence": [
+    {
+      "path": "lib/funnel-types.ts",
+      "sha": "e64d8d6251599c0ba83b52b568276e6ba926e872",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/outreach.ts",
+      "sha": "a3951ba49c3e2578f7c102ab5955330da8a08472",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "app/studio/funnels/page.tsx",
+      "sha": "b701dabe11c4dd837c6ec364e6263878615dd457",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/sales-page.ts",
+      "sha": "49d42bba4c687c8ef4e685aeb74f66e19974a981",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/funnel-mutation-response.ts",
+      "sha": "5b5879a2027df98d067d3b8cf26f6185fdeea569",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/product-extras.ts",
+      "sha": "928c0b380b37551bc9503fcda70c36edd690b10c",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/bundles.ts",
+      "sha": "35dd72eb15aca455bfb7ecf08b4c68afcd214b77",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/stripe-connect.ts",
+      "sha": "3afea76d1861ec674885622e1910e8f1faf26435",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/tax.ts",
+      "sha": "b7dcd08c4dd0b04a9a4e9e4ad7fe695cd216ea02",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/checkout-recovery.ts",
+      "sha": "4a4d92925c3f54dedd2e785b883092907c88a2a9",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/headline-test-rules.ts",
+      "sha": "1c7a53fb41b165243c811ce82be095f84d266c39",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/flows.ts",
+      "sha": "e4535053a2d854bce8998d6432b12aba82a5ac99",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/broadcasts.ts",
+      "sha": "c4e486bf59db7d08090239931cb08d5963a5abbf",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "components/email-studio.tsx",
+      "sha": "d92ff256a275443f03b4f91ee7fc0b88095507e5",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/mail.ts",
+      "sha": "f3d3b637936a0a280cc4063db30aa2e49973d295",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/crm.ts",
+      "sha": "bd09a8b5c0cc6ddea6ca6bddce9ce07fc33d0e07",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/forms.ts",
+      "sha": "a04a877465a2599ef4b8fd346ff57b75ec0b94d4",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/course.ts",
+      "sha": "74f279b989fb1fb9ce62c508884b7b17ab27e874",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/course-finish.ts",
+      "sha": "87349067ee96c6891fd9213fb0d553d37470c9ba",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/community.ts",
+      "sha": "b7ec0606ef07a9182fd604d445a9a1442d938c9f",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/calendar-sync.ts",
+      "sha": "d77dbf2a599fd1682056e940d460bbe85a26fd43",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/store-blog.ts",
+      "sha": "f4cbc8314edc135345a5feee68a10ee927929245",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/shipping.ts",
+      "sha": "a5beab6a714cfabaa6246ddf558de346537ce6bf",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/affiliates.ts",
+      "sha": "1fb74fd58606093dcaa99137bad8573640a49afc",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/affiliate-codes.ts",
+      "sha": "0e724a2260e7aef5fe17938c522c82547defa1fb",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/paypal-payouts.ts",
+      "sha": "4d724173f8e977b774050066438c9d48aecaf1c2",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/affiliate-hub.ts",
+      "sha": "4e677782d559cb886f0839a6cc7bb119f497c04f",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/affiliate-kit.ts",
+      "sha": "8a2720e227e253a784fb704fb7af5727bf2c7d22",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/mail-revenue.ts",
+      "sha": "7d5977bd70775b6291ab08a61aa1239f5abb4d70",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/funnel-metrics.ts",
+      "sha": "45ba044163ef82b08fa495400eb55f3c60c26c55",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/imports.ts",
+      "sha": "fce3eecf8a054782c0a439850495ec2a13be74cc",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/api-keys.ts",
+      "sha": "5d7779b2fa8db1a921b229b4b305a42d2d2d5d0c",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/webhooks.ts",
+      "sha": "036efd3f21dc3bfe0880a53b296fd9076a5c183b",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/api-write.ts",
+      "sha": "fe0d87bd6e7be20a4ea1e23fd8215da8cf9cdd72",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/inbox.ts",
+      "sha": "bc78e6d4e05a55c52981a66d6c138a209b4e90c5",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/two-step.ts",
+      "sha": "2aa151ef0290277005ec4a73cd9b68636101aa89",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/domains.ts",
+      "sha": "432b1c882c3af86b3c730727a4c582194b85a5b4",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "components/home-parts.tsx",
+      "sha": "c314dc419e39e697ec89f36474b6367ceef78fad",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/podcast.ts",
+      "sha": "e02ad3b8b33aa028b39be00132167d155dcb311b",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/page-funnel-store.ts",
+      "sha": "8f5b28f9301c3c777ae37a6814fa333573236f8f",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    },
+    {
+      "path": "lib/opening.ts",
+      "sha": "4ab980740258a46ac0fed7ff809ecbc67285a2e2",
+      "sourceRevision": "3cb51cc07ad5cb33606c112fb715731cc089e416"
+    }
+  ],
+  "features": [
+    {
+      "id": "F01",
+      "area": "Funnels",
+      "feature": "Blank funnels",
+      "source": "S02",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Blank creation and editable path.",
+      "evidencePath": "lib/funnel-types.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Eight goal-based types and manual page funnels exist.",
+      "improvement": "Reuse them; make setup resumable across the whole launch."
+    },
+    {
+      "id": "F02",
+      "area": "Funnels",
+      "feature": "Templates",
+      "source": "S02",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Template preview and selection.",
+      "evidencePath": "lib/funnel-types.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Original type definitions exist.",
+      "improvement": "Add versioned original template packs and prerequisite checks."
+    },
+    {
+      "id": "F03",
+      "area": "Funnels",
+      "feature": "AI first draft",
+      "source": "S03",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Conversation generates designed funnels and copy.",
+      "evidencePath": "lib/funnel-types.ts",
+      "marktmorgenEvidence": "U",
+      "current": "A complete integrated AI launch was not established.",
+      "improvement": "Generate schema-validated drafts after funded admission; never auto-publish."
+    },
+    {
+      "id": "F04",
+      "area": "Funnels",
+      "feature": "Market research by AI",
+      "source": "S03",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Research mode proposes audience, funnel and design.",
+      "evidencePath": "lib/outreach.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Whole-funnel market research was not established.",
+      "improvement": "Show dated sources, uncertainty and evidence; never invent market facts."
+    },
+    {
+      "id": "F05",
+      "area": "Funnels",
+      "feature": "Sharing and cloning",
+      "source": "S21",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Shared copies become independent; frameworks carry other resources.",
+      "evidencePath": "lib/funnel-types.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Portable native funnel bundles were not established.",
+      "improvement": "Export bounded versioned bundles with compatibility and repair reports."
+    },
+    {
+      "id": "F06",
+      "area": "Funnels",
+      "feature": "Launch review",
+      "source": "S02",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Publishing follows building and editing.",
+      "evidencePath": "app/studio/funnels/page.tsx",
+      "marktmorgenEvidence": "D",
+      "current": "Guided draft review, initial copy and questions shipped.",
+      "improvement": "Unify offers and consented email setup; retain separate explicit publishing."
+    },
+    {
+      "id": "F07",
+      "area": "Pages",
+      "feature": "Layout editor",
+      "source": "S04",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Sections, rows and elements with design controls.",
+      "evidencePath": "lib/sales-page.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Structured original blocks and plain-text rendering exist.",
+      "improvement": "Offer accessible presets and brand tokens without unsafe imported scripts."
+    },
+    {
+      "id": "F08",
+      "area": "Pages",
+      "feature": "Responsive and visual controls",
+      "source": "S04",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Editor settings cover layout, typography and backgrounds.",
+      "evidencePath": "lib/sales-page.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Fixed-shape blocks exist; comparative mobile UX unmeasured.",
+      "improvement": "Test touch tasks and responsive previews against shared fixtures."
+    },
+    {
+      "id": "F09",
+      "area": "Pages",
+      "feature": "Save confirmation",
+      "source": "S04",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Editing includes save and preview actions.",
+      "evidencePath": "lib/funnel-mutation-response.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Manual funnel acknowledgements and uncertain-result recovery shipped.",
+      "improvement": "Apply equivalent recoverable state to remaining editors."
+    },
+    {
+      "id": "F10",
+      "area": "Pages",
+      "feature": "Reusable blocks and custom code",
+      "source": "S28",
+      "clickfunnelsEvidence": "V-index",
+      "clickfunnels": "Documentation lists universal blocks and custom HTML/CSS/JS.",
+      "evidencePath": "lib/sales-page.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Full equivalent reusable-block coverage unestablished.",
+      "improvement": "Use safe reusable sections; offer sandboxed extensibility only after review."
+    },
+    {
+      "id": "F11",
+      "area": "Checkout",
+      "feature": "Order bumps",
+      "source": "S14",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Page SDK checkout documents bumps.",
+      "evidencePath": "lib/product-extras.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Checkout and offer modules exist; full bump journey untested.",
+      "improvement": "Test explicit opt-in, prices, discounts, currency and refunds end to end."
+    },
+    {
+      "id": "F12",
+      "area": "Checkout",
+      "feature": "Upsells and downsells",
+      "source": "S05",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Post-checkout OTO pages and acceptance/decline paths.",
+      "evidencePath": "app/studio/funnels/page.tsx",
+      "marktmorgenEvidence": "C/U",
+      "current": "Post-payment offer editor exists.",
+      "improvement": "Expose eligibility and tax restrictions before the creator configures offers."
+    },
+    {
+      "id": "F13",
+      "area": "Checkout",
+      "feature": "Store cross-sells",
+      "source": "S17",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Store upsells can lead to funnels or collections.",
+      "evidencePath": "lib/bundles.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Complete collection/cart parity unestablished.",
+      "improvement": "Prioritize creator-relevant bundles over a generic storefront rewrite."
+    },
+    {
+      "id": "F14",
+      "area": "Checkout",
+      "feature": "Subscriptions and installments",
+      "source": "S28",
+      "clickfunnelsEvidence": "V-index",
+      "clickfunnels": "Subscription and payment-plan documentation is indexed.",
+      "evidencePath": "lib/stripe-connect.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Creator-account payment integrations exist.",
+      "improvement": "Reconcile retries, upgrades, cancellation and access grants."
+    },
+    {
+      "id": "F15",
+      "area": "Checkout",
+      "feature": "Tax and currencies",
+      "source": "S28",
+      "clickfunnelsEvidence": "V-index",
+      "clickfunnels": "Tax and workspace-currency controls are documented.",
+      "evidencePath": "lib/tax.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Stripe Tax readiness checks exist.",
+      "improvement": "Preserve final-price visibility, correct registrations and refund consistency."
+    },
+    {
+      "id": "F16",
+      "area": "Checkout",
+      "feature": "Country pricing",
+      "source": "S28",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "Arbitrary country-price parity not verified.",
+      "evidencePath": "lib/tax.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Optional country price lists not established.",
+      "improvement": "Allow transparent country override with approved signed price IDs."
+    },
+    {
+      "id": "F17",
+      "area": "Checkout",
+      "feature": "Recovery",
+      "source": "S07",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Workflows can react to abandoned carts.",
+      "evidencePath": "lib/checkout-recovery.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Restricted consented reminder exists.",
+      "improvement": "Expand only after region, provider, stop-condition and cost validation."
+    },
+    {
+      "id": "F18",
+      "area": "Checkout",
+      "feature": "Processor fees",
+      "source": "S27",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Payments AI route may add gateway and recurring/rule fees.",
+      "evidencePath": "lib/stripe-connect.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Creator Stripe connections exist.",
+      "improvement": "Disclose actual route-specific fees; do not imply zero processing cost."
+    },
+    {
+      "id": "F19",
+      "area": "Experiments",
+      "feature": "Page variants",
+      "source": "S06",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "One variant page per funnel step is documented.",
+      "evidencePath": "lib/headline-test-rules.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Revenue-based headline decision logic exists.",
+      "improvement": "Audit repeated looks, traffic imbalance and refund maturity before automation."
+    },
+    {
+      "id": "F20",
+      "area": "Experiments",
+      "feature": "Winner confidence",
+      "source": "S06",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "A universal statistical guarantee was not established.",
+      "evidencePath": "lib/headline-test-rules.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Threshold and win-chance constants exist.",
+      "improvement": "Document inference policy and insufficient-data states; no guaranteed uplift."
+    },
+    {
+      "id": "F21",
+      "area": "Automation",
+      "feature": "Behavior triggers",
+      "source": "S07",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Opt-in, purchase, page and abandonment triggers.",
+      "evidencePath": "lib/flows.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Join, purchase and label sequence paths exist.",
+      "improvement": "Add typed event receipts and repeat-safe recipes."
+    },
+    {
+      "id": "F22",
+      "area": "Automation",
+      "feature": "Actions and handoffs",
+      "source": "S07",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Email, tags, access and integration actions.",
+      "evidencePath": "lib/flows.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Email, labels and sequence handoffs exist.",
+      "improvement": "Integrate existing actions with explicit permissions and execution history."
+    },
+    {
+      "id": "F23",
+      "area": "Automation",
+      "feature": "Branching and goals",
+      "source": "S28",
+      "clickfunnelsEvidence": "V-index",
+      "clickfunnels": "Conditional paths, goals, delays and split tests are indexed.",
+      "evidencePath": "lib/flows.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Complete visual-workflow action parity unverified.",
+      "improvement": "Add deterministic preview, stop rules and bounded retries."
+    },
+    {
+      "id": "F24",
+      "area": "Automation",
+      "feature": "Execution history",
+      "source": "S16",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Contact action history includes workflow progress.",
+      "evidencePath": "lib/flows.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Complete per-run history unestablished.",
+      "improvement": "Show attempted, confirmed, failed and uncertain effects separately."
+    },
+    {
+      "id": "F25",
+      "area": "Email",
+      "feature": "Broadcasts and schedules",
+      "source": "S08",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Templates, audiences, topics and sending setup.",
+      "evidencePath": "lib/broadcasts.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Existing broadcast/sequence infrastructure is present.",
+      "improvement": "Unify testing, final audience confirmation and suppression at send time."
+    },
+    {
+      "id": "F26",
+      "area": "Email",
+      "feature": "Email design and personalization",
+      "source": "S08",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Template editing and configurable sender/content.",
+      "evidencePath": "components/email-studio.tsx",
+      "marktmorgenEvidence": "C/U",
+      "current": "Existing block-email studio is present; full client rendering needs testing.",
+      "improvement": "Reuse its blocks; test accessible, truthful messages on target clients."
+    },
+    {
+      "id": "F27",
+      "area": "Email",
+      "feature": "Preferences and deliverability",
+      "source": "S08",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Topics, verified sending addresses and trial limits.",
+      "evidencePath": "lib/mail.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Consent checks and send restrictions exist.",
+      "improvement": "Preserve opt-out by topic where supported; bound every recipient attempt."
+    },
+    {
+      "id": "F28",
+      "area": "CRM",
+      "feature": "Contacts and activity",
+      "source": "S16",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Search, status tabs, filters and action history.",
+      "evidencePath": "lib/crm.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Contacts, fields and deal storage exist.",
+      "improvement": "Use one source/consent/revenue timeline with reliable bulk actions."
+    },
+    {
+      "id": "F29",
+      "area": "CRM",
+      "feature": "Custom fields and segmentation",
+      "source": "S16",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Attribute and activity filters are documented.",
+      "evidencePath": "lib/crm.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Custom fields are implemented.",
+      "improvement": "Add saved segments and preview changes without overwriting concurrent edits."
+    },
+    {
+      "id": "F30",
+      "area": "CRM",
+      "feature": "Deals, owners and follow-up",
+      "source": "S28",
+      "clickfunnelsEvidence": "V-index",
+      "clickfunnels": "Opportunities and pipeline documentation is indexed.",
+      "evidencePath": "lib/crm.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Reviewed form opportunities, owners and dated next actions shipped.",
+      "improvement": "Add useful next-action queues and reliable event-driven handoffs."
+    },
+    {
+      "id": "F31",
+      "area": "CRM",
+      "feature": "Capacity and concurrent edits",
+      "source": "S28",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "Internal concurrency implementation is private.",
+      "evidencePath": "lib/crm.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Atomic deal capacity and stage-edit preservation shipped.",
+      "improvement": "Extend tested concurrency invariants to remaining write paths."
+    },
+    {
+      "id": "F32",
+      "area": "Forms",
+      "feature": "Question types",
+      "source": "S10",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Choice, image, input and contact questions.",
+      "evidencePath": "lib/forms.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Forms, branching and outcomes exist.",
+      "improvement": "Preview every branch with accessible keyboard and touch controls."
+    },
+    {
+      "id": "F33",
+      "area": "Forms",
+      "feature": "Scores and profile mapping",
+      "source": "S10",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Answer scores and contact-attribute mapping.",
+      "evidencePath": "lib/forms.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Deterministic outcomes and questions exist.",
+      "improvement": "Show why a result was selected and carry source/consent into CRM."
+    },
+    {
+      "id": "F34",
+      "area": "Courses",
+      "feature": "Modules, lessons and publishing",
+      "source": "S11",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Course and lesson publication have separate controls.",
+      "evidencePath": "lib/course.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Module/lesson structure and delivery exist.",
+      "improvement": "Use one readiness checklist while preserving draft access boundaries."
+    },
+    {
+      "id": "F35",
+      "area": "Courses",
+      "feature": "Video and timed release",
+      "source": "S11",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Course publishing can be scheduled.",
+      "evidencePath": "lib/course.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Course video references and drip constants exist.",
+      "improvement": "Validate access, captions and finite playback/transfer budgets before sale."
+    },
+    {
+      "id": "F36",
+      "area": "Courses",
+      "feature": "Certificates",
+      "source": "S23",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Downloadable completion certificates are documented.",
+      "evidencePath": "lib/course-finish.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Completion notes exist; certificate equivalence unverified.",
+      "improvement": "Audit first; add original certificates only with complete completion/access tests."
+    },
+    {
+      "id": "F37",
+      "area": "Community",
+      "feature": "Groups, topics and moderation",
+      "source": "S12",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Groups/topics, access modes and posts.",
+      "evidencePath": "lib/community.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Spaces, posts, comments and access modules exist.",
+      "improvement": "Make moderation, reporting and revocation easy to inspect."
+    },
+    {
+      "id": "F38",
+      "area": "Community",
+      "feature": "Purchase-linked access",
+      "source": "S12",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Manual, product and workflow-based grants.",
+      "evidencePath": "lib/community.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Community access is checked separately.",
+      "improvement": "Reconcile subscription/refund effects before expanding access automations."
+    },
+    {
+      "id": "F39",
+      "area": "Memberships",
+      "feature": "Recurring access",
+      "source": "S12",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Products/memberships can control community access.",
+      "evidencePath": "lib/stripe-connect.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Membership and recurring payment paths exist.",
+      "improvement": "Keep cancellation, dunning, grace periods and export transparent."
+    },
+    {
+      "id": "F40",
+      "area": "Appointments",
+      "feature": "Team event types",
+      "source": "S13",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "One-on-one, collective and round-robin formats.",
+      "evidencePath": "lib/calendar-sync.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Calendar feeds exist; equivalent team scheduling unverified.",
+      "improvement": "Audit host allocation, capacity and timezone behavior before promising parity."
+    },
+    {
+      "id": "F41",
+      "area": "Appointments",
+      "feature": "Calendar sync and booking rules",
+      "source": "S13",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Connected calendars, buffers and booking rules.",
+      "evidencePath": "lib/calendar-sync.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "ICS busy-time import exists; it is not OAuth two-way sync.",
+      "improvement": "Show stale/sync state; test DST and duplicate bookings."
+    },
+    {
+      "id": "F42",
+      "area": "Blog",
+      "feature": "Content and SEO",
+      "source": "S22",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Posts, categories, SEO and draft publishing.",
+      "evidencePath": "lib/store-blog.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Creator blog posts and URLs exist.",
+      "improvement": "Audit canonical/sitemap output, scheduling and product-linked content."
+    },
+    {
+      "id": "F43",
+      "area": "Commerce",
+      "feature": "Physical goods and cart",
+      "source": "S17",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Store products, collections and cart configuration.",
+      "evidencePath": "lib/shipping.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Physical shipping rules exist.",
+      "improvement": "Validate stock, fulfillment and price consistency before adding provider breadth."
+    },
+    {
+      "id": "F44",
+      "area": "Affiliates",
+      "feature": "Registration and campaigns",
+      "source": "S18",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Signup funnels, commission plans and dashboards.",
+      "evidencePath": "lib/affiliates.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Creator affiliate records and signup paths exist.",
+      "improvement": "Present one useful setup path with explicit eligibility and terms."
+    },
+    {
+      "id": "F45",
+      "area": "Affiliates",
+      "feature": "Two levels",
+      "source": "S09",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Direct and recruiting-parent commissions are supported.",
+      "evidencePath": "lib/affiliates.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Two-level configuration exists.",
+      "improvement": "Test effective terms, self-referral prevention and refund reversals."
+    },
+    {
+      "id": "F46",
+      "area": "Affiliates",
+      "feature": "Branded referral codes",
+      "source": "S20",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Custom link identifiers and export-based code analysis.",
+      "evidencePath": "lib/affiliate-codes.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Discount-code ownership and attribution exist.",
+      "improvement": "Keep coupon ownership, collisions and refund attribution auditable."
+    },
+    {
+      "id": "F47",
+      "area": "Affiliates",
+      "feature": "Coupon attribution",
+      "source": "S20",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "A custom referral identifier does not prove discount-coupon attribution.",
+      "evidencePath": "lib/affiliate-codes.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Coupon-owner attribution functions exist.",
+      "improvement": "Verify coupon-only purchases and consent-safe link/coupon precedence."
+    },
+    {
+      "id": "F48",
+      "area": "Affiliates",
+      "feature": "PayPal payouts",
+      "source": "S19",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Manual or individual PayPal payment; bulk PayPal unsupported in this guide.",
+      "evidencePath": "lib/paypal-payouts.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Creator-owned PayPal batches and auto-pay configuration exist.",
+      "improvement": "Prove duplicate-safe settlement, approvals, balances and provider permissions."
+    },
+    {
+      "id": "F49",
+      "area": "Affiliates",
+      "feature": "Cross-program hub",
+      "source": "S18",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "A cross-creator equivalent was not established.",
+      "evidencePath": "lib/affiliate-hub.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Cross-store hub functions exist.",
+      "improvement": "Make status, earnings and program discovery coherent; do not claim exclusivity."
+    },
+    {
+      "id": "F50",
+      "area": "Affiliates",
+      "feature": "Materials and reversals",
+      "source": "S28",
+      "clickfunnelsEvidence": "V-index",
+      "clickfunnels": "Assets and commission-management articles are indexed.",
+      "evidencePath": "lib/affiliate-kit.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Affiliate book and materials modules exist.",
+      "improvement": "Use substantiated assets and event-linked refund/dispute reversal."
+    },
+    {
+      "id": "F51",
+      "area": "Analytics",
+      "feature": "Funnel revenue",
+      "source": "S15",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Upfront, recurring, cart value and earnings-per-click views.",
+      "evidencePath": "lib/mail-revenue.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Email revenue aggregation exists; full funnel reconciliation unproven.",
+      "improvement": "Reconcile retained revenue by funnel, page, channel and affiliate."
+    },
+    {
+      "id": "F52",
+      "area": "Analytics",
+      "feature": "Attribution filters",
+      "source": "S15",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Date and first/last-visit UTM filters.",
+      "evidencePath": "lib/mail-revenue.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Campaign tagging and revenue reading exist.",
+      "improvement": "Declare model/window, unknown attribution and FX basis."
+    },
+    {
+      "id": "F53",
+      "area": "Analytics",
+      "feature": "Counter availability",
+      "source": "S15",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Dashboard includes cached/calculating states.",
+      "evidencePath": "lib/funnel-metrics.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Unavailable reads stay unknown and step reach is labeled as a ratio.",
+      "improvement": "Preserve these semantics across dashboards and growth suggestions."
+    },
+    {
+      "id": "F54",
+      "area": "Analytics",
+      "feature": "Diagnostic recommendations",
+      "source": "S03",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "Fully autonomous causal funnel optimization was not established.",
+      "evidencePath": "lib/funnel-metrics.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Complete evidence-linked diagnosis unestablished.",
+      "improvement": "Start with deterministic checks and sample-aware suggestions, then evaluate AI."
+    },
+    {
+      "id": "F55",
+      "area": "Import",
+      "feature": "CSV contacts",
+      "source": "S25",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "CSV mapping/import workflow is documented.",
+      "evidencePath": "lib/imports.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Bounded CSV contacts/products/member imports exist.",
+      "improvement": "Add a ClickFunnels adapter with dry run, consent and row-level repair."
+    },
+    {
+      "id": "F56",
+      "area": "Import",
+      "feature": "Full funnel migration",
+      "source": "S21",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Sharing copies within the vendor; not a universal cross-platform format.",
+      "evidencePath": "lib/imports.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Complete ClickFunnels page/workflow converter unestablished.",
+      "improvement": "Map owned assets into safe native blocks; report unsupported content."
+    },
+    {
+      "id": "F57",
+      "area": "Integrations",
+      "feature": "REST API",
+      "source": "S14",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Management API, tokens/OAuth and resource operations.",
+      "evidencePath": "lib/api-keys.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Scoped keys and bounded write helpers exist.",
+      "improvement": "Version contracts and keep tenant permissions at every boundary."
+    },
+    {
+      "id": "F58",
+      "area": "Integrations",
+      "feature": "Webhooks",
+      "source": "S14",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Event delivery is separate from management and page APIs.",
+      "evidencePath": "lib/webhooks.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Bounded signed-event delivery structure exists.",
+      "improvement": "Test signing, retry/replay, delivery receipts and key rotation."
+    },
+    {
+      "id": "F59",
+      "area": "Integrations",
+      "feature": "Page SDK and external checkout",
+      "source": "S14",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Browser page tokens and externally hosted checkout are documented.",
+      "evidencePath": "lib/api-write.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Equivalent external-page SDK unestablished.",
+      "improvement": "Build only after validated demand, security and finite spend envelopes."
+    },
+    {
+      "id": "F60",
+      "area": "Integrations",
+      "feature": "MCP",
+      "source": "S14",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Scoped human-authorized AI workspace connector.",
+      "evidencePath": "lib/api-keys.ts",
+      "marktmorgenEvidence": "U",
+      "current": "A native Marktmorgen MCP surface was not established.",
+      "improvement": "Expose audited read tools first; require approvals for costly/external effects."
+    },
+    {
+      "id": "F61",
+      "area": "Messaging",
+      "feature": "Channel coverage",
+      "source": "S24",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Website, email, Messenger, WhatsApp, SMS and other inbox types.",
+      "evidencePath": "lib/inbox.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Store inbox exists; complete channel parity unverified.",
+      "improvement": "Expand channels only with consent, provider approval and funded limits."
+    },
+    {
+      "id": "F62",
+      "area": "Messaging",
+      "feature": "Outreach",
+      "source": "S24",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "A comparable prospecting workflow was not established.",
+      "evidencePath": "lib/outreach.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Bounded website research and outreach records exist.",
+      "improvement": "Preserve source proof and suppression; no indiscriminate scraping or sending."
+    },
+    {
+      "id": "F63",
+      "area": "Security",
+      "feature": "Roles and two-factor login",
+      "source": "S28",
+      "clickfunnelsEvidence": "V-index",
+      "clickfunnels": "Team roles and two-factor help articles are indexed.",
+      "evidencePath": "lib/two-step.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Team-role and two-step controls exist.",
+      "improvement": "Test least privilege, recovery and tenant isolation across complete tasks."
+    },
+    {
+      "id": "F64",
+      "area": "Security",
+      "feature": "Audit and data lifecycle",
+      "source": "S28",
+      "clickfunnelsEvidence": "V-index",
+      "clickfunnels": "Audit logs and export/history are documented.",
+      "evidencePath": "lib/api-keys.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Complete lifecycle assurance unverified.",
+      "improvement": "Test access/export/deletion, backup restore and audit retention."
+    },
+    {
+      "id": "F65",
+      "area": "Domains",
+      "feature": "Domains and routing",
+      "source": "S01",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Five domains on Launch; higher current tiers list unlimited.",
+      "evidencePath": "lib/domains.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Domain modules exist; exact operational parity unverified.",
+      "improvement": "Keep ownership proof, certificate state and canonical routing visible."
+    },
+    {
+      "id": "F66",
+      "area": "Mobile",
+      "feature": "Native mobile application",
+      "source": "S28",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "Complete native builder/app parity not verified.",
+      "evidencePath": "components/home-parts.tsx",
+      "marktmorgenEvidence": "U",
+      "current": "Public site distinguishes installable PWA from a native app.",
+      "improvement": "Measure mobile tasks; never describe PWA as a native application."
+    },
+    {
+      "id": "F67",
+      "area": "Content",
+      "feature": "Private podcasts",
+      "source": "S28",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "Equivalent dedicated private RSS capability not verified.",
+      "evidencePath": "lib/podcast.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Private podcast episodes and signed playback exist.",
+      "improvement": "Test access expiry, client compatibility and bounded transfer."
+    },
+    {
+      "id": "F68",
+      "area": "Operations",
+      "feature": "Performance and uptime",
+      "source": "S26",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Changelog records improvements; private architecture remains unknown.",
+      "evidencePath": "lib/page-funnel-store.ts",
+      "marktmorgenEvidence": "U",
+      "current": "Comparative latency, uptime and load results not established.",
+      "improvement": "Use matched fixtures/networks and publish measured percentiles only."
+    },
+    {
+      "id": "F69",
+      "area": "Operations",
+      "feature": "Onboarding and support",
+      "source": "S01",
+      "clickfunnelsEvidence": "V",
+      "clickfunnels": "Group onboarding; upper-tier priority/VIP options.",
+      "evidencePath": "app/studio/funnels/page.tsx",
+      "marktmorgenEvidence": "C/U",
+      "current": "Guided funnel review exists; total activation time unmeasured.",
+      "improvement": "Measure task completion, first useful launch and support cost."
+    },
+    {
+      "id": "F70",
+      "area": "Governance",
+      "feature": "Truthful growth and financial safety",
+      "source": "S28",
+      "clickfunnelsEvidence": "U",
+      "clickfunnels": "A comparable per-customer net-margin policy is not verified.",
+      "evidencePath": "lib/opening.ts",
+      "marktmorgenEvidence": "C/U",
+      "current": "Paid-plan opening is gated by commercial review.",
+      "improvement": "Keep prices fixed and block unproven entitlements; prove complete worst-case costs."
+    }
+  ],
+  "priorities": [
+    {
+      "rank": 0,
+      "item": "Commercial admission and complete cost coverage",
+      "sales": 5,
+      "profit": 5,
+      "effort": 5,
+      "gate": true,
+      "scope": "Audit #468 separately; require funded customer/company/provider reservations and non-usage cost coverage.",
+      "acceptance": "Maximum simultaneous entitlements, no creator sales, annual billing, refunds/disputes and one-customer fixed costs are covered; unknown tax/cost inputs keep paid opening closed.",
+      "score": 5
+    },
+    {
+      "rank": 1,
+      "item": "Edit funnel steps directly from the journey",
+      "sales": 4,
+      "profit": 4,
+      "effort": 1,
+      "scope": "Reuse existing page editors and already-loaded page/product identities.",
+      "acceptance": "One navigation from a saved step to the correct store and editor; hide removed/unauthorized targets; disable prefetch and preserve save recovery.",
+      "score": 16
+    },
+    {
+      "rank": 2,
+      "item": "One launch-readiness review",
+      "sales": 5,
+      "profit": 4,
+      "effort": 3,
+      "scope": "Integrate existing pages, forms, products, bumps, offers and consented follow-up drafts.",
+      "acceptance": "Every warning links to its real editor; no unapproved publication/send/payment; partial failures remain recoverable.",
+      "score": 6.666666666666667
+    },
+    {
+      "rank": 3,
+      "item": "Migration dry run and repair report",
+      "sales": 4,
+      "profit": 5,
+      "effort": 3,
+      "scope": "Extend existing bounded imports with a versioned ClickFunnels adapter.",
+      "acceptance": "Preview every row/resource, duplicates, consent and unsupported scripts; repeat-safe bounded application; no copied vendor assets.",
+      "score": 6.666666666666667
+    },
+    {
+      "rank": 4,
+      "item": "Reconciled retained revenue",
+      "sales": 5,
+      "profit": 5,
+      "effort": 4,
+      "scope": "Reuse campaign tags and Stripe events; declare attribution and money definitions.",
+      "acceptance": "Orders/refunds/disputes/renewals reconcile by currency; unknown attribution visible; no claim that attribution proves causal lift.",
+      "score": 6.25
+    },
+    {
+      "rank": 5,
+      "item": "Affiliate payout/refund reconciliation",
+      "sales": 4,
+      "profit": 5,
+      "effort": 4,
+      "scope": "Audit existing two-tier book, coupons, hub and creator-owned PayPal batches.",
+      "acceptance": "No duplicate payout after a lost response; refund/dispute correction and reserve policy tested; no live transfer in development.",
+      "score": 5
+    },
+    {
+      "rank": 6,
+      "item": "Experiment decision reliability",
+      "sales": 4,
+      "profit": 4,
+      "effort": 4,
+      "scope": "Review existing revenue-based headline tests instead of adding another test engine.",
+      "acceptance": "Predeclared measure, repeated-look policy, allocation checks, refund maturity and insufficient-data state.",
+      "score": 4
+    },
+    {
+      "rank": 7,
+      "item": "Matched mobile and performance tasks",
+      "sales": 4,
+      "profit": 4,
+      "effort": 4,
+      "scope": "Use shared content/network/device fixtures and real navigation traces.",
+      "acceptance": "Desktop/mobile task completion and latency percentiles recorded; publish fewer-clicks/faster claims only after comparable measurements.",
+      "score": 4
+    },
+    {
+      "rank": 8,
+      "item": "Whole-funnel AI drafting",
+      "sales": 5,
+      "profit": 3,
+      "effort": 5,
+      "scope": "Original structured pages and follow-up drafts from owned product facts.",
+      "acceptance": "Funded maximum request cost reserved before every call; bounded input/output/tools/retries; schema validation and human review; no invented proof or autonomous publication.",
+      "score": 3
+    },
+    {
+      "rank": 9,
+      "item": "Page review and growth copilots",
+      "sales": 4,
+      "profit": 3,
+      "effort": 4,
+      "scope": "Deterministic readiness checks first; model explanations only after budget approval.",
+      "acceptance": "Each recommendation cites its actual page/data, has a reversible action and handles insufficient evidence.",
+      "score": 3
+    },
+    {
+      "rank": 10,
+      "item": "Optional country prices",
+      "sales": 3,
+      "profit": 3,
+      "effort": 4,
+      "scope": "Integrate approved prices, currencies and tax readiness.",
+      "acceptance": "Transparent country override, signed prices, refund/renewal consistency and no hidden conversion.",
+      "score": 2.25
+    },
+    {
+      "rank": 11,
+      "item": "Predictive revenue and retention",
+      "sales": 4,
+      "profit": 3,
+      "effort": 5,
+      "scope": "Only eligible cohorts with sufficient histories and approved data collection.",
+      "acceptance": "Out-of-time evaluation, calibration, drift, uncertainty and no-data fallback; no guaranteed revenue prediction.",
+      "score": 2.4
+    }
+  ],
+  "commercial": {
+    "monthlyUSD": [
+      22,
+      149,
+      349
+    ],
+    "annualUSD": [
+      220,
+      1490,
+      3490
+    ],
+    "salesCommissionBps": [
+      625,
+      275,
+      0
+    ],
+    "minimumAfterAllCostsAndTaxesMargin": 0.6,
+    "status": "Not certified; do not activate commercial entitlements from this report"
+  }
+}
