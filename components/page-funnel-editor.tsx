@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import type { FunnelStepEditorLink } from "@/lib/funnel-editor-links";
+import { FunnelSharingReview, type FunnelPaymentReview } from "@/components/funnel-sharing-review";
+import { funnelLaunchIssues } from "@/lib/funnel-launch-review";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -57,11 +59,13 @@ export function PageFunnelEditor({
   saved,
   choices,
   base,
+  paymentReview,
 }: {
   saved: SavedFunnel[];
   choices: StepChoice[];
   /** The funnels' addresses start with this: https://marktmorgen.com/@chef/go/ */
   base: string;
+  paymentReview?: FunnelPaymentReview;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -207,6 +211,7 @@ export function PageFunnelEditor({
 
       <ul className="mt-6 space-y-4">
         {saved.map(({ funnel, steps }) => {
+          const launchIssues = funnelLaunchIssues(funnel.on, steps, paymentReview?.available ?? null);
           const first = steps.find((s) => s.open)?.seen ?? null;
           const last = [...steps].reverse().find((s) => s.open);
           return (
@@ -255,6 +260,16 @@ export function PageFunnelEditor({
                   )}
                 </div>
               </div>
+
+              <FunnelSharingReview
+                issues={launchIssues}
+                editors={steps.map(step => step.editor)}
+                paymentReview={paymentReview}
+                locked={locked}
+                settingsDisabled={locked || draft !== null}
+                onSettings={() => start(funnel)}
+                onNavigate={event => { if (flight.current || recovery.current) event.preventDefault(); }}
+              />
 
               <ol className="mt-4 space-y-2">
                 {steps.map((step, index) => (
