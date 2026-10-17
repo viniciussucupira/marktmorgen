@@ -15,6 +15,8 @@
  * because a share of people who went on means nothing across two different
  * funnels, and are forgotten 400 days after the last person counted.
  */
+import { type DataChange, type DataStore, giveData, needData, noteData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { createHash } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Listing, Store } from "@/lib/store";
@@ -22,6 +24,7 @@ import { readListings } from "@/lib/catalog";
 import { pageOut } from "@/lib/site-page-rules";
 import { productSegment } from "@/lib/product-slug";
 import {
+  MAX_FUNNEL_PAGES,
   MAX_PAGE_FUNNELS,
   type PageFunnel,
   type PageFunnelStep,
@@ -111,18 +114,53 @@ end
 redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
 return 1`;
 
-/** Keeps a funnel without exceeding capacity, duplicating an address or resurrecting a removed record. */
-export async function writePageFunnel(statsId: string, funnel: PageFunnel, existing: readonly PageFunnel[]): Promise<PageFunnel> {
-  const isNew = !existing.some((held) => held.id === funnel.id);
-  const replies = await redisPipeline([["EVAL", SAVE_PAGE_FUNNEL, 1, funnelsKey(statsId), funnel.id, JSON.stringify(funnel), MAX_PAGE_FUNNELS, isNew ? "new" : "edit"]]);
-  if (replies.length !== 1 || replies[0] !== 1) throw new Error("Funnel save could not be confirmed; review saved funnels before retrying");
+/**
+ * What a funnel's counts can weigh, in bytes: two HyperLogLogs a step (who
+ * opened it, who signed up or paid there), each at most 12 KB with its key.
+ * Counted in the store's data room with the funnel, before it is saved, and
+ * for KEEP_SECONDS once its steps change or it is removed: its counts are
+ * kept that long after their last visitor, and from then on have none.
+ */
+export const FUNNEL_COUNT_BYTES_PER_STEP = 2 * (12_304 + 128);
+const countsBytes = (funnel: Pick<PageFunnel, "steps">) => funnel.steps.length * FUNNEL_COUNT_BYTES_PER_STEP;
+const slotOf = (id: string) => `pf:${id}`;
+const countsLeft = (funnel: PageFunnel, now: number): DataChange => ({ until: now + KEEP_SECONDS * 1000, bytes: countsBytes(funnel) });
+
+/**
+ * Keeps a funnel without exceeding capacity, duplicating an address or
+ * resurrecting a removed record. Its room is taken first (DataRoomError when
+ * it does not fit), and given back when the save is not confirmed.
+ */
+export async function writePageFunnel(statsId: string, funnel: PageFunnel, existing: readonly PageFunnel[], room: DataStore, now = Date.now()): Promise<PageFunnel> {
+  const held = existing.find((f) => f.id === funnel.id) ?? null;
+  const isNew = !held;
+  const changes: DataChange[] = [{ slot: slotOf(funnel.id), bytes: countsBytes(funnel) + dataBytes([JSON.stringify(funnel)], 1), set: true }];
+  // Counts of steps that changed stop being written to, and stay until they expire.
+  if (held && held.since !== funnel.since) changes.push(countsLeft(held, now));
+  await needData(room, changes, now);
+  let replies: unknown[];
+  try {
+    replies = await redisPipeline([["EVAL", SAVE_PAGE_FUNNEL, 1, funnelsKey(statsId), funnel.id, JSON.stringify(funnel), MAX_PAGE_FUNNELS, isNew ? "new" : "edit"]]);
+  } catch (error) {
+    if (isNew) await giveData(room, [{ slot: slotOf(funnel.id), bytes: 0, set: true }], now);
+    throw error;
+  }
+  if (replies.length !== 1 || replies[0] !== 1) {
+    if (isNew) await giveData(room, [{ slot: slotOf(funnel.id), bytes: 0, set: true }], now);
+    throw new Error("Funnel save could not be confirmed; review saved funnels before retrying");
+  }
   return funnel;
 }
 
-/** Removes a funnel. Its numbers go with it, by their own expiry. */
-export async function dropPageFunnel(statsId: string, id: string): Promise<boolean> {
+/** Removes a funnel. Its numbers go with it, by their own expiry, and are counted until then. */
+export async function dropPageFunnel(statsId: string, id: string, room: DataStore, existing: readonly PageFunnel[] = [], now = Date.now()): Promise<boolean> {
   const replies = await redisPipeline([["HDEL", funnelsKey(statsId), id]]);
-  return confirmedMutation(replies) === 1;
+  const removed = confirmedMutation(replies) === 1;
+  if (removed) {
+    const held = existing.find((f) => f.id === id);
+    await noteData(room, [{ slot: slotOf(id), bytes: 0, set: true }, ...(held ? [countsLeft(held, now)] : [{ until: now + KEEP_SECONDS * 1000, bytes: MAX_FUNNEL_PAGES * FUNNEL_COUNT_BYTES_PER_STEP }])], now);
+  }
+  return removed;
 }
 
 /** What one step is, as the store stands: its title, where it is, and whether it can be shown. */

@@ -30,11 +30,19 @@ import { readFileWhole, writeFileWhole } from "@/lib/file-store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { MAX_STAMP_BYTES, type ProductFile, isPdf } from "@/lib/product-file";
 import { copyFolder } from "@/lib/pdf-stamp";
+import { type DataStore, keepFor } from "@/lib/store-data";
 
 /** The most pages a preview may hold. */
 export const MAX_PREVIEW_PAGES = 10;
 /** Kept as long as a product page is, in effect: a year, made again if lost. */
 const PREVIEW_SECONDS = 400 * 24 * 60 * 60;
+/**
+ * What a preview's record takes in the store's data room for the year it is
+ * kept (lib/store-data.ts): the copy's name and place, under its key. Taken
+ * before the copy is made; a store whose room is full shows no preview it
+ * has not made yet, and every one it has.
+ */
+export const PREVIEW_RECORD_BYTES = 1_024;
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const previewKey = (file: ProductFile, pages: number) => `nl:preview:${sha(`${file.pathname}|${file.addedAt}|${pages}`).slice(0, 40)}`;
@@ -60,7 +68,7 @@ export async function firstPages(bytes: Uint8Array, pages: number): Promise<Uint
  * The preview of this file at this many pages: kept, or made now. Null when
  * the file cannot have one. Never throws.
  */
-export async function previewCopy(file: ProductFile, pages: number): Promise<ProductFile | null> {
+export async function previewCopy(file: ProductFile, pages: number, store: DataStore): Promise<ProductFile | null> {
   if (!previewable(file) || pages < 1) return null;
   const key = previewKey(file, pages);
   try {
@@ -72,6 +80,7 @@ export async function previewCopy(file: ProductFile, pages: number): Promise<Pro
         } catch {}
       }
     }
+    if (isRedisConfigured() && !(await keepFor(store, PREVIEW_RECORD_BYTES, PREVIEW_SECONDS))) return null;
     const original = await readFileWhole(file.pathname, MAX_STAMP_BYTES);
     if (!original) return null;
     const bytes = await firstPages(original, pages);

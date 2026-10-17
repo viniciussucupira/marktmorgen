@@ -302,7 +302,7 @@ export async function removeStored(key: string, hands: Pick<Hands, "list" | "rem
             if (edited.ok) course = edited.course;
           }
           if (files.length) {
-            await saveCourse(course);
+            await saveCourse(course, store, true);
             const left = new Set(filesInCourse(course).map((f) => f.pathname));
             gone.push(...files.map((f) => f.pathname).filter((path) => !left.has(path)));
             if (left.size) failed(`a course kept ${left.size} of its files`, courseId);

@@ -28,6 +28,7 @@ import { redisPipeline } from "@/lib/redis";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const HOUR = 3_600_000;
 const realNow = Date.now;
@@ -146,8 +147,8 @@ async function main(): Promise<void> {
   });
   const flow = saved.ok ? saved.flows[0] : null;
   is("a new workflow is saved paused, even when it is sent switched on", flow?.active, false);
-  await upsertContact(list, "ana@example.com", { agreed: true, explicit: true, source: "free" });
-  await upsertContact(list, "ben@example.com", { agreed: true, explicit: true, source: "buyer", productId: guide.product.id, title: "Planting Guide" });
+  await upsertContact(list, "ana@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
+  await upsertContact(list, "ben@example.com", { agreed: true, explicit: true, source: "buyer", productId: guide.product.id, title: "Planting Guide" }, ROOM);
   store = (await storeForEmail(OWNER))!;
   await enroll(store, "ana@example.com", { joined: true });
   is("paused, it starts nobody", (await listRuns(flow!.id, 10)).length, 0);
@@ -179,7 +180,7 @@ async function main(): Promise<void> {
   await setFlowActive(store, lostId, true);
   await enroll(store, "cleo@example.com", { joined: false, tag: "lost" });
   is("only somebody on the list is started", (await listRuns(lostId, 10)).length, 0);
-  await upsertContact(list, "cleo@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(list, "cleo@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "cleo@example.com", { joined: false, tag: "lost" });
   resendDown = true;
   await run();
@@ -198,7 +199,7 @@ async function main(): Promise<void> {
   is("and the hold is gone", (await listHeld(list)).length, 0);
 
   part("An attempt left open by a run that stopped is held");
-  await upsertContact(list, "dan@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(list, "dan@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "dan@example.com", { joined: false, tag: "lost" });
   // As if a run wrote the attempt and was cut off before the outcome.
   await redisPipeline([["HSET", `nl:wf:run:${lostId}:${personOf("dan@example.com")}`, "open", `0:${id(21)}`]]);
@@ -215,7 +216,7 @@ async function main(): Promise<void> {
   const today = await runsToday(list);
   // Fill today past Studio's daily runs, then one more is refused.
   await redisPipeline([["HSET", `nl:wf:day:${list}:${new Date(Date.now()).toISOString().slice(0, 10)}`, "started", 300]]);
-  await upsertContact(list, "eve@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(list, "eve@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "eve@example.com", { joined: false, tag: "lost" });
   is("counted before the ceiling", (today?.started ?? 0) > 0, true);
   is("past the ceiling nobody more starts today, and the refusal is counted", [(await readRun(lostId, personOf("eve@example.com"))) === null, (await runsToday(list))?.refused], [true, 1]);
@@ -246,7 +247,7 @@ async function main(): Promise<void> {
   const listOwned = (key: string) => key === leadsKey(list) || key.startsWith("nl:mail:unsub:");
   // A new day's runs (the ceiling test above used today's).
   await redisPipeline([["DEL", `nl:wf:day:${list}:${new Date(Date.now()).toISOString().slice(0, 10)}`]]);
-  await upsertContact(list, "fay@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(list, "fay@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   const mid = await saveFlow(store, { name: "Mid", trigger: "tagged", tag: "mid", steps: [{ id: id(31), delayHours: 0, subject: "Mid one", body: "1" }, { id: id(32), delayHours: 48, subject: "Mid two", body: "2" }] });
   const midId = mid.ok ? mid.flows.find((f) => f.name === "Mid")!.id : "";
   await redisPipeline([["SET", `nl:mail:flows:${list}`, JSON.stringify((await readFlows(list)).map((f) => (f.id === midId ? { ...f, active: true } : { ...f, active: false })))]]);
@@ -263,7 +264,7 @@ async function main(): Promise<void> {
   is("and her waiting step never goes out", to("Mid two"), []);
 
   part("Erased: a workflow removed, and a store deleted");
-  await upsertContact(list, "gus@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(list, "gus@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "gus@example.com", { joined: false, tag: "mid" });
   await run();
   is("a run is recorded for him", (await readRun(midId, personOf("gus@example.com")))?.run.status, "running");

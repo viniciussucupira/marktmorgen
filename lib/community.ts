@@ -32,6 +32,15 @@
  * while somebody reads.
  *
  * Every limit is in lib/community-text.ts, where the studio reads it too.
+ *
+ * What members and the creator write here takes room in the store's data
+ * room before it is written (lib/store-data.ts), one slot a post: the post,
+ * its places in the feeds, its comments, its likes and the words they are
+ * found by (POST_SLOT). A post deleted gives its whole slot back; a comment
+ * deleted gives back what it took. What does not fit is refused with
+ * DataRoomError, and nothing is written. A member's own record is part of
+ * what their order left (lib/store-data-rules.ts, ORDER_DATA_BYTES); what a
+ * member adds to it later (a name, answers) takes room like a post.
  */
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -62,7 +71,9 @@ import {
   cleanText,
 } from "@/lib/community-text";
 import { MAX_ALT_LENGTH } from "@/lib/product-image";
-import { indexPost, partsOf, unindexPost } from "@/lib/community-search";
+import { indexBytes, indexPost, partsOf, unindexPost } from "@/lib/community-search";
+import { type DataStore, needData, giveData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { indexMember } from "@/lib/community-index";
 import { type Poll, parsePoll, pollKeys } from "@/lib/community-polls";
 import { type DmSetting, NO_DM, parseDmSetting } from "@/lib/community-dm";
@@ -216,6 +227,23 @@ export function newItemId(): string {
 }
 
 const now = () => Math.floor(Date.now() / 1000);
+
+/** The slot a post and everything under it is counted in. */
+const POST_SLOT = (post: string) => `cm:p:${post}`;
+/** The slot what members add to their own records is counted in. */
+const MEMBERS_SLOT = "cm:m";
+/** A like, a vote or a member key in a set: its member and Redis's own. */
+export const SET_ENTRY_BYTES = 96;
+
+/** What a post counts for: its record, its two places in the feeds, and its words. */
+function postBytes(post: Post): number {
+  return dataBytes([JSON.stringify(post)], 3) + indexBytes([post.title, post.text]);
+}
+
+/** What a comment counts for: its field, and the words it can add to its post's. */
+function commentBytes(comment: Comment): number {
+  return dataBytes([JSON.stringify(comment)], 1) + indexBytes([comment.text]);
+}
 
 // ------------------------------------------------------------------ settings
 
@@ -430,8 +458,17 @@ export async function setProfile(
   id: string,
   member: Member,
   change: { name: string; dir: boolean; mail: boolean; answers?: string[]; questions?: string[] },
+  room: DataStore,
 ): Promise<Member> {
   const name = cleanLine(change.name, MAX_DISPLAY_NAME);
+  // What the member adds to their record takes room before it is written:
+  // the name and the answers, the handle they are mentioned by and the words
+  // their name is found by. A record that shrinks gives it back.
+  const answers = change.answers && change.questions ? answersFor(change.answers, change.questions, member.qa) : {};
+  const after = JSON.stringify({ ...member, n: name, h: name.slice(0, 40), dir: change.dir && Boolean(name), mail: change.mail, ...answers });
+  const grown = dataBytes([after]) - dataBytes([JSON.stringify(member)]) + (name ? indexBytes([name]) + SET_ENTRY_BYTES : 0) - (member.n ? indexBytes([member.n]) + SET_ENTRY_BYTES : 0);
+  if (grown > 0) await needData(room, [{ slot: MEMBERS_SLOT, bytes: grown }]);
+  else if (grown < 0) await giveData(room, [{ slot: MEMBERS_SLOT, bytes: -grown }]);
   // The handle is taken before the name is written, so a member is never left
   // named but unmentionable. Claiming gives back what they ended up with,
   // which may carry a number when somebody already held the plain one.
@@ -619,7 +656,7 @@ export type NewPost = {
 };
 
 /** Writes a post. The caller has checked who may, and cleaned what it says. */
-export async function createPost(id: string, input: NewPost): Promise<{ ok: true; post: Post } | { ok: false; reason: "full" }> {
+export async function createPost(id: string, input: NewPost, room: DataStore): Promise<{ ok: true; post: Post } | { ok: false; reason: "full" }> {
   const [count] = await redisPipeline([["ZCARD", feedKey(id)]]);
   if (Number(count) >= MAX_POSTS) return { ok: false, reason: "full" };
   const [n] = await redisPipeline([["INCR", seqKey(id)]]);
@@ -637,6 +674,8 @@ export async function createPost(id: string, input: NewPost): Promise<{ ok: true
     ed: 0,
     poll: input.poll,
   };
+  // Its room first: refused here, nothing is written (DataRoomError).
+  await needData(room, [{ slot: POST_SLOT(post.id), bytes: postBytes(post), set: true }]);
   await redisPipeline([
     ["SET", postKey(id, post.id), JSON.stringify(post)],
     ["ZADD", feedKey(id), post.n, post.id],
@@ -703,15 +742,16 @@ export async function setPostHidden(id: string, post: Post, hidden: boolean): Pr
  * said, and a reader who cannot see that the words changed is being misled by
  * the software rather than by the author.
  */
-export async function editPost(id: string, post: Post, input: { title: string; text: string }): Promise<Post> {
+export async function editPost(id: string, post: Post, input: { title: string; text: string }, room: DataStore): Promise<Post> {
   const next: Post = { ...post, title: input.title, text: input.text, ed: now() };
+  await needData(room, [{ slot: POST_SLOT(post.id), bytes: postBytes(next) - postBytes(post) }]);
   await redisPipeline([["SET", postKey(id, post.id), JSON.stringify(next)]]);
   await reindexWithComments(id, next);
   return next;
 }
 
-/** Takes a post away for good, with its comments, likes and reports. */
-export async function deletePost(id: string, post: Post): Promise<void> {
+/** Takes a post away for good, with its comments, likes and reports, and gives back its room. */
+export async function deletePost(id: string, post: Post, room: DataStore): Promise<void> {
   const [raw] = await redisPipeline([["HKEYS", commentsKey(id, post.id)]]);
   const commentIds = Array.isArray(raw) ? (raw as string[]) : [];
   await redisPipeline([
@@ -723,6 +763,7 @@ export async function deletePost(id: string, post: Post): Promise<void> {
   await unindexPost(id, post.id).catch((error) => {
     console.error("taking a deleted post out of the search index failed", error);
   });
+  await giveData(room, [{ slot: POST_SLOT(post.id), bytes: 0, set: true }]);
 }
 
 export type FeedPage = { posts: Post[]; next: number | null };
@@ -783,19 +824,24 @@ export async function postNumbers(
 }
 
 /** One like per member per post: a second press takes it back. */
-export async function toggleLike(id: string, post: string, who: string): Promise<boolean> {
-  const [added] = await redisPipeline([["SADD", likesKey(id, post), who]]);
+export async function toggleLike(id: string, post: string, who: string, room: DataStore): Promise<boolean> {
+  return toggleIn(likesKey(id, post), post, who, room);
+}
+
+/** Adds `who` to a set of likes, or takes them out when they were in it: its room is taken first and given back after. */
+async function toggleIn(key: string, post: string, who: string, room: DataStore): Promise<boolean> {
+  const [held] = await redisPipeline([["SISMEMBER", key, who]]);
+  if (Number(held) !== 1) await needData(room, [{ slot: POST_SLOT(post), bytes: SET_ENTRY_BYTES }]);
+  const [added] = await redisPipeline([["SADD", key, who]]);
   if (Number(added) === 1) return true;
-  await redisPipeline([["SREM", likesKey(id, post), who]]);
+  await redisPipeline([["SREM", key, who]]);
+  await giveData(room, [{ slot: POST_SLOT(post), bytes: Number(held) === 1 ? SET_ENTRY_BYTES : 2 * SET_ENTRY_BYTES }]);
   return false;
 }
 
 /** The same for a comment: one like per member, a second press takes it back. */
-export async function toggleCommentLike(id: string, post: string, comment: string, who: string): Promise<boolean> {
-  const [added] = await redisPipeline([["SADD", commentLikesKey(id, post, comment), who]]);
-  if (Number(added) === 1) return true;
-  await redisPipeline([["SREM", commentLikesKey(id, post, comment), who]]);
-  return false;
+export async function toggleCommentLike(id: string, post: string, comment: string, who: string, room: DataStore): Promise<boolean> {
+  return toggleIn(commentLikesKey(id, post, comment), post, who, room);
 }
 
 /** How many liked each comment under a post, and whether this member did. */
@@ -880,6 +926,7 @@ export async function addComment(
   id: string,
   post: string,
   input: { parent: string; author: string; text: string },
+  room: DataStore,
 ): Promise<{ ok: true; comment: Comment } | { ok: false; reason: "full" | "parent" }> {
   const [size] = await redisPipeline([["HLEN", commentsKey(id, post)]]);
   if (Number(size) >= MAX_COMMENTS_PER_POST) return { ok: false, reason: "full" };
@@ -890,6 +937,7 @@ export async function addComment(
     parent = above.parent || above.id;
   }
   const comment: Comment = { id: newItemId(), parent, a: input.author, text: input.text, at: now(), hid: false, ed: 0 };
+  await needData(room, [{ slot: POST_SLOT(post), bytes: commentBytes(comment) }]);
   await redisPipeline([["HSET", commentsKey(id, post), comment.id, JSON.stringify(comment)]]);
   await reindexComments(id, post);
   return { ok: true, comment };
@@ -900,8 +948,9 @@ export async function addComment(
  * it, and never which comment it answers, so an edit cannot move a reply on
  * to another thread. The caller has checked that this is the author.
  */
-export async function editComment(id: string, post: string, comment: Comment, text: string): Promise<Comment> {
+export async function editComment(id: string, post: string, comment: Comment, text: string, room: DataStore): Promise<Comment> {
   const next: Comment = { ...comment, text, ed: now() };
+  await needData(room, [{ slot: POST_SLOT(post), bytes: commentBytes(next) - commentBytes(comment) }]);
   await redisPipeline([["HSET", commentsKey(id, post), comment.id, JSON.stringify(next)]]);
   await reindexComments(id, post);
   return next;
@@ -911,16 +960,18 @@ export async function setCommentHidden(id: string, post: string, comment: Commen
   await redisPipeline([["HSET", commentsKey(id, post), comment.id, JSON.stringify({ ...comment, hid: hidden })]]);
 }
 
-/** Deletes a comment, and the replies under it with it. */
-export async function deleteComment(id: string, post: string, comment: Comment): Promise<void> {
+/** Deletes a comment, and the replies under it with it, and gives back what they took. */
+export async function deleteComment(id: string, post: string, comment: Comment, room: DataStore): Promise<void> {
   const all = comment.parent ? [] : (await readComments(id, post)).filter((c) => c.parent === comment.id);
   const gone = [comment.id, ...all.map((c) => c.id)];
+  const freed = [comment, ...all].reduce((sum, c) => sum + commentBytes(c), 0);
   await redisPipeline([
     ["HDEL", commentsKey(id, post), ...gone],
     ["DEL", ...gone.map((c) => commentLikesKey(id, post, c))],
     ["ZREM", reportsKey(id), ...gone.map((c) => `c:${post}:${c}`)],
     ...gone.map((c) => ["DEL", reportersKey(id, `c:${post}:${c}`)]),
   ]);
+  await giveData(room, [{ slot: POST_SLOT(post), bytes: freed }]);
   await reindexComments(id, post);
 }
 

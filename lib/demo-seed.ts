@@ -748,7 +748,7 @@ async function ensureAbout(store: Store, product: Listing, pending: string[], te
     pending.push(refused("about", marked.ok ? "no_stats" : marked.reason));
     return store;
   }
-  await writeAbout(marked.store.statsId, product.id, text);
+  await writeAbout(marked.store.statsId, product.id, text, marked.store, true);
   return marked.store;
 }
 
@@ -765,7 +765,7 @@ async function ensureNote(store: Store, product: Listing, pending: string[]): Pr
   }
   const have = product.note ? await readThanksNote(store.statsId, product.id) : null;
   if (have && JSON.stringify(have) === JSON.stringify(want)) return store;
-  await writeThanksNote(store.statsId, product.id, want);
+  await writeThanksNote(store.statsId, product.id, want, store);
   const marked = await setProductNote(REF, product.id, true);
   if (!marked.ok) {
     pending.push(refused("note", marked.reason));
@@ -801,7 +801,7 @@ async function ensurePage(store: Store, product: Listing, pending: string[]): Pr
   const want = parsePage(DEMO_PAGE);
   const have = product.page ? await readPage(store.statsId, product.id) : null;
   if (have && JSON.stringify(have) === JSON.stringify(want)) return store;
-  await writePage(store.statsId, product.id, want);
+  await writePage(store.statsId, product.id, want, store, true);
   const marked = await setProductPage(REF, product.id, true);
   if (!marked.ok) {
     pending.push(refused("page", marked.reason));
@@ -819,7 +819,7 @@ async function ensurePost(store: Store, product: Listing, pending: string[]): Pr
   const want = { title: DEMO_POST.title, body: cleanPost({ body: DEMO_POST.body }).body, product: DEMO_POST.product ? product.id : null, draft: false };
   const have = await readPost(store.statsId, DEMO_POST.id);
   if (have && !have.draft && have.title === want.title && have.body === want.body && have.product === want.product && store.posts > 0) return store;
-  const saved = await savePost(store.statsId, have ? DEMO_POST.id : null, want, () => DEMO_POST.id);
+  const saved = await savePost(store.statsId, have ? DEMO_POST.id : null, want, () => DEMO_POST.id, store);
   if (!saved.ok) {
     pending.push(refused("post", saved.reason));
     return store;

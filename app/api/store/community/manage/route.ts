@@ -239,11 +239,11 @@ export async function POST(request: NextRequest) {
     if (target.kind === "comment") {
       const comment = ITEM_ID.test(target.comment) ? await readComment(id, post.id, target.comment) : null;
       if (comment) {
-        if (action === "report-delete") await deleteComment(id, post.id, comment);
+        if (action === "report-delete") await deleteComment(id, post.id, comment, store);
         else await setCommentHidden(id, post.id, comment, true);
       }
     } else if (action === "report-delete") {
-      await deletePost(id, post);
+      await deletePost(id, post, store);
       await dropCommunityImage(post.img?.path);
       let next = config;
       if (config.pinned.includes(post.id)) next = withPin(next, post.id, false) ?? next;

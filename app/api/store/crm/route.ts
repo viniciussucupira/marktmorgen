@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { StoreFullError } from "@/lib/store-full";
 import { guardStoreWrite } from "@/lib/store-request";
 import { ensureStatsId } from "@/lib/store";
 import { DEAL_ID, newCrmId, readFollowUp, parseDeal, parseFields, parseStages } from "@/lib/crm-rules";
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     if (body.action === "value") {
       const field = (await readFields(statsId)).find((f) => f.id === body.field);
       if (!field) return refuse("unknown", 404);
-      const ok = await setValue(statsId, typeof body.person === "string" ? body.person : "", field, body.value);
+      const ok = await setValue(statsId, typeof body.person === "string" ? body.person : "", field, body.value, store);
       return ok ? Response.json({ ok: true }) : refuse("value");
     }
     if (body.action === "stages") {
@@ -62,15 +63,17 @@ export async function POST(request: NextRequest) {
       const now = Math.floor(Date.now() / 1000);
       const deal = parseDeal({ ...existing, ...raw, ...follow.value, formResponseRef: existing?.formResponseRef, id: existing?.id ?? newCrmId(10), createdAt: existing?.createdAt ?? now, updatedAt: now }, stages);
       if (!deal) return refuse(typeof raw.title === "string" && raw.title.trim() ? "stage" : "title");
-      if (!(await writeDeal(statsId, deal))) return refuse("full");
+      if (!(await writeDeal(statsId, deal, store))) return refuse("full");
       return Response.json({ ok: true, deal });
     }
     if (body.action === "undeal") {
       const id = typeof body.id === "string" ? body.id : "";
-      return (await dropDeal(statsId, id)) ? Response.json({ ok: true }) : refuse("unknown", 404);
+      return (await dropDeal(statsId, id, store)) ? Response.json({ ok: true }) : refuse("unknown", 404);
     }
     return refuse("invalid");
   } catch (error) {
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof StoreFullError) return refuse("store_full", 409);
     if (error instanceof CrmValueWriteUnconfirmed) return refuse("crm_write_unconfirmed", 502);
     if (error instanceof CrmSchemaReadUnavailable) return refuse("crm_schema_read_unavailable", 503);
     if (error instanceof CrmSchemaWriteUnconfirmed) return refuse("crm_write_unconfirmed", 502);

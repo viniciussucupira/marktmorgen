@@ -1,6 +1,6 @@
 import { apiError, apiOk, apiStore, apiWriter, readApiBody } from "@/lib/api-guard";
 import { leads } from "@/lib/api-read";
-import { WRITE_ERRORS, addLead } from "@/lib/api-write";
+import { WRITE_ERRORS, addLead, roomFor } from "@/lib/api-write";
 
 /**
  * GET /api/v1/leads?cursor=&agreed=true — the creator's list: the same rows as
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const body = await readApiBody(request);
   if (body instanceof Response) return body;
   try {
-    const done = await addLead(writer.store, body);
+    const done = await roomFor(() => addLead(writer.store, body));
     if (!done.ok) return apiError(WRITE_ERRORS[done.error][0], done.error, WRITE_ERRORS[done.error][1]);
     return apiOk({ data: done.value });
   } catch (error) {

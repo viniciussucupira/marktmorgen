@@ -1,8 +1,8 @@
 import { readFlowListStrict } from "@/lib/flow-list";
 import { FLOW_TRIGGERS, type FlowTrigger, MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
-import { MAX_FLOWS, MAX_STEPS, activeFlowLimit, dailyRunLimit, startableFlows } from "@/lib/flow-limits";
+import { MAX_FLOWS, MAX_STEPS, RUN_KEEP_SECONDS, activeFlowLimit, dailyRunLimit, startableFlows } from "@/lib/flow-limits";
 import { END, afterIndex, checkRoutes, elseIndex } from "@/lib/flow-paths";
-import { type Settled, admitRuns, claimAttempts, forgetHeldCommand, forgetIndexCommand, forgetPersonCommands, noteRuns, openRuns, personOf, readRun, releaseHold, runPeople, settleAttempts } from "@/lib/flow-runs";
+import { RUN_EVENT_BYTES, RUN_RECORD_CHARS, type Settled, admitRuns, claimAttempts, forgetHeldCommand, forgetIndexCommand, forgetPersonCommands, noteRuns, openRuns, personOf, readRun, refuseRuns, releaseHold, runPeople, settleAttempts } from "@/lib/flow-runs";
 import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
 /**
@@ -38,6 +38,8 @@ import { hasPlaceholder } from "@/lib/mail-body";
 import { createHash, randomBytes } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { DataRoomError, needData, takeData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { isMailable, leadsKey, mailable, parseContact } from "@/lib/contacts";
 import { MAX_MAIL_BODY, MAX_SUBJECT, giveBackToMonth, monthlyAllowance, sendTo, takeFromMonth } from "@/lib/mail";
 import type { Store } from "@/lib/store";
@@ -193,10 +195,16 @@ export class FlowWriteUnconfirmed extends Error {
   }
 }
 
-async function writeFlows(listId: string, flows: Flow[]): Promise<void> {
+/**
+ * Writes the store's workflows, after taking their room in the store's data
+ * room (DataRoomError when they do not fit; shorter ones give it back).
+ */
+async function writeFlows(store: Store, listId: string, flows: Flow[]): Promise<void> {
+  const json = JSON.stringify(flows);
+  await needData(store, [{ slot: "wf:defs", bytes: dataBytes([json], 1 + flows.length), set: true }]);
   let replies: unknown;
   try {
-    replies = await redisPipeline([["SET", flowsKey(listId), JSON.stringify(flows)]]);
+    replies = await redisPipeline([["SET", flowsKey(listId), json]]);
   } catch {
     throw new FlowWriteUnconfirmed();
   }
@@ -294,7 +302,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>, opts:
   const next = [...flows];
   if (at >= 0) next[at] = flow;
   else next.push(flow);
-  await writeFlows(store.listId, next);
+  await writeFlows(store, store.listId, next);
   return { ok: true, flows: next };
 }
 
@@ -303,7 +311,7 @@ export async function removeFlow(store: Store, id: string): Promise<FlowResult> 
   const flows = await readFlowListStrict(store.listId);
   if (!flows.some((f) => f.id === id)) return { ok: false, reason: "unknown" };
   const next = flows.filter((f) => f.id !== id);
-  await writeFlows(store.listId, next);
+  await writeFlows(store, store.listId, next);
   // Its runs, their history, starts and queued steps: nothing of the people in it is kept.
   await purgeFlow(store, flows.find((f) => f.id === id)!).catch((error) => console.error("erasing a removed workflow's runs failed", error));
   return { ok: true, flows: next };
@@ -391,7 +399,7 @@ export async function setFlowActive(store: Store, id: string, active: boolean): 
   if (active && !flows[at].steps.length) return { ok: false, reason: "steps" };
   if (active && flows.filter((f) => f.active).length >= activeFlowLimit(store)) return { ok: false, reason: "active_limit" };
   const next = flows.map((f, i) => (i === at ? { ...f, active } : f));
-  await writeFlows(store.listId, next);
+  await writeFlows(store, store.listId, next);
   return { ok: true, flows: next };
 }
 
@@ -489,6 +497,15 @@ async function startFlows(store: Store, flows: Flow[], addresses: string[]): Pro
     const refused = claimed.slice(admitted);
     if (refused.length) await redisPipeline(refused.map((address) => ["DEL", enrolledKey(flow.id, address)])).catch(() => {});
     if (!fresh.length) continue;
+    // Each run takes room in the store's data room before it starts, at the
+    // most it can leave (runBytes), until it is gone by itself; with no room
+    // it does not start, and its start and its place in the day go back.
+    const room = await takeData(store, [{ until: runGoneBy(flow, now) * 1000, bytes: fresh.length * runBytes(flow) }]);
+    if (!room.ok) {
+      await redisPipeline(fresh.map((address) => ["DEL", enrolledKey(flow.id, address)])).catch(() => {});
+      await refuseRuns(store.listId, fresh.length, now);
+      continue;
+    }
     // The run's record first, so its first step always finds it.
     await openRuns(flow.id, fresh, now);
     await redisPipeline([
@@ -498,6 +515,27 @@ async function startFlows(store: Store, flows: Flow[], addresses: string[]): Pro
     started += fresh.length;
   }
   return started;
+}
+
+/**
+ * The most one run of this workflow can leave in the database: its record,
+ * every event its history may hold (two, and three a step, each at the most
+ * an event weighs), its start's mark, and its places in the index and the
+ * queue (lib/flow-runs.ts).
+ */
+export function runBytes(flow: Pick<Flow, "steps">): number {
+  return (2 + 3 * flow.steps.length) * RUN_EVENT_BYTES + dataBytes(["x".repeat(RUN_RECORD_CHARS)], 4);
+}
+
+/**
+ * When everything a run started now leaves is gone by itself, in seconds: its
+ * history is kept RUN_KEEP_SECONDS after it ends, and it ends at the latest
+ * after every wait of its steps and a month's hold at each for the monthly
+ * emails; its start's mark is kept 400 days.
+ */
+export function runGoneBy(flow: Pick<Flow, "steps">, nowSeconds: number): number {
+  const waits = flow.steps.reduce((sum, step) => sum + Math.max(0, step.delayHours) * 3_600, 0);
+  return nowSeconds + waits + flow.steps.length * 32 * 86_400 + Math.max(RUN_KEEP_SECONDS, 400 * 86_400) + 86_400;
 }
 
 /** What came of an action for one person, for the run's history (lib/flow-runs.ts). */
@@ -551,7 +589,7 @@ async function act(store: Store, flows: Flow[], action: FlowAction, emails: stri
     try {
       const { changed, same } = await changeLabels(listId, emails, (tags) =>
         tags.some((t) => sameLabel(t, action.tag)) ? tags.filter((t) => !sameLabel(t, action.tag)) : "same",
-      );
+      store);
       const done = new Set([...changed, ...same]);
       return emails.map((email) =>
         changed.includes(email) ? { email, state: "confirmed", changed: true, note: `Label “${action.tag}” taken off.` } : done.has(email) ? { email, state: "confirmed", note: `They did not have the label “${action.tag}”.` } : { email, state: "failed", note: "Their record changed while the label was being written; nothing was changed." },
@@ -568,8 +606,10 @@ async function act(store: Store, flows: Flow[], action: FlowAction, emails: stri
       const next = readTags([...tags, action.tag]);
       // Ten labels already: this one has no room, and nothing is taken off to make it.
       return next.some((t) => sameLabel(t, action.tag)) ? next : "skip";
-    }));
-  } catch {
+    }, store));
+  } catch (error) {
+    // Nothing was written past the store's data room (lib/store-data.ts).
+    if (error instanceof DataRoomError) return each(emails, "failed", "Not given: the store's data room is full.");
     return each(emails, "uncertain", "Whether the label was given could not be confirmed.");
   }
   const labeled = [...changed, ...same];
@@ -602,9 +642,11 @@ async function actOnPeople(
     const out: Acted[] = [];
     for (const email of emails) {
       try {
-        out.push((await setValue(statsId, personKey(statsId, email), field, action.value)) ? { email, state: "confirmed", changed: true, note: `“${field.name}” set to “${action.value}”.` } : { email, state: "failed", note: `“${field.name}” does not keep the value “${action.value}” any more.` });
-      } catch {
-        out.push({ email, state: "uncertain", note: `Whether “${field.name}” was set could not be confirmed.` });
+        out.push((await setValue(statsId, personKey(statsId, email), field, action.value, store)) ? { email, state: "confirmed", changed: true, note: `“${field.name}” set to “${action.value}”.` } : { email, state: "failed", note: `“${field.name}” does not keep the value “${action.value}” any more.` });
+      } catch (error) {
+        // Nothing was written past the store's data room (lib/store-data.ts).
+        if (error instanceof DataRoomError) out.push({ email, state: "failed", note: `“${field.name}” was not set: the store's data room is full.` });
+        else out.push({ email, state: "uncertain", note: `Whether “${field.name}” was set could not be confirmed.` });
       }
     }
     return out;
@@ -615,10 +657,12 @@ async function actOnPeople(
     const out: Acted[] = [];
     for (const email of emails) {
       try {
-        const kept = await addPersonNote(statsId, personKey(statsId, email), "sequence", `${action.text} (Sequence “${at.flow.name}”, step ${at.index + 1}.)`);
+        const kept = await addPersonNote(statsId, personKey(statsId, email), "sequence", `${action.text} (Sequence “${at.flow.name}”, step ${at.index + 1}.)`, store);
         out.push(kept ? { email, state: "confirmed", changed: true, note: "Note written on their page." } : { email, state: "failed", note: "The note could not be written." });
-      } catch {
-        out.push({ email, state: "uncertain", note: "Whether the note was written could not be confirmed." });
+      } catch (error) {
+        // Nothing was written past the store's data room (lib/store-data.ts).
+        if (error instanceof DataRoomError) out.push({ email, state: "failed", note: "The note was not written: the store's data room is full." });
+        else out.push({ email, state: "uncertain", note: "Whether the note was written could not be confirmed." });
       }
     }
     return out;
@@ -666,8 +710,12 @@ async function actOnPeople(
           : { id: newCrmId(10), title: (action.title || at.flow.name).slice(0, 90), email, cents: 0, stage: stage!.id, note: `Made by the sequence “${at.flow.name}”.`.slice(0, 500), createdAt: now, updatedAt: now };
       }
       try {
-        out.push((await writeDeal(statsId, deal)) ? { email, state: "confirmed", changed: true, note: action.do === "assign" ? `${action.assignee} is now responsible for their deal.` : open ? `Deal moved to “${stage!.name}”.` : `New deal made in “${stage!.name}”.` } : { email, state: "failed", note: "Your deals board is full; nothing was added." });
+        out.push((await writeDeal(statsId, deal, store)) ? { email, state: "confirmed", changed: true, note: action.do === "assign" ? `${action.assignee} is now responsible for their deal.` : open ? `Deal moved to “${stage!.name}”.` : `New deal made in “${stage!.name}”.` } : { email, state: "failed", note: "Your deals board is full; nothing was added." });
       } catch (error) {
+        if (error instanceof DataRoomError) {
+          out.push({ email, state: "failed", note: "The deal was not written: the store's data room is full." });
+          continue;
+        }
         out.push(error instanceof CrmDealReadUnavailable ? { email, state: "deferred", note: "Your deals board could not be read; tried again in a few minutes." } : { email, state: "uncertain", note: "Whether the deal was saved could not be confirmed." });
       }
     }

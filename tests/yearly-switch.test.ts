@@ -25,6 +25,7 @@ import { addProduct, claimHandle, ensureListId, ensureStatsId, setProductLink, s
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_yearly_switch_only";
 process.env.RESEND_API_KEY = "re_test_yearly_switch_only";
@@ -207,7 +208,7 @@ async function main(): Promise<void> {
     member("sub_Dee000000001", "cus_Dee0000001", "dee@example.com", { discounts: ["di_Dee"] }),
   ];
   for (const email of ["ana@example.com", "cy@example.com", "dee@example.com"]) {
-    await upsertContact(store.listId as string, email, { agreed: true, explicit: true, source: "buyer", productId: product, title: "Supper Club" });
+    await upsertContact(store.listId as string, email, { agreed: true, explicit: true, source: "buyer", productId: product, title: "Supper Club" }, ROOM);
   }
   mails.length = 0;
   is("sent to the one it fits", [await askStore(store, Date.now() + 20_000), mails.map((m) => [m.to].flat()[0])], [1, ["ana@example.com"]]);

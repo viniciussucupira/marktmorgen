@@ -18,6 +18,8 @@
  * they review, when they approve it.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { ENTRY_BYTES, dataBytes } from "@/lib/store-data-rules";
 import { markLesson } from "@/lib/learn";
 import { markPassed } from "@/lib/quiz";
 import { ITEM_ID_PATTERN } from "@/lib/course";
@@ -60,12 +62,26 @@ export async function readTaskFor(courseId: string, lessonId: string): Promise<T
   return { ...(parseTaskSetup(value) as Task), prompt: value.prompt };
 }
 
-export async function saveTask(courseId: string, lessonId: string, task: Task): Promise<void> {
-  await redisPipeline([["SET", taskKey(courseId, lessonId), JSON.stringify(task)]]);
+/**
+ * Where a course's assignments are counted in the store's data room
+ * (lib/store-data.ts): the prompts the creator writes, the work students hand
+ * in and what comes back, with their places in the lists. A student's file is
+ * counted apart, in bytes of its own (takeRoom).
+ */
+const TASKS_SLOT = (courseId: string) => `ca:${courseId}`;
+const recordBytes = (raw: unknown, entries = 1) => (typeof raw === "string" && raw ? dataBytes([raw], entries) : 0);
+
+export async function saveTask(courseId: string, lessonId: string, task: Task, data: DataStore): Promise<void> {
+  const json = JSON.stringify(task);
+  const [before] = await redisPipeline([["GET", taskKey(courseId, lessonId)]]);
+  const grown = recordBytes(json) - recordBytes(before);
+  if (grown > 0) await needData(data, [{ slot: TASKS_SLOT(courseId), bytes: grown }]);
+  await redisPipeline([["SET", taskKey(courseId, lessonId), json]]);
+  if (grown < 0) await giveData(data, [{ slot: TASKS_SLOT(courseId), bytes: -grown }]);
 }
 
 /** Forgets an assignment and all the work handed in for it. Returns the files to delete. */
-export async function dropTask(courseId: string, lessonId: string, room: string | null): Promise<string[]> {
+export async function dropTask(courseId: string, lessonId: string, room: string | null, data: DataStore): Promise<string[]> {
   if (!isRedisConfigured()) return [];
   const [flat] = await redisPipeline([["HGETALL", filesKey(courseId, lessonId)]]);
   const pairs = Array.isArray(flat) ? flat : [];
@@ -78,12 +94,16 @@ export async function dropTask(courseId: string, lessonId: string, room: string 
   // Each student's own record, found by the list of all the work handed in.
   const [waiting] = await redisPipeline([["ZRANGEBYSCORE", allKey(courseId), "-inf", "+inf"]]);
   const gone = (Array.isArray(waiting) ? waiting : []).filter((m): m is string => typeof m === "string" && m.startsWith(`${lessonId}|`));
+  // What the prompt and the work weighed comes back to the store's data room.
+  const held = await redisPipeline([["GET", taskKey(courseId, lessonId)], ...gone.map((member) => ["GET", subKey(courseId, lessonId, member.slice(lessonId.length + 1))])]);
+  const freed = held.reduce((sum: number, raw, i) => sum + recordBytes(raw, i === 0 ? 1 : 3), 0) + files.length * ENTRY_BYTES;
   await redisPipeline([
     ["DEL", taskKey(courseId, lessonId), filesKey(courseId, lessonId)],
     ...gone.map((member) => ["DEL", subKey(courseId, lessonId, member.slice(lessonId.length + 1))]),
     ...(gone.length ? [["ZREM", waitingKey(courseId), ...gone], ["ZREM", allKey(courseId), ...gone]] : []),
   ]);
   if (room && bytes) await releaseBytes(room, bytes);
+  if (freed) await giveData(data, [{ slot: TASKS_SLOT(courseId), bytes: freed }]);
   return files;
 }
 
@@ -149,6 +169,8 @@ export async function handIn(input: {
   text: string;
   file: HandedFile | null;
   now?: number;
+  /** The store whose data room the work takes from (DataRoomError when it does not fit). */
+  data: DataStore;
 }): Promise<HandIn> {
   const { courseId, lessonId, who, task } = input;
   const at = input.now ?? Math.floor(Date.now() / 1000);
@@ -164,22 +186,29 @@ export async function handIn(input: {
     tries: (before?.tries ?? 0) + 1,
   };
   const member = `${lessonId}|${who}`;
+  // Its room first: what it weighs over what it replaces, its two places in the lists the first time, its file's entry.
+  const grown = recordBytes(JSON.stringify(kept), 3) - (before ? recordBytes(JSON.stringify(before), 3) : 0) + (input.file ? ENTRY_BYTES : 0);
+  if (grown > 0) await needData(input.data, [{ slot: TASKS_SLOT(courseId), bytes: grown }]);
   await redisPipeline([
     ["SET", subKey(courseId, lessonId, who), JSON.stringify(kept)],
     ...(input.file ? [["HSET", filesKey(courseId, lessonId), input.file.path, input.file.bytes]] : []),
     task.review ? ["ZADD", waitingKey(courseId), at, member] : ["ZREM", waitingKey(courseId), member],
     ["ZADD", allKey(courseId), at, member],
   ]);
-  if (!task.review) await finish(courseId, lessonId, who, input.email);
+  if (grown < 0) await giveData(input.data, [{ slot: TASKS_SLOT(courseId), bytes: -grown }]);
+  if (!task.review) await finish(courseId, lessonId, who, input.email, input.data);
   const replaced = before?.file && before.file.path !== input.file?.path ? before.file : null;
-  if (replaced) await redisPipeline([["HDEL", filesKey(courseId, lessonId), replaced.path]]);
+  if (replaced) {
+    await redisPipeline([["HDEL", filesKey(courseId, lessonId), replaced.path]]);
+    await giveData(input.data, [{ slot: TASKS_SLOT(courseId), bytes: ENTRY_BYTES }]);
+  }
   return { state, replaced };
 }
 
 /** The lesson done, for the outline, the progress and the certificate, and the lessons after it open. */
-async function finish(courseId: string, lessonId: string, who: string, email: string): Promise<void> {
-  await markPassed(courseId, who, lessonId);
-  if (email) await markLesson(courseId, email, lessonId, true);
+async function finish(courseId: string, lessonId: string, who: string, email: string, data: DataStore): Promise<void> {
+  await markPassed(courseId, who, lessonId, data);
+  if (email) await markLesson(courseId, email, lessonId, true, data, true);
 }
 
 export type Waiting = { lessonId: string; who: string; at: number };
@@ -219,6 +248,8 @@ export async function review(input: {
   verdict: "approved" | "again";
   feedback: string;
   now?: number;
+  /** The store whose data room what comes back takes from (DataRoomError when it does not fit). */
+  data: DataStore;
 }): Promise<Review> {
   const { courseId, lessonId, who } = input;
   const before = await submissionOf(courseId, lessonId, who);
@@ -230,11 +261,13 @@ export async function review(input: {
     feedback: input.feedback.replace(/\r\n?/g, "\n").trim().slice(0, MAX_FEEDBACK),
     reviewedAt: input.now ?? Math.floor(Date.now() / 1000),
   };
+  const grown = recordBytes(JSON.stringify(after)) - recordBytes(JSON.stringify(before));
+  if (grown > 0) await needData(input.data, [{ slot: TASKS_SLOT(courseId), bytes: grown }]);
   await redisPipeline([
     ["SET", subKey(courseId, lessonId, who), JSON.stringify(after)],
     ["ZREM", waitingKey(courseId), `${lessonId}|${who}`],
   ]);
-  if (input.verdict === "approved") await finish(courseId, lessonId, who, input.email);
+  if (input.verdict === "approved") await finish(courseId, lessonId, who, input.email, input.data);
   return { ok: true, submission: after };
 }
 
@@ -272,11 +305,11 @@ export async function tellCreatorNow(courseId: string): Promise<boolean> {
 }
 
 /** Forgets every assignment of a course that is going, and returns their files to delete. */
-export async function dropCourseTasks(course: { id: string; modules: { lessons: { id: string; task?: unknown }[] }[] }, room: string | null): Promise<string[]> {
+export async function dropCourseTasks(course: { id: string; modules: { lessons: { id: string; task?: unknown }[] }[] }, room: string | null, data: DataStore): Promise<string[]> {
   const files: string[] = [];
   for (const unit of course.modules) {
     for (const lesson of unit.lessons) {
-      if (lesson.task) files.push(...(await dropTask(course.id, lesson.id, room)));
+      if (lesson.task) files.push(...(await dropTask(course.id, lesson.id, room, data)));
     }
   }
   if (files.length || course.modules.some((m) => m.lessons.some((l) => l.task))) {

@@ -20,6 +20,7 @@ import { redisPipeline } from "@/lib/redis";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const HOUR = 3_600_000;
 const realNow = Date.now;
@@ -118,10 +119,10 @@ async function main(): Promise<void> {
   const welcomeId = welcome.ok ? welcome.flows[1].id : "";
 
   part("Carried out for the people it is for");
-  await upsertContact(list, "ana@example.com", { agreed: true, explicit: true, source: "free" });
-  await upsertContact(list, "ben@example.com", { agreed: true, explicit: true, source: "buyer", productId: course.product.id, title: "Weeknight Course" });
+  await upsertContact(list, "ana@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
+  await upsertContact(list, "ben@example.com", { agreed: true, explicit: true, source: "buyer", productId: course.product.id, title: "Weeknight Course" }, ROOM);
   // Cleo already carries ten labels: no room for another.
-  await importContactRows(list, [{ email: "cleo@example.com", name: "Cleo", tags: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] }]);
+  await importContactRows(list, [{ email: "cleo@example.com", name: "Cleo", tags: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] }], ROOM);
   store = (await storeForEmail(OWNER))!;
   for (const email of ["ana@example.com", "ben@example.com", "cleo@example.com"]) await enroll(store, email, { joined: true });
   await run();
@@ -163,7 +164,7 @@ async function main(): Promise<void> {
       redis.run(["HSET", key, "ana@example.com", JSON.stringify({ ...row, unsub: true, unsubAt: "2026-10-12T00:00:00.000Z" })]);
     }
     return [...tags, "late"];
-  });
+  }, ROOM);
   const after = parseContact(redis.run(["HGET", key, "ana@example.com"]));
   is("the unsubscribe stays, and the label is written over the contact as it now is", [result.changed, after?.unsub, after?.tags.includes("late")], [["ana@example.com"], true, true]);
 

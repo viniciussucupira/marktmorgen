@@ -19,6 +19,7 @@ import { welcome } from "@/lib/community-access";
 import { inbox, thread } from "@/lib/community-dm";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 async function main(): Promise<void> {
   redis.clear();
@@ -44,16 +45,16 @@ async function main(): Promise<void> {
 
   part("The welcome");
   const config: CommunityConfig = { ...freshConfig("Harbor Kitchen"), welcome: "Welcome in! Start with the pinned post.", dm: { on: true, between: false, ask: true } };
-  is("sent to a member who has just come in", await welcome(id, config, ana), true);
-  is("never twice", await welcome(id, config, ana), false);
+  is("sent to a member who has just come in", await welcome(id, config, ana, ROOM), true);
+  is("never twice", await welcome(id, config, ana, ROOM), false);
   const conversations = await inbox(id, ana);
   is("it is in their messages", conversations.length, 1);
   const said = await thread(id, ana, conversations[0].pair);
   is("from the creator, with the creator's words", said?.messages.map((m) => [m.a, m.text]), [["creator", "Welcome in! Start with the pinned post."]]);
   is("it waits on nobody: a message from the creator is never a request", said?.pending, false);
   const ben = memberKey("ben@example.com");
-  is("nothing while private messages are off", await welcome(id, { ...config, dm: { on: false, between: false, ask: true } }, ben), false);
-  is("nothing when there is no message", await welcome(id, { ...config, welcome: "  " }, ben), false);
+  is("nothing while private messages are off", await welcome(id, { ...config, dm: { on: false, between: false, ask: true } }, ben, ROOM), false);
+  is("nothing when there is no message", await welcome(id, { ...config, welcome: "  " }, ben, ROOM), false);
 
   done();
 }

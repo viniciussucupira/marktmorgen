@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { DataRoomError } from "@/lib/store-data";
 import { originFrom } from "@/lib/request-origin";
 import { fromAnotherSite } from "@/lib/studio-route";
 import { limited } from "@/lib/request-guard";
@@ -60,14 +61,16 @@ export async function POST(request: NextRequest) {
     if (!(await within(id, viewer.key, "rsvp"))) return back(page, "slow");
 
     if (field("action", 12) === "notgoing") {
-      await cancelRsvp(id, event, viewer.key);
+      await cancelRsvp(id, event, viewer.key, store);
       return back(page, "notgoing");
     }
-    const answer = await rsvp(id, event, viewer.key);
+    const answer = await rsvp(id, event, viewer.key, store);
     if (answer === "full") return back(page, "eventfull");
     if (answer === "closed") return back(page, event.cancelled ? "eventcancelled" : "eventover");
     return back(page, viewer.member.mail ? "going" : "goingnomail");
   } catch (error) {
+    // No room in the store's data room: the place was not taken (lib/store-data.ts).
+    if (error instanceof DataRoomError) return back(page, "noroom");
     console.error("an RSVP failed", error);
     return back(page, "error");
   }

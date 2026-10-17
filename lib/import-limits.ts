@@ -70,6 +70,13 @@ export function importAllowanceFor(store: PlanFields & { tier: Tier }, nowSecond
 export const IMPORT_WORST_COMMANDS_PER_ROW = 6;
 /** The fewest rows an upload counts as, so the requests an allowance can start are bounded by it. */
 export const IMPORT_MIN_ROWS_PER_UPLOAD = 50;
+/**
+ * The most an upload keeps in the database for each row it counts as, in
+ * bytes (since 18 October 2026): an upload counts at least one row for every
+ * this many bytes it carries, so what imports keep while they run is bounded
+ * by the rows figure (tests/store-data-registry.ts), however long the cells.
+ */
+export const IMPORT_ROW_BYTES = 2_000;
 export const IMPORT_WORST_BYTES_PER_ROW = 3_000;
 
 /** "2,000 rows", for the studio. */
@@ -81,5 +88,5 @@ export function rowsWords(rows: number): string {
 export function importAllowanceWords(): string {
   const { creator, pro, scale } = IMPORT_ALLOWANCES;
   const n = (v: number) => v.toLocaleString("en-US");
-  return `Rows an import brings in, a billing month: ${n(creator.rows)} on Store, ${n(pro.rows)} on Studio, ${n(scale.rows)} on Scale (Store's figures in the free trial and before a plan), each upload counting at least ${IMPORT_MIN_ROWS_PER_UPLOAD} rows; imports started: ${n(creator.starts)}, ${n(pro.starts)} and ${n(scale.starts)}.`;
+  return `Rows an import brings in, a billing month: ${n(creator.rows)} on Store, ${n(pro.rows)} on Studio, ${n(scale.rows)} on Scale (Store's figures in the free trial and before a plan), each upload counting at least ${IMPORT_MIN_ROWS_PER_UPLOAD} rows, and one row for every ${n(IMPORT_ROW_BYTES)} bytes it carries; imports started: ${n(creator.starts)}, ${n(pro.starts)} and ${n(scale.starts)}.`;
 }

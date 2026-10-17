@@ -16,6 +16,7 @@ import { readListing } from "@/lib/catalog";
 import { confirmationFor } from "@/lib/purchase-email";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const OWNER = "owner@example.com";
 
@@ -41,7 +42,7 @@ async function main(): Promise<void> {
   const made = await addProduct(OWNER, "Supper Club Guide", "", "27", null);
   if (!made.ok || !statsId) throw new Error("no product");
   if (typeof full === "string") throw new Error("no note");
-  await writeThanksNote(statsId, made.product.id, full);
+  await writeThanksNote(statsId, made.product.id, full, ROOM);
   await setProductNote(OWNER, made.product.id, true);
   const store = (await storeForEmail(OWNER))!;
   const listing = (await readListing(store, made.product.id))!;
@@ -68,7 +69,7 @@ async function main(): Promise<void> {
 
   part("Taken off");
   await setProductNote(OWNER, made.product.id, false);
-  await writeThanksNote(statsId, made.product.id, null);
+  await writeThanksNote(statsId, made.product.id, null, ROOM);
   is("the product says so, and the record is gone", [(await readListing((await storeForEmail(OWNER))!, made.product.id))?.note, await readThanksNote(statsId, made.product.id)], [false, null]);
 
   part("The heading when the creator gives none");

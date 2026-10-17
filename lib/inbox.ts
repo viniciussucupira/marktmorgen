@@ -10,6 +10,13 @@
  * message; the index drops what has gone the next time it is read, and keeps
  * the newest MAX_CONVERSATIONS.
  *
+ * What it keeps takes room in the store's data room (lib/store-data.ts)
+ * until it expires by itself: each conversation is counted, whole, in the
+ * slot of the month it would expire in were nothing more written (kept on
+ * it as `bm`, with what its messages weigh as `b`); a message in the same
+ * month adds what it weighs, one in a later month counts the whole again
+ * there. A visitor's or a reply's message that does not fit is refused.
+ *
  * A visit to the store reads none of this: the chat is drawn from the store
  * record the page already has, and only a visitor who opens it and writes, or
  * comes back to a conversation they started, reaches these keys.
@@ -22,6 +29,8 @@ import { storeSender } from "@/lib/calls";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isHouseStore } from "@/lib/house-store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { DataRoomError, monthOf, needData, noteData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { withinLimit } from "@/lib/request-guard";
 import { SITE_URL } from "@/lib/site-url";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
@@ -53,7 +62,7 @@ const convKey = (statsId: string, id: string) => `nl:inbox:${statsId}:c:${id}`;
 const msgKey = (statsId: string, id: string) => `nl:inbox:${statsId}:m:${id}`;
 const tokenKey = (token: string) => `nl:inbox:tok:${token}`;
 
-type Kept = Conversation & { token: string };
+type Kept = Conversation & { token: string; b?: number; bm?: string };
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz0123456789";
 function newId(): string {
@@ -65,8 +74,14 @@ function parseKept(raw: unknown): Kept | null {
   const conversation = parseConversation(raw);
   if (!conversation) return null;
   try {
-    const token = (JSON.parse(String(raw)) as { token?: unknown }).token;
-    return { ...conversation, token: typeof token === "string" && CHAT_TOKEN.test(token) ? token : "" };
+    const value = JSON.parse(String(raw)) as { token?: unknown; b?: unknown; bm?: unknown };
+    const token = value.token;
+    return {
+      ...conversation,
+      token: typeof token === "string" && CHAT_TOKEN.test(token) ? token : "",
+      ...(typeof value.b === "number" && Number.isSafeInteger(value.b) && value.b >= 0 ? { b: value.b } : {}),
+      ...(typeof value.bm === "string" && /^\d{4}-\d{2}$/.test(value.bm) ? { bm: value.bm } : {}),
+    };
   } catch {
     return null;
   }
@@ -74,8 +89,10 @@ function parseKept(raw: unknown): Kept | null {
 
 /** What the studio is given: the conversation without the visitor's token. */
 function shown(kept: Kept): Conversation {
-  const { token, ...conversation } = kept;
+  const { token, b, bm, ...conversation } = kept;
   void token;
+  void b;
+  void bm;
   return conversation;
 }
 
@@ -90,7 +107,27 @@ function readEmail(raw: unknown): string | null {
   return normaliseEmail(text);
 }
 
-async function write(statsId: string, handle: string, conversation: Kept, add: Message | null): Promise<void> {
+/**
+ * Writes a conversation, and its new message. Its room is taken first: what
+ * the message adds in the month the conversation is counted in, or the
+ * whole conversation in a later one. `refusable` for what someone wrote,
+ * which then is not written (DataRoomError); a change of state is always
+ * counted, never refused.
+ */
+async function write(store: Store, statsId: string, handle: string, conversation: Kept, add: Message | null, refusable: boolean, now = Date.now()): Promise<Kept> {
+  const [length, oldest] = add ? await redisPipeline([["LLEN", msgKey(statsId, conversation.id)], ["LINDEX", msgKey(statsId, conversation.id), 0]]) : [0, null];
+  const dropped = add && Number(length) >= MAX_MESSAGES && typeof oldest === "string" ? dataBytes([oldest], 1) : 0;
+  const messages = Math.max(0, (conversation.b ?? 0) + (add ? dataBytes([JSON.stringify(add)], 1) : 0) - dropped);
+  const month = monthOf(now + (KEEP + 86_400) * 1000);
+  const record = (c: Kept) => dataBytes([JSON.stringify(c)], 3) + (c.token ? dataBytes([c.token, `${statsId}|${c.id}|${handle}`], 1) : 0);
+  const next: Kept = { ...conversation, b: messages, bm: month };
+  const bytes = conversation.bm === month ? messages - (conversation.b ?? 0) + Math.max(0, record(next) - record(conversation)) : messages + record(next);
+  if (bytes > 0) {
+    const changes = [{ until: now + (KEEP + 86_400) * 1000, bytes }];
+    if (refusable) await needData(store, changes, now);
+    else await noteData(store, changes, now);
+  }
+  conversation = next;
   const commands: (string | number)[][] = [
     ["SET", convKey(statsId, conversation.id), JSON.stringify(conversation), "EX", KEEP],
     ["ZADD", indexKey(statsId), conversation.lastAt, conversation.id],
@@ -102,6 +139,7 @@ async function write(statsId: string, handle: string, conversation: Kept, add: M
   commands.push(["EXPIRE", msgKey(statsId, conversation.id), KEEP]);
   if (conversation.token) commands.push(["SET", tokenKey(conversation.token), `${statsId}|${conversation.id}|${handle}`, "EX", KEEP]);
   await redisPipeline(commands);
+  return conversation;
 }
 
 async function readKept(statsId: string, id: string): Promise<Kept | null> {
@@ -157,9 +195,9 @@ async function open(input: NewInput): Promise<{ ok: true; conversation: Kept; me
     token: randomBytes(24).toString("base64url"),
   };
   const message: Message = { at: now, from: "visitor", text };
-  await write(statsId, store.handle, conversation, message);
+  const kept = await write(store, statsId, store.handle, conversation, message, true, now);
   await trim(statsId);
-  return { ok: true, conversation, messages: [message] };
+  return { ok: true, conversation: kept, messages: [message] };
 }
 
 export type VisitorThread = { token: string; status: Conversation["status"]; messages: { at: number; from: Message["from"]; text: string }[] };
@@ -177,7 +215,11 @@ export async function startChat(input: { store: Store; email: unknown; name: unk
   const { store } = input;
   if (!chatOpen(store)) return { ok: false, reason: "closed" };
   if (!(await withinLimit("chat-start", `${store.statsId}:${input.ip}`, 5, 3_600))) return { ok: false, reason: "limited" };
-  const made = await open({ ...input, source: "chat" });
+  // A store whose data room is full is not taking messages here: said as closed, nothing kept.
+  const made = await open({ ...input, source: "chat" }).catch((error) => {
+    if (error instanceof DataRoomError) return { ok: false as const, reason: "closed" as const };
+    throw error;
+  });
   if (!made.ok) return made;
   await tellTeam(store, made.conversation, made.messages[0].text).catch((error) => console.error("telling a store of a chat failed", error));
   return { ok: true, thread: forVisitor(made.conversation, made.messages) };
@@ -186,7 +228,10 @@ export async function startChat(input: { store: Store; email: unknown; name: unk
 /** A message sent with the store's contact form, filed in the inbox too. Nothing more is sent: the form already emailed the creator. */
 export async function fileContact(input: { store: Store; email: string; name: string; text: string; now?: number }): Promise<boolean> {
   if (!input.store.statsId || !isRedisConfigured()) return false;
-  const made = await open({ ...input, source: "contact" });
+  const made = await open({ ...input, source: "contact" }).catch((error) => {
+    if (error instanceof DataRoomError) return { ok: false as const };
+    throw error;
+  });
   return made.ok;
 }
 
@@ -235,8 +280,13 @@ export async function visitorSend(
   if (!(await withinLimit("chat-send", `${found.statsId}:${found.id}`, VISITOR_PER_HOUR, 3_600))) return { ok: false, reason: "limited" };
   if (!(await takeAllowance(store, "inbox", 1, now)).ok) return { ok: false, reason: "limited" };
   const message: Message = { at: now, from: "visitor", text };
-  const next: Kept = { ...conversation, status: "open", lastAt: now, lastFrom: "visitor", unread: conversation.unread + 1 };
-  await write(found.statsId, store.handle, next, message);
+  let next: Kept;
+  try {
+    next = await write(store, found.statsId, store.handle, { ...conversation, status: "open", lastAt: now, lastFrom: "visitor", unread: conversation.unread + 1 }, message, true, now);
+  } catch (error) {
+    if (error instanceof DataRoomError) return { ok: false, reason: "closed" };
+    throw error;
+  }
   await tellTeam(store, next, text).catch((error) => console.error("telling a store of a chat failed", error));
   return { ok: true, thread: forVisitor(next, await readMessages(found.statsId, found.id)) };
 }
@@ -294,8 +344,7 @@ export async function openConversation(statsId: string, id: string, store?: Stor
   const conversation = await readKept(statsId, id);
   if (!conversation) return null;
   if (conversation.unread && store) {
-    const next = { ...conversation, unread: 0 };
-    await write(statsId, store.handle, next, null);
+    const next = await write(store, statsId, store.handle, { ...conversation, unread: 0 }, null, false);
     return { conversation: shown(next), messages: await readMessages(statsId, id) };
   }
   return { conversation: shown(conversation), messages: await readMessages(statsId, id) };
@@ -313,8 +362,7 @@ export async function replyTo(store: Store, id: string, by: string, textRaw: unk
   if (!conversation) return { ok: false, reason: "none" };
   if (!(await withinLimit("inbox-reply", statsId, 400, 86_400))) return { ok: false, reason: "limited" };
   const message: Message = { at: now, from: "store", text, by };
-  const next: Kept = { ...conversation, lastAt: now, lastFrom: "store", unread: 0 };
-  await write(statsId, store.handle, next, message);
+  const next = await write(store, statsId, store.handle, { ...conversation, lastAt: now, lastFrom: "store", unread: 0 }, message, true, now);
   const w = chatWords(store.language);
   const link = chatOpen(store) && next.token ? `${SITE_URL}/@${store.handle}?chat=${next.token}` : "";
   const emailed = isSenderConfigured()
@@ -335,8 +383,7 @@ export async function setStatus(store: Store, id: string, status: unknown): Prom
   if (!store.statsId || (status !== "open" && status !== "closed")) return null;
   const conversation = await readKept(store.statsId, id);
   if (!conversation) return null;
-  const next = { ...conversation, status, unread: status === "closed" ? 0 : conversation.unread } as Kept;
-  await write(store.statsId, store.handle, next, null);
+  const next = await write(store, store.statsId, store.handle, { ...conversation, status, unread: status === "closed" ? 0 : conversation.unread } as Kept, null, false);
   return shown(next);
 }
 
@@ -347,8 +394,7 @@ export async function assignTo(store: Store, id: string, email: unknown, allowed
   if (who && !allowed.includes(who)) return null;
   const conversation = await readKept(store.statsId, id);
   if (!conversation) return null;
-  const next = { ...conversation, assigned: who };
-  await write(store.statsId, store.handle, next, null);
+  const next = await write(store, store.statsId, store.handle, { ...conversation, assigned: who }, null, false);
   return shown(next);
 }
 

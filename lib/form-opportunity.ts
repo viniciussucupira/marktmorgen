@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { FORM_RESPONSE_ID, type FormResponse } from "@/lib/forms";
 import { MAX_DEALS, parseDeal, type Deal, type Stage } from "@/lib/crm-rules";
+import { dealBytes, dealSlot } from "@/lib/crm";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
 import { redisPipeline } from "@/lib/redis";
 
 export const MAX_CONVERTIBLE_FORM_RESPONSES = 50;
@@ -20,11 +22,16 @@ if redis.call("HLEN", KEYS[1]) >= tonumber(ARGV[3]) then return {-1, ""} end
 redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
 return {1, ARGV[2]}`;
 
-export async function createFormOpportunity(statsId: string, ref: string, draft: Deal, stages: readonly Stage[]): Promise<{ state: "created" | "existing"; deal: Deal } | { state: "full" }> {
+export async function createFormOpportunity(statsId: string, ref: string, draft: Deal, stages: readonly Stage[], room: DataStore): Promise<{ state: "created" | "existing"; deal: Deal } | { state: "full" }> {
   if (!statsId || !/^[a-f0-9]{64}$/.test(ref)) throw new Error("Invalid form opportunity identity");
   const id = ref.slice(0, 10);
   const deal = { ...draft, id, formResponseRef: ref };
+  // Its room is taken first (DataRoomError when it does not fit), and given back when it was not made.
+  const before = await readFormOpportunity(statsId, ref, stages).catch(() => null);
+  if (!before) await needData(room, [{ slot: dealSlot(id), bytes: dealBytes(deal), set: true }]);
   const result = await redisPipeline([["EVAL", CREATE_FORM_OPPORTUNITY, 1, "nl:crm:deals:" + statsId, id, JSON.stringify(deal), MAX_DEALS]]);
+  const made = Array.isArray(result) && Array.isArray(result[0]) && result[0][0] === 1;
+  if (!before && !made) await giveData(room, [{ slot: dealSlot(id), bytes: 0, set: true }]);
   if (!Array.isArray(result) || result.length !== 1 || !Array.isArray(result[0]) || result[0].length !== 2) throw new Error("Form opportunity write unconfirmed");
   const [code, record] = result[0];
   if (code === -1 && record === "") return { state: "full" };

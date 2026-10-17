@@ -19,6 +19,7 @@ import { aiMonthKey } from "@/lib/ai";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 let reply: string | null = null;
 const prompts: string[] = [];
@@ -89,7 +90,7 @@ async function main(): Promise<void> {
   }
   await keepAnswer(store, "old", "x", { productId: made.product.id, question: "An old question from long ago", now: now - 120 * 86_400_000 });
   for (const [i, text] of ["I wish it came as a PDF to print", "Lovely recipes, easy to follow", "Mail me at pat@example.com for more"].entries()) {
-    await saveReview(statsId, { productId: made.product.id, email: `buyer${i}@example.com`, reference: `cs_test_rev${i}0000000000`, pi: `pi_rev${i}`, rating: 4 + (i % 2), text, name: `Buyer ${i}` });
+    await saveReview(statsId, { productId: made.product.id, email: `buyer${i}@example.com`, reference: `cs_test_rev${i}0000000000`, pi: `pi_rev${i}`, rating: 4 + (i % 2), text, name: `Buyer ${i}` }, ROOM);
   }
   await countSearchMiss(statsId, ["printable"]);
   await countSearchMiss(statsId, ["printable"]);

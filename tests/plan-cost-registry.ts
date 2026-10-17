@@ -71,6 +71,8 @@ import { MAX_TEAM } from "@/lib/team";
 import { MAX_TASK_FILE_BYTES, TASK_ROOM_BYTES, TRIAL_TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { COMMUNITY_PICTURES, PICTURE_BYTES, TRIAL_COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
 import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { DATA_ROOM_BYTES, NON_PAYING_DATA_ROOM_BYTES } from "@/lib/store-data-rules";
+import { afterEndByteMonths, reserveBytes } from "./store-data-registry";
 import {
   UPSTASH_MICRO_USD_PER_GB_MONTH, UPSTASH_MICRO_USD_PER_GB_TRANSFER, UPSTASH_MICRO_USD_PER_MILLION_COMMANDS, VERCEL_CALL_MICRO_USD_PER_MILLION,
   VERCEL_CPU_MICRO_USD_PER_HOUR, VERCEL_FUNCTION_GB, VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR,
@@ -541,6 +543,20 @@ export const COST_LINES: CostLine[] = [
     basis: "The plan's room for students' work, all of it kept, at the dearest store a file may be in; it sits beside the plan's own storage, which does not hold students back.",
   },
   {
+    id: "database-storage",
+    feature: "What a store keeps in the database: its data room, and every record kept outside it (18 October 2026: a room by plan)",
+    monthlyUsd: (tier) => (DATA_ROOM_BYTES[tier] + reserveBytes(tier)) * DB_BYTE_MONTH,
+    sources: [
+      { file: "lib/store-data-rules.ts", names: ["DATA_ROOM_BYTES", "NON_PAYING_DATA_ROOM_BYTES", "ORDER_DATA_BYTES", "ITEM_DATA_BYTES", "orderReserveFor", "contentRoomFor"] },
+      { file: "lib/store-data.ts", names: ["TAKE_DATA", "needData", "keepFor", "chargeOrderData"] },
+      { file: "lib/order-admission.ts", names: ["used + holding + bytes > room", "orderDataBytes(items)"] },
+      { file: "lib/orders.ts", names: ["chargeOrderData(store, items, now)"] },
+      { file: "tests/store-data-registry.ts", names: ["FAMILIES", "reserveBytes", "partAverage"] },
+      { file: "lib/spend-cost-table.ts", names: ["UPSTASH_MICRO_USD_PER_GB_MONTH", "daily average"] },
+    ],
+    basis: "The plan's data room full every day of the month, at Upstash's storage rate: everything a store keeps and what its orders leave is taken from it before it is written (orders' room held at the checkout), and past it a write is refused, never an order. Every record kept outside it (tests/store-data-registry.ts, which fails for a key family that does not say how it is bounded) at what it keeps on average over a month, which is what Upstash bills: each part at every unit of every window its expiry touches.",
+  },
+  {
     id: "community-pictures",
     feature: "Pictures in community posts (18 October 2026: a number by plan)",
     monthlyUsd: (tier) => ((COMMUNITY_PICTURES[tier] * PICTURE_BYTES) / GB) * STORAGE_PER_GB,
@@ -573,6 +589,18 @@ export const PER_PAYMENT_LINES: CostLine[] = [
     ],
     basis: "All a plan may keep, kept for its closing days and the week a late last notice adds, once after the payment that was the last. A plan that ended before 18 October 2026 keeps the old rule (a store with no plan's room, with no date): a legacy exposure of docs/funded-exposure-review.md, when no plan could yet be bought.",
   },
+  {
+    id: "retained-data",
+    feature: "What a store keeps in the database after its plan ends, until its closing day (18 October 2026)",
+    monthlyUsd: (tier) => (DATA_ROOM_BYTES[tier] * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30) + afterEndByteMonths(tier, CLOSING_DAYS + WARN_WEEK_DAYS)) * DB_BYTE_MONTH,
+    sources: [
+      { file: "lib/store-data-rules.ts", names: ["DATA_ROOM_BYTES", "NON_PAYING_DATA_ROOM_BYTES"] },
+      { file: "lib/plan-closing-rules.ts", names: ["CLOSING_DAYS"] },
+      { file: "tests/store-data-registry.ts", names: ["afterEndByteMonths", "partPeak"] },
+      { file: "docs/funded-exposure-review.md", names: ["What a store keeps in the database after its closing day"] },
+    ],
+    basis: "The room full, and every record outside it at the most it holds at once, for the closing days and the week a late last notice adds, each record only as long as it is kept. What the room holds past the closing day is kept for a store's buyers and is not priced here: docs/funded-exposure-review.md says so, for the owner.",
+  },
 ];
 
 /** What one payment of this plan can leave behind after it, in dollars. */
@@ -604,14 +632,14 @@ export function nonPayingWorst(): number {
     + (Object.keys(allowances) as AllowanceKind[]).reduce((sum, kind) => sum + figureCost(allowances, kind), 0)
     + ["imports", "clickfunnels", "funnel-share", "team-scheduling", "quizzes"].reduce((sum, id) => sum + creator(id), 0)
     // Its students' work and its community's pictures, kept for the trial and then to its closing day (lib/plan-closing.ts).
-    + ((TRIAL_TASK_ROOM_BYTES + TRIAL_COMMUNITY_PICTURES * PICTURE_BYTES) / GB) * STORAGE_PER_GB * (1 + (CLOSING_DAYS + WARN_WEEK_DAYS) / 30);
+    + ((TRIAL_TASK_ROOM_BYTES + TRIAL_COMMUNITY_PICTURES * PICTURE_BYTES) / GB) * STORAGE_PER_GB * (1 + (CLOSING_DAYS + WARN_WEEK_DAYS) / 30)
+    // Its data room, and what it keeps outside it at Store's figures, which are more than a trial's, for the trial and to its closing day.
+    + (NON_PAYING_DATA_ROOM_BYTES.trial * (1 + (CLOSING_DAYS + WARN_WEEK_DAYS) / 30) + reserveBytes("creator") + afterEndByteMonths("creator", CLOSING_DAYS + WARN_WEEK_DAYS)) * DB_BYTE_MONTH;
 }
 
 /** Per-use costs that no monthly figure bounds yet: not in worstCost, so nothing here is certified. */
 export type OpenItem = { id: string; what: string; names?: string[] };
-export const OPEN: OpenItem[] = [
-  { id: "database-storage", what: "Store records, contacts, page versions, stats and other data kept in the database have no per-store byte figure (only per-kind caps), and many grow with a store's age: no plan's worst month can say what they cost. Needs a per-store room taken where records are made and given back where they go (tests/plan-cost-registry.test.ts holds this the only item left)." },
-];
+export const OPEN: OpenItem[] = [];
 
 /** Exported limit or cost constants that are not a per-store monthly cost, and why. */
 export const NOT_A_COST: Record<string, string> = {

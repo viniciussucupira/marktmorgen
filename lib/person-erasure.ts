@@ -173,7 +173,7 @@ export const ERASERS: Eraser[] = [
     module: "lib/reviews.ts",
     only: "person",
     run: async (s, files) => {
-      const done = await forgetReviewsPerson(s.statsId, s.productIds, s.email);
+      const done = await forgetReviewsPerson(s.statsId, s.productIds, s.email, s.store);
       files.push(...done.photos);
       return done.records;
     },

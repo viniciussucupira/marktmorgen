@@ -97,3 +97,11 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_contact_erasure_redis.py
+      - name: Actual Redis data room checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_store_data_redis.py
+      - name: Actual Redis capped count checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_capped_count_redis.py

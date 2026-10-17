@@ -15,6 +15,7 @@ import { pageWords } from "@/lib/page-translate";
 import { coachChecks } from "@/lib/page-coach";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const FOLDER = "b".repeat(24);
 const path = (n: number) => `images/${FOLDER}/${String(n).padStart(32, "0")}.webp`;
@@ -86,7 +87,7 @@ async function main(): Promise<void> {
   is("two near-full versions together are saved", [JSON.stringify(heavy).length > MAX_PAGE_BYTES, pageProblem(heavyFirst, heavy)], [true, null]);
 
   part("Kept and read back");
-  await writePage("stats9", "prod9", heavy);
+  await writePage("stats9", "prod9", heavy, ROOM);
   is("both versions come back from storage as they were saved", JSON.stringify(await readPage("stats9", "prod9")) === JSON.stringify(heavy), true);
 
   part("Translated and coached");

@@ -9,6 +9,7 @@ import type { Store } from '@/lib/store';
 import { store as memory } from './redis-stub';
 import { paidPeriod } from './billing-period-fixture';
 import { windowId } from '@/lib/allowance-window';
+import { ROOM } from "./data-room";
 const actual=memory.pipeline.bind(memory);
 let reply: unknown[]|undefined;
 let pipelines:(string|number)[][][]=[];
@@ -36,7 +37,7 @@ async function fullStore(){
  await setSubscription(owner,{customerId:'cus_MailBudget0001',subscriptionId:'sub_MailBudget0001',active:true,tier:'pro',period:paidPeriod()});
  await setMailSettings(owner,{fromName:'Synthetic Mail Budget',address:'1 Test St, Portland, OR 97201'});
  const made=(await storeForEmail(owner))!;
- await upsertContact(made.listId!,'reader@example.com',{agreed:true,explicit:true,source:'free'});
+ await upsertContact(made.listId!,'reader@example.com',{agreed:true,explicit:true,source:'free'}, ROOM);
  return made;
 }
 test('actual send loop never dispatches after a lost reservation acknowledgement',async()=>{

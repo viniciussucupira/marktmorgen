@@ -80,6 +80,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { affiliatePromotionFrom, readAffiliatePromotion, type AffiliatePromotion } from "@/lib/affiliate-promotion";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
@@ -1094,15 +1096,22 @@ export async function addPayout(
     reference: input.reference.replace(/\s+/g, " ").trim().slice(0, MAX_REFERENCE_LENGTH),
     at: Date.now(),
   };
-  await redisPipeline([["HSET", payoutsKey(store.statsId as string), payout.id, JSON.stringify(payout)]]);
+  // What the creator writes down takes room in the store's data room first (DataRoomError when it does not fit).
+  const json = JSON.stringify(payout);
+  await needData(store, [{ slot: PAYOUTS_SLOT, bytes: dataBytes([payout.id, json], 1) }]);
+  await redisPipeline([["HSET", payoutsKey(store.statsId as string), payout.id, json]]);
   return payout;
 }
 
 export async function removePayout(store: Store, id: string): Promise<boolean> {
   if (!store.statsId || !/^[0-9a-f]{12}$/.test(id)) return false;
-  const [removed] = await redisPipeline([["HDEL", payoutsKey(store.statsId), id]]);
+  const [held, removed] = await redisPipeline([["HGET", payoutsKey(store.statsId), id], ["HDEL", payoutsKey(store.statsId), id]]);
+  if (Number(removed) === 1 && typeof held === "string") await giveData(store, [{ slot: PAYOUTS_SLOT, bytes: dataBytes([id, held], 1) }]);
   return Number(removed) === 1;
 }
+
+/** Where what the creator says they paid their affiliates is counted in the store's data room (lib/store-data.ts). */
+const PAYOUTS_SLOT = "aff:payouts";
 
 // ---- Clicks and the checkout ---------------------------------------------
 

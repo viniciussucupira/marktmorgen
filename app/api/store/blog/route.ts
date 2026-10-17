@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { StoreFullError } from "@/lib/store-full";
 import { randomBytes } from "node:crypto";
 import { ensureStatsId, setPostCount } from "@/lib/store";
 import { readListing } from "@/lib/catalog";
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     const store = guarded.store.statsId ? guarded.store : await ensureStatsId(guarded.ref);
     if (!store?.statsId) return fail("none");
     if (body.action === "delete") {
-      const left = await deletePost(store.statsId, text(body.id, 20));
+      const left = await deletePost(store.statsId, text(body.id, 20), store);
       if (left === null) return fail("unknown", 404);
       await setPostCount(guarded.ref, left);
       return Response.json({ ok: true });
@@ -30,11 +31,13 @@ export async function POST(request: NextRequest) {
     // Only one of the store's own products, as it is now.
     if (input.product && !(await readListing(store, input.product))) input.product = null;
     const id = typeof body.id === "string" && body.id ? text(body.id, 20) : null;
-    const saved = await savePost(store.statsId, id, input, () => randomBytes(5).toString("hex"));
+    const saved = await savePost(store.statsId, id, input, () => randomBytes(5).toString("hex"), store);
     if (!saved.ok) return fail(saved.reason, saved.reason === "unknown" ? 404 : 400);
     await setPostCount(guarded.ref, saved.published);
     return Response.json({ ok: true, post: saved.post });
   } catch (error) {
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof StoreFullError) return fail("store_full", 409);
     console.error("saving a blog post failed", error);
     return fail("server_error", 500);
   }

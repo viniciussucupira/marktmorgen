@@ -38,6 +38,8 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { MAX_IMPORT, MAX_LEADS } from "@/lib/contact-rules";
 import { liftCommand, suppressedAmongCommand, suppressedCommand, wasSuppressed } from "@/lib/suppression";
 import { joinedCommands } from "@/lib/joined-stores";
+import { type DataStore, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 
 /** How many product names one address keeps. */
 const MAX_TITLES = 20;
@@ -99,6 +101,27 @@ export function readTags(raw: string | string[]): string[] {
     if (out.length >= MAX_CONTACT_TAGS) break;
   }
   return out;
+}
+
+/**
+ * What contacts take in the store's data room (lib/store-data.ts), all in
+ * one slot. A contact put on the list by an order is part of what the order
+ * left (lib/store-data-rules.ts, ORDER_DATA_BYTES), so those writes pass
+ * `room` as null; every other way on (a sign-up, an import, the API, labels a
+ * sequence adds) takes what it grows the list by first, and is refused with
+ * DataRoomError when it does not fit. A contact counts for its record and,
+ * from the start, the unsubscribe link it will be given (TOKEN_BYTES) and
+ * the few flags leaving adds.
+ */
+const CONTACTS_SLOT = "ct";
+export const TOKEN_BYTES = dataBytes(["0".repeat(40), "x".repeat(40 + 254 + 40)], 1) + 64;
+const contactBytes = (contact: Contact | null) => (contact ? dataBytes([JSON.stringify(contact)], 1) + TOKEN_BYTES : 0);
+
+/** Takes what writing these contacts over what they were grows the list by; nothing when the writes are an order's. */
+async function needContacts(room: DataStore | null, pairs: { before: Contact | null; next: Contact }[]): Promise<void> {
+  if (!room) return;
+  const grown = pairs.reduce((sum, { before, next }) => sum + Math.max(0, contactBytes(next) - contactBytes(before)), 0);
+  if (grown > 0) await needData(room, [{ slot: CONTACTS_SLOT, bytes: grown }]);
 }
 
 export const leadsKey = (listId: string) => `nl:store:leads:${listId}`;
@@ -169,6 +192,8 @@ export async function upsertContact(
     /** The store's id, given when the person typed the address themselves, so asking to be deleted from every store finds this one (lib/joined-stores.ts). */
     sid?: string;
   },
+  /** The store whose data room the contact takes from, or null for one an order put on (counted with the order). */
+  room: DataStore | null,
 ): Promise<AddResult> {
   const none = { joined: false, gotProduct: false, full: false };
   if (!isRedisConfigured() || !listId) return none;
@@ -229,6 +254,7 @@ export async function upsertContact(
   const clicks = resubscribe ? (allowed ? input.at || now : "") : before?.clicks || (allowed ? input.at || now : "");
   if (clicks) next.clicks = clicks;
   if (deleted && !agreed) delete next.clicks;
+  await needContacts(room, [{ before, next }]);
   const commands: (string | number)[][] = [["HSET", key, email, JSON.stringify(next)]];
   if (agreed && !before?.agreed) commands.push(["INCR", agreedKey(listId)]);
   if (resubscribe) commands.push(["DECR", unsubKey(listId)]);
@@ -276,6 +302,7 @@ export async function isMailable(listId: string, rawEmail: string): Promise<bool
 export async function importContacts(
   listId: string,
   emails: string[],
+  data: DataStore,
 ): Promise<{ added: number; already: number; full: boolean }> {
   if (!isRedisConfigured() || !listId || !emails.length) return { added: 0, already: emails.length, full: false };
   const key = leadsKey(listId);
@@ -290,6 +317,7 @@ export async function importContacts(
     const found = Array.isArray(rows) ? rows : [];
     const deleted = Array.isArray(prints) ? prints : [];
     const pairs: string[] = [];
+    const sizes: { before: Contact | null; next: Contact }[] = [];
     let newlyAgreed = 0;
     chunk.forEach((email, j) => {
       // Deleted from this store: an import never brings them back.
@@ -319,9 +347,11 @@ export async function importContacts(
         importedAt: now,
       };
       pairs.push(email, JSON.stringify(next));
+      sizes.push({ before, next });
       newlyAgreed += 1;
     });
     if (pairs.length) {
+      await needContacts(data, sizes);
       await redisPipeline([
         ["HSET", key, ...pairs],
         ["INCRBY", agreedKey(listId), newlyAgreed],
@@ -470,7 +500,7 @@ export async function previewContactRows(
  * in between must not be written back as agreeing. An address that changed
  * meanwhile is read again and left as it now is.
  */
-export async function importContactRows(listId: string, rows: ImportedContact[]): Promise<ContactOutcome[]> {
+export async function importContactRows(listId: string, rows: ImportedContact[], data: DataStore): Promise<ContactOutcome[]> {
   if (!isRedisConfigured() || !listId || rows.length === 0) return rows.map(() => "full");
   const key = leadsKey(listId);
   const [size, found, prints] = await redisPipeline([
@@ -484,6 +514,7 @@ export async function importContactRows(listId: string, rows: ImportedContact[])
   const deleted = Array.isArray(prints) ? prints : [];
   // Each write, with the fingerprint of what its address held when read.
   const writes: { email: string; value: string; was: string; row: number }[] = [];
+  const sizes: { before: Contact | null; next: Contact }[] = [];
   let newlyAgreed = 0;
   let newlyLeft = 0;
   const outcomes = rows.map((row, i): ContactOutcome => {
@@ -496,12 +527,15 @@ export async function importContactRows(listId: string, rows: ImportedContact[])
     if (decided.next) {
       const raw = existing[i];
       writes.push({ email: row.email, value: JSON.stringify(decided.next), was: typeof raw === "string" ? sha1(raw) : "", row: i });
+      sizes.push({ before, next: decided.next });
     }
     if (decided.outcome === "added") newlyAgreed += 1;
     if (decided.outcome === "stopped") newlyLeft += 1;
     return decided.outcome;
   });
   if (!writes.length) return outcomes;
+  // What the rows grow the list by takes room first: past it, none of them is written.
+  await needContacts(data, sizes);
   const written = await casWrite(key, writes);
   const lost = writes.filter((_, i) => !written[i]);
   if (lost.length) {
@@ -576,6 +610,8 @@ export async function changeLabels(
   listId: string,
   emails: string[],
   change: (tags: string[]) => string[] | "same" | "skip",
+  /** The store whose data room new labels take from (DataRoomError when they do not fit). */
+  room: DataStore,
 ): Promise<{ changed: string[]; same: string[] }> {
   const key = leadsKey(listId);
   const changed: string[] = [];
@@ -584,15 +620,20 @@ export async function changeLabels(
   for (let round = 0; round < 3 && pending.length; round += 1) {
     const [rows] = await redisPipeline([["HMGET", key, ...pending]]);
     const writes: { email: string; value: string; was: string }[] = [];
+    const sizes: { before: Contact | null; next: Contact }[] = [];
     pending.forEach((email, i) => {
       const raw = Array.isArray(rows) ? rows[i] : null;
       const contact = parseContact(raw);
       if (!contact || typeof raw !== "string") return;
       const next = change(contact.tags);
       if (next === "same") same.push(email);
-      else if (next !== "skip") writes.push({ email, value: JSON.stringify({ ...contact, tags: next }), was: sha1(raw) });
+      else if (next !== "skip") {
+        writes.push({ email, value: JSON.stringify({ ...contact, tags: next }), was: sha1(raw) });
+        sizes.push({ before: contact, next: { ...contact, tags: next } });
+      }
     });
     if (!writes.length) break;
+    await needContacts(room, sizes);
     const written = await casWrite(key, writes);
     pending = writes.filter((_, i) => !written[i]).map((w) => w.email);
     writes.forEach((w, i) => {

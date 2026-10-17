@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { DataRoomError } from "@/lib/store-data";
 import { cookies } from "next/headers";
 import { originFrom } from "@/lib/request-origin";
 import { storeFolder, storeRef } from "@/lib/store";
@@ -99,8 +100,10 @@ export async function POST(request: NextRequest) {
     }
     if (!text.trim() && !file) return no("needed");
 
-    const done = await handIn({ courseId: course.id, lessonId: lesson.id, who, email, task, text, file }).catch(async (error: unknown) => {
+    const done = await handIn({ courseId: course.id, lessonId: lesson.id, who, email, task, text, file, data: store }).catch(async (error: unknown) => {
       if (taken) await releaseBytes(room, taken).catch(() => {});
+      // Work that was not kept leaves no file behind it.
+      if (error instanceof DataRoomError && file) await deleteFile(file.path).catch(() => {});
       throw error;
     });
     // Work that needs no reading is done at once, and may finish the course (lib/course-finish.ts).
@@ -118,6 +121,8 @@ export async function POST(request: NextRequest) {
     }
     return Response.json({ ok: true, submission: await submissionOf(course.id, lesson.id, who) }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    // No room in the store's data room: nothing was handed in (lib/store-data.ts), and the file was let go above.
+    if (error instanceof DataRoomError) return no("noroom", 409);
     console.error("handing in an assignment failed", error);
     return no("server_error", 500);
   }

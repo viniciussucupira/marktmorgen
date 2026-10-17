@@ -17,6 +17,7 @@ import { sitemapXml, storeRobots, storeSitemap } from "@/lib/store-sitemap";
 import { SITE_URL } from "@/lib/site-url";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 let n = 0;
 const nextId = () => (n++).toString(16).padStart(10, "0");
@@ -36,8 +37,8 @@ async function main(): Promise<void> {
     { id: "bbbbbbbbbb", slug: "later", title: "Later", nav: false, target: "", from: -1 },
   ]);
   let store = (await storeForEmail(OWNER))!;
-  await savePost(store.statsId, null, { title: "Rye for beginners", body: "Words.", product: null, draft: false }, nextId, 1_000);
-  await savePost(store.statsId, null, { title: "Not yet", body: "Soon.", product: null, draft: true }, nextId, 2_000);
+  await savePost(store.statsId, null, { title: "Rye for beginners", body: "Words.", product: null, draft: false }, nextId, ROOM, 1_000);
+  await savePost(store.statsId, null, { title: "Not yet", body: "Soon.", product: null, draft: true }, nextId, ROOM, 2_000);
 
   part("What the map lists");
   const root = `${SITE_URL}/@mapshop`;

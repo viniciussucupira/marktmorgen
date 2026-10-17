@@ -33,6 +33,8 @@ import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, SESSION_COOKIE, emailForSession, norma
 import { NIMBUS_FROM, sendEmail } from "@/lib/email";
 import { coursesWords } from "@/lib/buyer-words/courses";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData, noteData, takeData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { earnedCourses } from "@/lib/community-points";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
@@ -395,8 +397,13 @@ const doneKey = (courseId: string, email: string) => `nl:course:${courseId}:done
 
 type StudentRow = { e: string; s: number; l: number };
 
-/** Notes that a student opened the course, keeping when they began. */
-export async function touchStudent(courseId: string, email: string, startSeconds: number): Promise<void> {
+/**
+ * Notes that a student opened the course, keeping when they began. A new
+ * student's row takes its room in the store's data room first
+ * (lib/store-data.ts); when there is none it is not written, and the course
+ * opens all the same: the row is what the studio shows, not their access.
+ */
+export async function touchStudent(courseId: string, email: string, startSeconds: number, room: DataStore): Promise<void> {
   if (!isRedisConfigured()) return;
   const key = studentsKey(courseId);
   const field = emailKey(email);
@@ -409,7 +416,9 @@ export async function touchStudent(courseId: string, email: string, startSeconds
     } catch {}
   }
   row.l = Math.floor(Date.now() / 1000);
-  await redisPipeline([["HSET", key, field, JSON.stringify(row)]]);
+  const json = JSON.stringify(row);
+  if (typeof raw !== "string" && !(await takeData(room, [{ slot: DONE_SLOT(courseId), bytes: dataBytes([field, json, "0000000000"], 1) }])).ok) return;
+  await redisPipeline([["HSET", key, field, json]]);
 }
 
 /**
@@ -458,8 +467,26 @@ export async function doneLessons(courseId: string, email: string): Promise<Set<
   return new Set(Array.isArray(raw) ? (raw as string[]) : []);
 }
 
-export async function markLesson(courseId: string, email: string, lessonId: string, done: boolean): Promise<void> {
-  await redisPipeline([[done ? "SADD" : "SREM", doneKey(courseId, email), lessonId]]);
+/** Where lessons marked done are counted in the store's data room (lib/store-data.ts). */
+const DONE_SLOT = (courseId: string) => `cd:${courseId}`;
+
+/**
+ * Marks a lesson done or not done. Done takes room in the store's data room
+ * first (DataRoomError when it does not fit), unless `always`: what follows a
+ * quiz passed or work handed in, which was taken already.
+ */
+export async function markLesson(courseId: string, email: string, lessonId: string, done: boolean, room: DataStore, always = false): Promise<void> {
+  const bytes = dataBytes([lessonId], 1);
+  if (done) {
+    const [held] = await redisPipeline([["SISMEMBER", doneKey(courseId, email), lessonId]]);
+    if (Number(held) === 1) return;
+    if (always) await noteData(room, [{ slot: DONE_SLOT(courseId), bytes }]);
+    else await needData(room, [{ slot: DONE_SLOT(courseId), bytes }]);
+    await redisPipeline([["SADD", doneKey(courseId, email), lessonId]]);
+    return;
+  }
+  const [removed] = await redisPipeline([["SREM", doneKey(courseId, email), lessonId]]);
+  if (Number(removed) === 1) await giveData(room, [{ slot: DONE_SLOT(courseId), bytes }]);
 }
 
 /**

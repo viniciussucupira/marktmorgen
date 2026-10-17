@@ -138,6 +138,7 @@ import {
   productIdFor,
   productIds,
   productWrites,
+  productBytes,
   movedMark,
   movedCount,
   idsOfKind,
@@ -151,6 +152,12 @@ import {
   hasProduct,
 } from "@/lib/catalog";
 import { type Announcement, type StoreSection, parseAnnouncement, parseSections, sectionsWithout } from "@/lib/store-sections";
+import { noteData, takeData } from "@/lib/store-data";
+import { DEPTH_RECORD_BYTES } from "@/lib/page-depth-rules";
+import { PRODUCT_SIDE_BYTES } from "@/lib/store-data-rules";
+
+/** What a product keeps beside its own records: its page's reading and the rest (lib/store-data-rules.ts). */
+const BESIDE_PRODUCT = DEPTH_RECORD_BYTES + PRODUCT_SIDE_BYTES;
 import { type Collection, type CollectionsProblem, MAX_PAIRS, collectionsWithout, parseCollections, readCollectionsInput, readProductIds } from "@/lib/store-collections";
 import { type SitePage, parseSitePages, MAX_SITE_PAGES, slugProblem } from "@/lib/site-page-rules";
 import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rules";
@@ -1307,6 +1314,9 @@ async function moveToRecords(owner: string, store: Store, raw: string, held: Hel
   }
   if (!(await holdLock(held))) throw new StoreBusyError();
   await runWrites(inline.flatMap((product) => productWrites(id, product)));
+  // Counted in the store's data room as they now are: what it already kept is
+  // never refused for moving (lib/store-data.ts).
+  await noteData(store, inline.map((product) => ({ slot: `p:${product.id}`, bytes: productBytes(product) + BESIDE_PRODUCT, set: true })));
   const items = inline.map(itemOf);
   const head = headFrom(items, new Map(inline.map((product) => [product.id, listingOf(product)])));
   const moved: Store = { ...store, catalog: { id, items, head, inline: null } };
@@ -1349,6 +1359,23 @@ async function commit(owner: string, held: Held, before: Store, next: Store, cha
   // ceiling can always remove, shorten and reorder.
   if (byteLength(json) > MAX_STORE_BYTES && byteLength(json) > byteLength(recordJson(before))) {
     throw new StoreFullError();
+  }
+  // Each product's records take their room in the store's data room before
+  // they are written (lib/store-data.ts): a product that grows past it is
+  // refused like a record past its ceiling, and one removed gives its room
+  // back, all but what is kept beside it (its page's reading, which a page
+  // already drawn can still write to, and its side records), which stays
+  // counted (lib/store-data-rules.ts, PRODUCT_SIDE_BYTES). The record itself
+  // is bounded by MAX_STORE_BYTES.
+  const gone = [...drop].filter((id) => !put.some((product) => product.id === id));
+  const room = [
+    ...put.map((product) => ({ slot: `p:${product.id}`, bytes: productBytes(product) + BESIDE_PRODUCT, set: true })),
+    ...gone.map((id) => ({ slot: `p:${id}`, bytes: 0, set: true })),
+    ...(gone.length ? [{ slot: "dp", bytes: gone.length * BESIDE_PRODUCT }] : []),
+  ];
+  if (room.length) {
+    const taken = await takeData(before, room);
+    if (!taken.ok) throw taken.reason === "full" ? new StoreFullError() : new StoreBusyError();
   }
   // The lock is made to last another term before anything is written, and
   // the record is written only while it is still ours: a write held up past

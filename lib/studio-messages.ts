@@ -21,6 +21,8 @@ export const STUDIO_MESSAGES: Record<string, string> = {
     ? `A store without a plan holds up to ${SETUP_GB} GB, and this file does not fit in what is left. Start your plan to add more; trial storage is capped by the plan you choose.`
     : `A store holds up to ${SETUP_GB} GB until its plan starts, and this file does not fit in what is left. Plans are not on sale yet; until they are, delete a file you do not need to make room.`,
   upload_refresh: "Reload this page before uploading your file again.",
+  // What the store keeps in the database is past its data room (lib/store-data-rules.ts).
+  store_full: "Your store's data room is full. Delete something you no longer need, such as old posts, drafts, pages or contacts, or move to a larger plan.",
   upload_budget_unavailable: "New uploads are paused right now. Existing files and downloads are not changed by this pause.",
   uploads_pending: "Other uploads are using the remaining space. Finish or cancel them before trying again. If an earlier upload was interrupted, try again later.",
   upload_stopped: "The upload stopped before the end, and could not go on. Check your connection and upload the file again.",

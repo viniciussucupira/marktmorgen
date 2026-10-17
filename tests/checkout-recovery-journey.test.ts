@@ -21,6 +21,7 @@ import { stopWriting, tokensFor, unsubscribe, upsertContact } from "@/lib/contac
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_recovery_journey_only";
 process.env.RESEND_API_KEY = "re_test_recovery_journey_only";
@@ -117,8 +118,8 @@ async function main(): Promise<void> {
 
   part("Nobody who left the list, or whose address bounced");
   const listId = (await load()).listId!;
-  await upsertContact(listId, "cy@example.com", { agreed: true, explicit: true, source: "free" });
-  await upsertContact(listId, "dee@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(listId, "cy@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
+  await upsertContact(listId, "dee@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await stopWriting(listId, "dee@example.com", "bounced");
   // Leaving the list through the link its own emails carry.
   const listToken = (await tokensFor(listId, ["cy@example.com"], "clayworks")).get("cy@example.com") ?? "";

@@ -4,6 +4,7 @@ import { upsertContact } from "@/lib/contacts";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 async function main() {
   redis.clear();
   const owner = "batch-owner@example.com";
@@ -13,7 +14,7 @@ async function main() {
   await setMailSettings(owner, { fromName: "Batch Check", address: "1 Test Street, Test City" });
   const store = (await storeForEmail(owner))!;
   const emails = ["reader0@example.com", "reader1@example.com", "reader2@example.com"];
-  for (const email of emails) await upsertContact(store.listId!, email, { agreed: true, explicit: true, source: "free" });
+  for (const email of emails) await upsertContact(store.listId!, email, { agreed: true, explicit: true, source: "free" }, ROOM);
   process.env.RESEND_API_KEY = "re_test_recipient_batch_only";
   let messages: { to: string[] }[] = [];
   const originalFetch = globalThis.fetch;

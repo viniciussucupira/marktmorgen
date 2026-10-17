@@ -26,6 +26,7 @@ import { stringToSign, type SnsMessage } from "@/lib/sns";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const REGION = "us-east-1";
 const TOPIC = `arn:aws:sns:${REGION}:123456789012:marktmorgen-email`;
@@ -338,7 +339,7 @@ async function main(): Promise<void> {
   await setMailSettings("owner@example.com", { fromName: "Harbor Kitchen", address: "1 Main St, Portland, OR 97201" });
   const store = (await storeForEmail("owner@example.com"))!;
   const list = store.listId as string;
-  for (const who of ["gone", "angry", "fine"]) await upsertContact(list, `${who}@example.com`, { agreed: true, explicit: true, source: "import" });
+  for (const who of ["gone", "angry", "fine"]) await upsertContact(list, `${who}@example.com`, { agreed: true, explicit: true, source: "import" }, ROOM);
   const tags = { "ses:configuration-set": ["marktmorgen"], [STORE_TAG]: [healthId(store)], [LIST_TAG]: [list] };
   const bounce = (to: string, type = "Permanent") => ({ eventType: "Bounce", bounce: { bounceType: type, bounceSubType: "General", bouncedRecipients: [{ emailAddress: to, status: "5.1.1" }] }, mail: { destination: [to], tags } });
   fetched.length = 0;

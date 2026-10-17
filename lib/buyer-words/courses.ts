@@ -133,6 +133,7 @@ const en = {
   taskTooBig: (mb: number) => `That file is over ${mb} MB.`,
   taskWrongType: "That kind of file cannot be handed in here.",
   taskFull: "This course cannot take more files just now. Hand in your answer as text, or try again later.",
+  taskNoRoom: "This store has no room for your work right now, so it was not handed in. Try again later.",
   taskFailed: "That did not go through. Try again in a moment.",
   taskMailSubject: (lesson: string) => `Your work on “${lesson}”`,
   taskMailApproved: (store: string, lesson: string, course: string) => `${store} read your work on “${lesson}” in ${course} and approved it. The lesson is done.`,
@@ -195,6 +196,7 @@ const en = {
   // ---- A lesson's comments ------------------------------------------------------------
   commentNotices: {
     posted: "Posted.",
+    noroom: "This store has no room for that right now, so it was not saved. Try again later.",
     deleted: "Deleted.",
     hidden: "Hidden. Only you and whoever wrote it can see it now.",
     shown: "Shown again to every student.",
@@ -425,6 +427,7 @@ const es: CoursesWords = {
   taskTooBig: (mb) => `Ese archivo supera los ${mb} MB.`,
   taskWrongType: "Ese tipo de archivo no se puede entregar aquí.",
   taskFull: "Este curso no puede recibir más archivos por ahora. Entrega tu respuesta como texto o inténtalo más tarde.",
+  taskNoRoom: "Esta tienda no tiene espacio para tu trabajo ahora mismo, así que no se entregó. Inténtalo más tarde.",
   taskFailed: "No se pudo enviar. Inténtalo de nuevo en un momento.",
   taskMailSubject: (lesson) => `Tu trabajo en «${lesson}»`,
   taskMailApproved: (store, lesson, course) => `${store} leyó tu trabajo en «${lesson}» de ${course} y lo aprobó. La lección está hecha.`,
@@ -481,6 +484,7 @@ const es: CoursesWords = {
 
   commentNotices: {
     posted: "Publicado.",
+    noroom: "Esta tienda no tiene espacio para eso ahora mismo, así que no se guardó. Inténtalo más tarde.",
     deleted: "Eliminado.",
     hidden: "Oculto. Ahora solo lo ven tú y quien lo escribió.",
     shown: "Visible de nuevo para todos los estudiantes.",
@@ -705,6 +709,7 @@ const fr: CoursesWords = {
   taskTooBig: (mb) => `Ce fichier dépasse ${mb} Mo.`,
   taskWrongType: "Ce type de fichier ne peut pas être rendu ici.",
   taskFull: "Ce cours ne peut pas recevoir d'autres fichiers pour le moment. Rendez votre réponse sous forme de texte, ou réessayez plus tard.",
+  taskNoRoom: "Cette boutique n'a pas de place pour votre travail en ce moment, donc il n'a pas été remis. Réessayez plus tard.",
   taskFailed: "L'envoi n'a pas abouti. Réessayez dans un instant.",
   taskMailSubject: (lesson) => `Votre travail sur «${S}${lesson}${S}»`,
   taskMailApproved: (store, lesson, course) => `${store} a lu votre travail sur «${S}${lesson}${S}» dans ${course} et l'a validé. La leçon est terminée.`,
@@ -761,6 +766,7 @@ const fr: CoursesWords = {
 
   commentNotices: {
     posted: "Publié.",
+    noroom: "Cette boutique n'a pas de place pour cela en ce moment, donc rien n'a été enregistré. Réessayez plus tard.",
     deleted: "Supprimé.",
     hidden: "Masqué. Seuls vous et la personne qui l'a écrit pouvez le voir désormais.",
     shown: "De nouveau visible par tous les participants.",
@@ -979,6 +985,7 @@ const de: CoursesWords = {
   taskTooBig: (mb) => `Diese Datei ist größer als ${mb} MB.`,
   taskWrongType: "Diese Art von Datei kann hier nicht eingereicht werden.",
   taskFull: "Dieser Kurs kann gerade keine weiteren Dateien annehmen. Reichen Sie Ihre Antwort als Text ein oder versuchen Sie es später.",
+  taskNoRoom: "Dieser Shop hat gerade keinen Platz für Ihre Arbeit, deshalb wurde sie nicht abgegeben. Versuchen Sie es später erneut.",
   taskFailed: "Das hat nicht geklappt. Versuchen Sie es gleich noch einmal.",
   taskMailSubject: (lesson) => `Ihre Arbeit zu „${lesson}“`,
   taskMailApproved: (store, lesson, course) => `${store} hat Ihre Arbeit zu „${lesson}“ in ${course} gelesen und freigegeben. Die Lektion ist erledigt.`,
@@ -1035,6 +1042,7 @@ const de: CoursesWords = {
 
   commentNotices: {
     posted: "Veröffentlicht.",
+    noroom: "Dieser Shop hat gerade keinen Platz dafür, deshalb wurde nichts gespeichert. Versuchen Sie es später erneut.",
     deleted: "Gelöscht.",
     hidden: "Ausgeblendet. Nur Sie und die Person, die ihn geschrieben hat, können ihn jetzt sehen.",
     shown: "Wieder für alle Teilnehmenden sichtbar.",
@@ -1255,6 +1263,7 @@ const it: CoursesWords = {
   taskTooBig: (mb) => `Quel file supera i ${mb} MB.`,
   taskWrongType: "Quel tipo di file non si può consegnare qui.",
   taskFull: "Questo corso non può ricevere altri file per ora. Consegna la tua risposta come testo o riprova più tardi.",
+  taskNoRoom: "Questo negozio non ha spazio per il tuo lavoro in questo momento, quindi non è stato consegnato. Riprova più tardi.",
   taskFailed: "L'invio non è andato a buon fine. Riprova tra un momento.",
   taskMailSubject: (lesson) => `Il tuo lavoro su “${lesson}”`,
   taskMailApproved: (store, lesson, course) => `${store} ha letto il tuo lavoro su “${lesson}” in ${course} e l'ha approvato. La lezione è fatta.`,
@@ -1311,6 +1320,7 @@ const it: CoursesWords = {
 
   commentNotices: {
     posted: "Pubblicato.",
+    noroom: "Questo negozio non ha spazio per questo in questo momento, quindi non è stato salvato. Riprova più tardi.",
     deleted: "Eliminato.",
     hidden: "Nascosto. Ora possono vederlo solo tu e chi l'ha scritto.",
     shown: "Di nuovo visibile a tutti gli studenti.",
@@ -1532,6 +1542,7 @@ const nl: CoursesWords = {
   taskTooBig: (mb) => `Dat bestand is groter dan ${mb} MB.`,
   taskWrongType: "Dat soort bestand kan hier niet worden ingeleverd.",
   taskFull: "Deze cursus kan nu geen bestanden meer aannemen. Lever je antwoord als tekst in of probeer het later.",
+  taskNoRoom: "Deze winkel heeft nu geen ruimte voor je werk, dus het is niet ingeleverd. Probeer het later opnieuw.",
   taskFailed: "Dat lukte niet. Probeer het zo opnieuw.",
   taskMailSubject: (lesson) => `Je werk bij ‘${lesson}’`,
   taskMailApproved: (store, lesson, course) => `${store} heeft je werk bij ‘${lesson}’ in ${course} gelezen en goedgekeurd. De les is klaar.`,
@@ -1588,6 +1599,7 @@ const nl: CoursesWords = {
 
   commentNotices: {
     posted: "Geplaatst.",
+    noroom: "Deze winkel heeft daar nu geen ruimte voor, dus het is niet bewaard. Probeer het later opnieuw.",
     deleted: "Verwijderd.",
     hidden: "Verborgen. Alleen jij en wie het schreef kunnen het nu zien.",
     shown: "Weer zichtbaar voor alle cursisten.",
@@ -1809,6 +1821,7 @@ const pt: CoursesWords = {
   taskTooBig: (mb) => `Esse ficheiro tem mais de ${mb} MB.`,
   taskWrongType: "Esse tipo de ficheiro não pode ser entregue aqui.",
   taskFull: "Este curso não pode receber mais ficheiros de momento. Entregue a sua resposta em texto, ou tente mais tarde.",
+  taskNoRoom: "Esta loja não tem espaço para o seu trabalho neste momento, por isso não foi entregue. Tente mais tarde.",
   taskFailed: "Não foi possível enviar. Tente de novo dentro de momentos.",
   taskMailSubject: (lesson) => `O seu trabalho em «${lesson}»`,
   taskMailApproved: (store, lesson, course) => `${store} leu o seu trabalho em «${lesson}», de ${course}, e aprovou-o. A aula está concluída.`,
@@ -1865,6 +1878,7 @@ const pt: CoursesWords = {
 
   commentNotices: {
     posted: "Publicado.",
+    noroom: "Esta loja não tem espaço para isso neste momento, por isso não foi guardado. Tente mais tarde.",
     deleted: "Eliminado.",
     hidden: "Ocultado. Agora só é visível para si e para quem o escreveu.",
     shown: "Novamente visível para todos os alunos.",

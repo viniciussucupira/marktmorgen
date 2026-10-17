@@ -36,6 +36,7 @@ import { claimHandle, ensureStatsId, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { redisPipeline } from "@/lib/redis";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 process.env.NIMBUS_DATA_KEY = "a-local-key-for-tests-only-0123456789abcdef";
 process.env.STRIPE_SECRET_KEY = "sk_test_numbers_six_stand_in";
@@ -159,11 +160,11 @@ async function main(): Promise<void> {
 
   part("Buyers for ad audiences");
   const LIST = "list6six";
-  await upsertContact(LIST, "b@example.com", { agreed: true, explicit: true, source: "buyer" });
-  await upsertContact(LIST, "A@Example.com", { agreed: true, explicit: true, source: "buyer" });
-  await upsertContact(LIST, "lead@example.com", { agreed: true, explicit: true, source: "free" });
-  await upsertContact(LIST, "quiet@example.com", { agreed: false, explicit: false, source: "buyer" });
-  await upsertContact(LIST, "gone@example.com", { agreed: true, explicit: true, source: "buyer" });
+  await upsertContact(LIST, "b@example.com", { agreed: true, explicit: true, source: "buyer" }, ROOM);
+  await upsertContact(LIST, "A@Example.com", { agreed: true, explicit: true, source: "buyer" }, ROOM);
+  await upsertContact(LIST, "lead@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
+  await upsertContact(LIST, "quiet@example.com", { agreed: false, explicit: false, source: "buyer" }, ROOM);
+  await upsertContact(LIST, "gone@example.com", { agreed: true, explicit: true, source: "buyer" }, ROOM);
   await stopWriting(LIST, "gone@example.com", "complained");
   const file = await buyerAudience({ ...store, listId: LIST });
   is("only buyers who agreed and are still on the list, one address a line", [file.csv, file.rows], ["email\r\na@example.com\r\nb@example.com\r\n", 2]);

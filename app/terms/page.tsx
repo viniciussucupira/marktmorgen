@@ -19,6 +19,7 @@ import { FREE_POOL_BASE_STORES, PAID_STORES_PER_FREE_STORE } from "@/lib/free-po
 import { BUYER_RESERVE_BPS, EXTRA_REQUESTS, REQUESTS_PER_VISIT, ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, countWords, partsWords } from "@/lib/traffic-rules";
 import { ROOM_GRANT_MINUTES } from "@/lib/chat-pace";
 import { STORAGE_BRAKE_BYTES, storageWords } from "@/lib/storage-quota";
+import { NON_PAYING_DATA_ROOM_BYTES, dataRoomListWords, dataWords } from "@/lib/store-data-rules";
 import { INVITE_PROGRAM_OPEN, INVITE_PAUSE_NOTICE, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { feeWords, planPriceWords } from "@/lib/fee-words";
 import { TASK_ROOM_BYTES } from "@/lib/assignment-rules";
@@ -550,7 +551,17 @@ export default function TermsPage() {
           up to {COMMUNITY_PICTURES.creator.toLocaleString("en-US")} pictures in its posts on Store,{" "}
           {COMMUNITY_PICTURES.pro.toLocaleString("en-US")} on Studio and{" "}
           {COMMUNITY_PICTURES.scale.toLocaleString("en-US")} on Scale; deleting a post
-          with a picture makes room for another.
+          with a picture makes room for another. Your store&apos;s words and
+          records (products, pages, posts, courses, contacts, forms and their
+          answers, and what each order keeps) have a data room of{" "}
+          {dataRoomListWords({ creator: "Store", pro: "Studio", scale: "Scale" })}{" "}
+          ({dataWords(NON_PAYING_DATA_ROOM_BYTES.trial)} in a free trial). When it is full, what
+          you or your buyers would add is refused with a plain message until
+          something is deleted or the plan is larger; deleting is never
+          refused, and an order already paid for is never refused: room for
+          every checkout still open is held before it opens, so new checkouts
+          pause when the room is close to full, as they do at the month&apos;s
+          orders.
         </p>
         <p>
           Beyond those, we may limit or suspend a store only if use far above

@@ -6,6 +6,7 @@ import { FORM_ID } from "@/lib/forms";
 import { readStages } from "@/lib/crm";
 import { MAX_DEAL_CENTS, MAX_DEAL_NOTE, MAX_DEAL_TITLE, parseDeal, readFollowUp } from "@/lib/crm-rules";
 import { readTeam } from "@/lib/team";
+import { StoreFullError } from "@/lib/store-full";
 import { MAX_CONVERTIBLE_FORM_RESPONSES, createFormOpportunity, readFormOpportunity, formOpportunityRef } from "@/lib/form-opportunity";
 
 /** Explicit reviewed conversion only; no marketing enrollment or messaging. */
@@ -40,10 +41,11 @@ export async function POST(request: NextRequest) {
     const now = Math.floor(Date.now() / 1000);
     const deal = parseDeal({ ...raw, ...follow.value, id: body.responseRef.slice(0, 10), createdAt: now, updatedAt: now }, stages);
     if (!deal) return refuse("invalid");
-    const result = await createFormOpportunity(store.statsId, body.responseRef, deal, stages);
+    const result = await createFormOpportunity(store.statsId, body.responseRef, deal, stages, store);
     if (result.state === "full") return refuse("full");
     return Response.json({ ok: true, state: result.state, deal: result.deal });
   } catch (error) {
+    if (error instanceof StoreFullError) return Response.json({ ok: false, error: "store_full", message: error.message }, { status: 409 });
     console.error("Converting form response could not be confirmed", error);
     return refuse("conversion_unconfirmed", 502);
   }

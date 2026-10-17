@@ -50,6 +50,7 @@ import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, sendEmail } from "@/lib/email";
 import { communityWords } from "@/lib/buyer-words/community";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, DataRoomError } from "@/lib/store-data";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
 import { isLiveSub } from "@/lib/membership-access";
@@ -348,7 +349,7 @@ export async function communityViewer(store: Store, cookies: CookieJar): Promise
   // from the creator, where messages are on (lib/community-dm.ts). Once: the
   // record did not exist before this request, and the one made is theirs.
   if (!existing && member) {
-    await welcome(id, config, member.k).catch((error) => console.error("sending a community welcome failed", error));
+    await welcome(id, config, member.k, store).catch((error) => console.error("sending a community welcome failed", error));
   }
   return {
     state: "in",
@@ -367,11 +368,15 @@ export async function communityViewer(store: Store, cookies: CookieJar): Promise
  * moment: two first requests both find no record, and the mark lets only one
  * of them send. Nothing is sent while private messages are off.
  */
-export async function welcome(id: string, config: CommunityConfig, member: string): Promise<boolean> {
+export async function welcome(id: string, config: CommunityConfig, member: string, room: DataStore): Promise<boolean> {
   if (!config.welcome.trim() || !config.dm.on) return false;
   const [first] = await redisPipeline([["HSETNX", `nl:cm:${id}:wel`, member, Math.floor(Date.now() / 1000)]]);
   if (Number(first) !== 1) return false;
-  const sent = await sendMessage(id, config.dm, CREATOR, member, config.welcome);
+  // A welcome that does not fit in the store's data room is not sent; the member still comes in.
+  const sent = await sendMessage(id, config.dm, CREATOR, member, config.welcome, room).catch((error) => {
+    if (error instanceof DataRoomError) return { ok: false as const };
+    throw error;
+  });
   return sent.ok;
 }
 

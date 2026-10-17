@@ -4,6 +4,7 @@ import { BroadcastWriteUnconfirmed, createBroadcast } from "@/lib/broadcasts";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 async function main(): Promise<void> {
   redis.clear();
@@ -13,7 +14,7 @@ async function main(): Promise<void> {
   await setSubscription(owner, { customerId: "cus_Write00001", subscriptionId: "sub_Write00001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(owner, { fromName: "Write Check", address: "1 Test Street" });
   const store = (await storeForEmail(owner))!;
-  await upsertContact(store.listId!, "reader@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(store.listId!, "reader@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   const input = { subject: "A campaign", body: "A useful message", productId: null, notProductId: null, sendAt: Date.now() + 86_400_000 };
   const original = redis.pipeline;
   const normal = Symbol("normal");

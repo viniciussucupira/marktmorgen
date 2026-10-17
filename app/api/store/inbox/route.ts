@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { StoreFullError } from "@/lib/store-full";
 import { guardStoreWrite } from "@/lib/store-request";
 import { setInboxSetting } from "@/lib/store";
 import { readTeam } from "@/lib/team";
@@ -68,6 +69,8 @@ export async function POST(request: NextRequest) {
         return refuse("invalid");
     }
   } catch (error) {
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof StoreFullError) return refuse("store_full", 409);
     console.error("the inbox failed", error);
     return refuse("server_error", 500);
   }

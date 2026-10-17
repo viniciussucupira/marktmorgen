@@ -24,6 +24,7 @@ import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { GET, POST } from "@/app/api/store/funnel-share/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const MAX = SHARE_LIMITS.scale.bundleBytes;
 /** JSON with every object's keys in order, so two readings compare by what they hold. */
@@ -127,7 +128,7 @@ async function main() {
   const landing = senderStore.sitePages[0];
   const written = await readPage(senderStore.statsId, siteKey(landing.id));
   is("its words arrive as written, with the button to the chosen product", [written.hidden, written.blocks[0].kind === "hero" ? written.blocks[0].headline : "", landing.target], [true, "A free guide to [your topic]", senderFree.product.id]);
-  await writePage(senderStore.statsId!, siteKey(landing.id), { ...written, blocks: written.blocks.map((b) => (b.kind === "bio" ? { ...b, body: "Sender's own story." } : b)) });
+  await writePage(senderStore.statsId!, siteKey(landing.id), { ...written, blocks: written.blocks.map((b) => (b.kind === "bio" ? { ...b, body: "Sender's own story." } : b)) }, ROOM);
 
   const sentToRedis: string[] = [];
   const pipeline = redis.pipeline.bind(redis);

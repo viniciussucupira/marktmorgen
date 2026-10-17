@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { StoreFullError } from "@/lib/store-full";
 import { setProductNote } from "@/lib/store";
 import { readListing } from "@/lib/catalog";
 import { guardStoreWrite, text } from "@/lib/store-request";
@@ -22,12 +23,14 @@ export async function POST(request: NextRequest) {
   if (typeof note === "string") return Response.json({ ok: false, error: note }, { status: 400 });
   try {
     // Written before the product says it has one, and forgotten after it says it has none.
-    if (note) await writeThanksNote(store.statsId, id, note);
+    if (note) await writeThanksNote(store.statsId, id, note, store);
     const marked = await setProductNote(guarded.ref, id, note !== null);
     if (!marked.ok) return Response.json({ ok: false, error: marked.reason }, { status: 400 });
-    if (!note) await writeThanksNote(store.statsId, id, null);
+    if (!note) await writeThanksNote(store.statsId, id, null, store);
     return Response.json({ ok: true, note });
   } catch (error) {
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof StoreFullError) return Response.json({ ok: false, error: "store_full" }, { status: 409 });
     console.error("saving a note after paying failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
   }

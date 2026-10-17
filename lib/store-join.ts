@@ -16,6 +16,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { DataRoomError } from "@/lib/store-data";
 import { withinLimit } from "@/lib/request-guard";
 import { isPaidUp } from "@/lib/billing";
 import { type AddResult, upsertContact } from "@/lib/contacts";
@@ -124,7 +125,11 @@ export type ConfirmResult = { ok: true; grant: Grant; added: AddResult } | { ok:
 export async function confirmJoin(token: string, store: Store | null): Promise<ConfirmResult> {
   const grant = await readJoinToken(token);
   if (!grant || !store || store.statsId !== grant.s || !store.listId) return { ok: false, reason: "expired" };
-  const added = await upsertContact(store.listId, grant.e, { agreed: true, explicit: true, clicks: grant.k === true, source: "free", at: new Date().toISOString(), sid: store.sid });
+  // The list's room in the store's data room is its room too: past it, the address is not added, as on a full list.
+  const added = await upsertContact(store.listId, grant.e, { agreed: true, explicit: true, clicks: grant.k === true, source: "free", at: new Date().toISOString(), sid: store.sid }, store).catch((error) => {
+    if (error instanceof DataRoomError) return { joined: false, gotProduct: false, full: true };
+    throw error;
+  });
   if (added.full) return { ok: false, reason: "full" };
   await redisPipeline([["DEL", tokenKey(token)]]);
   return { ok: true, grant, added };

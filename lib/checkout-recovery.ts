@@ -37,6 +37,7 @@
  *   nl:recover:off:<statsId>:<hash>          that address pressed stop, kept for good
  *   nl:recover:link:<token>                  who a stop link belongs to
  */
+import { takeDataBytes } from "@/lib/store-data";
 import { saleHandles } from "@/lib/store";
 import { activeIntro } from "@/lib/intro-price";
 import { createHash, randomBytes } from "node:crypto";
@@ -84,6 +85,8 @@ const sentKey = (session: string) => `nl:recover:sent:${session}`;
 const onceKey = (statsId: string, email: string, product: string) =>
   `nl:recover:once:${statsId}:${sha(`nimbus-recover-once:${normaliseEmail(email)}|${product}`).slice(0, 32)}`;
 const offKey = (statsId: string, email: string) => `nl:recover:off:${statsId}:${who(email)}`;
+/** What a reminder's stop mark can keep for good, counted in the store's data room before it is sent. */
+export const RECOVER_TRACE_BYTES = 192;
 const linkKey = (token: string) => `nl:recover:link:${token}`;
 
 export type CountryAnswer = { state: "ok"; country: string } | { state: "unknown" };
@@ -341,6 +344,13 @@ async function deliver(
   ]);
   if (claimed === null || claimedOnce === null) return "skip";
 
+  // The stop mark this email's link may leave is kept for as long as the
+  // store is, so it takes its room before the email goes (lib/store-data.ts):
+  // a store whose room is full sends no reminder until it has room again.
+  if (!(await takeDataBytes(store, "off", RECOVER_TRACE_BYTES)).ok) {
+    await redisPipeline([["DEL", sentKey(id)], ["DEL", onceKey(statsId, email, onceFor)]]);
+    return "failed";
+  }
   const name = store.name;
   const { w, money } = speech(store);
   const g = givingWords(store.language);

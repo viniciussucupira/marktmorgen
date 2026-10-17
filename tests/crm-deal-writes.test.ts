@@ -8,6 +8,7 @@ import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { POST } from "@/app/api/store/crm/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 async function main() {
   redis.clear(); process.env.UPSTASH_REDIS_REST_URL ??= "http://stub";
   let statsId="crm-confirmation", key="nl:crm:deals:"+statsId;
@@ -25,24 +26,24 @@ async function main() {
   const invalidWrites=[null,{},[],[null],["1"],[true],[2],[-1],[1,1],new Error("write reply lost")];
   try{
     part("Unknown capacity/existence reads never authorize writes");
-    for(const reply of invalidPreflights){await reset();preflight=reply;let failed=false;try{await writeDeal(statsId,deal);}catch(e){failed=e instanceof CrmDealReadUnavailable;}
+    for(const reply of invalidPreflights){await reset();preflight=reply;let failed=false;try{await writeDeal(statsId,deal, ROOM);}catch(e){failed=e instanceof CrmDealReadUnavailable;}
       is("unconfirmed preflight is distinguished",failed,true);is("no deal write after unavailable preflight",writes,0);is("deal collection remains absent",(await original.call(redis,[["HLEN",key]]))[0],0);
     }
     part("Deal saves and removals require exact numeric acknowledgements");
-    for(const reply of invalidWrites){await reset();writeReply=reply;let failed=false;try{await writeDeal(statsId,deal);}catch(e){failed=e instanceof CrmDealWriteUnconfirmed;}
+    for(const reply of invalidWrites){await reset();writeReply=reply;let failed=false;try{await writeDeal(statsId,deal, ROOM);}catch(e){failed=e instanceof CrmDealWriteUnconfirmed;}
       is("unconfirmed save throws",failed,true);is("save is not retried",writes,1);
-      await reset();await original.call(redis,[["HSET",key,deal.id,JSON.stringify(deal)]]);removeReply=reply;failed=false;try{await dropDeal(statsId,deal.id);}catch(e){failed=e instanceof CrmDealWriteUnconfirmed;}
+      await reset();await original.call(redis,[["HSET",key,deal.id,JSON.stringify(deal)]]);removeReply=reply;failed=false;try{await dropDeal(statsId,deal.id, ROOM);}catch(e){failed=e instanceof CrmDealWriteUnconfirmed;}
       is("unconfirmed removal throws",failed,true);is("removal is not retried",writes,1);is("unapplied removal preserves record",(await original.call(redis,[["HGET",key,deal.id]]))[0],JSON.stringify(deal));
     }
-    await reset();writeReply=[];applied=true;let lost=false;try{await writeDeal(statsId,deal);}catch(e){lost=e instanceof CrmDealWriteUnconfirmed;}
+    await reset();writeReply=[];applied=true;let lost=false;try{await writeDeal(statsId,deal, ROOM);}catch(e){lost=e instanceof CrmDealWriteUnconfirmed;}
     is("applied save with lost reply is uncertain",lost,true);is("applied save is not rolled back",(await original.call(redis,[["HGET",key,deal.id]]))[0],JSON.stringify(deal));is("no repeated write after lost reply",writes,1);
-    removeReply=[];writes=0;lost=false;try{await dropDeal(statsId,deal.id);}catch(e){lost=e instanceof CrmDealWriteUnconfirmed;}
+    removeReply=[];writes=0;lost=false;try{await dropDeal(statsId,deal.id, ROOM);}catch(e){lost=e instanceof CrmDealWriteUnconfirmed;}
     is("applied deletion with lost reply is uncertain",lost,true);is("deleted record is not recreated",(await original.call(redis,[["HGET",key,deal.id]]))[0],null);is("no repeated deletion",writes,1);
     part("Confirmed capacity and absence retain existing behavior");
-    await reset();is("confirmed creation succeeds",await writeDeal(statsId,deal),true);is("confirmed update succeeds",await writeDeal(statsId,{...deal,title:"Updated"}),true);
-    writes=0;preflight=[0,MAX_DEALS];is("full collection refuses new deal",await writeDeal(statsId,{...deal,id:"bbbbbbbbbb"}),false);is("capacity refusal writes nothing",writes,0);
-    preflight=[1,MAX_DEALS];is("existing deal can still be edited at capacity",await writeDeal(statsId,deal),true);
-    preflight=normal;is("confirmed deletion succeeds",await dropDeal(statsId,deal.id),true);is("confirmed absence returns false",await dropDeal(statsId,deal.id),false);writes=0;is("invalid removal id refused",await dropDeal(statsId,"bad"),false);is("invalid id sends no deletion",writes,0);
+    await reset();is("confirmed creation succeeds",await writeDeal(statsId,deal, ROOM),true);is("confirmed update succeeds",await writeDeal(statsId,{...deal,title:"Updated"}, ROOM),true);
+    writes=0;preflight=[0,MAX_DEALS];is("full collection refuses new deal",await writeDeal(statsId,{...deal,id:"bbbbbbbbbb"}, ROOM),false);is("capacity refusal writes nothing",writes,0);
+    preflight=[1,MAX_DEALS];is("existing deal can still be edited at capacity",await writeDeal(statsId,deal, ROOM),true);
+    preflight=normal;is("confirmed deletion succeeds",await dropDeal(statsId,deal.id, ROOM),true);is("confirmed absence returns false",await dropDeal(statsId,deal.id, ROOM),false);writes=0;is("invalid removal id refused",await dropDeal(statsId,"bad", ROOM),false);is("invalid id sends no deletion",writes,0);
     part("API and client distinguish prewrite read failure from uncertain change");
     const owner="crm-write-owner@example.com";await claimHandle(owner,"crm-write-check","CRM Write Check","");await ensureStatsId(owner);const store=(await storeForEmail(owner))!;statsId=store.statsId!;key="nl:crm:deals:"+statsId;const session=await openSession(owner);
     const call=async(body:Record<string,unknown>)=>{const response=await POST(new NextRequest("https://marktmorgen.com/api/store/crm",{method:"POST",headers:{"content-type":"application/json",cookie:SESSION_COOKIE+"="+session},body:JSON.stringify(body)}));return {status:response.status,answer:await response.json()};};
@@ -58,15 +59,15 @@ async function main() {
   const raceStore = "crm-capacity-race", raceKey = "nl:crm:deals:" + raceStore;
   for (let i = 0; i < MAX_DEALS - 1; i++) await redis.pipeline([["HSET", raceKey, "f" + String(i).padStart(9, "0"), "existing"]]);
   const outcomes = await Promise.all(Array.from({ length: 64 }, async (_, i) => {
-    if (i % 2 === 0) return await writeDeal(raceStore, { ...deal, id: "m" + String(i).padStart(9, "0") }) ? "created" : "full";
+    if (i % 2 === 0) return await writeDeal(raceStore, { ...deal, id: "m" + String(i).padStart(9, "0") }, ROOM) ? "created" : "full";
     const ref = String(i).padStart(10, "0") + "a".repeat(54);
-    return (await createFormOpportunity(raceStore, ref, deal, DEFAULT_STAGES)).state;
+    return (await createFormOpportunity(raceStore, ref, deal, DEFAULT_STAGES, ROOM)).state;
   }));
   is("only one of 64 competing manual/form creations can occupy the last slot", [outcomes.filter(result => result === "created").length, outcomes.filter(result => result === "full").length, (await redis.pipeline([["HLEN", raceKey]]))[0]], [1, 63, MAX_DEALS]);
-  is("existing records remain editable at capacity", await writeDeal(raceStore, { ...deal, id: "f000000000", title: "Edited at capacity" }), true);
+  is("existing records remain editable at capacity", await writeDeal(raceStore, { ...deal, id: "f000000000", title: "Edited at capacity" }, ROOM), true);
   is("editing at capacity leaves the count unchanged", (await redis.pipeline([["HLEN", raceKey]]))[0], MAX_DEALS);
   await redis.pipeline([["HDEL", raceKey, "f000000000"]]);
-  is("deleting a record frees one slot for a new manual deal", await writeDeal(raceStore, { ...deal, id: "replacement".slice(0, 10) }), true);
+  is("deleting a record frees one slot for a new manual deal", await writeDeal(raceStore, { ...deal, id: "replacement".slice(0, 10) }, ROOM), true);
   is("capacity remains bounded after slot reuse", (await redis.pipeline([["HLEN", raceKey]]))[0], MAX_DEALS);
   done();
 }

@@ -26,6 +26,7 @@ import { allowanceWindow, calendarWindow } from "@/lib/allowance-window";
 import { shareBps } from "@/lib/platform-share";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
+import { chargeOrderData } from "@/lib/store-data";
 
 const seenKey = (reference: string) => `nl:orders:seen:${createHash("sha256").update(reference).digest("hex").slice(0, 32)}`;
 const countKey = (folder: string, month: string) => `nl:orders:n:${folder}:${month}`;
@@ -54,11 +55,15 @@ export function coveredByShare(store: Parameters<typeof shareBps>[0], paidCents:
  * Never throws: a count that cannot be written must not cost a buyer their
  * email.
  */
-export async function countOrder(store: Store, reference: string, paidCents: number, now = Date.now()): Promise<boolean> {
+export async function countOrder(store: Store, reference: string, paidCents: number, now = Date.now(), items = 1): Promise<boolean> {
   if (!isRedisConfigured() || !reference) return false;
   try {
     const [fresh] = await redisPipeline([["SET", seenKey(reference), "1", "NX", "EX", SEEN_SECONDS]]);
     if (fresh === null) return false;
+    // What the order leaves in the database is counted in the store's data
+    // room whatever it was, a share-covered order too, and never refused:
+    // its room was held when its checkout was admitted (lib/order-admission.ts).
+    await chargeOrderData(store, items, now);
     if (coveredByShare(store, paidCents, now / 1000)) return false;
     const owner = storeRef(store);
     const folder = await storeFolder(owner);

@@ -30,6 +30,8 @@
 import { reserveQuizSubmission } from "@/lib/quiz-usage";
 import { QUIZ_USAGE_POLICY } from "@/lib/quiz-usage-rules";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData, noteData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { type Course, ITEM_ID_PATTERN, lessonsInOrder, newItemId } from "@/lib/course";
 
 export const MAX_QUESTIONS = 20;
@@ -307,12 +309,28 @@ export async function readQuizFor(courseId: string, lessonId: string): Promise<Q
   return parseQuiz(raw);
 }
 
-export async function saveQuiz(courseId: string, lessonId: string, quiz: Quiz): Promise<void> {
-  await redisPipeline([["SET", quizKey(courseId, lessonId), JSON.stringify(quiz)]]);
+/**
+ * Where a course's quizzes are counted in the store's data room
+ * (lib/store-data.ts): the quizzes the creator writes, and what students'
+ * tries leave (their last answers and marks, their count, what they passed).
+ */
+const QUIZZES_SLOT = (courseId: string) => `cq:${courseId}`;
+const TRIES_SLOT = (courseId: string) => `ct:${courseId}`;
+const kept = (raw: unknown) => (typeof raw === "string" && raw ? dataBytes([raw], 1) : 0);
+
+export async function saveQuiz(courseId: string, lessonId: string, quiz: Quiz, room: DataStore): Promise<void> {
+  const json = JSON.stringify(quiz);
+  const [before] = await redisPipeline([["GET", quizKey(courseId, lessonId)]]);
+  const grown = dataBytes([json], 1) - kept(before);
+  if (grown > 0) await needData(room, [{ slot: QUIZZES_SLOT(courseId), bytes: grown }]);
+  await redisPipeline([["SET", quizKey(courseId, lessonId), json]]);
+  if (grown < 0) await giveData(room, [{ slot: QUIZZES_SLOT(courseId), bytes: -grown }]);
 }
 
-export async function dropQuiz(courseId: string, lessonId: string): Promise<void> {
+export async function dropQuiz(courseId: string, lessonId: string, room: DataStore): Promise<void> {
+  const [before] = await redisPipeline([["GET", quizKey(courseId, lessonId)]]);
   await redisPipeline([["DEL", quizKey(courseId, lessonId)]]);
+  if (kept(before)) await giveData(room, [{ slot: QUIZZES_SLOT(courseId), bytes: kept(before) }]);
 }
 
 /** The keys a course's quizzes are kept under, so they go when it goes. */
@@ -379,13 +397,22 @@ export async function submitQuiz(
   who: string,
   quiz: Quiz,
   answers: Answers,
-  storeSid?: string,
+  storeSid: string | undefined,
   /** The store's allowance window (lib/allowance-window.ts); null refuses a counted submission. */
-  window?: string | null,
+  window: string | null | undefined,
+  /** The store whose data room the try takes from (DataRoomError when it does not fit). */
+  room: DataStore,
 ): Promise<SubmitResult> {
   const before = await attemptOf(courseId, lessonId, who);
   if (before.passed) return { ok: false, reason: "passed" };
   if (quiz.attempts > 0 && before.used >= quiz.attempts) return { ok: false, reason: "no_tries" };
+  // What the try leaves takes room first, at the most it can weigh: its
+  // answers and marks rewritten over the last, its count the first time, and
+  // its pass. Nothing is counted against the store's quizzes without it.
+  const last = await redisPipeline([["GET", resultKey(courseId, lessonId, who)]]);
+  const draft = JSON.stringify({ used: 9_999, last: { answers, grade: gradeQuiz(quiz, answers), at: Math.floor(Date.now() / 1000) }, best: 100, passed: true });
+  const grown = dataBytes([draft], 1) - kept(last[0]) + (before.used ? 0 : dataBytes(["9999"], 1)) + dataBytes([lessonId], 1);
+  if (grown > 0) await needData(room, [{ slot: TRIES_SLOT(courseId), bytes: grown }]);
   if (quiz.usagePolicy === QUIZ_USAGE_POLICY) {
     const reserved = await reserveQuizSubmission(storeSid ?? "", Date.now(), window);
     if (reserved !== "ok") return { ok: false, reason: reserved };
@@ -415,9 +442,11 @@ export async function submitQuiz(
  * Writes a lesson down as passed for a student without a quiz: an assignment
  * done (lib/assignment.ts), which holds later lessons shut as a quiz does.
  */
-export async function markPassed(courseId: string, who: string, lessonId: string): Promise<void> {
+export async function markPassed(courseId: string, who: string, lessonId: string, room: DataStore): Promise<void> {
   if (!isRedisConfigured()) return;
-  await redisPipeline([["SADD", passedKey(courseId, who), lessonId]]);
+  const [added] = await redisPipeline([["SADD", passedKey(courseId, who), lessonId]]);
+  // Never refused: it follows work already handed in and taken.
+  if (Number(added) === 1) await noteData(room, [{ slot: TRIES_SLOT(courseId), bytes: dataBytes([lessonId], 1) }]);
 }
 
 /** The lessons whose quizzes this student has passed, and the assignments they have done. */
@@ -438,10 +467,14 @@ export async function passedFor(courseId: string, who: string[]): Promise<Set<st
  * Gives a student their tries back on every quiz of a course. What they
  * already passed stays passed: this is for someone stuck, not a penalty.
  */
-export async function resetTries(course: Course, who: string): Promise<void> {
+export async function resetTries(course: Course, who: string, room: DataStore): Promise<void> {
   const passed = await passedQuizzes(course.id, who);
   const lessons = lessonsInOrder(course).filter(({ lesson }) => lesson.quiz && !passed.has(lesson.id));
   if (lessons.length === 0) return;
+  // What the tries weighed comes back to the store's data room.
+  const held = await redisPipeline(lessons.flatMap(({ lesson }) => [["GET", resultKey(course.id, lesson.id, who)], ["GET", triesKey(course.id, lesson.id, who)]]));
+  const freed = held.reduce((sum: number, raw) => sum + kept(typeof raw === "number" ? String(raw) : raw), 0);
+  if (freed) await giveData(room, [{ slot: TRIES_SLOT(course.id), bytes: freed }]);
   await redisPipeline(
     lessons.flatMap(({ lesson }) => [
       ["DEL", triesKey(course.id, lesson.id, who)],

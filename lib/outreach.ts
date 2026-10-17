@@ -22,6 +22,7 @@
  *   nl:outreach:stoplink:<key>          the pitch a stop link in a footer belongs to
  *   nl:outreach:stop:all                the domains that asked that no store here write to them (a set)
  */
+import { giveData, takeData } from "@/lib/store-data";
 import { randomBytes } from "node:crypto";
 import { writePitch } from "@/lib/ai";
 import { readTitles } from "@/lib/catalog";
@@ -163,6 +164,11 @@ export async function readSite(raw: string, reader: PageReader = readPage): Prom
 const key = (statsId: string, part: string) => `nl:outreach:${statsId}:${part}`;
 const linkKey = (token: string) => `nl:outreach:stoplink:${token}`;
 const STOP_ALL = "nl:outreach:stop:all";
+/** What one pitch leaves in the store's data room for good: its stop link and a domain's place in the stop lists. */
+export const OUTREACH_TRACE_BYTES = 640;
+/** What a pitch weighs at the most, counted in the store's data room while it is kept: its words in any script, its footer, its record. */
+export const PITCH_BYTES = (MAX_PITCH_BODY + MAX_PITCH_SUBJECT) * 3 + 3_072;
+const PITCHES_SLOT = "op";
 /** Where a pitch's stop link leads: a page with one press, on the platform's own address. */
 export const stopUrl = (token: string) => `${SITE_URL}/outreach/stop/${token}`;
 const dayOf = (now: number) => new Date(now * 1000).toISOString().slice(0, 10);
@@ -200,7 +206,7 @@ export async function listPitches(store: Store): Promise<Pitch[]> {
 export type StartResult =
   /** `replaced`: drafts to the same business that this one took the place of. */
   | { ok: true; pitch: Pitch; left: number; replaced: string[] }
-  | { ok: false; reason: PitchProblem | SiteProblem | "unpublished" | "off" | "used" | "failed" | "notes" | "full" };
+  | { ok: false; reason: PitchProblem | SiteProblem | "unpublished" | "off" | "used" | "failed" | "notes" | "full" | "room" | "busy" };
 
 /**
  * Writes one pitch, after everything that could forbid it has been asked.
@@ -265,6 +271,11 @@ export async function startPitch(
   const spare = pitches.filter((p) => p.status === "draft" || p.status === "sent").sort((a, b) => a.createdAt - b.createdAt);
   if (pitches.length >= MAX_PITCHES && spare.length === 0) return { ok: false, reason: "full" };
 
+  // What a pitch leaves for as long as the store is, taken before the writing
+  // job is paid for (lib/store-data.ts): its stop link, which is never
+  // forgotten, and the domain's place among those that asked to stop.
+  const trace = await takeData(store, [{ slot: "off", bytes: OUTREACH_TRACE_BYTES }, { slot: PITCHES_SLOT, bytes: PITCH_BYTES }]);
+  if (!trace.ok) return { ok: false, reason: trace.reason === "full" ? "room" : "busy" };
   const titles = [...(await readTitles(store).catch(() => new Map<string, string>())).values()];
   const written = await writePitch(
     store,
@@ -279,7 +290,10 @@ export async function startPitch(
     },
     now * 1000,
   );
-  if (!written.ok) return { ok: false, reason: written.reason };
+  if (!written.ok) {
+    await giveData(store, [{ slot: "off", bytes: OUTREACH_TRACE_BYTES }, { slot: PITCHES_SLOT, bytes: PITCH_BYTES }]);
+    return { ok: false, reason: written.reason };
+  }
 
   // One pitch to a business at a time: a new draft takes the place of an older one to the same domain.
   const replaced = pitches.filter((p) => p.domain === domain && p.status === "draft");
@@ -303,16 +317,18 @@ export async function startPitch(
     createdAt: now,
     sentAt: 0,
   };
+  const pushedOut = pitches.length - replaced.length >= MAX_PITCHES && spare.some((p) => !replaced.includes(p)) ? spare.find((p) => !replaced.includes(p))! : null;
   await redisPipeline([
     ["HSET", key(store.statsId, "pitches"), pitch.id, JSON.stringify(pitch)],
     ["INCR", key(store.statsId, `day:${dayOf(now)}`)],
     ["EXPIRE", key(store.statsId, `day:${dayOf(now)}`), 3 * 86_400],
     ["SET", linkKey(stop), JSON.stringify({ s: store.statsId, id: pitch.id, d: domain, n: (store.mail?.fromName || store.name).slice(0, 80) })],
     ...replaced.flatMap((p) => [["HDEL", key(store.statsId!, "pitches"), p.id], ...(p.stop ? [["DEL", linkKey(p.stop)]] : [])]),
-    ...(pitches.length - replaced.length >= MAX_PITCHES && spare.some((p) => !replaced.includes(p))
-      ? [["HDEL", key(store.statsId, "pitches"), spare.find((p) => !replaced.includes(p))!.id]]
-      : []),
+    ...(pushedOut ? [["HDEL", key(store.statsId, "pitches"), pushedOut.id]] : []),
   ]);
+  // The pitches let go give their room back; their stop links stay counted (OUTREACH_TRACE_BYTES).
+  const gone = replaced.length + (pushedOut ? 1 : 0);
+  if (gone > 0) await giveData(store, [{ slot: PITCHES_SLOT, bytes: gone * PITCH_BYTES }]);
   return { ok: true, pitch, left: written.left, replaced: replaced.map((p) => p.id) };
 }
 
@@ -358,6 +374,7 @@ export async function dropPitch(store: Store, id: string): Promise<boolean> {
   const pitch = parsePitch(raw);
   if (!pitch || pitch.status !== "draft") return false;
   await redisPipeline([["HDEL", key(store.statsId, "pitches"), id], ...(pitch.stop ? [["DEL", linkKey(pitch.stop)]] : [])]);
+  await giveData(store, [{ slot: PITCHES_SLOT, bytes: PITCH_BYTES }]);
   return true;
 }
 

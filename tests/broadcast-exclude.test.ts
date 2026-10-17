@@ -15,6 +15,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { audience, leadsKey, parseContact, upsertContact } from "@/lib/contacts";
 import { store as redis } from "./redis-stub";
+import { ROOM } from "./data-room";
 
 const LIST = "list_abc";
 const FREE = "prod_guide";
@@ -22,11 +23,11 @@ const PAID = "prod_course";
 
 async function join(email: string, ids: string[]) {
   if (!ids.length) {
-    await upsertContact(LIST, email, { agreed: true, explicit: true, source: "free" });
+    await upsertContact(LIST, email, { agreed: true, explicit: true, source: "free" }, ROOM);
     return;
   }
   for (const id of ids) {
-    await upsertContact(LIST, email, { agreed: true, explicit: true, source: "free", productId: id, title: id });
+    await upsertContact(LIST, email, { agreed: true, explicit: true, source: "free", productId: id, title: id }, ROOM);
   }
 }
 

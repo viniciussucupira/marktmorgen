@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (body.action === "remove") {
       const id = text(body.id, 12);
       if (!FORM_ID.test(id)) return Response.json({ ok: false, error: "unknown" }, { status: 400 });
-      return (await dropForm(statsId, id)) ? Response.json({ ok: true }) : Response.json({ ok: false, error: "unknown" }, { status: 404 });
+      return (await dropForm(statsId, id, store)) ? Response.json({ ok: true }) : Response.json({ ok: false, error: "unknown" }, { status: 404 });
     }
 
     const raw = body.form && typeof body.form === "object" ? (body.form as Record<string, unknown>) : null;

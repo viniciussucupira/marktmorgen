@@ -17,6 +17,7 @@ import { MAX_REVIEW_PHOTO_BYTES, type ReviewPhoto } from "@/lib/review-summary";
 import { imageFolder } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const STATS = "d".repeat(32);
 const PRODUCT = "mugs000001";
@@ -52,13 +53,13 @@ async function main(): Promise<void> {
   if (typeof kept !== "object") throw new Error("no photo kept");
 
   part("On a review");
-  const saved = await saveReview(STATS, { productId: PRODUCT, email: "buyer@example.com", reference: "cs_test_1", pi: "pi_1", rating: 5, text: "Lovely mug.", name: "Ana" }, 1_700_000_000_000);
+  const saved = await saveReview(STATS, { productId: PRODUCT, email: "buyer@example.com", reference: "cs_test_1", pi: "pi_1", rating: 5, text: "Lovely mug.", name: "Ana" }, ROOM, 1_700_000_000_000);
   if (saved.state !== "created") throw new Error("review not written");
   const id = saved.review.id;
   const first = await setReviewPhoto(STATS, PRODUCT, id, kept);
   is("put on, nothing displaced", typeof first === "object" ? first.removed : first, null);
   is("it reads back", (await readReview(STATS, PRODUCT, id))?.photo, kept);
-  await saveReview(STATS, { productId: PRODUCT, email: "buyer@example.com", reference: "cs_test_1", pi: "pi_1", rating: 4, text: "Lovely mug, a little small.", name: "Ana" }, 1_700_000_100_000);
+  await saveReview(STATS, { productId: PRODUCT, email: "buyer@example.com", reference: "cs_test_1", pi: "pi_1", rating: 4, text: "Lovely mug, a little small.", name: "Ana" }, ROOM, 1_700_000_100_000);
   const edited = await readReview(STATS, PRODUCT, id);
   is("the buyer's edit keeps it", { text: edited?.text, photo: edited?.photo }, { text: "Lovely mug, a little small.", photo: kept });
   const other: ReviewPhoto = { path: `images/${folder}/${"ab".repeat(16)}.webp`, width: 800, height: 800 };

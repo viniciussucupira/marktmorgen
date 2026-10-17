@@ -16,6 +16,8 @@ import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { hasPlaceholder } from "@/lib/mail-body";
 import { randomBytes, randomInt } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { needData, takeData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { WHO, type Who, audience } from "@/lib/contacts";
 import { PORTION_NOTE, pauseNote } from "@/lib/mail-health";
 import { BATCH_SIZE, MAX_MAIL_BODY, MAX_SUBJECT, SENDER_WAIT_NOTE, monthlyAllowance, sendTo, usedThisMonth } from "@/lib/mail";
@@ -91,6 +93,9 @@ export class BroadcastCancellationUnconfirmed extends Error {
 }
 
 export const MAX_SCHEDULE_DAYS = 365;
+/** How long a broadcast's record is kept after its last change, and who it went to after it was made. */
+const RECORD_DAYS = 400;
+const RECIPIENT_DAYS = 60;
 const QUEUE = "nl:mail:queue";
 const bcKey = (id: string) => `nl:mail:bc:${id}`;
 const toKey = (id: string) => `nl:mail:bc:${id}:to`;
@@ -125,7 +130,7 @@ export async function readBroadcast(id: string): Promise<Broadcast | null> {
 }
 
 async function save(b: Broadcast): Promise<void> {
-  const response = await redisPipeline([["SET", bcKey(b.id), JSON.stringify(b), "EX", 400 * 86_400]]);
+  const response = await redisPipeline([["SET", bcKey(b.id), JSON.stringify(b), "EX", RECORD_DAYS * 86_400]]);
   if (!Array.isArray(response) || response.length !== 1 || response[0] !== "OK") throw new Error("Campaign progress write could not be confirmed");
 }
 
@@ -282,8 +287,16 @@ export async function createBroadcast(
     tagged: true,
     test,
   };
+  // Its room in the store's data room first (DataRoomError when it does not
+  // fit): its record, until it expires by itself (400 days after the last
+  // change, which comes at the latest when it goes out), and its place in
+  // the store's list of broadcasts.
+  await needData(store, [
+    { until: (now + (MAX_SCHEDULE_DAYS + RECORD_DAYS + 1) * 86_400) * 1000, bytes: dataBytes([JSON.stringify({ ...broadcast, note: "x".repeat(300) })], 1) },
+    { slot: "bc", bytes: dataBytes([broadcast.id], 1) },
+  ]);
   try {
-    const saved = await redisPipeline([["SET", bcKey(broadcast.id), JSON.stringify(broadcast), "EX", 400 * 86_400]]);
+    const saved = await redisPipeline([["SET", bcKey(broadcast.id), JSON.stringify(broadcast), "EX", RECORD_DAYS * 86_400]]);
     if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new BroadcastWriteUnconfirmed();
     const indexed = await redisPipeline([
       ["LPUSH", listKey(store.listId), broadcast.id],
@@ -308,7 +321,7 @@ export async function cancelBroadcast(store: Store, id: string): Promise<boolean
     const b = await readBroadcast(id);
     if (!b || b.id !== id || b.listId !== store.listId || b.status !== "scheduled" || b.sent !== 0 || b.listed !== false) return false;
     const cancelled = { ...b, status: "cancelled", finishedAt: Math.floor(Date.now() / 1000) };
-    const saved = await redisPipeline([["SET", bcKey(id), JSON.stringify(cancelled), "EX", 400 * 86_400]]);
+    const saved = await redisPipeline([["SET", bcKey(id), JSON.stringify(cancelled), "EX", RECORD_DAYS * 86_400]]);
     if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new BroadcastCancellationUnconfirmed();
     const removed = await redisPipeline([["SREM", QUEUE, id]]);
     if (!Array.isArray(removed) || removed.length !== 1 || (removed[0] !== 0 && removed[0] !== 1)) throw new BroadcastCancellationUnconfirmed();
@@ -385,9 +398,16 @@ export async function advanceBroadcast(
           test = { ...test, ...splitFor(to.length, test.share) };
         }
       }
+      // Who it goes to takes room in the store's data room until the list expires by itself.
+      const taken = await takeData(store, [{ until: Date.now() + (RECIPIENT_DAYS + 1) * 86_400_000, bytes: dataBytes(to, to.length) }]);
+      if (!taken.ok) {
+        b = { ...b, status: "waiting", note: taken.reason === "full" ? "Your store's data room is full, so the list of who it goes to could not be made. Nothing was sent. Make room, and it is tried again automatically." : "The recipient list could not be prepared. Nothing was sent. It will be checked again automatically." };
+        await save(b);
+        return b;
+      }
       const commands: (string | number)[][] = [["DEL", toKey(id)]];
       for (let i = 0; i < to.length; i += 500) commands.push(["RPUSH", toKey(id), ...to.slice(i, i + 500)]);
-      commands.push(["EXPIRE", toKey(id), 60 * 86_400]);
+      commands.push(["EXPIRE", toKey(id), RECIPIENT_DAYS * 86_400]);
       try {
         const prepared = await redisPipeline(commands);
         if (!Array.isArray(prepared) || prepared.length !== commands.length || (prepared[0] !== 0 && prepared[0] !== 1) || prepared.at(-1) !== (to.length ? 1 : 0)) throw new Error("Recipient snapshot write is unconfirmed");

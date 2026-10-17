@@ -3,6 +3,7 @@ import { addComment, deleteComment, dropLessonComments, readComment, setComments
 import { COMMENT_ID_PATTERN, CREATOR_AUTHOR } from "@/lib/lesson-comments-rules";
 import { tellStudent } from "@/lib/lesson-comment-notify";
 import type { NextRequest } from "next/server";
+import { DataRoomError } from "@/lib/store-data";
 import { MAX_AI_LESSONS, MAX_AI_MODULES } from "@/lib/ai-rules";
 import { deleteFile as del, headFile as head } from "@/lib/file-store";
 import { setCourseLessons, setProductCourse, storeForEmail, storeFolder } from "@/lib/store";
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
       const course = emptyCourse();
       const result = await setProductCourse(ref, id, { id: course.id, lessons: 0 });
       if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
-      await saveCourse(course);
+      await saveCourse(course, store);
       return Response.json({ ok: true, courseId: course.id });
     }
 
@@ -139,14 +140,14 @@ export async function POST(request: NextRequest) {
         return Response.json({ ok: true });
       }
       if (action === "cm-delete") {
-        await deleteComment(courseId, commentId);
+        await deleteComment(courseId, commentId, store);
         return Response.json({ ok: true });
       }
       if (action === "cm-reply") {
         const course = await readCourse(courseId);
         const found = course ? findLesson(course, comment.lesson) : null;
         if (!found) return Response.json({ ok: false, error: "gone" }, { status: 404 });
-        const result = await addComment({ courseId, lessonId: comment.lesson, by: CREATOR_AUTHOR, text: body.text, parent: comment.parent ?? comment.id });
+        const result = await addComment({ courseId, lessonId: comment.lesson, by: CREATOR_AUTHOR, text: body.text, parent: comment.parent ?? comment.id, room: store });
         if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
         if (result.parent) {
           await tellStudent({
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
       // Asking for another try without saying what to change leaves the student with nothing to go on.
       if (verdict === "again" && !feedback.trim()) return Response.json({ ok: false, error: "feedback" }, { status: 400 });
       const to = await studentEmail(courseId, who);
-      const result = await review({ courseId, lessonId: found.lesson.id, who, email: to ?? "", verdict, feedback });
+      const result = await review({ courseId, lessonId: found.lesson.id, who, email: to ?? "", verdict, feedback, data: store });
       if (!result.ok) return Response.json({ ok: false, error: result.reason === "unknown" ? "gone" : "reviewed" }, { status: 409 });
       // Approved work may be the last lesson of the course (lib/course-finish.ts).
       if (verdict === "approved" && to) await noteIfFinished(store, product.id, courseId, to);
@@ -211,7 +212,7 @@ export async function POST(request: NextRequest) {
       // whether a save succeeded: the creator's change is written either way.
       const community = communityOf(store);
       const save = async (next: Course) => {
-        await saveCourse(next);
+        await saveCourse(next, store);
         if (community) await courseChanged(community, product, course, next).catch(() => {});
       };
 
@@ -219,7 +220,7 @@ export async function POST(request: NextRequest) {
         if (lessonCount(course) > 0) return Response.json({ ok: false, error: "not_empty" }, { status: 400 });
         const result = await setProductCourse(ref, id, null);
         if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
-        await dropCourse(course);
+        await dropCourse(course, store);
         if (community) await unindexCourse(community, product.id, course).catch(() => {});
         await registerDrip(store, product, { ...course, modules: [] });
         return Response.json({ ok: true });
@@ -241,7 +242,7 @@ export async function POST(request: NextRequest) {
           if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
           await save(result.course);
           // The work handed in for it goes with it, files and all.
-          const files = await dropTask(course.id, lessonId, storeKey(store));
+          const files = await dropTask(course.id, lessonId, storeKey(store), store);
           if (files.length) await del(files).catch((error: unknown) => console.error("could not delete handed-in work", error));
           return Response.json({ ok: true, course: result.course });
         }
@@ -249,7 +250,7 @@ export async function POST(request: NextRequest) {
         if (found.lesson.quiz) return Response.json({ ok: false, error: "quiz_there" }, { status: 400 });
         const read = readTask(body.task);
         if (!read.ok) return Response.json({ ok: false, error: "prompt" }, { status: 400 });
-        await saveTask(course.id, lessonId, read.task);
+        await saveTask(course.id, lessonId, read.task, store);
         const { prompt: _prompt, ...setup } = read.task;
         void _prompt;
         const result = editCourse(course, { op: "task", lessonId, task: setup });
@@ -267,7 +268,7 @@ export async function POST(request: NextRequest) {
           const result = editCourse(course, { op: "quiz", lessonId, quiz: null });
           if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
           await save(result.course);
-          await dropQuiz(course.id, lessonId);
+          await dropQuiz(course.id, lessonId, store);
           return Response.json({ ok: true, course: result.course });
         }
         const hadQuiz = !!findLesson(course, lessonId)?.lesson.quiz;
@@ -279,7 +280,7 @@ export async function POST(request: NextRequest) {
           const at = "at" in read ? read.at : null;
           return Response.json({ ok: false, error: "quiz", problem: { reason: read.reason, at } }, { status: 400 });
         }
-        await saveQuiz(course.id, lessonId, read.quiz);
+        await saveQuiz(course.id, lessonId, read.quiz, store);
         const result = editCourse(course, { op: "quiz", lessonId, quiz: setupOf(read.quiz) });
         if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
         await save(result.course);
@@ -318,7 +319,7 @@ export async function POST(request: NextRequest) {
       if (action === "retries") {
         const who = text(body.email, 254).trim();
         if (!EMAIL_PATTERN.test(who)) return Response.json({ ok: false, error: "email" }, { status: 400 });
-        await resetTries(course, emailKey(who));
+        await resetTries(course, emailKey(who), store);
         return Response.json({ ok: true });
       }
 
@@ -326,7 +327,7 @@ export async function POST(request: NextRequest) {
         const lessonId = text(body.lessonId, 20);
         if (!findLesson(course, lessonId)) return Response.json({ ok: false, error: "unknown" }, { status: 404 });
         const cleaned = cleanBody(body.text);
-        await saveBody(course.id, lessonId, cleaned);
+        await saveBody(course.id, lessonId, cleaned, store);
         const found = findLesson(course, lessonId)!;
         const result = editCourse(course, {
           op: "lesson-edit",
@@ -416,18 +417,18 @@ export async function POST(request: NextRequest) {
       const lessons = lessonCount(result.course);
       if (lessons !== courseInfo.lessons) await setCourseLessons(ref, id, lessons);
       if (edit.op === "lesson-remove") {
-        await dropBody(course.id, edit.lessonId);
-        await dropQuiz(course.id, edit.lessonId);
+        await dropBody(course.id, edit.lessonId, store);
+        await dropQuiz(course.id, edit.lessonId, store);
       }
       if (edit.op === "lesson-remove" || edit.op === "module-remove") {
         const kept = new Set(lessonsInOrder(result.course).map(({ lesson }) => lesson.id));
         const goneLessons = lessonsInOrder(course).filter(({ lesson }) => !kept.has(lesson.id));
         const gone = goneLessons.map(({ lesson }) => lesson.id);
-        await dropLessonComments(course.id, gone).catch((error) => console.error("could not delete a lesson's comments", error));
+        await dropLessonComments(course.id, gone, store).catch((error) => console.error("could not delete a lesson's comments", error));
         // An assignment goes with its lesson, and the work handed in for it.
         for (const { lesson } of goneLessons) {
           if (!lesson.task) continue;
-          const files = await dropTask(course.id, lesson.id, storeKey(store)).catch(() => [] as string[]);
+          const files = await dropTask(course.id, lesson.id, storeKey(store), store).catch(() => [] as string[]);
           if (files.length) await del(files).catch((error: unknown) => console.error("could not delete handed-in work", error));
         }
       }
@@ -440,13 +441,15 @@ export async function POST(request: NextRequest) {
       for (const file of result.removed) {
         if (filesInCourse(result.course).some((f) => f.pathname === file.pathname)) continue;
         // A video the video service keeps is taken away there; anything else, from the file store.
-        if (await dropStream(file.pathname).catch(() => false)) continue;
+        if (await dropStream(file.pathname, store).catch(() => false)) continue;
         await del(file.pathname).catch((error: unknown) => console.error("could not delete a lesson file", error));
       }
       return Response.json({ ok: true, course: result.course, addedId: result.addedId, ...(stream ? { stream } : {}) });
     });
   } catch (error) {
     if (error instanceof LockBusyError) return Response.json({ ok: false, error: "busy" }, { status: 409 });
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof DataRoomError) return Response.json({ ok: false, error: "store_full", message: error.message }, { status: 409 });
     console.error("changing a course failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
   }

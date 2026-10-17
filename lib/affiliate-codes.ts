@@ -37,6 +37,8 @@
  *   nl:aff:<id>:promo   hash  Stripe promotion code id -> affiliate id
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import type { Store } from "@/lib/store";
 
 /** Stripe's id for a promotion code: the thing a buyer's code resolves to. */
@@ -75,16 +77,23 @@ export async function codeOwners(store: Store): Promise<Map<string, string>> {
 export async function giveCode(store: Store, promoId: string, affiliateId: string): Promise<boolean> {
   if (!store.statsId || !isRedisConfigured()) return false;
   if (!PROMO_ID_PATTERN.test(promoId) || !/^[0-9a-f]{12}$/.test(affiliateId)) return false;
+  // A code given for the first time takes room in the store's data room (DataRoomError when it does not fit).
+  const [held] = await redisPipeline([["HEXISTS", promoKey(store.statsId), promoId]]);
+  if (Number(held) !== 1) await needData(store, [{ slot: CODES_SLOT, bytes: dataBytes([promoId, affiliateId], 1) }]);
   await redisPipeline([["HSET", promoKey(store.statsId), promoId, affiliateId]]);
   return true;
 }
 
-/** Takes a code back. Sales already credited through it stay credited. */
+/** Takes a code back, and gives back its room. Sales already credited through it stay credited. */
 export async function takeCodeBack(store: Store, promoId: string): Promise<boolean> {
   if (!store.statsId || !isRedisConfigured() || !PROMO_ID_PATTERN.test(promoId)) return false;
-  const [removed] = await redisPipeline([["HDEL", promoKey(store.statsId), promoId]]);
+  const [held, removed] = await redisPipeline([["HGET", promoKey(store.statsId), promoId], ["HDEL", promoKey(store.statsId), promoId]]);
+  if (Number(removed) === 1 && typeof held === "string") await giveData(store, [{ slot: CODES_SLOT, bytes: dataBytes([promoId, held], 1) }]);
   return Number(removed) === 1;
 }
+
+/** Where the codes given to affiliates are counted in the store's data room (lib/store-data.ts). */
+const CODES_SLOT = "aff:codes";
 
 type DiscountLike = { promotion_code?: unknown } | null | undefined;
 

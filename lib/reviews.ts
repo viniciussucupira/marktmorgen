@@ -43,6 +43,8 @@
 import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData, takeData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import {
   EMPTY_SUMMARY,
   MAX_REPLY_TEXT,
@@ -300,7 +302,16 @@ export type SaveInput = {
   name: string;
 };
 
-export type SaveResult = { state: "created" | "updated"; review: Review } | { state: "full" | "busy" | "invalid" };
+export type SaveResult = { state: "created" | "updated"; review: Review } | { state: "full" | "noroom" | "busy" | "invalid" };
+
+/**
+ * Where a product's reviews are counted in the store's data room
+ * (lib/store-data.ts): each review's record and its places in the lists,
+ * the buyer's words taken before they are written, the creator's answer the
+ * same way.
+ */
+const REVIEWS_SLOT = (productId: string) => `rv:${productId}`;
+const reviewBytes = (review: Review | null) => (review ? dataBytes([JSON.stringify(review)], 5) : 0);
 
 /**
  * Writes a buyer's review, or changes the one they wrote. The caller has
@@ -309,7 +320,7 @@ export type SaveResult = { state: "created" | "updated"; review: Review } | { st
  * to hide it; the creator's answer stays, and the edit goes back into the
  * creator's queue so they see what changed.
  */
-export async function saveReview(statsId: string, input: SaveInput, now = Date.now()): Promise<SaveResult> {
+export async function saveReview(statsId: string, input: SaveInput, room: DataStore, now = Date.now()): Promise<SaveResult> {
   const rating = readRating(input.rating);
   if (!STATS_ID_PATTERN.test(statsId) || !PRODUCT_ID_PATTERN.test(input.productId) || rating === null) return { state: "invalid" };
   const id = reviewId(statsId, input.productId, input.email);
@@ -336,6 +347,8 @@ export async function saveReview(statsId: string, input: SaveInput, now = Date.n
       // A photo stays through an edit; it is added or taken off by setReviewPhoto.
       photo: before?.photo ?? null,
     };
+    const grown = reviewBytes(review) - reviewBytes(before);
+    if (grown > 0 && !(await takeData(room, [{ slot: REVIEWS_SLOT(input.productId), bytes: grown }], now)).ok) return { state: "noroom" };
     await write(statsId, review);
     const pays: (string | number)[][] = [];
     if (review.pi) pays.push(["HSET", payKey(statsId), review.pi, await payEntry(statsId, review.pi, `${review.productId}|${id}`)]);
@@ -359,11 +372,13 @@ async function payEntry(statsId: string, pi: string, member: string): Promise<st
 }
 
 /** Deletes a buyer's own review. Its stars leave the average with it. */
-export async function deleteReview(statsId: string, productId: string, id: string): Promise<"deleted" | "missing" | "busy"> {
+export async function deleteReview(statsId: string, productId: string, id: string, room: DataStore): Promise<"deleted" | "missing" | "busy"> {
   if (!REVIEW_ID_PATTERN.test(id) || !PRODUCT_ID_PATTERN.test(productId)) return "missing";
   const result = await locked(statsId, productId, async () => {
     const [raw] = await redisPipeline([["HGET", productKey(statsId, productId), id]]);
-    if (!parseReview(raw)) return "missing" as const;
+    const gone = parseReview(raw);
+    if (!gone) return "missing" as const;
+    await giveData(room, [{ slot: REVIEWS_SLOT(productId), bytes: reviewBytes(gone) }]);
     await redisPipeline([
       ["HDEL", productKey(statsId, productId), id],
       ["ZREM", visibleKey(statsId, productId), id],
@@ -382,6 +397,7 @@ async function creatorChange(
   productId: string,
   id: string,
   change: (review: Review) => Review,
+  room: DataStore | null,
 ): Promise<Review | "missing" | "busy"> {
   if (!REVIEW_ID_PATTERN.test(id) || !PRODUCT_ID_PATTERN.test(productId)) return "missing";
   return locked(statsId, productId, async () => {
@@ -389,6 +405,11 @@ async function creatorChange(
     const before = parseReview(raw);
     if (!before) return "missing" as const;
     const after = change(before);
+    // What the creator's answer grows the review by takes room first (DataRoomError when it does not fit);
+    // `room` is null for what only flips a mark or swaps a photo's path, which never refuses.
+    const grown = reviewBytes(after) - reviewBytes(before);
+    if (room && grown > 0) await needData(room, [{ slot: REVIEWS_SLOT(productId), bytes: grown }]);
+    else if (room && grown < 0) await giveData(room, [{ slot: REVIEWS_SLOT(productId), bytes: -grown }]);
     await write(statsId, after);
     await recount(statsId, productId);
     return after;
@@ -405,21 +426,21 @@ export async function setReviewPhoto(statsId: string, productId: string, id: str
   const done = await creatorChange(statsId, productId, id, (review) => {
     removed = review.photo && review.photo.path !== photo?.path ? review.photo : null;
     return { ...review, photo };
-  });
+  }, null);
   return typeof done === "string" ? done : { review: done, removed };
 }
 
 export function setHidden(statsId: string, productId: string, id: string, hidden: boolean) {
-  return creatorChange(statsId, productId, id, (review) => ({ ...review, hidden }));
+  return creatorChange(statsId, productId, id, (review) => ({ ...review, hidden }), null);
 }
 
 /** The creator's public answer; empty text takes it away. */
-export function setReply(statsId: string, productId: string, id: string, text: string, now = Date.now()) {
+export function setReply(statsId: string, productId: string, id: string, text: string, room: DataStore, now = Date.now()) {
   const clean = cleanReviewText(text, MAX_REPLY_TEXT);
   return creatorChange(statsId, productId, id, (review) => ({
     ...review,
     reply: clean ? { text: clean, at: review.reply?.text === clean ? review.reply.at : now } : null,
-  }));
+  }), room);
 }
 
 /**
@@ -441,7 +462,7 @@ export async function markRefunded(statsId: string, pi: string): Promise<number>
       if (review.pi !== pi || review.refunded) return review;
       hit = true;
       return { ...review, refunded: true };
-    });
+    }, null);
     if (hit) changed += 1;
   }
   return changed;
@@ -449,7 +470,7 @@ export async function markRefunded(statsId: string, pi: string): Promise<number>
 
 /** Marks a review refunded found some other way (an edit that found the order refunded). */
 export async function markOneRefunded(statsId: string, productId: string, id: string): Promise<void> {
-  await creatorChange(statsId, productId, id, (review) => ({ ...review, refunded: true }));
+  await creatorChange(statsId, productId, id, (review) => ({ ...review, refunded: true }), null);
 }
 
 /** Takes reviews out of the creator's queue: those named, or all of them. */
@@ -530,7 +551,7 @@ export async function dropReviews(statsId: string | null, productId: string): Pr
  * as their own delete does: its stars leave the average with it. Returns the
  * photos to delete from the picture folder.
  */
-export async function forgetReviewsPerson(statsId: string | null, productIds: string[], email: string): Promise<{ records: number; photos: string[] }> {
+export async function forgetReviewsPerson(statsId: string | null, productIds: string[], email: string, room: DataStore): Promise<{ records: number; photos: string[] }> {
   if (!statsId || !productIds.length || !isRedisConfigured()) return { records: 0, photos: [] };
   const wanted = productIds.filter((p) => PRODUCT_ID_PATTERN.test(p));
   const ids = wanted.map((p) => reviewId(statsId, p, email));
@@ -540,7 +561,7 @@ export async function forgetReviewsPerson(statsId: string | null, productIds: st
   for (let i = 0; i < wanted.length; i += 1) {
     const review = parseReview(raws[i]);
     if (!review) continue;
-    if ((await deleteReview(statsId, wanted[i], ids[i])) !== "deleted") throw new Error("a review could not be deleted just now");
+    if ((await deleteReview(statsId, wanted[i], ids[i], room)) !== "deleted") throw new Error("a review could not be deleted just now");
     records += 1;
     if (review.photo?.path) photos.push(review.photo.path);
     if (review.pi) {

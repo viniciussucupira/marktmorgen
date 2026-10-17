@@ -15,6 +15,7 @@ import {
   unblock,
 } from "@/lib/community-dm";
 import { restingAway, takeBuyerAction } from "@/lib/buyer-actions";
+import { DataRoomError } from "@/lib/store-data";
 
 /** A member key, or the creator. */
 const WHO = /^(creator|[0-9a-f]{12,64})$/;
@@ -72,7 +73,14 @@ export async function POST(request: NextRequest) {
     // of a stranger is in the opening, not in the tenth message of a talk
     // somebody chose to have.
     const started = await within(id, key, "dmNew");
-    const sent = await send(id, config.dm, key, to, text);
+    let sent: Awaited<ReturnType<typeof send>>;
+    try {
+      sent = await send(id, config.dm, key, to, text, store);
+    } catch (error) {
+      // No room in the store's data room: nothing was sent (lib/store-data.ts).
+      if (error instanceof DataRoomError) return back(`${box}/${pairOf(key, to)}`, "noroom");
+      throw error;
+    }
     if (!sent.ok) {
       const why =
         sent.reason === "declined"
@@ -100,11 +108,11 @@ export async function POST(request: NextRequest) {
     return (await accept(id, key, pair)) ? back(`${box}/${pair}`, "dmaccepted") : back(box, "gone");
   }
   if (action === "decline") {
-    return (await decline(id, key, pair)) ? back(box, "dmdeclined") : back(box, "gone");
+    return (await decline(id, key, pair, store)) ? back(box, "dmdeclined") : back(box, "gone");
   }
   if (action === "unblock") {
     const other = otherIn(pair, key);
-    if (other && other !== CREATOR) await unblock(id, key, other);
+    if (other && other !== CREATOR) await unblock(id, key, other, store);
     return back(box, "dmunblocked");
   }
   return back(box, "gone");

@@ -24,6 +24,8 @@
  *   nl:course:<course>:certs:all  -> set of every certificate id issued, withdrawn ones too
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { type Course, lessonsInOrder } from "@/lib/course";
 import { requiredQuizLessons } from "@/lib/quiz";
 import { emailKey } from "@/lib/learn";
@@ -128,6 +130,8 @@ function parseCertificate(raw: unknown): Certificate | null {
 }
 
 const certKey = (id: string) => `nl:cert:${id}`;
+/** Where a course's certificates are counted in the store's data room (lib/store-data.ts). */
+const CERTS_SLOT = (courseId: string) => `cc:${courseId}`;
 const indexKey = (courseId: string) => `nl:course:${courseId}:certs`;
 const allKey = (courseId: string) => `nl:course:${courseId}:certs:all`;
 /** Every certificate one student was ever issued for a course, withdrawn ones too (added 17 October 2026), so deleting them finds each. */
@@ -169,6 +173,8 @@ export async function issueCertificate(input: {
   email: string;
   who: string;
   name: unknown;
+  /** The store whose data room it takes from (DataRoomError when it does not fit). */
+  room: DataStore;
 }): Promise<IssueResult> {
   const name = cleanName(input.name);
   if (!name) return { ok: false, reason: "name" };
@@ -189,6 +195,9 @@ export async function issueCertificate(input: {
   // 17 October 2026). Claiming first left a moment in which the slot named
   // a certificate not yet written, and a second press arriving then read it
   // as lost, took the slot and issued a second certificate beside the first.
+  // Its room first: the record, kept for good, and its places in the course's lists.
+  const bytes = dataBytes([JSON.stringify(certificate)], 3);
+  await needData(input.room, [{ slot: CERTS_SLOT(input.course.id), bytes }]);
   await redisPipeline([["SET", certKey(id), JSON.stringify(certificate)]]);
   const [claimed] = await redisPipeline([["HSETNX", indexKey(input.course.id), input.who, id]]);
   if (Number(claimed) !== 1) {
@@ -196,6 +205,7 @@ export async function issueCertificate(input: {
     if (existing) {
       // This press made nothing that stands: its record goes, the standing one is the answer.
       await redisPipeline([["DEL", certKey(id)]]);
+      await giveData(input.room, [{ slot: CERTS_SLOT(input.course.id), bytes }]);
       return { ok: true, certificate: existing, fresh: false };
     }
     // The slot pointed at a certificate that was withdrawn: take it.

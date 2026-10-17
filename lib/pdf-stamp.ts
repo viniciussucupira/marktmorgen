@@ -31,11 +31,14 @@ import { VAULT_PREFIX, isVaultPath, keyName } from "@/lib/vault-rules";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { MAX_STAMP_BYTES, type ProductFile, isPdf } from "@/lib/product-file";
 import { folderFromPathname } from "@/lib/delivery";
+import { type DataStore, keepFor } from "@/lib/store-data";
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 
 /** Kept for about as long as anyone re-downloads a purchase. */
 const COPY_RECORD_SECONDS = 400 * 24 * 60 * 60;
+/** What a stamped copy's record takes in the store's data room for the time it is kept. */
+export const COPY_RECORD_BYTES = 768;
 /** How long a note about a PDF that could not be stamped stays in the studio. */
 const PROBLEM_SECONDS = 60 * 24 * 60 * 60;
 
@@ -150,6 +153,7 @@ export function copyFolder(file: Pick<ProductFile, "pathname">): string {
 export async function stampedCopy(
   file: ProductFile,
   sale: { reference: string; email: string; paidAt: number },
+  store: DataStore,
 ): Promise<ProductFile | null> {
   if (!isPdf(file) || !sale.reference || !sale.email) return null;
   if (file.bytes > MAX_STAMP_BYTES) {
@@ -192,7 +196,10 @@ export async function stampedCopy(
       contentType: "application/pdf",
       addedAt: new Date().toISOString(),
     };
-    if (isRedisConfigured()) {
+    // Its record is kept only while the store's data room has space for it
+    // (lib/store-data.ts): without it the buyer still gets this copy, and the
+    // next download stamps another.
+    if (isRedisConfigured() && (await keepFor(store, COPY_RECORD_BYTES, COPY_RECORD_SECONDS))) {
       await redisPipeline([["SET", key, JSON.stringify(copy), "EX", COPY_RECORD_SECONDS]]);
     }
     return copy;

@@ -7,6 +7,7 @@
  * and leaves Marktmorgen with nothing to hold, skim or lose. The 0% on the home
  * page is this file.
  */
+import { itemsHandedOver } from "@/lib/store-data-rules";
 import { ADMITTED_FIELD, OrdersPausedError, admitOrders } from "@/lib/order-admission";
 import { firstCharge } from "@/lib/move-rules";
 import { currentMeta } from "@/lib/tier-rules";
@@ -676,7 +677,7 @@ export async function createCheckout(
   // A paid store's new orders stop at its plan's figure (lib/order-admission.ts):
   // admitted here, before Stripe's page opens, so nobody is stopped while paying.
   // A purchase for several people holds its places too.
-  const admitted = await admitOrders(store, 1 + (extras.group ? extras.group.people : 0));
+  const admitted = await admitOrders(store, 1 + (extras.group ? extras.group.people : 0), Date.now(), itemsHandedOver([product, ...added.map((offer) => offer.target)]));
   if (!admitted.ok) throw new OrdersPausedError(admitted.reason);
   if (admitted.hour !== null) body.set(`metadata[${ADMITTED_FIELD}]`, String(admitted.hour));
 

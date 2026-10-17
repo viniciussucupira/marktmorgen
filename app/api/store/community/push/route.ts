@@ -38,20 +38,22 @@ export async function POST(request: NextRequest) {
   if ((action === "on" || action === "renew") && !(await takeBuyerAction(store, viewer.owner ? "owner" : "buyer"))) return restingJson();
 
   if (action === "on") {
-    const result = await rememberDevice(id, who, body.subscription);
+    const result = await rememberDevice(id, who, body.subscription, store);
     if (result === "invalid") return Response.json({ ok: false, error: "invalid" }, { status: 400 });
     if (result === "unavailable") return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
     if (result === "full") return Response.json({ ok: false, error: "full" }, { status: 409 });
+    // No room in the store's data room for one more device (lib/store-data.ts).
+    if (result === "noroom") return Response.json({ ok: false, error: "noroom" }, { status: 409 });
     return Response.json({ ok: true, devices: await deviceCount(id, who) });
   }
 
   if (action === "renew") {
-    await renewDevice(id, who, text(body.old, 1_000), body.subscription);
+    await renewDevice(id, who, text(body.old, 1_000), body.subscription, store);
     return Response.json({ ok: true });
   }
 
   if (action === "off") {
-    await forgetDevice(id, who, text(body.endpoint, 1_000));
+    await forgetDevice(id, who, text(body.endpoint, 1_000), store);
     return Response.json({ ok: true, devices: await deviceCount(id, who) });
   }
 

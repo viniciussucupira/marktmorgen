@@ -28,6 +28,7 @@ import { siteKey } from "@/lib/site-page-rules";
 import { readForms } from "@/lib/form-store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const OWNER = "cf-owner@example.com";
 
@@ -68,8 +69,8 @@ async function main(): Promise<void> {
   let store = (await storeForEmail(OWNER))!;
   const listId = store.listId!;
   // Already here: Lea agreed on a page of the store; Max unsubscribed here.
-  await upsertContact(listId, "lea@example.com", { agreed: true, explicit: true, source: "free" });
-  await upsertContact(listId, "max@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(listId, "lea@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
+  await upsertContact(listId, "max@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await redis.pipeline([
     ["HSET", leadsKey(listId), "max@example.com", JSON.stringify({ ...parseContact((await redis.pipeline([["HGET", leadsKey(listId), "max@example.com"]]))[0])!, unsub: true, unsubAt: new Date().toISOString() })],
     ["INCR", unsubKey(listId)],
@@ -134,7 +135,7 @@ async function main(): Promise<void> {
   await finishUpload(store, again.job.id);
   const second = await run(again.job.id);
   is("nothing new: no one added, no one stopped twice", [second?.counts.added, second?.counts.contacts, second?.counts.stopped], [0, 0, 0]);
-  const later = await upsertContact(listId, "grace@example.com", { agreed: true, explicit: true, source: "free", at: new Date(Date.now() + 1000).toISOString() });
+  const later = await upsertContact(listId, "grace@example.com", { agreed: true, explicit: true, source: "free", at: new Date(Date.now() + 1000).toISOString() }, ROOM);
   is("only Grace's own tick on a page of the store brings her back", later.joined, true);
 
   part("Contacts without the creator's word");

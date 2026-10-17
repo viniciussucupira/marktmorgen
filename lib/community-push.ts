@@ -36,6 +36,11 @@
  *     gone, and its row goes with it.
  */
 import { redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, takeData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
+
+/** Where members' devices are counted in the store's data room (lib/store-data.ts). */
+const DEVICES_SLOT = "cm:ps";
 import { type Subscription, readSubscription, sendPush, vapidKeys, vapidKeysFor } from "@/lib/web-push";
 
 const pushKey = (id: string, who: string) => `nl:cm:${id}:ps:${who}`;
@@ -87,13 +92,13 @@ async function devicesOf(id: string, who: string): Promise<MemberDevice[]> {
   return out;
 }
 
-export type AddDeviceResult = "added" | "known" | "full" | "invalid" | "unavailable";
+export type AddDeviceResult = "added" | "known" | "full" | "noroom" | "invalid" | "unavailable";
 
 /**
  * Remembers one device. `raw` is what the browser's own subscription object
  * turns into, checked by lib/web-push.ts against the push services we know.
  */
-export async function rememberDevice(id: string, who: string, raw: unknown): Promise<AddDeviceResult> {
+export async function rememberDevice(id: string, who: string, raw: unknown, room: DataStore): Promise<AddDeviceResult> {
   const keys = vapidKeys();
   if (!keys) return "unavailable";
   const subscription = readSubscription(raw);
@@ -106,7 +111,12 @@ export async function rememberDevice(id: string, who: string, raw: unknown): Pro
   const already = typeof held === "string" && held.length > 0;
   if (!already && Number(size) >= MAX_MEMBER_DEVICES) return "full";
   const device: MemberDevice = { ...subscription, kid: keys.kid, addedAt: Date.now() };
-  await redisPipeline([["HSET", key, subscription.endpoint, JSON.stringify(device)]]);
+  const value = JSON.stringify(device);
+  // A new device takes room in the store's data room first; one known already is rewritten in its place.
+  const grown = dataBytes([subscription.endpoint, value], 1) - (already ? dataBytes([subscription.endpoint, held as string], 1) : 0);
+  if (grown > 0 && !(await takeData(room, [{ slot: DEVICES_SLOT, bytes: grown }])).ok) return "noroom";
+  await redisPipeline([["HSET", key, subscription.endpoint, value]]);
+  if (grown < 0) await giveData(room, [{ slot: DEVICES_SLOT, bytes: -grown }]);
   return already ? "known" : "added";
 }
 
@@ -115,14 +125,21 @@ export async function rememberDevice(id: string, who: string, raw: unknown): Pro
  * Silent when the old one is not ours: a browser may report a change for a
  * subscription this community never held.
  */
-export async function renewDevice(id: string, who: string, oldEndpoint: string, raw: unknown): Promise<void> {
-  const result = await rememberDevice(id, who, raw);
-  if (result === "added" || result === "known") await forgetDevice(id, who, oldEndpoint);
+export async function renewDevice(id: string, who: string, oldEndpoint: string, raw: unknown, room: DataStore): Promise<void> {
+  const result = await rememberDevice(id, who, raw, room);
+  if (result === "added" || result === "known") await forgetDevice(id, who, oldEndpoint, room);
 }
 
-/** Forgets one device: what "turn this off on this device" writes. */
-export async function forgetDevice(id: string, who: string, endpoint: string): Promise<void> {
-  if (endpoint) await redisPipeline([["HDEL", pushKey(id, who), endpoint]]);
+/**
+ * Forgets one device: what "turn this off on this device" writes, and gives
+ * its room back when the store is known (a device a push service says is
+ * gone is forgotten without it, and its room stays counted).
+ */
+export async function forgetDevice(id: string, who: string, endpoint: string, room?: DataStore): Promise<void> {
+  if (!endpoint) return;
+  const [held] = room ? await redisPipeline([["HGET", pushKey(id, who), endpoint]]) : [null];
+  const [removed] = await redisPipeline([["HDEL", pushKey(id, who), endpoint]]);
+  if (room && Number(removed) === 1 && typeof held === "string") await giveData(room, [{ slot: DEVICES_SLOT, bytes: dataBytes([endpoint, held], 1) }]);
 }
 
 /** Forgets every device of one member: what leaving, or being removed, writes. */

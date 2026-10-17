@@ -77,7 +77,10 @@ export const AI_CALL_INFRA_MICRO_USD = Number(
  * the free 200 GB a month is $0.03 a GB, and data kept past the first free GB
  * $0.25 a GB-month. Read 2026-10-17 for the per-plan worst case of the
  * features that move or keep store data in the database
- * (tests/plan-cost-registry.ts). */
+ * (tests/plan-cost-registry.ts). Storage is billed on the daily average of
+ * the data kept, across every replica and region (Upstash's pricing FAQ,
+ * read 2026-10-18): one region is priced here, and a read region added to
+ * the database multiplies the storage line by the copies it keeps. */
 export const UPSTASH_MICRO_USD_PER_GB_TRANSFER = 30_000;
 export const UPSTASH_MICRO_USD_PER_GB_MONTH = 250_000;
 

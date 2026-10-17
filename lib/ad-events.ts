@@ -52,6 +52,8 @@
  *   nl:adsrv:ctx:<token>        the request that opened a checkout (4 days)
  *   nl:adsrv:sub:<subscription> the cookies and clicks a membership's renewals are sent with (400 days), never an address
  */
+import { keepFor } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { createHash, randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { seal, unseal } from "@/lib/secret-box";
@@ -68,6 +70,8 @@ export const SERVER_PLATFORMS: ServerPlatform[] = [...ADS_SERVER_PLATFORMS];
 const configKey = (statsId: string) => `nl:adsrv:${statsId}`;
 const lastKey = (statsId: string) => `nl:adsrv:last:${statsId}`;
 const sentKey = (id: string) => `nl:adsrv:sent:${id}`;
+/** What a renewal's sent mark takes in the store's data room for its forty days. */
+export const RENEWAL_MARK_BYTES = 192;
 const ctxKey = (token: string) => `nl:adsrv:ctx:${token}`;
 const subKey = (sub: string) => `nl:adsrv:sub:${sub}`;
 const context = (statsId: string, platform: ServerPlatform) => `ads-server|${statsId}|${platform}`;
@@ -505,7 +509,11 @@ export async function adsCheckout(request: Requested, store: Store, now = Date.n
     cookies: cookiesOf(request, store, now / 1000),
   };
   try {
-    await redisPipeline([["SET", ctxKey(token), JSON.stringify(kept), "EX", CTX_SECONDS]]);
+    // Kept only while the store's data room has space for it (lib/store-data.ts):
+    // without it the checkout opens as it would without the yes.
+    const value = JSON.stringify(kept);
+    if (!(await keepFor(store, dataBytes([ctxKey(token), value], 1), CTX_SECONDS, now))) return {};
+    await redisPipeline([["SET", ctxKey(token), value, "EX", CTX_SECONDS]]);
   } catch {
     return {};
   }
@@ -693,6 +701,9 @@ export async function sendRenewals(store: Store, now = Date.now(), deadline = In
     const cookies = parse<Record<string, string> | null>(kept[i], null);
     // Only a membership whose first payment was sent from here, with the buyer's yes.
     if (!cookies) continue;
+    // A renewal's mark is kept forty days: only while the store's data room
+    // has space for it (lib/store-data.ts), else renewals wait for room.
+    if (!(await keepFor(store, RENEWAL_MARK_BYTES, 40 * 86400, now))) break;
     const [claimed] = await redisPipeline([["SET", sentKey(row.id as string), "1", "NX", "EX", 40 * 86400]]);
     if (claimed === null) continue;
     const meta = row.parent?.subscription_details?.metadata ?? row.subscription_details?.metadata ?? {};

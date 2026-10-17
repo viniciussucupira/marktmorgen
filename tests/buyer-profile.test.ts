@@ -32,6 +32,7 @@ import { markLesson, touchStudent } from "@/lib/learn";
 import type { Store } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const NOW = Math.floor(Date.parse("2026-10-11T12:00:00Z") / 1000);
 const DAY = 86_400;
@@ -217,9 +218,9 @@ async function main(): Promise<void> {
   await redis.pipeline([
     ["HSET", leadsKey("list0001"), "buyer@example.com", JSON.stringify({ agreed: true, agreedAt: "2026-09-01T10:00:00.000Z", firstAt: "2026-09-01T10:00:00.000Z", lastAt: "2026-09-11T10:00:00.000Z", titles: [], ids: [], source: "buyer", unsub: false, unsubAt: "", t: "", name: "", tags: ["vip"], importedAt: "" })],
   ]);
-  await touchStudent(COURSE, "buyer@example.com", NOW - 30 * DAY);
-  await markLesson(COURSE, "buyer@example.com", "lesson000001", true);
-  await markLesson(COURSE, "buyer@example.com", "lesson000002", true);
+  await touchStudent(COURSE, "buyer@example.com", NOW - 30 * DAY, ROOM);
+  await markLesson(COURSE, "buyer@example.com", "lesson000001", true, ROOM);
+  await markLesson(COURSE, "buyer@example.com", "lesson000002", true, ROOM);
 
   part("What they paid");
   const profile = await buyerProfile(store, "  BUYER@example.com ");
@@ -259,13 +260,13 @@ async function main(): Promise<void> {
   part("Notes");
   const person = personKey(STATS, "Buyer@Example.com");
   is("the key is the same whatever the capitals, and is not the address", [person === profile.person, person.includes("buyer")], [true, false]);
-  is("empty words are not a note", await addPersonNote(STATS, person, "owner@example.com", "   "), null);
-  const one = await addPersonNote(STATS, person, "Owner@Example.com", "Asked about the advanced course.\n\n\n\nPrefers email.", NOW * 1000);
+  is("empty words are not a note", await addPersonNote(STATS, person, "owner@example.com", "   ", ROOM), null);
+  const one = await addPersonNote(STATS, person, "Owner@Example.com", "Asked about the advanced course.\n\n\n\nPrefers email.", ROOM, NOW * 1000);
   is("a note, with who wrote it and its line breaks kept", one?.map((n) => [n.by, n.text]), [["owner@example.com", "Asked about the advanced course.\n\nPrefers email."]]);
-  for (let i = 0; i < MAX_PERSON_NOTES + 3; i += 1) await addPersonNote(STATS, person, "owner@example.com", `note ${i}`, (NOW + i + 1) * 1000);
+  for (let i = 0; i < MAX_PERSON_NOTES + 3; i += 1) await addPersonNote(STATS, person, "owner@example.com", `note ${i}`, ROOM, (NOW + i + 1) * 1000);
   const many = await readPersonNotes(STATS, person);
   is("at most MAX_PERSON_NOTES, the newest kept", [many.length, many[0].text], [MAX_PERSON_NOTES, `note ${MAX_PERSON_NOTES + 2}`]);
-  is("one taken away", (await removePersonNote(STATS, person, many[0].id)).length, MAX_PERSON_NOTES - 1);
+  is("one taken away", (await removePersonNote(STATS, person, many[0].id, ROOM)).length, MAX_PERSON_NOTES - 1);
   const keys = [...(redis as unknown as { data: Map<string, unknown> }).data.keys()].filter((k) => k.startsWith("nl:person:"));
   is("no key holds the address", keys.some((k) => k.includes("buyer")), false);
   await forgetPersonNotes(STATS);

@@ -59,6 +59,7 @@ export function LessonTask({
     too_big: w.taskTooBig(MB),
     type: w.taskWrongType,
     full: w.taskFull,
+    noroom: w.taskNoRoom,
   };
 
   async function choose(chosen: File | undefined) {

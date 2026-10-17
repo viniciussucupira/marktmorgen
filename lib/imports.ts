@@ -55,6 +55,7 @@
  * import, previewImport is its dry run: every row checked here the way the
  * import will check it, against the store as it is, and nothing written.
  */
+import { DataRoomError } from "@/lib/store-data";
 import { windowId } from "@/lib/allowance-window";
 import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -83,7 +84,7 @@ import { grantImported, importedFor } from "@/lib/imported-purchases";
 import { deliverableItems } from "@/lib/bundle-rules";
 import { NIMBUS_FROM, isSenderConfigured, sendBatch } from "@/lib/email";
 import { giveBackToMonth, monthlyAllowance, releaseDay, reserveDay, takeFromMonth } from "@/lib/mail";
-import { IMPORT_MIN_ROWS_PER_UPLOAD, importAllowanceFor } from "@/lib/import-limits";
+import { IMPORT_MIN_ROWS_PER_UPLOAD, IMPORT_ROW_BYTES, importAllowanceFor } from "@/lib/import-limits";
 import { healthTags, noteSent, pausedFor, rampBack, rampRoom, startRamp } from "@/lib/mail-health";
 import { isPaidUp } from "@/lib/billing";
 import { storeBase } from "@/lib/purchase-email";
@@ -174,11 +175,13 @@ export async function releaseMoved(store: Store, n: number, now = Date.now()): P
  * (lib/import-limits.ts), as an upload arrives. All or nothing: a batch
  * that does not fit is refused whole, and nothing is taken for it.
  */
-export async function takeImportRows(store: Store, n: number, now = Date.now()): Promise<{ ok: true } | { ok: false; reason: "rows_month" | "unavailable"; limit: number }> {
+export async function takeImportRows(store: Store, n: number, now = Date.now(), bytes = 0): Promise<{ ok: true } | { ok: false; reason: "rows_month" | "unavailable"; limit: number }> {
   const limit = importAllowanceFor(store, now / 1000).rows;
   if (!Number.isSafeInteger(n) || n <= 0) return { ok: true };
-  // A small upload still costs a request: each counts at least this many rows.
-  n = Math.max(n, IMPORT_MIN_ROWS_PER_UPLOAD);
+  // A small upload still costs a request: each counts at least this many
+  // rows; and a heavy one what it keeps until it is applied, a row for every
+  // IMPORT_ROW_BYTES (lib/import-limits.ts).
+  n = Math.max(n, IMPORT_MIN_ROWS_PER_UPLOAD, Number.isFinite(bytes) && bytes > 0 ? Math.ceil(bytes / IMPORT_ROW_BYTES) : 0);
   const window = utcMonth(store, now);
   if (!store.sid || !isRedisConfigured() || !window) return { ok: false, reason: "unavailable", limit };
   const key = `nl:imports:rows:${store.sid}:${window}`;
@@ -197,6 +200,13 @@ export async function takeImportRows(store: Store, n: number, now = Date.now()):
   }
 }
 const KEEP_SECONDS = 14 * 86_400;
+/**
+ * How long the rows themselves are kept while they wait to be brought in
+ * (since 18 October 2026): what they weigh is counted in the database's
+ * figure for that long (tests/store-data-registry.ts). An import still not
+ * done by then stops, and says to start it again.
+ */
+export const RAW_DAYS = 3;
 /** An upload that stops before its last batch is given up after this long. */
 const RECEIVING_MS = 2 * 60 * 60 * 1000;
 const LOCK_SECONDS = 70;
@@ -449,7 +459,7 @@ export async function addRows(store: Store, id: string, rows: string[][]): Promi
   job.total += rows.length;
   await redisPipeline([
     ["RPUSH", rowsKey(id), JSON.stringify(rows)],
-    ["EXPIRE", rowsKey(id), KEEP_SECONDS],
+    ["EXPIRE", rowsKey(id), RAW_DAYS * 86_400],
     saveJob(job),
   ]);
   return { ok: true, job };
@@ -607,7 +617,7 @@ async function contactsStep(job: ImportJob, store: Store, rows: string[][]): Pro
     skipped.push({ line: v.line, column: "email", problem: `The same address as row ${seen[i]}`, value: v.email });
     return false;
   });
-  const outcomes = await importContactRows(listId, fresh.map(asImported));
+  const outcomes = await importContactRows(listId, fresh.map(asImported), store);
   outcomes.forEach((outcome, i) => {
     const row = fresh[i];
     if (outcome === "added") job.counts.added += 1;
@@ -777,7 +787,7 @@ async function productsStep(job: ImportJob, store: Store, rows: string[][]): Pro
     }
     const statsId = made.store.statsId;
     for (let i = 0; i < made.ids.length; i += 1) {
-      if (taking[i].about && statsId) await writeAbout(statsId, made.ids[i], taking[i].about);
+      if (taking[i].about && statsId) await writeAbout(statsId, made.ids[i], taking[i].about, made.store);
     }
     job.counts.added += made.ids.length;
   }
@@ -861,7 +871,7 @@ async function purchasesStep(job: ImportJob, store: Store, rows: string[][]): Pr
     skipped.push({ line: v.line, column: "email", problem: `The same buyer and product as row ${seen[i]}`, value: v.email });
     return false;
   });
-  const given = await grantImported(statsId, job.id, fresh.map((v) => ({ email: v.email, productId: v.productId, items: v.bundle })), undefined, store.sid);
+  const given = await grantImported(statsId, job.id, fresh.map((v) => ({ email: v.email, productId: v.productId, items: v.bundle })), undefined, store.sid, store);
   const toMail: string[] = [];
   given.forEach((isNew, i) => {
     if (isNew) {
@@ -1239,6 +1249,15 @@ export async function runImport(id: string, deadline: number): Promise<ImportJob
       if (job.state === "queued") job.state = "running";
       if (job.state === "running") {
         if (job.cursor.batch >= count) {
+          // Rows let go before they were brought in (RAW_DAYS): say so, rather than call it done.
+          if (job.done < job.total) {
+            await note(job, [{ line: 0, column: "", problem: `The rows waited more than ${RAW_DAYS} days to be brought in, so the rest were let go. Start the import again with the rows not brought in yet.`, value: "" }], "errors");
+            job.state = "failed";
+            job.finishedAt = Date.now();
+            await redisPipeline([saveJob(job), ["SREM", ACTIVE_KEY, id], ["DEL", rowsKey(id), mailKey(id)]]);
+            await releaseBusy(job);
+            return job;
+          }
           job.state = job.options.email ? "mailing" : "done";
           // Addresses brought in from elsewhere are of unknown age: the
           // store's next emails to them go out in portions that double
@@ -1263,10 +1282,23 @@ export async function runImport(id: string, deadline: number): Promise<ImportJob
         if (rows.length) {
           // The store as it is now: a chunk of products changes it.
           const current = (await storeForId(job.sid)) ?? store;
-          if (job.kind === "contacts") await contactsStep(job, current, rows);
-          else if (job.kind === "products") await productsStep(job, current, rows);
-          else if (job.kind === "members") await membersStep(job, current, rows);
-          else await purchasesStep(job, current, rows);
+          try {
+            if (job.kind === "contacts") await contactsStep(job, current, rows);
+            else if (job.kind === "products") await productsStep(job, current, rows);
+            else if (job.kind === "members") await membersStep(job, current, rows);
+            else await purchasesStep(job, current, rows);
+          } catch (error) {
+            // The store's data room is full (lib/store-data.ts): what was
+            // brought in stays, nothing more is, and the import says why
+            // rather than trying the same rows again every few minutes.
+            if (!(error instanceof DataRoomError)) throw error;
+            await note(job, [{ line: 0, column: "", problem: error.message, value: "" }], "errors");
+            job.state = "failed";
+            job.finishedAt = Date.now();
+            await redisPipeline([saveJob(job), ["SREM", ACTIVE_KEY, id], ["DEL", rowsKey(id), mailKey(id)]]);
+            await releaseBusy(job);
+            return job;
+          }
           job.done += rows.length;
         }
         const next = job.cursor.row + CHUNK[job.kind];

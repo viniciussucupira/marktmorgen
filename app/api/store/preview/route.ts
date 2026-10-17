@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   if (!(await takePublicRequest(store))) return plain(429, "This store can't show previews right now. Try again later.");
   const product = await readListing(store, (params.get("product") ?? "").slice(0, 40));
   if (!product || product.hidden || product.preview < 1 || !product.file) return plain(404, "This product has no preview.");
-  const copy = await previewCopy(product.file, product.preview);
+  const copy = await previewCopy(product.file, product.preview, store);
   if (!copy) return plain(404, "This product has no preview right now.");
   return serveFile(copy, { paid: false });
 }

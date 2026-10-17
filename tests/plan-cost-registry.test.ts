@@ -177,13 +177,14 @@ test("the billing period and every figure the owner named on October 17, 2026 ha
   for (const id of ["public-requests", "studio", "transactional-email", "store-email", "rest-api", "inbox", "integrations", "free-share"]) assert.ok(ids.has(id), id);
 });
 
-test("the uses the owner named on October 18, 2026 have left the open list, and only the database's bytes remain", () => {
+test("the uses the owner named on October 18, 2026 have left the open list, the database's bytes too, and it stays empty", () => {
   const open = OPEN.map((item) => item.id);
-  for (const id of ["buyer-actions", "group-places", "webhooks", "retained-files"]) assert.ok(!open.includes(id), id);
-  for (const id of ["buyer-actions", "webhooks", "task-files", "community-pictures"]) assert.ok(ids.has(id), id);
+  for (const id of ["buyer-actions", "group-places", "webhooks", "retained-files", "database-storage"]) assert.ok(!open.includes(id), id);
+  for (const id of ["buyer-actions", "webhooks", "task-files", "community-pictures", "database-storage"]) assert.ok(ids.has(id), id);
   assert.ok(PER_PAYMENT_LINES.some((line) => line.id === "retained-files"));
+  assert.ok(PER_PAYMENT_LINES.some((line) => line.id === "retained-data"));
   // Nothing may join it: a new per-use cost gets a figure enforced in code and a line here, never an open item.
-  assert.deepEqual(open, ["database-storage"], "the open list may only shrink");
+  assert.deepEqual(open, [], "the open list is empty and stays so");
   // No scope of a counter may point at an open item any more.
   for (const [scope, kind] of Object.entries(SCOPES)) assert.ok(!("open" in kind), `${scope} is still open`);
 });

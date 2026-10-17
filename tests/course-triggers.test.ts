@@ -21,6 +21,7 @@ import { addProduct, claimHandle, ensureListId, ensureStatsId, setMailSettings, 
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const HOUR = 3_600_000;
 const realNow = Date.now;
@@ -82,7 +83,7 @@ async function main(): Promise<void> {
     if (!added.ok) throw new Error("no lesson");
     course = added.course;
   }
-  await saveCourse(course);
+  await saveCourse(course, ROOM);
   const set = await setProductCourse(OWNER, made.product.id, { id: course.id, lessons: 2 });
   if (!set.ok) throw new Error(`not a course: ${JSON.stringify(set)}`);
   const [one, two] = course.modules[0].lessons.map((l) => l.id);
@@ -105,26 +106,26 @@ async function main(): Promise<void> {
 
   part("Has not opened the course, three days on");
   for (const email of ["ana@example.com", "ben@example.com"]) {
-    await upsertContact(store.listId as string, email, { agreed: true, explicit: true, productId: courseId, title: "Weeknight Course", source: "buyer" });
+    await upsertContact(store.listId as string, email, { agreed: true, explicit: true, productId: courseId, title: "Weeknight Course", source: "buyer" }, ROOM);
     await enroll(store, email, { joined: false, productId: courseId });
   }
-  await touchStudent(course.id, "ana@example.com", Math.floor(Date.now() / 1000));
+  await touchStudent(course.id, "ana@example.com", Math.floor(Date.now() / 1000), ROOM);
   shift += 73 * HOUR;
   await run();
   is("only the one who has not opened it", to("Your first lesson is waiting"), ["ben@example.com"]);
 
   part("Finishing it");
-  await markLesson(course.id, "ana@example.com", one, true);
+  await markLesson(course.id, "ana@example.com", one, true, ROOM);
   is("one lesson of two is not finishing", await noteIfFinished(store, courseId, course.id, "ana@example.com"), false);
-  await markLesson(course.id, "ana@example.com", two, true);
+  await markLesson(course.id, "ana@example.com", two, true, ROOM);
   is("the last one is", await noteIfFinished(store, courseId, course.id, "ana@example.com"), true);
   await run();
   is("and starts what finishing starts", to("You finished it"), ["ana@example.com"]);
-  await markLesson(course.id, "ana@example.com", two, false);
-  await markLesson(course.id, "ana@example.com", two, true);
+  await markLesson(course.id, "ana@example.com", two, false, ROOM);
+  await markLesson(course.id, "ana@example.com", two, true, ROOM);
   is("undone and done again starts nothing more", await noteIfFinished(store, courseId, course.id, "ana@example.com"), false);
-  await markLesson(course.id, "cy@example.com", one, true);
-  await markLesson(course.id, "cy@example.com", two, true);
+  await markLesson(course.id, "cy@example.com", one, true, ROOM);
+  await markLesson(course.id, "cy@example.com", two, true, ROOM);
   await noteIfFinished(store, courseId, course.id, "cy@example.com");
   await run();
   is("somebody who never agreed to hear from the creator is not written to", to("You finished it"), ["ana@example.com"]);

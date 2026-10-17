@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { DataRoomError } from "@/lib/store-data";
 import { after } from "next/server";
 import { storeForEmail, storeForHandle } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
@@ -102,7 +103,11 @@ export async function POST(request: NextRequest) {
         const space = config.spaces.find((s) => s.id === text(body.space, 12)) ?? config.spaces[0];
         if (space) {
           const words = announcementText(store, event);
-          const posted = await createPost(id, { space: space.id, author: CREATOR, title: words.title, text: words.text, img: null, kind: "announcement", poll: null });
+          // An announcement that does not fit in the store's data room is left out; the event stands.
+          const posted = await createPost(id, { space: space.id, author: CREATOR, title: words.title, text: words.text, img: null, kind: "announcement", poll: null }, store).catch((error) => {
+            if (error instanceof DataRoomError) return { ok: false as const, reason: "full" as const };
+            throw error;
+          });
           if (posted.ok) {
             await setEventPost(store, event.id, posted.post.id);
             event = { ...event, post: posted.post.id };
@@ -155,6 +160,8 @@ export async function POST(request: NextRequest) {
     if (!changed.ok) return fail(changed.reason, changed.reason === "gone" ? 404 : 409);
     return Response.json({ ok: true });
   } catch (error) {
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof DataRoomError) return fail("store_full", 409);
     console.error("changing a live event failed", action, error);
     return fail("server_error", 500);
   }
