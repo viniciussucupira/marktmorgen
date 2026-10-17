@@ -20,4 +20,12 @@ const locked = show({ issues: [{ code: "step", title: "Page", detail: "Kept back
 is("save recovery removes links from keyboard navigation", locked.includes('aria-disabled="true"') && locked.includes('tabindex="-1"'), true);
 const missing = show({ issues: [{ code: "step", title: "Deleted page", detail: "Deleted", stepIndex: 0 }], settingsDisabled: true });
 is("missing editor falls back to disabled settings action while drafting", /disabled=""[^>]*>Review the step in settings/.test(missing), true);
+const quizFinding = { code: "quiz_product" as const, title: "Result: course", detail: "Draft product", stepIndex: 0, formId: "form000001" };
+const quiz = show({ issues: [quizFinding], editors: [{ href: "/studio/site?store=chosen&page=page1", label: "Edit page" }], formsHref: "/studio/forms?store=chosen" });
+is("quiz repair targets the specific form in the selected store", quiz.includes('href="/studio/forms?store=chosen#form-review-form000001"'), true);
+is("quiz repair uses the form rather than the page editor", quiz.includes("page=page1"), false);
+const noFormPermission = show({ issues: [quizFinding], editors: [{ href: "/studio/site", label: "Edit page" }], formsHref: null });
+is("role without form access has no quiz repair link", noFormPermission.includes("href="), false);
+const lockedQuiz = show({ issues: [quizFinding], formsHref: "/studio/forms?store=chosen", locked: true });
+is("quiz repair retains recovery keyboard lock", lockedQuiz.includes('aria-disabled="true"') && lockedQuiz.includes('tabindex="-1"'), true);
 done();
