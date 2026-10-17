@@ -83,6 +83,7 @@ import { ExitOfferEditor } from "@/components/exit-offer-editor";
 import { StoreLayoutEditor } from "@/components/store-layout-editor";
 import { CollectionsEditor } from "@/components/collections-editor";
 import { BuyButtonEditor } from "@/components/buy-button-editor";
+import { CheckoutScriptEditor } from "@/components/checkout-script-editor";
 import { lookColours } from "@/lib/store-look";
 import { AnswersEditor } from "@/components/answers-editor";
 import { STORE_PAGE, answersAllowance, answersUsed, missedQuestions } from "@/lib/answers";
@@ -1712,6 +1713,16 @@ export default async function StudioPage({
                           products={published}
                           fill={lookColours(store.look).accent}
                           onFill={lookColours(store.look).onAccent}
+                        />
+                      ) : null}
+                      {may("page") ? (
+                        <CheckoutScriptEditor
+                          handle={store.handle}
+                          products={published}
+                          fill={lookColours(store.look).accent}
+                          onFill={lookColours(store.look).onAccent}
+                          sites={store.embedSites}
+                          signup={joinOpen(store)}
                         />
                       ) : null}
                       {may("page") && aiAvailableFor(store) ? (
