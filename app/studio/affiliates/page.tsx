@@ -44,7 +44,7 @@ export default async function StudioAffiliatesPage({ searchParams }: Params) {
   await settlePayPal(store).catch((error) => console.error("settling PayPal payouts failed", error));
   const [paypal, away, owners, codeList] = await Promise.all([
     readPayPal(store).catch(() => null),
-    onTheirWay(store).catch(() => new Set<string>()),
+    onTheirWay(store).catch(() => null),
     codeOwners(store).catch(() => new Map<string, string>()),
     // The creator's own codes, so one of them can be given to an affiliate
     // (lib/affiliate-codes.ts). Only worth asking Stripe when they have made any.
@@ -158,11 +158,12 @@ export default async function StudioAffiliatesPage({ searchParams }: Params) {
           today={new Date().toISOString().slice(0, 10)}
           currency={store.currency}
           elsewhere={book?.elsewhere ?? 0}
-          away={[...away]}
+          away={away ? [...away] : []}
+          pendingPayoutsChecked={away !== null}
           codes={codes}
           codeOwners={Object.fromEntries(owners)}
           payPanel={
-            book ? (
+            book && away !== null ? (
               <PayPalPayouts
                 initial={paypal}
                 people={payableLines(book, away).length}
