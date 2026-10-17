@@ -17,6 +17,7 @@ import { readFunnelCountsStrict, readPageFunnels, stepStates } from "@/lib/page-
 import { MAX_SITE_PAGES, pageOut } from "@/lib/site-page-rules";
 import { FunnelTypePicker, type TypeProduct } from "@/components/funnel-type-picker";
 import { MAX_PAGE_FUNNELS } from "@/lib/page-funnel";
+import { funnelStepEditorLink } from "@/lib/funnel-editor-links";
 import { can } from "@/lib/team-roles";
 import { canUseDomain } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site-url";
@@ -103,12 +104,20 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
       .filter((p) => !calls.has(p.id))
       .map((p) => ({ kind: "product" as const, id: p.id, title: p.title, note: drafts.has(p.id) ? "draft" : free.has(p.id) ? "free" : "" })),
   ];
+  const editorContext = {
+    storeId: store.sid,
+    pageIds: new Set(store.sitePages.map((page) => page.id)),
+    productIds: new Set(store.catalog.items.map((product) => product.id)),
+    canEditPages: can(view.role, "page"),
+    canEditProducts: can(view.role, "products"),
+  };
   const savedFunnels: SavedFunnel[] = await Promise.all(
     (await readPageFunnels(store.statsId).catch(() => [])).map(async (funnel) => {
       const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCountsStrict(store.statsId, funnel).catch(() => null)]);
       return {
         funnel,
         steps: states.map((state, i) => ({
+          editor: funnelStepEditorLink(state.step, editorContext),
           title: state.title,
           open: state.open,
           why: state.why,
