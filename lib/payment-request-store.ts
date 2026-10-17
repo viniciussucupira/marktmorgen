@@ -46,6 +46,8 @@ import {
 
 const DAY = 86_400_000;
 const recordKey = (id: string) => `nl:payreq:r:${id}`;
+/** A request's own record, for the walk that closes a store's records (lib/closed-store-data.ts). */
+export const requestRecordKey = recordKey;
 const storeKey = (sid: string) => `nl:payreq:s:${sid}`;
 const openKey = (sid: string) => `nl:payreq:o:${sid}`;
 const personSet = (sid: string, email: string) => `nl:payreq:p:${sid}:${personKey(sid, email)}`;

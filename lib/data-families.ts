@@ -276,6 +276,9 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:outreach:": E, "nl:outreach:stop:all": C, "nl:outreach:stoplink:": T("nl:outreach:"),
   "nl:pause:": E, "nl:pause:due": I, "nl:pause:last:": E,
   "nl:pay:currencies:": E,
+  // Payment requests (lib/payment-request-store.ts): the store's lists go, and each request through them; its reminders and its place in the sweep's list are taken out.
+  "nl:payreq:s:": E, "nl:payreq:o:": E, "nl:payreq:p:": E, "nl:payreq:r:": T("nl:payreq:s:", 400),
+  "nl:payreq:due": I, "nl:payreq:stores": I, "nl:payreq:lock:": X(1),
   "nl:person:": E, "nl:person:find:": X(1),
   "nl:pfunnel:done:": E, "nl:pfunnel:seen:": E, "nl:pfunnels:": E,
   "nl:phone:cfg:": E, "nl:phone:seen:": X(40), "nl:phone:st:": E,
@@ -359,7 +362,7 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
  */
 export const FOLLOWED_FAMILIES = [
   "nl:cal:cfg:", "nl:cm:", "nl:course:", "nl:erase:ix:", "nl:fshares:", "nl:inbox:", "nl:learn:passes:", "nl:mail:bcs:",
-  "nl:mv:", "nl:outreach:", "nl:pkg:s:", "nl:pod:by:", "nl:ppsell:sales:", "nl:slink:store:", "nl:store:leads:",
+  "nl:mv:", "nl:outreach:", "nl:payreq:s:", "nl:pkg:s:", "nl:pod:by:", "nl:ppsell:sales:", "nl:slink:store:", "nl:store:leads:",
 ] as const;
 
 /** The family a key belongs to, by the longest name it starts with; "" for none. */

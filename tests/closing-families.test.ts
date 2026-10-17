@@ -40,6 +40,7 @@ const PERSON_RECORDS: Record<string, string> = {
 /** The store's records kept in one list for every store, from which the walk takes the store's members. */
 const STORE_LISTS: Record<string, string> = {
   "nl:mail:flowq": "One sorted set of every store's steps due, each counted in its own store's room (lib/flows.ts).",
+  "nl:payreq:due": "One sorted set of every store's payment request reminders due, each counted in its own store's room (lib/payment-request-store.ts).",
 };
 
 test("every family of the registry says what becomes of it when its store closes, and nothing more is said", () => {

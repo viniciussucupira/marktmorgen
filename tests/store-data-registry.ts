@@ -309,6 +309,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:mail:bcs:@lib/closed-store-data.ts": follower("nl:mail:bcs:"),
   "nl:mv:@lib/closed-store-data.ts": follower("nl:mv:"),
   "nl:outreach:@lib/closed-store-data.ts": follower("nl:outreach:"),
+  "nl:payreq:s:@lib/closed-store-data.ts": follower("nl:payreq:s:"),
   "nl:pkg:s:@lib/closed-store-data.ts": follower("nl:pkg:s:"),
   "nl:pod:by:@lib/closed-store-data.ts": follower("nl:pod:by:"),
   "nl:ppsell:sales:@lib/closed-store-data.ts": follower("nl:ppsell:sales:"),
