@@ -182,7 +182,7 @@ async function main(): Promise<void> {
     is("page write failure reports possible partial setup, never success", [partial.ok, partial.error, (await storeForEmail(recoveryOwner))!.sitePages.length, (await readPageFunnels(recoveryStore.statsId)).length], [false, "setup_incomplete", 1, 0]);
   } finally { redis.pipeline = pipeline; }
   try {
-    redis.pipeline = async commands => commands.some(c => c[0] === "HEXISTS" && c[1] === formKey) ? [0, MAX_FORMS] : pipeline(commands);
+    redis.pipeline = async commands => commands.some(c => c[0] === "EVAL" && c[3] === formKey) ? [0] : pipeline(commands);
     const raced = await (await recover()).json();
     is("capacity changed after preflight cannot silently create a broken funnel", [raced.ok, raced.error, (await readPageFunnels(recoveryStore.statsId)).length], [false, "setup_incomplete", 0]);
   } finally { redis.pipeline = pipeline; }

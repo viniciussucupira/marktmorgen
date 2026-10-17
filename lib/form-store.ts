@@ -46,21 +46,25 @@ export async function readForm(statsId: string | null, id: string): Promise<Form
 /** Checks capacity before a multi-step setup; writeForm still checks concurrent changes. */
 export async function canAddForms(statsId: string, amount: number): Promise<boolean> {
   if (!statsId || !isRedisConfigured() || !Number.isSafeInteger(amount) || amount < 0) throw new Error("Form capacity unavailable");
-  const [raw] = await redisPipeline([["HLEN", formsKey(statsId)]]);
+  const results = await redisPipeline([["HLEN", formsKey(statsId)]]);
+  if (results.length !== 1) throw new Error("Form capacity unavailable");
+  const raw = results[0];
   const count = typeof raw === "number" ? raw : typeof raw === "string" && /^\d+$/.test(raw) ? Number(raw) : NaN;
   if (!Number.isSafeInteger(count) || count < 0) throw new Error("Form capacity unavailable");
   return count + amount <= MAX_FORMS;
 }
 
-/** Saves a form. False when the store already has as many as it may and this one is new. */
+/** Capacity is shared by manual editing and guided setup in one Redis operation. */
+export const SAVE_FORM = `-- marktmorgen:form-save:v1
+if redis.call("HEXISTS", KEYS[1], ARGV[1]) == 0 and redis.call("HLEN", KEYS[1]) >= tonumber(ARGV[3]) then return 0 end
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
+return 1`;
+
+/** Saves a form; existing forms remain editable at capacity. Unknown writes require review. */
 export async function writeForm(statsId: string, form: FormDef): Promise<boolean> {
-  const [exists, count] = await redisPipeline([
-    ["HEXISTS", formsKey(statsId), form.id],
-    ["HLEN", formsKey(statsId)],
-  ]);
-  if (Number(exists) !== 1 && Number(count) >= MAX_FORMS) return false;
-  await redisPipeline([["HSET", formsKey(statsId), form.id, JSON.stringify(form)]]);
-  return true;
+  const results = await redisPipeline([["EVAL", SAVE_FORM, 1, formsKey(statsId), form.id, JSON.stringify(form), MAX_FORMS]]);
+  if (results.length !== 1 || (results[0] !== 0 && results[0] !== 1)) throw new Error("Form save could not be confirmed");
+  return results[0] === 1;
 }
 
 /** Removes a form and every answer kept for it. */

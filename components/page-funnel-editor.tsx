@@ -188,7 +188,7 @@ export function PageFunnelEditor({
           const first = steps.find((s) => s.open)?.seen ?? 0;
           const last = [...steps].reverse().find((s) => s.open);
           return (
-            <li key={funnel.id} className="rounded-2xl border border-line bg-white p-4 sm:p-5">
+            <li key={funnel.id} id={`funnel-review-${funnel.id}`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">
