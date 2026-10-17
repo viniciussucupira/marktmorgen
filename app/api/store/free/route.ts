@@ -3,6 +3,7 @@ import { allowedBy, newLeadId, sendServerLead, sendsFromServer } from "@/lib/ad-
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { requestCopy } from "@/lib/free";
+import { leadAffiliate, visitCookies } from "@/lib/affiliate-leads";
 import { countHit, isStorePeople } from "@/lib/visit";
 import { markFromReferer } from "@/lib/page-funnel";
 import { countFunnelDone, funnelHere, funnelVisitor } from "@/lib/page-funnel-store";
@@ -87,7 +88,9 @@ export async function POST(request: NextRequest) {
     "unknown";
 
   try {
-    const result = await requestCopy({ store, product, email, consent, clicks, ip, origin: linkOrigin(request, store) });
+    // Sent by an affiliate, where the store pays per free product claimed: credited only once the emailed link is used.
+    const leadFor = await leadAffiliate(store, "free", visitCookies(request, store.handle), email);
+    const result = await requestCopy({ store, product, email, consent, clicks, ip, origin: linkOrigin(request, store), lead: leadFor });
     if (result === "sent") after(() => countHit(request, store, { kind: "checkout", id: product.id, free: true }));
     // The sign-up as a lead to the creator's ad platforms, with the buyer's yes (lib/ad-events.ts),
     // and its id on the page it lands on, so the pixel's lead and this one count once.

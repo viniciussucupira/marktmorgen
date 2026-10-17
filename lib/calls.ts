@@ -83,6 +83,7 @@ import { planCheck, planReminders, readMoves, unplanReminders, writeMove } from 
 import { calendarBusy } from "@/lib/calendar-sync";
 import { fold, icsText, icsTime } from "@/lib/ics-write";
 import { emitEvent } from "@/lib/webhooks";
+import { recordLead } from "@/lib/affiliate-leads";
 import { VIDEO_ROOM_NOTE, isVideoRoom, roomOf } from "@/lib/call-rooms";
 import { alertCreator } from "@/lib/phone-alerts";
 import { MEET_STORES, callMeeting, callMoved, linkUpdates } from "@/lib/meet-links";
@@ -237,6 +238,9 @@ export async function paidCalls(store: Store): Promise<
     /** A team booking's hosts' ids and the claim on their time; empty for an ordinary call. */
     hosts: string[];
     claim: string;
+    /** The affiliate a lead is credited to once the call has taken place (lib/affiliate-leads.ts), and the payment; empty otherwise. */
+    lead: string;
+    pi: string;
   }[]
 > {
   return (await readCallSessions(store)).paid;
@@ -271,7 +275,15 @@ function callFromRow(row: SessionRow, handles: Set<string>): CallRow | "refunded
     answers: readAnswers(row),
     amount: typeof row.amount_total === "number" ? row.amount_total : 0,
     ...(teamOf({ h: (meta.hosts ?? "").split(","), c: meta.claim }) ?? { hosts: [], claim: "" }),
+    lead: /^[0-9a-f]{12}$/.test(meta.lead_via ?? "") ? (meta.lead_via as string) : "",
+    pi: paymentOf(row.payment_intent),
   };
+}
+
+/** A checkout's payment's id, whether Stripe gave the id or the payment itself. */
+export function paymentOf(raw: unknown): string {
+  if (typeof raw === "string") return raw;
+  return raw && typeof raw === "object" && typeof (raw as { id?: unknown }).id === "string" ? (raw as { id: string }).id : "";
 }
 
 async function withMoves(found: CallRow[]): Promise<CallRow[]> {
@@ -489,6 +501,8 @@ export async function catchUpBookings(store: Store, paid: PaidCall[], origin: st
       moves: call.moves,
       answers: call.answers,
       amountCents: call.amount,
+      lead: call.lead,
+      pi: call.pi,
       origin,
     }).catch((error) => console.error("catching up a booking failed", error));
   }
@@ -637,6 +651,8 @@ export function callCheckoutBody(input: {
   channel?: Record<string, string>;
   /** A team booking: its hosts' ids and the claim on their time, kept on the sale so the ledger knows them. */
   team?: { hosts: string[]; claim: string } | null;
+  /** The affiliate a lead is credited to once the call takes place, where the store pays per booking (lib/affiliate-leads.ts). */
+  lead?: string | null;
 }): URLSearchParams {
   const { store, product, start, end, buyerTz, origin } = input;
   const pkg = input.fromPackage;
@@ -690,6 +706,9 @@ export function callCheckoutBody(input: {
     body.set("metadata[via_rate]", String(input.via.rate));
     body.set("payment_intent_data[metadata][via]", input.via.aff);
   }
+  // A lead, where the store pays per call that takes place: carried whatever the share, never from a package,
+  // whose purchase was the sale, and credited only once Stripe says it is paid (confirmBooking).
+  if (input.lead && /^[0-9a-f]{12}$/.test(input.lead) && !pkg) body.set("metadata[lead_via]", input.lead);
   // What the creator wants to know before the call, asked before paying.
   applyCheckoutFields(body, product.fields);
   applyTax(store, body);
@@ -717,6 +736,8 @@ export async function holdAndCheckout(input: {
   origin: string;
   /** The affiliate whose link the buyer followed, and the share it earns. */
   via?: { aff: string; rate: number } | null;
+  /** The affiliate a lead is credited to once the call takes place (callCheckoutBody). */
+  lead?: string | null;
   /**
    * A session from a package already paid for (lib/call-packages.ts): the
    * checkout carries a coupon for the whole of it, so nothing is charged, and
@@ -775,7 +796,7 @@ export async function holdAndCheckout(input: {
     }
 
     const pkg = input.fromPackage ?? null;
-    const body = callCheckoutBody({ store, product, start, end, buyerTz, origin, via: input.via ?? null, fromPackage: pkg, channel: input.channel, team: claimed });
+    const body = callCheckoutBody({ store, product, start, end, buyerTz, origin, via: input.via ?? null, fromPackage: pkg, channel: input.channel, team: claimed, lead: input.lead ?? null });
     // The share of the sale, when the store's plan has one (lib/platform-share.ts).
     // A session from a package pays nothing here: its share was taken on the package.
     if (!pkg) {
@@ -1266,6 +1287,9 @@ export async function confirmBooking(input: {
   answers?: Answer[];
   /** What was paid, in cents, for the creator's phone; left out when not known. */
   amountCents?: number | null;
+  /** The affiliate a lead is credited to (metadata lead_via), and the booking's payment, which a refund is made against. */
+  lead?: string;
+  pi?: string;
   origin: string;
 }): Promise<void> {
   const { store, product, session, start, end, buyerEmail, origin } = input;
@@ -1274,6 +1298,11 @@ export async function confirmBooking(input: {
   if (fresh === null) return;
   // Booked: the orders it was admitted as are the window's (lib/orders.ts), once, by the checkout.
   for (let unit = 1; unit <= CALL_ORDER_UNITS; unit += 1) await countOrder(store, `call:${session}:${unit}`, input.amountCents ?? 0);
+  // Booked through an affiliate's link, where the store pays per call that takes place: written down now,
+  // earning only once the call's time has passed, it was not refunded and the creator approves it (lib/affiliate-leads.ts).
+  if (input.lead && buyerEmail) {
+    await recordLead(store, { aff: input.lead, kind: "booking", email: buyerEmail, end: Math.floor(end / 1000), ref: session, pi: input.pi ?? "", paid: input.amountCents ?? 0, title: product.title });
+  }
 
   // A team booking keeps its hosts and the claim on their time, now for good.
   const team = await bookingTeam(store, product, session).catch((error) => {

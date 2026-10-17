@@ -16,6 +16,7 @@ import { codeOwners } from "@/lib/affiliate-codes";
 import { offerWords, waitingFor } from "@/lib/partner-invites";
 import { PartnerOffers } from "@/components/affiliate-studio";
 import { listCodes, offLabel } from "@/lib/discount";
+import type { LeadStatus } from "@/lib/affiliate-lead-rules";
 
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
@@ -137,7 +138,7 @@ export default async function StudioAffiliatesPage({ searchParams }: Params) {
             ...row,
             link: affiliateLink(store, row.affiliate.code),
           }))}
-          lines={(book?.lines ?? []).slice(0, 100).map((line) => ({
+          lines={(book?.lines ?? []).filter((line) => line.how !== "lead").slice(0, 100).map((line) => ({
             ref: line.ref,
             at: line.at,
             title: line.title || titles.get(line.product) || "A product that is no longer listed",
@@ -151,7 +152,21 @@ export default async function StudioAffiliatesPage({ searchParams }: Params) {
             how: line.how,
             promotion: line.promotion ?? null,
           }))}
-          linesTotal={book?.lines.length ?? null}
+          linesTotal={book ? book.lines.filter((line) => line.how !== "lead").length : null}
+          leads={(book?.lines ?? []).filter((line) => line.how === "lead" && line.lead).slice(0, 200).map((line) => ({
+            id: line.lead!.id,
+            aff: line.aff,
+            kind: line.lead!.kind,
+            email: line.lead!.email,
+            title: line.title,
+            at: line.at,
+            status: line.status as LeadStatus,
+            commission: line.commission,
+            currency: line.currency,
+            readyAt: line.lead!.readyAt,
+            why: line.lead!.why,
+          }))}
+          leadsTotal={book ? book.lines.filter((line) => line.how === "lead").length : 0}
           payouts={book?.payouts ?? []}
           refundsChecked={book?.refundsChecked ?? true}
           invoicesChecked={book?.invoicesChecked ?? true}

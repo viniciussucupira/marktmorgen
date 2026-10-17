@@ -75,6 +75,8 @@ export const PERSON_DATA: PersonData[] = [
   { file: "lib/form-store.ts", how: "erased", what: "Every answer they gave to your forms, with each quiz result and score kept with it" },
   { file: "lib/waitlist.ts", how: "erased", what: "Their place on every waitlist, and in any launch email still going out" },
   { file: "lib/affiliate-bond.ts", how: "erased", what: "Which affiliate they belong to" },
+  { file: "lib/affiliate-leads.ts", how: "erased", what: "Their address on a lead an affiliate was credited for (a sign-up, a free product claimed or a call booked); the lead stays without it, as the affiliate's money record" },
+  { file: "lib/affiliate-leads.ts", how: "suppression", what: "A one-way fingerprint of the address in your affiliate program, the lead's id, so the same person is never counted as a new lead again. It cannot be turned back into the address." },
   { file: "lib/affiliates.ts", how: "kept", what: "Commissions an affiliate earned on their purchases", why: "They are the affiliate's money records, paid or owed, and name the sale, not the buyer's address." },
   { file: "lib/affiliates.ts", how: "account", what: "An affiliate's own account in a store's program; a buyer is not one" },
   { file: "lib/affiliate-hub.ts", how: "account", what: "An affiliate's own sign-in to their programs, by a one-way hash" },

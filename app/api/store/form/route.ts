@@ -9,6 +9,7 @@ import { readForm, addResponse } from "@/lib/form-store";
 import { enroll } from "@/lib/flows";
 import { FORM_ID, outcomeOf, readAnswers, scoreOf, scoreQuery } from "@/lib/forms";
 import { askToJoin } from "@/lib/store-join";
+import { leadAffiliate, visitCookies } from "@/lib/affiliate-leads";
 import { funnelMark } from "@/lib/page-funnel";
 import { countFunnelDone, funnelHere, funnelVisitor } from "@/lib/page-funnel-store";
 import { isStorePeople } from "@/lib/visit";
@@ -80,7 +81,8 @@ export async function POST(request: NextRequest) {
     // The list, only when they checked the box: the email that asks them to confirm, never the list itself.
     let joined = false;
     if (def.offerList && one("consent") === "yes" && read.email) {
-      const asked = await askToJoin({ store, email: read.email, ip, origin: linkOrigin(request, store), fromForm: true, formId: def.id, formOutcome: outcome?.id }).catch(() => "error" as const);
+      const lead = await leadAffiliate(store, "signup", visitCookies(request, store.handle), read.email);
+      const asked = await askToJoin({ store, email: read.email, ip, origin: linkOrigin(request, store), fromForm: true, formId: def.id, formOutcome: outcome?.id, lead }).catch(() => "error" as const);
       joined = asked === "sent";
     }
     await addResponse(statsId, def.id, { id: randomBytes(16).toString("hex"), at: Math.floor(Date.now() / 1000), page: page?.id ?? "", answers: read.answers, outcome: outcome?.id ?? "", joined, ...(measured ? { score: measured.total, scores: measured.categories } : {}) }, store);

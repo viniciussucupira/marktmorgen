@@ -20,6 +20,8 @@ import {
   setPartnerShare,
 } from "@/lib/affiliates";
 import { PROMO_ID_PATTERN, giveCode, takeCodeBack } from "@/lib/affiliate-codes";
+import { leadProblem } from "@/lib/affiliate-lead-rules";
+import { MAX_LEAD_DECISIONS, decideLeads } from "@/lib/affiliate-leads";
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -51,7 +53,11 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
  *   address already has a store here, in which case the offer waits in their
  *   own studio instead of their inbox;
  * `{ action: "answer", invite, accept: true | false }`, that creator
- *   answering one. Only the address it was left for can answer it.
+ *   answering one. Only the address it was left for can answer it;
+ * `lead: { kind, cents, hold, daily, budget }` on "settings", pay per lead
+ *   (lib/affiliate-lead-rules.ts), refused when any number is out of range;
+ * `{ action: "leads", ids: [<lead>], decision: "approve" | "reverse" | "reopen", why }`,
+ *   the creator's decision on confirmed leads (lib/affiliate-leads.ts decideLeads).
  */
 export async function POST(request: NextRequest) {
   const guarded = await guardStoreWrite(request, "settings", 16_000);
@@ -73,6 +79,8 @@ export async function POST(request: NextRequest) {
       if (body.recurring !== undefined && Number(body.recurring) !== setting.recurring) return fail("recurring");
       if (readBonuses(body.bonuses) === null) return fail("bonus");
       if (body.secondTier !== undefined && Number(body.secondTier) !== setting.secondTier) return fail("tier");
+      const leadRefused = leadProblem(body.lead);
+      if (leadRefused) return fail(leadRefused);
       const asked = body.rates && typeof body.rates === "object" ? Object.keys(body.rates as object).length : 0;
       if (asked !== Object.keys(setting.rates).length) return fail("rate");
       const result = await setAffiliateSetting(guarded.ref, setting);
@@ -88,6 +96,13 @@ export async function POST(request: NextRequest) {
     if (action === "release") {
       const done = await releaseHold(store, text(body.id, 20));
       return done ? Response.json({ ok: true }) : fail("unknown");
+    }
+    if (action === "leads") {
+      const ids = Array.isArray(body.ids) ? body.ids.slice(0, MAX_LEAD_DECISIONS).map((id) => text(id, 30)) : [];
+      const decision = body.decision === "approve" || body.decision === "reverse" || body.decision === "reopen" ? body.decision : null;
+      if (!decision || !ids.length) return fail("unknown");
+      const done = await decideLeads(store, ids, decision, text(body.why, 20));
+      return done.ok ? Response.json({ ok: true, changed: done.changed }) : fail(done.reason === "reason" ? "lead_reason" : done.reason === "not_ready" ? "lead_not_ready" : "unknown");
     }
     if (action === "approve" || action === "decline" || action === "remove" || action === "restore") {
       const done = await decide(store, text(body.id, 20), action);

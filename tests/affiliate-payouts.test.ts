@@ -8,6 +8,7 @@
  */
 import { MAX_PAYDAY, nextPayday, ordinal, paydayWords, payoutPromise } from "@/lib/affiliate-setting";
 import { done, is, part } from "./check";
+import { NO_LEADS } from "@/lib/affiliate-lead-rules";
 
 /** The same arithmetic readBook does, on its own so it can be checked. */
 const payable = (earned: number, waiting: number, paid: number) => {
@@ -42,12 +43,12 @@ is("21st", ordinal(21), "21st");
 is("23rd", ordinal(23), "23rd");
 is(
   "a day and a wait",
-  payoutPromise({ enabled: true, percent: 20, days: 30, rule: "last" as const, rates: {}, payday: 5, hold: 14, buyers: false, directory: false, numbers: false, kit: true, lifetime: false, recurring: 0, bonuses: [], paidSearch: false, secondTier: 0 }, "Harbor Kitchen"),
+  payoutPromise({ enabled: true, percent: 20, days: 30, rule: "last" as const, rates: {}, payday: 5, hold: 14, buyers: false, directory: false, numbers: false, kit: true, lifetime: false, recurring: 0, bonuses: [], paidSearch: false, secondTier: 0, lead: NO_LEADS }, "Harbor Kitchen"),
   "Harbor Kitchen pays on the 5th of each month. A sale is payable 14 days after it is made, so a refund in that time comes off it first.",
 );
 is(
   "no day promised says so plainly",
-  payoutPromise({ enabled: true, percent: 20, days: 30, rule: "last" as const, rates: {}, payday: 0, hold: 0, buyers: false, directory: false, numbers: false, kit: true, lifetime: false, recurring: 0, bonuses: [], paidSearch: false, secondTier: 0 }, "Harbor Kitchen"),
+  payoutPromise({ enabled: true, percent: 20, days: 30, rule: "last" as const, rates: {}, payday: 0, hold: 0, buyers: false, directory: false, numbers: false, kit: true, lifetime: false, recurring: 0, bonuses: [], paidSearch: false, secondTier: 0, lead: NO_LEADS }, "Harbor Kitchen"),
   "Harbor Kitchen has not set a payment day, and pays when they choose.",
 );
 
