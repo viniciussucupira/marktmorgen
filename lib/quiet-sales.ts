@@ -134,7 +134,7 @@ export async function checkQuiet(store: Store, now = Date.now()): Promise<QuietO
     "",
     `This comes once for each quiet stretch. To stop these emails, the busy-day one and the weekly one: ${stopUrl}`,
   );
-  const ok = await sendEmail({
+  const ok = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: NIMBUS_FROM,
     to: store.email,
     subject: `${store.name}: no sales in ${verdict.days} days`.slice(0, 180),

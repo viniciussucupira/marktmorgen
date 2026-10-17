@@ -19,6 +19,7 @@ import type { CallSetup } from "@/lib/call-setup";
 import { bookLink, remindAbandoned } from "@/lib/checkout-recovery";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "owner@example.com";
 const checkouts: URLSearchParams[] = [];
@@ -74,7 +75,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const made = await addProduct(OWNER, "Coaching Call", "", "120", null);
   if (!made.ok) throw new Error("no product");
   const id = made.product.id;

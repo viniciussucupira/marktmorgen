@@ -26,7 +26,7 @@ export async function tellCreatorOfWork(input: { store: Store; product: Listing;
   const { store, product, courseId, lessonTitle, origin } = input;
   if (!(await tellCreatorNow(courseId))) return false;
   const page = `${origin}/studio/course/${product.id}${store.sid ? `?store=${store.sid}` : ""}#work`;
-  return sendEmail({
+  return sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: NIMBUS_FROM,
     to: store.email,
     subject: `Work to read in ${excerpt(product.title, 80)}`,
@@ -56,7 +56,7 @@ export async function tellStudentOfReview(input: {
   const w = coursesWords(store.language);
   const link = `${origin}/@${store.handle}/course/${product.id}/${lessonId}#task`;
   const lead = submission.state === "approved" ? w.taskMailApproved(store.name, lessonTitle, product.title) : w.taskMailAgain(store.name, lessonTitle, product.title);
-  return sendEmail({
+  return sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: courseSender(store),
     to,
     subject: w.taskMailSubject(excerpt(lessonTitle, 120)).slice(0, 200),

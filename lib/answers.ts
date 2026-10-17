@@ -15,6 +15,7 @@
  * nothing twice), and a question the page could not answer, with the product
  * and the day, for the creator to read. Never who asked.
  */
+import { windowId } from "@/lib/allowance-window";
 import { SHIP_REGIONS, activeShipping } from "@/lib/shipping";
 import { createHash } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -43,7 +44,11 @@ import {
 const ANSWER_TIMEOUT_MS = 20_000;
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
-const monthKey = (statsId: string, now: Date) => `nl:ask:${statsId}:${now.toISOString().slice(0, 7)}`;
+/** A store's answers, counted in its window (lib/allowance-window.ts): null when none is known, and then none is given. */
+const monthKey = (store: Store, now: Date): string | null => {
+  const window = windowId(store, now.getTime());
+  return store.statsId && window ? `nl:ask:${store.statsId}:${window}` : null;
+};
 const answerKey = (hash: string) => `nl:ask:a:${hash}`;
 const missedKey = (statsId: string) => `nl:ask:missed:${statsId}`;
 
@@ -60,8 +65,9 @@ export function answersAllowance(store: Store, now = Date.now()): number {
 
 /** How many of this month's answers were given. */
 export async function answersUsed(store: Store, now = Date.now()): Promise<number> {
-  if (!store.statsId || !isRedisConfigured()) return 0;
-  const [used] = await redisPipeline([["GET", monthKey(store.statsId, new Date(now))]]);
+  const key = monthKey(store, new Date(now));
+  if (!store.statsId || !isRedisConfigured() || !key) return 0;
+  const [used] = await redisPipeline([["GET", key]]);
   return Math.max(0, Number(used) || 0);
 }
 
@@ -264,8 +270,8 @@ export async function answerQuestion(input: {
  * page's guide (lib/store-guide.ts), which draws on the same allowance.
  */
 export async function takeAnswer(store: Store, now = Date.now()): Promise<boolean> {
-  if (!store.statsId) return false;
-  const key = monthKey(store.statsId, new Date(now));
+  const key = monthKey(store, new Date(now));
+  if (!store.statsId || !key) return false;
   const [used, expires] = await redisPipeline([["INCR", key], ["EXPIRE", key, 40 * 86_400]]);
   const count = typeof used === "number" ? used : typeof used === "string" && /^[1-9]\d*$/.test(used) ? Number(used) : NaN;
   if (!Number.isSafeInteger(count) || count < 1 || (expires !== 1 && expires !== "1")) return false;
@@ -278,8 +284,9 @@ export async function takeAnswer(store: Store, now = Date.now()): Promise<boolea
 
 /** Releases a reservation only before a provider request starts; never after a failed request. */
 export async function giveAnswerBack(store: Store, now = Date.now()): Promise<void> {
-  if (!store.statsId) return;
-  await redisPipeline([["DECR", monthKey(store.statsId, new Date(now))]]).catch(() => {});
+  const key = monthKey(store, new Date(now));
+  if (!store.statsId || !key) return;
+  await redisPipeline([["DECR", key]]).catch(() => {});
 }
 
 /** An answer kept for a day, by its hash, or null. */

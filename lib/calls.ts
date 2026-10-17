@@ -43,6 +43,9 @@
  * booking also takes its hosts' time on every store at once, atomically
  * (lib/host-claims.ts), under the same lock as everything here.
  */
+import { admitOrders } from "@/lib/order-admission";
+import { CALL_ORDER_UNITS } from "@/lib/order-rules";
+import { countOrder } from "@/lib/orders";
 import { saleHandles } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
@@ -577,6 +580,7 @@ export type HoldResult =
   | { ok: true; url: string; session: string }
   | { ok: false; reason: "taken" | "invalid" | "unavailable" | "error" };
 
+
 /**
  * Holds a seat and opens a checkout for it, on the creator's account.
  *
@@ -704,6 +708,11 @@ export async function holdAndCheckout(input: {
 
   const team = await activeTeam(store, product).catch(() => "closed" as const);
   if (team === "closed") return { ok: false, reason: "unavailable" };
+
+  // Counted as orders, admitted before anything is held or opened: nobody is stopped while paying.
+  const admitted = await admitOrders(store, CALL_ORDER_UNITS);
+  // Past the store's orders the buyer is told the call cannot be booked right now, and nothing is charged.
+  if (!admitted.ok) return { ok: false, reason: "unavailable" };
 
   if (!(await takeLock(store.callsId))) return { ok: false, reason: "taken" };
 
@@ -1062,7 +1071,7 @@ async function tellMoved(input: {
     const locale = LANGUAGES[parseLanguage(store.language)].locale;
     const buyerAt = (ms: number) => `${readableTime(ms, buyerTz, locale)} (${zoneName(ms, buyerTz, locale)})`;
     const again = canMove(setup, start, moves);
-    await sendEmail({
+    await sendEmail({ meter: { by: "store", store: store, kind: "email" },
       from: storeSender(store),
       to: email,
       subject: b.movedSubject(product.title, store.name),
@@ -1085,7 +1094,7 @@ async function tellMoved(input: {
     });
   }
 
-  await sendEmail({
+  await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: `"Marktmorgen" <${senderAddress()}>`,
     to: hostRecipient(store, hosts),
     subject: `Moved: ${product.title}, now ${readableTime(start, setup.tz)}`,
@@ -1233,6 +1242,8 @@ export async function confirmBooking(input: {
   if (!isRedisConfigured() || !store.callsId) return;
   const [fresh] = await redisPipeline([["SET", confirmedKey(session), "1", "NX"]]);
   if (fresh === null) return;
+  // Booked: the orders it was admitted as are the window's (lib/orders.ts), once, by the checkout.
+  for (let unit = 1; unit <= CALL_ORDER_UNITS; unit += 1) await countOrder(store, `call:${session}:${unit}`, input.amountCents ?? 0);
 
   // A team booking keeps its hosts and the claim on their time, now for good.
   const team = await bookingTeam(store, product, session).catch((error) => {
@@ -1302,7 +1313,7 @@ export async function confirmBooking(input: {
     const b = bookingWords(store.language);
     const locale = LANGUAGES[parseLanguage(store.language)].locale;
     const hours = Math.max(setup.noticeHours, 1);
-    await sendEmail({
+    await sendEmail({ meter: { by: "order" },
       from: storeSender(store),
       to: buyerEmail,
       subject: b.bookedSubject(product.title, store.name),
@@ -1331,7 +1342,7 @@ export async function confirmBooking(input: {
     });
   }
 
-  await sendEmail({
+  await sendEmail({ meter: { by: "order" },
     from: `"Marktmorgen" <${senderAddress()}>`,
     to: hostRecipient(store, hosts),
     subject: `New booking: ${product.title}, ${readableTime(start, setup.tz)}`,
@@ -1450,7 +1461,7 @@ export async function tellNewLink(input: {
     const invite = Buffer.from(
       callInvite({ uid: call.session, start: call.start, end: call.end, title: product.title, storeName: store.name, room: meeting.link, note, sequence: call.moves + meeting.updates, words: b }),
     ).toString("base64");
-    const sent = await sendEmail({
+    const sent = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
       from: storeSender(store),
       to: call.email,
       subject: b.newLinkSubject(product.title, store.name),
@@ -1472,7 +1483,7 @@ export async function tellNewLink(input: {
     }).catch(() => false);
     if (sent) told += 1;
   }
-  await sendEmail({
+  await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: `"Marktmorgen" <${senderAddress()}>`,
     to: store.email,
     subject: `${name} link made: ${product.title}, ${readableTime(meeting.start, setup.tz)}`,

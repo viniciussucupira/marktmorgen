@@ -17,7 +17,7 @@ const REFUSED_BEFORE_START = new Set(["long", "invalid", "unknown"]);
 const MESSAGES: Record<string, string> = {
   unconfirmed: "The writing result could not be confirmed. Review your current content and check your writing allowance before trying again.",
   notes: "Write a few words about it first: what it is, who it is for, what is inside.",
-  used: "This month's writing help is used up. It starts again on the 1st.",
+  used: "This month's writing help is used up. It starts again with your next billing month.",
   slow: "A few at a time: wait a minute, then try again.",
   failed: "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance. Try again in a moment.",
   off: "The writing help is not available right now.",

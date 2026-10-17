@@ -11,6 +11,7 @@
  * waitlists are, so the form cannot be used to flood anybody's inbox. Nothing
  * is read or written on a plain visit to the store page.
  */
+import { withinStore } from "@/lib/metered-limits";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
@@ -71,7 +72,7 @@ export async function askToJoin(input: { store: Store; email: string; clicks?: b
   if (!raw || raw.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(raw)) return "email";
   if (!(input.fromForm ? listOpen(store) : joinOpen(store)) || !store.statsId) return "closed";
   const email = normaliseEmail(raw);
-  if (!(await withinLimit("join-ip", `${store.statsId}:${ip}`, 10, 3_600))) return "limited";
+  if (!(await withinStore("join-ip", `${store.statsId}:${ip}`, 10, 3_600, store))) return "limited";
   if (!(await withinLimit("join-address", sha(email), 5, 3_600))) return "limited";
 
   const token = randomBytes(24).toString("hex");
@@ -79,7 +80,7 @@ export async function askToJoin(input: { store: Store; email: string; clicks?: b
   await redisPipeline([["SET", tokenKey(token), JSON.stringify(grant), "EX", JOIN_SECONDS]]);
 
   const w = joinWords(store.language);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
     from: sender(store),
     to: email,
     subject: w.mailSubject(store.name).slice(0, 200),

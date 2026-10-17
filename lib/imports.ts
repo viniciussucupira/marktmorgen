@@ -55,6 +55,7 @@
  * import, previewImport is its dry run: every row checked here the way the
  * import will check it, against the store as it is, and nothing written.
  */
+import { windowId } from "@/lib/allowance-window";
 import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -137,7 +138,8 @@ const MAIL_CHUNK = 100;
  * with no plan) has IMPORT_ALLOWANCES.creator.movedEmails a calendar month.
  */
 const movedKey = (sid: string, month: string) => `nl:imports:moved:${sid}:${month}`;
-const utcMonth = (now: number) => new Date(now).toISOString().slice(0, 7);
+/** The store's window (lib/allowance-window.ts): its billing month when it pays, the calendar month otherwise; null when unknown. */
+const utcMonth = (store: Store, now: number) => windowId(store, now);
 
 /** Takes up to `n` for the store's emails to people brought over; answers how many it may send now. */
 export async function reserveMoved(store: Store, n: number, now = Date.now()): Promise<number> {
@@ -145,7 +147,9 @@ export async function reserveMoved(store: Store, n: number, now = Date.now()): P
   if (monthlyAllowance(store) > 0) return takeFromMonth(store, n);
   const cap = importAllowanceFor(store, now / 1000).movedEmails;
   if (cap <= 0) return 0;
-  const key = movedKey(store.sid, utcMonth(now));
+  const window = utcMonth(store, now);
+  if (!window) return 0;
+  const key = movedKey(store.sid, window);
   const [, total] = await redisPipeline([
     ["SET", key, "0", "NX", "EX", 32 * 86_400],
     ["INCRBY", key, n],
@@ -161,7 +165,8 @@ export async function reserveMoved(store: Store, n: number, now = Date.now()): P
 export async function releaseMoved(store: Store, n: number, now = Date.now()): Promise<void> {
   if (!Number.isSafeInteger(n) || n <= 0 || !store.sid) return;
   if (monthlyAllowance(store) > 0) return giveBackToMonth(store, n);
-  await redisPipeline([["DECRBY", movedKey(store.sid, utcMonth(now)), n]]);
+  const window = utcMonth(store, now);
+  if (window) await redisPipeline([["DECRBY", movedKey(store.sid, window), n]]);
 }
 
 /**
@@ -174,8 +179,9 @@ export async function takeImportRows(store: Store, n: number, now = Date.now()):
   if (!Number.isSafeInteger(n) || n <= 0) return { ok: true };
   // A small upload still costs a request: each counts at least this many rows.
   n = Math.max(n, IMPORT_MIN_ROWS_PER_UPLOAD);
-  if (!store.sid || !isRedisConfigured()) return { ok: false, reason: "unavailable", limit };
-  const key = `nl:imports:rows:${store.sid}:${utcMonth(now)}`;
+  const window = utcMonth(store, now);
+  if (!store.sid || !isRedisConfigured() || !window) return { ok: false, reason: "unavailable", limit };
+  const key = `nl:imports:rows:${store.sid}:${window}`;
   try {
     const [, total] = await redisPipeline([
       ["SET", key, "0", "NX", "EX", 32 * 86_400],
@@ -1180,7 +1186,7 @@ async function mailStep(job: ImportJob, store: Store): Promise<"more" | "done" |
     await unsent(portion);
     return "more";
   }
-  const sent = await sendBatch(sending, `nimbus-import:${job.id}:${emails.slice().sort()[0]}:${emails.length}`);
+  const sent = await sendBatch(sending, `nimbus-import:${job.id}:${emails.slice().sort()[0]}:${emails.length}`, { by: "monthly" });
   if (sent === "retry") {
     await redisPipeline([["SADD", mailKey(job.id), ...emails]]);
     await releaseMoved(store, sending.length);
@@ -1383,7 +1389,7 @@ export async function sendMoveReminders(deadline: number, now = Date.now()): Pro
             tags: healthTags(store, false),
           },
         ],
-        `nimbus-move-remind:${store.statsId}:${field}`,
+        `nimbus-move-remind:${store.statsId}:${field}`, { by: "monthly" },
       );
       if (sent === "sent") {
         await noteSent(sid, 1);

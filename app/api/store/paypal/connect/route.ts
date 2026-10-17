@@ -1,6 +1,7 @@
+import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { away, creatorFrom } from "@/lib/studio-route";
-import { clientAddress, withinLimit } from "@/lib/request-guard";
+import { clientAddress } from "@/lib/request-guard";
 import { onboardingUrl, paypalSalesConfigured } from "@/lib/paypal-sales";
 
 /**
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
   const { store, origin, studio } = creator;
   if (!paypalSalesConfigured()) return away(origin, studio("paypal=unavailable#paypal"));
   if (!store.statsId) return away(origin, studio("paypal=error#paypal"));
-  if (!(await withinLimit("paypal-sell-connect", `${clientAddress(request)}|${store.handle}`, 10, 3600))) {
+  if (!(await withinService("paypal-sell-connect", `${clientAddress(request)}|${store.handle}`, 10, 3600, store))) {
     return away(origin, studio("paypal=slow#paypal"));
   }
   try {

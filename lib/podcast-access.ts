@@ -30,6 +30,7 @@
  *     most: the feed can be put together FEED_READS_A_DAY times a day for
  *     one address and no more.
  */
+import { withinStore } from "@/lib/metered-limits";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -131,14 +132,14 @@ export async function sendFeedLink(input: { store: Store; product: Listing; emai
   const raw = input.email.trim();
   if (!raw || raw.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(raw)) return "email";
   const { store, product } = input;
-  if (!(await withinLimit("podcast-link-ip", `${store.handle}:${input.ip}`, 10, 3_600))) return "limited";
+  if (!(await withinStore("podcast-link-ip", `${store.handle}:${input.ip}`, 10, 3_600, store, "buyer"))) return "limited";
   if (!(await withinLimit("podcast-link-address", sha(normaliseEmail(raw)), 5, 3_600))) return "limited";
   if (!(await mayListen(store, product.id, raw))) return "sent";
   const token = await feedToken(store, product.id, raw);
   if (!token) return "error";
   // In the store's language (lib/buyer-words/courses.ts).
   const w = coursesWords(store.language);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
     from: input.from,
     to: normaliseEmail(raw),
     subject: w.podcastSubject(product.title).slice(0, 200),

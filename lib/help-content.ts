@@ -7,11 +7,14 @@ import { AI_PLANS_WORDS, aiAllowanceWords } from "@/lib/ai-rules";
  * the page shows. Each answer is plain text; numbers come from the rules they
  * describe, so the two can never disagree.
  */
-import { BUYER_RESERVE_BPS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, countWords, publicVisitLimit } from "@/lib/traffic-rules";
+import { BUYER_RESERVE_BPS, EXTRA_REQUESTS, REQUESTS_PER_VISIT, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, countWords, publicVisitLimit } from "@/lib/traffic-rules";
 import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_VIDEO_SECONDS } from "@/lib/plan-standing";
-import { ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
+import { CALL_ORDER_UNITS, ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
+import { API_WRITE_UNITS, allowanceListWords } from "@/lib/store-allowance-rules";
+import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
+import { FREE_POOL_BASE_STORES, PAID_STORES_PER_FREE_STORE } from "@/lib/free-pool-rules";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import { isDomainsConfigured } from "@/lib/domains";
 import { TEAM_LIMITS, teamLimitWords } from "@/lib/team-scheduling-rules";
@@ -120,7 +123,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           "Yes, from “Move from ClickFunnels” under “Moving from another platform” in your studio, in four steps: the Products, Contacts and Orders files ClickFunnels lets you export, and your funnel's pages, each saved from your own browser as “Webpage, HTML Only”. ClickFunnels' column names are matched for you. Each file and each funnel is checked first in a dry run that saves nothing and lists what every row and page will become, then imported; running the same import again makes nothing twice.",
           "Contacts ClickFunnels marks Subscribed can be emailed here once you confirm they agreed; everyone else comes in as a contact you cannot email, and those marked Unsubscribed or Undeliverable stay unsubscribed here. Paid orders give past buyers what they bought; refunded, failed, canceled and pending ones are left out. Each saved page's headings, text, buttons, YouTube, Vimeo and Loom videos and form become one of your store's own pages, kept from visitors until you let it out, and the pages a funnel, switched off. A page you say was an order form becomes your product's own checkout, its order bumps boxes at that checkout, and pages you say were upsells or downsells offers after paying.",
           "What it does not do: we never sign in to ClickFunnels or fetch your pages, and pictures, design, scripts, tracking, countdown timers, workflows, courses and memberships are not brought over. Every page lists what was left out and why.",
-          `How much a month: ${importAllowanceWords()} Moving funnels: ${IMPORT_ALLOWANCES.creator.pageReads}, ${IMPORT_ALLOWANCES.pro.pageReads} and ${IMPORT_ALLOWANCES.scale.pageReads} saved pages read, ${IMPORT_ALLOWANCES.creator.funnelChecks}, ${IMPORT_ALLOWANCES.pro.funnelChecks} and ${IMPORT_ALLOWANCES.scale.funnelChecks} funnel checks, and ${IMPORT_ALLOWANCES.creator.funnelSaves}, ${IMPORT_ALLOWANCES.pro.funnelSaves} and ${IMPORT_ALLOWANCES.scale.funnelSaves} funnels made, on Store, Studio and Scale. Dry runs: ${IMPORT_ALLOWANCES.creator.checks}, ${IMPORT_ALLOWANCES.pro.checks} and ${IMPORT_ALLOWANCES.scale.checks} batches of contacts or products, and ${IMPORT_ALLOWANCES.creator.buyerChecks}, ${IMPORT_ALLOWANCES.pro.buyerChecks} and ${IMPORT_ALLOWANCES.scale.buyerChecks} of past buyers (each batch is up to 1,000 rows). Each figure starts again on the 1st of the month (UTC); past one, that step waits for the next month or a larger plan.`,
+          `How much a month: ${importAllowanceWords()} Moving funnels: ${IMPORT_ALLOWANCES.creator.pageReads}, ${IMPORT_ALLOWANCES.pro.pageReads} and ${IMPORT_ALLOWANCES.scale.pageReads} saved pages read, ${IMPORT_ALLOWANCES.creator.funnelChecks}, ${IMPORT_ALLOWANCES.pro.funnelChecks} and ${IMPORT_ALLOWANCES.scale.funnelChecks} funnel checks, and ${IMPORT_ALLOWANCES.creator.funnelSaves}, ${IMPORT_ALLOWANCES.pro.funnelSaves} and ${IMPORT_ALLOWANCES.scale.funnelSaves} funnels made, on Store, Studio and Scale. Dry runs: ${IMPORT_ALLOWANCES.creator.checks}, ${IMPORT_ALLOWANCES.pro.checks} and ${IMPORT_ALLOWANCES.scale.checks} batches of contacts or products, and ${IMPORT_ALLOWANCES.creator.buyerChecks}, ${IMPORT_ALLOWANCES.pro.buyerChecks} and ${IMPORT_ALLOWANCES.scale.buyerChecks} of past buyers (each batch is up to 1,000 rows). Each figure starts again with your billing month (for a store with no plan, on the 1st, UTC); past one, that step waits for the next month or a larger plan.`,
         ],
       },
       {
@@ -303,19 +306,37 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "How many visits does my plan cover?",
         a: [
-          `Store covers ${countWords(VISITS_INCLUDED.creator)} visits a month, Studio ${countWords(VISITS_INCLUDED.pro)}, and Scale ${countWords(VISITS_INCLUDED.scale)}. A visit is one person opening your store on one day, however many of its pages they look at. You are never counted when you are signed in, and neither is a robot that says it is one.`,
+          `Store covers ${countWords(VISITS_INCLUDED.creator)} visits a billing month, Studio ${countWords(VISITS_INCLUDED.pro)}, and Scale ${countWords(VISITS_INCLUDED.scale)}. A visit is one person opening your store on one day, however many of its pages they look at. You are never counted when you are signed in, and neither is a robot that says it is one.`,
           "A buyer who comes back counts the same way: a student or a member who opens a course or your community on a day is that day's visit, once. A subscriber to a private podcast is one visit on each day their app checks for episodes. Your community's live room checks for new messages for as long as it is open in front of a member, so it counts by the 10 minutes it is open, for each member: 2.6 visits while people are talking, when it checks every 5 seconds, and 0.6 of a visit while the room is quiet. A room in a background tab, or one nobody has touched for 20 minutes, checks nothing and counts nothing.",
           `Visits are never billed. Your store's public pages (its page, products, blog and collections) rest at ${(10_000 - BUYER_RESERVE_BPS) / 100}% of the month's figure: ${countWords(publicVisitLimit(VISITS_INCLUDED.creator))} on Store, ${countWords(publicVisitLimit(VISITS_INCLUDED.pro))} on Studio and ${countWords(publicVisitLimit(VISITS_INCLUDED.scale))} on Scale. The last ${BUYER_RESERVE_BPS / 100}% are kept for what your buyers already have: courses and lessons, the community and its live room, and private podcasts, which rest once the whole figure is used, with a page that tells your buyers their access is kept. Everything opens again when the calendar month turns, or when a plan change gives the store a larger figure. A checkout already open always finishes. Your studio shows the recorded count. A failed or unreadable count also pauses new public-page admission.`,
-          `The same in the free trial (${countWords(TRIAL_VISITS)} visits) and before a plan starts or after it ends (${countWords(SETUP_VISITS)}). Downloads of what was bought are not visits and are not stopped by them. Lesson video has its own finite playback threshold. The live room stops checking by itself and shows new messages when a member presses a button.`,
+          `The same in the free trial (${countWords(TRIAL_VISITS)} visits for the whole trial) and before a plan starts or after it ends (${countWords(SETUP_VISITS)} a calendar month).`,
+          `Your store's public side also answers up to ${countWords(REQUESTS_PER_VISIT)} requests for each visit its plan covers, and ${countWords(EXTRA_REQUESTS.creator)} more on Store, ${countWords(EXTRA_REQUESTS.pro)} on Studio and ${countWords(EXTRA_REQUESTS.scale)} on Scale: pages opened again, searches, the cart, downloads and the page after paying. Past them its pages rest the same way.`,
+          `Downloads of what was bought are not visits and are not stopped by them. Lesson video has its own finite playback threshold. The live room stops checking by itself and shows new messages when a member presses a button.`,
         ],
       },
       {
         q: "What if I sell a very large number of things?",
         a: [
           `Your plan covers ${countWords(ORDERS_INCLUDED.creator)} orders a month on ${PLAN_TITLES.creator}, ${countWords(ORDERS_INCLUDED.pro)} on ${PLAN_TITLES.pro}, and ${countWords(ORDERS_INCLUDED.scale)} on ${PLAN_TITLES.scale}. An order is a purchase confirmed (a bundle or a cart of several products is one), an offer taken after paying, a PayPal order, a place in a purchase made for several people, or a free copy sent.${feeWords().ordersShared}`,
-          "Orders are never billed. When a paid store reaches its plan's figure, new orders pause until the calendar month turns or the store moves to a larger plan: a buyer who presses buy is told plainly that the store is not taking new orders right now, and nothing is charged. Anybody already paying finishes and gets everything they bought, because a checkout opened in the last day counts toward the figure until it is paid or closes. A PayPal order counts like a card order. We email you the first time a month reaches the figure, and your studio shows the count as it grows.",
+          "Orders are never billed. When a paid store reaches its plan's figure, new orders pause until its next billing month or until it moves to a larger plan: a buyer who presses buy is told plainly that the store is not taking new orders right now, and nothing is charged. Anybody already paying finishes and gets everything they bought, because a checkout opened in the last day counts toward the figure until it is paid or closes. A PayPal order counts like a card order. We email you the first time a month reaches the figure, and your studio shows the count as it grows.",
           "Selling video works the same way at any volume. A video sold as a file is sent to each buyer at no cost to you however many buy it. A video inside a course counts by the hour watched, as the question on lesson video says.",
-          `In the free trial there is no invoice to add an order to, so free copies stop for the month once the store has had ${countWords(TRIAL_ORDERS)} orders, until the plan is paid or the month turns. Paid orders are never stopped.`,
+          `In the free trial, new orders (paid ones and free copies together) pause once the store has had ${countWords(TRIAL_ORDERS)} in the trial, until the plan is paid. A package of calls is one order, and a call booked counts as ${countWords(CALL_ORDER_UNITS)}, for the emails and reminders it sends.`,
+        ],
+      },
+      {
+        q: "When do my plan's monthly figures start again?",
+        a: [
+          "With your billing month, not on the 1st. A paid plan's figures (visits, orders, emails, AI, uploads, imports and the rest) are counted from the day your plan renews until the next payment's month begins, so each payment buys one whole month of every figure. On a yearly plan they are monthly too, each month starting on the day of the month your year began. Your studio shows the dates.",
+          "A free trial counts its figures for the trial as a whole. A store with no plan, before one starts or after it ends, counts them by calendar month (UTC).",
+        ],
+      },
+      {
+        q: "What else does my plan cover each month?",
+        a: [
+          `On ${PLAN_TITLES.creator}: ${allowanceListWords("creator")}. On ${PLAN_TITLES.pro}: ${allowanceListWords("pro")}. On ${PLAN_TITLES.scale}: ${allowanceListWords("scale")}.`,
+          `A studio request is any page of your studio you open (each counts as ${STUDIO_PAGE_UNITS}), any save, and the studio's own refreshing. An API request is one made with one of your keys; a contact added or a product given counts as ${API_WRITE_UNITS}. Store emails are what your store's own tools send outside your monthly emails and your orders: inbox notices and replies, a purchase sent again, reminders, offers and notices to members. Access emails hand buyers what they already have, such as the link to their purchases.`,
+          "When one is used, that use is refused with a plain message until your next billing month, or at once on a larger plan. Nothing is ever billed past a figure. Changing your plan, canceling it, deleting your store and downloading your sales always work.",
+          `Free trials and stores without a paid plan share a limited number of places each calendar month (${countWords(FREE_POOL_BASE_STORES)}, and one more for every ${countWords(PAID_STORES_PER_FREE_STORE)} paying stores). If they are taken, such a store is told so, and what it asked for waits until the next month or until its plan is paid.`,
         ],
       },
       {

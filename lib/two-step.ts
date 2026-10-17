@@ -142,7 +142,7 @@ function newCodes(): string[] {
 async function tell(email: string, subject: string, line: string): Promise<void> {
   if (!isSenderConfigured()) return;
   const when = new Date().toISOString().replace("T", " ").slice(0, 16);
-  await sendEmail({
+  await sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: normaliseEmail(email),
     replyTo: "support@marktmorgen.com",
@@ -325,7 +325,7 @@ export async function startSetup(email: string, session: string, backupRaw: stri
   const secret = newSecret();
   const confirm = confirmCode();
   const sent = isSenderConfigured()
-    ? await sendEmail({
+    ? await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: backup,
         replyTo: "support@marktmorgen.com",
@@ -394,7 +394,7 @@ export async function sendRescue(token: string, origin: string): Promise<"sent" 
   const rescue = randomBytes(32).toString("hex");
   await redisPipeline([["SET", rescueKey(rescue), normaliseEmail(email), "EX", 15 * 60]]);
   const sent = isSenderConfigured()
-    ? await sendEmail({
+    ? await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: backup,
         replyTo: "support@marktmorgen.com",

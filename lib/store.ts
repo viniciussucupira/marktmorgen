@@ -73,8 +73,10 @@ import { type WelcomeOffer, NO_WELCOME_OFFER, parseWelcomeOffer } from "@/lib/we
 import { type InboxSetting, NO_INBOX, parseInboxSetting } from "@/lib/inbox-rules";
 import { type PastSale, type StoreSale, NO_SALE, parsePastSales, parseSale, withPastSale } from "@/lib/store-sale";
 import { parseTiers } from "@/lib/tier-rules";
+import { type BillingPeriod, isPeriod } from "@/lib/allowance-window";
 import { ENDED_INDEX } from "@/lib/plan-standing";
 import { SHARING_INDEX } from "@/lib/platform-share";
+import { PAYING_INDEX } from "@/lib/free-pool-rules";
 import { type Cycle, type Tier, parseCycle, parseTier } from "@/lib/plan";
 import { COMMUNITY_ID } from "@/lib/community-text";
 import { type Bump, MAX_BUMPS, type Plan, bumpTargets, canBeBumped, isOneOff, uncoveredOption } from "@/lib/product-extras";
@@ -390,6 +392,15 @@ export type Store = {
   cycle: Cycle;
   /** When the free trial ends, in seconds; 0 when not in one. A snapshot too. */
   trialEnds: number;
+  /**
+   * The billing period Stripe last said this store paid for, in seconds, and
+   * whether it renews (added 17 October 2026). Every monthly allowance is
+   * counted in the store's own billing month (lib/allowance-window.ts); a
+   * store that pays and has none written down has no window, so nothing that
+   * costs money starts until the studio or the daily job reads it. Absent
+   * from records written before.
+   */
+  period?: BillingPeriod | null;
   /**
    * Whether the plan is at the prices that go with a share of each sale
    * (lib/plan.ts isSharedPrice), as Stripe last said. False for a store that
@@ -870,6 +881,8 @@ function parseStore(raw: unknown): Store | null {
       tier: parseTier(value.tier) ?? "creator",
       cycle: parseCycle(value.cycle) ?? "month",
       trialEnds: typeof value.trialEnds === "number" && value.trialEnds > 0 ? value.trialEnds : 0,
+      // Records from before the period was kept have none: no billing month is known.
+      period: isPeriod((value as { period?: unknown }).period) ? { ...((value as { period: BillingPeriod }).period) } : null,
       // Every store from before there was a share pays none.
       shared: value.shared === true,
       // Stores written before this was kept have none: read as never ended.
@@ -1094,6 +1107,7 @@ async function freshStore(fields: {
     tier: "creator",
     cycle: "month",
     trialEnds: 0,
+    period: null,
     shared: false,
     planEndedAt: "",
     mail: null,
@@ -1718,6 +1732,8 @@ export async function setSubscription(
     cycle?: Cycle;
     trialEnds?: number;
     shared?: boolean;
+    /** The period paid for; null forgets it (a plan not running, a trial). Left as it is when not given. */
+    period?: BillingPeriod | null;
   },
 ): Promise<Store | null> {
   const result = await withStore<Store | null>(email, async (store, save) => {
@@ -1751,6 +1767,8 @@ export async function setSubscription(
       cycle: fields.cycle ?? store.cycle,
       trialEnds: fields.trialEnds ?? store.trialEnds,
       shared: fields.shared ?? store.shared,
+      // A plan that is not running has no period to follow.
+      period: !fields.active ? null : fields.period === undefined ? store.period ?? null : fields.period,
       planEndedAt,
     });
     // Kept in line by the day its plan ended, for the daily job that looks
@@ -1762,6 +1780,14 @@ export async function setSubscription(
         planEndedAt ? ["ZADD", ENDED_INDEX, Date.parse(planEndedAt), storeRef(saved)] : ["ZREM", ENDED_INDEX, storeRef(saved)],
       ]).catch((error) => console.error("could not keep the line of ended plans", error));
     }
+    // The stores that pay us, for the shared ceiling on stores that do not
+    // (lib/free-pool-rules.ts): it grows only with them. A trial pays
+    // nothing yet, and a plan with no subscription behind it pays nothing.
+    const nowSeconds = Date.now() / 1000;
+    const paysNow = (record: Store) => record.subscriptionActive && Boolean(record.subscriptionId) && !(record.trialEnds > nowSeconds);
+    await redisPipeline([[paysNow(saved) ? "SADD" : "SREM", PAYING_INDEX, storeRef(saved)]]).catch((error) =>
+      console.error("could not keep the list of stores that pay", error),
+    );
     // The stores whose sales pay a share, for the daily job that keeps what
     // was taken to what is owed (lib/share-settle.ts). Only when it changes.
     const sharing = saved.shared && saved.subscriptionActive;

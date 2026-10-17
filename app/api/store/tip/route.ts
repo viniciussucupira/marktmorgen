@@ -1,8 +1,9 @@
+import { withinStore } from "@/lib/metered-limits";
 import { channelOfRequest } from "@/lib/visit-channel";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { createTipCheckout, tipsOpen } from "@/lib/store-tip-checkout";
 import { readTipAmount, tipAmounts } from "@/lib/store-tips";
 
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
   if (amount === null) return away("amount");
 
   // Twenty a connection in ten minutes per store: far past any fan, short of a script trying cards.
-  if (!(await withinLimit("tip", `${clientAddress(request)}|${store.handle}`, 20, 600))) return away("limited");
+  if (!(await withinStore("tip", `${clientAddress(request)}|${store.handle}`, 20, 600, store))) return away("limited");
   try {
     const opened = await createTipCheckout(
       store,

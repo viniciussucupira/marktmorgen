@@ -1,8 +1,9 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { openMove } from "@/lib/move-members";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
 
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
   const page = `${origin}/@${store.handle}/move/${product}`;
   const back = (status: string) =>
     new Response(null, { status: 303, headers: { Location: `${page}?k=${encodeURIComponent(token)}&status=${status}`, "Cache-Control": "no-store" } });
-  if (!(await withinLimit("move-open", `${clientAddress(request)}|${store.handle}`, 20, 600))) return back("limited");
+  if (!(await withinStore("move-open", `${clientAddress(request)}|${store.handle}`, 20, 600, store, "buyer"))) return back("limited");
   const opened = await openMove(store, product, token, linkOrigin(request, store));
   if (!opened.ok) return back(opened.reason);
   return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });

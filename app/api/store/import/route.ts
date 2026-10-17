@@ -1,3 +1,4 @@
+import { windowId } from "@/lib/allowance-window";
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { jsonAccess } from "@/lib/studio-route";
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
     if (!job) return Response.json({ ok: false, error: "unknown" }, { status: 404 });
     if (request.nextUrl.searchParams.get("report") === "1") {
       if (!(await withinLimit("import-report", store.sid, 60, 600))) return new Response("Too many downloads for now. Try again in a few minutes.", { status: 429 });
-      if (!(await withinMonth("import-report-month", store.sid, importAllowanceFor(store).reports))) return new Response("Your plan's downloads of import reports for this month are used. They open again on the 1st (UTC).", { status: 429 });
+      if (!(await withinMonth("import-report-month", store.sid, importAllowanceFor(store).reports, windowId(store)))) return new Response("Your plan's downloads of import reports for this month are used. They open again with your next billing month.", { status: 429 });
       const csv = await reportCsv(job);
       const day = new Date(job.at).toISOString().slice(0, 10);
       return new Response(csv, {
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
       // Twenty imports a day is far more than moving a store takes.
       if (!(await withinLimit("import-start", store.sid || guarded.ref, 20, 86_400))) return refuse("slow", 429);
       const starts = importAllowanceFor(store).starts;
-      if (!(await withinMonth("import-start-month", store.sid || guarded.ref, starts))) return refuse("starts_month", 429, { limit: starts });
+      if (!(await withinMonth("import-start-month", store.sid || guarded.ref, starts, windowId(store)))) return refuse("starts_month", 429, { limit: starts });
       const started = await startImport(store, email, kind, startInput(body));
       if (!started.ok) return refuse(started.reason, started.reason === "busy" ? 409 : 400, { limit: started.limit });
       return Response.json({ ok: true, import: view(started.job) });
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
       const buyers = kind === "purchases";
       const allowance = importAllowanceFor(store);
       if (!(await withinLimit("import-preview", who, 400, 600))) return refuse("slow", 429);
-      if (!(await withinMonth(buyers ? "import-preview-buyers-month" : "import-preview-month", who, buyers ? allowance.buyerChecks : allowance.checks))) {
+      if (!(await withinMonth(buyers ? "import-preview-buyers-month" : "import-preview-month", who, buyers ? allowance.buyerChecks : allowance.checks, windowId(store)))) {
         return refuse("checks_month", 429, { limit: buyers ? allowance.buyerChecks : allowance.checks });
       }
       const rows = readBatch(kind, body.rows);
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
       if (!done.ok) return refuse(done.reason, 409);
       // The first few seconds of work right away, so a small file is done
       // by the time the page shows it; past the month's steps the five-minute job does it.
-      if (!(await withinMonth("import-step-month", store.sid || guarded.ref, importAllowanceFor(store).steps))) return Response.json({ ok: true, import: view(done.job) });
+      if (!(await withinMonth("import-step-month", store.sid || guarded.ref, importAllowanceFor(store).steps, windowId(store)))) return Response.json({ ok: true, import: view(done.job) });
       const after = await runImport(id, Date.now() + STEP_MS);
       return Response.json({ ok: true, import: view(after ?? done.job) });
     }
@@ -186,7 +187,7 @@ export async function POST(request: NextRequest) {
       const job = await jobOf(store, id);
       if (!job) return refuse("unknown", 404);
       // Past the month's steps the page stops pushing; the five-minute job finishes every import.
-      if (!(await withinMonth("import-step-month", store.sid || guarded.ref, importAllowanceFor(store).steps))) return Response.json({ ok: true, import: view(job) });
+      if (!(await withinMonth("import-step-month", store.sid || guarded.ref, importAllowanceFor(store).steps, windowId(store)))) return Response.json({ ok: true, import: view(job) });
       const after = await runImport(id, Date.now() + STEP_MS);
       return Response.json({ ok: true, import: view(after ?? job) });
     }

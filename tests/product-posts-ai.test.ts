@@ -13,6 +13,7 @@ import { claimHandle, ensureStatsId, setLanguage, setSubscription, storeForEmail
 import { aiLeft, writePosts } from "@/lib/ai";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 let reply = "";
 const asked: { system: string; prompt: string }[] = [];
@@ -28,7 +29,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "cocina", "Cocina de Ana", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   await setLanguage("owner@example.com", "es");
   const store = (await storeForEmail("owner@example.com"))!;
 

@@ -285,7 +285,7 @@ export async function advanceUpdate(id: string, load: (handle: string) => Promis
           });
           messages.push({ from: fromLine(store), to: email, subject: r.subject, text: r.text, html: r.html, replyTo: store.email, headers: r.headers });
         }
-        const outcome = await sendBatch(messages, `upd:${id}:${job.done}:${emails.length}`);
+        const outcome = await sendBatch(messages, `upd:${id}:${job.done}:${emails.length}`, { by: "monthly" });
         if (outcome !== "sent") {
           await release(store, recipients.length);
           const failures = job.failures + 1;

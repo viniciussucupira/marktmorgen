@@ -239,7 +239,7 @@ export async function sendFailedPlanNotices(): Promise<{ sent: number; failed: n
         // First, so the card that pays is the one the next renewal uses.
         await keepCardThatPays(due.subscription);
         const { subject, text } = failedPlanEmail(due);
-        const ok = await sendEmail({ from: NIMBUS_FROM, to: due.email, subject, text, replyTo: SUPPORT_EMAIL });
+        const ok = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: due.email, subject, text, replyTo: SUPPORT_EMAIL });
         if (!ok) throw new Error("the email was not sent");
         counts.sent += 1;
       } catch (error) {
@@ -280,7 +280,7 @@ export async function sendReminders(nowSeconds = Math.floor(Date.now() / 1000)):
         const [claimed] = await redisPipeline([["SET", key, "1", "NX", "EX", 60 * DAY]]);
         if (claimed === null) continue;
         const { subject, text } = reminderEmail(reminder);
-        const ok = await sendEmail({ from: NIMBUS_FROM, to: reminder.email, subject, text, replyTo: SUPPORT_EMAIL });
+        const ok = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: reminder.email, subject, text, replyTo: SUPPORT_EMAIL });
         if (ok) counts.sent += 1;
         else {
           counts.failed += 1;

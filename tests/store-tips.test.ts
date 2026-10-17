@@ -12,6 +12,7 @@ import { MAX_TIP_AMOUNTS, parseTips, readTipAmount, tipAmounts, tipBounds, tipIn
 import { TIP_TITLE, createTipCheckout, readTip, tipsOpen } from "@/lib/store-tip-checkout";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const checkouts: URLSearchParams[] = [];
 let session: Record<string, unknown> = {};
@@ -50,7 +51,7 @@ async function main(): Promise<void> {
   await setTips(owner, { on: true, heading: "", line: "", amounts: [] });
   is("switched on, but no Stripe yet: not shown", tipsOpen((await storeForEmail(owner))!), false);
   await setStripeAccount(owner, "acct_1TestTips000001", true);
-  await setSubscription(owner, { customerId: "cus_Tips00001", subscriptionId: "sub_Tips00001", active: true });
+  await setSubscription(owner, { customerId: "cus_Tips00001", subscriptionId: "sub_Tips00001", active: true, period: paidPeriod() });
   is("with a till that works: shown", tipsOpen((await storeForEmail(owner))!), true);
 
   part("The checkout");

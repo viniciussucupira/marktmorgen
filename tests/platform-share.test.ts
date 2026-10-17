@@ -32,6 +32,7 @@ import { redisPipeline } from "@/lib/redis";
 import { COUNTRIES } from "@/lib/stripe-connect";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const NOW = 1_800_000_000;
 const ON = true;
@@ -149,7 +150,7 @@ async function main(): Promise<void> {
   const OWNER = "maker@example.com";
   await claimHandle(OWNER, "maker", "Maker", "");
   await setStripeAccount(OWNER, "acct_1TestShare00001", true);
-  await setSubscription(OWNER, { customerId: "cus_Share000001", subscriptionId: "sub_Share000001", active: true, tier: "creator", cycle: "month", trialEnds: NOW - 10 * 86_400, shared: true });
+  await setSubscription(OWNER, { customerId: "cus_Share000001", subscriptionId: "sub_Share000001", active: true, tier: "creator", cycle: "month", trialEnds: NOW - 10 * 86_400, shared: true, period: paidPeriod() });
   const store = (await storeForEmail(OWNER))!;
   const ref = storeRef(store);
   is("a store that pays a share is in the list the job reads", (await redisPipeline([["SISMEMBER", SHARING_INDEX, ref]]))[0], 1);

@@ -1,3 +1,4 @@
+import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { withinLimit } from "@/lib/request-guard";
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   try {
     if (action === "find") {
-      if (!(await withinLimit("outreach-find", who, FINDS_PER_MINUTE, 60))) return fail("slow", 429);
+      if (!(await withinService("outreach-find", who, FINDS_PER_MINUTE, 60, store))) return fail("slow", 429);
       if (!(await withinLimit("outreach-find-day", who, FINDS_PER_DAY, 86_400))) return fail("slow", 429);
       const read = await readSite(text(body.site, 300));
       if (!read.ok) return fail(read.reason);

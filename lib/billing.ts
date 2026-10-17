@@ -35,6 +35,7 @@ import {
   type Store,
 } from "@/lib/store";
 import { feeWords } from "@/lib/fee-words";
+import { type BillingPeriod, isPeriod } from "@/lib/allowance-window";
 
 /** Internal billing calls must keep their route-issued cash grant bound to the
  * published offer. This does not create or release a funding reservation. */
@@ -369,6 +370,8 @@ export type StartedSubscription = {
   trialEnds: number;
   /** Whether the plan is at the prices that go with a share of each sale. */
   shared: boolean;
+  /** The period paid for, which the store's allowances follow (lib/allowance-window.ts); null when Stripe did not say. */
+  period: BillingPeriod | null;
 };
 
 /**
@@ -415,6 +418,7 @@ export async function readStartedSubscription(
     cycle: state.state === "active" ? state.cycle : "month",
     trialEnds: state.state === "active" && state.trialing ? state.until : 0,
     shared: state.state === "active" && state.shared,
+    period: state.state === "active" ? state.period : null,
   };
 }
 
@@ -435,6 +439,12 @@ export type SubscriptionState =
       shared: boolean;
       /** A change of plan is waiting on a payment the bank has not let through. */
       changePending: boolean;
+      /**
+       * The period being paid for, which the store's allowances follow
+       * (lib/allowance-window.ts): null while trialing, and when Stripe did
+       * not give both ends. `renews` is false when it is set to stop.
+       */
+      period: BillingPeriod | null;
     }
   /** Stripe knows it and it is not paying: unpaid, cancelled, incomplete. */
   | { state: "inactive"; reason: string }
@@ -536,7 +546,15 @@ export function stateOf(subscription: Record<string, unknown>): SubscriptionStat
     cancelsAtEnd: subscription.cancel_at_period_end === true || cancelAt > 0,
     ...planOf(subscription),
     changePending: Boolean(subscription.pending_update),
+    period: periodOf(subscription, trialing, subscription.cancel_at_period_end === true || cancelAt > 0),
   };
+}
+
+/** The period paid for, as the store keeps it; null while trialing or when either end is missing. */
+export function periodOf(subscription: Record<string, unknown>, trialing: boolean, stops: boolean): BillingPeriod | null {
+  if (trialing) return null;
+  const period = { start: periodStart(subscription), end: periodEnd(subscription, false), renews: !stops };
+  return isPeriod(period) ? period : null;
 }
 
 /** Asks Stripe what a subscription is doing right now. */
@@ -825,6 +843,7 @@ export function startedFrom(subscription: Record<string, unknown>): StartedSubsc
     cycle: state.cycle,
     trialEnds: state.trialing ? state.until : 0,
     shared: state.shared,
+    period: state.period,
   };
 }
 

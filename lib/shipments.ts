@@ -93,7 +93,7 @@ export async function markShipped(store: Store, session: string, rawTracking: un
     "",
     sw.shippedWhy(name),
   ].join("\n");
-  const emailed = await sendEmail({
+  const emailed = await sendEmail({ meter: { by: "order" },
     from: fromCreator(store),
     to: email,
     subject: sw.shippedSubject(title).slice(0, 200),

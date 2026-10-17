@@ -38,6 +38,7 @@ import {
 import { canSellProduct, sellableOptions } from "@/lib/store-checkout";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "options@example.com";
 
@@ -71,7 +72,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "optionsshop", "Options Shop", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestOptions0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Options0001", subscriptionId: "sub_Options0001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Options0001", subscriptionId: "sub_Options0001", active: true, period: paidPeriod() });
 
   part("Many prices on one product");
   const made = await addProduct(OWNER, "Template pack", "", "19", null);

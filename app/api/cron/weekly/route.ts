@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
         out.stopped += 1;
         continue;
       }
-      const ok = await sendEmail({
+      const ok = await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: store.email,
         subject: message.subject,
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
           if (!member || !can(member.role, "stats")) continue;
           const own = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&e=${encodeURIComponent(email)}&t=${encodeURIComponent(weeklyMemberToken(store.handle, email))}`;
           const text = message.text.replace(stopUrl, own).replace("You get this every Monday while your store has visitors.", `You get this because the owner of @${store.handle} added you.`);
-          await sendEmail({ from: NIMBUS_FROM, to: email, subject: message.subject, text, headers: { "List-Unsubscribe": `<${own}>` } }).catch(() => false);
+          await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: email, subject: message.subject, text, headers: { "List-Unsubscribe": `<${own}>` } }).catch(() => false);
         }
       }
     }

@@ -51,7 +51,7 @@ export function FaqEditor({ faq, ai }: { faq: FaqItem[]; ai: { on: boolean; left
         setNote("Drafted below from what your store says. Read each one, change what is not right, and save.");
         return;
       }
-      setNote(data.error === "used" ? "This month's writing help is used up. It starts again on the 1st." : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.");
+      setNote(data.error === "used" ? "This month's writing help is used up. It starts again with your next billing month." : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.");
     } catch {
       setNote("The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.");
     } finally {

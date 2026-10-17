@@ -20,6 +20,7 @@ import { noteSales } from "@/lib/sale-events";
 import { claimHandle, ensureStatsId, setChatSales, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_store_alerts_stand_in";
 process.env.RESEND_API_KEY = "re_test_store_alerts_stand_in";
@@ -122,7 +123,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   let store = (await storeForEmail(OWNER))!;
   await setChatAddress(store.statsId!, "Harbor Kitchen", SLACK);
   await setChatSales(OWNER, true);

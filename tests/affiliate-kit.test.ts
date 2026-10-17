@@ -21,6 +21,7 @@ import { aiAllowance, aiLeft } from "@/lib/ai";
 import type { Affiliate } from "@/lib/affiliates";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 let asked: { system: string; prompt: string }[] = [];
 let answerWith: string | null = JSON.stringify({ x: "A week of dinners, planned. See https://evil.example/x", instagram: "Busy weeknights?\nThis helps.\n#dinner", linkedin: "Planning dinners for a family is work." });
@@ -53,7 +54,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "chef", "Chef Ana", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestChef000001", true);
-  await setSubscription(OWNER, { customerId: "cus_Chef00001", subscriptionId: "sub_Chef00001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_Chef00001", subscriptionId: "sub_Chef00001", active: true, tier: "pro", period: paidPeriod() });
   await setLanguage(OWNER, "es");
   const plan = await addProduct(OWNER, "Weeknight Plan", "Thirty dinners in thirty minutes.", "29", null);
   const out = await addProduct(OWNER, "Left Out", "", "10", null);

@@ -24,6 +24,7 @@ import { introOf } from "@/lib/purchase-email";
 import { canTier } from "@/lib/tier-rules";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "owner@example.com";
 const checkouts: URLSearchParams[] = [];
@@ -93,7 +94,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const made = await addProduct(OWNER, "Supper Club", "", "20", monthly);
   if (!made.ok) throw new Error("no product");
   await setProductLink(OWNER, made.product.id, "https://example.com/club");

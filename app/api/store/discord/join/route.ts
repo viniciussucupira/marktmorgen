@@ -1,7 +1,8 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
-import { fromAnotherSite, limited, withinLimit, clientAddress } from "@/lib/request-guard";
+import { fromAnotherSite, limited, clientAddress } from "@/lib/request-guard";
 import { readOrder } from "@/lib/store-checkout";
 import { ordersGrant } from "@/lib/buyer-orders";
 import { authorizeUrl, isDiscordConfigured, redirectUri } from "@/lib/discord";
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
   if (!store) return new Response("No such store.", { status: 404 });
   const page = (status: string) => new Response(null, { status: 303, headers: { Location: `${origin}/@${store.handle}/discord?status=${status}`, "Cache-Control": "no-store" } });
   if (!isDiscordConfigured() || !store.sid || !(await readServer(storeKey(store)))) return page("off");
-  if (!(await withinLimit("discord-join", clientAddress(request), 20, 600))) return page("failed");
+  if (!(await withinStore("discord-join", clientAddress(request), 20, 600, store, "buyer"))) return page("failed");
 
   let email: string | null = null;
   if (sessionId) {

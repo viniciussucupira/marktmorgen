@@ -215,7 +215,7 @@ export async function requestManageLink(input: {
   const name = store.name;
   const link = `${origin}/@${store.handle}/manage?token=${token}`;
   const m = membershipWords(store.language);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
     from: `"${m.fromName(displayName(name))}" <${senderAddress()}>`,
     to: email,
     subject: m.membershipWith(name),

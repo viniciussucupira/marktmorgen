@@ -337,7 +337,7 @@ export function pauseEmail(kind: "set" | "soon" | "restarted" | "failed", record
 async function tell(store: Store, kind: "set" | "soon" | "restarted" | "failed", record: PauseRecord): Promise<boolean> {
   if (!isSenderConfigured() || !store.email) return false;
   const { subject, text } = pauseEmail(kind, record);
-  return sendEmail({ from: NIMBUS_FROM, to: store.email, subject, text, replyTo: SUPPORT_EMAIL });
+  return sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: store.email, subject, text, replyTo: SUPPORT_EMAIL });
 }
 
 /** Tells the creator what they just set. Never fails the request that set it. */

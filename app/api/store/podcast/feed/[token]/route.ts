@@ -48,7 +48,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   // store's other buyer pages (lib/traffic-rules.ts): the app is told to come back later,
   // and nothing in the feed is taken away.
   if (allowed && !own && (await isResting(store, Date.now(), "buyer"))) {
-    return new Response("This feed is resting until the start of next month.", { status: 503, headers: { "Retry-After": String(6 * 3600), "Cache-Control": "no-store" } });
+    return new Response("This feed is resting for now. It opens again with the store's next month.", { status: 503, headers: { "Retry-After": String(6 * 3600), "Cache-Control": "no-store" } });
   }
   // A subscriber whose app asked today is that day's visit to the store,
   // once (lib/traffic.ts). Never the creator's own feed.

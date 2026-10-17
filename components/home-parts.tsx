@@ -14,6 +14,7 @@ import { PLANS_ON_SALE } from "@/lib/opening";
 import { paidVideoWords } from "@/lib/video-admission-rules";
 import { VISITS_INCLUDED, publicVisitLimit } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED } from "@/lib/order-rules";
+import { allowanceListWords } from "@/lib/store-allowance-rules";
 import {
   COMMISSION_BPS,
   PUBLISHED_PLAN_PRICES as PLAN_PRICES,
@@ -411,8 +412,9 @@ export function HeroFlow() {
  */
 const INCLUDED = [
   "Your own store address, live the moment you take it",
-  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} counted visits to your store a month; public pages pause at ${publicVisitLimit(VISITS_INCLUDED.creator).toLocaleString("en-US")}, and the rest are kept for your buyers' courses, community and podcasts; nothing is billed past it`,
-  `${ORDERS_INCLUDED.creator.toLocaleString("en-US")} orders a month${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; at that figure new orders pause until the month turns, nothing is billed past it, and a buyer already paying always finishes`,
+  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} counted visits to your store a billing month; public pages pause at ${publicVisitLimit(VISITS_INCLUDED.creator).toLocaleString("en-US")}, and the rest are kept for your buyers' courses, community and podcasts; nothing is billed past it`,
+  `${ORDERS_INCLUDED.creator.toLocaleString("en-US")} orders a billing month${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; at that figure new orders pause until your next billing month, nothing is billed past it, and a buyer already paying always finishes`,
+  `Each billing month, starting on the day your plan renews: ${allowanceListWords("creator")}; past one, that use waits for the next month or a larger plan, and nothing is billed`,
   "Buyers pay into your own Stripe account",
   "Up to 2,000 products: files, courses, memberships, paid calls and live sessions",
   "Sales pages and landing pages built from blocks, and reviews only buyers can write",
@@ -436,6 +438,7 @@ const PRO_INCLUDED = [
   `Everything in ${PLAN_TITLES.creator}`,
   `${VISITS_INCLUDED.pro.toLocaleString("en-US")} visits to your store a month covered, instead of ${VISITS_INCLUDED.creator.toLocaleString("en-US")}`,
   `${ORDERS_INCLUDED.pro.toLocaleString("en-US")} orders a month covered, instead of ${ORDERS_INCLUDED.creator.toLocaleString("en-US")}`,
+  `Each billing month: ${allowanceListWords("pro")}`,
   "One-off emails to your list, now or at a time you choose, to everyone or to the people who have not bought a particular thing yet",
   "Sequences that go out by themselves after someone joins or buys",
   `Up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month (${TRIAL_MONTHLY_EMAILS.toLocaleString("en-US")} during the free trial), from your name, with replies coming to you`,
@@ -741,7 +744,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
             { icon: "mail", title: "More room to grow", body: `Up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails, ${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits and ${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month.` },
             { icon: "percent", title: "0% platform fee on sales", body: "Stripe charges its own processing fees separately." },
           ]}
-          perks={[`Everything in ${PLAN_TITLES.pro}`, `${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month`, `${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits a month`, `${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month`, `${AI_MONTHLY.scale.toLocaleString("en-US")} AI writing jobs and ${ANSWERS_MONTHLY.scale.toLocaleString("en-US")} visitor answers a month`]}
+          perks={[`Everything in ${PLAN_TITLES.pro}`, `${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month`, `${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits a month`, `${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month`, `${AI_MONTHLY.scale.toLocaleString("en-US")} AI writing jobs and ${ANSWERS_MONTHLY.scale.toLocaleString("en-US")} visitor answers a month`, `Each billing month: ${allowanceListWords("scale")}`]}
           featured={false}
           cta="Start on Scale"
           yearly={yearly}

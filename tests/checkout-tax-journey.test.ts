@@ -20,6 +20,7 @@ import { createCartCheckout } from "@/lib/cart-checkout";
 import { NO_TAX, taxStatus } from "@/lib/tax";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_tax_journey_only";
 
@@ -55,7 +56,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "loomhouse", "Loom House", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestLoom00001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00003", subscriptionId: "sub_Owner00003", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00003", subscriptionId: "sub_Owner00003", active: true, period: paidPeriod() });
   const add = async (title: string, price: string, recurring: Parameters<typeof addProduct>[4] = null) => {
     const made = await addProduct(OWNER, title, "", price, recurring);
     if (!made.ok) throw new Error(`no ${title}`);

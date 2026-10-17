@@ -170,6 +170,19 @@ export function visitCost(): number {
 }
 
 /**
+ * One page after a visit's first, at the most it costs: its request at the
+ * CDN, the page and its count, its pictures, its commands and its bytes.
+ * What each of a visit's later pages is costed at inside visitCost, and what
+ * every public request a store answers past its visits' own pages is costed
+ * at (tests/plan-cost-registry.ts, public-requests): a review ceiling for a
+ * cart, a search, a download or the page after paying, none of which draws
+ * more than a page does.
+ */
+export function laterPageCost(): number {
+  return (1 + 1 + PICTURES_ON_A_LATER_PAGE) * CDN_PER_REQUEST + (COMMANDS.laterPage + COMMANDS.laterCount) * COMMAND + PAGE_AND_COUNT + PAGE_BYTES * ORIGIN_PER_BYTE;
+}
+
+/**
  * One look at what is new in a room, with the CDN holding no answer for it:
  * the request, the call, one read of the room, a few thousandths of a
  * second of work, memory held while the read is waited on, and an answer of

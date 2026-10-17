@@ -1,3 +1,4 @@
+import { withinStore } from "@/lib/metered-limits";
 import { isDiscordConfigured } from "@/lib/discord";
 import { discordFor } from "@/lib/discord-store";
 import { discordWords } from "@/lib/buyer-words/discord";
@@ -29,7 +30,7 @@ import { ClearCart } from "@/components/store-cart";
 import { confirmStock } from "@/lib/stock";
 import { finishPlan } from "@/lib/plans";
 import { cookies, headers } from "next/headers";
-import { clientAddress, withinLimit } from "@/lib/request-guard";
+import { clientAddress } from "@/lib/request-guard";
 import { isStorePeople } from "@/lib/visit";
 import { funnelMark } from "@/lib/page-funnel";
 import { countFunnelDone, funnelHere, funnelVisitor } from "@/lib/page-funnel-store";
@@ -145,7 +146,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
   // reloading, sharing and coming back ever makes, and short of a script
   // spending the creator's allowance with Stripe on made-up order numbers.
   const allowed = sessionId
-    ? await withinLimit("thanks-view", `${clientAddress({ headers: await headers() })}|${store.handle}`, VIEWS_PER_TEN_MINUTES, 600)
+    ? await withinStore("thanks-view", `${clientAddress({ headers: await headers() })}|${store.handle}`, VIEWS_PER_TEN_MINUTES, 600, store, "buyer")
     : true;
   const order: Order | { state: "slow" } = allowed ? await readOrder(store, sessionId) : { state: "slow" };
 
@@ -1306,7 +1307,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
  * purchases from it for a day, as the Stripe page does with its order.
  */
 async function PayPalThanks({ store, order }: { store: Store; order: string }) {
-  const allowed = await withinLimit("thanks-view", `${clientAddress({ headers: await headers() })}|${store.handle}`, VIEWS_PER_TEN_MINUTES, 600);
+  const allowed = await withinStore("thanks-view", `${clientAddress({ headers: await headers() })}|${store.handle}`, VIEWS_PER_TEN_MINUTES, 600, store, "buyer");
   const paid = allowed ? await readPaid(order) : null;
   const ours = paid && paid.store === store.statsId ? paid : null;
   const product = ours ? await readListing(store, ours.product) : null;

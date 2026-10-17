@@ -5,6 +5,8 @@ import { API_PAGE } from "@/lib/api-read";
 import { API_RATE } from "@/lib/api-guard";
 import { MAX_KEYS } from "@/lib/api-key-rules";
 import { ADDS_PER_DAY, GIVES_PER_DAY } from "@/lib/api-write";
+import { API_WRITE_UNITS, STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
+import { PLAN_TITLES } from "@/lib/plan";
 
 export const metadata: Metadata = {
   title: "Developers — Marktmorgen",
@@ -83,8 +85,14 @@ export default function DevelopersPage() {
           {`Each key may make ${API_RATE} requests a minute. Past that, the answer is 429 with `}
           <code className="whitespace-nowrap font-mono">Retry-After: 60</code>.
         </p>
+        <p>
+          {`A store's keys together also have a figure for each billing month (the month that starts on the day the store's plan renews): ${STORE_ALLOWANCES.creator.api.toLocaleString("en-US")} requests on ${PLAN_TITLES.creator}, ${STORE_ALLOWANCES.pro.api.toLocaleString("en-US")} on ${PLAN_TITLES.pro} and ${STORE_ALLOWANCES.scale.api.toLocaleString("en-US")} on ${PLAN_TITLES.scale}. A contact added or a product given counts as ${API_WRITE_UNITS}. Past it, the answer is 429 `}
+          <code className="font-mono">monthly_limit</code>
+          {" until the next billing month, or at once on a larger plan. Nothing is billed for requests."}
+        </p>
         <Code>{`401  {"error": "unauthorized", "message": "Send your API key as: Authorization: Bearer nl_live_…"}
 429  {"error": "rate_limited", "message": "At most ${API_RATE} requests a minute per key. Try again in a minute."}
+429  {"error": "monthly_limit", "message": "Your store's API requests for this month are used: …"}
 502  {"error": "unavailable", "message": "… could not be read just now. Try again in a moment."}`}</Code>
         <p>A missing, mistyped and revoked key all get the same 401.</p>
       </LegalSection>

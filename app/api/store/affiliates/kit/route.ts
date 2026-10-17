@@ -1,9 +1,10 @@
+import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { affiliateCookieName, affiliateForSession } from "@/lib/affiliates";
 import { draftKit } from "@/lib/affiliate-kit";
 import { MAX_KIT_NOTE } from "@/lib/affiliate-kit-rules";
-import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { fromAnotherSite, limited } from "@/lib/request-guard";
 
 /**
  * A signed-in, approved affiliate asking for three posts about one of the
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
   if (!store) return Response.json({ ok: false, error: "unknown" }, { status: 404 });
   const affiliate = await affiliateForSession(store, request.cookies.get(affiliateCookieName(store.handle))?.value);
   if (!affiliate) return Response.json({ ok: false, error: "signedout" }, { status: 401 });
-  if (!(await withinLimit("aff-kit", `${store.handle}|${affiliate.id}`, 3, 60))) return Response.json({ ok: false, error: "slow" }, { status: 429 });
+  if (!(await withinService("aff-kit", `${store.handle}|${affiliate.id}`, 3, 60, store))) return Response.json({ ok: false, error: "slow" }, { status: 429 });
   const result = await draftKit(store, affiliate, read("product", 40), read("note", MAX_KIT_NOTE * 2));
   if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "failed" ? 502 : 400 });
   return Response.json({ ok: true, posts: result.posts, left: result.left }, { headers: { "Cache-Control": "no-store" } });

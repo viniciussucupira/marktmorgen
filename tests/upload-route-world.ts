@@ -2,12 +2,13 @@ import type { Tier } from '@/lib/plan';
 export { storageBrakeFor } from '../lib/storage-rules';
 export const FOLDER='a'.repeat(32);
 export const PATH='vault/'+FOLDER+'/product-1/0123456789abcdef-file.pdf';
-export const state={auth:true,owns:true,lessonOwned:true,rateAllowed:true,vaultConfigured:true,providerFails:false,events:[] as string[],storageLimits:[] as number[],store:{statsId:'b'.repeat(32),tier:'creator' as Tier,subscriptionActive:true,subscriptionId:'sub_test123',trialEnds:0,planEndedAt:''}};
+export const state={auth:true,owns:true,lessonOwned:true,rateAllowed:true,vaultConfigured:true,providerFails:false,events:[] as string[],storageLimits:[] as number[],store:{statsId:'b'.repeat(32),tier:'creator' as Tier,subscriptionActive:true,subscriptionId:null as string|null,trialEnds:0,planEndedAt:''}};
 export function resetWorld(){state.auth=true;state.owns=true;state.lessonOwned=true;state.rateAllowed=true;state.vaultConfigured=true;state.providerFails=false;state.events.length=0;state.storageLimits.length=0;state.store.tier="creator";state.store.trialEnds=0;}
 export async function guardStoreWrite(request:Request){return state.auth?{ok:true,ref:'owner@example.test',body:await request.json()}:{ok:false,response:Response.json({ok:false,error:'signed_out'},{status:401})};}
 export async function studioAccess(){return state.auth?{ok:true,access:{store:state.store,ref:'owner@example.test'}}:{ok:false,reason:'signed_out'};}
 export const storeForEmail=async()=>state.store;
 export const storeFolder=async()=>FOLDER;
+export const storeRef=()=>'owner@example.test';
 export const ownsDeliveryId=()=>state.owns;
 export const readKind=async()=>[{course:{id:'course-1'}}];
 export const ITEM_ID_PATTERN=/^[A-Za-z0-9_-]{1,40}$/;
@@ -16,6 +17,9 @@ export const readCourses=async()=>new Map([['course-1',{id:'course-1'}]]);
 export const findLesson=()=>state.lessonOwned?{id:'lesson-1'}:null;
 export const text=(value:unknown,length:number)=>typeof value==='string'?value.slice(0,length):'';
 export const withinLimit=async()=>state.rateAllowed;
+/** The short limit and the store's figure together (lib/metered-limits.ts): the figure is held by tests/store-allowance.test.ts. */
+export const withinService=async()=>state.rateAllowed;
+export const withinStore=async()=>state.rateAllowed;
 export const fromAnotherSite=()=>false;
 export const limited=async(request:Request)=>request;
 export const rememberFolderOwner=async()=>{};

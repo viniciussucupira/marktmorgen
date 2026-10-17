@@ -21,6 +21,7 @@ import { LINK_CODE_PATTERN, codeCookieName, readLinkCode } from "@/lib/code-link
 import { createCheckout } from "@/lib/store-checkout";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const sessions: URLSearchParams[] = [];
 let live: Record<string, string> = {};
@@ -58,7 +59,7 @@ async function main(): Promise<void> {
   await claimHandle(owner, "codeshop", "Code Shop", "");
   await ensureStatsId(owner);
   await setStripeAccount(owner, "acct_1TestCodes00001", true);
-  await setSubscription(owner, { customerId: "cus_Codes00001", subscriptionId: "sub_Codes00001", active: true });
+  await setSubscription(owner, { customerId: "cus_Codes00001", subscriptionId: "sub_Codes00001", active: true, period: paidPeriod() });
   await setHasDiscounts(owner, true);
   const made = await addProduct(owner, "Recipe pack", "", "27", null);
   if (!made.ok) throw new Error("no product");

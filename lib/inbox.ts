@@ -14,6 +14,7 @@
  * record the page already has, and only a visitor who opens it and writes, or
  * comes back to a conversation they started, reaches these keys.
  */
+import { takeAllowance } from "@/lib/store-allowance";
 import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { type AiResult, answerModel, askModel, counted } from "@/lib/ai";
@@ -140,6 +141,8 @@ async function open(input: NewInput): Promise<{ ok: true; conversation: Kept; me
   if (text.length < MIN_MESSAGE) return { ok: false, reason: "short" };
   if (!(await withinLimit("inbox-new", statsId, NEW_PER_DAY, 86_400))) return { ok: false, reason: "limited" };
   const now = input.now ?? Date.now();
+  // One of the store's inbox messages for its window (lib/store-allowance-rules.ts), before it is written.
+  if (!(await takeAllowance(store, "inbox", 1, now)).ok) return { ok: false, reason: "limited" };
   const conversation: Kept = {
     id: newId(),
     email,
@@ -194,6 +197,11 @@ async function fromToken(token: unknown): Promise<{ statsId: string; id: string;
   return statsId && id && handle ? { statsId, id, handle } : null;
 }
 
+/** The store a visitor's chat token belongs to, by its address, or null. */
+export async function tokenHandle(token: unknown): Promise<string | null> {
+  return (await fromToken(token))?.handle ?? null;
+}
+
 /** What a visitor's chat shows: their conversation's messages, by the token only they hold. */
 export async function visitorThread(token: unknown): Promise<VisitorThread | null> {
   const found = await fromToken(token);
@@ -225,6 +233,7 @@ export async function visitorSend(
   const conversation = await readKept(found.statsId, found.id);
   if (!conversation || conversation.token !== token) return { ok: false, reason: "gone" };
   if (!(await withinLimit("chat-send", `${found.statsId}:${found.id}`, VISITOR_PER_HOUR, 3_600))) return { ok: false, reason: "limited" };
+  if (!(await takeAllowance(store, "inbox", 1, now)).ok) return { ok: false, reason: "limited" };
   const message: Message = { at: now, from: "visitor", text };
   const next: Kept = { ...conversation, status: "open", lastAt: now, lastFrom: "visitor", unread: conversation.unread + 1 };
   await write(found.statsId, store.handle, next, message);
@@ -239,7 +248,7 @@ async function tellTeam(store: Store, conversation: Kept, text: string): Promise
   const to = conversation.assigned || store.email;
   const who = conversation.name || conversation.email;
   const sid = store.sid ? `store=${store.sid}&` : "";
-  await sendEmail({
+  await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: NIMBUS_FROM,
     to,
     subject: `New message from ${who.slice(0, 60)} on ${store.name}`.slice(0, 200),
@@ -309,7 +318,7 @@ export async function replyTo(store: Store, id: string, by: string, textRaw: unk
   const w = chatWords(store.language);
   const link = chatOpen(store) && next.token ? `${SITE_URL}/@${store.handle}?chat=${next.token}` : "";
   const emailed = isSenderConfigured()
-    ? await sendEmail({
+    ? await sendEmail({ meter: { by: "store", store: store, kind: "email" },
         from: storeSender(store),
         to: next.email,
         replyTo: store.email,

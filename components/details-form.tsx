@@ -63,7 +63,7 @@ export function DetailsForm({
         data.error === "notes"
           ? "Add a product first, or write a few words about your store in the box."
           : data.error === "used"
-            ? "This month's writing help is used up. It starts again on the 1st."
+            ? "This month's writing help is used up. It starts again with your next billing month."
             : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.",
       );
     } catch {

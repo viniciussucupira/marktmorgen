@@ -1,8 +1,9 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { AFFILIATE_SESSION_SECONDS, affiliateCookieName, joinAsBuyer } from "@/lib/affiliates";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
 
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
   const page = `${origin}/@${store.handle}/affiliates`;
   const back = (status: string) =>
     new Response(null, { status: 303, headers: { Location: `${page}?status=${status}`, "Cache-Control": "no-store" } });
-  if (!(await withinLimit("aff-join", `${clientAddress(request)}|${store.handle}`, 20, 600))) return back("limited");
+  if (!(await withinStore("aff-join", `${clientAddress(request)}|${store.handle}`, 20, 600, store))) return back("limited");
   const result = await joinAsBuyer(store, order).catch((error) => {
     console.error("a buyer joining the affiliate program failed", error);
     return { ok: false as const, reason: "error" as const };

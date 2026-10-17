@@ -141,7 +141,7 @@ export async function sendTrialNudges(nowSeconds = Math.floor(Date.now() / 1000)
       const [claimed] = await redisPipeline([["SET", keys[due.which], "1", "NX", "EX", 60 * DAY]]);
       if (claimed === null) continue;
       const { subject, text } = nudgeEmail(store, nextStep(store), due.left, due.which);
-      const ok = await sendEmail({ from: NIMBUS_FROM, to: store.email, subject, text, replyTo: SUPPORT_EMAIL }).catch(() => false);
+      const ok = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: store.email, subject, text, replyTo: SUPPORT_EMAIL }).catch(() => false);
       if (ok) counts.sent += 1;
       else {
         counts.failed += 1;

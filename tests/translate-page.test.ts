@@ -14,6 +14,7 @@ import { CELL_NO, CELL_YES, parsePage } from "@/lib/sales-page";
 import { MAX_TRANSLATE_PARTS, TRANSLATE_PART_CHARS, pageWords, translateParts, withWords } from "@/lib/page-translate";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 let mode: "caps" | "short" = "caps";
 const asked: { system: string; model: string; strings: string[] }[] = [];
@@ -79,7 +80,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   const store = (await storeForEmail("owner@example.com"))!;
   const result = await translatePage(store, { page, language: "Spanish" });
   is("by the smaller model, told the language and to add nothing", [asked[0].model, asked[0].system.includes("into Spanish"), asked[0].system.includes("Add nothing and leave nothing out")], [answerModel(), true, true]);

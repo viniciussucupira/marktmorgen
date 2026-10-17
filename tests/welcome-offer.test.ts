@@ -21,6 +21,7 @@ import { discountKindOf, entryOf } from "@/lib/discount-impact";
 import { addProduct, claimHandle, ensureStatsId, setProductLink, setStripeAccount, setSubscription, setWelcomeOffer, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.RESEND_API_KEY = "re_test_welcome_only_a_stand_in";
 process.env.STRIPE_SECRET_KEY = "sk_test_welcome_only_a_stand_in";
@@ -66,7 +67,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestWelcome001", true);
-  await setSubscription(OWNER, { customerId: "cus_Welcome0001", subscriptionId: "sub_Welcome0001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Welcome0001", subscriptionId: "sub_Welcome0001", active: true, period: paidPeriod() });
   const free = await addProduct(OWNER, "Pantry Guide", "", "0", null);
   const free2 = await addProduct(OWNER, "Spice Chart", "", "0", null);
   const paid = await addProduct(OWNER, "Knife Skills", "", "49", null);

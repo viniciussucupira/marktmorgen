@@ -58,7 +58,7 @@ export async function noteCheckoutTrouble(store: Store, error: unknown, now = Da
   if (!isRefusal(error) || !isSenderConfigured()) return "counted";
   const [claimed] = await redisPipeline([["SET", mailKey(store.statsId, day), "1", "NX", "EX", 2 * 86_400]]);
   if (claimed === null) return "counted";
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: NIMBUS_FROM,
     to: store.email,
     subject: `${store.name}: Stripe would not open a checkout`.slice(0, 180),

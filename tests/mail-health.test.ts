@@ -23,6 +23,7 @@ import { LIST_TAG, PORTION_NOTE, STORE_TAG, healthId, heardFromSender, listHealt
 import { BOUNCE_FLOOR, COMPLAINT_FLOOR, PAUSE_DAYS, RAMP_FIRST, RAMP_GAP_MINUTES, RAMP_TRIGGER, healthRuleWords, rampPortions, rampRuleWords } from "@/lib/mail-health-rules";
 import { advance, store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "owner@example.com";
 const SECRET_BYTES = Buffer.from("a-stand-in-secret-for-tests-only");
@@ -81,7 +82,7 @@ async function main(): Promise<void> {
   if (!made.ok) throw new Error("no store");
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(OWNER, { fromName: "Harbor Kitchen", address: "1 Main St, Portland, OR 97201" });
   const store = (await storeForEmail(OWNER))!;
   const list = store.listId as string;
@@ -165,7 +166,7 @@ async function main(): Promise<void> {
 
   part("What a store cannot run without still goes");
   single.length = 0;
-  is("a login link is sent all the same", [await sendEmail({ from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Here." }), single.length], [true, 1]);
+  is("a login link is sent all the same", [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Here." }), single.length], [true, 1]);
 
   part("A broadcast waits, and goes on by itself");
   const created = await createBroadcast(store, { subject: "The plan is here", body: "It is ready.", productId: "", notProductId: "", sendAt: undefined });
@@ -226,7 +227,7 @@ async function main(): Promise<void> {
   if (!second.ok) throw new Error("no second store");
   await ensureStatsId("second@example.com");
   await ensureListId("second@example.com");
-  await setSubscription("second@example.com", { customerId: "cus_Owner00002", subscriptionId: "sub_Owner00002", active: true, tier: "pro" });
+  await setSubscription("second@example.com", { customerId: "cus_Owner00002", subscriptionId: "sub_Owner00002", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings("second@example.com", { fromName: "Orchard Bakes", address: "2 Main St, Portland, OR 97201" });
   const orchard = (await storeForEmail("second@example.com"))!;
   const brought = Array.from({ length: 450 }, (_, i) => `old${i}@example.com`);
@@ -256,7 +257,7 @@ async function main(): Promise<void> {
   if (!third.ok) throw new Error("no third store");
   await ensureStatsId("third@example.com");
   await ensureListId("third@example.com");
-  await setSubscription("third@example.com", { customerId: "cus_Owner00003", subscriptionId: "sub_Owner00003", active: true, tier: "pro" });
+  await setSubscription("third@example.com", { customerId: "cus_Owner00003", subscriptionId: "sub_Owner00003", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings("third@example.com", { fromName: "Meadow Yoga", address: "3 Main St, Portland, OR 97201" });
   const meadow = (await storeForEmail("third@example.com"))!;
   const good = await importContacts(meadow.listId as string, Array.from({ length: 450 }, (_, i) => `member${i}@example.com`));

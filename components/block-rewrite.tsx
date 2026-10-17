@@ -7,7 +7,7 @@ import { FILLABLE, REWRITABLE, REWRITE_STYLES, type RewriteStyle, blockText } fr
 import type { PageBlock, SalesPage } from "@/lib/sales-page";
 
 const MESSAGES: Record<string, string> = {
-  used: "This month's writing help is used up. It starts again on the 1st.",
+  used: "This month's writing help is used up. It starts again with your next billing month.",
   slow: "A few at a time: wait a minute, then try again.",
   failed: "That rewrite did not come back, or it tried to add something your page does not say, so it was not used. Started attempts count toward the monthly allowance. Try again, or another way.",
   unwritten: "That draft did not come back, or it tried to add something your product and page do not say, so it was not used. Started attempts count toward the monthly allowance. Add a few words to the product's description, then try again.",

@@ -1,9 +1,9 @@
+import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { hostLink } from "@/lib/meet-links";
 import { isScope } from "@/lib/meet-records";
 import { isConfigured } from "@/lib/meet-providers";
 import { isEventScopeOf } from "@/lib/event-meetings";
-import { withinLimit } from "@/lib/request-guard";
 import { originFrom } from "@/lib/request-origin";
 import { away, studioAccess, studioPath } from "@/lib/studio-route";
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   // Only a scope of this store's own: one of its calls, or one of its community's events.
   const ours = (store.callsId && scope.startsWith(`c:${store.callsId}:`)) || isEventScopeOf(scope, store.community?.id);
   if (!isScope(scope) || !store.statsId || !ours) return back;
-  if (!(await withinLimit("meet-host", store.statsId, PER_TEN_MINUTES, 600))) return back;
+  if (!(await withinService("meet-host", store.statsId, PER_TEN_MINUTES, 600, store))) return back;
   try {
     const url = await hostLink(store, scope);
     if (!url) return back;

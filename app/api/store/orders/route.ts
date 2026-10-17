@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
+import { takePublicRequest } from "@/lib/traffic";
 import { requestOrdersLink } from "@/lib/buyer-orders";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
 
@@ -48,6 +49,8 @@ export async function POST(request: NextRequest) {
 
   const store = await storeForHandle(handle);
   if (!store) return new Response("No such store.", { status: 404 });
+  // One of the store's public requests for its window (lib/traffic.ts).
+  if (!(await takePublicRequest(store, "buyer"))) return new Response("Please try again later.", { status: 429 });
 
   const page = `/@${store.handle}/orders`;
   // A field no person can see. Whatever filled it in is told it worked.

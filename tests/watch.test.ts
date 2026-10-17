@@ -53,6 +53,7 @@ import {
 } from "@/lib/watch-rules";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const LIBRARY = "4242";
 const API_KEY = "a-stand-in-library-key-for-tests-only";
@@ -189,7 +190,7 @@ async function main(): Promise<void> {
   is("a figure that is not one owes nothing", [videoOwedCents(Number.NaN), videoOwedCents(-5)], [0, 0]);
   is("a length of watching, in words", [hoursWords(0), hoursWords(60), hoursWords(59 * 60), hoursWords(HOUR), hoursWords(3.56 * HOUR), hoursWords(412.9 * HOUR), hoursWords(1500 * HOUR)], ["0 minutes", "1 minute", "59 minutes", "1 hour", "3.5 hours", "412 hours", "1,500 hours"]);
   is("money and months, in words", [centsWords(3), centsWords(150), monthWords("2026-10"), monthBefore("2026-10"), monthBefore("2027-01")], ["$0.03", "$1.50", "October 2026", "2026-09", "2026-12"]);
-  const plan = { subscriptionActive: true, subscriptionId: "sub_Paid00001", stripeCustomerId: "cus_Paid00001", trialEnds: 0 };
+  const plan = { subscriptionActive: true, subscriptionId: "sub_Paid00001", period: paidPeriod(), stripeCustomerId: "cus_Paid00001", trialEnds: 0 };
   is("a paid plan past its trial can be charged", canBeCharged(plan, 1_000), true);
   is("one still in its free trial cannot", canBeCharged({ ...plan, trialEnds: 2_000 }, 1_000), false);
   is("nor one that is not paying, or was never started", [canBeCharged({ ...plan, subscriptionActive: false }, 1_000), canBeCharged({ ...plan, subscriptionId: null }, 1_000), canBeCharged({ ...plan, stripeCustomerId: null }, 1_000)], [false, false, false]);
@@ -254,7 +255,7 @@ async function main(): Promise<void> {
 
   part("Past the hours, on the creator's next invoice");
   const now = Date.UTC(2026, 9, 21, 14, 0, 0);
-  await setSubscription("ana@example.com", { customerId: "cus_Ana0001", subscriptionId: "sub_Ana0001", active: true, cycle: "month" });
+  await setSubscription("ana@example.com", { customerId: "cus_Ana0001", subscriptionId: "sub_Ana0001", active: true, cycle: "month", period: paidPeriod() });
   await watched(ana.folder, month, VIDEO_SECONDS_INCLUDED + 50 * HOUR);
   stripeAsked.length = 0;
   const billed = await settleAt(ana.folder, month, false, now);
@@ -274,7 +275,7 @@ async function main(): Promise<void> {
 
   part("Stripe does not answer");
   const cal = await storeWith("cal@example.com", "cal");
-  await setSubscription("cal@example.com", { customerId: "cus_Cal0001", subscriptionId: "sub_Cal0001", active: true, cycle: "year" });
+  await setSubscription("cal@example.com", { customerId: "cus_Cal0001", subscriptionId: "sub_Cal0001", active: true, cycle: "year", period: paidPeriod() });
   await watched(cal.folder, month, VIDEO_SECONDS_INCLUDED + 200 * HOUR);
   stripe = "down";
   const before = lines.length;
@@ -293,7 +294,7 @@ async function main(): Promise<void> {
 
   part("A store with no plan that can be charged");
   const dee = await storeWith("dee@example.com", "dee");
-  await setSubscription("dee@example.com", { customerId: "cus_Dee0001", subscriptionId: "sub_Dee0001", active: true, trialEnds: Math.floor(now / 1000) + 86_400 * 10 });
+  await setSubscription("dee@example.com", { customerId: "cus_Dee0001", subscriptionId: "sub_Dee0001", active: true, trialEnds: Math.floor(now / 1000) + 86_400 * 10, period: paidPeriod() });
   await watched(dee.folder, month, VIDEO_SECONDS_INCLUDED + 300 * HOUR);
   stripeAsked.length = 0;
   const trial = await settleAt(dee.folder, month, false, now);
@@ -324,9 +325,9 @@ async function main(): Promise<void> {
   lines.length = 0;
   keys.clear();
   const fay = await storeWith("fay@example.com", "fay");
-  await setSubscription("fay@example.com", { customerId: "cus_Fay0001", subscriptionId: "sub_Fay0001", active: true });
+  await setSubscription("fay@example.com", { customerId: "cus_Fay0001", subscriptionId: "sub_Fay0001", active: true, period: paidPeriod() });
   const gus = await storeWith("gus@example.com", "gus");
-  await setSubscription("gus@example.com", { customerId: "cus_Gus0001", subscriptionId: "sub_Gus0001", active: true });
+  await setSubscription("gus@example.com", { customerId: "cus_Gus0001", subscriptionId: "sub_Gus0001", active: true, period: paidPeriod() });
   await watched(fay.folder, "2026-11", VIDEO_SECONDS_INCLUDED + 10 * HOUR);
   await watched(fay.folder, "2026-12", VIDEO_SECONDS_INCLUDED + 40 * HOUR);
   await watched(gus.folder, "2026-12", VIDEO_SECONDS_INCLUDED - 60);

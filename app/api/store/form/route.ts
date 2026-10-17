@@ -1,7 +1,8 @@
+import { withinStore } from "@/lib/metered-limits";
 import { randomBytes } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { originFrom, linkOrigin } from "@/lib/request-origin";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { readForm, addResponse } from "@/lib/form-store";
 import { enroll } from "@/lib/flows";
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
   if (one("website").trim()) return go(done("", false));
 
   const ip = clientAddress(request);
-  if (!(await withinLimit("form-ip", `${statsId}:${ip}`, PER_HOUR, 3_600))) return back("limited");
+  if (!(await withinStore("form-ip", `${statsId}:${ip}`, PER_HOUR, 3_600, store))) return back("limited");
 
   const read = readAnswers(def, (name) => form.getAll(name).filter((v): v is string => typeof v === "string").map((v) => v.slice(0, 4_000)));
   if (!read.ok) return back(read.error);

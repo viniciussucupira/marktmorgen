@@ -47,6 +47,7 @@ import { productLink } from "@/lib/checkout-recovery";
 import { WRITING_JOB_MICRO_USD, WRITING_JOB_REFERENCE, aiRequestHoldMicroUsd } from "@/lib/spend-cost-table";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const asked: { system: string; content: string; max: number }[] = [];
 const replies: { pages: string; emails: string; research: string; status: number } = { pages: "{}", emails: "{}", research: "{}", status: 200 };
@@ -98,7 +99,7 @@ async function main(): Promise<void> {
   const OWNER = "aifunnel@example.com";
   await claimHandle(OWNER, "aifunnel", "Pixel Studio", "");
   await ensureStatsId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_AiFunnel01", subscriptionId: "sub_AiFunnel01", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription(OWNER, { customerId: "cus_AiFunnel01", subscriptionId: "sub_AiFunnel01", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   const guide = await addProduct(OWNER, "Pricing Checklist", "A one-page checklist for pricing design work.", "0", null);
   const course = await addProduct(OWNER, "Pricing Course", "Six lessons on pricing and pitching.", "99", null);
   const extra = await addProduct(OWNER, "Proposal Templates", "Three proposal templates.", "19", null);
@@ -152,12 +153,12 @@ async function main(): Promise<void> {
 
   part("Admission");
   asked.length = 0;
-  redis.run(["SET", aiMonthKey(store, new Date()), aiAllowance(store) - 2]);
+  redis.run(["SET", aiMonthKey(store, new Date())!, aiAllowance(store) - 2]);
   const short = await (await post(AI, "ai", { kind: "funnel", type: "lead-magnet", products, audience: "Designers", emails: true })).json();
   is("not enough uses left for its weight: refused before any request", [short.error, asked.length, await aiLeft(store)], ["used", 0, 2]);
   const enough = await (await post(AI, "ai", { kind: "funnel", type: "lead-magnet", products, audience: "Designers", emails: false })).json();
   is("without the emails it weighs two, and fits", [enough.ok, asked.length, await aiLeft(store)], [true, 1, 0]);
-  redis.run(["SET", aiMonthKey(store, new Date()), 0]);
+  redis.run(["SET", aiMonthKey(store, new Date())!, 0]);
   asked.length = 0;
   replies.status = 500;
   const failed = await (await post(AI, "ai", { kind: "funnel", type: "lead-magnet", products, audience: "Designers", emails: true })).json();

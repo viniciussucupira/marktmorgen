@@ -52,7 +52,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq }: { currency: 
       }
       setNote(
         data.error === "used"
-          ? "This month's writing help is used up. It starts again on the 1st."
+          ? "This month's writing help is used up. It starts again with your next billing month."
           : data.error === "notes"
             ? "Say in a sentence or two what you make and for whom."
             : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.",

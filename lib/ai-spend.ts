@@ -3,6 +3,7 @@ import type { Tier } from '@/lib/plan';
 import { isRedisConfigured, redisPipeline } from '@/lib/redis';
 import { AI_BUDGET_TIERS, AUTOMATIC_AI_SPEND_REVIEW_ID, aiSpendLedgerKey, aiSpendOpenedKey, aiSpendPolicySnapshot, currentAiSpendPolicy, isAiSpendPolicyValid, type AiBudgetTier, type AiSpendPolicy } from '@/lib/ai-spend-policy';
 import { SUPPORTED_AI_MODELS } from '@/lib/ai-request-rules';
+import type { AllowanceWindow } from '@/lib/allowance-window';
 
 /** Acquisition and ended accounts never consume a paid-tier allocation. */
 export function aiBudgetScopeFor(store: PlanFields & { tier: Tier }, nowSeconds = Date.now() / 1000): AiBudgetTier {
@@ -108,13 +109,27 @@ return 1
  * rejection, invalid output, response loss or a failed creator job. A retry is
  * a new paid call with a new reservation. Caller-supplied historical dates
  * cannot choose a fresh spending month.
+ *
+ * `window` (17 October 2026): the store's allowance window
+ * (lib/allowance-window.ts). A paying store's monthly ceiling follows its
+ * billing month, not the calendar: the month is reserved in the ledger of
+ * the calendar month it began in, under a field of its own, so one payment
+ * buys one month's ceiling however many calendar months the billing month
+ * touches. The window is worked out from the store's record, never from the
+ * request. Without one, the calendar month of the policy, as before.
  */
 export async function reserveAiSpend(
   statsId: string, tier: AiBudgetTier, model: string,
-  policy: AiSpendPolicy | null = currentAiSpendPolicy(),
+  given: AiSpendPolicy | null = currentAiSpendPolicy(),
   requestHoldMicroUsd?: number,
+  window?: AllowanceWindow,
 ): Promise<boolean> {
-  if (!isAiBudgetConfigured(policy) || !isRedisConfigured() || typeof statsId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(statsId)
+  // The ledger of the month a billing month began in, at most a month back.
+  const began = window?.billing ? new Date(window.start) : null;
+  if (began && (!Number.isFinite(began.getTime()) || Date.now() - began.getTime() > 32 * 86_400_000 || began.getTime() - Date.now() > 300_000)) return false;
+  const policy = began && given?.reviewId === AUTOMATIC_AI_SPEND_REVIEW_ID ? currentAiSpendPolicy(began) : given;
+  if (!isAiBudgetConfigured(policy, began ?? new Date())) return false;
+  if (!isRedisConfigured() || typeof statsId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(statsId)
     || !(AI_BUDGET_TIERS as readonly string[]).includes(tier) || !(SUPPORTED_AI_MODELS as readonly string[]).includes(model)) return false;
   const ceiling = policy.requestMicroUsd[model as keyof typeof policy.requestMicroUsd];
   // The automatic policy reserves the hard bound of this very request
@@ -125,7 +140,8 @@ export async function reserveAiSpend(
   const charge = automatic && requestHoldMicroUsd !== undefined ? requestHoldMicroUsd : ceiling;
   if (policy.fundedStores[tier] === 0 || charge > policy.storeMicroUsd[tier] || charge > policy.companyMicroUsd) return false;
   const key = aiSpendLedgerKey(policy.month), snapshot = aiSpendPolicySnapshot(policy);
-  const reserve: (string | number)[] = ['EVAL', RESERVE_AI_SPEND, 1, key, policy.reviewId, 'store:' + statsId,
+  const field = 'store:' + statsId + (window?.billing ? ':' + window.id : '');
+  const reserve: (string | number)[] = ['EVAL', RESERVE_AI_SPEND, 1, key, policy.reviewId, field,
     charge, policy.storeMicroUsd[tier], policy.companyMicroUsd, snapshot, tier, policy.fundedStores[tier]];
   try {
     if (!automatic) {

@@ -3,13 +3,14 @@ import { upsertContact } from "@/lib/contacts";
 import { BroadcastWriteUnconfirmed, createBroadcast } from "@/lib/broadcasts";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 async function main(): Promise<void> {
   redis.clear();
   const owner = "campaign-write@example.com";
   await claimHandle(owner, "write-check", "Write Check", "");
   await ensureListId(owner);
-  await setSubscription(owner, { customerId: "cus_Write00001", subscriptionId: "sub_Write00001", active: true, tier: "pro" });
+  await setSubscription(owner, { customerId: "cus_Write00001", subscriptionId: "sub_Write00001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(owner, { fromName: "Write Check", address: "1 Test Street" });
   const store = (await storeForEmail(owner))!;
   await upsertContact(store.listId!, "reader@example.com", { agreed: true, explicit: true, source: "free" });

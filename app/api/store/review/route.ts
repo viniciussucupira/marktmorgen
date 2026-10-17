@@ -1,3 +1,4 @@
+import { withinStore } from "@/lib/metered-limits";
 import { type NextRequest, after } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { refreshStoreQuotes } from "@/lib/store-quotes";
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
   // A field no person can see: whatever filled it in is told it worked.
   if (read("website").trim()) return answer("saved");
 
-  if (!(await withinLimit("review", `${clientAddress(request)}|${store.handle}`, IP_LIMIT, 3600))) return answer("slow");
+  if (!(await withinStore("review", `${clientAddress(request)}|${store.handle}`, IP_LIMIT, 3600, store))) return answer("slow");
 
   const opened = await openDoor(store, door);
   if (opened.state !== "ok") return answer(opened.state === "error" ? "error" : opened.state);

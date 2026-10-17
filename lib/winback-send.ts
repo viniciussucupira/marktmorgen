@@ -159,7 +159,7 @@ async function sweepStore(store: Store, deadline: number, now: number): Promise<
       // the list, and the creator's postal address.
       const withAddress = { ...store, mail: { fromName: store.mail?.fromName || store.name, address: store.winback.address } };
       const rendered = render(withAddress, mail.subject, mail.body, unsub);
-      const ok = await sendEmail({
+      const ok = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
         from: fromLine(withAddress),
         to: email,
         subject: rendered.subject,

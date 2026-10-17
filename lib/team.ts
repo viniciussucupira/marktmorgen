@@ -259,7 +259,7 @@ export async function inviteMember(
   if (!made.ok) return made;
   const { invite, token } = made;
 
-  const sentOk = await sendEmail({
+  const sentOk = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: NIMBUS_FROM,
     to: email,
     replyTo: store.email,

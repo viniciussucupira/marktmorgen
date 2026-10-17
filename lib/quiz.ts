@@ -380,12 +380,14 @@ export async function submitQuiz(
   quiz: Quiz,
   answers: Answers,
   storeSid?: string,
+  /** The store's allowance window (lib/allowance-window.ts); null refuses a counted submission. */
+  window?: string | null,
 ): Promise<SubmitResult> {
   const before = await attemptOf(courseId, lessonId, who);
   if (before.passed) return { ok: false, reason: "passed" };
   if (quiz.attempts > 0 && before.used >= quiz.attempts) return { ok: false, reason: "no_tries" };
   if (quiz.usagePolicy === QUIZ_USAGE_POLICY) {
-    const reserved = await reserveQuizSubmission(storeSid ?? "");
+    const reserved = await reserveQuizSubmission(storeSid ?? "", Date.now(), window);
     if (reserved !== "ok") return { ok: false, reason: reserved };
   }
   const [count] = await redisPipeline([["INCR", triesKey(courseId, lessonId, who)]]);

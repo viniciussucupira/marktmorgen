@@ -191,6 +191,7 @@ export async function POST(request: NextRequest) {
         // writing the draft.
         [{ from: fromLine(store), to: email, subject: r.subject, text: r.text, html: r.html, replyTo: store.email }],
         `test:${store.handle}:${Date.now()}`,
+        { by: "monthly" },
       );
       if (outcome !== "sent") {
         await release(store, 1);

@@ -141,20 +141,23 @@ export async function withinLimit(scope: string, who: string, limit: number, win
 }
 
 /**
- * The same counter, by calendar month (UTC) instead of by a window that
- * starts with the first use. Added 17 October 2026 for the allowances whose
- * cost sits in each plan's worst month (tests/plan-cost-registry.ts): a
- * thirty-day window can touch three windows of one calendar month, and a
- * calendar month holds exactly one of these. Kept 32 days, so the key is
- * gone after its month. Fails open like withinLimit: when Redis cannot be
- * asked, the work it guards cannot run either.
+ * The same counter, by the store's allowance window instead of by a window
+ * that starts with the first use. Added 17 October 2026 for the allowances
+ * whose cost sits in each plan's worst month (tests/plan-cost-registry.ts):
+ * a thirty-day window can touch three windows of one month, and a month holds
+ * exactly one of these. `window` is the store's window by its name
+ * (lib/allowance-window.ts, windowId): its billing month when it pays us,
+ * the calendar month otherwise, so one payment buys one month of each. No
+ * window known, nothing let through. Kept 32 days, longer than any window.
+ * Fails open like withinLimit when Redis cannot be asked: the work it guards
+ * cannot run either.
  */
-export async function withinMonth(scope: string, who: string, limit: number, now = Date.now()): Promise<boolean> {
+export async function withinMonth(scope: string, who: string, limit: number, window: string | null): Promise<boolean> {
+  if (!window || !/^\d{4}-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?$/.test(window)) return false;
   if (!isRedisConfigured()) return true;
   if (!Number.isSafeInteger(limit) || limit <= 0) return false;
   try {
-    const at = new Date(now);
-    const month = `${at.getUTCFullYear()}-${String(at.getUTCMonth() + 1).padStart(2, "0")}`;
+    const month = window;
     const key = `nl:rlm:${scope}:${(await sha256Hex(`nimbus-${scope}:${who}`)).slice(0, 32)}:${month}`;
     const [, count] = await redisPipeline([
       ["SET", key, "0", "EX", 32 * 86_400, "NX"],

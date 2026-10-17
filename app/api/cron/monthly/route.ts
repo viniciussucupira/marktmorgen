@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       }
       if (chat && (await postToChat(chat, `${message.subject}\n\n${forChat(message.text)}`).catch(() => false))) out.posted += 1;
       if (emailOff) continue;
-      const ok = await sendEmail({
+      const ok = await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: store.email,
         subject: message.subject,

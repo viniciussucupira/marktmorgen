@@ -103,7 +103,7 @@ async function loop(sender: Sender, deadline: number): Promise<Check[]> {
         html: "<p>This email is sent once a day to an address the sender keeps for testing, to check that a bounce or a spam report still finds its way back.</p>",
         tags: { [STORE_TAG]: store, [LIST_TAG]: list },
       })),
-      `mail-check:${sender}:${label}`,
+      `mail-check:${sender}:${label}`, { by: "company" },
       sender,
     );
     if (sent !== "sent") {

@@ -239,7 +239,7 @@ export async function advanceAnnouncement(
           });
           messages.push({ from: fromLine(store), to: member.e, subject: r.subject, text: r.text, html: r.html, replyTo: store.email, headers: r.headers });
         }
-        const outcome = await sendBatch(messages, `cm:${id}:${job.done}:${keys.length}`);
+        const outcome = await sendBatch(messages, `cm:${id}:${job.done}:${keys.length}`, { by: "monthly" });
         if (outcome !== "sent") {
           await release(store, recipients.length);
           const failures = job.failures + 1;

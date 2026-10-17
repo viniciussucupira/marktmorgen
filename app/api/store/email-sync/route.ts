@@ -1,8 +1,8 @@
+import { withinService } from "@/lib/metered-limits";
 import { type NextRequest, after } from "next/server";
 import { noticeCreator } from "@/lib/account-notice";
 import { ensureStatsId } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { withinLimit } from "@/lib/request-guard";
 import { MAX_KEY_LENGTH, PROVIDER_NAMES } from "@/lib/email-platforms";
 import { connect, disconnect, refreshTargets, saveSettings, syncView, testConnection } from "@/lib/email-sync";
 
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (!store || !store.statsId) return Response.json({ ok: false, error: "none" }, { status: 400 });
     // Every action but disconnecting reaches the platform, so they are counted.
     const action = text(guarded.body.action, 20);
-    if (action !== "disconnect" && !(await withinLimit("esync", store.statsId, PER_MINUTE, 60))) {
+    if (action !== "disconnect" && !(await withinService("esync", store.statsId, PER_MINUTE, 60, store))) {
       return Response.json({ ok: false, error: "limited" }, { status: 429 });
     }
 

@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { createHash } from "node:crypto";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
+import { takePublicRequest } from "@/lib/traffic";
 import { MAX_KEY_LENGTH, checkKey } from "@/lib/licence-keys";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { clientIp } from "@/lib/visit";
@@ -61,6 +62,8 @@ export async function GET(request: NextRequest) {
     // Checked whether or not the product still hands out keys: a product that
     // stopped still answers for the keys it gave, which stay valid.
     if (!store || !product) return answer(404, { error: "No such product with license keys." });
+    // One of the store's public requests for its window (lib/traffic.ts).
+    if (!(await takePublicRequest(store, "buyer"))) return answer(429, { error: "Too many checks for this store right now. Try again later." });
     const status = await checkKey(store, product, key);
     return answer(200, { valid: status === "valid", status });
   } catch (error) {

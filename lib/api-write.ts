@@ -37,6 +37,8 @@ import { storeBase } from "@/lib/purchase-email";
 import { accessWords } from "@/lib/buyer-words/access";
 import { redisPipeline } from "@/lib/redis";
 import { withinLimit } from "@/lib/request-guard";
+import { takeAllowance } from "@/lib/store-allowance";
+import { API_WRITE_UNITS } from "@/lib/store-allowance-rules";
 
 export const ADDS_PER_DAY = 2_000;
 export const GIVES_PER_DAY = 1_000;
@@ -54,7 +56,8 @@ export type WriteError =
   | "nothing_to_give"
   | "not_given_here"
   | "cannot_email"
-  | "daily_limit";
+  | "daily_limit"
+  | "monthly_limit";
 
 type Done<T> = { ok: true; value: T } | { ok: false; error: WriteError };
 
@@ -84,6 +87,8 @@ export async function addLead(store: Store, body: Record<string, unknown>): Prom
   const [before] = await redisPipeline([["HGET", leadsKey(listId), email]]);
   const had = parseContact(before);
   if (!had && !(await withinLimit("api-add", store.sid ?? store.handle, ADDS_PER_DAY, 86_400))) return fail("daily_limit");
+  // A contact written is API_WRITE_UNITS of the window's API requests, the request itself one of them.
+  if (!had && !(await takeAllowance(store, "api", API_WRITE_UNITS - 1)).ok) return fail("monthly_limit");
   const [outcome] = await importContactRows(listId, [{ email, name, tags }]);
   if (outcome === "left") return fail("unsubscribed");
   if (outcome === "full") return fail("list_full");
@@ -176,6 +181,7 @@ export async function giveAccess(
   const already = (await importedFor({ ...store, statsId, pastBuyers: true }, email)).some((p) => p.productId === product.id);
   if (already) return { ok: true, value: { email, product: product.id, status: "already", emailed: false } };
   if (!(await withinLimit("api-give", store.sid, GIVES_PER_DAY, 86_400))) return fail("daily_limit");
+  if (!(await takeAllowance(store, "api", API_WRITE_UNITS - 1)).ok) return fail("monthly_limit");
   const [isNew] = await grantImported(statsId, `api:${keyId}`, [{ email, productId: product.id, items }], undefined, store.sid);
   if (!store.pastBuyers) await setPastBuyers(storeRef(store));
   if (!isNew) return { ok: true, value: { email, product: product.id, status: "already", emailed: false } };
@@ -195,7 +201,7 @@ export async function giveAccess(
         a.why(store.name),
         a.sentBy(store.name),
       ].join("\n");
-      emailed = await sendEmail({
+      emailed = await sendEmail({ meter: { by: "monthly" },
         from: `"${store.name.replace(/["\\<>\r\n]/g, "").trim().slice(0, 60) || "A store"} via Marktmorgen" <${senderAddress()}>`,
         to: email,
         subject: a.subject(product.title, store.name).slice(0, 200),
@@ -237,4 +243,5 @@ export const WRITE_ERRORS: Record<WriteError, [number, string]> = {
   not_given_here: [404, "This address was not given this product through the API, so the API cannot take it back."],
   cannot_email: [409, "Emailing needs your store's plan to be active. Send notify: false, or start your plan."],
   daily_limit: [429, "That is as many as a store may add in a day through the API. Try again tomorrow."],
+  monthly_limit: [429, `Your store's API requests for this month are used (each contact added or product given counts as ${API_WRITE_UNITS}). They open again with your next billing month, or at once on a larger plan.`],
 };

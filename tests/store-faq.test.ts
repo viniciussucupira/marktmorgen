@@ -9,6 +9,7 @@ import { MAX_FAQ, faqData, parseFaq } from "@/lib/store-faq";
 import { aiLeft, writeStoreFaq } from "@/lib/ai";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 type Sent = { system: string; messages: { content: string }[] };
 const asked: Sent[] = [];
@@ -38,7 +39,7 @@ async function main(): Promise<void> {
   const owner = "faq@example.com";
   await claimHandle(owner, "faqshop", "Faq Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   await setFaq(owner, [{ q: "How do I pay?", a: "With a card, on Stripe's page." }]);
   let store = (await storeForEmail(owner))!;
   is("saved", store.faq, [{ q: "How do I pay?", a: "With a card, on Stripe's page." }]);

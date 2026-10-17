@@ -49,6 +49,7 @@ import { sendSignInLink } from "@/lib/auth";
 import { MAX_BIO_LENGTH } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const DEMO_KEY = "sk_test_demo_only_a_stand_in";
 const OUR_TEST_KEY = "sk_test_platform_only_a_stand_in";
@@ -298,7 +299,7 @@ async function main(): Promise<void> {
   // A creator's store beside it is named by its own Stripe account, as before.
   await claimHandle("owner@example.com", "sourdough", "Sourdough", "");
   await setStripeAccount("owner@example.com", "acct_1Creator00001", true);
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const made = await addProduct("owner@example.com", "Starter Guide", "", "19");
   if (!made.ok) throw new Error("no product");
   await setProductLink("owner@example.com", made.product.id, "https://example.com/guide");

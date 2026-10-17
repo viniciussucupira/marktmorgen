@@ -1,3 +1,4 @@
+import { allowanceWindow, windowId } from "@/lib/allowance-window";
 import { reserveFundedExposure } from '@/lib/exposure-budget';
 import { consumeAiCallBudget, hasAiCallBudget, withAiCallBudget } from '@/lib/ai-call-budget';
 import { AI_ENTITLEMENT_RULES } from '@/lib/ai-entitlement-rules';
@@ -78,7 +79,11 @@ function jobCount(value: unknown): number | null {
   return Number.isSafeInteger(count) && count >= 0 ? count : null;
 }
 
-const monthKey = (store: Store, now: Date) => `nl:ai:${store.statsId}:${now.toISOString().slice(0, 7)}`;
+/** A store's writing jobs, counted in its window (lib/allowance-window.ts): null when none is known, and then none is taken. */
+const monthKey = (store: Store, now: Date): string | null => {
+  const window = windowId(store, now.getTime());
+  return window ? `nl:ai:${store.statsId}:${window}` : null;
+};
 
 /** The key a store's month of writing jobs is counted under, for work counted elsewhere against the same month (lib/affiliate-kit.ts). */
 export const aiMonthKey = monthKey;
@@ -104,8 +109,9 @@ export function aiAllowance(store: Store, now = Date.now()): number {
 
 /** What is left of this month's writing jobs. */
 export async function aiLeft(store: Store, now = Date.now()): Promise<number> {
-  if (!store.statsId || !isRedisConfigured()) return 0;
-  const [used] = await redisPipeline([["GET", monthKey(store, new Date(now))]]);
+  const key = monthKey(store, new Date(now));
+  if (!store.statsId || !isRedisConfigured() || !key) return 0;
+  const [used] = await redisPipeline([["GET", key]]);
   if (used === null) return aiAllowance(store, now);
   const count = jobCount(used);
   return count === null ? 0 : Math.max(0, aiAllowance(store, now) - count);
@@ -202,7 +208,10 @@ export async function askModel(
   // and output ceiling at the cost table's rates, reserved before the fetch.
   const hold = aiRequestHoldMicroUsd(named, bounded.shape);
   if (hold === null) return null;
-  if (!(await reserveAiSpend(store.statsId, scope, named, undefined, hold))) return null;
+  // The store's window (lib/allowance-window.ts): a paying store's ceiling is its billing month's.
+  const window = allowanceWindow(store);
+  if (!window) return null;
+  if (!(await reserveAiSpend(store.statsId, scope, named, undefined, hold, window))) return null;
   const response = await timed(timeoutMs, (signal) =>
     fetch(API, {
       method: "POST",
@@ -291,6 +300,7 @@ export async function counted<T>(store: Store, now: number, run: () => Promise<T
   if (!Number.isSafeInteger(allowance) || allowance < 0) return { ok: false, reason: "off" };
   if (jobs > allowance) return { ok: false, reason: "used" };
   const key = monthKey(store, new Date(now));
+  if (!key) return { ok: false, reason: "off" };
   const [used] = await redisPipeline([
     ["INCRBY", key, jobs],
     ["EXPIRE", key, 40 * 86_400],

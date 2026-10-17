@@ -5,16 +5,18 @@
  * stress tax, and tests/plan-cost-registry.test.ts fails when:
  *
  *   - a line's sources do not hold the constants it names (moved or renamed);
- *   - a counter in the code (withinLimit, withinMonth, countUse) has a scope
- *     that no entry of SCOPES classifies;
+ *   - a counter in the code (withinLimit, withinMonth, withinStore,
+ *     withinService, countUse) has a scope that no entry of SCOPES classifies,
+ *     a store figure (takeAllowance) has a kind no line prices, or a file
+ *     sends email with a meter EMAIL_SITES does not allow it;
  *   - an exported limit or cost constant in lib/ (a name with _PER_DAY,
  *     _MONTHLY, _INCLUDED, WORST_, _LIMITS, _BY_TIER, ALLOWANCE...) is cited by
  *     no line, no open item and no entry of NOT_A_COST.
  *
  * So a feature cannot add a per-use cost without saying where it is counted.
  *
- * Each line is the most one store on a plan can cost in one calendar month
- * at every enforced cap at once, in dollars, from the rates in
+ * Each line is the most one store on a plan can cost in one window at every
+ * enforced cap at once, in dollars, from the rates in
  * lib/spend-cost-table.ts and tests/traffic-cost.ts. A request is costed by
  * the call, its CPU, 2 GB of memory for its wall time, its database commands
  * and the bytes it moves through the database; the shapes below are review
@@ -22,11 +24,26 @@
  * Daily windows that start with their first use can touch 32 windows of a
  * 31-day month; UTC-day and calendar-month counters touch 31 and 1.
  *
+ * The window (since 17 October 2026, lib/allowance-window.ts) is the store's
+ * billing month: one payment, one window, a monthly plan's period or a yearly
+ * plan's month on the day it began, at most 31 days. So each allowance is
+ * counted once per payment, as the floor test prices it. A billing month
+ * touches 32 UTC days (part of its first and last), so a counter by the UTC
+ * day is priced at DAY_WINDOWS, and one by the calendar month at two.
+ *
  * OPEN lists the per-use costs that no monthly figure bounds yet. They are
  * not in worstCost, so the floor test does not certify them: the owner's rule
  * counts them as failing until each has a figure here.
  */
 import { paidStorageBytes } from "@/lib/storage-rules";
+import { STORE_ALLOWANCES, NON_PAYING_ALLOWANCES, type AllowanceKind } from "@/lib/store-allowance-rules";
+import { ESSENTIAL_PER_DAY } from "@/lib/studio-allowance-rules";
+import { EXTRA_REQUESTS, REQUESTS_PER_VISIT, TRIAL_EXTRA_REQUESTS, TRIAL_VISITS } from "@/lib/traffic-rules";
+import { TRIAL_ORDERS } from "@/lib/order-rules";
+import { TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
+import { TRIAL_VIDEO_HOURS } from "@/lib/video-admission-rules";
+import { TRIAL_DAILY_RUNS } from "@/lib/flow-limits";
+import { PAID_STORES_PER_FREE_STORE } from "@/lib/free-pool-rules";
 import { monthlyEmails, type Tier } from "@/lib/plan";
 import { FREE_PAUSE_ABOVE_BYTES } from "@/lib/delivery";
 import { PAID_VIDEO_HOURS } from "@/lib/video-admission-rules";
@@ -50,7 +67,7 @@ import {
   UPSTASH_MICRO_USD_PER_GB_MONTH, UPSTASH_MICRO_USD_PER_GB_TRANSFER, UPSTASH_MICRO_USD_PER_MILLION_COMMANDS, VERCEL_CALL_MICRO_USD_PER_MILLION,
   VERCEL_CPU_MICRO_USD_PER_HOUR, VERCEL_FUNCTION_GB, VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR,
 } from "@/lib/spend-cost-table";
-import { PAGES_PER_VISIT, visitCost } from "./traffic-cost";
+import { PAGES_PER_VISIT, laterPageCost, visitCost } from "./traffic-cost";
 
 export const GB = 1024 * 1024 * 1024;
 /** Keeping a file, at the dearest of the three stores one may be in. */
@@ -66,11 +83,15 @@ export const ORDER_COMPUTE = 0.0003;
 /** What one order costs at the most: its confirmation, the email that says it shipped, and its compute. */
 export const ORDER_COST = 2 * PER_EMAIL + ORDER_COMPUTE;
 /**
- * The other emails nothing counts by the order: sign-in links and a buyer's
- * link to their purchases. Set high, and not enforced by any counter: OPEN
- * item "transactional-email" says so.
+ * The access emails a plan's window holds (lib/store-allowance-rules.ts):
+ * since 17 October 2026 counted and refused past the figure, before sending
+ * (lib/email.ts, EmailMeter); until then a figure set high that no counter held.
  */
-export const TRANSACTIONAL: Record<Tier, number> = { creator: 500, pro: 1_000, scale: 2_000 };
+export const TRANSACTIONAL: Record<Tier, number> = {
+  creator: STORE_ALLOWANCES.creator.transactional,
+  pro: STORE_ALLOWANCES.pro.transactional,
+  scale: STORE_ALLOWANCES.scale.transactional,
+};
 
 const micro = (n: number) => n / 1_000_000;
 /** One database command, a byte moved through the database, a byte kept there a month. */
@@ -91,7 +112,42 @@ export const SHAPES = {
   write: { seconds: 5, cpu: 1 },
   /** An import's step, which works for up to eight seconds (app/api/store/import, STEP_MS). */
   step: { seconds: 10, cpu: 2 },
+  /** A studio request: the session, the store and its role read, and what the route does. */
+  studio: { seconds: 1.5, cpu: 0.2 },
+  /** A call to another service, waited on: a meeting made, a calendar or a site read. */
+  wait: { seconds: 10, cpu: 0.2 },
 } as const;
+
+/** How often a day the page that says the studio is paused is drawn at the most (app/studio/paused/page.tsx, SHOWN_PER_DAY). */
+export const PAUSED_PER_DAY = 20;
+
+/** Commands a store figure costs to take (lib/store-allowance.ts): its count kept, and a store that pays nothing's place. */
+export const TAKE_COMMANDS = 4;
+/** One unit of each store figure, at the most it costs (lib/store-allowance-rules.ts). */
+export const UNIT_COST: Record<AllowanceKind, number> = {
+  // A studio request at its shape, its twenty commands and fifty kilobytes through the database.
+  studio: request("studio", 20 + TAKE_COMMANDS, 50_000),
+  // An API request: the key, the store and the answer.
+  api: request("light", 20 + TAKE_COMMANDS, 20_000),
+  // A message written to the inbox, and its index.
+  inbox: request("light", 12 + TAKE_COMMANDS, 4_000),
+  // An email sent from inside a request or a job already counted, and its count.
+  email: PER_EMAIL + TAKE_COMMANDS * COMMAND,
+  transactional: PER_EMAIL + (6 + TAKE_COMMANDS) * COMMAND,
+  // A call out, waited on at 2 GB for ten seconds.
+  integration: request("wait", 10 + TAKE_COMMANDS, 20_000),
+};
+/** A store figure in full, in dollars, for a plan or for a store that pays nothing. */
+export function figureCost(allowances: Record<AllowanceKind, number>, kind: AllowanceKind): number {
+  return allowances[kind] * UNIT_COST[kind];
+}
+/**
+ * Commands each counted public request adds for a paying store: its count
+ * (lib/traffic.ts, countRequest). A route's own burst limit is part of the
+ * route, inside the later page it is costed at; a store that pays nothing
+ * reads its place as well (nonPayingWorst).
+ */
+export const REQUEST_COMMANDS = 1;
 
 /** What one request costs: its call, CPU, memory, database commands and the bytes it moves through the database. */
 export function request(shape: keyof typeof SHAPES, commands: number, bytes = 0): number {
@@ -168,11 +224,14 @@ export const COST_LINES: CostLine[] = [
   },
   {
     id: "orders",
-    feature: "Orders (checkouts, carts, offers after paying, PayPal orders, places, free copies)",
+    feature: "Orders (checkouts, carts, offers after paying, PayPal orders, places, free copies; since 17 October 2026 call packages, and each booked call as CALL_ORDER_UNITS)",
     monthlyUsd: (tier) => ORDERS_INCLUDED[tier] * ORDER_COST,
     sources: [
       { file: "lib/order-rules.ts", names: ["ORDERS_INCLUDED", "paidOrdersLimitFor", "freeCopiesLimitFor", "ORDER_CENTS_PER_THOUSAND_OVER"] },
       { file: "lib/order-admission.ts", names: ["ADMIT_ORDERS", "admitOrders"] },
+      { file: "lib/order-rules.ts", names: ["CALL_ORDER_UNITS", "TRIAL_ORDERS"] },
+      { file: "lib/calls.ts", names: ["admitOrders(store, CALL_ORDER_UNITS)", "countOrder"] },
+      { file: "lib/call-packages.ts", names: ["admitOrders(store, 1)"] },
     ],
     basis: "The plan's figure, each order at the most one costs. Nothing is sold past it: new orders are admitted only while the month's orders and the checkouts held from the last day are under the figure.",
   },
@@ -188,10 +247,26 @@ export const COST_LINES: CostLine[] = [
   },
   {
     id: "transactional-email",
-    feature: "Sign-in links and buyers' links to their purchases",
-    monthlyUsd: (tier) => TRANSACTIONAL[tier] * PER_EMAIL,
-    sources: [{ file: "tests/plan-cost-registry.ts", names: ["TRANSACTIONAL"] }],
-    basis: "A figure set high; no counter holds it (OPEN item transactional-email).",
+    feature: "Buyers' access emails: links to their purchases, a course, a private podcast, a community, a membership to manage, a member's sign-in, an affiliate's link (17 October 2026)",
+    monthlyUsd: (tier) => figureCost(STORE_ALLOWANCES[tier], "transactional"),
+    sources: [
+      { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "transactional"] },
+      { file: "lib/email.ts", names: ["EmailMeter", "metered"] },
+    ],
+    basis: "The plan's access emails, each at the most an email costs and its count; taken from the store's window before sending, refused past it.",
+  },
+  {
+    id: "store-email",
+    feature: "The store's own emails outside the monthly ones: inbox notices and replies, a purchase sent again, contact-form and inbound-mail notices, checkout reminders, come-back, welcome and yearly offers, payment and pause notices to members, community events, affiliates, team invites (17 October 2026)",
+    monthlyUsd: (tier) => figureCost(STORE_ALLOWANCES[tier], "email"),
+    sources: [
+      { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "email"] },
+      { file: "lib/email.ts", names: ["EmailMeter", "metered"] },
+      { file: "lib/store-contact.ts", names: ["MAX_PER_DAY"] },
+      { file: "lib/checkout-ask.ts", names: ["ASKS_PER_STORE_DAY"] },
+      { file: "lib/winback.ts", names: ["ONCE_PER_DAYS"] },
+    ],
+    basis: "The plan's store emails, each at the most an email costs and its count; the daily and per-person limits only spread them.",
   },
   {
     id: "ai",
@@ -216,9 +291,9 @@ export const COST_LINES: CostLine[] = [
   {
     id: "workflows",
     feature: "Workflow runs (#507)",
-    monthlyUsd: (tier) => DAILY_RUNS_BY_TIER[tier] * UTC_DAYS * WORST_COMMANDS_PER_RUN * COMMAND,
+    monthlyUsd: (tier) => DAILY_RUNS_BY_TIER[tier] * DAY_WINDOWS * WORST_COMMANDS_PER_RUN * COMMAND,
     sources: [{ file: "lib/flow-limits.ts", names: ["DAILY_RUNS_BY_TIER", "WORST_COMMANDS_PER_RUN", "TRIAL_DAILY_RUNS", "ACTIVE_FLOWS_BY_TIER", "WORKFLOW_LIMITS"] }],
-    basis: "Every new run of every UTC day at the run ceiling of commands. Steps run in the five-minute job, whose time the schedule bounds (a company fixed cost); emails and the owner's notices come out of the monthly emails.",
+    basis: "Every new run of every UTC day a billing month touches (32) at the run ceiling of commands. Steps run in the five-minute job, whose time the schedule bounds (a company fixed cost); emails and the owner's notices come out of the monthly emails.",
   },
   {
     id: "imports",
@@ -264,7 +339,8 @@ export const COST_LINES: CostLine[] = [
     monthlyUsd: (tier) => {
       const l = SHARE_LIMITS[tier];
       const kept = (l.shares * 2 * l.bundleBytes + l.savedBlocks * MAX_SECTION_BYTES) * DB_BYTE_MONTH;
-      const linkReads = l.shares * (IMPORTS_PER_SHARE_MONTH * request("light", 6, l.bundleBytes) + PREVIEWS_PER_SHARE_MONTH * request("light", 4, 20_000));
+      // A link's reads by other stores are counted by the calendar month: a billing month touches two.
+      const linkReads = 2 * l.shares * (IMPORTS_PER_SHARE_MONTH * request("light", 6, l.bundleBytes) + PREVIEWS_PER_SHARE_MONTH * request("light", 4, 20_000));
       const own = l.importsPerMonth * request("write", 300, l.bundleBytes + 30 * MAX_PAGE_BYTES)
         + l.previewsPerMonth * request("light", 30, 50_000)
         + l.appliesPerMonth * request("write", MAX_APPLY_PAGES * 10, MAX_APPLY_PAGES * 4 * MAX_PAGE_BYTES)
@@ -277,7 +353,7 @@ export const COST_LINES: CostLine[] = [
       { file: "lib/funnel-share-store.ts", names: ["storeMonthKey", "shareMonthKey"] },
       { file: "lib/saved-blocks.ts", names: ["MAX_SECTION_BYTES"] },
     ],
-    basis: "Links and sections kept, every link read by others at its monthly figure, and every import, preview, update from a section, link made and file exported of the month, each page read and written with its earlier version.",
+    basis: "Links and sections kept, every link read by others at its monthly figure in both calendar months a billing month touches, and every import, preview, update from a section, link made and file exported of the store's window, each page read and written with its earlier version.",
   },
   {
     id: "team-scheduling",
@@ -320,25 +396,110 @@ export const COST_LINES: CostLine[] = [
     sources: [{ file: "lib/embed-open.ts", names: ["isResting", "recordVisit", "OPENS_PER_TEN_MINUTES"] }],
     basis: "Page views load nothing from us; an open of a card counts as a visit and rests with the public pages, so it is inside the visits line, and a checkout from it is an order.",
   },
+  {
+    id: "public-requests",
+    feature: "Requests beyond the counted visit: pages drawn again, the cart, searches, downloads, the page after paying, reviews, members' pages to manage, forms (17 October 2026)",
+    monthlyUsd: (tier) => {
+      const limit = REQUESTS_PER_VISIT * VISITS_INCLUDED[tier] + EXTRA_REQUESTS[tier];
+      return EXTRA_REQUESTS[tier] * laterPageCost() + limit * REQUEST_COMMANDS * COMMAND;
+    },
+    sources: [
+      { file: "lib/traffic-rules.ts", names: ["REQUESTS_PER_VISIT", "EXTRA_REQUESTS", "requestLimitFor"] },
+      { file: "lib/traffic.ts", names: ["countRequest", "takePublicRequest", "requestsKey"] },
+      { file: "lib/metered-limits.ts", names: ["withinStore"] },
+    ],
+    basis: "Every request of the window is counted, pages and public routes together, and the store rests at REQUESTS_PER_VISIT for each visit of its figure and EXTRA_REQUESTS more: the visits line already prices three pages a visit (tests/traffic-cost.ts), so the extra ones are priced here at a later page each (a review ceiling no public route passes), and every one at its count.",
+  },
+  {
+    id: "studio",
+    feature: "The studio's own reads and writes: every page of it drawn (STUDIO_PAGE_UNITS each), every save and read, its refreshing; and the never-paused plan, cancel, delete and data-download requests (17 October 2026)",
+    monthlyUsd: (tier) => figureCost(STORE_ALLOWANCES[tier], "studio") + ESSENTIAL_PER_DAY * DAY_WINDOWS * request("heavy", 40, 200_000) + PAUSED_PER_DAY * DAY_WINDOWS * request("light", 8),
+    sources: [
+      { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "studio"] },
+      { file: "lib/studio-allowance-rules.ts", names: ["STUDIO_PAGE_UNITS", "ESSENTIAL_PER_DAY", "ESSENTIAL_NEEDS"] },
+      { file: "lib/studio-route.ts", names: ["countStudio", "studio-essential"] },
+      { file: "app/studio/paused/page.tsx", names: [`SHOWN_PER_DAY = ${PAUSED_PER_DAY};`, "studio-paused"] },
+    ],
+    basis: "Every studio request of the window at the studio shape; a page drawn takes STUDIO_PAGE_UNITS of them, more than a heavy read costs (held below). Past the figure the studio shows one page, drawn at most PAUSED_PER_DAY times a day; changing or canceling the plan, deleting the store and downloading its sales take a small daily figure instead.",
+  },
+  {
+    id: "rest-api",
+    feature: "The REST API: every request with one of the store's keys, a contact added or a product given as API_WRITE_UNITS of them (17 October 2026)",
+    monthlyUsd: (tier) => figureCost(STORE_ALLOWANCES[tier], "api"),
+    sources: [
+      { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "API_WRITE_UNITS"] },
+      { file: "lib/api-guard.ts", names: ["takeAllowance", "API_RATE"] },
+      { file: "lib/api-write.ts", names: ["ADDS_PER_DAY", "GIVES_PER_DAY", "monthly_limit"] },
+    ],
+    basis: "The plan's API requests at a light request each; a write takes API_WRITE_UNITS of them, more than a write costs (held below). The per-minute and daily limits only spread them.",
+  },
+  {
+    id: "inbox",
+    feature: "The inbox: visitors' chats and messages, contact forms filed (17 October 2026)",
+    monthlyUsd: (tier) => figureCost(STORE_ALLOWANCES[tier], "inbox"),
+    sources: [
+      { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "inbox"] },
+      { file: "lib/inbox.ts", names: ["takeAllowance"] },
+      { file: "lib/inbox-rules.ts", names: ["NEW_PER_DAY", "VISITOR_PER_HOUR"] },
+    ],
+    basis: "Every message that arrives in the window, written with its index; the notices and replies it brings are store emails (line store-email).",
+  },
+  {
+    id: "integrations",
+    feature: "Calls to other services: meetings and Zoom, a host's calendar checked by hand, Discord, email platforms, Meta ads, PayPal, affiliate kits and pay-to, outreach reads of a business's site, person lookups, the vault, video upload doors and captions, email pictures (17 October 2026)",
+    monthlyUsd: (tier) => figureCost(STORE_ALLOWANCES[tier], "integration"),
+    sources: [
+      { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "integration"] },
+      { file: "lib/metered-limits.ts", names: ["withinService"] },
+    ],
+    basis: "Every call of the window, held at 2 GB for ten seconds while the other service answers; what the service charges is nothing to us, and AI captions are bought apart.",
+  },
+  {
+    id: "free-share",
+    feature: "This store's share of the stores that pay nothing: free trials, stores with no plan, ended plans (17 October 2026, the owner's \"Teto mínimo pago pela empresa\")",
+    monthlyUsd: () => nonPayingWorst() / PAID_STORES_PER_FREE_STORE,
+    sources: [
+      { file: "lib/free-pool-rules.ts", names: ["PAID_STORES_PER_FREE_STORE", "FREE_POOL_BASE_STORES", "freePoolSize"] },
+      { file: "lib/free-pool.ts", names: ["admitNonPaying"] },
+      { file: "lib/store-allowance-rules.ts", names: ["NON_PAYING_ALLOWANCES"] },
+    ],
+    basis: "A store that pays nothing does nothing that costs us without one of the month's places, and each PAID_STORES_PER_FREE_STORE paying stores add one place: so each paying store carries 1/PAID_STORES_PER_FREE_STORE of the worst window one of them can cost (nonPayingWorst). The FREE_POOL_BASE_STORES places the company pays for itself are a fixed cost, covered by the minimum paid base.",
+  },
 ];
+
+/**
+ * The worst window a store that pays nothing can cost (17 October 2026): a
+ * free trial, the largest of the three. Its visits, pages and orders at the
+ * trial's figures, its emails if it is a trial of a plan with monthly emails,
+ * an hour of video, its workflows over the fifteen UTC days a trial touches,
+ * every store figure at the trial's, and Store's own imports, moves, shared
+ * funnels, team calls and quizzes, which a trial has as Store has them. No AI
+ * and no uploads: a trial has none (lib/ai-spend-policy.ts,
+ * lib/upload-budget-policy.ts). A store with no plan or an ended one has
+ * smaller figures in every one of these (held below).
+ */
+export function nonPayingWorst(): number {
+  const creator = (id: string) => COST_LINES.find((line) => line.id === id)!.monthlyUsd("creator");
+  const allowances = NON_PAYING_ALLOWANCES.trial;
+  const requests = (REQUESTS_PER_VISIT * TRIAL_VISITS + TRIAL_EXTRA_REQUESTS) * (REQUEST_COMMANDS + 1) * COMMAND + TRIAL_EXTRA_REQUESTS * laterPageCost();
+  return TRIAL_VISITS * visitCost()
+    + requests
+    + TRIAL_ORDERS * ORDER_COST
+    + TRIAL_MONTHLY_EMAILS * PER_EMAIL
+    + TRIAL_VIDEO_HOURS * hourCost()
+    + TRIAL_DAILY_RUNS * 15 * WORST_COMMANDS_PER_RUN * COMMAND
+    + (Object.keys(allowances) as AllowanceKind[]).reduce((sum, kind) => sum + figureCost(allowances, kind), 0)
+    + ["imports", "clickfunnels", "funnel-share", "team-scheduling", "quizzes"].reduce((sum, id) => sum + creator(id), 0);
+}
 
 /** Per-use costs that no monthly figure bounds yet: not in worstCost, so nothing here is certified. */
 export type OpenItem = { id: string; what: string; names?: string[] };
 export const OPEN: OpenItem[] = [
-  { id: "public-requests", what: "A visit is counted once a day per person, but the requests a person makes (repeat pages, thanks and review pages, downloads, store search, the cart, checkout opens) are bounded only per connection, not per store." },
-  { id: "studio-requests", what: "The studio's own reads and writes (saving products, pages, sections, settings, exports of data) have no monthly figure per store." },
-  { id: "transactional-email", what: "Sign-in links, buyers' links to their purchases and other transactional emails are not counted against TRANSACTIONAL by any counter." },
-  { id: "rest-api", what: "The REST API (120 requests a minute per key) and its writes (contacts added, products given) are bounded by the day, not the month.", names: ["ADDS_PER_DAY", "GIVES_PER_DAY"] },
-  { id: "inbox", what: "The inbox: visitor messages, replies by email and notices to the creator, bounded by the day.", names: ["NEW_PER_DAY", "VISITOR_PER_HOUR"] },
-  { id: "creator-email", what: "Emails a store's paths send outside the monthly emails: resending a purchase, contact-form and inbound-mail notices, checkout reminders a buyer asks for, come-back and welcome offers.", names: ["MAX_PER_DAY", "ASKS_PER_STORE_DAY", "ONCE_PER_DAYS"] },
   { id: "buyer-actions", what: "What buyers do inside what they bought: lesson comments, task hand-ins, community posts, events and messages, bounded per person.", names: ["COMMENTS_PER_DAY", "COMMENTS_PER_MINUTE", "EVENT_WRITES_PER_HOUR", "RATE_LIMITS"] },
-  { id: "integrations", what: "Calls to other services from the studio (a host's Check now of their calendar, meetings, Zoom, Discord, email platforms, Meta ads, PayPal payouts, affiliate kits, outreach searches, person lookups, the vault, video upload doors, email pictures), bounded by the minute or hour.", names: ["KIT_PER_DAY", "PITCHES_PER_DAY", "OPENS_PER_DAY"] },
-  { id: "calls", what: "Booked calls and call packages are not orders: their checkouts and emails are not counted or admitted.", names: ["MAX_RANGES_PER_DAY"] },
   { id: "group-places", what: "A place claimed in a later month from a purchase for several people made earlier counts in the month it is claimed; its purchase held room for all its places only for a day." },
-  { id: "free-and-trial", what: "Stores in a free trial or with no plan: their paid orders, buyers' pages and the stores' own use are the funded exposures of docs/funded-exposure-review.md, not a plan's worst month." },
   { id: "database-storage", what: "Store records, contacts, page versions, stats and other data kept in the database have no per-store byte figure (only per-kind caps)." },
-  { id: "billing-period", what: "Allowances are by calendar month while a subscription's period starts on any day, so one billing period can touch two calendar months of every allowance." },
   { id: "webhooks", what: "A webhook's first try runs in the request or job that raised the event; retries ride a job with a company-wide bound." },
+  { id: "retained-files", what: "Files a store whose plan ended keeps, up to a store with no plan's room, until it starts a plan again or deletes them: storage with no use behind it, a post-cancellation exposure of docs/funded-exposure-review.md, not a window's use." },
 ];
 
 /** Exported limit or cost constants that are not a per-store monthly cost, and why. */
@@ -349,8 +510,13 @@ export const NOT_A_COST: Record<string, string> = {
   VERCEL_CPU_MICRO_USD_PER_HOUR: "A rate, not a cap.",
   ASKS_PER_TEN_MINUTES: "A burst limit under ANSWERS_MONTHLY (line ai).",
   STORE_ASKS_PER_MINUTE: "A burst limit under ANSWERS_MONTHLY (line ai).",
-  TRIAL_MONTHLY_EMAILS: "The free trial's emails: a funded exposure (OPEN free-and-trial).",
+  TRIAL_MONTHLY_EMAILS: "The free trial's emails: in nonPayingWorst (line free-share).",
   DAILY_CAPS: "The choices of a host's own daily booking cap: how many calls a host takes, not a cost.",
+  KIT_PER_DAY: "A daily burst limit under the writing jobs an affiliate kit takes (line ai).",
+  PITCHES_PER_DAY: "Outreach pitches are drafts the creator sends from their own mailbox: nothing is sent from here, and reading a business's site is a call out (line integrations).",
+  OPENS_PER_DAY: "A daily burst limit on one numbers link: each opening is one of the store's public requests (line public-requests).",
+  MAX_RANGES_PER_DAY: "How many time ranges a host may set on one day of the week: a setting, not a use.",
+  NON_PAYING_ALLOWANCES: "The figures of a store that pays nothing: in nonPayingWorst (line free-share).",
 };
 
 /** What a scope of a counter in the code is: counted in a line, an abuse guard, or open. */
@@ -359,7 +525,10 @@ const guard = (why: string): ScopeClass => ({ guard: why });
 const line = (id: string): ScopeClass => ({ line: id });
 const open = (id: string): ScopeClass => ({ open: id });
 const ACCOUNT = guard("Sign-in and account security, per address or connection: a company cost per creator account, not per store use.");
-const PUBLIC = open("public-requests");
+const PUBLIC = line("public-requests");
+const SERVICE = line("integrations");
+const BURST = (under: string): ScopeClass => guard(`A burst limit per connection, person or day, under the store's figure (line ${under}).`);
+const METERED_EMAIL = guard("Per connection or person; the email it sends is taken from the store's figure before it goes (lib/email.ts, EmailMeter).");
 
 export const SCOPES: Record<string, ScopeClass> = {
   // Counted in a line.
@@ -372,35 +541,73 @@ export const SCOPES: Record<string, ScopeClass> = {
   "countUse:storeMonthKey(store.statsId": line("funnel-share"), "countUse:storeUseKey(statsId": line("funnel-share"), "countUse:key: string": line("funnel-share"),
   ai: line("ai"), ask: line("ai"), "ask-day": line("ai"), "ask-store": line("ai"), "chat-summary": line("ai"),
   "embed-open": line("embed"), checkout: line("orders"), upsell: line("orders"), "group-place": line("orders"),
+  book: line("orders"), "paypal-return": line("orders"),
   "podcast-feed": line("visits"), "<dynamic:allowance[0]>": line("visits"),
-  "<dynamic:scope: string>": guard("The definition of withinLimit and withinMonth themselves (lib/request-guard.ts)."),
+  "<dynamic:scope>": guard("withinStore and withinService pass their scope on to withinLimit (lib/metered-limits.ts)."),
+  "<dynamic:scope: string>": guard("The definitions of withinLimit, withinMonth, withinStore and withinService themselves (lib/request-guard.ts, lib/metered-limits.ts)."),
+  api: line("rest-api"), "studio-essential": line("studio"), "studio-paused": line("studio"), "bundle-picker": line("studio"),
   // Sign-in and account security.
   join: ACCOUNT, passkey: ACCOUNT, "passkey-change": ACCOUNT, "two-step": ACCOUNT, "two-step-backup": ACCOUNT, "two-step-change": ACCOUNT,
   "two-step-rescue": ACCOUNT, "recovery-address": ACCOUNT, "recovery-address-change": ACCOUNT, "lost-email": ACCOUNT, "lost-email-ip": ACCOUNT,
   "discord-return": ACCOUNT, "metaads-return": ACCOUNT, "meet-return": ACCOUNT, report: guard("Takedown reports, per connection: a company cost."),
-  "mail-ses": guard("The email provider's own notices: a company cost."), "mail-inbound": open("creator-email"), "mail-clicked": PUBLIC,
+  "mail-ses": guard("The email provider's own notices: a company cost."), "mail-inbound": guard("The email provider's inbound notices, per connection: a company cost; what is sent on to a creator is one of their store's emails (lib/inbound-mail.ts)."),
+  "mail-clicked": guard("A click beacon from a store page opened from an email link, which the page itself counts: a few commands and no work, per connection."),
   "stream-hook": guard("The video service's own notices: a company cost."), "zoom-notice": guard("Zoom's own notices: a company cost."),
   "metaads-deauth": guard("Meta's own notices: a company cost."), "outreach-stop": guard("A recipient's stop link: a company cost."),
-  // Public requests, per connection.
-  "ads-event": PUBLIC, "aff-join": PUBLIC, "aff-open": PUBLIC, "affhub-address": PUBLIC, "affhub-ip": PUBLIC, book: open("calls"), "book-move": open("calls"),
-  "cart-read": PUBLIC, "chat-send": open("inbox"), "chat-start": open("inbox"), "come-back": PUBLIC, "contact-ip": open("creator-email"),
-  "course-start": PUBLIC, "course-start-order": PUBLIC, "discord-join": PUBLIC, download: PUBLIC, "form-ip": PUBLIC, heard: PUBLIC,
-  "join-address": PUBLIC, "join-ip": PUBLIC, "library-address": open("transactional-email"), "library-ip": open("transactional-email"),
-  "manage-card": PUBLIC, "manage-card-back": PUBLIC, "manage-leave": PUBLIC, "manage-open": PUBLIC, "move-open": PUBLIC, "numbers-link": open("integrations"),
-  "paypal-return": PUBLIC, "podcast-link-address": open("transactional-email"), "podcast-link-ip": open("transactional-email"), preview: PUBLIC,
-  "remind-ask": open("creator-email"), review: PUBLIC, "review-order": PUBLIC, "review-view": PUBLIC, "store-search": PUBLIC,
-  "thanks-view": PUBLIC, "tier-switch": PUBLIC, tip: PUBLIC, "waitlist-address": PUBLIC, "waitlist-ip": PUBLIC, "welcome-open": PUBLIC,
+  // Public requests: counted in the store's window as well (lib/metered-limits.ts, withinStore).
+  "ads-event": PUBLIC, "aff-join": PUBLIC, "aff-open": PUBLIC, "book-move": PUBLIC, "cart-read": PUBLIC, "come-back": PUBLIC, "course-start": PUBLIC,
+  "discord-join": PUBLIC, download: PUBLIC, "form-ip": PUBLIC, heard: PUBLIC, "join-ip": PUBLIC, "manage-card": PUBLIC, "manage-card-back": PUBLIC,
+  "manage-leave": PUBLIC, "manage-open": PUBLIC, "move-open": PUBLIC, "podcast-link-ip": PUBLIC, review: PUBLIC, "review-view": PUBLIC,
+  "store-search": PUBLIC, "thanks-view": PUBLIC, "tier-switch": PUBLIC, tip: PUBLIC, "waitlist-ip": PUBLIC, "welcome-open": PUBLIC,
+  "course-start-order": BURST("public-requests"), "review-order": BURST("public-requests"), "join-address": BURST("public-requests"),
+  "waitlist-address": BURST("public-requests"), "numbers-link": BURST("public-requests"), preview: BURST("public-requests"),
+  "affhub-address": METERED_EMAIL, "affhub-ip": METERED_EMAIL, "library-address": METERED_EMAIL, "library-ip": METERED_EMAIL,
+  "podcast-link-address": METERED_EMAIL, "contact-ip": METERED_EMAIL, "contact-store": METERED_EMAIL, "remind-ask": METERED_EMAIL,
+  "remind-store": METERED_EMAIL, "resend-sale": METERED_EMAIL, "resend-store": METERED_EMAIL, "creator-inbound": METERED_EMAIL,
+  "inbox-reply": METERED_EMAIL, "inbox-tell": METERED_EMAIL,
   "lesson-comment": open("buyer-actions"), "lesson-comment-day": open("buyer-actions"), "task-hand-in": open("buyer-actions"), "task-upload": open("buyer-actions"),
-  // Per store, with no monthly figure yet.
-  api: open("rest-api"), "api-add": open("rest-api"), "api-give": open("rest-api"),
-  "inbox-new": open("inbox"), "inbox-reply": open("inbox"), "inbox-tell": open("inbox"),
-  "contact-store": open("creator-email"), "remind-store": open("creator-email"), "resend-sale": open("creator-email"), "resend-store": open("creator-email"),
-  "creator-inbound": open("creator-email"),
-  "meet-host": open("integrations"), "meet-manage": open("integrations"), "meet-start": open("integrations"), "metaads-start": open("integrations"),
-  "discord-connect": open("integrations"), esync: open("integrations"), "paypal-connect": open("integrations"), "paypal-pay": open("integrations"),
-  "paypal-sell-connect": open("integrations"), "aff-kit": open("integrations"), "aff-payto": open("integrations"), "outreach-find": open("integrations"),
-  "outreach-find-day": open("integrations"), "person-find": open("integrations"), "vault-open": open("integrations"), "vault-sign": open("integrations"),
-  "stream-door": open("integrations"), "stream-captions": open("integrations"), "mail-picture": open("integrations"),
-  "bundle-picker": open("studio-requests"),
-  "host-calendar": open("integrations"),
+  // Per store, under a figure of the window.
+  "api-add": BURST("rest-api"), "api-give": BURST("rest-api"),
+  "inbox-new": BURST("inbox"), "chat-send": BURST("inbox"), "chat-start": BURST("inbox"),
+  // Calls to other services: counted in the store's window as well (lib/metered-limits.ts, withinService).
+  "meet-host": SERVICE, "meet-manage": SERVICE, "meet-start": SERVICE, "metaads-start": SERVICE, "discord-connect": SERVICE, esync: SERVICE,
+  "paypal-connect": SERVICE, "paypal-pay": SERVICE, "paypal-sell-connect": SERVICE, "aff-kit": SERVICE, "aff-payto": SERVICE, "outreach-find": SERVICE,
+  "person-find": SERVICE, "vault-open": SERVICE, "vault-sign": SERVICE, "stream-door": SERVICE, "stream-captions": SERVICE, "mail-picture": SERVICE,
+  "host-calendar": SERVICE, "outreach-find-day": BURST("integrations"),
+};
+
+/** The store figures, each priced by a line (lib/store-allowance-rules.ts, takeAllowance). */
+export const KIND_LINES: Record<AllowanceKind, string> = {
+  studio: "studio", api: "rest-api", inbox: "inbox", email: "store-email", transactional: "transactional-email", integration: "integrations",
+};
+
+/**
+ * Every file that sends email, and the meters it may count them against
+ * (lib/email.ts, EmailMeter): "company" for what we send a creator about
+ * their own account, "order" for an order's two emails, "monthly" for what
+ * was taken from the monthly emails before, "store" for what is taken from
+ * the store's own figures as it goes.
+ */
+const COMPANY = ["company"], ORDER = ["order"], MONTHLY = ["monthly"], STORE = ["store"];
+export const EMAIL_SITES: Record<string, string[]> = {
+  "lib/email.ts": ["company", "order", "monthly", "store"],
+  "app/api/cron/mail-check/route.ts": COMPANY, "app/api/cron/monthly/route.ts": COMPANY, "app/api/cron/stripe-check/route.ts": COMPANY,
+  "app/api/cron/usage/route.ts": COMPANY, "app/api/cron/weekly/route.ts": COMPANY, "lib/account-notice.ts": COMPANY, "lib/auth.ts": COMPANY,
+  "lib/billing-reminders.ts": COMPANY, "lib/passkeys.ts": COMPANY, "lib/plan-closing.ts": COMPANY, "lib/plan-pause.ts": COMPANY,
+  "lib/recovery-address.ts": COMPANY, "lib/stats-report.ts": COMPANY, "lib/store-alerts.ts": COMPANY, "lib/takedown.ts": COMPANY,
+  "lib/trial-nudges.ts": COMPANY, "lib/two-step.ts": COMPANY, "lib/verify-mail.ts": COMPANY, "lib/yearly-offer.ts": COMPANY,
+  "lib/inbound-mail.ts": ["store", "company"],
+  "app/api/store/mail/route.ts": MONTHLY, "lib/api-write.ts": MONTHLY, "lib/community-mail.ts": MONTHLY, "lib/flows.ts": MONTHLY,
+  "lib/imports.ts": MONTHLY, "lib/product-updates.ts": MONTHLY, "lib/review-requests.ts": MONTHLY,
+  "lib/mail.ts": ["monthly", "company"],
+  "lib/call-packages.ts": ORDER, "lib/call-reminders.ts": ORDER, "lib/free.ts": ORDER, "lib/gifts.ts": ORDER, "lib/group-buy.ts": ORDER,
+  "lib/paypal-sales.ts": ORDER, "lib/preorders.ts": ORDER, "lib/shipments.ts": ORDER,
+  "lib/purchase-email.ts": ["order", "store"], "lib/calls.ts": ["order", "store"], "lib/licence-keys.ts": ["order", "store"],
+  "lib/affiliate-hub.ts": STORE, "lib/affiliate-payday.ts": STORE, "lib/affiliates.ts": STORE, "lib/assignment-notify.ts": STORE,
+  "lib/buyer-library.ts": STORE, "lib/buyer-orders.ts": STORE, "lib/checkout-recovery.ts": STORE, "lib/checkout-trouble.ts": STORE,
+  "lib/community-access.ts": STORE, "lib/community-event-mail.ts": STORE, "lib/inbox.ts": STORE, "lib/learn.ts": STORE,
+  "lib/lesson-comment-notify.ts": STORE, "lib/member-nudge.ts": STORE, "lib/membership-manage.ts": STORE, "lib/membership-pause.ts": STORE,
+  "lib/payment-recovery.ts": STORE, "lib/podcast-access.ts": STORE, "lib/quiet-sales.ts": STORE, "lib/store-contact.ts": STORE,
+  "lib/store-join.ts": STORE, "lib/team.ts": STORE, "lib/tier-switch.ts": STORE, "lib/waitlist.ts": STORE,
+  "lib/welcome-offer-send.ts": STORE, "lib/winback-send.ts": STORE, "lib/yearly-ask.ts": STORE, "lib/yearly-switch.ts": STORE,
 };

@@ -269,6 +269,7 @@ export async function forwardInbound(id: string): Promise<"sent" | "skipped" | "
   const creators = creatorDomain(NIMBUS_FROM);
   const toStore = creators ? written.find((a) => a.toLowerCase().endsWith(`@${creators}`)) : undefined;
   let creator: { name: string; email: string; address: string } | null = null;
+  let store: Awaited<ReturnType<typeof storeForHandle>> = null;
   if (toStore) {
     const handle = toStore.slice(0, toStore.lastIndexOf("@")).toLowerCase();
     if (!HANDLE_PATTERN.test(handle)) return "skipped";
@@ -283,6 +284,7 @@ export async function forwardInbound(id: string): Promise<"sent" | "skipped" | "
     if (!found || !email) return "skipped";
     if (!(await withinLimit("creator-inbound", handle, CREATOR_HOURLY, 3_600))) return "skipped";
     creator = { name: headerText(found.name, 60).replace(/["\\<>]/g, "") || handle, email, address: `${handle}@${creators}` };
+    store = found;
   }
   const subject = typeof mail.subject === "string" && mail.subject.trim() ? mail.subject : "(no subject)";
   const html = typeof mail.html === "string" ? mail.html.slice(0, MAX_BODY_CHARS) : "";
@@ -309,7 +311,8 @@ export async function forwardInbound(id: string): Promise<"sent" | "skipped" | "
   const writtenTo = ours.slice(ours.lastIndexOf("@") + 1).toLowerCase();
   const site = writtenTo === platformDomain() || !/^[a-z0-9.-]{3,80}$/.test(writtenTo) ? "Marktmorgen" : writtenTo;
 
-  const ok = await sendEmail({
+  // To a creator, one of their store's emails; to our own support, a company cost.
+  const ok = await sendEmail({ meter: store ? { by: "store", store, kind: "email" } : { by: "company" },
     from: creator ? `"${shown} via ${creator.name}" <${creator.address}>` : `"${shown} via ${site}" <support@${platformDomain()}>`,
     to: creator ? creator.email : target,
     subject,

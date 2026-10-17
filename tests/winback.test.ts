@@ -32,6 +32,7 @@ import { parseWinBack, winbackOn, winbackWords } from "@/lib/winback";
 import { openWinBack, readWinBack, sendWinBacks, winbackEmail } from "@/lib/winback-send";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const DAY = 86_400;
 const now = Date.now();
@@ -107,7 +108,7 @@ async function main(): Promise<void> {
   await ensureStatsId("owner@example.com");
   await ensureListId("owner@example.com");
   await setStripeAccount("owner@example.com", "acct_1TestHarbor0001", true);
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const club = await addProduct("owner@example.com", "The Inner Circle", "", "29", { interval: "month", trialDays: 7, payments: 0 });
   const yearly = await addProduct("owner@example.com", "Yearly Club", "", "290", { interval: "year", trialDays: 0, payments: 0 });
   if (!club.ok || !yearly.ok) throw new Error("no product");

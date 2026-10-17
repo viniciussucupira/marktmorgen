@@ -22,6 +22,8 @@ import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
 import { guideFacts, guideOn, guideVisitor } from "@/lib/store-guide";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
+import { windowId } from "@/lib/allowance-window";
 
 type Sent = { model: string; system: string; messages: { role: string; content: string }[] };
 const asked: Sent[] = [];
@@ -41,7 +43,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = "sk-ant-test-only-a-stand-in-0123456789";
   const owner = "guide@example.com";
   await claimHandle(owner, "guideshop", "Guide Shop", "");
-  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   await ensureStatsId(owner);
   const add = async (title: string, summary: string, price: string) => {
     const made = await addProduct(owner, title, summary, price, null);
@@ -100,7 +102,7 @@ async function main(): Promise<void> {
   const before = await answersUsed(store);
   is("failed attempt remains counted", [await guide("Something for a beginner cook"), await answersUsed(store)], [{ ok: false, reason: "failed" }, before + 1]);
   reply = '{"picks": []}';
-  const month = `nl:ask:${store.statsId}:${new Date().toISOString().slice(0, 7)}`;
+  const month = `nl:ask:${store.statsId}:${windowId(store)}`;
   redis.run(["SET", month, String(ANSWERS_MONTHLY.trial + ANSWERS_MONTHLY.scale)]);
   const sentBefore = asked.length;
   is("past the month: closed, and the model is not asked", [await guide("Something else entirely"), asked.length], [{ ok: false, reason: "closed" }, sentBefore]);

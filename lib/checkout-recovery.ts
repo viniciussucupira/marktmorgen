@@ -394,7 +394,7 @@ async function deliver(
 
   let ok = false;
   try {
-    ok = await sendEmail({
+    ok = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
       // An email that asks for a sale is the creator's, like their list's:
       // from their own address where there is one (lib/mail-from.ts).
       from: fromCreator(store),

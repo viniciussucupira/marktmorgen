@@ -4,11 +4,12 @@ import { reserveStoreUpload, reserveUploadControl, OPEN_UPLOAD_BUDGET, RESERVE_U
 import { AUTOMATIC_UPLOAD_CAPS, AUTOMATIC_UPLOAD_REVIEW_ID, PAID_UPLOAD_ALLOCATIONS_PER_TIER, automaticUploadBudgetPolicy, currentUploadBudgetPolicy, isUploadBudgetConfigured, minimumControlRequests, uploadAllowanceWords, uploadBudgetSnapshot, uploadLedgerKey, uploadOpenedKey } from '../lib/upload-budget-policy';
 import { PAID_STORAGE_BYTES } from '../lib/storage-rules';
 import { hashes, opened, calls, reset } from './upload-budget-redis';
+import { calendarPeriod, calendarPeriodId } from './billing-period-fixture';
 
 const now = new Date();
 const key = uploadLedgerKey(now.toISOString().slice(0, 7));
 const id = (n: number) => n.toString(16).padStart(32, '0');
-const store = (n = 1, tier: 'creator' | 'pro' | 'scale' = 'pro', extra: Partial<UploadStore> = {}): UploadStore => ({ statsId: id(n), tier, subscriptionActive: true, subscriptionId: 'sub_test123', trialEnds: 0, planEndedAt: '', ...extra });
+const store = (n = 1, tier: 'creator' | 'pro' | 'scale' = 'pro', extra: Partial<UploadStore> = {}): UploadStore => ({ statsId: id(n), tier, subscriptionActive: true, subscriptionId: 'sub_test123', trialEnds: 0, planEndedAt: '', period: calendarPeriod(), ...extra });
 
 test('the automatic upload policy is valid every month and matches the published storage', () => {
   const policy = currentUploadBudgetPolicy(now)!;
@@ -31,9 +32,9 @@ test('the first upload of the month opens the ledger once and reserves before th
   const row = hashes.get(key)!;
   assert.equal(row.get('review'), AUTOMATIC_UPLOAD_REVIEW_ID);
   assert.equal(row.get('policy'), uploadBudgetSnapshot(currentUploadBudgetPolicy()!));
-  assert.equal(row.get('store:' + id(1) + ':bytes'), '5000000');
+  assert.equal(row.get('store:' + id(1) + '@' + calendarPeriodId() + ':bytes'), '5000000');
   assert.equal(await reserveUploadControl(store()), true);
-  assert.equal(row.get('store:' + id(1) + ':controls'), '2');
+  assert.equal(row.get('store:' + id(1) + '@' + calendarPeriodId() + ':controls'), '2');
 });
 
 test('a store stops at its monthly starts', async () => {
@@ -73,7 +74,7 @@ test('a changed automatic allowance carries the counters it finds', async () => 
   row.set('policy', 'an-older-automatic-snapshot');
   assert.equal(await reserveStoreUpload(store(), 3, 'r2'), true);
   assert.equal(row.get('policy'), uploadBudgetSnapshot(currentUploadBudgetPolicy()!));
-  assert.equal(row.get('store:' + id(1) + ':bytes'), '10');
+  assert.equal(row.get('store:' + id(1) + '@' + calendarPeriodId() + ':bytes'), '10');
   assert.equal(row.get('slots:pro'), String(PAID_UPLOAD_ALLOCATIONS_PER_TIER - 1));
 });
 

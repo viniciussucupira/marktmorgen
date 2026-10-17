@@ -1,3 +1,4 @@
+import { withinStore } from "@/lib/metered-limits";
 import { type NextRequest, after } from "next/server";
 import { OrdersPausedError } from "@/lib/order-admission";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
   const ids = readCartIds((params.get("ids") ?? "").split(","));
   const store = handle ? await storeForHandle(handle) : null;
   if (!store) return Response.json({ ok: false, error: "unknown" }, { status: 404 });
-  if (!(await withinLimit("cart-read", `${clientAddress(request)}|${store.handle}`, 120, 600))) {
+  if (!(await withinStore("cart-read", `${clientAddress(request)}|${store.handle}`, 120, 600, store))) {
     return Response.json({ ok: false, error: "slow" }, { status: 429 });
   }
   const country = readCountry(request.headers.get("x-vercel-ip-country"));

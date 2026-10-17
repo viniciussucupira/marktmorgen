@@ -391,7 +391,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
     // The same notice asked for twice in a day is sent once (a record that
     // could not be written after it went out).
     const idempotencyKey = `${stateKey(key)}:${endedAt}:${kind}`;
-    const sent = await sendEmail({ from: NIMBUS_FROM, to: store.email, replyTo: SUPPORT_EMAIL, subject, text, idempotencyKey }).catch((error) => {
+    const sent = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: store.email, replyTo: SUPPORT_EMAIL, subject, text, idempotencyKey }).catch((error) => {
       console.error("sending a notice about an ended plan's files failed", error);
       return false;
     });
@@ -441,7 +441,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
       const own = await readSubscription(store.subscriptionId);
       if (own.state === "unknown") return { key, state: "held", note: "Stripe could not be asked" };
       if (own.state === "active") {
-        await setSubscription(key, { active: true, tier: own.tier, cycle: own.cycle, trialEnds: own.trialing ? own.until : 0, shared: own.shared });
+        await setSubscription(key, { active: true, tier: own.tier, cycle: own.cycle, trialEnds: own.trialing ? own.until : 0, shared: own.shared, period: own.period });
         await redisPipeline([["DEL", stateKey(key)]]);
         return { key, state: "running", note: "Stripe says the plan runs" };
       }
@@ -453,7 +453,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   }
   if (live) {
     // Our note was wrong, or the plan was started again a moment ago: put right.
-    await setSubscription(key, { customerId: live.customerId, subscriptionId: live.subscriptionId, active: true, tier: live.tier, cycle: live.cycle, trialEnds: live.trialEnds, shared: live.shared });
+    await setSubscription(key, { customerId: live.customerId, subscriptionId: live.subscriptionId, active: true, tier: live.tier, cycle: live.cycle, trialEnds: live.trialEnds, shared: live.shared, period: live.period });
     await redisPipeline([["DEL", stateKey(key)]]);
     return { key, state: "running", note: "Stripe says the plan runs" };
   }

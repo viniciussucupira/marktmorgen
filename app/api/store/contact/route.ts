@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
+import { takePublicRequest } from "@/lib/traffic";
 import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { sendContact } from "@/lib/store-contact";
 
@@ -35,6 +36,8 @@ export async function POST(request: NextRequest) {
   }
   const store = handle ? await storeForHandle(handle) : null;
   if (!store) return new Response("No such store.", { status: 404 });
+  // One of the store's public requests for its window (lib/traffic.ts).
+  if (!(await takePublicRequest(store))) return new Response("This store can't take messages right now. Please try again later.", { status: 429 });
   const away = (status: string) =>
     new Response(null, { status: 303, headers: { Location: `${origin}/@${store.handle}/contact?status=${status}`, "Cache-Control": "no-store" } });
   // A field no person can see: whatever filled it in is told it worked, and nothing is sent.

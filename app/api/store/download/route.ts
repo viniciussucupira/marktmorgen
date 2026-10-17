@@ -1,3 +1,4 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { preorderWords } from "@/lib/buyer-words/preorder";
 import { readListing } from "@/lib/catalog";
@@ -12,7 +13,6 @@ import { originFrom } from "@/lib/request-origin";
 import type { ProductFile } from "@/lib/product-file";
 import { BUMP_KEYS } from "@/lib/bundle-rules";
 import { ordersWords } from "@/lib/buyer-words/orders";
-import { withinLimit } from "@/lib/request-guard";
 
 /**
  * Hands the buyer the file they paid for.
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
   // Counted by the link, before anything is asked of Stripe.
   const link = token ? `t:${token}` : `s:${request.nextUrl.searchParams.get("session_id") ?? ""}`;
-  if (!(await withinLimit("download", `${store.handle}:${link}`, OPENS_PER_HOUR, 3600))) {
+  if (!(await withinStore("download", `${store.handle}:${link}`, OPENS_PER_HOUR, 3600, store, "buyer"))) {
     return new Response(say.tooOften, {
       status: 429,
       headers: { "Content-Type": "text/plain; charset=utf-8", "Retry-After": "600", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" },

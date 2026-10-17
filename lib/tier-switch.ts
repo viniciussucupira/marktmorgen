@@ -281,7 +281,7 @@ async function tell(store: Store, account: string, found: Found, updated: Record
           ? m.paidCredit(formatMoney(-total, currency, locale))
           : m.paidNothing;
   const from = `"${m.fromName(store.name.replace(/["\\<>\r\n]/g, "").slice(0, 60))}" <${(NIMBUS_FROM.match(/<([^>]+)>/)?.[1] ?? NIMBUS_FROM).trim()}>`;
-  await sendEmail({
+  await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from,
     to: email,
     subject: m.switchedSubject(found.to.title).slice(0, 200),
@@ -298,7 +298,7 @@ async function tell(store: Store, account: string, found: Found, updated: Record
     replyTo: store.email,
   }).catch((error) => console.error("a tier switch receipt failed", error));
   if (store.email) {
-    await sendEmail({
+    await sendEmail({ meter: { by: "store", store: store, kind: "email" },
       from: NIMBUS_FROM,
       to: store.email,
       subject: `A member switched to ${found.to.title}`.slice(0, 200),

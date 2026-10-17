@@ -22,7 +22,7 @@ const MESSAGES: Record<string, string> = {
   unconfirmed: "The result could not be confirmed. Nothing in your setup was changed. Reload to check your AI uses before trying again.",
   notes: "Write a few words first: who it is for, or what they get.",
   long: "There is too much to send in one draft. Shorten what you typed, or the descriptions of the products in its steps.",
-  used: "This month's AI uses are not enough for this. They start again on the 1st.",
+  used: "This month's AI uses are not enough for this. They start again with your next billing month.",
   slow: "A few at a time: wait a minute, then try again.",
   failed: "The AI did not answer just now. Nothing in your setup was changed. Started attempts count toward the monthly allowance.",
   off: "Writing with AI is not available right now.",

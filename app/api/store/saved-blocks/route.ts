@@ -121,7 +121,9 @@ export async function POST(request: NextRequest) {
       const listed = new Set(await sectionUses(statsId, id));
       if (asked.some((key) => !listed.has(key))) return refuse("pages");
       if (asked.some((key) => !mayChange(role, key))) return refuse("forbidden", 403);
-      if (!(await countUse(storeMonthKey(statsId, "apply", monthOfUse()), limits.appliesPerMonth, MONTH_USE_SECONDS))) return refuse("applies_full", 429, { limit: limits.appliesPerMonth });
+      const month = monthOfUse(store);
+      if (!month) return refuse("unavailable", 503);
+      if (!(await countUse(storeMonthKey(statsId, "apply", month), limits.appliesPerMonth, MONTH_USE_SECONDS))) return refuse("applies_full", 429, { limit: limits.appliesPerMonth });
       const titles = new Map([...(await readCards(store)).values()].map((card) => [card.id, card.title]));
       const done: string[] = [];
       const skipped: { key: string; why: string }[] = [];

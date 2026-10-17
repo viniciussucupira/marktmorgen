@@ -198,7 +198,7 @@ export const PRO_ON_SALE = true;
  */
 export const PRO_MONTHLY_EMAILS = 5_000;
 /** Funded acquisition exposure still requires a separate reviewed allowance. */
-export const TRIAL_MONTHLY_EMAILS = 1_000;
+export const TRIAL_MONTHLY_EMAILS = 300;
 export const SCALE_MONTHLY_EMAILS = 8_000;
 
 /** Whether a plan has what Pro switches on: Pro itself, and Scale above it. */

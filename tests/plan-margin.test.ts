@@ -319,14 +319,14 @@ test("a store nobody can charge cannot be visited past the visits it has", () =>
   for (const page of ["app/[handle]/page.tsx", "app/[handle]/p/[product]/page.tsx"]) {
     assert.match(readFileSync(join(process.cwd(), page), "utf8"), /if \(await isResting\(store\)\) return <StoreResting store=\{store\} \/>;/, `${page} must rest with its store`);
   }
-  assert.equal(TRIAL_VISITS, VISITS_INCLUDED.creator, "a trial of any plan has the smallest plan's visits: it has paid for none");
+  assert.ok(TRIAL_VISITS <= VISITS_INCLUDED.creator, "a trial of any plan has no more than the smallest plan's visits: it has paid for none");
 });
 
 test("lesson pages supply the store's video allowance", () => {
   // The actual admission behavior, including failed reads and exact exhaustion,
   // is exercised in video-admission.test.ts. Keep this route wiring check.
   const page = readFileSync(join(process.cwd(), "app/[handle]/course/[product]/[lesson]/page.tsx"), "utf8");
-  assert.match(page, /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/, "the lesson page must supply the store's allowance");
+  assert.match(page, /lessonVideo\(lesson\.video, videoLimitFor\(store\), windowId\(store\)\)/, "the lesson page must supply the store's allowance and its window");
 });
 
 test("a store that pays nothing can cost next to nothing", () => {

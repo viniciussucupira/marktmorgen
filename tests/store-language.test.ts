@@ -42,6 +42,7 @@ import { readProduct } from "@/lib/catalog";
 import { createCheckout } from "@/lib/store-checkout";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const checkouts: URLSearchParams[] = [];
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -237,7 +238,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "lingua", "Lingua Shop", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestLingua0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Lingua00001", subscriptionId: "sub_Lingua00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Lingua00001", subscriptionId: "sub_Lingua00001", active: true, period: paidPeriod() });
   const made = await addProduct(OWNER, "Recetario", "", "27", null);
   if (!made.ok) throw new Error("no product");
   await setProductLink(OWNER, made.product.id, "https://example.com/recetario");

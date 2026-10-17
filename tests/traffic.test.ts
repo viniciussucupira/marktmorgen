@@ -57,6 +57,12 @@ import { COMMANDS, PAGES_PER_VISIT, STATIC_FILES, visitCost } from "./traffic-co
 import { POST as readRoute } from "@/app/api/store/read/route";
 import { STORE_SCOPE, readToken } from "@/lib/page-read";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
+import { addMonthsMs, allowanceWindow } from "@/lib/allowance-window";
+import { REQUEST_COMMANDS } from "./plan-cost-registry";
+
+/** A store's window at a moment (lib/allowance-window.ts): its billing month when it pays, the calendar month or its trial otherwise. */
+const windowOf = (store: Parameters<typeof allowanceWindow>[0], at = Date.now()) => allowanceWindow(store, at)!.id;
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 const DAY = 24 * 60 * 60 * 1000;
@@ -150,6 +156,7 @@ async function storeWith(handle: string, plan: "paid" | "trial" | "none" | "ende
       tier,
       cycle,
       trialEnds: plan === "trial" ? Math.floor(Date.now() / 1000) + 10 * 86_400 : 0,
+      ...(plan === "paid" ? { period: paidPeriod() } : {}),
     });
     if (plan === "ended") await setSubscription(email, { active: false });
   }
@@ -189,8 +196,9 @@ async function main(): Promise<void> {
   part("A visit is one person, one day, one store");
   const ana = await storeWith("ana", "paid");
   const anaStore = (await storeForEmail(ana.email))!;
-  const t0 = Date.UTC(2026, 9, 20, 14, 0, 0);
-  const month = monthKey(new Date(t0));
+  // A paying store counts in its billing month (lib/allowance-window.ts): ten days into it, at two in the afternoon.
+  const t0 = Math.floor((anaStore.period!.start * 1000 + 10 * DAY) / DAY) * DAY + 14 * 3_600_000;
+  const month = windowOf(anaStore, t0);
   is("the first time somebody comes it is a visit", [await recordVisit(anaStore, "203.0.113.9", t0), await visitsIn(ana.folder, month)], [true, 1]);
   is("however many pages they open that day, it is the one", [await recordVisit(anaStore, "203.0.113.9", t0 + 60_000), await recordVisit(anaStore, "203.0.113.9", t0 + 5 * 3_600_000), await visitsIn(ana.folder, month)], [false, false, 1]);
   is("somebody else is another", [await recordVisit(anaStore, "198.51.100.7", t0), await visitsIn(ana.folder, month)], [true, 2]);
@@ -199,31 +207,33 @@ async function main(): Promise<void> {
   const ben = await storeWith("ben", "paid");
   const benStore = (await storeForEmail(ben.email))!;
   is("and at another store, a visit to that store", [await recordVisit(benStore, "203.0.113.9", t0), await visitsIn(ben.folder, month), await visitsIn(ana.folder, month)], [true, 1, 4]);
-  is("the stores visited in a month are known, and whose each is", [await visitedFolders(month), (await storeOf(ana.folder))?.handle, (await storeOf(ben.folder))?.handle], [[ana.folder, ben.folder].sort(), "ana", "ben"]);
-  const november = Date.UTC(2026, 10, 1, 0, 5, 0);
-  is("a visit belongs to the month of its day", [await recordVisit(anaStore, "203.0.113.9", november), await visitsIn(ana.folder, "2026-11"), await visitsIn(ana.folder, month)], [true, 1, 4]);
-  const [kept] = await real([["SMEMBERS", `nl:traffic:day:${ana.folder}:2026-10-20`]]);
+  is("the stores visited in a month are known, and whose each is", [await visitedFolders(new Date(t0).toISOString().slice(0, 7)), (await storeOf(ana.folder))?.handle, (await storeOf(ben.folder))?.handle], [[ana.folder, ben.folder].sort(), "ana", "ben"]);
+  // The day the billing month renews: the next one, which begins exactly there.
+  const renewed = anaStore.period!.end * 1000 + 5 * 60_000;
+  is("a visit belongs to the billing month of its moment", [await recordVisit(anaStore, "203.0.113.9", renewed), await visitsIn(ana.folder, windowOf(anaStore, renewed)), await visitsIn(ana.folder, month), windowOf(anaStore, renewed) !== month], [true, 1, 4, true]);
+  const [kept] = await real([["SMEMBERS", `nl:traffic:day:${ana.folder}:${new Date(t0).toISOString().slice(0, 10)}`]]);
   is("what is kept of a visitor is a few letters, not their address", [(kept as string[]).length, (kept as string[]).every((member) => /^[0-9a-f]{16}$/.test(member))], [3, true]);
 
   part("Who is never counted");
-  const before = await visitsIn(ana.folder, monthKey());
+  const anaNow = () => windowOf(anaStore);
+  const before = await visitsIn(ana.folder, anaNow());
   await countVisit(asking("192.0.2.10", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"), anaStore);
-  is("a robot that says it is one", (await visitsIn(ana.folder, monthKey())) - before, 0);
+  is("a robot that says it is one", (await visitsIn(ana.folder, anaNow())) - before, 0);
   const session = await openSession(ana.email);
   await countVisit(asking("192.0.2.11", undefined, session), anaStore);
-  is("the store's owner, looking at their own store", (await visitsIn(ana.folder, monthKey())) - before, 0);
+  is("the store's owner, looking at their own store", (await visitsIn(ana.folder, anaNow())) - before, 0);
   await countVisit(asking("192.0.2.12", undefined, await openSession(ben.email)), anaStore);
-  is("somebody signed in who is not the owner is a visitor like any other", (await visitsIn(ana.folder, monthKey())) - before, 1);
+  is("somebody signed in who is not the owner is a visitor like any other", (await visitsIn(ana.folder, anaNow())) - before, 1);
   await countVisit(asking("192.0.2.13"), anaStore);
-  is("and so is anybody else", (await visitsIn(ana.folder, monthKey())) - before, 2);
+  is("and so is anybody else", (await visitsIn(ana.folder, anaNow())) - before, 2);
 
   part("Paid plans also have a finite visit threshold");
   const onScale = { ...anaStore, tier: "scale" as const };
   is("each paid plan is held to its published counted-visit threshold", [visitLimitFor(anaStore), visitLimitFor(onScale)], [VISITS_INCLUDED.creator, VISITS_INCLUDED.scale]);
-  await visited(ana, monthKey(), 5_000_000);
+  await visited(ana, anaNow(), 5_000_000);
   is("at five million visits its public pages rest", await isResting((await storeForEmail(ana.email))!), true);
   is("a paid store is checked with the same strict read", await counted(() => isResting(anaStore)), 1);
-  await visited(ana, monthKey(), 2);
+  await visited(ana, anaNow(), 2);
 
   part("A store with no plan to charge rests at the visits it has");
   const cyd = await storeWith("cyd", "none");
@@ -242,13 +252,14 @@ async function main(): Promise<void> {
   is("a store whose plan ended is held to the same figure", [visitLimitFor(deeStore), await isResting(deeStore)], [SETUP_VISITS, true]);
   const eve = await storeWith("eve", "trial", "scale");
   const eveStore = (await storeForEmail(eve.email))!;
-  is("a free trial has what the smallest plan covers, whichever plan it is a trial of", [visitLimitFor(eveStore), TRIAL_VISITS, TRIAL_VISITS === VISITS_INCLUDED.creator], [TRIAL_VISITS, VISITS_INCLUDED.creator, true]);
-  await visited(eve, monthKey(), publicVisitLimit(TRIAL_VISITS) - 1);
+  is("a free trial has its own figure, whichever plan it is a trial of, no more than the smallest plan's", [visitLimitFor(eveStore), TRIAL_VISITS <= VISITS_INCLUDED.creator], [TRIAL_VISITS, true]);
+  // A free trial is one window, from the day it began (lib/allowance-window.ts).
+  await visited(eve, windowOf(eveStore), publicVisitLimit(TRIAL_VISITS) - 1);
   const open = await isResting(eveStore);
-  await visited(eve, monthKey(), publicVisitLimit(TRIAL_VISITS));
+  await visited(eve, windowOf(eveStore), publicVisitLimit(TRIAL_VISITS));
   is("and rests there", [open, await isResting(eveStore)], [false, true]);
-  await setSubscription(eve.email, { active: true, trialEnds: 0 });
-  is("a paid Scale plan can continue while below its own larger threshold", await isResting((await storeForEmail(eve.email))!), false);
+  await setSubscription(eve.email, { active: true, trialEnds: 0, period: paidPeriod() });
+  is("a paid Scale plan starts its own billing month, below its own larger threshold", await isResting((await storeForEmail(eve.email))!), false);
   is("when the month turns, so are a resting store's", await isResting(cydStore, Date.now() + 40 * DAY), false);
   is("an acknowledged unused month remains open", await isResting({ ...cydStore, email: "nobody-with-visits@example.com" }), false);
 
@@ -256,16 +267,21 @@ async function main(): Promise<void> {
   const fay = await storeWith("fay", "paid", "creator");
   const now = Date.UTC(2026, 9, 20, 9, 30, 0);
   clock = now;
+  await setSubscription(fay.email, { active: true, period: paidPeriod(now) });
   const fayStore = (await storeForEmail(fay.email))!;
-  await visited(fay, month, publicVisitLimit(VISITS_INCLUDED.creator) - 1);
+  const fayMonth = windowOf(fayStore, now);
+  await visited(fay, fayMonth, publicVisitLimit(VISITS_INCLUDED.creator) - 1);
   is("under 95% of the figure, every page is open", [await isResting(fayStore, now), await isResting(fayStore, now, "buyer")], [false, false]);
-  await visited(fay, month, publicVisitLimit(VISITS_INCLUDED.creator));
+  await visited(fay, fayMonth, publicVisitLimit(VISITS_INCLUDED.creator));
   is("at 95%, public pages rest and buyers' pages stay open", [await isResting(fayStore, now), await isResting(fayStore, now, "buyer")], [true, false]);
-  await visited(fay, month, VISITS_INCLUDED.creator);
+  await visited(fay, fayMonth, VISITS_INCLUDED.creator);
   is("at the whole figure, buyers' pages rest too", await isResting(fayStore, now, "buyer"), true);
   is("and no line is put on any invoice for it", lines.length, 0);
   const gil = await storeWith("gil", "paid", "pro", "year");
-  await visited(gil, month, VISITS_INCLUDED.creator + 4000);
+  await setSubscription(gil.email, { active: true, period: { start: Math.floor(now / 1000) - 40 * 86_400, end: Math.floor(now / 1000) + 325 * 86_400, renews: true } });
+  const gilStore = (await storeForEmail(gil.email))!;
+  is("a yearly plan's month starts on the day of the month its year began", windowOf(gilStore, now), new Date(addMonthsMs(gilStore.period!.start * 1000, 1)).toISOString().slice(0, 10));
+  await visited(gil, windowOf(gilStore, now), VISITS_INCLUDED.creator + 4000);
   is("the same visits on a larger plan are inside it", await isResting((await storeForEmail(gil.email))!, now), false);
   is("a creator is written to about a month once", [await firstWordOnVisits(fay.folder, "2026-12"), await firstWordOnVisits(fay.folder, "2026-12"), await firstWordOnVisits(fay.folder, "2027-01")], [true, false, true]);
   void eve; void cyd; void monthly; void stripe; void stripeAsked;
@@ -289,7 +305,8 @@ async function main(): Promise<void> {
     return listings;
   };
   const listings = await drawFront();
-  is("a full page of a store that pays is drawn in a few reads", [listings.length, (await counted(drawFront)) <= COMMANDS.frontPage], [24, true]);
+  // And the request the page is, counted in the store's window: priced apart (tests/plan-cost-registry.ts, public-requests).
+  is("a full page of a store that pays is drawn in a few reads", [listings.length, (await counted(drawFront)) <= COMMANDS.frontPage + REQUEST_COMMANDS], [24, true]);
   const countFront = async (ip: string) => {
     const store = (await storeForHandle("joy"))!;
     await withinLimit("hit", `${ip}|${store.handle}`, 120, 600);
@@ -316,7 +333,7 @@ async function main(): Promise<void> {
       isSoon(store, product.id).catch(() => false),
     ]);
   };
-  is("a product's page is drawn inside it", (await counted(drawLater)) <= COMMANDS.laterPage, true);
+  is("a product's page is drawn inside it", (await counted(drawLater)) <= COMMANDS.laterPage + REQUEST_COMMANDS, true);
   const countLater = async (ip: string) => {
     const store = (await storeForHandle("joy"))!;
     await withinLimit("hit", `${ip}|${store.handle}`, 120, 600);
@@ -371,7 +388,7 @@ async function main(): Promise<void> {
   is("what a visit is, and who is never counted", [/one person opening your store on one day/.test(terms), /never counted/.test(terms)], [true, true]);
   is("and what happens with no paid plan", [/countWords\(TRIAL_VISITS\)/.test(terms), /countWords\(SETUP_VISITS\)/.test(terms), /rest/.test(terms)], [true, true, true]);
   const help = read("lib/help-content.ts");
-  is("the help pages disclose counted visits, page pauses and that nothing is billed", [help.includes("countWords(VISITS_INCLUDED.creator)} visits a month"), help.includes("Visits are never billed"), help.includes("public pages"), help.includes("countWords(SETUP_VISITS)")], [true, true, true, true]);
+  is("the help pages disclose counted visits, page pauses and that nothing is billed", [help.includes("countWords(VISITS_INCLUDED.creator)} visits a billing month"), help.includes("Visits are never billed"), help.includes("public pages"), help.includes("countWords(SETUP_VISITS)")], [true, true, true, true]);
   const home = read("components/home-parts.tsx");
   is("the price list says it beside the plan, with no price past it", [/VISITS_INCLUDED\.creator/.test(home), /VISITS_INCLUDED\.pro/.test(home), /VISIT_CENTS_PER_THOUSAND_OVER/.test(home), /nothing is billed past it/.test(home)], [true, true, false, true]);
   const feature = read("lib/feature-pages.ts");
@@ -379,7 +396,7 @@ async function main(): Promise<void> {
   const privacy = read("app/privacy/page.tsx");
   is("the privacy policy says what is kept of a visitor for the count, and for how long", [/keep its first sixteen\s+characters/.test(privacy), /deleted two days later/.test(privacy), /made with a secret key of our own/.test(privacy)], [true, true, true]);
   const studio = read("app/studio/page.tsx");
-  is("the studio shows visits and their finite threshold", [/Visits this month/.test(studio), /trafficForAdmission\(folder\)/.test(studio), /visitLimitFor\(store\)/.test(studio), /Visits are never billed/.test(studio)], [true, true, true, true]);
+  is("the studio shows visits and their finite threshold", [/Visits this month/.test(studio), /trafficForAdmission\(folder, usageId\)/.test(studio), /visitLimitFor\(store\)/.test(studio), /Visits are never billed/.test(studio)], [true, true, true, true]);
   is("a plan's price is far more than its visits cost us", (VISITS_INCLUDED.creator * visitCost()) / (PLAN_PRICES.creator.month / 100) < 0.05, true);
 
   done();

@@ -5,8 +5,9 @@ import { publicVisitLimit, visitLimitFor, VISITS_INCLUDED } from '@/lib/traffic-
 import { videoLimitFor } from '@/lib/plan-standing';
 import { paidVideoSeconds } from '@/lib/video-admission-rules';
 import { world } from './traffic-admission-world';
+import { paidPeriod } from './billing-period-fixture';
 const folder = 'a'.repeat(32);
-const paid = {subscriptionActive:true,subscriptionId:'sub_test',trialEnds:0,planEndedAt:'',tier:'creator' as const};
+const paid = {subscriptionActive:true,subscriptionId:'sub_test',trialEnds:0,planEndedAt:'',tier:'creator' as const,period:paidPeriod()};
 const store = paid as Parameters<typeof isResting>[0];
 beforeEach(()=>Object.assign(world,{configured:true,throws:false,results:[[null,null]],reads:0,folder}));
 test('all paid tiers have finite thresholds, independent of monthly/yearly billing',()=>{
@@ -50,6 +51,11 @@ test('missing acknowledgements, malformed rows and corrupt counters never author
 test('unavailable ledger and provider exceptions pause admission',async()=>{
  world.configured=false;assert.equal(await isResting(store),true);assert.equal(world.reads,0);
  world.configured=true;world.throws=true;assert.equal(await isResting(store),true);
+});
+test('a paying store whose billing month is not known rests: nothing that costs is answered',async()=>{
+ world.results=[['0',null]];
+ assert.equal(await isResting({...paid,period:null} as Parameters<typeof isResting>[0]),true);
+ assert.equal(await isResting(store),false);
 });
 test('invalid folder, month or request clock cannot authorize',async()=>{
  for(const month of ['2026-00','2026-13','2026-1','oops'])assert.equal(await trafficForAdmission(folder,month),null);

@@ -44,7 +44,7 @@ export function AiPosts({ productId, url, page, what = "page" }: { productId?: s
       }
       setNote(
         data.error === "used"
-          ? "This month's writing help is used up. It starts again on the 1st."
+          ? "This month's writing help is used up. It starts again with your next billing month."
           : data.error === "notes"
             ? "Add a product or a line about your store first: the posts are written from them."
             : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.",

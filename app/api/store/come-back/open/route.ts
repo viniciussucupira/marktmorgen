@@ -1,8 +1,9 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { openWinBack } from "@/lib/winback-send";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
 
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
   const page = `${origin}/@${store.handle}/renew/${product}`;
   const back = (status: string) =>
     new Response(null, { status: 303, headers: { Location: `${page}?back=${encodeURIComponent(token)}&status=${status}`, "Cache-Control": "no-store" } });
-  if (!(await withinLimit("come-back", `${clientAddress(request)}|${store.handle}`, 20, 600))) return back("limited");
+  if (!(await withinStore("come-back", `${clientAddress(request)}|${store.handle}`, 20, 600, store))) return back("limited");
   const opened = await openWinBack(store, product, token, linkOrigin(request, store));
   if (!opened.ok) return back(opened.reason);
   return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });

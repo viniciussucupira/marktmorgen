@@ -22,6 +22,7 @@
  *   nl:lib:<hash of the address>   the stores it bought from (a set of ids), kept 3 years after the last
  *   nl:lib:link:<hash of a token>  the address a library link was sent to, for a day
  */
+import { storeForId } from "@/lib/store";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -75,7 +76,10 @@ export async function requestLibraryLink(input: { email: string; ip: string; ori
   const token = randomBytes(32).toString("hex");
   await redisPipeline([["SET", linkKey(token), email, "EX", LIBRARY_LINK_SECONDS]]);
   const link = `${input.origin}/library?token=${token}`;
-  const sent = await sendEmail({
+  // One of the access emails of the store the address bought from first in the list (lib/store-allowance-rules.ts).
+  const charged = await storeForId(stores[0]).catch(() => null);
+  if (!charged) return "error";
+  const sent = await sendEmail({ meter: { by: "store", store: charged, kind: "transactional" },
     from: NIMBUS_FROM,
     to: email,
     subject: "Your purchases on Marktmorgen",

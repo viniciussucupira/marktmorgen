@@ -16,6 +16,8 @@ import type { StatsData } from "@/lib/stats";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
+import { windowId } from "@/lib/allowance-window";
 
 let reply: string | null = null;
 const prompts: string[] = [];
@@ -72,7 +74,7 @@ async function main(): Promise<void> {
   const owner = "owner@example.com";
   await claimHandle(owner, "numshop", "Num Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Num0001", subscriptionId: "sub_Num0001", active: true, tier: "pro" });
+  await setSubscription(owner, { customerId: "cus_Num0001", subscriptionId: "sub_Num0001", active: true, tier: "pro", period: paidPeriod() });
   const store = (await storeForEmail(owner))!;
   const before = await aiLeft(store);
 
@@ -100,7 +102,7 @@ async function main(): Promise<void> {
   part("The weekly summary");
   reply = "Visitors rose to 120 from 90. Instagram brought most of the money.";
   is("a few sentences from the same numbers", await weeklySummary(store, data), "Visitors rose to 120 from 90. Instagram brought most of the money.");
-  await redis.pipeline([["SET", `nl:ai:${store.statsId}:${new Date().toISOString().slice(0, 7)}`, "999999"]]);
+  await redis.pipeline([["SET", `nl:ai:${store.statsId}:${windowId(store)}`, "999999"]]);
   is("none left: the email goes without it", await weeklySummary(store, data), null);
 
   done();

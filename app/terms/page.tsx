@@ -12,8 +12,11 @@ import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
-import { ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
-import { BUYER_RESERVE_BPS, ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, countWords, partsWords } from "@/lib/traffic-rules";
+import { CALL_ORDER_UNITS, ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
+import { API_WRITE_UNITS, allowanceListWords } from "@/lib/store-allowance-rules";
+import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
+import { FREE_POOL_BASE_STORES, PAID_STORES_PER_FREE_STORE } from "@/lib/free-pool-rules";
+import { BUYER_RESERVE_BPS, EXTRA_REQUESTS, REQUESTS_PER_VISIT, ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, countWords, partsWords } from "@/lib/traffic-rules";
 import { ROOM_GRANT_MINUTES } from "@/lib/chat-pace";
 import { STORAGE_BRAKE_BYTES, storageWords } from "@/lib/storage-quota";
 import { INVITE_PROGRAM_OPEN, INVITE_PAUSE_NOTICE, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
@@ -331,10 +334,61 @@ export default function TermsPage() {
           and the monthly figures of imports, workflows and shared funnels.
           You can see every one of them while you use the Services. Use past
           a plan&apos;s figures is not sold or billed: what needs the figure
-          waits for the next calendar month or a larger plan, as each part of
+          waits for your next billing month or a larger plan, as each part of
           this section says.
           None of them is hidden in this document and then discovered by being
           enforced against you.
+        </p>
+        <p>
+          <strong className="text-black">Your billing month.</strong> A paid
+          plan&apos;s monthly figures are counted in your billing month, not
+          the calendar month: it begins on the day your plan renews and ends
+          when the next payment&apos;s month begins, so each payment buys one
+          month of every figure. A yearly plan&apos;s figures are monthly too,
+          each month beginning on the day of the month your year began. A free
+          trial&apos;s figures are counted for the trial as a whole, and a
+          store with no plan, before one starts or after one ends, counts them
+          by calendar month (UTC). Until we have read your plan&apos;s billing
+          month from our payment processor (when you next open your studio, or
+          within a day), uses that cost us money wait, and a buyer who is
+          already paying is never stopped.
+        </p>
+        <p>
+          <strong className="text-black">The other monthly figures.</strong>{" "}
+          Each billing month also covers: on {PLAN_TITLES.creator},{" "}
+          {allowanceListWords("creator")}; on {PLAN_TITLES.pro},{" "}
+          {allowanceListWords("pro")}; and on {PLAN_TITLES.scale},{" "}
+          {allowanceListWords("scale")}. A studio request is any page of your
+          studio you open (each counts as {STUDIO_PAGE_UNITS}), any save, and
+          the studio&apos;s own refreshing; an API request is one made with
+          one of your store&apos;s keys (a contact added or a product given
+          counts as {API_WRITE_UNITS}); store emails are the emails your
+          store&apos;s own tools send outside your monthly emails and your
+          orders (inbox notices and replies, a purchase sent again, reminders,
+          offers, notices to members); access emails hand a buyer what they
+          already have (a link to their purchases, a course, a private
+          podcast). When one is used, that use is refused with a plain
+          message until your next billing month or a larger plan; nothing is
+          billed past it. Changing your plan, canceling it, deleting your
+          store and downloading your sales are never refused for it. Your
+          store&apos;s public side also answers up to{" "}
+          {countWords(REQUESTS_PER_VISIT)} requests for each visit its plan
+          covers and a number more ({countWords(EXTRA_REQUESTS.creator)} on{" "}
+          {PLAN_TITLES.creator}, {countWords(EXTRA_REQUESTS.pro)} on{" "}
+          {PLAN_TITLES.pro} and {countWords(EXTRA_REQUESTS.scale)} on{" "}
+          {PLAN_TITLES.scale}): pages, searches, the cart, downloads and the
+          page after paying. Past them its pages rest as they do for visits.
+        </p>
+        <p>
+          <strong className="text-black">Stores that pay nothing.</strong>{" "}
+          Free trials, stores with no plan and stores whose plan has ended
+          share a limited number of places each calendar month:{" "}
+          {countWords(FREE_POOL_BASE_STORES)}, and one more for every{" "}
+          {countWords(PAID_STORES_PER_FREE_STORE)} paying stores. A store that
+          pays nothing uses its place the first time in a month it does
+          something that costs us money. When the places are taken, such a
+          store is told plainly, and what it asked for waits until the next
+          month or until its plan is paid.
         </p>
         <p>
           We do not stop a download because a store has passed that figure.
@@ -357,7 +411,7 @@ export default function TermsPage() {
           {" "}{paidVideoWords()} each month. Free trials have {hoursWords(TRIAL_VIDEO_SECONDS)}{" "}
           a month. Before a plan starts and after one ends, the threshold is
           {" "}{hoursWords(SETUP_VIDEO_SECONDS)}. New playback pauses at the applicable threshold until the next
-          calendar month or a plan change provides capacity. Existing player
+          billing month or a plan change provides capacity. Existing player
           links may remain valid until they expire. Watching is measured about
           once an hour; the meter is not a limit on transferred bytes. Video
           sold or served as a file follows the separate download path. Other
@@ -382,7 +436,7 @@ export default function TermsPage() {
           address they come from, and by nothing kept in their browser. You
           are never counted when you are signed in, and neither is a robot
           that says it is one. Your plan covers a number of visits in each
-          calendar month: {countWords(VISITS_INCLUDED.creator)} on{" "}
+          billing month: {countWords(VISITS_INCLUDED.creator)} on{" "}
           {PLAN_TITLES.creator}, {countWords(VISITS_INCLUDED.pro)} on{" "}
           {PLAN_TITLES.pro}, and {countWords(VISITS_INCLUDED.scale)} on{" "}
           {PLAN_TITLES.scale}. Visits are not billed, and none are sold past
@@ -393,7 +447,7 @@ export default function TermsPage() {
           buyers already have (courses and lessons, the community and its
           live room, and private podcasts), which rest once the whole figure
           is used, with a page that tells your buyers their access is kept.
-          Everything opens again at the next calendar month, or when a plan
+          Everything opens again with your next billing month, or when a plan
           change provides a larger figure. A checkout already open is never
           stopped by this. An unreadable count also pauses new public-page
           admission.
@@ -415,10 +469,10 @@ export default function TermsPage() {
           counted in your own room.
         </p>
         <p>
-          A store with no paid plan rests the same way until the plan is paid
-          or the month turns: {countWords(TRIAL_VISITS)} visits a month in
-          the free trial, and {countWords(SETUP_VISITS)} a month before a plan
-          is started and after one has ended. A visitor to a resting store is
+          A store with no paid plan rests the same way until the plan is paid:{" "}
+          {countWords(TRIAL_VISITS)} visits for the whole free trial, and{" "}
+          {countWords(SETUP_VISITS)} a calendar month before a plan is started
+          and after one has ended, until the month turns. A visitor to a resting store is
           told the page will be open again soon. Nothing is charged for
           visits, and downloads of what a buyer bought are not visits and are
           never part of the rest. The live room of a resting store
@@ -430,12 +484,14 @@ export default function TermsPage() {
           (a bundle or a cart of several products is one), one offer taken
           after paying, one PayPal order, one place in a purchase made for
           several people, or one free copy sent to an address, each counted
-          once. Your plan covers a number of orders in each calendar month:{" "}
+          once; a package of calls is one order, and a call booked counts as{" "}
+          {countWords(CALL_ORDER_UNITS)}, for the emails and reminders it
+          sends. Your plan covers a number of orders in each billing month:{" "}
           {countWords(ORDERS_INCLUDED.creator)} on {PLAN_TITLES.creator},{" "}
           {countWords(ORDERS_INCLUDED.pro)} on {PLAN_TITLES.pro}, and{" "}
           {countWords(ORDERS_INCLUDED.scale)} on {PLAN_TITLES.scale}. Orders
           are not billed, and none are sold past that figure: when a paid
-          store reaches it, new orders pause until the next calendar month or
+          store reaches it, new orders pause until the next billing month or
           a plan change that provides a larger figure. A buyer who tries to
           buy then is told plainly that the store is not taking new orders
           right now, and nothing is charged. A checkout opened in the
@@ -443,10 +499,10 @@ export default function TermsPage() {
           so a buyer who is already paying is never stopped and receives
           everything bought. You are emailed automatically the first time a
           month reaches the figure.
-          {feeWords().ordersShared} In the free trial, free copies stop for
-          the month once the store has had {countWords(TRIAL_ORDERS)} orders,
-          until the plan is paid or the month turns; paid orders in the trial
-          are not stopped.
+          {feeWords().ordersShared} In the free trial, new orders, paid and
+          free copies together, pause once the store has had{" "}
+          {countWords(TRIAL_ORDERS)} in the trial, until the plan is paid; a
+          buyer who is already paying is never stopped.
         </p>
         <p>
           What we ask in return is that the Services are used to sell your own

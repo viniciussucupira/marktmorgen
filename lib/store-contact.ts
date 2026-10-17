@@ -54,7 +54,7 @@ export async function sendContact(input: { store: Store; name: string; email: st
   if (!(await withinLimit("contact-ip", `${who}:${input.ip}`, 3, 3_600))) return "limited";
   if (!(await withinLimit("contact-store", who, MAX_PER_DAY, 86_400))) return "limited";
   const from = name || email;
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: NIMBUS_FROM,
     to: store.email,
     replyTo: email,

@@ -22,6 +22,7 @@ import { checkMember, joinServer } from "@/lib/discord-access";
 import { accountOf, dueMembers, readMember, saveServer, setProductRoles, startTrip, takeTrip } from "@/lib/discord-store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const SERVER = "100000000000000001";
 const R1 = "200000000000000001";
@@ -109,7 +110,7 @@ async function main(): Promise<void> {
   await ensureStatsId(OWNER);
   await ensureStoreId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestClubhouse1", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const made = await addProduct(OWNER, "The Club", "", "20", null);
   if (!made.ok) throw new Error("no product");
   productId = made.product.id;

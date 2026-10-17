@@ -169,7 +169,7 @@ export async function noticeCreator(store: Pick<Store, "email" | "handle">, chan
   const { subject, line } = describe(change);
   const when = new Date().toISOString().replace("T", " ").slice(0, 16);
   try {
-    return await sendEmail({
+    return await sendEmail({ meter: { by: "company" },
       from: NIMBUS_FROM,
       to: store.email,
       replyTo: SUPPORT,

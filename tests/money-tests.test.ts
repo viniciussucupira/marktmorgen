@@ -19,6 +19,7 @@ import { writeTestHeadline } from "@/lib/ai";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 let reply = "";
 globalThis.fetch = (async (input: string | URL | Request) => {
@@ -67,7 +68,7 @@ async function main(): Promise<void> {
   const owner = "owner@example.com";
   await claimHandle(owner, "abshop", "AB Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Ab00001", subscriptionId: "sub_Ab00001", active: true, tier: "pro" });
+  await setSubscription(owner, { customerId: "cus_Ab00001", subscriptionId: "sub_Ab00001", active: true, tier: "pro", period: paidPeriod() });
   const store = (await storeForEmail(owner))!;
   const facts = "Bread School: a course of 12 lessons on sourdough at home.";
   reply = JSON.stringify({ headline: "Bake the loaf you buy, at home", sub: "Twelve short lessons, one bake at a time." });

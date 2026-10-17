@@ -81,5 +81,5 @@ export function rowsWords(rows: number): string {
 export function importAllowanceWords(): string {
   const { creator, pro, scale } = IMPORT_ALLOWANCES;
   const n = (v: number) => v.toLocaleString("en-US");
-  return `Rows an import brings in, a calendar month: ${n(creator.rows)} on Store, ${n(pro.rows)} on Studio, ${n(scale.rows)} on Scale (Store's figures in the free trial and before a plan), each upload counting at least ${IMPORT_MIN_ROWS_PER_UPLOAD} rows; imports started: ${n(creator.starts)}, ${n(pro.starts)} and ${n(scale.starts)}.`;
+  return `Rows an import brings in, a billing month: ${n(creator.rows)} on Store, ${n(pro.rows)} on Studio, ${n(scale.rows)} on Scale (Store's figures in the free trial and before a plan), each upload counting at least ${IMPORT_MIN_ROWS_PER_UPLOAD} rows; imports started: ${n(creator.starts)}, ${n(pro.starts)} and ${n(scale.starts)}.`;
 }

@@ -18,7 +18,7 @@ type Review = {
 };
 
 const MESSAGES: Record<string, string> = {
-  used: "This month's writing help is used up. It starts again on the 1st.",
+  used: "This month's writing help is used up. It starts again with your next billing month.",
   slow: "A few at a time: wait a minute, then try again.",
   failed: "The review did not come back just now. Your content was not changed. Started attempts count toward the monthly allowance. Try again in a moment.",
   off: "The writing help is not available right now.",

@@ -12,6 +12,7 @@ import { keepStoreSetup } from "@/lib/store-setup";
 import { KIND } from "@/lib/catalog";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 type Sent = { system: string; messages: { content: string }[] };
 const asked: Sent[] = [];
@@ -31,7 +32,7 @@ async function main(): Promise<void> {
   const owner = "setup@example.com";
   await claimHandle(owner, "setupshop", "Setup Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Setup0001", subscriptionId: "sub_Setup0001", active: true, tier: "pro" });
+  await setSubscription(owner, { customerId: "cus_Setup0001", subscriptionId: "sub_Setup0001", active: true, tier: "pro", period: paidPeriod() });
 
   part("The draft");
   reply = JSON.stringify({

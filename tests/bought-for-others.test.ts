@@ -24,6 +24,7 @@ import { canConfirm, confirmPurchase, resendPurchase } from "@/lib/purchase-emai
 import { importedFor } from "@/lib/imported-purchases";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const emails: { to: string[]; subject: string; text: string }[] = [];
 /** Checkouts as the creator's Stripe account would answer for them, by id. */
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
   await setStripeAccount("owner@example.com", "acct_1TestHarbor0001", true);
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const made = await addProduct("owner@example.com", "Sourdough Course", "", "49", null);
   if (!made.ok) throw new Error("no product");
   await setProductLink("owner@example.com", made.product.id, "https://example.com/course");

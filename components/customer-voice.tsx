@@ -7,7 +7,7 @@ import type { VoiceSource, VoiceSummary } from "@/lib/customer-voice";
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
   few: "Not enough yet: fewer than 8 things customers wrote or searched for in the last 90 days. It is worth reading once there are more.",
-  used: "This month's AI jobs are used up. They come back on the 1st.",
+  used: "This month's AI jobs are used up. They come back with your next billing month.",
   off: "This summary is not available right now.",
   busy: "It is already being read. Look again in a minute.",
   slow: "A few AI jobs a minute at most. Try again in a moment.",

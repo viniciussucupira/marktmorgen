@@ -26,6 +26,7 @@ import { claimHandle, ensureStatsId, ensureStoreId, setSubscription, storeForEma
 import { GET as mcpGet, POST as mcp } from "@/app/api/mcp/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const PHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148";
 const OWNER = "owner@example.com";
@@ -110,7 +111,7 @@ async function main(): Promise<void> {
   store = (await storeForEmail(OWNER))!;
   for (let i = 0; i < 64; i += 1) await recordHit(store, { kind: "view", source: "tiktok", ip: `198.51.100.${i}`, userAgent: PHONE }, TODAY);
   is("a store with no plan is not written to", await maybeBusyAlert(store, 64, TODAY), false);
-  await setSubscription(OWNER, { customerId: "cus_Busy00001", subscriptionId: "sub_Busy00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Busy00001", subscriptionId: "sub_Busy00001", active: true, period: paidPeriod() });
   store = (await storeForEmail(OWNER))!;
   is("only at 64, 128, 256…", await maybeBusyAlert(store, 65, TODAY), false);
   await setWeeklyOff("harbor", true);

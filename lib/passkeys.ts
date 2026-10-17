@@ -134,7 +134,7 @@ async function saveList(email: string, list: Passkey[]): Promise<void> {
 async function tell(email: string, subject: string, line: string): Promise<void> {
   if (!isSenderConfigured()) return;
   const when = new Date().toISOString().replace("T", " ").slice(0, 16);
-  await sendEmail({
+  await sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: normaliseEmail(email),
     replyTo: "support@marktmorgen.com",

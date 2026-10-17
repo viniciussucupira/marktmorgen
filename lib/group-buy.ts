@@ -220,7 +220,7 @@ async function sendReceipt(input: {
   const amount = typeof session.amount_total === "number" ? session.amount_total : product.priceCents * group.people;
   const currency = typeof session.currency === "string" && session.currency ? session.currency : store.currency;
   const g = givingWords(store.language);
-  return sendEmail({
+  return sendEmail({ meter: { by: "order" },
     from: input.from,
     to: buyer,
     subject: g.groupReceiptSubject(group.people, title).slice(0, 200),
@@ -318,7 +318,7 @@ export async function askPlace(input: {
 
   if (has) {
     const link = (await input.ordersLink(email)) ?? `${base}/orders`;
-    const sent = await sendEmail({
+    const sent = await sendEmail({ meter: { by: "order" },
       from: input.from,
       to: email,
       subject: g.placeAgainSubject(title).slice(0, 200),
@@ -338,7 +338,7 @@ export async function askPlace(input: {
 
   const token = randomBytes(32).toString("hex");
   await redisPipeline([["SET", tokenKey(token), JSON.stringify({ g: group.id, e: email }), "EX", PLACE_LINK_SECONDS]]);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "order" },
     from: input.from,
     to: email,
     subject: g.takePlaceSubject(title).slice(0, 200),

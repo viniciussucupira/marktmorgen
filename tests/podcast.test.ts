@@ -26,6 +26,9 @@ import { grantImported } from "@/lib/imported-purchases";
 import { setPastBuyers } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
+import { windowId } from "@/lib/allowance-window";
+import { REQUEST_COMMANDS } from "./plan-cost-registry";
 
 globalThis.fetch = (async () => new Response(JSON.stringify({ object: "list", data: [], has_more: false }))) as typeof fetch;
 
@@ -35,7 +38,7 @@ async function main(): Promise<void> {
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
   await setStripeAccount("owner@example.com", "acct_1TestHarbor0001", true);
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const show = await addProduct("owner@example.com", "Sourdough Radio", "", "19", null);
   const free = await addProduct("owner@example.com", "Free Guide", "", "0", null);
   const linked = await addProduct("owner@example.com", "Linked", "", "9", null);
@@ -108,9 +111,9 @@ async function main(): Promise<void> {
   const first = await ask(hal);
   is("a subscriber's feed is answered", [first.status, first.headers.get("content-type")], [200, "application/rss+xml; charset=utf-8"]);
   is("and the CDN may keep it, under its own secret address, for a few hours", first.headers.get("cache-control"), `public, max-age=0, s-maxage=${FEED_SHARED_SECONDS}`);
-  is("the subscriber is that day's visit to the store", await visitsIn(folder), 1);
+  is("the subscriber is that day's visit to the store", await visitsIn(folder, windowId((await storeForEmail("owner@example.com"))!)!), 1);
   await ask(hal);
-  is("once, however often the app asks", await visitsIn(folder), 1);
+  is("once, however often the app asks", await visitsIn(folder, windowId((await storeForEmail("owner@example.com"))!)!), 1);
   const ivy = "ivy@example.com";
   await grantImported(store.statsId!, "gift:gft_y", [{ email: ivy, productId: show.product.id, items: null }]);
   const ivys = (await feedToken(store, show.product.id, ivy))!;
@@ -123,12 +126,12 @@ async function main(): Promise<void> {
   commands = 0;
   await ask(ivys);
   const again = commands;
-  is("another subscriber is another", await visitsIn(folder), 2);
-  is("putting a feed together stays inside what it is costed at, the day's first time and after", [built <= COMMANDS.feedFirst, again <= COMMANDS.feed, again > 0], [true, true, true]);
+  is("another subscriber is another", await visitsIn(folder, windowId((await storeForEmail("owner@example.com"))!)!), 2);
+  is("putting a feed together stays inside what it is costed at, the day's first time and after", [built <= COMMANDS.feedFirst + REQUEST_COMMANDS, again <= COMMANDS.feed + REQUEST_COMMANDS, again > 0], [true, true, true]);
   await ask((await feedToken(store, show.product.id, "owner@example.com"))!);
-  is("the creator's own feed is never counted", await visitsIn(folder), 2);
+  is("the creator's own feed is never counted", await visitsIn(folder, windowId((await storeForEmail("owner@example.com"))!)!), 2);
   const stranger = await ask((await feedToken(store, show.product.id, "dana@example.com"))!);
-  is("an address that does not hold it gets an empty list, and is no visit", [stranger.status, /<item>/.test(await stranger.text()), await visitsIn(folder)], [200, false, 2]);
+  is("an address that does not hold it gets an empty list, and is no visit", [stranger.status, /<item>/.test(await stranger.text()), await visitsIn(folder, windowId((await storeForEmail("owner@example.com"))!)!)], [200, false, 2]);
   const asked: number[] = [];
   for (let i = 0; i < FEED_READS_A_DAY; i += 1) asked.push((await ask(hal)).status);
   is("a feed is put together only so often in a day", [asked.filter((code) => code === 200).length, asked[asked.length - 1]], [FEED_READS_A_DAY - 2, 429]);

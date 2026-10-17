@@ -21,6 +21,8 @@ import { upsertContact, unsubscribe, tokensFor } from "@/lib/contacts";
 import { usedThisMonth } from "@/lib/mail";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
+import { windowId } from "@/lib/allowance-window";
 
 const OWNER = "owner@example.com";
 type Message = { to: string; subject: string; text: string; headers?: Record<string, string> };
@@ -60,7 +62,7 @@ async function main(): Promise<void> {
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const made = await addProduct(OWNER, "Weekly Meal Planner", "", "27", null);
   const other = await addProduct(OWNER, "Pantry Checklist", "", "5", null);
   if (!made.ok || !other.ok) throw new Error("no product");
@@ -84,7 +86,7 @@ async function main(): Promise<void> {
   part("Only where it can be sent");
   const product = (await readListing(await load(), id))!;
   is("not without Pro", (await startUpdate(await load(), product, "")).ok ? "started" : "plan", "plan");
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(OWNER, { fromName: "Jenny at Harbor", address: "1 Main St, Portland, OR 97201" });
   const unsold = (await readListing(await load(), other.product.id))!;
   sessions = sessions.filter((s) => (s.metadata as Record<string, string>).product !== other.product.id || (s.metadata as Record<string, string>).bump);
@@ -104,7 +106,7 @@ async function main(): Promise<void> {
   is("once a week at most, however many presses", again.ok ? "started" : [again.reason, (again.until ?? 0) - started.job.createdAt], ["soon", 7 * 86_400]);
 
   part("The email");
-  const before = await usedThisMonth((await load()).listId);
+  const before = await usedThisMonth((await load()).listId, windowId(await load()));
   const job = await advanceUpdate(started.job.id, storeForHandle, Date.now() + 20_000);
   const sent = batches.flat().map((m) => ({ ...m, to: [m.to].flat()[0] as string }));
   is("sent, to Ana only: Ben left the list", [job?.status, sent.map((m) => m.to)], ["sent", ["ana@example.com"]]);
@@ -112,7 +114,7 @@ async function main(): Promise<void> {
   const text = updateText(await load(), "Weekly Meal Planner", "x");
   is("that there is a new version, the creator's words, and the orders page", [mail.subject, mail.text.includes("There is a new version of Weekly Meal Planner, which you bought from Jenny at Harbor."), mail.text.includes("Ten new recipes.\n\nAnd one-page shopping lists."), mail.text.includes("https://marktmorgen.com/@harbor/orders")], ["Weekly Meal Planner has been updated", true, true, true]);
   is("with why it came, a way to stop them and the postal address", [mail.text.includes("because you bought Weekly Meal Planner from Jenny at Harbor"), mail.text.includes("/unsubscribe?u="), mail.text.includes("1 Main St, Portland, OR 97201"), Boolean(mail.headers?.["List-Unsubscribe"])], [true, true, true, true]);
-  is("counted in the store's month", (await usedThisMonth((await load()).listId)) - before, 1);
+  is("counted in the store's month", (await usedThisMonth((await load()).listId, windowId(await load()))) - before, 1);
   is("the words of the email in every store language", new Set(Object.values(UPDATES_WORDS).map((w) => w.subject("X"))).size, 7);
   is("the subject comes from the words", text.subject, "Weekly Meal Planner has been updated");
 

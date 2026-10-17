@@ -143,7 +143,7 @@ export async function sendWelcomeReminders(deadline: number, nowSeconds = Math.f
       ].join("\n");
       const withAddress = { ...store, mail: { fromName: store.mail?.fromName || store.name, address: store.welcomeOffer.address } };
       const rendered = render(withAddress, subject, body, unsub);
-      const ok = await sendEmail({
+      const ok = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
         from: fromLine(withAddress),
         to: v.e,
         subject: rendered.subject,

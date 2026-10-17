@@ -678,7 +678,7 @@ async function actOnPeople(
   // One of the store's monthly emails, like every other email a workflow sends (lib/flow-limits.ts).
   if ((await takeFromMonth(store, 1)) < 1) return each(emails, "failed", "Your monthly emails were used up, so you were not emailed about this step.");
   const shown = emails.slice(0, 50);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "monthly" },
     from: NIMBUS_FROM,
     to: store.email,
     subject: `${emails.length === 1 ? emails[0] : `${emails.length} people`} reached step ${at.index + 1} of “${at.flow.name}”`.slice(0, 200),

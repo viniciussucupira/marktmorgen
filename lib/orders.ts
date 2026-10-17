@@ -21,7 +21,8 @@
  * to err.
  */
 import { createHash } from "node:crypto";
-import { monthKey, rememberFolderOwner } from "@/lib/delivery";
+import { rememberFolderOwner } from "@/lib/delivery";
+import { allowanceWindow, calendarWindow } from "@/lib/allowance-window";
 import { shareBps } from "@/lib/platform-share";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
@@ -61,10 +62,14 @@ export async function countOrder(store: Store, reference: string, paidCents: num
     if (coveredByShare(store, paidCents, now / 1000)) return false;
     const owner = storeRef(store);
     const folder = await storeFolder(owner);
-    const month = monthKey(new Date(now));
+    // Counted in the store's window (lib/allowance-window.ts). An order paid
+    // for when no window is known (its checkout was opened before) still
+    // counts, in the calendar month, rather than nowhere.
+    const window = (allowanceWindow(store, now) ?? calendarWindow(now)).id;
+    const month = calendarWindow(now).id;
     const [count] = await redisPipeline([
-      ["INCR", countKey(folder, month)],
-      ["EXPIRE", countKey(folder, month), KEEP_SECONDS],
+      ["INCR", countKey(folder, window)],
+      ["EXPIRE", countKey(folder, window), KEEP_SECONDS],
     ]);
     // Written with the month's first order, and again at every hundredth, so
     // one write lost to a bad moment mends itself long before a bill could be
@@ -85,8 +90,8 @@ export async function countOrder(store: Store, reference: string, paidCents: num
   }
 }
 
-/** The orders a store had in a month ("2026-10"); this month by default. Zero when it cannot be read. */
-export async function ordersIn(folder: string, month = monthKey()): Promise<number> {
+/** The orders a store had in a window: a calendar month ("2026-10"), this one by default, or a billing month ("2026-10-19"). Zero when it cannot be read. */
+export async function ordersIn(folder: string, month = calendarWindow().id): Promise<number> {
   if (!isRedisConfigured() || !folder) return 0;
   try {
     const [raw] = await redisPipeline([["GET", countKey(folder, month)]]);
@@ -98,13 +103,13 @@ export async function ordersIn(folder: string, month = monthKey()): Promise<numb
   }
 }
 
-/** The orders a store has had this month, by the store. */
+/** The orders a store has had in its window (its billing month when it pays), by the store. */
 export async function storeOrdersThisMonth(store: Store, now = Date.now()): Promise<number> {
-  return ordersIn(await storeFolder(storeRef(store)), monthKey(new Date(now)));
+  return ordersIn(await storeFolder(storeRef(store)), (allowanceWindow(store, now) ?? calendarWindow(now)).id);
 }
 
 /** The stores that had any order counted in a month. */
-export async function orderedFolders(month = monthKey()): Promise<string[]> {
+export async function orderedFolders(month = calendarWindow().id): Promise<string[]> {
   if (!isRedisConfigured()) return [];
   const [raw] = await redisPipeline([["SMEMBERS", foldersKey(month)]]);
   return Array.isArray(raw) ? raw.filter((f): f is string => typeof f === "string" && FOLDER_PATTERN.test(f)).sort() : [];

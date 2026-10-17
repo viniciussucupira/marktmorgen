@@ -15,6 +15,7 @@
 import { keyFromHeader, resolveKey } from "@/lib/api-keys";
 import { storeForId, type Store } from "@/lib/store";
 import { withinLimit } from "@/lib/request-guard";
+import { takeAllowance } from "@/lib/store-allowance";
 
 /** Requests one key may make in a minute. Generous for a sync, a wall for a runaway loop. */
 export const API_RATE = 120;
@@ -65,6 +66,9 @@ async function apiKeyed(request: Request): Promise<{ store: Store; keyId: string
   }
   const store = await storeForId(found.sid);
   if (!store) return unauthorized();
+  // Each request is one of the store's window (lib/store-allowance-rules.ts), taken before any work.
+  const taken = await takeAllowance(store, "api");
+  if (!taken.ok) return apiError(429, taken.reason === "used" ? "monthly_limit" : "unavailable", taken.message);
   return { store, keyId: found.id, write: found.write };
 }
 

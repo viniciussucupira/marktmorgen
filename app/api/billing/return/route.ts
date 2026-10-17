@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       cycle: started.cycle,
       trialEnds: started.trialEnds,
       shared: started.shared,
+      period: started.period,
     });
     if (!saved) return away(origin, studio("billing=error"));
     // Started again by hand during a break: there is nothing left for the

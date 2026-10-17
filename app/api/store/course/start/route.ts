@@ -1,3 +1,4 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { fromAnotherSite } from "@/lib/studio-route";
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
   // A press may email the buyer a link, so it is counted like the other
   // forms that send one: per connection, and per order.
   if (
-    !(await withinLimit("course-start", `${clientAddress(request)}|${store.handle}`, 10, 3600)) ||
+    !(await withinStore("course-start", `${clientAddress(request)}|${store.handle}`, 10, 3600, store, "buyer")) ||
     !(await withinLimit("course-start-order", sessionId.slice(0, 220), 5, 3600))
   ) {
     return away(`/@${store.handle}`);

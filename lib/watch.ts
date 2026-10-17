@@ -40,7 +40,9 @@
  * A reading belongs to the month it is made in, so the last hour of a month
  * can land in the next. It is still counted once.
  */
-import { monthKey } from "@/lib/delivery";
+import { storeKeysOf } from "@/lib/delivery";
+import { WINDOW_ID, allowanceWindow, calendarWindow } from "@/lib/allowance-window";
+import { storeFolder, storeForEmail, storeRef } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { PLAYER_SECONDS, isStreamConfigured, streamWatched } from "@/lib/stream";
 import { MEASURE_EVERY_MS, MEASURE_SOON_MS } from "@/lib/watch-rules";
@@ -81,7 +83,7 @@ export async function opened(folder: string, now = Date.now()): Promise<void> {
 }
 
 /** The seconds of video a store's students watched in a month ("2026-10"); this month by default. */
-export async function watchedIn(folder: string, month = monthKey()): Promise<number> {
+export async function watchedIn(folder: string, month = calendarWindow().id): Promise<number> {
   if (!isRedisConfigured() || !folder) return 0;
   try {
     const [raw] = await redisPipeline([["GET", secondsKey(folder, month)]]);
@@ -99,8 +101,8 @@ export async function watchedIn(folder: string, month = monthKey()): Promise<num
  * A missing monthly key is the existing meter's representation of no recorded
  * usage; this reader does not prove meter freshness or protect against key loss.
  */
-export async function watchedForAdmission(folder: string, month = monthKey()): Promise<number | null> {
-  if (!isRedisConfigured() || !FOLDER_PATTERN.test(folder) || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null;
+export async function watchedForAdmission(folder: string, month = calendarWindow().id): Promise<number | null> {
+  if (!isRedisConfigured() || !FOLDER_PATTERN.test(folder) || !WINDOW_ID.test(month)) return null;
   try {
     const results = await redisPipeline([["GET", secondsKey(folder, month)]]);
     if (results.length !== 1) return null;
@@ -114,10 +116,26 @@ export async function watchedForAdmission(folder: string, month = monthKey()): P
 }
 
 /** The stores whose video was watched at all in a month. */
-export async function watchedFolders(month = monthKey()): Promise<string[]> {
+export async function watchedFolders(month = calendarWindow().id): Promise<string[]> {
   if (!isRedisConfigured()) return [];
   const [raw] = await redisPipeline([["SMEMBERS", foldersKey(month)]]);
   return Array.isArray(raw) ? raw.filter((f): f is string => typeof f === "string" && FOLDER_PATTERN.test(f)).sort() : [];
+}
+
+/**
+ * The window a folder's store counts its video in: its billing month when it
+ * pays and the period is known, the calendar month otherwise (watching that
+ * happened is counted somewhere, never nowhere).
+ */
+async function windowOfFolder(folder: string, now: number): Promise<string> {
+  try {
+    const [key] = await storeKeysOf([folder]);
+    const store = key ? await storeForEmail(key) : null;
+    if (store && (await storeFolder(storeRef(store))) === folder) return (allowanceWindow(store, now) ?? calendarWindow(now)).id;
+  } catch (error) {
+    console.error("could not read whose video was watched", error);
+  }
+  return calendarWindow(now).id;
 }
 
 /**
@@ -152,10 +170,13 @@ export async function measure(folder: string, now = Date.now()): Promise<number 
   if (gone.length) writes.push(["HDEL", lastKey(folder), ...gone]);
 
   if (added > 0) {
-    const month = monthKey(new Date(now));
+    // Added to the store's window (lib/allowance-window.ts), where its video
+    // stops; the line of stores is kept by the calendar month.
+    const window = await windowOfFolder(folder, now);
+    const month = calendarWindow(now).id;
     writes.push(
-      ["INCRBY", secondsKey(folder, month), added],
-      ["EXPIRE", secondsKey(folder, month), KEEP_SECONDS],
+      ["INCRBY", secondsKey(folder, window), added],
+      ["EXPIRE", secondsKey(folder, window), KEEP_SECONDS],
       ["SADD", foldersKey(month), folder],
       ["EXPIRE", foldersKey(month), KEEP_SECONDS],
     );

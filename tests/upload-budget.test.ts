@@ -5,7 +5,7 @@ import { isUploadBudgetConfigured, uploadAllowanceWords, UPLOAD_BUDGET_SCOPES, u
 import { uploadTestPolicy } from './upload-budget-approved-policy';
 import { calls, reset, seed, hashes, settings } from './upload-budget-redis';
 const id=(n:number)=>n.toString(16).padStart(32,'0');
-const store=(n=1,scope='creator'):UploadStore=>({statsId:id(n),tier:scope==='pro'?'pro':scope==='scale'?'scale':'creator',subscriptionActive:!['setup','ended'].includes(scope),subscriptionId:scope==='setup'?null:'sub_test123',trialEnds:scope==='trial'?Date.now()/1000+600:0,planEndedAt:scope==='ended'?'2026-01-01':''});
+const store=(n=1,scope='creator'):UploadStore=>({statsId:id(n),tier:scope==='pro'?'pro':scope==='scale'?'scale':'creator',subscriptionActive:!['setup','ended'].includes(scope),subscriptionId:null,trialEnds:scope==='trial'?Date.now()/1000+600:0,planEndedAt:scope==='ended'?'2026-01-01':''});
 
 test('a separately reviewed policy never gets its missing ledger created',async()=>{
  reset();assert.equal(await reserveStoreUpload(store(),1,'r2',uploadTestPolicy()),false);assert.equal(hashes.size,0);

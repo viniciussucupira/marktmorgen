@@ -63,6 +63,8 @@ Both ledgers are one persistent hash per UTC month, `nl:ai-spend:v2:{YYYY-MM}` a
 - A ledger written under any other review (a separately reviewed policy) is never touched.
 - When the computed ceilings change (a deploy or the lowering setting), the policy binding is replaced and every spent amount and claimed allocation is carried; new allocation slots are what the new count leaves after those already claimed. Nothing is reset, refunded or expired.
 
+Since 17 October 2026 a paying store's monthly ceiling follows its billing month (lib/allowance-window.ts), not the calendar month: its AI reservations go into the ledger of the calendar month its billing month began in, under the field `store:<statsId>:<billing month>`, and its uploads under `store:<statsId>@<billing month>:…`. One payment buys one month's ceiling however many calendar months it touches, which is what each plan's worst month prices. A store that pays nothing, and every reservation made without a window, keeps the calendar month and the field `store:<statsId>`. A paying store whose billing month is not known reserves nothing.
+
 Explicitly supplied policies keep #468's behavior exactly: their ledgers are never created by the request path. `scripts/test_spend_ledger_open_redis.py` runs both opening scripts and the reservation scripts against the loopback CI Redis.
 
 ## What stays null, and what is missing
