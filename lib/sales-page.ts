@@ -933,6 +933,7 @@ export type PageProblem =
   | "pictures"
   | "countdown"
   | "quote_link"
+  | "quote_length"
   | "shape"
   | "too_big"
   | "same_version"
@@ -957,6 +958,7 @@ function blocksProblem(sent: unknown[], kept: PageBlock[]): PageProblem {
     if (value.kind === "quotes" && Array.isArray(value.items)) {
       for (const item of value.items) {
         const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+        if (typeof row.text === "string" && row.text.trim().length > MAX_QUOTE) return "quote_length";
         if (typeof row.text === "string" && row.text.trim() && !quoteUrl(row.url)) return "quote_link";
       }
     }

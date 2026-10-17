@@ -106,6 +106,7 @@ const MESSAGES: Record<string, string> = {
   video: "That video address is not one we can play. Paste a YouTube, Vimeo or Loom link.",
   pictures: `A picture on the page could not be kept. A page holds up to ${MAX_PAGE_PICTURES} pictures, each shown once: remove the one that was added twice, or add it again.`,
   countdown: "Give the countdown the moment it runs to, no more than a year away, or remove the block.",
+  quote_length: `A quotation exceeds the ${MAX_QUOTE}-character limit. Use a shorter, complete quotation from the source or remove it. Nothing was saved.`,
   quote_link: "Each thing said elsewhere needs the full https address of where it was said, so visitors can check it. Add it, or remove that one.",
   shape: "Something in the page could not be read. Reload the studio and try again.",
   same_version: "Version B shows just what version A does, or one of them has no blocks. Change something in version B, or end the test.",
