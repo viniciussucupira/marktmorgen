@@ -1,10 +1,12 @@
+import { zeroExposureFixture } from './margin-test-fixtures';
+import {fundedCustomerWithAi,zeroFixedCompanyFixture} from './margin-test-fixtures';
 import { BASE_PLAN_REVENUE_CEILINGS, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, REQUIRED_MARGIN_SCENARIOS, commercialMarginReady, commercialPlansMayOpen, type CommercialMarginReview, type MarginScenario } from "@/lib/commercial-margin";
 import { PUBLISHED_PLAN_PRICES } from "@/lib/plan";
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, type CustomerWorstCase } from "@/lib/net-margin-rules";
 import { done, is } from "./check";
 const costs = (n = 0) => Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key => [key, key === "other" ? n : 0]));
-const funded = (gross: number): CustomerWorstCase => ({ collectedRevenueCents: gross, refundableRevenueCents: 0, taxesCeilingCents: 0, costCeilings: costs(Math.floor(gross * 0.4)), allCostsBounded: true, allTaxesReviewed: true, revenueCollected: true });
-const review = (): CommercialMarginReview => ({ priceAndRightsSnapshot: CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, taxEvidence: "TEST ONLY", costAndLimitEvidence: "TEST ONLY", singleCustomerFixedCostsVerified: true, prepaidUsageEnforced: true, scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => [key, funded(BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000)])) });
+const funded = (gross: number): CustomerWorstCase => fundedCustomerWithAi(gross,Math.floor(gross*.65));
+const review = (): CommercialMarginReview => ({ companyBase:zeroFixedCompanyFixture, priceAndRightsSnapshot: CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, taxEvidence: "TEST ONLY", costAndLimitEvidence: "TEST ONLY", allocatedFixedCostsVerified:true, fundedExposure:zeroExposureFixture(), prepaidUsageEnforced: true, scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => [key, funded(BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000)])) });
 is("all six approved subscription ceilings", BASE_PLAN_REVENUE_CEILINGS, { creator_month_full: 2200, creator_year_full: 22000, pro_month_full: 14900, pro_year_full: 149000, scale_month_full: 34900, scale_year_full: 349000 });
 is("hypothetical exact-floor model remains assessable", commercialMarginReady(review()), true);
 for (const [key, ceiling] of Object.entries(BASE_PLAN_REVENUE_CEILINGS) as [MarginScenario, number][]) {

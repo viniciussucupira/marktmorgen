@@ -1,0 +1,15 @@
+# Funded exposures and minimum paid customer base
+
+The owner authorized a calculated minimum paid customer base and separately funded acquisition/refund exposure. A free account has no positive revenue on which a 60% profit margin could be computed. It is never reported as a profitable paid customer.
+
+Commercial review now separates nine revenue-bearing scenarios (six fixed plan/cycle offers and three overage cases) from seven funded exposure scopes: trial, setup, full refunds, non-payment, post-cancellation, paused accounts and accrued legacy credits. Every scope requires explicit maximum occurrences in the worst recognized month and complete per-occurrence cost/tax ceilings, even when the reviewed occurrence cap is zero. Expected conversions, future invoices and another scope's profit cannot offset losses. Full refunds preserve non-refundable card fees, taxes and service costs.
+
+Every funded trial, setup and ended AI allocation must also appear in the corresponding exposure occurrence cap and full per-case AI cost. Those pools cannot disappear from the company accounting even when paid customer AI is covered.
+
+The sum of all simultaneous losses must fit the reviewed monthly exposure ceiling. The entire ceiling is then added to the company fixed-cost ceiling before calculating the minimum paid base, with no assumed tax deduction. Each paying customer's surplus above 60% funds its equal allocation of this total. The weakest of all six plan/cycle cases determines the base, using exact annual normalization. A base of one is accepted only if that customer's own surplus covers the full allocation. A base below the computed minimum cannot approve commercial release.
+
+The former demand that every free/refund case independently earn 60%, and that one customer always carry all company fixed expenses, is replaced by this explicitly authorized allocation. The 60% test on paid customer units is unchanged. Reviews bind these rules in the price-and-rights snapshot. Missing, expired, underfunded, unbounded or incomplete exposure reviews keep release closed.
+
+This is a review calculation, not a live enrollment ledger. Actual acquisition occurrence limits, reserve availability, active paid-base observation, retention risk, legacy obligations and supplier enforcement still need runtime admission controls and evidence. Existing refund rights or accrued credits may not be denied to fit a new budget. New exposure must stop before exceeding a reviewed allocation; old obligations require sufficient reserves. The actual commercial review and AI/upload policies remain null, so this change does not authorize sales, certify tax rates or establish the real minimum customer count.
+
+The first runtime integration is now the persistent exposure reservation before non-paying AI dispatch; see [exposure admission](exposure-admission.md). This does not implement the remaining enrollment, reserve migration, other-provider or annual-term controls.

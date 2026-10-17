@@ -250,7 +250,7 @@ export async function makeVoice(store: Store, now = Date.now()): Promise<VoiceRe
         "Name each theme in plain American English, at most 8 words, saying what customers said or wanted (for example: \"Wants a printable version\", \"Price feels high for what is inside\"). No numbers in a name, no judgment of the customers, nothing that is not in the texts.",
         "Return only a JSON object: {\"themes\": [{\"title\": string, \"ids\": [numbers of its texts]}]}, the most repeated theme first.",
       ].join("\n\n");
-      const reply = await askModel(system, voicePrompt(items), 900, answerModel());
+      const reply = await askModel(store, system, voicePrompt(items), 900, answerModel());
       const json = reply ? jsonIn(reply) : null;
       if (!json) return null;
       const sorted = themesFrom(json, items);

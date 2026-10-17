@@ -1,3 +1,4 @@
+import type {ContractGrant} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
  *
@@ -18,6 +19,7 @@ import {
   type Tier,
   PLAN_NAMES,
   PLAN_PRICES,
+  PUBLISHED_PLAN_PRICES,
   PRICES_WITHOUT_COMMISSION,
   COMMISSION_LIVE,
   PRICE_CENTS,
@@ -33,6 +35,14 @@ import {
   type Store,
 } from "@/lib/store";
 import { feeWords } from "@/lib/fee-words";
+
+/** Internal billing calls must keep their route-issued cash grant bound to the
+ * published offer. This does not create or release a funding reservation. */
+function assertFunding(funding:ContractGrant|undefined,tier:Tier,cycle:Cycle,statsId?:string):void {
+ if(!funding)return;
+ const now=Math.floor(Date.now()/1000);
+ if(funding.key!==tier+'_'+cycle||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(funding.id)||!Number.isSafeInteger(funding.reservedCents)||funding.reservedCents<PUBLISHED_PLAN_PRICES[tier][cycle]||PLAN_PRICES[tier][cycle]!==PUBLISHED_PLAN_PRICES[tier][cycle]||!Number.isSafeInteger(funding.submitUntilSeconds)||now>funding.submitUntilSeconds||!Number.isSafeInteger(funding.checkoutExpiresAtSeconds)||funding.checkoutExpiresAtSeconds<now+1800||statsId!==undefined&&funding.statsId!==statsId)throw new Error('Funding grant does not cover this published plan or activation window');
+}
 
 /**
  * The price and the trial come from lib/plan.ts and are passed straight
@@ -137,7 +147,7 @@ const PRODUCT_IDS: Record<Tier, string> = {
 const PRODUCT_DESCRIPTIONS: Record<Tier, string> = {
   creator: feeWords(COMMISSION_LIVE).storeProduct,
   pro: "Everything in Marktmorgen, and what costs us money to run for you.",
-  scale: "Everything in Marktmorgen Pro, with three times the email to your list.",
+  scale: "Everything in Marktmorgen Studio, with the published Scale email and storage allowances.",
 };
 
 /** The name each price is found by, so there is never a second one. */
@@ -273,8 +283,10 @@ export async function createBillingCheckout(
   origin: string,
   choice: { tier: Tier; cycle: Cycle } = { tier: "creator", cycle: "month" },
   customerId: string | null = store.stripeCustomerId,
+  funding?:ContractGrant,
 ): Promise<string> {
   const { tier, cycle } = choice;
+  assertFunding(funding,tier,cycle,store.statsId??'');
   const body = new URLSearchParams({
     mode: "subscription",
     // English, always. Left to itself Stripe picks the language of the
@@ -290,6 +302,7 @@ export async function createBillingCheckout(
     success_url: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}${store.sid ? `&store=${store.sid}` : ""}`,
     cancel_url: `${origin}/studio?${store.sid ? `store=${store.sid}&` : ""}billing=canceled`,
   });
+  if(funding){body.set('expires_at',String(funding.checkoutExpiresAtSeconds));body.set('metadata[funding_grant]',funding.id);body.set('metadata[funding_review]',funding.reviewId);body.set('subscription_data[metadata][funding_grant]',funding.id);body.set('subscription_data[metadata][funding_review]',funding.reviewId);}
   if (customerId && CUSTOMER_PATTERN.test(customerId)) {
     body.set("customer", customerId);
   } else {
@@ -320,6 +333,7 @@ export async function createBillingCheckout(
 
   let session: Record<string, unknown>;
   try {
+    assertFunding(funding,tier,cycle,store.statsId??'');
     session = await onPlatform("POST", "/checkout/sessions", body);
   } catch (error) {
     if (!(error instanceof BillingError) || error.status !== 400) throw error;
@@ -653,7 +667,9 @@ const LOCAL_PAGE = /^http:\/\/127\.0\.0\.1:\d+\//;
 export async function switchPlan(
   subscriptionId: string,
   choice: { tier: Tier; cycle: Cycle },
+  funding?:ContractGrant,
 ): Promise<SwitchResult> {
+  assertFunding(funding,choice.tier,choice.cycle);
   if (!SUBSCRIPTION_PATTERN.test(subscriptionId)) return { kind: "refused", reason: "standing" };
   const path = `/subscriptions/${encodeURIComponent(subscriptionId)}`;
   const subscription = await onPlatform("GET", path);
@@ -690,8 +706,10 @@ export async function switchPlan(
   if (status === "trialing" && typeof subscription.trial_end === "number") {
     body.set("trial_end", String(subscription.trial_end));
   }
+  if(funding)await onPlatform('POST',path,new URLSearchParams({'metadata[funding_pending_grant]':funding.id,'metadata[funding_pending_review]':funding.reviewId}));
   let updated: Record<string, unknown>;
   try {
+    assertFunding(funding,choice.tier,choice.cycle);
     updated = await onPlatform("POST", path, body);
   } catch (error) {
     // A price archived at Stripe since we last read it. The creator asked to
@@ -701,6 +719,7 @@ export async function switchPlan(
     if (!(error instanceof BillingError) || error.status !== 400) throw error;
     priceIds.clear();
     body.set("items[0][price]", await ensurePrice(choice.tier, choice.cycle));
+    assertFunding(funding,choice.tier,choice.cycle);
     updated = await onPlatform("POST", path, body);
   }
 
@@ -714,7 +733,7 @@ export async function switchPlan(
   }
   // The price says which plan this is; the note is for whoever reads the
   // subscription in the Stripe dashboard. Missing it changes nothing charged.
-  await onPlatform("POST", path, new URLSearchParams({ "metadata[tier]": choice.tier })).catch((error) =>
+  await onPlatform("POST", path, new URLSearchParams({ "metadata[tier]": choice.tier,...(funding?{"metadata[funding_grant]":funding.id,"metadata[funding_review]":funding.reviewId,"metadata[funding_pending_grant]":"","metadata[funding_pending_review]":""}:{}) })).catch((error) =>
     console.error("noting the plan on the subscription failed", error),
   );
   return { kind: "switched", state: stateOf(updated) };

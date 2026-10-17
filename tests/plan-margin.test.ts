@@ -1,3 +1,4 @@
+import { paidStorageBytes } from '@/lib/storage-rules';
 /**
  * No plan may lose money in its own worst case.
  *
@@ -101,6 +102,7 @@ import { AI_MONTHLY } from "@/lib/ai-rules";
 import { DELIVERY_ALLOWANCE_BYTES } from "@/lib/delivery";
 import { TOP_HEIGHT, viewingBytes } from "@/lib/stream-rules";
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED } from "@/lib/watch-rules";
+import { PAID_VIDEO_HOURS, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { LONGEST_PAUSE_MONTHS, PAID_MONTHS_BEFORE_PAUSE } from "@/lib/plan-pause-rules";
@@ -157,15 +159,16 @@ function netOf(tier: Tier, cycle: Cycle = "month", prices: Prices = PLAN_PRICES)
   return cycle === "year" ? kept / 12 : kept;
 }
 
-/** What an hour of video watched costs us at most: the largest size kept, and what is fetched ahead of it. */
+/** Historical operating model only: encoded-size assumptions and fetched-ahead factor.
+ * This is not a verified bound on provider bytes, replay, invoice rates or taxes. */
 function hourCost(): number {
   const gigabytes = (viewingBytes(3600, TOP_HEIGHT, Number.POSITIVE_INFINITY) / GB) * FETCHED_AHEAD;
   return gigabytes * STREAM_DELIVERY_PER_GB;
 }
 
 /** The hours of video a plan covers, all of them watched. */
-function videoCost(): number {
-  return VIDEO_HOURS_INCLUDED * hourCost();
+function videoCost(tier: Tier = "creator"): number {
+  return PAID_VIDEO_HOURS[tier] * hourCost();
 }
 
 /** The visits a plan covers, all of them made, each by the heavy visitor a visit is costed as. */
@@ -180,9 +183,9 @@ function ordersCost(tier: Tier): number {
 
 /** Everything one store on this plan can run up in a month, at every limit at once. */
 function worstCost(tier: Tier): number {
-  const storage = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB;
+  const storage = (paidStorageBytes(tier) / GB) * STORAGE_PER_GB;
   const free = (FREE_PAUSE_ABOVE_BYTES / GB) * FILE_DELIVERY_PER_GB;
-  const video = videoCost();
+  const video = videoCost(tier);
   const email = monthlyEmails(tier) * PER_EMAIL;
   const drafts = AI_MONTHLY[tier] * PER_DRAFT;
   const receipts = TRANSACTIONAL[tier] * PER_EMAIL;
@@ -241,9 +244,9 @@ for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
   test(`${tier}, ${schedule}: no single brake is big enough to swallow the plan by itself`, () => {
     const net = netOf(tier, "month", prices);
     const lines: [string, number][] = [
-      ["storage", (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB],
+      ["storage", (paidStorageBytes(tier) / GB) * STORAGE_PER_GB],
       ["free downloads", (FREE_PAUSE_ABOVE_BYTES / GB) * FILE_DELIVERY_PER_GB],
-      ["video", videoCost()],
+      ["video", videoCost(tier)],
       ["visits", visitsCost(tier)],
       ["orders", ordersCost(tier)],
       ["email", monthlyEmails(tier) * PER_EMAIL],
@@ -409,7 +412,7 @@ test("a store that pays nothing can cost next to nothing", () => {
   assert.ok(kept + watched + visited < 0.4, `a store with no plan can cost $${(kept + watched + visited).toFixed(2)} a month`);
   // A free trial lasts two weeks with a card on file. All it may keep,
   // every hour it may play and every visit it may have, in one month:
-  const trial = (TRIAL_STORAGE_BYTES / GB) * STORAGE_PER_GB + videoCost() + TRIAL_VISITS * visitCost();
+  const trial = (TRIAL_STORAGE_BYTES / GB) * STORAGE_PER_GB + (TRIAL_VIDEO_SECONDS / 3600) * hourCost() + TRIAL_VISITS * visitCost();
   assert.ok(trial < 8, `a trial at every limit costs $${trial.toFixed(2)} in a month`);
 });
 
@@ -423,8 +426,8 @@ test("a store whose plan ended stops costing more than a store with no plan, on 
   // The dearest store there can be: it pays for one month, runs every limit
   // of its plan in it, cancels, and leaves all a paid plan may keep here
   // until its day. That one month has to have paid for all of it.
-  const kept = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * months;
   for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
+    const kept = (paidStorageBytes(tier) / GB) * STORAGE_PER_GB * months;
     const cost = worstCost(tier) + kept;
     const net = netOf(tier, "month", prices);
     assert.ok(
@@ -444,10 +447,11 @@ test("a store whose plan ended stops costing more than a store with no plan, on 
   assert.ok(job.crons.some((cron) => cron.path === "/api/cron/closing"), "and the job that does it must be scheduled, or the day never comes");
 });
 
-test("the video a plan covers is said in hours a creator can check", () => {
+test("historical video invoices retain their old allowance and rate", () => {
   // Published in the studio, the Terms and the price list (tests/watch.test.ts
   // holds the pages to these two numbers). Stated here so the figure cannot
   // be raised without this file's sums being run against it.
+  assert.deepEqual(PAID_VIDEO_HOURS, {creator:4,pro:32,scale:64});
   assert.equal(VIDEO_HOURS_INCLUDED, 400);
   assert.equal(VIDEO_CENTS_PER_HOUR_OVER, 3);
 });
@@ -488,8 +492,8 @@ test("a break from the plan is paid for by the months before it, at its longest"
   // that never sells or comes back.
   const months = PAID_MONTHS_BEFORE_PAUSE;
   const afterMonths = (WARN_WEEK_DAYS * 2) / 30;
-  const kept = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * (LONGEST_PAUSE_MONTHS + afterMonths);
   for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
+    const kept = (paidStorageBytes(tier) / GB) * STORAGE_PER_GB * (LONGEST_PAUSE_MONTHS + afterMonths);
     const cost = months * worstCost(tier) + kept;
     const net = months * netOf(tier, "month", prices);
     const margin = (net - cost) / net;
@@ -515,15 +519,15 @@ const STRIPE_FEE = (grossCents: number) => (grossCents / 100) * (0.029 + BILLING
  * way a plan can end — cancelled, refunded, unpaid — ends in this, and until
  * October 12, 2026 none of the refund sums below counted it.
  */
-const KEPT_TO_CLOSING = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30);
+const keptToClosing = (tier: Tier) => (paidStorageBytes(tier) / GB) * STORAGE_PER_GB * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30);
 
 test("the one exposure is the first payment refunded in full: bounded, once per account, and said in writing", () => {
   // A customer pays, runs every brake to its limit, asks the payment back,
   // and leaves everything a paid plan may keep until the closing day. This is
   // the guarantee's whole price, taken once per account (lib/plan.ts REFUND_DAYS).
   for (const [schedule, prices] of SCHEDULES) {
-    const month = worstCost("creator") + STRIPE_FEE(prices.creator.month) + KEPT_TO_CLOSING;
-    const year = worstCost("creator") + STRIPE_FEE(prices.creator.year) + KEPT_TO_CLOSING;
+    const month = worstCost("creator") + STRIPE_FEE(prices.creator.month) + keptToClosing("creator");
+    const year = worstCost("creator") + STRIPE_FEE(prices.creator.year) + keptToClosing("creator");
     assert.ok(month < 27, `${schedule}: a first month given back can cost $${month.toFixed(2)} on one account`);
     assert.ok(year < 35, `${schedule}: a first year given back can cost $${year.toFixed(2)} on one account`);
   }
@@ -545,7 +549,7 @@ for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
     const yearNet = prices[tier].year / 100 - STRIPE_FEE(prices[tier].year);
     const refunded = prices[tier].year / 100 - prices[tier].month / 100 - STRIPE_FEE(prices[tier].year);
     const kept = yearNet - refunded;
-    const cost = worstCost(tier) + KEPT_TO_CLOSING;
+    const cost = worstCost(tier) + keptToClosing(tier);
     assert.ok(kept > cost, `${tier}, ${schedule}: keeps $${kept.toFixed(2)} against $${cost.toFixed(2)}`);
   });
 }

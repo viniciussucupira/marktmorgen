@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
-import { MAX_RECOVERY_ADDRESS, type RecoverySetting } from "@/lib/recovery-setting";
+import { MAX_RECOVERY_ADDRESS, type RecoverySetting } from "@/lib/recovery-setting-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 
 const MESSAGES: Record<string, string> = {

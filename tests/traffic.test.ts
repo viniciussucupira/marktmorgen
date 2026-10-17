@@ -221,12 +221,12 @@ async function main(): Promise<void> {
   await countVisit(asking("192.0.2.13"), anaStore);
   is("and so is anybody else", (await visitsIn(ana.folder, monthKey())) - before, 2);
 
-  part("A store that pays is never rested");
+  part("Paid plans also have a finite visit threshold");
   const onScale = { ...anaStore, tier: "scale" as const };
-  is("it has no figure its pages stop at, on any plan", [visitLimitFor(anaStore), visitLimitFor(onScale)], [null, null]);
+  is("each paid plan is held to its published counted-visit threshold", [visitLimitFor(anaStore), visitLimitFor(onScale)], [VISITS_INCLUDED.creator, VISITS_INCLUDED.scale]);
   await visited(ana, monthKey(), 5_000_000);
-  is("at five million visits its pages are open", await isResting((await storeForEmail(ana.email))!), false);
-  is("and it is not even asked about: nothing is read for it", await counted(() => isResting(anaStore)), 0);
+  is("at five million visits its public pages rest", await isResting((await storeForEmail(ana.email))!), true);
+  is("a paid store is checked with the same strict read", await counted(() => isResting(anaStore)), 1);
   await visited(ana, monthKey(), 2);
 
   part("A store with no plan to charge rests at the visits it has");
@@ -250,9 +250,9 @@ async function main(): Promise<void> {
   await visited(eve, monthKey(), TRIAL_VISITS);
   is("and rests there", [open, await isResting(eveStore)], [false, true]);
   await setSubscription(eve.email, { active: true, trialEnds: 0 });
-  is("the day its plan is paid, its pages are open again", await isResting((await storeForEmail(eve.email))!), false);
+  is("a paid Scale plan can continue while below its own larger threshold", await isResting((await storeForEmail(eve.email))!), false);
   is("when the month turns, so are a resting store's", await isResting(cydStore, Date.now() + 40 * DAY), false);
-  is("a count that cannot be read rests nobody", await isResting({ ...cydStore, email: "nobody-with-visits@example.com" }), false);
+  is("an acknowledged unused month remains open", await isResting({ ...cydStore, email: "nobody-with-visits@example.com" }), false);
 
   part("Visits past a plan's go on the next invoice");
   const fay = await storeWith("fay", "paid", "creator");
@@ -414,20 +414,20 @@ async function main(): Promise<void> {
 
   part("What the pages say");
   const terms = read("app/terms/page.tsx");
-  is("the Terms give each plan's visits and the price, from where the bill reads them", [/countWords\(VISITS_INCLUDED\.creator\)/.test(terms), /countWords\(VISITS_INCLUDED\.pro\)/.test(terms), /countWords\(VISITS_INCLUDED\.scale\)/.test(terms), /centsWords\(VISIT_CENTS_PER_THOUSAND_OVER\)/.test(terms)], [true, true, true, true]);
+  is("the Terms give finite plan visit thresholds", [/countWords\(VISITS_INCLUDED\.creator\)/.test(terms), /countWords\(VISITS_INCLUDED\.pro\)/.test(terms), /countWords\(VISITS_INCLUDED\.scale\)/.test(terms), /public pages rest/.test(terms)], [true, true, true, true]);
   is("what a visit is, and who is never counted", [/one person opening your store on one day/.test(terms), /never counted/.test(terms)], [true, true]);
   is("and what happens with no paid plan", [/countWords\(TRIAL_VISITS\)/.test(terms), /countWords\(SETUP_VISITS\)/.test(terms), /rest/.test(terms)], [true, true, true]);
   const help = read("lib/help-content.ts");
   const price = centsWords(VISIT_CENTS_PER_THOUSAND_OVER);
-  is("the help pages give the same figures", [help.includes(`${countWords(VISITS_INCLUDED.creator)} visits a month`), help.includes(`${countWords(VISITS_INCLUDED.pro)}`), help.includes(`${countWords(VISITS_INCLUDED.scale)}`), help.includes(`${price} for each thousand`), help.includes(`${countWords(SETUP_VISITS)} a month`)], [true, true, true, true, true]);
+  is("the help pages disclose counted visits and page pauses", [help.includes(`${countWords(VISITS_INCLUDED.creator)} visits a month`), help.includes(`${countWords(VISITS_INCLUDED.pro)}`), help.includes(`${countWords(VISITS_INCLUDED.scale)}`), help.includes("public pages rest"), help.includes(`${countWords(SETUP_VISITS)} before a plan`)], [true, true, true, true, true]);
   const home = read("components/home-parts.tsx");
   is("the price list says it beside the plan", [/VISITS_INCLUDED\.creator/.test(home), /VISITS_INCLUDED\.pro/.test(home), /VISIT_CENTS_PER_THOUSAND_OVER/.test(home)], [true, true, true]);
   const feature = read("lib/feature-pages.ts");
-  is("so does the page about the store page, and it says what a page without a plan is shown for", [feature.includes(`${countWords(VISITS_INCLUDED.creator)} on the \${PLAN_AT.creator} plan, ${countWords(VISITS_INCLUDED.pro)} on the \${PLAN_AT.pro} plan and ${countWords(VISITS_INCLUDED.scale)} on the \${PLAN_AT.scale} plan`), feature.includes(`${price} for each thousand visits`), feature.includes(`shown for ${countWords(SETUP_VISITS)} visits a month`), help.includes(`shown for ${countWords(SETUP_VISITS)} visits a month`)], [true, true, true, true]);
+  is("the store feature page discloses finite public-page visits", [feature.includes("public pages pause"), feature.includes(`shown for ${countWords(SETUP_VISITS)} visits a month`)], [true, true]);
   const privacy = read("app/privacy/page.tsx");
   is("the privacy policy says what is kept of a visitor for the count, and for how long", [/keep its first sixteen\s+characters/.test(privacy), /deleted two days later/.test(privacy), /made with a secret key of our own/.test(privacy)], [true, true, true]);
   const studio = read("app/studio/page.tsx");
-  is("the studio shows a store its visits, what its plan covers and what they come to", [/Visits this month/.test(studio), /trafficIn\(folder\)/.test(studio), /visitLimitFor\(store\)/.test(studio), /visitsOwedCents\(visited, store\.tier\)/.test(studio)], [true, true, true, true]);
+  is("the studio shows visits and their finite threshold", [/Visits this month/.test(studio), /trafficForAdmission\(folder\)/.test(studio), /visitLimitFor\(store\)/.test(studio), /Public pages pause/.test(studio)], [true, true, true, true]);
   is("a plan's price is far more than its visits cost us", (VISITS_INCLUDED.creator * visitCost()) / (PLAN_PRICES.creator.month / 100) < 0.05, true);
 
   done();

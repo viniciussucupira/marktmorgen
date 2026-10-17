@@ -7,7 +7,7 @@
  *   - what comes back keeps the block's id, kind and non-word parts, and a
  *     list never grows;
  *   - a rewrite that brings a number the block and the page never had is
- *     thrown away whole, and not counted;
+ *     thrown away whole, with its attempt still counted;
  *   - a price is taken off a button, and a block with no words is refused
  *     before the model is asked.
  */
@@ -57,7 +57,7 @@ async function main(): Promise<void> {
   part("Never a new fact");
   reply = JSON.stringify({ headline: "Cut faster in 10 days", sub: "Loved by 2,000 home cooks." });
   const invented = await rewriteBlock(store, { block: hero, style: "warmer", facts, language: "English" });
-  is("a number nobody wrote: thrown away, and not counted", [invented.ok, invented.ok ? "" : invented.reason], [false, "failed"]);
+  is("a number nobody wrote: thrown away, with its attempt still counted", [invented.ok, invented.ok ? "" : invented.reason], [false, "failed"]);
 
   part("Lists never grow");
   const benefits = block({ id: "bene0001", kind: "benefits", heading: "What you get", items: ["Ten lessons", "A grip guide"] });

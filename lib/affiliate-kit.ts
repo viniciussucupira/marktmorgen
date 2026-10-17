@@ -52,6 +52,8 @@ export async function draftKit(store: Store, affiliate: Affiliate, productId: st
   const product = await readListing(store, productId);
   if (!kitProduct(store, affiliate, product)) return { ok: false, reason: "unknown" };
   const note = rawNote.replace(/\s+/g, " ").trim().slice(0, MAX_KIT_NOTE);
+  const allowance = aiAllowance(store, now.getTime());
+  if (!Number.isSafeInteger(allowance) || allowance < 0) return { ok: false, reason: "off" };
   const day = dayKey(store, affiliate, now);
   const month = monthKey(store, now);
   const jobs = aiMonthKey(store, now);
@@ -63,12 +65,12 @@ export async function draftKit(store: Store, affiliate: Affiliate, productId: st
     ["INCR", jobs],
     ["EXPIRE", jobs, 40 * 86_400],
   ]);
+  if (![today, thisMonth, storeMonth].every(value => (typeof value === "number" || (typeof value === "string" && /^\d+$/.test(value))) && Number.isSafeInteger(Number(value)) && Number(value) >= 1)) return { ok: false, reason: "off" };
   const giveBack = () => redisPipeline([["DECR", day], ["DECR", month], ["DECR", jobs]]).catch(() => null);
   if (Number(today) > KIT_PER_DAY) {
     await giveBack();
     return { ok: false, reason: "day" };
   }
-  const allowance = aiAllowance(store, now.getTime());
   if (Number(thisMonth) > kitMonthly(allowance) || Number(storeMonth) > allowance) {
     await giveBack();
     return { ok: false, reason: "month" };
@@ -80,10 +82,8 @@ export async function draftKit(store: Store, affiliate: Affiliate, productId: st
   } catch (error) {
     console.error("drafting an affiliate's posts failed", error);
   }
-  if (!posts) {
-    await giveBack();
-    return { ok: false, reason: "failed" };
-  }
+  // Started work may be billed even when no usable text comes back.
+  if (!posts) return { ok: false, reason: "failed" };
   const link = productAffiliateLink(store, product, affiliate.code);
   const full = DISCLOSURE[store.language] ?? DISCLOSURE.en;
   const variant = `kit-${randomUUID().replaceAll("-", "")}`;

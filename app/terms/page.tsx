@@ -1,3 +1,4 @@
+import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -7,8 +8,9 @@ import { formatMoney } from "@/lib/money";
 import { PRO_MONTHLY_EMAILS, REFUND_DAYS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS, PLAN_TITLES } from "@/lib/plan";
 import { healthRuleWords } from "@/lib/mail-health-rules";
 import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords } from "@/lib/delivery";
-import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, centsWords } from "@/lib/watch-rules";
-import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
+import { centsWords, hoursWords } from "@/lib/watch-rules";
+import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
+import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS } from "@/lib/order-rules";
 import { ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER, countWords, partsWords } from "@/lib/traffic-rules";
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 13, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 16, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -324,7 +326,7 @@ export default function TermsPage() {
           page: the number of products a store may list, the size of a single
           file, how many emails a month a plan may send,{" "}
           {bytesWords(DELIVERY_ALLOWANCE_BYTES)} of downloads a month per
-          store, {VIDEO_HOURS_INCLUDED} hours of lesson video watched a
+          store, lesson video watched for {paidVideoWords()} a
           month per store, and the visits to your store a month that your
           plan covers. You can see every one of them while you use the
           Services.
@@ -341,37 +343,21 @@ export default function TermsPage() {
           Nothing is charged for downloads, inside that figure or past it.
         </p>
         <p>
-          Two things here are billed by use: lesson video, and visits to
-          your store. Each is covered up to a published figure and charged
-          past it, rather than limited, so that nobody you sold to is cut off
-          and your store is never taken down for being busy.
+          Visits and lesson video have finite monthly admission thresholds.
+          Public pages pause at the recorded counted-visit threshold. New stream
+          playback pauses at the recorded watched-time threshold; an unavailable
+          or invalid admission measurement does not authorize new playback.
         </p>
         <p>
-          Lesson video is
-          measured by the time your students spend watching your lesson
-          videos, as the video player counts it, added up across your store
-          for each calendar month and read about once an hour. Your plan
-          covers {VIDEO_HOURS_INCLUDED} hours a month. Past that, video is
-          charged rather than limited: {centsWords(VIDEO_CENTS_PER_HOUR_OVER)}{" "}
-          for each hour watched above {VIDEO_HOURS_INCLUDED} in a calendar
-          month, counted to the second and rounded down to the cent, added to
-          your next subscription invoice on the card you already pay with. On
-          a plan paid by the year, those lines are invoiced monthly. A student
-          is never cut off because a store has passed its hours.
-        </p>
-        <p>
-          You are emailed automatically the first time a month&apos;s
-          watching passes the hours your plan covers, with your own figure in
-          it, and the same figure is in your studio at any time. A month in
-          which you stay inside them costs nothing beyond your plan.
-        </p>
-        <p>
-          A store with no paid plan has nothing a charge can be added to, so
-          its lesson videos are paused past its hours until the plan is paid
-          or the month turns: {VIDEO_HOURS_INCLUDED} hours a month in the
-          free trial, and {SETUP_VIDEO_HOURS} hours a month before a plan is
-          started and after one has ended. Nothing is charged for those
-          hours, and everything else in a course stays open.
+          <strong className="text-black">Lesson video.</strong> Paid plans cover
+          {" "}{paidVideoWords()} each month. Free trials have {hoursWords(TRIAL_VIDEO_SECONDS)}{" "}
+          a month. Before a plan starts and after one ends, the threshold is
+          {" "}{hoursWords(SETUP_VIDEO_SECONDS)}. New playback pauses at the applicable threshold until the next
+          calendar month or a plan change provides capacity. Existing player
+          links may remain valid until they expire. Watching is measured about
+          once an hour; the meter is not a limit on transferred bytes. Video
+          sold or served as a file follows the separate download path. Other
+          course content remains available.
         </p>
         <p>
           Captions written by AI for a lesson&apos;s video are bought when you
@@ -395,14 +381,9 @@ export default function TermsPage() {
           calendar month: {countWords(VISITS_INCLUDED.creator)} on{" "}
           {PLAN_TITLES.creator}, {countWords(VISITS_INCLUDED.pro)} on{" "}
           {PLAN_TITLES.pro}, and {countWords(VISITS_INCLUDED.scale)} on{" "}
-          {PLAN_TITLES.scale}. Past that, visits are charged rather than
-          limited: {centsWords(VISIT_CENTS_PER_THOUSAND_OVER)} for each
-          thousand visits above your plan&apos;s figure in a calendar month,
-          counted to the visit and rounded down to the cent, added to your
-          next subscription invoice the same way video is. A store that pays
-          is never taken down because it has passed its visits, and you are
-          emailed automatically the first time a month passes them, with your
-          own figure in it.
+          {PLAN_TITLES.scale}. At the threshold, public pages rest until the
+          next calendar month or a plan change provides a larger threshold.
+          An unreadable count also pauses new public-page admission.
         </p>
         <p>
           A buyer who comes back is a visit like anybody else: a student or
@@ -445,7 +426,7 @@ export default function TermsPage() {
           {centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand orders
           above your plan&apos;s figure in a calendar month, counted to the
           order and rounded down to the cent, added to your next subscription
-          invoice the same way visits are. Nothing is ever refused to a buyer
+          invoice under the published order terms. Nothing is ever refused to a buyer
           because a store has passed its orders, and you are emailed
           automatically the first time a month passes them.
           {feeWords().ordersShared} In the free trial, free copies stop for
@@ -473,9 +454,11 @@ export default function TermsPage() {
           {bytesWords(FREE_PAUSE_ABOVE_BYTES)} in that month, and resume when
           the month turns; anything anyone has bought is unaffected. And new
           uploads stop once a store holds as much as it may:{" "}
-          {storageWords(STORAGE_BRAKE_BYTES)} on a paid plan, which is far
-          more than a storefront needs,{" "}
-          {storageWords(TRIAL_STORAGE_BYTES)} in a plan&apos;s free trial, and{" "}
+          {storageWords(PAID_STORAGE_BYTES.creator)} on Store,{" "}
+          {storageWords(PAID_STORAGE_BYTES.pro)} on Studio, and{" "}
+          {storageWords(PAID_STORAGE_BYTES.scale)} on Scale. A free trial has
+          the smaller of {storageWords(TRIAL_STORAGE_BYTES)} and its chosen
+          plan&apos;s storage limit. The threshold is{" "}
           {storageWords(SETUP_STORAGE_BYTES)} for a store with no plan, before
           one is started or after one has ended. That asks you to remove
           something before adding more and changes nothing about what is
@@ -524,7 +507,10 @@ export default function TermsPage() {
           the next month. Scale, at {planPriceWords("scale")} or {planPriceWords("scale", "year")},
           is Studio with up to{" "}
           {SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, counted
-          the same way.
+          the same way. Reserved sending attempts count toward the allowance.
+          If a provider cannot confirm delivery after dispatch, the reservation
+          is retained and a retry uses new capacity. A failed or ambiguous
+          capacity acknowledgement does not authorize a send.
         </p>
         {domains ? (
           <p>

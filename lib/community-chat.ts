@@ -36,6 +36,8 @@
  * typing, the difference is not something a person can perceive; what it is
  * not is a claim that a message arrives the instant it is sent.
  */
+import { MAX_CHAT_TEXT, MAX_CHAT_KEPT, CHAT_PAGE, MAX_SLOW, type ChatRefusal } from "@/lib/community-chat-rules";
+export { MAX_CHAT_TEXT, MAX_CHAT_KEPT, CHAT_PAGE, MAX_SLOW, type ChatRefusal } from "@/lib/community-chat-rules";
 import { redisPipeline } from "@/lib/redis";
 import { cleanText, linkCount } from "@/lib/community-text";
 import { holdsAll } from "@/lib/community-search";
@@ -44,14 +46,6 @@ const base = (id: string) => `nl:cm:${id}`;
 const roomKey = (id: string) => `${base(id)}:ch`;
 const countKey = (id: string) => `${base(id)}:chn`;
 const spokeKey = (id: string, who: string) => `${base(id)}:chs:${who}`;
-
-export const MAX_CHAT_TEXT = 1_000;
-/** How many messages the room keeps. Older ones fall off the end. */
-export const MAX_CHAT_KEPT = 500;
-/** How many one look can bring back. */
-export const CHAT_PAGE = 100;
-/** The longest cooldown a creator may set, in seconds. */
-export const MAX_SLOW = 300;
 
 export type ChatMessage = {
   /** Its number: what a reader asks for "everything after". */
@@ -220,18 +214,7 @@ export async function clearRoom(id: string): Promise<void> {
  * `slow` for both, and the room told a member who had written thirty times in
  * an hour that they were waiting thirty seconds.
  */
-export type ChatRefusal =
-  | "off"
-  | "empty"
-  | "links"
-  | "slow"
-  | "hourly"
-  | "creatorOnly"
-  | "muted"
-  | "full"
-  | "name"
-  | "out"
-  | "unknown";
+
 
 export function refusalWords(reason: ChatRefusal, slow: number, wait?: number): string {
   switch (reason) {

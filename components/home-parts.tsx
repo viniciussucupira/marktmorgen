@@ -7,8 +7,11 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import { listSizeWords } from "@/lib/contact-rules";
 import { HOME_QUESTIONS } from "@/lib/home-faq";
+import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
+import { uploadAllowanceWords } from "@/lib/upload-budget-policy";
 import { PLANS_ON_SALE } from "@/lib/opening";
-import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, centsWords } from "@/lib/watch-rules";
+import { centsWords } from "@/lib/watch-rules";
+import { paidVideoWords } from "@/lib/video-admission-rules";
 import { VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER } from "@/lib/order-rules";
 import {
@@ -408,7 +411,7 @@ export function HeroFlow() {
  */
 const INCLUDED = [
   "Your own store address, live the moment you take it",
-  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} visits to your store a month covered; past that, ${centsWords(VISIT_CENTS_PER_THOUSAND_OVER)} for each thousand, and your store is never taken down for being busy`,
+  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} counted visits to your store a month; public pages pause at the monthly threshold`,
   `${ORDERS_INCLUDED.creator.toLocaleString("en-US")} orders a month covered${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; past that, ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, and a buyer is never turned away`,
   "Buyers pay into your own Stripe account",
   "Up to 2,000 products: files, courses, memberships, paid calls and live sessions",
@@ -420,7 +423,7 @@ const INCLUDED = [
   "An affiliate program with a page for each affiliate, paid from your own PayPal in one press or on payday by itself",
   "Your own numbers counted without cookies, as CSV files too, and ad pixels for Meta, Google, TikTok and Pinterest — those are the platforms' own, and visitors are asked first where the law requires it",
   "License keys, stamped PDFs, course quizzes and certificates",
-  `Lesson videos that play in the size each connection can carry, with ${VIDEO_HOURS_INCLUDED} hours watched a month covered; past that, ${centsWords(VIDEO_CENTS_PER_HOUR_OVER)} for each hour watched, and a student is never cut off`,
+  `Lesson videos: ${paidVideoWords()} each month; new playback pauses at the threshold`,
   "A private video room for each booking if you want one, and calendar sync for your calls",
   "Mailchimp, Kit, beehiiv or MailerLite built in, and webhooks for Zapier or Make",
   "A team of you plus up to five people per store, each with a role, and notifications of sales on your phone",
@@ -648,6 +651,9 @@ function PlanCard({
         </ul>
       </details>
 
+      <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>
+      <p className="mt-3 text-sm text-ink-soft">Up to {PAID_STORAGE_BYTES[tier] / (1024 ** 3)} GB of stored files and videos. New uploads must fit in the remaining space.</p>
+
       <div className="mt-auto pt-8">
         {/*
           The plan and the rhythm travel with the press.
@@ -764,8 +770,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
         <p className="flex gap-2 text-ink-soft">
           <Icon name="download" size={18} className="mt-0.5 shrink-0 text-violet-deep" />
           <span>
-            <strong className="font-semibold text-ink">200 GB of downloads a month.</strong> Written here rather than in the
-            terms, and nothing is cut off if you pass it.
+            <strong className="font-semibold text-ink">Storage: {PAID_STORAGE_BYTES.creator / (1024 ** 3)} GB on Store, {PAID_STORAGE_BYTES.pro / (1024 ** 3)} GB on Studio, and {PAID_STORAGE_BYTES.scale / (1024 ** 3)} GB on Scale.</strong> Uploads pause when there is no room left. A free trial never has more storage than its chosen plan.
           </span>
         </p>
       </div>
@@ -773,11 +778,11 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
   );
 }
 
-export function Faq() {
+export function Faq({ questions = HOME_QUESTIONS }: { questions?: typeof HOME_QUESTIONS } = {}) {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <ul className="divide-y divide-line border-y border-line">
-      {HOME_QUESTIONS.map((item, i) => {
+      {questions.map((item, i) => {
         const isOpen = open === i;
         return (
           <li key={item.q}>

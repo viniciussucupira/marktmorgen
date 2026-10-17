@@ -16,7 +16,8 @@ import { SITE_URL } from "@/lib/site-url";
 import { SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { watchedFolders, watchedIn } from "@/lib/watch";
 import { firstWord, settleAll, storeOf } from "@/lib/watch-billing";
-import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, VIDEO_SECONDS_INCLUDED, canBeCharged, centsWords, hoursWords, videoOwedCents } from "@/lib/watch-rules";
+import { VIDEO_SECONDS_INCLUDED, canBeCharged, centsWords, videoOwedCents } from "@/lib/watch-rules";
+import { videoUsageNotice } from "@/lib/video-usage-notice";
 import { visitedFolders, visitsIn } from "@/lib/traffic";
 import { firstWordOnVisits, settleAllVisits } from "@/lib/traffic-billing";
 import { SETUP_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor, visitsIncluded, visitsOwedCents, visitsWords } from "@/lib/traffic-rules";
@@ -110,43 +111,14 @@ async function videoRun(): Promise<VideoRun> {
       if (!paused && !charged) continue;
       if (paused) out.paused += 1;
       if (!isSenderConfigured() || !(await firstWord(folder, month))) continue;
-      const watched = hoursWords(seconds);
+      const notice = videoUsageNotice({ seconds, limit, standing: standingOf(store),
+        legacyChargeCents: charged ? videoOwedCents(seconds) : 0,
+        studioUrl: `${SITE_URL}/studio`, supportEmail: SUPPORT_EMAIL });
       const sent = await sendEmail({
         from: NIMBUS_FROM,
         to: store.email,
         replyTo: SUPPORT_EMAIL,
-        subject: charged ? `Your students have watched ${watched} of video this month` : "Your lesson videos are paused",
-        text: (charged
-          ? [
-              `Your students have watched ${watched} of your lesson videos so far this month. Your`,
-              `plan covers ${VIDEO_HOURS_INCLUDED} hours a month, so you are past it.`,
-              "",
-              "Nobody has been cut off, and nobody will be. A student who paid you watches",
-              "as much as they like.",
-              "",
-              `Past the ${VIDEO_HOURS_INCLUDED} hours, video is ${centsWords(VIDEO_CENTS_PER_HOUR_OVER)} for each hour watched, counted to the`,
-              `second. So far this month that comes to ${centsWords(videoOwedCents(seconds))}. It is added to your next invoice,`,
-              "on the card you already pay with. There is nothing for you to do.",
-              "",
-              "Your studio shows the hours as they are watched, under your plan:",
-              `${SITE_URL}/studio`,
-              "",
-              `If the figure surprises you, reply to this email or write to ${SUPPORT_EMAIL}.`,
-            ]
-          : [
-              `Your lesson videos have been watched for ${watched} this month, which is past the`,
-              `${hoursWords(limit ?? 0)} ${standingOf(store) === "trial" ? "a plan's free trial covers" : "a store without a paid plan has"} in a month.`,
-              "",
-              "Your store has no paid plan to carry more, so your lesson videos are paused.",
-              "Everything else in your courses is open as usual: the text, the downloads,",
-              "the quizzes.",
-              "",
-              "They play again as soon as your plan is paid, or when the month turns,",
-              "whichever comes first. Nothing has been charged for the hours watched.",
-              "",
-              `${SITE_URL}/studio`,
-            ]
-        ).join("\n"),
+        ...notice,
       }).catch((error) => {
         console.error("sending the video hours notice failed", error);
         return false;
@@ -159,7 +131,7 @@ async function videoRun(): Promise<VideoRun> {
   console.log(
     out.stores === 0 && out.paused === 0
       ? "video-watch: every store inside its hours"
-      : `video-watch: ${out.stores} past a plan's hours, ${out.billed} billed ${centsWords(out.cents)}, ${out.paused} paused with no plan, ${out.failed} failed, ${out.told} written to`,
+      : `video-watch: ${out.stores} past a plan's hours, ${out.billed} billed ${centsWords(out.cents)}, ${out.paused} playback paused, ${out.failed} failed, ${out.told} written to`,
   );
   return out;
 }

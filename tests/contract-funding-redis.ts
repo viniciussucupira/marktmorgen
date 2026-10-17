@@ -1,0 +1,12 @@
+import {createHash} from 'node:crypto';
+import type {ContractFundingConfiguration} from '@/lib/contract-funding-rules';
+export const ledger=new Map<string,Map<string,string>>();
+export const calls:(string|number)[][][]=[];
+let available=true,failure=false,lostAck=false;
+let response:unknown[]|null=null;
+export const isRedisConfigured=()=>available;
+export function reset(){ledger.clear();calls.length=0;available=true;failure=false;lostAck=false;response=null;}
+export function settings(v:{available?:boolean;failure?:boolean;lostAck?:boolean;response?:unknown[]|null}){if(v.available!==undefined)available=v.available;if(v.failure!==undefined)failure=v.failure;if(v.lostAck!==undefined)lostAck=v.lostAck;if(v.response!==undefined)response=v.response;}
+export function seed(c:ContractFundingConfiguration){ledger.set('nl:contract-reserve:v1',new Map([['review',c.reviewId],['policy',createHash('sha256').update(c.binding).digest('hex')],['reserved',String(c.carryForwardCents)],['carried',String(c.carryForwardCents)],...Object.entries(c.fundedGrants).map(([key,n]):[string,string]=>['slots:'+key,String(n)])]));}
+/** Contract double only. CI executes the production Lua against real Redis. */
+export async function redisPipeline(commands:(string|number)[][]):Promise<unknown[]>{calls.push(commands);if(failure)throw Error('Redis unavailable');if(response!==null)return response;const [op,,keys,key,binding,review,store,choice,rawCharge,rawLimit,rawCarry,rawFunded,nonce,receipt]=commands[0];if(op!=='EVAL'||keys!==1||commands.length!==1)throw Error('Expected one contract reservation');const h=ledger.get(String(key));if(!h||h.get('policy')!==binding||h.get('review')!==review)return[0];const parse=(n:unknown)=>typeof n==='string'&&/^(0|[1-9][0-9]*)$/.test(n)&&Number(n)<=1e12?Number(n):NaN;const reserved=parse(h.get('reserved')),carried=parse(h.get('carried')),charge=parse(String(rawCharge)),limit=parse(String(rawLimit)),carry=parse(String(rawCarry)),funded=parse(String(rawFunded)),slots=parse(h.get('slots:'+choice));if(![reserved,carried,charge,limit,carry,funded,slots].every(Number.isSafeInteger)||charge<=0||carried!==carry||reserved<carried||reserved>limit||funded<=0||slots>funded||slots<=0||h.has('pending:'+store)||h.has('grant:'+nonce)||charge>limit-reserved)return[0];h.set('slots:'+choice,String(slots-1));h.set('reserved',String(reserved+charge));h.set('pending:'+store,String(nonce));h.set('grant:'+nonce,String(receipt));return lostAck?[]:[1];}

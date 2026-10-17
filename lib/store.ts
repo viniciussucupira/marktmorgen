@@ -31,6 +31,8 @@
  * person who owns them. Every function below that takes a store's key calls
  * it `email` for the first kind and works the same for the second.
  */
+import { MAX_NAME_LENGTH, MAX_BIO_LENGTH, MAX_ADDRESSES, isFree, type StoreJoin, MAX_JOIN_HEADING, MAX_JOIN_LINE, parseJoin } from "@/lib/store-field-rules";
+export { MAX_NAME_LENGTH, MAX_BIO_LENGTH, MAX_ADDRESSES, isFree, type StoreJoin, MAX_JOIN_HEADING, MAX_JOIN_LINE, parseJoin } from "@/lib/store-field-rules";
 import { MAX_LINKS, type NumbersLink, parseLinks } from "@/lib/numbers-links";
 import { type ShipProblem, type Shipping, shipProblem } from "@/lib/shipping";
 import { type CartDeal, NO_DEAL, parseCartDeal } from "@/lib/cart-rules";
@@ -167,8 +169,8 @@ export type { CourseRef, Listing, Product };
  * inventing a different one for this store alone.
  */
 export const HANDLE_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,22}[a-z0-9])$/;
-export const MAX_NAME_LENGTH = 60;
-export const MAX_BIO_LENGTH = 160;
+
+
 
 /** Names the site itself uses, or may use, so a store can never shadow one. */
 const RESERVED = new Set([
@@ -220,7 +222,7 @@ const RESERVED = new Set([
  * nothing for anyone else. It is a ceiling on what one store holds at once:
  * letting an address go frees the slot and hands the name back.
  */
-export const MAX_ADDRESSES = 10;
+
 
 /**
  * How long a released address stays dark before anyone may take it.
@@ -247,9 +249,7 @@ const RELEASED_PREFIX = "released:";
  * allowed, and it means something different: the product is not sold, it is
  * given away for an email address. Nothing about it ever reaches Stripe.
  */
-export function isFree(product: Pick<Product, "priceCents">): boolean {
-  return product.priceCents === 0;
-}
+
 
 /** What a list id looks like: 32 hex characters, and nothing else. */
 export const LIST_ID_PATTERN = /^[0-9a-f]{32}$/;
@@ -3479,16 +3479,12 @@ export async function setJoin(email: string, raw: unknown): Promise<Store | null
 }
 
 /** Saves the creator's profiles elsewhere (lib/store-socials.ts), made safe; says how many were kept. */
-export type StoreJoin = { on: boolean; heading: string; line: string };
-export const MAX_JOIN_HEADING = 60;
-export const MAX_JOIN_LINE = 200;
+
+
+
 
 /** The sign-up box's settings, as kept or as sent, made safe. */
-export function parseJoin(raw: unknown): StoreJoin {
-  const value = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-  const line = (text: unknown, max: number) => (typeof text === "string" ? text.replace(/\s+/g, " ").trim().slice(0, max) : "");
-  return { on: value.on === true, heading: line(value.heading, MAX_JOIN_HEADING), line: line(value.line, MAX_JOIN_LINE) };
-}
+
 
 export async function setSocials(email: string, raw: unknown): Promise<Store | null> {
   const socials = parseSocials(raw);

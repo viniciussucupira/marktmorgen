@@ -49,7 +49,7 @@ async function main(): Promise<void> {
   reply = "not json";
   const failed = await writeBio(store, { products: [{ title: "Bread", summary: "" }], notes: "" });
   const after = await writeBio(store, { products: [{ title: "Bread", summary: "" }], notes: "" }).catch(() => null);
-  is("an answer that is not lines changes nothing and is not counted", [failed.ok, after && !after.ok ? after.reason : null], [false, "failed"]);
+  is("an answer that is not lines changes nothing but retains its started attempt", [failed.ok, after && !after.ok ? after.reason : null], [false, "failed"]);
   done();
 }
 

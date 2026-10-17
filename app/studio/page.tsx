@@ -1,3 +1,4 @@
+import { UsageMeter } from "@/components/usage-meter";
 import { isDiscordConfigured } from "@/lib/discord";
 import { RecentSalesSwitch } from "@/components/recent-sales-switch";
 import { firstSaleAt } from "@/lib/yearly-offer";
@@ -148,9 +149,10 @@ import {
 } from "@/lib/stripe-connect";
 import { ORDERS_PAGE_SIZE, canSell, listSales } from "@/lib/store-checkout";
 import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords, deliveredThisMonth } from "@/lib/delivery";
-import { watchedIn } from "@/lib/watch";
-import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, VIDEO_SECONDS_INCLUDED, centsWords, hoursWords, videoOwedCents } from "@/lib/watch-rules";
-import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, standingOf, videoLimitFor } from "@/lib/plan-standing";
+import { watchedForAdmission } from "@/lib/watch";
+import { centsWords, hoursWords } from "@/lib/watch-rules";
+import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
+import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closingOf } from "@/lib/plan-closing";
 import { MAX_LEADS, listSize } from "@/lib/free";
 import { readableSize } from "@/lib/product-file";
@@ -161,7 +163,7 @@ import {
   trialOffered,
 } from "@/lib/billing";
 import { STORAGE_BRAKE_BYTES, storageBrakeFor, storageUsed, storageWords } from "@/lib/storage-quota";
-import { trafficIn } from "@/lib/traffic";
+import { trafficForAdmission } from "@/lib/traffic";
 import { ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, ordersIncluded, ordersOwedCents, ordersWords, perOrderWords } from "@/lib/order-rules";
 import { ordersIn } from "@/lib/orders";
 import { SETUP_VISITS, TRIAL_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor, visitsIncluded, visitsOwedCents, visitsWords } from "@/lib/traffic-rules";
@@ -799,17 +801,21 @@ export default async function StudioPage({
   // What this store has sent out this month, and how long its lesson video
   // was watched: the one thing here that is charged by use, visible to the
   // creator before it is visible on an invoice (lib/watch-rules.ts).
-  const delivery = store && may("settings") ? await deliveredThisMonth(folder) : null;
-  const watched = store && may("settings") ? await watchedIn(folder) : 0;
+  const [delivery, watchedReading, trafficReading] = await Promise.all([
+    store && may("settings") ? deliveredThisMonth(folder) : Promise.resolve(null),
+    store && may("settings") ? watchedForAdmission(folder) : Promise.resolve(null),
+    store && may("settings") ? trafficForAdmission(folder) : Promise.resolve(null),
+  ]);
+  const watched = watchedReading ?? 0;
   // Where the store stands with its plan decides how much it may keep and
   // how long its video may be watched (lib/plan-standing.ts).
   const standing = store ? standingOf(store) : "none";
   const videoLimit = store ? videoLimitFor(store) : null;
-  const videoRoom = videoLimit ?? VIDEO_SECONDS_INCLUDED;
+  const videoRoom = videoLimit ?? paidVideoSeconds();
   // The visits the store has had this month, the other thing charged by use
   // (lib/traffic-rules.ts): what the plan covers, and where the pages of a
   // store with no plan to charge rest.
-  const traffic = store && may("settings") ? await trafficIn(folder) : { people: 0, parts: 0, visits: 0 };
+  const traffic = trafficReading ?? { people: 0, parts: 0, visits: 0 };
   const visited = traffic.visits;
   // The part of the count that is the live room (lib/traffic-rules.ts), in whole visits.
   const roomVisits = traffic.visits - traffic.people;
@@ -2182,12 +2188,12 @@ export default async function StudioPage({
                   <div>
                     <dt className="font-semibold text-ink">Files stored</dt>
                     <dd className="text-ink-soft">
-                      {`Up to ${storageWords(storageBrakeFor(standing))} for your store${
+                      {`Up to ${storageWords(storageBrakeFor(standing, store.tier))} for your store${
                         standing === "paid"
                           ? ""
                           : standing === "trial"
-                            ? ` during the free trial, and ${storageWords(STORAGE_BRAKE_BYTES)} from your first payment`
-                            : `, and ${storageWords(storageBrakeFor("trial"))} once a plan's free trial starts`
+                            ? ` during the free trial, and ${storageWords(storageBrakeFor("paid", store.tier))} from your first payment`
+                            : `, and ${storageWords(storageBrakeFor("trial", store.tier))} once a plan's free trial starts`
                       }. `}
                       {standing === "ended"
                         ? `Past that you are asked to delete something before adding more. A store that keeps more than ${storageWords(SETUP_STORAGE_BYTES)} after its plan has ended has ${CLOSING_DAYS} days from the end of the plan, and three emails, before what it keeps is removed.`
@@ -2204,54 +2210,28 @@ export default async function StudioPage({
                   made from.
                 */}
                 <div className="mt-6 border-t border-line pt-5">
-                  <p className="font-semibold text-ink">Video watched this month</p>
-                  <p className="mt-1 text-ink-soft">
-                    {`${hoursWords(watched)} of the ${hoursWords(videoRoom)} ${
-                      standing === "paid" || standing === "trial" ? "your plan covers" : "a store without a paid plan has"
-                    }. This is the time your students spent watching your lesson videos, as the player counts it, read about once an hour.`}
-                  </p>
-                  <div
-                    className="mt-4 h-2 w-full overflow-hidden rounded-full bg-sand"
-                    role="progressbar"
-                    aria-valuenow={Math.min(100, Math.round((watched / videoRoom) * 100))}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label="Video hours used this month"
-                  >
-                    <div
-                      className={`h-full rounded-full ${
-                        watched >= videoRoom ? "bg-amber-brand" : "bg-gradient-to-r from-violet-brand to-sky-brand"
-                      }`}
-                      style={{ width: `${Math.min(100, Math.max(1, Math.round((watched / videoRoom) * 100)))}%` }}
-                    />
-                  </div>
-                  {watched > VIDEO_SECONDS_INCLUDED && videoLimit === null ? (
-                    <p className="mt-4 notice notice-warn">
-                      {`You are past the ${VIDEO_HOURS_INCLUDED} hours this month. `}
-                      <strong>Nobody has been cut off and nobody will be.</strong>
-                      {` The hours past it come to ${centsWords(videoOwedCents(watched))} so far, and go on your next invoice.`}
-                    </p>
-                  ) : null}
-                  {videoLimit !== null && watched >= videoLimit ? (
+                  <UsageMeter label="Video watched this month" used={watchedReading} limit={videoRoom} format={hoursWords}
+                    unavailable="Usage measurement is temporarily unavailable. New stream playback is paused until it can be verified."
+                    description="The player counts recorded watched time, read about once an hour. Existing player links may remain valid until they expire." />
+                  {watchedReading !== null && videoLimit !== null && watched >= videoLimit ? (
                     <p className="mt-4 notice notice-warn">
                       <strong>Your lesson videos are paused.</strong>
                       {` They have been watched for the ${hoursWords(videoLimit)} ${
-                        standing === "trial" ? "a plan covers" : "a store without a paid plan has"
-                      } this month, and your store has no paid plan to carry more. They play again as soon as your plan is paid, or when the month turns. Everything else in your courses is open as usual.`}
+                        standing === "paid" || standing === "trial" ? "your plan covers" : "a store without a paid plan has"
+                      } this month. New playback resumes when capacity is available again. Existing player links may remain valid until they expire. Everything else in your courses is open as usual.`}
                     </p>
                   ) : null}
                   <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                     <div>
-                      <dt className="font-semibold text-ink">{`Past the ${VIDEO_HOURS_INCLUDED} hours`}</dt>
+                      <dt className="font-semibold text-ink">{`At ${hoursWords(videoRoom)} watched`}</dt>
                       <dd className="text-ink-soft">
-                        {`${centsWords(VIDEO_CENTS_PER_HOUR_OVER)} for each hour watched above ${VIDEO_HOURS_INCLUDED}, counted to the second, on your next invoice. `}
-                        A student is never cut off for it. We email you the first time a month passes it.
+                        New stream playback pauses at the recorded monthly threshold. The meter is read about once an hour; existing player links may remain valid until they expire.
                       </dd>
                     </div>
                     <div>
                       <dt className="font-semibold text-ink">Without a paid plan</dt>
                       <dd className="text-ink-soft">
-                        {`In the free trial, lesson videos play for ${VIDEO_HOURS_INCLUDED} hours a month; before a plan starts and after one ends, for ${SETUP_VIDEO_HOURS}. Past that they pause `}
+                        {`In the free trial, lesson videos play for ${hoursWords(TRIAL_VIDEO_SECONDS)} a month; before a plan starts and after one ends, for ${hoursWords(SETUP_VIDEO_SECONDS)}. Past that they pause `}
                         until the plan is paid or the month turns. Nothing is charged for those hours.
                       </dd>
                     </div>
@@ -2264,51 +2244,20 @@ export default async function StudioPage({
                   same numbers the invoice is made from.
                 */}
                 <div className="mt-6 border-t border-line pt-5">
-                  <p className="font-semibold text-ink">Visits this month</p>
-                  <p className="mt-1 text-ink-soft">
-                    {`${visitsWords(visited)} of the ${countWords(visitRoom)} ${
-                      standing === "paid" ? "your plan covers" : standing === "trial" ? "a free trial has" : "a store without a paid plan has"
-                    }. A visit is one person opening your store on one day, however many of its pages they look at, a buyer coming back to a course, the community or a podcast included. You are never counted.`}
-                    {roomVisits > 0 ? ` ${visitsWords(roomVisits)} of them ${roomVisits === 1 ? "is" : "are"} your community's live room, which counts by the time it is open in front of a member.` : ""}
-                  </p>
-                  <div
-                    className="mt-4 h-2 w-full overflow-hidden rounded-full bg-sand"
-                    role="progressbar"
-                    aria-valuenow={visitRoom > 0 ? Math.min(100, Math.round((visited / visitRoom) * 100)) : 0}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label="Visits used this month"
-                  >
-                    <div
-                      className={`h-full rounded-full ${
-                        visited >= visitRoom ? "bg-amber-brand" : "bg-gradient-to-r from-violet-brand to-sky-brand"
-                      }`}
-                      style={{ width: `${visitRoom > 0 ? Math.min(100, Math.max(1, Math.round((visited / visitRoom) * 100))) : 1}%` }}
-                    />
-                  </div>
-                  {visitLimit === null && visited > visitRoom ? (
-                    <p className="mt-4 notice notice-warn">
-                      {`You are past the ${countWords(visitRoom)} visits this month. `}
-                      <strong>Your store is open, and it stays open.</strong>
-                      {` The visits past it come to ${centsWords(visitsOwedCents(visited, store.tier))} so far, and go on your next invoice.`}
-                    </p>
-                  ) : null}
-                  {visitLimit !== null && visited >= visitLimit ? (
+                  <UsageMeter label="Visits this month" used={trafficReading?.visits ?? null} limit={visitRoom} format={visitsWords}
+                    unavailable="Usage measurement is temporarily unavailable. Public pages are paused until it can be verified."
+                    description="A counted visit is one person opening your store on one day. Community room activity also contributes to this count." />
+                  {trafficReading !== null && visitLimit !== null && visited >= visitLimit ? (
                     <p className="mt-4 notice notice-warn">
                       <strong>Your store&rsquo;s pages are resting.</strong>
-                      {` It has had the ${countWords(visitLimit)} visits ${
-                        standing === "trial" ? "a free trial has" : "a store without a paid plan has"
-                      } this month, and has no paid plan to carry more. Its pages open again ${
-                        PLANS_ON_SALE || standing === "trial" ? "as soon as your plan is paid, or when the month turns" : "when the month turns; plans are not on sale yet"
-                      }. Everything your buyers already have is open as usual.`}
+                      {` It has reached its threshold of ${countWords(visitLimit)} counted visits this month. Public pages reopen when the month turns or a plan change provides a larger threshold. Existing orders and downloads remain available; video has its own playback threshold.`}
                     </p>
                   ) : null}
                   <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                     <div>
                       <dt className="font-semibold text-ink">Past your plan&rsquo;s visits</dt>
                       <dd className="text-ink-soft">
-                        {`${centsWords(VISIT_CENTS_PER_THOUSAND_OVER)} for each thousand visits above what your plan covers, counted to the visit, on your next invoice. `}
-                        A store that pays is never taken down for it. We email you the first time a month passes it.
+                        Public pages pause at the recorded monthly threshold. A failed or unreadable measurement also pauses new public-page admission. Existing orders and downloads remain available.
                       </dd>
                     </div>
                     <div>
@@ -2359,10 +2308,7 @@ export default async function StudioPage({
                   What you pay us
                 </p>
                 <p className="mt-2 text-ink-soft">
-                  {feeWords(COMMISSION_LIVE && store.shared).studioPay} Two things are charged by
-                  use, and only if you reach them: visits to your store past
-                  the visits your plan covers, and lesson video watched past
-                  its hours. Both are shown above as they are counted.
+                  {feeWords(COMMISSION_LIVE && store.shared).studioPay} Visits and lesson video have finite monthly thresholds, shown above. Public pages and new video playback pause at their respective thresholds.
                 </p>
 
                 {paid && cancelling && pauseSet && pause ? (
@@ -2481,7 +2427,7 @@ export default async function StudioPage({
                           {`Move up to Scale: ${priceWords("scale", billedYearly ? "year" : "month")}`}
                         </summary>
                         <p className="mt-3 text-sm text-ink-soft">
-                          {`Scale is Pro with room for a bigger list: up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, and ${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts instead of ${AI_MONTHLY.pro}. Everything else is the same. `}
+                          {`Scale is Pro with room for a bigger list: up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, and ${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts instead of ${AI_MONTHLY.pro}. Stored capacity is ${storageWords(storageBrakeFor("paid", "scale"))} instead of ${storageWords(storageBrakeFor("paid", "pro"))}. `}
                           {trialing
                             ? "Nothing is charged now. When the trial ends you pay the Scale price instead."
                             : "Today you are charged only the difference for the rest of the period you already paid for, and the Scale price from your next charge on. If your bank asks you to confirm, you are sent to confirm it, and nothing changes until it is paid."}

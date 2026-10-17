@@ -35,6 +35,8 @@
  * store record replaced, in one write. Until that write lands the old record
  * is the store, complete, and doing it again writes the same records.
  */
+import { MAX_PRODUCTS, MAX_TITLE_LENGTH, MAX_SUMMARY_LENGTH } from "@/lib/catalog-rules";
+export { MAX_PRODUCTS, MAX_TITLE_LENGTH, MAX_SUMMARY_LENGTH } from "@/lib/catalog-rules";
 import { type Shipping, parseShipping } from "@/lib/shipping";
 import { idInSegment } from "@/lib/product-slug";
 import { type CallPackage, parseCallPackage } from "@/lib/call-package-rules";
@@ -67,9 +69,9 @@ import type { Store } from "@/lib/store";
  * them by name. It is a ceiling nobody selling to their own audience meets,
  * and we say it as a number rather than a word we could not keep.
  */
-export const MAX_PRODUCTS = 2_000;
-export const MAX_TITLE_LENGTH = 80;
-export const MAX_SUMMARY_LENGTH = 300;
+
+
+
 
 /** Products on one page of the store; the first page lives in the store record. */
 export const STORE_PAGE_SIZE = 24;

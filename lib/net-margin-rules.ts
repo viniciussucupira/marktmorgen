@@ -2,6 +2,8 @@
  * This checks supplied ceilings, not the accuracy of tax advice, vendor quotes or usage enforcement.
  */
 export const MINIMUM_NET_MARGIN_BPS=6_000;
+/** Owner-required planning minimum, not a ruling on the legal tax treatment. */
+export const PLANNING_PROFIT_TAX_FLOOR_BPS=2_750;
 export const CUSTOMER_COST_CATEGORIES=[
  "infrastructure","storageDeliveryVideo","email","ai","paymentAndFx",
  "supportAndOperations","acquisitionAndAffiliates","fixedBusinessCosts",
@@ -17,7 +19,7 @@ export type CustomerWorstCase={
  allTaxesReviewed:boolean;
  revenueCollected:boolean;
 };
-export type MarginAssessment={approved:boolean;reason:"unknown"|"invalid"|"unbounded"|"uncollected"|"no_revenue"|"below_floor"|"approved";netCents:number|null;marginBps:number|null};
+export type MarginAssessment={approved:boolean;reason:"unknown"|"invalid"|"unbounded"|"uncollected"|"no_revenue"|"below_floor"|"tax_below_planning_floor"|"approved";netCents:number|null;marginBps:number|null};
 const stopped=(reason:MarginAssessment["reason"]):MarginAssessment=>({approved:false,reason,netCents:null,marginBps:null});
 const money=(n:unknown):n is number=>typeof n==="number"&&Number.isSafeInteger(n)&&n>=0;
 /** Only explicit data belongs to a review. Inherited defaults and computed
@@ -51,7 +53,10 @@ export function assessCustomerWorstCase(value:CustomerWorstCase|null):MarginAsse
  const gross=BigInt(value.collectedRevenueCents!);
  if(gross===BigInt(0))return stopped("no_revenue");
  const costs=CUSTOMER_COST_CATEGORIES.reduce((total,key)=>total+BigInt(value.costCeilings[key]!),BigInt(0));
- const net=gross-BigInt(value.refundableRevenueCents!)-BigInt(value.taxesCeilingCents!)-costs;
+ const pretax=gross-BigInt(value.refundableRevenueCents!)-costs;
+ const taxFloor=pretax>BigInt(0)?(pretax*BigInt(PLANNING_PROFIT_TAX_FLOOR_BPS)+BigInt(9_999))/BigInt(10_000):BigInt(0);
+ if(BigInt(value.taxesCeilingCents!)<taxFloor)return stopped("tax_below_planning_floor");
+ const net=pretax-BigInt(value.taxesCeilingCents!);
  if(net>BigInt(Number.MAX_SAFE_INTEGER)||net< -BigInt(Number.MAX_SAFE_INTEGER))return stopped("invalid");
  const ratio=Number(net*BigInt(10_000)/gross);
  const approved=net*BigInt(10_000)>=gross*BigInt(MINIMUM_NET_MARGIN_BPS);

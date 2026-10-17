@@ -162,7 +162,7 @@ async function main(): Promise<void> {
   is("and then none is given: the room is read by asking for it", [await grantRoom(unpaid, OTHER, { key: ANA, owner: false }, true, true, t1 + GRANT_MS), await grantRoom(unpaid, OTHER, { key: BIA, owner: false }, false, false, t1)], ["resting", "resting"]);
   is("nothing more is counted", (await trafficIn(free, month)).parts, before);
   is("its creator is still never refused", leave(await grantRoom(unpaid, OTHER, { key: "creator", owner: true }, false, false, t1)).ms, GRANT_MS);
-  is("a store that pays is never refused, whatever it has had", leave(await grantRoom(paid, ROOM, { key: "c3c3c3c3c3c3", owner: false }, false, false, t1)).ms, GRANT_MS);
+  is("a paid store at its finite threshold receives no new polling grant", await grantRoom(paid, ROOM, { key: "c3c3c3c3c3c3", owner: false }, false, false, t1), "resting");
   is("the page of a resting room has a button and asks nothing by itself", [/t\.checkNew/.test(page) && /checkNew: "Check for new messages"/.test(roomWordsSource), /pace === "stopped" \|\| restingNow\.current\) return IDLE_MS;/.test(page)], [true, true]);
 
   part("What it is counted as is what it can cost, and a little over");
@@ -180,7 +180,7 @@ async function main(): Promise<void> {
   const help = readFileSync(join(process.cwd(), "lib/help-content.ts"), "utf8");
   is("the Terms say what a buyer coming back counts as, from the figures the count is made from", [/ROOM_GRANT_MINUTES\} minutes it is open: \{partsWords\(ROOM_LIVE_PARTS\)\}/.test(terms), /partsWords\(ROOM_IDLE_PARTS\)\} of a visit while the room is/.test(terms), /one visit on each day their podcast app checks/.test(terms), /is that\s+day&apos;s visit, once/.test(terms)], [true, true, true, true]);
   is("the help page says the same, in the same figures", [help.includes(`by the ${ROOM_GRANT_MINUTES} minutes it is open, for each member: ${partsWords(ROOM_LIVE_PARTS)} visits while people are talking, when it checks every ${LIVE_MS / 1000} seconds, and ${partsWords(ROOM_IDLE_PARTS)} of a visit while the room is quiet`), help.includes(`one nobody has touched for ${AWAY_AFTER_MS / MINUTE} minutes, checks nothing and counts nothing`)], [true, true]);
-  is("both say what a resting store's room does", [/stops checking by itself and shows new\s+messages when a member asks for them/.test(terms), /stops checking by itself, and shows new messages when a member presses a button/.test(help)], [true, true]);
+  is("both say what a resting store's room does", [/stops checking by itself and shows new\s+messages when a member asks for them/.test(terms), /stops checking by itself,? and shows new messages when a member presses a button/.test(help)], [true, true]);
 
   const features = readFileSync(join(process.cwd(), "lib/feature-pages.ts"), "utf8");
   is("the page about communities says how often the room checks, and that it counts", features.includes(`The room checks for new messages every ${LIVE_MS / 1000} seconds while people are talking and every ${IDLE_MS / 1000} while it is quiet, and not at all in a background tab or after ${AWAY_AFTER_MS / MINUTE} minutes without a touch. Time in the room counts toward your plan's visits.`), true);

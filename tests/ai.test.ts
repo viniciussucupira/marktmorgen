@@ -11,7 +11,7 @@
  *   - every request carries the rules against invented reviews, numbers,
  *     results and urgency;
  *   - only what fits the studio's boxes comes back, cut to their limits;
- *   - a job that fails is not counted, and a month's allowance is a ceiling;
+ *   - a started attempt stays counted if it fails, and a month's allowance is a ceiling;
  *   - an outline goes into a course whole, or not at all when it would not fit.
  */
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
@@ -73,11 +73,11 @@ async function main(): Promise<void> {
   reply = { status: 529, text: "overloaded" };
   const failed = await writeProduct(store, { title: "Pantry Guide", price: "", kind: "download", notes: "40 recipes" });
   is("says so", failed.ok ? "ran" : failed.reason, "failed");
-  is("and is given back", await aiLeft(store), AI_MONTHLY.creator - 1);
+  is("and the started attempt stays counted", await aiLeft(store), AI_MONTHLY.creator - 2);
   reply = { status: 200, text: "I cannot help with that." };
   const nonsense = await writeProduct(store, { title: "Pantry Guide", price: "", kind: "download", notes: "40 recipes" });
   is("an answer that is not the shape asked for is a failure too", nonsense.ok ? "ran" : nonsense.reason, "failed");
-  is("and is given back too", await aiLeft(store), AI_MONTHLY.creator - 1);
+  is("and an unusable answer also consumes its request", await aiLeft(store), AI_MONTHLY.creator - 3);
 
   part("An outline");
   const lots = Array.from({ length: 12 }, (_, i) => ({ title: `Module ${i + 1}`, lessons: Array.from({ length: 11 }, (_, n) => `Lesson ${n + 1}`) }));

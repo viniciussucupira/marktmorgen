@@ -1,3 +1,4 @@
+import { reserveStoreUpload } from "@/lib/upload-budget";
 import type { NextRequest } from "next/server";
 import { readKind } from "@/lib/catalog";
 import { ITEM_ID_PATTERN, VIDEO_TYPES, findLesson, readCourses } from "@/lib/course";
@@ -54,13 +55,16 @@ export async function POST(request: NextRequest) {
       return Response.json({ ok: false, error: "unknown" }, { status: 404 });
     }
 
+    // An unbounded direct-provider grant is unavailable; the studio can use
+    // its existing R2 file fallback instead, subject to that path's budget.
+    if (!(await reserveStoreUpload(store, bytes, "stream"))) return Response.json({ ok: false, error: "off" }, { status: 404 });
     const folder = await storeFolder(ref);
     if (!(await withinLimit("stream-door", folder, DOORS_PER_HOUR, 3600))) {
       return Response.json({ ok: false, error: "slow_down" }, { status: 429 });
     }
     // What a store may keep goes by where it stands with its plan (lib/plan-standing.ts).
     const standing = standingOf(store);
-    const held = await storageUsed(folder, storageBrakeFor(standing));
+    const held = await storageUsed(folder, storageBrakeFor(standing, store.tier));
     if (held.available === false) return Response.json({ ok: false, error: "video_unavailable" }, { status: 503 });
     if (!fits(held, bytes)) return Response.json({ ok: false, error: storageRefusal(standing) }, { status: 400 });
     await rememberFolderOwner(folder, ref);
@@ -71,6 +75,7 @@ export async function POST(request: NextRequest) {
     }
     return Response.json({ ok: true, door: opened.door }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    if (error instanceof Error && error.message === "storage_unavailable") return Response.json({ ok: false, error: "video_unavailable" }, { status: 503 });
     console.error("opening the door for a lesson video failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
   }

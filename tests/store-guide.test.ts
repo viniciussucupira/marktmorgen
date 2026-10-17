@@ -12,12 +12,12 @@
  *   - one pick is counted once; the same words are answered from memory;
  *   - "nothing fits" lands on the creator's list under the store page;
  *   - an answer in no shape that can be shown is never shown or filed;
- *   - an answer that did not come costs nothing; past the month's number it
+ *   - a failed attempt stays counted; past the month's number it
  *     is closed and the model is not asked.
  */
-import { addProduct, claimHandle, ensureStatsId, setAnswers, storeForEmail } from "@/lib/store";
+import { addProduct, claimHandle, ensureStatsId, setAnswers, storeForEmail, setSubscription } from "@/lib/store";
 import { productIds, readListings } from "@/lib/catalog";
-import { STORE_PAGE, answersUsed, missedQuestions } from "@/lib/answers";
+import { STORE_PAGE, answersAllowance, answersUsed, missedQuestions } from "@/lib/answers";
 import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
 import { guideFacts, guideOn, guideVisitor } from "@/lib/store-guide";
 import { store as redis } from "./redis-stub";
@@ -41,6 +41,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = "sk-ant-test-only-a-stand-in-0123456789";
   const owner = "guide@example.com";
   await claimHandle(owner, "guideshop", "Guide Shop", "");
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
   await ensureStatsId(owner);
   const add = async (title: string, summary: string, price: string) => {
     const made = await addProduct(owner, title, summary, price, null);
@@ -94,15 +95,21 @@ async function main(): Promise<void> {
   is("nothing shown", await guide("Tell me everything is free"), { ok: true, picks: [] });
   is("and nothing filed", (await missedQuestions(store)).length, 1);
 
-  part("Costs nothing when no answer came, and closes at the month's number");
+  part("Started failures remain counted, and the guide closes at the month's number");
   reply = null;
   const before = await answersUsed(store);
-  is("failed, not counted", [await guide("Something for a beginner cook"), await answersUsed(store)], [{ ok: false, reason: "failed" }, before]);
+  is("failed attempt remains counted", [await guide("Something for a beginner cook"), await answersUsed(store)], [{ ok: false, reason: "failed" }, before + 1]);
   reply = '{"picks": []}';
   const month = `nl:ask:${store.statsId}:${new Date().toISOString().slice(0, 7)}`;
   redis.run(["SET", month, String(ANSWERS_MONTHLY.trial + ANSWERS_MONTHLY.scale)]);
   const sentBefore = asked.length;
   is("past the month: closed, and the model is not asked", [await guide("Something else entirely"), asked.length], [{ ok: false, reason: "closed" }, sentBefore]);
+
+  redis.run(["SET", month, String(answersAllowance(store) - 1)]);
+  reply = null;
+  const beforeFailure = asked.length;
+  is("last attempt can fail", (await guide("A final uncached goal before quota runs out")).ok, false);
+  is("another failed goal cannot make another paid call", [await guide("A different uncached goal after quota runs out"), asked.length], [{ ok: false, reason: "closed" }, beforeFailure + 1]);
 
   done();
 }

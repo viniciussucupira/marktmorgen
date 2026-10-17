@@ -203,7 +203,13 @@ async function senderTakes(n: number): Promise<boolean> {
   return false;
 }
 
-export type Reserved = "ok" | "month" | "day" | "sender";
+export type Reserved = "ok" | "month" | "day" | "sender" | "unavailable";
+
+function confirmedCount(raw: unknown, minimum: number): number | null {
+  if ((typeof raw !== "string" && typeof raw !== "number") || (typeof raw === "string" && !/^(0|[1-9][0-9]*)$/.test(raw))) return null;
+  const value=Number(raw);
+  return Number.isSafeInteger(value) && value>=minimum ? value : null;
+}
 
 /**
  * Takes `n` from the company's day only (MARKETING_DAILY_CAP), for a bulk
@@ -212,20 +218,22 @@ export type Reserved = "ok" | "month" | "day" | "sender";
  * (lib/imports.ts). False, and nothing taken, when it would pass the cap.
  */
 export async function reserveDay(n: number): Promise<boolean> {
-  if (n <= 0) return true;
-  // The sender's own ceiling comes first: nothing is taken from the day for
-  // a send that cannot go at all this month.
-  if (!(await senderTakes(n))) return false;
-  const cap = dailyCap();
-  if (cap === 0) return true;
-  const day = dayKey();
-  const [today] = await redisPipeline([
-    ["INCRBY", day, n],
-    ["EXPIRE", day, 3 * 86_400],
-  ]);
-  if (Number(today) <= cap) return true;
-  await redisPipeline([["DECRBY", day, n]]);
-  return false;
+  if (!Number.isSafeInteger(n) || n<0) return false;
+  if (n===0) return true;
+  if (!isRedisConfigured()) return false;
+  try {
+    if (!(await senderTakes(n))) return false;
+    const cap=dailyCap();
+    if(cap===0)return true;
+    const day=dayKey();
+    const result=await redisPipeline([["INCRBY",day,n],["EXPIRE",day,3*86400]]);
+    if(result.length!==2 || result[1]!==1)return false;
+    const today=confirmedCount(result[0],n);
+    if(today===null)return false;
+    if(today<=cap)return true;
+    await redisPipeline([["DECRBY",day,n]]);
+    return false;
+  } catch { return false; }
 }
 
 /** Gives back what reserveDay took, for a send that did not go out. */
@@ -236,29 +244,26 @@ export async function releaseDay(n: number): Promise<void> {
 
 /** Takes `n` from the month (and the company's day), or nothing when that would pass either. */
 export async function reserve(store: Store, n: number): Promise<Reserved> {
-  if (n <= 0) return "ok";
-  if (!store.listId) return "month";
-  // Before anything is taken from the store's own month: the sender's
-  // ceiling, which is everybody's (above).
-  if (!(await senderTakes(n))) return "sender";
-  const allowance = monthlyAllowance(store);
-  const key = usedKey(store.listId);
-  const cap = dailyCap();
-  const day = dayKey();
-  const [total, , today] = await redisPipeline([
-    ["INCRBY", key, n],
-    ["EXPIRE", key, 70 * 86_400],
-    ["INCRBY", day, n],
-    ["EXPIRE", day, 3 * 86_400],
-  ]);
-  const overMonth = Number(total) > allowance;
-  const overDay = cap > 0 && Number(today) > cap;
-  if (!overMonth && !overDay) return "ok";
-  await redisPipeline([
-    ["DECRBY", key, n],
-    ["DECRBY", day, n],
-  ]);
-  return overMonth ? "month" : "day";
+  if (!Number.isSafeInteger(n) || n<0) return "month";
+  if(n===0)return "ok";
+  if(!store.listId)return "month";
+  if(!isRedisConfigured())return "unavailable";
+  const allowance=monthlyAllowance(store);
+  if(!Number.isSafeInteger(allowance) || allowance<0 || n>allowance)return "month";
+  try {
+    if(!(await senderTakes(n)))return "sender";
+    const key=usedKey(store.listId),cap=dailyCap(),day=dayKey();
+    const results=await redisPipeline([["INCRBY",key,n],["EXPIRE",key,70*86400],["INCRBY",day,n],["EXPIRE",day,3*86400]]);
+    // A missing acknowledgement may still have consumed capacity. Never
+    // refund it or dispatch a provider call on an ambiguous response.
+    if(results.length!==4 || results[1]!==1 || results[3]!==1)return "unavailable";
+    const total=confirmedCount(results[0],n),today=confirmedCount(results[2],n);
+    if(total===null || today===null)return "unavailable";
+    const overMonth=total>allowance,overDay=cap>0 && today>cap;
+    if(!overMonth && !overDay)return "ok";
+    await redisPipeline([["DECRBY",key,n],["DECRBY",day,n]]);
+    return overMonth?"month":"day";
+  } catch { return "unavailable"; }
 }
 
 /** Gives back what was taken for a batch that was not sent. */
@@ -423,7 +428,7 @@ export async function sendTo(
     const reserved = await reserve(store, chunk.length);
     if (reserved !== "ok") {
       await rampBack(watched, chunk.length);
-      return { done, rest: emails.slice(i), stopped: reserved === "month" ? "allowance" : reserved };
+      return { done, rest: emails.slice(i), stopped: reserved === "month" ? "allowance" : reserved === "unavailable" ? "retry" : reserved };
     }
     // In a sequence, those who allowed their link use to be seen get links that say so (lib/mail-clicks.ts).
     const counting = tag?.medium === "sequence" ? new Set<string>() : undefined;
@@ -439,8 +444,8 @@ export async function sendTo(
     if (messages.length) await paced();
     const outcome = await sendBatch(messages, `${keyBase}:${i}:${chunk.length}`);
     if (outcome !== "sent") {
-      await release(store, chunk.length);
-      await rampBack(watched, chunk.length);
+      // Dispatch may have succeeded before its acknowledgement was lost.
+      // Keep attempted capacity reserved; retries consume new capacity.
       return { done, rest: emails.slice(i), stopped: outcome };
     }
     if (messages.length < chunk.length) await release(store, chunk.length - messages.length);

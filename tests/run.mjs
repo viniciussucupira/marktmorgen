@@ -11,6 +11,8 @@ import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { checkClientBundles } from "./client-bundles.mjs";
+import {testAliases,testEnvironment} from "./test-config.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "..");
@@ -32,42 +34,24 @@ try {
       format: "cjs",
       outfile: bundle,
       logLevel: "error",
-      alias: {
-        "@": root,
-        // REST coverage tests must exercise the real client against their fetch doubles.
-        "@/lib/redis": ["range-traffic-coverage.test.ts", "stats-traffic-coverage.test.ts"].includes(file)
-          ? join(root, "lib/redis.ts")
-          : join(here, "redis-stub.ts"),
-        ...(file === "video-admission.test.ts" ? {
-          "@/lib/redis": join(here, "video-admission-redis.ts"),
-          "@/lib/stream": join(here, "video-admission-stream.ts"),
-        } : {}),
-        ...(file === "storage-measurement.test.ts" ? {
-          "@/lib/blob": join(here, "storage-provider-stub.ts"),
-          "@/lib/vault": join(here, "storage-provider-stub.ts"),
-          "@/lib/stream": join(here, "storage-provider-stub.ts"),
-        } : {}),
-      },
+      alias: testAliases(file,root,here),
     });
     console.log(`\n=== ${file} ===`);
     const { spawnSync } = await import("node:child_process");
     const run = spawnSync(process.execPath, [bundle], {
       stdio: "inherit",
-      env: {
-        ...process.env,
-        // A deployment's own secret, which the VAPID keys are derived from
-        // (lib/web-push.ts). A fixed one here, so a test that needs push to
-        // exist gets the same key pair every run and never reaches anything
-        // real; without it, push is correctly unavailable and every check
-        // about devices would pass for the wrong reason.
-        NIMBUS_DATA_KEY: process.env.NIMBUS_DATA_KEY ?? "tests-only-not-a-real-deployment-secret",
-      },
+      env: testEnvironment(process.env),
     });
     if (run.status !== 0) failed += 1;
   }
 } finally {
   rmSync(out, { recursive: true, force: true });
 }
+
+const clientBundles = await checkClientBundles(root);
+console.log(`\nBrowser bundles: ${clientBundles.total - clientBundles.failed}/${clientBundles.total} passed.`);
+for (const failure of clientBundles.failures) console.error(failure);
+failed += clientBundles.failed;
 
 if (failed) {
   console.log(`\n${failed} test file(s) failed.`);

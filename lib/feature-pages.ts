@@ -1,3 +1,7 @@
+import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
+import { hoursWords } from "@/lib/watch-rules";
+import { SETUP_VIDEO_SECONDS } from "@/lib/plan-standing";
+import {answerAllowanceWords} from "@/lib/answers-rules";
 // The feature pages and the pages for each kind of creator.
 //
 // Every sentence here describes something a creator can open and use today,
@@ -105,7 +109,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         intro: "Said here so nobody signs up expecting it.",
         items: [
           "There is one layout, a single column that reads on a phone: you choose the theme, the color, the letters, the background and which part of the page comes first, not where parts sit beside each other.",
-          "Up to 2,000 products and 100 links per store. Stan says unlimited; we say the number we can stand behind.",
+          "Each store supports up to 2,000 products and 100 links.",
           "No custom code on the page, and the whole store cannot be put inside another website. One product can, as a card or a button.",
           "Buyers pay through Stripe, with the ways to pay your own Stripe account has on. Do not count on PayPal: Stripe offers it only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein, and its documentation, read on September 28, 2026, lists it as not supported for direct charges, which is how every sale here is charged.",
         ],
@@ -118,7 +122,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { q: "Is the page up before I connect Stripe?", a: "Yes. The page, the editor and your address are free and stay free; without a plan, the page is shown for 500 visits a month. Taking a card needs two things: Stripe has cleared your account, and your plan or its 14-day trial is running. Until then the page says plainly that it cannot take a payment." },
           { q: "Can I use my own domain?", a: DOMAINS ? `Yes, on the ${PLAN_AT.pro} Studio plan. You add one record where you bought the domain, and the certificate is made for you. Your marktmorgen.com address keeps working as well.` : "Not yet. It is planned for the Studio plan, and this page will say so on the day it works." },
           { q: "How do I see what the page looks like before I save?", a: "The studio shows the page with your photo, theme, color and letters as you change them, before anything is saved." },
-          { q: "Is there a limit on how many people can visit?", a: `Your plan covers a number of visits a month: 3,000 on the ${PLAN_AT.creator} plan, 10,000 on the ${PLAN_AT.pro} plan and 50,000 on the ${PLAN_AT.scale} plan. A visit is one person opening your store on one day, however many pages they look at, and you are never counted. Past your plan's figure it is $0.50 for each thousand visits, on your next invoice, and your store is never taken down for being busy. Your studio shows the count as it grows.` },
+          { q: "Is there a limit on how many people can visit?", a: `Your plan covers a number of visits a month: 3,000 on the ${PLAN_AT.creator} plan, 10,000 on the ${PLAN_AT.pro} plan and 50,000 on the ${PLAN_AT.scale} plan. A visit is one person opening your store on one day, however many pages they look at, and you are never counted. At your plan's recorded counted-visit threshold, public pages pause until the month turns or a plan change provides a larger threshold. Your studio shows the count as it grows.` },
           { q: "Can one account run more than one store?", a: "Yes, up to five, each with its own address, products, Stripe account and plan. You switch between them at the top of your studio." }
         ],
       },
@@ -257,8 +261,8 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           "The certificate's PDF file is drawn in Latin, Greek and Cyrillic letters; a name in another script is printed from the certificate's page instead.",
           "No live lessons inside the course itself. Hold them as live events in your community, or put a link in a lesson to where you hold them.",
-          "Video is covered for 400 hours watched a month across your store, counted by the player as your students watch. Past that it is $0.03 for each hour watched, on your next invoice; a student is never cut off, and your studio shows the hours as they are watched.",
-          "Without a paid plan, lesson videos pause past the store's hours until the plan is paid or the month turns: 400 hours a month in the free trial, and 10 hours a month before a plan starts and after one ends.",
+          `Stream video has a finite threshold of ${paidVideoWords()} a month across your store. New playback pauses at the recorded threshold. The meter is read about once an hour; existing player links may remain valid until they expire. Your studio shows the recorded hours.`,
+          `Without a paid plan, lesson videos pause past the store's hours until the plan is paid or the month turns: ${hoursWords(TRIAL_VIDEO_SECONDS)} a month in the free trial, and ${hoursWords(SETUP_VIDEO_SECONDS)} a month before a plan starts and after one ends.`,
           "Video is kept up to 1080p: a 4K file plays at 1080p.",
           `Captions written by AI are machine transcription: read them before you rely on them, and replace a language with your own file whenever you like. They are for videos of up to ${MAX_AUTO_MINUTES / 60} hours, need a paid plan, and come as captions in the player, not as a separate transcript.`,
           "A signed address stops a link from being passed around. It does not stop a student from recording their own screen; nothing does.",
@@ -1679,7 +1683,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "chart", title: "Where readers stop", body: "Each block of your page shows the share of visitors who read down to it, measured on one visitor in eight and shown once 30 are, so you can see which block to rewrite or move up. No cookie, nothing about who." },
           { icon: "chart", title: "Two headlines, tested", body: "Write a second headline and half your visitors see each. Once both have been seen 200 times and one brings clearly more people to the checkout (95% confidence), your page shows the winner to everybody by itself. Only words change: everyone pays the same price." },
           { icon: "layout", title: "Two whole pages, tested", body: "Make version B from the page itself and change anything in it: blocks, their order, words, pictures, video. Half your visitors read each, and once one brings clearly more of them to the checkout (95% confidence), it becomes the page for everybody by itself. On the page you already have, with no separate page builder to pay for." },
-          { icon: "chat", title: "Buyers' questions, answered from your page", body: "Switch it on and every product page gets a box: \u201cA question before you buy?\u201d The visitor is answered in seconds, in their own language, only from what that page says and from the notes you write for it. It never states a price, a refund, a deadline or a result that is not on your page, and it says the answer is automatic. What your page could not answer is told plainly and listed in your studio, with nothing about who asked, so you can see what the page is missing. 500 answers a month on Store, 2,000 on Studio, 6,000 on Scale; past that the box closes until the month turns, and nothing is charged." },
+          { icon: "chat", title: "Buyers' questions, answered from your page", body: "Switch it on and every product page gets a box: \u201cA question before you buy?\u201d The visitor is answered in seconds, in their own language, only from what that page says and from the notes you write for it. It never states a price, a refund, a deadline or a result that is not on your page, and it says the answer is automatic. What your page could not answer is told plainly and listed in your studio, with nothing about who asked, so you can see what the page is missing. " + answerAllowanceWords() + " Past the allowance, the box closes until the month turns. Cached answers can still be shown without another model call." },
           { icon: "sparkle", title: "A whole page drafted with AI", body: "From the product's name, price and description, plus anything you add. It never writes your story or a guarantee you did not give, never invents reviews, numbers, results or deadlines, and never puts a price on a button. Nothing is saved until you press Save. It counts as one of your monthly drafts." },
           { icon: "globe", title: "Search and sharing", body: "An address in words from the product's name — /p/knife-skills-… — that follows a rename without breaking a link shared before. A title of up to 70 characters and a description of up to 160 for search engines, and a share picture drawn for you from the product's picture, name, price and stars." },
         ],
@@ -2510,7 +2514,7 @@ export const CREATOR_PAGES: TopicPage[] = [
         items: [
           "No workout-tracking app and no progress photos: students mark lessons done, and that is what you see.",
           "The community's live room is text only: there is no group video inside it, so a live workout runs as a live event on Google Meet, Jitsi or your own link.",
-          "Video is covered for 400 hours watched a month; past that it is $0.03 for each hour watched, and nobody is cut off.",
+          `Stream video has a finite threshold of ${paidVideoWords()} a month. New playback pauses at the recorded threshold; existing player links may remain valid until they expire.`,
         ],
       },
       {

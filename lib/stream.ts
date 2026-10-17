@@ -273,16 +273,15 @@ async function collectionFor(config: Config, folder: string): Promise<string | n
  * cannot be read.
  */
 export async function streamHeld(folder: string): Promise<number | null> {
-  const config = streamConfig();
-  if (!config) return 0;
   if (!isRedisConfigured()) return null;
   const [known] = await redisPipeline([["GET", collectionKey(folder)]]);
   if (known === null) return 0;
-  if (typeof known !== "string" || !STREAM_ID_PATTERN.test(known)) return null;
-  const answer = await ask(config, "GET", `/collections/${known}`);
+  const config = streamConfig();
+  if (!config || typeof known !== "string" || !STREAM_ID_PATTERN.test(known)) return null;
+  const answer = await ask(config, "GET", "/collections/" + known);
   if (answer.status === 404) return 0;
   const size = field(answer.data, "totalSize");
-  return answer.status === 200 && typeof size === "number" && Number.isFinite(size) && size >= 0 ? size : null;
+  return answer.status === 200 && typeof size === "number" && Number.isSafeInteger(size) && size >= 0 ? size : null;
 }
 
 /** How many pages of a store's videos are read: a thousand to a page. */
@@ -299,25 +298,47 @@ const WATCH_PAGES = 20;
  * (lib/watch.ts): time watched, which no page view of ours can inflate.
  */
 export async function streamWatched(folder: string): Promise<{ id: string; seconds: number }[] | null> {
-  const config = streamConfig();
-  if (!config || !isRedisConfigured()) return [];
+  if (!isRedisConfigured()) return null;
   const [known] = await redisPipeline([["GET", collectionKey(folder)]]);
-  if (typeof known !== "string" || !STREAM_ID_PATTERN.test(known)) return [];
+  if (known === null) return [];
+  const config = streamConfig();
+  if (!config || typeof known !== "string" || !STREAM_ID_PATTERN.test(known)) return null;
   const out: { id: string; seconds: number }[] = [];
+  const seen = new Set<string>();
+  let expected: number | undefined;
+  let pageSize: number | undefined;
   for (let page = 1; page <= WATCH_PAGES; page += 1) {
-    const answer = await ask(config, "GET", `/videos?collection=${known}&page=${page}&itemsPerPage=1000&orderBy=date`);
+    const answer = await ask(config, "GET", "/videos?collection=" + known + "&page=" + page + "&itemsPerPage=1000&orderBy=date");
     const items = field(answer.data, "items");
-    if (answer.status !== 200 || !Array.isArray(items)) return null;
+    const total = field(answer.data, "totalItems");
+    const currentPage = field(answer.data, "currentPage");
+    const declaredSize = field(answer.data, "itemsPerPage");
+    const size = declaredSize === undefined ? 1000 : declaredSize;
+    if (answer.status !== 200 || !Array.isArray(items) ||
+      typeof total !== "number" || !Number.isSafeInteger(total) || total < 0 ||
+      typeof size !== "number" || !Number.isSafeInteger(size) || size < 1 || size > 1000 ||
+      (currentPage !== undefined && currentPage !== page) ||
+      (expected !== undefined && expected !== total) ||
+      (pageSize !== undefined && pageSize !== size) || items.length > size) return null;
+    expected = total;
+    pageSize = size;
     for (const item of items) {
       const id = field(item, "guid");
       const seconds = field(item, "totalWatchTime");
-      if (typeof id !== "string" || !STREAM_ID_PATTERN.test(id.toLowerCase())) continue;
-      out.push({ id: id.toLowerCase(), seconds: typeof seconds === "number" && Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0 });
+      if (typeof id !== "string" || !STREAM_ID_PATTERN.test(id.toLowerCase()) ||
+        field(item, "collectionId") !== known ||
+        typeof seconds !== "number" || !Number.isSafeInteger(seconds) || seconds < 0) return null;
+      const normalized = id.toLowerCase();
+      if (seen.has(normalized)) return null;
+      seen.add(normalized);
+      out.push({ id: normalized, seconds });
     }
-    const total = field(answer.data, "totalItems");
-    if (items.length < 1000 || (typeof total === "number" && out.length >= total)) break;
+    if (out.length > total) return null;
+    if (out.length === total) return out;
+    if (items.length < size) return null;
   }
-  return out;
+  // A bounded scan that did not reach the declared total is unavailable.
+  return null;
 }
 
 /**
@@ -332,10 +353,11 @@ export async function streamWatched(folder: string): Promise<{ id: string; secon
  * one run can take away.
  */
 export async function dropAllStreams(folder: string, until = Number.POSITIVE_INFINITY): Promise<number | null> {
-  const config = streamConfig();
-  if (!config || !isRedisConfigured()) return 0;
   const videos = await streamWatched(folder);
   if (videos === null) return null;
+  if (!videos.length) return 0;
+  const config = streamConfig();
+  if (!config) return null;
   for (const { id } of videos) {
     // Out of time: not seen through, and said so. The rest is there to be
     // listed the next time.

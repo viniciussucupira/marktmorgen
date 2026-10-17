@@ -44,7 +44,7 @@ async function main(): Promise<void> {
   is("one of the month's jobs", result.ok ? result.left : null, 99);
   reply = "no";
   const failed = await replyToReview(store, { productTitle: "x", rating: 5, text: "", name: "", maxLength: 1_000 });
-  is("stars only is asked as stars only, and an empty answer is not counted", [asked.at(-1)?.prompt.includes("They left stars only, no words."), failed.ok], [true, false]);
+  is("stars only is asked as stars only, and an empty answer retains its started attempt", [asked.at(-1)?.prompt.includes("They left stars only, no words."), failed.ok], [true, false]);
 
   part("Where it is asked");
   const route = readFileSync("app/api/store/ai/route.ts", "utf8");

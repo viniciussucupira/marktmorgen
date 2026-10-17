@@ -117,7 +117,7 @@ async function main(): Promise<void> {
 
   reply = "not json";
   const broken = await reviewPage(store, { facts: "x", missing: [], drop: "", language: "English", free: false, notes: "" });
-  is("an answer that cannot be read is not counted", [broken.ok, broken.ok ? 0 : broken.reason], [false, "failed"]);
+  is("an answer that cannot be read retains its started attempt", [broken.ok, broken.ok ? 0 : broken.reason], [false, "failed"]);
 
   part("Comparison cells read as words for the model");
   is("a tick is kept as the tick character", CELL_YES, "✓");

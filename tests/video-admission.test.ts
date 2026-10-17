@@ -16,3 +16,5 @@ test('corrupt or ambiguous counter cannot mint a player token',async()=>{for(con
 test('zero and exhausted allowances pause before player issuance',async()=>{for(const [used,limit] of [[0,0],[100,100],[101,100]]){set([String(used)]);reset();assert.deepEqual(await lessonVideo(file,limit),{kind:'paused'});assert.equal(players,0);}});
 test('invalid finite allowance cannot bypass admission',async()=>{for(const limit of [NaN,Infinity,-1,0.5]){set(['0']);reset();assert.equal(await lessonVideo(file,limit),null);assert.equal(players,0);}});
 test('confirmed balance below allowance preserves playback',async()=>{set(['99']);reset();assert.equal((await lessonVideo(file,100))?.kind,'stream');assert.equal(players,1);});
+
+test('null or omitted stream allowance cannot mint a player token',async()=>{for(const limit of [null,undefined]){set(['0']);reset();assert.equal(await lessonVideo(file,limit),null);assert.equal(players,0);assert.equal(commands.length,0);}});

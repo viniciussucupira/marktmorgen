@@ -16,7 +16,7 @@
  */
 import { createHash } from "node:crypto";
 import { answerModel, askModel, jsonIn } from "@/lib/ai";
-import { STORE_PAGE, answersOn, deliveryWords, giveAnswerBack, keepAnswer, keptAnswer, priceWords, takeAnswer } from "@/lib/answers";
+import { STORE_PAGE, answersOn, deliveryWords, keepAnswer, keptAnswer, priceWords, takeAnswer } from "@/lib/answers";
 import { MAX_FACTS_CHARS, questionKey, readQuestion } from "@/lib/answers-rules";
 import type { Listing, Store } from "@/lib/store";
 
@@ -100,12 +100,12 @@ export async function guideVisitor(input: { store: Store; products: Listing[]; g
   if (!(await takeAnswer(store, now))) return { ok: false, reason: "closed" };
   let text: string | null = null;
   try {
-    text = await askModel(SYSTEM, `The catalog:\n\n${facts}\n\nWhat the visitor is looking for:\n${goal}`, 400, answerModel(), GUIDE_TIMEOUT_MS);
+    text = await askModel(store, SYSTEM, `The catalog:\n\n${facts}\n\nWhat the visitor is looking for:\n${goal}`, 400, answerModel(), GUIDE_TIMEOUT_MS);
   } catch (error) {
     console.error("guiding a visitor failed", error);
   }
   if (text === null) {
-    await giveAnswerBack(store, now);
+    // A timeout or provider failure can still incur a charge; retain the attempt.
     return { ok: false, reason: "failed" };
   }
   const json = jsonIn(text);

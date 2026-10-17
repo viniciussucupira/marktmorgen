@@ -15,7 +15,7 @@ const MESSAGES: Record<string, string> = {
   notes: "Write a few words about it first: what it is, who it is for, what is inside.",
   used: "This month's writing help is used up. It starts again on the 1st.",
   slow: "A few at a time: wait a minute, then try again.",
-  failed: "The writing help did not answer just now. Nothing was changed, and it was not counted. Try again in a moment.",
+  failed: "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance. Try again in a moment.",
   off: "The writing help is not available right now.",
   forbidden: "Your role on this store cannot do this.",
   file: "The product's PDF could not be read. Draft the page without it, or upload the PDF again.",
@@ -118,7 +118,7 @@ export function AiAssist<T>({
           <button type="button" className="btn btn-secondary btn-sm" onClick={() => void run()} disabled={busy || left <= 0} aria-busy={busy}>
             {busy ? "Writing…" : "Write a draft"}
           </button>
-          <span className="text-xs text-ink-soft">{`${left} left this month`}</span>
+          <span className="text-xs text-ink-soft">{`${left} left this month. Started attempts count, even if they fail.`}</span>
         </div>
         {error ? (
           <p className="notice notice-error text-sm" role="alert">

@@ -9,11 +9,11 @@
  *     1 to 14 days after the one before;
  *   - the writer is handed the moment, the store's products with their prices
  *     and links, and the creator's words, in the store's language, and is
- *     counted as one job; a reply with nothing usable is not counted.
+ *     counted as one job; a reply with nothing usable retains its started attempt.
  */
 import { keepOwnLinks, readDraftedSteps } from "@/lib/sequence-draft";
 import { writeSequence } from "@/lib/ai";
-import { claimHandle, ensureStatsId, setLanguage, storeForEmail } from "@/lib/store";
+import { claimHandle, ensureStatsId, setLanguage, storeForEmail, setSubscription } from "@/lib/store";
 import { aiLeft } from "@/lib/ai";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -60,6 +60,7 @@ async function main(): Promise<void> {
 
   part("Asked of the writer");
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
   await ensureStatsId("owner@example.com");
   await setLanguage("owner@example.com", "de");
   const store = (await storeForEmail("owner@example.com"))!;
@@ -81,7 +82,7 @@ async function main(): Promise<void> {
   is("counted as one job", before - (await aiLeft(store)), 1);
   reply = "Sorry, I cannot.";
   const failed = await writeSequence(store, input);
-  is("a reply with nothing usable fails, and is not counted", [failed.ok ? "written" : failed.reason, before - (await aiLeft(store))], ["failed", 1]);
+  is("a reply with nothing usable fails, and its attempt stays counted", [failed.ok ? "written" : failed.reason, before - (await aiLeft(store))], ["failed", 2]);
 
   done();
 }

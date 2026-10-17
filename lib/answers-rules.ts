@@ -1,3 +1,4 @@
+import {PLAN_TITLES} from "@/lib/plan";
 /**
  * A visitor's question about a product, answered from what its page says.
  * Rules the browser can read too; the part that asks the model, counts and
@@ -99,4 +100,10 @@ export function questionKey(question: string): string {
 /** What the box says when the page does not answer the question. */
 export function unknownWords(storeName: string): string {
   return `This page does not say. Ask ${storeName} before you buy.`;
+}
+
+/** Published allowance wording follows the same cap and plan identities as admission. */
+export function answerAllowanceWords(): string {
+ const count=(n:number)=>n.toLocaleString('en-US');
+ return 'Up to '+count(ANSWERS_MONTHLY.creator)+' automated answer requests a month on '+PLAN_TITLES.creator+', '+count(ANSWERS_MONTHLY.pro)+' on '+PLAN_TITLES.pro+' and '+count(ANSWERS_MONTHLY.scale)+' on '+PLAN_TITLES.scale+'. The store guide uses the same allowance. Attempts count even when the model cannot return an answer.';
 }

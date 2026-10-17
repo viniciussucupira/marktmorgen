@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
-import { MAX_ADDRESSES } from "@/lib/store";
+import { MAX_ADDRESSES } from "@/lib/store-field-rules";
 
 type State =
   | { kind: "closed" }

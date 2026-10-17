@@ -75,7 +75,7 @@ async function main(): Promise<void> {
   is("another way to say it", written.ok ? written.value.headline : written, "Bake the loaf you buy, at home");
   reply = JSON.stringify({ headline: "Join 5,000 bakers who learned sourdough", sub: "" });
   const invented = await writeTestHeadline(store, { headline: "Learn sourdough in 12 lessons", sub: "", facts, language: "English" });
-  is("a number the page does not state is refused, and not counted", invented.ok ? invented.value : invented.reason, "failed");
+  is("a number the page does not state is refused, with its attempt still counted", invented.ok ? invented.value : invented.reason, "failed");
 
   done();
 }
