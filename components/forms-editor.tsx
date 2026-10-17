@@ -152,7 +152,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
 
       <ul className="mt-6 space-y-4">
         {saved.map(({ form, total, latest }) => (
-          <li key={form.id} className="rounded-2xl border border-line bg-white p-4 sm:p-5">
+          <li key={form.id} id={`form-review-${form.id}`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">
