@@ -427,7 +427,7 @@ async function main(): Promise<void> {
   const privacy = read("app/privacy/page.tsx");
   is("the privacy policy says what is kept of a visitor for the count, and for how long", [/keep its first sixteen\s+characters/.test(privacy), /deleted two days later/.test(privacy), /made with a secret key of our own/.test(privacy)], [true, true, true]);
   const studio = read("app/studio/page.tsx");
-  is("the studio shows visits and their finite threshold", [/Visits this month/.test(studio), /trafficIn\(folder\)/.test(studio), /visitLimitFor\(store\)/.test(studio), /Public pages pause/.test(studio)], [true, true, true, true]);
+  is("the studio shows visits and their finite threshold", [/Visits this month/.test(studio), /trafficForAdmission\(folder\)/.test(studio), /visitLimitFor\(store\)/.test(studio), /Public pages pause/.test(studio)], [true, true, true, true]);
   is("a plan's price is far more than its visits cost us", (VISITS_INCLUDED.creator * visitCost()) / (PLAN_PRICES.creator.month / 100) < 0.05, true);
 
   done();

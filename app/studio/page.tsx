@@ -1,3 +1,4 @@
+import { UsageMeter } from "@/components/usage-meter";
 import { isDiscordConfigured } from "@/lib/discord";
 import { RecentSalesSwitch } from "@/components/recent-sales-switch";
 import { firstSaleAt } from "@/lib/yearly-offer";
@@ -148,7 +149,7 @@ import {
 } from "@/lib/stripe-connect";
 import { ORDERS_PAGE_SIZE, canSell, listSales } from "@/lib/store-checkout";
 import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords, deliveredThisMonth } from "@/lib/delivery";
-import { watchedIn } from "@/lib/watch";
+import { watchedForAdmission } from "@/lib/watch";
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, VIDEO_SECONDS_INCLUDED, centsWords, hoursWords, videoOwedCents } from "@/lib/watch-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closingOf } from "@/lib/plan-closing";
@@ -161,7 +162,7 @@ import {
   trialOffered,
 } from "@/lib/billing";
 import { STORAGE_BRAKE_BYTES, storageBrakeFor, storageUsed, storageWords } from "@/lib/storage-quota";
-import { trafficIn } from "@/lib/traffic";
+import { trafficForAdmission } from "@/lib/traffic";
 import { ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, ordersIncluded, ordersOwedCents, ordersWords, perOrderWords } from "@/lib/order-rules";
 import { ordersIn } from "@/lib/orders";
 import { SETUP_VISITS, TRIAL_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor, visitsIncluded, visitsOwedCents, visitsWords } from "@/lib/traffic-rules";
@@ -799,8 +800,12 @@ export default async function StudioPage({
   // What this store has sent out this month, and how long its lesson video
   // was watched: the one thing here that is charged by use, visible to the
   // creator before it is visible on an invoice (lib/watch-rules.ts).
-  const delivery = store && may("settings") ? await deliveredThisMonth(folder) : null;
-  const watched = store && may("settings") ? await watchedIn(folder) : 0;
+  const [delivery, watchedReading, trafficReading] = await Promise.all([
+    store && may("settings") ? deliveredThisMonth(folder) : Promise.resolve(null),
+    store && may("settings") ? watchedForAdmission(folder) : Promise.resolve(null),
+    store && may("settings") ? trafficForAdmission(folder) : Promise.resolve(null),
+  ]);
+  const watched = watchedReading ?? 0;
   // Where the store stands with its plan decides how much it may keep and
   // how long its video may be watched (lib/plan-standing.ts).
   const standing = store ? standingOf(store) : "none";
@@ -809,7 +814,7 @@ export default async function StudioPage({
   // The visits the store has had this month, the other thing charged by use
   // (lib/traffic-rules.ts): what the plan covers, and where the pages of a
   // store with no plan to charge rest.
-  const traffic = store && may("settings") ? await trafficIn(folder) : { people: 0, parts: 0, visits: 0 };
+  const traffic = trafficReading ?? { people: 0, parts: 0, visits: 0 };
   const visited = traffic.visits;
   // The part of the count that is the live room (lib/traffic-rules.ts), in whole visits.
   const roomVisits = traffic.visits - traffic.people;
@@ -2204,28 +2209,10 @@ export default async function StudioPage({
                   made from.
                 */}
                 <div className="mt-6 border-t border-line pt-5">
-                  <p className="font-semibold text-ink">Video watched this month</p>
-                  <p className="mt-1 text-ink-soft">
-                    {`${hoursWords(watched)} of the ${hoursWords(videoRoom)} ${
-                      standing === "paid" || standing === "trial" ? "your plan covers" : "a store without a paid plan has"
-                    }. This is the time your students spent watching your lesson videos, as the player counts it, read about once an hour.`}
-                  </p>
-                  <div
-                    className="mt-4 h-2 w-full overflow-hidden rounded-full bg-sand"
-                    role="progressbar"
-                    aria-valuenow={Math.min(100, Math.round((watched / videoRoom) * 100))}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label="Video hours used this month"
-                  >
-                    <div
-                      className={`h-full rounded-full ${
-                        watched >= videoRoom ? "bg-amber-brand" : "bg-gradient-to-r from-violet-brand to-sky-brand"
-                      }`}
-                      style={{ width: `${Math.min(100, Math.max(1, Math.round((watched / videoRoom) * 100)))}%` }}
-                    />
-                  </div>
-                  {videoLimit !== null && watched >= videoLimit ? (
+                  <UsageMeter label="Video watched this month" used={watchedReading} limit={videoRoom} format={hoursWords}
+                    unavailable="Usage measurement is temporarily unavailable. New stream playback is paused until it can be verified."
+                    description="The player counts recorded watched time, read about once an hour. Existing player links may remain valid until they expire." />
+                  {watchedReading !== null && videoLimit !== null && watched >= videoLimit ? (
                     <p className="mt-4 notice notice-warn">
                       <strong>Your lesson videos are paused.</strong>
                       {` They have been watched for the ${hoursWords(videoLimit)} ${
@@ -2256,29 +2243,10 @@ export default async function StudioPage({
                   same numbers the invoice is made from.
                 */}
                 <div className="mt-6 border-t border-line pt-5">
-                  <p className="font-semibold text-ink">Visits this month</p>
-                  <p className="mt-1 text-ink-soft">
-                    {`${visitsWords(visited)} of the ${countWords(visitRoom)} ${
-                      standing === "paid" ? "your plan covers" : standing === "trial" ? "a free trial has" : "a store without a paid plan has"
-                    }. A visit is one person opening your store on one day, however many of its pages they look at, a buyer coming back to a course, the community or a podcast included. You are never counted.`}
-                    {roomVisits > 0 ? ` ${visitsWords(roomVisits)} of them ${roomVisits === 1 ? "is" : "are"} your community's live room, which counts by the time it is open in front of a member.` : ""}
-                  </p>
-                  <div
-                    className="mt-4 h-2 w-full overflow-hidden rounded-full bg-sand"
-                    role="progressbar"
-                    aria-valuenow={visitRoom > 0 ? Math.min(100, Math.round((visited / visitRoom) * 100)) : 0}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label="Visits used this month"
-                  >
-                    <div
-                      className={`h-full rounded-full ${
-                        visited >= visitRoom ? "bg-amber-brand" : "bg-gradient-to-r from-violet-brand to-sky-brand"
-                      }`}
-                      style={{ width: `${visitRoom > 0 ? Math.min(100, Math.max(1, Math.round((visited / visitRoom) * 100))) : 1}%` }}
-                    />
-                  </div>
-                  {visitLimit !== null && visited >= visitLimit ? (
+                  <UsageMeter label="Visits this month" used={trafficReading?.visits ?? null} limit={visitRoom} format={visitsWords}
+                    unavailable="Usage measurement is temporarily unavailable. Public pages are paused until it can be verified."
+                    description="A counted visit is one person opening your store on one day. Community room activity also contributes to this count." />
+                  {trafficReading !== null && visitLimit !== null && visited >= visitLimit ? (
                     <p className="mt-4 notice notice-warn">
                       <strong>Your store&rsquo;s pages are resting.</strong>
                       {` It has reached its threshold of ${countWords(visitLimit)} counted visits this month. Public pages reopen when the month turns or a plan change provides a larger threshold. Existing orders and downloads remain available; video has its own playback threshold.`}
