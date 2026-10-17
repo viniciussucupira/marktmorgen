@@ -6,6 +6,7 @@ import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { readFunnelMutationResult, type FunnelMutation } from "@/lib/funnel-mutation-response";
+import { funnelCompletionMetric, funnelStepMetrics } from "@/lib/funnel-metrics";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import {
   MAX_FUNNEL_NAME,
@@ -43,10 +44,6 @@ const MESSAGES: Record<string, string> = {
 };
 
 const key = (step: Pick<PageFunnelStep, "kind" | "id">) => `${step.kind}:${step.id}`;
-
-/** "120 people", "1 person". */
-const people = (n: number) => `${n.toLocaleString("en-US")} ${n === 1 ? "person" : "people"}`;
-const share = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : "–");
 
 /**
  * The studio's funnels of pages (lib/page-funnel.ts): each with its address,
@@ -270,9 +267,7 @@ export function PageFunnelEditor({
                       </p>
                       {step.open ? (
                         <p className="mt-0.5 text-ink-soft">
-                          {step.seen === null || step.done === null
-                            ? "Counts unavailable. Reload to try again."
-                            : `${people(step.seen)} opened it${step.product ? ` · ${step.done.toLocaleString("en-US")} ${step.free ? "signed up" : "paid"} (${share(step.done, step.seen)})` : ""}`}
+                          {funnelStepMetrics(step)}
                         </p>
                       ) : (
                         <p className="mt-0.5 font-semibold text-ink">{step.why}</p>
@@ -282,9 +277,7 @@ export function PageFunnelEditor({
                 ))}
               </ol>
               <p className="mt-3 text-xs text-ink-mute">
-                {last && last.seen !== null && first !== null && first > 0
-                  ? `${share(last.seen, first)} of the people who opened the first step reached the last. `
-                  : ""}
+                {funnelCompletionMetric(first, last?.seen ?? null)}
                 {`Counted since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed: each person once a step, never you or your team.`}
               </p>
             </li>
