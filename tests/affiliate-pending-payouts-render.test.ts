@@ -7,7 +7,7 @@ import { AffiliateStudio } from "@/components/affiliate-studio";
 import { parseAffiliateSetting } from "@/lib/affiliate-setting";
 const row = {
   affiliate: {id:"legacy-affiliate",email:"affiliate@example.com",code:"reader",status:"approved",appliedAt:1,decidedAt:2,note:""},
-  clicks:1,sales:1,earned:1000,paid:0,owed:1000,waiting:0,payable:1000,
+  clicks:1,sales:1,earned:1000,paid:0,owed:1000,waiting:0,payable:1000,held:0,flags:[],paidClicks:0,link:"https://example.com/?via=reader",
 };
 function render(checked: boolean) {
   return renderToStaticMarkup(createElement(AppRouterContext.Provider, {value: {} as never},
