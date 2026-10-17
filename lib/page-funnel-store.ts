@@ -143,9 +143,16 @@ export type StepState = {
  * catalog for the products it names: what the studio shows, and what a page
  * needs to know where "next" is.
  */
-export async function stepStates(store: Store, funnel: Pick<PageFunnel, "steps">): Promise<StepState[]> {
+export async function stepStates(store: Store, funnel: Pick<PageFunnel, "steps">, options: { strictProducts?: boolean } = {}): Promise<StepState[]> {
   const productIds = funnel.steps.filter((s) => s.kind === "product").map((s) => s.id);
-  const listings: Listing[] = productIds.length ? await readListings(store, productIds).catch(() => []) : [];
+  const listings: Listing[] = productIds.length
+    ? options.strictProducts ? await readListings(store, productIds) : await readListings(store, productIds).catch(() => [])
+    : [];
+  if (options.strictProducts) {
+    const existing = new Set(store.catalog.items.map(item => item.id));
+    const loaded = new Set(listings.map(product => product.id));
+    if (productIds.some(id => existing.has(id) && !loaded.has(id))) throw new Error("Funnel product availability could not be checked");
+  }
   const now = Math.floor(Date.now() / 1000);
   return funnel.steps.map((step) => {
     if (step.kind === "page") {
