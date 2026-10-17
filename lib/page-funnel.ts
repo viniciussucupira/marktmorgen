@@ -47,7 +47,7 @@ export type PageFunnel = {
   /** Its address: /@handle/go/<slug>. */
   slug: string;
   steps: PageFunnelStep[];
-  /** Off keeps it, and sends its address to the first step's page without the funnel. */
+  /** Off keeps the draft; its funnel entry address is unavailable. */
   on: boolean;
   /** When its steps were last changed, in seconds: its numbers count from then. */
   since: number;

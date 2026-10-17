@@ -26,7 +26,6 @@ import {
   type PageFunnel,
   type PageFunnelStep,
   STEP_WHY,
-  newFunnelId,
   nextOpen,
   parsePageFunnels,
   productStepProblem,
@@ -75,16 +74,32 @@ function confirmedMutation(replies: unknown[]): 0 | 1 {
   throw new Error("Funnel mutation acknowledgement invalid");
 }
 
-/** Keeps a funnel, new or changed. A new one is given an id no other funnel of the store has. */
+/** Capacity, identity and address ownership are checked with the write. */
+export const SAVE_PAGE_FUNNEL = `-- marktmorgen:funnel-save:v1
+local kind = redis.call("TYPE", KEYS[1]).ok
+if kind ~= "none" and kind ~= "hash" then return -3 end
+local exists = redis.call("HEXISTS", KEYS[1], ARGV[1])
+if ARGV[4] == "new" then
+  if exists == 1 then return -2 end
+  if redis.call("HLEN", KEYS[1]) >= tonumber(ARGV[3]) then return 0 end
+elseif ARGV[4] ~= "edit" or exists == 0 then return -2 end
+local valid, incoming = pcall(cjson.decode, ARGV[2])
+if not valid or type(incoming) ~= "table" or incoming.id ~= ARGV[1] or type(incoming.slug) ~= "string" then return -3 end
+local rows = redis.call("HGETALL", KEYS[1])
+for i = 1, #rows, 2 do
+  local ok, held = pcall(cjson.decode, rows[i + 1])
+  if not ok or type(held) ~= "table" or held.id ~= rows[i] or type(held.slug) ~= "string" then return -3 end
+  if rows[i] ~= ARGV[1] and string.lower(held.slug) == string.lower(incoming.slug) then return -1 end
+end
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
+return 1`;
+
+/** Keeps a funnel without exceeding capacity, duplicating an address or resurrecting a removed record. */
 export async function writePageFunnel(statsId: string, funnel: PageFunnel, existing: readonly PageFunnel[]): Promise<PageFunnel> {
-  let id = funnel.id;
-  const isNew = !existing.some((f) => f.id === id);
-  if (isNew && existing.length >= MAX_PAGE_FUNNELS) throw new Error("too many funnels");
-  while (isNew && existing.some((f) => f.id === id)) id = newFunnelId();
-  const kept = { ...funnel, id };
-  const replies = await redisPipeline([["HSET", funnelsKey(statsId), id, JSON.stringify(kept)]]);
-  confirmedMutation(replies);
-  return kept;
+  const isNew = !existing.some((held) => held.id === funnel.id);
+  const replies = await redisPipeline([["EVAL", SAVE_PAGE_FUNNEL, 1, funnelsKey(statsId), funnel.id, JSON.stringify(funnel), MAX_PAGE_FUNNELS, isNew ? "new" : "edit"]]);
+  if (replies.length !== 1 || replies[0] !== 1) throw new Error("Funnel save could not be confirmed; review saved funnels before retrying");
+  return funnel;
 }
 
 /** Removes a funnel. Its numbers go with it, by their own expiry. */
