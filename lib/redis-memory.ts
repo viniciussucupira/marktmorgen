@@ -103,6 +103,17 @@ export class MemoryRedis {
     switch (name) {
       case "EVAL": {
         // Models only the explicitly supported application scripts. Not a Lua interpreter.
+        if (key.startsWith("-- marktmorgen:crm-deal-move:v1\n") && args[0] === "1" && args.length === 5) {
+          const target = args[1];
+          this.live(target);
+          const held = this.data.get(target);
+          if (held !== undefined && !(held instanceof Map)) throw new Error("WRONGTYPE");
+          const current = held instanceof Map ? held.get(args[2]) : undefined;
+          if (current === undefined) return 0;
+          if (current !== args[3]) return -1;
+          this.hash(target).set(args[2], args[4]);
+          return 1;
+        }
         if (key.startsWith("-- marktmorgen:crm-deal-save:v1\n") && args[0] === "1" && args.length === 5) {
           const target = args[1];
           this.live(target);
