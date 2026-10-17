@@ -149,6 +149,18 @@ export default function TermsPage() {
           yours to moderate, and the rules in section 4 apply to it.
         </p>
         <p>
+          <strong className="text-black">Payment requests.</strong> Send a
+          payment request only to a person who agreed to pay you for what it
+          lists, for what you are owed or agreed. It is not for marketing, for
+          asking someone you have no dealings with, or for a sum they dispute.
+          You are the seller of what it is for, and its refunds and disputes
+          are yours, as for any sale. Nothing is added to what the person pays
+          for paying by request: no fee, no interest and no late charge, and a
+          request may not be used to add one. Each request and each reminder
+          is one of your store&apos;s emails for the month. We may switch
+          payment requests off for a store that misuses them.
+        </p>
+        <p>
           <strong className="text-black">Reviews.</strong> Reviews on your
           store come only from buyers whose payment your Stripe account
           confirms. You may answer a review and hide one. You may not offer

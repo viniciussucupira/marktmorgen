@@ -25,6 +25,8 @@ import { STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
 import { COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
 import { TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { storageWords } from "@/lib/storage-quota";
+import { MAX_AUTO_REMINDERS, MAX_LINES, OPEN_DAYS, REQUEST_LIMITS } from "@/lib/payment-request-rules";
+import { PLAN_TITLES } from "@/lib/plan";
 
 /** Whether stores can be put on their own domain on this deployment. */
 const DOMAINS = isDomainsConfigured();
@@ -482,6 +484,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "basket", title: "A cart", body: "Once two or more of your products could go in one, each card and product page offers \u201cAdd to cart\u201d. The cart sits at the top of your store with each product at its price now, a sale or a fair price already taken off, and buyers pay for up to four in one payment. Each one is handed over exactly as if bought on its own. The open cart offers what you picked to go with what is in it, then what its buyers really bought with it. Switch on \u201cBuy more, save more\u201d and every Add to cart says, say, 10% off for 2 or more, while the cart counts down to it." },
           { icon: "bolt", title: "One click after paying", body: "The thank-you page offers one more product, or up to five in a row as a funnel, charged to the card just used. Only in that browser, for an hour, and only after a card, Apple Pay or Google Pay payment.", href: "/platform/funnels" },
           { icon: "calendar", title: "Payment plans", body: "Two to twelve weekly or monthly payments. The buyer gets what they bought after the first payment, and the plan ends by itself after the last." },
+          { icon: "receipt", title: "Payment requests and invoices", body: `Ask one person to pay a custom amount, from your studio or from a deal: up to ${MAX_LINES} lines of what it is for, a note, a due date if you want one and up to ${MAX_AUTO_REMINDERS} reminders a week apart. They get an email from your store's name and a page that says who is asking, what for and the total; they pay on Stripe's page, on your own account, and get a receipt they can print. Each status shows in your studio: open, paid, canceled, expired or refunded. Nothing is added to what they pay, and no late fee is charged. Each email is one of your store's emails for the month.` },
           { icon: "list", title: "Limited quantity", body: "Sell fifty and stop. The count shown is the real one, and a unit being paid for is held so the last one is never sold twice." },
           { icon: "receipt", title: "Sales tax and VAT", body: "Stripe Tax works it out from each buyer's address, on your account, once your Stripe tax setup is complete." },
           { icon: "scroll", title: "A VAT number box and invoices, for business buyers", body: "Two switches, off until you turn them on. A company can enter its VAT or tax number at checkout, saved on your Stripe account and printed on its invoice, and Stripe can draw up an invoice for every single payment, with you as the seller. Stripe charges you for those invoices, and filing the tax stays yours." },
@@ -511,6 +514,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           "While sales tax is on, offers after paying are paused, because tax cannot be added to a one-click charge.",
           "Offers after paying are shown only to a buyer who paid by card, Apple Pay or Google Pay. A buyer who paid with Klarna, Link or a bank goes straight to what they bought.",
           "A payment plan cannot be canceled from your page; a buyer who needs to change something replies to their order confirmation email, which reaches you.",
+          `A payment request is one payment: no installments on requests yet. Up to ${REQUEST_LIMITS.creator.open} open at once on ${PLAN_TITLES.creator}, ${REQUEST_LIMITS.pro.open} on ${PLAN_TITLES.pro} and ${REQUEST_LIMITS.scale.open} on ${PLAN_TITLES.scale}; each link takes payment for ${OPEN_DAYS} days.`,
           "Pay what you want is for a product with one price, sold once: not with memberships, price options, payment plans, the box at checkout, calls or discount codes.",
           "Questions are short answers, numbers, lists or a phone number: no checkbox question, and none on free products.",
           "Stripe shows its own consent box only on checkouts of US businesses, so outside the United States the reminder after an unpaid checkout reaches only a buyer who goes back from the checkout and asks for it. A call's reminder needs that box, so outside the United States none is sent for calls or live sessions.",

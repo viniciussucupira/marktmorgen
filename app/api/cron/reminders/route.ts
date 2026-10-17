@@ -5,6 +5,7 @@ import { isBillingConfigured } from "@/lib/billing";
 import { sendFailedPlanNotices, sendReminders } from "@/lib/billing-reminders";
 import { runBreaks } from "@/lib/plan-pause";
 import { sendTrialNudges } from "@/lib/trial-nudges";
+import { sendDueReminders } from "@/lib/payment-requests";
 
 /** Four passes over our subscriptions, one after another. */
 export const maxDuration = 60;
@@ -15,7 +16,9 @@ export const maxDuration = 60;
  * failed where to pay it. And ends the breaks creators chose: told a week
  * before, and the plan started again on the day (lib/plan-pause.ts). And
  * writes twice during a trial to a store that has not sold yet, with the one
- * step that would help it most (lib/trial-nudges.ts).
+ * step that would help it most (lib/trial-nudges.ts). And reminds the
+ * people a creator sent a payment request, on the days the creator chose
+ * (lib/payment-requests.ts).
  *
  * Safe to run more than once: each charge is warned of once, only to the person
  * paying it, and one run at a time.
@@ -37,7 +40,12 @@ export async function GET(request: NextRequest) {
     const failed = await sendFailedPlanNotices();
     const breaks = await runBreaks();
     const nudges = await sendTrialNudges();
-    return Response.json({ ok: true, ...counts, failedPayments: failed, breaks, nudges }, { headers: { "Cache-Control": "no-store" } });
+    // Creators' payment requests still unpaid, reminded on the day they asked for (lib/payment-requests.ts), within what is left of the run.
+    const requests = await sendDueReminders(Date.now() + 20_000).catch((error) => {
+      console.error("sending payment request reminders failed", error);
+      return { sent: 0, skipped: 0 };
+    });
+    return Response.json({ ok: true, ...counts, failedPayments: failed, breaks, nudges, requests }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("sending billing reminders failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

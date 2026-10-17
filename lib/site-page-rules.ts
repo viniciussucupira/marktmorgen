@@ -88,6 +88,8 @@ export const RESERVED_SLUGS = new Set([
   "move",
   "orders",
   "p",
+  // A payment request's page (app/[handle]/pay/[request]).
+  "pay",
   "podcast",
   "renew",
   "resting",

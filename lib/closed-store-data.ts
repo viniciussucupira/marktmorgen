@@ -84,6 +84,7 @@ import { broadcastKeys } from "@/lib/broadcasts";
 import { paypalOrderKeys } from "@/lib/paypal-sales";
 import { calendarKeys } from "@/lib/calendar-sync";
 import { packageKeys } from "@/lib/call-packages";
+import { requestRecordKey } from "@/lib/payment-request-store";
 import { passKeyOfHash } from "@/lib/learn";
 
 export const DUE_KEY = "nl:closed:due";
@@ -443,6 +444,15 @@ export const FOLLOWERS: Readonly<Record<string, Follower>> = {
   "nl:learn:passes:": {
     match: () => true,
     find: async (keys) => (await unionOf(keys)).filter((h) => /^[0-9a-f]{64}$/.test(h)).map(passKeyOfHash),
+  },
+  // A store's payment requests: each request's own record, kept by its id.
+  "nl:payreq:s:": {
+    match: () => true,
+    find: async (keys) => {
+      const out: string[] = [];
+      for (const key of keys) for (const id of await membersOf(key)) if (/^[0-9a-f]{32}$/.test(id)) out.push(requestRecordKey(id));
+      return out;
+    },
   },
   "nl:pkg:s:": {
     match: () => true,

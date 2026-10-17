@@ -400,6 +400,22 @@ export default function PrivacyPage() {
           time limit is kept for as long as it can be used. Each session is a
           booking like any other and is kept the same way.
         </p>
+        <p id="payment-requests">
+          <strong className="text-black">Payment requests.</strong>{" "}
+          When a store sends you a payment request, we keep the email address
+          and the name the creator typed, what it asks you to pay for, its due
+          date if it has one, when it and any reminders were emailed to you (at
+          most four emails in all, never two within a day, and none once it is
+          paid, withdrawn or expired), and what became of it: the checkout
+          opened for it, whether it was paid, the payment&apos;s reference and
+          any refund Stripe reports. It is kept for 400 days from the day it
+          was made and then deleted by itself; the creator can delete it
+          sooner. Deleting yourself from that store (the privacy link at the
+          foot of its pages) deletes every request of yours there and withdraws
+          any still open. You are not added to the creator&apos;s list by a
+          request. The payment itself is made on the creator&apos;s own Stripe
+          account and kept there, under Stripe&apos;s privacy policy.
+        </p>
         <p id="gifts">
           <strong className="text-black">Gifts.</strong>{" "}
           When you buy something as a gift, we keep the recipient&apos;s email

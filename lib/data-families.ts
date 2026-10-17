@@ -19,7 +19,8 @@ export const COUNTED_FAMILIES: readonly string[] = [
   "nl:dc:mem:", "nl:dc:prod:", "nl:depth:", "nl:erased:", "nl:esync:tags:", "nl:form:r:", "nl:imp:buy:",
   "nl:imp:who:", "nl:inbox:", "nl:inbox:tok:", "nl:intro:c:", "nl:keys:", "nl:lc:", "nl:learn:enr:",
   "nl:lib:", "nl:mail:bc:", "nl:mail:bcs:", "nl:mail:enr:", "nl:mail:flowq", "nl:mail:flows:", "nl:mail:mk:",
-  "nl:mail:unsub:", "nl:mv:", "nl:mv:link:", "nl:outreach:", "nl:outreach:stoplink:", "nl:person:",
+  "nl:mail:unsub:", "nl:mv:", "nl:mv:link:", "nl:outreach:", "nl:outreach:stoplink:",
+  "nl:payreq:due", "nl:payreq:o:", "nl:payreq:p:", "nl:payreq:r:", "nl:payreq:s:", "nl:person:",
   "nl:pfunnel:done:", "nl:pfunnel:seen:", "nl:pfunnels:", "nl:pkg:", "nl:pkg:s:", "nl:pkg:t:", "nl:pod:", "nl:pod:by:",
   "nl:pod:t:", "nl:preview:", "nl:product:about:", "nl:product:note:", "nl:product:page:",
   "nl:product:pages:", "nl:product:pics:", "nl:recover:off:", "nl:rev:", "nl:rev:all:", "nl:rev:new:",
@@ -71,7 +72,7 @@ export const ELSEWHERE_FAMILIES: readonly string[] = [
   "nl:monthly:sent:", "nl:mv:due", "nl:next:", "nl:next:lock:", "nl:nlink:", "nl:nlink:opens:", "nl:none",
   "nl:nudge:", "nl:nudge:count:", "nl:nudge:cursor", "nl:orders:folders:", "nl:orders:link:", "nl:orders:n:",
   "nl:orders:open:", "nl:orders:seen:", "nl:outreach:stop:all", "nl:pause:", "nl:pause:due",
-  "nl:pause:last:", "nl:pay:currencies:", "nl:person:find:", "nl:phone:cfg:", "nl:phone:seen:",
+  "nl:pause:last:", "nl:pay:currencies:", "nl:payreq:lock:", "nl:payreq:stores", "nl:person:find:", "nl:phone:cfg:", "nl:phone:seen:",
   "nl:phone:st:", "nl:pinv:", "nl:pk:", "nl:pk:auth:", "nl:pk:cred:", "nl:pk:reg:", "nl:plan:closing:",
   "nl:plan:closing:after", "nl:plan:ended", "nl:plan:paying", "nl:plans:lock", "nl:plans:pending",
   "nl:pod:n:", "nl:pod:ok:", "nl:pp:", "nl:pp:item:", "nl:pp:open:", "nl:pp:stores", "nl:ppsell:o:",
@@ -275,6 +276,9 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:outreach:": E, "nl:outreach:stop:all": C, "nl:outreach:stoplink:": T("nl:outreach:"),
   "nl:pause:": E, "nl:pause:due": I, "nl:pause:last:": E,
   "nl:pay:currencies:": E,
+  // Payment requests (lib/payment-request-store.ts): the store's lists go, and each request through them; its reminders and its place in the sweep's list are taken out.
+  "nl:payreq:s:": E, "nl:payreq:o:": E, "nl:payreq:p:": E, "nl:payreq:r:": T("nl:payreq:s:", 400),
+  "nl:payreq:due": I, "nl:payreq:stores": I, "nl:payreq:lock:": X(1),
   "nl:person:": E, "nl:person:find:": X(1),
   "nl:pfunnel:done:": E, "nl:pfunnel:seen:": E, "nl:pfunnels:": E,
   "nl:phone:cfg:": E, "nl:phone:seen:": X(40), "nl:phone:st:": E,
@@ -358,7 +362,7 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
  */
 export const FOLLOWED_FAMILIES = [
   "nl:cal:cfg:", "nl:cm:", "nl:course:", "nl:erase:ix:", "nl:fshares:", "nl:inbox:", "nl:learn:passes:", "nl:mail:bcs:",
-  "nl:mv:", "nl:outreach:", "nl:pkg:s:", "nl:pod:by:", "nl:ppsell:sales:", "nl:slink:store:", "nl:store:leads:",
+  "nl:mv:", "nl:outreach:", "nl:payreq:s:", "nl:pkg:s:", "nl:pod:by:", "nl:ppsell:sales:", "nl:slink:store:", "nl:store:leads:",
 ] as const;
 
 /** The family a key belongs to, by the longest name it starts with; "" for none. */

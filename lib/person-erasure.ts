@@ -89,6 +89,7 @@ import { forgetHealthCopy } from "@/lib/member-health";
 import { forgetReviewsPerson } from "@/lib/reviews";
 import { forgetLibraryPerson } from "@/lib/buyer-library";
 import { forgetNoted } from "@/lib/erasure-index";
+import { forgetRequestsPerson } from "@/lib/payment-request-store";
 
 
 /**
@@ -113,6 +114,7 @@ export const ERASERS: Eraser[] = [
   { module: "lib/mail-clicks.ts", run: (s) => forgetClicksPerson(s.listId, s.email) },
   { module: "lib/mail-health.ts", run: (s) => forgetHealthPerson(s.store, s.email) },
   { module: "lib/crm.ts", run: (s) => forgetCrmPerson(s.statsId, s.person, s.email) },
+  { module: "lib/payment-request-store.ts", run: (s) => forgetRequestsPerson(s.sid, s.email) },
   { module: "lib/buyer-profile.ts", run: (s) => forgetNotesPerson(s.statsId, s.person) },
   { module: "lib/form-store.ts", run: (s) => forgetFormsPerson(s.statsId, s.email) },
   {

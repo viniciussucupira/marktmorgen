@@ -59,7 +59,7 @@ export default async function StudioDealsPage({ searchParams }: Params) {
             .
           </p>
           <div className="mt-8">
-            {available ? <DealsBoard key={(store.sid || store.handle) + ":" + dealActionFilter(query.followup)} deals={inventory.deals} stages={inventory.stages} fields={fields} currency={store.currency} assignees={assignees} today={today} initialFilter={dealActionFilter(query.followup)} /> : <DealsUnavailable storeId={store.sid} buyersHref={studioPath(store, "", "people")} fields={fields} followup={dealActionFilter(query.followup)} />}
+            {available ? <DealsBoard key={(store.sid || store.handle) + ":" + dealActionFilter(query.followup)} deals={inventory.deals} stages={inventory.stages} fields={fields} currency={store.currency} assignees={assignees} today={today} initialFilter={dealActionFilter(query.followup)} requestHref={can(view.role, "send") ? studioPath(store, "", "requests") : undefined} /> : <DealsUnavailable storeId={store.sid} buyersHref={studioPath(store, "", "people")} fields={fields} followup={dealActionFilter(query.followup)} />}
           </div>
         </main>
       </StudioStorePin>
