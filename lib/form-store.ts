@@ -43,6 +43,15 @@ export async function readForm(statsId: string | null, id: string): Promise<Form
   }
 }
 
+/** Checks capacity before a multi-step setup; writeForm still checks concurrent changes. */
+export async function canAddForms(statsId: string, amount: number): Promise<boolean> {
+  if (!statsId || !isRedisConfigured() || !Number.isSafeInteger(amount) || amount < 0) throw new Error("Form capacity unavailable");
+  const [raw] = await redisPipeline([["HLEN", formsKey(statsId)]]);
+  const count = typeof raw === "number" ? raw : typeof raw === "string" && /^\d+$/.test(raw) ? Number(raw) : NaN;
+  if (!Number.isSafeInteger(count) || count < 0) throw new Error("Form capacity unavailable");
+  return count + amount <= MAX_FORMS;
+}
+
 /** Saves a form. False when the store already has as many as it may and this one is new. */
 export async function writeForm(statsId: string, form: FormDef): Promise<boolean> {
   const [exists, count] = await redisPipeline([
