@@ -13,7 +13,7 @@ import { imageUrl } from "@/lib/product-image";
 import { FunnelEditor } from "@/components/funnel-editor";
 import { offerableAfterPaying } from "@/lib/bundles";
 import { PageFunnelEditor, type SavedFunnel, type StepChoice } from "@/components/page-funnel-editor";
-import { readFunnelCountsStrict, readPageFunnels, stepStates } from "@/lib/page-funnel-store";
+import { readFunnelCountsStrict, readPageFunnelsStrict, stepStates } from "@/lib/page-funnel-store";
 import { MAX_SITE_PAGES, pageOut } from "@/lib/site-page-rules";
 import { FunnelTypePicker, type TypeProduct } from "@/components/funnel-type-picker";
 import { MAX_PAGE_FUNNELS } from "@/lib/page-funnel";
@@ -111,8 +111,9 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
     canEditPages: can(view.role, "page"),
     canEditProducts: can(view.role, "products"),
   };
+  const inventory = await readPageFunnelsStrict(store.statsId).catch(() => null);
   const savedFunnels: SavedFunnel[] = await Promise.all(
-    (await readPageFunnels(store.statsId).catch(() => [])).map(async (funnel) => {
+    (inventory ?? []).map(async (funnel) => {
       const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCountsStrict(store.statsId, funnel).catch(() => null)]);
       return {
         funnel,
@@ -152,6 +153,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
           Pages walked in order from one address, and the offers a buyer meets right after paying.
         </p>
 
+        {inventory !== null ? <>
         <div className="mt-8">
           <FunnelTypePicker
             products={typeProducts}
@@ -165,6 +167,16 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
         <div className="mt-8">
           <PageFunnelEditor saved={savedFunnels} choices={choices} base={funnelBase} />
         </div>
+        </> : (
+          <section className="notice notice-warn mt-8" role="status" aria-labelledby="funnel-inventory-unavailable">
+            <h2 id="funnel-inventory-unavailable" className="font-semibold">Your funnels could not be loaded</h2>
+            <p className="mt-1 text-sm">The saved list is unavailable. Creating or editing page funnels is paused here until it can be checked. Your existing funnels have not been changed.</p>
+            <form action="/studio/funnels" method="get" className="mt-3">
+              <input type="hidden" name="store" value={store.sid} />
+              <button type="submit" className="btn btn-secondary">Reload funnels</button>
+            </form>
+          </section>
+        )}
 
         <h2 className="mt-14 text-xl font-semibold tracking-[-0.02em] text-ink">Offers after they pay</h2>
         <p className="mt-3 max-w-2xl text-ink-soft">
