@@ -378,7 +378,7 @@ export function PageFunnelEditor({
             On: its address leads through the steps
           </label>
           <p className="mt-1 text-xs text-ink-soft">
-            Off, the address opens the first step as an ordinary page, and nothing leads on.
+            Off, this funnel address is unavailable. Individual pages and products keep their own visibility.
           </p>
 
           <p className="mt-5 text-xs leading-relaxed text-ink-soft">
