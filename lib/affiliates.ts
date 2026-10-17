@@ -107,6 +107,11 @@ import { plainAmount } from "@/lib/money";
 import { alertCreator } from "@/lib/phone-alerts";
 import { bumpsFromMeta } from "@/lib/bundle-rules";
 import { affiliatesWords } from "@/lib/buyer-words/affiliates";
+import { type LeadKind, type LeadReason, type LeadStatus, type SettledLead, leadsKey, parseLead, settleLeads } from "@/lib/affiliate-lead-rules";
+import { readMoves } from "@/lib/call-records";
+import { leadWords } from "@/lib/buyer-words/affiliate-leads";
+import { formatMoney } from "@/lib/money";
+import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 
 /** How long the emailed link to apply or sign in keeps working. */
 export const AFFILIATE_LINK_SECONDS = 24 * 60 * 60;
@@ -212,9 +217,11 @@ export type Affiliate = {
  *            link, read from its invoice;
  *   "bonus"  a goal reached in a month, not a sale at all;
  *   "tier2"  a sale brought by somebody who joined through their invitation
- *            link: the second tier, worked out when the book is read.
+ *            link: the second tier, worked out when the book is read;
+ *   "lead"   not a sale: a confirmed lead, earning the program's fixed amount
+ *            per lead (lib/affiliate-leads.ts, added 18 October 2026).
  */
-export type Credit = "click" | "code" | "buyer" | "partner" | "recurring" | "bonus" | "tier2";
+export type Credit = "click" | "code" | "buyer" | "partner" | "recurring" | "bonus" | "tier2" | "lead";
 
 /** A sale that came through an affiliate's link. */
 export type Referral = {
@@ -1073,6 +1080,14 @@ export async function decide(store: Store, id: string, decision: Decision): Prom
         ),
         "",
         a.termDisclose,
+        // Pay per lead, when the program pays it (lib/affiliate-leads.ts): its terms and its own disclosure.
+        ...(store.affiliates.lead.kind !== "none"
+          ? (() => {
+              const lw = leadWords(store.language);
+              const amount = (cents: number) => formatMoney(cents, store.currency, LANGUAGES[parseLanguage(store.language)].locale);
+              return ["", lw.term(store.affiliates.lead.kind, amount(store.affiliates.lead.cents), store.name), lw.termRules(store.affiliates.lead.hold, store.affiliates.lead.daily, amount(store.affiliates.lead.budget), store.name), "", lw.disclose];
+            })()
+          : []),
         "",
         a.approvedPage(`${SITE_URL}/@${store.handle}/affiliates`),
         "",
@@ -1179,6 +1194,19 @@ export async function attributionFor(
   productId: string,
   cookies: { via: string | undefined; session: string | undefined },
 ): Promise<{ aff: string; rate: number; own: number | null } | null> {
+  const affiliate = await attributedAffiliate(store, cookies);
+  return affiliate ? { aff: affiliate.id, rate: commissionRate(store.affiliates, productId, affiliate.rate), own: affiliate.rate } : null;
+}
+
+/**
+ * The approved affiliate a visit is credited to by its click cookie, under
+ * the store's rule and window, never the affiliate's own browser: what a
+ * checkout is credited by (attributionFor), and a lead (lib/affiliate-leads.ts).
+ */
+export async function attributedAffiliate(
+  store: Store,
+  cookies: { via: string | undefined; session: string | undefined },
+): Promise<Affiliate | null> {
   if (!affiliatesOn(store)) return null;
   const via = readViaCookie(cookies.via);
   if (!via) return null;
@@ -1198,7 +1226,7 @@ export async function attributionFor(
   if (!affiliate) return null;
   const own = await affiliateForSession(store, cookies.session);
   if (own?.id === affiliate.id) return null;
-  return { aff: affiliate.id, rate: commissionRate(store.affiliates, productId, affiliate.rate), own: affiliate.rate };
+  return affiliate;
 }
 
 /** The share an offer after paying earns the affiliate the order came through. */
@@ -1500,7 +1528,7 @@ export async function noteCharge(store: Store, pi: Record<string, unknown>): Pro
 
 // ---- The book ------------------------------------------------------------
 
-export type LineStatus = "earned" | "partly refunded" | "refunded" | "own purchase";
+export type LineStatus = "earned" | "partly refunded" | "refunded" | "own purchase" | LeadStatus;
 
 export type Line = Referral & {
   /** Given back to the buyer, in cents, as Stripe says today. */
@@ -1508,7 +1536,35 @@ export type Line = Referral & {
   /** What it earns now, in cents. */
   commission: number;
   status: LineStatus;
+  /** For a lead (how "lead"): which, what kind, whose address, and when it can be approved. */
+  lead?: LeadView;
 };
+
+/** A lead as the book shows it (lib/affiliate-lead-rules.ts). The address is masked on an affiliate's own page. */
+export type LeadView = { id: string; kind: LeadKind; email: string; readyAt: number; why: LeadReason | "" };
+
+/** A lead as one line of the book, beside the sales: its fixed amount, never a share. */
+export function leadLine(settled: SettledLead): Line {
+  const { lead } = settled;
+  return {
+    ref: `lead:${lead.id}`,
+    pi: lead.pi,
+    aff: lead.aff,
+    at: lead.at,
+    product: lead.kind === "signup" ? "" : lead.kind === "free" ? lead.ref : "",
+    title: lead.title,
+    base: 0,
+    total: 0,
+    currency: lead.currency,
+    rate: 0,
+    self: false,
+    how: "lead",
+    refunded: 0,
+    commission: settled.commission,
+    status: settled.status,
+    lead: { id: lead.id, kind: lead.kind, email: lead.email, readyAt: settled.readyAt, why: lead.why },
+  };
+}
 
 export type Row = {
   affiliate: Affiliate;
@@ -1646,13 +1702,15 @@ export function settleLine(referral: Referral, refunded: number): Line {
 export async function readBook(store: Store, only?: string): Promise<Book> {
   if (!store.statsId || !isRedisConfigured()) return { rows: [], lines: [], payouts: [], refundsChecked: true, invoicesChecked: true, currency: store.currency, elsewhere: 0 };
   const statsId = store.statsId;
-  const [people, clicks, sales, payouts, shares, paidClicks] = await redisPipeline([
+  const [people, clicks, sales, payouts, shares, paidClicks, leadsReply] = await redisPipeline([
     ["HGETALL", peopleKey(statsId)],
     ["HGETALL", clicksKey(statsId)],
     ["HGETALL", salesKey(statsId)],
     ["HGETALL", payoutsKey(statsId)],
     ["HGETALL", sharesKey(statsId)],
     ["HGETALL", paidClicksKey(statsId)],
+    // Confirmed leads (lib/affiliate-leads.ts), all of them: the caps and the budget are counted across the program.
+    ["HGETALL", leadsKey(statsId)],
   ]);
   // Everybody, for the checks that compare one affiliate with the others.
   const everyone = pairs(people)
@@ -1708,10 +1766,15 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
     }
   }
   const everything = [...referrals, ...partnerLines, ...recurringLines];
+  const leads = pairs(leadsReply)
+    .map(([, raw]) => parseLead(raw))
+    .filter((l): l is NonNullable<typeof l> => l !== null);
+  // A booking's lead is reversed by a refund in full of its booking, read with the sales' refunds.
+  const bookings = leads.filter((l) => l.kind === "booking" && l.pi);
   let refunds = new Map<string, number>();
   let refundsChecked = true;
-  if (everything.length) {
-    const since = Math.min(...everything.map((r) => r.at));
+  if (everything.length || bookings.length) {
+    const since = Math.min(...[...everything, ...bookings].map((r) => r.at));
     try {
       const read = store.stripeAccountId ? await refundsSince(store, since) : { byIntent: new Map<string, number>(), complete: true };
       refunds = read.byIntent;
@@ -1737,11 +1800,25 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
     }
   }
   const settled = everything.map((r) => settleLine(r, r.pi ? refunds.get(r.pi) ?? 0 : 0));
+  // Each lead as it stands: the program's caps and budget counted across every affiliate's, then only the ones asked for.
+  let ends = new Map<string, number>();
+  const openBookings = leads.filter((l) => l.kind === "booking" && l.state === "open" && l.ref && mine(l.aff)).slice(0, 200);
+  if (openBookings.length) {
+    try {
+      for (const [session, move] of await readMoves(openBookings.map((l) => l.ref))) ends.set(session, Math.floor(move.e / 1000));
+    } catch (error) {
+      console.error("reading moved bookings for the affiliate book failed", error);
+      ends = new Map();
+    }
+  }
+  const leadLines = settleLeads(leads, Math.floor(Date.now() / 1000), (pi) => refunds.get(pi) ?? 0, ends)
+    .filter((s) => !only || s.lead.aff === only)
+    .map(leadLine);
   const flagsOf = holdFlags(store, everyone, paidCount);
   // A goal reached in a month adds its bonus, and a sale by somebody an
   // affiliate brought adds their second tier, both worked out from the sales
   // as they stand after refunds. Then only the one affiliate's, when it is one.
-  const lines = [...settled, ...bonusLines(store, settled), ...tierLines(everyone, settled, flagsOf)]
+  const lines = [...settled, ...bonusLines(store, settled), ...tierLines(everyone, settled, flagsOf), ...leadLines]
     .filter((l) => !only || l.aff === only)
     .sort((a, b) => b.at - a.at);
 
@@ -1754,14 +1831,15 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
       const own = lines.filter((l) => l.aff === affiliate.id && l.currency === store.currency);
       const earned = own.reduce((sum, l) => sum + l.commission, 0);
       const out = paid.filter((p) => p.aff === affiliate.id && p.currency === store.currency).reduce((sum, p) => sum + p.cents, 0);
-      const waiting = own.filter((l) => l.at > until).reduce((sum, l) => sum + l.commission, 0);
+      // A lead waits until the creator approves it (lib/affiliate-leads.ts decideLeads); a sale, until the store's wait has passed.
+      const waiting = own.filter((l) => (l.how === "lead" ? l.status !== "approved" : l.at > until)).reduce((sum, l) => sum + l.commission, 0);
       const owed = earned - out;
       const flags = flagsOf.get(affiliate.id) ?? [];
       const payable = owed <= 0 ? owed : Math.max(0, Math.min(owed, earned - waiting - out));
       return {
         affiliate,
         clicks: clickCount.get(affiliate.id) ?? 0,
-        sales: own.filter((l) => l.commission > 0 && l.how !== "bonus" && l.how !== "tier2").length,
+        sales: own.filter((l) => l.commission > 0 && l.how !== "bonus" && l.how !== "tier2" && l.how !== "lead").length,
         earned,
         paid: out,
         owed,
@@ -1886,7 +1964,7 @@ export function bonusLines(store: Pick<Store, "affiliates" | "currency">, lines:
   if (!goals.length) return [];
   const months = new Map<string, Line[]>();
   for (const line of lines) {
-    if (line.commission <= 0 || line.how === "partner" || line.how === "bonus" || line.how === "tier2" || line.currency !== store.currency) continue;
+    if (line.commission <= 0 || line.how === "partner" || line.how === "bonus" || line.how === "tier2" || line.how === "lead" || line.currency !== store.currency) continue;
     const key = `${line.aff}|${new Date(line.at * 1000).toISOString().slice(0, 7)}`;
     months.set(key, [...(months.get(key) ?? []), line]);
   }
@@ -1996,6 +2074,9 @@ export async function releaseHold(store: Store, id: string): Promise<Affiliate |
   return next;
 }
 
+/** What each kind of lead is called in the book's spreadsheet. */
+const LEAD_KIND_WORDS: Record<LeadKind, string> = { signup: "Lead: email sign-up", free: "Lead: free product claimed", booking: "Lead: call that took place" };
+
 const csvCell = (value: string | number) => {
   const text = String(value);
   // A cell a spreadsheet would read as a formula is written as text.
@@ -2028,12 +2109,12 @@ export function bookCsv(book: Book, all: Affiliate[]): string {
   ];
   const rows: (string | number)[][] = [
     ...book.lines.map((l) => [
-      l.how === "tier2" ? "second tier" : "sale",
+      l.how === "tier2" ? "second tier" : l.how === "lead" ? "lead" : "sale",
       day(l.at),
       who.get(l.aff)?.email ?? "",
       who.get(l.aff)?.code ?? "",
       l.ref,
-      l.title,
+      l.how === "lead" ? `${LEAD_KIND_WORDS[l.lead?.kind ?? "signup"]}${l.title ? `: ${l.title}` : ""}` : l.title,
       plainAmount(l.base, l.currency),
       plainAmount(l.refunded, l.currency),
       l.rate,

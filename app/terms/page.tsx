@@ -146,7 +146,10 @@ export default function TermsPage() {
           owe on your sales, including sales tax, VAT, or GST where it applies
           to you. If you run an affiliate program, paying your affiliates what
           you agreed is yours too: we keep the record, and we never hold or
-          pay out that money. If you run a community, what is posted in it is
+          pay out that money. That includes pay per lead: what counts as a
+          lead, its amount, hold, caps and budget are yours to set, approving
+          or reversing each lead is your decision, and you must not use it to
+          pay for sign-ups or bookings that people did not make themselves. If you run a community, what is posted in it is
           yours to moderate, and the rules in section 4 apply to it.
         </p>
         <p>

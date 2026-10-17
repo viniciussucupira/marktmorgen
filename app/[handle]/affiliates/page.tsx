@@ -32,6 +32,8 @@ import { AffiliateCampaignLinks } from "@/components/affiliate-campaign-links";
 import { AffiliatePromotionResults } from "@/components/affiliate-promotion-results";
 import { kitProduct, productAffiliateLink } from "@/lib/affiliate-kit";
 import { aiAvailableFor } from "@/lib/ai";
+import { leadWords } from "@/lib/buyer-words/affiliate-leads";
+import { type LeadStatus, maskEmail } from "@/lib/affiliate-lead-rules";
 
 type Params = {
   params: Promise<{ handle: string }>;
@@ -63,6 +65,8 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
 
   const { w, lang, date } = speech(store);
   const a = affiliatesWords(store.language);
+  // Pay per lead (lib/affiliate-leads.ts): its terms, its disclosure and each lead's status.
+  const lw = leadWords(store.language);
   /** In the currency it was paid in; totals are in the store's (lib/affiliates.ts, readBook). */
   const money = (cents: number, currency: string) => `${cents < 0 ? "-" : ""}${formatMoney(Math.abs(cents), currency, lang.locale)}`;
   const day = (seconds: number) =>
@@ -248,6 +252,13 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                   </p>
                   <p className="st-muted mt-2 text-sm">{attribution(store.affiliates)}</p>
                   <p className="st-muted mt-2 text-sm" data-disclose>{a.termDisclose}</p>
+                  {store.affiliates.lead.kind !== "none" ? (
+                    <>
+                      <p className="st-muted mt-2 text-sm">{lw.term(store.affiliates.lead.kind, money(store.affiliates.lead.cents, store.currency), store.name)}</p>
+                      <p className="st-muted mt-2 text-sm">{lw.termRules(store.affiliates.lead.hold, store.affiliates.lead.daily, money(store.affiliates.lead.budget, store.currency), store.name)}</p>
+                      <p className="st-muted mt-2 text-sm" data-disclose-leads>{lw.disclose}</p>
+                    </>
+                  ) : null}
                   {/* The second tier (lib/affiliates.ts tierLines), only while the programme has one. */}
                   {store.affiliates.secondTier > 0 ? (
                     <>
@@ -364,12 +375,38 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                   ) : null}
 
                   <AffiliatePromotionResults book={book} />
+                  {/* Each lead with where it stands (lib/affiliate-lead-rules.ts), the person's address masked. */}
+                  {book.lines.some((line) => line.how === "lead") ? (
+                    <>
+                      <h2 className="mt-8 text-lg font-semibold">{lw.head}</h2>
+                      <ul className="mt-3 divide-y" style={{ borderColor: "var(--st-line)" }} data-leads>
+                        {book.lines.filter((line) => line.how === "lead" && line.lead).slice(0, 50).map((line) => {
+                          const status = line.status as LeadStatus;
+                          const lead = line.lead!;
+                          const words = [
+                            lw.status[status],
+                            ...(status === "in hold" || status === "waiting for the call" ? [lw.until(day(lead.readyAt))] : []),
+                            ...(status === "not genuine" && lead.why ? [lw.reason[lead.why]] : []),
+                          ].join(" · ");
+                          return (
+                            <li key={line.ref} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3" style={{ borderColor: "var(--st-line)" }}>
+                              <span className="min-w-0">
+                                <span className="block font-semibold">{`${lw.kind[lead.kind]}${line.title ? `: ${line.title}` : ""}`}</span>
+                                <span className="st-muted block text-xs [overflow-wrap:anywhere]">{`${day(line.at)} · ${lead.email ? maskEmail(lead.email) : lw.deleted} · ${words}`}</span>
+                              </span>
+                              <span className="font-semibold tabular-nums">{money(line.commission, line.currency)}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </>
+                  ) : null}
                   <h2 className="mt-8 text-lg font-semibold">{a.salesHead}</h2>
-                  {book.lines.length === 0 ? (
+                  {book.lines.filter((line) => line.how !== "lead").length === 0 ? (
                     <p className="st-muted mt-2 text-sm">{a.noneYet}</p>
                   ) : (
                     <ul className="mt-3 divide-y" style={{ borderColor: "var(--st-line)" }}>
-                      {book.lines.slice(0, 50).map((line) => (
+                      {book.lines.filter((line) => line.how !== "lead").slice(0, 50).map((line) => (
                         <li key={line.ref} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3" style={{ borderColor: "var(--st-line)" }}>
                           <span className="min-w-0">
                             <span className="block font-semibold">{line.how === "bonus" ? bonusTitle(line.ref) : line.title || a.aProduct}</span>
@@ -488,10 +525,14 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                       terms.recurring > 0 ? a.termShareAll(terms.percent, different.length > 0) : a.termShare(terms.percent, different.length > 0),
                       ...(terms.recurring > 0 ? [a.termRecurring(terms.recurring)] : []),
                       ...terms.bonuses.map((b) => a.termBonus(b.sales, money(b.cents, store.currency))),
+                      ...(terms.lead.kind !== "none"
+                        ? [lw.term(terms.lead.kind, money(terms.lead.cents, store.currency), store.name), lw.termRules(terms.lead.hold, terms.lead.daily, money(terms.lead.budget, store.currency), store.name)]
+                        : []),
                       ...(terms.paidSearch ? [] : [a.termNoPaidSearch(store.name)]),
                       attribution(terms),
                       a.termRefunds,
                       a.termDisclose,
+                      ...(terms.lead.kind !== "none" ? [lw.disclose] : []),
                       promise(terms),
                       store.affiliates.buyers ? a.termBuyers(store.name) : a.termApproves(store.name),
                     ].map((line) => (

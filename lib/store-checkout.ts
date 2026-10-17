@@ -790,7 +790,7 @@ export type Order =
        * For a paid call: the time booked — where its buyer moved it, if they
        * did — the buyer's own time zone, and how many times it was moved.
        */
-      call: { start: number; end: number; buyerTz: string; moves: number } | null;
+      call: { start: number; end: number; buyerTz: string; moves: number; lead: string; pi: string } | null;
       /**
        * The products the buyer added at checkout, in the order of their
        * boxes, each with what it delivers — and, when it is a bundle, the
@@ -950,7 +950,20 @@ export async function readOrder(
   const end = Number(metadata?.end);
   let call =
     metadata?.kind === "call" && Number.isFinite(start) && Number.isFinite(end) && end > start
-      ? { start, end, buyerTz: typeof metadata?.tz === "string" ? metadata.tz : "UTC", moves: 0 }
+      ? {
+          start,
+          end,
+          buyerTz: typeof metadata?.tz === "string" ? metadata.tz : "UTC",
+          moves: 0,
+          // The affiliate a lead is credited to once the call takes place, and its payment (lib/affiliate-leads.ts).
+          lead: /^[0-9a-f]{12}$/.test(metadata?.lead_via ?? "") ? (metadata?.lead_via as string) : "",
+          pi:
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : session.payment_intent && typeof session.payment_intent === "object" && typeof (session.payment_intent as { id?: unknown }).id === "string"
+                ? (session.payment_intent as { id: string }).id
+                : "",
+        }
       : null;
   // A booking its buyer moved is at its new time everywhere it is shown.
   if (call) {

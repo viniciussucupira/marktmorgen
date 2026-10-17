@@ -36,6 +36,8 @@ import {
 } from "@/lib/partner-share";
 import type { Affiliate, AffiliateStatus, HoldFlag, Payout } from "@/lib/affiliates";
 import { StoreField } from "@/components/studio-store-pin";
+import { LeadReview, type LeadRow, LeadTerms, type LeadTermsState } from "@/components/affiliate-leads-studio";
+import { MAX_LEAD_BUDGET_CENTS, MAX_LEAD_CAP, MAX_LEAD_CENTS, MAX_LEAD_HOLD_DAYS, MIN_LEAD_BUDGET_CENTS, MIN_LEAD_CENTS, MIN_LEAD_HOLD_DAYS } from "@/lib/affiliate-lead-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 
 const MESSAGES: Record<string, string> = {
@@ -69,6 +71,11 @@ const MESSAGES: Record<string, string> = {
   unavailable: "Stores are not switched on yet, so nothing was saved.",
   store_full: "Your store is full. Remove something before adding more.",
   server_error: "Something went wrong on our side. Try again in a moment.",
+  lead_kind: "Pick what counts as a lead, or no pay per lead.",
+  lead_amount: `Type an amount per lead from ${MIN_LEAD_CENTS / 100} to ${MAX_LEAD_CENTS / 100}.`,
+  lead_hold: `Type a whole number of days in hold from ${MIN_LEAD_HOLD_DAYS} to ${MAX_LEAD_HOLD_DAYS}.`,
+  lead_daily: `Type how many leads earn per affiliate a day, from 1 to ${MAX_LEAD_CAP}.`,
+  lead_budget: `Type a monthly budget from ${MIN_LEAD_BUDGET_CENTS / 100} to ${(MAX_LEAD_BUDGET_CENTS / 100).toLocaleString("en-US")}, and at least one lead's amount.`,
 };
 
 /** One of the creator's live discount codes, as this screen needs it. */
@@ -166,6 +173,8 @@ export function AffiliateStudio({
   codes = [],
   codeOwners = {},
   payPanel = null,
+  leads = [],
+  leadsTotal = 0,
 }: {
   handle: string;
   setting: AffiliateSetting;
@@ -192,6 +201,9 @@ export function AffiliateStudio({
   codeOwners?: Record<string, string>;
   /** Paying from the creator's own PayPal (components/paypal-payouts.tsx), shown above the files. */
   payPanel?: React.ReactNode;
+  /** Confirmed leads, newest first (lib/affiliate-leads.ts), and how many there are in all. */
+  leads?: LeadRow[];
+  leadsTotal?: number;
 }) {
   const router = useRouter();
   const pending = rows.filter((r) => r.affiliate.status === "pending");
@@ -276,7 +288,9 @@ export function AffiliateStudio({
               </p>
               {waitingTotal > 0 ? (
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                  {`${money(waitingTotal, currency)} more is still inside your ${setting.hold}-day wait and is not in this file. It joins the next one once that time has passed.`}
+                  {leadsTotal > 0
+                    ? `${money(waitingTotal, currency)} more is still inside your ${setting.hold}-day wait, or is leads in hold or waiting for your approval, and is not in this file. It joins the next one once that time has passed and you have approved the leads.`
+                    : `${money(waitingTotal, currency)} more is still inside your ${setting.hold}-day wait and is not in this file. It joins the next one once that time has passed.`}
                 </p>
               ) : null}
               <div className="mt-4 flex flex-wrap gap-3">
@@ -468,6 +482,8 @@ export function AffiliateStudio({
           )}
         </section>
 
+        {leadsTotal > 0 ? <LeadReview leads={leads} total={leadsTotal} who={Object.fromEntries(rows.map((r) => [r.affiliate.id, r.affiliate.email]))} /> : null}
+
         <AffiliateCommissionHistory lines={lines} total={linesTotal} who={who} refundsChecked={refundsChecked} invoicesChecked={invoicesChecked} />
 
         {payouts.length ? (
@@ -540,6 +556,13 @@ function Terms({
     Object.fromEntries(Object.entries(setting.rates).map(([id, n]) => [id, String(n)])),
   );
   const [showRates, setShowRates] = useState(Object.keys(setting.rates).length > 0);
+  const [lead, setLead] = useState<LeadTermsState>({
+    kind: setting.lead.kind,
+    amount: moneyField(setting.lead.cents, storeCurrency),
+    hold: String(setting.lead.hold),
+    daily: String(setting.lead.daily),
+    budget: moneyField(setting.lead.budget, storeCurrency),
+  });
   const credited = products.filter((p) => p.credited);
   // Memberships and payment plans, whatever is chosen for them now.
   const left = products.filter((p) => p.recurring || !p.credited);
@@ -576,6 +599,14 @@ function Terms({
               numbers: directory && numbers,
               kit,
               rates: chosen,
+              // An unreadable amount goes as 0, which the server refuses with the reason.
+              lead: {
+                kind: lead.kind,
+                cents: readMoney(lead.amount.trim(), storeCurrency) ?? 0,
+                hold: Number(lead.hold.trim()),
+                daily: Number(lead.daily.trim()),
+                budget: readMoney(lead.budget.trim(), storeCurrency) ?? 0,
+              },
             },
             enabled ? "Affiliate program saved." : "Affiliate program switched off.",
           );
@@ -965,6 +996,9 @@ function Terms({
             takes the bonus back too.
           </p>
         </fieldset>
+
+        {/* Pay per lead (components/affiliate-leads-studio.tsx, lib/affiliate-leads.ts). */}
+        <LeadTerms value={lead} onChange={setLead} currency={storeCurrency} />
 
         <label className="mt-5 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3">
           <input

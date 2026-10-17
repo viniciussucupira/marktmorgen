@@ -75,6 +75,7 @@ import { forgetLessonCommentsPerson } from "@/lib/lesson-comments";
 import { forgetCommunityPerson } from "@/lib/community-erasure";
 import { forgetWaitlistPerson } from "@/lib/waitlist";
 import { forgetBondPerson } from "@/lib/affiliate-bond";
+import { forgetLeadPerson } from "@/lib/affiliate-leads";
 import { forgetImportedPerson } from "@/lib/imported-purchases";
 import { forgetPodcastPerson } from "@/lib/podcast-access";
 import { forgetWelcomePerson } from "@/lib/welcome-offer-send";
@@ -147,6 +148,7 @@ export const ERASERS: Eraser[] = [
   { module: "lib/community-erasure.ts", run: (s) => (s.communityId ? forgetCommunityPerson(s.communityId, s.learner, s.email, s.productIds) : Promise.resolve(0)) },
   { module: "lib/waitlist.ts", run: (s) => forgetWaitlistPerson(s.statsId, s.productIds, s.email) },
   { module: "lib/affiliate-bond.ts", run: (s) => forgetBondPerson(s.statsId, s.email) },
+  { module: "lib/affiliate-leads.ts", run: (s) => forgetLeadPerson(s.store, s.email) },
   { module: "lib/imported-purchases.ts", only: "person", run: (s) => forgetImportedPerson(s.statsId, s.email) },
   { module: "lib/podcast-access.ts", run: (s) => forgetPodcastPerson(s.store, s.productIds, s.email) },
   { module: "lib/welcome-offer-send.ts", run: (s) => forgetWelcomePerson(s.statsId, s.email) },

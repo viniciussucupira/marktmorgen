@@ -21,6 +21,8 @@
  * batch, and on the day itself the batch arrives in their inbox.
  */
 
+import { type LeadSetting, NO_LEADS, parseLeadSetting } from "@/lib/affiliate-lead-rules";
+
 /**
  * Which affiliate a sale belongs to when the buyer followed more than one
  * link before paying.
@@ -152,6 +154,12 @@ export type AffiliateSetting = {
    * bring.
    */
   secondTier: number;
+  /**
+   * Pay per lead (added 18 October 2026, lib/affiliate-lead-rules.ts): a
+   * fixed commission on each confirmed lead an affiliate brings, beside the
+   * share of each sale. Off ("none") for every programme before it.
+   */
+  lead: LeadSetting;
 };
 
 /** The choices for the second tier, in percent; 0 is "none". */
@@ -226,6 +234,7 @@ export const NO_AFFILIATES: AffiliateSetting = {
   bonuses: [],
   paidSearch: false,
   secondTier: 0,
+  lead: NO_LEADS,
 };
 
 /** The goals as given, each whole and in range, the fewest sales first; null when any is not. */
@@ -290,6 +299,8 @@ export function parseAffiliateSetting(raw: unknown): AffiliateSetting {
     paidSearch: value.paidSearch === true,
     // Missing on every programme saved before it existed: none.
     secondTier: (SECOND_TIER_OPTIONS as readonly number[]).includes(Number(value.secondTier)) ? Number(value.secondTier) : 0,
+    // Missing on every programme saved before it existed: no lead commission.
+    lead: parseLeadSetting(value.lead),
   };
 }
 

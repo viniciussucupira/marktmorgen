@@ -69,6 +69,8 @@ export function paydayEmail(input: {
   waitingCents: number;
   hold: number;
   refundsChecked: boolean;
+  /** Of what is waiting, the leads in hold or waiting for the creator's approval (lib/affiliate-leads.ts). */
+  leadsCents?: number;
 }): { subject: string; text: string } {
   // What can be paid today, not what is owed in all: when a wait is set the
   // two differ, and a subject line that calls the smaller number "owed" tells
@@ -86,10 +88,17 @@ export function paydayEmail(input: {
     "",
     "When it has gone out, mark the batch as paid on that same page. Each affiliate then sees it on their own page, with the date and your reference.",
   ];
-  if (input.waitingCents > 0) {
+  const leads = Math.max(0, Math.min(input.leadsCents ?? 0, input.waitingCents));
+  if (input.waitingCents - leads > 0) {
     lines.push(
       "",
-      `A further ${formatMoney(input.waitingCents, input.currency)} is owed but still inside your ${input.hold}-day wait, so it is not in this batch. It joins the next one.`,
+      `A further ${formatMoney(input.waitingCents - leads, input.currency)} is owed but still inside your ${input.hold}-day wait, so it is not in this batch. It joins the next one.`,
+    );
+  }
+  if (leads > 0) {
+    lines.push(
+      "",
+      `${formatMoney(leads, input.currency)} more is for leads still in their hold or waiting for your approval on the same page, so it is not in this batch either. A lead joins a batch once you approve it.`,
     );
   }
   if (!input.refundsChecked) {
@@ -177,6 +186,7 @@ async function payday(store: Store, month: string, dayOfMonth: number): Promise<
     waitingCents: book.rows.reduce((sum, row) => sum + row.waiting, 0),
     hold: store.affiliates.hold,
     refundsChecked: book.refundsChecked,
+    leadsCents: book.lines.filter((l) => l.how === "lead" && l.status !== "approved" && l.currency === book.currency).reduce((sum, l) => sum + l.commission, 0),
   });
   return sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: NIMBUS_FROM,

@@ -1,6 +1,7 @@
 import { type NextRequest, after } from "next/server";
 import { isFree, storeForHandle } from "@/lib/store";
 import { recordLead, spendClaim } from "@/lib/free";
+import { recordLead as recordAffiliateLead } from "@/lib/affiliate-leads";
 import { scheduleReminder } from "@/lib/welcome-offer-send";
 import { enroll } from "@/lib/flows";
 import { emitEvent } from "@/lib/webhooks";
@@ -61,6 +62,11 @@ export async function POST(request: NextRequest) {
   // Sequences start only for someone who agreed to hear from the creator,
   // now or before; enroll checks that.
   if (listed) await enroll(store, claim.e, { joined: listed.joined, productId: claim.p });
+  // Claimed through an affiliate's link, where the store pays per free product claimed: credited now that
+  // the address is proved, the first time it got this product, and once per person (lib/affiliate-leads.ts).
+  if (claim.a && listed?.gotProduct) {
+    await recordAffiliateLead(store, { aff: claim.a, kind: "free", email: claim.e, ref: product.id, title: product.title });
+  }
   // The creator's webhooks hear of it once per request, however many times
   // the same link is pressed.
   await emitEvent(store, "lead.captured", `${claim.e}|${claim.p}|${claim.at}`, {

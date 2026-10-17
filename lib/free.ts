@@ -158,6 +158,8 @@ export type Claim = {
   k?: boolean;
   /** When it was asked for. */
   at: string;
+  /** The affiliate the visit was credited to, where the store pays per free product claimed (lib/affiliate-leads.ts). */
+  a?: string;
 };
 
 /**
@@ -176,6 +178,8 @@ export async function requestCopy(input: {
   clicks?: boolean;
   ip: string;
   origin: string;
+  /** The affiliate a claim would be credited to once the link is used (lib/affiliate-leads.ts leadAffiliate). */
+  lead?: string | null;
 }): Promise<RequestResult> {
   const { store, product, consent, ip, origin } = input;
   const raw = input.email.trim();
@@ -203,6 +207,7 @@ export async function requestCopy(input: {
     c: consent,
     ...(consent && input.clicks ? { k: true } : {}),
     at: new Date().toISOString(),
+    ...(input.lead && /^[0-9a-f]{12}$/.test(input.lead) ? { a: input.lead } : {}),
   };
   const claimed = await claimKey(token);
   await redisPipeline([["SET", claimed, JSON.stringify(claim), "EX", CLAIM_TTL_SECONDS], ...noteForErasure(store.statsId, email, claimed)]);
@@ -264,6 +269,7 @@ function parseClaim(raw: unknown): Claim | null {
       c: value.c === true,
       ...(value.c === true && value.k === true ? { k: true } : {}),
       at: typeof value.at === "string" ? value.at : "",
+      ...(typeof value.a === "string" && /^[0-9a-f]{12}$/.test(value.a) ? { a: value.a } : {}),
     };
   } catch {
     return null;

@@ -5,6 +5,7 @@ import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { askToJoin } from "@/lib/store-join";
+import { leadAffiliate, visitCookies } from "@/lib/affiliate-leads";
 import { listedReturn, listedSite, scriptMode, scriptTags, withTags } from "@/lib/embed-sites";
 
 const MAX_BODY_BYTES = 2_000;
@@ -62,7 +63,9 @@ export async function POST(request: NextRequest) {
   // A field no person can see: whatever filled it in is told it worked, and nothing is sent.
   if (honeypot.trim()) return away("sent");
   try {
-    const result = await askToJoin({ store, email, clicks, ip: clientAddress(request), origin: linkOrigin(request, store), site: site ?? undefined });
+    // Sent by an affiliate, where the store pays per sign-up: credited only once the address confirms (lib/affiliate-leads.ts).
+    const lead = await leadAffiliate(store, "signup", visitCookies(request, store.handle), email);
+    const result = await askToJoin({ store, email, clicks, ip: clientAddress(request), origin: linkOrigin(request, store), site: site ?? undefined, lead });
     // Counted under the channel the visitor came from (lib/visit-channel.ts).
     if (result === "sent") after(() => countHit(request, store, { kind: "signup" }));
     return away(result);

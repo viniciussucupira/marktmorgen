@@ -36,7 +36,8 @@ const tokenKey = (token: string) => `nl:join:t:${sha(`nimbus-join:${token}`)}`;
 /** `f`: the store's form it was asked from (lib/forms.ts), so a sequence that starts with that form starts on confirming. */
 /** `w`: the creator's own site it was asked from, through the checkout script (lib/embed-sites.ts), for the list.joined webhook. */
 /** `f`: the form it came from; `r`: that form's quiz result for them, so a workflow for one result starts on confirming. */
-type Grant = { s: string; h: string; e: string; at: string; k?: boolean; f?: string; r?: string; w?: string };
+/** `a`: the affiliate the visit was credited to, when the store pays per sign-up (lib/affiliate-leads.ts): credited only on confirming. */
+type Grant = { s: string; h: string; e: string; at: string; k?: boolean; f?: string; r?: string; w?: string; a?: string };
 
 /**
  * Whether this store's page shows the box and takes sign-ups: switched on, a
@@ -69,7 +70,7 @@ function sender(store: Store): string {
 export type JoinResult = "sent" | "email" | "limited" | "closed" | "error";
 
 /** Emails a button to confirm. Nothing is added to the list here. */
-export async function askToJoin(input: { store: Store; email: string; clicks?: boolean; ip: string; origin: string; fromForm?: boolean; formId?: string; formOutcome?: string; site?: string }): Promise<JoinResult> {
+export async function askToJoin(input: { store: Store; email: string; clicks?: boolean; ip: string; origin: string; fromForm?: boolean; formId?: string; formOutcome?: string; site?: string; lead?: string | null }): Promise<JoinResult> {
   const { store, ip, origin } = input;
   const raw = input.email.trim();
   if (!raw || raw.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(raw)) return "email";
@@ -79,7 +80,7 @@ export async function askToJoin(input: { store: Store; email: string; clicks?: b
   if (!(await withinLimit("join-address", sha(email), 5, 3_600))) return "limited";
 
   const token = randomBytes(24).toString("hex");
-  const grant: Grant = { s: store.statsId, h: store.handle, e: email, at: new Date().toISOString(), ...(input.clicks ? { k: true } : {}), ...(input.formId && /^[a-z0-9]{10}$/.test(input.formId) ? { f: input.formId, ...(input.formOutcome && /^[a-z0-9]{6}$/.test(input.formOutcome) ? { r: input.formOutcome } : {}) } : {}), ...(input.site && /^https:\/\/[^/\s]{1,300}$/.test(input.site) ? { w: input.site } : {}) };
+  const grant: Grant = { s: store.statsId, h: store.handle, e: email, at: new Date().toISOString(), ...(input.clicks ? { k: true } : {}), ...(input.formId && /^[a-z0-9]{10}$/.test(input.formId) ? { f: input.formId, ...(input.formOutcome && /^[a-z0-9]{6}$/.test(input.formOutcome) ? { r: input.formOutcome } : {}) } : {}), ...(input.site && /^https:\/\/[^/\s]{1,300}$/.test(input.site) ? { w: input.site } : {}), ...(input.lead && /^[0-9a-f]{12}$/.test(input.lead) ? { a: input.lead } : {}) };
   await redisPipeline([["SET", tokenKey(token), JSON.stringify(grant), "EX", JOIN_SECONDS], ...noteForErasure(store.statsId, grant.e, tokenKey(token))]);
 
   const w = joinWords(store.language);
@@ -110,7 +111,7 @@ export async function readJoinToken(token: string): Promise<Grant | null> {
   try {
     const value = JSON.parse(raw) as Partial<Grant>;
     if (typeof value.s !== "string" || typeof value.h !== "string" || typeof value.e !== "string" || !EMAIL_PATTERN.test(value.e)) return null;
-    return { s: value.s, h: value.h, e: value.e, at: typeof value.at === "string" ? value.at : "", ...(value.k === true ? { k: true } : {}), ...(typeof value.f === "string" && /^[a-z0-9]{10}$/.test(value.f) ? { f: value.f, ...(typeof value.r === "string" && /^[a-z0-9]{6}$/.test(value.r) ? { r: value.r } : {}) } : {}), ...(typeof value.w === "string" && /^https:\/\/[^/\s]{1,300}$/.test(value.w) ? { w: value.w } : {}) };
+    return { s: value.s, h: value.h, e: value.e, at: typeof value.at === "string" ? value.at : "", ...(value.k === true ? { k: true } : {}), ...(typeof value.f === "string" && /^[a-z0-9]{10}$/.test(value.f) ? { f: value.f, ...(typeof value.r === "string" && /^[a-z0-9]{6}$/.test(value.r) ? { r: value.r } : {}) } : {}), ...(typeof value.w === "string" && /^https:\/\/[^/\s]{1,300}$/.test(value.w) ? { w: value.w } : {}), ...(typeof value.a === "string" && /^[0-9a-f]{12}$/.test(value.a) ? { a: value.a } : {}) };
   } catch {
     return null;
   }

@@ -7,6 +7,7 @@ import { enroll } from "@/lib/flows";
 import { queuePerson } from "@/lib/email-sync";
 import { allowedBy, newLeadId, sendServerLead, sendsFromServer } from "@/lib/ad-events";
 import { emitEvent } from "@/lib/webhooks";
+import { recordLead } from "@/lib/affiliate-leads";
 
 /** The button on the page an emailed sign-up link opens: the address joins the creator's list. */
 export async function POST(request: NextRequest) {
@@ -31,6 +32,11 @@ export async function POST(request: NextRequest) {
       // The creator's welcome sequence, when they have one for people who join,
       // and their own email platform, when they connected one (lib/email-sync.ts).
       await enroll(store, result.grant.e, { joined: result.added.joined });
+      // A sign-up an affiliate brought, where the store pays per sign-up: credited now that it is confirmed,
+      // and only for an address new to the list (lib/affiliate-leads.ts).
+      if (result.grant.a && result.added.joined) {
+        await recordLead(store, { aff: result.grant.a, kind: "signup", email: result.grant.e, count: true });
+      }
       // Asked from one of the store's forms: a sequence that starts with that form starts now, on confirming.
       if (result.grant.f) await enroll(store, result.grant.e, { joined: false, form: result.grant.f, formOutcome: result.grant.r ?? "" });
       // Joining the list, as a lead to the creator's ad platforms, with the visitor's yes (lib/ad-events.ts).

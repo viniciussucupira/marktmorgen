@@ -6,6 +6,7 @@ const CREDIT_WORDS: Record<Credit, string> = {
   click: "Their link", code: "Their code", buyer: "A buyer who was already theirs",
   partner: "Partner share", recurring: "A membership or plan payment",
   bonus: "A monthly goal reached", tier2: "A sale by somebody they brought",
+  lead: "A confirmed lead",
 };
 const money = (cents: number, currency: string) => `${cents < 0 ? "-" : ""}${formatMoney(Math.abs(cents), currency)}`;
 const day = (seconds: number) => {

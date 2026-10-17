@@ -918,7 +918,23 @@ export default function PrivacyPage() {
           and sales, and the payments the creator records to them with the
           date and reference the creator types. An affiliate who signs in to
           their page keeps a cookie named <code>nl_aff_</code> followed by the
-          store&apos;s address, for 30 days. The creator sees all of this; an
+          store&apos;s address, for 30 days. Where a creator pays affiliates
+          per lead (since October 18, 2026) &mdash; an email sign-up to their
+          list the person confirmed, a free product claimed from its emailed
+          link, or a booked call that took place &mdash; the affiliate the
+          visit came through travels in the emailed confirmation link, or on
+          the booking in the creator&apos;s own Stripe account, and once the
+          lead is confirmed we keep, for it: the person&apos;s email address;
+          a one-way fingerprint of that address with the store&apos;s own id,
+          so one person is one lead in that program; which affiliate it is
+          credited to; the kind of lead and the product or booking it was;
+          when it was confirmed; the amount and the terms then; and what the
+          creator decided, with the reason they gave. The creator sees the
+          address; the affiliate sees only its first letter and its domain.
+          A person deleted from the store has their address removed from the
+          lead; the lead stays, as the affiliate&apos;s record, and so does
+          the fingerprint, which cannot be turned back into the address, so
+          they are not counted again. The creator sees all of this; an
           affiliate sees only their own figures. It is kept with the
           store&apos;s records. We never hold or pay out an affiliate&apos;s
           money: the creator pays them. A creator who pays from their own

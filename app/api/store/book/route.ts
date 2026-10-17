@@ -101,6 +101,8 @@ export async function POST(request: NextRequest) {
     buyerTz: tz,
     origin: linkOrigin(request, store),
     via,
+    // Where the store pays per call that takes place, the same affiliate is carried for the lead, whatever the share.
+    lead: store.affiliates.lead.kind === "booking" ? via?.aff ?? null : null,
     fromPackage: prepared && prepared.ok ? prepared.fromPackage : null,
     channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays), ...(await adsCheckout(request, store)) },
   });
