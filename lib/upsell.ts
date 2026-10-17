@@ -603,6 +603,8 @@ export type FunnelView = {
   taken: { slot: string; product: Listing; reference: string; items: BundleContents | null }[];
   /** An offer still waiting on the bank or Stripe, or one the card turned down. */
   notes: { state: "checking" | "unconfirmed" | "declined"; title: string }[];
+  /** The products the buyer said no to, or whose charge the card turned down: never suggested to them again (lib/next-offer.ts). */
+  declined: string[];
 };
 
 /**
@@ -627,6 +629,7 @@ export async function funnelView(input: {
   const records = await readAnswers(session);
   const taken: FunnelView["taken"] = [];
   const notes: FunnelView["notes"] = [];
+  const declined: string[] = [];
   const find = listingFinder(store);
   for (const [slot, record] of records) {
     const known = await find(record.product);
@@ -637,6 +640,7 @@ export async function funnelView(input: {
     }
     if (record.state === "pending") notes.push({ state: record.pi ? "unconfirmed" : "checking", title });
     if (record.state === "failed") notes.push({ state: "declined", title });
+    if (record.state === "declined" || record.state === "failed") declined.push(record.product);
   }
 
   // The funnel and what it names are read only when an offer could follow.
@@ -644,10 +648,10 @@ export async function funnelView(input: {
   const full = open ? await readProduct(store, product.id) : null;
   const offered = full ? await offerableAfterPaying(store, await readListings(store, funnelProductIds(full.funnel))) : [];
   const funnel = full ? activeFunnel(offered, full) : null;
-  if (!funnel) return { offer: null, taken, notes };
+  if (!funnel) return { offer: null, taken, notes, declined };
   const owned = new Set([product.id, ...input.alsoOwned]);
   const position = funnelPosition(funnel, offered, toAnswers(records), owned);
-  if (position.kind !== "offer") return { offer: null, taken, notes };
+  if (position.kind !== "offer") return { offer: null, taken, notes, declined };
   const { step, target } = position;
   const pictured = step.imageFrom ? offered.find((p) => p.id === step.imageFrom) ?? null : null;
   const afterNo = funnel.steps.some((s) => s.no === step.id && records.get(stepSlot(funnel, s))?.state === "declined");
@@ -660,5 +664,6 @@ export async function funnelView(input: {
     },
     taken,
     notes,
+    declined,
   };
 }

@@ -483,6 +483,21 @@ export default function TermsPage() {
           to Anthropic&apos;s AI model to write the replies; see the Privacy
           Policy.
         </p>
+        <p id="store-assistant-next">
+          The {ASSISTANT_NAME} can also, when you switch it on, show a buyer
+          one more of your own products after a purchase, on the page after
+          paying and, if you allow it, in that order&apos;s confirmation email
+          to buyers who agreed at checkout to hear from you. It shows only
+          products you list and sell, at the price and terms on their own
+          pages, never one the buyer already bought from you or turned down
+          after paying, and follows your own choices first (what goes well with
+          a product, its offers after paying, its checkout boxes, its
+          collections). Only when you made none does an AI choose among your
+          products, labeled as an AI suggestion; each such choice is one reply
+          of the add-on&apos;s month, and once those are used your store&apos;s
+          own order decides. It is a suggestion, not an offer of different
+          terms: a purchase that follows it is an ordinary sale of yours.
+        </p>
         <p>
           A visit is one person opening your store on one day, however many
           of its pages they look at. People are told apart by the network

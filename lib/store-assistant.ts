@@ -147,7 +147,12 @@ export async function assistantLeft(store: Store, now = Date.now()): Promise<{ l
   return { left: Math.max(0, Math.floor((cap - held - spent) / assistantMessageWorstMicroUsd())), answered: fields.get("n") ?? 0, capMicroUsd: cap, spentMicroUsd: spent, heldMicroUsd: held };
 }
 
-async function pool(op: "reserve" | "settle" | "release", statsId: string, windowId: string, hold: number, value = 0): Promise<number> {
+/**
+ * One step of the month's pool: 1 done, 0 refused (reserve only: it cannot
+ * hold this), -1 not done. The add-on's other functions (lib/next-offer.ts)
+ * draw on the same pool through this, at the same worst cost.
+ */
+export async function pool(op: "reserve" | "settle" | "release", statsId: string, windowId: string, hold: number, value = 0): Promise<number> {
   const args: (string | number)[] = op === "reserve" ? [op, hold, value, POOL_KEEP_SECONDS] : op === "settle" ? [op, hold, value] : [op, hold];
   try {
     const [result] = await redisPipeline([["EVAL", ASSISTANT_POOL, 1, poolKey(statsId, windowId), ...args]]);

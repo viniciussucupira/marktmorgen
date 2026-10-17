@@ -1783,6 +1783,7 @@ export default async function StudioPage({
                             return (
                               <StoreAssistantEditor
                                 setting={own.assistant}
+                                next={own.nextOffer}
                                 plan={own.assistantPlan}
                                 onSale={ASSISTANT_ON_SALE}
                                 canBill={may("billing")}

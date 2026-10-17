@@ -480,6 +480,27 @@ export default function PrivacyPage() {
           . Leave personal details out of a question: it is read by the model,
           and the creator may read it.
         </p>
+        <p id="store-assistant-next" className="scroll-mt-24">
+          <strong className="text-black">One next product after you buy.</strong>{" "}
+          Where a store with the Store assistant has switched it on, the page
+          after paying may show one more of that store&apos;s own products, at
+          its published price, with &ldquo;No thanks&rdquo; to dismiss it. To
+          leave out what you already have, the store&apos;s own Stripe account
+          is asked, by the email address you paid with, which of its products
+          that address bought there, and the store&apos;s own record of
+          purchases it brought over is read; the answer is used for that and
+          not kept. When the creator has set no product to follow the one you
+          bought, an AI model run by Anthropic may choose among the
+          store&apos;s products and is then labeled &ldquo;AI suggestion&rdquo;;
+          it is sent only the products&apos; titles, prices and descriptions,
+          nothing about you. The product chosen for your order, and whether
+          you dismissed it, are kept for three days under your order&apos;s
+          reference, with no name or address, so the page shows the same one
+          if you open it again. If you checked the box to hear from the store
+          at checkout, and the store allows it, the same product is also
+          mentioned in your order&apos;s confirmation email; no separate email
+          is sent for it.
+        </p>
         <p id="fair-prices">
           <strong className="text-black">Prices for your country.</strong>{" "}
           Some stores lower their prices for buyers in certain countries. To

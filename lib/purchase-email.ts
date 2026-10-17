@@ -67,6 +67,10 @@ import { type SaleKey, activeKeys, keyForSale } from "@/lib/licence-keys";
 import { purchaseRefunded } from "@/lib/refunds";
 import { scheduleReviewAsk } from "@/lib/review-ask";
 import { type BundleSlot, bumpsFromMeta, bundleFromMeta, deliveredIds, isBundle } from "@/lib/bundle-rules";
+import { type NextOffer, nextOfferForEmail } from "@/lib/next-offer";
+import { nextOfferWords } from "@/lib/buyer-words/next-offer";
+import { pricePill } from "@/components/store-product";
+import { productSegment } from "@/lib/product-slug";
 
 const SESSION_ID_PATTERN = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
 const INTENT_ID_PATTERN = /^pi_[A-Za-z0-9]{10,200}$/;
@@ -176,6 +180,12 @@ export function confirmationFor(
   listings: Listing[] = recordListings(store),
   /** The creator's own note after paying, read by the caller (lib/thanks-note.ts). */
   note: ThanksNote | null = null,
+  /**
+   * The Store assistant's next product, as the page after paying chose it
+   * (lib/next-offer.ts, nextOfferForEmail): only where the creator allows it
+   * and the buyer agreed at checkout to hear from them. No email of its own.
+   */
+  next: NextOffer | null = null,
 ): Confirmation | null {
   const id = typeof session.id === "string" ? session.id : "";
   if (!SESSION_ID_PATTERN.test(id)) return null;
@@ -311,6 +321,20 @@ export function confirmationFor(
     lines.push("", words.earnBySharing(store.affiliates.percent, name, `${base}/affiliates?order=${id}`));
   }
 
+  // One next product from the same store, as its page after paying showed it: its published price and its own words, labeled as AI's when the model chose it.
+  if (next && meta.news === "yes") {
+    const nw = nextOfferWords(store.language);
+    const why = next.why || next.product.summary;
+    lines.push(
+      "",
+      `${next.ai ? nw.aiLabel : nw.label(name)}: ${next.product.title}, ${pricePill(store, next.product)}`,
+      ...(why ? [why] : []),
+      `${base}/p/${productSegment(next.product)}`,
+      ...(next.ai ? [nw.aiNote(name)] : []),
+      nw.emailConsent(name),
+    );
+  }
+
   lines.push("", words.storeAt(name, base), "", words.questions(name), words.paymentWent(name));
 
   return {
@@ -444,7 +468,8 @@ async function confirmOnce(
     return bought ? "sent" : "skip";
   }
   if (!confirmationFor(store, session, Date.now() / 1000, [], listings)) return "skip";
-  const letter = confirmationFor(store, session, Date.now() / 1000, await keysFor(store, session, listings), listings, await noteFor(store, session, listings));
+  const next = await nextOfferForEmail(store, sessionId, session.metadata ?? {}).catch(() => null);
+  const letter = confirmationFor(store, session, Date.now() / 1000, await keysFor(store, session, listings), listings, await noteFor(store, session, listings), next);
   if (!letter) return "skip";
 
   const [claimed] = await redisPipeline([["SET", key, "sending", "NX", "EX", SENDING_MARK_SECONDS]]);

@@ -249,6 +249,8 @@ export const FAMILIES: Record<string, Family> = {
   "nl:assist:pool:@lib/store-assistant.ts": { what: "The Store assistant's pool of replies for one month of the add-on", line: "store-assistant" },
   "nl:assist:c:@lib/store-assistant.ts": { what: "A conversation with the Store assistant, a day after its last message", line: "store-assistant" },
   "nl:assist:missed:@lib/store-assistant.ts": { what: "Questions the Store assistant could not answer, for the creator", line: "store-assistant" },
+  "nl:assist:next:@lib/next-offer.ts": short("The one next product the Store assistant chose for an order, and whether the buyer dismissed it", "order", 3, KB),
+  "nl:assist:nextlock:@lib/next-offer.ts": short("An order's next product being chosen, a minute", "order", 1, MARK),
   "nl:ask:@lib/answers.ts": short("Visitors' answers counted in the window", "day", 40, 128),
   "nl:ask:a:@lib/answers.ts": short("An answer already given to a question about a page, a day", "ai", 1, 8 * KB),
   "nl:ask:missed:@lib/answers.ts": { what: "Questions a page did not answer, for the creator", parts: [capped(100 * KB, "The newest MISSED_KEPT, trimmed on every write.", src("lib/answers.ts", "MISSED_KEPT", "LTRIM"))] },
