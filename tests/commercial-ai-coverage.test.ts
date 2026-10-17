@@ -1,7 +1,7 @@
 import { zeroExposureFixture } from './margin-test-fixtures';
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CURRENT_AI_SPEND_POLICY as policy } from "@/lib/ai-spend-policy";
+import { CURRENT_AI_SPEND_POLICY as policy } from "./commercial-ai-approved-policy";
 import { commercialMarginReady, commercialPlansMayOpen, CURRENT_COMMERCIAL_MARGIN_REVIEW, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, REQUIRED_MARGIN_SCENARIOS, BASE_PLAN_REVENUE_CEILINGS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { assessCustomerWorstCase } from "@/lib/net-margin-rules";
 import { fundedCustomerWithAi, zeroFixedCompanyFixture } from "./margin-test-fixtures";
