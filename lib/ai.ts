@@ -130,6 +130,12 @@ function honesty(language = "English"): string {
   ].join("\n");
 }
 
+/** The rules every draft is held to, for writers kept in a file of their own (lib/funnel-ai.ts). */
+export const writingRules = (language = "English"): string => honesty(language);
+
+/** The model drafts are written by, for writers kept in a file of their own (lib/funnel-ai.ts). */
+export const writingModel = (): string => model();
+
 /** The language a store sells in, by its English name: what buyers read is written in it. */
 function storeLanguage(store: Store): string {
   return LANGUAGES[store.language]?.english ?? "English";
