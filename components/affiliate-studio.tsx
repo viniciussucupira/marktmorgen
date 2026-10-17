@@ -162,6 +162,7 @@ export function AffiliateStudio({
   currency = "usd",
   elsewhere = 0,
   away = [],
+  pendingPayoutsChecked = true,
   codes = [],
   codeOwners = {},
   payPanel = null,
@@ -183,6 +184,8 @@ export function AffiliateStudio({
   elsewhere?: number;
   /** Affiliates with a PayPal payment on its way (lib/paypal-payouts.ts): not in any new batch. */
   away?: string[];
+  /** False when pending provider payments could not be confirmed. */
+  pendingPayoutsChecked?: boolean;
   /** The creator's own live discount codes, any of which can be given to an affiliate. */
   codes?: StoreCode[];
   /** Which affiliate holds each of those codes, by Stripe's promotion code id. */
@@ -200,7 +203,7 @@ export function AffiliateStudio({
   // Everyone who can be paid today: what one batch file holds. A sale still
   // inside the wait is owed but not payable, so the two totals differ while
   // anything is clearing.
-  const owedNow = rows.filter((r) => r.payable > 0 && r.affiliate.status === "approved" && !away.includes(r.affiliate.id));
+  const owedNow = pendingPayoutsChecked ? rows.filter((r) => r.payable > 0 && r.affiliate.status === "approved" && !away.includes(r.affiliate.id)) : [];
   const batchTotal = owedNow.reduce((sum, r) => sum + r.payable, 0);
   const waitingTotal = rows.reduce((sum, r) => sum + r.waiting, 0);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -264,7 +267,7 @@ export function AffiliateStudio({
             </form>
             <span className="text-sm text-ink-soft">{`Owed now, in all: ${money(owedTotal, currency)}`}</span>
           </div>
-          {payPanel}
+          {pendingPayoutsChecked ? payPanel : <p className="notice notice-warn mt-5" role="alert">Pending payments could not be checked. New payment batches and batch files are unavailable until you reload and this check succeeds. Your saved records and full export remain available.</p>}
           {owedNow.length ? (
             <div className="mt-5 rounded-2xl border border-line bg-paper p-4">
               <h3 className="font-semibold text-ink">Pay everyone at once</h3>

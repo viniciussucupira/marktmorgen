@@ -145,6 +145,28 @@ async function main(): Promise<void> {
   is("nobody is sent twice while on their way", again.ok ? "sent" : again.reason, "nothing");
   is("the book does not say paid yet", Object.fromEntries(await owed(store)), { "sara@example.com": [0, 3000], "tom@example.com": [0, 1500] });
 
+  part("Unavailable pending records never start a new payment");
+  const pipeline = redis.pipeline.bind(redis);
+  const openKey = `nl:pp:open:${STATS}`;
+  const [savedOpen] = await pipeline([["HGETALL", openKey]]);
+  for (const broken of [undefined, null, ["BROKEN"], {BROKEN:"{"}, {BROKEN:JSON.stringify({at:1,currency:"usd",lines:[{a:"a",c:-1}]})}]) {
+    redis.pipeline = async (commands) => commands.some((cmd) => cmd[0] === "HGETALL" && cmd[1] === openKey)
+      ? [broken] : pipeline(commands);
+    const sentBefore = created.length;
+    let blocked = false;
+    try { await onTheirWay(store); } catch { blocked = true; }
+    is("unknown pending exposure rejects the read", blocked, true);
+    const refused = await payWithPayPal(store);
+    is("unknown pending exposure refuses a new batch", refused.ok ? "sent" : refused.reason, "error");
+    is("no provider batch is dispatched", created.length, sentBefore);
+    let settlementBlocked = false;
+    try { await settlePayPal(store); } catch { settlementBlocked = true; }
+    is("invalid storage is not cleared by settlement", settlementBlocked, true);
+  }
+  redis.pipeline = pipeline;
+  is("saved pending records were not changed", await pipeline([["HGETALL", openKey]]), [savedOpen]);
+  is("valid pending records recover immediately", (await onTheirWay(store)).size, 2);
+
   part("What PayPal reports");
   itemStatus = { aaaaaaaaaaaa: "SUCCESS", bbbbbbbbbbbb: "UNCLAIMED" };
   is("paid, and still waiting to be claimed", await settlePayPal(store), { paid: 1, released: 0, waiting: 1 });

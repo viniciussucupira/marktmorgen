@@ -34,6 +34,7 @@ import { type Book, addPayout, payAddress, readBook } from "@/lib/affiliates";
 import { type BatchLine, batchTotal, owedLines, payoutNote } from "@/lib/affiliate-payouts";
 import { plainAmount } from "@/lib/money";
 import { withLock } from "@/lib/redis-lock";
+import { readPendingPayoutBatches, type PendingPayoutBatch } from "@/lib/pending-payouts";
 import { type Store, storeForId } from "@/lib/store";
 
 /** Local tests may point this at a stand-in on 127.0.0.1; nothing else is taken. */
@@ -59,8 +60,8 @@ const context = (statsId: string) => `paypal-payouts|${statsId}`;
 
 type Link = { client: string; secret: string; at: number; auto: boolean };
 export type PayPalView = { client: string; at: number; auto: boolean; broken: boolean };
-type Sent = { a: string; c: number };
-type OpenBatch = { at: number; currency: string; lines: Sent[] };
+type OpenBatch = PendingPayoutBatch;
+type Sent = OpenBatch["lines"][number];
 
 async function readLink(store: Store): Promise<Link | null> {
   if (!store.statsId || !isRedisConfigured()) return null;
@@ -168,24 +169,12 @@ export async function setAutoPay(store: Store, on: boolean): Promise<boolean> {
 }
 
 async function readOpen(statsId: string): Promise<Map<string, OpenBatch>> {
-  const [raw] = await redisPipeline([["HGETALL", openKey(statsId)]]);
-  const out = new Map<string, OpenBatch>();
-  const pairs: [string, string][] = [];
-  if (Array.isArray(raw)) for (let i = 0; i + 1 < raw.length; i += 2) pairs.push([String(raw[i]), String(raw[i + 1])]);
-  else if (raw && typeof raw === "object") for (const [k, v] of Object.entries(raw as Record<string, string>)) pairs.push([k, String(v)]);
-  for (const [id, value] of pairs) {
-    try {
-      out.set(id, JSON.parse(value) as OpenBatch);
-    } catch {
-      /* a broken record is left for the next settle to drop */
-    }
-  }
-  return out;
+  return readPendingPayoutBatches(await redisPipeline([["HGETALL", openKey(statsId)]]));
 }
 
 /** The affiliates with a PayPal payment on its way, left out of every new batch and file. */
 export async function onTheirWay(store: Store): Promise<Set<string>> {
-  if (!store.statsId || !isRedisConfigured()) return new Set();
+  if (!store.statsId || !isRedisConfigured()) throw new Error("Pending payout records are unavailable");
   const open = await readOpen(store.statsId);
   return new Set([...open.values()].flatMap((b) => b.lines.map((l) => l.a)));
 }
