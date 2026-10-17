@@ -21,6 +21,8 @@ import { formatMoney } from "@/lib/money";
 import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { EXPECTATION, MAX_PAGES_READ, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
 import { PLAN_AT, feeWords, planPriceWords, yearSavingWords } from "@/lib/fee-words";
+import { MAX_SHARE_DAYS, SHARE_LIMITS, bytesWords } from "@/lib/funnel-share-rules";
+import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
 
 /** An anchor for one answer, from its question. */
 export function answerId(q: string): string {
@@ -705,6 +707,23 @@ export const HELP_SECTIONS: HelpSection[] = [
         a: [
           "Yes, with the truth only. Under \u201cLatest purchases on your store\u201d in your studio, switch it on, and your front page and product pages show a small card at the bottom: what was bought, how long ago, and the country the card was billed in, written in your store's language. It never says who bought, by name, city or picture.",
           "It shows only purchases paid on your own Stripe account with real money, from the moment you switch it on, for 7 days each: up to 3 a visit, each once, never repeated to fill the space. Test payments, free copies, trials, calls and tips are not shown. A payment refunded in any part is left out, and so is a product you hide or remove. With no purchase in the last 7 days, nothing is shown. There is no way to type one in, here or anywhere else. A visitor can close it, and it stays closed for the rest of their visit.",
+        ],
+      },
+      {
+        q: "Can I copy a funnel, or share one with another creator?",
+        a: [
+          "Yes, on every plan. Under Funnels in your studio, choose a funnel and make a copy here, make a share link, or download it as a file. A copy keeps your words, videos and products, makes pages of its own and leaves the pictures on the original pages. It arrives off, with its pages kept from visitors.",
+          `A share link opens the funnel for another Marktmorgen creator: they see its steps, pages and forms, choose their own products for its steps (or leave one out), and bring it in as a draft. Only the words and the shape go. Your pictures, files, buyers, contacts, form answers, reviews, prices, numbers and products never do, and neither do your about text, guarantee, videos, deadlines or what others said about you: they are told what to fill in. The link is shown once; only its fingerprint is kept. Revoke it at any time, and it stops working at once; otherwise it works for the days you chose, ${MAX_SHARE_DAYS} at most.`,
+          `It is a snapshot: what you change afterward is not in it. Share links at once: ${SHARE_LIMITS.creator.shares} on Store, ${SHARE_LIMITS.pro.shares} on Studio and ${SHARE_LIMITS.scale.shares} on Scale. Funnels brought in a day, copies and starters included: ${SHARE_LIMITS.creator.importsPerDay}, ${SHARE_LIMITS.pro.importsPerDay} and ${SHARE_LIMITS.scale.importsPerDay}. A funnel's file can be up to ${bytesWords(SHARE_LIMITS.creator.bundleBytes)}, ${bytesWords(SHARE_LIMITS.pro.bundleBytes)} and ${bytesWords(SHARE_LIMITS.scale.bundleBytes)}. A file is checked before anything is made: anything that is not part of a Marktmorgen funnel, or looks like code, is refused.`,
+          "There are also three starters with first words written: a free guide then your first offer, a recorded workshop, and a coaching application with its form. Every sentence in them is one you can say as it stands, or a part in [brackets] for you to fill in.",
+        ],
+      },
+      {
+        q: "Can I reuse a section on several pages?",
+        a: [
+          `Yes, on every plan. In the page editor, open Saved sections and save up to ${MAX_SECTION_BLOCKS} blocks of the page under a name; then add it to any other page of your store, product pages and your own pages alike. A headline at the top and the reviews cannot be in a section, because a page has one of each.`,
+          "After changing a section on one page, press Update the saved section from this page. You see the other pages that use it and check the ones to update; nothing else changes. A page with its own pictures in the section, or running a test, is listed and left for you to change by hand. Every page updated keeps its earlier version, to bring back.",
+          `Pictures stay on the page that shows them: a section keeps the block, and you add that page's pictures. Sections in your library: ${SHARE_LIMITS.creator.savedBlocks} on Store, ${SHARE_LIMITS.pro.savedBlocks} on Studio and ${SHARE_LIMITS.scale.savedBlocks} on Scale.`,
         ],
       },
       {
