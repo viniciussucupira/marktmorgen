@@ -61,12 +61,14 @@ export function PageFunnelEditor({
   choices,
   base,
   paymentReview,
+  formsHref,
 }: {
   saved: SavedFunnel[];
   choices: StepChoice[];
   /** The funnels' addresses start with this: https://marktmorgen.com/@chef/go/ */
   base: string;
   paymentReview?: FunnelPaymentReview;
+  formsHref?: string | null;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -266,6 +268,7 @@ export function PageFunnelEditor({
                 issues={launchIssues}
                 editors={steps.map(step => step.editor)}
                 paymentReview={paymentReview}
+                formsHref={formsHref}
                 locked={locked}
                 settingsDisabled={locked || draft !== null}
                 onSettings={() => start(funnel)}

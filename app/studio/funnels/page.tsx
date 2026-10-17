@@ -180,6 +180,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
             saved={savedFunnels}
             choices={choices}
             base={funnelBase}
+            formsHref={can(view.role, "page") ? studioPath(store, "", "forms") : null}
             paymentReview={{
               available: canSell(store) || sellsThroughPayPal(store),
               paymentsHref: can(view.role, "payments") ? `${studioPath(store)}#stripe` : null,
