@@ -50,7 +50,8 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount, platformKey } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
 import { CONFIRM_WITHIN_SECONDS, type SessionRecord, canConfirm, confirmPurchase, confirmationKey } from "@/lib/purchase-email";
-import { remindAbandoned } from "@/lib/checkout-recovery";
+import { REMIND_WITHIN_SECONDS, remindAbandoned } from "@/lib/checkout-recovery";
+import { enroll, readFlows } from "@/lib/flows";
 import { recoveryOn } from "@/lib/recovery-setting";
 import { type Store, ensureStoreId, saleHandles, storeRef, storesAfter } from "@/lib/store";
 import { listingsNamed, sellsThings } from "@/lib/catalog";
@@ -265,6 +266,14 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
       }
     }
 
+    // Workflows that start on an abandoned checkout (lib/flows.ts, trigger
+    // "abandoned"): only for a buyer who agreed on Stripe's page to hear from
+    // the creator and who is on the creator's list, once per checkout, and
+    // only for a store that has such a workflow switched on.
+    if (store.listId && rows.some((row) => row.status === "expired" && row.consent?.promotions === "opt_in") && Date.now() < deadline) {
+      await startAbandonedWorkflows(store, rows).catch((error) => console.error("starting abandoned-checkout workflows failed", store.handle, error));
+    }
+
     const last = rows[rows.length - 1];
     if (listed.has_more !== true || !last || typeof last.id !== "string") break;
     after = last.id;
@@ -322,4 +331,31 @@ export async function sweepCheckouts(deadline: number): Promise<SweepCounts> {
   }
   await redisPipeline([["SET", CURSOR_KEY, `${cursor}|0`]]);
   return counts;
+}
+
+/**
+ * Starts the workflows about an abandoned checkout, for each closed, unpaid
+ * checkout of the last few hours whose buyer agreed to hear from the creator
+ * on Stripe's own page. enroll() then also requires them to be on the
+ * creator's list and still written to. Each checkout is handed on once.
+ */
+async function startAbandonedWorkflows(store: Store, rows: SessionRecord[]): Promise<void> {
+  // Never the demo store's, whose checkout takes any address (lib/house-store.ts).
+  if (!store.listId || isHouseStore(store)) return;
+  const flows = (await readFlows(store.listId)).filter((f) => f.active && f.trigger === "abandoned");
+  if (!flows.length) return;
+  const handles = saleHandles(store);
+  const now = Math.floor(Date.now() / 1000);
+  for (const row of rows) {
+    if (row.status !== "expired" || row.consent?.promotions !== "opt_in") continue;
+    const meta = row.metadata ?? {};
+    const closed = typeof row.expires_at === "number" ? row.expires_at : 0;
+    if (!closed || now - closed > REMIND_WITHIN_SECONDS || closed > now) continue;
+    if (!handles.has(meta.store ?? "") || !meta.product || !flows.some((f) => f.productId === meta.product)) continue;
+    const email = typeof row.customer_details?.email === "string" ? row.customer_details.email : typeof row.customer_email === "string" ? row.customer_email : "";
+    if (!email || typeof row.id !== "string") continue;
+    const [fresh] = await redisPipeline([["SET", `nl:wf:abandoned:${row.id}`, "1", "NX", "EX", 2 * 86_400]]);
+    if (fresh === null) continue;
+    await enroll(store, email, { joined: false, abandoned: meta.product });
+  }
 }

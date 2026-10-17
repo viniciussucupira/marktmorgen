@@ -84,12 +84,12 @@ async function main(): Promise<void> {
       { delayHours: 0, subject: "The course is open", body: "Thirty dinners." },
       { delayHours: 1, action: { do: "untag", tag: "interested" } },
     ],
-  });
+  }, { activate: true });
   is("a sequence that starts with a label, its label trimmed", offer.ok ? [offer.flows[0].trigger, offer.flows[0].tag, offer.flows[0].steps[1].action, offer.flows[0].steps[1].subject] : offer, ["tagged", "Interested", { do: "untag", tag: "interested" }, ""]);
   const offerId = offer.ok ? offer.flows[0].id : "";
-  is("a label trigger with no label is refused", (await saveFlow(store, { name: "X", trigger: "tagged", tag: "  ", active: true, steps: [{ delayHours: 0, subject: "a", body: "b" }] })) , { ok: false, reason: "tag" });
-  is("a sequence that is not the store's is refused", (await saveFlow(store, { name: "X", trigger: "joined", active: true, steps: [{ delayHours: 0, action: { do: "start", flowId: "ffffffffffffffff" } }] })), { ok: false, reason: "step" });
-  is("so is a sequence starting itself", (await saveFlow(store, { id: offerId, name: "The offer", trigger: "tagged", tag: "Interested", active: true, steps: [{ delayHours: 0, action: { do: "start", flowId: offerId } }] })), { ok: false, reason: "step" });
+  is("a label trigger with no label is refused", (await saveFlow(store, { name: "X", trigger: "tagged", tag: "  ", active: true, steps: [{ delayHours: 0, subject: "a", body: "b" }] }, { activate: true })) , { ok: false, reason: "tag" });
+  is("a sequence that is not the store's is refused", (await saveFlow(store, { name: "X", trigger: "joined", active: true, steps: [{ delayHours: 0, action: { do: "start", flowId: "ffffffffffffffff" } }] }, { activate: true })), { ok: false, reason: "step" });
+  is("so is a sequence starting itself", (await saveFlow(store, { id: offerId, name: "The offer", trigger: "tagged", tag: "Interested", active: true, steps: [{ delayHours: 0, action: { do: "start", flowId: offerId } }] }, { activate: true })), { ok: false, reason: "step" });
   is("a condition on the email before needs an email right before it", (await saveFlow(store, {
     name: "X",
     trigger: "joined",
@@ -99,7 +99,7 @@ async function main(): Promise<void> {
       { delayHours: 0, action: { do: "tag", tag: "x" } },
       { delayHours: 0, subject: "c", body: "d", when: { if: "clicked" } },
     ],
-  })), { ok: false, reason: "step" });
+  }, { activate: true })), { ok: false, reason: "step" });
 
   const welcome = await saveFlow(store, {
     name: "Welcome",
@@ -112,7 +112,7 @@ async function main(): Promise<void> {
       { delayHours: 24, action: { do: "start", flowId: offerId } },
       { delayHours: 0, subject: "Thanks for reading", body: "That is all." },
     ],
-  });
+  }, { activate: true });
   is("a welcome that gives a label and starts another sequence", welcome.ok ? welcome.flows.map((f) => [f.name, f.steps.length]) : welcome, [["The offer", 2], ["Welcome", 4]]);
   const welcomeId = welcome.ok ? welcome.flows[1].id : "";
 
@@ -136,11 +136,11 @@ async function main(): Promise<void> {
   is("and the welcome goes on to its last email", to("Thanks for reading"), ["ana@example.com", "ben@example.com", "cleo@example.com"]);
 
   part("Two sequences that start each other");
-  const ping = await saveFlow(store, { name: "Ping", trigger: "tagged", tag: "ping", active: true, steps: [{ delayHours: 0, subject: "Ping", body: "1" }] });
+  const ping = await saveFlow(store, { name: "Ping", trigger: "tagged", tag: "ping", active: true, steps: [{ delayHours: 0, subject: "Ping", body: "1" }] }, { activate: true });
   const pingId = ping.ok ? ping.flows.find((f) => f.name === "Ping")!.id : "";
-  const pong = await saveFlow(store, { name: "Pong", trigger: "tagged", tag: "pong", active: true, steps: [{ delayHours: 0, subject: "Pong", body: "2" }, { delayHours: 0, action: { do: "start", flowId: pingId } }] });
+  const pong = await saveFlow(store, { name: "Pong", trigger: "tagged", tag: "pong", active: true, steps: [{ delayHours: 0, subject: "Pong", body: "2" }, { delayHours: 0, action: { do: "start", flowId: pingId } }] }, { activate: true });
   const pongId = pong.ok ? pong.flows.find((f) => f.name === "Pong")!.id : "";
-  await saveFlow(store, { id: pingId, name: "Ping", trigger: "tagged", tag: "ping", active: true, steps: [{ delayHours: 0, subject: "Ping", body: "1" }, { delayHours: 0, action: { do: "start", flowId: pongId } }] });
+  await saveFlow(store, { id: pingId, name: "Ping", trigger: "tagged", tag: "ping", active: true, steps: [{ delayHours: 0, subject: "Ping", body: "1" }, { delayHours: 0, action: { do: "start", flowId: pongId } }] }, { activate: true });
   store = (await storeForEmail(OWNER))!;
   await enroll(store, "ana@example.com", { joined: false, tag: "ping" });
   for (let i = 0; i < 6; i += 1) await later(1);

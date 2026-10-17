@@ -25,6 +25,9 @@ import { listDraftsStrict } from "@/lib/mail-drafts";
 import { can } from "@/lib/team-roles";
 import { trialOffered } from "@/lib/billing";
 import { listSegments } from "@/lib/segments";
+import { activeFlowLimit, dailyRunLimit } from "@/lib/flow-limits";
+import { listHeld, runsToday } from "@/lib/flow-runs";
+import { readTeam } from "@/lib/team";
 
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
@@ -213,6 +216,13 @@ export default async function StudioEmailPage({ searchParams }: Params) {
               fields: (await readFields(store.statsId).catch(() => [])).map((f) => ({ id: f.id, name: f.name, type: f.type, options: f.options })),
               stages: (await readStages(store.statsId).catch(() => [])).map((st) => ({ id: st.id, name: st.name })),
             }}
+            workflowLimits={{
+              maxActive: activeFlowLimit(store),
+              dailyRuns: dailyRunLimit(store),
+              runsToday: await runsToday(store.listId),
+              held: can(role, "send") ? ((await listHeld(store.listId, 500).catch(() => null))?.length ?? null) : null,
+            }}
+            assignees={can(role, "send") ? [store.email.toLowerCase(), ...(await readTeam(store.sid).catch(() => ({ members: [] as { email: string; role: Parameters<typeof can>[0] }[] }))).members.filter((m) => can(m.role, "orders")).map((m) => m.email.toLowerCase())] : []}
           />
           </>
         )}

@@ -143,7 +143,8 @@ test("the sequence is saved by the one place that checks a sequence", () => {
   // most are saveFlow's rules. Writing the list of sequences here as well
   // would be a second door with none of them on it.
   const src = read("lib/mail-reuse.ts");
-  assert.match(src, /const saved = await saveFlow\(store, plan\.raw\);/);
+  // "Keep sending it" is the creator's explicit switch on (lib/flows.ts saves new workflows paused otherwise).
+  assert.match(src, /const saved = await saveFlow\(store, plan\.raw, \{ activate: true \}\);/);
   assert.ok(!/writeFlows|redisPipeline/.test(src), "nothing is written to the list's records from here");
 });
 

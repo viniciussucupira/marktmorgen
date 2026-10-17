@@ -147,7 +147,8 @@ export async function keepSending(
   if (!plan.ok) return plan;
   // Every rule a sequence has — the plan, the setup, the product still being
   // there, ten sequences at most — is checked by the one place that saves them.
-  const saved = await saveFlow(store, plan.raw);
+  // "Keep sending it" is the creator asking for it to go out: an explicit switch on.
+  const saved = await saveFlow(store, plan.raw, { activate: true });
   if (!saved.ok) return saved;
   return { ok: true, flows: saved.flows, name: plan.name, waitHours: plan.waitHours, position: plan.position };
 }

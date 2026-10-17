@@ -71,11 +71,24 @@ export type StepCondition =
 /** Whether a condition reads the email before, so cannot be on the first. */
 export const readsEmailBefore = (condition: StepCondition | null | undefined): boolean => condition?.if === "clicked" || condition?.if === "unclicked";
 
-/** What happens to somebody a condition does not hold for. */
-export type Otherwise = "skip" | "end";
+/**
+ * What happens to somebody a condition does not hold for: skip the step and
+ * go on to the next, leave the workflow there, or (added 17 October 2026)
+ * jump to a later step named by the step's `jump` (lib/flow-paths.ts). With a
+ * step's `next`, that is an IF/ELSE: those it holds for do this step and go
+ * on to `next`; the others go to `jump`.
+ */
+export type Otherwise = "skip" | "end" | "jump";
 
-/** When a sequence ends early: once they get one product, or buy anything. */
-export type FlowGoal = { productId: string } | { any: true };
+/**
+ * When a sequence ends early: once they get one product, buy anything, or
+ * (added 17 October 2026) carry a label.
+ */
+export type FlowGoal = { productId: string } | { any: true } | { tag: string };
+
+/** What starts a workflow (lib/flows.ts, Flow.trigger). */
+export type FlowTrigger = "joined" | "product" | "bought" | "tagged" | "finished" | "form" | "started" | "abandoned";
+export const FLOW_TRIGGERS: readonly FlowTrigger[] = ["joined", "product", "bought", "tagged", "finished", "form", "started", "abandoned"];
 
 /** The longest label a condition can name; the same as an imported label's (lib/contacts.ts). */
 export const MAX_CONDITION_TAG = 40;
@@ -153,7 +166,9 @@ export function holds(condition: StepCondition, person: Person, paid: ReadonlySe
 
 /** Whether this person has reached the sequence's end. */
 export function reached(goal: FlowGoal, person: Person, paid: ReadonlySet<string>): boolean {
-  return "any" in goal ? paidSomething(person, paid) : person.ids.includes(goal.productId);
+  if ("any" in goal) return paidSomething(person, paid);
+  if ("tag" in goal) return person.tags.some((t) => sameTag(t, goal.tag));
+  return person.ids.includes(goal.productId);
 }
 
 /**
@@ -192,6 +207,10 @@ export function readGoal(raw: unknown, known: (productId: string) => boolean): F
   if (typeof raw !== "object") return "bad";
   const value = raw as Record<string, unknown>;
   if (value.any === true) return { any: true };
+  if (value.tag !== undefined) {
+    const tag = cleanTag(value.tag);
+    return tag ? { tag } : "bad";
+  }
   const productId = typeof value.productId === "string" ? value.productId : "";
   return productId && known(productId) ? { productId } : "bad";
 }
@@ -202,10 +221,13 @@ export function readGoal(raw: unknown, known: (productId: string) => boolean): F
  * product sold for money (`startsPaid`), cannot end at "has bought anything",
  * nor one about a product at getting that same product.
  */
-export function goalClash(trigger: "joined" | "product" | "bought" | "tagged" | "finished" | "form", productId: string | null, goal: FlowGoal | null, startsPaid: boolean): boolean {
+export function goalClash(trigger: FlowTrigger, productId: string | null, goal: FlowGoal | null, startsPaid: boolean, tag?: string): boolean {
   if (!goal) return false;
-  // Somebody who finishes a course already has it: "finished" ends where "product" would.
-  const aboutProduct = trigger === "product" || trigger === "finished";
+  // A workflow that starts with a label cannot end at that same label.
+  if ("tag" in goal) return trigger === "tagged" && Boolean(tag) && sameTag(goal.tag, tag ?? "");
+  // Somebody who finishes, or opens, a course already has it: "finished" and "started" end where "product" would.
+  // An abandoned checkout is about a product they do not have yet, so ending when they get it is its whole point.
+  const aboutProduct = trigger === "product" || trigger === "finished" || trigger === "started";
   if ("any" in goal) return trigger === "bought" || (aboutProduct && startsPaid);
   return aboutProduct && goal.productId === productId;
 }
@@ -236,13 +258,17 @@ export type FlowAction =
   | { do: "field"; field: string; value: string }
   | { do: "deal"; stage: string; title: string }
   | { do: "note"; text: string }
-  | { do: "notify" };
+  | { do: "notify" }
+  /** Only waits (its step's delay): with a condition and a jump, a pure branch. Added 17 October 2026. */
+  | { do: "wait" }
+  /** Makes a teammate responsible for the person's open deal (lib/crm.ts). Added 17 October 2026. */
+  | { do: "assign"; assignee: string };
 
 /** The longest note a step writes on a person's page. */
 export const MAX_STEP_NOTE = 300;
 
-/** What a step may name besides another sequence: the store's fields and its board's stages. */
-export type ActionContext = { field?: (id: string) => CrmField | undefined; isStage?: (id: string) => boolean };
+/** What a step may name besides another sequence: the store's fields, its board's stages and who may own a deal. */
+export type ActionContext = { field?: (id: string) => CrmField | undefined; isStage?: (id: string) => boolean; isAssignee?: (email: string) => boolean };
 
 /** An action as sent from the studio, cleaned; null for an email. `isFlow` says whether a sequence is the store's. */
 export function readAction(raw: unknown, isFlow: (flowId: string) => boolean, ctx: ActionContext = {}): FlowAction | null | "bad" {
@@ -275,6 +301,11 @@ export function readAction(raw: unknown, isFlow: (flowId: string) => boolean, ct
     return text ? { do: "note", text } : "bad";
   }
   if (value.do === "notify") return { do: "notify" };
+  if (value.do === "wait") return { do: "wait" };
+  if (value.do === "assign") {
+    const assignee = typeof value.assignee === "string" ? value.assignee.trim().toLowerCase() : "";
+    return assignee && assignee.length <= 254 && ctx.isAssignee?.(assignee) ? { do: "assign", assignee } : "bad";
+  }
   return "bad";
 }
 

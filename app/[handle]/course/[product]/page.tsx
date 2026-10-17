@@ -24,6 +24,7 @@ import { readListing } from "@/lib/catalog";
 import { membershipLine, speech } from "@/lib/buyer-words";
 import { coursesWords } from "@/lib/buyer-words/courses";
 import { productSegment } from "@/lib/product-slug";
+import { noteIfOpened } from "@/lib/course-finish";
 
 type Params = {
   params: Promise<{ handle: string; product: string }>;
@@ -81,6 +82,8 @@ export default async function CoursePage({ params, searchParams }: Params) {
     after(() => touchStudent(course.id, email, access.start));
     // A student's day in a course is a visit to the store (lib/day-visit.ts).
     await countDay(store);
+    // The first time a student opens it, what opening it starts (lib/course-finish.ts).
+    after(() => noteIfOpened(store, product.id, course.id, email));
   }
   // Lessons a quiz that has to be passed still holds shut, for this student.
   const held = studying ? heldBack(course, passed) : new Map<string, string>();

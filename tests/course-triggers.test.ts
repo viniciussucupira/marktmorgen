@@ -89,16 +89,16 @@ async function main(): Promise<void> {
   const courseId = made.product.id;
 
   part("Saved, and checked when saved");
-  is("finishing is only for a course", (await saveFlow(store, { name: "Next", trigger: "finished", productId: guide.product.id, active: true, steps: [{ delayHours: 0, subject: "Well done", body: "Next." }] })).ok, false);
-  is("a condition on an ordinary product is refused", (await saveFlow(store, { name: "Nudge", trigger: "product", productId: courseId, active: true, steps: [{ delayHours: 72, subject: "Start here", body: "Hi.", when: { if: "unstarted", productId: guide.product.id } }] })).ok, false);
+  is("finishing is only for a course", (await saveFlow(store, { name: "Next", trigger: "finished", productId: guide.product.id, active: true, steps: [{ delayHours: 0, subject: "Well done", body: "Next." }] }, { activate: true })).ok, false);
+  is("a condition on an ordinary product is refused", (await saveFlow(store, { name: "Nudge", trigger: "product", productId: courseId, active: true, steps: [{ delayHours: 72, subject: "Start here", body: "Hi.", when: { if: "unstarted", productId: guide.product.id } }] }, { activate: true })).ok, false);
   const nudge = await saveFlow(store, {
     name: "Nudge",
     trigger: "product",
     productId: courseId,
     active: true,
     steps: [{ delayHours: 72, subject: "Your first lesson is waiting", body: "Hi.", when: { if: "unstarted", productId: courseId } }],
-  });
-  const next = await saveFlow(store, { name: "Next", trigger: "finished", productId: courseId, active: true, steps: [{ delayHours: 0, subject: "You finished it", body: "Well done." }] });
+  }, { activate: true });
+  const next = await saveFlow(store, { name: "Next", trigger: "finished", productId: courseId, active: true, steps: [{ delayHours: 0, subject: "You finished it", body: "Well done." }] }, { activate: true });
   is("both saved", [nudge.ok, next.ok, (await readFlows(store.listId)).map((f) => f.trigger)], [true, true, ["product", "finished"]]);
   store = (await storeForEmail(OWNER))!;
 
