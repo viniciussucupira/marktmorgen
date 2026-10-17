@@ -41,8 +41,8 @@ async function main(): Promise<void> {
   is("only a store that pays, with a subscription behind it, can have an hour added to an invoice", [canBeCharged(paid, NOW), canBeCharged(trial, NOW), canBeCharged(ended, NOW), canBeCharged({ ...never, subscriptionActive: true }, NOW)], [true, false, false, false]);
 
   part("How long its video may be watched in a month");
-  is("a store that pays is never paused: its hours past the plan are charged", videoLimitFor(paid, NOW), null);
-  is("nor is the store this site runs itself", videoLimitFor({ ...never, subscriptionActive: true }, NOW), null);
+  is("a paid plan has a finite monthly playback threshold", videoLimitFor(paid, NOW), VIDEO_SECONDS_INCLUDED);
+  is("an internal paid store has the same finite threshold", videoLimitFor({ ...never, subscriptionActive: true }, NOW), VIDEO_SECONDS_INCLUDED);
   is("a trial plays for the hours a plan covers", videoLimitFor(trial, NOW), VIDEO_SECONDS_INCLUDED);
   is("a store with no plan, before one or after one, for a few", [videoLimitFor(never, NOW), videoLimitFor(ended, NOW)], [SETUP_VIDEO_SECONDS, SETUP_VIDEO_SECONDS]);
   is("which is far less than a plan's", SETUP_VIDEO_HOURS * 10 <= VIDEO_HOURS_INCLUDED, true);
@@ -99,10 +99,10 @@ async function main(): Promise<void> {
   part("What the pages say");
   const terms = read("app/terms/page.tsx");
   is("the Terms give all three figures for what a store may keep, from where the doors read them", [/storageWords\(STORAGE_BRAKE_BYTES\)/.test(terms), /storageWords\(TRIAL_STORAGE_BYTES\)/.test(terms), /storageWords\(SETUP_STORAGE_BYTES\)/.test(terms)], [true, true, true]);
-  is("and both figures for video with no paid plan", [/\{VIDEO_HOURS_INCLUDED\} hours a month in the\s+free trial/.test(terms), /\{SETUP_VIDEO_HOURS\} hours a month before a plan is\s+started and after one has ended/.test(terms)], [true, true]);
+  is("the Terms disclose finite paid and setup playback thresholds", [/Paid plans and/.test(terms), /VIDEO_HOURS_INCLUDED/.test(terms), /SETUP_VIDEO_HOURS/.test(terms), /New playback pauses/.test(terms)], [true, true, true, true]);
   is("and that a store holding more when its plan ends cannot add to it, with where its date is said", /cannot add to it, and section 8 says how\s+long it keeps what it holds/.test(terms), true);
   const help = read("lib/help-content.ts");
-  is("the help pages give the same figures", [help.includes(`In a plan's free trial it holds ${storageWords(TRIAL_STORAGE_BYTES)}`), help.includes(`holds ${storageWords(SETUP_STORAGE_BYTES)}.`), help.includes(`${VIDEO_HOURS_INCLUDED} hours a month in the free trial, and ${SETUP_VIDEO_HOURS} hours a month before a plan starts and after one ends`)], [true, true, true]);
+  is("the help pages disclose storage and finite playback thresholds", [help.includes(`In a plan's free trial it holds ${storageWords(TRIAL_STORAGE_BYTES)}`), help.includes(`holds ${storageWords(SETUP_STORAGE_BYTES)}.`), help.includes("New playback pauses at that threshold")], [true, true, true]);
   is("so does the page about courses", read("lib/feature-pages.ts").includes(`${VIDEO_HOURS_INCLUDED} hours a month in the free trial, and ${SETUP_VIDEO_HOURS} hours a month before a plan starts and after one ends`), true);
   const studio = read("app/studio/page.tsx");
   is("the studio shows a store its own figures", [/storageBrakeFor\(standing\)/.test(studio), /videoLimitFor\(store\)/.test(studio), /SETUP_VIDEO_HOURS/.test(studio)], [true, true, true]);

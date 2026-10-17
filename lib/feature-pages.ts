@@ -119,7 +119,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { q: "Is the page up before I connect Stripe?", a: "Yes. The page, the editor and your address are free and stay free; without a plan, the page is shown for 500 visits a month. Taking a card needs two things: Stripe has cleared your account, and your plan or its 14-day trial is running. Until then the page says plainly that it cannot take a payment." },
           { q: "Can I use my own domain?", a: DOMAINS ? `Yes, on the ${PLAN_AT.pro} Studio plan. You add one record where you bought the domain, and the certificate is made for you. Your marktmorgen.com address keeps working as well.` : "Not yet. It is planned for the Studio plan, and this page will say so on the day it works." },
           { q: "How do I see what the page looks like before I save?", a: "The studio shows the page with your photo, theme, color and letters as you change them, before anything is saved." },
-          { q: "Is there a limit on how many people can visit?", a: `Your plan covers a number of visits a month: 3,000 on the ${PLAN_AT.creator} plan, 10,000 on the ${PLAN_AT.pro} plan and 50,000 on the ${PLAN_AT.scale} plan. A visit is one person opening your store on one day, however many pages they look at, and you are never counted. Past your plan's figure it is $0.50 for each thousand visits, on your next invoice, and your store is never taken down for being busy. Your studio shows the count as it grows.` },
+          { q: "Is there a limit on how many people can visit?", a: `Your plan covers a number of visits a month: 3,000 on the ${PLAN_AT.creator} plan, 10,000 on the ${PLAN_AT.pro} plan and 50,000 on the ${PLAN_AT.scale} plan. A visit is one person opening your store on one day, however many pages they look at, and you are never counted. At your plan's recorded counted-visit threshold, public pages pause until the month turns or a plan change provides a larger threshold. Your studio shows the count as it grows.` },
           { q: "Can one account run more than one store?", a: "Yes, up to five, each with its own address, products, Stripe account and plan. You switch between them at the top of your studio." }
         ],
       },
@@ -258,7 +258,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           "The certificate's PDF file is drawn in Latin, Greek and Cyrillic letters; a name in another script is printed from the certificate's page instead.",
           "No live lessons inside the course itself. Hold them as live events in your community, or put a link in a lesson to where you hold them.",
-          "Video is covered for 400 hours watched a month across your store, counted by the player as your students watch. Past that it is $0.03 for each hour watched, on your next invoice; a student is never cut off, and your studio shows the hours as they are watched.",
+          "Stream video has a finite threshold of 400 watched hours a month across your store. New playback pauses at the recorded threshold. The meter is read about once an hour; existing player links may remain valid until they expire. Your studio shows the recorded hours.",
           "Without a paid plan, lesson videos pause past the store's hours until the plan is paid or the month turns: 400 hours a month in the free trial, and 10 hours a month before a plan starts and after one ends.",
           "Video is kept up to 1080p: a 4K file plays at 1080p.",
           `Captions written by AI are machine transcription: read them before you rely on them, and replace a language with your own file whenever you like. They are for videos of up to ${MAX_AUTO_MINUTES / 60} hours, need a paid plan, and come as captions in the player, not as a separate transcript.`,
@@ -2511,7 +2511,7 @@ export const CREATOR_PAGES: TopicPage[] = [
         items: [
           "No workout-tracking app and no progress photos: students mark lessons done, and that is what you see.",
           "The community's live room is text only: there is no group video inside it, so a live workout runs as a live event on Google Meet, Jitsi or your own link.",
-          "Video is covered for 400 hours watched a month; past that it is $0.03 for each hour watched, and nobody is cut off.",
+          "Stream video has a finite threshold of 400 watched hours a month. New playback pauses at the recorded threshold; existing player links may remain valid until they expire.",
         ],
       },
       {

@@ -577,14 +577,9 @@ export type LessonVideo =
  * by the service's own count, and never how often a page was opened. Any
  * other is the signed link it has always been.
  *
- * `limit` is the seconds of video the store may have watched this month
- * before its video is paused, by where it stands with its plan
- * (lib/plan-standing.ts, videoLimitFor); null for a store that pays, which
- * is never paused, at any number: its hours past the plan are charged. A
- * store with nobody to send that bill to, in its free trial, before a plan
- * or after one, plays for its hours and is paused past them, until the plan
- * is paid or the month turns. Those hours are the one thing here that costs
- * us by the hour.
+ * Stream playback requires a finite explicit monthly watched-time threshold,
+ * including for paid plans. Missing, invalid or unreadable limits never mint
+ * a player token. This meter does not bound provider bytes, replay or buffering.
  */
 export async function lessonVideo(file: ProductFile, limit: number | null = null): Promise<LessonVideo | null> {
   if (!isStreamPath(file.pathname)) {
@@ -593,12 +588,10 @@ export async function lessonVideo(file: ProductFile, limit: number | null = null
   }
   try {
     const folder = folderFromPathname(file.pathname);
-    if (limit !== null) {
-      if (!Number.isSafeInteger(limit) || limit < 0 || !folder) return null;
-      const watched = await watchedForAdmission(folder);
-      if (watched === null) return null;
-      if (watched >= limit) return { kind: "paused" };
-    }
+    if (limit === null || !Number.isSafeInteger(limit) || limit < 0 || !folder) return null;
+    const watched = await watchedForAdmission(folder);
+    if (watched === null) return null;
+    if (watched >= limit) return { kind: "paused" };
     const player = await playerFor(file.pathname);
     if (!player) return null;
     if (player.state === "failed") return { kind: "failed" };

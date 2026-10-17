@@ -10,6 +10,7 @@ export function testAliases(file,root,here){
   for(const name of ['store','catalog','course','delivery','storage-quota','stream','vault','vault-storage','request-guard','store-request','studio-route','blob'])aliases['@/lib/'+name]=join(here,'upload-route-world.ts');
   aliases['@vercel/blob/client']=join(here,'upload-route-world.ts');
  }
+ if(file==='traffic-admission.test.ts')for(const name of ['redis','store','delivery','secret-box'])aliases['@/lib/'+name]=join(here,'traffic-admission-world.ts');
  if(file==='upload-budget.test.ts')aliases['@/lib/redis']=join(here,'upload-budget-redis.ts');
  if(['commercial-terms-snapshot.test.ts','net-margin.test.ts','customer-base.test.ts','plan-revenue-ceilings.test.ts'].includes(file))aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
  if(file==='ai-spend-provider.test.ts')aliases['@/lib/ai-spend-policy']=join(here,'ai-spend-approved-policy.ts');

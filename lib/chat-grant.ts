@@ -15,9 +15,9 @@
  *   - The pace of a talking room is given only while the room is talking.
  *     A page cannot ask its way into the dearer count.
  *   - The creator is never counted, as on every other page of their store.
- *   - A store with no plan to charge, past the visits it has, is given no
- *     leave: its room is read by asking for it (a button), like a page that
- *     rests, and nothing is counted. A store that pays is never refused.
+ *   - At the finite counted-visit threshold, no new automatic polling grant
+ *     is issued, including for paid plans. Existing grants can live until
+ *     expiry; manual reads and owner activity have separate exposure.
  *
  *   nl:cm:<id>:rg:<member>   the leave a member holds: until when, and what it was counted as
  */
@@ -56,7 +56,7 @@ function parseHeld(raw: unknown): Held | null {
 
 /**
  * Hands a member's page its leave, counting it. "resting" when the store
- * has none to give (no plan to charge, and past its visits); null when it
+ * has none to give (at its finite visit threshold); null when it
  * could not be made or kept, and the page asks by name instead.
  *
  * `talking`: whether the room has been spoken in lately (lib/chat-pace.ts,

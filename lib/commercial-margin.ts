@@ -41,7 +41,8 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 8,
+ schemaVersion: 9,
+ usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: CURRENT_UPLOAD_BUDGET_POLICY },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
  customerBaseRules: CUSTOMER_BASE_RULES,

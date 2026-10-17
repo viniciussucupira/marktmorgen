@@ -2225,27 +2225,19 @@ export default async function StudioPage({
                       style={{ width: `${Math.min(100, Math.max(1, Math.round((watched / videoRoom) * 100)))}%` }}
                     />
                   </div>
-                  {watched > VIDEO_SECONDS_INCLUDED && videoLimit === null ? (
-                    <p className="mt-4 notice notice-warn">
-                      {`You are past the ${VIDEO_HOURS_INCLUDED} hours this month. `}
-                      <strong>Nobody has been cut off and nobody will be.</strong>
-                      {` The hours past it come to ${centsWords(videoOwedCents(watched))} so far, and go on your next invoice.`}
-                    </p>
-                  ) : null}
                   {videoLimit !== null && watched >= videoLimit ? (
                     <p className="mt-4 notice notice-warn">
                       <strong>Your lesson videos are paused.</strong>
                       {` They have been watched for the ${hoursWords(videoLimit)} ${
-                        standing === "trial" ? "a plan covers" : "a store without a paid plan has"
-                      } this month, and your store has no paid plan to carry more. They play again as soon as your plan is paid, or when the month turns. Everything else in your courses is open as usual.`}
+                        standing === "paid" || standing === "trial" ? "your plan covers" : "a store without a paid plan has"
+                      } this month. New playback resumes when capacity is available again. Existing player links may remain valid until they expire. Everything else in your courses is open as usual.`}
                     </p>
                   ) : null}
                   <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                     <div>
                       <dt className="font-semibold text-ink">{`Past the ${VIDEO_HOURS_INCLUDED} hours`}</dt>
                       <dd className="text-ink-soft">
-                        {`${centsWords(VIDEO_CENTS_PER_HOUR_OVER)} for each hour watched above ${VIDEO_HOURS_INCLUDED}, counted to the second, on your next invoice. `}
-                        A student is never cut off for it. We email you the first time a month passes it.
+                        New stream playback pauses at the recorded monthly threshold. The meter is read about once an hour; existing player links may remain valid until they expire.
                       </dd>
                     </div>
                     <div>
@@ -2286,29 +2278,17 @@ export default async function StudioPage({
                       style={{ width: `${visitRoom > 0 ? Math.min(100, Math.max(1, Math.round((visited / visitRoom) * 100))) : 1}%` }}
                     />
                   </div>
-                  {visitLimit === null && visited > visitRoom ? (
-                    <p className="mt-4 notice notice-warn">
-                      {`You are past the ${countWords(visitRoom)} visits this month. `}
-                      <strong>Your store is open, and it stays open.</strong>
-                      {` The visits past it come to ${centsWords(visitsOwedCents(visited, store.tier))} so far, and go on your next invoice.`}
-                    </p>
-                  ) : null}
                   {visitLimit !== null && visited >= visitLimit ? (
                     <p className="mt-4 notice notice-warn">
                       <strong>Your store&rsquo;s pages are resting.</strong>
-                      {` It has had the ${countWords(visitLimit)} visits ${
-                        standing === "trial" ? "a free trial has" : "a store without a paid plan has"
-                      } this month, and has no paid plan to carry more. Its pages open again ${
-                        PLANS_ON_SALE || standing === "trial" ? "as soon as your plan is paid, or when the month turns" : "when the month turns; plans are not on sale yet"
-                      }. Everything your buyers already have is open as usual.`}
+                      {` It has reached its threshold of ${countWords(visitLimit)} counted visits this month. Public pages reopen when the month turns or a plan change provides a larger threshold. Existing orders and downloads remain available; video has its own playback threshold.`}
                     </p>
                   ) : null}
                   <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                     <div>
                       <dt className="font-semibold text-ink">Past your plan&rsquo;s visits</dt>
                       <dd className="text-ink-soft">
-                        {`${centsWords(VISIT_CENTS_PER_THOUSAND_OVER)} for each thousand visits above what your plan covers, counted to the visit, on your next invoice. `}
-                        A store that pays is never taken down for it. We email you the first time a month passes it.
+                        Public pages pause at the recorded monthly threshold. A failed or unreadable measurement also pauses new public-page admission. Existing orders and downloads remain available.
                       </dd>
                     </div>
                     <div>
@@ -2359,10 +2339,7 @@ export default async function StudioPage({
                   What you pay us
                 </p>
                 <p className="mt-2 text-ink-soft">
-                  {feeWords(COMMISSION_LIVE && store.shared).studioPay} Two things are charged by
-                  use, and only if you reach them: visits to your store past
-                  the visits your plan covers, and lesson video watched past
-                  its hours. Both are shown above as they are counted.
+                  {feeWords(COMMISSION_LIVE && store.shared).studioPay} Visits and lesson video have finite monthly thresholds, shown above. Public pages and new video playback pause at their respective thresholds.
                 </p>
 
                 {paid && cancelling && pauseSet && pause ? (

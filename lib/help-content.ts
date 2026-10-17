@@ -6,7 +6,8 @@ import {answerAllowanceWords} from "@/lib/answers-rules";
  * describe, so the two can never disagree.
  */
 import { countWords } from "@/lib/traffic-rules";
-import { centsWords } from "@/lib/watch-rules";
+import { centsWords, VIDEO_HOURS_INCLUDED } from "@/lib/watch-rules";
+import { SETUP_VIDEO_HOURS } from "@/lib/plan-standing";
 import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, perOrderWords } from "@/lib/order-rules";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import { isDomainsConfigured } from "@/lib/domains";
@@ -78,7 +79,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "What will it cost?",
         a: [
           feeWords().costLine,
-          `Three things are charged by use, and only if you reach them, all added to your next invoice. Lesson video watched past 400 hours in a month is $0.03 for each hour. Visits to your store past what your plan covers are $0.50 for each thousand. Orders past what your plan covers are ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand. Your studio shows each as it is counted, and none of them ever takes your store down, turns a buyer away or cuts a student off. Downloads are never charged for.`,
+          `Visits and lesson video have finite monthly thresholds. Public pages pause at the plan's counted-visit threshold, and new lesson video playback pauses at ${VIDEO_HOURS_INCLUDED} watched hours. These thresholds do not authorize unlimited overages. Orders beyond the plan's included count retain their separate published billing terms.`,
           "The price is published on the home page. If it ever changes, existing subscribers are told before it applies to them.",
         ],
       },
@@ -288,8 +289,8 @@ export const HELP_SECTIONS: HelpSection[] = [
         a: [
           "Store covers 3,000 visits a month, Studio 10,000, and Scale 50,000. A visit is one person opening your store on one day, however many of its pages they look at. You are never counted when you are signed in, and neither is a robot that says it is one.",
           "A buyer who comes back counts the same way: a student or a member who opens a course or your community on a day is that day's visit, once. A subscriber to a private podcast is one visit on each day their app checks for episodes. Your community's live room checks for new messages for as long as it is open in front of a member, so it counts by the 10 minutes it is open, for each member: 2.6 visits while people are talking, when it checks every 5 seconds, and 0.6 of a visit while the room is quiet. A room in a background tab, or one nobody has touched for 20 minutes, checks nothing and counts nothing.",
-          "Past your plan's figure, visits are $0.50 for each thousand, counted to the visit and added to your next invoice. Your store is never taken down for it. We email you the first time a month passes it, and your studio shows the count as it grows.",
-          "A store with no paid plan has nothing a charge can be added to, so its public pages rest past its visits until the plan is paid or the month turns: 3,000 visits a month in the free trial, and 500 a month before a plan starts and after one ends. A visitor is told the page will be open again soon. What your buyers already have stays open: their orders, downloads, lessons, podcasts and memberships. The live room of such a store stops checking by itself, and shows new messages when a member presses a button.",
+          "At your plan's counted-visit threshold, public pages rest until the next calendar month or a plan change gives the store a larger threshold. Your studio shows the recorded count. A failed or unreadable count also pauses new public-page admission.",
+          "Public pages also rest at 3,000 counted visits in the free trial and 500 before a plan starts or after it ends. Existing orders, downloads, lessons, podcasts and memberships are not closed by the public-page visit threshold. Lesson video has its own finite playback threshold. The live room stops checking by itself and shows new messages when a member presses a button.",
         ],
       },
       {
@@ -567,7 +568,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           "If your buyers already gather in a Discord server, connect it from the studio and choose which products give which roles there. A buyer presses \u201cJoin the Discord\u201d after paying or on their orders, says yes on Discord's own page, and is in with those roles. Everyone is checked again every six hours against your Stripe account, and the roles go when a membership ends or a purchase is refunded; when Stripe cannot be reached, nothing is taken. You can also have people removed from the server once their access ends.",
           "Under every lesson, students can ask questions and answer each other, under a name they choose; their email address is never shown, and only the course's students and you can read what they write. You answer as the creator from the lesson itself or from the course's page in your studio, the student gets an email with your answer, and your phone can tell you when a comment comes. You can hide or delete any comment, or switch comments off for the course without deleting them.",
           "The course can be sold once, in a payment plan, or as a membership that stays open while the member pays.",
-          "Lesson videos are covered for 400 hours watched a month across your store, counted by the player as your students watch. Past that it is $0.03 for each hour watched, on your next invoice, and a student is never cut off for it. A store with no paid plan has nothing a charge can be added to, so its lesson videos pause past its hours until the plan is paid or the month turns: 400 hours a month in the free trial, and 10 hours a month before a plan starts and after one ends.",
+          `Lesson video playback has a finite monthly threshold: ${VIDEO_HOURS_INCLUDED} watched hours on a paid plan or in its free trial, and ${SETUP_VIDEO_HOURS} hours before a plan starts or after it ends. New playback pauses at that threshold until capacity is available again. Existing player links can remain valid until they expire; raw video files use the download path instead.`, 
           `Captions can be uploaded as a .vtt or .srt file in any of 28 languages, or written by AI from what is said in the video: in the language spoken and up to two more, ${dollars(CENTS_PER_MINUTE)} a minute of video for each language, never less than ${dollars(MIN_CENTS)} a request. The price is shown before you confirm and charged then to the card your plan is paid with; anything not delivered within ${GIVE_UP_HOURS} hours is refunded. Read them before your students rely on them: a machine wrote them.`,
         ],
       },

@@ -66,14 +66,12 @@ export function visitsOwedCents(visits: number, tier: Tier): number {
   return Math.floor(((visits - included) * VISIT_CENTS_PER_THOUSAND_OVER) / 1000);
 }
 
-/**
- * How many visits a store's pages are shown for in a month; null for a
- * store that pays, which is never rested: its visits past the plan are
- * charged instead.
+/** Finite monthly counted-visit threshold for every standing, including paid plans.
+ * This is not a request/byte ceiling: provider exposure still needs its own bound.
  */
-export function visitLimitFor(store: PlanFields, nowSeconds = Date.now() / 1000): number | null {
+export function visitLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = Date.now() / 1000): number {
   const standing = standingOf(store, nowSeconds);
-  if (standing === "paid") return null;
+  if (standing === "paid") return visitsIncluded(store.tier ?? "creator");
   return standing === "trial" ? TRIAL_VISITS : SETUP_VISITS;
 }
 

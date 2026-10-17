@@ -179,17 +179,36 @@ export async function visitedFolders(month = monthKey()): Promise<string[]> {
   return Array.isArray(raw) ? raw.filter((f): f is string => typeof f === "string" && FOLDER_PATTERN.test(f)).sort() : [];
 }
 
-/**
- * Whether a store's pages are resting for the remainder of the month: it
- * has no plan that a visit can be charged to, and has had the visits such a
- * store has (lib/traffic-rules.ts). Never true for a store that pays, which
- * is not asked about at all.
- *
- * Answers false when the count cannot be read: a figure we do not have must
- * not take a store's page down.
+/** Strict admission read. Display/billing fallbacks must never authorize new work.
+ * A null key is the existing meter's unused-month representation; this does
+ * not establish freshness or defend against acknowledged counter deletion.
+ */
+export async function trafficForAdmission(folder: string, month = monthKey()): Promise<Traffic | null> {
+  if (!isRedisConfigured() || !FOLDER_PATTERN.test(folder) || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null;
+  try {
+    const results = await redisPipeline([["MGET", countKey(folder, month), partsKey(folder, month)]]);
+    if (results.length !== 1 || !Array.isArray(results[0]) || results[0].length !== 2) return null;
+    const values: number[] = [];
+    for (const raw of results[0]) {
+      if (raw === null) { values.push(0); continue; }
+      if ((typeof raw !== "string" && typeof raw !== "number") || (typeof raw === "string" && !/^(0|[1-9][0-9]*)$/.test(raw))) return null;
+      const value = Number(raw);
+      if (!Number.isSafeInteger(value) || value < 0) return null;
+      values.push(value);
+    }
+    const [people, parts] = values;
+    const visits = people + Math.floor(parts / PARTS_PER_VISIT);
+    return Number.isSafeInteger(visits) ? { people, parts, visits } : null;
+  } catch { return null; }
+}
+
+/** Finite plan threshold. Unknown measurements pause new page/room admission.
+ * Counted visits are not an atomic request reservation or a supplier-byte cap.
  */
 export async function isResting(store: Store, now = Date.now()): Promise<boolean> {
-  const limit = visitLimitFor(store, now / 1000);
-  if (limit === null) return false;
-  return (await visitsIn(await storeFolder(storeRef(store)), monthKey(new Date(now)))) >= limit;
+  try {
+    const limit = visitLimitFor(store, now / 1000);
+    const traffic = await trafficForAdmission(await storeFolder(storeRef(store)), monthKey(new Date(now)));
+    return traffic === null || traffic.visits >= limit;
+  } catch { return true; }
 }

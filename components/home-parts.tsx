@@ -410,7 +410,7 @@ export function HeroFlow() {
  */
 const INCLUDED = [
   "Your own store address, live the moment you take it",
-  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} visits to your store a month covered; past that, ${centsWords(VISIT_CENTS_PER_THOUSAND_OVER)} for each thousand, and your store is never taken down for being busy`,
+  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} counted visits to your store a month; public pages pause at the monthly threshold`,
   `${ORDERS_INCLUDED.creator.toLocaleString("en-US")} orders a month covered${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; past that, ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, and a buyer is never turned away`,
   "Buyers pay into your own Stripe account",
   "Up to 2,000 products: files, courses, memberships, paid calls and live sessions",
@@ -422,7 +422,7 @@ const INCLUDED = [
   "An affiliate program with a page for each affiliate, paid from your own PayPal in one press or on payday by itself",
   "Your own numbers counted without cookies, as CSV files too, and ad pixels for Meta, Google, TikTok and Pinterest — those are the platforms' own, and visitors are asked first where the law requires it",
   "License keys, stamped PDFs, course quizzes and certificates",
-  `Lesson videos that play in the size each connection can carry, with ${VIDEO_HOURS_INCLUDED} hours watched a month covered; past that, ${centsWords(VIDEO_CENTS_PER_HOUR_OVER)} for each hour watched, and a student is never cut off`,
+  `Lesson videos with a finite threshold of ${VIDEO_HOURS_INCLUDED} watched hours a month; new playback pauses at the threshold`,
   "A private video room for each booking if you want one, and calendar sync for your calls",
   "Mailchimp, Kit, beehiiv or MailerLite built in, and webhooks for Zapier or Make",
   "A team of you plus up to five people per store, each with a role, and notifications of sales on your phone",

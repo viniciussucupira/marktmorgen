@@ -318,7 +318,7 @@ async function main(): Promise<void> {
   is("and the store is put in line to be read", typeof (await redis.pipeline([["ZSCORE", "nl:watch:due", dee.folder]]))[0], "string");
   await watched(dee.folder, thisMonth, VIDEO_SECONDS_INCLUDED);
   is("at the hours it is paused", await lessonVideo(file, VIDEO_SECONDS_INCLUDED), { kind: "paused" });
-  is("a store that pays is never paused, at any number", [(await watched(dee.folder, thisMonth, VIDEO_SECONDS_INCLUDED * 50), await lessonVideo(file, null))?.kind], ["stream"]);
+  is("a null limit cannot bypass a paid store playback threshold", [(await watched(dee.folder, thisMonth, VIDEO_SECONDS_INCLUDED * 50), await lessonVideo(file, null))?.kind], [undefined]);
 
   part("The daily run");
   lines.length = 0;
@@ -343,16 +343,16 @@ async function main(): Promise<void> {
   const hours = `${VIDEO_HOURS_INCLUDED} hours`;
   const price = centsWords(VIDEO_CENTS_PER_HOUR_OVER);
   const terms = read("app/terms/page.tsx");
-  is("the Terms read the hours and the price from where the bill is made", [/VIDEO_HOURS_INCLUDED/.test(terms), /centsWords\(VIDEO_CENTS_PER_HOUR_OVER\)/.test(terms)], [true, true]);
-  is("and say a student is never cut off, and what happens with no paid plan", [/A student\s+is never cut off because a store has passed its hours/.test(terms), /paused past its hours until the plan is paid\s+or the month turns/.test(terms)], [true, true]);
+  is("the Terms disclose a finite video threshold", [/VIDEO_HOURS_INCLUDED/.test(terms), /New playback pauses/.test(terms)], [true, true]);
+  is("the Terms explain existing player links and separate file delivery", [/Existing player/.test(terms), /separate download path/.test(terms)], [true, true]);
   is("and no longer say a download is charged for", [/Nothing is charged for downloads/.test(terms), /OVER_ALLOWANCE/.test(terms)], [true, false]);
   const studio = read("app/studio/page.tsx");
-  is("the studio shows the hours, the price and what it has come to", [/VIDEO_HOURS_INCLUDED/.test(studio), /centsWords\(VIDEO_CENTS_PER_HOUR_OVER\)/.test(studio), /videoOwedCents\(watched\)/.test(studio)], [true, true, true]);
-  is("the price list on the home page has it beside the plans", /VIDEO_HOURS_INCLUDED[\s\S]{0,200}VIDEO_CENTS_PER_HOUR_OVER/.test(read("components/home-parts.tsx")), true);
+  is("the studio shows the hours and the playback pause", [/VIDEO_HOURS_INCLUDED/.test(studio), /New stream playback pauses/.test(studio)], [true, true]);
+  is("the home page discloses finite video admission", /new playback pauses at the threshold/.test(read("components/home-parts.tsx")), true);
   const help = read("lib/help-content.ts");
   const features = read("lib/feature-pages.ts");
-  is("the help pages give the same figures", [help.includes(`past ${hours} in a month is ${price} for each hour`), help.includes(`covered for ${hours} watched a month`)], [true, true]);
-  is("so does the page about courses", [features.includes(`covered for ${hours} watched a month across your store`), features.includes(`it is ${price} for each hour watched`)], [true, true]);
+  is("the help explains the finite playback threshold", help.includes("New playback pauses at that threshold"), true);
+  is("the course feature page explains pauses", features.includes("New playback pauses at the recorded threshold"), true);
   is("nothing still says video counts as a download", [/Videos watched count toward/.test(help), /Videos watched count toward/.test(features)], [false, false]);
   is("a lesson's video is no longer counted by the page that opens it", /recordDelivery\(file\.pathname, viewingBytes/.test(read("lib/learn.ts")), false);
   is("the daily job is the one that bills, and it is scheduled", [/settleAll/.test(read("app/api/cron/usage/route.ts")), /\/api\/cron\/usage/.test(read("vercel.json"))], [true, true]);

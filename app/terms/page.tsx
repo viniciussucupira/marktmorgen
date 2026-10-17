@@ -341,37 +341,21 @@ export default function TermsPage() {
           Nothing is charged for downloads, inside that figure or past it.
         </p>
         <p>
-          Two things here are billed by use: lesson video, and visits to
-          your store. Each is covered up to a published figure and charged
-          past it, rather than limited, so that nobody you sold to is cut off
-          and your store is never taken down for being busy.
+          Visits and lesson video have finite monthly admission thresholds.
+          Public pages pause at the recorded counted-visit threshold. New stream
+          playback pauses at the recorded watched-time threshold; an unavailable
+          or invalid admission measurement does not authorize new playback.
         </p>
         <p>
-          Lesson video is
-          measured by the time your students spend watching your lesson
-          videos, as the video player counts it, added up across your store
-          for each calendar month and read about once an hour. Your plan
-          covers {VIDEO_HOURS_INCLUDED} hours a month. Past that, video is
-          charged rather than limited: {centsWords(VIDEO_CENTS_PER_HOUR_OVER)}{" "}
-          for each hour watched above {VIDEO_HOURS_INCLUDED} in a calendar
-          month, counted to the second and rounded down to the cent, added to
-          your next subscription invoice on the card you already pay with. On
-          a plan paid by the year, those lines are invoiced monthly. A student
-          is never cut off because a store has passed its hours.
-        </p>
-        <p>
-          You are emailed automatically the first time a month&apos;s
-          watching passes the hours your plan covers, with your own figure in
-          it, and the same figure is in your studio at any time. A month in
-          which you stay inside them costs nothing beyond your plan.
-        </p>
-        <p>
-          A store with no paid plan has nothing a charge can be added to, so
-          its lesson videos are paused past its hours until the plan is paid
-          or the month turns: {VIDEO_HOURS_INCLUDED} hours a month in the
-          free trial, and {SETUP_VIDEO_HOURS} hours a month before a plan is
-          started and after one has ended. Nothing is charged for those
-          hours, and everything else in a course stays open.
+          <strong className="text-black">Lesson video.</strong> Paid plans and
+          free trials have {VIDEO_HOURS_INCLUDED} watched hours a month. Before
+          a plan starts and after one ends, the threshold is {SETUP_VIDEO_HOURS}
+          hours. New playback pauses at the applicable threshold until the next
+          calendar month or a plan change provides capacity. Existing player
+          links may remain valid until they expire. Watching is measured about
+          once an hour; the meter is not a limit on transferred bytes. Video
+          sold or served as a file follows the separate download path. Other
+          course content remains available.
         </p>
         <p>
           Captions written by AI for a lesson&apos;s video are bought when you
@@ -395,14 +379,9 @@ export default function TermsPage() {
           calendar month: {countWords(VISITS_INCLUDED.creator)} on{" "}
           {PLAN_TITLES.creator}, {countWords(VISITS_INCLUDED.pro)} on{" "}
           {PLAN_TITLES.pro}, and {countWords(VISITS_INCLUDED.scale)} on{" "}
-          {PLAN_TITLES.scale}. Past that, visits are charged rather than
-          limited: {centsWords(VISIT_CENTS_PER_THOUSAND_OVER)} for each
-          thousand visits above your plan&apos;s figure in a calendar month,
-          counted to the visit and rounded down to the cent, added to your
-          next subscription invoice the same way video is. A store that pays
-          is never taken down because it has passed its visits, and you are
-          emailed automatically the first time a month passes them, with your
-          own figure in it.
+          {PLAN_TITLES.scale}. At the threshold, public pages rest until the
+          next calendar month or a plan change provides a larger threshold.
+          An unreadable count also pauses new public-page admission.
         </p>
         <p>
           A buyer who comes back is a visit like anybody else: a student or
@@ -445,7 +424,7 @@ export default function TermsPage() {
           {centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand orders
           above your plan&apos;s figure in a calendar month, counted to the
           order and rounded down to the cent, added to your next subscription
-          invoice the same way visits are. Nothing is ever refused to a buyer
+          invoice under the published order terms. Nothing is ever refused to a buyer
           because a store has passed its orders, and you are emailed
           automatically the first time a month passes them.
           {feeWords().ordersShared} In the free trial, free copies stop for
