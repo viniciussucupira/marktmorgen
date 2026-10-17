@@ -39,6 +39,7 @@ import { countOrder } from "@/lib/orders";
 import { shippingWords } from "@/lib/buyer-words/shipping";
 import { shippingAddressOf, wasShipped } from "@/lib/shipping-address";
 import { recordPackage } from "@/lib/call-packages";
+import { type PaidSession, markPaid, sendReceipt } from "@/lib/payment-request-store";
 import { type ThanksNote } from "@/lib/thanks-note";
 import { readThanksNote } from "@/lib/thanks-note-store";
 import { videoAddress } from "@/lib/sales-page";
@@ -420,6 +421,8 @@ async function confirmOnce(
   read.session = session;
   // A gift through "Support my work" has nothing to hand over or confirm (lib/store-tips.ts).
   if (session.metadata?.kind === "tip") return "skip";
+  // A payment request (lib/payment-requests.ts): written down as paid, and its receipt emailed.
+  if (session.metadata?.kind === "request") return confirmRequest(store, session, key);
   const listings = await listingsNamed(store, session.metadata);
   // The products it hands over, a bundle's each, for what it keeps (lib/store-data-rules.ts).
   read.items = listings.reduce((n, product) => n + (isBundle(product) ? (product.bundle?.length ?? 1) : 1), 0) || 1;
@@ -469,6 +472,27 @@ async function confirmOnce(
   if (sent && typeof session.amount_total === "number" && session.amount_total > 0) {
     const paidAt = typeof session.created === "number" ? session.created : Math.floor(Date.now() / 1000);
     await scheduleReviewAsk(store, sessionId, paidAt).catch((error) => console.error("putting an order on the review list failed", error));
+  }
+  return sent ? "sent" : "failed";
+}
+
+/**
+ * A paid payment request (lib/payment-request-store.ts): written down as
+ * paid, once, and its receipt emailed to the address it was sent to, as an
+ * order's own email. The order is counted by confirmPurchase, as any.
+ */
+async function confirmRequest(store: Store, session: SessionRecord, key: string): Promise<ConfirmOutcome> {
+  const meta = session.metadata ?? {};
+  if (!isSettled(session) || !saleHandles(store).has(meta.store ?? "") || typeof meta.request !== "string") return "skip";
+  const marked = await markPaid(store, meta.request, session as PaidSession);
+  if (!marked) return "skip";
+  const [claimed] = await redisPipeline([["SET", key, "sending", "NX", "EX", SENDING_MARK_SECONDS]]);
+  if (claimed === null) return "already";
+  let sent = false;
+  try {
+    sent = await sendReceipt({ store, request: marked.request, base: storeBase(store), from: fromStore(store), idempotencyKey: `nimbus-confirm:${String(session.id)}` });
+  } finally {
+    await redisPipeline(sent ? [["SET", key, "sent", "EX", SENT_MARK_SECONDS]] : [["DEL", key]]);
   }
   return sent ? "sent" : "failed";
 }

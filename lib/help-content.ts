@@ -35,6 +35,7 @@ import { PLAN_AT, feeWords, planPriceWords, yearSavingWords } from "@/lib/fee-wo
 import { IMPORTS_PER_SHARE_MONTH, MAX_SHARE_DAYS, PREVIEWS_PER_SHARE_MONTH, SHARE_LIMITS, bytesWords } from "@/lib/funnel-share-rules";
 import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
 import { ERASE_STUDIO_UNITS } from "@/lib/erasure-rules";
+import { KEEP_DAYS, MAX_AUTO_REMINDERS, MAX_LINES, MAX_PER_PERSON, MAX_SENDS, OPEN_DAYS, REMIND_EVERY_DAYS, REQUEST_LIMITS } from "@/lib/payment-request-rules";
 
 /** An anchor for one answer, from its question. */
 export function answerId(q: string): string {
@@ -188,6 +189,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         a: [
           feeWords().fromASale,
           "Stripe charges its own processing fee on each payment, published on Stripe's own pricing page, and that is taken on your account by Stripe.",
+        ],
+      },
+      {
+        q: "How do I ask one person to pay me a custom amount?",
+        a: [
+          `Open Payment requests in your studio (or press Request payment on a deal with a person): their email, up to ${MAX_LINES} lines of what it is for, a note, a due date if you want one and up to ${MAX_AUTO_REMINDERS} reminders ${REMIND_EVERY_DAYS} days apart. They get one email from your store's name with a link to a page that shows who is asking, what for and the total, and pay on Stripe's page, on your own Stripe account. Paid, they get a receipt by email and the page becomes one they can print.`,
+          `It is paid like any sale: it is listed with your sales, your plan's share of a sale applies, it is one of the month's orders, sales tax and Stripe's invoice apply where you switched them on, and you refund it from Stripe. Nothing is added to what they pay: no fee, no interest, no late charge. It earns no affiliate or partner share. The request and each reminder are each one of your store's emails for the month, and do not go once those are used.`,
+          `Open at once: ${REQUEST_LIMITS.creator.open} on ${PLAN_TITLES.creator}, ${REQUEST_LIMITS.pro.open} on ${PLAN_TITLES.pro} and ${REQUEST_LIMITS.scale.open} on ${PLAN_TITLES.scale}; ${REQUEST_LIMITS.creator.kept.toLocaleString("en-US")}, ${REQUEST_LIMITS.pro.kept.toLocaleString("en-US")} and ${REQUEST_LIMITS.scale.kept.toLocaleString("en-US")} kept, and ${MAX_PER_PERSON} for one person. Each link takes payment for ${OPEN_DAYS} days, a request is kept for ${KEEP_DAYS} days, and no request is emailed more than ${MAX_SENDS} times or twice in a day. Send one only to someone who agreed to pay you for it. A single payment for now: installments are not offered on requests.`,
         ],
       },
       {

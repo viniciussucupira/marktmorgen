@@ -68,7 +68,7 @@ const KIND_WORDS: Record<StageKind, string> = { open: "Open", won: "Won", lost: 
  * who it is with, and a way to move it on. The stages are the store's own,
  * and so are the fields kept about each person, made here too.
  */
-export function DealsBoard({ deals, stages, fields, currency, assignees, today, initialFilter = "all" }: { deals: Deal[]; stages: Stage[]; fields: CrmField[]; currency: string; assignees: string[]; today: string; initialFilter?: DealActionFilter }) {
+export function DealsBoard({ deals, stages, fields, currency, assignees, today, initialFilter = "all", requestHref }: { deals: Deal[]; stages: Stage[]; fields: CrmField[]; currency: string; assignees: string[]; today: string; initialFilter?: DealActionFilter; /** The payment requests page, for a role that may send them; a deal with a person links to it, filled in. */ requestHref?: string }) {
   const router = useRouter();
   const money = (cents: number) => formatMoney(cents, currency);
   const [draft, setDraft] = useState<DealDraft | null>(null);
@@ -318,6 +318,14 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
                         <button type="button" className="btn btn-secondary btn-sm" disabled={locked || editing || writeUnconfirmed} onClick={() => void run({ action: "undeal", id: deal.id }, "Deal removed.")} aria-label={`Remove ${deal.title}`}>
                           <Icon name="minus" size={16} />
                         </button>
+                        {requestHref && deal.email ? (
+                          <a
+                            className="btn btn-secondary btn-sm"
+                            href={`${requestHref}${requestHref.includes("?") ? "&" : "?"}${new URLSearchParams({ email: deal.email, for: deal.title, ...(deal.cents ? { amount: moneyField(deal.cents, currency) } : {}) }).toString()}`}
+                          >
+                            <Icon name="receipt" size={16} /> Request payment
+                          </a>
+                        ) : null}
                       </div>
                     </li>
                   ))}

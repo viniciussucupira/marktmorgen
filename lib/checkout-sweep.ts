@@ -65,6 +65,7 @@ import { rememberBuyers } from "@/lib/buyer-library";
 import { isHouseStore } from "@/lib/house-store";
 import { deliveredIds } from "@/lib/bundle-rules";
 import { sendPaidOrders, sendRenewals, sendsFromServer } from "@/lib/ad-events";
+import { settleStoreList, storesWithRequests } from "@/lib/payment-request-store";
 
 const CURSOR_KEY = "nl:sweep:cursor";
 /** At most this many pages of a hundred checkouts are read per store per pass. */
@@ -82,10 +83,14 @@ export type SweepCounts = {
   listed: number;
 };
 
-/** Whether a store has anything this pass could send about. */
-function worthAsking(store: Store): boolean {
+/**
+ * Whether a store has anything this pass could send about. `requesting`:
+ * it has open payment requests (lib/payment-request-store.ts), whose
+ * receipts are confirmed here like any sale's, even with nothing listed.
+ */
+function worthAsking(store: Store, requesting = false): boolean {
   return (
-    (canConfirm(store) && sellsThings(store)) ||
+    (canConfirm(store) && (sellsThings(store) || requesting)) ||
     (Boolean(store.stripeAccountId) && affiliatesOn(store)) ||
     storeHasKeys(store) ||
     listensToSales(store) ||
@@ -95,7 +100,7 @@ function worthAsking(store: Store): boolean {
 }
 
 /** One store: its checkouts of the last day, each handed to what it needs. */
-async function sweepStore(store: Store, counts: SweepCounts, deadline: number, reviewed: boolean): Promise<void> {
+async function sweepStore(store: Store, counts: SweepCounts, deadline: number, reviewed: boolean, requesting = false): Promise<void> {
   // Refunds first: a key that should no longer open anything matters more
   // than a reminder. One failing never stops the checkouts below.
   if (storeHasKeys(store)) {
@@ -143,7 +148,7 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
       console.error("reading a store's refunds for reviews failed", store.handle, error);
     }
   }
-  if (!worthAsking(store)) return;
+  if (!worthAsking(store, requesting)) return;
   // A membership's renewals, sent to the creator's ad platforms as purchases
   // of their own (lib/ad-events.ts): one read of the day's invoices, only on
   // a store that sends from the server.
@@ -176,8 +181,9 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
         ? await Promise.all([codeOwners(store), listPartners(store)])
         : [new Map<string, string>(), []];
       for (const row of paid) {
-        // A gift through "Support my work" sold nothing, so it earns nobody a share (lib/store-tips.ts).
-        if (row.metadata?.kind === "tip") continue;
+        // A gift through "Support my work" sold nothing, so it earns nobody a share (lib/store-tips.ts),
+        // and a payment request is the creator's own bill to someone they already deal with (lib/payment-requests.ts).
+        if (row.metadata?.kind === "tip" || row.metadata?.kind === "request") continue;
         const code = owners.size ? affiliateForCodes(row as { discounts?: unknown }, owners) : "";
         if (row.metadata?.via || code || partners.length) {
           await noteSession(store, row as Parameters<typeof noteSession>[1], owners, partners);
@@ -278,6 +284,8 @@ async function sweepStore(store: Store, counts: SweepCounts, deadline: number, r
     if (listed.has_more !== true || !last || typeof last.id !== "string") break;
     after = last.id;
   }
+  // A store with no open payment request left comes off their list, once this pass has confirmed the day's.
+  if (requesting) await settleStoreList(store.sid).catch(() => undefined);
 }
 
 /**
@@ -296,6 +304,8 @@ export async function sweepCheckouts(deadline: number): Promise<SweepCounts> {
   const [savedCursor, savedDone] = typeof saved === "string" ? saved.split("|") : ["0", "0"];
   let cursor = /^\d+$/.test(savedCursor ?? "") ? savedCursor : "0";
   let skip = Number(savedDone) || 0;
+  // The stores with open payment requests, read once a run.
+  const requesting = await storesWithRequests().catch(() => new Set<string>());
 
   while (Date.now() < deadline) {
     const { stores, next } = await storesAfter(cursor);
@@ -307,10 +317,11 @@ export async function sweepCheckouts(deadline: number): Promise<SweepCounts> {
       }
       if (Date.now() >= deadline) break;
       const reviewed = Boolean(store.stripeAccountId) && (await storeHasReviews(store).catch(() => false));
-      if (worthAsking(store) || reviewed || store.paypalSeller) {
+      const asks = Boolean(store.sid) && requesting.has(store.sid);
+      if (worthAsking(store, asks) || reviewed || store.paypalSeller) {
         counts.stores += 1;
         try {
-          await sweepStore(store, counts, deadline, reviewed);
+          await sweepStore(store, counts, deadline, reviewed, asks);
         } catch (error) {
           // One store's account refusing, or Stripe having a moment, does not
           // hold up everyone after it. It is reached again next time round.
