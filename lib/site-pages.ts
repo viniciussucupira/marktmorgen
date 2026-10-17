@@ -506,7 +506,7 @@ export const PAGES: TopicPage[] = [
       {
         kind: "note",
         title: "Where things stand today",
-        body: `Today you can log in without a password, take a store address that is yours, write what you sell with its price, upload the file each one delivers, connect your own Stripe account, and be paid on it — the buyer's card is charged on your account, ${feeWords().onTop}, and the file goes out the second Stripe confirms. The demo store is still there to try first, with a test card. Our planned subscription is: ${planPriceWords("creator")}, or ${planPriceWords("pro")} on Studio with email to your list, free for the first 14 days, and it is what switches your page's checkout on. Everything marked as not available is exactly that — not promised, not dated. A line only changes when you can open it and try it.`,
+        body: "New paid plans and payment activation are paused while we review the full costs and tax requirements. A Stripe connection alone does not enable selling. You can try the demo before deciding; demo payments use a test card and do not charge real money. Existing accounts keep their contracted rights and access to recovery, export and cancellation. Published plan prices describe the planned offer, not an invitation to start paying today. We have not announced an opening date.",
       },
       {
         kind: "note",
@@ -530,7 +530,7 @@ export const PAGES: TopicPage[] = [
         kind: "steps",
         title: "The short answers",
         items: [
-          { title: "Can I sign up and sell today?", body: "Yes. You take your store address, put what you sell on the page, connect your own Stripe account, and a buyer can pay for it — on your account, " + feeWords().onTop + `. Until Stripe clears your account, your page says plainly that it cannot take a payment, so nobody's time is wasted. Taking payments needs the ${PLAN_AT.creator} plan, and its first 14 days are free.` },
+          { title: "Can I sign up and sell today?", body: "New paid plans and payment activation are currently paused. Connecting Stripe does not bypass this pause. You can explore the demo with test payments; no opening date has been announced. If you already have an account, your contracted rights, recovery, exports and cancellation remain available." },
           { title: "Who holds the money from my sales?", body: feeWords().whoHolds },
           { title: "What happens if Marktmorgen closes?", body: "Your Stripe account, your customers and your files were never ours. Your list downloads from your studio at any time, and a shutdown comes with at least 30 days' notice in writing." },
           { title: "Who is behind this?", body: "A small independent studio, working in public. Support is in English, in writing, and a person answers it." },
