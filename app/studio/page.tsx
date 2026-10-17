@@ -152,7 +152,7 @@ import {
 import { ORDERS_PAGE_SIZE, canSell, listSales } from "@/lib/store-checkout";
 import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords, deliveredThisMonth } from "@/lib/delivery";
 import { watchedForAdmission } from "@/lib/watch";
-import { centsWords, hoursWords } from "@/lib/watch-rules";
+import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closingOf } from "@/lib/plan-closing";
@@ -166,9 +166,9 @@ import {
 } from "@/lib/billing";
 import { STORAGE_BRAKE_BYTES, storageBrakeFor, storageUsed, storageWords } from "@/lib/storage-quota";
 import { trafficForAdmission } from "@/lib/traffic";
-import { ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, ordersIncluded, ordersOwedCents, ordersWords, perOrderWords } from "@/lib/order-rules";
+import { TRIAL_ORDERS, ordersIncluded, ordersWords } from "@/lib/order-rules";
 import { ordersIn } from "@/lib/orders";
-import { SETUP_VISITS, TRIAL_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor, visitsIncluded, visitsOwedCents, visitsWords } from "@/lib/traffic-rules";
+import { BUYER_RESERVE_BPS, SETUP_VISITS, TRIAL_VISITS, countWords, publicVisitLimit, visitLimitFor, visitsIncluded, visitsWords } from "@/lib/traffic-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { COMMISSION_LIVE, canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
@@ -2270,39 +2270,42 @@ export default async function StudioPage({
                 </div>
 
                 {/*
-                  Visits: the other thing here that is charged by use
-                  (lib/traffic-rules.ts), said the same way and from the
-                  same numbers the invoice is made from.
+                  Visits (lib/traffic-rules.ts): never billed since 17 October
+                  2026. Public pages rest at 95% of the month's figure; buyers'
+                  own pages go on to the whole figure.
                 */}
                 <div className="mt-6 border-t border-line pt-5">
                   <UsageMeter label="Visits this month" used={trafficReading?.visits ?? null} limit={visitRoom} format={visitsWords}
                     unavailable="Usage measurement is temporarily unavailable. Public pages are paused until it can be verified."
                     description="A counted visit is one person opening your store on one day. Community room activity also contributes to this count." />
-                  {trafficReading !== null && visitLimit !== null && visited >= visitLimit ? (
+                  {trafficReading !== null && visitLimit !== null && visited >= publicVisitLimit(visitLimit) ? (
                     <p className="mt-4 notice notice-warn">
-                      <strong>Your store&rsquo;s pages are resting.</strong>
-                      {` It has reached its threshold of ${countWords(visitLimit)} counted visits this month. Public pages reopen when the month turns or a plan change provides a larger threshold. Existing orders and downloads remain available; video has its own playback threshold.`}
+                      <strong>{visited >= visitLimit ? "Your store\u2019s pages, and your buyers\u2019 pages, are resting." : "Your store\u2019s public pages are resting."}</strong>
+                      {visited >= visitLimit
+                        ? ` It has used all ${countWords(visitLimit)} counted visits this month, so courses, the community and podcasts rest too, with a page that tells your buyers their access is kept. Everything opens again when the month turns${standing === "paid" ? " or on a larger plan" : ""}.`
+                        : ` It has reached ${countWords(publicVisitLimit(visitLimit))} of its ${countWords(visitLimit)} counted visits this month. Your buyers\u2019 courses, community and podcasts stay open for the last ${countWords(visitLimit - publicVisitLimit(visitLimit))}. Public pages open again when the month turns${standing === "paid" ? " or on a larger plan" : ""}.`}
                     </p>
                   ) : null}
                   <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                     <div>
-                      <dt className="font-semibold text-ink">Past your plan&rsquo;s visits</dt>
+                      <dt className="font-semibold text-ink">Where a month&rsquo;s visits stop</dt>
                       <dd className="text-ink-soft">
-                        Public pages pause at the recorded monthly threshold. A failed or unreadable measurement also pauses new public-page admission. Existing orders and downloads remain available.
+                        {`Your page, products, blog and collections rest at ${(10_000 - BUYER_RESERVE_BPS) / 100}% of the month\u2019s visits; the last ${BUYER_RESERVE_BPS / 100}% are kept for your buyers\u2019 courses, community and podcasts. Visits are never billed. A checkout already open always finishes. A failed or unreadable measurement also pauses new public-page admission.`}
                       </dd>
                     </div>
                     <div>
                       <dt className="font-semibold text-ink">Without a paid plan</dt>
                       <dd className="text-ink-soft">
-                        {`In the free trial a store has ${countWords(TRIAL_VISITS)} visits a month; before a plan starts and after one ends, ${countWords(SETUP_VISITS)}. Past that its pages rest `}
-                        until the plan is paid or the month turns. Nothing is charged for those visits, and what a buyer already has stays open.
+                        {`In the free trial a store has ${countWords(TRIAL_VISITS)} visits a month; before a plan starts and after one ends, ${countWords(SETUP_VISITS)}. They stop the same way, `}
+                        until the plan is paid or the month turns. Nothing is charged for visits.
                       </dd>
                     </div>
                   </dl>
                 </div>
                 {/*
-                  Orders: charged by use like visits (lib/order-rules.ts),
-                  from the same count the invoice is made from.
+                  Orders (lib/order-rules.ts): never billed since 17 October
+                  2026; a paid store's new orders stop at its plan's figure
+                  (lib/order-admission.ts).
                 */}
                 {standing === "paid" || standing === "trial" ? (
                 <div className="mt-6 border-t border-line pt-5">
@@ -2310,23 +2313,22 @@ export default async function StudioPage({
                   <p className="mt-1 text-ink-soft">
                     {`${ordersWords(ordered)} counted of the ${countWords(orderRoom)} ${
                       standing === "paid" ? "your plan covers" : "a free trial has before free copies stop"
-                    }. An order is a purchase confirmed, an offer taken after paying, a place taken in a purchase for several people, or a free copy sent.${feeWords(COMMISSION_LIVE && store.shared).ordersShared}`}
+                    }. An order is a purchase confirmed, an offer taken after paying, a PayPal order, a place in a purchase for several people, or a free copy sent.${feeWords(COMMISSION_LIVE && store.shared).ordersShared}`}
                   </p>
-                  {standing === "paid" && store && ordered > orderRoom ? (
+                  {standing === "paid" && store && ordered >= orderRoom ? (
                     <p className="mt-4 notice notice-warn">
-                      {`You are past the ${countWords(orderRoom)} orders this month. `}
-                      <strong>Nothing is refused to a buyer for it.</strong>
-                      {` The orders past it come to ${centsWords(ordersOwedCents(ordered, store.tier))} so far, and go on your next invoice.`}
+                      <strong>New orders are paused for the month.</strong>
+                      {` Your store has had the ${countWords(orderRoom)} orders your plan covers. A buyer who presses buy is told the store is not taking new orders right now, and nothing is charged; anybody already paying finishes. Orders open again when the month turns, or on a larger plan.`}
                     </p>
                   ) : null}
                   {standing === "trial" && ordered >= TRIAL_ORDERS ? (
                     <p className="mt-4 notice notice-warn">
                       <strong>Free copies are paused for the month.</strong>
-                      {` Your store has had the ${countWords(TRIAL_ORDERS)} orders a free trial has. Free copies start again as soon as your plan is paid, or when the month turns; paid orders are never stopped.`}
+                      {` Your store has had the ${countWords(TRIAL_ORDERS)} orders a free trial has. Free copies start again as soon as your plan is paid, or when the month turns; paid orders are never stopped in the trial.`}
                     </p>
                   ) : null}
                   <p className="mt-3 text-sm text-ink-soft">
-                    {`Past your plan\u2019s orders: ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, ${perOrderWords()} an order, on your next invoice. We email you the first time a month passes them.`}
+                    {"Orders are never billed. At your plan\u2019s figure new orders pause until the month turns, and we email you the first time a month reaches it. A checkout opened in the last day counts toward the figure until it is paid or closes, so nobody is stopped while paying."}
                   </p>
                 </div>
                 ) : null}
@@ -2565,7 +2567,7 @@ export default async function StudioPage({
                       are free and stay free. What a plan switches on is your
                       checkout: taking a card for what you sell, and handing
                       out what you give away for an email address.
-                      {` Without a plan, your page is shown for ${countWords(SETUP_VISITS)} visits a month.`}
+                      {` Without a plan, your page is shown for ${countWords(publicVisitLimit(SETUP_VISITS))} visits a month.`}
                     </p>
                     {/* Not open yet (lib/opening.ts): no button that the
                         checkout would refuse, and the reason in its place. */}
@@ -2593,7 +2595,7 @@ export default async function StudioPage({
                       are free and stay free. What the subscription switches on
                       is your checkout: taking a card for what you sell, and handing
                       out what you give away for an email address.
-                      {` Without a plan, your page is shown for ${countWords(SETUP_VISITS)} visits a month.`}
+                      {` Without a plan, your page is shown for ${countWords(publicVisitLimit(SETUP_VISITS))} visits a month.`}
                     </p>
                     <form action={`/api/billing/checkout${pin}`} method="post" className="mt-5 flex flex-col items-start gap-3">
                       <button

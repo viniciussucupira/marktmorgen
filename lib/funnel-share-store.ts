@@ -176,3 +176,11 @@ export async function countUse(key: string, limit: number, windowSeconds: number
 
 export const shareUseKey = (id: string, what: "preview" | "import") => countKey(id, what);
 export const storeUseKey = (statsId: string, what: "preview" | "import" | "apply") => `nl:fuse:${what}:${statsId}`;
+/**
+ * The same counts by calendar month (UTC), the period each plan's worst
+ * month is counted in (lib/funnel-share-rules.ts): pass MONTH_USE_SECONDS as
+ * the window, so the key is gone after its month.
+ */
+export const shareMonthKey = (id: string, what: "preview" | "import", month: string) => `${countKey(id, what)}:${month}`;
+export const storeMonthKey = (statsId: string, what: "share" | "preview" | "import" | "apply" | "export", month: string) => `nl:fuse:m:${what}:${statsId}:${month}`;
+export const MONTH_USE_SECONDS = 32 * 86_400;

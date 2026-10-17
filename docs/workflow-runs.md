@@ -34,13 +34,13 @@ The abandoned-checkout claim (`nl:wf:abandoned:<checkout session id>`, 2 days) h
 | Workflows kept | email not on plan | 20 | 20 | 20 |
 | Steps per workflow | | 20 | 20 | 20 |
 | Switched on at once | 0 | 10 | 20 | 3 |
-| New runs per UTC day, all workflows | 0 | 300 | 600 | 50 |
+| New runs per UTC day, all workflows | 0 | 25 | 40 | 10 |
 
 Runs past the daily ceiling are refused before any record is written, their start claim is given back, and the refusals are counted and shown. A store that moves to a smaller plan keeps its workflows; only the oldest switched-on ones up to the new limit start new runs. The limits are in `CURRENT_COMMERCIAL_TERMS.workflows`, so changing any of them invalidates an earlier margin review.
 
 ## Cost reasoning
 
-Emails draw on the existing monthly allowance and its supplier reservation; nothing here adds an email that bypasses it. Owner notices use the platform sender once per group of people. Webhook events reuse the store's endpoints (at most 5) and the existing seven-try retry ceiling. The non-email cost is Redis commands. `WORST_COMMANDS_PER_RUN` (8 to start, plus 20 steps × (9 history + 6 queue/contact) = 308) is a review ceiling, not a measured average. At Upstash's published $0.20 per 100,000 commands (baseline doc C06), the daily run ceiling gives about $5.73 a month for Studio (300 × 31 × 308) and $11.46 for Scale. Erasure adds a bounded number of commands per request (per workflow: 5 deletions plus 2 queue removals). The figures are inputs for the margin review. They are not proof that any plan meets the 60% after-tax floor.
+Emails draw on the existing monthly allowance and its supplier reservation; nothing here adds an email that bypasses it. Owner notices use the platform sender once per group of people. Webhook events reuse the store's endpoints (at most 5) and the existing seven-try retry ceiling. The non-email cost is Redis commands. `WORST_COMMANDS_PER_RUN` (8 to start, plus 20 steps × (9 history + 6 queue/contact) = 308) is a review ceiling, not a measured average. At Upstash's published $0.20 per 100,000 commands (baseline doc C06), the daily run ceilings first set (300 and 600) gave about $5.73 a month for Studio and $11.46 for Scale, which neither plan's worst month could carry paid by the year. Since 17 October 2026 they are 25 and 40 (10 in the free trial): $0.48 and $0.76 a month (25 or 40 × 31 × 308 commands), the `workflows` line of `tests/plan-cost-registry.ts`. The owner's notice step now takes one of the store's monthly emails before it is sent (`lib/mail.ts`, `takeFromMonth`); with none left the step is marked failed with that reason, and the run goes on. Erasure adds a bounded number of commands per request (per workflow: 5 deletions plus 2 queue removals). The figures are inputs for the margin review. They are not proof that any plan meets the 60% after-tax floor.
 
 ## Verification
 

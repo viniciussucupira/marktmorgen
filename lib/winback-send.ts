@@ -17,6 +17,7 @@
  *   nl:wb:link:<token>                 who a link in an email is for
  *   nl:wb:n:<statsId>                  how many have been sent, for the studio
  */
+import { OrdersPausedError } from "@/lib/order-admission";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
 import { isSenderConfigured, sendEmail } from "@/lib/email";
@@ -271,6 +272,8 @@ export async function openWinBack(store: Store, productId: string, token: string
     // A coupon the creator deleted in their own dashboard, most likely: said
     // plainly, with the ordinary way back, rather than a checkout at a price
     // the email did not promise.
+    // The store's orders for the month are reached (lib/order-admission.ts): not open right now, nothing charged.
+    if (error instanceof OrdersPausedError) return { ok: false, reason: "unavailable" };
     console.error("opening a come-back checkout failed", store.handle, error);
     return { ok: false, reason: "refused" };
   }

@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { withinLimit } from "@/lib/request-guard";
+import { withinLimit, withinMonth } from "@/lib/request-guard";
+import { importAllowanceFor } from "@/lib/import-limits";
 import { can } from "@/lib/team-roles";
 import { MAX_TRIMMED_PAGE_CHARS, convertSavedPage } from "@/lib/clickfunnels-page";
 import { planFunnelImport, saveFunnelImport } from "@/lib/clickfunnels-funnel";
@@ -34,12 +35,16 @@ export async function POST(request: NextRequest) {
   const { store, body, role } = guarded;
   const action = text(body.action, 10);
   const who = store.sid || guarded.ref;
+  // Each path has a calendar month's figure by plan (lib/import-limits.ts), the one each plan's
+  // worst month counts (tests/plan-cost-registry.ts); the short windows only spread the work.
+  const allowance = importAllowanceFor(store);
 
   try {
     if (action === "page") {
       // Sixty pages in ten minutes is several whole funnels, read and read again. Reading a page
       // touches no store record: the allowance bounds the work, not a bill.
-      if (!(await withinLimit("import-cf-page", who, 60, 600)) || !(await withinLimit("import-cf-page-day", who, 300, 86_400))) return refuse("slow", 429);
+      if (!(await withinLimit("import-cf-page", who, 60, 600))) return refuse("slow", 429);
+      if (!(await withinMonth("import-cf-page-month", who, allowance.pageReads))) return refuse("month", 429, { limit: allowance.pageReads });
       const html = typeof body.html === "string" ? body.html : "";
       if (!html.trim()) return refuse("empty");
       if (html.length > MAX_TRIMMED_PAGE_CHARS) return refuse("too_big", 413);
@@ -51,12 +56,13 @@ export async function POST(request: NextRequest) {
       if (!can(role, "page") || !can(role, "products")) return refuse("role", 403);
       // Each plan reads at most a few dozen records; each save writes ten pages at most. Both are
       // allowances of their own, checked before any work (docs/clickfunnels-import.md).
-      if (action === "plan" && (!(await withinLimit("import-cf-plan", who, 120, 600)) || !(await withinLimit("import-cf-plan-30d", who, 1_500, 30 * 86_400)))) {
-        return refuse("slow", 429);
+      if (action === "plan") {
+        if (!(await withinLimit("import-cf-plan", who, 120, 600))) return refuse("slow", 429);
+        if (!(await withinMonth("import-cf-plan-month", who, allowance.funnelChecks))) return refuse("month", 429, { limit: allowance.funnelChecks });
       }
-      // Ten a day is far more than moving a store's funnels takes.
-      if (action === "save" && (!(await withinLimit("import-cf-save", who, 10, 86_400)) || !(await withinLimit("import-cf-save-30d", who, 60, 30 * 86_400)))) {
-        return refuse("slow", 429);
+      if (action === "save") {
+        if (!(await withinLimit("import-cf-save", who, 10, 86_400))) return refuse("slow", 429);
+        if (!(await withinMonth("import-cf-save-month", who, allowance.funnelSaves))) return refuse("month", 429, { limit: allowance.funnelSaves });
       }
       const input = { name: body.name, pages: body.pages };
       if (action === "plan") return Response.json({ ok: true, plan: await planFunnelImport(store, input) }, { headers: NO_STORE });

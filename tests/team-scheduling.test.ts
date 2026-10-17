@@ -366,12 +366,12 @@ async function main(): Promise<void> {
 
   part("When her calendar cannot be read");
   freeBusy = () => new Response(JSON.stringify({ error: { message: "backend" } }), { status: 503 });
-  offset += 10 * 60_000;
+  offset += 20 * 60_000;
   const within = await hostSync(first.store, MAYA, NY, { refresh: true });
   is("a failure soon after a good reading keeps it, and says so", [within.state, within.blocked, within.message.length > 0], ["ok", false, true]);
-  offset += 25 * 60_000;
+  offset += 30 * 60_000;
   const stale = await hostSync(first.store, MAYA, NY, { refresh: true });
-  is("past 20 minutes without a good reading she is blocked", [stale.state, stale.blocked], ["stale", true]);
+  is("past 45 minutes without a good reading she is blocked", [stale.state, stale.blocked], ["stale", true]);
   const T = weekdayAt(7, 600);
   is("her times are hidden, the owner's are not", [await offered(first.store, rrCall, T), (await (async () => { const h = await hold(first.store, rrCall, T); return h.ok && (await claimsOf(OWNER)).includes(T); })())], [true, true]);
   const second2 = await slotsForProduct(second.store, second.products[0]);

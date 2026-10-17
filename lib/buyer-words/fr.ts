@@ -194,6 +194,7 @@ export const fr: BuyerWords = {
     busy: { title: "Quelqu'un est en train de l'acheter", body: "Rien n'a été débité. Cliquez de nouveau sur acheter dans un instant." },
     slow: { title: "Beaucoup de tentatives en quelques minutes", body: "Rien n'a été débité. Patientez quelques minutes, puis cliquez de nouveau sur acheter." },
     error: { title: "La page de paiement n'a pas pu s'ouvrir", body: "Rien n'a été débité. Réessayez dans un instant." },
+    paused: { title: "Cette boutique ne prend pas de nouvelles commandes pour le moment", body: "Rien n'a été débité. Les nouvelles commandes rouvrent au début du mois prochain, ou avant." },
     "paypal-declined": {
       title: "PayPal n'a pas accepté le paiement",
       body: "Rien n'a été débité. Réessayez avec une autre carte ou un autre compte dans PayPal, ou payez par carte ici.",
@@ -286,6 +287,8 @@ export const fr: BuyerWords = {
   restingTitle: "Cette page est en pause pour le moment",
   restingBody: (store) =>
     `Elle rouvrira au début du mois prochain, ou avant. Tout ce que vous avez déjà de ${store} reste à vous, et reste accessible.`,
+  restingBuyerBody: (store) =>
+    `Votre accès est conservé${S}: vous ne perdez rien de ce que vous avez de ${store}. Cette page rouvre au début du mois prochain, ou avant.`,
   restingOwner: `C'est votre boutique${S}? Votre studio explique pourquoi, et comment la rouvrir`,
 
   reviewsOf: (title) => `Avis sur ${title}`,

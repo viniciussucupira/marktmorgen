@@ -5,18 +5,29 @@
  *
  * What each costs us is storage and reads in the store's database, nothing
  * else: no email, no AI, no file storage (a shared funnel never carries a
- * picture or a file). Every resource is capped so a store's worst case is a
- * few megabytes and a few thousand database commands a month:
+ * picture or a file). Every resource is capped, by plan and by calendar
+ * month (UTC), so each plan's worst month counts it
+ * (tests/plan-cost-registry.ts):
  *
  *   - shares: active share links a store holds at once, each a snapshot of at
  *     most `bundleBytes`, each kept for at most MAX_SHARE_DAYS;
+ *   - sharesPerMonth: share links a store makes in a month;
  *   - savedBlocks: sections in the store's library, each at most
  *     MAX_SECTION_BYTES;
- *   - imports: funnels a store brings in (from a link, a file, a starter, or
- *     a copy of its own) per rolling day;
- *   - every share link may be previewed and imported only so often a day,
+ *   - importsPerMonth: funnels a store brings in (from a link, a file, a
+ *     starter, or a copy of its own), failed attempts counted;
+ *   - previewsPerMonth: looks at what a link, a file or a starter would make;
+ *   - appliesPerMonth: updates of its pages from a saved section, each of at
+ *     most MAX_APPLY_PAGES pages;
+ *   - exportsPerMonth: funnels downloaded as a file;
+ *   - every share link may be previewed and imported only so often a month,
  *     whoever asks, so a link posted somewhere cannot run up the sender's
- *     reads (PREVIEWS_PER_SHARE_DAY, IMPORTS_PER_SHARE_DAY).
+ *     reads (PREVIEWS_PER_SHARE_MONTH, IMPORTS_PER_SHARE_MONTH).
+ *
+ * Until 17 October 2026 imports, link reads and section updates were counted
+ * by the day (5, 15 and 30 imports a day; 200 previews and 50 imports of a
+ * link a day; 20 section updates a day), and links made and files exported
+ * not at all: at full use more than Store's whole margin a month.
  *
  * Pure and browser-safe.
  */
@@ -26,18 +37,26 @@ import { type PlanFields, standingOf } from "@/lib/plan-standing";
 export type ShareLimits = {
   /** Share links a store holds at once. */
   shares: number;
+  /** Share links a store makes in a calendar month. */
+  sharesPerMonth: number;
   /** Sections in the store's library. */
   savedBlocks: number;
   /** The most one funnel's file or share link may weigh, in bytes. */
   bundleBytes: number;
-  /** Funnels brought into the store per rolling day: imports, starters and copies. */
-  importsPerDay: number;
+  /** Funnels brought into the store in a calendar month: imports, starters and copies. */
+  importsPerMonth: number;
+  /** Previews of a link, a file or a starter in a calendar month. */
+  previewsPerMonth: number;
+  /** Updates of the store's pages from a saved section in a calendar month. */
+  appliesPerMonth: number;
+  /** Funnels downloaded as a file in a calendar month. */
+  exportsPerMonth: number;
 };
 
 export const SHARE_LIMITS: Record<Tier, ShareLimits> = {
-  creator: { shares: 3, savedBlocks: 10, bundleBytes: 150_000, importsPerDay: 5 },
-  pro: { shares: 10, savedBlocks: 30, bundleBytes: 300_000, importsPerDay: 15 },
-  scale: { shares: 20, savedBlocks: 50, bundleBytes: 500_000, importsPerDay: 30 },
+  creator: { shares: 3, savedBlocks: 10, sharesPerMonth: 6, bundleBytes: 150_000, importsPerMonth: 5, previewsPerMonth: 30, appliesPerMonth: 5, exportsPerMonth: 5 },
+  pro: { shares: 10, savedBlocks: 30, sharesPerMonth: 20, bundleBytes: 300_000, importsPerMonth: 20, previewsPerMonth: 150, appliesPerMonth: 20, exportsPerMonth: 30 },
+  scale: { shares: 20, savedBlocks: 50, sharesPerMonth: 40, bundleBytes: 500_000, importsPerMonth: 40, previewsPerMonth: 300, appliesPerMonth: 40, exportsPerMonth: 60 },
 };
 
 /** The largest bundle any plan accepts: what a request body is capped at before the plan is known. */
@@ -62,14 +81,18 @@ export function parseShareDays(raw: unknown): ShareDays | null {
   return (SHARE_DAYS as readonly number[]).includes(value) ? (value as ShareDays) : null;
 }
 
-/** What one link may be read in a day, by everybody together. */
-export const PREVIEWS_PER_SHARE_DAY = 200;
-export const IMPORTS_PER_SHARE_DAY = 50;
-/** Previews one store may ask for in an hour, of any link or file. */
+/** What one link may be read in a calendar month, by everybody together. */
+export const PREVIEWS_PER_SHARE_MONTH = 300;
+export const IMPORTS_PER_SHARE_MONTH = 50;
+/** Previews one store may ask for in an hour, of any link or file: a burst limit under the month's. */
 export const PREVIEWS_PER_STORE_HOUR = 60;
-/** Times one store may update its pages from a saved section in a day, and pages in one update. */
-export const APPLIES_PER_DAY = 20;
+/** Pages one update from a saved section may change. */
 export const MAX_APPLY_PAGES = 30;
+
+/** "2026-10": the calendar month (UTC) the monthly counts above are kept under. */
+export function monthOfUse(now = Date.now()): string {
+  return new Date(now).toISOString().slice(0, 7);
+}
 
 /** A share code: "mmf_" and 32 hexadecimal characters, 128 random bits. Only its SHA-256 is kept. */
 export const SHARE_CODE = /^mmf_[0-9a-f]{32}$/;

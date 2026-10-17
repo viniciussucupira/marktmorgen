@@ -4,7 +4,7 @@ import { readListing } from "@/lib/catalog";
 import { readPodcast } from "@/lib/podcast";
 import { FEED_SHARED_SECONDS, feedReadAllowed, listenerOf, mayListen, readFeedToken } from "@/lib/podcast-access";
 import { normaliseEmail } from "@/lib/auth";
-import { recordListener } from "@/lib/traffic";
+import { isResting, recordListener } from "@/lib/traffic";
 import { feedXml } from "@/lib/podcast-rules";
 import { imageUrl } from "@/lib/product-image";
 import { photoUrl } from "@/lib/photo-limits";
@@ -43,9 +43,16 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const product = store && store.statsId === grant.s ? await readListing(store, grant.p) : null;
   if (!store || !product?.podcast) return new Response("This podcast is no longer here.", { status: 410, headers: { "Cache-Control": "no-store" } });
   const allowed = await mayListen(store, product.id, grant.e);
+  const own = normaliseEmail(grant.e) === normaliseEmail(store.email);
+  // Once the store has used the whole month's visits, a subscriber's feed rests like the
+  // store's other buyer pages (lib/traffic-rules.ts): the app is told to come back later,
+  // and nothing in the feed is taken away.
+  if (allowed && !own && (await isResting(store, Date.now(), "buyer"))) {
+    return new Response("This feed is resting until the start of next month.", { status: 503, headers: { "Retry-After": String(6 * 3600), "Cache-Control": "no-store" } });
+  }
   // A subscriber whose app asked today is that day's visit to the store,
   // once (lib/traffic.ts). Never the creator's own feed.
-  if (allowed && normaliseEmail(grant.e) !== normaliseEmail(store.email)) await recordListener(store, listenerOf(token));
+  if (allowed && !own) await recordListener(store, listenerOf(token));
   const podcast = allowed ? await readPodcast(product.podcast.id) : null;
   const base = `${SITE_URL}/api/store/podcast/play/${token}`;
   const body = feedXml({

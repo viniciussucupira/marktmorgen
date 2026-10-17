@@ -1,4 +1,5 @@
 import { countDay } from "@/lib/day-visit";
+import { isResting } from "@/lib/traffic";
 import { forVisitor } from "@/lib/visitor";
 import { activeIntro } from "@/lib/intro-price";
 import { salePrice } from "@/lib/store-sale";
@@ -80,6 +81,8 @@ export default async function CoursePage({ params, searchParams }: Params) {
   if (open && !access.learner.owner) {
     const { email } = access.learner;
     after(() => touchStudent(course.id, email, access.start));
+    // Once the whole month's visits are used, a course rests too (lib/traffic-rules.ts).
+    if (await isResting(store, undefined, "buyer")) redirect(`/@${store.handle}/resting`);
     // A student's day in a course is a visit to the store (lib/day-visit.ts).
     await countDay(store);
     // The first time a student opens it, what opening it starts (lib/course-finish.ts).

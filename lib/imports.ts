@@ -11,12 +11,12 @@
  *              to keep it here, first charged on the day it would have
  *              renewed there (lib/move-members.ts). Nobody is given a
  *              membership: keeping it is a checkout. Up to 20,000 rows, and
- *              the emails count with the past buyers' in the same thirty days.
+ *              the emails count with the past buyers' in the same month.
  *   purchases  past buyers given what they bought before, with no payment
  *              and no receipt here, marked for what they are
  *              (lib/imported-purchases.ts). Up to 20,000 rows, and, only if
  *              the creator ticks it, one email to each buyer saying so — at
- *              most MOVED_EMAILS_PER_30_DAYS per store in thirty days, and
+ *              most what reserveMoved allows a store in a calendar month, and
  *              within the company's daily cap (lib/mail.ts), since they go
  *              out from our sender to addresses only the creator vouches for.
  *
@@ -81,7 +81,8 @@ import { csvLine, readConsent } from "@/lib/csv";
 import { grantImported, importedFor } from "@/lib/imported-purchases";
 import { deliverableItems } from "@/lib/bundle-rules";
 import { NIMBUS_FROM, isSenderConfigured, sendBatch } from "@/lib/email";
-import { releaseDay, reserveDay } from "@/lib/mail";
+import { giveBackToMonth, monthlyAllowance, releaseDay, reserveDay, takeFromMonth } from "@/lib/mail";
+import { IMPORT_MIN_ROWS_PER_UPLOAD, importAllowanceFor } from "@/lib/import-limits";
 import { healthTags, noteSent, pausedFor, rampBack, rampRoom, startRamp } from "@/lib/mail-health";
 import { isPaidUp } from "@/lib/billing";
 import { storeBase } from "@/lib/purchase-email";
@@ -124,22 +125,70 @@ const CHUNK: Record<ImportKind, number> = { contacts: 1_000, products: 50, purch
 /** Buyers emailed in one step. */
 const MAIL_CHUNK = 100;
 /**
- * Buyers brought over one store may email in thirty days: one full import's
- * worth. The addresses are the creator's word alone, and the email goes out
- * from our sender, so a store cannot turn imports into a mailing list.
+ * The emails to buyers and members brought over, and what limits them. The
+ * addresses are the creator's word alone, and the email goes out from our
+ * sender, so a store cannot turn imports into a mailing list.
+ *
+ * Until 17 October 2026 every store had 20,000 of them in thirty days, on
+ * top of its plan, which no plan's price covered ($18 a month at the most an
+ * email costs, tests/plan-cost-registry.ts). Since then a plan with monthly
+ * emails (Studio, Scale and their free trial) sends them out of those
+ * (lib/mail.ts, takeFromMonth), and a plan without them (Store, and a store
+ * with no plan) has IMPORT_ALLOWANCES.creator.movedEmails a calendar month.
  */
-export const MOVED_EMAILS_PER_30_DAYS = 20_000;
-const movedKey = (sid: string) => `nl:imports:moved:${sid}`;
+const movedKey = (sid: string, month: string) => `nl:imports:moved:${sid}:${month}`;
+const utcMonth = (now: number) => new Date(now).toISOString().slice(0, 7);
 
-/** Takes up to `n` from the store's thirty days; answers how many it may send now. */
-export async function reserveMoved(sid: string, n: number): Promise<number> {
+/** Takes up to `n` for the store's emails to people brought over; answers how many it may send now. */
+export async function reserveMoved(store: Store, n: number, now = Date.now()): Promise<number> {
+  if (!Number.isSafeInteger(n) || n <= 0 || !store.sid) return 0;
+  if (monthlyAllowance(store) > 0) return takeFromMonth(store, n);
+  const cap = importAllowanceFor(store, now / 1000).movedEmails;
+  if (cap <= 0) return 0;
+  const key = movedKey(store.sid, utcMonth(now));
   const [, total] = await redisPipeline([
-    ["SET", movedKey(sid), "0", "NX", "EX", 30 * 86_400],
-    ["INCRBY", movedKey(sid), n],
+    ["SET", key, "0", "NX", "EX", 32 * 86_400],
+    ["INCRBY", key, n],
   ]);
-  const over = Math.min(n, Math.max(0, Number(total) - MOVED_EMAILS_PER_30_DAYS));
-  if (over > 0) await redisPipeline([["DECRBY", movedKey(sid), over]]);
+  const counted = Number(total);
+  if (!Number.isSafeInteger(counted)) return 0;
+  const over = Math.min(n, Math.max(0, counted - cap));
+  if (over > 0) await redisPipeline([["DECRBY", key, over]]);
   return n - over;
+}
+
+/** Gives back what reserveMoved took for emails that did not go. */
+export async function releaseMoved(store: Store, n: number, now = Date.now()): Promise<void> {
+  if (!Number.isSafeInteger(n) || n <= 0 || !store.sid) return;
+  if (monthlyAllowance(store) > 0) return giveBackToMonth(store, n);
+  await redisPipeline([["DECRBY", movedKey(store.sid, utcMonth(now)), n]]);
+}
+
+/**
+ * Takes `n` rows from the store's calendar month of imported rows
+ * (lib/import-limits.ts), as an upload arrives. All or nothing: a batch
+ * that does not fit is refused whole, and nothing is taken for it.
+ */
+export async function takeImportRows(store: Store, n: number, now = Date.now()): Promise<{ ok: true } | { ok: false; reason: "rows_month" | "unavailable"; limit: number }> {
+  const limit = importAllowanceFor(store, now / 1000).rows;
+  if (!Number.isSafeInteger(n) || n <= 0) return { ok: true };
+  // A small upload still costs a request: each counts at least this many rows.
+  n = Math.max(n, IMPORT_MIN_ROWS_PER_UPLOAD);
+  if (!store.sid || !isRedisConfigured()) return { ok: false, reason: "unavailable", limit };
+  const key = `nl:imports:rows:${store.sid}:${utcMonth(now)}`;
+  try {
+    const [, total] = await redisPipeline([
+      ["SET", key, "0", "NX", "EX", 32 * 86_400],
+      ["INCRBY", key, n],
+    ]);
+    const counted = Number(total);
+    if (!Number.isSafeInteger(counted)) return { ok: false, reason: "unavailable", limit };
+    if (counted <= limit) return { ok: true };
+    await redisPipeline([["DECRBY", key, n]]);
+    return { ok: false, reason: "rows_month", limit };
+  } catch {
+    return { ok: false, reason: "unavailable", limit };
+  }
 }
 const KEEP_SECONDS = 14 * 86_400;
 /** An upload that stops before its last batch is given up after this long. */
@@ -1122,8 +1171,8 @@ async function mailStep(job: ImportJob, store: Store): Promise<"more" | "done" |
     await unsent(portion);
     return "retry";
   }
-  // Then the store's thirty days: past them, the rest are not emailed.
-  const room = await reserveMoved(job.sid, messages.length);
+  // Then the store's month (its plan's emails, or Store's own figure): past it, the rest are not emailed.
+  const room = await reserveMoved(store, messages.length);
   const sending = messages.slice(0, room);
   if (sending.length < messages.length) await releaseDay(messages.length - sending.length);
   if (sending.length === 0) {
@@ -1133,10 +1182,8 @@ async function mailStep(job: ImportJob, store: Store): Promise<"more" | "done" |
   }
   const sent = await sendBatch(sending, `nimbus-import:${job.id}:${emails.slice().sort()[0]}:${emails.length}`);
   if (sent === "retry") {
-    await redisPipeline([
-      ["SADD", mailKey(job.id), ...emails],
-      ["DECRBY", movedKey(job.sid), sending.length],
-    ]);
+    await redisPipeline([["SADD", mailKey(job.id), ...emails]]);
+    await releaseMoved(store, sending.length);
     await releaseDay(sending.length);
     await unsent(portion);
     return "retry";
@@ -1290,7 +1337,7 @@ export async function reportCsv(job: ImportJob): Promise<string> {
  * a few days before it renews (lib/move-rules.ts, REMIND_DAYS_BEFORE): asked
  * of the creator's Stripe account first, so somebody who already kept it
  * hears nothing. Sent under the same limits as the first emails: the
- * company's day, the store's thirty days, and nothing to a store whose
+ * company's day, the store's month (reserveMoved), and nothing to a store whose
  * moved addresses have bounced too often.
  */
 export async function sendMoveReminders(deadline: number, now = Date.now()): Promise<{ sent: number; kept: number }> {
@@ -1317,7 +1364,7 @@ export async function sendMoveReminders(deadline: number, now = Date.now()): Pro
         await remindLater(sid, field, now);
         continue;
       }
-      if ((await reserveMoved(sid, 1)) < 1) {
+      if ((await reserveMoved(store, 1)) < 1) {
         await releaseDay(1);
         continue;
       }
@@ -1342,7 +1389,7 @@ export async function sendMoveReminders(deadline: number, now = Date.now()): Pro
         await noteSent(sid, 1);
         counts.sent += 1;
       } else if (sent === "retry") {
-        await redisPipeline([["DECRBY", movedKey(sid), 1]]);
+        await releaseMoved(store, 1);
         await releaseDay(1);
         await remindLater(sid, field, now);
       }

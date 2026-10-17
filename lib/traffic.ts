@@ -31,7 +31,7 @@ import { monthKey, rememberFolderOwner } from "@/lib/delivery";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { deriveKey } from "@/lib/secret-box";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
-import { PARTS_PER_VISIT, visitLimitFor, visitorAddress } from "@/lib/traffic-rules";
+import { PARTS_PER_VISIT, publicVisitLimit, visitLimitFor, visitorAddress } from "@/lib/traffic-rules";
 
 const dayKey = (folder: string, day: string) => `nl:traffic:day:${folder}:${day}`;
 const countKey = (folder: string, month: string) => `nl:traffic:n:${folder}:${month}`;
@@ -204,10 +204,15 @@ export async function trafficForAdmission(folder: string, month = monthKey()): P
 
 /** Finite plan threshold. Unknown measurements pause new page/room admission.
  * Counted visits are not an atomic request reservation or a supplier-byte cap.
+ * `who` is "public" for the store's own pages, which rest at publicVisitLimit,
+ * and "buyer" for what buyers already have (courses, the community and its
+ * room, a private podcast), which rests at the whole month's figure
+ * (lib/traffic-rules.ts).
  */
-export async function isResting(store: Store, now = Date.now()): Promise<boolean> {
+export async function isResting(store: Store, now = Date.now(), who: "public" | "buyer" = "public"): Promise<boolean> {
   try {
-    const limit = visitLimitFor(store, now / 1000);
+    const month = visitLimitFor(store, now / 1000);
+    const limit = who === "buyer" ? month : publicVisitLimit(month);
     if (!Number.isSafeInteger(limit) || limit < 0) return true;
     const traffic = await trafficForAdmission(await storeFolder(storeRef(store)), monthKey(new Date(now)));
     return traffic === null || traffic.visits >= limit;

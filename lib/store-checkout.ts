@@ -7,6 +7,7 @@
  * and leaves Marktmorgen with nothing to hold, skim or lose. The 0% on the home
  * page is this file.
  */
+import { ADMITTED_FIELD, OrdersPausedError, admitOrders } from "@/lib/order-admission";
 import { firstCharge } from "@/lib/move-rules";
 import { currentMeta } from "@/lib/tier-rules";
 import { saleOff } from "@/lib/store-sale";
@@ -671,6 +672,13 @@ export async function createCheckout(
   // The share of the sale, when the store's plan has one. A choose-your-price
   // line is still at its floor here, which is the least it can be.
   applyShare(body, store, { recurring, least: leastPaid(linesTotal(body).cents, mayComeOff) });
+
+  // A paid store's new orders stop at its plan's figure (lib/order-admission.ts):
+  // admitted here, before Stripe's page opens, so nobody is stopped while paying.
+  // A purchase for several people holds its places too.
+  const admitted = await admitOrders(store, 1 + (extras.group ? extras.group.people : 0));
+  if (!admitted.ok) throw new OrdersPausedError(admitted.reason);
+  if (admitted.hour !== null) body.set(`metadata[${ADMITTED_FIELD}]`, String(admitted.hour));
 
   // Where the receipt page sends the buyer back to, and the sale.completed
   // webhook's source: written last, and only while Stripe's fifty metadata

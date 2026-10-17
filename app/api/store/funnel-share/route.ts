@@ -6,13 +6,13 @@ import { fileHeaders } from "@/lib/request-guard";
 import { FUNNEL_ID } from "@/lib/page-funnel";
 import { type BundleOutline, type FunnelBundle, leftOutWords, outlineOf, planImport, readBundle } from "@/lib/funnel-bundle";
 import { collectBundle, importBundle, receiverOf } from "@/lib/funnel-bundle-store";
-import { countUse, createShare, listShares, openShare, revokeShare, shareUseKey, storeUseKey } from "@/lib/funnel-share-store";
+import { MONTH_USE_SECONDS, countUse, createShare, listShares, openShare, revokeShare, shareMonthKey, storeMonthKey, storeUseKey } from "@/lib/funnel-share-store";
 import { funnelStarter } from "@/lib/funnel-starters";
 import {
   DEFAULT_SHARE_DAYS,
-  IMPORTS_PER_SHARE_DAY,
+  IMPORTS_PER_SHARE_MONTH,
   MAX_BUNDLE_BYTES,
-  PREVIEWS_PER_SHARE_DAY,
+  PREVIEWS_PER_SHARE_MONTH,
   PREVIEWS_PER_STORE_HOUR,
   SHARE_ID,
   bytesWords,
@@ -20,6 +20,7 @@ import {
   parseShareDays,
   shareLimitsFor,
   shareLink,
+  monthOfUse,
 } from "@/lib/funnel-share-rules";
 import { SITE_URL } from "@/lib/site-url";
 import type { Store } from "@/lib/store";
@@ -63,8 +64,8 @@ async function sourceOf(body: Record<string, unknown>, store: Store, want: "prev
   if (!code) return { ok: false, response: refuse("code") };
   const opened = await openShare(code, want === "preview" ? "sum" : "bundle");
   if (!opened) return { ok: false, response: refuse("code_gone", 404) };
-  // However many stores ask, one link is read only so often a day.
-  const fits = await countUse(shareUseKey(opened.id, want), want === "preview" ? PREVIEWS_PER_SHARE_DAY : IMPORTS_PER_SHARE_DAY, 86_400);
+  // However many stores ask, one link is read only so often a month.
+  const fits = await countUse(shareMonthKey(opened.id, want, monthOfUse()), want === "preview" ? PREVIEWS_PER_SHARE_MONTH : IMPORTS_PER_SHARE_MONTH, MONTH_USE_SECONDS);
   if (!fits) return { ok: false, response: refuse("share_busy", 429) };
   if (want === "preview") {
     const outline = opened.value as BundleOutline;
@@ -118,6 +119,8 @@ export async function POST(request: NextRequest) {
       if (!days) return refuse("days");
       const held = await listShares(statsId);
       if (held.length >= limits.shares) return refuse("shares_full", 400, { limit: limits.shares });
+      // Links made in the month, revoked ones included: each writes a snapshot.
+      if (!(await countUse(storeMonthKey(statsId, "share", monthOfUse()), limits.sharesPerMonth, MONTH_USE_SECONDS))) return refuse("shares_month", 429, { limit: limits.sharesPerMonth });
       const collected = await collectBundle(store, funnelId, "share");
       if (!collected) return refuse("unknown", 404);
       const outline = outlineOf(collected.bundle);
@@ -141,6 +144,7 @@ export async function POST(request: NextRequest) {
 
     if (action === "preview") {
       if (!(await countUse(storeUseKey(statsId, "preview"), PREVIEWS_PER_STORE_HOUR, 3_600))) return refuse("busy", 429);
+      if (!(await countUse(storeMonthKey(statsId, "preview", monthOfUse()), limits.previewsPerMonth, MONTH_USE_SECONDS))) return refuse("previews_month", 429, { limit: limits.previewsPerMonth });
       const source = await sourceOf(body, store, "preview");
       if (!source.ok) return source.response;
       const receiver = await receiverOf(store);
@@ -178,7 +182,7 @@ export async function POST(request: NextRequest) {
         mapping = mappingOf(body.products);
       }
       // Counted before anything is written, and kept when it fails: an attempt costs reads as well.
-      if (!(await countUse(storeUseKey(statsId, "import"), limits.importsPerDay, 86_400))) return refuse("imports_full", 429, { limit: limits.importsPerDay });
+      if (!(await countUse(storeMonthKey(statsId, "import", monthOfUse()), limits.importsPerMonth, MONTH_USE_SECONDS))) return refuse("imports_full", 429, { limit: limits.importsPerMonth });
       const result = await importBundle(ref, store, bundle, mapping, name);
       if (!result.ok) return refuse(result.error, result.error === "setup_incomplete" ? 500 : 400, { lines: result.lines ?? [] });
       return Response.json({ ok: true, funnel: result.funnel, pages: result.pages, lines: result.lines, left });
@@ -203,9 +207,11 @@ export async function GET(request: NextRequest) {
   const funnelId = (request.nextUrl.searchParams.get("export") ?? "").slice(0, 10);
   if (!store || !FUNNEL_ID.test(funnelId) || !can(access.role, "products")) return refuse("unknown", 404);
   try {
+    const limits = shareLimitsFor(store);
+    if (!store.statsId) return refuse("unavailable", 503);
+    if (!(await countUse(storeMonthKey(store.statsId, "export", monthOfUse()), limits.exportsPerMonth, MONTH_USE_SECONDS))) return refuse("exports_month", 429, { limit: limits.exportsPerMonth });
     const collected = await collectBundle(store, funnelId, "share");
     if (!collected) return refuse("unknown", 404);
-    const limits = shareLimitsFor(store);
     const json = JSON.stringify(collected.bundle, null, 2);
     if (new TextEncoder().encode(json).length > limits.bundleBytes) return refuse("too_big", 400, { limit: bytesWords(limits.bundleBytes) });
     const slug = collected.funnel.slug || "funnel";

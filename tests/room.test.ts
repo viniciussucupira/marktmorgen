@@ -27,7 +27,6 @@ import { lastSaid, parseChatSetting, quietFor, room, say } from "@/lib/community
 import { monthKey } from "@/lib/delivery";
 import { claimHandle, setSubscription, storeFolder, storeForEmail } from "@/lib/store";
 import { isResting, recordParts, recordVisit, trafficIn, visitedFolders, visitsIn } from "@/lib/traffic";
-import { settleVisits } from "@/lib/traffic-billing";
 import { PARTS_PER_VISIT, ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, VISITS_INCLUDED, partsWords, roomHourWords } from "@/lib/traffic-rules";
 import { store as redis } from "./redis-stub";
 import { roomLeaveCost, roomLookCost, roomMinutesCost, visitCost } from "./traffic-cost";
@@ -145,8 +144,8 @@ async function main(): Promise<void> {
   is("a store whose only visits are its room is known to the daily job", (await visitedFolders(month)).includes(folder), true);
   is("what a page prints of it", [partsWords(ROOM_LIVE_PARTS), partsWords(ROOM_IDLE_PARTS), roomHourWords(ROOM_LIVE_PARTS), roomHourWords(ROOM_IDLE_PARTS)], ["2.6", "0.6", "16", "3.6"]);
   await recordParts(folder, "owner@example.com", (VISITS_INCLUDED.creator + 2_000) * PARTS_PER_VISIT, t1);
-  const bill = await settleVisits(folder, month, false, t1).catch(() => null);
-  is("and past the plan's visits the room is charged like any visit", bill ? [bill.amount > VISITS_INCLUDED.creator, bill.owed > 0] : null, [true, true]);
+  // Since 17 October 2026 visits past a plan are not sold: the room past the figure rests, and nothing is billed.
+  is("and past the plan's visits the room rests like the store's other buyer pages", await isResting(paid, t1, "buyer"), true);
   is("nothing is counted that is not a whole number of hundredths", [await recordParts(folder, null, 0, t1), await recordParts(folder, null, 1.5, t1), await recordParts("nope", null, 5, t1)], [null, null, null]);
 
   part("A store with no plan to charge");
@@ -190,10 +189,10 @@ async function main(): Promise<void> {
   const sources = pages.map((name) => readFileSync(join(process.cwd(), "app/[handle]/community", `${name}.tsx`), "utf8"));
   is("every page of a community counts the member's day as it is drawn", sources.map((source) => /communityVisitor\(store, await cookies\(\)\)/.test(source) && !/communityViewer\(/.test(source)), pages.map(() => true));
   const door = readFileSync(join(process.cwd(), "lib/community-page.ts"), "utf8");
-  is("for somebody who is in, and never for the creator", /viewer\.state === "in" && !viewer\.owner\) await countDay\(store\)/.test(door), true);
+  is("for somebody who is in, and never for the creator", /viewer\.state === "in" && !viewer\.owner\) \{[\s\S]{0,300}await countDay\(store\)/.test(door), true);
   const course = readFileSync(join(process.cwd(), "app/[handle]/course/[product]/page.tsx"), "utf8");
   const lesson = readFileSync(join(process.cwd(), "app/[handle]/course/[product]/[lesson]/page.tsx"), "utf8");
-  is("a course and each of its lessons count a student's day, never the creator's", [/!access\.learner\.owner\) \{[\s\S]{0,260}await countDay\(store\)/.test(course), /if \(student\) await countDay\(store\)/.test(lesson)], [true, true]);
+  is("a course and each of its lessons count a student's day, never the creator's", [/!access\.learner\.owner\) \{[\s\S]{0,500}await countDay\(store\)/.test(course), /if \(student\) await countDay\(store\)/.test(lesson)], [true, true]);
   const day = readFileSync(join(process.cwd(), "lib/day-visit.ts"), "utf8");
   is("counted after the page is sent, by the address it came from, like any visit", [/after\(\(\) => recordVisit\(store, ip\)\)/.test(day), /x-forwarded-for/.test(day)], [true, true]);
   const routes = ["route.ts", "new/route.ts"].map((name) => readFileSync(join(process.cwd(), "app/api/store/community/chat", name), "utf8"));

@@ -1,4 +1,5 @@
 import { countDay } from "@/lib/day-visit";
+import { isResting } from "@/lib/traffic";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -92,6 +93,8 @@ export default async function LessonPage({ params, searchParams }: Params) {
   const student = access.state === "open" && !access.learner.owner ? access.learner : null;
   const who = student ? emailKey(student.email) : "";
   // A student's day in a course is a visit to the store (lib/day-visit.ts).
+  // Once the whole month's visits are used, a lesson rests too (lib/traffic-rules.ts).
+  if (student && (await isResting(store, undefined, "buyer"))) redirect(`/@${store.handle}/resting`);
   if (student) await countDay(store);
   const [done, passed] = student
     ? await Promise.all([doneLessons(course.id, student.email), passedQuizzes(course.id, who)])

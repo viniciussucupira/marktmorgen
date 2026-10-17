@@ -13,6 +13,7 @@
  * it holds an ordinary membership on the creator's Stripe account, and every
  * door reads that, as it reads any other.
  */
+import { OrdersPausedError } from "@/lib/order-admission";
 import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -260,6 +261,8 @@ export async function openMove(store: Store, productId: string, token: string, o
     if (!held.ok) return { ok: false, reason: "unavailable" };
     return { ok: true, url: held.value.url };
   } catch (error) {
+    // The store's orders for the month are reached (lib/order-admission.ts): not open right now, nothing charged.
+    if (error instanceof OrdersPausedError) return { ok: false, reason: "unavailable" };
     console.error("opening a moved member's checkout failed", store.handle, error);
     return { ok: false, reason: "refused" };
   }

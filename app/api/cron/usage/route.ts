@@ -19,10 +19,11 @@ import { firstWord, settleAll, storeOf } from "@/lib/watch-billing";
 import { VIDEO_SECONDS_INCLUDED, canBeCharged, centsWords, videoOwedCents } from "@/lib/watch-rules";
 import { videoUsageNotice } from "@/lib/video-usage-notice";
 import { visitedFolders, visitsIn } from "@/lib/traffic";
-import { firstWordOnVisits, settleAllVisits } from "@/lib/traffic-billing";
-import { SETUP_VISITS, VISIT_CENTS_PER_THOUSAND_OVER, countWords, visitLimitFor, visitsIncluded, visitsOwedCents, visitsWords } from "@/lib/traffic-rules";
-import { firstWordOnOrders, settleAllOrders } from "@/lib/orders-billing";
-import { ORDER_CENTS_PER_THOUSAND_OVER, ordersIncluded, ordersOwedCents, ordersWords } from "@/lib/order-rules";
+import { firstWordOnVisits } from "@/lib/traffic-billing";
+import { SETUP_VISITS, countWords, publicVisitLimit, visitLimitFor, visitsWords } from "@/lib/traffic-rules";
+import { firstWordOnOrders } from "@/lib/orders-billing";
+import { orderedFolders, ordersIn } from "@/lib/orders";
+import { ORDERS_INCLUDED, ordersWords, paidOrdersLimitFor } from "@/lib/order-rules";
 
 /**
  * The daily run that writes to a creator who has gone past the allowance.
@@ -52,15 +53,11 @@ import { ORDER_CENTS_PER_THOUSAND_OVER, ordersIncluded, ordersOwedCents, ordersW
  * come to, and that nobody is cut off. A store with no plan to charge is
  * written to as well, because its videos are paused (lib/learn.ts).
  *
- * And the other: visits to a store past the visits its plan covers
- * (lib/traffic-billing.ts), billed and written about the same way. A store
- * with no plan to charge is written to because its pages are resting
- * (lib/traffic.ts).
- *
- * And orders past the orders a plan covers (lib/orders-billing.ts), billed
- * and written about the same way. There is nothing to rest for them: a buyer
- * is never refused, and a store with no plan to charge gives no free copies
- * past the trial's (lib/order-rules.ts).
+ * Visits and orders are not billed (since 17 October 2026, when their prices
+ * past a plan no longer kept the owner's 60% after tax). Each creator is
+ * written to once a month instead: when a month's visits rest the store's
+ * public pages (lib/traffic-rules.ts), and when a paid store's orders reach
+ * its plan's figure and new orders stop (lib/order-admission.ts).
  */
 export const maxDuration = 60;
 
@@ -136,30 +133,16 @@ async function videoRun(): Promise<VideoRun> {
   return out;
 }
 
-type VisitsRun = { stores: number; billed: number; cents: number; resting: number; failed: number; told: number };
+type VisitsRun = { stores: number; resting: number; failed: number; told: number };
 
-/** Bills visits past the plan's, and writes to each creator the first time a month passes them. */
+/**
+ * Writes to each creator the first time a month's visits rest their public
+ * pages. Nothing is billed: since 17 October 2026 visits past a plan's figure
+ * are not sold (lib/traffic-rules.ts); the pages rest instead, for every
+ * standing, and what buyers already have goes on until the whole figure.
+ */
 async function visitsRun(): Promise<VisitsRun> {
-  const out: VisitsRun = { stores: 0, billed: 0, cents: 0, resting: 0, failed: 0, told: 0 };
-  let settled: Awaited<ReturnType<typeof settleAllVisits>> = [];
-  try {
-    settled = await settleAllVisits();
-  } catch (error) {
-    console.error("settling visits failed", error);
-    return out;
-  }
-  for (const row of settled) {
-    if (row.owed > 0) out.stores += 1;
-    if (row.added > 0) {
-      out.billed += 1;
-      out.cents += row.added;
-    }
-    if (row.state === "failed") out.failed += 1;
-  }
-
-  // Each creator is written to once about the month that is running: the
-  // first time their visits pass what their plan covers, or, where there is
-  // no plan to charge, the first time their pages rest.
+  const out: VisitsRun = { stores: 0, resting: 0, failed: 0, told: 0 };
   const month = monthKey();
   let visited: string[] = [];
   try {
@@ -170,69 +153,59 @@ async function visitsRun(): Promise<VisitsRun> {
   for (const folder of visited) {
     try {
       const visits = await visitsIn(folder, month);
-      if (visits < SETUP_VISITS) continue;
+      if (visits < publicVisitLimit(SETUP_VISITS)) continue;
       const store = await storeOf(folder);
       if (!store) continue;
       const limit = visitLimitFor(store);
-      const resting = limit !== null && visits >= limit;
-      const included = visitsIncluded(store.tier);
-      const charged = canBeCharged(store) && visits > included;
-      if (!resting && !charged) continue;
-      if (resting) out.resting += 1;
+      const shown = publicVisitLimit(limit);
+      if (visits < shown) continue;
+      out.stores += 1;
+      out.resting += 1;
       if (!isSenderConfigured() || !(await firstWordOnVisits(folder, month))) continue;
-      const price = centsWords(VISIT_CENTS_PER_THOUSAND_OVER);
+      const standing = standingOf(store);
       const sent = await sendEmail({
         from: NIMBUS_FROM,
         to: store.email,
         replyTo: SUPPORT_EMAIL,
-        subject: charged ? `Your store has had ${visitsWords(visits)} this month` : "Your store's pages are resting",
-        text: (charged
-          ? [
-              `Your store has had ${visitsWords(visits)} so far this month. Your plan covers`,
-              `${countWords(included)} a month, so you are past it.`,
-              "",
-              "Your store is open, and it stays open. Nothing is taken down for this.",
-              "",
-              `Past the ${countWords(included)}, visits are ${price} for each thousand, counted to the visit.`,
-              `So far this month that comes to ${centsWords(visitsOwedCents(visits, store.tier))}. It is added to your next invoice, on`,
-              "the card you already pay with. There is nothing for you to do.",
-              "",
-              "A visit is one person opening your store on one day, however many of its",
-              "pages they look at. You are never counted, and neither is a robot that",
-              "says it is one. Your studio shows the count as it grows, under your plan:",
-              `${SITE_URL}/studio`,
-              "",
-              `If the figure surprises you, reply to this email or write to ${SUPPORT_EMAIL}.`,
-            ]
-          : [
-              `Your store has had ${visitsWords(visits)} this month, which is the ${countWords(limit ?? 0)}`,
-              `${standingOf(store) === "trial" ? "a free trial has" : "a store without a paid plan has"} in a month.`,
-              "",
-              "Your store has no paid plan to carry more, so its pages are resting: a",
-              "visitor is told the page will be open again soon. Everything your buyers",
-              "already have is open as usual: their orders, their downloads, their",
-              "lessons, their memberships.",
-              "",
-              ...(PLANS_ON_SALE || standingOf(store) === "trial"
-                ? ["Your pages open again as soon as your plan is paid, or when the month", "turns, whichever comes first. Nothing has been charged for the visits."]
-                : ["Your pages open again when the month turns. Plans are not on sale yet, and", "nothing has been charged for the visits."]),
-              "",
-              `${SITE_URL}/studio`,
-            ]
-        ).join("\n"),
+        subject: "Your store's pages are resting",
+        text: [
+          `Your store has had ${visitsWords(visits)} this month. ${standing === "paid" ? "Your plan covers" : standing === "trial" ? "A free trial has" : "A store without a paid plan has"}`,
+          `${countWords(limit)} a month: its public pages rest at ${countWords(shown)}, and the last`,
+          `${countWords(limit - shown)} are kept for what your buyers already have.`,
+          "",
+          "So your store's page, products and blog are resting: a visitor is told the",
+          "page will be open again soon. Your buyers' courses, lessons, community and",
+          "podcasts stay open until the whole month's visits are used, and then rest",
+          "too, with a page that says their access is kept. Nothing is charged for",
+          "visits, and nothing anyone bought is taken away.",
+          "",
+          ...(standing === "paid"
+            ? ["Your pages open again when the month turns, or as soon as you move to a", "larger plan."]
+            : PLANS_ON_SALE || standing === "trial"
+              ? ["Your pages open again as soon as your plan is paid, or when the month", "turns, whichever comes first."]
+              : ["Your pages open again when the month turns. Plans are not on sale yet."]),
+          "",
+          "A visit is one person opening your store on one day, however many of its",
+          "pages they look at. You are never counted, and neither is a robot that",
+          "says it is one. Your studio shows the count as it grows:",
+          `${SITE_URL}/studio`,
+          "",
+          `If the figure surprises you, reply to this email or write to ${SUPPORT_EMAIL}.`,
+        ].join("\n"),
       }).catch((error) => {
         console.error("sending the visits notice failed", error);
         return false;
       });
       if (sent !== false) out.told += 1;
     } catch (error) {
+      out.failed += 1;
       console.error("writing to a creator about visits failed", error);
     }
   }
   console.log(
-    out.stores === 0 && out.resting === 0
+    out.resting === 0
       ? "visits-watch: every store inside its visits"
-      : `visits-watch: ${out.stores} past a plan's visits, ${out.billed} billed ${centsWords(out.cents)}, ${out.resting} resting with no plan, ${out.failed} failed, ${out.told} written to`,
+      : `visits-watch: ${out.resting} resting, ${out.failed} failed, ${out.told} written to`,
   );
   return out;
 }
@@ -349,50 +322,52 @@ export async function GET(request: NextRequest) {
   );
 }
 
-type OrdersRun = { stores: number; billed: number; cents: number; failed: number; told: number };
+type OrdersRun = { stores: number; failed: number; told: number };
 
-/** Bills orders past the plan's, and writes to each creator the first time a month passes them. */
+/**
+ * Writes to each creator the first time a month's orders reach their plan's
+ * figure, where new orders stop (lib/order-admission.ts). Nothing is billed:
+ * since 17 October 2026 orders past a plan's figure are not sold.
+ */
 async function ordersRun(): Promise<OrdersRun> {
-  const out: OrdersRun = { stores: 0, billed: 0, cents: 0, failed: 0, told: 0 };
-  let settled: Awaited<ReturnType<typeof settleAllOrders>> = [];
+  const out: OrdersRun = { stores: 0, failed: 0, told: 0 };
+  const month = monthKey();
+  let ordered: string[] = [];
   try {
-    settled = await settleAllOrders();
+    ordered = await orderedFolders(month);
   } catch (error) {
-    console.error("settling orders failed", error);
+    console.error("could not read the stores with orders", error);
     return out;
   }
-  const month = monthKey();
-  for (const row of settled) {
-    if (row.owed > 0) out.stores += 1;
-    if (row.added > 0) {
-      out.billed += 1;
-      out.cents += row.added;
-    }
-    if (row.state === "failed") out.failed += 1;
-    // Written to once, about the month that is running, the first time it passes what the plan covers.
-    const store = row.store;
-    if (row.month !== month || !store || row.owed <= 0 || !canBeCharged(store)) continue;
+  for (const folder of ordered) {
     try {
-      if (!isSenderConfigured() || !(await firstWordOnOrders(row.folder, month))) continue;
-      const included = ordersIncluded(store.tier);
+      const orders = await ordersIn(folder, month);
+      if (orders < Math.min(...Object.values(ORDERS_INCLUDED))) continue;
+      const store = await storeOf(folder);
+      if (!store) continue;
+      const limit = paidOrdersLimitFor(store);
+      if (limit === null || orders < limit) continue;
+      out.stores += 1;
+      if (!isSenderConfigured() || !(await firstWordOnOrders(folder, month))) continue;
       const sent = await sendEmail({
         from: NIMBUS_FROM,
         to: store.email,
         replyTo: SUPPORT_EMAIL,
-        subject: `Your store has had ${ordersWords(row.amount)} this month`,
+        subject: `Your store has had ${ordersWords(orders)} this month`,
         text: [
-          `Your store has had ${ordersWords(row.amount)} so far this month. Your plan covers`,
-          `${countWords(included)} a month, so you are past it.`,
+          `Your store has had ${ordersWords(orders)} this month, which is the ${countWords(limit)} your plan`,
+          "covers. New orders are paused until the month turns, or until you move to a",
+          "larger plan.",
           "",
-          "Nothing is refused to a buyer for this, and nothing is asked of you.",
+          "A buyer who presses buy now is told plainly that the store is not taking new",
+          "orders right now, and nothing is charged. Anybody who was already paying",
+          "finishes and gets everything they bought. Nothing is billed for orders, and",
+          "nothing is asked of you.",
           "",
-          `Past the ${countWords(included)}, orders are ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, half a cent an order.`,
-          `So far this month that comes to ${centsWords(ordersOwedCents(row.amount, store.tier))}. It is added to your next invoice, on`,
-          "the card you already pay with. There is nothing for you to do.",
-          "",
-          "An order is a purchase confirmed, an offer taken after paying, a place taken",
-          "in a purchase for several people, or a free copy sent. Your studio shows the",
-          `count as it grows, under your plan: ${SITE_URL}/studio`,
+          "An order is a purchase confirmed, an offer taken after paying, a place in a",
+          "purchase for several people, or a free copy sent. An order whose sale paid",
+          "your plan's share is not counted. Your studio shows the count as it grows,",
+          `under your plan: ${SITE_URL}/studio`,
           "",
           `If the figure surprises you, reply to this email or write to ${SUPPORT_EMAIL}.`,
         ].join("\n"),
@@ -402,13 +377,14 @@ async function ordersRun(): Promise<OrdersRun> {
       });
       if (sent !== false) out.told += 1;
     } catch (error) {
+      out.failed += 1;
       console.error("writing to a creator about orders failed", error);
     }
   }
   console.log(
     out.stores === 0
       ? "orders-watch: every store inside its orders"
-      : `orders-watch: ${out.stores} past a plan's orders, ${out.billed} billed ${centsWords(out.cents)}, ${out.failed} failed, ${out.told} written to`,
+      : `orders-watch: ${out.stores} at a plan's orders, ${out.failed} failed, ${out.told} written to`,
   );
   return out;
 }

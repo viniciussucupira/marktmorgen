@@ -17,7 +17,6 @@
  * Nothing here may read an environment variable or a secret: client pages
  * import it, as they import lib/plan.ts.
  */
-import { perOrderWords } from "@/lib/order-rules";
 import { COMMISSION_BPS, COMMISSION_PLANS_PUBLISHED, PUBLISHED_PLAN_PRICES as PLAN_PRICES, PRICES_WITH_COMMISSION, PRICES_WITHOUT_COMMISSION, type Tier } from "@/lib/plan";
 
 /** "6.25%", "2.75%". */
@@ -68,7 +67,7 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
       /** The mission page's promise about charging. */
       missionPromise: "One subscription, written in one line. No cut of your sales, no fee that appears at the last screen, no feature listed on the site that does not exist in the product.",
       /** The mission page, on how we make money. */
-      missionMoney: `We take 0% of your sales and make money one way only — your subscription: the same price whether you sell three files or three hundred, with ${perOrderWords()} an order past what your plan covers added to the same invoice.`,
+      missionMoney: `We take 0% of your sales and make money one way only — your subscription: the same price whether you sell three files or three hundred, with nothing billed by the order or the visit.`,
       /** The Terms, on what we charge. */
       termsCharge: "Marktmorgen takes 0% of a creator's sales; what we charge a creator is a subscription for the store itself.",
       /** The Terms, on the money. */
@@ -76,7 +75,7 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
       /** Said after how orders are counted (app/terms): nothing while no share is taken. */
       ordersShared: "",
       /** The studio's "What you pay us". */
-      studioPay: `A plan, and 0% of what you sell, because what you sell never passes through us. The subscription is the same whether you sell three files or three hundred; past the orders your plan covers, an order is ${perOrderWords()} on the same invoice.`,
+      studioPay: `A plan, and 0% of what you sell, because what you sell never passes through us. The subscription is the same whether you sell three files or three hundred, and nothing is billed by the order or the visit: at your plan's orders for the month, new orders pause until the month turns.`,
       /** The answer to "what does Marktmorgen take from a sale?". */
       fromASale: "Nothing. 0% of your sales, with no asterisk. Our only income is the subscription.",
       /** The answer to "what does it take from a renewal?". */

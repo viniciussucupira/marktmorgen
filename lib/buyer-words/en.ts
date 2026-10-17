@@ -206,6 +206,7 @@ export const en = {
     busy: { title: "Someone else is buying that right now", body: "Nothing was charged. Press buy again in a moment." },
     slow: { title: "That was a lot of tries in a few minutes", body: "Nothing was charged. Wait a few minutes, then press buy again." },
     error: { title: "The payment page could not be opened", body: "Nothing was charged. Try again in a moment." },
+    paused: { title: "This store isn't taking new orders right now", body: "Nothing was charged. New orders open again at the start of next month, or sooner." },
     "paypal-declined": {
       title: "PayPal did not take the payment",
       body: "Nothing was charged. Try again with another card or account in PayPal, or pay with a card here.",
@@ -304,6 +305,8 @@ export const en = {
   restingTitle: "This page is resting for now",
   restingBody: (store: string) =>
     `It will be open again at the start of next month, or sooner. Anything you already have from ${store} is still yours, and still open.`,
+  restingBuyerBody: (store: string) =>
+    `Your access is kept: nothing you have from ${store} is lost. This page opens again at the start of next month, or sooner.`,
   restingOwner: "Is this your store? Your studio says why, and how to open it again",
 
   // ---- Every review of a product ----------------------------------------------------

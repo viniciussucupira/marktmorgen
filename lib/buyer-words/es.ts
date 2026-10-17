@@ -191,6 +191,7 @@ export const es: BuyerWords = {
     busy: { title: "Alguien lo está comprando ahora mismo", body: "No se ha cobrado nada. Vuelve a pulsar comprar en un momento." },
     slow: { title: "Demasiados intentos en pocos minutos", body: "No se ha cobrado nada. Espera unos minutos y vuelve a pulsar comprar." },
     error: { title: "No se pudo abrir la página de pago", body: "No se ha cobrado nada. Vuelve a intentarlo en un momento." },
+    paused: { title: "Esta tienda no acepta pedidos nuevos ahora mismo", body: "No se ha cobrado nada. Los pedidos nuevos vuelven a abrirse a principios del mes que viene, o antes." },
     "paypal-declined": {
       title: "PayPal no aceptó el pago",
       body: "No se ha cobrado nada. Prueba con otra tarjeta o cuenta en PayPal, o paga aquí con tarjeta.",
@@ -283,6 +284,8 @@ export const es: BuyerWords = {
   restingTitle: "Esta página está en pausa por ahora",
   restingBody: (store) =>
     `Volverá a abrirse a principios del mes que viene, o antes. Todo lo que ya tienes de ${store} sigue siendo tuyo y sigue disponible.`,
+  restingBuyerBody: (store) =>
+    `Conservas tu acceso: no pierdes nada de lo que tienes de ${store}. Esta página vuelve a abrirse a principios del mes que viene, o antes.`,
   restingOwner: "¿Es tu tienda? Tu estudio explica por qué y cómo volver a abrirla",
 
   reviewsOf: (title) => `Reseñas de ${title}`,

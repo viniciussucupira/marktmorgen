@@ -266,6 +266,38 @@ export async function reserve(store: Store, n: number): Promise<Reserved> {
   } catch { return "unavailable"; }
 }
 
+/**
+ * Takes up to `n` from the store's monthly emails alone (the company's day is
+ * the caller's to take): answers how many may go. For the emails that are
+ * not to the list but still cost one email each and come from a plan with an
+ * allowance: the one email to each buyer or member brought over from another
+ * platform (lib/imports.ts) and a workflow's notice to the owner
+ * (lib/flows.ts). Added 17 October 2026 so those are inside the monthly
+ * emails each plan's worst month already counts (tests/plan-cost-registry.ts).
+ * Zero when the store has no allowance or the count cannot be written.
+ */
+export async function takeFromMonth(store: Store, n: number): Promise<number> {
+  if (!Number.isSafeInteger(n) || n <= 0 || !store.listId || !isRedisConfigured()) return 0;
+  const allowance = monthlyAllowance(store);
+  if (!Number.isSafeInteger(allowance) || allowance <= 0) return 0;
+  try {
+    const key = usedKey(store.listId);
+    const results = await redisPipeline([["INCRBY", key, n], ["EXPIRE", key, 70 * 86400]]);
+    const total = confirmedCount(results[0], n);
+    if (results.length !== 2 || total === null) return 0;
+    const over = Math.min(n, Math.max(0, total - allowance));
+    if (over > 0) await redisPipeline([["DECRBY", key, over]]);
+    return n - over;
+  } catch {
+    return 0;
+  }
+}
+
+/** Gives back to the store's month what takeFromMonth took for emails that did not go. */
+export async function giveBackToMonth(store: Store, n: number): Promise<void> {
+  if (store.listId && Number.isSafeInteger(n) && n > 0) await redisPipeline([["DECRBY", usedKey(store.listId), n]]);
+}
+
 /** Gives back what was taken for a batch that was not sent. */
 export async function release(store: Store, n: number): Promise<void> {
   if (store.listId && n > 0) {

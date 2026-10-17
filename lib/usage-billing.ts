@@ -1,10 +1,14 @@
 /**
  * Use past what a plan covers, put on the creator's next invoice.
  *
- * Three things here are charged by use: lesson video watched past a plan's
+ * Three things were charged by use here: lesson video watched past a plan's
  * hours (lib/watch-rules.ts), visits to a store past a plan's visits
  * (lib/traffic-rules.ts), and orders past a plan's orders
- * (lib/order-rules.ts). Each keeps its own count (lib/watch.ts,
+ * (lib/order-rules.ts). Since 17 October 2026 visits and orders are not:
+ * their meters owe nothing and keep only the record that a creator was
+ * written to (lib/traffic-billing.ts, lib/orders-billing.ts). Video's line
+ * past 400 hours is never reached, because playback stops at each plan's
+ * hours first (lib/video-admission-rules.ts). Each keeps its own count (lib/watch.ts,
  * lib/traffic.ts) and has its own price; this is the part they share, the
  * daily job's part (app/api/cron/usage): for every store past what its plan
  * covers it works out what the month has come to, takes away what was

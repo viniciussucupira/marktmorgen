@@ -5,12 +5,13 @@
  * a 27.5% profit tax. Before tax that allows P x 5/29 of costs
  * (lib/cost-envelope.ts, maximumPretaxCostCents).
  *
- * Costs are the per-plan worst case of tests/plan-cost-model.ts (storage at
- * the dearest store, video, visits, orders, email, receipts), the automatic
- * AI ceiling (lib/ai-spend-policy.ts), every upload operation the automatic
- * upload allowance can start (lib/upload-budget-policy.ts), and Stripe's card
- * and Billing fees on the charge. An annual plan is twelve full months for
- * ten monthly prices.
+ * Costs are the per-plan worst case of tests/plan-cost-model.ts, the sum of
+ * every line of tests/plan-cost-registry.ts (storage, video, visits, orders,
+ * email, receipts, the automatic AI ceiling, upload operations, workflows,
+ * imports, the ClickFunnels move, shared funnels, quizzes...), and Stripe's
+ * card and Billing fees on the charge. An annual plan is twelve full months
+ * for ten monthly prices. What the registry lists as OPEN is not in the sum
+ * and not certified here.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -22,7 +23,7 @@ import { currentUploadBudgetPolicy, uploadWorstCostMicroUsd } from "@/lib/upload
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
 import { ANSWER_MICRO_USD, WRITING_JOB_MICRO_USD } from "@/lib/spend-cost-table";
-import { BILLING_RATE, aiCeilingUsd, uploadOpsUsd, worstCost } from "./plan-cost-model";
+import { BILLING_RATE, aiCeilingUsd, uploadOpsUsd, worstCost, worstLines } from "./plan-cost-model";
 
 const months = (cycle: Cycle) => (cycle === "year" ? 12 : 1);
 function sum(tier: Tier, cycle: Cycle) {
@@ -57,14 +58,22 @@ for (const tier of TIERS) for (const cycle of ["month", "year"] as const) {
   });
 }
 
-test("Store keeps the floor on both cycles with room to spare, and still without AI", () => {
+test("every plan keeps the floor on both cycles with room to spare, and Store still without AI", () => {
   // Until October 17, 2026 Store paid by the year was $1.42 short (a todo
-  // here). Its covered orders went from 500 to 400 (lib/order-rules.ts); no
-  // price changed. The room asserted is the buffer kept, so a later
-  // allowance cannot spend Store back to the edge without failing here.
+  // here), and Studio and Scale had $0.55 and $1.68 of room by the year
+  // before the features of that day were counted at all. The room asserted
+  // is the buffer kept, so a later allowance cannot spend a plan back to the
+  // edge without failing here: $0.25 by the month, $1 by the year.
   assert.equal(AUTOMATIC_AI_STORE_MICRO_USD.creator, 0);
-  for (const cycle of ["month", "year"] as const) {
-    const row = sum("creator", cycle);
-    assert.ok(row.room >= (cycle === "year" ? 1 : 0.25), `Store, ${cycle}: room $${row.room.toFixed(4)}`);
+  for (const tier of TIERS) for (const cycle of ["month", "year"] as const) {
+    const row = sum(tier, cycle);
+    assert.ok(row.room >= (cycle === "year" ? 1 : 0.25), `${tier}, ${cycle}: room $${row.room.toFixed(4)}`);
+  }
+});
+
+test("the worst month, line by line", () => {
+  for (const tier of TIERS) {
+    const lines = Object.entries(worstLines(tier)).map(([id, usd]) => `${id} $${usd.toFixed(4)}`).join(", ");
+    console.log(`${tier}: ${lines}; total $${worstCost(tier).toFixed(4)}`);
   }
 });

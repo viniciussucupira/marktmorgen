@@ -16,6 +16,7 @@
  *   https://platform.claude.com/docs/en/build-with-claude/vision
  *   https://platform.claude.com/docs/en/build-with-claude/pdf-support
  *   https://developers.cloudflare.com/r2/pricing/
+ *   https://upstash.com/pricing/redis (the Upstash transfer and storage rates)
  */
 export const COST_TABLE_VERSION = 'cost-table-2026-10-17';
 
@@ -71,6 +72,14 @@ export const AI_CALL_INFRA_MICRO_USD = Number(
   + ceilDiv(BigInt(VERCEL_CALL_MICRO_USD_PER_MILLION), BigInt(1_000_000))
   + ceilDiv(BigInt(VERCEL_CPU_MICRO_USD_PER_HOUR), BigInt(3600))
   + ceilDiv(BigInt(UPSTASH_MICRO_USD_PER_MILLION_COMMANDS * 20), BigInt(1_000_000)));
+
+/** Upstash Redis pay as you go, with no free quota counted: data moved past
+ * the free 200 GB a month is $0.03 a GB, and data kept past the first free GB
+ * $0.25 a GB-month. Read 2026-10-17 for the per-plan worst case of the
+ * features that move or keep store data in the database
+ * (tests/plan-cost-registry.ts). */
+export const UPSTASH_MICRO_USD_PER_GB_TRANSFER = 30_000;
+export const UPSTASH_MICRO_USD_PER_GB_MONTH = 250_000;
 
 /** Cloudflare R2 Standard, no free-tier credit: $0.015 per GB-month,
  * $4.50 per million Class A operations, $0.36 per million Class B. */

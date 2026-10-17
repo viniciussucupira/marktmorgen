@@ -186,6 +186,7 @@ export const it: BuyerWords = {
     busy: { title: "Qualcun altro lo sta acquistando proprio ora", body: "Non è stato addebitato nulla. Premi di nuovo acquista tra un momento." },
     slow: { title: "Troppi tentativi in pochi minuti", body: "Non è stato addebitato nulla. Attendi qualche minuto, poi premi di nuovo acquista." },
     error: { title: "Non è stato possibile aprire la pagina di pagamento", body: "Non è stato addebitato nulla. Riprova tra un momento." },
+    paused: { title: "Questo negozio non accetta nuovi ordini in questo momento", body: "Non è stato addebitato nulla. I nuovi ordini riaprono all'inizio del mese prossimo, o prima." },
     "paypal-declined": {
       title: "PayPal non ha accettato il pagamento",
       body: "Non è stato addebitato nulla. Riprova con un'altra carta o un altro conto su PayPal, oppure paga qui con la carta.",
@@ -278,6 +279,8 @@ export const it: BuyerWords = {
   restingTitle: "Questa pagina è in pausa per ora",
   restingBody: (store) =>
     `Riaprirà all'inizio del mese prossimo, o prima. Tutto ciò che hai già da ${store} resta tuo e resta disponibile.`,
+  restingBuyerBody: (store) =>
+    `Il tuo accesso resta: non perdi nulla di ciò che hai da ${store}. Questa pagina riapre all'inizio del mese prossimo, o prima.`,
   restingOwner: "È il tuo negozio? Il tuo studio spiega perché e come riaprirlo",
 
   reviewsOf: (title) => `Recensioni di ${title}`,

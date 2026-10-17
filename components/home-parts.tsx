@@ -11,10 +11,9 @@ import { HOME_QUESTIONS } from "@/lib/home-faq";
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { uploadAllowanceWords } from "@/lib/upload-budget-policy";
 import { PLANS_ON_SALE } from "@/lib/opening";
-import { centsWords } from "@/lib/watch-rules";
 import { paidVideoWords } from "@/lib/video-admission-rules";
-import { VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
-import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER } from "@/lib/order-rules";
+import { VISITS_INCLUDED, publicVisitLimit } from "@/lib/traffic-rules";
+import { ORDERS_INCLUDED } from "@/lib/order-rules";
 import {
   COMMISSION_BPS,
   PUBLISHED_PLAN_PRICES as PLAN_PRICES,
@@ -412,8 +411,8 @@ export function HeroFlow() {
  */
 const INCLUDED = [
   "Your own store address, live the moment you take it",
-  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} counted visits to your store a month; public pages pause at the monthly threshold`,
-  `${ORDERS_INCLUDED.creator.toLocaleString("en-US")} orders a month covered${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; past that, ${centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand, and a buyer is never turned away`,
+  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} counted visits to your store a month; public pages pause at ${publicVisitLimit(VISITS_INCLUDED.creator).toLocaleString("en-US")}, and the rest are kept for your buyers' courses, community and podcasts; nothing is billed past it`,
+  `${ORDERS_INCLUDED.creator.toLocaleString("en-US")} orders a month${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; at that figure new orders pause until the month turns, nothing is billed past it, and a buyer already paying always finishes`,
   "Buyers pay into your own Stripe account",
   "Up to 2,000 products: files, courses, memberships, paid calls and live sessions",
   "Sales pages and landing pages built from blocks, and reviews only buyers can write",

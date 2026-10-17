@@ -34,17 +34,18 @@ import { summaries, summaryOf } from "@/lib/reviews";
 import { stockLeft } from "@/lib/stock";
 import { addProduct, claimHandle, setProductFile, setSubscription, storeFolder, storeForEmail, storeForHandle, storeForPage } from "@/lib/store";
 import { isResting, recordVisit, visitedFolders, visitsIn } from "@/lib/traffic";
-import { firstWordOnVisits, settleAllVisits, settleVisits } from "@/lib/traffic-billing";
+import { firstWordOnVisits } from "@/lib/traffic-billing";
 import {
   SETUP_VISITS,
   TRIAL_VISITS,
   VISITS_INCLUDED,
   VISIT_CENTS_PER_THOUSAND_OVER,
+  BUYER_RESERVE_BPS,
+  publicVisitLimit,
   countWords,
   visitLimitFor,
   visitorAddress,
   visitsIncluded,
-  visitsOwedCents,
   visitsWords,
 } from "@/lib/traffic-rules";
 import { storeOf } from "@/lib/usage-billing";
@@ -67,7 +68,7 @@ const lines: Line[] = [];
 const keys = new Map<string, Line>();
 const monthly: string[] = [];
 /** up; down, nothing happens and nothing is answered; lost, the request is carried out and never answered. */
-let stripe: "up" | "down" | "lost" = "up";
+const stripe = "up" as "up" | "down" | "lost";
 const stripeAsked: string[] = [];
 /** What time it is at Stripe: the time of the run that is asking. */
 let clock = Date.now();
@@ -164,24 +165,19 @@ async function visited(made: Made, month: string, visits: number): Promise<void>
   ]);
 }
 
-const settleAt = (made: Made, month: string, final: boolean, when: number) => {
-  clock = when;
-  return settleVisits(made.folder, month, final, when);
-};
-
 async function main(): Promise<void> {
   redis.clear();
   process.env.STRIPE_SECRET_KEY = "sk_test_a_stand_in_key_for_tests_only";
 
-  part("What a plan covers, and what a thousand visits past it cost");
+  part("What a plan covers, and where a month's visits stop");
   is("a larger plan covers more", [VISITS_INCLUDED.creator < VISITS_INCLUDED.pro, VISITS_INCLUDED.pro < VISITS_INCLUDED.scale, visitsIncluded("pro")], [true, true, VISITS_INCLUDED.pro]);
-  is("a month inside them owes nothing", [visitsOwedCents(0, "creator"), visitsOwedCents(VISITS_INCLUDED.creator, "creator"), visitsOwedCents(VISITS_INCLUDED.pro, "pro")], [0, 0, 0]);
-  is("a thousand past them is the published price", visitsOwedCents(VISITS_INCLUDED.creator + 1000, "creator"), VISIT_CENTS_PER_THOUSAND_OVER);
-  is("counted to the visit, and a part of a cent is never charged", [visitsOwedCents(VISITS_INCLUDED.creator + 19, "creator"), visitsOwedCents(VISITS_INCLUDED.creator + 20, "creator"), visitsOwedCents(VISITS_INCLUDED.creator + 39, "creator")], [0, 1, 1]);
-  is("the same visits owe less on a larger plan", [visitsOwedCents(20_000, "creator") > visitsOwedCents(20_000, "pro"), visitsOwedCents(20_000, "scale")], [true, 0]);
-  is("a figure that is not one owes nothing", [visitsOwedCents(Number.NaN, "creator"), visitsOwedCents(-5, "pro")], [0, 0]);
+  is("public pages rest at 95% of the figure, the rest kept for buyers' pages", [publicVisitLimit(VISITS_INCLUDED.creator), publicVisitLimit(VISITS_INCLUDED.pro), publicVisitLimit(SETUP_VISITS), BUYER_RESERVE_BPS], [Math.floor(VISITS_INCLUDED.creator * 0.95), Math.floor(VISITS_INCLUDED.pro * 0.95), Math.floor(SETUP_VISITS * 0.95), 500]);
+  is("a figure that is not one rests everything", [publicVisitLimit(Number.NaN), publicVisitLimit(-5)], [0, 0]);
   is("in words", [visitsWords(0), visitsWords(1), visitsWords(4812.9), countWords(30000), centsWords(VISIT_CENTS_PER_THOUSAND_OVER)], ["0 visits", "1 visit", "4,812 visits", "30,000", "$0.50"]);
-  is("the price is a little over twice what a thousand visits cost us, and no less", [(VISIT_CENTS_PER_THOUSAND_OVER / 100) * (1 - 0.029) >= 1.8 * 1000 * visitCost(), 1000 * visitCost() < 0.3], [true, true]);
+  // The old price past a plan: a visit's cost is more than 17.2% of it, the most a cost may be
+  // of a price and still leave 60% after a 27.5% tax, which is why visits are no longer sold.
+  is("the price visits were billed at did not keep the floor", (1000 * visitCost()) / (VISIT_CENTS_PER_THOUSAND_OVER / 100) > 0.172, true);
+
 
   part("Who a visitor is, for a day");
   is("an old-style address is itself", [visitorAddress("203.0.113.9"), visitorAddress(" 203.0.113.9 ")], ["203.0.113.9", "203.0.113.9"]);
@@ -233,10 +229,12 @@ async function main(): Promise<void> {
   const cyd = await storeWith("cyd", "none");
   const cydStore = (await storeForEmail(cyd.email))!;
   is("before a plan, and after one, it has a few hundred", [visitLimitFor(cydStore), SETUP_VISITS, SETUP_VISITS * 5 <= VISITS_INCLUDED.creator], [SETUP_VISITS, 500, true]);
-  await visited(cyd, monthKey(), SETUP_VISITS - 1);
-  is("one short of them, its pages are open", await isResting(cydStore), false);
+  await visited(cyd, monthKey(), publicVisitLimit(SETUP_VISITS) - 1);
+  is("one short of where public pages stop, its pages are open", await isResting(cydStore), false);
+  await visited(cyd, monthKey(), publicVisitLimit(SETUP_VISITS));
+  is("there, its public pages rest; buyers' pages go on to the whole figure", [await isResting(cydStore), await isResting(cydStore, Date.now(), "buyer")], [true, false]);
   await visited(cyd, monthKey(), SETUP_VISITS);
-  is("at them, they rest", await isResting(cydStore), true);
+  is("at the whole figure, they rest too", await isResting(cydStore, Date.now(), "buyer"), true);
   is("which is asked in one read", await counted(() => isResting(cydStore)), 1);
   const dee = await storeWith("dee", "ended");
   const deeStore = (await storeForEmail(dee.email))!;
@@ -245,78 +243,32 @@ async function main(): Promise<void> {
   const eve = await storeWith("eve", "trial", "scale");
   const eveStore = (await storeForEmail(eve.email))!;
   is("a free trial has what the smallest plan covers, whichever plan it is a trial of", [visitLimitFor(eveStore), TRIAL_VISITS, TRIAL_VISITS === VISITS_INCLUDED.creator], [TRIAL_VISITS, VISITS_INCLUDED.creator, true]);
-  await visited(eve, monthKey(), TRIAL_VISITS - 1);
+  await visited(eve, monthKey(), publicVisitLimit(TRIAL_VISITS) - 1);
   const open = await isResting(eveStore);
-  await visited(eve, monthKey(), TRIAL_VISITS);
+  await visited(eve, monthKey(), publicVisitLimit(TRIAL_VISITS));
   is("and rests there", [open, await isResting(eveStore)], [false, true]);
   await setSubscription(eve.email, { active: true, trialEnds: 0 });
   is("a paid Scale plan can continue while below its own larger threshold", await isResting((await storeForEmail(eve.email))!), false);
   is("when the month turns, so are a resting store's", await isResting(cydStore, Date.now() + 40 * DAY), false);
   is("an acknowledged unused month remains open", await isResting({ ...cydStore, email: "nobody-with-visits@example.com" }), false);
 
-  part("Visits past a plan's go on the next invoice");
+  part("Visits past a plan are never billed: pages rest instead");
   const fay = await storeWith("fay", "paid", "creator");
   const now = Date.UTC(2026, 9, 20, 9, 30, 0);
+  clock = now;
+  const fayStore = (await storeForEmail(fay.email))!;
+  await visited(fay, month, publicVisitLimit(VISITS_INCLUDED.creator) - 1);
+  is("under 95% of the figure, every page is open", [await isResting(fayStore, now), await isResting(fayStore, now, "buyer")], [false, false]);
+  await visited(fay, month, publicVisitLimit(VISITS_INCLUDED.creator));
+  is("at 95%, public pages rest and buyers' pages stay open", [await isResting(fayStore, now), await isResting(fayStore, now, "buyer")], [true, false]);
   await visited(fay, month, VISITS_INCLUDED.creator);
-  is("inside what the plan covers, nothing is added", [(await settleAt(fay, month, false, now)).state, lines.length], ["nothing", 0]);
-  await visited(fay, month, VISITS_INCLUDED.creator + 4000);
-  const first = await settleAt(fay, month, false, now);
-  is("four thousand past it is two dollars, added as one line", [first.state, first.owed, first.added, first.amount], ["billed", 200, 200, VISITS_INCLUDED.creator + 4000]);
-  is("on the store's own subscription", [lines.length, lines[0]?.customer, lines[0]?.subscription, lines[0]?.amount], [1, "cus_fay0001", "sub_fay0001", 200]);
-  is("saying what it is for, with the plan's own figure", lines[0]?.description, `Visits to your store past your plan's ${countWords(VISITS_INCLUDED.creator)} in October 2026 (${visitsWords(VISITS_INCLUDED.creator + 4000)} so far)`);
-  is("under a mark of its own, apart from video's", lines[0]?.mark, `visits:${fay.folder}:${month}:0`);
-  is("the same day again adds nothing", [(await settleAt(fay, month, false, now)).state, lines.length], ["nothing", 1]);
-  await visited(fay, month, VISITS_INCLUDED.creator + 5000);
-  is("a thousand more is fifty cents: not a line yet, while the month runs", [(await settleAt(fay, month, false, now + DAY)).state, lines.length], ["waiting", 1]);
-  await visited(fay, month, VISITS_INCLUDED.creator + 7000);
-  is("once it is worth a dollar it is one", [(await settleAt(fay, month, false, now + 2 * DAY)).added, lines[1]?.amount, lines.length], [150, 150, 2]);
-  await visited(fay, month, VISITS_INCLUDED.creator + 7100);
-  is("when the month is over what is left is billed, to the cent", [(await settleAt(fay, month, true, Date.UTC(2026, 10, 1, 14))).added, lines[2]?.amount], [5, 5]);
-  is("and the month comes to what the visits come to, once", lines.filter((l) => l.customer === "cus_fay0001").reduce((n, l) => n + l.amount, 0), visitsOwedCents(VISITS_INCLUDED.creator + 7100, "creator"));
-
+  is("at the whole figure, buyers' pages rest too", await isResting(fayStore, now, "buyer"), true);
+  is("and no line is put on any invoice for it", lines.length, 0);
   const gil = await storeWith("gil", "paid", "pro", "year");
   await visited(gil, month, VISITS_INCLUDED.creator + 4000);
-  is("the same visits on a larger plan are inside it", [(await settleAt(gil, month, false, now)).state, lines.filter((l) => l.customer === "cus_gil0001").length], ["nothing", 0]);
-  await visited(gil, month, VISITS_INCLUDED.pro + 10_000);
-  const larger = await settleAt(gil, month, false, now);
-  is("and past its own figure it is billed by its own figure", [larger.added, lines.at(-1)?.description], [500, `Visits to your store past your plan's ${countWords(VISITS_INCLUDED.pro)} in October 2026 (${visitsWords(VISITS_INCLUDED.pro + 10_000)} so far)`]);
-  is("a plan paid by the year has the line billed by the month", monthly, ["sub_gil0001"]);
-
-  part("Stripe does not answer");
-  const hal = await storeWith("hal", "paid", "creator");
-  await visited(hal, month, VISITS_INCLUDED.creator + 20_000);
-  stripe = "down";
-  const mark = lines.length;
-  is("nothing is added and nothing is written down as billed", [(await settleAt(hal, month, false, now)).state, lines.length - mark], ["failed", 0]);
-  stripe = "lost";
-  is("a request Stripe carried out without saying so is not known to have worked", [(await settleAt(hal, month, false, now + 3_600_000)).state, lines.length - mark], ["failed", 1]);
-  stripe = "up";
-  await visited(hal, month, VISITS_INCLUDED.creator + 21_000);
-  const found = await settleAt(hal, month, false, now + DAY);
-  is("the next run finds the line that is there, and does not add it twice", [found.state, lines.length - mark, lines[mark]?.amount], ["billed", 1, 1000]);
-  is("with the words it was first written with", lines[mark]?.description.includes(visitsWords(VISITS_INCLUDED.creator + 20_000)), true);
-
-  part("A store with no plan that can be charged");
-  await visited(eve, month, VISITS_INCLUDED.scale + 30_000);
-  await setSubscription(eve.email, { active: true, trialEnds: Math.floor(now / 1000) + 10 * 86_400 });
-  stripeAsked.length = 0;
-  const trial = await settleAt(eve, month, false, now);
-  is("in its free trial, nothing is put on an invoice", [trial.state, trial.added, stripeAsked], ["no_plan", 0, []]);
-  await visited(cyd, month, 80_000);
-  is("nor for a store that never had a plan", [(await settleAt(cyd, month, false, now)).state, stripeAsked], ["no_plan", []]);
-  const nobody: Made = { email: "nobody@example.com", handle: "nobody", folder: "f".repeat(32) };
-  await real([["SET", `nl:traffic:n:${nobody.folder}:${month}`, 90_000]]);
-  is("nor for visits nobody is known to own", [(await settleAt(nobody, month, false, now)).state, (await settleAt(nobody, month, false, now)).owed], ["nothing", 0]);
-
-  part("The daily run");
-  const ivy = await storeWith("ivy", "paid", "creator");
-  await visited(ivy, "2026-12", VISITS_INCLUDED.creator + 100);
-  const mid = lines.length;
-  const during = await settleAllVisits(Date.UTC(2026, 11, 20, 14));
-  is("while a month runs, five cents waits", [during.find((row) => row.folder === ivy.folder)?.state, lines.length - mid], ["waiting", 0]);
-  const closing = await settleAllVisits(Date.UTC(2027, 0, 2, 14));
-  is("in the first days of the next, the month before is closed to the cent", [closing.find((row) => row.folder === ivy.folder && row.month === "2026-12")?.added, lines.at(-1)?.amount], [5, 5]);
-  is("a creator is written to about a month once, and apart from video", [await firstWordOnVisits(ivy.folder, "2026-12"), await firstWordOnVisits(ivy.folder, "2026-12"), await firstWordOnVisits(ivy.folder, "2027-01")], [true, false, true]);
+  is("the same visits on a larger plan are inside it", await isResting((await storeForEmail(gil.email))!, now), false);
+  is("a creator is written to about a month once", [await firstWordOnVisits(fay.folder, "2026-12"), await firstWordOnVisits(fay.folder, "2026-12"), await firstWordOnVisits(fay.folder, "2027-01")], [true, false, true]);
+  void eve; void cyd; void monthly; void stripe; void stripeAsked;
 
   part("What a page sends to the database is inside what a visit is costed at");
   const joy = await storeWith("joy", "paid");
@@ -406,28 +358,28 @@ async function main(): Promise<void> {
   }
   const resting = read("components/store-resting.tsx");
   is("a resting page keeps the way back to what a buyer has, and counts nothing", [/\/orders/.test(resting), /\/community/.test(resting), /StoreTracking|StoreBeacon/.test(resting.replace(/\/\*[\s\S]*?\*\//, ""))], [true, true, false]);
-  for (const page of ["app/[handle]/orders", "app/[handle]/course", "app/[handle]/manage", "app/api/store/download"]) {
+  for (const page of ["app/[handle]/orders", "app/[handle]/manage", "app/api/store/download"]) {
     is(`${page.split("/").pop()}: what a buyer has is never part of the rest`, /isResting/.test(readDir(page)), false);
   }
+  is("courses, the community and podcasts rest only at the whole figure", [/isResting\(store, undefined, "buyer"\)/.test(readDir("app/[handle]/course")), /isResting\(store, Date\.now\(\), "buyer"\)/.test(read("lib/community-page.ts")), /isResting\(store, Date\.now\(\), "buyer"\)/.test(read("app/api/store/podcast/feed/[token]/route.ts"))], [true, true, true]);
   const job = read("app/api/cron/usage/route.ts");
-  is("the daily job is the one that bills and writes, and it is scheduled", [/settleAllVisits\(\)/.test(job), /firstWordOnVisits\(folder, month\)/.test(job), /\/api\/cron\/usage/.test(read("vercel.json"))], [true, true, true]);
+  is("the daily job writes and never bills visits, and it is scheduled", [/settleAllVisits/.test(job), /firstWordOnVisits\(folder, month\)/.test(job), /\/api\/cron\/usage/.test(read("vercel.json"))], [false, true, true]);
 
   part("What the pages say");
   const terms = read("app/terms/page.tsx");
-  is("the Terms give finite plan visit thresholds", [/countWords\(VISITS_INCLUDED\.creator\)/.test(terms), /countWords\(VISITS_INCLUDED\.pro\)/.test(terms), /countWords\(VISITS_INCLUDED\.scale\)/.test(terms), /public pages rest/.test(terms)], [true, true, true, true]);
+  is("the Terms give finite plan visit thresholds, and say nothing is billed", [/countWords\(VISITS_INCLUDED\.creator\)/.test(terms), /countWords\(VISITS_INCLUDED\.pro\)/.test(terms), /countWords\(VISITS_INCLUDED\.scale\)/.test(terms), /public pages \(its page/.test(terms), /Visits are not billed/.test(terms)], [true, true, true, true, true]);
   is("what a visit is, and who is never counted", [/one person opening your store on one day/.test(terms), /never counted/.test(terms)], [true, true]);
   is("and what happens with no paid plan", [/countWords\(TRIAL_VISITS\)/.test(terms), /countWords\(SETUP_VISITS\)/.test(terms), /rest/.test(terms)], [true, true, true]);
   const help = read("lib/help-content.ts");
-  const price = centsWords(VISIT_CENTS_PER_THOUSAND_OVER);
-  is("the help pages disclose counted visits and page pauses", [help.includes(`${countWords(VISITS_INCLUDED.creator)} visits a month`), help.includes(`${countWords(VISITS_INCLUDED.pro)}`), help.includes(`${countWords(VISITS_INCLUDED.scale)}`), help.includes("public pages rest"), help.includes(`${countWords(SETUP_VISITS)} before a plan`)], [true, true, true, true, true]);
+  is("the help pages disclose counted visits, page pauses and that nothing is billed", [help.includes("countWords(VISITS_INCLUDED.creator)} visits a month"), help.includes("Visits are never billed"), help.includes("public pages"), help.includes("countWords(SETUP_VISITS)")], [true, true, true, true]);
   const home = read("components/home-parts.tsx");
-  is("the price list says it beside the plan", [/VISITS_INCLUDED\.creator/.test(home), /VISITS_INCLUDED\.pro/.test(home), /VISIT_CENTS_PER_THOUSAND_OVER/.test(home)], [true, true, true]);
+  is("the price list says it beside the plan, with no price past it", [/VISITS_INCLUDED\.creator/.test(home), /VISITS_INCLUDED\.pro/.test(home), /VISIT_CENTS_PER_THOUSAND_OVER/.test(home), /nothing is billed past it/.test(home)], [true, true, false, true]);
   const feature = read("lib/feature-pages.ts");
-  is("the store feature page discloses finite public-page visits", [feature.includes("public pages pause"), feature.includes(`shown for ${countWords(SETUP_VISITS)} visits a month`)], [true, true]);
+  is("the store feature page discloses finite public-page visits", [feature.includes("public pages pause"), feature.includes("shown for \" + countWords(publicVisitLimit(SETUP_VISITS))")], [true, true]);
   const privacy = read("app/privacy/page.tsx");
   is("the privacy policy says what is kept of a visitor for the count, and for how long", [/keep its first sixteen\s+characters/.test(privacy), /deleted two days later/.test(privacy), /made with a secret key of our own/.test(privacy)], [true, true, true]);
   const studio = read("app/studio/page.tsx");
-  is("the studio shows visits and their finite threshold", [/Visits this month/.test(studio), /trafficForAdmission\(folder\)/.test(studio), /visitLimitFor\(store\)/.test(studio), /Public pages pause/.test(studio)], [true, true, true, true]);
+  is("the studio shows visits and their finite threshold", [/Visits this month/.test(studio), /trafficForAdmission\(folder\)/.test(studio), /visitLimitFor\(store\)/.test(studio), /Visits are never billed/.test(studio)], [true, true, true, true]);
   is("a plan's price is far more than its visits cost us", (VISITS_INCLUDED.creator * visitCost()) / (PLAN_PRICES.creator.month / 100) < 0.05, true);
 
   done();

@@ -82,7 +82,7 @@ export async function grantRoom(
     const held = parseHeld(raw);
     const left = held ? held.u - now : 0;
     if (held && left > FRESH_MS && held.w >= weight) return { pass, ms: left, live: held.w >= ROOM_LIVE_PARTS };
-    if (await isResting(store, now)) return "resting";
+    if (await isResting(store, now, "buyer")) return "resting";
     const upgrade = held !== null && left > FRESH_MS;
     const until = upgrade ? held.u : now + GRANT_MS;
     const owed = upgrade ? weight - held.w : weight;

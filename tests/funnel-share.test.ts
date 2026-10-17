@@ -185,19 +185,19 @@ async function main() {
   const formsBefore = (await readForms((await storeForEmail(RECEIVER))!.statsId)).length;
   const application = await send(RECEIVER, { action: "import", starter: "coaching-application", products: {} });
   is("a starter with a form makes the form too, its answers empty", [application.ok, (await readForms((await storeForEmail(RECEIVER))!.statsId)).length - formsBefore], [true, 1]);
-  // Imports are counted per store per rolling day, failed attempts included.
+  // Imports are counted per store per calendar month, failed attempts included.
   const fresh = "counted@example.com";
   await claimHandle(fresh, "countedshop", "Counted", "");
   await ensureStatsId(fresh);
   sessions[fresh] = await openSession(fresh);
   let attempts = 0;
   let last: { ok?: boolean; error?: string } = {};
-  while (attempts < SHARE_LIMITS.creator.importsPerDay + 3) {
+  while (attempts < SHARE_LIMITS.creator.importsPerMonth + 3) {
     last = await send(fresh, { action: "import", starter: "coaching-application", products: {} });
     if (last.error === "imports_full") break;
     attempts += 1;
   }
-  is("imports stop at the plan's daily number, failed attempts counted", [last.error, attempts], ["imports_full", SHARE_LIMITS.creator.importsPerDay]);
+  is("imports stop at the plan's monthly number, failed attempts counted", [last.error, attempts], ["imports_full", SHARE_LIMITS.creator.importsPerMonth]);
   done();
 }
 
