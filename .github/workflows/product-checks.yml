@@ -79,3 +79,7 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_contract_funding_redis.py
+      - name: Actual Redis host claim checks for team scheduling
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_host_claims_redis.py

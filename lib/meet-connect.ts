@@ -39,6 +39,14 @@
  * already made stay in the creator's calendar and keep working.
  *
  *   nl:meet:conn:<statsId>:<provider>   the connection
+ *   nl:meet:conn:hosts:google:h:<host id>   one team host's own Google
+ *                                       Calendar (lib/host-calendar.ts): the
+ *                                       same rules, connected by that person
+ *                                       for themselves, with the scopes a
+ *                                       host's sync needs (GOOGLE_HOST_SCOPES).
+ *                                       It is the person's, not a store's: every
+ *                                       store they host on uses the one connection,
+ *                                       whatever `statsId` the caller passes.
  *   nl:meet:state:<hash>                one consent in progress, ten minutes
  *   nl:meet:user:<provider>:<hash>      the stores a Zoom user connected, for Zoom's uninstall notice
  *   nl:meet:log:<statsId>               the store's last problems, newest first
@@ -91,15 +99,19 @@ type Connection = {
   brokenAt: number;
 };
 
-const connKey = (statsId: string, provider: MeetProvider) => `nl:meet:conn:${statsId}:${provider}`;
+/** A connection's place: the store's own (`host` empty), or one team host's own, shared by every store. */
+const slot = (host: string) => (host ? `:h:${host}` : "");
+const space = (statsId: string, host: string) => (host ? "hosts" : statsId);
+const connKey = (statsId: string, provider: MeetProvider, host = "") => `nl:meet:conn:${space(statsId, host)}:${provider}${slot(host)}`;
 /** The test meeting a creator made to check a connection (lib/meet-test.ts): forgotten with the connection it was made on. */
 export const testKey = (statsId: string, provider: MeetProvider) => `nl:meet:test:${statsId}:${provider}`;
-const refreshLockKey = (statsId: string, provider: MeetProvider) => `nl:meet:refresh:${statsId}:${provider}`;
+const refreshLockKey = (statsId: string, provider: MeetProvider, host = "") => `nl:meet:refresh:${space(statsId, host)}:${provider}${slot(host)}`;
 const hash = (value: string) => createHash("sha256").update(value).digest("hex").slice(0, 40);
 const stateKey = (state: string) => `nl:meet:state:${hash(`meet-state:${state}`)}`;
 const userKey = (provider: MeetProvider, id: string) => `nl:meet:user:${provider}:${hash(`meet-user:${provider}:${id}`)}`;
 const logKey = (statsId: string) => `nl:meet:log:${statsId}`;
-const context = (statsId: string, provider: MeetProvider, part: "access" | "refresh") => `meet|${statsId}|${provider}|${part}`;
+const context = (statsId: string, provider: MeetProvider, part: "access" | "refresh", host = "") =>
+  host ? `meet|hosts|${provider}|h:${host}|${part}` : `meet|${statsId}|${provider}|${part}`;
 
 function parseConnection(raw: unknown, provider: MeetProvider): Connection | null {
   if (typeof raw !== "string" || !raw) return null;
@@ -124,10 +136,16 @@ function parseConnection(raw: unknown, provider: MeetProvider): Connection | nul
   }
 }
 
-async function readConnection(statsId: string, provider: MeetProvider): Promise<Connection | null> {
+async function readConnection(statsId: string, provider: MeetProvider, host = ""): Promise<Connection | null> {
   if (!isRedisConfigured()) return null;
-  const [raw] = await redisPipeline([["GET", connKey(statsId, provider)]]);
+  const [raw] = await redisPipeline([["GET", connKey(statsId, provider, host)]]);
   return parseConnection(raw, provider);
+}
+
+/** A team host's own Google Calendar connection, as their studio page shows it, with what it was granted. */
+export async function hostConnectionView(statsId: string, host: string): Promise<(ConnectionView & { scope: string }) | null> {
+  const c = await readConnection(statsId, "google", host);
+  return c ? { ...viewOf(c), scope: c.scope } : null;
 }
 
 // ---- What the studio shows ---------------------------------------------------
@@ -202,7 +220,7 @@ export async function logProblem(statsId: string, provider: MeetProvider, what: 
 
 // ---- Connecting --------------------------------------------------------------
 
-type Pending = { provider: MeetProvider; statsId: string; sid: string; session: string; email: string; verifier: string; at: number };
+type Pending = { provider: MeetProvider; statsId: string; sid: string; session: string; email: string; verifier: string; at: number; host?: string };
 
 /**
  * Starts a consent: keeps the state and the verifier, bound to this session,
@@ -210,7 +228,7 @@ type Pending = { provider: MeetProvider; statsId: string; sid: string; session: 
  */
 export async function beginConsent(
   provider: MeetProvider,
-  input: { statsId: string; sid: string; sessionCookie: string; email: string },
+  input: { statsId: string; sid: string; sessionCookie: string; email: string; host?: string; scopes?: string[] },
 ): Promise<string> {
   const state = randomBytes(32).toString("base64url");
   const { verifier, challenge } = pkcePair();
@@ -222,9 +240,10 @@ export async function beginConsent(
     email: input.email.toLowerCase(),
     verifier,
     at: Date.now(),
+    ...(input.host ? { host: input.host } : {}),
   };
   await redisPipeline([["SET", stateKey(state), JSON.stringify(pending), "EX", STATE_SECONDS]]);
-  return consentUrl(provider, state, challenge);
+  return consentUrl(provider, state, challenge, input.scopes);
 }
 
 /**
@@ -236,7 +255,7 @@ export async function takeConsent(
   provider: MeetProvider,
   state: string,
   input: { sessionCookie: string; email: string },
-): Promise<{ statsId: string; sid: string; verifier: string } | null> {
+): Promise<{ statsId: string; sid: string; verifier: string; host: string } | null> {
   if (!/^[A-Za-z0-9_-]{40,64}$/.test(state) || !isRedisConfigured()) return null;
   const [raw] = await redisPipeline([["GETDEL", stateKey(state)]]);
   if (typeof raw !== "string") return null;
@@ -246,7 +265,7 @@ export async function takeConsent(
     if (p.session !== hash(`meet-session:${input.sessionCookie}`)) return null;
     if (p.email !== input.email.toLowerCase()) return null;
     if (Date.now() - p.at > STATE_SECONDS * 1000) return null;
-    return { statsId: p.statsId, sid: p.sid, verifier: p.verifier };
+    return { statsId: p.statsId, sid: p.sid, verifier: p.verifier, host: typeof p.host === "string" && /^[0-9a-f]{24}$/.test(p.host) ? p.host : "" };
   } catch {
     return null;
   }
@@ -259,7 +278,7 @@ export type ConnectResult =
 /** Trades the code for tokens and keeps the connection, sealed. */
 export async function finishConsent(
   provider: MeetProvider,
-  input: { statsId: string; code: string; verifier: string; by: string; owner: { email: string; handle: string } },
+  input: { statsId: string; code: string; verifier: string; by: string; owner: { email: string; handle: string }; host?: string },
 ): Promise<ConnectResult> {
   if (!canSeal()) return { ok: false, error: "seal" };
   const traded = await exchangeCode(provider, input.code, input.verifier);
@@ -267,7 +286,7 @@ export async function finishConsent(
   // Written under the renewal lock, so a renewal of the connection this
   // replaces cannot land over it a moment later.
   try {
-    return await withLock(refreshLockKey(input.statsId, provider), 20, 9_000, (held) => keepConnection(provider, input, traded, held));
+    return await withLock(refreshLockKey(input.statsId, provider, input.host ?? ""), 20, 9_000, (held) => keepConnection(provider, input, traded, held));
   } catch (error) {
     // Not kept: what Google or Zoom just gave is given back rather than left
     // granted with nothing here that knows of it.
@@ -280,17 +299,18 @@ export async function finishConsent(
 
 async function keepConnection(
   provider: MeetProvider,
-  input: { statsId: string; by: string; owner: { email: string; handle: string } },
+  input: { statsId: string; by: string; owner: { email: string; handle: string }; host?: string },
   traded: { tokens: Tokens; account: Account },
   held: Held,
 ): Promise<ConnectResult> {
-  const before = await readConnection(input.statsId, provider);
+  const host = input.host ?? "";
+  const before = await readConnection(input.statsId, provider, host);
   const connection: Connection = {
     provider,
     account: traded.account,
-    access: seal(traded.tokens.access, context(input.statsId, provider, "access")),
+    access: seal(traded.tokens.access, context(input.statsId, provider, "access", host)),
     expires: traded.tokens.expires,
-    refresh: seal(traded.tokens.refresh, context(input.statsId, provider, "refresh")),
+    refresh: seal(traded.tokens.refresh, context(input.statsId, provider, "refresh", host)),
     scope: traded.tokens.scope,
     connectedAt: Date.now(),
     by: input.by,
@@ -298,8 +318,14 @@ async function keepConnection(
     broken: "",
     brokenAt: 0,
   };
-  if (!(await setIfHeld(held, connKey(input.statsId, provider), JSON.stringify(connection)))) {
+  if (!(await setIfHeld(held, connKey(input.statsId, provider, host), JSON.stringify(connection)))) {
     throw new LockBusyError("the connection changed while it was saved");
+  }
+  if (host) {
+    // A host's own: nothing else here is keyed by it. A different account
+    // connected in its place has its access given back.
+    if (before && before.account.id !== traded.account.id) await giveBack(input.statsId, before, host).catch(() => {});
+    return { ok: true, view: viewOf(connection), replaced: Boolean(before) };
   }
   await redisPipeline([["SADD", userKey(provider, traded.account.id), input.statsId]]);
   // A different account connected in its place: the old one's access is given back.
@@ -313,10 +339,10 @@ async function keepConnection(
   return { ok: true, view: viewOf(connection), replaced: Boolean(before) };
 }
 
-async function giveBack(statsId: string, c: Connection): Promise<void> {
-  const opened = unseal(c.refresh, context(statsId, c.provider, "refresh"));
+async function giveBack(statsId: string, c: Connection, host = ""): Promise<void> {
+  const opened = unseal(c.refresh, context(statsId, c.provider, "refresh", host));
   // Zoom takes back the whole grant from its access token; Google from either.
-  const access = unseal(c.access, context(statsId, c.provider, "access"));
+  const access = unseal(c.access, context(statsId, c.provider, "access", host));
   const token = c.provider === "zoom" ? (access.ok ? access.value : "") : opened.ok ? opened.value : "";
   if (token) await revoke(c.provider, token);
 }
@@ -325,15 +351,19 @@ async function giveBack(statsId: string, c: Connection): Promise<void> {
  * Disconnects: gives the access back to the provider, then forgets it here.
  * Returns the account that was connected, or null when none was.
  */
-export async function disconnect(statsId: string, provider: MeetProvider): Promise<ConnectionView | null> {
+export async function disconnect(statsId: string, provider: MeetProvider, host = ""): Promise<ConnectionView | null> {
   // Under the renewal lock: a renewal under way finishes first, and none can
   // write the connection back after it is gone.
-  return withLock(refreshLockKey(statsId, provider), 20, 9_000, async () => {
-    const c = await readConnection(statsId, provider);
+  return withLock(refreshLockKey(statsId, provider, host), 20, 9_000, async () => {
+    const c = await readConnection(statsId, provider, host);
     if (!c) return null;
     // Forgotten here whatever the provider says: a revoke that fails must not
     // leave a connection the creator asked to end.
-    await giveBack(statsId, c).catch((error) => console.error("giving a meeting connection back failed", error));
+    await giveBack(statsId, c, host).catch((error) => console.error("giving a meeting connection back failed", error));
+    if (host) {
+      await redisPipeline([["DEL", connKey(statsId, provider, host)]]);
+      return viewOf(c);
+    }
     await redisPipeline([
       ["DEL", connKey(statsId, provider)],
       ["DEL", testKey(statsId, provider)],
@@ -382,10 +412,10 @@ export class NotConnected extends Error {
 }
 
 /** Marks the connection broken, only while the renewal lock is still ours (it is only called holding it). */
-async function markBroken(held: Held, statsId: string, provider: MeetProvider, why: string): Promise<boolean> {
-  const c = await readConnection(statsId, provider);
+async function markBroken(held: Held, statsId: string, provider: MeetProvider, why: string, host = ""): Promise<boolean> {
+  const c = await readConnection(statsId, provider, host);
   if (!c || c.broken) return false;
-  return setIfHeld(held, connKey(statsId, provider), JSON.stringify({ ...c, broken: why, brokenAt: Date.now() }));
+  return setIfHeld(held, connKey(statsId, provider, host), JSON.stringify({ ...c, broken: why, brokenAt: Date.now() }));
 }
 
 /** Hook for telling the owner once that a connection broke (set by the caller that knows the store). */
@@ -395,29 +425,29 @@ export type BrokenHook = (provider: MeetProvider) => Promise<void>;
  * An access token for the store's connection, renewed when it is within a
  * minute of running out. Throws NotConnected when there is none that works.
  */
-export async function accessFor(statsId: string, provider: MeetProvider, onBroken?: BrokenHook): Promise<Access> {
+export async function accessFor(statsId: string, provider: MeetProvider, onBroken?: BrokenHook, host = ""): Promise<Access> {
   if (!isConfigured(provider)) throw new NotConnected(`${ACCOUNT_NAMES[provider]} is not switched on`);
-  const c = await readConnection(statsId, provider);
+  const c = await readConnection(statsId, provider, host);
   if (!c) throw new NotConnected(`${ACCOUNT_NAMES[provider]} is not connected`);
   if (c.broken) throw new NotConnected(`${ACCOUNT_NAMES[provider]} needs connecting again: ${c.broken}`, true);
   if (c.expires > Date.now() + 60_000) {
-    const open = unseal(c.access, context(statsId, provider, "access"));
+    const open = unseal(c.access, context(statsId, provider, "access", host));
     if (open.ok) return { token: open.value, account: c.account.id };
   }
   try {
-    return await withLock(refreshLockKey(statsId, provider), 20, lockWait(9_000), async (held: Held) => {
+    return await withLock(refreshLockKey(statsId, provider, host), 20, lockWait(9_000), async (held: Held) => {
       // Read again inside the lock: another request may have renewed it.
-      const now = await readConnection(statsId, provider);
+      const now = await readConnection(statsId, provider, host);
       if (!now || now.account.id !== c.account.id) throw new NotConnected(`${ACCOUNT_NAMES[provider]} is not connected`);
       if (now.broken) throw new NotConnected(`${ACCOUNT_NAMES[provider]} needs connecting again: ${now.broken}`, true);
       if (now.expires > Date.now() + 60_000) {
-        const open = unseal(now.access, context(statsId, provider, "access"));
+        const open = unseal(now.access, context(statsId, provider, "access", host));
         if (open.ok) return { token: open.value, account: now.account.id };
       }
-      const refresh = unseal(now.refresh, context(statsId, provider, "refresh"));
+      const refresh = unseal(now.refresh, context(statsId, provider, "refresh", host));
       if (!refresh.ok) {
         const why = refresh.reason === "other-key" ? "the key that protects it was changed" : "what we kept could not be read";
-        if (await markBroken(held, statsId, provider, why)) await onBroken?.(provider).catch(() => {});
+        if (await markBroken(held, statsId, provider, why, host)) await onBroken?.(provider).catch(() => {});
         throw new NotConnected(`${ACCOUNT_NAMES[provider]} needs connecting again: ${why}`, true);
       }
       let tokens: Tokens;
@@ -426,20 +456,20 @@ export async function accessFor(statsId: string, provider: MeetProvider, onBroke
       } catch (error) {
         if (error instanceof ProviderError && error.kind === "auth") {
           const why = `${ACCOUNT_NAMES[provider]} no longer lets us in (access was withdrawn or ran out)`;
-          if (await markBroken(held, statsId, provider, why)) await onBroken?.(provider).catch(() => {});
+          if (await markBroken(held, statsId, provider, why, host)) await onBroken?.(provider).catch(() => {});
           throw new NotConnected(`${ACCOUNT_NAMES[provider]} needs connecting again`, true);
         }
         throw error;
       }
       const next: Connection = {
         ...now,
-        access: seal(tokens.access, context(statsId, provider, "access")),
+        access: seal(tokens.access, context(statsId, provider, "access", host)),
         expires: tokens.expires,
         // Zoom's new refresh token replaces the old one, which stops working.
-        refresh: tokens.refresh ? seal(tokens.refresh, context(statsId, provider, "refresh")) : now.refresh,
+        refresh: tokens.refresh ? seal(tokens.refresh, context(statsId, provider, "refresh", host)) : now.refresh,
         scope: tokens.scope || now.scope,
       };
-      if (!(await setIfHeld(held, connKey(statsId, provider), JSON.stringify(next)))) {
+      if (!(await setIfHeld(held, connKey(statsId, provider, host), JSON.stringify(next)))) {
         throw new ProviderError("server", 0, "the connection changed while it was renewed");
       }
       return { token: tokens.access, account: now.account.id };

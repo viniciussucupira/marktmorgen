@@ -68,6 +68,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { noticeCreator } from "@/lib/account-notice";
 import { roomOf } from "@/lib/call-rooms";
 import type { Store } from "@/lib/store";
+import { hostWriteTarget } from "@/lib/host-calendar";
 
 /** Minutes between the tries after a failure; one more try than there are gaps is the first. */
 export const RETRY_MINUTES = [5, 15, 60, 180, 720];
@@ -140,10 +141,18 @@ export type MeetingAsk = {
   guest: string | null;
   /** What people get when the meeting cannot be made. */
   fallback: () => Promise<string | null>;
+  /** A team booking: the host whose own Google Calendar it goes on, and which of their calendars. */
+  host?: string;
+  calendar?: string;
+  /** Other people on the guest list from the start: a collective call's other hosts. */
+  alsoInvite?: string[];
 };
 
-async function create(ask: Pick<MeetingAsk, "store" | "provider" | "title" | "description" | "start" | "end" | "tz" | "group" | "scope">, guests: string[]) {
-  const access = await accessFor(ask.store.statsId as string, ask.provider, brokenHook(ask.store));
+async function create(
+  ask: Pick<MeetingAsk, "store" | "provider" | "title" | "description" | "start" | "end" | "tz" | "group" | "scope"> & { host?: string; calendar?: string },
+  guests: string[],
+) {
+  const access = await accessFor(ask.store.statsId as string, ask.provider, brokenHook(ask.store), ask.host ?? "");
   const spec = {
     eventId: eventId(ask.scope),
     title: ask.title,
@@ -154,7 +163,7 @@ async function create(ask: Pick<MeetingAsk, "store" | "provider" | "title" | "de
     guests: guests.slice(0, MAX_GUESTS),
     group: ask.group,
   };
-  const made = ask.provider === "google" ? await googleCreate(access.token, spec) : await zoomCreate(access.token, spec);
+  const made = ask.provider === "google" ? await googleCreate(access.token, spec, ask.calendar || "primary") : await zoomCreate(access.token, spec);
   return { ...made, account: access.account, added: ask.provider === "google" ? spec.guests : [] };
 }
 
@@ -174,9 +183,9 @@ export async function meetingFor(ask: MeetingAsk): Promise<MeetRecord> {
       let record: MeetRecord = { ...found, guests };
       if (found.made && found.todo === "") {
         try {
-          const access = await accessFor(ask.store.statsId as string, "google", brokenHook(ask.store));
+          const access = await accessFor(ask.store.statsId as string, "google", brokenHook(ask.store), found.host);
           if (access.account !== found.account) throw new NotConnected("the event was made on another Google account");
-          await googleGuests(access.token, found.id, guests, found.added);
+          await googleGuests(access.token, found.id, guests, found.added, found.calendar || "primary");
           record = { ...record, added: guests };
         } catch (error) {
           const words = problemWords(error, "google");
@@ -206,7 +215,7 @@ export async function meetingFor(ask: MeetingAsk): Promise<MeetRecord> {
       end: ask.end,
       tz: ask.tz,
       title: ask.title.slice(0, 300),
-      guests: guest ? [guest] : [],
+      guests: [...new Set([...(guest ? [guest] : []), ...(ask.alsoInvite ?? []).map((g) => g.trim().toLowerCase())])].slice(0, MAX_GUESTS),
       added: [],
       todo: "",
       tries: 0,
@@ -214,6 +223,8 @@ export async function meetingFor(ask: MeetingAsk): Promise<MeetRecord> {
       error: "",
       updates: 0,
       gone: false,
+      host: ask.host ?? "",
+      calendar: ask.calendar ?? "",
     };
     let record: MeetRecord;
     try {
@@ -269,6 +280,8 @@ function emptyRecord(ask: MeetingAsk): MeetRecord {
     error: "",
     updates: 0,
     gone: false,
+    host: ask.host ?? "",
+    calendar: ask.calendar ?? "",
   };
 }
 
@@ -286,22 +299,23 @@ async function onRecord(scope: string, change: (record: MeetRecord) => Promise<M
 
 /** What to do for a record, against the provider. Throws what the provider throws. */
 async function perform(record: MeetRecord, store: StoreRef): Promise<MeetRecord> {
-  const access = await accessFor(record.statsId, record.provider, brokenHook(store));
+  const access = await accessFor(record.statsId, record.provider, brokenHook(store), record.host);
+  const calendar = record.calendar || "primary";
   if (record.id && record.account && access.account !== record.account) {
     throw new NotConnected(`it was made on another ${ACCOUNT_NAMES[record.provider]} account, which is no longer connected`);
   }
   const when = { start: record.start, end: record.end, tz: record.tz };
   switch (record.todo) {
     case "patch":
-      if (record.provider === "google") await googleMove(access.token, record.id, when);
+      if (record.provider === "google") await googleMove(access.token, record.id, when, calendar);
       else await zoomMove(access.token, record.id, when);
       return { ...record, todo: "", tries: 0, next: 0, error: "" };
     case "delete":
-      if (record.provider === "google") await googleDelete(access.token, record.id);
+      if (record.provider === "google") await googleDelete(access.token, record.id, calendar);
       else await zoomDelete(access.token, record.id);
       return { ...record, todo: "", tries: 0, next: 0, error: "" };
     case "guests":
-      if (record.provider === "google") await googleGuests(access.token, record.id, record.guests, record.added);
+      if (record.provider === "google") await googleGuests(access.token, record.id, record.guests, record.added, calendar);
       return { ...record, todo: "", tries: 0, next: 0, error: "", added: record.guests };
     default:
       return record;
@@ -319,9 +333,9 @@ export async function moveMeeting(store: StoreRef, scope: string, start: number,
     // Not made yet: a later try makes it at the new time.
     if (!record.made) return moved;
     try {
-      const access = await accessFor(record.statsId, record.provider, brokenHook(store));
+      const access = await accessFor(record.statsId, record.provider, brokenHook(store), record.host);
       if (access.account !== record.account) throw new NotConnected(`it was made on another ${ACCOUNT_NAMES[record.provider]} account`);
-      if (record.provider === "google") await googleMove(access.token, record.id, { start, end, tz });
+      if (record.provider === "google") await googleMove(access.token, record.id, { start, end, tz }, record.calendar || "primary");
       else await zoomMove(access.token, record.id, { start, end, tz });
       return { ...moved, todo: record.todo === "patch" ? "" : record.todo, error: record.todo === "patch" ? "" : record.error };
     } catch (error) {
@@ -345,9 +359,9 @@ export async function leaveMeeting(store: StoreRef, scope: string, guest: string
     const left: MeetRecord = { ...record, guests };
     if (record.provider !== "google" || !record.made || !record.added.includes(who)) return left;
     try {
-      const access = await accessFor(record.statsId, "google", brokenHook(store));
+      const access = await accessFor(record.statsId, "google", brokenHook(store), record.host);
       if (access.account !== record.account) throw new NotConnected("it was made on another Google account");
-      await googleGuests(access.token, record.id, guests, record.added);
+      await googleGuests(access.token, record.id, guests, record.added, record.calendar || "primary");
       return { ...left, added: guests };
     } catch (error) {
       const words = problemWords(error, "google");
@@ -367,9 +381,9 @@ export async function cancelMeeting(store: StoreRef, scope: string): Promise<Mee
     const gone: MeetRecord = { ...record, gone: true };
     if (!record.made) return { ...gone, todo: "", next: 0 };
     try {
-      const access = await accessFor(record.statsId, record.provider, brokenHook(store));
+      const access = await accessFor(record.statsId, record.provider, brokenHook(store), record.host);
       if (access.account !== record.account) throw new NotConnected(`it was made on another ${ACCOUNT_NAMES[record.provider]} account`);
-      if (record.provider === "google") await googleDelete(access.token, record.id);
+      if (record.provider === "google") await googleDelete(access.token, record.id, record.calendar || "primary");
       else await zoomDelete(access.token, record.id);
       return { ...gone, todo: "", tries: 0, next: 0, error: "" };
     } catch (error) {
@@ -490,16 +504,29 @@ export async function callMeeting(input: {
   end: number;
   buyerEmail: string | null;
   buyerName?: string | null;
+  /**
+   * A team booking's hosts, by address, the first being the one it is
+   * written for: when that host connected their own Google Calendar for it
+   * (lib/host-calendar.ts), the event and its Meet link are made on their
+   * chosen calendar, with the other hosts of a collective call as guests.
+   * A call set to Zoom keeps making its Zoom meeting on the store's account.
+   */
+  team?: { hosts: string[] };
 }): Promise<MeetRecord | null> {
   const { store, product, session, start, end } = input;
   const setup = product.call;
-  if (!setup.meet || !store.callsId) return null;
+  if (!store.callsId) return null;
+  const organizer = input.team?.hosts[0];
+  const target = organizer && setup.meet !== "zoom" ? await hostWriteTarget(store, organizer).catch(() => null) : null;
+  const provider = target ? "google" : setup.meet;
+  if (!provider) return null;
   const group = isGroup(setup);
   const scope = callScope(store.callsId, { group, session, product: product.id, start });
   const who = input.buyerName || input.buyerEmail || "a buyer";
   const record = await meetingFor({
     store,
-    provider: setup.meet,
+    provider,
+    ...(target ? { host: target.host, calendar: target.calendar, alsoInvite: (input.team?.hosts ?? []).slice(1) } : {}),
     scope,
     group,
     product: product.id,

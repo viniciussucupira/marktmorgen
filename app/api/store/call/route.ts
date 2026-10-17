@@ -4,6 +4,7 @@ import { type CallSetup, readSetup } from "@/lib/call-setup";
 import { checkCallChange } from "@/lib/calls";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { usableProviders } from "@/lib/meet-connect";
+import { writeTeam } from "@/lib/team-booking";
 
 /**
  * Makes a product a paid call, changes its hours, or turns it back.
@@ -48,6 +49,8 @@ export async function POST(request: NextRequest) {
     }
     const result = await setProductCall(guarded.ref, id, setup);
     if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
+    // No longer a call: its team, if it had one, goes with it (lib/team-booking.ts).
+    if (!setup) await writeTeam(result.store, id, null).catch((error) => console.error("dropping a call's team failed", error));
     // Nothing of the store record goes back: the editor needs only to know it saved.
     return Response.json({ ok: true });
   } catch (error) {

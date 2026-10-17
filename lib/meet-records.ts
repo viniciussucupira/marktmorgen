@@ -76,6 +76,13 @@ export type MeetRecord = {
   updates: number;
   /** Cancelled: refunded, so the meeting was removed or is being removed. */
   gone: boolean;
+  /**
+   * A team booking's host whose own Google Calendar it is on (lib/host-calendar.ts),
+   * by host id, and that calendar's id; both empty for the store's own connection
+   * and its primary calendar.
+   */
+  host: string;
+  calendar: string;
 };
 
 export const MEET_QUEUE = "nl:meet:q";
@@ -131,6 +138,8 @@ export function parseRecord(raw: unknown): MeetRecord | null {
       error: text(v.error, 300),
       updates: num(v.updates),
       gone: v.gone === true,
+      host: typeof v.host === "string" && /^[0-9a-f]{24}$/.test(v.host) ? v.host : "",
+      calendar: text(v.calendar, 300),
     };
   } catch {
     return null;

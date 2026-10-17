@@ -20,8 +20,18 @@
  *
  *   Google   openid email https://www.googleapis.com/auth/calendar.events
  *            — to see which account was connected, and to create, change and
- *            delete events on calendars the account can edit. We only ever
- *            touch its primary calendar, and only events we made.
+ *            delete events on calendars the account can edit. A store's own
+ *            connection only ever touches its primary calendar, and only
+ *            events we made.
+ *
+ *            A team host's own connection (lib/host-calendar.ts) asks for two
+ *            more, and only once the deployment says the owner has added them
+ *            to the app's consent screen (hostSyncOn):
+ *            https://www.googleapis.com/auth/calendar.freebusy, to read when
+ *            they are busy (never what), and
+ *            https://www.googleapis.com/auth/calendar.calendarlist.readonly,
+ *            to list their calendars so they can pick which ones count and
+ *            which one bookings are written to. Events are still only ours.
  *   Zoom     the scopes set on the app (a user-managed app): create, read,
  *            update and delete meetings of the user who installs it, and
  *            read that user's own profile, for the account name shown.
@@ -62,7 +72,35 @@ const ZOOM = {
 const HOSTS = new Set(["oauth2.googleapis.com", "www.googleapis.com", "zoom.us", "api.zoom.us"]);
 
 export const GOOGLE_SCOPES = ["openid", "email", "https://www.googleapis.com/auth/calendar.events"];
-const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+/** Reading when a host is busy, never what they are busy with. */
+export const FREEBUSY_SCOPE = "https://www.googleapis.com/auth/calendar.freebusy";
+/** Listing a host's calendars, so they choose which ones are read and which one is written to. */
+export const CALENDARLIST_SCOPE = "https://www.googleapis.com/auth/calendar.calendarlist.readonly";
+/** What a team host's own connection asks for: the store's, and the two above. */
+export const GOOGLE_HOST_SCOPES = [...GOOGLE_SCOPES, FREEBUSY_SCOPE, CALENDARLIST_SCOPE];
+
+/**
+ * Whether team hosts may connect their own Google Calendar for two-way sync.
+ * The two extra scopes have to be on the Google Cloud app's OAuth consent
+ * screen first, which only the owner of the deployment can do; until they
+ * set GOOGLE_CALENDAR_SYNC_SCOPES=1, hosts are offered the iCal address
+ * instead and the studio says why.
+ */
+export function hostSyncOn(): boolean {
+  return isConfigured("google") && env("GOOGLE_CALENDAR_SYNC_SCOPES") === "1";
+}
+
+/** Whether a granted scope string covers each part of a host's sync. */
+export function grantedParts(scope: string): { events: boolean; freebusy: boolean; calendars: boolean } {
+  const granted = new Set(scope.split(/\s+/).filter(Boolean));
+  return {
+    events: granted.has(CALENDAR_SCOPE),
+    // The broader read scopes also cover free/busy, if a grant ever carries one.
+    freebusy: granted.has(FREEBUSY_SCOPE) || granted.has("https://www.googleapis.com/auth/calendar.events.freebusy") || granted.has("https://www.googleapis.com/auth/calendar.readonly"),
+    calendars: granted.has(CALENDARLIST_SCOPE),
+  };
+}
 
 export const REDIRECT_URIS: Record<MeetProvider, string> = {
   google: `${SITE_URL}/api/integrations/google/callback`,
@@ -242,13 +280,13 @@ export function pkcePair(): { verifier: string; challenge: string } {
 }
 
 /** Where the creator is sent to say yes. */
-export function consentUrl(provider: MeetProvider, state: string, challenge: string): string {
+export function consentUrl(provider: MeetProvider, state: string, challenge: string, scopes: string[] = GOOGLE_SCOPES): string {
   if (provider === "google") {
     const query = new URLSearchParams({
       client_id: env("GOOGLE_OAUTH_CLIENT_ID"),
       redirect_uri: REDIRECT_URIS.google,
       response_type: "code",
-      scope: GOOGLE_SCOPES.join(" "),
+      scope: scopes.join(" "),
       // A refresh token, so meetings can be made while the creator is away,
       // and asked again each time so one always comes back.
       access_type: "offline",
@@ -530,9 +568,9 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * what lets them into the Meet without waiting to be let in, when they are
  * signed in to Google with that address.
  */
-export async function googleCreate(token: string, spec: MeetingSpec): Promise<Meeting> {
+export async function googleCreate(token: string, spec: MeetingSpec, calendar = "primary"): Promise<Meeting> {
   const auth = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-  const events = `${GOOGLE.calendar()}/calendars/primary/events`;
+  const events = `${GOOGLE.calendar()}/calendars/${calendarPath(calendar)}/events`;
   const request = () => ({ createRequest: { requestId: `${spec.eventId}-${randomBytes(4).toString("hex")}`, conferenceSolutionKey: { type: "hangoutsMeet" } } });
   let answer = await call(`${events}?conferenceDataVersion=1&sendUpdates=none`, {
     method: "POST",
@@ -585,8 +623,8 @@ export async function googleCreate(token: string, spec: MeetingSpec): Promise<Me
 }
 
 /** Moves the event to a new time. */
-export async function googleMove(token: string, id: string, spec: Pick<MeetingSpec, "start" | "end" | "tz">): Promise<void> {
-  const answer = await call(`${GOOGLE.calendar()}/calendars/primary/events/${encodeURIComponent(id)}?sendUpdates=none`, {
+export async function googleMove(token: string, id: string, spec: Pick<MeetingSpec, "start" | "end" | "tz">, calendar = "primary"): Promise<void> {
+  const answer = await call(`${GOOGLE.calendar()}/calendars/${calendarPath(calendar)}/events/${encodeURIComponent(id)}?sendUpdates=none`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ start: { dateTime: iso(spec.start), timeZone: spec.tz }, end: { dateTime: iso(spec.end), timeZone: spec.tz } }),
@@ -600,9 +638,9 @@ export async function googleMove(token: string, id: string, spec: Pick<MeetingSp
  * less `want`) are taken off, and anyone the creator added themselves is
  * left alone.
  */
-export async function googleGuests(token: string, id: string, want: string[], had: string[]): Promise<void> {
+export async function googleGuests(token: string, id: string, want: string[], had: string[], calendar = "primary"): Promise<void> {
   const auth = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-  const url = `${GOOGLE.calendar()}/calendars/primary/events/${encodeURIComponent(id)}`;
+  const url = `${GOOGLE.calendar()}/calendars/${calendarPath(calendar)}/events/${encodeURIComponent(id)}`;
   const read = await call(url, { method: "GET", headers: auth });
   if (read.status !== 200) throw problem(read, "reading the event");
   const lower = (s: string) => s.toLowerCase();
@@ -617,13 +655,79 @@ export async function googleGuests(token: string, id: string, want: string[], ha
 }
 
 /** Deletes the event. One already gone counts as done. */
-export async function googleDelete(token: string, id: string): Promise<void> {
-  const answer = await call(`${GOOGLE.calendar()}/calendars/primary/events/${encodeURIComponent(id)}?sendUpdates=none`, {
+export async function googleDelete(token: string, id: string, calendar = "primary"): Promise<void> {
+  const answer = await call(`${GOOGLE.calendar()}/calendars/${calendarPath(calendar)}/events/${encodeURIComponent(id)}?sendUpdates=none`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
   if (answer.status === 204 || answer.status === 200 || answer.status === 404 || answer.status === 410) return;
   throw problem(answer, "deleting the event");
+}
+
+/** A calendar id as a path segment: "primary", or an id Google gave us (an address-like string), encoded. */
+function calendarPath(calendar: string): string {
+  return calendar && calendar.length <= 300 ? encodeURIComponent(calendar) : "primary";
+}
+
+/** The longest stretch asked of free/busy in one request; a longer horizon is asked in pieces. */
+export const FREEBUSY_CHUNK_DAYS = 30;
+/** Calendars read for one host, at most (Google answers for up to 50). */
+export const MAX_READ_CALENDARS = 10;
+
+/**
+ * When the host is busy on each calendar given, from `from` to `to`: busy
+ * stretches only, never a title, a guest or a place. Asked in pieces of
+ * FREEBUSY_CHUNK_DAYS. A calendar Google answers with an error for makes the
+ * whole reading fail, so a calendar that could not be read never looks free.
+ */
+export async function googleFreeBusy(token: string, calendars: string[], from: number, to: number): Promise<[number, number][]> {
+  const ids = (calendars.length ? calendars : ["primary"]).slice(0, MAX_READ_CALENDARS);
+  const busy: [number, number][] = [];
+  for (let at = from; at < to; at += FREEBUSY_CHUNK_DAYS * 86_400_000) {
+    const until = Math.min(to, at + FREEBUSY_CHUNK_DAYS * 86_400_000);
+    const answer = await call(`${GOOGLE.calendar()}/freeBusy`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ timeMin: iso(at), timeMax: iso(until), items: ids.map((id) => ({ id })) }),
+    });
+    if (answer.status !== 200) throw problem(answer, "reading free/busy");
+    const found = (answer.json.calendars ?? {}) as Record<string, { busy?: { start?: unknown; end?: unknown }[]; errors?: { reason?: unknown }[] }>;
+    for (const id of ids) {
+      const entry = found[id];
+      if (!entry) throw new ProviderError("bad", 200, `Google did not answer for one of your calendars`);
+      if (Array.isArray(entry.errors) && entry.errors.length) {
+        const reason = String(entry.errors[0]?.reason ?? "error").slice(0, 60);
+        throw new ProviderError(reason === "notFound" ? "gone" : "server", 200, `Google could not read one of your calendars (${reason})`);
+      }
+      for (const b of Array.isArray(entry.busy) ? entry.busy.slice(0, 5_000) : []) {
+        const s = Date.parse(String(b.start ?? ""));
+        const e = Date.parse(String(b.end ?? ""));
+        if (Number.isFinite(s) && Number.isFinite(e) && e > s) busy.push([s, e]);
+      }
+    }
+  }
+  return busy;
+}
+
+export type GoogleCalendar = { id: string; name: string; primary: boolean; writable: boolean };
+
+/** The host's calendars, for them to pick from: at most 100, primary first. */
+export async function googleCalendars(token: string): Promise<GoogleCalendar[]> {
+  const answer = await call(`${GOOGLE.calendar()}/users/me/calendarList?maxResults=100&minAccessRole=freeBusyReader`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (answer.status !== 200) throw problem(answer, "listing your calendars");
+  const items = Array.isArray(answer.json.items) ? (answer.json.items as Record<string, unknown>[]) : [];
+  return items
+    .filter((c) => typeof c.id === "string" && c.id && (c.id as string).length <= 300)
+    .map((c) => ({
+      id: c.id as string,
+      name: String(c.summaryOverride ?? c.summary ?? c.id).slice(0, 120),
+      primary: c.primary === true,
+      writable: c.accessRole === "owner" || c.accessRole === "writer",
+    }))
+    .sort((a, b) => Number(b.primary) - Number(a.primary) || a.name.localeCompare(b.name));
 }
 
 function zoomBody(spec: Pick<MeetingSpec, "start" | "end" | "tz">) {
