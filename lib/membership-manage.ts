@@ -25,6 +25,7 @@ import { saleHandles } from "@/lib/store";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { orderWrite } from "@/lib/order-data";
 import { StripeError, onAccount, platformKey } from "@/lib/stripe-account";
 import type { Store } from "@/lib/store";
 import { readListings, sellsAny } from "@/lib/catalog";
@@ -532,7 +533,8 @@ export async function openCancel(store: Store, token: string, subscription: stri
     // again is not shown it a second time.
     let withOffer = false;
     if (saveOn(store) && canOffer(offer, interval, every)) {
-      const [claimed] = await redisPipeline([["SET", offeredKey(grant.a, subscription), String(Date.now()), "NX"]]);
+      // Kept for good, once a membership: counted in the store's room (lib/order-data.ts).
+      const [claimed] = await orderWrite(store, [["SET", offeredKey(grant.a, subscription), String(Date.now()), "NX"]]);
       withOffer = claimed !== null;
     }
 

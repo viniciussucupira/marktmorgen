@@ -29,6 +29,7 @@
  *   nl:cm:<id>:unl:<member>   when each reward reached this member (hash)
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataOwner, orderWrite } from "@/lib/order-data";
 import { LEVELS, MAX_LEVEL, MAX_REWARDS, type Reward, levelOf, parseRewards, toNextLevel } from "@/lib/community-levels";
 
 export { LEVELS, MAX_LEVEL, MAX_REWARDS, type Reward, levelOf, parseRewards, toNextLevel };
@@ -55,11 +56,12 @@ const dayOf = (ms: number) => Math.floor(ms / 86_400_000);
  * the creator, and anything that is not a member key, is passed over.
  * All-time points never go below zero.
  */
-export async function award(id: string, who: string, delta: 1 | -1, now = Date.now()): Promise<void> {
+export async function award(id: string, who: string, delta: 1 | -1, owner: DataOwner, now = Date.now()): Promise<void> {
   if (!COMMUNITY.test(id) || !MEMBER.test(who) || !isRedisConfigured()) return;
   const day = dayKey(id, dayOf(now));
   if (delta > 0) {
-    await redisPipeline([
+    // A member's first point puts them on the boards for good: counted in the store's room (lib/order-data.ts).
+    await orderWrite(owner, [
       ["ZINCRBY", allKey(id), 1, who],
       ["ZINCRBY", day, 1, who],
       ["EXPIRE", day, DAYS_KEPT * 86_400],
@@ -155,6 +157,8 @@ export async function earnedCourses(
   now = Date.now(),
   /** False while the community is switched off: what was handed over stays, nothing new is. */
   grant = true,
+  /** The store whose room what is handed over is counted in (lib/order-data.ts). */
+  owner?: DataOwner,
 ): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   if (!COMMUNITY.test(id) || !MEMBER.test(member) || !isRedisConfigured()) return out;
@@ -182,7 +186,8 @@ export async function earnedCourses(
   const due = parseRewards(rawRewards).filter((r) => r.level <= level && !held.has(r.product));
   if (due.length) {
     const at = Math.floor(now / 1000);
-    await redisPipeline(due.map((r) => ["HSETNX", unlockedKey(id, member), r.product, at]));
+    const writes = due.map((r) => ["HSETNX", unlockedKey(id, member), r.product, at]);
+    await (owner ? orderWrite(owner, writes) : redisPipeline(writes));
     for (const r of due) out.set(r.product, at);
   }
   return out;

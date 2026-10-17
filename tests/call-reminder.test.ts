@@ -14,7 +14,9 @@
  */
 import { addProduct, claimHandle, ensureStatsId, setProductCall, setRecovery, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { readListing } from "@/lib/catalog";
-import { type CallListing, holdAndCheckout, slotsForProduct } from "@/lib/calls";
+import { type CallListing, PAST_CALL_DAYS, busyTimes, holdAndCheckout, slotsForProduct } from "@/lib/calls";
+import { fieldReleaseBytes, orderWrite } from "@/lib/order-data";
+import { dataUsed } from "@/lib/store-data";
 import type { CallSetup } from "@/lib/call-setup";
 import { bookLink, remindAbandoned } from "@/lib/checkout-recovery";
 import { store as redis } from "./redis-stub";
@@ -140,6 +142,20 @@ async function main(): Promise<void> {
   await setProductCall(OWNER, id, { ...weekly, weekly: [[], [], [], [], [], [], []] } as unknown as CallSetup);
   ({ store } = await load());
   is("nor when no time is left to book", await remindAbandoned(store, left("cs_test_callleft00004", { customer_details: { email: "cy@example.com" } }) as never), "skip");
+
+  part("A call long over leaves the diary, and gives its room back");
+  ({ store } = await load());
+  const diary = `nl:call:busy:${store.callsId}`;
+  const ended = (days: number) => Date.now() - days * 86_400_000;
+  const oldLine = JSON.stringify({ s: ended(PAST_CALL_DAYS + 10) - 3_600_000, e: ended(PAST_CALL_DAYS + 10), until: 0, session: "cs_test_longago000001", p: id });
+  const recentLine = JSON.stringify({ s: ended(10) - 3_600_000, e: ended(10), until: 0, session: "cs_test_recent0000001", p: id });
+  await orderWrite(store, [["HSET", diary, "cs_test_longago000001", oldLine], ["HSET", diary, "cs_test_recent0000001", recentLine]]);
+  const before = (await dataUsed(store))!.orders;
+  await busyTimes(store);
+  is("the call that ended more than PAST_CALL_DAYS ago is let go; the recent one stays", [redis.run(["HEXISTS", diary, "cs_test_longago000001"]), redis.run(["HEXISTS", diary, "cs_test_recent0000001"])], [0, 1]);
+  is("and what its line took is given back, never more", (await dataUsed(store))!.orders, before - fieldReleaseBytes("cs_test_longago000001", oldLine));
+  await busyTimes(store);
+  is("given back once", (await dataUsed(store))!.orders, before - fieldReleaseBytes("cs_test_longago000001", oldLine));
 
   done();
 }

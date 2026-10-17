@@ -20,6 +20,7 @@
 import { ADMITTED_FIELD, OrdersPausedError, admitOrders } from "@/lib/order-admission";
 import { createHash, randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataOwner, orderWrite } from "@/lib/order-data";
 import { normaliseEmail } from "@/lib/auth";
 import { StripeError, onAccount } from "@/lib/stripe-account";
 import { isConfirmed } from "@/lib/calls";
@@ -194,9 +195,10 @@ export async function recordPackage(input: { store: Store; session: Session; pro
   const total = Math.max(1, Math.min(20, Number(meta.sessions) || 0));
   const token = randomBytes(24).toString("hex");
   const bought: Bought = { s: store.statsId, h: store.handle, p: product.id, e: email, total, at, until: days ? at + days * 86_400 : 0, token, holds: [] };
-  const [fresh] = await redisPipeline([["SET", pkgKey(checkout), JSON.stringify(bought), "NX", ...keep(bought)]]);
+  // Counted in the store's room at what they really add (lib/order-data.ts).
+  const [fresh] = await orderWrite(store, [["SET", pkgKey(checkout), JSON.stringify(bought), "NX", ...keep(bought)]]);
   if (fresh === null) return readBought(checkout);
-  await redisPipeline([["SET", tokenKey(token), checkout, ...keep(bought)]]);
+  await orderWrite(store, [["SET", tokenKey(token), checkout, ...keep(bought)]]);
   const amount = typeof session.amount_total === "number" ? session.amount_total : 0;
   const currency = typeof session.currency === "string" && session.currency ? session.currency : store.currency;
   // In the store's language (lib/buyer-words/booking.ts), with the amount and
@@ -281,14 +283,15 @@ export async function prepareSession(store: Store, token: string, origin: string
  * another tab took the last one first — in which case the caller lets the
  * time go again.
  */
-export async function holdSession(checkout: string, session: string, until: number): Promise<boolean> {
+export async function holdSession(store: DataOwner, checkout: string, session: string, until: number): Promise<boolean> {
   return withLock(`nl:pkg:${checkout}:lock`, 30, 10_000, async () => {
     const bought = await readBought(checkout);
     if (!bought) return false;
     const state = await packageState(bought);
     if (state.left <= 0) return false;
     bought.holds.push({ session, until });
-    await redisPipeline([["SET", pkgKey(checkout), JSON.stringify(bought), ...keep(bought)]]);
+    // What the record grows by is counted in the store's room (lib/order-data.ts).
+    await orderWrite(store, [["SET", pkgKey(checkout), JSON.stringify(bought), ...keep(bought)]]);
     return true;
   });
 }

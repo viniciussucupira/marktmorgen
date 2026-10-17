@@ -31,6 +31,7 @@ import { storeForId } from "@/lib/store";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { orderWrite } from "@/lib/order-data";
 import { withinLimit } from "@/lib/request-guard";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { joinedKey } from "@/lib/joined-stores";
@@ -61,12 +62,16 @@ export async function forgetLibraryPerson(sid: string, email: string): Promise<n
   return replies.reduce<number>((sum, n) => sum + (Number(n) || 0), 0);
 }
 
-/** Notes that these addresses bought something from the store with this id. Never throws. */
+/**
+ * Notes that these addresses bought something from the store with this id,
+ * counted in that store's room at what it really adds (lib/order-data.ts):
+ * an address already noted adds nothing. Never throws.
+ */
 export async function rememberBuyers(sid: string, emails: string[]): Promise<void> {
   const wanted = emails.filter((email) => typeof email === "string" && EMAIL_PATTERN.test(normaliseEmail(email)));
   if (!STORE_ID.test(sid) || !wanted.length || !isRedisConfigured()) return;
   try {
-    await redisPipeline(wanted.flatMap((email) => [["SADD", libraryKey(email), sid], ["EXPIRE", libraryKey(email), KEEP_SECONDS]]));
+    await orderWrite({ sid }, wanted.flatMap((email) => [["SADD", libraryKey(email), sid], ["EXPIRE", libraryKey(email), KEEP_SECONDS]]));
   } catch (error) {
     console.error("noting a buyer for their library failed", error);
   }

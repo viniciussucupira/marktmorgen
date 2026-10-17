@@ -34,6 +34,7 @@ import { withinStore } from "@/lib/metered-limits";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { orderWrite } from "@/lib/order-data";
 import { holdsProducts } from "@/lib/community-access";
 import { sendEmail } from "@/lib/email";
 import { withinLimit } from "@/lib/request-guard";
@@ -57,12 +58,13 @@ export async function feedToken(store: Store, productId: string, email: string):
   if (typeof existing === "string" && FEED_TOKEN.test(existing)) return existing;
   const token = randomBytes(24).toString("hex");
   const grant: FeedGrant = { s: sid, h: store.handle, p: productId, e: normaliseEmail(email) };
-  const [set] = await redisPipeline([["SET", byKey(sid, productId, email), token, "NX"]]);
+  // A listener's access is kept for good: counted in the store's room at what it adds (lib/order-data.ts).
+  const [set] = await orderWrite(store, [["SET", byKey(sid, productId, email), token, "NX"]]);
   if (set === null) {
     const [again] = await redisPipeline([["GET", byKey(sid, productId, email)]]);
     return typeof again === "string" ? again : null;
   }
-  await redisPipeline([["SET", tokenKey(token), JSON.stringify(grant)]]);
+  await orderWrite(store, [["SET", tokenKey(token), JSON.stringify(grant)]]);
   return token;
 }
 

@@ -553,7 +553,8 @@ export default function TermsPage() {
           {COMMUNITY_PICTURES.scale.toLocaleString("en-US")} on Scale; deleting a post
           with a picture makes room for another. Your store&apos;s words and
           records (products, pages, posts, courses, contacts, forms and their
-          answers, and what each order keeps) have a data room of{" "}
+          answers, and what each order keeps, counted at what it really
+          writes) have a data room of{" "}
           {dataRoomListWords({ creator: "Store", pro: "Studio", scale: "Scale" })}{" "}
           ({dataWords(NON_PAYING_DATA_ROOM_BYTES.trial)} in a free trial). When it is full, what
           you or your buyers would add is refused with a plain message until

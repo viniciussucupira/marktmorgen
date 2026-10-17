@@ -39,6 +39,7 @@ import { MAX_IMPORT, MAX_LEADS } from "@/lib/contact-rules";
 import { liftCommand, suppressedAmongCommand, suppressedCommand, wasSuppressed } from "@/lib/suppression";
 import { joinedCommands } from "@/lib/joined-stores";
 import { type DataStore, needData } from "@/lib/store-data";
+import { type DataOwner, orderWrite } from "@/lib/order-data";
 import { dataBytes } from "@/lib/store-data-rules";
 
 /** How many product names one address keeps. */
@@ -106,20 +107,25 @@ export function readTags(raw: string | string[]): string[] {
 /**
  * What contacts take in the store's data room (lib/store-data.ts), all in
  * one slot. A contact put on the list by an order is part of what the order
- * left (lib/store-data-rules.ts, ORDER_DATA_BYTES), so those writes pass
- * `room` as null; every other way on (a sign-up, an import, the API, labels a
- * sequence adds) takes what it grows the list by first, and is refused with
- * DataRoomError when it does not fit. A contact counts for its record and,
- * from the start, the unsubscribe link it will be given (TOKEN_BYTES) and
- * the few flags leaving adds.
+ * left, so those writes pass `room` as { order: store } and are written by
+ * lib/order-data.ts, which charges the room what each really adds (a buyer
+ * already on the list, only what their record grew by); every other way on
+ * (a sign-up, an import, the API, labels a sequence adds) takes what it grows
+ * the list by first, and is refused with DataRoomError when it does not fit.
+ * A contact counts for its record and, from the start, the unsubscribe link
+ * it will be given (TOKEN_BYTES) and the few flags leaving adds. `room` null
+ * is for the company's own lists, which are not a store's.
  */
 const CONTACTS_SLOT = "ct";
 export const TOKEN_BYTES = dataBytes(["0".repeat(40), "x".repeat(40 + 254 + 40)], 1) + 64;
 const contactBytes = (contact: Contact | null) => (contact ? dataBytes([JSON.stringify(contact)], 1) + TOKEN_BYTES : 0);
 
+/** Who a contact's write is counted for: the store's room, an order of the store's, or nobody (the company's own lists). */
+export type ContactRoom = DataStore | { order: DataOwner } | null;
+
 /** Takes what writing these contacts over what they were grows the list by; nothing when the writes are an order's. */
-async function needContacts(room: DataStore | null, pairs: { before: Contact | null; next: Contact }[]): Promise<void> {
-  if (!room) return;
+async function needContacts(room: ContactRoom, pairs: { before: Contact | null; next: Contact }[]): Promise<void> {
+  if (!room || "order" in room) return;
   const grown = pairs.reduce((sum, { before, next }) => sum + Math.max(0, contactBytes(next) - contactBytes(before)), 0);
   if (grown > 0) await needData(room, [{ slot: CONTACTS_SLOT, bytes: grown }]);
 }
@@ -192,8 +198,8 @@ export async function upsertContact(
     /** The store's id, given when the person typed the address themselves, so asking to be deleted from every store finds this one (lib/joined-stores.ts). */
     sid?: string;
   },
-  /** The store whose data room the contact takes from, or null for one an order put on (counted with the order). */
-  room: DataStore | null,
+  /** The store whose data room the contact takes from; { order: store } for one an order put on (lib/order-data.ts); null for the company's own lists. */
+  room: ContactRoom,
 ): Promise<AddResult> {
   const none = { joined: false, gotProduct: false, full: false };
   if (!isRedisConfigured() || !listId) return none;
@@ -260,7 +266,8 @@ export async function upsertContact(
   if (resubscribe) commands.push(["DECR", unsubKey(listId)]);
   if (deleted && ownYes) commands.push(liftCommand(listId, email));
   if (input.sid) commands.push(...joinedCommands(input.sid, email));
-  await redisPipeline(commands);
+  if (room && "order" in room) await orderWrite(room.order, commands);
+  else await redisPipeline(commands);
   return { joined: mailable(next) && !wasMailable, gotProduct, full: false };
 }
 
@@ -268,7 +275,7 @@ export async function upsertContact(
  * Notes that someone already on the list got a product, without adding
  * anyone who is not. Says whether they may be written to.
  */
-export async function noteProduct(listId: string, rawEmail: string, productId: string, title: string): Promise<boolean> {
+export async function noteProduct(listId: string, rawEmail: string, productId: string, title: string, order: DataOwner): Promise<boolean> {
   if (!isRedisConfigured() || !listId) return false;
   const email = normaliseEmail(rawEmail);
   const [raw] = await redisPipeline([["HGET", leadsKey(listId), email]]);
@@ -281,7 +288,8 @@ export async function noteProduct(listId: string, rawEmail: string, productId: s
       ids: [...before.ids, productId].slice(-MAX_TITLES),
       titles: (before.titles.includes(title) ? before.titles : [...before.titles, title]).slice(-MAX_TITLES),
     };
-    await redisPipeline([["HSET", leadsKey(listId), email, JSON.stringify(next)]]);
+    // An order's: counted at what the record grew by (lib/order-data.ts).
+    await orderWrite(order, [["HSET", leadsKey(listId), email, JSON.stringify(next)]]);
   }
   return mailable(before);
 }

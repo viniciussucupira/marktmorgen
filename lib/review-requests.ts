@@ -38,10 +38,11 @@ import { SITE_URL } from "@/lib/site-url";
 import { ASK_DUE_KEY, type AskEntry, dueAt, readAskMember } from "@/lib/review-ask";
 import { mintReviewLink, provePurchase } from "@/lib/review-proof";
 import { readReview, reviewId } from "@/lib/reviews";
-import type { Store } from "@/lib/store";
+import { type Store, storeForHandle } from "@/lib/store";
 import { speech } from "@/lib/buyer-words";
 import { givingWords } from "@/lib/buyer-words/giving";
 import { noteForErasure } from "@/lib/erasure-index";
+import { orderWrite } from "@/lib/order-data";
 import { suppressedCommand, wasSuppressed } from "@/lib/suppression";
 
 /** Orders looked at in one run of the job. */
@@ -62,7 +63,7 @@ const stopKey = (token: string) => `nl:rev:stop:${token}`;
 /**
  * One stop link for each address a store writes to (since 18 October 2026),
  * the same in every email: so what the links keep is one record a buyer,
- * which their order counts for (lib/store-data-rules.ts, ORDER_DATA_BYTES),
+ * counted in the store's room when it is first made (lib/order-data.ts),
  * not one an email. Signed with a key of our own, so nobody can make the
  * link of an address; where no key is set, a new one each time, as before.
  */
@@ -74,7 +75,12 @@ function stopToken(statsId: string, email: string): string {
 async function stopLink(store: Store, email: string): Promise<string> {
   const token = stopToken(store.statsId ?? "", email);
   const grant = { s: store.statsId, e: normaliseEmail(email), h: store.handle, n: store.mail?.fromName || store.name };
-  await redisPipeline([["SET", stopKey(token), JSON.stringify(grant), "EX", STOP_LINK_SECONDS], ...noteForErasure(store.statsId, email, stopKey(token))]);
+  // The link itself is counted in the store's room at what it really adds,
+  // once an address (lib/order-data.ts); the note that finds it again for an
+  // erasure is bounded on its own (lib/erasure-index.ts).
+  await orderWrite(store, [["SET", stopKey(token), JSON.stringify(grant), "EX", STOP_LINK_SECONDS]]);
+  const notes = noteForErasure(store.statsId, email, stopKey(token));
+  if (notes.length) await redisPipeline(notes);
   return token;
 }
 
@@ -101,9 +107,11 @@ export async function stopReviewRequests(token: string): Promise<boolean> {
   const [raw] = await redisPipeline([["GET", stopKey(token)]]);
   if (typeof raw !== "string" || !raw) return false;
   try {
-    const grant = JSON.parse(raw) as { s?: unknown; e?: unknown };
+    const grant = JSON.parse(raw) as { s?: unknown; e?: unknown; h?: unknown };
     if (typeof grant.s !== "string" || typeof grant.e !== "string" || !grant.s || !grant.e) return false;
-    await redisPipeline([["SET", offKey(grant.s, grant.e), new Date().toISOString()]]);
+    // Kept for good, so counted in the store's room at what it adds (lib/order-data.ts).
+    const store = typeof grant.h === "string" && grant.h ? await storeForHandle(grant.h).catch(() => null) : null;
+    await orderWrite(store && store.statsId === grant.s ? store : { statsId: grant.s }, [["SET", offKey(grant.s, grant.e), new Date().toISOString()]]);
     return true;
   } catch {
     return false;

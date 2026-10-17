@@ -45,8 +45,10 @@ const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 test("no page draws itself by reading every product in the store", () => {
   // One exception, and it has to stay one: see the test below it. (And the
   // daily job for a store whose plan ended, lib/plan-closing.ts, which takes
-  // the file off every product a store has, once, and is not a page.)
-  const allowed = new Set(["lib/catalog.ts", "app/api/store/product/route.ts", "lib/imports.ts", "lib/plan-closing.ts"]);
+  // the file off every product a store has, once, and is not a page; and the
+  // one-time count of what stores keep, lib/data-recount.ts, which reads each
+  // store's products once for the ids its keys are named by.)
+  const allowed = new Set(["lib/catalog.ts", "app/api/store/product/route.ts", "lib/imports.ts", "lib/plan-closing.ts", "lib/data-recount.ts"]);
   const offenders = walk("app")
     .concat(walk("lib"), walk("components"))
     .filter((file) => !allowed.has(file))

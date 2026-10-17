@@ -16,6 +16,7 @@
  */
 import { createHash, randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { orderWrite } from "@/lib/order-data";
 import { emailKey, storeKey } from "@/lib/learn";
 import { normaliseEmail } from "@/lib/auth";
 import type { Store } from "@/lib/store";
@@ -141,7 +142,8 @@ export async function accountOf(room: string, email: string): Promise<string | n
 
 /** Keeps a person, and when they are checked next. */
 export async function keepMember(room: string, sid: string, userId: string, member: Member, now = Date.now()): Promise<void> {
-  await redisPipeline([
+  // A person given roles is kept for good: counted in the store's room at what it adds (lib/order-data.ts).
+  await orderWrite({ sid }, [
     ["HSET", membersKey(room), userId, JSON.stringify({ ...member, e: normaliseEmail(member.e) })],
     ["SET", addressKey(room, member.e), userId],
     ["ZADD", DUE_KEY, Math.floor(now / 1000) + CHECK_HOURS * 3_600, `${sid}|${userId}`],

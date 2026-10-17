@@ -108,13 +108,13 @@ async function main(): Promise<void> {
   const coupon = posts.find((p) => p.path === "/coupons")!.body;
   is("the coupon", [coupon.get("percent_off"), coupon.get("max_redemptions"), coupon.get("duration")], ["100", "1", "once"]);
   const soon = Math.floor(Date.now() / 1000) + 1_800;
-  for (let i = 0; i < 4; i += 1) await holdSession(PAID, `cs_test_hold${i}${"x".repeat(20)}`, soon);
+  for (let i = 0; i < 4; i += 1) await holdSession(store, PAID, `cs_test_hold${i}${"x".repeat(20)}`, soon);
   is("held sessions count", (await packageState((await readBought(PAID))!)).left, 1);
-  await holdSession(PAID, `cs_test_expired${"x".repeat(20)}`, Math.floor(Date.now() / 1000) - 3_600);
+  await holdSession(store, PAID, `cs_test_expired${"x".repeat(20)}`, Math.floor(Date.now() / 1000) - 3_600);
   is("a hold that ran out unpaid comes back", (await packageState((await readBought(PAID))!)).left, 1);
   redis.run(["SET", `nl:call:confirmed:cs_test_expired${"x".repeat(20)}`, "1"]);
   is("unless it was booked after all", (await packageState((await readBought(PAID))!)).left, 0);
-  is("a sixth is refused", await holdSession(PAID, `cs_test_late${"x".repeat(20)}`, soon), false);
+  is("a sixth is refused", await holdSession(store, PAID, `cs_test_late${"x".repeat(20)}`, soon), false);
   const usedUp = await prepareSession(store, bought.token, "https://marktmorgen.com");
   is("and so is its checkout", usedUp.ok ? "prepared" : usedUp.reason, "used");
 

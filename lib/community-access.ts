@@ -50,6 +50,7 @@ import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, sendEmail } from "@/lib/email";
 import { communityWords } from "@/lib/buyer-words/community";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { orderWrite } from "@/lib/order-data";
 import { type DataStore, DataRoomError } from "@/lib/store-data";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
@@ -344,7 +345,7 @@ export async function communityViewer(store: Store, cookies: CookieJar): Promise
   const existing = await readMember(id, key);
   if (existing?.removed) return { state: "removed", config, email: learner.email };
   if (!(await holdsTicket(store, config, learner.email))) return { state: "closed", config, email: learner.email };
-  const member = await touchMember(id, learner.email, existing);
+  const member = await touchMember(id, learner.email, existing, store);
   // The first time somebody comes in, the creator's welcome, sent privately
   // from the creator, where messages are on (lib/community-dm.ts). Once: the
   // record did not exist before this request, and the one made is theirs.
@@ -370,7 +371,8 @@ export async function communityViewer(store: Store, cookies: CookieJar): Promise
  */
 export async function welcome(id: string, config: CommunityConfig, member: string, room: DataStore): Promise<boolean> {
   if (!config.welcome.trim() || !config.dm.on) return false;
-  const [first] = await redisPipeline([["HSETNX", `nl:cm:${id}:wel`, member, Math.floor(Date.now() / 1000)]]);
+  // The welcome's mark, once a member: counted in the store's room (lib/order-data.ts).
+  const [first] = await orderWrite(room, [["HSETNX", `nl:cm:${id}:wel`, member, Math.floor(Date.now() / 1000)]]);
   if (Number(first) !== 1) return false;
   // A welcome that does not fit in the store's data room is not sent; the member still comes in.
   const sent = await sendMessage(id, config.dm, CREATOR, member, config.welcome, room).catch((error) => {

@@ -385,7 +385,7 @@ export async function confirmPurchase(
   // by the checkout, and not at all when its sale paid a share.
   if (outcome === "sent") {
     const paid = typeof read.session?.amount_total === "number" ? read.session.amount_total : 0;
-    await countOrder(store, `checkout:${sessionId}`, paid, Date.now(), read.items ?? 1);
+    await countOrder(store, `checkout:${sessionId}`, paid, Date.now());
     // The hour its checkout was held in gives it back, now that it is counted (lib/order-admission.ts).
     await settleAdmitted(store, read.session?.metadata?.[ADMITTED_FIELD], 1, read.items ?? 1);
   }

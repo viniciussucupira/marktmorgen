@@ -81,6 +81,7 @@ import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { giveData, needData } from "@/lib/store-data";
+import { orderWrite } from "@/lib/order-data";
 import { dataBytes } from "@/lib/store-data-rules";
 import { affiliatePromotionFrom, readAffiliatePromotion, type AffiliatePromotion } from "@/lib/affiliate-promotion";
 import { onAccount } from "@/lib/stripe-account";
@@ -1210,8 +1211,9 @@ export async function funnelRate(store: Store, affId: string, productId: string)
 
 async function writeReferral(store: Store, referral: Referral): Promise<void> {
   if (!store.statsId || !isRedisConfigured()) return;
-  // Once per sale, whichever of the thanks page and the five-minute job is first.
-  await redisPipeline([["HSETNX", salesKey(store.statsId), referral.ref, JSON.stringify(referral)]]);
+  // Once per sale, whichever of the thanks page and the five-minute job is
+  // first, counted in the store's room at what it really adds (lib/order-data.ts).
+  await orderWrite(store, [["HSETNX", salesKey(store.statsId), referral.ref, JSON.stringify(referral)]]);
 }
 
 /**
@@ -1256,7 +1258,7 @@ export async function notePartners(
     };
     commands.push(["HSETNX", sharesKey(store.statsId), `${sale.ref}:${partner.id}`, JSON.stringify(earning)]);
   }
-  await redisPipeline(commands);
+  await orderWrite(store, commands);
 }
 
 /**

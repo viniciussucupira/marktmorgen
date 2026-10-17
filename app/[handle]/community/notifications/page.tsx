@@ -56,7 +56,7 @@ export default async function NotificationsPage({ params }: Params) {
   const devices = canPush() ? await deviceCount(id, key) : 0;
   // Read is read. Done after the list is built, so this visit still shows
   // what was new when they arrived.
-  await markSeen(id, key);
+  await markSeen(id, key, store);
 
   return (
     <div lang={LANGUAGES[store.language].locale} className={`st-page st-theme-${store.look.theme} relative min-h-screen`} style={lookStyle(store.look) as React.CSSProperties}>

@@ -44,6 +44,7 @@ import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type DataStore, giveData, needData, takeData } from "@/lib/store-data";
+import { orderWrite } from "@/lib/order-data";
 import { dataBytes } from "@/lib/store-data-rules";
 import {
   EMPTY_SUMMARY,
@@ -350,13 +351,13 @@ export async function saveReview(statsId: string, input: SaveInput, room: DataSt
     const grown = reviewBytes(review) - reviewBytes(before);
     if (grown > 0 && !(await takeData(room, [{ slot: REVIEWS_SLOT(input.productId), bytes: grown }], now)).ok) return { state: "noroom" };
     await write(statsId, review);
-    const pays: (string | number)[][] = [];
-    if (review.pi) pays.push(["HSET", payKey(statsId), review.pi, await payEntry(statsId, review.pi, `${review.productId}|${id}`)]);
     await redisPipeline([
       ["ZADD", newKey(statsId), now, `${review.productId}|${id}`],
       ["SADD", REVIEW_STORES_KEY, statsId],
-      ...pays,
     ]);
+    // Which reviews a payment paid for, kept for its refund: counted in the
+    // store's room at what it really adds (lib/order-data.ts).
+    if (review.pi) await orderWrite(room, [["HSET", payKey(statsId), review.pi, await payEntry(statsId, review.pi, `${review.productId}|${id}`)]]);
     await recount(statsId, input.productId);
     return { state: before ? "updated" : "created", review };
   });

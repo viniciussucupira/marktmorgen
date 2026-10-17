@@ -315,6 +315,22 @@ export class MemoryRedis {
           return removed;
         }
         if (key.startsWith("-- marktmorgen:store-data:v1\n") && args[0] === "1") return this.storeData(args.slice(1));
+        if (key.startsWith("-- marktmorgen:order-write:v1\n")) return this.orderWrite(args);
+        if (key.startsWith("-- marktmorgen:recount-page:v1\n") && args[0] === "2") {
+          const [state, sums, from, next, ...pairs] = args.slice(1);
+          if (pairs.length % 2 !== 0) return -1;
+          const st = this.hash(state);
+          if (st.get("phase") !== "scan" || st.get("cursor") !== from) return 0;
+          for (let i = 0; i < pairs.length; i += 2) if (!/^\d+$/.test(pairs[i + 1])) return -1;
+          const sum = this.hash(sums);
+          for (let i = 0; i < pairs.length; i += 2) sum.set(pairs[i], String((Number(sum.get(pairs[i])) || 0) + Number(pairs[i + 1])));
+          st.set("cursor", next);
+          if (next === "0") {
+            st.set("phase", "apply");
+            st.set("cursor", "0");
+          }
+          return 1;
+        }
         if (key.startsWith("-- marktmorgen:capped-count:v1\n")) return this.cappedCount(args);
         if (!key.startsWith("-- marktmorgen:form-opportunity:v1\n") || args[0] !== "1" || args.length !== 5) throw new Error("MemoryRedis: unsupported EVAL");
         const target = args[1];
@@ -465,6 +481,16 @@ export class MemoryRedis {
         });
         this.data.set(key, kept);
         return gone;
+      }
+      case "STRLEN": {
+        const held = this.data.get(key);
+        return typeof held === "string" ? Buffer.byteLength(held, "utf8") : 0;
+      }
+      case "ZSCAN": {
+        // ZSCAN key cursor [COUNT n]: everything at once, member and score, the cursor back at "0", as HSCAN does.
+        const flat: string[] = [];
+        for (const e of this.zset(key)) flat.push(e.member, String(e.score));
+        return ["0", flat];
       }
       case "LLEN":
         return this.data.has(key) ? this.list(key).length : 0;
@@ -776,6 +802,110 @@ export class MemoryRedis {
    * the script itself against a real Redis.
    */
   /** lib/store-data.ts, TAKE_DATA: the same steps, in the same order. */
+  /** Whether a key holds anything: a read here makes an empty one, which Redis never keeps. */
+  private present(key: string): boolean {
+    this.live(key);
+    const held = this.data.get(key);
+    if (held === undefined) return false;
+    if (typeof held === "string") return true;
+    return held instanceof Map || held instanceof Set ? held.size > 0 : held.length > 0;
+  }
+
+  /** What Redis's TYPE would say of a key, an empty one being none. */
+  private typeOf(key: string): string {
+    if (!this.present(key)) return "none";
+    return String(this.run(["TYPE", key]));
+  }
+
+  /**
+   * lib/order-data.ts, ORDER_WRITE: each command run as Redis runs it, and
+   * charged what it added, the way the script measures it (UTF-8 bytes).
+   */
+  private orderWrite(args: string[]): unknown {
+    const count = Number(args[0]);
+    const keys = args.slice(1, 1 + count);
+    const argv = args.slice(1 + count);
+    const allowed = new Set(["SET", "HSET", "HSETNX", "HINCRBY", "SADD", "ZADD", "ZINCRBY", "RPUSH", "LPUSH", "INCR", "INCRBY", "DECR", "DECRBY", "EXPIRE", "PEXPIRE", "EXPIREAT", "PEXPIREAT", "DEL", "HDEL", "SREM", "ZREM"]);
+    const n = Number(argv[0]);
+    if (!Number.isInteger(n) || n < 1 || n > 48) return [-1];
+    const plan: { name: string; key: string; args: string[] }[] = [];
+    let i = 1;
+    for (let c = 0; c < n; c += 1) {
+      const name = argv[i];
+      const k = Number(argv[i + 1]);
+      const argc = Number(argv[i + 2]);
+      if (!allowed.has(name) || !Number.isInteger(k) || k < 2 || !keys[k - 1] || !Number.isInteger(argc) || argc < 0 || i + 2 + argc > argv.length - 1) return [-1];
+      plan.push({ name, key: keys[k - 1], args: argv.slice(i + 3, i + 3 + argc) });
+      i += 3 + argc;
+    }
+    if (i !== argv.length) return [-1];
+    const bytes = (text: string) => Buffer.byteLength(text, "utf8");
+    const existed = new Map<string, boolean>();
+    let grown = 0;
+    const replies: unknown[] = [];
+    for (const { name, key, args: rest } of plan) {
+      if (!existed.has(key)) existed.set(key, this.present(key));
+      const t = this.typeOf(key);
+      const strlen = () => (this.typeOf(key) === "string" ? bytes(String(this.data.get(key))) : 0);
+      const field = (f: string) => (this.typeOf(key) === "hash" && (this.data.get(key) as Map<string, string>).has(f) ? bytes((this.data.get(key) as Map<string, string>).get(f)!) : null);
+      const member = (m: string) => {
+        const held = this.typeOf(key);
+        if (held === "set") return (this.data.get(key) as Set<string>).has(m);
+        if (held === "zset") return (this.data.get(key) as { member: string }[]).some((e) => e.member === m);
+        return false;
+      };
+      let before: number | Map<string, number | null> | Map<string, boolean> = 0;
+      if (name === "SET" || name === "INCR" || name === "INCRBY" || name === "DECR" || name === "DECRBY") before = strlen();
+      else if ((name === "HSET" || name === "HSETNX") && (t === "hash" || t === "none")) {
+        const fields = new Map<string, number | null>();
+        for (let j = 0; j + 1 < rest.length; j += 2) if (!fields.has(rest[j])) fields.set(rest[j], field(rest[j]));
+        before = fields;
+      } else if (name === "HINCRBY" && (t === "hash" || t === "none")) before = new Map([[rest[0], field(rest[0])]]);
+      else if (name === "SADD" && (t === "set" || t === "none")) before = new Map(rest.map((m) => [m, member(m)]));
+      else if ((name === "ZADD" || name === "ZINCRBY") && (t === "zset" || t === "none")) {
+        const members: string[] = [];
+        if (name === "ZINCRBY") members.push(rest[1]);
+        else {
+          let j = 0;
+          while (rest[j] !== undefined && /^[A-Z]+$/.test(rest[j].toUpperCase())) j += 1;
+          for (; rest[j + 1] !== undefined; j += 2) members.push(rest[j + 1]);
+        }
+        before = new Map(members.map((m) => [m, member(m)]));
+      }
+      let reply: unknown;
+      try {
+        if ((name === "HSET" || name === "HSETNX" || name === "HINCRBY") && t !== "hash" && t !== "none") throw new Error("WRONGTYPE");
+        if (name === "SADD" && t !== "set" && t !== "none") throw new Error("WRONGTYPE");
+        reply = this.run([name, key, ...rest]);
+        if (name === "HSET") reply = (before as Map<string, number | null>).size === 0 ? 0 : [...(before as Map<string, number | null>).values()].filter((v) => v === null).length;
+      } catch (error) {
+        replies.push(`\u0000order-write-error:${error instanceof Error ? error.message : String(error)}`);
+        continue;
+      }
+      replies.push(reply === undefined ? null : reply);
+      if (name === "SET" || name === "INCR" || name === "INCRBY" || name === "DECR" || name === "DECRBY") grown += Math.max(0, strlen() - (before as number));
+      else if (name === "HSET" || name === "HSETNX" || name === "HINCRBY") {
+        for (const [f, old] of before as Map<string, number | null>) {
+          const now = field(f);
+          if (now === null) continue;
+          grown += old === null ? bytes(f) + now + 64 : Math.max(0, now - old);
+        }
+      } else if (name === "SADD" || name === "ZADD" || name === "ZINCRBY") {
+        for (const [m, was] of before as Map<string, boolean>) if (!was && member(m)) grown += name === "SADD" ? bytes(m) + 64 : bytes(m) + 8 + 128;
+      } else if (name === "RPUSH" || name === "LPUSH") for (const v of rest) grown += bytes(v) + 64;
+    }
+    for (const [key, was] of existed) if (!was && this.present(key)) grown += bytes(key) + 96;
+    const charged = Math.ceil((grown * 5) / 4 / 16) * 16;
+    if (charged > 0) {
+      const room = this.hash(keys[0]);
+      const old = Number(room.get("o") ?? "0") || 0;
+      const total = Number(room.get("#") ?? "0") || 0;
+      room.set("o", String(Math.max(old, 0) + charged));
+      room.set("#", String(Math.max(total, 0) + charged + (old <= 0 ? 64 : 0)));
+    }
+    return [charged, ...replies];
+  }
+
   private storeData(args: string[]): unknown {
     const [target, rawLimit, always, month, ...rest] = args;
     this.live(target);

@@ -55,6 +55,7 @@ import { MAX_UPLOAD_KEYS, MAX_POOL_KEYS, MIN_KEY_LENGTH, MAX_KEY_LENGTH, KEY_ALP
 export { MAX_UPLOAD_KEYS, MAX_POOL_KEYS, MIN_KEY_LENGTH, MAX_KEY_LENGTH, KEY_ALPHABET, MAX_KEY_FILE_BYTES, sampleKey, type IssuedKey, type KeyCounts } from "@/lib/licence-key-rules";
 import { saleHandles } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { orderWrite } from "@/lib/order-data";
 import { giveData, needData } from "@/lib/store-data";
 import { dataBytes } from "@/lib/store-data-rules";
 import { NIMBUS_FROM, sendEmail } from "@/lib/email";
@@ -282,14 +283,15 @@ export async function keyForSale(store: Store, product: Listing, reference: stri
  * else — then that one stands, and this key goes back where it came from.
  */
 async function settle(store: Store, product: Listing, reference: string, email: string, key: string, fromPool: boolean): Promise<SaleKey> {
-  const [won] = await redisPipeline([["HSETNX", saleKey(store, product), reference, key]]);
+  // A key given to a sale is kept for good: counted in the store's room at what it adds (lib/order-data.ts).
+  const [won] = await orderWrite(store, [["HSETNX", saleKey(store, product), reference, key]]);
   if (Number(won) !== 1) {
     await redisPipeline(fromPool ? [["LPUSH", poolKey(store, product), key]] : [["SREM", allKey(store, product), key]]);
     const again = await keyOfSale(store, product, reference);
     return again ?? { state: "waiting" };
   }
   const info: Info = { r: reference, e: email, at: Math.floor(Date.now() / 1000) };
-  await redisPipeline([
+  await orderWrite(store, [
     ["HSET", infoKey(store, product), key, JSON.stringify(info)],
     ["HDEL", waitingKey(store, product), reference],
   ]);
@@ -443,7 +445,7 @@ export async function setRevoked(
     at: info.at,
     ...(revoked ? { v: Math.floor(Date.now() / 1000), ...(by === "refund" ? { w: "refund" as const } : {}) } : {}),
   };
-  await redisPipeline([["HSET", infoKey(store, product), key, JSON.stringify(next)]]);
+  await orderWrite(store, [["HSET", infoKey(store, product), key, JSON.stringify(next)]]);
   return true;
 }
 

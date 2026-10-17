@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
   // The session counts against the package from now; if another tab took the
   // last one meanwhile, this time is let go again.
   if (prepared && prepared.ok && prepared.checkout) {
-    const counted = await holdSession(prepared.checkout, result.session, Math.floor(Date.now() / 1000) + HOLD_SECONDS).catch(() => false);
+    const counted = await holdSession(store, prepared.checkout, result.session, Math.floor(Date.now() / 1000) + HOLD_SECONDS).catch(() => false);
     if (!counted) {
       await releaseOwnHold(store, result.session).catch(() => {});
       return back("pkg-used");

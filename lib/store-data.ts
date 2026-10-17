@@ -12,7 +12,8 @@
  * the total past the room, before anything is written: the caller writes
  * only when it was taken. A change that shrinks or keeps the total is always
  * taken, so deleting never fails for want of room. An order's bytes are
- * added always (chargeOrderData), never refused: their room is held up front
+ * added by the writes that leave them, at what each really adds
+ * (lib/order-data.ts, slot "o"), never refused: their room is held up front
  * at the checkout (lib/order-admission.ts).
  *
  * What this errs toward. A record whose deletion is not given back stays
@@ -26,7 +27,7 @@
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { StoreFullError } from "@/lib/store-full";
-import { type DataFields, contentRoomFor, dataFullWords, dataRoomFor, orderDataBytes } from "@/lib/store-data-rules";
+import { type DataFields, contentRoomFor, dataFullWords, dataRoomFor } from "@/lib/store-data-rules";
 
 /** What a store is kept under, and what its room is measured by. */
 export type DataStore = DataFields & { sid?: string; statsId?: string | null; handle?: string };
@@ -259,16 +260,6 @@ export async function noteData(store: DataStore, changes: DataChange[], now = Da
 /** One slot shrunk by `bytes`. Never refuses and never throws. */
 export function giveDataBytes(store: DataStore, slot: string, bytes: number, now = Date.now()): Promise<void> {
   return giveData(store, [{ slot, bytes }], now);
-}
-
-/**
- * What one order of `items` products leaves, added to the room whatever it
- * comes to: an order is never refused here (its room was held at the
- * checkout, at the most an order can take). Never throws: a count that
- * cannot be written must not cost a buyer anything.
- */
-export async function chargeOrderData(store: DataStore, items = 1, now = Date.now()): Promise<void> {
-  await run(store, [{ slot: "o", bytes: orderDataBytes(items) }], true, now / 1000).catch(() => undefined);
 }
 
 /** What a store keeps, in bytes, and the room it has, for the studio; null when it cannot be read. */
