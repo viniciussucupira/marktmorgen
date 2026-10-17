@@ -71,6 +71,8 @@ import { HeardAsk } from "@/components/heard-ask";
 import { heardOff } from "@/lib/heard";
 import { listedReturn, listedSite, purchaseReturn } from "@/lib/embed-sites";
 import { eventIdFor } from "@/lib/webhooks";
+import { Suspense } from "react";
+import { NextOfferCard } from "@/components/next-offer-card";
 
 export async function generateMetadata({ params }: Pick<Params, "params">): Promise<Metadata> {
   const { handle } = await params;
@@ -1173,6 +1175,24 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     </p>
                   </form>
                 </section>
+              ) : null}
+              {/* The Store assistant's one next product (lib/next-offer.ts): never while an
+                  offer after paying, or the next step of a funnel of pages, waits on the
+                  buyer; streamed in after the rest, so nothing here waits on it. */}
+              {sessionId && !offer && !funnelNext && !ended && order.email ? (
+                <Suspense fallback={null}>
+                  <NextOfferCard
+                    store={store}
+                    session={sessionId}
+                    email={order.email}
+                    bought={[order.product, ...order.bumps.map((added) => added.product)]}
+                    alsoOwned={[
+                      ...bundled.map((p) => p.id),
+                      ...(funnel?.taken ?? []).flatMap((added) => [added.product.id, ...(added.items?.items ?? []).map((p) => p.id)]),
+                    ]}
+                    declined={funnel?.declined ?? []}
+                  />
+                </Suspense>
               ) : null}
               {funnel?.notes.map((note) => (
                 <p key={`${note.state}-${note.title}`} className="st-note mt-6 text-sm" role="status">

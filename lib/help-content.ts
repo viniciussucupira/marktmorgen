@@ -811,6 +811,14 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can the Store assistant suggest one next product after a purchase?",
+        a: [
+          `Yes, with the ${ASSISTANT_NAME}: switch on \u201cSuggest one next product after a purchase\u201d under Pages in your studio. The page after paying then shows one more of your own products, at its published price, with its own description and a \u201cNo thanks\u201d that hides it for that order. It never shows what the buyer just bought or already owns from you (read from your own Stripe account by the address they paid with, and from purchases you brought over), anything they turned down after paying, a draft, or a product with a limited number for sale, and it waits while one of your offers after paying is still asking for an answer.`,
+          "Your own choices decide first, in this order: what you said goes well with the product, what it offers after paying, what it offers in a box at checkout, the rest of a collection it is in. Only when you set none does an AI choose among your products; it is then labeled \u201cAI suggestion\u201d, and its one sentence of why is shown only when it says nothing your own words do not, otherwise your product's own description is. Each AI choice is one reply of the add-on's month; once those are used, your store's own order decides, at no AI cost. One choice is made per order and kept three days, so opening the page again costs nothing more.",
+          "Check \u201cAlso in the order's confirmation email\u201d and the same product is a few lines of the email the buyer already gets, never an email of its own, and only for buyers who checked the box to hear from you at checkout. A purchase that follows it is an ordinary sale on the product's own page.",
+        ],
+      },
+      {
         q: "What if I can no longer open the email I log in with?",
         a: [
           "Two things get you back in without it, and both are set up ahead of time under Account in your studio. A passkey logs you in with your fingerprint, face or device PIN, with everything open; then move your sign-in address to an inbox you have. A recovery address is a second inbox you confirm with a code: from \u201cCannot open your email any more?\u201d on the login page, type the address you log in with, and a link goes there that lets you in at once.",

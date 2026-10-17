@@ -162,6 +162,7 @@ import { type Collection, type CollectionsProblem, MAX_PAIRS, collectionsWithout
 import { type SitePage, parseSitePages, MAX_SITE_PAGES, slugProblem } from "@/lib/site-page-rules";
 import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rules";
 import { type AssistantPlan, type AssistantSetting, NO_ASSISTANT, parseAssistant, parseAssistantPlan } from "@/lib/store-assistant-rules";
+import { type NextOfferSetting, NO_NEXT_OFFER, parseNextOffer } from "@/lib/next-offer-rules";
 import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
 import { DEFAULT_LANGUAGE, type LanguageCode, parseLanguage } from "@/lib/store-language";
 import { type AdsServerPlatform, parseAdsServer } from "@/lib/ad-consent";
@@ -673,6 +674,12 @@ export type Store = {
   /** What Stripe last said about the add-on's own subscription, or null when the store never had one. */
   assistantPlan: AssistantPlan | null;
   /**
+   * The Store assistant's next product after a purchase (lib/next-offer-rules.ts):
+   * whether it is suggested on the page after paying, and in the order's
+   * confirmation email too. Off on every store until its creator switches it on.
+   */
+  nextOffer: NextOfferSetting;
+  /**
    * A lower price for buyers in countries where money buys less
    * (lib/fair-price.ts), and the deepest discount the creator accepts. Off
    * on every store until its creator switches it on.
@@ -982,6 +989,7 @@ function parseStore(raw: unknown): Store | null {
       answers: parseAnswers(value.answers),
       assistant: parseAssistant(value.assistant),
       assistantPlan: parseAssistantPlan(value.assistantPlan),
+      nextOffer: parseNextOffer(value.nextOffer),
       fair: parseFair(value.fair),
       cartDeal: parseCartDeal(value.cartDeal),
       // Stores written before a store could pick its language speak English.
@@ -1185,6 +1193,7 @@ async function freshStore(fields: {
     answers: { ...NO_ANSWERS },
     assistant: { ...NO_ASSISTANT },
     assistantPlan: null,
+    nextOffer: { ...NO_NEXT_OFFER },
     fair: { ...DEFAULT_FAIR },
     cartDeal: { ...NO_DEAL },
     language: DEFAULT_LANGUAGE,
@@ -3914,6 +3923,11 @@ export async function setAnswers(email: string, raw: unknown): Promise<Store | n
 /** Switches the Store assistant's chat on or off, and keeps the creator's notes for it (lib/store-assistant-rules.ts). */
 export async function setAssistant(email: string, raw: unknown): Promise<Store | null> {
   return patchStore(email, () => ({ assistant: parseAssistant(raw) }));
+}
+
+/** Switches the Store assistant's next product after a purchase on or off, and its line in the confirmation email (lib/next-offer-rules.ts). */
+export async function setNextOffer(email: string, raw: unknown): Promise<Store | null> {
+  return patchStore(email, () => ({ nextOffer: parseNextOffer(raw) }));
 }
 
 /** Writes down what Stripe says about the store's add-on subscription (lib/assistant-billing.ts); null forgets it. */

@@ -161,6 +161,7 @@ export const PERSON_DATA: PersonData[] = [
   { file: "lib/answers.ts", how: "none", what: "Answers to visitors' questions, never who asked" },
   { file: "lib/store-assistant.ts", how: "expires", days: 1, what: "What they asked your Store assistant and its replies, under a random code only their browser holds and with no name or address, deleted a day after the last message, or at once when they press Delete this chat" },
   { file: "lib/store-assistant.ts", how: "none", what: "Questions your Store assistant could not answer, with the day, never who asked; what they chose to send you goes into your inbox, deleted with it" },
+  { file: "lib/next-offer.ts", how: "expires", days: 3, what: "The one next product your Store assistant suggested after an order, under the order's reference and with no name or address, deleted three days later; what the buyer already owns is read from your Stripe account to leave it out, and not kept" },
   { file: "lib/yearly-ask.ts", how: "none", what: "Marks that a membership's yearly offer went, by its Stripe subscription, never by address" },
 ];
 

@@ -12,6 +12,7 @@ import {
   assistantAllowanceWords,
   assistantPriceWords,
 } from "@/lib/store-assistant-rules";
+import type { NextOfferSetting } from "@/lib/next-offer-rules";
 
 const DATE = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 const FAILED = "It could not be saved just now. Try again in a moment.";
@@ -42,6 +43,7 @@ const NOTICES: Record<string, string> = {
  */
 export function StoreAssistantEditor({
   setting,
+  next,
   plan,
   onSale,
   canBill,
@@ -52,6 +54,7 @@ export function StoreAssistantEditor({
   pin,
 }: {
   setting: AssistantSetting;
+  next: NextOfferSetting;
   plan: AssistantPlan | null;
   onSale: boolean;
   canBill: boolean;
@@ -64,12 +67,16 @@ export function StoreAssistantEditor({
   const router = useRouter();
   const [on, setOn] = useState(setting.on);
   const [notes, setNotes] = useState(setting.notes);
-  const [busy, setBusy] = useState<"save" | "clear" | null>(null);
+  const [nextOn, setNextOn] = useState(next.on);
+  const [nextEmail, setNextEmail] = useState(next.email);
+  const [busy, setBusy] = useState<"save" | "clear" | "next" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const changed = on !== setting.on || notes.trim() !== setting.notes;
   const active = Boolean(plan?.active && plan.period);
 
-  async function post(body: Record<string, unknown>, what: "save" | "clear", said: string) {
+  const nextChanged = nextOn !== next.on || (nextOn && nextEmail) !== next.email;
+
+  async function post(body: Record<string, unknown>, what: "save" | "clear" | "next", said: string) {
     setBusy(what);
     setError(null);
     try {
@@ -191,6 +198,49 @@ export function StoreAssistantEditor({
           {error}
         </p>
       ) : null}
+
+      <div className="mt-7 border-t border-line pt-6">
+        <p className="font-semibold text-ink">After a purchase: one next product</p>
+        <p className="mt-1 text-sm text-ink-soft">
+          On the page after paying, one more of your own products, at its published price, with its own description, and a &ldquo;No thanks&rdquo;.
+          Never what the buyer just bought or already owns from you, never something they turned down after paying, and never while one of your
+          offers after paying is waiting on their answer. Your own choices come first, in this order: what you said goes well with the product,
+          what it offers after paying, what it offers at checkout, the rest of a collection it is in. Only when you set none does an AI choose among
+          your products, labeled &ldquo;AI suggestion&rdquo;; each such choice is one reply of the month, and once the month&apos;s replies are used
+          your store&apos;s own order decides, at no AI cost.
+        </p>
+        <label className="mt-4 flex min-h-11 cursor-pointer items-start gap-3 text-sm font-semibold text-ink">
+          <input type="checkbox" checked={nextOn} onChange={(event) => setNextOn(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-violet-brand" />
+          <span>Suggest one next product after a purchase</span>
+        </label>
+        <label className={`mt-1 flex min-h-11 items-start gap-3 text-sm font-semibold ${nextOn ? "cursor-pointer text-ink" : "text-ink-mute"}`}>
+          <input
+            type="checkbox"
+            checked={nextOn && nextEmail}
+            disabled={!nextOn}
+            onChange={(event) => setNextEmail(event.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-violet-brand"
+          />
+          <span>
+            Also in the order&apos;s confirmation email
+            <span className="block font-normal text-ink-soft">
+              The same product, as a few lines in the email the buyer already gets, never an email of its own; only to buyers who checked the box to
+              hear from you at checkout.
+            </span>
+          </span>
+        </label>
+        <div className="mt-3">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => void post({ next: { on: nextOn, email: nextOn && nextEmail } }, "next", nextOn ? "Saved. It shows after purchases while the add-on is paid for." : "Saved. No next product is suggested.")}
+            disabled={busy !== null || !nextChanged}
+            aria-busy={busy === "next"}
+          >
+            {busy === "next" ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
 
       {missed.length > 0 ? (
         <div className="mt-7 border-t border-line pt-6">
