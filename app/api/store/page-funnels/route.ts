@@ -5,7 +5,7 @@ import { FUNNEL_ID, MAX_FUNNEL_NAME, MAX_FUNNEL_PAGES, MAX_PAGE_FUNNELS, type Pa
 import { dropPageFunnel, readPageFunnels, writePageFunnel } from "@/lib/page-funnel-store";
 import { randomBytes } from "node:crypto";
 import { can } from "@/lib/team-roles";
-import { setSitePages } from "@/lib/store";
+import { appendSitePages } from "@/lib/store";
 import { emptyBlock, parsePage } from "@/lib/sales-page";
 import { writePage } from "@/lib/sales-page-store";
 import { MAX_SITE_PAGES, type SitePage, siteKey, slugProblem } from "@/lib/site-page-rules";
@@ -88,8 +88,9 @@ export async function POST(request: NextRequest) {
       }
       if (made.length) {
         setupStarted = true;
-        const saved = await setSitePages(guarded.ref, [...store.sitePages, ...made.map((m) => m.page)]);
-        if (!saved.ok || !saved.store.statsId) return Response.json({ ok: false, error: "setup_incomplete" }, { status: 500 });
+        const saved = await appendSitePages(guarded.ref, made.map((m) => m.page));
+        if (!saved.ok) return Response.json({ ok: false, error: "pages_changed" }, { status: 409 });
+        if (!saved.store.statsId) throw new Error("Saved pages have no store identity");
         for (const { slot, page } of made) {
           const blocks = slot.blocks.map((kind) => emptyBlock(kind));
           const copy = pageCopy[slot.key];
