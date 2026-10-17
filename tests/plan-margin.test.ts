@@ -102,6 +102,7 @@ import { AI_MONTHLY } from "@/lib/ai-rules";
 import { DELIVERY_ALLOWANCE_BYTES } from "@/lib/delivery";
 import { TOP_HEIGHT, viewingBytes } from "@/lib/stream-rules";
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED } from "@/lib/watch-rules";
+import { PAID_VIDEO_HOURS, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { LONGEST_PAUSE_MONTHS, PAID_MONTHS_BEFORE_PAUSE } from "@/lib/plan-pause-rules";
@@ -158,15 +159,16 @@ function netOf(tier: Tier, cycle: Cycle = "month", prices: Prices = PLAN_PRICES)
   return cycle === "year" ? kept / 12 : kept;
 }
 
-/** What an hour of video watched costs us at most: the largest size kept, and what is fetched ahead of it. */
+/** Historical operating model only: encoded-size assumptions and fetched-ahead factor.
+ * This is not a verified bound on provider bytes, replay, invoice rates or taxes. */
 function hourCost(): number {
   const gigabytes = (viewingBytes(3600, TOP_HEIGHT, Number.POSITIVE_INFINITY) / GB) * FETCHED_AHEAD;
   return gigabytes * STREAM_DELIVERY_PER_GB;
 }
 
 /** The hours of video a plan covers, all of them watched. */
-function videoCost(): number {
-  return VIDEO_HOURS_INCLUDED * hourCost();
+function videoCost(tier: Tier = "creator"): number {
+  return PAID_VIDEO_HOURS[tier] * hourCost();
 }
 
 /** The visits a plan covers, all of them made, each by the heavy visitor a visit is costed as. */
@@ -183,7 +185,7 @@ function ordersCost(tier: Tier): number {
 function worstCost(tier: Tier): number {
   const storage = (paidStorageBytes(tier) / GB) * STORAGE_PER_GB;
   const free = (FREE_PAUSE_ABOVE_BYTES / GB) * FILE_DELIVERY_PER_GB;
-  const video = videoCost();
+  const video = videoCost(tier);
   const email = monthlyEmails(tier) * PER_EMAIL;
   const drafts = AI_MONTHLY[tier] * PER_DRAFT;
   const receipts = TRANSACTIONAL[tier] * PER_EMAIL;
@@ -244,7 +246,7 @@ for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
     const lines: [string, number][] = [
       ["storage", (paidStorageBytes(tier) / GB) * STORAGE_PER_GB],
       ["free downloads", (FREE_PAUSE_ABOVE_BYTES / GB) * FILE_DELIVERY_PER_GB],
-      ["video", videoCost()],
+      ["video", videoCost(tier)],
       ["visits", visitsCost(tier)],
       ["orders", ordersCost(tier)],
       ["email", monthlyEmails(tier) * PER_EMAIL],
@@ -410,7 +412,7 @@ test("a store that pays nothing can cost next to nothing", () => {
   assert.ok(kept + watched + visited < 0.4, `a store with no plan can cost $${(kept + watched + visited).toFixed(2)} a month`);
   // A free trial lasts two weeks with a card on file. All it may keep,
   // every hour it may play and every visit it may have, in one month:
-  const trial = (TRIAL_STORAGE_BYTES / GB) * STORAGE_PER_GB + videoCost() + TRIAL_VISITS * visitCost();
+  const trial = (TRIAL_STORAGE_BYTES / GB) * STORAGE_PER_GB + (TRIAL_VIDEO_SECONDS / 3600) * hourCost() + TRIAL_VISITS * visitCost();
   assert.ok(trial < 8, `a trial at every limit costs $${trial.toFixed(2)} in a month`);
 });
 
@@ -445,10 +447,11 @@ test("a store whose plan ended stops costing more than a store with no plan, on 
   assert.ok(job.crons.some((cron) => cron.path === "/api/cron/closing"), "and the job that does it must be scheduled, or the day never comes");
 });
 
-test("the video a plan covers is said in hours a creator can check", () => {
+test("historical video invoices retain their old allowance and rate", () => {
   // Published in the studio, the Terms and the price list (tests/watch.test.ts
   // holds the pages to these two numbers). Stated here so the figure cannot
   // be raised without this file's sums being run against it.
+  assert.deepEqual(PAID_VIDEO_HOURS, {creator:4,pro:32,scale:64});
   assert.equal(VIDEO_HOURS_INCLUDED, 400);
   assert.equal(VIDEO_CENTS_PER_HOUR_OVER, 3);
 });

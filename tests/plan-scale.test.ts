@@ -68,7 +68,7 @@ async function main(): Promise<void> {
   is("email, the domain and the rest are on for it", [canUse(store({ tier: "scale" }), "email"), canUseDomain(store({ tier: "scale" })), canUse(store({ tier: "scale", subscriptionActive: false }), "email")], [true, true, false]);
 
   part("What it gives");
-  is("Scale has the larger explicit email allowance", [monthlyEmails("pro"), monthlyEmails("scale"), SCALE_MONTHLY_EMAILS / PRO_MONTHLY_EMAILS], [5_000, 10_000, 2]);
+  is("Scale has the larger explicit email allowance", [monthlyEmails("pro"), monthlyEmails("scale"), SCALE_MONTHLY_EMAILS / PRO_MONTHLY_EMAILS], [5_000, 8_000, 1.6]);
   is("a store on it may send that many", monthlyAllowance(store({ tier: "scale" })), SCALE_MONTHLY_EMAILS);
   is("Pro is left exactly as it was", [monthlyAllowance(store({ tier: "pro" })), aiAllowance(store({ tier: "pro" }))], [PRO_MONTHLY_EMAILS, AI_MONTHLY.pro]);
   is("and the plan under it still sends none", monthlyAllowance(store({ tier: "creator" })), 0);

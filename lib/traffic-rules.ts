@@ -52,7 +52,7 @@ export const TRIAL_VISITS = VISITS_INCLUDED.creator;
 
 /** The visits a store's plan covers in a month. */
 export function visitsIncluded(tier: Tier): number {
-  return VISITS_INCLUDED[tier] ?? VISITS_INCLUDED.creator;
+  return Object.hasOwn(VISITS_INCLUDED, tier) ? VISITS_INCLUDED[tier] : VISITS_INCLUDED.creator;
 }
 
 /**

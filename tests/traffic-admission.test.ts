@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { trafficForAdmission, isResting } from '@/lib/traffic';
 import { visitLimitFor, VISITS_INCLUDED } from '@/lib/traffic-rules';
 import { videoLimitFor } from '@/lib/plan-standing';
-import { VIDEO_SECONDS_INCLUDED } from '@/lib/watch-rules';
+import { paidVideoSeconds } from '@/lib/video-admission-rules';
 import { world } from './traffic-admission-world';
 const folder = 'a'.repeat(32);
 const paid = {subscriptionActive:true,subscriptionId:'sub_test',trialEnds:0,planEndedAt:'',tier:'creator' as const};
@@ -13,9 +13,17 @@ test('all paid tiers have finite thresholds, independent of monthly/yearly billi
  for(const tier of ['creator','pro','scale'] as const)for(const cycle of ['month','year']){
  const customer={...paid,tier,cycle};
  assert.equal(visitLimitFor(customer),VISITS_INCLUDED[tier]);
- assert.equal(videoLimitFor(customer),VIDEO_SECONDS_INCLUDED);
+ assert.equal(videoLimitFor(customer),paidVideoSeconds(tier));
  }
  assert.equal(visitLimitFor({...paid,tier:undefined}),VISITS_INCLUDED.creator);
+});
+test('inherited and unknown tiers cannot bypass the smallest paid threshold',async()=>{
+ for(const tier of ['__proto__','constructor','unknown']){
+  const customer={...paid,tier:tier as typeof paid.tier};
+  assert.equal(visitLimitFor(customer),VISITS_INCLUDED.creator);
+  world.results=[[String(VISITS_INCLUDED.creator),null]];
+  assert.equal(await isResting(customer as Parameters<typeof isResting>[0]),true);
+ }
 });
 test('acknowledged unused month and exact integer counters are readable',async()=>{
  assert.deepEqual(await trafficForAdmission(folder),{people:0,parts:0,visits:0});

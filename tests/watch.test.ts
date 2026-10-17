@@ -343,11 +343,11 @@ async function main(): Promise<void> {
   const hours = `${VIDEO_HOURS_INCLUDED} hours`;
   const price = centsWords(VIDEO_CENTS_PER_HOUR_OVER);
   const terms = read("app/terms/page.tsx");
-  is("the Terms disclose a finite video threshold", [/VIDEO_HOURS_INCLUDED/.test(terms), /New playback pauses/.test(terms)], [true, true]);
+  is("the Terms disclose a finite video threshold", [/paidVideoWords/.test(terms), /New playback pauses/.test(terms)], [true, true]);
   is("the Terms explain existing player links and separate file delivery", [/Existing player/.test(terms), /separate download path/.test(terms)], [true, true]);
   is("and no longer say a download is charged for", [/Nothing is charged for downloads/.test(terms), /OVER_ALLOWANCE/.test(terms)], [true, false]);
   const studio = read("app/studio/page.tsx");
-  is("the studio shows the hours and the playback pause", [/VIDEO_HOURS_INCLUDED/.test(studio), /New stream playback pauses/.test(studio)], [true, true]);
+  is("the studio shows the hours and the playback pause", [/hoursWords\(videoRoom\)/.test(studio), /New stream playback pauses/.test(studio)], [true, true]);
   is("the home page discloses finite video admission", /new playback pauses at the threshold/.test(read("components/home-parts.tsx")), true);
   const help = read("lib/help-content.ts");
   const features = read("lib/feature-pages.ts");

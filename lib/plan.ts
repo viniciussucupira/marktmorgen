@@ -192,14 +192,14 @@ export const PRO_ON_SALE = true;
 /** Provisional list-email ceilings, all campaigns and sequences combined.
  * A 4% allocation of annual subscription revenue recognized monthly is used
  * for this resource-only reduction at the public $0.90/1,000 send rate.
- * Studio: 5,000 => $4.50; Scale: 10,000 => $9.00, before fixed plan fees,
+ * Studio: 5,000 => $4.50; Scale: 8,000 => $7.20, before fixed plan fees,
  * request/compute costs, other messages and taxes. No free tier is assumed.
  * These limits do not certify the required after-all-tax net margin.
  */
 export const PRO_MONTHLY_EMAILS = 5_000;
 /** Funded acquisition exposure still requires a separate reviewed allowance. */
 export const TRIAL_MONTHLY_EMAILS = 1_000;
-export const SCALE_MONTHLY_EMAILS = 10_000;
+export const SCALE_MONTHLY_EMAILS = 8_000;
 
 /** Whether a plan has what Pro switches on: Pro itself, and Scale above it. */
 export function hasPro(tier: Tier): boolean {

@@ -1,3 +1,6 @@
+import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
+import { hoursWords } from "@/lib/watch-rules";
+import { SETUP_VIDEO_SECONDS } from "@/lib/plan-standing";
 import {answerAllowanceWords} from "@/lib/answers-rules";
 // The feature pages and the pages for each kind of creator.
 //
@@ -258,8 +261,8 @@ export const FEATURE_PAGES: TopicPage[] = [
         items: [
           "The certificate's PDF file is drawn in Latin, Greek and Cyrillic letters; a name in another script is printed from the certificate's page instead.",
           "No live lessons inside the course itself. Hold them as live events in your community, or put a link in a lesson to where you hold them.",
-          "Stream video has a finite threshold of 400 watched hours a month across your store. New playback pauses at the recorded threshold. The meter is read about once an hour; existing player links may remain valid until they expire. Your studio shows the recorded hours.",
-          "Without a paid plan, lesson videos pause past the store's hours until the plan is paid or the month turns: 400 hours a month in the free trial, and 10 hours a month before a plan starts and after one ends.",
+          `Stream video has a finite threshold of ${paidVideoWords()} a month across your store. New playback pauses at the recorded threshold. The meter is read about once an hour; existing player links may remain valid until they expire. Your studio shows the recorded hours.`,
+          `Without a paid plan, lesson videos pause past the store's hours until the plan is paid or the month turns: ${hoursWords(TRIAL_VIDEO_SECONDS)} a month in the free trial, and ${hoursWords(SETUP_VIDEO_SECONDS)} a month before a plan starts and after one ends.`,
           "Video is kept up to 1080p: a 4K file plays at 1080p.",
           `Captions written by AI are machine transcription: read them before you rely on them, and replace a language with your own file whenever you like. They are for videos of up to ${MAX_AUTO_MINUTES / 60} hours, need a paid plan, and come as captions in the player, not as a separate transcript.`,
           "A signed address stops a link from being passed around. It does not stop a student from recording their own screen; nothing does.",
@@ -2511,7 +2514,7 @@ export const CREATOR_PAGES: TopicPage[] = [
         items: [
           "No workout-tracking app and no progress photos: students mark lessons done, and that is what you see.",
           "The community's live room is text only: there is no group video inside it, so a live workout runs as a live event on Google Meet, Jitsi or your own link.",
-          "Stream video has a finite threshold of 400 watched hours a month. New playback pauses at the recorded threshold; existing player links may remain valid until they expire.",
+          `Stream video has a finite threshold of ${paidVideoWords()} a month. New playback pauses at the recorded threshold; existing player links may remain valid until they expire.`,
         ],
       },
       {

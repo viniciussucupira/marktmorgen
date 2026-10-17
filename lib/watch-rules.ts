@@ -7,7 +7,8 @@
  * File delivery can still incur storage, request and application costs even
  * where the storage provider does not charge Internet egress bandwidth.
  */
-/** Hours of video watched that every plan covers, per store, per calendar month. */
+/** Historical invoice allowance only. Playback admission is tier-specific in
+ * video-admission-rules.ts and plan-standing.ts; do not use this for new grants. */
 export const VIDEO_HOURS_INCLUDED = 400;
 /** What an hour watched past that costs the creator, in cents. */
 export const VIDEO_CENTS_PER_HOUR_OVER = 3;

@@ -150,8 +150,9 @@ import {
 import { ORDERS_PAGE_SIZE, canSell, listSales } from "@/lib/store-checkout";
 import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords, deliveredThisMonth } from "@/lib/delivery";
 import { watchedForAdmission } from "@/lib/watch";
-import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, VIDEO_SECONDS_INCLUDED, centsWords, hoursWords, videoOwedCents } from "@/lib/watch-rules";
-import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, standingOf, videoLimitFor } from "@/lib/plan-standing";
+import { centsWords, hoursWords } from "@/lib/watch-rules";
+import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
+import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closingOf } from "@/lib/plan-closing";
 import { MAX_LEADS, listSize } from "@/lib/free";
 import { readableSize } from "@/lib/product-file";
@@ -810,7 +811,7 @@ export default async function StudioPage({
   // how long its video may be watched (lib/plan-standing.ts).
   const standing = store ? standingOf(store) : "none";
   const videoLimit = store ? videoLimitFor(store) : null;
-  const videoRoom = videoLimit ?? VIDEO_SECONDS_INCLUDED;
+  const videoRoom = videoLimit ?? paidVideoSeconds();
   // The visits the store has had this month, the other thing charged by use
   // (lib/traffic-rules.ts): what the plan covers, and where the pages of a
   // store with no plan to charge rest.
@@ -2222,7 +2223,7 @@ export default async function StudioPage({
                   ) : null}
                   <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                     <div>
-                      <dt className="font-semibold text-ink">{`Past the ${VIDEO_HOURS_INCLUDED} hours`}</dt>
+                      <dt className="font-semibold text-ink">{`At ${hoursWords(videoRoom)} watched`}</dt>
                       <dd className="text-ink-soft">
                         New stream playback pauses at the recorded monthly threshold. The meter is read about once an hour; existing player links may remain valid until they expire.
                       </dd>
@@ -2230,7 +2231,7 @@ export default async function StudioPage({
                     <div>
                       <dt className="font-semibold text-ink">Without a paid plan</dt>
                       <dd className="text-ink-soft">
-                        {`In the free trial, lesson videos play for ${VIDEO_HOURS_INCLUDED} hours a month; before a plan starts and after one ends, for ${SETUP_VIDEO_HOURS}. Past that they pause `}
+                        {`In the free trial, lesson videos play for ${hoursWords(TRIAL_VIDEO_SECONDS)} a month; before a plan starts and after one ends, for ${hoursWords(SETUP_VIDEO_SECONDS)}. Past that they pause `}
                         until the plan is paid or the month turns. Nothing is charged for those hours.
                       </dd>
                     </div>

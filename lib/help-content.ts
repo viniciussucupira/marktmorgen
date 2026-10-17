@@ -6,8 +6,9 @@ import {answerAllowanceWords} from "@/lib/answers-rules";
  * describe, so the two can never disagree.
  */
 import { countWords } from "@/lib/traffic-rules";
-import { centsWords, VIDEO_HOURS_INCLUDED } from "@/lib/watch-rules";
-import { SETUP_VIDEO_HOURS } from "@/lib/plan-standing";
+import { centsWords, hoursWords } from "@/lib/watch-rules";
+import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
+import { SETUP_VIDEO_SECONDS } from "@/lib/plan-standing";
 import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS, perOrderWords } from "@/lib/order-rules";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import { isDomainsConfigured } from "@/lib/domains";
@@ -79,7 +80,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "What will it cost?",
         a: [
           feeWords().costLine,
-          `Visits and lesson video have finite monthly thresholds. Public pages pause at the plan's counted-visit threshold, and new lesson video playback pauses at ${VIDEO_HOURS_INCLUDED} watched hours. These thresholds do not authorize unlimited overages. Orders beyond the plan's included count retain their separate published billing terms.`,
+          `Visits and lesson video have finite monthly thresholds. Public pages pause at the plan's counted-visit threshold, and new lesson video playback pauses at the recorded threshold: ${paidVideoWords()} each month. These thresholds do not authorize unlimited overages. Orders beyond the plan's included count retain their separate published billing terms.`,
           "Sending capacity includes reserved attempts. When a provider cannot confirm delivery, the reservation is retained and a retry uses new capacity. The price is published on the home page. If it ever changes, existing subscribers are told before it applies to them.",
         ],
       },
@@ -568,7 +569,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           "If your buyers already gather in a Discord server, connect it from the studio and choose which products give which roles there. A buyer presses \u201cJoin the Discord\u201d after paying or on their orders, says yes on Discord's own page, and is in with those roles. Everyone is checked again every six hours against your Stripe account, and the roles go when a membership ends or a purchase is refunded; when Stripe cannot be reached, nothing is taken. You can also have people removed from the server once their access ends.",
           "Under every lesson, students can ask questions and answer each other, under a name they choose; their email address is never shown, and only the course's students and you can read what they write. You answer as the creator from the lesson itself or from the course's page in your studio, the student gets an email with your answer, and your phone can tell you when a comment comes. You can hide or delete any comment, or switch comments off for the course without deleting them.",
           "The course can be sold once, in a payment plan, or as a membership that stays open while the member pays.",
-          `Lesson video playback has a finite monthly threshold: ${VIDEO_HOURS_INCLUDED} watched hours on a paid plan or in its free trial, and ${SETUP_VIDEO_HOURS} hours before a plan starts or after it ends. New playback pauses at that threshold until capacity is available again. Existing player links can remain valid until they expire; raw video files use the download path instead.`, 
+          `Lesson video playback has a finite monthly threshold: ${paidVideoWords()} each month on paid plans, ${hoursWords(TRIAL_VIDEO_SECONDS)} in the free trial and ${hoursWords(SETUP_VIDEO_SECONDS)} before a plan starts or after it ends. New playback pauses at that threshold until capacity is available again. Existing player links can remain valid until they expire; raw video files use the download path instead.`, 
           `Captions can be uploaded as a .vtt or .srt file in any of 28 languages, or written by AI from what is said in the video: in the language spoken and up to two more, ${dollars(CENTS_PER_MINUTE)} a minute of video for each language, never less than ${dollars(MIN_CENTS)} a request. The price is shown before you confirm and charged then to the card your plan is paid with; anything not delivered within ${GIVE_UP_HOURS} hours is refunded. Read them before your students rely on them: a machine wrote them.`,
         ],
       },

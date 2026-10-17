@@ -10,6 +10,7 @@ import { AI_SPEND_RULES, CURRENT_AI_SPEND_POLICY } from "@/lib/ai-spend-policy";
 import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY, AI_PER_MINUTE, MAX_AI_NOTES, READ_PDF_PAGES, READ_PDF_JOBS } from "@/lib/ai-rules";
 import { VIDEO_HOURS_INCLUDED, VIDEO_CENTS_PER_HOUR_OVER } from "@/lib/watch-rules";
+import { PAID_VIDEO_HOURS, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER, SETUP_VISITS, TRIAL_VISITS, ROOM_LIVE_PARTS, ROOM_IDLE_PARTS } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS } from "@/lib/order-rules";
 import { STORAGE_BRAKE_BYTES, PAID_STORAGE_BYTES } from "@/lib/storage-rules";
@@ -41,7 +42,7 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 11,
+ schemaVersion: 12,
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: CURRENT_UPLOAD_BUDGET_POLICY },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
@@ -63,7 +64,7 @@ export const CURRENT_COMMERCIAL_TERMS = {
  email: { admission: "strict-counter-ack-retain-dispatched-attempts-v1", trial: TRIAL_MONTHLY_EMAILS, pro: PRO_MONTHLY_EMAILS, scale: SCALE_MONTHLY_EMAILS, maxLeads: MAX_LEADS, maxImport: MAX_IMPORT },
  ai: { spendRules: AI_SPEND_RULES, spendPolicy: CURRENT_AI_SPEND_POLICY, requestLimits: AI_REQUEST_LIMITS, supportedModels: SUPPORTED_AI_MODELS, monthly: AI_MONTHLY, perMinute: AI_PER_MINUTE, maxNotes: MAX_AI_NOTES, pdfPages: READ_PDF_PAGES, pdfJobs: READ_PDF_JOBS },
  storage: { paidBytesByTier: PAID_STORAGE_BYTES, defaultPaidBytes: STORAGE_BRAKE_BYTES, trialNeverExceedsPaidTier: true, trialBytes: TRIAL_STORAGE_BYTES, setupBytes: SETUP_STORAGE_BYTES, maxFileBytes: MAX_FILE_BYTES, maxStampBytes: MAX_STAMP_BYTES },
- video: { includedHours: VIDEO_HOURS_INCLUDED, setupSeconds: SETUP_VIDEO_SECONDS, overageCentsPerHour: VIDEO_CENTS_PER_HOUR_OVER, topHeight: TOP_HEIGHT, maxKeptBytes: MOST_KEPT_BYTES, uploadWindowSeconds: UPLOAD_WINDOW_SECONDS, abandonedAfterMs: ABANDONED_AFTER_MS, giveUpAfterMs: GIVE_UP_AFTER_MS },
+ video: { paidHoursByTier: PAID_VIDEO_HOURS, trialSeconds: TRIAL_VIDEO_SECONDS, legacyBillingIncludedHours: VIDEO_HOURS_INCLUDED, setupSeconds: SETUP_VIDEO_SECONDS, overageCentsPerHour: VIDEO_CENTS_PER_HOUR_OVER, topHeight: TOP_HEIGHT, maxKeptBytes: MOST_KEPT_BYTES, uploadWindowSeconds: UPLOAD_WINDOW_SECONDS, abandonedAfterMs: ABANDONED_AFTER_MS, giveUpAfterMs: GIVE_UP_AFTER_MS },
  traffic: { included: VISITS_INCLUDED, setup: SETUP_VISITS, trial: TRIAL_VISITS, overageCentsPerThousand: VISIT_CENTS_PER_THOUSAND_OVER, roomLiveParts: ROOM_LIVE_PARTS, roomIdleParts: ROOM_IDLE_PARTS },
  orders: { included: ORDERS_INCLUDED, trial: TRIAL_ORDERS, overageCentsPerThousand: ORDER_CENTS_PER_THOUSAND_OVER },
  closure: { days: CLOSING_DAYS, recheckDays: RECHECK_DAYS },

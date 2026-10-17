@@ -19,7 +19,8 @@ import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, SETUP_VIDEO_SECONDS, TRIAL_STOR
 import { STORAGE_BRAKE_BYTES, fits, storageBrakeFor, storageUsed, storageWords } from "@/lib/storage-quota";
 import { claimHandle, setSubscription, storeForEmail } from "@/lib/store";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
-import { VIDEO_HOURS_INCLUDED, VIDEO_SECONDS_INCLUDED, canBeCharged } from "@/lib/watch-rules";
+import { canBeCharged } from "@/lib/watch-rules";
+import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { done, is, part } from "./check";
 
 const GB = 1024 * 1024 * 1024;
@@ -41,12 +42,12 @@ async function main(): Promise<void> {
   is("only a store that pays, with a subscription behind it, can have an hour added to an invoice", [canBeCharged(paid, NOW), canBeCharged(trial, NOW), canBeCharged(ended, NOW), canBeCharged({ ...never, subscriptionActive: true }, NOW)], [true, false, false, false]);
 
   part("How long its video may be watched in a month");
-  is("a paid plan has a finite monthly playback threshold", videoLimitFor(paid, NOW), VIDEO_SECONDS_INCLUDED);
-  is("an internal paid store has the same finite threshold", videoLimitFor({ ...never, subscriptionActive: true }, NOW), VIDEO_SECONDS_INCLUDED);
-  is("a trial plays for the hours a plan covers", videoLimitFor(trial, NOW), VIDEO_SECONDS_INCLUDED);
+  is("a paid plan has a finite monthly playback threshold", videoLimitFor(paid, NOW), paidVideoSeconds());
+  is("an internal paid store has the same finite threshold", videoLimitFor({ ...never, subscriptionActive: true }, NOW), paidVideoSeconds());
+  is("a trial plays for the hours a plan covers", videoLimitFor(trial, NOW), TRIAL_VIDEO_SECONDS);
   is("a store with no plan, before one or after one, for a few", [videoLimitFor(never, NOW), videoLimitFor(ended, NOW)], [SETUP_VIDEO_SECONDS, SETUP_VIDEO_SECONDS]);
-  is("which is far less than a plan's", SETUP_VIDEO_HOURS * 10 <= VIDEO_HOURS_INCLUDED, true);
-  is("and costs us cents: ten hours at the most an hour can cost", SETUP_VIDEO_HOURS * 0.0144 < 0.2, true);
+  is("which is far less than a plan's", SETUP_VIDEO_HOURS * 3600 < TRIAL_VIDEO_SECONDS && TRIAL_VIDEO_SECONDS < paidVideoSeconds(), true);
+  is("setup playback is limited to fifteen recorded minutes", SETUP_VIDEO_SECONDS, 900);
 
   part("How much it may keep");
   is("a paid plan has the brake every plan has", storageBrakeFor("paid"), STORAGE_BRAKE_BYTES);
@@ -99,13 +100,13 @@ async function main(): Promise<void> {
   part("What the pages say");
   const terms = read("app/terms/page.tsx");
   is("the Terms disclose all paid tiers and the capped trial", [/PAID_STORAGE_BYTES\.creator/.test(terms), /PAID_STORAGE_BYTES\.pro/.test(terms), /PAID_STORAGE_BYTES\.scale/.test(terms), /TRIAL_STORAGE_BYTES/.test(terms), /SETUP_STORAGE_BYTES/.test(terms)], [true, true, true, true, true]);
-  is("the Terms disclose finite paid and setup playback thresholds", [/Paid plans and/.test(terms), /VIDEO_HOURS_INCLUDED/.test(terms), /SETUP_VIDEO_HOURS/.test(terms), /New playback pauses/.test(terms)], [true, true, true, true]);
+  is("the Terms disclose finite paid and setup playback thresholds", [/Paid plans cover/.test(terms), /paidVideoWords/.test(terms), /SETUP_VIDEO_SECONDS/.test(terms), /New playback pauses/.test(terms)], [true, true, true, true]);
   is("and that a store holding more when its plan ends cannot add to it, with where its date is said", /cannot add to it, and section 8 says how\s+long it keeps what it holds/.test(terms), true);
   const help = read("lib/help-content.ts");
   is("the help discloses tier-specific storage and finite playback", [help.includes("8 GB on Store, 64 GB on Studio and 128 GB on Scale"), help.includes("capped by the chosen plan"), help.includes("New playback pauses at that threshold")], [true, true, true]);
-  is("so does the page about courses", read("lib/feature-pages.ts").includes(`${VIDEO_HOURS_INCLUDED} hours a month in the free trial, and ${SETUP_VIDEO_HOURS} hours a month before a plan starts and after one ends`), true);
+  is("so does the page about courses", ["paidVideoWords()", "hoursWords(TRIAL_VIDEO_SECONDS)", "hoursWords(SETUP_VIDEO_SECONDS)"].every(piece => read("lib/feature-pages.ts").includes(piece)), true);
   const studio = read("app/studio/page.tsx");
-  is("the studio shows a store its own figures", [/storageBrakeFor\(standing, store\.tier\)/.test(studio), /videoLimitFor\(store\)/.test(studio), /SETUP_VIDEO_HOURS/.test(studio)], [true, true, true]);
+  is("the studio shows a store its own figures", [/storageBrakeFor\(standing, store\.tier\)/.test(studio), /videoLimitFor\(store\)/.test(studio), /SETUP_VIDEO_SECONDS/.test(studio)], [true, true, true]);
   is("and the lesson page pauses by the store's own hours", /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/.test(read("app/[handle]/course/[product]/[lesson]/page.tsx")), true);
 
   done();

@@ -1,10 +1,11 @@
 /** Plan standing and finite storage/playback admission thresholds.
- * These historical allowance sizes are not a verified supplier-cost ceiling
+ * These provisional allowance sizes are not a verified supplier-cost ceiling
  * or proof of the owner's after-all-tax margin. Paid and trial stream playback
  * both require the explicit monthly threshold; setup and ended stores have a
  * smaller threshold. Storage and retention follow their separate guards.
  */
-import { VIDEO_SECONDS_INCLUDED } from "@/lib/watch-rules";
+import type { Tier } from "@/lib/plan";
+import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 
 const GB = 1024 * 1024 * 1024;
 
@@ -31,17 +32,17 @@ export const TRIAL_STORAGE_BYTES = 50 * GB;
 /** Historical setup/ended storage threshold; not a certified cost budget. */
 export const SETUP_STORAGE_BYTES = 5 * GB;
 /** The hours of lesson video a store with no plan may have watched in a month: its owner looking at their own lessons, and a preview. */
-export const SETUP_VIDEO_HOURS = 10;
+export const SETUP_VIDEO_HOURS = 0.25;
 export const SETUP_VIDEO_SECONDS = SETUP_VIDEO_HOURS * 3600;
 
 /**
  * The seconds of lesson video a store may have watched this month before
  * its video is paused. Paid plans also have a finite monthly threshold.
  */
-export function videoLimitFor(store: PlanFields, nowSeconds = Date.now() / 1000): number {
+export function videoLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = Date.now() / 1000): number {
   const standing = standingOf(store, nowSeconds);
-  if (standing === "paid") return VIDEO_SECONDS_INCLUDED;
-  return standing === "trial" ? VIDEO_SECONDS_INCLUDED : SETUP_VIDEO_SECONDS;
+  if (standing === "paid") return paidVideoSeconds(store.tier);
+  return standing === "trial" ? Math.min(paidVideoSeconds(store.tier), TRIAL_VIDEO_SECONDS) : SETUP_VIDEO_SECONDS;
 }
 
 /**

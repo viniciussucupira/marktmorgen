@@ -11,7 +11,7 @@ export const PAID_STORAGE_BYTES = Object.freeze({ creator:8*GiB, pro:64*GiB, sca
 /** Conservative default when a caller has not supplied a paid tier. */
 export const STORAGE_BRAKE_BYTES=PAID_STORAGE_BYTES.creator;
 export function paidStorageBytes(tier: Tier='creator'):number {
- return PAID_STORAGE_BYTES[tier]??PAID_STORAGE_BYTES.creator;
+ return Object.hasOwn(PAID_STORAGE_BYTES,tier)?PAID_STORAGE_BYTES[tier]:PAID_STORAGE_BYTES.creator;
 }
 
 /** A trial never authorizes more stored bytes than the chosen paid tier. */

@@ -208,6 +208,7 @@ export async function trafficForAdmission(folder: string, month = monthKey()): P
 export async function isResting(store: Store, now = Date.now()): Promise<boolean> {
   try {
     const limit = visitLimitFor(store, now / 1000);
+    if (!Number.isSafeInteger(limit) || limit < 0) return true;
     const traffic = await trafficForAdmission(await storeFolder(storeRef(store)), monthKey(new Date(now)));
     return traffic === null || traffic.visits >= limit;
   } catch { return true; }

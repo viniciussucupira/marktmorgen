@@ -29,3 +29,7 @@ test('actual pricing rendering discloses each tier storage threshold',()=>{
  for(const gb of [8,64,128])assert.ok(text.includes('Up to '+gb+' GB of stored files and videos.'),text.slice(-3000));
  assert.match(text,/free trial never has more storage than its chosen plan/);assert.doesNotMatch(text,/Up to 200 GB of stored files/);
 });
+
+test('inherited and unknown tier names receive the smallest paid storage cap',()=>{
+ for(const tier of ['__proto__','constructor','unknown'])assert.equal(paidStorageBytes(tier as Parameters<typeof paidStorageBytes>[0]),PAID_STORAGE_BYTES.creator);
+});

@@ -7,6 +7,7 @@ import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { VISITS_INCLUDED } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED } from "@/lib/order-rules";
+import { PAID_VIDEO_HOURS, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { done, is } from "./check";
 const scenario = fundedCustomerScenario();
 const review = (): CommercialMarginReview => ({
@@ -24,6 +25,8 @@ is("default storage uses the smallest explicit paid tier", STORAGE_BRAKE_BYTES, 
 is("review uses actual AI entitlements", CURRENT_COMMERCIAL_TERMS.ai.monthly, AI_MONTHLY);
 is("review uses actual visit entitlements", CURRENT_COMMERCIAL_TERMS.traffic.included, VISITS_INCLUDED);
 is("review uses actual order entitlements", CURRENT_COMMERCIAL_TERMS.orders.included, ORDERS_INCLUDED);
+is("review captures actual per-tier playback thresholds", CURRENT_COMMERCIAL_TERMS.video.paidHoursByTier, PAID_VIDEO_HOURS);
+is("review captures reduced trial playback", CURRENT_COMMERCIAL_TERMS.video.trialSeconds, TRIAL_VIDEO_SECONDS);
 function checkLeaves(value: unknown, path: string[] = []) {
  if (value !== null && typeof value === "object") {
   for (const [key, child] of Object.entries(value)) checkLeaves(child, [...path, key]);

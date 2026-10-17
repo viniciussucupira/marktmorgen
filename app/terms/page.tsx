@@ -8,8 +8,9 @@ import { formatMoney } from "@/lib/money";
 import { PRO_MONTHLY_EMAILS, REFUND_DAYS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS, PLAN_TITLES } from "@/lib/plan";
 import { healthRuleWords } from "@/lib/mail-health-rules";
 import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords } from "@/lib/delivery";
-import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, centsWords } from "@/lib/watch-rules";
-import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
+import { centsWords, hoursWords } from "@/lib/watch-rules";
+import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
+import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS } from "@/lib/order-rules";
 import { ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER, countWords, partsWords } from "@/lib/traffic-rules";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 13, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 16, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -325,7 +326,7 @@ export default function TermsPage() {
           page: the number of products a store may list, the size of a single
           file, how many emails a month a plan may send,{" "}
           {bytesWords(DELIVERY_ALLOWANCE_BYTES)} of downloads a month per
-          store, {VIDEO_HOURS_INCLUDED} hours of lesson video watched a
+          store, lesson video watched for {paidVideoWords()} a
           month per store, and the visits to your store a month that your
           plan covers. You can see every one of them while you use the
           Services.
@@ -348,10 +349,10 @@ export default function TermsPage() {
           or invalid admission measurement does not authorize new playback.
         </p>
         <p>
-          <strong className="text-black">Lesson video.</strong> Paid plans and
-          free trials have {VIDEO_HOURS_INCLUDED} watched hours a month. Before
-          a plan starts and after one ends, the threshold is {SETUP_VIDEO_HOURS}
-          hours. New playback pauses at the applicable threshold until the next
+          <strong className="text-black">Lesson video.</strong> Paid plans cover
+          {" "}{paidVideoWords()} each month. Free trials have {hoursWords(TRIAL_VIDEO_SECONDS)}{" "}
+          a month. Before a plan starts and after one ends, the threshold is
+          {" "}{hoursWords(SETUP_VIDEO_SECONDS)}. New playback pauses at the applicable threshold until the next
           calendar month or a plan change provides capacity. Existing player
           links may remain valid until they expire. Watching is measured about
           once an hour; the meter is not a limit on transferred bytes. Video
