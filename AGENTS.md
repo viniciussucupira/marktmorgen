@@ -37,3 +37,7 @@ How it is applied, with the two decisions the owner made the same night when ask
 3. **The company as a whole**: the code guarantees the per-customer floor; fixed costs (Delaware tax, registered agent, accountant, domains, tools — shared 50/50 between the two products) are covered from a computed minimum base of paying customers, which must be shown, with 60% consolidated at and above that base; fixed costs are kept as low as possible until then (decision: "Garantir a partir da base mínima").
 
 Unknown taxes, unknown supplier costs and unenforced limits count as failing, never as zero. No guard, calculator or passing test certifies this rule by itself.
+
+## Tax uncertainty: the reading with more tax (owner, 17 Oct 2026, rule 19)
+
+Where the law is unclear or has more than one reading, every margin model, review and gate uses the reading that gives MORE tax, so profit is never overstated; the open questions are listed in [docs/tax-uncertainty.md](docs/tax-uncertainty.md) for the owner to confirm with an accountant before forming the company. Under the most-tax reading the 60% floor is not reachable at any limit (about 32% of revenue would remain even with no cost), so paid sales stay closed until an accountant confirms a lower reading. Never lower the tax assumption, raise a price or loosen a gate to make a test pass; limits are still sized for 60% at the most favorable reading the owner may later confirm.
