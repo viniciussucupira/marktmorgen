@@ -10,7 +10,9 @@
  *   - the steps set the field, put the person's deal in the stage (made for
  *     them when they have none open, moved when they have one), write a note
  *     on their page, and tell the owner by email who reached the step;
- *   - a sign-up asked from a form remembers the form, so confirming starts it.
+ *   - a sign-up asked from a form remembers the form, so confirming starts it;
+ *   - a workflow can start only for one of a quiz's results, and a sign-up
+ *     from the quiz remembers that result too.
  */
 import { readAction } from "@/lib/flow-rules";
 import { enroll, saveFlow, sendDueSteps } from "@/lib/flows";
@@ -123,6 +125,30 @@ async function main(): Promise<void> {
   await askToJoin({ store, email: "cleo@example.com", ip: "10.0.0.9", origin: "https://marktmorgen.com", fromForm: true, formId: "applyform1" });
   const token = /join\?token=([0-9a-f]{48})/.exec(sent[0]?.text ?? "")?.[1] ?? "";
   is("the confirmation link knows the form", (await readJoinToken(token))?.f, "applyform1");
+
+  part("A workflow for one quiz result (added 17 October 2026)");
+  await writeForm(statsId, parseForm({
+    id: "scorequiz1", name: "Readiness", scoring: "points",
+    fields: [{ id: "q1mail", type: "email", label: "Email", required: true }, { id: "q2lvl0", type: "choice", label: "Level?", required: true, options: [{ id: "lowopt", label: "New", points: 0 }, { id: "hiopt0", label: "Old", points: 10 }] }],
+    outcomes: [{ id: "tierlo", title: "Starting", min: 0, max: 4 }, { id: "tierhi", title: "Ready", min: 5, max: 10 }],
+  })!);
+  const quizFlow = (formOutcome: string) => saveFlow(store, { name: "Ready ones", trigger: "form", formId: "scorequiz1", formOutcome, active: true, steps: [{ delayHours: 0, subject: "You are ready", body: "Here is the next step." }] }, { activate: true });
+  is("a result the quiz does not have is refused", await quizFlow("nope00"), { ok: false, reason: "form" });
+  const forReady = await quizFlow("tierhi");
+  is("one of its results is kept on the workflow", forReady.ok ? forReady.flows.find((f) => f.name === "Ready ones")?.formOutcome : forReady, "tierhi");
+  sent.length = 0;
+  await upsertContact(list, "dan@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
+  await upsertContact(list, "eve@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
+  store = (await storeForEmail(OWNER))!;
+  await enroll(store, "dan@example.com", { joined: false, form: "scorequiz1", formOutcome: "tierlo" });
+  await enroll(store, "eve@example.com", { joined: false, form: "scorequiz1", formOutcome: "tierhi" });
+  for (let i = 0; i < 3; i += 1) await run();
+  is("only the person who got that result starts it", sent.filter((m) => m.subject === "You are ready").map((m) => m.to), ["eve@example.com"]);
+  sent.length = 0;
+  await askToJoin({ store, email: "fay@example.com", ip: "10.0.0.10", origin: "https://marktmorgen.com", fromForm: true, formId: "scorequiz1", formOutcome: "tierhi" });
+  const quizToken = /join\?token=([0-9a-f]{48})/.exec(sent[0]?.text ?? "")?.[1] ?? "";
+  const grant = await readJoinToken(quizToken);
+  is("a sign-up asked from a quiz remembers the form and the result, for when they confirm", [grant?.f, grant?.r], ["scorequiz1", "tierhi"]);
 
   done();
 }

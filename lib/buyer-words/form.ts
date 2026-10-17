@@ -17,6 +17,10 @@ const en = {
   doneBody: (store: string) => `Your answers were sent to ${store}.`,
   confirmSent: "One more step: we emailed you a button to confirm you want to hear from them.",
   result: "Your result",
+  /** A scored quiz: the total, and "of" the most possible when that is known. */
+  yourScore: "Your score",
+  points: (n: number, of: number | null) => `${n} ${n === 1 ? "point" : "points"}${of === null ? "" : ` of ${of}`}`,
+  covers: (min: number, max: number) => `This result is for a score from ${min} to ${max}.`,
   seeProduct: "Take a look",
   backTo: (store: string) => `Back to ${store}`,
   errors: {
@@ -41,6 +45,9 @@ const es: FormWords = {
   doneBody: (store) => `Tus respuestas se enviaron a ${store}.`,
   confirmSent: "Un paso más: te enviamos un email con un botón para confirmar que quieres recibir sus novedades.",
   result: "Tu resultado",
+  yourScore: "Tu puntuación",
+  points: (n, of) => `${n} ${n === 1 ? "punto" : "puntos"}${of === null ? "" : ` de ${of}`}`,
+  covers: (min, max) => `Este resultado corresponde a una puntuación de ${min} a ${max}.`,
   seeProduct: "Echar un vistazo",
   backTo: (store) => `Volver a ${store}`,
   errors: {
@@ -63,6 +70,9 @@ const fr: FormWords = {
   doneBody: (store) => `Vos réponses ont été envoyées à ${store}.`,
   confirmSent: `Encore une étape${S}: nous vous avons envoyé un email avec un bouton pour confirmer que vous voulez recevoir leurs nouvelles.`,
   result: "Votre résultat",
+  yourScore: "Votre score",
+  points: (n, of) => `${n} ${n <= 1 ? "point" : "points"}${of === null ? "" : ` sur ${of}`}`,
+  covers: (min, max) => `Ce résultat correspond à un score de ${min} à ${max}.`,
   seeProduct: "Découvrir",
   backTo: (store) => `Retour à ${store}`,
   errors: {
@@ -85,6 +95,9 @@ const de: FormWords = {
   doneBody: (store) => `Ihre Antworten wurden an ${store} gesendet.`,
   confirmSent: "Noch ein Schritt: Wir haben Ihnen eine E-Mail mit einer Schaltfläche geschickt, mit der Sie bestätigen, dass Sie Neuigkeiten erhalten möchten.",
   result: "Ihr Ergebnis",
+  yourScore: "Ihre Punktzahl",
+  points: (n, of) => `${n} ${n === 1 ? "Punkt" : "Punkte"}${of === null ? "" : ` von ${of}`}`,
+  covers: (min, max) => `Dieses Ergebnis gilt für eine Punktzahl von ${min} bis ${max}.`,
   seeProduct: "Ansehen",
   backTo: (store) => `Zurück zu ${store}`,
   errors: {
@@ -107,6 +120,9 @@ const it: FormWords = {
   doneBody: (store) => `Le tue risposte sono state inviate a ${store}.`,
   confirmSent: "Ancora un passo: ti abbiamo inviato un'email con un pulsante per confermare che vuoi ricevere le sue novità.",
   result: "Il tuo risultato",
+  yourScore: "Il tuo punteggio",
+  points: (n, of) => `${n} ${n === 1 ? "punto" : "punti"}${of === null ? "" : ` su ${of}`}`,
+  covers: (min, max) => `Questo risultato corrisponde a un punteggio da ${min} a ${max}.`,
   seeProduct: "Dai un'occhiata",
   backTo: (store) => `Torna a ${store}`,
   errors: {
@@ -129,6 +145,9 @@ const nl: FormWords = {
   doneBody: (store) => `Je antwoorden zijn naar ${store} gestuurd.`,
   confirmSent: "Nog één stap: we hebben je een e-mail gestuurd met een knop om te bevestigen dat je hun nieuws wilt ontvangen.",
   result: "Jouw resultaat",
+  yourScore: "Jouw score",
+  points: (n, of) => `${n} ${n === 1 ? "punt" : "punten"}${of === null ? "" : ` van ${of}`}`,
+  covers: (min, max) => `Dit resultaat hoort bij een score van ${min} tot ${max}.`,
   seeProduct: "Bekijken",
   backTo: (store) => `Terug naar ${store}`,
   errors: {
@@ -151,6 +170,9 @@ const pt: FormWords = {
   doneBody: (store) => `As suas respostas foram enviadas a ${store}.`,
   confirmSent: "Só mais um passo: enviámos-lhe um email com um botão para confirmar que quer receber as novidades.",
   result: "O seu resultado",
+  yourScore: "A sua pontuação",
+  points: (n, of) => `${n} ${n === 1 ? "ponto" : "pontos"}${of === null ? "" : ` de ${of}`}`,
+  covers: (min, max) => `Este resultado corresponde a uma pontuação de ${min} a ${max}.`,
   seeProduct: "Ver",
   backTo: (store) => `Voltar a ${store}`,
   errors: {

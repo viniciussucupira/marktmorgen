@@ -7,7 +7,7 @@ import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { readForm, addResponse } from "@/lib/form-store";
 import { enroll } from "@/lib/flows";
-import { FORM_ID, outcomeOf, readAnswers } from "@/lib/forms";
+import { FORM_ID, outcomeOf, readAnswers, scoreOf, scoreQuery } from "@/lib/forms";
 import { askToJoin } from "@/lib/store-join";
 import { funnelMark } from "@/lib/page-funnel";
 import { countFunnelDone, funnelHere, funnelVisitor } from "@/lib/page-funnel-store";
@@ -59,8 +59,9 @@ export async function POST(request: NextRequest) {
   const def = store.suspended ? null : await readForm(store.statsId, formId).catch(() => null);
   if (!def || !store.statsId) return back("closed");
   const statsId = store.statsId;
-  const done = (outcome: string, joined: boolean) =>
-    `/@${store.handle}/form/${def.id}?p=${page?.id ?? ""}${outcome ? `&r=${outcome}` : ""}${joined ? "&j=1" : ""}${mark ? `&f=${mark}` : ""}`;
+  // A scored quiz's total rides along in the address, as the result does: numbers the page checks, never anybody's answers.
+  const done = (outcome: string, joined: boolean, scored = "") =>
+    `/@${store.handle}/form/${def.id}?p=${page?.id ?? ""}${outcome ? `&r=${outcome}${scored}` : ""}${joined ? "&j=1" : ""}${mark ? `&f=${mark}` : ""}`;
 
   // A field no person can see: whatever filled it in is told it worked, and nothing is kept.
   if (one("website").trim()) return go(done("", false));
@@ -71,17 +72,20 @@ export async function POST(request: NextRequest) {
   const read = readAnswers(def, (name) => form.getAll(name).filter((v): v is string => typeof v === "string").map((v) => v.slice(0, 4_000)));
   if (!read.ok) return back(read.error);
   const outcome = outcomeOf(def, read.answers);
+  // A scored quiz keeps its total with the answers only when something was scored, as its result is.
+  const score = scoreOf(def, read.answers);
+  const measured = score && score.answered > 0 ? score : null;
 
   try {
     // The list, only when they checked the box: the email that asks them to confirm, never the list itself.
     let joined = false;
     if (def.offerList && one("consent") === "yes" && read.email) {
-      const asked = await askToJoin({ store, email: read.email, ip, origin: linkOrigin(request, store), fromForm: true, formId: def.id }).catch(() => "error" as const);
+      const asked = await askToJoin({ store, email: read.email, ip, origin: linkOrigin(request, store), fromForm: true, formId: def.id, formOutcome: outcome?.id }).catch(() => "error" as const);
       joined = asked === "sent";
     }
-    await addResponse(statsId, def.id, { id: randomBytes(16).toString("hex"), at: Math.floor(Date.now() / 1000), page: page?.id ?? "", answers: read.answers, outcome: outcome?.id ?? "", joined }, store);
+    await addResponse(statsId, def.id, { id: randomBytes(16).toString("hex"), at: Math.floor(Date.now() / 1000), page: page?.id ?? "", answers: read.answers, outcome: outcome?.id ?? "", joined, ...(measured ? { score: measured.total, scores: measured.categories } : {}) }, store);
     // Somebody already on the list: the sequences that start with this form start now (lib/flows.ts checks they may be written to).
-    if (read.email) await enroll(store, read.email, { joined: false, form: def.id });
+    if (read.email) await enroll(store, read.email, { joined: false, form: def.id, formOutcome: outcome?.id ?? "" });
 
     // A step of a funnel: counted as done there, and the person goes on.
     const here = page && mark ? await funnelHere(store, mark, "page", page.id).catch(() => null) : null;
@@ -90,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
     // A result, or the box's email, is said on a page of its own first; otherwise straight on.
     if (here?.next && !outcome && !joined) return go(here.next);
-    return go(done(outcome?.id ?? "", joined));
+    return go(done(outcome?.id ?? "", joined, measured ? scoreQuery(measured) : ""));
   } catch (error) {
     // No room in the store's data room: the answers were not kept (lib/store-data.ts).
     if (error instanceof DataRoomError) return back("noroom");

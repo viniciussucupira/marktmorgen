@@ -114,6 +114,12 @@ export type Flow = {
   tag?: string;
   /** The form that starts it, for "form" (lib/forms.ts). */
   formId?: string;
+  /**
+   * For "form" on a quiz: only those who got this result start it (added 17
+   * October 2026, for scored quizzes and results alike). Absent for everyone
+   * who sends the form.
+   */
+  formOutcome?: string;
   steps: FlowStep[];
   active: boolean;
   createdAt: number;
@@ -245,7 +251,10 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>, opts:
   if (trigger === "form") {
     const form = formId ? await readForm(store.statsId, formId).catch(() => null) : null;
     if (!form || !form.fields.some((f) => f.type === "email")) return { ok: false, reason: "form" };
+    // One of the quiz's own results, or everyone who sends it.
+    if (typeof raw.formOutcome === "string" && raw.formOutcome && !form.outcomes.some((o) => o.id === raw.formOutcome)) return { ok: false, reason: "form" };
   }
+  const formOutcome = trigger === "form" && typeof raw.formOutcome === "string" ? raw.formOutcome : "";
   // The store's fields and stages, for a step that sets one or moves a deal (lib/crm.ts).
   const [crmFields, stages] = await Promise.all([readFields(store.statsId), readStages(store.statsId)]);
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
@@ -292,6 +301,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>, opts:
     productId,
     ...(tag ? { tag } : {}),
     ...(formId ? { formId } : {}),
+    ...(formOutcome ? { formOutcome } : {}),
     steps,
     active,
     createdAt: at >= 0 ? flows[at].createdAt : Math.floor(Date.now() / 1000),
@@ -444,7 +454,7 @@ export async function flowsStartedFor(flows: Flow[], email: string): Promise<str
  * Starts whichever sequences this event begins, for this person. Never
  * throws: the list must never cost anyone what they asked for.
  */
-export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string; form?: string; started?: string; abandoned?: string }): Promise<void> {
+export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string; form?: string; formOutcome?: string; started?: string; abandoned?: string }): Promise<void> {
   try {
     if (!store.listId || monthlyAllowance(store) === 0) return;
     // Whether what they just got is sold for money: the store's own index
@@ -462,7 +472,7 @@ export async function enroll(store: Store, email: string, event: { joined: boole
           (f.trigger === "finished" && event.finished && f.productId === event.finished) ||
           (f.trigger === "started" && event.started && f.productId === event.started) ||
           (f.trigger === "abandoned" && event.abandoned && f.productId === event.abandoned) ||
-          (f.trigger === "form" && event.form && f.formId === event.form)),
+          (f.trigger === "form" && event.form && f.formId === event.form && (!f.formOutcome || f.formOutcome === event.formOutcome))),
     );
     if (!flows.length) return;
     const address = normaliseEmail(email);

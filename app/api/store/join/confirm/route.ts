@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       // and their own email platform, when they connected one (lib/email-sync.ts).
       await enroll(store, result.grant.e, { joined: result.added.joined });
       // Asked from one of the store's forms: a sequence that starts with that form starts now, on confirming.
-      if (result.grant.f) await enroll(store, result.grant.e, { joined: false, form: result.grant.f });
+      if (result.grant.f) await enroll(store, result.grant.e, { joined: false, form: result.grant.f, formOutcome: result.grant.r ?? "" });
       // Joining the list, as a lead to the creator's ad platforms, with the visitor's yes (lib/ad-events.ts).
       if (sendsFromServer(store) && allowedBy(request, store)) {
         const id = newLeadId();

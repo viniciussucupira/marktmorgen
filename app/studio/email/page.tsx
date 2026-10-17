@@ -213,7 +213,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             courses={idsOfKind(store, "course")}
             paidProducts={idsOfKind(store, "paid")}
             automation={{
-              forms: (await readForms(store.statsId).catch(() => [])).filter((f) => f.fields.some((x) => x.type === "email")).map((f) => ({ id: f.id, name: f.name })),
+              forms: (await readForms(store.statsId).catch(() => [])).filter((f) => f.fields.some((x) => x.type === "email")).map((f) => ({ id: f.id, name: f.name, outcomes: f.outcomes.map((o) => ({ id: o.id, title: o.title })) })),
               fields: (await readFields(store.statsId).catch(() => [])).map((f) => ({ id: f.id, name: f.name, type: f.type, options: f.options })),
               stages: (await readStages(store.statsId).catch(() => [])).map((st) => ({ id: st.id, name: st.name })),
             }}

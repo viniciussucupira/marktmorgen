@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { answerText, responsesCsv, type FormDef, type FormResponse } from "@/lib/forms";
+import { answerText, isScored, responsesCsv, type FormDef, type FormResponse } from "@/lib/forms";
 import { filterFormResponses, NO_CURRENT_FORM_RESULT, type FormOpportunityFilter } from "@/lib/form-response-filter";
 import type { FormDealMatch } from "@/lib/form-deal";
 
@@ -19,6 +19,9 @@ export function FormAnswers({ form, latest, total, canReview, blocked, existingD
   const filtered = filterFormResponses(form, latest, query, outcome, { available: canReview && existingDealsAvailable, filter: activeOpportunity, refs: linkedRefs });
   const activeOutcome = outcome === NO_CURRENT_FORM_RESULT || form.outcomes.some(item => item.id === outcome) ? outcome : "";
   const changed = !!query || !!activeOutcome || opportunityFilter !== "all";
+  const scored = isScored(form);
+  const scoreText = (response: ResponseRow) =>
+    typeof response.score !== "number" ? "" : [String(response.score), ...(form.categories ?? []).flatMap(c => typeof response.scores?.[c.id] === "number" ? [`${c.name} ${response.scores[c.id]}`] : [])].join(" · ");
   function download() {
     if (!filtered.length) return;
     const file = new Blob(["\uFEFF", responsesCsv(form, filtered)], { type: "text/csv;charset=utf-8" });
@@ -75,6 +78,7 @@ export function FormAnswers({ form, latest, total, canReview, blocked, existingD
               <tr className="text-ink-soft">
                 <th scope="col" className="py-2 pr-4 font-semibold">Sent</th>
                 {form.fields.map(field => <th scope="col" key={field.id} className="py-2 pr-4 font-semibold">{field.label}</th>)}
+                {scored ? <th scope="col" className="py-2 pr-4 font-semibold">Score</th> : null}
                 {form.outcomes.length ? <th scope="col" className="py-2 pr-4 font-semibold">Result</th> : null}
                 {canReview ? <th scope="col" className="py-2 pr-4 font-semibold">CRM</th> : null}
               </tr>
@@ -84,6 +88,7 @@ export function FormAnswers({ form, latest, total, canReview, blocked, existingD
                 <tr key={response.id || `${response.at}-${index}`} className="border-t border-line align-top">
                   <td className="py-2 pr-4 whitespace-nowrap">{new Date(response.at * 1000).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
                   {form.fields.map(field => <td key={field.id} className="max-w-[18rem] py-2 pr-4 break-words">{answerText(field, response.answers[field.id])}</td>)}
+                  {scored ? <td className="py-2 pr-4 whitespace-nowrap">{scoreText(response)}</td> : null}
                   {form.outcomes.length ? <td className="py-2 pr-4">{form.outcomes.find(item => item.id === response.outcome)?.title ?? ""}</td> : null}
                   {canReview ? <td className="py-2 pr-4"><button type="button" className="btn btn-secondary btn-sm" disabled={blocked || !existingDealsAvailable || !response.opportunityRef} onClick={() => response.opportunityRef && onReview(response)}>{response.opportunityRef && linkedRefs.has(response.opportunityRef) ? "View opportunity" : "Review as opportunity"}</button></td> : null}
                 </tr>

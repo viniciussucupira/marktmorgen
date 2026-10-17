@@ -71,7 +71,7 @@ export const PERSON_DATA: PersonData[] = [
   { file: "lib/crm.ts", how: "erased", what: "Your fields about them, and every deal with them" },
   { file: "lib/buyer-profile.ts", how: "erased", what: "Your team's notes about them" },
   { file: "lib/buyer-profile.ts", how: "expires", days: 1, what: "A search for their page in the studio works for an hour" },
-  { file: "lib/form-store.ts", how: "erased", what: "Every answer they gave to your forms" },
+  { file: "lib/form-store.ts", how: "erased", what: "Every answer they gave to your forms, with each quiz result and score kept with it" },
   { file: "lib/waitlist.ts", how: "erased", what: "Their place on every waitlist, and in any launch email still going out" },
   { file: "lib/affiliate-bond.ts", how: "erased", what: "Which affiliate they belong to" },
   { file: "lib/affiliates.ts", how: "kept", what: "Commissions an affiliate earned on their purchases", why: "They are the affiliate's money records, paid or owed, and name the sale, not the buyer's address." },
