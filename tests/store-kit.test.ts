@@ -76,7 +76,7 @@ async function main(): Promise<void> {
   is("saved, and dated", [store.kit.on, store.kit.pitch, store.kit.stated], [true, "Hello brands", "2026-10-09"]);
 
   part("The introduction drafted with AI");
-  await setSubscription(owner, { customerId: "cus_Kit00001", subscriptionId: "sub_Kit00001", active: true });
+  await setSubscription(owner, { customerId: "cus_Kit00001", subscriptionId: "sub_Kit00001", active: true, tier: "pro" });
   reply = JSON.stringify({ pitches: ["I cook for parents.", "I cook for parents.", "Busy weeknights, solved."] });
   const drafted = await writeKitPitch((await storeForEmail(owner))!, { products: ["Meal Planner"], audience: ["YouTube: 5000"], facts: ["Most are 25 to 34"], notes: "" });
   is("three at most, each once", drafted.ok && drafted.value, ["I cook for parents.", "Busy weeknights, solved."]);

@@ -6,7 +6,7 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { AiOn } from "@/components/ai-assist";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { BlogEditor } from "@/components/blog-editor";
 import { allPosts, postSegment, readPost } from "@/lib/store-blog";
 
@@ -37,7 +37,7 @@ export default async function StudioBlogPage({ searchParams }: Params) {
   const [posts, open, left] = await Promise.all([
     allPosts(store.statsId),
     editing && editing !== "new" ? readPost(store.statsId, editing) : Promise.resolve(null),
-    isAiConfigured() ? aiLeft(store).catch(() => 0) : Promise.resolve(0),
+    aiAvailableFor(store) ? aiLeft(store).catch(() => 0) : Promise.resolve(0),
   ]);
   const back = studioPath(store, "", "blog");
   const products = store.catalog.head.filter((p) => !p.hidden).map((p) => ({ id: p.id, title: p.title }));
@@ -83,7 +83,7 @@ export default async function StudioBlogPage({ searchParams }: Params) {
 
             <section aria-label={open ? `Editing ${open.title}` : "A new post"} className="card min-w-0 p-5 sm:p-7">
               {writing ? (
-                <AiOn value={isAiConfigured() ? { on: true, left } : { on: false, left: 0 }}>
+                <AiOn value={aiAvailableFor(store) ? { on: true, left } : { on: false, left: 0 }}>
                   <BlogEditor
                     key={open?.id ?? "new"}
                     post={open ? { id: open.id, title: open.title, body: open.body, product: open.product, draft: open.draft, href: open.draft ? null : live(open.id, open.title) } : { id: null, title: "", body: "", product: null, draft: true, href: null }}

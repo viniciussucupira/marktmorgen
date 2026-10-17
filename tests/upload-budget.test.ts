@@ -7,9 +7,9 @@ import { calls, reset, seed, hashes, settings } from './upload-budget-redis';
 const id=(n:number)=>n.toString(16).padStart(32,'0');
 const store=(n=1,scope='creator'):UploadStore=>({statsId:id(n),tier:scope==='pro'?'pro':scope==='scale'?'scale':'creator',subscriptionActive:!['setup','ended'].includes(scope),subscriptionId:scope==='setup'?null:'sub_test123',trialEnds:scope==='trial'?Date.now()/1000+600:0,planEndedAt:scope==='ended'?'2026-01-01':''});
 
-test('unknown funding policy and missing ledgers never authorize a provider upload',async()=>{
- reset();assert.equal(await reserveStoreUpload(store(),1,'r2'),false);assert.equal(calls.length,0);
- assert.equal(await reserveStoreUpload(store(),1,'r2',uploadTestPolicy()),false);
+test('a separately reviewed policy never gets its missing ledger created',async()=>{
+ reset();assert.equal(await reserveStoreUpload(store(),1,'r2',uploadTestPolicy()),false);assert.equal(hashes.size,0);
+ assert.equal(calls.length,1);assert.equal(calls[0].length,1);
 });
 test('policy covers every allocated store at every maximum, not an average',()=>{
  const p=uploadTestPolicy();assert.equal(isUploadBudgetConfigured(p),true);
@@ -62,7 +62,7 @@ test('unproven direct Blob and Bunny grants remain unavailable',async()=>{
  reset();const p=uploadTestPolicy();seed(p);for(const backend of ['blob','stream'] as const)assert.equal(await reserveStoreUpload(store(),1,backend,p),false);assert.equal(calls.length,0);
 });
 test('invalid identifiers and byte counts cannot reach Redis',async()=>{
- reset();const p=uploadTestPolicy();seed(p);for(const bytes of [0,-1,0.5,NaN,Infinity,1e12+1])assert.equal(await reserveStoreUpload(store(),bytes,'r2',p),false);assert.equal(await reserveStoreUpload({...store(),statsId:'bad:id'},1,'r2',p),false);assert.equal(await reserveStoreUpload({...store(),statsId:null},1,'r2',p),false);assert.equal(calls.length,0);
+ reset();const p=uploadTestPolicy();seed(p);for(const bytes of [0,-1,0.5,NaN,Infinity,9e15+2])assert.equal(await reserveStoreUpload(store(),bytes,'r2',p),false);assert.equal(await reserveStoreUpload({...store(),statsId:'bad:id'},1,'r2',p),false);assert.equal(await reserveStoreUpload({...store(),statsId:null},1,'r2',p),false);assert.equal(calls.length,0);
 });
 test('public wording is honest when paused and uses the reviewed numerical ceilings',()=>{
  assert.match(uploadAllowanceWords('creator',null),/paused/);const words=uploadAllowanceWords('creator',uploadTestPolicy());assert.match(words,/2 upload starts/);assert.match(words,/10 bytes/);assert.match(words,/6 requests/);

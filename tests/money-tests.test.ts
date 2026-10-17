@@ -67,7 +67,7 @@ async function main(): Promise<void> {
   const owner = "owner@example.com";
   await claimHandle(owner, "abshop", "AB Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Ab00001", subscriptionId: "sub_Ab00001", active: true });
+  await setSubscription(owner, { customerId: "cus_Ab00001", subscriptionId: "sub_Ab00001", active: true, tier: "pro" });
   const store = (await storeForEmail(owner))!;
   const facts = "Bread School: a course of 12 lessons on sourdough at home.";
   reply = JSON.stringify({ headline: "Bake the loaf you buy, at home", sub: "Twelve short lessons, one bake at a time." });

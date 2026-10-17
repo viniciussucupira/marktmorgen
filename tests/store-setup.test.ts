@@ -31,7 +31,7 @@ async function main(): Promise<void> {
   const owner = "setup@example.com";
   await claimHandle(owner, "setupshop", "Setup Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Setup0001", subscriptionId: "sub_Setup0001", active: true });
+  await setSubscription(owner, { customerId: "cus_Setup0001", subscriptionId: "sub_Setup0001", active: true, tier: "pro" });
 
   part("The draft");
   reply = JSON.stringify({

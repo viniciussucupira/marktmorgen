@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   const made = await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   if (!made.ok) throw new Error("no store");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
 
   part("No key, no writing help");
@@ -62,22 +62,22 @@ async function main(): Promise<void> {
   is("and promised results", rules.includes("Never promise a result"), true);
   is("in American English", rules.includes("American English"), true);
   is("it is told how the product is delivered, so it never guesses", asked[0].content.includes("downloads the file from the thank-you page"), true);
-  is("one job counted", await aiLeft(store), AI_MONTHLY.creator - 1);
+  is("one job counted", await aiLeft(store), AI_MONTHLY.pro - 1);
 
   part("Nothing to write from");
   const empty = await writeProduct(store, { title: "Pantry Guide", price: "", kind: "download", notes: "   " });
   is("is refused before asking", empty.ok ? "ran" : empty.reason, "notes");
-  is("and not counted", await aiLeft(store), AI_MONTHLY.creator - 1);
+  is("and not counted", await aiLeft(store), AI_MONTHLY.pro - 1);
 
   part("A job that fails");
   reply = { status: 529, text: "overloaded" };
   const failed = await writeProduct(store, { title: "Pantry Guide", price: "", kind: "download", notes: "40 recipes" });
   is("says so", failed.ok ? "ran" : failed.reason, "failed");
-  is("and the started attempt stays counted", await aiLeft(store), AI_MONTHLY.creator - 2);
+  is("and the started attempt stays counted", await aiLeft(store), AI_MONTHLY.pro - 2);
   reply = { status: 200, text: "I cannot help with that." };
   const nonsense = await writeProduct(store, { title: "Pantry Guide", price: "", kind: "download", notes: "40 recipes" });
   is("an answer that is not the shape asked for is a failure too", nonsense.ok ? "ran" : nonsense.reason, "failed");
-  is("and an unusable answer also consumes its request", await aiLeft(store), AI_MONTHLY.creator - 3);
+  is("and an unusable answer also consumes its request", await aiLeft(store), AI_MONTHLY.pro - 3);
 
   part("An outline");
   const lots = Array.from({ length: 12 }, (_, i) => ({ title: `Module ${i + 1}`, lessons: Array.from({ length: 11 }, (_, n) => `Lesson ${n + 1}`) }));
@@ -101,7 +101,7 @@ async function main(): Promise<void> {
 
   part("The month is a ceiling");
   const key = `nl:ai:${store.statsId}:${new Date().toISOString().slice(0, 7)}`;
-  await redis.pipeline([["SET", key, String(AI_MONTHLY.creator)]]);
+  await redis.pipeline([["SET", key, String(AI_MONTHLY.pro)]]);
   const over = await writeEmail(store, { goal: "announce", product: "", link: "", notes: "hello" });
   is("past it, nothing is asked", over.ok ? "ran" : over.reason, "used");
   is("and the count stays at the ceiling", await aiLeft(store), 0);

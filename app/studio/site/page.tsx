@@ -10,7 +10,7 @@ import { EMPTY_PAGE, MAX_BLOCKS } from "@/lib/sales-page";
 import { readPage } from "@/lib/sales-page-store";
 import { PageEditor } from "@/components/page-editor";
 import { AiOn } from "@/components/ai-assist";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { storeBase } from "@/lib/purchase-email";
 import { featuredCards } from "@/lib/featured-cards";
 import { SITE_KINDS, siteKey } from "@/lib/site-page-rules";
@@ -70,7 +70,7 @@ export default async function StudioSitePage({ searchParams }: Params) {
               {selected && page ? (
                 <>
                   <SitePageSettings key={`settings-${selected.id}-${selected.slug}-${selected.title}`} page={selected} pages={pages} products={products} base={base} sid={store.sid} />
-                  <AiOn value={isAiConfigured() ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}>
+                  <AiOn value={aiAvailableFor(store) ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}>
                     <PageEditor
                       key={selected.id}
                       site={{ id: selected.id, kinds: SITE_KINDS }}

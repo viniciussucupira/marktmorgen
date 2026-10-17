@@ -17,8 +17,11 @@ import { AI_ENTITLEMENT_RULES } from '@/lib/ai-entitlement-rules';
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { aiBudgetScopeFor, isAiBudgetConfigured, reserveAiSpend } from "@/lib/ai-spend";
+import { currentAiSpendPolicy } from "@/lib/ai-spend-policy";
+import { standingOf } from "@/lib/plan-standing";
 import { timed } from "@/lib/fetch-timeout";
 import { boundedAiRequest, isSupportedAiModel } from "@/lib/ai-request-rules";
+import { aiRequestHoldMicroUsd } from "@/lib/spend-cost-table";
 import { inTrial } from "@/lib/mail";
 import type { Store } from "@/lib/store";
 import { LANGUAGES } from "@/lib/store-language";
@@ -79,6 +82,19 @@ const monthKey = (store: Store, now: Date) => `nl:ai:${store.statsId}:${now.toIS
 
 /** The key a store's month of writing jobs is counted under, for work counted elsewhere against the same month (lib/affiliate-kit.ts). */
 export const aiMonthKey = monthKey;
+
+/**
+ * Whether this store has any AI to use: the deployment is set up and its plan
+ * includes a monthly allowance. Store, the free trial and stores without a
+ * paid plan have none (lib/ai-rules.ts), so no button is shown to them.
+ */
+export function aiAvailableFor(store: Store | null | undefined, now = Date.now()): boolean {
+  if (!store || !isAiConfigured() || aiAllowance(store, now) <= 0) return false;
+  // Only a paying plan has a spending allocation (lib/ai-spend-policy.ts).
+  if (standingOf(store, now / 1000) !== "paid") return false;
+  const policy = currentAiSpendPolicy(new Date(now));
+  return !!policy && policy.storeMicroUsd[store.tier] > 0 && policy.fundedStores[store.tier] > 0;
+}
 
 /** Writing jobs this store may ask for this month. */
 export function aiAllowance(store: Store, now = Date.now()): number {
@@ -176,7 +192,11 @@ export async function askModel(
   const scope=aiBudgetScopeFor(store);
   const exposure=scope==='trial'?'trial':scope==='setup'?'setup':scope==='ended'?'post_cancellation':null;
   if(exposure&&!(await reserveFundedExposure(store.statsId,exposure)))return null;
-  if (!(await reserveAiSpend(store.statsId, scope, named))) return null;
+  // The most this very request can cost, worked out from its own bytes, media
+  // and output ceiling at the cost table's rates, reserved before the fetch.
+  const hold = aiRequestHoldMicroUsd(named, bounded.shape);
+  if (hold === null) return null;
+  if (!(await reserveAiSpend(store.statsId, scope, named, undefined, hold))) return null;
   const response = await timed(timeoutMs, (signal) =>
     fetch(API, {
       method: "POST",

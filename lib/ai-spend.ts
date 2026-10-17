@@ -1,7 +1,7 @@
 import { standingOf, type PlanFields } from '@/lib/plan-standing';
 import type { Tier } from '@/lib/plan';
 import { isRedisConfigured, redisPipeline } from '@/lib/redis';
-import { AI_BUDGET_TIERS, aiSpendPolicySnapshot, isAiSpendPolicyValid, CURRENT_AI_SPEND_POLICY, type AiBudgetTier, type AiSpendPolicy } from '@/lib/ai-spend-policy';
+import { AI_BUDGET_TIERS, AUTOMATIC_AI_SPEND_REVIEW_ID, aiSpendLedgerKey, aiSpendOpenedKey, aiSpendPolicySnapshot, currentAiSpendPolicy, isAiSpendPolicyValid, type AiBudgetTier, type AiSpendPolicy } from '@/lib/ai-spend-policy';
 import { SUPPORTED_AI_MODELS } from '@/lib/ai-request-rules';
 
 /** Acquisition and ended accounts never consume a paid-tier allocation. */
@@ -10,13 +10,14 @@ export function aiBudgetScopeFor(store: PlanFields & { tier: Tier }, nowSeconds 
   return standing === 'paid' ? store.tier : standing === 'none' ? 'setup' : standing;
 }
 
-export function isAiBudgetConfigured(policy: AiSpendPolicy | null = CURRENT_AI_SPEND_POLICY, now = new Date()): policy is AiSpendPolicy {
+export function isAiBudgetConfigured(policy: AiSpendPolicy | null = currentAiSpendPolicy(), now = new Date()): policy is AiSpendPolicy {
   return isAiSpendPolicyValid(policy, now);
 }
 
 /** A single hash keeps both counters in the same Redis cluster slot. Read and
  * validate everything before writing. Missing/corrupt/expiring ledgers deny.
- * Ledger creation belongs to the reviewed funding migration, never this path.
+ * This script never creates a ledger; OPEN_AI_SPEND_LEDGER opens the
+ * automatic policy's month once and never recreates it.
  */
 export const RESERVE_AI_SPEND = `
 local function amount(value)
@@ -53,6 +54,56 @@ redis.call('HINCRBY', KEYS[1], 'company', ARGV[3])
 return 1
 `;
 
+/** Opens the automatic policy's month once, and carries a changed automatic
+ * policy onto the same counters. It never resets or recreates anything: a
+ * month whose ledger was opened and later went missing stays refused, a
+ * ledger that belongs to any other review is left alone, and changed ceilings
+ * keep every spent amount and every claimed allocation. Reservation itself
+ * stays in RESERVE_AI_SPEND, unchanged.
+ */
+export const OPEN_AI_SPEND_LEDGER = `
+local function amount(value)
+  if not value or not string.match(value, '^%d+$') or (#value > 1 and string.sub(value, 1, 1) == '0') then return nil end
+  local n = tonumber(value)
+  if not n or n < 0 or n > 1000000000000 or n ~= math.floor(n) then return nil end
+  return n
+end
+local tiers = {'creator', 'pro', 'scale', 'trial', 'setup', 'ended'}
+local funded = {}
+for i = 1, 6 do
+  funded[i] = amount(ARGV[2 + i])
+  if not funded[i] then return 0 end
+end
+local kind = redis.call('TYPE', KEYS[1]).ok
+if kind == 'none' then
+  if redis.call('EXISTS', KEYS[2]) ~= 0 then return 0 end
+  redis.call('SET', KEYS[2], ARGV[1])
+  redis.call('HSET', KEYS[1], 'review', ARGV[1], 'policy', ARGV[2], 'company', '0')
+  for i = 1, 6 do
+    redis.call('HSET', KEYS[1], 'slots:' .. tiers[i], funded[i], 'funded:' .. tiers[i], funded[i])
+  end
+  return 1
+end
+if kind ~= 'hash' or redis.call('TTL', KEYS[1]) ~= -1 then return 0 end
+if redis.call('HGET', KEYS[1], 'review') ~= ARGV[1] then return 0 end
+if redis.call('HGET', KEYS[1], 'policy') == ARGV[2] then return 1 end
+if not amount(redis.call('HGET', KEYS[1], 'company')) then return 0 end
+local slots = {}
+for i = 1, 6 do
+  local was = amount(redis.call('HGET', KEYS[1], 'funded:' .. tiers[i]))
+  local left = amount(redis.call('HGET', KEYS[1], 'slots:' .. tiers[i]))
+  if not was or not left or left > was then return 0 end
+  local claimed = was - left
+  if funded[i] > claimed then slots[i] = funded[i] - claimed else slots[i] = 0 end
+end
+-- No writes until every field has been read and checked.
+for i = 1, 6 do
+  redis.call('HSET', KEYS[1], 'slots:' .. tiers[i], slots[i], 'funded:' .. tiers[i], funded[i])
+end
+redis.call('HSET', KEYS[1], 'policy', ARGV[2])
+return 1
+`;
+
 /** The reservation is final before fetch. Never refund on timeout, provider
  * rejection, invalid output, response loss or a failed creator job. A retry is
  * a new paid call with a new reservation. Caller-supplied historical dates
@@ -60,16 +111,30 @@ return 1
  */
 export async function reserveAiSpend(
   statsId: string, tier: AiBudgetTier, model: string,
-  policy: AiSpendPolicy | null = CURRENT_AI_SPEND_POLICY,
+  policy: AiSpendPolicy | null = currentAiSpendPolicy(),
+  requestHoldMicroUsd?: number,
 ): Promise<boolean> {
   if (!isAiBudgetConfigured(policy) || !isRedisConfigured() || typeof statsId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(statsId)
     || !(AI_BUDGET_TIERS as readonly string[]).includes(tier) || !(SUPPORTED_AI_MODELS as readonly string[]).includes(model)) return false;
-  const charge = policy.requestMicroUsd[model as keyof typeof policy.requestMicroUsd];
+  const ceiling = policy.requestMicroUsd[model as keyof typeof policy.requestMicroUsd];
+  // The automatic policy reserves the hard bound of this very request
+  // (lib/spend-cost-table.ts), never above the model's largest request. A
+  // separately reviewed policy keeps its flat per-model ceiling.
+  const automatic = policy.reviewId === AUTOMATIC_AI_SPEND_REVIEW_ID;
+  if (automatic && requestHoldMicroUsd !== undefined && (!Number.isSafeInteger(requestHoldMicroUsd) || requestHoldMicroUsd < 1 || requestHoldMicroUsd > ceiling)) return false;
+  const charge = automatic && requestHoldMicroUsd !== undefined ? requestHoldMicroUsd : ceiling;
   if (policy.fundedStores[tier] === 0 || charge > policy.storeMicroUsd[tier] || charge > policy.companyMicroUsd) return false;
+  const key = aiSpendLedgerKey(policy.month), snapshot = aiSpendPolicySnapshot(policy);
+  const reserve: (string | number)[] = ['EVAL', RESERVE_AI_SPEND, 1, key, policy.reviewId, 'store:' + statsId,
+    charge, policy.storeMicroUsd[tier], policy.companyMicroUsd, snapshot, tier, policy.fundedStores[tier]];
   try {
-    const result = await redisPipeline([['EVAL', RESERVE_AI_SPEND, 1,
-      'nl:ai-spend:v1:' + policy.month, policy.reviewId, 'store:' + statsId,
-      charge, policy.storeMicroUsd[tier], policy.companyMicroUsd, aiSpendPolicySnapshot(policy), tier, policy.fundedStores[tier]]]);
-    return result.length === 1 && result[0] === 1;
+    if (!automatic) {
+      const result = await redisPipeline([reserve]);
+      return result.length === 1 && result[0] === 1;
+    }
+    const open: (string | number)[] = ['EVAL', OPEN_AI_SPEND_LEDGER, 2, key, aiSpendOpenedKey(policy.month), policy.reviewId, snapshot,
+      ...AI_BUDGET_TIERS.map(scope => policy.fundedStores[scope])];
+    const result = await redisPipeline([open, reserve]);
+    return result.length === 2 && result[0] === 1 && result[1] === 1;
   } catch { return false; }
 }

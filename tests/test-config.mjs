@@ -2,7 +2,7 @@ import {join} from 'node:path';
 /** One wiring source for the repository runner and local parallel verification. */
 export function testAliases(file,root,here){
  const aliases={'@':root,'@/lib/redis':['range-traffic-coverage.test.ts','stats-traffic-coverage.test.ts'].includes(file)?join(root,'lib/redis.ts'):join(here,'redis-stub.ts')};
- if(['ai-spend.test.ts','ai-spend-provider.test.ts'].includes(file))aliases['@/lib/redis']=join(here,'ai-spend-redis.ts');
+ if(['ai-spend.test.ts','ai-spend-provider.test.ts','automatic-ai-spend.test.ts'].includes(file))aliases['@/lib/redis']=join(here,'ai-spend-redis.ts');
  else aliases['@/lib/ai-spend']=join(here,'ai-spend-regression-stub.ts');
  if(file==='upload-budget-routes.test.ts'){
   aliases['@/lib/redis']=join(here,'upload-budget-redis.ts');
@@ -12,7 +12,7 @@ export function testAliases(file,root,here){
  }
  if(file==='mail-reservation.test.ts'){aliases['@/lib/email']=join(here,'mail-reservation-email.ts');aliases['@/lib/ses']=join(here,'mail-reservation-ses.ts');}
  if(file==='traffic-admission.test.ts')for(const name of ['redis','store','delivery','secret-box'])aliases['@/lib/'+name]=join(here,'traffic-admission-world.ts');
- if(file==='upload-budget.test.ts')aliases['@/lib/redis']=join(here,'upload-budget-redis.ts');
+ if(['upload-budget.test.ts','automatic-upload-budget.test.ts'].includes(file))aliases['@/lib/redis']=join(here,'upload-budget-redis.ts');
  if(['commercial-terms-snapshot.test.ts','net-margin.test.ts','customer-base.test.ts','plan-revenue-ceilings.test.ts','commercial-ai-coverage.test.ts'].includes(file))aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
  if(['commercial-terms-snapshot.test.ts','net-margin.test.ts','customer-base.test.ts','plan-revenue-ceilings.test.ts','commercial-ai-coverage.test.ts'].includes(file))aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
  if(file==='ai-spend-provider.test.ts')aliases['@/lib/ai-spend-policy']=join(here,'ai-spend-approved-policy.ts');

@@ -47,7 +47,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
 
   part("Only the first pages");

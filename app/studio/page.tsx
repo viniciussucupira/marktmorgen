@@ -109,7 +109,7 @@ import { activeYearly } from "@/lib/yearly-price";
 import { WinBackEditor } from "@/components/winback-editor";
 import { WelcomeOfferEditor } from "@/components/welcome-offer-editor";
 import { welcomesOffered } from "@/lib/welcome-offer-send";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { AiOn } from "@/components/ai-assist";
 import { AiPosts } from "@/components/ai-posts";
 import { winbacksSent } from "@/lib/winback-send";
@@ -717,7 +717,7 @@ export default async function StudioPage({
   /** Carried on the forms below that post to the studio's routes, so each acts on this store. */
   const pin = store?.sid ? `?store=${store.sid}` : "";
   // The writing help, and what is left of it this month: read once for the whole studio page.
-  const ai = store && isAiConfigured() ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
+  const ai = store && aiAvailableFor(store) ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
   const notice =
     ADDRESS_NOTICES[typeof params.address === "string" ? params.address : ""] ??
     STRIPE_NOTICES[typeof params.stripe === "string" ? params.stripe : ""] ??
@@ -1303,7 +1303,7 @@ export default async function StudioPage({
                   askHeard={!heardIsOff}
                   canSetHeard={may("settings")}
                   canSetAttribution={may("settings")}
-                  canAsk={isAiConfigured()}
+                  canAsk={aiAvailableFor(store)}
                   voice={store ? await readVoice(store).catch(() => null) : undefined}
                   insightContext={{
                     storeUrl: current ? storeBase(current) : undefined,
@@ -1314,7 +1314,7 @@ export default async function StudioPage({
                       ? statListings.filter((product) => !product.hidden).map((product) => ({ id: product.id, title: product.title, url: `${storeBase(current)}/p/${productSegment(product)}` }))
                       : [],
                   }}
-                  weeklyAi={may("settings") && isAiConfigured() && store ? store.weeklyAi : undefined}
+                  weeklyAi={may("settings") && aiAvailableFor(store) && store ? store.weeklyAi : undefined}
                   weeklyTeam={
                     team && store
                       ? {
@@ -1714,7 +1714,7 @@ export default async function StudioPage({
                           onFill={lookColours(store.look).onAccent}
                         />
                       ) : null}
-                      {may("page") && isAiConfigured() ? (
+                      {may("page") && aiAvailableFor(store) ? (
                         <AnswersEditor
                           setting={store.answers}
                           used={await answersUsed(store).catch(() => 0)}
