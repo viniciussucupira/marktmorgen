@@ -41,6 +41,8 @@ Owner steps (the code stays off until the last one):
 3. If the app is in production and verified, Google asks for the changed scopes to be verified again: submit it with the same justification as above (team hosts' availability and calendar choice; no event content is read). Until approved, Google shows unverified-app warnings to new hosts.
 4. In Vercel → project → Settings → Environment Variables, add `GOOGLE_CALENDAR_SYNC_SCOPES` = `1` for Production, and redeploy.
 
+**Done on 17 Oct 2026** (owner authorized it in conversation): both scopes were added under Google Auth Platform → Data access of the project "Nimbus Labs" (`nimbus-labs-509912`, owned by the owner's Google account); Google lists both as non-sensitive, so no new verification was required. `GOOGLE_CALENDAR_SYNC_SCOPES=1` was added to the Vercel project for Production as a Config variable, and this commit's deployment is the redeploy that reads it.
+
 While the variable is unset, hosts are offered only the iCal address, the studio says why, and a host who had chosen Google is blocked (never read without permission). A host who unchecks the free/busy box on Google's page is told so and blocked until they connect again with it.
 
 ## Limits per plan (enforced on save and at every booking)
