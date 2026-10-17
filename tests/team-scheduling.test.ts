@@ -312,7 +312,7 @@ async function main(): Promise<void> {
   if (h1.ok) await releaseOwnHold(first.store, h1.session);
   is("a hold given back frees its host and the time", [await claimsOf(MAYA), await offered(first.store, rrCall, S)], [[], true]);
 
-  const second = await storeWithCalls("other@example.com", "lantern", "acct_1TestLantern01", "creator", 1);
+  const second = await storeWithCalls("other@example.com", "lantern", "acct_1TestLantern01", "pro", 1);
   await putMember(second.store, MAYA, "editor");
   await writeTeam(second.store, second.products[0].id, { mode: "round_robin", hosts: [host(MAYA)], createdAt: "2026-10-03T00:00:00.000Z" });
   const again = await hold(first.store, rrCall, S);
@@ -325,14 +325,12 @@ async function main(): Promise<void> {
   is("a collective hold takes every host's time, once", [g1.ok, g2.ok ? "held" : g2.reason, await claimsOf(PAT), (await claimsOf(OWNER)).includes(G)], [true, "taken", [G], true]);
   is("the owner is taken, so on the round robin call the time goes to Maya", [await offered(first.store, rrCall, G), (await (async () => { const h = await hold(first.store, rrCall, G); return h.ok && (await claimsOf(MAYA)).includes(G); })())], [true, true]);
 
-  await writeTeam(second.store, "another", { mode: "round_robin", hosts: [host(MAYA)], createdAt: "2026-10-04T00:00:00.000Z" });
-  const extra = await addProduct("other@example.com", "Second call", "", "120", null);
-  if (!extra.ok) throw new Error("no product");
-  await setProductCall("other@example.com", extra.product.id, weekly);
-  await writeTeam(second.store, extra.product.id, { mode: "round_robin", hosts: [host(MAYA)], createdAt: "2026-10-05T00:00:00.000Z" });
-  const secondNow = (await storeForEmail("other@example.com")) as Store;
-  const extraCall = (await readListing(secondNow, extra.product.id)) as CallListing;
-  is("on the Store plan the second team event is closed, the first stays", [await activeTeam(secondNow, extraCall), (await activeTeam(secondNow, second.products[0])) !== "closed", (await slotsForProduct(secondNow, extraCall))?.days.length], ["closed", true, 0]);
+  // Since 18 October 2026 the Store plan has no team event types (lib/team-scheduling-rules.ts): one written is closed.
+  const third = await storeWithCalls("third@example.com", "ember", "acct_1TestEmber0001", "creator", 1);
+  await putMember(third.store, MAYA, "editor");
+  await writeTeam(third.store, third.products[0].id, { mode: "round_robin", hosts: [host(MAYA)], createdAt: "2026-10-05T00:00:00.000Z" });
+  const thirdNow = (await storeForEmail("third@example.com")) as Store;
+  is("on the Store plan a team event is closed, and offers no times", [TEAM_LIMITS.creator.eventTypes, await activeTeam(thirdNow, third.products[0]), (await slotsForProduct(thirdNow, third.products[0]))?.days.length], [0, "closed", 0]);
 
   part("A host's own Google Calendar");
   process.env.GOOGLE_CALENDAR_SYNC_SCOPES = "1";

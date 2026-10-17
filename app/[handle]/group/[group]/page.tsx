@@ -107,7 +107,7 @@ export default async function GroupPage({ params, searchParams }: Params) {
       console.error("taking a place failed", error);
       return null;
     });
-    if (taken && taken.outcome !== "gone" && taken.outcome !== "full") {
+    if (taken && taken.outcome !== "gone" && taken.outcome !== "full" && taken.outcome !== "resting") {
       const link = (await ordersLinkFor(store, taken.email, base).catch(() => null)) ?? `${base}/orders`;
       const email = taken.email;
       return shell(
@@ -133,6 +133,8 @@ export default async function GroupPage({ params, searchParams }: Params) {
   const notice =
     taken?.outcome === "full"
       ? g.groupNotices.full
+      : taken?.outcome === "resting"
+        ? g.groupNotices.resting
       : taken?.outcome === "gone" || (token && !taken)
         ? g.groupNotices.expired
         : status !== "expired" ? g.groupNotices[status] ?? null : null;

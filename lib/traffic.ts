@@ -247,17 +247,18 @@ export async function isResting(store: Store, now = Date.now(), who: "public" | 
  * requests and what buyers have at all of them (lib/traffic-rules.ts,
  * requestLimitFor). A count that cannot be made is a request refused.
  */
-async function countRequest(folder: string, store: Store, window: AllowanceWindow, who: "public" | "buyer", now: number): Promise<boolean> {
+async function countRequest(folder: string, store: Store, window: AllowanceWindow, who: "public" | "buyer", now: number, units = 1): Promise<boolean> {
   const whole = requestLimitFor(store, now / 1000);
   const limit = who === "buyer" ? whole : publicVisitLimit(whole);
   if (!Number.isSafeInteger(limit) || limit <= 0 || !FOLDER_PATTERN.test(folder)) return false;
+  if (!Number.isSafeInteger(units) || units < 1) return false;
   // A store that pays nothing answers only while it holds one of the month's places (lib/free-pool-rules.ts).
   if (!(await admitNonPaying(store, now))) return false;
   const key = requestsKey(folder, window.id);
-  const [count] = await redisPipeline([["INCR", key]]);
+  const [count] = await redisPipeline([["INCRBY", key, units]]);
   const n = Number(count);
-  if (!Number.isSafeInteger(n) || n < 1) return false;
-  if (n === 1) await redisPipeline([["EXPIRE", key, keepSecondsFor(window, now)]]);
+  if (!Number.isSafeInteger(n) || n < units) return false;
+  if (n === units) await redisPipeline([["EXPIRE", key, keepSecondsFor(window, now)]]);
   return n <= limit;
 }
 
@@ -265,13 +266,16 @@ async function countRequest(folder: string, store: Store, window: AllowanceWindo
  * A public request this store is about to answer, other than a page drawn
  * (which isResting counts): the cart, a search, a download, the page after
  * paying... Refused when the window's requests are used, as its pages rest.
+ * `units` is how many requests it counts as: more than one for a request
+ * that sends a file's bytes through us (a community picture, since 18
+ * October 2026), so each is priced at what it costs (tests/plan-cost-registry.ts).
  */
-export async function takePublicRequest(store: Store, who: "public" | "buyer" = "public", now = Date.now()): Promise<boolean> {
+export async function takePublicRequest(store: Store, who: "public" | "buyer" = "public", now = Date.now(), units = 1): Promise<boolean> {
   if (!isRedisConfigured()) return false;
   try {
     const window = allowanceWindow(store, now);
     if (!window) return false;
-    return await countRequest(await storeFolder(storeRef(store)), store, window, who, now);
+    return await countRequest(await storeFolder(storeRef(store)), store, window, who, now, units);
   } catch {
     return false;
   }

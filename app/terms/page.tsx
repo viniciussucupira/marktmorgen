@@ -11,7 +11,7 @@ import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords } from "@/
 import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
-import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { CALL_ORDER_UNITS, ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
 import { API_WRITE_UNITS, allowanceListWords } from "@/lib/store-allowance-rules";
 import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
@@ -21,6 +21,8 @@ import { ROOM_GRANT_MINUTES } from "@/lib/chat-pace";
 import { STORAGE_BRAKE_BYTES, storageWords } from "@/lib/storage-quota";
 import { INVITE_PROGRAM_OPEN, INVITE_PAUSE_NOTICE, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { feeWords, planPriceWords } from "@/lib/fee-words";
+import { TASK_ROOM_BYTES } from "@/lib/assignment-rules";
+import { COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Marktmorgen",
@@ -367,7 +369,14 @@ export default function TermsPage() {
           orders (inbox notices and replies, a purchase sent again, reminders,
           offers, notices to members); access emails hand a buyer what they
           already have (a link to their purchases, a course, a private
-          podcast). When one is used, that use is refused with a plain
+          podcast, a place in a purchase made for several people); buyer
+          actions are what your buyers, and you, do inside what was bought
+          other than opening its pages (a community post, comment, like,
+          message, RSVP or picture, a lesson comment, a hand-in, a lesson
+          marked done, a certificate; what you do there yourself counts as
+          studio requests, and deleting what one wrote is not counted); a
+          webhook delivery is each try to send one of your webhooks,
+          retries and tests included. When one is used, that use is refused with a plain
           message until your next billing month or a larger plan; nothing is
           billed past it. Changing your plan, canceling it, deleting your
           store and downloading your sales are never refused for it. Your
@@ -534,7 +543,14 @@ export default function TermsPage() {
           something before adding more and changes nothing about what is
           already there or already sold. A store that holds more than its
           figure when its plan ends cannot add to it, and section 8 says how
-          long it keeps what it holds.
+          long it keeps what it holds. Files your students hand in have room
+          of their own: {storageWords(TASK_ROOM_BYTES.creator)} on Store,{" "}
+          {storageWords(TASK_ROOM_BYTES.pro)} on Studio and{" "}
+          {storageWords(TASK_ROOM_BYTES.scale)} on Scale. Your community keeps
+          up to {COMMUNITY_PICTURES.creator.toLocaleString("en-US")} pictures in its posts on Store,{" "}
+          {COMMUNITY_PICTURES.pro.toLocaleString("en-US")} on Studio and{" "}
+          {COMMUNITY_PICTURES.scale.toLocaleString("en-US")} on Scale; deleting a post
+          with a picture makes room for another.
         </p>
         <p>
           Beyond those, we may limit or suspend a store only if use far above
@@ -640,24 +656,30 @@ export default function TermsPage() {
         <p>
           When a plan ends, the store stays: its page, its products and their
           prices, its lessons&rsquo; text and quizzes, its contacts and its
-          orders are kept, and buyers go on downloading what they bought. A
-          store that keeps {storageWords(SETUP_STORAGE_BYTES)} or less of
-          files and lesson videos, the room a store with no plan has (section
-          5), is not affected in any other way.
+          orders are kept, and buyers go on downloading what they bought until
+          the day below.
         </p>
         <p>
-          A store that keeps more than that when its plan ends has a date.{" "}
+          What the store keeps has a date.{" "}
           {CLOSING_DAYS} days after the plan ended, what the store keeps is
-          removed: the files its products hand over, its lessons&rsquo; videos and downloads, and its
-          podcast&rsquo;s episodes. From that day, buyers can no longer download those files or watch those videos,
+          removed: the files its products hand over, its lessons&rsquo; videos and downloads, its
+          podcast&rsquo;s episodes, the files its students handed in and the pictures in its community&rsquo;s posts.
+          From that day, buyers can no longer download those files or watch those videos,
           so a creator who has sold them should start a plan again or give
           buyers another way to what they bought before then. We email the
           store&rsquo;s owner when the plan ends, {WARN_MONTH_DAYS} days before that day and {WARN_WEEK_DAYS} days before it,
           each time with the date, and what a store keeps is never removed sooner than a week after the last of those emails.
-          Starting a plan again, or deleting enough for the store to keep{" "}
-          {storageWords(SETUP_STORAGE_BYTES)} or less, before that day stops
-          it. Nothing else is removed, and a file can be put back on a product
+          Starting a plan again before that day stops it. Nothing else is removed, and a file can be put back on a product
           and a video on a lesson once a plan is started again.
+        </p>
+        <p>
+          A plan that ended before{" "}
+          {new Date(KEEP_NOTHING_FROM).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}{" "}
+          keeps the rule it ended under: a store that keeps{" "}
+          {storageWords(SETUP_STORAGE_BYTES)} or less of files and lesson
+          videos is not affected, and one that keeps more has the date above,
+          which deleting enough to keep {storageWords(SETUP_STORAGE_BYTES)} or
+          less before that day also stops.
         </p>
       </LegalSection>
 

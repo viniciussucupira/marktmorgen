@@ -34,6 +34,11 @@
  * OPEN lists the per-use costs that no monthly figure bounds yet. They are
  * not in worstCost, so the floor test does not certify them: the owner's rule
  * counts them as failing until each has a figure here.
+ *
+ * PER_PAYMENT_LINES (since 18 October 2026) are what one payment can leave
+ * behind after its plan ends: what the store keeps until its closing day
+ * (lib/plan-closing.ts). They happen once a payment, not once a window, and
+ * tests/spend-floor.test.ts adds them once to each payment's worst case.
  */
 import { paidStorageBytes } from "@/lib/storage-rules";
 import { STORE_ALLOWANCES, NON_PAYING_ALLOWANCES, type AllowanceKind } from "@/lib/store-allowance-rules";
@@ -63,6 +68,9 @@ import { QUIZ_MONTHLY_SUBMISSIONS } from "@/lib/quiz-usage-rules";
 import { TEAM_LIMITS } from "@/lib/team-scheduling-rules";
 import { SYNC_SECONDS } from "@/lib/host-calendar";
 import { MAX_TEAM } from "@/lib/team";
+import { MAX_TASK_FILE_BYTES, TASK_ROOM_BYTES, TRIAL_TASK_ROOM_BYTES } from "@/lib/assignment-rules";
+import { COMMUNITY_PICTURES, PICTURE_BYTES, TRIAL_COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
+import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import {
   UPSTASH_MICRO_USD_PER_GB_MONTH, UPSTASH_MICRO_USD_PER_GB_TRANSFER, UPSTASH_MICRO_USD_PER_MILLION_COMMANDS, VERCEL_CALL_MICRO_USD_PER_MILLION,
   VERCEL_CPU_MICRO_USD_PER_HOUR, VERCEL_FUNCTION_GB, VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR,
@@ -123,6 +131,19 @@ export const PAUSED_PER_DAY = 20;
 
 /** Commands a store figure costs to take (lib/store-allowance.ts): its count kept, and a store that pays nothing's place. */
 export const TAKE_COMMANDS = 4;
+/** What a function sends on to the browser, by the byte ("Fast Origin Transfer", tests/traffic-cost.ts). */
+export const ORIGIN_PER_BYTE = 0.06 / 1e9;
+/**
+ * What the file store charges to hand a private file to a function that
+ * reads it, by the byte: a review ceiling, twice Vercel Blob's published
+ * data transfer rate, for the community pictures that pass through us
+ * (app/api/store/community/image).
+ */
+export const BLOB_TRANSFER_PER_BYTE = 0.1 / 1e9;
+/** How long a door's file may be kept before it is used or swept away, in months: a day, and the day the job may take to reach it. */
+export const DOOR_KEPT_MONTHS = 2 / 31;
+/** What one community picture costs to send: the request, the reads, a second held at 2 GB, and its megabyte from the file store and on to the browser. */
+export const PICTURE_READ = request("light", 16) + PICTURE_BYTES * (ORIGIN_PER_BYTE + BLOB_TRANSFER_PER_BYTE);
 /** One unit of each store figure, at the most it costs (lib/store-allowance-rules.ts). */
 export const UNIT_COST: Record<AllowanceKind, number> = {
   // A studio request at its shape, its twenty commands and fifty kilobytes through the database.
@@ -136,6 +157,15 @@ export const UNIT_COST: Record<AllowanceKind, number> = {
   transactional: PER_EMAIL + (6 + TAKE_COMMANDS) * COMMAND,
   // A call out, waited on at 2 GB for ten seconds.
   integration: request("wait", 10 + TAKE_COMMANDS, 20_000),
+  // What a buyer does inside what they bought (lib/buyer-actions.ts): the
+  // heaviest is a post or comment that tells up to eleven people, their
+  // devices pushed at once and waited on, its notices filed, its words
+  // indexed, and its deletion later. A hundred commands, 60 KB through the
+  // database and on to the browser, and a door's file of up to 10 MB kept
+  // for as long as an unused door may be.
+  buyer: request("wait", 100 + TAKE_COMMANDS, 60_000) + 60_000 * ORIGIN_PER_BYTE + (MAX_TASK_FILE_BYTES / GB) * STORAGE_PER_GB * DOOR_KEPT_MONTHS,
+  // A webhook's try (lib/webhooks.ts): the delivery and the store read and written, the endpoint waited on for up to eight seconds.
+  webhook: request("wait", 20 + TAKE_COMMANDS, 40_000),
 };
 /** A store figure in full, in dollars, for a plan or for a store that pays nothing. */
 export function figureCost(allowances: Record<AllowanceKind, number>, kind: AllowanceKind): number {
@@ -232,8 +262,9 @@ export const COST_LINES: CostLine[] = [
       { file: "lib/order-rules.ts", names: ["CALL_ORDER_UNITS", "TRIAL_ORDERS"] },
       { file: "lib/calls.ts", names: ["admitOrders(store, CALL_ORDER_UNITS)", "countOrder"] },
       { file: "lib/call-packages.ts", names: ["admitOrders(store, 1)"] },
+      { file: "lib/group-buy.ts", names: ["placesHeld", "admitOrders(store, 1)", "settleAdmitted(store, hour)"] },
     ],
-    basis: "The plan's figure, each order at the most one costs. Nothing is sold past it: new orders are admitted only while the month's orders and the checkouts held from the last day are under the figure.",
+    basis: "The plan's figure, each order at the most one costs. Nothing is sold past it: new orders are admitted only while the month's orders and the checkouts held from the last day are under the figure. A place in a purchase for several people is an order of the month it is taken in: inside its checkout's hold for a day, admitted when taken after (since 18 October 2026), its emails access emails.",
   },
   {
     id: "list-email",
@@ -465,7 +496,89 @@ export const COST_LINES: CostLine[] = [
     ],
     basis: "A store that pays nothing does nothing that costs us without one of the month's places, and each PAID_STORES_PER_FREE_STORE paying stores add one place: so each paying store carries 1/PAID_STORES_PER_FREE_STORE of the worst window one of them can cost (nonPayingWorst). The FREE_POOL_BASE_STORES places the company pays for itself are a fixed cost, covered by the minimum paid base.",
   },
+  {
+    id: "buyer-actions",
+    feature: "What buyers do inside what they bought: community posts, comments, likes, votes, reports, messages, live-room messages, RSVPs, picture doors and phones signed up; lesson comments, hand-ins and their doors, lessons marked done, certificates (18 October 2026)",
+    monthlyUsd: (tier) => figureCost(STORE_ALLOWANCES[tier], "buyer"),
+    sources: [
+      { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "buyer"] },
+      { file: "lib/buyer-actions.ts", names: ["takeBuyerAction", "restingAway"] },
+      { file: "app/api/store/community/route.ts", names: ["takeBuyerAction(store, owner ? \"owner\" : \"buyer\")", "UNCOUNTED"] },
+      { file: "app/api/store/community/rsvp/route.ts", names: ["takeBuyerAction(store)"] },
+      { file: "app/api/store/community/chat/route.ts", names: ["takeBuyerAction"] },
+      { file: "app/api/store/community/messages/route.ts", names: ["takeBuyerAction"] },
+      { file: "app/api/store/community/push/route.ts", names: ["takeBuyerAction"] },
+      { file: "app/api/store/community/upload/route.ts", names: ["takeBuyerAction", "takePicturePlace"] },
+      { file: "app/api/store/course/comment/route.ts", names: ["takeBuyerAction"] },
+      { file: "app/api/store/course/task/route.ts", names: ["takeBuyerAction(store)"] },
+      { file: "app/api/store/course/task/upload/route.ts", names: ["takeBuyerAction(on.store)"] },
+      { file: "app/api/store/course/progress/route.ts", names: ["takeBuyerAction"] },
+      { file: "app/api/store/course/certificate/route.ts", names: ["takeBuyerAction(store)"] },
+      { file: "lib/lesson-comments-rules.ts", names: ["COMMENTS_PER_DAY", "COMMENTS_PER_MINUTE"] },
+      { file: "lib/community-text.ts", names: ["RATE_LIMITS", "EVENT_WRITES_PER_HOUR"] },
+    ],
+    basis: "Every action of the window at the heaviest one's cost; the creator's own acts there are studio requests (line studio), a deletion follows an action already counted, and the per-person limits only spread them. The reads beside them (pictures, calendar files, lesson downloads, sign-in links, podcast episodes) are public requests on the buyers' side (line public-requests), a picture as PICTURE_REQUEST_UNITS of them.",
+  },
+  {
+    id: "webhooks",
+    feature: "Webhook deliveries: each try to one of the creator's endpoints, the first one, every retry and every test (18 October 2026)",
+    monthlyUsd: (tier) => figureCost(STORE_ALLOWANCES[tier], "webhook"),
+    sources: [
+      { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "webhook"] },
+      { file: "lib/webhooks.ts", names: ["takeAllowance(store, \"webhook\", 1, now)", "ATTEMPT_TIMEOUT_MS", "RETRY_MINUTES"] },
+    ],
+    basis: "Every try of the window, each held at 2 GB while the endpoint answers; past the figure a delivery is not tried and is marked failed with the reason.",
+  },
+  {
+    id: "task-files",
+    feature: "Files students hand in (18 October 2026: room by plan)",
+    monthlyUsd: (tier) => (TASK_ROOM_BYTES[tier] / GB) * STORAGE_PER_GB,
+    sources: [
+      { file: "lib/assignment-rules.ts", names: ["TASK_ROOM_BYTES", "taskRoomFor", "TRIAL_TASK_ROOM_BYTES"] },
+      { file: "app/api/store/course/task/route.ts", names: ["taskRoomFor(store)"] },
+      { file: "app/api/store/course/task/upload/route.ts", names: ["taskRoomFor(on.store)"] },
+    ],
+    basis: "The plan's room for students' work, all of it kept, at the dearest store a file may be in; it sits beside the plan's own storage, which does not hold students back.",
+  },
+  {
+    id: "community-pictures",
+    feature: "Pictures in community posts (18 October 2026: a number by plan)",
+    monthlyUsd: (tier) => ((COMMUNITY_PICTURES[tier] * PICTURE_BYTES) / GB) * STORAGE_PER_GB,
+    sources: [
+      { file: "lib/community-picture-rules.ts", names: ["COMMUNITY_PICTURES", "TRIAL_COMMUNITY_PICTURES", "picturesLimitFor"] },
+      { file: "lib/community-files.ts", names: ["takePicturePlace", "givePicturePlace", "sweepCommunityUploads"] },
+      { file: "app/api/cron/courses/route.ts", names: ["sweepCommunityUploads"] },
+    ],
+    basis: "Every picture the plan lets a community keep, each at the most one may weigh, at the dearest store a file may be in. A door takes a place before it is given; a picture deleted, or a door never used (swept a day on), gives it back.",
+  },
 ];
+
+/**
+ * What one payment can leave behind once its plan ends (18 October 2026):
+ * everything the store may keep, its plan's storage, its students' room and
+ * its community's pictures, kept until its closing day, CLOSING_DAYS after
+ * the end and never sooner than a week after the last notice
+ * (lib/plan-closing.ts). Since that day a plan that ends keeps nothing past
+ * it (lib/plan-closing-rules.ts, keptRoomFor), so this happens once a
+ * payment at most, and is added once to each payment's worst case.
+ */
+export const PER_PAYMENT_LINES: CostLine[] = [
+  {
+    id: "retained-files",
+    feature: "Files a store keeps after its plan ends, until its closing day (18 October 2026: nothing past it)",
+    monthlyUsd: (tier) => ((paidStorageBytes(tier) + TASK_ROOM_BYTES[tier] + COMMUNITY_PICTURES[tier] * PICTURE_BYTES) / GB) * STORAGE_PER_GB * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30),
+    sources: [
+      { file: "lib/plan-closing-rules.ts", names: ["CLOSING_DAYS", "KEEP_NOTHING_FROM", "keptRoomFor"] },
+      { file: "lib/plan-closing.ts", names: ["if (held <= keptRoomFor(endedAt))", "communityFolder(store.community.id)", "removeStored"] },
+    ],
+    basis: "All a plan may keep, kept for its closing days and the week a late last notice adds, once after the payment that was the last. A plan that ended before 18 October 2026 keeps the old rule (a store with no plan's room, with no date): a legacy exposure of docs/funded-exposure-review.md, when no plan could yet be bought.",
+  },
+];
+
+/** What one payment of this plan can leave behind after it, in dollars. */
+export function perPaymentCost(tier: Tier): number {
+  return PER_PAYMENT_LINES.reduce((sum, line) => sum + line.monthlyUsd(tier), 0);
+}
 
 /**
  * The worst window a store that pays nothing can cost (17 October 2026): a
@@ -489,17 +602,15 @@ export function nonPayingWorst(): number {
     + TRIAL_VIDEO_HOURS * hourCost()
     + TRIAL_DAILY_RUNS * 15 * WORST_COMMANDS_PER_RUN * COMMAND
     + (Object.keys(allowances) as AllowanceKind[]).reduce((sum, kind) => sum + figureCost(allowances, kind), 0)
-    + ["imports", "clickfunnels", "funnel-share", "team-scheduling", "quizzes"].reduce((sum, id) => sum + creator(id), 0);
+    + ["imports", "clickfunnels", "funnel-share", "team-scheduling", "quizzes"].reduce((sum, id) => sum + creator(id), 0)
+    // Its students' work and its community's pictures, kept for the trial and then to its closing day (lib/plan-closing.ts).
+    + ((TRIAL_TASK_ROOM_BYTES + TRIAL_COMMUNITY_PICTURES * PICTURE_BYTES) / GB) * STORAGE_PER_GB * (1 + (CLOSING_DAYS + WARN_WEEK_DAYS) / 30);
 }
 
 /** Per-use costs that no monthly figure bounds yet: not in worstCost, so nothing here is certified. */
 export type OpenItem = { id: string; what: string; names?: string[] };
 export const OPEN: OpenItem[] = [
-  { id: "buyer-actions", what: "What buyers do inside what they bought: lesson comments, task hand-ins, community posts, events and messages, bounded per person.", names: ["COMMENTS_PER_DAY", "COMMENTS_PER_MINUTE", "EVENT_WRITES_PER_HOUR", "RATE_LIMITS"] },
-  { id: "group-places", what: "A place claimed in a later month from a purchase for several people made earlier counts in the month it is claimed; its purchase held room for all its places only for a day." },
-  { id: "database-storage", what: "Store records, contacts, page versions, stats and other data kept in the database have no per-store byte figure (only per-kind caps)." },
-  { id: "webhooks", what: "A webhook's first try runs in the request or job that raised the event; retries ride a job with a company-wide bound." },
-  { id: "retained-files", what: "Files a store whose plan ended keeps, up to a store with no plan's room, until it starts a plan again or deletes them: storage with no use behind it, a post-cancellation exposure of docs/funded-exposure-review.md, not a window's use." },
+  { id: "database-storage", what: "Store records, contacts, page versions, stats and other data kept in the database have no per-store byte figure (only per-kind caps), and many grow with a store's age: no plan's worst month can say what they cost. Needs a per-store room taken where records are made and given back where they go (tests/plan-cost-registry.test.ts holds this the only item left)." },
 ];
 
 /** Exported limit or cost constants that are not a per-store monthly cost, and why. */
@@ -523,7 +634,6 @@ export const NOT_A_COST: Record<string, string> = {
 export type ScopeClass = { line: string } | { open: string } | { guard: string };
 const guard = (why: string): ScopeClass => ({ guard: why });
 const line = (id: string): ScopeClass => ({ line: id });
-const open = (id: string): ScopeClass => ({ open: id });
 const ACCOUNT = guard("Sign-in and account security, per address or connection: a company cost per creator account, not per store use.");
 const PUBLIC = line("public-requests");
 const SERVICE = line("integrations");
@@ -565,7 +675,7 @@ export const SCOPES: Record<string, ScopeClass> = {
   "podcast-link-address": METERED_EMAIL, "contact-ip": METERED_EMAIL, "contact-store": METERED_EMAIL, "remind-ask": METERED_EMAIL,
   "remind-store": METERED_EMAIL, "resend-sale": METERED_EMAIL, "resend-store": METERED_EMAIL, "creator-inbound": METERED_EMAIL,
   "inbox-reply": METERED_EMAIL, "inbox-tell": METERED_EMAIL,
-  "lesson-comment": open("buyer-actions"), "lesson-comment-day": open("buyer-actions"), "task-hand-in": open("buyer-actions"), "task-upload": open("buyer-actions"),
+  "lesson-comment": BURST("buyer-actions"), "lesson-comment-day": BURST("buyer-actions"), "task-hand-in": BURST("buyer-actions"), "task-upload": BURST("buyer-actions"),
   // Per store, under a figure of the window.
   "api-add": BURST("rest-api"), "api-give": BURST("rest-api"),
   "inbox-new": BURST("inbox"), "chat-send": BURST("inbox"), "chat-start": BURST("inbox"),
@@ -579,6 +689,7 @@ export const SCOPES: Record<string, ScopeClass> = {
 /** The store figures, each priced by a line (lib/store-allowance-rules.ts, takeAllowance). */
 export const KIND_LINES: Record<AllowanceKind, string> = {
   studio: "studio", api: "rest-api", inbox: "inbox", email: "store-email", transactional: "transactional-email", integration: "integrations",
+  buyer: "buyer-actions", webhook: "webhooks",
 };
 
 /**
@@ -600,7 +711,7 @@ export const EMAIL_SITES: Record<string, string[]> = {
   "app/api/store/mail/route.ts": MONTHLY, "lib/api-write.ts": MONTHLY, "lib/community-mail.ts": MONTHLY, "lib/flows.ts": MONTHLY,
   "lib/imports.ts": MONTHLY, "lib/product-updates.ts": MONTHLY, "lib/review-requests.ts": MONTHLY,
   "lib/mail.ts": ["monthly", "company"],
-  "lib/call-packages.ts": ORDER, "lib/call-reminders.ts": ORDER, "lib/free.ts": ORDER, "lib/gifts.ts": ORDER, "lib/group-buy.ts": ORDER,
+  "lib/call-packages.ts": ORDER, "lib/call-reminders.ts": ORDER, "lib/free.ts": ORDER, "lib/gifts.ts": ORDER, "lib/group-buy.ts": ["order", "store"],
   "lib/paypal-sales.ts": ORDER, "lib/preorders.ts": ORDER, "lib/shipments.ts": ORDER,
   "lib/purchase-email.ts": ["order", "store"], "lib/calls.ts": ["order", "store"], "lib/licence-keys.ts": ["order", "store"],
   "lib/affiliate-hub.ts": STORE, "lib/affiliate-payday.ts": STORE, "lib/affiliates.ts": STORE, "lib/assignment-notify.ts": STORE,

@@ -6,6 +6,7 @@ import { communityViewer } from "@/lib/community-access";
 import { MAX_CHAT_TEXT, clearRoom, lastSaid, room, say, unsay } from "@/lib/community-chat";
 import { grantRoom } from "@/lib/chat-grant";
 import { isTalking } from "@/lib/chat-pace";
+import { takeBuyerAction } from "@/lib/buyer-actions";
 
 /**
  * The room: reading what is new, and saying something.
@@ -74,6 +75,8 @@ export async function POST(request: NextRequest) {
   if (!config.chat.on) return Response.json({ ok: false, error: "off" }, { status: 404 });
   const id = store.community.id;
   const action = text(body.action, 20);
+  // One of the store's buyer actions, or the creator's studio requests, before anything is written (lib/buyer-actions.ts).
+  if (!(await takeBuyerAction(store, owner ? "owner" : "buyer"))) return Response.json({ ok: false, error: "resting" }, { status: 503 });
 
   if (action === "say") {
     // Muted means reads, does not write — here exactly as everywhere else,

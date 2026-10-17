@@ -3,6 +3,8 @@ import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { fileHeaders } from "@/lib/request-guard";
 import { communityViewer } from "@/lib/community-access";
 import { eventIcs, mayAttend, readEvent } from "@/lib/community-events";
+import { takeBuyerRead } from "@/lib/buyer-actions";
+import { speech } from "@/lib/buyer-words";
 
 /**
  * The calendar file for a community live event, for its "Add to calendar"
@@ -20,6 +22,8 @@ export async function GET(request: NextRequest) {
   if (!store?.community) return refuse();
   const viewer = await communityViewer(store, request.cookies).catch(() => null);
   if (!viewer || viewer.state !== "in") return refuse();
+  // One of the store's public requests on the buyers' side (lib/buyer-actions.ts).
+  if (!(await takeBuyerRead(store))) return new Response(speech(store).w.restingTitle, { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
   const event = await readEvent(store.community.id, eventId);
   if (!event || !(await mayAttend(store, viewer.config, event, { owner: viewer.owner, email: viewer.email }))) return refuse();
   return new Response(eventIcs(store, event, viewer.config.name), {

@@ -161,6 +161,7 @@ import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closingOf } from "@/lib/plan-closing";
+import { keptRoomFor } from "@/lib/plan-closing-rules";
 import { MAX_LEADS, listSize } from "@/lib/free";
 import { readableSize } from "@/lib/product-file";
 import {
@@ -861,7 +862,9 @@ export default async function StudioPage({
   // job counts it (lib/plan-closing.ts). Measured only for such a store.
   const closingAt = store && standing === "ended" && may("settings") ? await closingOf(store).catch(() => null) : null;
   const keptNow = closingAt ? (await storageUsed(folder, SETUP_STORAGE_BYTES)).bytes : 0;
-  const closing = closingAt && keptNow > SETUP_STORAGE_BYTES ? { ...closingAt, bytes: keptNow } : null;
+  // What it may keep with no date: none for a plan ended from 18 October 2026 (lib/plan-closing-rules.ts).
+  const keptRoom = closingAt ? keptRoomFor(closingAt.endedAt) : 0;
+  const closing = closingAt && keptNow > keptRoom ? { ...closingAt, bytes: keptNow, room: keptRoom } : null;
   const dayWords = (ms: number) => new Date(ms).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
   // The list is shown once there is something that fills it, or once it holds
   // anybody — a creator who stops giving things away still owns what came in.
@@ -2137,16 +2140,20 @@ export default async function StudioPage({
                   Your plan has ended, and what your store keeps has a date
                 </p>
                 <p className="mt-4 notice notice-warn">
-                  {`Your plan ended on ${dayWords(closing.endedAt)}. Your store keeps ${
-                    storageWords(closing.bytes) === storageWords(SETUP_STORAGE_BYTES) ? `a little over ${storageWords(SETUP_STORAGE_BYTES)}` : storageWords(closing.bytes)
-                  } of files and lesson videos, and a store with no plan may keep ${storageWords(SETUP_STORAGE_BYTES)}. `}
+                  {closing.room > 0
+                    ? `Your plan ended on ${dayWords(closing.endedAt)}. Your store keeps ${
+                        storageWords(closing.bytes) === storageWords(closing.room) ? `a little over ${storageWords(closing.room)}` : storageWords(closing.bytes)
+                      } of files and lesson videos, and a store with no plan may keep ${storageWords(closing.room)}. `
+                    : `Your plan ended on ${dayWords(closing.endedAt)}. Your store keeps ${storageWords(closing.bytes)} of files and lesson videos, and a store whose plan has ended keeps them until a set day. `}
                   <strong>{`On ${dayWords(closing.day)}, what it keeps will be removed`}</strong>
-                  : the files your products hand over, your lessons&rsquo; videos and downloads, and your
-                  podcast&rsquo;s episodes. From that day your buyers can no longer download those files or watch
-                  those videos.
+                  : the files your products hand over, your lessons&rsquo; videos and downloads, your
+                  podcast&rsquo;s episodes, the files your students handed in and the pictures in your community&rsquo;s
+                  posts. From that day your buyers can no longer download those files or watch those videos.
                 </p>
                 <p className="mt-4 text-ink-soft">
-                  {`Two things stop it, either one: start a plan again, or delete files or lessons you no longer need until your store keeps ${storageWords(SETUP_STORAGE_BYTES)} or less. `}
+                  {closing.room > 0
+                    ? `Two things stop it, either one: start a plan again, or delete files or lessons you no longer need until your store keeps ${storageWords(closing.room)} or less. `
+                    : "Starting a plan again stops it. If you would rather not, download what you want to keep before then. "}
                   Your store and its page, your products and their prices, your lessons&rsquo; text and quizzes, your
                   contacts and your orders stay either way.
                 </p>

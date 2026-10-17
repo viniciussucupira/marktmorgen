@@ -36,7 +36,11 @@
  * A message is tried at once, and when the endpoint does not answer 2xx, again
  * after RETRY_MINUTES (5 minutes, 15, 1 hour, 3, 12, 24): seven tries over
  * about forty hours, then it is marked failed. Retries ride the five-minute
- * job, a bounded number per run. The last LOG_SIZE deliveries of a store are
+ * job, a bounded number per run. Since 18 October 2026 every try, the first,
+ * each retry and each test, is one of the store's webhook deliveries for its
+ * month (lib/store-allowance-rules.ts), taken before the endpoint is called:
+ * once they are used, a delivery is not tried, and is marked failed with the
+ * reason, which the studio's log shows. The last LOG_SIZE deliveries of a store are
  * kept for its studio, with what the endpoint answered; each is kept for a
  * week at most. Every request goes through lib/safe-fetch.ts, so an endpoint
  * on a private network is refused, and none follows a redirect.
@@ -56,6 +60,7 @@ import { StripeError, onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
 import { SafeFetchError, checkUrl, problemWords, safeFetch } from "@/lib/safe-fetch";
 import { type Store, storeForHandle, saleHandles } from "@/lib/store";
+import { takeAllowance } from "@/lib/store-allowance";
 import { readListing } from "@/lib/catalog";
 import { SITE_URL } from "@/lib/site-url";
 import { type BundleSlot, bumpsFromMeta, bundleFromMeta } from "@/lib/bundle-rules";
@@ -211,10 +216,23 @@ export function setSendHooksForTests(hooks: SendHooks): void {
 }
 
 /** One try of one delivery. Returns the delivery as it stands after it. */
-async function attempt(delivery: Delivery, endpoint: Endpoint | undefined, now = Date.now()): Promise<Delivery> {
+/**
+ * `store` is whose month the try is taken from, before the endpoint is
+ * called; "taken" when the caller took it already (a test).
+ */
+async function attempt(delivery: Delivery, endpoint: Endpoint | undefined, store: Store | null | "taken", now = Date.now()): Promise<Delivery> {
   const next = { ...delivery, attempts: delivery.attempts + 1, lastAt: now };
   if (!endpoint) {
     return { ...next, state: "failed", next: 0, lastStatus: 0, lastError: "The endpoint was removed." };
+  }
+  if (!store) return { ...delivery, state: "failed", next: 0, lastAt: now, lastStatus: 0, lastError: "The store could not be found." };
+  // One of the store's webhook deliveries for its month, before the endpoint is called.
+  const taken = store === "taken" ? ({ ok: true } as const) : await takeAllowance(store, "webhook", 1, now);
+  if (!taken.ok) {
+    const retryIn = delivery.type === "test" ? undefined : RETRY_MINUTES[delivery.attempts];
+    // A count that could not be made is tried again on the schedule; a month whose deliveries are used is not.
+    if (taken.reason === "unknown" && retryIn !== undefined) return { ...delivery, state: "retrying", next: now + retryIn * 60_000, lastAt: now, lastStatus: 0, lastError: taken.message };
+    return { ...delivery, state: "failed", next: 0, lastAt: now, lastStatus: 0, lastError: `Not sent. ${taken.message}` };
   }
   const timestamp = Math.floor(now / 1000);
   let status = 0;
@@ -260,7 +278,8 @@ async function runClaimed(statsId: string, id: string, now = Date.now()): Promis
   }
   const config = await readConfig(delivery.statsId);
   const endpoint = config?.endpoints.find((e) => e.id === delivery.endpoint);
-  const done = await attempt(delivery, endpoint, now);
+  const store = endpoint && config?.handle ? await storeForHandle(config.handle).catch(() => null) : null;
+  const done = await attempt(delivery, endpoint, store && store.statsId === delivery.statsId ? store : null, now);
   const commands: (string | number)[][] = [["SET", deliveryKey(id), JSON.stringify(done), "EX", DELIVERY_SECONDS]];
   commands.push(
     done.state === "retrying" ? ["ZADD", QUEUE_KEY, done.next, `${statsId}|${id}`] : ["ZREM", QUEUE_KEY, `${statsId}|${id}`],
@@ -510,7 +529,7 @@ export async function removeEndpoint(store: Store, id: string): Promise<Webhooks
  * Sends one test message to one endpoint, now, and says how it went. Tried
  * once, never retried, and listed with the rest.
  */
-export async function sendTest(store: Store, id: string, now = Date.now()): Promise<{ ok: true; delivery: Delivery; view: WebhooksView } | { ok: false; reason: "missing" | "limited" }> {
+export async function sendTest(store: Store, id: string, now = Date.now()): Promise<{ ok: true; delivery: Delivery; view: WebhooksView } | { ok: false; reason: "missing" | "limited" } | { ok: false; reason: "used"; message: string }> {
   if (!store.statsId) return { ok: false, reason: "missing" };
   const statsId = store.statsId;
   const config = await readConfig(statsId);
@@ -521,6 +540,9 @@ export async function sendTest(store: Store, id: string, now = Date.now()): Prom
     ["INCR", testsKey(statsId)],
   ]);
   if (Number(count) > TESTS_PER_MINUTE) return { ok: false, reason: "limited" };
+  // A test is one of the store's webhook deliveries too: refused, it is not made at all.
+  const taken = await takeAllowance(store, "webhook", 1, now);
+  if (!taken.ok) return { ok: false, reason: "used", message: taken.message };
   const eventId = eventIdFor(statsId, "test", randomBytes(8).toString("hex"));
   const body = JSON.stringify({
     id: eventId,
@@ -544,7 +566,7 @@ export async function sendTest(store: Store, id: string, now = Date.now()): Prom
     lastAt: 0,
     createdAt: now,
   };
-  const done = await attempt(delivery, endpoint, now);
+  const done = await attempt(delivery, endpoint, "taken", now);
   await redisPipeline([
     ["SET", deliveryKey(done.id), JSON.stringify(done), "EX", DELIVERY_SECONDS],
     ["LPUSH", logKey(statsId), done.id],

@@ -9,13 +9,14 @@ import { fits, maximumUploadBytes, type StorageUse } from '@/lib/storage-quota';
 const GiB=1024**3;
 const held=(bytes:number,brake:number):StorageUse=>({bytes,brake,left:Math.max(0,brake-bytes),full:bytes>=brake,available:true});
 test('all three paid tiers have explicit smaller immutable storage ceilings',()=>{
- assert.deepEqual(PAID_STORAGE_BYTES,{creator:8*GiB,pro:64*GiB,scale:128*GiB});
+ // 8, 64 and 128 GB until 18 October 2026 (lib/storage-rules.ts).
+ assert.deepEqual(PAID_STORAGE_BYTES,{creator:5*GiB,pro:40*GiB,scale:80*GiB});
  assert.equal(STORAGE_BRAKE_BYTES,PAID_STORAGE_BYTES.creator);assert.equal(Object.isFrozen(PAID_STORAGE_BYTES),true);
  for(const tier of ['creator','pro','scale'] as const){assert.equal(storageBrakeFor('paid',tier),PAID_STORAGE_BYTES[tier]);assert.equal(paidStorageBytes(tier),PAID_STORAGE_BYTES[tier]);assert.ok(PAID_STORAGE_BYTES[tier]<200*GiB);}
 });
 test('no trial has more storage than its selected paid tier',()=>{
  for(const tier of ['creator','pro','scale'] as const)assert.equal(storageBrakeFor('trial',tier),Math.min(TRIAL_STORAGE_BYTES,PAID_STORAGE_BYTES[tier]));
- assert.equal(storageBrakeFor('trial','creator'),8*GiB);assert.equal(storageBrakeFor('trial','pro'),50*GiB);assert.equal(storageBrakeFor('trial','scale'),50*GiB);
+ assert.equal(storageBrakeFor('trial','creator'),5*GiB);assert.equal(storageBrakeFor('trial','pro'),40*GiB);assert.equal(storageBrakeFor('trial','scale'),50*GiB);
  assert.equal(storageBrakeFor('none','scale'),SETUP_STORAGE_BYTES);assert.equal(storageBrakeFor('ended','scale'),SETUP_STORAGE_BYTES);
 });
 test('every tier can fill its exact remaining bytes but not authorize one byte beyond',()=>{
@@ -26,7 +27,7 @@ test('a downgrade blocks new uploads while retaining the recorded existing conte
 });
 test('actual pricing rendering discloses each tier storage threshold',()=>{
  const text=renderToStaticMarkup(createElement(Pricing)).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ');
- for(const gb of [8,64,128])assert.ok(text.includes('Up to '+gb+' GB of stored files and videos.'),text.slice(-3000));
+ for(const gb of [5,40,80])assert.ok(text.includes('Up to '+gb+' GB of stored files and videos.'),text.slice(-3000));
  assert.match(text,/free trial never has more storage than its chosen plan/);assert.doesNotMatch(text,/Up to 200 GB of stored files/);
 });
 

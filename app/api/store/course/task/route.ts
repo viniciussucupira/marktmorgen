@@ -14,6 +14,7 @@ import {
   MAX_ANSWER_TEXT,
   MAX_TASK_FILE_BYTES,
   cleanFileName,
+  taskRoomFor,
   ownsTaskPath,
   taskExtension,
   taskFolder,
@@ -22,6 +23,8 @@ import { deleteFile, headFile } from "@/lib/file-store";
 import { plain, serveFile } from "@/lib/serve-file";
 import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { noteIfFinished } from "@/lib/course-finish";
+import { takeBuyerAction, takeBuyerRead } from "@/lib/buyer-actions";
+import { speech } from "@/lib/buyer-words";
 
 /** Hand-ins one student may make in an hour. */
 const HAND_INS_PER_HOUR = 20;
@@ -55,6 +58,8 @@ export async function POST(request: NextRequest) {
     if (!on.ok) return no(on.reason === "unknown" ? "unknown" : "closed", on.reason === "unknown" ? 404 : 403);
     const { store, product, course, lesson, task, who, email } = on;
     if (!(await withinLimit("task-hand-in", who, HAND_INS_PER_HOUR, 3_600))) return no("slow", 429);
+    // A hand-in is one of the store's buyer actions (lib/buyer-actions.ts).
+    if (!(await takeBuyerAction(store))) return no("resting", 503);
 
     const before = await submissionOf(course.id, lesson.id, who);
     if (before && task.review && before.state === "approved") return no("closed", 409);
@@ -84,7 +89,7 @@ export async function POST(request: NextRequest) {
           await deleteFile(path).catch(() => {});
           return no("too_big");
         }
-        if (!(await takeRoom(room, found.size))) {
+        if (!(await takeRoom(room, found.size, taskRoomFor(store)))) {
           await deleteFile(path).catch(() => {});
           return no("full");
         }
@@ -139,6 +144,8 @@ export async function GET(request: NextRequest) {
   } else {
     const on = await studentOnTask(q.get("h") ?? "", q.get("p") ?? "", lessonId, await cookies());
     if (!on.ok) return plain(on.reason === "unknown" ? 404 : 403, "Not found.");
+    // One of the store's public requests on the buyers' side (lib/buyer-actions.ts).
+    if (!(await takeBuyerRead(on.store))) return plain(503, speech(on.store).w.restingTitle);
     courseId = on.course.id;
     who = on.who;
   }

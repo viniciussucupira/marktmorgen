@@ -22,7 +22,7 @@ const review = (): CommercialMarginReview => ({
 is("hypothetical current review passes calculation", commercialMarginReady(review()), true);
 is("actual review remains absent", commercialMarginReady(), false);
 is("upload and review use one storage ceiling", UPLOAD_STORAGE_BYTES, STORAGE_BRAKE_BYTES);
-is("default storage uses the smallest explicit paid tier", STORAGE_BRAKE_BYTES, 8 * 1024 * 1024 * 1024);
+is("default storage uses the smallest explicit paid tier", STORAGE_BRAKE_BYTES, 5 * 1024 * 1024 * 1024);
 is("review uses actual AI entitlements", CURRENT_COMMERCIAL_TERMS.ai.monthly, AI_MONTHLY);
 is("review uses actual visit entitlements", CURRENT_COMMERCIAL_TERMS.traffic.included, VISITS_INCLUDED);
 is("review uses actual order entitlements", CURRENT_COMMERCIAL_TERMS.orders.included, ORDERS_INCLUDED);

@@ -18,14 +18,21 @@
  *   - a redirect is not followed; a removed endpoint is not sent to;
  *   - one store can neither see, change, remove nor test another store's
  *     endpoints, and the same seed makes different event ids in two stores;
- *   - test messages are limited per minute.
+ *   - test messages are limited per minute;
+ *   - since 18 October 2026 every try is one of the store's webhook
+ *     deliveries for its month: past the figure nothing is sent, and the
+ *     delivery is marked failed with the reason; a store with no plan sends
+ *     none.
  */
 import { createHmac } from "node:crypto";
 import http from "node:http";
 import https from "node:https";
 import net from "node:net";
 import { MAX_ATTEMPTS, MAX_ENDPOINTS, RETRY_MINUTES, addEndpoint, deliverDue, emitEvent, eventIdFor, removeEndpoint, sendTest, setEndpointEvents, setSendHooksForTests, webhooksView } from "@/lib/webhooks";
-import { claimHandle, ensureStatsId, storeForEmail } from "@/lib/store";
+import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
+import { STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
+import { takeAllowance } from "@/lib/store-allowance";
+import { paidPeriod } from "./billing-period-fixture";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -90,6 +97,9 @@ async function main(): Promise<void> {
   await claimHandle("two@example.com", "second-shop", "Second Shop", "");
   await ensureStatsId("one@example.com");
   await ensureStatsId("two@example.com");
+  // Both pay for Store: a webhook's tries come out of the plan's month (lib/store-allowance-rules.ts).
+  await setSubscription("one@example.com", { customerId: "cus_HookOne00001", subscriptionId: "sub_HookOne00001", active: true, period: paidPeriod() });
+  await setSubscription("two@example.com", { customerId: "cus_HookTwo00001", subscriptionId: "sub_HookTwo00001", active: true, period: paidPeriod() });
   let one = (await storeForEmail("one@example.com"))!;
   const two = (await storeForEmail("two@example.com"))!;
 
@@ -175,6 +185,16 @@ async function main(): Promise<void> {
   is("ten are sent, the eleventh waits", [tests.slice(0, 10).every((t) => t.ok), tests[10]], [true, { ok: false, reason: "limited" }]);
   const test = received.at(-1)!;
   is("a test says it is one, signed like the rest", [test.headers["marktmorgen-event-type"], verify(refunds.secret, String(test.headers["marktmorgen-signature"]), test.body)], ["test", true]);
+
+  part("Every try is one of the month's webhook deliveries");
+  const sentSoFar = received.length;
+  // What is left of the month, used, as a busy store would.
+  for (;;) if (!(await takeAllowance(one, "webhook")).ok) break;
+  const hook = await emitEvent(one, "refund.issued", "re_test_0099", { amount_cents: 100 });
+  view = await webhooksView(one);
+  is("past the figure a delivery is not tried, and says why", [hook, received.length, view.log[0].state, view.log[0].attempts, view.log[0].lastError.startsWith("Not sent. Your webhook deliveries for this month are used")], [1, sentSoFar, "failed", 0, true]);
+  is("it is not tried again either", [(await deliverDue(Date.now() + 10_000, Date.now() + 86_400_000)).tried, received.length], [0, sentSoFar]);
+  is("Store's figure is the one published", STORE_ALLOWANCES.creator.webhook > 0, true);
 
   server.close();
   done();

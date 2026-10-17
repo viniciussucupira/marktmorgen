@@ -32,6 +32,17 @@
  *                  started or read, a calendar checked by hand, Discord,
  *                  email platforms, Meta ads, PayPal, a business's site read
  *                  for outreach, video upload doors, the vault.
+ *   buyer          (since 18 October 2026) what buyers, and the creator,
+ *                  do inside what was bought, outside the pages themselves:
+ *                  a community post, comment, like, message, RSVP, picture
+ *                  door, event, a lesson comment, a hand-in and its upload
+ *                  door, a lesson marked done, a certificate made
+ *                  (lib/buyer-actions.ts). A buyer is told the store is
+ *                  resting for now; nothing they already have is taken away.
+ *   webhook        (since 18 October 2026) each try of a webhook delivery to
+ *                  one of the creator's endpoints, the first one, each retry
+ *                  and each test (lib/webhooks.ts). A delivery past the
+ *                  figure is not tried and is marked failed with the reason.
  *
  * The figures are each plan's own, sized so every plan, paid by the month or
  * by the year, keeps the owner's 60% at every figure used in full
@@ -43,14 +54,14 @@
 import type { Tier } from "@/lib/plan";
 import { type PlanFields, type Standing, standingOf } from "@/lib/plan-standing";
 
-export const ALLOWANCE_KINDS = ["studio", "api", "inbox", "email", "transactional", "integration"] as const;
+export const ALLOWANCE_KINDS = ["studio", "api", "inbox", "email", "transactional", "integration", "buyer", "webhook"] as const;
 export type AllowanceKind = (typeof ALLOWANCE_KINDS)[number];
 
 /** Each plan's figure for a window, per store. */
 export const STORE_ALLOWANCES: Record<Tier, Record<AllowanceKind, number>> = {
-  creator: { studio: 2_000, api: 500, inbox: 100, email: 75, transactional: 150, integration: 50 },
-  pro: { studio: 5_000, api: 2_000, inbox: 300, email: 300, transactional: 400, integration: 200 },
-  scale: { studio: 15_000, api: 10_000, inbox: 1_000, email: 800, transactional: 1_000, integration: 500 },
+  creator: { studio: 2_000, api: 500, inbox: 100, email: 75, transactional: 150, integration: 50, buyer: 200, webhook: 300 },
+  pro: { studio: 5_000, api: 2_000, inbox: 300, email: 300, transactional: 400, integration: 200, buyer: 1_000, webhook: 1_000 },
+  scale: { studio: 15_000, api: 10_000, inbox: 1_000, email: 800, transactional: 1_000, integration: 500, buyer: 3_000, webhook: 3_000 },
 };
 
 /**
@@ -61,9 +72,9 @@ export const STORE_ALLOWANCES: Record<Tier, Record<AllowanceKind, number>> = {
  * take its data away, and answers what its buyers need.
  */
 export const NON_PAYING_ALLOWANCES: Record<Exclude<Standing, "paid">, Record<AllowanceKind, number>> = {
-  trial: { studio: 1_000, api: 100, inbox: 30, email: 30, transactional: 40, integration: 20 },
-  none: { studio: 300, api: 0, inbox: 20, email: 25, transactional: 20, integration: 5 },
-  ended: { studio: 100, api: 0, inbox: 0, email: 0, transactional: 20, integration: 0 },
+  trial: { studio: 1_000, api: 100, inbox: 30, email: 30, transactional: 40, integration: 20, buyer: 50, webhook: 50 },
+  none: { studio: 300, api: 0, inbox: 20, email: 25, transactional: 20, integration: 5, buyer: 20, webhook: 0 },
+  ended: { studio: 100, api: 0, inbox: 0, email: 0, transactional: 20, integration: 0, buyer: 20, webhook: 0 },
 };
 
 /** The figure this store has for one kind in its window. */
@@ -84,6 +95,8 @@ export const KIND_WORDS: Record<AllowanceKind, { many: string; what: string }> =
   email: { many: "store emails", what: "Your store's emails (notices, replies, reminders and offers)" },
   transactional: { many: "access emails", what: "Your buyers' access emails (links to their purchases and podcasts)" },
   integration: { many: "calls to connected services", what: "Your calls to connected services" },
+  buyer: { many: "buyer actions", what: "Your buyers' actions (posts, comments, messages, hand-ins)" },
+  webhook: { many: "webhook deliveries", what: "Your webhook deliveries" },
 };
 
 /** "2,000 studio requests, 500 API requests, ... and 50 calls to connected services": a plan's figures, for the pages that publish them. */

@@ -105,12 +105,13 @@ export async function submissionsOf(courseId: string, rows: { lessonId: string; 
 
 /**
  * Room for a file of this size in what this store's students keep: taken
- * now, given back when the file is no longer kept (releaseBytes).
+ * now, given back when the file is no longer kept (releaseBytes). `limit`
+ * is the store's own (lib/assignment-rules.ts, taskRoomFor).
  */
-export async function takeRoom(room: string, bytes: number): Promise<boolean> {
-  if (!isRedisConfigured() || !Number.isFinite(bytes) || bytes <= 0) return false;
+export async function takeRoom(room: string, bytes: number, limit: number = MAX_STORE_TASK_BYTES): Promise<boolean> {
+  if (!isRedisConfigured() || !Number.isFinite(bytes) || bytes <= 0 || !Number.isSafeInteger(limit) || limit <= 0) return false;
   const [used] = await redisPipeline([["INCRBY", bytesKey(room), Math.ceil(bytes)]]);
-  if (Number(used) > MAX_STORE_TASK_BYTES) {
+  if (Number(used) > limit) {
     await redisPipeline([["DECRBY", bytesKey(room), Math.ceil(bytes)]]);
     return false;
   }
@@ -118,10 +119,10 @@ export async function takeRoom(room: string, bytes: number): Promise<boolean> {
 }
 
 /** Whether a file of this size would still fit, read without taking anything. */
-export async function hasRoom(room: string, bytes: number): Promise<boolean> {
+export async function hasRoom(room: string, bytes: number, limit: number = MAX_STORE_TASK_BYTES): Promise<boolean> {
   if (!isRedisConfigured()) return false;
   const [used] = await redisPipeline([["GET", bytesKey(room)]]);
-  return (Number(used) || 0) + bytes <= MAX_STORE_TASK_BYTES;
+  return (Number(used) || 0) + bytes <= limit;
 }
 
 /** Gives back room taken for files that are no longer kept. */

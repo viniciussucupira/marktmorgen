@@ -3,6 +3,7 @@ import { originFrom } from "@/lib/request-origin";
 import { storeForHandle } from "@/lib/store";
 import { mintPass, passCookie, storeKey } from "@/lib/learn";
 import { openCommunityLink } from "@/lib/community-access";
+import { restingAway, takeBuyerRead } from "@/lib/buyer-actions";
 
 /**
  * The link from the email. Whoever holds it has read that inbox, so this
@@ -20,6 +21,8 @@ export async function GET(request: NextRequest) {
       { status: 410, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } },
     );
   }
+  // One of the store's public requests on the buyers' side (lib/buyer-actions.ts).
+  if (!(await takeBuyerRead(store))) return restingAway(origin, store);
   const pass = await mintPass(store, grant.e, "all");
   const headers = new Headers({ Location: `${origin}/@${store.handle}/community`, "Cache-Control": "no-store" });
   headers.append("Set-Cookie", passCookie(store, pass, origin.startsWith("https://")));

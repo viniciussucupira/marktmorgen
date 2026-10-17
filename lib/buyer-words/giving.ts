@@ -183,6 +183,10 @@ const en = {
       title: "That link has expired",
       body: "It works for 24 hours. Type your address again below and a new one comes right away.",
     },
+    resting: {
+      title: "This store is resting for now",
+      body: "No place was taken or lost. The store hands out places again when its next month begins, or sooner: come back then and type your address below for a new link.",
+    },
   } as Record<string, Notice>,
   groupRefundedTitle: "This purchase was refunded",
   groupRefundedBody: (title: string, people: number) =>
@@ -511,6 +515,10 @@ const es: GivingWords = {
       title: "Ese enlace ha caducado",
       body: "Funciona durante 24 horas. Vuelve a escribir tu dirección abajo y te llegará uno nuevo enseguida.",
     },
+    resting: {
+      title: "Esta tienda está en pausa por ahora",
+      body: "No se ha ocupado ni perdido ninguna plaza. La tienda vuelve a repartir plazas cuando empieza su próximo mes, o antes: vuelve entonces y escribe tu dirección abajo para recibir un enlace nuevo.",
+    },
   },
   groupRefundedTitle: "Esta compra se reembolsó",
   groupRefundedBody: (title, people) =>
@@ -822,6 +830,10 @@ const fr: GivingWords = {
       title: "Ce lien a expiré",
       body: "Il fonctionne pendant 24 heures. Saisissez de nouveau votre adresse ci-dessous et un nouveau lien arrive aussitôt.",
     },
+    resting: {
+      title: "Cette boutique est en pause pour le moment",
+      body: `Aucune place n'a été prise ni perdue. La boutique distribue de nouveau des places au début de son prochain mois, ou avant${S}: revenez alors et saisissez votre adresse ci-dessous pour recevoir un nouveau lien.`,
+    },
   },
   groupRefundedTitle: "Cet achat a été remboursé",
   groupRefundedBody: (title, people) =>
@@ -1131,6 +1143,10 @@ const de: GivingWords = {
       title: "Dieser Link ist abgelaufen",
       body: "Er funktioniert 24 Stunden lang. Geben Sie Ihre Adresse unten erneut ein, und ein neuer kommt sofort.",
     },
+    resting: {
+      title: "Dieser Shop pausiert gerade",
+      body: "Kein Platz wurde vergeben oder ist verloren. Der Shop vergibt wieder Plätze, wenn sein nächster Monat beginnt, oder früher: Kommen Sie dann zurück und geben Sie unten Ihre Adresse für einen neuen Link ein.",
+    },
   },
   groupRefundedTitle: "Dieser Kauf wurde erstattet",
   groupRefundedBody: (title, people) =>
@@ -1438,6 +1454,10 @@ const it: GivingWords = {
     expired: {
       title: "Quel link è scaduto",
       body: "Funziona per 24 ore. Scrivi di nuovo il tuo indirizzo qui sotto e ne arriva subito uno nuovo.",
+    },
+    resting: {
+      title: "Questo negozio è in pausa per ora",
+      body: "Nessun posto è stato preso o perso. Il negozio torna ad assegnare posti quando inizia il suo prossimo mese, o prima: torna allora e scrivi il tuo indirizzo qui sotto per un nuovo link.",
     },
   },
   groupRefundedTitle: "Questo acquisto è stato rimborsato",
@@ -1749,6 +1769,10 @@ const nl: GivingWords = {
       title: "Die link is verlopen",
       body: "Hij werkt 24 uur. Vul je adres hieronder opnieuw in en er komt meteen een nieuwe.",
     },
+    resting: {
+      title: "Deze winkel rust even",
+      body: "Er is geen plaats genomen of verloren. De winkel geeft weer plaatsen uit wanneer zijn volgende maand begint, of eerder: kom dan terug en vul hieronder je adres in voor een nieuwe link.",
+    },
   },
   groupRefundedTitle: "Deze aankoop is terugbetaald",
   groupRefundedBody: (title, people) =>
@@ -2055,6 +2079,10 @@ const pt: GivingWords = {
     expired: {
       title: "Essa ligação expirou",
       body: "Funciona durante 24 horas. Introduza novamente o seu endereço abaixo e chega logo uma nova.",
+    },
+    resting: {
+      title: "Esta loja está em pausa por agora",
+      body: "Nenhum lugar foi ocupado nem perdido. A loja volta a atribuir lugares quando começa o seu próximo mês, ou antes: volte nessa altura e introduza o seu endereço abaixo para receber uma nova ligação.",
     },
   },
   groupRefundedTitle: "Esta compra foi reembolsada",

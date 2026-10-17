@@ -1647,11 +1647,13 @@ export default function PrivacyPage() {
         </p>
         <p>
           The files a creator sells, their lessons&apos; videos and their
-          podcast&apos;s episodes are kept until the creator removes them.
-          Where a store&apos;s plan has ended and the store keeps more than a
-          store with no plan may, they are deleted 30 days after the plan
-          ended, after three emails to the store&apos;s owner (Terms of
-          Service, section 8).
+          podcast&apos;s episodes, the files their students hand in and the
+          pictures in their community&apos;s posts are kept until they are
+          removed with what they belong to. Where a
+          store&apos;s plan has ended, they are deleted 30 days after the plan
+          ended, after three emails to the store&apos;s owner; for a plan that
+          ended before October 18, 2026, only where the store keeps more than a
+          store with no plan may (Terms of Service, section 8).
         </p>
         <p>
           A creator&apos;s list is kept for as long as their store exists, or

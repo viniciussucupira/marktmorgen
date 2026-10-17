@@ -32,7 +32,7 @@
  * atomically (lib/host-claims.ts) and moves to the next free host when the
  * claim loses a race.
  */
-import type { Tier } from "@/lib/plan";
+import { PLAN_TITLES, type Tier } from "@/lib/plan";
 import { type PlanFields, standingOf } from "@/lib/plan-standing";
 import { BUFFERS, type Busy, type CallSetup, type Day, MAX_RANGES_PER_DAY, NOTICE_CHOICES, type Range, isTimeZone, zonedToUtc } from "@/lib/call-setup";
 
@@ -86,12 +86,16 @@ export type TeamLimits = { eventTypes: number; hosts: number };
  * somebody is looking at a booking page, so these also bound the reading.
  */
 export const TEAM_LIMITS: Record<Tier, TeamLimits> = {
-  creator: { eventTypes: 1, hosts: 2 },
+  // One with two hosts until 18 October 2026, when Store's worst month had to
+  // make room for the uses priced that day (tests/plan-cost-registry.ts):
+  // reading two hosts' calendars all month was the least used of what Store
+  // paid for. The price did not change.
+  creator: { eventTypes: 0, hosts: 0 },
   pro: { eventTypes: 5, hosts: 4 },
   scale: { eventTypes: 10, hosts: 4 },
 };
 
-/** A store in its free trial: what the Store plan allows. */
+/** A store in its free trial: what the Store plan allows, none since 18 October 2026. */
 export const TRIAL_TEAM_LIMITS: TeamLimits = TEAM_LIMITS.creator;
 
 /** A store with no plan running: no team event types. */
@@ -105,7 +109,7 @@ export function teamLimitsFor(store: PlanFields & { tier?: Tier }, nowSeconds = 
 
 /** "1 team event type with up to 2 hosts", for the studio and the plan pages. */
 export function teamLimitWords(limits: TeamLimits): string {
-  if (limits.eventTypes === 0) return "Team event types need a plan, or its free trial.";
+  if (limits.eventTypes === 0) return `no team event types (they come with ${PLAN_TITLES.pro} and ${PLAN_TITLES.scale})`;
   return `${limits.eventTypes} team event ${limits.eventTypes === 1 ? "type" : "types"}, each with up to ${limits.hosts} ${limits.hosts === 1 ? "host" : "hosts"}`;
 }
 

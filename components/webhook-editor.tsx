@@ -42,6 +42,7 @@ function outcome(d: DeliveryView): { text: string; tone: "ok" | "wait" | "bad" }
   if (d.state === "delivered") return { text: `Delivered${d.lastStatus ? ` (${d.lastStatus})` : ""}`, tone: "ok" };
   if (d.state === "queued") return { text: "Sending", tone: "wait" };
   if (d.state === "retrying") return { text: `Try ${d.attempts} failed; next ${when(d.next)}`, tone: "wait" };
+  if (d.attempts === 0) return { text: "Not sent", tone: "bad" };
   return { text: `Failed after ${d.attempts} ${d.attempts === 1 ? "try" : "tries"}`, tone: "bad" };
 }
 

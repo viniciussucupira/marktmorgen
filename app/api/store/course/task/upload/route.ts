@@ -6,7 +6,8 @@ import { storeFolder, storeRef } from "@/lib/store";
 import { storeKey } from "@/lib/learn";
 import { studentOnTask } from "@/lib/assignment-access";
 import { hasRoom, noteTaskUpload } from "@/lib/assignment";
-import { MAX_TASK_FILE_BYTES, taskExtension, taskFolder } from "@/lib/assignment-rules";
+import { MAX_TASK_FILE_BYTES, taskExtension, taskFolder, taskRoomFor } from "@/lib/assignment-rules";
+import { takeBuyerAction } from "@/lib/buyer-actions";
 import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 
 /** How long the student has to start the upload after asking for the door. */
@@ -53,10 +54,12 @@ export async function POST(request: NextRequest) {
     if (!extension) return Response.json({ ok: false, error: "type" }, { status: 400 });
     if (!(await withinLimit("task-upload", on.who, DOORS_PER_HOUR, 3_600))) return Response.json({ ok: false, error: "slow" }, { status: 429 });
 
-    // What the store's students keep is held to its own figure (lib/assignment.ts),
-    // read from one counter. The store's storage brake (lib/storage-quota.ts)
+    // What the store's students keep is held to its plan's figure (lib/assignment-rules.ts,
+    // taskRoomFor), read from one counter. The store's storage brake (lib/storage-quota.ts)
     // is pressure on the creator's own uploads, never on a student's.
-    if (!(await hasRoom(storeKey(on.store), MAX_TASK_FILE_BYTES))) return Response.json({ ok: false, error: "full" }, { status: 400 });
+    if (!(await hasRoom(storeKey(on.store), MAX_TASK_FILE_BYTES, taskRoomFor(on.store)))) return Response.json({ ok: false, error: "full" }, { status: 400 });
+    // The door is one of the store's buyer actions (lib/buyer-actions.ts).
+    if (!(await takeBuyerAction(on.store))) return Response.json({ ok: false, error: "resting" }, { status: 503 });
     // Inside the store's own folder: counted with what the store keeps, and gone when its files go.
     const folder = await storeFolder(storeRef(on.store));
     const pathname = `${taskFolder(folder, on.course.id, on.lesson.id, on.who)}${randomBytes(16).toString("hex")}.${extension}`;

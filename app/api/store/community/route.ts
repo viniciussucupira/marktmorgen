@@ -50,11 +50,14 @@ import {
 import { limited } from "@/lib/request-guard";
 import { alertCreator } from "@/lib/phone-alerts";
 import { award, levelOf, pointsOf } from "@/lib/community-points";
+import { restingAway, takeBuyerAction } from "@/lib/buyer-actions";
 
 /** The most a form here may weigh: a full post with its picture's details. */
 const MAX_FORM_BYTES = 40_000;
 
 const OWNER_ONLY = new Set(["hide", "unhide", "hide-comment", "unhide-comment", "pin", "unpin", "start", "unstart", "mute", "unmute"]);
+/** Acts that are not counted: taking away what was counted when it was made. */
+const UNCOUNTED = new Set(["delete", "delete-comment"]);
 
 /**
  * Everything a member, or the creator, does inside a community: plain forms
@@ -116,6 +119,10 @@ export async function POST(request: NextRequest) {
   const id = store.community.id;
   const { config, owner, key } = viewer;
   if (OWNER_ONLY.has(action) && !owner) return back(fromPage, "forbidden");
+  // Each act is one of the store's buyer actions, or the creator's studio
+  // requests, taken before anything is written (lib/buyer-actions.ts).
+  // Deleting what one wrote is not: it can only follow an act that was.
+  if (!UNCOUNTED.has(action) && !(await takeBuyerAction(store, owner ? "owner" : "buyer"))) return restingAway(origin, store);
 
   try {
     // ------------------------------------------------------------ your choices
@@ -194,7 +201,8 @@ export async function POST(request: NextRequest) {
         }
         if (checked === "missing") await noteCommunityUpload(path, key).catch(() => {});
         if (checked !== "ok" || !w || !h) {
-          if (checked === "ok") await dropCommunityImage(path);
+          // A picture refused here was deleted by the check, or is deleted now: its place goes back.
+          if (checked !== "missing" && checked !== "path") await dropCommunityImage(path);
           return back(fromPage, "image");
         }
         img = { path, w, h, alt: cleanLine(form.get("img_alt"), MAX_ALT_LENGTH) };

@@ -102,7 +102,7 @@ import { DELIVERY_ALLOWANCE_BYTES } from "@/lib/delivery";
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED } from "@/lib/watch-rules";
 import { PAID_VIDEO_HOURS, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_HOURS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
-import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, KEEP_NOTHING_FROM, WARN_WEEK_DAYS, keptRoomFor } from "@/lib/plan-closing-rules";
 import { LONGEST_PAUSE_MONTHS, PAID_MONTHS_BEFORE_PAUSE } from "@/lib/plan-pause-rules";
 import { SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER } from "@/lib/traffic-rules";
 import { visitCost } from "./traffic-cost";
@@ -114,7 +114,7 @@ import { join } from "node:path";
 
 import {
   GB, STORAGE_PER_GB, FILE_DELIVERY_PER_GB, STREAM_STORAGE_PER_GB, PER_EMAIL, ORDER_COST, BILLING_RATE,
-  aiCeilingUsd, hourCost, netOf, ordersCost, videoCost, visitsCost, worstCost, type Prices,
+  aiCeilingUsd, hourCost, netOf, ordersCost, perPaymentCost, videoCost, visitsCost, worstCost, type Prices,
 } from "./plan-cost-model";
 
 /**
@@ -354,8 +354,11 @@ test("a store whose plan ended stops costing more than a store with no plan, on 
   // The dearest store there can be: it pays for one month, runs every limit
   // of its plan in it, cancels, and leaves all a paid plan may keep here
   // until its day. That one month has to have paid for all of it.
+  // Since 18 October 2026 that is all it keeps, its students' room and its
+  // community's pictures too (tests/plan-cost-registry.ts, PER_PAYMENT_LINES).
   for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
-    const kept = (paidStorageBytes(tier) / GB) * STORAGE_PER_GB * months;
+    const kept = perPaymentCost(tier);
+    assert.ok(kept >= (paidStorageBytes(tier) / GB) * STORAGE_PER_GB * months, `${tier}: what is kept after the end is at least the plan's storage to its day`);
     const cost = worstCost(tier) + kept;
     const net = netOf(tier, "month", prices);
     assert.ok(
@@ -370,7 +373,8 @@ test("a store whose plan ended stops costing more than a store with no plan, on 
   assert.ok(trial < 3, `keeping an unpaid trial's files to its day costs $${trial.toFixed(2)} once`);
   // After the day, either is a store with no plan: the test above.
   const closing = readFileSync(join(process.cwd(), "lib/plan-closing.ts"), "utf8");
-  assert.match(closing, /if \(held <= SETUP_STORAGE_BYTES\)/, "the room a closing store is held to must be the room of a store with no plan");
+  assert.match(closing, /if \(held <= keptRoomFor\(endedAt\)\)/, "the room a closing store is held to must be the one lib/plan-closing-rules.ts gives: none for a plan ended from 18 October 2026");
+  assert.equal(keptRoomFor(KEEP_NOTHING_FROM), 0, "a plan that ends from that day keeps nothing past its day");
   const job = JSON.parse(readFileSync(join(process.cwd(), "vercel.json"), "utf8")) as { crons: { path: string }[] };
   assert.ok(job.crons.some((cron) => cron.path === "/api/cron/closing"), "and the job that does it must be scheduled, or the day never comes");
 });

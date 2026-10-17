@@ -9,6 +9,7 @@ import { heldBack, passedQuizzes } from "@/lib/quiz";
 import { limited } from "@/lib/request-guard";
 import { readCourseListing } from "@/lib/catalog";
 import { noteIfFinished } from "@/lib/course-finish";
+import { restingAway, takeBuyerAction } from "@/lib/buyer-actions";
 
 /** "Mark as done", and on to the next lesson. A plain form, no script needed. */
 export async function POST(request: NextRequest) {
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
   if (!course || access.state !== "open" || !found || !isOpen(course, found.unit, access.start)) {
     return new Response(null, { status: 303, headers: { Location: base } });
   }
+  // A lesson marked done is one of the store's buyer actions (lib/buyer-actions.ts).
+  if (!(await takeBuyerAction(store, access.learner.owner ? "owner" : "buyer"))) return restingAway(origin, store);
   if (!access.learner.owner) {
     // A lesson behind a quiz that must be passed, or one whose own quiz must
     // be passed first, is not marked done by a button.
