@@ -78,7 +78,7 @@ import { MAX_PRODUCTS } from "@/lib/catalog-rules";
 import { CLOSING, FOLLOWED_FAMILIES } from "@/lib/data-families";
 import { CLOSING_DAYS } from "@/lib/plan-closing-rules";
 import { NON_PAYING_ALLOWANCES } from "@/lib/store-allowance-rules";
-import { TRIAL_EXTRA_REQUESTS, TRIAL_VISITS } from "@/lib/traffic-rules";
+import { SETUP_EXTRA_REQUESTS, SETUP_VISITS, TRIAL_EXTRA_REQUESTS, TRIAL_VISITS } from "@/lib/traffic-rules";
 import { TRIAL_ORDERS } from "@/lib/order-rules";
 import { TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { TRIAL_DAILY_RUNS } from "@/lib/flow-limits";
@@ -210,7 +210,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:inbound:seen:@app/api/mail/inbound/route.ts": company("Inbound mail already handled", "The email provider's notices, kept a few days: the company's."),
   "nl:sns:seen:@app/api/mail/ses/route.ts": company("Amazon's notices already handled", "The email provider's notices, kept a few days: the company's."),
   "nl:course:@app/api/store/course/route.ts": short("A course's lock while the studio changes it", "studio", 1),
-  "nl:rl:export:@app/api/store/export/route.ts": short("Downloads of a store's sales, counted a day", "studio", 1),
+  "nl:rl:export:@app/api/store/export/route.ts": { what: "Downloads of a store's files: counted ten minutes at a time, and its whole exports since its plan ended", parts: [per("studio", 1, KEY, "Downloads counted ten minutes at a time."), capped(() => KEY, "One count of whole exports since the plan ended, sixty days.")] },
   "nl:rl:licence:@app/api/store/licence/route.ts": short("A license check's count per connection", "request", 1, KEY, REQ("license")),
   "nl:pod:@app/api/store/podcast/route.ts": short("A podcast's lock while the studio changes it", "studio", 1),
 
@@ -223,7 +223,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:stats:@lib/ad-spend.ts": { what: "What the creator spent on ads", parts: [capped(MAX_SPEND_ENTRIES * 512, "MAX_SPEND_ENTRIES entries, the oldest let go.", src("lib/ad-spend-rules.ts", "MAX_SPEND_ENTRIES"))] },
   "nl:aff:@lib/affiliate-bond.ts": { what: "Which affiliate a buyer belongs to", parts: [kept(MARK, "A field per buyer, written with a sale, kept for good.")] },
   "nl:aff:@lib/affiliate-codes.ts": { what: "Discount codes given to affiliates", room: ["lib/affiliate-codes.ts"] },
-  "nl:affhub:@lib/affiliate-hub.ts": company("The stores an address is an affiliate of", "Per affiliate across stores, in the set of the quarter it was noted in, kept QUARTERS_KEPT quarters at the most: written with an affiliate record (capped by MAX_AFFILIATES per store, below); what a closed store leaves in it is priced with its closing (tests/plan-cost-registry.ts, closure)."),
+  "nl:affhub:@lib/affiliate-hub.ts": company("The stores an address is an affiliate of", "Per affiliate across stores, in the set of the quarter it was noted in, kept QUARTERS_KEPT quarters at the most: written with an affiliate record (capped by MAX_AFFILIATES per store, below); what a closed store leaves in it is the company's as the hub is, and runs out with its quarter."),
   "nl:affhub:link:@lib/affiliate-hub.ts": company("An emailed link to an affiliate's page, a day", "Per affiliate across stores, behind a per-address limit."),
   "nl:affkit:@lib/affiliate-kit.ts": short("An affiliate kit's counts, by the day and the window", "ai", 40),
   "nl:aff:payday:@lib/affiliate-payday.ts": short("A store's monthly payday claimed", "day", 40),
@@ -928,11 +928,31 @@ export const TRIAL_UNITS: Record<Unit, number> = {
   day: 32,
 };
 
-/** The most a part keeps at one time at a free trial's units. */
-export function trialPartPeak(part: Part, tier: Tier): number {
+/**
+ * The units of a store whose plan has ended, until its closing day: its own
+ * figures where it has them (NON_PAYING_ALLOWANCES.ended, and the requests
+ * of a store with no plan, lib/traffic-rules.ts, requestLimitFor), and a
+ * free trial's where it has none of its own, which are more.
+ */
+export const ENDED_UNITS: Record<Unit, number> = {
+  ...TRIAL_UNITS,
+  request: REQUESTS_PER_VISIT * SETUP_VISITS + SETUP_EXTRA_REQUESTS,
+  studio: NON_PAYING_ALLOWANCES.ended.studio + ESSENTIAL_PER_DAY * 32,
+  api: NON_PAYING_ALLOWANCES.ended.api,
+  inbox: NON_PAYING_ALLOWANCES.ended.inbox,
+  own: NON_PAYING_ALLOWANCES.ended.email,
+  access: NON_PAYING_ALLOWANCES.ended.transactional,
+  store: NON_PAYING_ALLOWANCES.ended.email + NON_PAYING_ALLOWANCES.ended.transactional,
+  integration: NON_PAYING_ALLOWANCES.ended.integration,
+  buyer: NON_PAYING_ALLOWANCES.ended.buyer,
+  webhook: NON_PAYING_ALLOWANCES.ended.webhook,
+};
+
+/** The most a part keeps at one time at a free trial's units, or (`units`) another standing's. */
+export function trialPartPeak(part: Part, tier: Tier, units: Record<Unit, number> = TRIAL_UNITS): number {
   if ("capped" in part) return part.capped(tier);
   if (!("per" in part)) return 0;
-  return TRIAL_UNITS[part.per] * part.bytes * windowsOver(Math.max(1, Math.ceil(part.days)));
+  return units[part.per] * part.bytes * windowsOver(Math.max(1, Math.ceil(part.days)));
 }
 
 const prefixOf = (name: string) => name.slice(0, name.lastIndexOf("@"));
@@ -943,12 +963,12 @@ const deletes = (name: string) => {
   return Boolean(rule && (rule.how === "erase" || rule.how === "token"));
 };
 
-/** What a part still keeps on a store's closing day, at least CLOSING_DAYS after its plan ended: what its paid windows wrote of a part kept longer than that (at `tier`, or for a free trial at its units), and whatever it wrote since its plan ended, at a free trial's units. */
+/** What a part still keeps on a store's closing day, at least CLOSING_DAYS after its plan ended: what its paid windows wrote of a part kept longer than that (at `tier`, or for a free trial at its units), and whatever it wrote since, at an ended store's units (a free trial's after its trial). */
 function keptAtClosing(part: Part, tier: Tier, trial: boolean): number {
   if ("capped" in part) return part.capped(tier);
   if (!("per" in part)) return 0;
   const paid = part.days > CLOSING_DAYS ? (trial ? trialPartPeak(part, tier) : partPeak(part, tier)) : 0;
-  return paid + trialPartPeak(part, tier);
+  return paid + trialPartPeak(part, tier, trial ? TRIAL_UNITS : ENDED_UNITS);
 }
 
 /**

@@ -84,3 +84,15 @@ export const ERASE_WITHIN_DAYS = ERASE_EVERY_DAYS + 7;
 export const DEL_BATCH = 4000;
 export const FOLLOW_BATCH = 1000;
 export const RENEWALS_AT_ONCE = 25;
+
+/**
+ * Whole exports a store's owner may take once its plan has ended, before it
+ * closes (app/api/store/export, what=store): the store's own, counted for
+ * that ending, never taken from a studio figure or the share of stores that
+ * pay nothing, so taking one's data away is never refused for want of room.
+ * Each is priced at the largest store there can be, with the rest of its
+ * closing, once for each store against its own payments
+ * (tests/plan-cost-registry.ts, closure). While a plan runs, an export is
+ * taken from the store's studio figure at its size (lib/store-export.ts).
+ */
+export const ENDED_STORE_EXPORTS = 1;

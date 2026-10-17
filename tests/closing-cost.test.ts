@@ -18,6 +18,9 @@
  *     the quarters it is kept, and runs out by itself (CLOSING, lapses);
  *   - the export a paying store takes from its studio figure costs no more
  *     than the units it takes, Stripe's pages included;
+ *   - once its plan has ended, its ENDED_STORE_EXPORTS whole exports are its
+ *     own, never taken from a figure or the share of stores that pay
+ *     nothing, and priced in the closure;
  *   - the walk, reading the whole database, is the company's scheduled job.
  */
 import { test } from "node:test";
@@ -29,13 +32,16 @@ import { EXPORT_PAGES } from "@/lib/stats";
 import { EXPORT_STRIPE_PAGES, exportUnits } from "@/lib/store-export";
 import { PERSON_RECORD_MONTHS, QUARTERS_KEPT, quarterOf, quarterStart } from "@/lib/joined-stores";
 import { WALK_COUNT } from "@/lib/closed-store-data";
+import { ENDED_STORE_EXPORTS } from "@/lib/plan-closing-rules";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { COMMAND, DB_BYTE, DB_BYTE_MONTH, ORDER_COST, ORDER_LIBRARY, PER_PAYMENT_LINES, UNIT_COST, closureCost, exportCommands, exportCost, nonPayingWorst } from "./plan-cost-registry";
 import { FAMILIES, lifetimeByteMonths, partAverage } from "./store-data-registry";
 
 test("a closing's worst cost, part by part, for each plan and for a free trial", () => {
   for (const tier of TIERS) {
     const c = closureCost(tier);
-    console.log(`${tier}: deletes $${c.deletes.toFixed(4)}, followers $${c.follows.toFixed(4)}, affiliates' hub $${c.hub.toFixed(4)}, last steps $${c.prepare.toFixed(4)}: $${c.total.toFixed(4)}, once for the store; each order $${ORDER_LIBRARY.toFixed(6)} for its buyers' library entries`);
+    console.log(`${tier}: deletes $${c.deletes.toFixed(4)}, followers $${c.follows.toFixed(4)}, its whole export after its plan ended $${c.exports.toFixed(4)}, last steps $${c.prepare.toFixed(4)}: $${c.total.toFixed(4)}, once for the store; each order $${ORDER_LIBRARY.toFixed(6)} for its buyers' library entries`);
     for (const value of Object.values(c)) assert.ok(Number.isFinite(value) && value >= 0, tier);
   }
   const trial = closureCost("creator", true);
@@ -80,6 +86,15 @@ test("an export a paying store takes from its studio figure costs no more than t
       assert.ok(units * UNIT_COST.studio >= exportCost(bytes, shape.commands), `${tier}, ${bytes} bytes: ${units} units at $${UNIT_COST.studio} for $${exportCost(bytes, shape.commands)}`);
     }
   }
+});
+
+test("once a plan has ended, its whole exports are its own: counted for the store, never refused for want of a figure or a place, and priced in its closing", () => {
+  const route = readFileSync(join(process.cwd(), "app/api/store/export/route.ts"), "utf8");
+  const ended = route.slice(route.indexOf('if (standingOf(store) === "ended")'), route.indexOf("} else {", route.indexOf('if (standingOf(store) === "ended")')));
+  assert.ok(ended.includes("ENDED_STORE_EXPORTS") && ended.includes("INCR"), "counted for the store");
+  assert.ok(!ended.includes("takeAllowance") && !ended.includes("admitNonPaying"), "never from a figure or the share of stores that pay nothing");
+  assert.ok(ENDED_STORE_EXPORTS >= 1);
+  for (const tier of TIERS) assert.equal(closureCost(tier).exports, ENDED_STORE_EXPORTS * exportCost(DATA_ROOM_BYTES[tier] + 1_000_000));
 });
 
 test("the walk, the company's: what it costs a walk for every million keys the database holds", () => {

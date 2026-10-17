@@ -72,12 +72,14 @@ import { SYNC_SECONDS } from "@/lib/host-calendar";
 import { MAX_TEAM } from "@/lib/team";
 import { MAX_TASK_FILE_BYTES, TASK_ROOM_BYTES, TRIAL_TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { COMMUNITY_PICTURES, PICTURE_BYTES, TRIAL_COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
-import { CLOSING_DAYS, DEL_BATCH, FOLLOW_BATCH, RENEWALS_AT_ONCE, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, DEL_BATCH, ENDED_STORE_EXPORTS, FOLLOW_BATCH, RENEWALS_AT_ONCE, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { MAX_STORE_BYTES } from "@/lib/store";
+import { BODIES_PER_READ } from "@/lib/course";
+import { MAX_LEADS } from "@/lib/contact-rules";
 import { DATA_ROOM_BYTES, ENTRY_BYTES, NON_PAYING_DATA_ROOM_BYTES } from "@/lib/store-data-rules";
 import { ORDER_KEY_BYTES } from "@/lib/order-data";
 import { PERSON_RECORD_MONTHS } from "@/lib/joined-stores";
 import { FOLLOWED_FAMILIES } from "@/lib/data-families";
-import { MAX_AFFILIATES } from "@/lib/affiliate-setting";
 import { MAX_PRODUCTS } from "@/lib/catalog-rules";
 import { MAX_LESSONS } from "@/lib/course";
 import { MAX_POSTS } from "@/lib/store-blog";
@@ -632,35 +634,46 @@ export const PER_PAYMENT_LINES: CostLine[] = [
   },
   {
     id: "closure",
-    feature: "Closing the store (18 October 2026): its records deleted, its followers read, what it leaves in its affiliates' hub, its last steps",
+    feature: "Closing the store (18 October 2026): its records deleted, its followers read, its whole exports after its plan ended, its last steps",
     monthlyUsd: (tier) => closureCost(tier).total,
     sources: [
       { file: "lib/closed-store-data.ts", names: ["walkPage", "FOLLOWERS", "prepareStore", "stopRenewals", "DEL_BATCH", "FOLLOW_BATCH", "RENEWALS_AT_ONCE"] },
-      { file: "lib/affiliate-hub.ts", names: ["personWrite(HUB"] },
+      { file: "lib/plan-closing-rules.ts", names: ["ENDED_STORE_EXPORTS"] },
+      { file: "app/api/store/export/route.ts", names: ["ENDED_STORE_EXPORTS", "storeExport(store)"] },
+      { file: "lib/store-export.ts", names: ["EXPORT_STRIPE_PAGES", "EXPORT_PAGE_SECONDS", "EXPORT_COMMANDS"] },
       { file: "lib/joined-stores.ts", names: ["QUARTERS_KEPT", "PERSON_RECORD_MONTHS"] },
       { file: "lib/plan-closing-rules.ts", names: ["DEL_BATCH", "FOLLOW_BATCH", "RENEWALS_AT_ONCE"] },
       { file: "tests/store-data-registry.ts", names: ["closingBytes", "followedBytes", "TRIAL_UNITS"] },
       { file: "lib/data-families.ts", names: ["FOLLOWED_FAMILIES", "CLOSING"] },
       { file: "lib/order-data.ts", names: ["ORDER_KEY_BYTES"] },
     ],
-    basis: "Once for each store, so against each of its payments: a store that paid one month and closed carries all of it in that month's margin. Its keys deleted, the room's at the fewest bytes a key it counts can weigh and the rest at a mark's, DEL_BATCH at a command, each name sent back once: no longer than KEY_NAME_BYTES, and in the room never more than that share of a key beside the ORDER_KEY_BYTES the room charges it; what its followers read, the room and what they read outside it, FOLLOW_BATCH keys at a command; its id in its affiliates' hub, every one it may have, until each quarter's set runs out (lib/joined-stores.ts); and its last steps' commands. The walk's own time is its schedule's. Its whole download once its plan has ended is a studio request of a store that pays nothing, in the share of those (NON_PAYING_ALLOWANCES.ended, whose studio figure holds the largest store's export, tests/closing-cost.test.ts). Reading the whole database to find its keys is the company's, a scheduled job bounded by its schedule (docs/funded-exposure-review.md). What an order leaves for it, a buyer's library entry and a renewal to stop, is in the order's cost (ORDER_COST); what it writes once its plan has ended is a store that pays nothing's, in the share of those (nonPayingWorst).",
+    basis: "Once for each store, so against each of its payments: a store that paid one month and closed carries all of it in that month's margin. Its keys deleted, the room's at the fewest bytes a key it counts can weigh and the rest at a mark's, DEL_BATCH at a command, each name sent back once: no longer than KEY_NAME_BYTES, and never more than that share of a key beside the ORDER_KEY_BYTES the room charges it, which the registry counts beside every key too (what Redis keeps beside it); its ENDED_STORE_EXPORTS whole exports once its plan has ended, its own and never refused, each at the largest store there can be: its room and its record, every product, course, lesson, post and form there can be, read together, and every page of its sales at Stripe; what its followers read, the room and what they read outside it, FOLLOW_BATCH entries at a command; and its last steps' commands, for its owner and every one of its team as a host. The walk's own time is its schedule's. Its id left in a person's records across stores that are the company's (the lists they joined, an affiliate's hub: tests/store-data-registry.ts) is the company's as those records are, and runs out with the quarter it was written in (lib/joined-stores.ts).  Reading the whole database to find its keys is the company's, a scheduled job bounded by its schedule (docs/funded-exposure-review.md). What an order leaves for it, a buyer's library entry and a renewal to stop, is in the order's cost (ORDER_COST); what it writes once its plan has ended is a store that pays nothing's, in the share of those (nonPayingWorst).",
   },
 ];
 
 /** The longest name of a closing store's key, sent back to be deleted: a review ceiling, held to every key a closing store makes (tests/closed-store.test.ts). */
 export const KEY_NAME_BYTES = 128;
-/** Commands a closing store's last steps take at the most: its hosts' claims, team, keys for the API, webhooks, email platform, phones, address, record, and its line in the walk. */
-export const PREPARE_COMMANDS = 400;
+/**
+ * Commands a closing store's last steps take at the most
+ * (lib/closed-store-data.ts, prepareStore): for its owner and each of its
+ * team as a host, fifty pages of their claims and their deletes, and the
+ * stores they serve; and a hundred for its ids, team, keys for the API,
+ * webhooks, email platform, phones, address, record and line in the walk.
+ */
+export const PREPARE_COMMANDS = (1 + MAX_TEAM) * (2 * 50 + 5) + 100;
 
-/** What the whole export reads at the most, for a store of `bytes`: every product, lesson, post and form there can be, and its contacts a thousand at a command (lib/store-export.ts). */
+/** What the whole export reads at the most, for a store of `bytes`: every product, course, lesson, post and form there can be, each read together, and its contacts a thousand at a command (lib/store-export.ts). */
 export function exportCommands(bytes: number): number {
-  const lessons = Math.min(MAX_PRODUCTS * MAX_LESSONS, Math.ceil(bytes / ORDER_KEY_BYTES));
-  return Math.ceil(EXPORT_COMMANDS.fixed + EXPORT_COMMANDS.product * MAX_PRODUCTS + EXPORT_COMMANDS.lesson * lessons + MAX_PRODUCTS + EXPORT_COMMANDS.post * MAX_POSTS + EXPORT_COMMANDS.form * MAX_FORMS + Math.ceil(bytes / 100 / 1000));
+  // Every lesson there can be: one with no text takes next to nothing of the room, and is read all the same.
+  const lessons = MAX_PRODUCTS * MAX_LESSONS;
+  // The contacts' pages: a thousand at a command, as many as the room can hold and never more than lib/free.ts, listAsCsv, reads (MAX_LEADS).
+  const contacts = Math.min(Math.ceil(bytes / 100 / 1000), MAX_LEADS / 500 + 10);
+  return Math.ceil(EXPORT_COMMANDS.fixed + 3 * Math.ceil(MAX_PRODUCTS / 100) + Math.ceil(MAX_PRODUCTS / 100) + Math.ceil(lessons / BODIES_PER_READ) + Math.ceil(MAX_POSTS / 100) + EXPORT_COMMANDS.form * MAX_FORMS + contacts);
 }
 
-/** What one whole export of a store of `bytes` costs at the most: its reads, its time at 2 GB (a step's ten seconds for every 20 MB), and every page of its sales at Stripe waited on. */
+/** What one whole export of a store of `bytes` costs at the most: its reads, its time at 2 GB (a step's ten seconds for every 20 MB), and one list of its sales at Stripe waited on page by page, the other read beside it. */
 export function exportCost(bytes: number, commands = exportCommands(bytes)): number {
-  return request("heavy", commands, bytes) + Math.ceil(bytes / 20_000_000) * request("step", 0) + EXPORT_STRIPE_PAGES * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
+  return request("heavy", commands, bytes) + Math.ceil(bytes / 20_000_000) * request("step", 0) + (EXPORT_STRIPE_PAGES / 2) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
 }
 
 /**
@@ -668,20 +681,20 @@ export function exportCost(bytes: number, commands = exportCommands(bytes)): num
  * of this plan, or a free trial's (`trial`, its room and its units). The
  * parts are said in the basis of the line closure.
  */
-export function closureCost(tier: Tier, trial = false): { deletes: number; follows: number; hub: number; prepare: number; total: number } {
+export function closureCost(tier: Tier, trial = false): { deletes: number; follows: number; exports: number; prepare: number; total: number } {
   const room = trial ? NON_PAYING_DATA_ROOM_BYTES.trial : DATA_ROOM_BYTES[tier];
   const roomKeys = room / ORDER_KEY_BYTES;
   const keys = roomKeys + closingBytes(tier, trial) / MARK;
   const outside = followedBytes(tier, trial);
-  const names = (room * KEY_NAME_BYTES) / (ORDER_KEY_BYTES + KEY_NAME_BYTES) + (closingBytes(tier, trial) / MARK) * KEY_NAME_BYTES;
+  const names = ((room + closingBytes(tier, trial)) * KEY_NAME_BYTES) / (ORDER_KEY_BYTES + KEY_NAME_BYTES);
   const out = {
     deletes: names * DB_BYTE + Math.ceil(keys / DEL_BATCH) * COMMAND,
-    follows: (room + outside) * DB_BYTE + (Math.ceil((roomKeys + outside / MARK) / FOLLOW_BATCH) * 2 + FOLLOWED_FAMILIES.length * 4) * COMMAND,
-    hub: MAX_AFFILIATES * ENTRY_BYTES * PERSON_RECORD_MONTHS * DB_BYTE_MONTH,
+    follows: (room + outside) * DB_BYTE + (Math.ceil((roomKeys + outside / MARK) / FOLLOW_BATCH) + FOLLOWED_FAMILIES.length * 4) * COMMAND,
+    exports: ENDED_STORE_EXPORTS * exportCost(room + MAX_STORE_BYTES),
     prepare: PREPARE_COMMANDS * COMMAND,
     total: 0,
   };
-  out.total = out.deletes + out.follows + out.hub + out.prepare;
+  out.total = out.deletes + out.follows + out.exports + out.prepare;
   return out;
 }
 

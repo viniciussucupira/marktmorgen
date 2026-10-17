@@ -15,21 +15,20 @@
  * is, with the wait for Stripe's pages: while a plan runs it is taken from
  * the store's studio figure at exportUnits of its size
  * (tests/closing-cost.test.ts holds the units to the cost), and once a plan
- * has ended it is taken the same way from the studio figure a store whose
- * plan ended keeps to take its data away (lib/store-allowance-rules.ts,
- * NON_PAYING_ALLOWANCES.ended), in the share of stores that pay nothing:
- * that figure holds the export of the largest store there can be
- * (tests/closing-cost.test.ts).
+ * has ended a store may take ENDED_STORE_EXPORTS of them before it closes
+ * (lib/plan-closing-rules.ts), its own and never refused for want of room
+ * anywhere else, priced with its closing against its own payments
+ * (tests/plan-cost-registry.ts, closure).
  */
 import { readAllListings } from "@/lib/catalog";
-import { readBodies, readCourses } from "@/lib/course";
+import { BODIES_PER_READ, readAllBodies, readCourses } from "@/lib/course";
 import { listAsCsv, listSize } from "@/lib/free";
 import { dataUsed } from "@/lib/store-data";
 import { readForms, readResponses } from "@/lib/form-store";
 import { readAbouts } from "@/lib/product-about";
 import { readPages } from "@/lib/sales-page-store";
 import { EXPORT_PAGES, salesCsv, readsSales } from "@/lib/stats";
-import { allPosts, readPost } from "@/lib/store-blog";
+import { allPosts, readPosts } from "@/lib/store-blog";
 import { type Store } from "@/lib/store";
 import { readThanksNotes } from "@/lib/thanks-note-store";
 
@@ -40,8 +39,15 @@ import { readThanksNotes } from "@/lib/thanks-note-store";
  * form's answers), the contacts a thousand at a command, and its fixed part.
  */
 export type ExportShape = { bytes: number; commands: number };
-/** Commands a product (its page, long description and note, each read a hundred at a command), a lesson (its text, the same), a post and a form take at the most; and the fixed part, the catalog's pages included. */
-export const EXPORT_COMMANDS = { product: 0.03, lesson: 0.01, post: 2, form: 1, fixed: 60 };
+/**
+ * Commands each thing an export reads takes at the most, read together: a
+ * product (its page, long description and note, a hundred at a command), a
+ * course (a hundred at a command), a lesson (its text, BODIES_PER_READ at a
+ * command whatever course it is of), a post (its words, a hundred at a
+ * command), a form (its answers); and the fixed part, the catalog's pages,
+ * the posts' list, the contacts' first page and the store's PayPal sales.
+ */
+export const EXPORT_COMMANDS = { product: 0.03, course: 0.01, lesson: 0.002, post: 0.01, form: 2, fixed: 80 };
 /**
  * One studio unit is twenty commands and fifty kilobytes through the
  * database at a studio request's time (tests/plan-cost-registry.ts,
@@ -51,9 +57,9 @@ export const EXPORT_COMMANDS = { product: 0.03, lesson: 0.01, post: 2, form: 1, 
  */
 export const EXPORT_COMMANDS_PER_UNIT = 16;
 export const EXPORT_BYTES_PER_UNIT = 1_000_000;
-/** The pages of the store's sales read from its Stripe account at the most: its checkouts' and its one-click extras' (lib/stats.ts, salesCsv). */
+/** The pages of the store's sales read from its Stripe account at the most: its checkouts' and its one-click extras' (lib/stats.ts, salesCsv), the two read side by side. */
 export const EXPORT_STRIPE_PAGES = 2 * EXPORT_PAGES;
-/** How long one of those pages is waited for at the most, held at 2 GB: a review ceiling. */
+/** How long one of those pages is waited for at the most, held at 2 GB: a review ceiling. The two lists are read at once, so the wait is for one list's pages. */
 export const EXPORT_PAGE_SECONDS = 2;
 /** The studio units that wait takes, whatever the store's size (tests/closing-cost.test.ts holds them to it). */
 export const EXPORT_WAIT_UNITS = 20;
@@ -76,7 +82,7 @@ export async function exportShape(store: Store): Promise<ExportShape> {
   const contacts = (await listSize(store)).total;
   return {
     bytes: used?.used ?? 0,
-    commands: Math.ceil(EXPORT_COMMANDS.fixed + 3 * Math.ceil(listings.length / 100) + EXPORT_COMMANDS.lesson * lessons + courses.size + EXPORT_COMMANDS.post * posts + EXPORT_COMMANDS.form * forms + contacts / 1000),
+    commands: Math.ceil(EXPORT_COMMANDS.fixed + 3 * Math.ceil(listings.length / 100) + Math.ceil(courses.size / 100) + Math.ceil(lessons / BODIES_PER_READ) + Math.ceil(posts / 100) + EXPORT_COMMANDS.form * forms + contacts / 1000),
   };
 }
 
@@ -100,16 +106,13 @@ export function storeExport(store: Store, now = Date.now()): ReadableStream<Uint
       const out = listings.map((listing, i) => ({ product: listing, page: statsId ? pages[i] : null, about: abouts[i] ?? "", thanks: notes[i] ?? null }));
       const courseIds = listings.flatMap((l) => (l.course ? [l.course.id] : []));
       const courses = courseIds.length ? await readCourses(courseIds) : new Map();
-      const withText: unknown[] = [];
-      for (const course of courses.values()) {
-        const lessons = await readBodies(course.id, course.modules.flatMap((unit: { lessons: { id: string }[] }) => unit.lessons.map((lesson) => lesson.id)));
-        withText.push({ ...course, lessonText: lessons });
-      }
+      const list = [...courses.values()];
+      const bodies = await readAllBodies(list.map((course) => ({ id: course.id, lessons: course.modules.flatMap((unit: { lessons: { id: string }[] }) => unit.lessons.map((lesson) => lesson.id)) })));
+      const withText: unknown[] = list.map((course) => ({ ...course, lessonText: bodies.get(course.id) ?? {} }));
       return `,"products":${JSON.stringify(out)},"courses":${JSON.stringify(withText)}`;
     },
     async () => {
-      const posts: unknown[] = [];
-      for (const meta of await allPosts(statsId)) posts.push((await readPost(statsId, meta.id)) ?? meta);
+      const posts = await readPosts(statsId, await allPosts(statsId));
       return `,"posts":${JSON.stringify(posts)}`;
     },
     async () => {

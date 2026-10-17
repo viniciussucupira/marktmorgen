@@ -311,8 +311,8 @@ export async function runClosingJourney(is: Check, sent: Sent[], stripe: StripeW
   const notices = sent.filter((m) => m.to === CLOSER);
   is(
     "each names the day, what goes, that no copy of its sales is kept, its students' certificates and where to download everything",
-    notices.map((m) => [m.text.includes("your store closes"), m.text.includes("everything else it keeps with us is"), m.text.includes("We keep no copy of your sales"), m.text.includes("course certificates"), m.text.includes("/studio#closing")]),
-    [[true, true, true, true, true], [true, true, true, true, true], [true, true, true, true, true]],
+    notices.map((m) => [m.text.includes("your store closes"), m.text.includes("everything else it keeps with us is"), m.text.includes("We keep no copy of your sales"), m.text.includes("course certificates"), m.text.includes("/studio#closing"), m.text.includes("you can download it once")]),
+    [[true, true, true, true, true, true], [true, true, true, true, true, true], [true, true, true, true, true, true]],
   );
   is("before the day nothing is touched", [(await closeOne(CLOSER, E + (CLOSING_DAYS - 1) * DAY, hands, Number.POSITIVE_INFINITY)).state, files.size, stripe.posted.length], ["waiting", 2, 0]);
 

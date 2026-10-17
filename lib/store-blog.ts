@@ -167,6 +167,29 @@ export async function readPost(statsId: string | null, id: string): Promise<Post
   return { ...m, body: words, product };
 }
 
+/** Every post whole, a hundred at a command for their words (HMGET): what a store's whole export reads (lib/store-export.ts). */
+export async function readPosts(statsId: string | null, metas: PostMeta[]): Promise<Post[]> {
+  if (!statsId || !isRedisConfigured()) return [];
+  const out: Post[] = [];
+  for (let i = 0; i < metas.length; i += 100) {
+    const some = metas.slice(i, i + 100);
+    const [bodies] = await redisPipeline([["HMGET", bodyKey(statsId), ...some.map((m) => m.id)]]);
+    some.forEach((m, n) => {
+      let words = "";
+      let product: string | null = null;
+      try {
+        const parsed = JSON.parse(String(Array.isArray(bodies) ? bodies[n] : "")) as { body?: unknown; product?: unknown };
+        words = typeof parsed.body === "string" ? parsed.body : "";
+        product = typeof parsed.product === "string" && PRODUCT_ID.test(parsed.product) ? parsed.product : null;
+      } catch {
+        words = "";
+      }
+      out.push({ ...m, body: words, product });
+    });
+  }
+  return out;
+}
+
 export type SaveResult = { ok: true; post: Post; published: number } | { ok: false; reason: "title" | "body" | "full" | "unknown" | "off" };
 
 /**

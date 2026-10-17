@@ -11,7 +11,7 @@ import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords } from "@/
 import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
-import { CLOSING_DAYS, ERASE_WITHIN_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { RELEASE_QUARANTINE_DAYS } from "@/lib/store";
 import { CALL_ORDER_UNITS, ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
 import { API_WRITE_UNITS, allowanceListWords } from "@/lib/store-allowance-rules";
@@ -696,10 +696,11 @@ export default function TermsPage() {
         </p>
         <p>
           <strong className="text-black">Download what you want to keep before that day.</strong>{" "}
-          The studio offers your whole store as one file, while your plan
-          runs and after it ends until the closing day, counted in the
-          studio&rsquo;s use like any other request. It holds your products
-          and their pages, posts,
+          The studio offers your whole store as one file: while your plan
+          runs, as often as your plan&rsquo;s studio use allows, and{" "}
+          {ENDED_STORE_EXPORTS === 1 ? "once" : `${ENDED_STORE_EXPORTS} times`}{" "}
+          after it ends, before the closing day, whatever the store&rsquo;s
+          size. It holds your products and their pages, posts,
           courses with every lesson&rsquo;s text, forms and their answers,
           contacts and your orders as a spreadsheet. Files and videos
           download from their own pages. Your students can download their

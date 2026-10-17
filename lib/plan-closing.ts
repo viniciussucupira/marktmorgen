@@ -69,7 +69,7 @@ import { editCourse, filesInCourse, readCourse, saveCourse } from "@/lib/course"
 import { bytesWords } from "@/lib/delivery";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { deleteFile, listFiles } from "@/lib/file-store";
-import { CLOSING_DAYS, ERASE_WITHIN_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closesStore, keptRoomFor } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closesStore, keptRoomFor } from "@/lib/plan-closing-rules";
 import { type Batched, deleteSalesTraces, markDue, stopRenewals, unmarkDue } from "@/lib/closed-store-data";
 import { communityFolder } from "@/lib/community-image";
 import { forgetPictures, picturesKept } from "@/lib/community-files";
@@ -254,8 +254,8 @@ function letter(kind: "ended" | "month" | "week" | "removed", store: Store, held
  * The notices of a store that closes (plans that end from 18 October 2026):
  * the three before its day. What they say is what lib/closed-store-data.ts
  * does, and the download they point to is the studio's (app/api/store/export,
- * what=store), which a store whose plan has ended takes from the studio
- * figure it keeps to take its data away.
+ * what=store), which a store whose plan has ended has ENDED_STORE_EXPORTS of,
+ * its own, never refused for want of room.
  */
 export function closingLetter(kind: "ended" | "month" | "week", name: string, endedAt: number, day: number, now: number): { subject: string; text: string } {
   const studio = `${SITE_URL}/studio#closing`;
@@ -285,7 +285,8 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
       "",
       "  - download everything your store keeps as one file, from your studio: your contacts,",
       "    your orders as a spreadsheet, your products and their pages, your posts, your courses",
-      "    and your forms' answers;",
+      `    and your forms' answers. Now that your plan has ended you can download it ${ENDED_STORE_EXPORTS === 1 ? "once" : `${ENDED_STORE_EXPORTS} times`},`,
+      "    whatever your store's size, so download it when you are ready to keep it;",
       "  - tell your students to download their course certificates: they can until that day,",
       "    and not after;",
       "  - tell your buyers, and give them another way to what they bought if you sell elsewhere.",

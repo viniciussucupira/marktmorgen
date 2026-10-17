@@ -163,7 +163,7 @@ import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closingOf } from "@/lib/plan-closing";
-import { ERASE_WITHIN_DAYS, closesStore, keptRoomFor } from "@/lib/plan-closing-rules";
+import { ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, closesStore, keptRoomFor } from "@/lib/plan-closing-rules";
 import { MAX_LEADS, listSize } from "@/lib/free";
 import { readableSize } from "@/lib/product-file";
 import {
@@ -2181,7 +2181,7 @@ export default async function StudioPage({
                     </button>
                   </form>
                   <span className="text-sm text-ink-soft">
-                    {`One file: your products and their pages, posts, courses with every lesson's text, forms and their answers, contacts and your orders as a spreadsheet, until your store closes. Files and videos download from their own pages.`}
+                    {`One file: your products and their pages, posts, courses with every lesson's text, forms and their answers, contacts and your orders as a spreadsheet. ${ENDED_STORE_EXPORTS === 1 ? "Once" : `${ENDED_STORE_EXPORTS} times`} now that your plan has ended, whatever your store's size, so download it when you are ready to keep it. Files and videos download from their own pages.`}
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-ink-soft">
