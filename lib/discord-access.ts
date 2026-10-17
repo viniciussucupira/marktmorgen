@@ -16,6 +16,7 @@
  * asked, nothing is taken and the person is checked again later.
  */
 import { holdsProductsOrThrow } from "@/lib/community-access";
+import { redisPipeline } from "@/lib/redis";
 import { emailKey, storeKey } from "@/lib/learn";
 import { type Store, storeForId } from "@/lib/store";
 import { giveRole, putMember, removeMember, takeRole } from "@/lib/discord";
@@ -163,4 +164,38 @@ export async function sweepDiscord(deadline: number, now = Date.now()): Promise<
     }
   }
   return counts;
+}
+
+/** The most roles deleting one person takes back in Discord, each one call. */
+export const ERASE_ROLE_CALLS = 10;
+
+/**
+ * Deletes one person from the store's Discord access (lib/person-erasure.ts):
+ * the roles they were given are taken back in the creator's server, then
+ * their Discord id and the address that brought it are forgotten. Answers
+ * whether every role came back; a role Discord would not take back is left
+ * for the creator to remove, and the confirmation says so.
+ */
+export async function forgetDiscordPerson(store: Store, email: string, productIds: string[]): Promise<{ records: number; rolesLeft: boolean }> {
+  const room = storeKey(store);
+  const userId = await accountOf(room, email).catch(() => null);
+  let records = 0;
+  let rolesLeft = false;
+  if (userId) {
+    const [server, member] = await Promise.all([readServer(room), readMember(room, userId)]);
+    if (member && server) {
+      for (const role of member.r.slice(0, ERASE_ROLE_CALLS)) {
+        const done = await takeRole(server.id, userId, role, "Marktmorgen: deleted at their request").catch(() => "failed" as const);
+        if (done === "failed") rolesLeft = true;
+      }
+      if (member.r.length > ERASE_ROLE_CALLS) rolesLeft = true;
+    }
+    await forgetMember(room, store.sid, userId, email);
+    records += 1;
+  }
+  if (productIds.length) {
+    const [gone] = await redisPipeline([["DEL", ...productIds.map((id) => cacheKey(store, email, id))]]);
+    records += Number(gone) || 0;
+  }
+  return { records, rolesLeft };
 }

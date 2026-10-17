@@ -1420,10 +1420,13 @@
       "clickfunnels": "Audit logs and export/history are documented.",
       "evidencePath": "lib/api-keys.ts",
       "marktmorgenEvidence": "C/U",
-      "current": "Team activity log, exports behind the export permission and deletion of empty extra stores that forgets their integrations, webhooks and API keys (tested); buyer-data deletion requests, backup restore and retention schedules not established.",
-      "improvement": "Test buyer-data access/deletion requests, backup restore and audit retention.",
+      "current": "Team activity log, exports behind the export permission and deletion of empty extra stores that forgets their integrations, webhooks and API keys (tested). Deleting one person from a store (17 October 2026): by the owner or an Admin from the buyer's studio page, or by the person through an emailed link from any store's footer, across every module the registry in lib/person-data.ts names (a module keeping per-person data without a registry line fails tests/person-data-registry.test.ts); a one-way fingerprint keeps the store from emailing them again and imports from adding them back; order records and the creator's Stripe payments kept; journey tested on in-memory and real Redis. Community posts, comments, likes and poll votes stay without a name (open); access requests, backup restore and retention schedules not established.",
+      "improvement": "Delete a person's community posts and comments with them; test access requests, backup restore and audit retention.",
       "testEvidence": [
-        "tests/store-deletion.test.ts"
+        "tests/store-deletion.test.ts",
+        "tests/person-erasure.test.ts",
+        "tests/person-data-registry.test.ts",
+        "scripts/test_contact_erasure_redis.py"
       ]
     },
     {

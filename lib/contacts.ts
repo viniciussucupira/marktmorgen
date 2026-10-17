@@ -25,11 +25,19 @@
  *   nl:store:leads:<listId>:agreed   how many agreed, ever
  *   nl:store:leads:<listId>:unsub    how many of those have since left
  *   nl:mail:unsub:<token>            listId|address|handle, for the link in an email
+ *   nl:erased:<listId>               one-way fingerprints of the addresses deleted from the store (lib/suppression.ts)
+ *
+ * And one way off for good, by the person or the creator: deleting them
+ * (lib/person-erasure.ts). Their row and its token go; what stays is a
+ * fingerprint of the address, so nothing but their own yes, given again,
+ * puts them back on as someone who may be written to (forgetContactPerson).
  */
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { MAX_IMPORT, MAX_LEADS } from "@/lib/contact-rules";
+import { liftCommand, suppressedAmongCommand, suppressedCommand, wasSuppressed } from "@/lib/suppression";
+import { joinedCommands } from "@/lib/joined-stores";
 
 /** How many product names one address keeps. */
 const MAX_TITLES = 20;
@@ -158,6 +166,8 @@ export async function upsertContact(
     at?: string;
     /** They also ticked the box allowing their link use to be seen (lib/mail-clicks.ts). */
     clicks?: boolean;
+    /** The store's id, given when the person typed the address themselves, so asking to be deleted from every store finds this one (lib/joined-stores.ts). */
+    sid?: string;
   },
 ): Promise<AddResult> {
   const none = { joined: false, gotProduct: false, full: false };
@@ -165,16 +175,22 @@ export async function upsertContact(
   const email = normaliseEmail(rawEmail);
   if (!email || email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) return none;
   const key = leadsKey(listId);
-  const [raw, size] = await redisPipeline([
+  const [raw, size, erased] = await redisPipeline([
     ["HGET", key, email],
     ["HLEN", key],
+    suppressedCommand(listId, email),
   ]);
   const before = parseContact(raw);
   if (!before && Number(size) >= MAX_LEADS) return { ...none, full: true };
 
   const now = new Date().toISOString();
   const wasMailable = before ? mailable(before) : false;
-  const agreed = Boolean(before?.agreed) || input.agreed;
+  // Somebody deleted from this store is kept, by a fingerprint, from being
+  // written to again: only their own yes, given now, lifts it. A purchase
+  // without the box still records the purchase, as anyone's does.
+  const deleted = wasSuppressed(erased);
+  const ownYes = input.agreed && input.explicit;
+  const agreed = Boolean(before?.agreed) || (input.agreed && (!deleted || ownYes));
   // A yes only undoes an unsubscribe when it was given after it: a thank-you
   // page reloaded, or a download link opened again, repeats an old tick.
   const saidAt = Date.parse(input.at || now);
@@ -192,7 +208,7 @@ export async function upsertContact(
 
   const next: Contact = {
     agreed,
-    agreedAt: before?.agreed ? before.agreedAt : input.agreed ? input.at || now : "",
+    agreedAt: before?.agreed ? before.agreedAt : agreed ? input.at || now : "",
     firstAt: before?.firstAt || now,
     lastAt: now,
     titles: titles.slice(-MAX_TITLES),
@@ -212,9 +228,12 @@ export async function upsertContact(
   const allowed = input.clicks === true && input.agreed && input.explicit;
   const clicks = resubscribe ? (allowed ? input.at || now : "") : before?.clicks || (allowed ? input.at || now : "");
   if (clicks) next.clicks = clicks;
+  if (deleted && !agreed) delete next.clicks;
   const commands: (string | number)[][] = [["HSET", key, email, JSON.stringify(next)]];
-  if (input.agreed && !before?.agreed) commands.push(["INCR", agreedKey(listId)]);
+  if (agreed && !before?.agreed) commands.push(["INCR", agreedKey(listId)]);
   if (resubscribe) commands.push(["DECR", unsubKey(listId)]);
+  if (deleted && ownYes) commands.push(liftCommand(listId, email));
+  if (input.sid) commands.push(...joinedCommands(input.sid, email));
   await redisPipeline(commands);
   return { joined: mailable(next) && !wasMailable, gotProduct, full: false };
 }
@@ -267,11 +286,14 @@ export async function importContacts(
   let full = false;
   for (let i = 0; i < emails.length; i += 500) {
     const chunk = emails.slice(i, i + 500);
-    const [rows] = await redisPipeline([["HMGET", key, ...chunk]]);
+    const [rows, prints] = await redisPipeline([["HMGET", key, ...chunk], suppressedAmongCommand(listId, chunk)]);
     const found = Array.isArray(rows) ? rows : [];
+    const deleted = Array.isArray(prints) ? prints : [];
     const pairs: string[] = [];
     let newlyAgreed = 0;
     chunk.forEach((email, j) => {
+      // Deleted from this store: an import never brings them back.
+      if (deleted[j] !== null && deleted[j] !== undefined) return;
       const before = parseContact(found[j]);
       if (!before) {
         if (room <= 0) {
@@ -338,8 +360,10 @@ export function decideContact(
   before: Contact | null,
   row: ImportedContact,
   now: string,
+  /** The address was deleted from this store (lib/suppression.ts): left alone, as one who left is. */
+  deleted = false,
 ): { outcome: Exclude<ContactOutcome, "full">; next: Contact | null; fresh: boolean } {
-  if (before?.unsub) return { outcome: "left", next: null, fresh: false };
+  if (before?.unsub || deleted) return { outcome: "left", next: null, fresh: false };
   const consent = row.consent ?? "agreed";
   const name = before?.name || row.name.slice(0, MAX_CONTACT_NAME);
   const tags = readTags([...(before?.tags ?? []), ...row.tags]);
@@ -402,21 +426,23 @@ export async function previewContactRows(
   rows: ImportedContact[],
 ): Promise<{ outcomes: { outcome: Exclude<ContactOutcome, "full">; fresh: boolean }[]; room: number }> {
   const now = new Date().toISOString();
-  const decide = (before: Contact | null, row: ImportedContact) => {
-    const { outcome, fresh } = decideContact(before, row, now);
+  const decide = (before: Contact | null, row: ImportedContact, deleted = false) => {
+    const { outcome, fresh } = decideContact(before, row, now, deleted);
     return { outcome, fresh };
   };
   if (!rows.length) return { outcomes: [], room: MAX_LEADS };
   // A store whose list is made when its first import starts: everything is new.
   if (!isRedisConfigured() || !listId) return { outcomes: rows.map((row) => decide(null, row)), room: MAX_LEADS };
   const key = leadsKey(listId);
-  const [size, found] = await redisPipeline([
+  const [size, found, prints] = await redisPipeline([
     ["HLEN", key],
     ["HMGET", key, ...rows.map((r) => r.email)],
+    suppressedAmongCommand(listId, rows.map((r) => r.email)),
   ]);
   const existing = Array.isArray(found) ? found : [];
+  const deleted = Array.isArray(prints) ? prints : [];
   return {
-    outcomes: rows.map((row, i) => decide(parseContact(existing[i]), row)),
+    outcomes: rows.map((row, i) => decide(parseContact(existing[i]), row, deleted[i] !== null && deleted[i] !== undefined)),
     room: Math.max(0, MAX_LEADS - (Number(size) || 0)),
   };
 }
@@ -447,20 +473,22 @@ export async function previewContactRows(
 export async function importContactRows(listId: string, rows: ImportedContact[]): Promise<ContactOutcome[]> {
   if (!isRedisConfigured() || !listId || rows.length === 0) return rows.map(() => "full");
   const key = leadsKey(listId);
-  const [size, found] = await redisPipeline([
+  const [size, found, prints] = await redisPipeline([
     ["HLEN", key],
     ["HMGET", key, ...rows.map((r) => r.email)],
+    suppressedAmongCommand(listId, rows.map((r) => r.email)),
   ]);
   let room = MAX_LEADS - (Number(size) || 0);
   const now = new Date().toISOString();
   const existing = Array.isArray(found) ? found : [];
+  const deleted = Array.isArray(prints) ? prints : [];
   // Each write, with the fingerprint of what its address held when read.
   const writes: { email: string; value: string; was: string; row: number }[] = [];
   let newlyAgreed = 0;
   let newlyLeft = 0;
   const outcomes = rows.map((row, i): ContactOutcome => {
     const before = parseContact(existing[i]);
-    const decided = decideContact(before, row, now);
+    const decided = decideContact(before, row, now, deleted[i] !== null && deleted[i] !== undefined);
     if (decided.fresh) {
       if (room <= 0) return "full";
       room -= 1;
@@ -799,4 +827,31 @@ export function readAddresses(text: string): { emails: string[]; skipped: number
     else skipped += 1;
   }
   return { emails: [...found], skipped };
+}
+
+/** Takes one from a count, never below nothing: a count that drifted is never made negative. */
+export const DECR_TO_ZERO = `-- marktmorgen:decr-to-zero:v1
+local n = tonumber(redis.call("GET", KEYS[1]) or "0") or 0
+if n > 0 then return redis.call("DECR", KEYS[1]) end
+return 0`;
+
+/**
+ * Deletes one address from the list (lib/person-erasure.ts): its row, the
+ * token in its unsubscribe link, and its place in the list's counts. What
+ * stays is lib/suppression.ts's fingerprint, written before this by the
+ * erasure, so the address is never written to again. Answers how many
+ * records went. Safe to run twice.
+ */
+export async function forgetContactPerson(listId: string | null, rawEmail: string): Promise<number> {
+  if (!listId || !isRedisConfigured()) return 0;
+  const email = normaliseEmail(rawEmail);
+  const [raw] = await redisPipeline([["HGET", leadsKey(listId), email]]);
+  const contact = parseContact(raw);
+  if (!contact) return 0;
+  const commands: (string | number)[][] = [["HDEL", leadsKey(listId), email]];
+  if (contact.t) commands.push(["DEL", tokenKey(contact.t)]);
+  if (contact.agreed) commands.push(["EVAL", DECR_TO_ZERO, 1, agreedKey(listId)]);
+  if (contact.agreed && contact.unsub) commands.push(["EVAL", DECR_TO_ZERO, 1, unsubKey(listId)]);
+  await redisPipeline(commands);
+  return contact.t ? 2 : 1;
 }

@@ -40,6 +40,8 @@ import { readReview, reviewId } from "@/lib/reviews";
 import type { Store } from "@/lib/store";
 import { speech } from "@/lib/buyer-words";
 import { givingWords } from "@/lib/buyer-words/giving";
+import { noteForErasure } from "@/lib/erasure-index";
+import { suppressedCommand, wasSuppressed } from "@/lib/suppression";
 
 /** Orders looked at in one run of the job. */
 export const MAX_ASKS_PER_RUN = 50;
@@ -59,7 +61,7 @@ const stopKey = (token: string) => `nl:rev:stop:${token}`;
 async function stopLink(store: Store, email: string): Promise<string> {
   const token = randomBytes(20).toString("hex");
   const grant = { s: store.statsId, e: normaliseEmail(email), h: store.handle, n: store.mail?.fromName || store.name };
-  await redisPipeline([["SET", stopKey(token), JSON.stringify(grant), "EX", STOP_LINK_SECONDS]]);
+  await redisPipeline([["SET", stopKey(token), JSON.stringify(grant), "EX", STOP_LINK_SECONDS], ...noteForErasure(store.statsId, email, stopKey(token))]);
   return token;
 }
 
@@ -185,11 +187,13 @@ export async function sendReviewRequests(
       continue;
     }
     const email = proof.proof.email;
-    const [off, contact] = await redisPipeline([
+    const [off, contact, deleted] = await redisPipeline([
       ["EXISTS", offKey(entry.statsId, email)],
       store.listId ? ["HGET", leadsKey(store.listId), normaliseEmail(email)] : ["EXISTS", "nl:none"],
+      suppressedCommand(store.listId, email),
     ]);
-    if (Number(off) === 1 || (store.listId && parseContact(contact)?.unsub)) {
+    // Nobody who pressed stop, left the list, or was deleted from the store (lib/suppression.ts).
+    if (Number(off) === 1 || (store.listId && parseContact(contact)?.unsub) || wasSuppressed(deleted)) {
       await drop(member);
       continue;
     }

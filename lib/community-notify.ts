@@ -155,3 +155,9 @@ export async function markSeen(id: string, who: string): Promise<void> {
 export function noticeKeys(id: string, who: string): string[] {
   return [listKey(id, who), seenKey(id, who)];
 }
+
+/** Deletes what one member was told and when they last looked (lib/community-erasure.ts). */
+export async function forgetNoticesPerson(id: string, who: string): Promise<number> {
+  const [gone] = await redisPipeline([["DEL", ...noticeKeys(id, who)]]);
+  return Number(gone) || 0;
+}

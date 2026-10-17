@@ -33,6 +33,7 @@ import { storeBase } from "@/lib/purchase-email";
 import { OFFER_DAYS, ONCE_PER_DAYS, canWinBack, winbackOn } from "@/lib/winback";
 import { affiliatesWords } from "@/lib/buyer-words/affiliates";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
+import { noteForErasure } from "@/lib/erasure-index";
 
 const CURSOR_KEY = "nl:wb:cursor";
 const SUB_PATTERN = /^sub_[A-Za-z0-9]{6,64}$/;
@@ -144,7 +145,7 @@ async function sweepStore(store: Store, deadline: number, now: number): Promise<
 
       const token = randomBytes(20).toString("hex");
       const grant = { s: statsId, e: email, p: product.id, o: meta.option ?? "", c: store.winback.coupon, pc: store.winback.percent, m: store.winback.months };
-      await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", OFFER_DAYS * 86_400]]);
+      await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", OFFER_DAYS * 86_400], ...noteForErasure(statsId, email, linkKey(token))]);
       const ended = typeof sub.ended_at === "number" ? sub.ended_at : nowSeconds;
       const mail = winbackEmail({
         storeName: store.name,
@@ -277,4 +278,11 @@ export async function openWinBack(store: Store, productId: string, token: string
     console.error("opening a come-back checkout failed", store.handle, error);
     return { ok: false, reason: "refused" };
   }
+}
+
+/** Forgets that one person heard a come-back offer about each product lately (lib/person-erasure.ts). */
+export async function forgetWinbackPerson(statsId: string | null, productIds: string[], email: string): Promise<number> {
+  if (!statsId || !productIds.length || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", ...productIds.map((p) => onceKey(statsId, email, p))]]);
+  return Number(gone) || 0;
 }

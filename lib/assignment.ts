@@ -284,3 +284,27 @@ export async function dropCourseTasks(course: { id: string; modules: { lessons: 
   }
   return files;
 }
+
+/**
+ * Deletes one student's work in a course's assignments (lib/person-erasure.ts):
+ * each record of what they handed in and what came back, its place in the
+ * creator's lists, and the room its files took. Returns the files to delete
+ * from the file store, as dropTask does.
+ */
+export async function forgetTasksPerson(courseId: string, lessonIds: string[], who: string, room: string | null): Promise<{ records: number; files: string[] }> {
+  if (!lessonIds.length || !WHO.test(who) || !isRedisConfigured()) return { records: 0, files: [] };
+  const raws = await redisPipeline(lessonIds.map((l) => ["GET", subKey(courseId, l, who)]));
+  const handed = lessonIds.map((l, i) => ({ lessonId: l, sub: parse<Submission>(raws[i]) })).filter((h) => h.sub !== null);
+  if (!handed.length) return { records: 0, files: [] };
+  const files = handed.flatMap((h) => (h.sub?.file?.path ? [{ lessonId: h.lessonId, path: h.sub.file.path, bytes: Number(h.sub.file.bytes) || 0 }] : []));
+  const members = handed.map((h) => `${h.lessonId}|${who}`);
+  await redisPipeline([
+    ["DEL", ...handed.map((h) => subKey(courseId, h.lessonId, who))],
+    ["ZREM", waitingKey(courseId), ...members],
+    ["ZREM", allKey(courseId), ...members],
+    ...files.map((f) => ["HDEL", filesKey(courseId, f.lessonId), f.path]),
+  ]);
+  const bytes = files.reduce((sum, f) => sum + f.bytes, 0);
+  if (room && bytes) await releaseBytes(room, bytes);
+  return { records: handed.length, files: files.map((f) => f.path) };
+}

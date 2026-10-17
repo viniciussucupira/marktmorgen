@@ -178,3 +178,14 @@ export async function removeSegment(store: Store, id: unknown): Promise<Segment[
   }
   return listSegments(store.listId);
 }
+
+/**
+ * Lets the ten-minute copy of the store's buyers go (lib/person-erasure.ts),
+ * so a deleted person is not in it: it is read again from Stripe when next
+ * needed, without them in the list's own records.
+ */
+export async function forgetLedgerCopy(statsId: string | null): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", ledgerKey(statsId)]]);
+  return Number(gone) || 0;
+}

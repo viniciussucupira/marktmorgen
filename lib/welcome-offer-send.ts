@@ -198,3 +198,10 @@ export async function openWelcome(store: Store, token: string, origin: string, n
     return { ok: false, reason: "refused" };
   }
 }
+
+/** Forgets when one person's welcome offer began and that their reminder was set (lib/person-erasure.ts). */
+export async function forgetWelcomePerson(statsId: string | null, email: string): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", startKey(statsId, email), remindedKey(statsId, email)]]);
+  return Number(gone) || 0;
+}

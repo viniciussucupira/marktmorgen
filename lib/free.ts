@@ -46,6 +46,7 @@ import {
   parseContact,
   upsertContact,
 } from "@/lib/contacts";
+import { noteForErasure } from "@/lib/erasure-index";
 
 export { MAX_LEADS };
 
@@ -203,9 +204,8 @@ export async function requestCopy(input: {
     ...(consent && input.clicks ? { k: true } : {}),
     at: new Date().toISOString(),
   };
-  await redisPipeline([
-    ["SET", await claimKey(token), JSON.stringify(claim), "EX", CLAIM_TTL_SECONDS],
-  ]);
+  const claimed = await claimKey(token);
+  await redisPipeline([["SET", claimed, JSON.stringify(claim), "EX", CLAIM_TTL_SECONDS], ...noteForErasure(store.statsId, email, claimed)]);
 
   const name = store.name;
   const g = givingWords(store.language);
@@ -316,6 +316,7 @@ export async function recordLead(
       explicit: claim.c,
       clicks: claim.k === true,
       source: "free",
+      sid: store.sid,
       productId: claim.p,
       title,
       at: claim.at,

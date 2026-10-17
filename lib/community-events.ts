@@ -781,3 +781,24 @@ export function announcementText(store: Pick<Store, "handle">, event: CommunityE
     ].filter(Boolean).join("\n\n"),
   };
 }
+
+/**
+ * Takes one member off every live event of the community they said they
+ * were coming to, and forgets each event's answer about whether they may
+ * come in (lib/community-erasure.ts).
+ */
+export async function forgetRsvpsPerson(id: string, who: string, email: string): Promise<number> {
+  if (!isRedisConfigured()) return 0;
+  const [raw] = await redisPipeline([["ZRANGEBYSCORE", indexKey(id), "-inf", "+inf"]]);
+  const events = (Array.isArray(raw) ? raw : []).map(String).slice(0, MAX_KEPT_EVENTS);
+  if (!events.length) return 0;
+  const replies = await redisPipeline([...events.map((e) => ["HDEL", rsvpKey(id, e), who]), ["DEL", ...events.map((e) => accessKey(id, e, email))]]);
+  return replies.slice(0, events.length).reduce<number>((sum, n) => sum + (Number(n) || 0), 0);
+}
+
+/** How many live events the community keeps: what deleting a member goes through (lib/community-erasure.ts). */
+export async function eventCount(id: string): Promise<number> {
+  if (!isRedisConfigured()) return 0;
+  const [n] = await redisPipeline([["ZCARD", indexKey(id)]]);
+  return Math.min(Number(n) || 0, MAX_KEPT_EVENTS);
+}

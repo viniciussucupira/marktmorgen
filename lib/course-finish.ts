@@ -67,3 +67,10 @@ export async function noteIfFinished(store: Store, productId: string, courseId: 
     return false;
   }
 }
+
+/** Forgets the marks that one person opened and finished these courses (lib/person-erasure.ts). */
+export async function forgetFinishPerson(courseIds: string[], email: string): Promise<number> {
+  if (!courseIds.length || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", ...courseIds.flatMap((c) => [finishedKey(c, email), openedKey(c, email)])]]);
+  return Number(gone) || 0;
+}

@@ -219,3 +219,49 @@ export async function dropLessonComments(courseId: string, lessonIds: string[]):
     ...lessonIds.map((l) => ["DEL", lessonKey(courseId, l)]),
   ]);
 }
+
+/**
+ * Takes one student's comments out of a course, on the Redis side, with the
+ * answers under their own comments, as deleting a comment does, and the name
+ * they chose. KEYS: the comments, the newest, the answer counts, the names,
+ * then each lesson's comments; ARGV: the student's key, then each lesson's
+ * id in the same order. Answers how many comments went.
+ */
+export const FORGET_LESSON_COMMENTS = `-- marktmorgen:lesson-comments-forget:v1
+local who = ARGV[1]
+local lessons = {}
+for i = 5, #KEYS do lessons[ARGV[i - 3]] = KEYS[i] end
+local flat = redis.call("HGETALL", KEYS[1])
+local all = {}
+local tops = {}
+for i = 1, #flat, 2 do
+  local ok, c = pcall(cjson.decode, flat[i + 1])
+  if ok and type(c) == "table" then
+    all[flat[i]] = c
+    if c.b == who and (c.r == nil or c.r == cjson.null) then tops[flat[i]] = true end
+  end
+end
+local gone = 0
+for id, c in pairs(all) do
+  local parent = c.r
+  if parent == cjson.null then parent = nil end
+  if c.b == who or (parent ~= nil and tops[parent]) then
+    redis.call("HDEL", KEYS[1], id)
+    redis.call("ZREM", KEYS[2], id)
+    redis.call("HDEL", KEYS[3], id)
+    if lessons[c.l] then redis.call("ZREM", lessons[c.l], id) end
+    if parent ~= nil and not tops[parent] and all[parent] then redis.call("HINCRBY", KEYS[3], parent, -1) end
+    gone = gone + 1
+  end
+end
+redis.call("HDEL", KEYS[4], who)
+return gone`;
+
+/** Deletes one student's comments in a course and the name they chose (lib/person-erasure.ts). `who` is lib/learn.ts emailKey. */
+export async function forgetLessonCommentsPerson(courseId: string, lessonIds: string[], who: string): Promise<number> {
+  if (!isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([
+    ["EVAL", FORGET_LESSON_COMMENTS, 4 + lessonIds.length, commentsKey(courseId), allKey(courseId), repliesKey(courseId), namesKey(courseId), ...lessonIds.map((l) => lessonKey(courseId, l)), who, ...lessonIds],
+  ]);
+  return Number(gone) || 0;
+}

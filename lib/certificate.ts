@@ -130,6 +130,10 @@ function parseCertificate(raw: unknown): Certificate | null {
 const certKey = (id: string) => `nl:cert:${id}`;
 const indexKey = (courseId: string) => `nl:course:${courseId}:certs`;
 const allKey = (courseId: string) => `nl:course:${courseId}:certs:all`;
+/** Every certificate one student was ever issued for a course, withdrawn ones too (added 17 October 2026), so deleting them finds each. */
+const byKey = (courseId: string, who: string) => `nl:course:${courseId}:certs:by:${who}`;
+/** How many certificates of a course deleting a person looks through for ones issued before byKey was kept. */
+const LEGACY_SCAN = 500;
 
 export async function readCertificate(id: string): Promise<Certificate | null> {
   if (!isRedisConfigured() || !CERT_ID_PATTERN.test(id)) return null;
@@ -197,7 +201,7 @@ export async function issueCertificate(input: {
     // The slot pointed at a certificate that was withdrawn: take it.
     await redisPipeline([["HSET", indexKey(input.course.id), input.who, id]]);
   }
-  await redisPipeline([["SADD", allKey(input.course.id), id]]);
+  await redisPipeline([["SADD", allKey(input.course.id), id], ["SADD", byKey(input.course.id, input.who), id]]);
   return { ok: true, certificate, fresh: true };
 }
 
@@ -230,4 +234,46 @@ export async function withdrawCertificate(courseId: string, id: string): Promise
   const [current] = await redisPipeline([["HGET", indexKey(courseId), who]]);
   if (current === id) await redisPipeline([["HDEL", indexKey(courseId), who]]);
   return true;
+}
+
+/**
+ * Deletes every certificate one student was issued in these courses
+ * (lib/person-erasure.ts): its page stops proving anything and says it was
+ * not found. Found by the student's own list, and, for certificates issued
+ * before that list was kept, by reading the course's certificates when it
+ * has LEGACY_SCAN or fewer; a standing one is always found by its slot.
+ */
+export async function forgetCertificatesPerson(courseIds: string[], email: string): Promise<number> {
+  if (!courseIds.length || !isRedisConfigured()) return 0;
+  const who = emailKey(email);
+  const address = email.trim().toLowerCase();
+  let gone = 0;
+  for (const courseId of courseIds) {
+    const [mine, current, size] = await redisPipeline([["SMEMBERS", byKey(courseId, who)], ["HGET", indexKey(courseId), who], ["SCARD", allKey(courseId)]]);
+    const [all] = Number(size) > 0 && Number(size) <= LEGACY_SCAN ? await redisPipeline([["SMEMBERS", allKey(courseId)]]) : [[]];
+    const ids = new Set<string>([...(Array.isArray(mine) ? mine.map(String) : []), ...(typeof current === "string" ? [current] : [])]);
+    const others = (Array.isArray(all) ? all.map(String) : []).filter((id) => CERT_ID_PATTERN.test(id) && !ids.has(id));
+    for (let i = 0; i < others.length; i += 500) {
+      const chunk = others.slice(i, i + 500);
+      const [rows] = await redisPipeline([["MGET", ...chunk.map(certKey)]]);
+      (Array.isArray(rows) ? rows : []).forEach((raw, j) => {
+        if (parseCertificate(raw)?.email.trim().toLowerCase() === address) ids.add(chunk[j]);
+      });
+    }
+    const list = [...ids].filter((id) => CERT_ID_PATTERN.test(id));
+    await redisPipeline([
+      ["DEL", byKey(courseId, who), ...list.map(certKey)],
+      ["HDEL", indexKey(courseId), who],
+      ...(list.length ? [["SREM", allKey(courseId), ...list]] : []),
+    ]);
+    gone += list.length;
+  }
+  return gone;
+}
+
+/** How many certificates each course keeps: what deleting a person may read (lib/person-erasure.ts). */
+export async function certificateCount(courseIds: string[]): Promise<number> {
+  if (!courseIds.length || !isRedisConfigured()) return 0;
+  const counts = await redisPipeline(courseIds.map((c) => ["SCARD", allKey(c)]));
+  return counts.reduce<number>((sum, n) => sum + Math.min(Number(n) || 0, LEGACY_SCAN), 0);
 }

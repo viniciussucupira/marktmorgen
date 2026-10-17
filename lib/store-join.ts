@@ -23,6 +23,7 @@ import type { Store } from "@/lib/store";
 import { isHouseStore } from "@/lib/house-store";
 import { joinWords } from "@/lib/buyer-words/join";
 import { givingWords } from "@/lib/buyer-words/giving";
+import { noteForErasure } from "@/lib/erasure-index";
 
 export const JOIN_SECONDS = 7 * 24 * 60 * 60;
 export const JOIN_TOKEN = /^[0-9a-f]{48}$/;
@@ -77,7 +78,7 @@ export async function askToJoin(input: { store: Store; email: string; clicks?: b
 
   const token = randomBytes(24).toString("hex");
   const grant: Grant = { s: store.statsId, h: store.handle, e: email, at: new Date().toISOString(), ...(input.clicks ? { k: true } : {}), ...(input.formId && /^[a-z0-9]{10}$/.test(input.formId) ? { f: input.formId } : {}), ...(input.site && /^https:\/\/[^/\s]{1,300}$/.test(input.site) ? { w: input.site } : {}) };
-  await redisPipeline([["SET", tokenKey(token), JSON.stringify(grant), "EX", JOIN_SECONDS]]);
+  await redisPipeline([["SET", tokenKey(token), JSON.stringify(grant), "EX", JOIN_SECONDS], ...noteForErasure(store.statsId, grant.e, tokenKey(token))]);
 
   const w = joinWords(store.language);
   const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
@@ -123,7 +124,7 @@ export type ConfirmResult = { ok: true; grant: Grant; added: AddResult } | { ok:
 export async function confirmJoin(token: string, store: Store | null): Promise<ConfirmResult> {
   const grant = await readJoinToken(token);
   if (!grant || !store || store.statsId !== grant.s || !store.listId) return { ok: false, reason: "expired" };
-  const added = await upsertContact(store.listId, grant.e, { agreed: true, explicit: true, clicks: grant.k === true, source: "free", at: new Date().toISOString() });
+  const added = await upsertContact(store.listId, grant.e, { agreed: true, explicit: true, clicks: grant.k === true, source: "free", at: new Date().toISOString(), sid: store.sid });
   if (added.full) return { ok: false, reason: "full" };
   await redisPipeline([["DEL", tokenKey(token)]]);
   return { ok: true, grant, added };

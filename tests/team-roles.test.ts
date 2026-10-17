@@ -53,9 +53,10 @@ async function main(): Promise<void> {
   for (const role of TEAM_ROLES) {
     is(`${role}: none of the owner's four`, OWNER_ONLY.filter((p) => can(role, p)), []);
   }
-  is("the owner has every permission", [...ROLE_PERMISSIONS.owner].length, 16);
-  is("support edits nothing", ["settings", "page", "products", "send", "draft", "export", "import", "events"].filter((p) => can("support", p as Permission)), []);
-  is("an editor cannot send, export, import or touch settings", ["send", "export", "import", "settings"].filter((p) => can("editor", p as Permission)), []);
+  is("the owner has every permission", [...ROLE_PERMISSIONS.owner].length, 17);
+  is("support edits nothing", ["settings", "page", "products", "send", "draft", "export", "import", "events", "erase"].filter((p) => can("support", p as Permission)), []);
+  is("an editor cannot send, export, import, delete a person or touch settings", ["send", "export", "import", "erase", "settings"].filter((p) => can("editor", p as Permission)), []);
+  is("deleting a person is the owner's and an admin's (lib/person-erasure.ts)", (["owner", "admin", "editor", "support"] as const).filter((r) => can(r, "erase")), ["owner", "admin"]);
   is("whatever two-step login locks after a recovery is beyond an editor and support", LOCKED_NEEDS.filter((p) => can("editor", p as Permission) || can("support", p as Permission)), []);
   is("a word that is not a permission is not one, even on an object's prototype", [isPermission("toString"), isPermission("constructor"), isPermission("send")], [false, false, true]);
 

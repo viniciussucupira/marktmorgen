@@ -166,3 +166,12 @@ export function withMentions(
   }
   return out;
 }
+
+/** Lets go of the handle a deleted member held, if it is still theirs (lib/community-erasure.ts). */
+export async function forgetHandle(id: string, handle: string, who: string): Promise<number> {
+  if (!handle) return 0;
+  const [owner] = await redisPipeline([["HGET", handlesKey(id), handle]]);
+  if (owner !== who) return 0;
+  const [gone] = await redisPipeline([["HDEL", handlesKey(id), handle]]);
+  return Number(gone) || 0;
+}

@@ -32,7 +32,7 @@ jobs:
 
   form-opportunity-redis:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     services:
       redis:
         image: redis:7.4-alpine
@@ -87,3 +87,13 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_order_admission_redis.py
+      # Deleting a person runs the application's own code against Redis, so it needs the dependencies.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Actual Redis person deletion checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_contact_erasure_redis.py

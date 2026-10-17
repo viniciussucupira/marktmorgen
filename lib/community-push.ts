@@ -195,3 +195,9 @@ export async function pushMembers(id: string, to: string[], alert: MemberAlert):
   );
   return sent;
 }
+
+/** Deletes the devices one member let us notify (lib/community-erasure.ts). */
+export async function forgetPushPerson(id: string, who: string): Promise<number> {
+  const [gone] = await redisPipeline([["DEL", pushKey(id, who)]]);
+  return Number(gone) || 0;
+}

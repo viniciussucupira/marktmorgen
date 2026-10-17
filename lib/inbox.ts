@@ -381,3 +381,37 @@ export async function suggestReply(store: Store, id: string, now = Date.now()): 
     return text || null;
   });
 }
+
+/**
+ * Deletes every conversation one person had with the store's inbox
+ * (lib/person-erasure.ts): what they wrote, what the store answered, and the
+ * link their chat opened with.
+ */
+export async function forgetInboxPerson(statsId: string | null, email: string): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const address = normaliseEmail(email);
+  const [rawIds] = await redisPipeline([["ZREVRANGE", indexKey(statsId), 0, -1]]);
+  const ids = (Array.isArray(rawIds) ? rawIds : []).filter((id): id is string => typeof id === "string" && CONVERSATION_ID.test(id));
+  const theirs: Kept[] = [];
+  for (let i = 0; i < ids.length; i += 200) {
+    const chunk = ids.slice(i, i + 200);
+    const [raw] = await redisPipeline([["MGET", ...chunk.map((id) => convKey(statsId, id))]]);
+    for (const value of Array.isArray(raw) ? raw : []) {
+      const kept = parseKept(value);
+      if (kept && normaliseEmail(kept.email) === address) theirs.push(kept);
+    }
+  }
+  if (!theirs.length) return 0;
+  await redisPipeline([
+    ["DEL", ...theirs.flatMap((c) => [convKey(statsId, c.id), msgKey(statsId, c.id), ...(c.token ? [tokenKey(c.token)] : [])])],
+    ["ZREM", indexKey(statsId), ...theirs.map((c) => c.id)],
+  ]);
+  return theirs.length;
+}
+
+/** How many conversations the inbox keeps: what deleting a person reads (lib/person-erasure.ts). */
+export async function conversationCount(statsId: string | null): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const [n] = await redisPipeline([["ZCARD", indexKey(statsId)]]);
+  return Math.min(Number(n) || 0, MAX_CONVERSATIONS);
+}

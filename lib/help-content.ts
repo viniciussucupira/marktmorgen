@@ -33,6 +33,7 @@ import { EXPECTATION, MAX_PAGES_READ, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REP
 import { PLAN_AT, feeWords, planPriceWords, yearSavingWords } from "@/lib/fee-words";
 import { IMPORTS_PER_SHARE_MONTH, MAX_SHARE_DAYS, PREVIEWS_PER_SHARE_MONTH, SHARE_LIMITS, bytesWords } from "@/lib/funnel-share-rules";
 import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
+import { ERASE_STUDIO_UNITS } from "@/lib/erasure-rules";
 
 /** An anchor for one answer, from its question. */
 export function answerId(q: string): string {
@@ -916,8 +917,18 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can I have it deleted?",
         a: [
-          "Yes. Email us from the address you used and we remove what we hold about you. You do not have to give a reason.",
-          "If you bought from a store or asked it for something free, that store's creator decides about its own records, and the payment itself stays in their Stripe account. Write to them first; if you write to us instead, we pass it on and tell you we did.",
+          "Yes, and you do it yourself. If you bought from a store, joined its list or asked it for something free, open marktmorgen.com/privacy/delete, or the link at the foot of that store's page, and type your address. If the store knows it, we email you a link that works for an hour; the page it opens says what is deleted and what is kept, and its button deletes you from that store, or from every store you bought from or signed up with. The store's owner is told it was done. You do not have to give a reason, and nobody has to approve it.",
+          "What stays: a one-way fingerprint of your address, so that store never emails you again; your payments, which are on the creator's own Stripe account as their sales records; and the few order records a refund or a delivery still needs. Posts and comments you wrote in a community stay, without your name; delete them there first if you want them gone. The privacy page lists each one.",
+          "For your own account as a creator, email us from the address you sign in with and we remove what we hold about you.",
+        ],
+      },
+      {
+        q: "Someone asked me to delete their data. What do I do?",
+        a: [
+          "Open their page under Buyers in your studio (find them by the address they paid with or joined your list with), press Delete this person at the bottom, read what goes and what stays, type DELETE and press Delete this person again. It is done at once: their place on your list, your fields, notes and deals about them, their form answers, inbox conversations, waitlist places, workflow history and any email still waiting for them, their course progress, work, comments and certificates, their community record, points and messages, their podcast feeds and Discord roles, and the links your store emailed them.",
+          "Two things stay when you delete someone, and go when they delete themselves: reviews they wrote, because a store may not take a review down by deleting its writer (the FTC's rule on consumer reviews), and what an import from your old platform gave them, which is how they keep what they bought there.",
+          "Your store will not email them again: a one-way fingerprint of the address stays, so no import or API call puts them back, and only they can lift it by joining your list again themselves. Their payments stay on your own Stripe account, and the few order records a refund or a delivery still needs stay with only what they need. If you also keep them in a connected email platform or your own files, delete them there too.",
+          "Only you and your Admins can do it; Editors and Support cannot. Each deletion takes " + `${ERASE_STUDIO_UNITS} of your plan's studio requests, and more for a store with many products, courses, deals, conversations or live events (each deletion works out how many before it starts), and is written in your team's activity log, without the address. People can also delete themselves from the link at the foot of your store's page, and you get an email when they do.`,
         ],
       },
       {

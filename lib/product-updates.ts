@@ -47,6 +47,8 @@ import { givingWords } from "@/lib/buyer-words/giving";
 import { updatesWords } from "@/lib/buyer-words/updates";
 import { type Listing, type Store, saleHandles } from "@/lib/store";
 import { MAX_UPDATE_NOTE, MAX_UPDATE_RECIPIENTS, UPDATE_GAP_SECONDS, canTellBuyers } from "@/lib/product-updates-rules";
+import { noteForErasure } from "@/lib/erasure-index";
+import { suppressedCommand, wasSuppressed } from "@/lib/suppression";
 
 export { MAX_UPDATE_NOTE, MAX_UPDATE_RECIPIENTS, UPDATE_GAP_SECONDS, canTellBuyers };
 
@@ -205,7 +207,7 @@ async function save(job: UpdateJob): Promise<void> {
 async function stopLink(store: Store, email: string): Promise<string> {
   const token = randomBytes(20).toString("hex");
   const grant = { s: store.statsId, e: normaliseEmail(email), h: store.handle, n: store.mail?.fromName || store.name };
-  await redisPipeline([["SET", stopKey(token), JSON.stringify(grant), "EX", STOP_LINK_SECONDS]]);
+  await redisPipeline([["SET", stopKey(token), JSON.stringify(grant), "EX", STOP_LINK_SECONDS], ...noteForErasure(store.statsId, email, stopKey(token))]);
   return token;
 }
 
@@ -247,13 +249,15 @@ export async function advanceUpdate(id: string, load: (handle: string) => Promis
         break;
       }
       // Nobody who pressed stop here, or left the creator's list.
+      // Nor anybody deleted from the store (lib/suppression.ts).
       const checks = await redisPipeline(
         emails.flatMap((email) => [
           ["EXISTS", offKey(job!.statsId, email)],
           store.listId ? ["HGET", leadsKey(store.listId), email] : ["EXISTS", "nl:none"],
+          suppressedCommand(store.listId, email),
         ]),
       );
-      const recipients = emails.filter((_, i) => Number(checks[i * 2]) !== 1 && !(store.listId && parseContact(checks[i * 2 + 1])?.unsub));
+      const recipients = emails.filter((_, i) => Number(checks[i * 3]) !== 1 && !(store.listId && parseContact(checks[i * 3 + 1])?.unsub) && !wasSuppressed(checks[i * 3 + 2]));
       if (recipients.length) {
         const reserved = await reserve(store, recipients.length);
         if (reserved !== "ok") {

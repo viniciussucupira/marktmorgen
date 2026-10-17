@@ -114,3 +114,34 @@ export async function responseCounts(statsId: string | null, ids: string[]): Pro
   const counts = await redisPipeline(ids.map((id) => ["LLEN", responsesKey(statsId, id)]));
   return Object.fromEntries(ids.map((id, i) => [id, Number(counts[i]) || 0]));
 }
+
+/**
+ * Removes, from every list of responses given, each response one of whose
+ * answers is this address (ARGV[1], lower case), on the Redis side so no
+ * response travels. Answers how many went.
+ */
+export const FORGET_FORM_PERSON = `-- marktmorgen:form-forget:v1
+local removed = 0
+for k = 1, #KEYS do
+  local items = redis.call("LRANGE", KEYS[k], 0, -1)
+  for _, raw in ipairs(items) do
+    local ok, value = pcall(cjson.decode, raw)
+    local hit = false
+    if ok and type(value) == "table" and type(value.answers) == "table" then
+      for _, answer in pairs(value.answers) do
+        if type(answer) == "string" and string.lower(string.match(answer, "^%s*(.-)%s*$")) == ARGV[1] then hit = true end
+      end
+    end
+    if hit then removed = removed + redis.call("LREM", KEYS[k], 0, raw) end
+  end
+end
+return removed`;
+
+/** Deletes every response one person gave to any of the store's forms (lib/person-erasure.ts). */
+export async function forgetFormsPerson(statsId: string | null, email: string): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const forms = await readForms(statsId);
+  if (!forms.length) return 0;
+  const [removed] = await redisPipeline([["EVAL", FORGET_FORM_PERSON, forms.length, ...forms.map((f) => responsesKey(statsId, f.id)), email.trim().toLowerCase()]]);
+  return Number(removed) || 0;
+}

@@ -267,3 +267,26 @@ export async function openMove(store: Store, productId: string, token: string, o
     return { ok: false, reason: "refused" };
   }
 }
+
+/**
+ * Deletes the invitations an import gave one person to keep a membership
+ * here, their links and their reminders (lib/person-erasure.ts). A
+ * membership they already kept is the creator's Stripe record, not this.
+ */
+export async function forgetInvitesPerson(store: Pick<Store, "sid" | "statsId">, productIds: string[], email: string): Promise<number> {
+  if (!store.statsId || !productIds.length || !isRedisConfigured()) return 0;
+  const statsId = store.statsId;
+  const fields = productIds.map((p) => inviteField(email, p));
+  const [rows] = await redisPipeline([["HMGET", invitesKey(statsId), ...fields]]);
+  const held = fields.flatMap((field, i) => {
+    const invite = parseInvite(Array.isArray(rows) ? rows[i] : null);
+    return invite ? [{ field, invite }] : [];
+  });
+  if (!held.length) return 0;
+  await redisPipeline([
+    ["HDEL", invitesKey(statsId), ...held.map((h) => h.field)],
+    ["DEL", ...held.map((h) => linkKey(h.invite.t))],
+    ["ZREM", DUE_KEY, ...held.map((h) => `${store.sid}|${h.field}`)],
+  ]);
+  return held.length;
+}

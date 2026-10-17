@@ -258,3 +258,34 @@ export async function forgetCrm(statsId: string | null): Promise<void> {
   const fields = await readFields(statsId);
   await redisPipeline([["DEL", fieldsKey(statsId), stagesKey(statsId), dealsKey(statsId), ...fields.map((f) => valuesKey(statsId, f.id))]]);
 }
+
+/**
+ * Deletes one person from the store's fields and deals (lib/person-erasure.ts):
+ * every value kept under their key, and every deal with them, by the address
+ * a deal names. Answers how many records went.
+ */
+export async function forgetCrmPerson(statsId: string | null, person: string, email: string): Promise<number> {
+  if (!statsId || !PERSON.test(person) || !isRedisConfigured()) return 0;
+  const fields = await readFields(statsId);
+  const address = email.trim().toLowerCase();
+  const [raw] = await redisPipeline([["HGETALL", dealsKey(statsId)]]);
+  const pairs: [string, string][] = [];
+  if (Array.isArray(raw)) for (let i = 0; i + 1 < raw.length; i += 2) pairs.push([String(raw[i]), String(raw[i + 1])]);
+  else if (raw && typeof raw === "object") for (const [k, v] of Object.entries(raw as Record<string, string>)) pairs.push([k, String(v)]);
+  const theirs = pairs.filter(([, value]) => {
+    const deal = json(value) as { email?: unknown } | null;
+    return typeof deal?.email === "string" && deal.email.trim().toLowerCase() === address;
+  }).map(([id]) => id);
+  const commands: (string | number)[][] = fields.map((f) => ["HDEL", valuesKey(statsId, f.id), person]);
+  if (theirs.length) commands.push(["HDEL", dealsKey(statsId), ...theirs]);
+  if (!commands.length) return 0;
+  const replies = await redisPipeline(commands);
+  return replies.reduce<number>((sum, n) => sum + (Number(n) || 0), 0);
+}
+
+/** How many deals the store keeps: what deleting a person reads (lib/person-erasure.ts). */
+export async function dealCount(statsId: string | null): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const [n] = await redisPipeline([["HLEN", dealsKey(statsId)]]);
+  return Number(n) || 0;
+}

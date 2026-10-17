@@ -524,3 +524,31 @@ export async function dropReviews(statsId: string | null, productId: string): Pr
   ]);
   return photos;
 }
+
+/**
+ * Deletes every review one buyer wrote in this store (lib/person-erasure.ts),
+ * as their own delete does: its stars leave the average with it. Returns the
+ * photos to delete from the picture folder.
+ */
+export async function forgetReviewsPerson(statsId: string | null, productIds: string[], email: string): Promise<{ records: number; photos: string[] }> {
+  if (!statsId || !productIds.length || !isRedisConfigured()) return { records: 0, photos: [] };
+  const wanted = productIds.filter((p) => PRODUCT_ID_PATTERN.test(p));
+  const ids = wanted.map((p) => reviewId(statsId, p, email));
+  const raws = wanted.length ? await redisPipeline(wanted.map((p, i) => ["HGET", productKey(statsId, p), ids[i]])) : [];
+  let records = 0;
+  const photos: string[] = [];
+  for (let i = 0; i < wanted.length; i += 1) {
+    const review = parseReview(raws[i]);
+    if (!review) continue;
+    if ((await deleteReview(statsId, wanted[i], ids[i])) !== "deleted") throw new Error("a review could not be deleted just now");
+    records += 1;
+    if (review.photo?.path) photos.push(review.photo.path);
+    if (review.pi) {
+      const member = `${wanted[i]}|${ids[i]}`;
+      const [raw] = await redisPipeline([["HGET", payKey(statsId), review.pi]]);
+      const rest = (typeof raw === "string" ? raw.split(";") : []).filter((m) => m && m !== member);
+      await redisPipeline([rest.length ? ["HSET", payKey(statsId), review.pi, rest.join(";")] : ["HDEL", payKey(statsId), review.pi]]);
+    }
+  }
+  return { records, photos };
+}

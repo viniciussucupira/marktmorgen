@@ -131,3 +131,14 @@ export async function forgetBuyer(store: Store, email: string): Promise<boolean>
   const [removed] = await redisPipeline([["HDEL", bondKey(store.statsId), buyerHash(store.statsId, email)]]);
   return Number(removed) === 1;
 }
+
+/**
+ * Forgets which affiliate one buyer belongs to (lib/person-erasure.ts). Only
+ * the bond: a commission already earned on their purchase is a money record
+ * of the affiliate's and stays in the affiliate program's books.
+ */
+export async function forgetBondPerson(statsId: string | null, email: string): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["HDEL", bondKey(statsId), buyerHash(statsId, email)]]);
+  return Number(gone) || 0;
+}

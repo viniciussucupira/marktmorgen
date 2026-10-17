@@ -342,3 +342,11 @@ export function pauseNote(pause: Pause): string {
     ? `Paused until ${pauseEnds(pause)}: too many of this store's emails went to addresses that do not exist. The rest go out by themselves then.`
     : `Paused until ${pauseEnds(pause)}: too many of this store's emails were marked as spam. The rest go out by themselves then.`;
 }
+
+/** Forgets that one address was counted this week for this store (lib/person-erasure.ts). */
+export async function forgetHealthPerson(store: Pick<Store, "sid" | "listId">, email: string): Promise<number> {
+  const id = healthId(store);
+  if (!id || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", seenKey(id, normaliseEmail(email))]]);
+  return Number(gone) || 0;
+}
