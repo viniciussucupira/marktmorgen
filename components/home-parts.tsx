@@ -1,6 +1,7 @@
 "use client";
 
 import { AI_MONTHLY } from "@/lib/ai-rules";
+import { MAX_OPTIONS } from "@/lib/product-option";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
@@ -413,7 +414,7 @@ const INCLUDED = [
   "Up to 2,000 products: files, courses, memberships, paid calls and live sessions",
   "Sales pages and landing pages built from blocks, and reviews only buyers can write",
   "A community for your buyers, with spaces, posts, comments, moderation and live events members RSVP to",
-  "Up to three prices on any product, bundles of 2 to 20 products, pay what you want, discount codes and payment plans",
+  `Up to ${MAX_OPTIONS} prices on any product, bundles of 2 to 20 products, pay what you want, discount codes and payment plans`,
   "15 currencies, and Apple Pay, Google Pay, Klarna and the other ways to pay you switch on in Stripe",
   "Offers before and after paying: a box at checkout, and up to five one-click offers after",
   "An affiliate program with a page for each affiliate, paid from your own PayPal in one press or on payday by itself",
