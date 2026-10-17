@@ -74,7 +74,7 @@ def main():
         assert reserve(redis, key, size=4) == 1
         assert redis.command("HGET", key, "company:bytes") == "10"
         print("PASS: retries cannot refund an acknowledged or unacknowledged reservation")
-        for value in ("", "-1", "01", "1.5", "1000000000001", "bad"):
+        for value in ("", "-1", "01", "1.5", "9000000000000001", "bad"):
             key = fresh()
             redis.command("HSET", key, "company:bytes", value)
             before = snapshot(key)

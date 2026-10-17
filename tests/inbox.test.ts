@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   part("A store, its chat off");
   await claimHandle(OWNER, "cocina", "Cocina de Ana", "");
   await ensureStatsId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Inbox00001", subscriptionId: "sub_Inbox00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription(OWNER, { customerId: "cus_Inbox00001", subscriptionId: "sub_Inbox00001", active: true, tier: "pro", trialEnds: 0 });
   await setLanguage(OWNER, "es");
   await setFaq(OWNER, [{ q: "How many lessons?", a: "Twelve, yours for good." }]);
   let store = (await storeForEmail(OWNER))!;

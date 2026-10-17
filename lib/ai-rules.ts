@@ -23,10 +23,29 @@
  *     and changes them, and nothing is saved until they press Save.
  */
 
+import { PDF_READ_MICRO_USD, WRITING_JOB_MICRO_USD } from "@/lib/spend-cost-table";
+import { PLAN_TITLES } from "@/lib/plan";
+
 export type AiKind = "product" | "page" | "outline" | "email" | "review" | "block";
 
-/** Writing jobs a store may ask for in a calendar month, by where it stands with its plan. */
-export const AI_MONTHLY = { trial: 20, creator: 100, pro: 400, scale: 1_000 } as const;
+/**
+ * Writing jobs a store may ask for in a calendar month, by where it stands
+ * with its plan. Lowered on October 17, 2026 to what each plan's 60%
+ * after-tax floor leaves room for once every other allowance is used in full
+ * (tests/spend-floor.test.ts shows the sum): Store, which has no room left,
+ * and the free trial, whose cost has no approved funded-exposure review yet,
+ * have none. The money behind them is a monthly ceiling worked out from these
+ * counts and the supplier rates (lib/ai-spend-policy.ts, lib/spend-cost-table.ts).
+ */
+export const AI_MONTHLY = { trial: 0, creator: 0, pro: 40, scale: 80 } as const;
+
+/** The plans whose price includes the writing help, as public copy names them. */
+export const AI_PLANS_WORDS = `${PLAN_TITLES.pro} and ${PLAN_TITLES.scale}`;
+
+/** The allowance as every public page states it, from the same numbers admission uses. */
+export function aiAllowanceWords(): string {
+  return `${AI_MONTHLY.pro} writing jobs a month on ${PLAN_TITLES.pro} and ${AI_MONTHLY.scale} on ${PLAN_TITLES.scale}; not included on ${PLAN_TITLES.creator} or during the free trial. Each request sets aside the most it could cost from the plan's monthly AI budget before it runs, so long ones, like a whole sales page or reading a PDF, use more of it, and the budget can run out before the jobs do. An attempt that fails still counts.`;
+}
 /** And in any one minute, so a stuck button cannot spend the month. */
 export const AI_PER_MINUTE = 6;
 
@@ -55,9 +74,10 @@ export const MAX_AI_LESSONS = 8;
 /**
  * A sales page drafted from the product's own PDF too (lib/ai.ts,
  * readPdfFacts): its first pages are read, at most this many, and the reading
- * takes this many of the month's jobs on top of the page's own one. Ten pages
- * read by the smaller model cost about what two drafts are costed at
- * (tests/plan-margin.test.ts).
+ * takes this many of the month's jobs on top of the page's own one. A PDF's
+ * text is not bounded by its size, so its reading is reserved at the model's
+ * whole context window; the jobs it takes are that reservation in priced jobs,
+ * rounded up (lib/spend-cost-table.ts).
  */
 export const READ_PDF_PAGES = 10;
-export const READ_PDF_JOBS = 2;
+export const READ_PDF_JOBS = Math.ceil(PDF_READ_MICRO_USD / WRITING_JOB_MICRO_USD);

@@ -26,17 +26,21 @@ import {PLAN_TITLES} from "@/lib/plan";
  *     automatic.
  *
  * What keeps it from costing more than it earns. Each answer is one request
- * to the smallest current model, a fraction of a cent (Haiku 5.5 at $0.10
- * and $0.50 per million tokens in and out, read on 7 October 2026: under
- * $0.001 for the longest page and answer allowed). A store gets a number of
- * answers a month by its plan, below; past it the box closes by itself until
- * the month turns. At the largest allowance that is a few dollars a month in
- * the worst case, on a $249 plan. The same question about the same page is
- * answered from memory for a day and costs nothing.
+ * to the smallest current model (Haiku 5.5 at $0.10 and $0.50 per million
+ * tokens in and out, as lib/spend-cost-table.ts holds it). A store gets a
+ * number of answers a month by its plan, below, priced into the plan's
+ * automatic monthly AI ceiling (lib/ai-spend-policy.ts); past either the box
+ * closes by itself until the month turns. The same question about the same
+ * page is answered from memory for a day and costs nothing.
  */
 
-/** Answers a store's visitors may be given in a calendar month, by where the store stands with its plan. */
-export const ANSWERS_MONTHLY = { trial: 100, creator: 500, pro: 2_000, scale: 6_000 } as const;
+/**
+ * Answers a store's visitors may be given in a calendar month, by where the
+ * store stands with its plan. Lowered on October 17, 2026 with the writing
+ * jobs (lib/ai-rules.ts, AI_MONTHLY) to what each plan's 60% after-tax floor
+ * leaves room for; Store and the free trial have none.
+ */
+export const ANSWERS_MONTHLY = { trial: 0, creator: 0, pro: 250, scale: 400 } as const;
 
 /** What one visitor may ask of one store: a few in ten minutes, and a ceiling a day. */
 export const ASKS_PER_TEN_MINUTES = 6;
@@ -105,5 +109,5 @@ export function unknownWords(storeName: string): string {
 /** Published allowance wording follows the same cap and plan identities as admission. */
 export function answerAllowanceWords(): string {
  const count=(n:number)=>n.toLocaleString('en-US');
- return 'Up to '+count(ANSWERS_MONTHLY.creator)+' automated answer requests a month on '+PLAN_TITLES.creator+', '+count(ANSWERS_MONTHLY.pro)+' on '+PLAN_TITLES.pro+' and '+count(ANSWERS_MONTHLY.scale)+' on '+PLAN_TITLES.scale+'. The store guide uses the same allowance. Attempts count even when the model cannot return an answer.';
+ return 'Up to '+count(ANSWERS_MONTHLY.pro)+' automated answer requests a month on '+PLAN_TITLES.pro+' and '+count(ANSWERS_MONTHLY.scale)+' on '+PLAN_TITLES.scale+'; not included on '+PLAN_TITLES.creator+' or during the free trial. The store guide uses the same allowance and the plan\'s monthly AI budget. Attempts count even when the model cannot return an answer.';
 }

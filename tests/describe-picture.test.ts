@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
 
   part("What is sent");
@@ -43,7 +43,7 @@ async function main(): Promise<void> {
 
   part("What comes back");
   is("one clean line, its quotes taken off", done1.ok ? done1.value : null, "Una hogaza de centeno cortada sobre una tabla de madera.");
-  is("counted as one of the month's jobs", done1.ok ? done1.left : null, 99);
+  is("counted as one of the month's jobs", done1.ok ? done1.left : null, 39);
   reply = "A".repeat(400);
   const long = await describePicture(store, { bytes, mediaType: "image/jpeg", productTitle: "Sunday Baking", language: "English" });
   is("never longer than a description may be", long.ok ? long.value.length : null, 150);

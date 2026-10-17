@@ -103,7 +103,7 @@ async function main(): Promise<void> {
   const made = await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   if (!made.ok) throw new Error("no store");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
   const NOW = 1_780_000_000;
 
@@ -306,7 +306,7 @@ async function main(): Promise<void> {
   const two = await claimHandle("other@example.com", "bakes", "Bakes by Mo", "");
   if (!two.ok) throw new Error("no second store");
   await ensureStatsId("other@example.com");
-  await setSubscription("other@example.com", { customerId: "cus_Other00001", subscriptionId: "sub_Other00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("other@example.com", { customerId: "cus_Other00001", subscriptionId: "sub_Other00001", active: true, tier: "pro", trialEnds: 0 });
   const other = (await storeForEmail("other@example.com"))!;
   await saveSender(other, { name: "Mo", address: "2 High St, Leeds" });
   const theirs = await startPitch(other, input, { reader: site(COPPER), now: NOW });
@@ -316,7 +316,7 @@ async function main(): Promise<void> {
   const third = await claimHandle("third@example.com", "knits", "Knits", "");
   if (!third.ok) throw new Error("no third store");
   await ensureStatsId("third@example.com");
-  await setSubscription("third@example.com", { customerId: "cus_Third00001", subscriptionId: "sub_Third00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("third@example.com", { customerId: "cus_Third00001", subscriptionId: "sub_Third00001", active: true, tier: "pro", trialEnds: 0 });
   const knits = (await storeForEmail("third@example.com"))!;
   await saveSender(knits, { name: "Kay", address: "3 Mill Rd" });
   const refused = await startPitch(knits, input, { reader: site(COPPER), now: NOW });

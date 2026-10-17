@@ -1,5 +1,5 @@
 import { zeroExposureFixture } from './margin-test-fixtures';
-import {CURRENT_UPLOAD_BUDGET_POLICY as testUploadFunding} from "@/lib/upload-budget-policy";
+import {CURRENT_UPLOAD_BUDGET_POLICY as testUploadFunding} from "./upload-budget-approved-policy";
 import {fundedCustomerScenario,fundedCustomerWithAi,zeroFixedCompanyFixture} from './margin-test-fixtures';
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
 import { commercialMarginReady, commercialPlansMayOpen, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, REQUIRED_MARGIN_SCENARIOS, BASE_PLAN_REVENUE_CEILINGS, type CommercialMarginReview } from "@/lib/commercial-margin";

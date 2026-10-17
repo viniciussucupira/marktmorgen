@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   const owner = "owner@example.com";
   await claimHandle(owner, "numshop", "Num Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Num0001", subscriptionId: "sub_Num0001", active: true });
+  await setSubscription(owner, { customerId: "cus_Num0001", subscriptionId: "sub_Num0001", active: true, tier: "pro" });
   const store = (await storeForEmail(owner))!;
   const before = await aiLeft(store);
 

@@ -25,7 +25,7 @@ import { readStats } from "@/lib/stats";
 import { readCourse } from "@/lib/course";
 import { missedQuestions } from "@/lib/answers";
 import { AiOn } from "@/components/ai-assist";
-import { aiLeft, isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { storeBase } from "@/lib/purchase-email";
 import { productSegment } from "@/lib/product-slug";
 import { featuredCards } from "@/lib/featured-cards";
@@ -179,7 +179,7 @@ export default async function StudioPagesPage({ searchParams }: Params) {
             </nav>
 
             <div className="min-w-0">
-            <AiOn value={isAiConfigured() ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}>
+            <AiOn value={aiAvailableFor(store) ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 }}>
             <PageEditor
               // One editor per product: a save keeps the editor as it is, with the
               // page as the server kept it (components/page-editor.tsx, send),

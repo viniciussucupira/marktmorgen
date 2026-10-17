@@ -7,3 +7,4 @@ export function uploadTestPolicy(funded=1): UploadBudgetPolicy {
     perStore,fundedStores,company:{opens:12*funded,authorizedBytes:60*funded,controlRequests:36*funded}};
 }
 export const CURRENT_UPLOAD_BUDGET_POLICY=uploadTestPolicy(10000);
+export const currentUploadBudgetPolicy=()=>CURRENT_UPLOAD_BUDGET_POLICY;

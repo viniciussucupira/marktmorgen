@@ -1,6 +1,7 @@
 "use client";
 
 import { AI_MONTHLY } from "@/lib/ai-rules";
+import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
 import { MAX_OPTIONS } from "@/lib/product-option";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -430,7 +431,6 @@ const INCLUDED = [
   "Sign-in without passwords, and a full refund that closes access by itself",
   "Free products that build an email list you can download at any time",
   "Your list, products and past buyers brought over from another platform, from a spreadsheet",
-  `Writing help with AI, from your own words and in your store's language: product descriptions, whole sales pages and course outlines, a second opinion on a page, any block rewritten, a page translated, picture descriptions, the line about your store, blog posts, replies to reviews and posts to share — ${AI_MONTHLY.creator} a month (${AI_MONTHLY.trial} during the free trial)`,
 ];
 
 const PRO_INCLUDED = [
@@ -443,7 +443,7 @@ const PRO_INCLUDED = [
   "One-click unsubscribe in every email, honored for good",
   "Community announcements emailed to the members who asked for them, counted in the same monthly allowance",
   "One email that asks each buyer for a review, 3 to 30 days after buying",
-  `The same writing help with AI, raised from ${AI_MONTHLY.creator} to ${AI_MONTHLY.pro} a month, and emails among the things it drafts`,
+  `Writing help with AI, from your own words and in your store's language: product descriptions, whole sales pages and course outlines, a second opinion on a page, any block rewritten, a page translated, picture descriptions, the line about your store, blog posts, emails, replies to reviews and posts to share — ${AI_MONTHLY.pro} writing jobs and ${ANSWERS_MONTHLY.pro.toLocaleString("en-US")} answers to visitors' questions a month, each request setting aside the most it could cost from the plan's monthly AI budget first; not during the free trial`,
   "Our name off the foot of your page, so it carries yours and nothing of ours",
 ];
 
@@ -742,7 +742,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
             { icon: "mail", title: "More room to grow", body: `Up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails, ${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits and ${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month.` },
             { icon: "percent", title: "0% platform fee on sales", body: "Stripe charges its own processing fees separately." },
           ]}
-          perks={[`Everything in ${PLAN_TITLES.pro}`, `${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month`, `${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits a month`, `${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month`, `${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts a month`]}
+          perks={[`Everything in ${PLAN_TITLES.pro}`, `${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month`, `${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits a month`, `${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month`, `${AI_MONTHLY.scale.toLocaleString("en-US")} AI writing jobs and ${ANSWERS_MONTHLY.scale.toLocaleString("en-US")} visitor answers a month`]}
           featured={false}
           cta="Start on Scale"
           yearly={yearly}

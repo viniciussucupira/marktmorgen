@@ -23,7 +23,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
 
   part("Asked");
@@ -34,7 +34,7 @@ async function main(): Promise<void> {
 
   part("Back");
   is("a title and the words, bold taken off", result.ok ? [result.value.title, result.value.body.includes("**")] : null, ["How to keep a knife sharp", false]);
-  is("one of the month's jobs", result.ok ? result.left : null, 99);
+  is("one of the month's jobs", result.ok ? result.left : null, 39);
   const before = asked.length;
   const empty = await writeBlogPost(store, { notes: "  ", products: [] });
   is("nothing to write about is refused before asking", [empty.ok ? null : empty.reason, asked.length], ["notes", before]);

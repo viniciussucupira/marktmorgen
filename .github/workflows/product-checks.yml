@@ -63,6 +63,10 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_ai_spend_redis.py
+      - name: Actual Redis automatic spend ledger opening checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_spend_ledger_open_redis.py
       - name: Actual Redis company exposure reservation checks
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"

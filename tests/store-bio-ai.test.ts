@@ -26,7 +26,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "cocina", "Cocina de Ana", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   await setLanguage("owner@example.com", "es");
   const store = (await storeForEmail("owner@example.com"))!;
 
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   const lines = result.ok ? result.value : [];
   is("three different lines, quotation marks taken off", lines.slice(0, 2), ["Recetas de domingo para familias con prisa.", "Pan casero paso a paso."]);
   is("each short enough for the box", lines.every((l) => l.length <= MAX_BIO_LENGTH), true);
-  is("one of the month's jobs", result.ok ? result.left : null, 99);
+  is("one of the month's jobs", result.ok ? result.left : null, 39);
 
   part("What is refused");
   const before = asked.length;

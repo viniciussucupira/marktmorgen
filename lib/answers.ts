@@ -18,7 +18,7 @@
 import { SHIP_REGIONS, activeShipping } from "@/lib/shipping";
 import { createHash } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { answerModel, askModel, isAiConfigured, jsonIn } from "@/lib/ai";
+import { aiAvailableFor, answerModel, askModel, jsonIn } from "@/lib/ai";
 import { inTrial } from "@/lib/mail";
 import { formatMoney } from "@/lib/money";
 import { speech } from "@/lib/buyer-words";
@@ -49,7 +49,7 @@ const missedKey = (statsId: string) => `nl:ask:missed:${statsId}`;
 
 /** Whether this store's product pages offer the box at all. */
 export function answersOn(store: Store): boolean {
-  return store.answers.on && isAiConfigured() && isRedisConfigured() && Boolean(store.statsId);
+  return store.answers.on && aiAvailableFor(store) && answersAllowance(store) > 0 && isRedisConfigured() && Boolean(store.statsId);
 }
 
 /** Answers this store's visitors may be given this month. */

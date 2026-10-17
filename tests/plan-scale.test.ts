@@ -73,7 +73,7 @@ async function main(): Promise<void> {
   is("Pro is left exactly as it was", [monthlyAllowance(store({ tier: "pro" })), aiAllowance(store({ tier: "pro" }))], [PRO_MONTHLY_EMAILS, AI_MONTHLY.pro]);
   is("and the plan under it still sends none", monthlyAllowance(store({ tier: "creator" })), 0);
   is("a trial on it is a trial: the small allowance, so it cannot be used to spam", monthlyAllowance(store({ tier: "scale", trialEnds: Math.floor(Date.now() / 1000) + 86_400 })), TRIAL_MONTHLY_EMAILS);
-  is("more AI drafts than Pro", [aiAllowance(store({ tier: "scale" })), AI_MONTHLY.scale > AI_MONTHLY.pro], [1_000, true]);
+  is("more AI drafts than Pro", [aiAllowance(store({ tier: "scale" })), AI_MONTHLY.scale > AI_MONTHLY.pro], [AI_MONTHLY.scale, true]);
 
   part("Reading a subscription");
   const named = (tier: string, cycle: string) => planOf(subscription({ lookup_key: `nimbus_${tier}_${cycle}`, unit_amount: 1, recurring: { interval: cycle } }));

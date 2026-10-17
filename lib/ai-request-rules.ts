@@ -8,6 +8,8 @@ const only = (value: Record<string, unknown>, keys: string[]) => Object.keys(val
 export type BoundedAiRequest = {
     ok: true;
     body: string;
+    /** What the cost table bounds the request by (lib/spend-cost-table.ts). */
+    shape: { inputBytes: number; blocks: number; media: 'image' | 'document' | null; maxTokens: number };
 } | {
     ok: false;
     reason: 'model' | 'output' | 'system' | 'content' | 'media' | 'size';
@@ -20,7 +22,8 @@ export function boundedAiRequest(system: string, prompt: string | unknown[], max
             return { ok: false, reason: 'output' };
         if (typeof system !== 'string' || system.length > AI_REQUEST_LIMITS.systemBytes || bytes(system) > AI_REQUEST_LIMITS.systemBytes)
             return { ok: false, reason: 'system' };
-        let textBytes = 0, media = 0;
+        let textBytes = 0, media = 0, blocks = 1;
+        let mediaKind: 'image' | 'document' | null = null;
         let content: string | unknown[] = prompt;
         if (typeof prompt === 'string') {
             if (prompt.length > AI_REQUEST_LIMITS.textBytes)
@@ -32,6 +35,7 @@ export function boundedAiRequest(system: string, prompt: string | unknown[], max
                 return { ok: false, reason: 'content' };
             const clean: unknown[] = [];
             content = clean;
+            blocks = prompt.length;
             for (const block of prompt) {
                 if (!record(block))
                     return { ok: false, reason: 'content' };
@@ -55,6 +59,7 @@ export function boundedAiRequest(system: string, prompt: string | unknown[], max
                     const formats = kind === 'image' ? ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] : ['application/pdf'];
                     if (typeof mediaType !== 'string' || !formats.includes(mediaType) || ++media > AI_REQUEST_LIMITS.mediaBlocks)
                         return { ok: false, reason: 'media' };
+                    mediaKind = kind;
                     clean.push({ type: kind, source: { type: 'base64', media_type: mediaType, data } });
                 }
                 else
@@ -66,7 +71,7 @@ export function boundedAiRequest(system: string, prompt: string | unknown[], max
         const body = JSON.stringify({ model, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
         if (bytes(body) > AI_REQUEST_LIMITS.bodyBytes)
             return { ok: false, reason: 'size' };
-        return { ok: true, body };
+        return { ok: true, body, shape: { inputBytes: bytes(system) + textBytes, blocks, media: mediaKind, maxTokens } };
     }
     catch {
         return { ok: false, reason: 'content' };

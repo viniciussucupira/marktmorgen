@@ -56,7 +56,7 @@ async function main(): Promise<void> {
 
   const owner = "answers@example.com";
   await claimHandle(owner, "answershop", "Answer Shop", "");
-  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   await ensureStatsId(owner);
   const made = await addProduct(owner, "Meal Planner", "A week of dinners, planned.", "27", null);
   if (!made.ok) throw new Error("no product");
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
   is("a question too short to be one is not sent", [(await ask("?")).ok, asked.length], [false, 6]);
 
   part("Past the month's number");
-  is("a store on the base plan gets its number", answersAllowance({ ...store, trialEnds: 0 }), ANSWERS_MONTHLY.creator);
+  is("a store on Studio gets its number, and Store none", [answersAllowance({ ...store, trialEnds: 0 }), answersAllowance({ ...store, tier: "creator", trialEnds: 0 })], [ANSWERS_MONTHLY.pro, 0]);
   const now = Date.now();
   await redis.pipeline([["SET", `nl:ask:${store.statsId}:${new Date(now).toISOString().slice(0, 7)}`, String(answersAllowance(store, now))]]);
   reply = '{"known": true, "answer": "Yes."}';
@@ -157,7 +157,7 @@ async function main(): Promise<void> {
     const copy = JSON.stringify(data);
     is(
       `${file} states the month's numbers the code enforces`,
-      [`${said(ANSWERS_MONTHLY.creator)} automated answer requests a month on ${PLAN_TITLES.creator}`, `${said(ANSWERS_MONTHLY.pro)} on ${PLAN_TITLES.pro}`, `${said(ANSWERS_MONTHLY.scale)} on ${PLAN_TITLES.scale}`].map((piece) => copy.includes(piece)),
+      [`${said(ANSWERS_MONTHLY.pro)} automated answer requests a month on ${PLAN_TITLES.pro}`, `${said(ANSWERS_MONTHLY.scale)} on ${PLAN_TITLES.scale}`, `not included on ${PLAN_TITLES.creator}`].map((piece) => copy.includes(piece)),
       [true, true, true],
     );
   }

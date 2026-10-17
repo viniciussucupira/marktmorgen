@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   const owner = "help@example.com";
   await claimHandle(owner, "helpshop", "Help Shop", "");
   await ensureStatsId(owner);
-  await setSubscription(owner, { customerId: "cus_Help0001", subscriptionId: "sub_Help0001", active: true });
+  await setSubscription(owner, { customerId: "cus_Help0001", subscriptionId: "sub_Help0001", active: true, tier: "pro" });
   reply = JSON.stringify({ answer: "Up to 5 GB, in the formats listed.", used: [1, 1, 9] });
   const answered = await answerHelp((await storeForEmail(owner))!, "What files can I sell?", () => files);
   is("the answer, and the sources it used, once each, only real ones", answered.ok && answered.value, { answer: "Up to 5 GB, in the formats listed.", sources: [{ id: files[0].id, q: files[0].q }] });
