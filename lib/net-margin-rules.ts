@@ -20,9 +20,29 @@ export type CustomerWorstCase={
 export type MarginAssessment={approved:boolean;reason:"unknown"|"invalid"|"unbounded"|"uncollected"|"no_revenue"|"below_floor"|"approved";netCents:number|null;marginBps:number|null};
 const stopped=(reason:MarginAssessment["reason"]):MarginAssessment=>({approved:false,reason,netCents:null,marginBps:null});
 const money=(n:unknown):n is number=>typeof n==="number"&&Number.isSafeInteger(n)&&n>=0;
+/** Only explicit data belongs to a review. Inherited defaults and computed
+ * properties are not evidence and must never execute during a margin check. */
+const ownReviewData=(record:object,key:string)=>{
+ try{
+  const field=Object.getOwnPropertyDescriptor(record,key);
+  return field&&Object.prototype.hasOwnProperty.call(field,"value")?field.value:undefined;
+ }catch{return undefined;}
+};
 /** Exact integer comparison: a display rounded to 60% never approves an amount below the floor. */
 export function assessCustomerWorstCase(value:CustomerWorstCase|null):MarginAssessment{
- if(!value||typeof value!=="object"||!value.costCeilings||typeof value.costCeilings!=="object")return stopped("unknown");
+ if(!value||typeof value!=="object"||Array.isArray(value))return stopped("unknown");
+ const suppliedCosts=ownReviewData(value,"costCeilings");
+ if(!suppliedCosts||typeof suppliedCosts!=="object"||Array.isArray(suppliedCosts))return stopped("unknown");
+ // Read once into a plain snapshot. Validation and arithmetic use identical data.
+ value={
+  collectedRevenueCents:ownReviewData(value,"collectedRevenueCents"),
+  refundableRevenueCents:ownReviewData(value,"refundableRevenueCents"),
+  taxesCeilingCents:ownReviewData(value,"taxesCeilingCents"),
+  costCeilings:Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,ownReviewData(suppliedCosts,key)])),
+  allCostsBounded:ownReviewData(value,"allCostsBounded")===true,
+  allTaxesReviewed:ownReviewData(value,"allTaxesReviewed")===true,
+  revenueCollected:ownReviewData(value,"revenueCollected")===true,
+ };
  const amounts=[value.collectedRevenueCents,value.refundableRevenueCents,value.taxesCeilingCents,...CUSTOMER_COST_CATEGORIES.map(key=>value.costCeilings[key])];
  if(amounts.some(n=>n===null||n===undefined))return stopped("unknown");
  if(!amounts.every(money)||value.refundableRevenueCents!>value.collectedRevenueCents!)return stopped("invalid");
