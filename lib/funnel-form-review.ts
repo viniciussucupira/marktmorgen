@@ -2,13 +2,15 @@ import type { Store } from "@/lib/store";
 import { MAX_PAGE_FUNNELS, MAX_FUNNEL_PAGES, type PageFunnel } from "@/lib/page-funnel";
 import { MAX_SITE_PAGES, pageOut, siteKey } from "@/lib/site-page-rules";
 import { MAX_BLOCKS, MAX_STORED_PAGE_BYTES, parsePage, pageProblem } from "@/lib/sales-page";
-import { FORM_ID, MAX_FORMS, parseForm } from "@/lib/forms";
+import { KIND } from "@/lib/catalog";
+import { FORM_ID, MAX_FORMS, parseForm, type FormDef } from "@/lib/forms";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { FunnelLaunchIssue } from "@/lib/funnel-launch-review";
 
 type Binding = { version: string; form: string | null };
 type Inspection = { bindings: Binding[] } | null;
 type FormState = "present" | "missing" | "unknown";
+const MAX_QUIZ_FINDINGS_PER_PAGE = 8;
 const MAX_REVIEW_FORM_BYTES = 64 * 1024;
 
 /** Only saved page/form definitions: no answers, writes, email or provider calls. Two batches at most across all funnels. */
@@ -49,6 +51,7 @@ export async function readFunnelFormReviews(store: Store, funnels: readonly Page
 
   const formIds = [...new Set([...inspected.values()].flatMap(page => page ? page.bindings.flatMap(binding => binding.form ? [binding.form] : []) : []))];
   const states = new Map<string, FormState>();
+  const definitions = new Map<string, FormDef>();
   const checkedFormIds = formIds.slice(0, MAX_FORMS);
   const limited = formIds.length > checkedFormIds.length;
   if (checkedFormIds.length) {
@@ -62,15 +65,25 @@ export async function readFunnelFormReviews(store: Store, funnels: readonly Page
         try {
           if (typeof raw !== "string" || Buffer.byteLength(raw, "utf8") > MAX_REVIEW_FORM_BYTES) throw new Error("Invalid saved form");
           const parsed = parseForm(JSON.parse(raw));
-          states.set(id, parsed?.id === id && parsed.fields.length > 0 ? "present" : "unknown");
+          if (parsed?.id === id && parsed.fields.length > 0) {
+            states.set(id, "present");
+            definitions.set(id, parsed);
+          } else states.set(id, "unknown");
         } catch { states.set(id, "unknown"); }
       });
     } catch { checkedFormIds.forEach(id => states.set(id, "unknown")); }
   }
+  const catalogItems = store.catalog?.items;
+  const products = Array.isArray(catalogItems)
+    && catalogItems.every(product => product && typeof product.id === "string" && product.id.length > 0)
+    && new Set(catalogItems.map(product => product.id)).size === catalogItems.length
+    ? new Map(catalogItems.map(product => [product.id, product]))
+    : null;
   for (const ref of references) {
     const page = inspected.get(ref.page.id);
     const issues = result.get(ref.funnel)!;
     if (!page) { issues.push(unknown(ref)); continue; }
+    const quizIssues: FunnelLaunchIssue[] = [];
     for (const version of new Set(page.bindings.map(binding => binding.version))) {
       const bindings = page.bindings.filter(binding => binding.version === version);
       const empty = bindings.filter(binding => !binding.form).length;
@@ -80,6 +93,32 @@ export async function readFunnelFormReviews(store: Store, funnels: readonly Page
       if (empty) issues.push({ code: "form", title, detail: `${empty} form ${empty === 1 ? "block has" : "blocks have"} no selected form. Choose a form in the page editor before sharing.`, stepIndex: ref.stepIndex });
       if (missing) issues.push({ code: "form", title, detail: `${missing} form ${missing === 1 ? "block references" : "blocks reference"} a form no longer available in this store. Select a replacement in the page editor.`, stepIndex: ref.stepIndex });
       if (uncertain) issues.push({ code: "forms_unknown", title, detail: `${uncertain} form ${uncertain === 1 ? "block could" : "blocks could"} not be checked. Reload and review the selected form before sharing.${limited ? ` This review checks up to ${MAX_FORMS} different forms at a time. Remove old references and reload to check the rest.` : ""}`, stepIndex: ref.stepIndex });
+      for (const formId of new Set(bindings.flatMap(binding => binding.form ? [binding.form] : []))) {
+        const form = definitions.get(formId);
+        if (!form) continue;
+        for (const outcome of form.outcomes) {
+          if (!outcome.product) continue;
+          const product = products?.get(outcome.product);
+          const finding = { title: `${title} · Quiz result “${outcome.title}”`, stepIndex: ref.stepIndex, formId };
+          if (!products || (product && (!Number.isSafeInteger(product.kind) || product.kind < 0 || product.kind > 0x7fffffff))) {
+            quizIssues.push({ ...finding, code: "quiz_unknown", detail: "The recommended product could not be checked. Reload and review this result under Forms." });
+          } else if (!product) {
+            quizIssues.push({ ...finding, code: "quiz_product", detail: "This result recommends a product no longer in this store. Choose another product under Forms." });
+          } else if ((product.kind & KIND.hidden) !== 0) {
+            quizIssues.push({ ...finding, code: "quiz_product", detail: "This result recommends a draft product. Publish the product or choose another recommendation under Forms." });
+          }
+        }
+      }
+    }
+    issues.push(...quizIssues.slice(0, MAX_QUIZ_FINDINGS_PER_PAGE));
+    if (quizIssues.length > MAX_QUIZ_FINDINGS_PER_PAGE) {
+      issues.push({
+        code: "quiz_unknown",
+        title: `Step ${ref.stepIndex + 1}: ${ref.page.title}`,
+        detail: `${quizIssues.length - MAX_QUIZ_FINDINGS_PER_PAGE} additional quiz findings need review. Open Forms and check the remaining product recommendations.`,
+        stepIndex: ref.stepIndex,
+        formId: quizIssues[MAX_QUIZ_FINDINGS_PER_PAGE].formId,
+      });
     }
   }
   return result;
