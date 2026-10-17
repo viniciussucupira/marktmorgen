@@ -39,11 +39,13 @@
  * found by (POST_SLOT). A post deleted gives its whole slot back; a comment
  * deleted gives back what it took. What does not fit is refused with
  * DataRoomError, and nothing is written. A member's own record is part of
- * what their order left (lib/store-data-rules.ts, ORDER_DATA_BYTES); what a
- * member adds to it later (a name, answers) takes room like a post.
+ * what their order left, charged at what it really adds when it is first
+ * made (lib/order-data.ts); what a member adds to it later (a name,
+ * answers) takes room like a post.
  */
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataOwner, orderWrite } from "@/lib/order-data";
 import { normaliseEmail } from "@/lib/auth";
 import { emailKey } from "@/lib/learn";
 import {
@@ -434,7 +436,7 @@ async function patchMember(id: string, key: string, change: (member: Member) => 
  * come and dated each time after, at most once an hour so reading costs no
  * write. Null when the community already holds as many people as it can.
  */
-export async function touchMember(id: string, email: string, existing: Member | null): Promise<Member | null> {
+export async function touchMember(id: string, email: string, existing: Member | null, owner: DataOwner): Promise<Member | null> {
   const key = memberKey(email);
   const at = now();
   if (existing) {
@@ -444,8 +446,10 @@ export async function touchMember(id: string, email: string, existing: Member | 
   const [size] = await redisPipeline([["HLEN", membersKey(id)]]);
   if (Number(size) >= MAX_MEMBERS) return null;
   const member: Member = { k: key, e: normaliseEmail(email), n: "", h: "", dir: false, mail: false, at, seen: at, muted: false, removed: false, t: "", q: [], qa: 0, qq: [] };
-  // HSETNX: two first visits at once make one record, not two.
-  await redisPipeline([["HSETNX", membersKey(id), key, JSON.stringify(member)]]);
+  // HSETNX: two first visits at once make one record, not two. Counted in
+  // the store's room at what it adds (lib/order-data.ts); what a member adds
+  // to it later is taken from the room (MEMBERS_SLOT).
+  await orderWrite(owner, [["HSETNX", membersKey(id), key, JSON.stringify(member)]]);
   return (await readMember(id, key)) ?? member;
 }
 

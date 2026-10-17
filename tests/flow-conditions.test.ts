@@ -123,7 +123,7 @@ async function main(): Promise<void> {
   is("the first email: not to Ben, who already has what it sells", to("Welcome"), ["ana@example.com", "cleo@example.com"]);
 
   // Cleo buys something else: she has paid now, but not for the course.
-  await noteProduct(list, "cleo@example.com", extra.product.id, "Spice Chart");
+  await noteProduct(list, "cleo@example.com", extra.product.id, "Spice Chart", store);
   shift += 25 * HOUR;
   await run();
   is("the second, for those who have not bought: Ana; Cleo skips it", to("Not bought yet?"), ["ana@example.com"]);
@@ -134,7 +134,7 @@ async function main(): Promise<void> {
   is("the third, for the label: Cleo, a day after the one she skipped; Ana leaves", to("For the launch list"), ["cleo@example.com"]);
 
   // Cleo buys the course before the last one.
-  await noteProduct(list, "cleo@example.com", course.product.id, "Weeknight Course");
+  await noteProduct(list, "cleo@example.com", course.product.id, "Weeknight Course", store);
   shift += 25 * HOUR;
   await run();
   is("the last: nobody — Ana left, Cleo now has the course", to("Last call"), []);

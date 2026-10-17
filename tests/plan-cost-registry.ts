@@ -548,13 +548,13 @@ export const COST_LINES: CostLine[] = [
     monthlyUsd: (tier) => (DATA_ROOM_BYTES[tier] + reserveBytes(tier)) * DB_BYTE_MONTH,
     sources: [
       { file: "lib/store-data-rules.ts", names: ["DATA_ROOM_BYTES", "NON_PAYING_DATA_ROOM_BYTES", "ORDER_DATA_BYTES", "ITEM_DATA_BYTES", "orderReserveFor", "contentRoomFor"] },
-      { file: "lib/store-data.ts", names: ["TAKE_DATA", "needData", "keepFor", "chargeOrderData"] },
+      { file: "lib/store-data.ts", names: ["TAKE_DATA", "needData", "keepFor"] },
+      { file: "lib/order-data.ts", names: ["ORDER_WRITE", "orderWrite", "ORDER_KEY_BYTES", "ORDER_ENTRY_BYTES"] },
       { file: "lib/order-admission.ts", names: ["used + holding + bytes > room", "orderDataBytes(items)"] },
-      { file: "lib/orders.ts", names: ["chargeOrderData(store, items, now)"] },
       { file: "tests/store-data-registry.ts", names: ["FAMILIES", "reserveBytes", "partAverage"] },
       { file: "lib/spend-cost-table.ts", names: ["UPSTASH_MICRO_USD_PER_GB_MONTH", "daily average"] },
     ],
-    basis: "The plan's data room full every day of the month, at Upstash's storage rate: everything a store keeps and what its orders leave is taken from it before it is written (orders' room held at the checkout), and past it a write is refused, never an order. Every record kept outside it (tests/store-data-registry.ts, which fails for a key family that does not say how it is bounded) at what it keeps on average over a month, which is what Upstash bills: each part at every unit of every window its expiry touches.",
+    basis: "The plan's data room full every day of the month, at Upstash's storage rate: everything a store keeps and what its orders leave is taken from it before it is written (orders' room held at the checkout at the most an order can take, and charged what each of its writes really adds, lib/order-data.ts), and past it a write is refused, never an order. Every record kept outside it (tests/store-data-registry.ts, which fails for a key family that does not say how it is bounded) at what it keeps on average over a month, which is what Upstash bills: each part at every unit of every window its expiry touches.",
   },
   {
     id: "community-pictures",

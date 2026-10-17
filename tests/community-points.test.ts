@@ -51,22 +51,22 @@ async function main(): Promise<void> {
   if (!id) throw new Error("no community");
   const ana = memberKey("ana@example.com");
   const ben = memberKey("ben@example.com");
-  await touchMember(id, "ana@example.com", null);
-  await touchMember(id, "ben@example.com", null);
+  await touchMember(id, "ana@example.com", null, { sid: "points-test" });
+  await touchMember(id, "ben@example.com", null, { sid: "points-test" });
 
   part("Points");
   const now = Date.now();
-  for (let i = 0; i < 6; i += 1) await award(id, ana, 1, now);
-  await award(id, ana, -1, now);
+  for (let i = 0; i < 6; i += 1) await award(id, ana, 1, { sid: "points-test" }, now);
+  await award(id, ana, -1, { sid: "points-test" }, now);
   is("six likes and one taken back is five points", (await pointsOf(id, [ana])).get(ana), 5);
-  await award(id, ben, -1, now);
+  await award(id, ben, -1, { sid: "points-test" }, now);
   is("taking back a point nobody had leaves zero, never less", (await pointsOf(id, [ben])).get(ben), 0);
-  await award(id, "creator", 1, now);
+  await award(id, "creator", 1, { sid: "points-test" }, now);
   is("the creator collects no points", (await board(id, "all", null, now)).top.some((s) => s.key === "creator"), false);
 
   part("The boards");
   // Ben's points were all made twelve days ago.
-  for (let i = 0; i < 9; i += 1) await award(id, ben, 1, now - 12 * DAY);
+  for (let i = 0; i < 9; i += 1) await award(id, ben, 1, { sid: "points-test" }, now - 12 * DAY);
   const all = await board(id, "all", ben, now);
   is("all time: Ben first with 9, Ana with 5", all.top.map((s) => [s.key === ben ? "ben" : "ana", s.points]), [["ben", 9], ["ana", 5]]);
   is("and Ben is told he is first", all.mine, { rank: 1, points: 9 });
@@ -89,14 +89,14 @@ async function main(): Promise<void> {
   is("Ana, at Level 2, has it", earned.has(productId), true);
   is("from the day she reached it", earned.get(productId), Math.floor(reached / 1000));
   is("and the course opens for her", (await paidCourses(store, "ana@example.com")).has(productId), true);
-  await award(id, ana, -1, now);
-  await award(id, ana, -1, now);
+  await award(id, ana, -1, { sid: "points-test" }, now);
+  await award(id, ana, -1, { sid: "points-test" }, now);
   is("her points fall under Level 2", levelOf((await pointsOf(id, [ana])).get(ana) ?? 0), 1);
   is("and the course stays hers", (await paidCourses(store, "ana@example.com")).has(productId), true);
   const carl = memberKey("carl@example.com");
-  await touchMember(id, "carl@example.com", null);
+  await touchMember(id, "carl@example.com", null, { sid: "points-test" });
   is("Carl, at Level 1, does not have it", (await paidCourses(store, "carl@example.com")).has(productId), false);
-  for (let i = 0; i < 5; i += 1) await award(id, carl, 1, now);
+  for (let i = 0; i < 5; i += 1) await award(id, carl, 1, { sid: "points-test" }, now);
   // Taken out by the creator: the record as moderation leaves it.
   const record = await readMember(id, carl);
   await redis.pipeline([["HSET", `nl:cm:${id}:m`, carl, JSON.stringify({ ...record, removed: true })]]);

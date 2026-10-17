@@ -37,6 +37,7 @@ import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { AttributionRule } from "@/lib/affiliate-setting";
+import { orderWrite } from "@/lib/order-data";
 import type { Store } from "@/lib/store";
 
 /**
@@ -97,19 +98,20 @@ export async function rememberBuyer(store: Store, email: string, affiliateId: st
   const field = buyerHash(store.statsId as string, email);
   if (rule === "first") {
     // Only if nobody has this buyer yet.
-    await redisPipeline([["HSETNX", key, field, affiliateId]]);
+    await orderWrite(store, [["HSETNX", key, field, affiliateId]]);
     return;
   }
   // On last click a known buyer moves to the affiliate who brought them back;
   // an unknown one is only added while there is room under the cap.
   const [known] = await redisPipeline([["HEXISTS", key, field]]);
   if (Number(known) === 1) {
-    await redisPipeline([["HSET", key, field, affiliateId]]);
+    await orderWrite(store, [["HSET", key, field, affiliateId]]);
     return;
   }
   const [count] = await redisPipeline([["HLEN", key]]);
   if (Number(count) >= MAX_BONDS) return;
-  await redisPipeline([["HSET", key, field, affiliateId]]);
+  // Counted in the store's room as what the order that made it really adds (lib/order-data.ts).
+  await orderWrite(store, [["HSET", key, field, affiliateId]]);
 }
 
 /** How many buyers this store has bonded, for the creator's own screen. */

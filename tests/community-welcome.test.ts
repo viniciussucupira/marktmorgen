@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   const id = (await setCommunity("owner@example.com", true))?.community?.id;
   if (!id) throw new Error("no community");
   const ana = memberKey("ana@example.com");
-  await touchMember(id, "ana@example.com", null);
+  await touchMember(id, "ana@example.com", null, { sid: "welcome-test" });
   const questions = ["What brought you here?", "What do you want to cook in 90 days?"];
 
   part("Answers");

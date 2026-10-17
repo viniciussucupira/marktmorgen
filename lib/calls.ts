@@ -48,6 +48,8 @@ import { CALL_ORDER_UNITS } from "@/lib/order-rules";
 import { countOrder } from "@/lib/orders";
 import { saleHandles } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { fieldReleaseBytes, orderWrite, releaseOrderData } from "@/lib/order-data";
+import { PAST_CALL_DAYS } from "@/lib/store-data-rules";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isHouseStore } from "@/lib/house-store";
 import { HOLD_SECONDS, checkoutClosesAt, onAccount } from "@/lib/stripe-account";
@@ -152,12 +154,29 @@ function readEntries(flat: string[]): { field: string; entry: Entry }[] {
   return out;
 }
 
-async function heldAndBooked(callsId: string, now: number): Promise<(TeamBusy & { field: string })[]> {
+export { PAST_CALL_DAYS };
+
+async function heldAndBooked(store: Store, now: number): Promise<(TeamBusy & { field: string })[]> {
+  const callsId = store.callsId as string;
   const [raw] = await redisPipeline([["HGETALL", busyKey(callsId)]]);
   const flat = Array.isArray(raw) ? (raw as string[]) : [];
   const busy: (TeamBusy & { field: string })[] = [];
   const stale: string[] = [];
+  const past: string[] = [];
+  let freed = 0;
+  for (let i = 0; i + 1 < flat.length; i += 2) {
+    try {
+      const entry = JSON.parse(flat[i + 1]) as Entry;
+      if (entry.until === 0 && Number.isFinite(entry.e) && entry.e < now - PAST_CALL_DAYS * 86_400_000) {
+        past.push(flat[i]);
+        freed += fieldReleaseBytes(flat[i], flat[i + 1]);
+      }
+    } catch {
+      // Read as stale below.
+    }
+  }
   for (const { field, entry } of readEntries(flat)) {
+    if (past.includes(field)) continue;
     if (entry.until === -1 || (entry.until !== 0 && entry.until < now)) {
       stale.push(field);
       continue;
@@ -167,8 +186,12 @@ async function heldAndBooked(callsId: string, now: number): Promise<(TeamBusy & 
     const team = teamOf(entry);
     busy.push({ start, end: entry.e, product: entry.p, session: entry.session, field, ...(team ? { hosts: team.hosts, claim: team.claim } : {}) });
   }
-  // Holds that ran out are tidied as they are noticed.
+  // Holds that ran out are tidied as they are noticed, and calls long over let go.
   if (stale.length) await redisPipeline([["HDEL", busyKey(callsId), ...stale]]).catch(() => {});
+  if (past.length) {
+    const [gone] = await redisPipeline([["HDEL", busyKey(callsId), ...past]]).catch(() => [0]);
+    if (Number(gone) === past.length) await releaseOrderData(store, freed);
+  }
   return busy;
 }
 
@@ -313,7 +336,7 @@ async function readBusy(
   store: Store,
   now: number,
 ): Promise<{ busy: TeamBusy[]; paid: PaidCall[]; blocked: Busy[]; sessions: Busy[] }> {
-  const local = store.callsId && isRedisConfigured() ? await heldAndBooked(store.callsId, now) : [];
+  const local = store.callsId && isRedisConfigured() ? await heldAndBooked(store, now) : [];
   let paid: PaidCall[] = [];
   // Read alongside Stripe, and never a reason to fail: a calendar that does
   // not answer blocks nothing.
@@ -992,7 +1015,8 @@ export async function moveBooking(input: {
       .filter(({ field, entry }) => entry.session === session && field !== session)
       .map(({ field }) => field);
     const entry: Entry = { s: start, e: end, until: 0, session, p: product.id, ...(teamOwn ? { h: teamOwn.hosts, c: teamOwn.claim } : {}) };
-    await redisPipeline([
+    // Counted in the store's room at what it really adds (lib/order-data.ts).
+    await orderWrite(store, [
       ...(old.length ? [["HDEL", busyKey(callsId), ...old]] : []),
       ["HSET", busyKey(callsId), session, JSON.stringify(entry)],
       // Moved before it was ever confirmed: the move email says it all, and
@@ -1240,7 +1264,7 @@ export async function confirmBooking(input: {
 }): Promise<void> {
   const { store, product, session, start, end, buyerEmail, origin } = input;
   if (!isRedisConfigured() || !store.callsId) return;
-  const [fresh] = await redisPipeline([["SET", confirmedKey(session), "1", "NX"]]);
+  const [fresh] = await orderWrite(store, [["SET", confirmedKey(session), "1", "NX"]]);
   if (fresh === null) return;
   // Booked: the orders it was admitted as are the window's (lib/orders.ts), once, by the checkout.
   for (let unit = 1; unit <= CALL_ORDER_UNITS; unit += 1) await countOrder(store, `call:${session}:${unit}`, input.amountCents ?? 0);
@@ -1251,7 +1275,10 @@ export async function confirmBooking(input: {
     return null;
   });
   const entry: Entry = { s: start, e: end, until: 0, session, p: product.id, ...(team ? { h: team.hosts, c: team.claim } : {}) };
-  await redisPipeline([["HSET", busyKey(store.callsId), session, JSON.stringify(entry)]]);
+  // Kept for good now that it is paid: written anew, so the store's room is
+  // charged the whole entry (lib/order-data.ts), not only what it grew by
+  // since its checkout held the time.
+  await orderWrite(store, [["HDEL", busyKey(store.callsId), session], ["HSET", busyKey(store.callsId), session, JSON.stringify(entry)]]);
   if (team) {
     await confirmTeam(store, product.id, team.hosts, team.claim, start, end).catch((error) => console.error("confirming a team booking's hosts failed", error));
     // The five-minute job reads this store's refunds while it has team bookings to come, so a refund gives the hosts their time back.

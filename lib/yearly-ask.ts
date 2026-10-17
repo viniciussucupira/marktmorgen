@@ -19,6 +19,7 @@
  *   nl:yearask:cursor                         where the last run stopped
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { orderWrite } from "@/lib/order-data";
 import { platformKey } from "@/lib/stripe-account";
 import { isSenderConfigured, sendEmail } from "@/lib/email";
 import { type Listing, type Store, storesAfter } from "@/lib/store";
@@ -101,7 +102,8 @@ export async function askStore(store: Store, deadline: number, now = Date.now())
     const unsub = tokens.get(row.email);
     if (!unsub) continue;
     const key = sentKey(statsId, row.sub);
-    const [claimed] = await redisPipeline([["SET", key, String(now), "NX", "EX", SENT_SECONDS]]);
+    // Five years, counted as for good in the store's room (lib/order-data.ts).
+    const [claimed] = await orderWrite(store, [["SET", key, String(now), "NX", "EX", SENT_SECONDS]]);
     if (claimed === null) continue;
     try {
       const token = await mintYearlyLink(store, row.customer, row.sub);

@@ -25,6 +25,7 @@
  */
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { orderWrite } from "@/lib/order-data";
 import { type BatchMessage, sendBatch } from "@/lib/email";
 import { CHECKED_BATCH_SIZE, SENDER_WAIT_NOTE, canWrite, fromLine, monthlyAllowance, release, render, reserve } from "@/lib/mail";
 import { SITE_URL } from "@/lib/site-url";
@@ -145,7 +146,8 @@ export async function queueAnnouncement(store: Store, config: CommunityConfig, p
 export async function tokenFor(store: Store, communityId: string, member: Member): Promise<string> {
   if (member.t) return member.t;
   const token = randomBytes(20).toString("hex");
-  await redisPipeline([["SET", unsubKey(token), `${communityId}|${member.k}|${store.handle}`]]);
+  // Kept for good, once a member: counted in the store's room (lib/order-data.ts).
+  await orderWrite(store, [["SET", unsubKey(token), `${communityId}|${member.k}|${store.handle}`]]);
   await setMemberToken(communityId, member, token);
   return token;
 }

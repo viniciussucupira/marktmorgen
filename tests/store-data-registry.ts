@@ -16,8 +16,10 @@
  *   - kept, item: written by an order and kept for as long as the store is,
  *     at most `kept` bytes an order and `item` bytes for each product it
  *     hands over: inside ORDER_DATA_BYTES and ITEM_DATA_BYTES, which every
- *     order takes from the room (lib/orders.ts) and every checkout holds
- *     before it opens (lib/order-admission.ts).
+ *     checkout holds before it opens (lib/order-admission.ts). Since 18
+ *     October 2026 what each order really writes is charged to the room as
+ *     it is written (lib/order-data.ts, orderWrite), so the file named must
+ *     write through it; these ceilings bound only the hold.
  *   - per: written by one unit of a figure the store's window counts (an
  *     order, a public request, a studio request, an email...), at most
  *     `bytes` a unit, gone by itself within `days`. Parts of one `group` are
@@ -186,6 +188,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:plans:lock@app/api/cron/plans/route.ts": lock("The plans job"),
   "nl:quiet:at:@app/api/cron/quiet/route.ts": company("When the quiet-sales job ran each day", "One key a day, the company's job, kept two days."),
   "nl:quiet:lock@app/api/cron/quiet/route.ts": lock("The quiet-sales job"),
+  "nl:recount:lock@app/api/cron/recount/route.ts": lock("The one-time count of what stores keep"),
   "nl:remind:lock@app/api/cron/reminders/route.ts": lock("The reminders job"),
   "nl:share:lock@app/api/cron/shares/route.ts": lock("The shares job"),
   "nl:stream:lock@app/api/cron/stream/route.ts": lock("The video job"),
@@ -681,6 +684,12 @@ export const FAMILIES: Record<string, Family> = {
   "nl:blog:meta:@lib/store-blog.ts": { what: "Blog posts", room: ["lib/store-blog.ts"] },
   "nl:blog:pub:@lib/store-blog.ts": { what: "Published blog posts", room: ["lib/store-blog.ts"] },
   "nl:data:@lib/store-data.ts": { what: "The store's data room itself: a field a slot", room: ["lib/store-data.ts"] },
+  "nl:data:@lib/data-recount.ts": { what: "The stores' data rooms, read and set by the one-time count", room: ["lib/data-recount.ts"] },
+  "nl:*@lib/data-recount.ts": company("The pattern the one-time count reads the database by", "Not a key: a pattern."),
+  "nl:recount:@lib/data-recount.ts": company("The one-time count's own records: where it is, the stores' ids, what each measured", "The company's job, three keys, deleted when it is done."),
+  "nl:recount:ids@lib/data-recount.ts": company("The ids each store's keys are named by, while the count runs", "The company's job, deleted when it is done, thirty days at the most."),
+  "nl:recount:state@lib/data-recount.ts": company("Where the one-time count is", "One key, the company's job."),
+  "nl:recount:sum@lib/data-recount.ts": company("What the count measured of each store, until it is set in its room", "The company's job, deleted when it is done."),
   "nl:join:t:@lib/store-join.ts": short("A link to join the list, sent by email", "access", 7, LINK_BYTES, MAIL("join")),
   "nl:store:photo:@lib/store-photo.ts": { what: "The store's photo", parts: [capped(2 * (MAX_PHOTO_BYTES * 4) / 3 + KB, "One photo, and the one it replaces while it is written.", src("lib/photo-limits.ts", "MAX_PHOTO_BYTES"))] },
   "nl:account:stores:@lib/store.ts": company("An account's other stores", "An account's."),

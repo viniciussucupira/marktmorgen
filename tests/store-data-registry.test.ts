@@ -29,7 +29,8 @@ function walk(dir: string, out: string[] = []): string[] {
 /** Every key the code names under "nl:", by the part before its first variable, and the file it is in. */
 function familiesInCode(): Set<string> {
   const found = new Set<string>();
-  for (const file of ["app", "lib"].flatMap((dir) => walk(dir))) {
+  // lib/data-families.ts is the list of these families' names for the code that measures them, not keys of its own.
+  for (const file of ["app", "lib"].flatMap((dir) => walk(dir)).filter((file) => file !== "lib/data-families.ts")) {
     for (const m of read(file).matchAll(/[`"'](nl:[^`"'$]*)(\$\{|[`"'])/g)) found.add(`${m[1]}@${file}`);
   }
   return found;
@@ -46,7 +47,7 @@ test("every key family in the code is in the registry, and every entry is in the
 
 test("each family is bounded one way at least, and what it says can be checked", () => {
   const lines = new Set([...COST_LINES, ...PER_PAYMENT_LINES].map((line) => line.id));
-  const writes = /\b(takeData|needData|needDataBytes|takeDataBytes|keepFor|noteData|giveData|giveDataBytes|chargeOrderData)\(/;
+  const writes = /\b(takeData|needData|needDataBytes|takeDataBytes|keepFor|noteData|giveData|giveDataBytes)\(/;
   for (const [name, family] of Object.entries(FAMILIES)) {
     assert.ok(family.what.length > 3, `${name}: say what it is`);
     const ways = [family.room?.length ? "room" : "", family.company ? "company" : "", family.line ? "line" : "", family.parts?.length ? "parts" : ""].filter(Boolean);
@@ -85,7 +86,22 @@ test("each family is bounded one way at least, and what it says can be checked",
   }
 });
 
-test("what an order keeps for good fits what every order takes from the room", () => {
+test("what an order keeps for good is written where it is measured, and charged what it really adds", () => {
+  // Since 18 October 2026 an order is no longer charged a fixed ceiling:
+  // every record it keeps is written by lib/order-data.ts, which charges the
+  // room what each write adds (tests/order-data.test.ts,
+  // scripts/test_order_data_redis.py). So every file a kept or item part
+  // names must write through it.
+  const files = new Set<string>();
+  for (const [name, family] of Object.entries(FAMILIES)) {
+    if ((family.parts ?? []).some((part) => "kept" in part || "item" in part)) files.add(name.slice(name.indexOf("@") + 1));
+  }
+  assert.ok(files.size >= 20, `only ${files.size} files keep what an order leaves`);
+  for (const file of files) assert.match(read(file), /\borderWrite(Charged)?\(/, `${file} keeps what an order leaves and does not write it through lib/order-data.ts`);
+  assert.doesNotMatch(read("lib/orders.ts"), /chargeOrderData|ORDER_DATA_BYTES/, "an order is charged a fixed ceiling again");
+});
+
+test("what an order can keep for good fits what every checkout holds before it opens", () => {
   const kept = keptParts().reduce((sum, part) => sum + part.bytes, 0);
   assert.ok(kept <= ORDER_DATA_BYTES, `an order keeps ${kept} bytes, ORDER_DATA_BYTES is ${ORDER_DATA_BYTES}`);
   assert.ok(itemBytes() <= ITEM_DATA_BYTES, `a product keeps ${itemBytes()} bytes, ITEM_DATA_BYTES is ${ITEM_DATA_BYTES}`);

@@ -17,14 +17,16 @@
  *     inside what they bought. Taken before it is written, all or nothing:
  *     what does not fit is refused with a sentence saying so, and nothing is
  *     written. Deleting, shortening and hiding are never refused.
- *   - What an order leaves: ORDER_DATA_BYTES for each order counted
- *     (lib/orders.ts), whatever it is, and never refused, because a buyer
- *     who paid must get everything. Its room is held up front instead: a new
- *     checkout is admitted only while the room has space for it and for
- *     every checkout still open (lib/order-admission.ts), the way the
- *     month's order figure is, and what a store chooses to keep may fill the
- *     room only up to ORDER_RESERVE_WINDOWS windows of orders from the top,
- *     so a full room never stops sales on its own.
+ *   - What an order leaves: each of its records charged at what it really
+ *     adds as it is written (lib/order-data.ts, since 18 October 2026; until
+ *     then a fixed ORDER_DATA_BYTES an order), and never refused, because a
+ *     buyer who paid must get everything. Its room is held up front instead,
+ *     at the most an order can take: a new checkout is admitted only while
+ *     the room has space for it and for every checkout still open
+ *     (lib/order-admission.ts), the way the month's order figure is, and
+ *     what a store chooses to keep may fill the room only up to
+ *     ORDER_RESERVE_WINDOWS windows of orders from the top, so a full room
+ *     never stops sales on its own.
  *
  * Records that are not in the room are bounded another way, each in
  * tests/store-data-registry.ts: they expire within days of the use that
@@ -66,11 +68,14 @@ export const NON_PAYING_DATA_ROOM_BYTES: Record<Exclude<Standing, "paid">, numbe
 };
 
 /**
- * What one order counted takes from the room for good, in bytes, whatever it
- * holds: at least everything an order writes that is kept for as long as the
- * store is (its buyer's contact and access, the community, the license key,
- * the podcast and Discord access a product gives, the sale an affiliate
- * earns on, its review's marks...), each at the most it can weigh, and
+ * The most one order can keep for good, in bytes, whatever it holds: what a
+ * checkout holds in the room while it is open (lib/order-admission.ts), and
+ * the reserve for orders is counted in. What an order really keeps is
+ * charged as it is written (lib/order-data.ts), and is far less. This is at
+ * least everything an order can write that is kept for as long as the store
+ * is (its buyer's contact and access, the community, the license key, the
+ * podcast and Discord access a product gives, the sale an affiliate earns
+ * on, its review's marks...), each at the most it can weigh, and
  * ITEM_DATA_BYTES more for each product it hands over
  * (tests/store-data-registry.ts adds them up and holds these above the sums).
  * What an order keeps only for a while is priced on its own, at every order
@@ -112,6 +117,16 @@ export function orderDataBytes(items: number): number {
  * (lib/store.ts): some are kept until they expire, some are never let go.
  */
 export const PRODUCT_SIDE_BYTES = 8_192;
+
+/**
+ * How long a booked call's line in the store's diary is kept after the call
+ * ended (18 October 2026). The diary is what makes a time unavailable; a call
+ * long over makes nothing unavailable, and Stripe keeps the booking itself
+ * (its checkout, with the time in its details), which is what every page and
+ * refund reads. So the line is let go, and the room it took given back, on
+ * the first look at the diary this many days after the call (lib/calls.ts).
+ */
+export const PAST_CALL_DAYS = 90;
 
 /** Windows of a plan's orders, of one product each, that what a store keeps leaves room for. */
 export const ORDER_RESERVE_WINDOWS = 2;

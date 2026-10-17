@@ -2,11 +2,13 @@
  * A store's data room (lib/store-data.ts): what it keeps is taken before it
  * is written and refused past the room, what it deletes is given back, what
  * expires by itself comes off with its month, and an order is never refused
- * once paid, because its room was held when its checkout opened. Runs the
+ * once paid, because its room was held when its checkout opened (what it
+ * really writes is charged by lib/order-data.ts, tests/order-data.test.ts). Runs the
  * real code against the in-memory Redis (tests/redis-stub.ts);
  * scripts/test_store_data_redis.py runs the same script on a real Redis.
  */
-import { DataRoomError, chargeOrderData, dataKey, dataUsed, giveData, keepFor, needData, noteData, takeData } from "@/lib/store-data";
+import { DataRoomError, dataKey, dataUsed, giveData, keepFor, needData, noteData, takeData } from "@/lib/store-data";
+import { orderWriteCharged } from "@/lib/order-data";
 import { DATA_FULL_BUYER_WORDS, DATA_ROOM_BYTES, NON_PAYING_DATA_ROOM_BYTES, ORDER_DATA_BYTES, contentRoomFor, dataBytes, dataFullWords, dataRoomFor, itemsHandedOver, orderDataBytes, orderReserveFor, utf8Length } from "@/lib/store-data-rules";
 import { StoreFullError } from "@/lib/store-full";
 import { cappedCount } from "@/lib/capped-count";
@@ -59,9 +61,9 @@ async function main() {
 
   part("An order is never refused once paid");
   await noteData(paid, [{ slot: "p:huge", bytes: room, set: true }], now);
-  await chargeOrderData(paid, 2, now);
+  const left = await orderWriteCharged(paid, [["HSETNX", "nl:learn:enr:data-test:buyer", "p1", "1760000000"], ["SADD", "nl:lib:data-test-buyer", "a".repeat(32)]]);
   const used = (await dataUsed(paid, now))!;
-  is("what an order leaves is added whatever the room holds", used.orders, orderDataBytes(2));
+  is("what an order leaves is added whatever the room holds, at what it really adds", [used.orders, left.charged > 0, left.charged < orderDataBytes(1)], [left.charged, true, true]);
   is("so the room may be passed by what was paid for", used.used > room, true);
 
   part("A checkout is held only while the room has space for its order");

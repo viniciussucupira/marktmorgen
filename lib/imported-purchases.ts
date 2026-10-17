@@ -35,6 +35,7 @@ import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type DataStore, needData } from "@/lib/store-data";
+import { orderWrite } from "@/lib/order-data";
 import { dataBytes } from "@/lib/store-data-rules";
 import type { Store } from "@/lib/store";
 
@@ -137,7 +138,7 @@ export async function importedFor(store: Store, email: string): Promise<Imported
   // Brought over before the list of who was brought existed: noted the first time they are read.
   const brought = found.filter((p) => IMPORT_JOB.test(p.job));
   if (brought.length && store.statsId) {
-    await redisPipeline([["HSETNX", importedWhoKey(store.statsId), normaliseEmail(email), String(Math.min(...brought.map((p) => p.at)))]]).catch(() => {});
+    await orderWrite(store, [["HSETNX", importedWhoKey(store.statsId), normaliseEmail(email), String(Math.min(...brought.map((p) => p.at)))]]).catch(() => {});
   }
   return found;
 }
@@ -156,8 +157,8 @@ export async function grantImported(
   /**
    * The store whose data room an import or the API's gift takes from
    * (DataRoomError when it does not fit), or null for what an order gives (a
-   * gift, a place, a pre-order, a PayPal purchase), counted with the order
-   * (lib/store-data-rules.ts, ORDER_DATA_BYTES).
+   * gift, a place, a pre-order, a PayPal purchase), counted at what it
+   * really adds (lib/order-data.ts).
    */
   room: DataStore | null = null,
 ): Promise<boolean[]> {
@@ -168,14 +169,14 @@ export async function grantImported(
   if (IMPORT_JOB.test(job)) {
     await redisPipeline([...new Set(grants.map((g) => normaliseEmail(g.email)))].map((email) => ["HSETNX", importedWhoKey(statsId), email, String(atSeconds)]));
   }
-  const answers = await redisPipeline(
-    grants.map((g) => [
-      "HSETNX",
-      importedKey(statsId, g.email),
-      g.productId,
-      JSON.stringify({ at: atSeconds, job, items: g.items, ...(g.option ? { option: g.option } : {}) }),
-    ]),
-  );
+  const writes: (string | number)[][] = grants.map((g) => [
+    "HSETNX",
+    importedKey(statsId, g.email),
+    g.productId,
+    JSON.stringify({ at: atSeconds, job, items: g.items, ...(g.option ? { option: g.option } : {}) }),
+  ]);
+  // An order's grant (no room given) is counted at what it really adds (lib/order-data.ts).
+  const answers = room ? await redisPipeline(writes) : await orderWrite({ sid, statsId }, writes);
   return answers.map((a) => Number(a) === 1);
 }
 

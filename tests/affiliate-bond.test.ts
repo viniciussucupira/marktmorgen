@@ -149,7 +149,8 @@ test("a store at the cap keeps every bond it has and refuses only new ones", asy
 
 test("no address, name or order is kept, only a one-way hash", () => {
   const src = readFileSync(join(process.cwd(), "lib/affiliate-bond.ts"), "utf8");
-  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  // Comments and the modules it is written with are not what it keeps.
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/^import .*$/gm, "");
   assert.match(code, /createHash\("sha256"\)/, "the buyer is hashed, not stored");
   assert.match(code, /nimbus-aff-bond:\$\{statsId\}/, "and the store's own id is mixed in, so two stores' records cannot be lined up");
   // Nothing else about the person may creep in beside the hash.
@@ -162,7 +163,8 @@ test("the affiliate is never shown who their buyers are", () => {
   // The bond answers one question, asked by the checkout: which affiliate does
   // this address already belong to. There is no reading it the other way.
   const src = readFileSync(join(process.cwd(), "lib/affiliate-bond.ts"), "utf8");
-  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  // Comments and the modules it is written with are not what it keeps.
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/^import .*$/gm, "");
   assert.doesNotMatch(code, /HGETALL|HKEYS|HVALS|SMEMBERS/, "no call that lists a store's buyers belongs in this file");
 });
 

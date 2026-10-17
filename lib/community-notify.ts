@@ -28,6 +28,7 @@
  * thinner still — who did what, and where to go, never the words.
  */
 import { redisPipeline } from "@/lib/redis";
+import { type DataOwner, orderWrite } from "@/lib/order-data";
 import { pushMembers } from "@/lib/community-push";
 import { communityWords } from "@/lib/buyer-words/community";
 import { type DataStore, takeData } from "@/lib/store-data";
@@ -164,9 +165,9 @@ export async function unreadCount(id: string, who: string): Promise<number> {
   return n;
 }
 
-/** Marks everything up to now as looked at. */
-export async function markSeen(id: string, who: string): Promise<void> {
-  await redisPipeline([["SET", seenKey(id, who), String(now())]]).catch(() => {});
+/** Marks everything up to now as looked at: a member's mark, counted in the store's room once (lib/order-data.ts). */
+export async function markSeen(id: string, who: string, owner: DataOwner): Promise<void> {
+  await orderWrite(owner, [["SET", seenKey(id, who), String(now())]]).catch(() => {});
 }
 
 /** What a member leaves behind when they are removed. */

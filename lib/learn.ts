@@ -35,6 +35,7 @@ import { coursesWords } from "@/lib/buyer-words/courses";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type DataStore, giveData, needData, noteData, takeData } from "@/lib/store-data";
 import { dataBytes } from "@/lib/store-data-rules";
+import { orderWrite } from "@/lib/order-data";
 import { earnedCourses } from "@/lib/community-points";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
@@ -168,7 +169,8 @@ const blockedKey = (courseId: string) => `nl:course:${courseId}:blocked`;
 /** Written when a purchase is confirmed on the thanks page. */
 export async function recordEnrollment(store: Store, email: string, productId: string, startSeconds: number): Promise<void> {
   if (!isRedisConfigured()) return;
-  await redisPipeline([
+  // Counted in the store's room at what it really adds: nothing for a course already there (lib/order-data.ts).
+  await orderWrite(store, [
     ["HSETNX", ledgerKey(store, email), productId, String(Math.floor(startSeconds))],
     ["DEL", paidCacheKey(store, email)],
   ]);
@@ -348,7 +350,7 @@ async function courseLedger(store: Store, email: string): Promise<Ledger> {
   // new is handed over, and what already was stays.
   if (store.community?.id) {
     try {
-      const earned = await earnedCourses(store.community.id, emailKey(email), Date.now(), store.community.on);
+      const earned = await earnedCourses(store.community.id, emailKey(email), Date.now(), store.community.on, store);
       for (const product of courses) {
         const at = earned.get(product.id);
         if (product.course && !result.has(product.id) && at !== undefined) result.set(product.id, at);

@@ -173,7 +173,7 @@ export async function seedPerson(w: World, rawEmail: string, other: string | nul
 
   // The community (lib/community*.ts, lib/chat-grant.ts).
   const id = w.communityId;
-  const member = await touchMember(id, email, null);
+  const member = await touchMember(id, email, null, store);
   if (!member) throw new Error("no member");
   // Their profile as setProfile leaves it (its compare-and-set script is Redis's own, lib/community.ts):
   // a name, a handle others mention them by, the directory, the member search, and the token of their announcements' unsubscribe link.
@@ -187,7 +187,7 @@ export async function seedPerson(w: World, rawEmail: string, other: string | nul
     ["SET", `nl:cm:unsub:${unsub}`, `${id}|${learner}|${store.handle}`],
   ]);
   await indexMember(id, named);
-  await award(id, learner, 1);
+  await award(id, learner, 1, store);
   await tell(id, [learner], { kind: "reply", post: "p00001", comment: "", by: "creator", words: "Welcome in" } as never, ROOM);
   await redisPipeline([
     ["SET", `nl:cm:${id}:ps:${learner}`, JSON.stringify([{ endpoint: "https://push.example.com/1", keys: { p256dh: "x", auth: "y" }, kid: "k1", live: false }])],

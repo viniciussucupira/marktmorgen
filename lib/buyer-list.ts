@@ -71,10 +71,10 @@ export async function listOrder(store: Store, order: ListedOrder): Promise<"done
         clicks: order.clicks === true,
         productId: first.id,
         title: first.title,
-      }, null);
+      }, { order: store });
       await enroll(store, order.email, { joined: added.joined, productId: first.id });
       for (const item of rest) {
-        if (await noteProduct(store.listId, order.email, item.id, item.title)) {
+        if (await noteProduct(store.listId, order.email, item.id, item.title, store)) {
           await enroll(store, order.email, { joined: false, productId: item.id });
         }
       }
@@ -82,7 +82,7 @@ export async function listOrder(store: Store, order: ListedOrder): Promise<"done
       // Someone already on the list who buys without the box: nobody new is
       // added, but a sequence about what they bought starts for them.
       for (const got of products) {
-        if (await noteProduct(store.listId, order.email, got.id, got.title)) {
+        if (await noteProduct(store.listId, order.email, got.id, got.title, store)) {
           await enroll(store, order.email, { joined: false, productId: got.id });
         }
       }
