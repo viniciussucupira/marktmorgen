@@ -77,7 +77,7 @@ async function main(): Promise<void> {
   const OWNER = "owner@example.com";
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro" });
   const made = await addProduct(OWNER, "Meal Planner", "", "19");
   if (!made.ok) throw new Error("no product");
   const store = (await storeForEmail(OWNER))!;

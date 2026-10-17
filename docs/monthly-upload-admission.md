@@ -12,7 +12,7 @@ Completing or canceling an existing grant remains accessible when new admissions
 
 Only revocable R2 multipart authorization is currently admitted by this guard. Direct Bunny and Blob grants remain unavailable because those paths do not establish the same binding used by this review. The existing studio fallback can upload a lesson video as a file to R2; this does not provide Bunny transcoding. Existing stored content and playback are not deleted or newly restricted by this change.
 
-Numerical allowances and paused availability are shown from the same policy on the pricing cards. The policy is also bound into the commercial terms. Commercial review cannot pass with an expired or missing upload policy, or insufficient allocation capacity for any possible plan mix of its reviewed paid base. The reviewed funding policy is currently null: no real numerical allocation or funding has been approved, and new upload admission is paused. No prices, commissions or plan count changed.
+Numerical allowances and paused availability are shown from the same policy on the pricing cards. The policy is also bound into the commercial terms. Commercial review cannot pass with an expired or missing upload policy, or insufficient allocation capacity for any possible plan mix of its reviewed paid base. Since 17 Oct 2026 the paid-plan allowances are computed in code from the published storage limits and the cost table, and each month's ledger is opened once automatically; trial, setup and ended stores have none ([automatic spend policies](automatic-spend-policies.md)). No prices, commissions or plan count changed.
 
 ## Limits of the evidence
 

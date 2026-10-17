@@ -41,7 +41,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = "sk-ant-test-only-a-stand-in-0123456789";
   const owner = "guide@example.com";
   await claimHandle(owner, "guideshop", "Guide Shop", "");
-  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   await ensureStatsId(owner);
   const add = async (title: string, summary: string, price: string) => {
     const made = await addProduct(owner, title, summary, price, null);

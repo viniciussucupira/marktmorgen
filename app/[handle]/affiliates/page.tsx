@@ -31,7 +31,7 @@ import { AffiliateKit } from "@/components/affiliate-kit";
 import { AffiliateCampaignLinks } from "@/components/affiliate-campaign-links";
 import { AffiliatePromotionResults } from "@/components/affiliate-promotion-results";
 import { kitProduct, productAffiliateLink } from "@/lib/affiliate-kit";
-import { isAiConfigured } from "@/lib/ai";
+import { aiAvailableFor } from "@/lib/ai";
 
 type Params = {
   params: Promise<{ handle: string }>;
@@ -257,7 +257,7 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                     </>
                   ) : null}
                   <AffiliateCampaignLinks products={promotionProducts} />
-                  <AffiliateKit handle={store.handle} language={store.language} products={isAiConfigured() ? kitProducts : []} />
+                  <AffiliateKit handle={store.handle} language={store.language} products={aiAvailableFor(store) ? kitProducts : []} />
                   {/*
                     A code of the store's own, given to this affiliate
                     (lib/affiliate-codes.ts). It is the only thing on this page

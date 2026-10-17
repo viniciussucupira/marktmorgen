@@ -87,7 +87,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
   reply = `Here:\n${JSON.stringify({
     verdict: "Clear offer. Put a button under the headline.",
@@ -113,7 +113,7 @@ async function main(): Promise<void> {
   is("it is told never to put a price in a headline", asked[0].system.includes("Never a price"), true);
   is("a one-sided who-it-is-for is left out, not half shown", reviewed.value.fit, null);
   is("a question the page cannot answer keeps its empty answer", reviewed.value.questions[0], { q: "¿Cuánto dura el acceso?", a: "" });
-  is("it counts as one of the month's jobs", reviewed.left, 99);
+  is("it counts as one of the month's jobs", reviewed.left, 39);
 
   reply = "not json";
   const broken = await reviewPage(store, { facts: "x", missing: [], drop: "", language: "English", free: false, notes: "" });

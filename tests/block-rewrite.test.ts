@@ -42,7 +42,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   const store = (await storeForEmail("owner@example.com"))!;
   const facts = "Product: Knife Skills\nPrice: $49";
 
@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   if (!done1.ok) throw new Error(`no rewrite: ${done1.reason}`);
   is("told the way, the language, and to add nothing", [asked[0].system.includes("Make it clearer"), asked[0].system.includes("Write in Spanish"), asked[0].system.includes("add none")], [true, true, true]);
   is("the words change, the picture beside them does not", done1.value.kind === "hero" ? [done1.value.id, done1.value.headline, done1.value.media] : null, ["hero0001", "Cortar más rápido en 10 días", "picture"]);
-  is("it counts as one of the month's jobs", done1.left, 99);
+  is("it counts as one of the month's jobs", done1.left, 39);
 
   part("Never a new fact");
   reply = JSON.stringify({ headline: "Cut faster in 10 days", sub: "Loved by 2,000 home cooks." });

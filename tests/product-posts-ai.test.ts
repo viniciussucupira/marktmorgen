@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "cocina", "Cocina de Ana", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
   await setLanguage("owner@example.com", "es");
   const store = (await storeForEmail("owner@example.com"))!;
 
@@ -43,12 +43,12 @@ async function main(): Promise<void> {
   is("a link the model wrote is taken out", posts?.x.includes("http"), false);
   is("each kept to its length", (posts?.x.length ?? 0) <= 260, true);
   is("the caption says the link is in the bio", posts?.instagram.includes("bio"), true);
-  is("one of the month's jobs", result.ok ? result.left : null, AI_MONTHLY.creator - 1);
+  is("one of the month's jobs", result.ok ? result.left : null, AI_MONTHLY.pro - 1);
 
   part("What changes nothing");
   reply = JSON.stringify({ x: "Only one." });
   const missing = await writePosts(store, { facts: "Product: x" });
-  is("an unusable response is refused but its started attempt is counted", [missing.ok, await aiLeft(store)], [false, AI_MONTHLY.creator - 2]);
+  is("an unusable response is refused but its started attempt is counted", [missing.ok, await aiLeft(store)], [false, AI_MONTHLY.pro - 2]);
 
   part("Where the link comes from");
   const panel = readFileSync("components/ai-posts.tsx", "utf8");

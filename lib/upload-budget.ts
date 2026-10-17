@@ -1,7 +1,7 @@
 import { isRedisConfigured, redisPipeline } from '@/lib/redis';
 import { standingOf, type PlanFields } from '@/lib/plan-standing';
 import type { Tier } from '@/lib/plan';
-import { CURRENT_UPLOAD_BUDGET_POLICY, UPLOAD_BUDGET_RULES, UPLOAD_BUDGET_SCOPES, isUploadBudgetConfigured, uploadBudgetSnapshot, type UploadBudgetPolicy, type UploadBudgetScope } from '@/lib/upload-budget-policy';
+import { AUTOMATIC_UPLOAD_REVIEW_ID, UPLOAD_BUDGET_RULES, UPLOAD_BUDGET_SCOPES, currentUploadBudgetPolicy, isUploadBudgetConfigured, uploadBudgetSnapshot, uploadLedgerKey, uploadOpenedKey, type UploadBudgetPolicy, type UploadBudgetScope } from '@/lib/upload-budget-policy';
 
 export type UploadBackend = 'r2'|'blob'|'stream';
 export type UploadStore = PlanFields & { statsId: string|null; tier: Tier };
@@ -10,14 +10,14 @@ export function uploadScopeFor(store: UploadStore): UploadBudgetScope {
   return standing==='paid'?store.tier:standing==='none'?'setup':standing;
 }
 /** One persistent cluster-slot hash covers all providers and all customers.
- * Its initial policy, company counters and allocation slots are supplied by a
- * reviewed migration. This request path never initializes a missing ledger.
+ * Under the automatic policy OPEN_UPLOAD_BUDGET opens each month's ledger
+ * once; this script never initializes a missing ledger.
  */
 export const RESERVE_UPLOAD_BUDGET = `
 local function amount(value)
   if not value or not string.match(value, '^%d+$') or (#value > 1 and string.sub(value, 1, 1) == '0') then return nil end
   local n = tonumber(value)
-  if not n or n < 0 or n > 1000000000000 or n ~= math.floor(n) then return nil end
+  if not n or n < 0 or n > 9000000000000000 or n ~= math.floor(n) then return nil end
   return n
 end
 if redis.call('TYPE', KEYS[1]).ok ~= 'hash' or redis.call('TTL', KEYS[1]) ~= -1 then return 0 end
@@ -68,6 +68,58 @@ end
 return 1
 `;
 
+/** Opens the automatic policy's month once, and carries a changed automatic
+ * policy onto the same counters. It never resets or recreates anything: a
+ * month whose ledger was opened and later went missing stays refused, a
+ * ledger without the automatic review is left alone, and changed allowances
+ * keep every used amount and every claimed allocation. RESERVE_UPLOAD_BUDGET
+ * is unchanged.
+ */
+export const OPEN_UPLOAD_BUDGET = `
+local function amount(value)
+  if not value or not string.match(value, '^%d+$') or (#value > 1 and string.sub(value, 1, 1) == '0') then return nil end
+  local n = tonumber(value)
+  if not n or n < 0 or n > 9000000000000000 or n ~= math.floor(n) then return nil end
+  return n
+end
+local scopes = {'creator', 'pro', 'scale', 'trial', 'setup', 'ended'}
+local funded = {}
+for i = 1, 6 do
+  funded[i] = amount(ARGV[2 + i])
+  if not funded[i] then return 0 end
+end
+local kind = redis.call('TYPE', KEYS[1]).ok
+if kind == 'none' then
+  if redis.call('EXISTS', KEYS[2]) ~= 0 then return 0 end
+  redis.call('SET', KEYS[2], ARGV[1])
+  redis.call('HSET', KEYS[1], 'review', ARGV[1], 'policy', ARGV[2], 'company:opens', '0', 'company:bytes', '0', 'company:controls', '0')
+  for i = 1, 6 do
+    redis.call('HSET', KEYS[1], 'slots:' .. scopes[i], funded[i], 'funded:' .. scopes[i], funded[i])
+  end
+  return 1
+end
+if kind ~= 'hash' or redis.call('TTL', KEYS[1]) ~= -1 then return 0 end
+if redis.call('HGET', KEYS[1], 'review') ~= ARGV[1] then return 0 end
+if redis.call('HGET', KEYS[1], 'policy') == ARGV[2] then return 1 end
+for _, name in ipairs({'opens', 'bytes', 'controls'}) do
+  if not amount(redis.call('HGET', KEYS[1], 'company:' .. name)) then return 0 end
+end
+local slots = {}
+for i = 1, 6 do
+  local was = amount(redis.call('HGET', KEYS[1], 'funded:' .. scopes[i]))
+  local left = amount(redis.call('HGET', KEYS[1], 'slots:' .. scopes[i]))
+  if not was or not left or left > was then return 0 end
+  local claimed = was - left
+  if funded[i] > claimed then slots[i] = funded[i] - claimed else slots[i] = 0 end
+end
+-- No writes until every field has been read and checked.
+for i = 1, 6 do
+  redis.call('HSET', KEYS[1], 'slots:' .. scopes[i], slots[i], 'funded:' .. scopes[i], funded[i])
+end
+redis.call('HSET', KEYS[1], 'policy', ARGV[2])
+return 1
+`;
+
 async function reserve(statsId: string, scope: UploadBudgetScope, action: 'open'|'control', bytes: number, policy: UploadBudgetPolicy|null): Promise<boolean> {
   if(!isUploadBudgetConfigured(policy) || !isRedisConfigured() || !/^[a-f0-9]{32}$/.test(statsId)
     || !(UPLOAD_BUDGET_SCOPES as readonly string[]).includes(scope)
@@ -75,18 +127,26 @@ async function reserve(statsId: string, scope: UploadBudgetScope, action: 'open'
     || (action==='open' && bytes===0) || (action==='control' && bytes!==0))return false;
   const cap=policy.perStore[scope], company=policy.company;
   if(cap.controlRequests<1 || (action==='open' && (cap.opens<1 || bytes>cap.authorizedBytes)))return false;
+  const key=uploadLedgerKey(policy.month), snapshot=uploadBudgetSnapshot(policy);
+  const take:(string|number)[]=['EVAL',RESERVE_UPLOAD_BUDGET,1,key,
+      snapshot,statsId,scope,action,bytes,cap.opens,cap.authorizedBytes,cap.controlRequests,
+      company.opens,company.authorizedBytes,company.controlRequests,policy.fundedStores[scope]];
   try{
-    const result=await redisPipeline([['EVAL',RESERVE_UPLOAD_BUDGET,1,UPLOAD_BUDGET_RULES.ledgerPrefix+policy.month,
-      uploadBudgetSnapshot(policy),statsId,scope,action,bytes,cap.opens,cap.authorizedBytes,cap.controlRequests,
-      company.opens,company.authorizedBytes,company.controlRequests,policy.fundedStores[scope]]]);
-    return result.length===1 && result[0]===1;
+    if(policy.reviewId!==AUTOMATIC_UPLOAD_REVIEW_ID){
+      const result=await redisPipeline([take]);
+      return result.length===1 && result[0]===1;
+    }
+    const open:(string|number)[]=['EVAL',OPEN_UPLOAD_BUDGET,2,key,uploadOpenedKey(policy.month),policy.reviewId,snapshot,
+      ...UPLOAD_BUDGET_SCOPES.map(name=>policy.fundedStores[name])];
+    const result=await redisPipeline([open,take]);
+    return result.length===2 && result[0]===1 && result[1]===1;
   }catch{return false;}
 }
 /** The full authorized size is retained on abort, timeout, rejection or lost
  * acknowledgement. Reopening is a new reservation; deleting a file never
  * refunds monthly upload capacity. This is not a supplier-dollar ceiling.
  */
-export async function reserveStoreUpload(store: UploadStore, bytes: number, backend: UploadBackend, policy: UploadBudgetPolicy|null=CURRENT_UPLOAD_BUDGET_POLICY): Promise<boolean> {
+export async function reserveStoreUpload(store: UploadStore, bytes: number, backend: UploadBackend, policy: UploadBudgetPolicy|null=currentUploadBudgetPolicy()): Promise<boolean> {
   // Direct Blob/Bunny grants do not establish the same revocable, size-bound
   // session contract. Keep them closed until that provider path is proven.
   if(backend!=='r2')return false;
@@ -96,6 +156,6 @@ export async function reserveStoreUpload(store: UploadStore, bytes: number, back
  * Completing or canceling an existing grant remains accessible; the reviewed
  * per-open liability must include that work and month-boundary carryover.
  */
-export async function reserveUploadControl(store: UploadStore, policy: UploadBudgetPolicy|null=CURRENT_UPLOAD_BUDGET_POLICY): Promise<boolean> {
+export async function reserveUploadControl(store: UploadStore, policy: UploadBudgetPolicy|null=currentUploadBudgetPolicy()): Promise<boolean> {
   return !!store?.statsId && reserve(store.statsId,uploadScopeFor(store),'control',0,policy);
 }

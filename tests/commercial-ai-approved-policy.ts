@@ -9,3 +9,4 @@ export const CURRENT_AI_SPEND_POLICY: AiSpendPolicy = {
   fundedStores:{creator:10000,pro:10000,scale:10000,trial:0,setup:0,ended:0},
   companyMicroUsd:300000000,
 };
+export const currentAiSpendPolicy=()=>CURRENT_AI_SPEND_POLICY;

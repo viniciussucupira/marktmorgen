@@ -1,0 +1,148 @@
+/**
+ * The one table of supplier rates that the automatic spend ceilings are
+ * computed from (lib/ai-spend-policy.ts, lib/upload-budget-policy.ts).
+ * Client-safe: no secrets, no environment, no network.
+ *
+ * Every figure is a published list price, read on the date below, or a
+ * deliberately high allowance stated as such. Nothing here is an average or
+ * a forecast. A changed rate moves every ceiling and every reservation that
+ * is computed from it; tests/spend-cost-table.test.ts fails when another file
+ * repeats a rate that no longer matches this one.
+ *
+ * Sources, read 2026-10-17:
+ *   https://platform.claude.com/docs/en/about-claude/pricing
+ *   https://platform.claude.com/docs/en/models/sonnet-5-5/overview
+ *   https://platform.claude.com/docs/en/models/haiku-5-5/overview
+ *   https://platform.claude.com/docs/en/build-with-claude/vision
+ *   https://platform.claude.com/docs/en/build-with-claude/pdf-support
+ *   https://developers.cloudflare.com/r2/pricing/
+ */
+export const COST_TABLE_VERSION = 'cost-table-2026-10-17';
+
+type RateTier = { readonly upToInputTokens: number; readonly inputMicroUsdPerMTok: number; readonly outputMicroUsdPerMTok: number };
+type ModelRates = { readonly contextTokens: number; readonly tiers: readonly RateTier[] };
+
+/** Anthropic list prices in micro-USD per million tokens (1 USD = 1,000,000).
+ * Sonnet 5.5: $2 in / $10 out across the full 1M context at standard pricing.
+ * Haiku 5.5: $0.10 / $0.50 for prompts up to 100,000 tokens and $0.50 / $2.50
+ * above, the whole request priced at the higher rate. The application never
+ * sends inference_geo, so the 1.1x US-only multiplier does not apply.
+ */
+export const ANTHROPIC_RATES = {
+  'claude-sonnet-5-5': { contextTokens: 1_000_000, tiers: [{ upToInputTokens: 1_000_000, inputMicroUsdPerMTok: 2_000_000, outputMicroUsdPerMTok: 10_000_000 }] },
+  'claude-haiku-5-5': { contextTokens: 1_000_000, tiers: [
+    { upToInputTokens: 100_000, inputMicroUsdPerMTok: 100_000, outputMicroUsdPerMTok: 500_000 },
+    { upToInputTokens: 1_000_000, inputMicroUsdPerMTok: 500_000, outputMicroUsdPerMTok: 2_500_000 },
+  ] },
+} as const satisfies Record<string, ModelRates>;
+export type RatedModel = keyof typeof ANTHROPIC_RATES;
+
+/** A deliberately high allowance, not a measured rate, added to every model
+ * charge for taxes on the provider invoice, currency exchange and card or
+ * remittance costs. */
+export const PROVIDER_CHARGES_BPS = 1_000;
+
+/** A hard input bound worked out from the request itself. Every token covers
+ * at least one byte of text, so UTF-8 bytes bound the text tokens; the
+ * framing allowance covers the message structure. An image is downscaled by
+ * the provider to at most 4,784 visual tokens (the high-resolution tier of
+ * Claude 4.7 and later; 1,568 on older models). A PDF page carries extracted
+ * text that its byte size does not bound, so a request with a document is
+ * held at the model's whole context window. */
+export const AI_FRAMING_TOKENS = 1_024;
+export const AI_TOKENS_PER_BLOCK = 32;
+export const IMAGE_TOKEN_CEILING = 4_784;
+
+/** Hosting rates for the request that waits on the model (tests/traffic-cost.ts
+ * holds the same figures for visits): function memory $0.0106 per GB-hour at
+ * 2 GB, held for the whole 45-second model timeout; $0.60 per million
+ * function calls; $0.128 per CPU-hour, one CPU-second counted; $2.00 per
+ * million database commands, twenty counted. */
+export const VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR = 10_600;
+export const VERCEL_FUNCTION_GB = 2;
+export const VERCEL_CALL_MICRO_USD_PER_MILLION = 600_000;
+export const VERCEL_CPU_MICRO_USD_PER_HOUR = 128_000;
+export const UPSTASH_MICRO_USD_PER_MILLION_COMMANDS = 2_000_000;
+export const AI_CALL_WAIT_SECONDS = 45;
+const ceilDiv = (a: bigint, b: bigint) => (a + b - BigInt(1)) / b;
+/** What one model call costs the host and the database, whatever its answer. */
+export const AI_CALL_INFRA_MICRO_USD = Number(
+  ceilDiv(BigInt(VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR * VERCEL_FUNCTION_GB * AI_CALL_WAIT_SECONDS), BigInt(3600))
+  + ceilDiv(BigInt(VERCEL_CALL_MICRO_USD_PER_MILLION), BigInt(1_000_000))
+  + ceilDiv(BigInt(VERCEL_CPU_MICRO_USD_PER_HOUR), BigInt(3600))
+  + ceilDiv(BigInt(UPSTASH_MICRO_USD_PER_MILLION_COMMANDS * 20), BigInt(1_000_000)));
+
+/** Cloudflare R2 Standard, no free-tier credit: $0.015 per GB-month,
+ * $4.50 per million Class A operations, $0.36 per million Class B. */
+export const R2_STORAGE_MICRO_USD_PER_GB_MONTH = 15_000;
+export const R2_CLASS_A_MICRO_USD_PER_MILLION = 4_500_000;
+export const R2_CLASS_B_MICRO_USD_PER_MILLION = 360_000;
+
+/** Upload doors (lib/upload-budget.ts): each request is a function call held
+ * at 2 GB for up to 10 seconds with one CPU-second and twenty database
+ * commands. An upload start is allowed twenty Class A operations (create,
+ * complete, abort and the storage listing pages that admission reads) and two
+ * Class B; each signed piece is one Class A part upload. */
+export const UPLOAD_REQUEST_WAIT_SECONDS = 10;
+export const UPLOAD_REQUEST_INFRA_MICRO_USD = Number(
+  ceilDiv(BigInt(VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR * VERCEL_FUNCTION_GB * UPLOAD_REQUEST_WAIT_SECONDS), BigInt(3600))
+  + ceilDiv(BigInt(VERCEL_CALL_MICRO_USD_PER_MILLION), BigInt(1_000_000))
+  + ceilDiv(BigInt(VERCEL_CPU_MICRO_USD_PER_HOUR), BigInt(3600))
+  + ceilDiv(BigInt(UPSTASH_MICRO_USD_PER_MILLION_COMMANDS * 20), BigInt(1_000_000)));
+export const UPLOAD_OPEN_CLASS_A_OPS = 20;
+export const UPLOAD_OPEN_CLASS_B_OPS = 2;
+/** Requests an upload start brings besides itself: completing and canceling it. */
+export const UPLOAD_REQUESTS_PER_OPEN = 3;
+
+/** The most a month of upload starts and signed pieces can cost, in whole micro-USD. */
+export function uploadOperationsMicroUsd(opens: number, controlRequests: number, piecesPerControl: number): number | null {
+  if (![opens, controlRequests, piecesPerControl].every(n => Number.isSafeInteger(n) && n >= 0)) return null;
+  const million = BigInt(1_000_000);
+  const classA = BigInt(opens) * BigInt(UPLOAD_OPEN_CLASS_A_OPS) + BigInt(controlRequests) * BigInt(piecesPerControl);
+  const classB = BigInt(opens) * BigInt(UPLOAD_OPEN_CLASS_B_OPS);
+  const requests = BigInt(opens) * BigInt(UPLOAD_REQUESTS_PER_OPEN) + BigInt(controlRequests);
+  const total = ceilDiv(classA * BigInt(R2_CLASS_A_MICRO_USD_PER_MILLION), million) + ceilDiv(classB * BigInt(R2_CLASS_B_MICRO_USD_PER_MILLION), million)
+    + requests * BigInt(UPLOAD_REQUEST_INFRA_MICRO_USD);
+  return total > BigInt(Number.MAX_SAFE_INTEGER) ? null : Number(total);
+}
+
+export type AiRequestShape = { inputBytes: number; blocks: number; media: 'image' | 'document' | null; maxTokens: number };
+
+/** The most one request can cost, in whole micro-USD, rounded up at every
+ * step. Null when the model or the shape is not one this table can bound. */
+export function aiRequestHoldMicroUsd(model: string, shape: AiRequestShape): number | null {
+  if (!Object.hasOwn(ANTHROPIC_RATES, model) || !shape || typeof shape !== 'object') return null;
+  const { inputBytes, blocks, media, maxTokens } = shape;
+  if (![inputBytes, blocks, maxTokens].every(n => Number.isSafeInteger(n) && n >= 0) || maxTokens < 1 || blocks < 1
+    || (media !== null && media !== 'image' && media !== 'document')) return null;
+  const rates: ModelRates = ANTHROPIC_RATES[model as RatedModel];
+  const bound = inputBytes + AI_FRAMING_TOKENS + AI_TOKENS_PER_BLOCK * blocks + (media === 'image' ? IMAGE_TOKEN_CEILING : 0);
+  const input = media === 'document' ? rates.contextTokens : Math.min(bound, rates.contextTokens);
+  if (maxTokens > rates.contextTokens) return null;
+  const tier = rates.tiers.find(row => input <= row.upToInputTokens);
+  if (!tier) return null;
+  const million = BigInt(1_000_000);
+  const provider = ceilDiv(BigInt(input) * BigInt(tier.inputMicroUsdPerMTok), million) + ceilDiv(BigInt(maxTokens) * BigInt(tier.outputMicroUsdPerMTok), million);
+  const charged = ceilDiv(provider * BigInt(10_000 + PROVIDER_CHARGES_BPS), BigInt(10_000));
+  const total = charged + BigInt(AI_CALL_INFRA_MICRO_USD);
+  return total > BigInt(Number.MAX_SAFE_INTEGER) ? null : Number(total);
+}
+
+/** The priced unit behind a writing job: one call to the writing model with
+ * 12 KiB of instructions and notes and up to 3,000 tokens back. Longer
+ * requests (a whole sales page, a PDF) reserve more and are said to. */
+export const WRITING_JOB_REFERENCE = { model: 'claude-sonnet-5-5', shape: { inputBytes: 12_288, blocks: 1, media: null, maxTokens: 3_000 } } as const;
+/** The priced unit behind a visitor answer or a store-guide reply: one call to
+ * the answering model with 24 KiB of page facts and question, 400 tokens back. */
+export const ANSWER_REFERENCE = { model: 'claude-haiku-5-5', shape: { inputBytes: 24_576, blocks: 1, media: null, maxTokens: 400 } } as const;
+/** Reading a product's PDF: the answering model, a document and 1,500 tokens back. */
+export const PDF_READ_REFERENCE = { model: 'claude-haiku-5-5', shape: { inputBytes: 2_048, blocks: 2, media: 'document', maxTokens: 1_500 } } as const;
+
+const priced = (ref: { model: string; shape: AiRequestShape }) => {
+  const value = aiRequestHoldMicroUsd(ref.model, ref.shape);
+  if (value === null) throw new Error('Unpriceable reference request');
+  return value;
+};
+export const WRITING_JOB_MICRO_USD = priced(WRITING_JOB_REFERENCE);
+export const ANSWER_MICRO_USD = priced(ANSWER_REFERENCE);
+export const PDF_READ_MICRO_USD = priced(PDF_READ_REFERENCE);

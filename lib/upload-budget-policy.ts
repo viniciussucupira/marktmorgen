@@ -1,5 +1,7 @@
 import { MAX_FILE_BYTES } from "@/lib/product-file";
 import { PIECE_BYTES, PIECES_PER_ASK } from "@/lib/vault-rules";
+import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
+import { COST_TABLE_VERSION, uploadOperationsMicroUsd } from "@/lib/spend-cost-table";
 /** Public numerical ceilings, not proof of supplier pricing or tax treatment. */
 export const UPLOAD_BUDGET_SCOPES = ['creator','pro','scale','trial','setup','ended'] as const;
 export type UploadBudgetScope = typeof UPLOAD_BUDGET_SCOPES[number];
@@ -14,25 +16,87 @@ export type UploadBudgetPolicy = {
   fundedStores: Record<UploadBudgetScope,number>;
 };
 export const UPLOAD_BUDGET_RULES = {
-  schema: 1,
+  schema: 2,
   boundedBackend: 'r2-revocable-multipart-only',
   completionAndCancellation: 'reserved-liability-not-blocked',
-  maxInteger: 1_000_000_000_000,
-  ledgerPrefix: 'nl:upload-budget:v1:',
+  /** Exact in Lua doubles and JavaScript numbers (below 2^53): a month of bytes across every allocated store fits. */
+  maxInteger: 9_000_000_000_000_000,
+  ledger: 'nl:upload-budget:v2:{YYYY-MM}',
   scopeChanges: 'review-required-no-counter-reset',
   reservation: 'before-provider-authorization-no-refund',
-  missingLedger: 'deny',
+  missingLedger: 'automatic-policy-opens-each-month-once-never-recreates',
+  changedAutomaticCeilings: 'carry-every-counter',
   expiry: 'none',
 } as const;
-/** No full monthly allocation has been reviewed or funded. Unknown is not zero cost. */
-export const CURRENT_UPLOAD_BUDGET_POLICY: UploadBudgetPolicy|null = null;
+export const uploadLedgerKey = (month: string) => 'nl:upload-budget:v2:{' + month + '}';
+/** Marks that a month's ledger was opened, in the same cluster slot, so a lost ledger is never recreated empty. */
+export const uploadOpenedKey = (month: string) => uploadLedgerKey(month) + ':opened';
+
+/** The smallest number of upload-control requests that lets every start and every byte be signed. */
+export function minimumControlRequests(opens: number, authorizedBytes: number): number {
+  if (opens === 0) return 0;
+  return opens + opens + Math.floor((authorizedBytes - opens) / (PIECE_BYTES * PIECES_PER_ASK));
+}
+/** Upload starts a paid store may make in a calendar month. */
+export const PAID_UPLOAD_OPENS = { creator: 50, pro: 300, scale: 600 } as const;
+/**
+ * Each paid plan's monthly upload allowance, computed from what the plan
+ * already publishes and enforces: newly authorized bytes up to the plan's
+ * whole storage (lib/storage-rules.ts), its upload starts, and enough signing
+ * requests for every byte plus one more batch for each start. Stored bytes
+ * are paid for by the storage allowance, because admission counts every open
+ * reservation against it (docs/storage-reservations.md); what this allowance
+ * adds is the provider operations, priced in lib/spend-cost-table.ts and held
+ * to the 60% floor by tests/spend-floor.test.ts.
+ *
+ * Trial, setup and ended stores have no revenue: their uploads are a funded
+ * exposure with no approved reserve, so they have no allocation here.
+ */
+const paidCaps = (tier: 'creator'|'pro'|'scale'): UploadCaps => {
+  const opens = PAID_UPLOAD_OPENS[tier], authorizedBytes = PAID_STORAGE_BYTES[tier];
+  return { opens, authorizedBytes, controlRequests: minimumControlRequests(opens, authorizedBytes) + opens };
+};
+const NONE: UploadCaps = { opens: 0, authorizedBytes: 0, controlRequests: 0 };
+export const AUTOMATIC_UPLOAD_CAPS: Record<UploadBudgetScope, UploadCaps> = {
+  creator: paidCaps('creator'), pro: paidCaps('pro'), scale: paidCaps('scale'), trial: NONE, setup: NONE, ended: NONE,
+};
+/** Paid stores' allocations are funded by their own subscription; a finite count per tier. */
+export const PAID_UPLOAD_ALLOCATIONS_PER_TIER = 10_000;
+const AUTOMATIC_UPLOAD_FUNDED: Record<UploadBudgetScope, number> = { creator: PAID_UPLOAD_ALLOCATIONS_PER_TIER, pro: PAID_UPLOAD_ALLOCATIONS_PER_TIER, scale: PAID_UPLOAD_ALLOCATIONS_PER_TIER, trial: 0, setup: 0, ended: 0 };
+export const AUTOMATIC_UPLOAD_REVIEW_ID = 'automatic_' + COST_TABLE_VERSION.replace(/[^A-Za-z0-9_-]/g, '_');
+/** Month-free allowances, bound into the commercial terms snapshot. */
+export const AUTOMATIC_UPLOAD_BUDGET_CEILINGS = { reviewId: AUTOMATIC_UPLOAD_REVIEW_ID, perStore: AUTOMATIC_UPLOAD_CAPS, fundedStores: AUTOMATIC_UPLOAD_FUNDED } as const;
+/** The most one store's monthly upload allowance can cost in provider operations, in micro-USD. */
+export function uploadWorstCostMicroUsd(scope: UploadBudgetScope): number {
+  const cap = AUTOMATIC_UPLOAD_CAPS[scope];
+  const value = uploadOperationsMicroUsd(cap.opens, cap.controlRequests, PIECES_PER_ASK);
+  if (value === null) throw new Error('Unpriceable upload allowance');
+  return value;
+}
+/** The automatic policy for the current UTC month. Nothing to renew. */
+export function automaticUploadBudgetPolicy(now = new Date()): UploadBudgetPolicy|null {
+  if (!Number.isFinite(now.getTime())) return null;
+  const sum = (dimension: keyof UploadCaps) => UPLOAD_BUDGET_SCOPES.reduce((total, scope) => total + AUTOMATIC_UPLOAD_CAPS[scope][dimension] * AUTOMATIC_UPLOAD_FUNDED[scope], 0);
+  return {
+    reviewId: AUTOMATIC_UPLOAD_REVIEW_ID,
+    month: now.toISOString().slice(0, 7),
+    evidence: 'Computed in code from the published storage allowances and ' + COST_TABLE_VERSION + ' (lib/spend-cost-table.ts).',
+    company: { opens: sum('opens'), authorizedBytes: sum('authorizedBytes'), controlRequests: sum('controlRequests') },
+    perStore: Object.fromEntries(UPLOAD_BUDGET_SCOPES.map(scope => [scope, { ...AUTOMATIC_UPLOAD_CAPS[scope] }])) as Record<UploadBudgetScope, UploadCaps>,
+    fundedStores: { ...AUTOMATIC_UPLOAD_FUNDED },
+  };
+}
+/** The policy in force now. Always the automatic one. */
+export function currentUploadBudgetPolicy(now = new Date()): UploadBudgetPolicy|null {
+  return automaticUploadBudgetPolicy(now);
+}
 const amount = (n: unknown): n is number => typeof n==='number' && Number.isSafeInteger(n) && n>=0 && n<=UPLOAD_BUDGET_RULES.maxInteger;
 const caps = (value: unknown): value is UploadCaps => {
   if(!value || typeof value!=='object')return false;
   const row=value as UploadCaps;
   return amount(row.opens)&&amount(row.authorizedBytes)&&amount(row.controlRequests);
 };
-export function isUploadBudgetConfigured(policy: UploadBudgetPolicy|null = CURRENT_UPLOAD_BUDGET_POLICY, now = new Date()): policy is UploadBudgetPolicy {
+export function isUploadBudgetConfigured(policy: UploadBudgetPolicy|null = currentUploadBudgetPolicy(), now = new Date()): policy is UploadBudgetPolicy {
   if(!policy || !Number.isFinite(now.getTime()) || policy.month!==now.toISOString().slice(0,7)
     || !/^[A-Za-z0-9_-]{1,128}$/.test(policy.reviewId) || typeof policy.evidence!=='string' || !policy.evidence.trim()
     || !caps(policy.company) || !policy.perStore || !policy.fundedStores)return false;
@@ -62,9 +126,10 @@ export function uploadBudgetSnapshot(policy: UploadBudgetPolicy): string {
 }
 
 /** Customer-facing wording uses the same current ceilings as admission. */
-export function uploadAllowanceWords(scope: UploadBudgetScope, policy: UploadBudgetPolicy|null=CURRENT_UPLOAD_BUDGET_POLICY): string {
+export function uploadAllowanceWords(scope: UploadBudgetScope, policy: UploadBudgetPolicy|null=currentUploadBudgetPolicy()): string {
   if(!isUploadBudgetConfigured(policy))return 'New product and lesson file uploads are paused while monthly allowances are being reviewed.';
   const cap=policy.perStore[scope];
+  if(cap.opens===0)return 'New product and lesson file uploads start with a paid plan.';
   const bytes=cap.authorizedBytes;
   const unit=bytes>=1_000_000_000?1_000_000_000:bytes>=1_000_000?1_000_000:1;
   const label=unit===1_000_000_000?'GB':unit===1_000_000?'MB':'bytes';
