@@ -18,6 +18,8 @@ import { MAX_SITE_PAGES, pageOut } from "@/lib/site-page-rules";
 import { FunnelTypePicker, type TypeProduct } from "@/components/funnel-type-picker";
 import { MAX_PAGE_FUNNELS } from "@/lib/page-funnel";
 import { funnelStepEditorLink } from "@/lib/funnel-editor-links";
+import { canSell } from "@/lib/store-checkout";
+import { sellsThroughPayPal } from "@/lib/paypal-sales";
 import { can } from "@/lib/team-roles";
 import { canUseDomain } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site-url";
@@ -114,10 +116,16 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
   const inventory = await readPageFunnelsStrict(store.statsId).catch(() => null);
   const savedFunnels: SavedFunnel[] = await Promise.all(
     (inventory ?? []).map(async (funnel) => {
-      const [states, counts] = await Promise.all([stepStates(store, funnel), readFunnelCountsStrict(store.statsId, funnel).catch(() => null)]);
+      const [states, counts] = await Promise.all([stepStates(store, funnel, { strictProducts: true }).catch(() => null), readFunnelCountsStrict(store.statsId, funnel).catch(() => null)]);
       return {
         funnel,
-        steps: states.map((state, i) => ({
+        steps: (states ?? funnel.steps.map(step => ({
+          step,
+          title: choices.find(choice => choice.kind === step.kind && choice.id === step.id)?.title ?? "Saved step",
+          open: false,
+          why: "Step availability could not be checked. Reload before preparing this funnel.",
+          free: step.kind === "product" && free.has(step.id),
+        }))).map((state, i) => ({
           editor: funnelStepEditorLink(state.step, editorContext),
           title: state.title,
           open: state.open,
@@ -165,7 +173,16 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
         </div>
 
         <div className="mt-8">
-          <PageFunnelEditor saved={savedFunnels} choices={choices} base={funnelBase} />
+          <PageFunnelEditor
+            saved={savedFunnels}
+            choices={choices}
+            base={funnelBase}
+            paymentReview={{
+              available: canSell(store) || sellsThroughPayPal(store),
+              paymentsHref: can(view.role, "payments") ? `${studioPath(store)}#stripe` : null,
+              billingHref: can(view.role, "billing") ? `${studioPath(store)}#billing` : null,
+            }}
+          />
         </div>
         </> : (
           <section className="notice notice-warn mt-8" role="status" aria-labelledby="funnel-inventory-unavailable">
