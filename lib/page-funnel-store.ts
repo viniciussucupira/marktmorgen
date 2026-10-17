@@ -53,6 +53,23 @@ export async function readPageFunnels(statsId: string | null): Promise<PageFunne
   return parsePageFunnels(list).sort((a, b) => a.since - b.since || a.id.localeCompare(b.id));
 }
 
+/** Management reads must distinguish confirmed empty inventory from unavailable data. */
+export async function readPageFunnelsStrict(statsId: string | null): Promise<PageFunnel[]> {
+  if (!statsId || !isRedisConfigured()) throw new Error("Funnel inventory unavailable");
+  const replies = await redisPipeline([["HVALS", funnelsKey(statsId)]]);
+  if (!Array.isArray(replies) || replies.length !== 1 || !Array.isArray(replies[0])) {
+    throw new Error("Incomplete funnel inventory");
+  }
+  const raw = replies[0];
+  const records: unknown[] = raw.map((value) => {
+    if (typeof value !== "string") throw new Error("Invalid funnel inventory record");
+    return JSON.parse(value) as unknown;
+  });
+  const funnels = parsePageFunnels(records);
+  if (funnels.length !== records.length) throw new Error("Invalid funnel inventory");
+  return funnels.sort((a, b) => a.since - b.since || a.id.localeCompare(b.id));
+}
+
 /** One funnel by its id, or null. */
 export async function readPageFunnel(statsId: string | null, id: string): Promise<PageFunnel | null> {
   if (!statsId || !id || !isRedisConfigured()) return null;
