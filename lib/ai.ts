@@ -13,7 +13,7 @@
  *   nl:ai:<statsId>:<YYYY-MM>   writing jobs a store asked for this month
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { isAiBudgetConfigured, reserveAiSpend } from "@/lib/ai-spend";
+import { aiBudgetScopeFor, isAiBudgetConfigured, reserveAiSpend } from "@/lib/ai-spend";
 import { timed } from "@/lib/fetch-timeout";
 import { boundedAiRequest, isSupportedAiModel } from "@/lib/ai-request-rules";
 import { inTrial } from "@/lib/mail";
@@ -166,7 +166,7 @@ export async function askModel(
     console.error("AI request refused before provider call", bounded.reason);
     return null;
   }
-  if (!store?.statsId || !(await reserveAiSpend(store.statsId, inTrial(store, Date.now() / 1000) ? "trial" : store.tier, named))) return null;
+  if (!store?.statsId || !(await reserveAiSpend(store.statsId, aiBudgetScopeFor(store), named))) return null;
   const response = await timed(timeoutMs, (signal) =>
     fetch(API, {
       method: "POST",
