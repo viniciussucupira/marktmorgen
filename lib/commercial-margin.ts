@@ -1,3 +1,4 @@
+import { assessFundedExposure, FUNDED_EXPOSURE_RULES, type FundedExposureReview } from '@/lib/funded-exposure-rules';
 import { AI_ENTITLEMENT_RULES, aiEntitlementsFunded } from '@/lib/ai-entitlement-rules';
 import { CURRENT_UPLOAD_BUDGET_POLICY, UPLOAD_BUDGET_RULES, isUploadBudgetConfigured } from "@/lib/upload-budget-policy";
 /** Client-safe release policy. No secrets, tax rates inferred from residence, or optimistic defaults.
@@ -25,7 +26,7 @@ import { INVITE_PROGRAM_OPEN, INVITE_SHARE_PERCENT, INVITE_BONUS_CENTS, LEGACY_I
 import { QUIZ_USAGE_POLICY, QUIZ_MONTHLY_SUBMISSIONS } from "@/lib/quiz-usage-rules";
 export const REQUIRED_MARGIN_SCENARIOS=[
  "creator_month_full","creator_year_full","pro_month_full","pro_year_full","scale_month_full","scale_year_full",
- "video_overage","visits_overage","orders_overage","free_trial","full_refund","non_payment","post_cancellation","single_customer_all_fixed_costs","company_all_costs",
+ "video_overage","visits_overage","orders_overage",
 ] as const;
 export type MarginScenario=typeof REQUIRED_MARGIN_SCENARIOS[number];
 /** Base-plan worst cases cannot rely on future sales, overages or twelve monthly
@@ -43,11 +44,12 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 14,
+ schemaVersion: 15,
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: CURRENT_UPLOAD_BUDGET_POLICY },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
  customerBaseRules: CUSTOMER_BASE_RULES,
+ fundedExposureRules: FUNDED_EXPOSURE_RULES,
  invitations: { open: INVITE_PROGRAM_OPEN, legacySharePercent: INVITE_SHARE_PERCENT, legacyBonusCents: INVITE_BONUS_CENTS, legacyRecordingUntil: LEGACY_INVITE_RECORDING_UNTIL },
  quizzes: { newQuizPolicy: QUIZ_USAGE_POLICY, submissionsPerStoreUtcMonth: QUIZ_MONTHLY_SUBMISSIONS, legacyQuizzesExempt: true },
  basePlanRevenueCeilings: BASE_PLAN_REVENUE_CEILINGS,
@@ -75,9 +77,10 @@ export const CURRENT_PRICE_AND_RIGHTS_SNAPSHOT = JSON.stringify(CURRENT_COMMERCI
 export type CommercialMarginReview={
  priceAndRightsSnapshot:string;
  companyBase:CustomerBaseReview|null;
+ fundedExposure:FundedExposureReview|null;
  taxEvidence:string;
  costAndLimitEvidence:string;
- singleCustomerFixedCostsVerified:boolean;
+ allocatedFixedCostsVerified:boolean;
  prepaidUsageEnforced:boolean;
  scenarios:Partial<Record<MarginScenario,CustomerWorstCase|null>>;
 };
@@ -90,11 +93,23 @@ export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT
  if(!isAiSpendPolicyValid(aiPolicy)||!aiEntitlementsFunded(aiPolicy))return false;
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
  if(!review.taxEvidence?.trim()||!review.costAndLimitEvidence?.trim())return false;
- if(review.singleCustomerFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
+ if(review.allocatedFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
+ const exposure=assessFundedExposure(review.fundedExposure);
+ if(!exposure.approved||!review.companyBase||review.companyBase.monthlyFixedCostsCeilingCents==null)return false;
+ const combinedCosts=review.companyBase.monthlyFixedCostsCeilingCents+exposure.monthlyBudgetCents!;
+ if(!Number.isSafeInteger(combinedCosts))return false;
  const company = assessMinimumCustomerBase(
-  Object.keys(BASE_PLAN_REVENUE_CEILINGS).map(key=>({months:key.includes("_year_")?12:1,scenario:review.scenarios[key as MarginScenario]??null})), review.companyBase??null,
+  Object.keys(BASE_PLAN_REVENUE_CEILINGS).map(key=>({months:key.includes("_year_")?12:1,scenario:review.scenarios[key as MarginScenario]??null})), {...review.companyBase,monthlyFixedCostsCeilingCents:combinedCosts},
  );
  if(!company.reviewedBaseSufficient)return false;
+ // Non-paying AI allocations must be represented in the funded company
+ // exposure too; a pool cannot disappear from the accounting scenarios.
+ for(const [tier,scope] of [['trial','trial'],['setup','setup'],['ended','post_cancellation']] as const){
+  if(aiPolicy.fundedStores[tier]===0)continue;
+  const item=review.fundedExposure!.cases[scope], aiCents=aiStoreCostCents(aiPolicy,tier,1);
+  const cost=item?.worstCase?.costCeilings.ai;
+  if(!item||item.maximumMonthlyCases===null||item.maximumMonthlyCases<aiPolicy.fundedStores[tier]||aiCents===null||typeof cost!=='number'||!Number.isSafeInteger(cost)||cost<aiCents)return false;
+ }
  // Until an authenticated plan mix is bound to this review, fund enough
  // upload allocations for any mix of the reviewed paid customer base.
  if((["creator","pro","scale"] as const).some(tier=>uploadPolicy.fundedStores[tier]<review.companyBase!.reviewedPayingCustomers! || aiPolicy.fundedStores[tier]<review.companyBase!.reviewedPayingCustomers! || aiPolicy.storeMicroUsd[tier]<Math.max(...SUPPORTED_AI_MODELS.map(model=>aiPolicy.requestMicroUsd[model]))))return false;

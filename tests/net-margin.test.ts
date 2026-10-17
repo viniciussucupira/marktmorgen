@@ -1,3 +1,4 @@
+import { zeroExposureFixture } from './margin-test-fixtures';
 import {CURRENT_UPLOAD_BUDGET_POLICY as testUploadFunding} from "@/lib/upload-budget-policy";
 import {fundedCustomerScenario,fundedCustomerWithAi,zeroFixedCompanyFixture} from './margin-test-fixtures';
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
@@ -38,7 +39,7 @@ for(const gross of [1,3,10,101,1000,10001,1000000]){
   is("exact boundary not display rounding",result.approved,(gross-cost-tax)*100>=gross*60);
  }
 }
-const review=():CommercialMarginReview=>({companyBase:{monthlyFixedCostsCeilingCents:0,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: zero fixed costs",fixedTaxEvidence:"TEST ONLY: zero fixed taxes",reviewedPayingCustomers:1},priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",singleCustomerFixedCostsVerified:true,prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return [key,fundedCustomerWithAi(gross,Math.floor(gross*.65))];}))});
+const review=():CommercialMarginReview=>({companyBase:{monthlyFixedCostsCeilingCents:0,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: zero fixed costs",fixedTaxEvidence:"TEST ONLY: zero fixed taxes",reviewedPayingCustomers:1},priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",allocatedFixedCostsVerified:true, fundedExposure:zeroExposureFixture(),prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return [key,fundedCustomerWithAi(gross,Math.floor(gross*.65))];}))});
 is("hypothetical complete passing review passes calculation",commercialMarginReady(review()),true);
 is("absent real review stays closed",commercialMarginReady(),false);
 is("requesting launch cannot bypass missing review",commercialPlansMayOpen(true),false);
@@ -53,7 +54,7 @@ for(const key of REQUIRED_MARGIN_SCENARIOS){
 is("price change invalidates old review",commercialMarginReady({...review(),priceAndRightsSnapshot:"old prices"}),false);
 is("tax evidence required",commercialMarginReady({...review(),taxEvidence:" "}),false);
 is("cost and limit evidence required",commercialMarginReady({...review(),costAndLimitEvidence:""}),false);
-is("isolated-customer fixed costs must be reviewed",commercialMarginReady({...review(),singleCustomerFixedCostsVerified:false}),false);
+is("allocated fixed costs must be reviewed",commercialMarginReady({...review(),allocatedFixedCostsVerified:false}),false);
 is("postpaid unlimited consumption cannot be certified",commercialMarginReady({...review(),prepaidUsageEnforced:false}),false);
 is("published commission menu cannot launch before fee collection is proven",commercialPlansMayOpen(true,review()),false);
 

@@ -1,3 +1,4 @@
+import { zeroExposureFixture } from './margin-test-fixtures';
 import {fundedCustomerScenario,fundedCustomerWithAi,zeroFixedCompanyFixture} from './margin-test-fixtures';
 import { BASE_PLAN_REVENUE_CEILINGS, CURRENT_COMMERCIAL_TERMS, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, commercialMarginReady, REQUIRED_MARGIN_SCENARIOS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { CUSTOMER_COST_CATEGORIES } from "@/lib/net-margin-rules";
@@ -14,7 +15,7 @@ const review = (): CommercialMarginReview => ({
  companyBase:{monthlyFixedCostsCeilingCents:0,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: zero fixed costs",fixedTaxEvidence:"TEST ONLY: zero fixed taxes",reviewedPayingCustomers:1},priceAndRightsSnapshot: CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,
  taxEvidence: "TEST ONLY: hypothetical taxes",
  costAndLimitEvidence: "TEST ONLY: hypothetical funded limits",
- singleCustomerFixedCostsVerified: true,
+ allocatedFixedCostsVerified:true, fundedExposure:zeroExposureFixture(),
  prepaidUsageEnforced: true,
  scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => { const gross = BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000; return [key, fundedCustomerWithAi(gross,Math.floor(gross*.65))]; })),
 });
