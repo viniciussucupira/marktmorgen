@@ -24,6 +24,10 @@ import { sellsThroughPayPal } from "@/lib/paypal-sales";
 import { can } from "@/lib/team-roles";
 import { canUseDomain } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site-url";
+import { FunnelSharePanel } from "@/components/funnel-share-panel";
+import { listShares } from "@/lib/funnel-share-store";
+import { shareLimitsFor } from "@/lib/funnel-share-rules";
+import { FUNNEL_STARTERS } from "@/lib/funnel-starters";
 
 export const metadata: Metadata = {
   title: "Funnels — Marktmorgen",
@@ -143,6 +147,9 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
   );
   // What a kind of funnel can be built with (lib/funnel-types.ts): every product, and what it is.
   const typeProducts: TypeProduct[] = [...cards.values()].map((p) => ({ id: p.id, title: p.title, free: free.has(p.id), call: calls.has(p.id), draft: drafts.has(p.id) }));
+  // Copying, sharing and bringing in funnels (lib/funnel-bundle.ts): the store's links, never their codes.
+  const canShare = can(view.role, "page");
+  const shares = canShare ? await listShares(store.statsId).then((list) => list.map((entry) => ({ id: entry.id, name: entry.name, funnelId: entry.funnelId, createdAt: entry.createdAt, expiresAt: entry.expiresAt, hint: entry.hint }))).catch(() => null) : null;
   const funnelBase =
     store.domain?.liveAt && canUseDomain(store) ? `https://${store.domain.name}/go/` : `${SITE_URL}/@${store.handle}/go/`;
 
@@ -188,6 +195,18 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
             }}
           />
         </div>
+
+        {canShare ? (
+          <div className="mt-8">
+            <FunnelSharePanel
+              funnels={savedFunnels.map(({ funnel }) => ({ id: funnel.id, name: funnel.name }))}
+              shares={shares}
+              limits={shareLimitsFor(store)}
+              starters={FUNNEL_STARTERS.map(({ id, label, hint }) => ({ id, label, hint }))}
+              sid={store.sid}
+            />
+          </div>
+        ) : null}
         </> : (
           <section className="notice notice-warn mt-8" role="status" aria-labelledby="funnel-inventory-unavailable">
             <h2 id="funnel-inventory-unavailable" className="font-semibold">Your funnels could not be loaded</h2>

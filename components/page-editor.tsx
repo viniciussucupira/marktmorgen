@@ -7,6 +7,7 @@ import type { WhyNot } from "@/lib/why-not-rules";
 import type { VideoReach } from "@/lib/page-depth";
 
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { SavedSections } from "@/components/saved-sections";
 import { useRouter } from "next/navigation";
 import { uploadPresigned } from "@vercel/blob/client";
 import { shrink } from "@/components/product-image-editor";
@@ -539,6 +540,16 @@ export function PageEditor({
     setPicking(null);
   }
 
+  /** A saved section's blocks (components/saved-sections.tsx), at the end of the page. */
+  function insertSection(blocks: PageBlock[]) {
+    setDrafts((all) =>
+      all.length + blocks.length > MAX_BLOCKS
+        ? all
+        : [...all, ...blocks.map((block) => ({ block, video: block.kind === "video" && block.video ? videoAddress(block.video) : "" }))],
+    );
+    setPicking(null);
+  }
+
   function move(index: number, by: -1 | 1) {
     setDrafts((all) => {
       const to = index + by;
@@ -621,6 +632,8 @@ export function PageEditor({
     if (!source || drafts.length >= MAX_BLOCKS || !canDuplicate(source.block)) return;
     const block = { ...structuredClone(source.block), id: newBlockId() } as PageBlock;
     if (block.kind === "feature") block.picture = null;
+    // A copy is the creator's own block, not part of the saved section the original came from.
+    delete block.saved;
     setDrafts((all) => {
       if (all.length >= MAX_BLOCKS) return all;
       const copy = [...all];
@@ -2035,6 +2048,7 @@ export function PageEditor({
                     >
                       <span className="text-sm font-semibold text-ink">{`${index + 1}. ${kindLabel(block.kind)}`}</span>
                       <span className="w-full truncate text-xs text-ink-soft">
+                        {block.saved ? "Saved section · " : ""}
                         {block.screens === "phone" ? "Phones only · " : block.screens === "computer" ? "Computers and tablets only · " : ""}
                         {summaryLine(block)}
                         {reach && reach.visitors >= MIN_DEPTH_VISITORS && reach.shares[block.id] !== undefined
@@ -2176,6 +2190,15 @@ export function PageEditor({
               </button>
             )}
           </div>
+
+          <SavedSections
+            pageKey={pageKey}
+            allowed={site ? site.kinds : BLOCK_KINDS.map((k) => k.kind).filter((kind) => kind !== "form")}
+            blocks={drafts.map((d) => d.block)}
+            room={MAX_BLOCKS - drafts.length}
+            disabled={busy}
+            onInsert={insertSection}
+          />
 
           <div className="mt-6 rounded-2xl bg-paper p-4 ring-1 ring-line sm:p-5">
             <p className="field-label">Page style</p>

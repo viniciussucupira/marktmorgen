@@ -10,6 +10,8 @@
  *
  *   nl:product:page:<statsId>:<productId>  -> the page, as JSON
  *   nl:product:pics:<statsId>              -> hash: picture path -> the product whose page shows it
+ *   nl:sblock:uses:<statsId>:<section>     -> set: the pages carrying a saved section (lib/saved-block-store.ts),
+ *                                             kept with every save
  *   nl:product:pages:<statsId>:<productId> -> list: the page as it was before each of its last
  *                                             five saves, newest first, as "<ms>\n<json>";
  *                                             forgotten 30 days after the last save
@@ -22,6 +24,8 @@
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { EMPTY_PAGE, MAX_STORED_PAGE_BYTES, type SalesPage, parsePage, picturePaths } from "@/lib/sales-page";
+import { sectionsOn } from "@/lib/saved-blocks";
+import { usesCommands } from "@/lib/saved-block-store";
 
 const pageKey = (statsId: string, productId: string) => `nl:product:page:${statsId}:${productId}`;
 const picsKey = (statsId: string) => `nl:product:pics:${statsId}`;
@@ -84,7 +88,19 @@ export async function writePage(statsId: string, productId: string, page: SalesP
     const key = versionsKey(statsId, productId);
     commands.push(["LPUSH", key, `${Date.now()}\n${before}`], ["LTRIM", key, 0, MAX_VERSIONS - 1], ["EXPIRE", key, VERSION_DAYS * 86_400]);
   }
+  // Which saved sections the page carries, before and after (lib/saved-blocks.ts).
+  commands.push(...usesCommands(statsId, productId, sectionsOfRecord(before), empty ? [] : sectionsOn(page)));
   await redisPipeline(commands);
+}
+
+/** The saved sections a stored record carries; none when it cannot be read. */
+function sectionsOfRecord(raw: unknown): string[] {
+  if (typeof raw !== "string" || !raw || raw.length > MAX_STORED_PAGE_BYTES) return [];
+  try {
+    return sectionsOn(parsePage(JSON.parse(raw)));
+  } catch {
+    return [];
+  }
 }
 
 export type PageVersion = { at: number; page: SalesPage };
@@ -112,7 +128,8 @@ export async function readVersions(statsId: string | null, productId: string): P
 /** Forgets the page of a product that is gone. Returns the picture files it was the one showing, to delete. */
 export async function dropPage(statsId: string | null, productId: string): Promise<string[]> {
   if (!statsId || !isRedisConfigured()) return [];
-  const shown = picturePaths(await readPage(statsId, productId).catch(() => ({ blocks: [] })));
-  await redisPipeline([["DEL", pageKey(statsId, productId), versionsKey(statsId, productId)]]);
+  const held = await readPage(statsId, productId).catch(() => ({ ...EMPTY_PAGE, blocks: [] }));
+  const shown = picturePaths(held);
+  await redisPipeline([["DEL", pageKey(statsId, productId), versionsKey(statsId, productId)], ...usesCommands(statsId, productId, sectionsOn(held), [])]);
   return releasePictures(statsId, productId, shown);
 }
