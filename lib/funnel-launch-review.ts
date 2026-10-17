@@ -1,5 +1,5 @@
 export type FunnelLaunchStep = { title: string; open: boolean; why: string; product: boolean; free: boolean };
-export type FunnelLaunchIssue = { code: "disabled" | "empty" | "step" | "payments" | "payments_unknown" | "form" | "forms_unknown"; title: string; detail: string; stepIndex?: number };
+export type FunnelLaunchIssue = { code: "disabled" | "empty" | "step" | "payments" | "payments_unknown" | "form" | "forms_unknown" | "quiz_product" | "quiz_unknown"; title: string; detail: string; stepIndex?: number; formId?: string };
 /** Saved configuration checks only; never proof of checkout, delivery or conversion. */
 export function funnelLaunchIssues(enabled: boolean, steps: readonly FunnelLaunchStep[], paymentsAvailable: boolean | null): FunnelLaunchIssue[] {
   const issues: FunnelLaunchIssue[] = [];
