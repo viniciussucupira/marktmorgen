@@ -97,10 +97,10 @@ async function main(): Promise<void> {
     { delayHours: 24, subject: "For the launch list", body: "Early price.", when: { if: "tag", tag: "  VIP " }, otherwise: "end" },
     { delayHours: 24, subject: "Last call", body: "Closing.", when: { if: "lacks", productId: course.product.id }, otherwise: "skip" },
   ];
-  is("a condition on a product that is not the store's", (await saveFlow(store, { name: "Launch", trigger: "joined", active: true, steps: [{ ...steps[0], when: { if: "has", productId: "nosuchproduct" } }] })).ok ? "saved" : "refused", "refused");
-  const clash = await saveFlow(store, { name: "Launch", trigger: "bought", active: true, steps, goal: { any: true } });
+  is("a condition on a product that is not the store's", (await saveFlow(store, { name: "Launch", trigger: "joined", active: true, steps: [{ ...steps[0], when: { if: "has", productId: "nosuchproduct" } }] }, { activate: true })).ok ? "saved" : "refused", "refused");
+  const clash = await saveFlow(store, { name: "Launch", trigger: "bought", active: true, steps, goal: { any: true } }, { activate: true });
   is("an end that would come first", clash.ok ? "saved" : clash.reason, "goal");
-  const saved = await saveFlow(store, { name: "Launch", trigger: "joined", active: true, steps, goal: { productId: course.product.id } });
+  const saved = await saveFlow(store, { name: "Launch", trigger: "joined", active: true, steps, goal: { productId: course.product.id } }, { activate: true });
   const flow = saved.ok ? saved.flows[0] : null;
   is("kept as asked: the label trimmed, the others skipping unless told to leave", [
     flow?.goal,
@@ -175,14 +175,14 @@ async function main(): Promise<void> {
   const row = async (email: string) => parseContact((await redis.pipeline([["HGET", leadsKey(list), email]]))[0]);
   is("allowed only by somebody's own tick, with their yes to the list", [Boolean((await row("gus@example.com"))?.clicks), Boolean((await row("hal@example.com"))?.clicks), Boolean((await row("ivy@example.com"))?.clicks)], [true, false, false]);
   const firstClick = { delayHours: 0, subject: "The guide, and the course", body: `Hello.\n\nThe course: ${SITE_URL}/@harbor/p/${course.product.id}` };
-  is("a condition on the email before cannot be on the first", (await saveFlow(store, { name: "Clicks", trigger: "product", productId: guide.product.id, active: true, steps: [{ ...firstClick, when: { if: "clicked" } }] })).ok, false);
+  is("a condition on the email before cannot be on the first", (await saveFlow(store, { name: "Clicks", trigger: "product", productId: guide.product.id, active: true, steps: [{ ...firstClick, when: { if: "clicked" } }] }, { activate: true })).ok, false);
   const clicksFlow = await saveFlow(store, {
     name: "Clicks",
     trigger: "product",
     productId: guide.product.id,
     active: true,
     steps: [firstClick, { delayHours: 24, subject: "Since you looked", body: "More about it.", when: { if: "clicked" } }, { delayHours: 24, subject: "In case you missed it", body: "Here it is again.", when: { if: "unclicked" } }],
-  });
+  }, { activate: true });
   if (!clicksFlow.ok) throw new Error(`no flow: ${clicksFlow.reason}`);
   const cf = clicksFlow.flows.at(-1)!;
   for (const email of ["gus@example.com", "hal@example.com"]) await enroll(store, email, { joined: false, productId: guide.product.id });

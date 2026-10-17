@@ -8,13 +8,20 @@ import {
   storeForHandle,
 } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { MAX_IMPORT, WHO, type Who, audience, importContacts, listCounts, readAddresses } from "@/lib/contacts";
+import { MAX_IMPORT, WHO, type Who, audience, importContacts, isBuyer, leadsKey, listCounts, parseContact, readAddresses } from "@/lib/contacts";
 import { MAX_MAIL_BODY, MAX_SUBJECT, fromLine, monthlyAllowance, render, reserve, release } from "@/lib/mail";
 import { sendBatch } from "@/lib/email";
 import { healthId, startRamp } from "@/lib/mail-health";
 import { BroadcastCancellationUnconfirmed, BroadcastWriteUnconfirmed, advanceBroadcast, cancelBroadcast, createBroadcast, whoOf } from "@/lib/broadcasts";
 import { buyerLedger, isNarrowed, keeps, ledgerChannels, readNarrow, removeSegment, saveSegment } from "@/lib/segments";
-import { FlowWriteUnconfirmed, removeFlow, saveFlow } from "@/lib/flows";
+import { FLOW_ID, FlowWriteUnconfirmed, RESOLVE_CHOICES, type ResolveChoice, removeFlow, resolveHeldRun, saveFlow, setFlowActive } from "@/lib/flows";
+import { readFlowListStrict } from "@/lib/flow-list";
+import { FlowRunUnavailable, PERSON_KEY, listRuns, readRun } from "@/lib/flow-runs";
+import { RUNS_LISTED } from "@/lib/flow-limits";
+import { normaliseEmail } from "@/lib/auth";
+import { courseProgress } from "@/lib/learn";
+import { idsOfKind } from "@/lib/catalog";
+import { redisPipeline } from "@/lib/redis";
 import { DraftRemovalConflict, DraftRemovalUnconfirmed, DraftReadUnavailable, DraftWriteUnconfirmed, finishBroadcastDraft, removeDraft, saveDraft } from "@/lib/mail-drafts";
 import { copyOf, keepSending } from "@/lib/mail-reuse";
 import { setUpStarters } from "@/lib/mail-starters";
@@ -44,6 +51,14 @@ const MAIL_PERMISSIONS: Record<string, Permission> = {
   cancel: "send",
   flow: "send",
   "flow-remove": "send",
+  // Switching a workflow on is its own, explicit step (lib/flows.ts, setFlowActive).
+  "flow-activate": "send",
+  // A workflow's runs name the people in them, so they are for those who send.
+  "flow-runs": "send",
+  "flow-run": "send",
+  "flow-resolve": "send",
+  // One person of the list, read to preview their path: as private as the runs.
+  "flow-sample": "send",
   // A sent email written again is a new draft; kept sending, it reaches the list.
   copy: "draft",
   keep: "send",
@@ -66,6 +81,11 @@ const MAIL_PERMISSIONS: Record<string, Permission> = {
  *   { action: "broadcast", subject, body, productId, notProductId, who, sendAt, draftId? }
  *   { action: "cancel", id }
  *   { action: "flow", flow: {...} }  /  { action: "flow-remove", id }
+ *   { action: "flow-activate", id, active }   switch a saved workflow on or off
+ *   { action: "flow-runs", id }               its most recent runs
+ *   { action: "flow-run", id, run }           one run's history, step by step
+ *   { action: "flow-resolve", id, run, choice }   a held run: "continue" | "retry" | "end"
+ *   { action: "flow-sample", email, courses }  one person of the list, for the preview
  *   { action: "copy", id }   a sent email's subject and text, to write again
  *   { action: "starters" }   the welcome and the after-a-first-purchase sequences, written
  *                            and left switched off, where the store has none (lib/mail-starters.ts)
@@ -235,6 +255,49 @@ export async function POST(request: NextRequest) {
       return result.ok ? Response.json({ ok: true, flows: result.flows }) : fail(result.reason);
     }
 
+    if (action === "flow-activate") {
+      const result = await setFlowActive(store, text(body.id, 40), body.active === true);
+      return result.ok ? Response.json({ ok: true, flows: result.flows }) : fail(result.reason, result.reason === "unknown" ? 404 : 400);
+    }
+
+    if (action === "flow-runs" || action === "flow-run" || action === "flow-resolve") {
+      const id = text(body.id, 40);
+      // Only a workflow of this store: its runs are found under its own id.
+      const flows = FLOW_ID.test(id) ? await readFlowListStrict(store.listId) : [];
+      if (!flows.some((f) => f.id === id)) return fail("unknown", 404);
+      if (action === "flow-runs") return Response.json({ ok: true, runs: await listRuns(id, RUNS_LISTED) });
+      const run = text(body.run, 40);
+      if (!PERSON_KEY.test(run)) return fail("unknown", 404);
+      if (action === "flow-run") {
+        const found = await readRun(id, run);
+        return found ? Response.json({ ok: true, ...found }) : fail("unknown", 404);
+      }
+      const choice = RESOLVE_CHOICES.find((c) => c === body.choice) as ResolveChoice | undefined;
+      if (!choice) return fail("invalid");
+      const resolved = await resolveHeldRun(store, id, run, choice);
+      if (resolved !== "ok") return fail(resolved === "unknown" ? "unknown" : resolved === "paused" ? "run_paused" : "run_not_held", resolved === "unknown" ? 404 : 409);
+      const found = await readRun(id, run);
+      return Response.json({ ok: true, ...(found ?? {}) });
+    }
+
+    if (action === "flow-sample") {
+      if (!store.listId) return Response.json({ ok: true, found: false });
+      const address = normaliseEmail(text(body.email, 320));
+      if (!address) return fail("email");
+      const [raw] = await redisPipeline([["HGET", leadsKey(store.listId), address]]);
+      const contact = parseContact(raw);
+      if (!contact) return Response.json({ ok: true, found: false });
+      const courses = new Set(idsOfKind(store, "course"));
+      const asked = (Array.isArray(body.courses) ? body.courses : []).filter((c): c is string => typeof c === "string" && courses.has(c)).slice(0, 20);
+      const progress: Record<string, { started: boolean; finished: boolean }> = {};
+      for (const productId of asked) progress[productId] = (await courseProgress(store, productId, [address])).get(address) ?? { started: false, finished: false };
+      return Response.json({
+        ok: true,
+        found: true,
+        sample: { email: address, ids: contact.ids, buyer: isBuyer(contact, new Set(idsOfKind(store, "paid"))), tags: contact.tags, courses: progress },
+      });
+    }
+
     if (action === "copy") {
       const copy = await copyOf(store, text(body.id, 40));
       return copy ? Response.json({ ok: true, copy }) : fail("unknown", 404);
@@ -266,6 +329,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof BroadcastCancellationUnconfirmed) return fail("broadcast_cancel_unconfirmed", 502);
     if (error instanceof BroadcastWriteUnconfirmed) return fail("broadcast_write_unconfirmed", 502);
     if (error instanceof FlowWriteUnconfirmed) return fail("flow_write_unconfirmed", 502);
+    if (error instanceof FlowRunUnavailable) return fail("flow_runs_unavailable", 503);
     if (error instanceof DraftWriteUnconfirmed) return fail("draft_write_unconfirmed", 502);
     if (error instanceof DraftReadUnavailable) return fail("draft_read_unavailable", 503);
     if (error instanceof DraftRemovalConflict) return fail("draft_remove_conflict", 409);
