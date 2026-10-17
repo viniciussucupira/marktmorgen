@@ -147,7 +147,7 @@ async function main(): Promise<void> {
   is("named, and saying in its own description that it is a demo", [store.name, /fictional/.test(store.bio) && /demo store/.test(store.bio)], ["Harbor Kitchen", true]);
   is("its description fits what a store may say", store.bio.length <= MAX_BIO_LENGTH && store.bio === DEMO_STORE.bio, true);
   is("it is the house's", isHouseStore(store), true);
-  is("on the demo's own account, on the $29 plan, with no subscription written down", [store.stripeAccountId, store.stripeChargesEnabled, store.subscriptionActive, store.tier, store.subscriptionId], [DEMO_CONNECTED_ACCOUNT, true, true, "creator", null]);
+  is("on the demo's own account, on Studio so it shows the AI features, with no subscription written down", [store.stripeAccountId, store.stripeChargesEnabled, store.subscriptionActive, store.tier, store.subscriptionId], [DEMO_CONNECTED_ACCOUNT, true, true, "pro", null]);
   is("it can sell", canSell(store), true);
   is("the planner, with the two prices, the two other products and the call after it", [productIds(store).length, listing.options.map((o) => [o.label, o.priceCents])], [4, [["1 week", 2700], ["5 weeks", 3900]]]);
   const rest = (await readListings(store, productIds(store))).filter((p) => p.id !== listing.id);

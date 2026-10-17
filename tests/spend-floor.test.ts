@@ -50,18 +50,21 @@ test("each plan's AI ceiling is its published writing jobs and answers at the pr
 
 for (const tier of TIERS) for (const cycle of ["month", "year"] as const) {
   const name = `${tier}, ${cycle}`;
-  const known = tier === "creator" && cycle === "year";
-  test(`${name}: every allowance used in full, the AI and upload ceilings included, keeps 60% after tax`, { todo: known ? "Store paid by the year is short of the floor before any AI or upload: its visits, orders and receipt allowances need the owner's decision" : false }, () => {
+  test(`${name}: every allowance used in full, the AI and upload ceilings included, keeps 60% after tax`, () => {
     const row = sum(tier, cycle);
     console.log(`${name}: paid $${row.paid.toFixed(2)}, costs allowed $${row.allowed.toFixed(4)}; Stripe $${row.stripe.toFixed(4)} + ${months(cycle)} x ($${row.other.toFixed(4)} other + $${row.ai.toFixed(4)} AI + $${row.uploads.toFixed(4)} uploads) = $${row.total.toFixed(4)}; room $${row.room.toFixed(4)}`);
     assert.ok(row.total <= row.allowed, `${name} costs $${row.total.toFixed(4)} against $${row.allowed.toFixed(4)} allowed`);
   });
 }
 
-test("Store has no AI, so its shortfall paid by the year is none of the AI ceiling's making", () => {
+test("Store keeps the floor on both cycles with room to spare, and still without AI", () => {
+  // Until October 17, 2026 Store paid by the year was $1.42 short (a todo
+  // here). Its covered orders went from 500 to 400 (lib/order-rules.ts); no
+  // price changed. The room asserted is the buffer kept, so a later
+  // allowance cannot spend Store back to the edge without failing here.
   assert.equal(AUTOMATIC_AI_STORE_MICRO_USD.creator, 0);
-  const row = sum("creator", "year");
-  const withoutUploads = row.stripe + 12 * row.other;
-  console.log(`creator, year, before AI and uploads: $${withoutUploads.toFixed(4)} against $${row.allowed.toFixed(4)} allowed`);
-  assert.ok(withoutUploads > row.allowed, "if this now fits, remove the todo above");
+  for (const cycle of ["month", "year"] as const) {
+    const row = sum("creator", cycle);
+    assert.ok(row.room >= (cycle === "year" ? 1 : 0.25), `Store, ${cycle}: room $${row.room.toFixed(4)}`);
+  }
 });

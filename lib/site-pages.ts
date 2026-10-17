@@ -323,7 +323,7 @@ export const PAGES: TopicPage[] = [
           { title: "Same tool for everyone", body: "Google PageSpeed Insights, mobile, simulated slow 4G, Lighthouse 13.5.0." },
           { title: "Stan stores from Stan's own list", body: "Three public stores of creators Stan named in its \"25 in 25\" winners post: the first on the list and every sixth after it. Measured on the same day, one run each." },
           { title: "Our store measured twice", body: "Because the score moves a few points between runs. It scored 93 and 94." },
-          { title: "A real store, with its photos", body: `The demo store is an ordinary store on the ${PLAN_AT.creator} plan, drawn by the same pages as every creator's, with a portrait and a product picture on it. A store with more or heavier pictures can score lower.` },
+          { title: "A real store, with its photos", body: `The demo store was measured as an ordinary store on the ${PLAN_AT.creator} plan, drawn by the same pages as every creator's, with a portrait and a product picture on it. Since October 17, 2026 it is on the ${PLAN_AT.pro} plan, so it can show the AI features too; it has not been measured on it yet. A store with more or heavier pictures can score lower.` },
           { title: "The number we retired", body: "Until October 5, 2026 this page said 97 to 100. That was measured on September 17 on an earlier demo, a simpler page with no photos that was not built the way a store is. It is gone, and so is its score." },
         ],
       },
