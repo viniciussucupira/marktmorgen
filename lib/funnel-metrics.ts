@@ -9,9 +9,9 @@ export function funnelStepMetrics({ seen, done, product, free }: Counts): string
   return people + (product ? ` · ${done.toLocaleString("en-US")} ${free ? "signed up" : "paid"} (${share(done, seen)})` : "");
 }
 
-/** Do not infer a completion rate from missing measurements or an empty denominator. */
-export function funnelCompletionMetric(first: number | null, last: number | null): string {
+/** Step cardinalities are a reach ratio, not proof that the same visitors completed the journey. */
+export function funnelReachRatioMetric(first: number | null, last: number | null): string {
   return confirmed(first) && confirmed(last) && first > 0
-    ? `${share(last, first)} of the people who opened the first step reached the last. `
+    ? `Last-step opens compared with first-step opens: ${share(last, first)}. `
     : "";
 }
