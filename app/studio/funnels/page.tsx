@@ -18,6 +18,7 @@ import { MAX_SITE_PAGES, pageOut } from "@/lib/site-page-rules";
 import { FunnelTypePicker, type TypeProduct } from "@/components/funnel-type-picker";
 import { MAX_PAGE_FUNNELS } from "@/lib/page-funnel";
 import { funnelStepEditorLink } from "@/lib/funnel-editor-links";
+import { readFunnelFormReviews } from "@/lib/funnel-form-review";
 import { canSell } from "@/lib/store-checkout";
 import { sellsThroughPayPal } from "@/lib/paypal-sales";
 import { can } from "@/lib/team-roles";
@@ -114,11 +115,13 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
     canEditProducts: can(view.role, "products"),
   };
   const inventory = await readPageFunnelsStrict(store.statsId).catch(() => null);
+  const formReviews = readFunnelFormReviews(store, inventory ?? []);
   const savedFunnels: SavedFunnel[] = await Promise.all(
     (inventory ?? []).map(async (funnel) => {
-      const [states, counts] = await Promise.all([stepStates(store, funnel, { strictProducts: true }).catch(() => null), readFunnelCountsStrict(store.statsId, funnel).catch(() => null)]);
+      const [states, counts, pageReviews] = await Promise.all([stepStates(store, funnel, { strictProducts: true }).catch(() => null), readFunnelCountsStrict(store.statsId, funnel).catch(() => null), formReviews]);
       return {
         funnel,
+        pageIssues: pageReviews.get(funnel.id) ?? [],
         steps: (states ?? funnel.steps.map(step => ({
           step,
           title: choices.find(choice => choice.kind === step.kind && choice.id === step.id)?.title ?? "Saved step",
