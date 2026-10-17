@@ -6,6 +6,11 @@ export type PromotionProduct = { id: string; title: string; url: string };
 export type PromotionWindow = "d7" | "d30" | "d90";
 export const MAX_PROMOTION_PRODUCTS = 50;
 
+/** Follow the chosen channel until the creator explicitly chooses a promotion type. */
+export function promotionMedium(channel: string, override: CampaignMedium | null = null): CampaignMedium {
+  return override ?? (channel === "email" || channel === "newsletter" ? "email" : "post");
+}
+
 /** Rank only published products supplied by the server; never infer a product/channel pairing. */
 export function promotionChoices(data: StatsData, range: PromotionWindow, products: PromotionProduct[]) {
   const known = paidFiguresComplete(data);
@@ -26,8 +31,12 @@ export function promotionChoices(data: StatsData, range: PromotionWindow, produc
   const supported = new Set(POST_PLACES.map(place => place.place));
   const channels = [...(data.channels?.[range] ?? [])].filter(row => supported.has(row.source));
   channels.sort((a, b) => known && b.cents !== a.cents ? b.cents - a.cents : b.visits - a.visits || a.source.localeCompare(b.source));
-  const channel = channels.find(row => known ? row.cents > 0 : row.visits > 0);
-  return { products: choices.slice(0, MAX_PROMOTION_PRODUCTS), known, channel: channel?.source ?? "instagram", channelEvidence: channel ?? null };
+  const revenueChannel = known ? channels.find(row => row.cents > 0) : undefined;
+  // Recorded visits can guide a first promotion, but do not establish sales.
+  const trafficChannel = [...channels].sort((a, b) => b.visits - a.visits || a.source.localeCompare(b.source)).find(row => row.visits > 0);
+  const channel = revenueChannel ?? trafficChannel;
+  const channelBasis = revenueChannel ? "sales" : channel ? "visits" : "default";
+  return { products: choices.slice(0, MAX_PROMOTION_PRODUCTS), known, channel: channel?.source ?? "instagram", channelEvidence: channel ?? null, channelBasis };
 }
 
 /** Blank campaign names never produce an unlabelled promotion link. */
