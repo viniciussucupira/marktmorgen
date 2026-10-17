@@ -62,7 +62,7 @@ async function main() {
     formReply = [Array(20).fill(null)];
     const bounded = (await review()).get(funnel.id)!;
     is("definition lookup respects existing form capacity", calls[1][0].length, 22);
-    is("unread excess references remain explicitly unknown", bounded.some(issue => issue.code === "forms_unknown" && issue.detail.includes("20 distinct")), true);
+    is("unread excess references remain explicitly unknown", bounded.some(issue => issue.code === "forms_unknown" && issue.detail.includes("20 different forms")), true);
     redis.pipeline = async () => { throw new Error("outage"); };
     is("page storage outage is not clean readiness", (await review()).get(funnel.id)![0].code, "forms_unknown");
   } finally { redis.pipeline = pipeline; }
