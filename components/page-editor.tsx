@@ -1,5 +1,7 @@
 "use client";
 
+import { pasteExceedsLimit } from "@/lib/paste-limit";
+
 import { PageAnswers } from "@/components/page-answers";
 import type { WhyNot } from "@/lib/why-not-rules";
 import type { VideoReach } from "@/lib/page-depth";
@@ -2386,9 +2388,11 @@ export function PageEditor({
 /** The rows of a comparison: what is compared, and a cell for each column, with a tick and a cross a press away. */
 /** Things said elsewhere: the words, who said them, and where (lib/sales-page.ts, QuotesBlock). */
 function QuotesEditor({ base, items, onChange }: { base: string; items: Quote[]; onChange: (items: Quote[]) => void }) {
+  const [pasteBlocked, setPasteBlocked] = useState(false);
   const set = (i: number, patch: Partial<Quote>) => onChange(items.map((item, j) => (j === i ? { ...item, ...patch } : item)));
   return (
     <div className="space-y-3">
+      {pasteBlocked ? <p role="alert" className="text-sm font-semibold text-danger">That paste exceeds the {MAX_QUOTE}-character quote limit. Nothing was pasted. Choose a complete quotation that fits.</p> : null}
       {items.map((item, i) => {
         const badLink = item.url.trim() !== "" && !quoteUrl(item.url);
         const noLink = item.text.trim() !== "" && item.url.trim() === "";
@@ -2408,7 +2412,25 @@ function QuotesEditor({ base, items, onChange }: { base: string; items: Quote[];
             <label htmlFor={`${base}-q${i}t`} className="mt-1 block text-xs font-semibold text-ink-soft">
               Their words, as they said them
             </label>
-            <textarea id={`${base}-q${i}t`} className="field mt-1" rows={3} maxLength={MAX_QUOTE} value={item.text} onChange={(e) => set(i, { text: e.target.value })} />
+            <textarea
+              id={`${base}-q${i}t`}
+              className="field mt-1"
+              rows={3}
+              maxLength={MAX_QUOTE}
+              value={item.text}
+              onPaste={(event) => {
+                const input = event.currentTarget;
+                const text = event.clipboardData.getData("text/plain");
+                if (!text) return;
+                const blocked = pasteExceedsLimit(input.value, input.selectionStart, input.selectionEnd, text, MAX_QUOTE);
+                if (blocked) event.preventDefault();
+                setPasteBlocked(blocked);
+              }}
+              onChange={(event) => {
+                setPasteBlocked(false);
+                set(i, { text: event.target.value });
+              }}
+            />
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <div className="min-w-0">
                 <label htmlFor={`${base}-q${i}n`} className="text-xs font-semibold text-ink-soft">
