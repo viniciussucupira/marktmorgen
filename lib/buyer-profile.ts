@@ -40,6 +40,8 @@ import { readPaid } from "@/lib/paypal-sales";
 import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
 import { saleChannel } from "@/lib/stats";
@@ -151,6 +153,10 @@ function parsePersonNotes(raw: unknown): PersonNote[] {
   return out.sort((a, b) => b.at - a.at || a.id.localeCompare(b.id));
 }
 
+/** Where notes about people are counted in the store's data room (lib/store-data.ts). */
+const NOTES_SLOT = "pn";
+const noteBytes = (note: PersonNote) => dataBytes([note.id, JSON.stringify({ at: note.at, by: note.by, text: note.text })], 1);
+
 export async function readPersonNotes(statsId: string | null, person: string): Promise<PersonNote[]> {
   if (!statsId || !PERSON_KEY.test(person) || !isRedisConfigured()) return [];
   const [raw] = await redisPipeline([["HGETALL", notesKey(statsId, person)]]);
@@ -162,29 +168,35 @@ export async function readPersonNotes(statsId: string | null, person: string): P
  * Each note is a field of its own, so two people writing at once both keep
  * theirs. Over MAX_PERSON_NOTES, the oldest go. Null when the words are empty.
  */
-export async function addPersonNote(statsId: string, person: string, by: string, textRaw: unknown, now = Date.now()): Promise<PersonNote[] | null> {
+export async function addPersonNote(statsId: string, person: string, by: string, textRaw: unknown, room: DataStore, now = Date.now()): Promise<PersonNote[] | null> {
   const text = personNoteText(textRaw);
   if (!text || !PERSON_KEY.test(person) || !isRedisConfigured()) return null;
   const id = randomBytes(4).toString("hex");
+  const json = JSON.stringify({ at: Math.floor(now / 1000), by: normaliseEmail(by), text });
+  // Its room in the store's data room first (DataRoomError when it does not fit), its person's place with it.
+  await needData(room, [{ slot: NOTES_SLOT, bytes: dataBytes([id, json], 1) + dataBytes([person], 1) }]);
   await redisPipeline([
-    ["HSET", notesKey(statsId, person), id, JSON.stringify({ at: Math.floor(now / 1000), by: normaliseEmail(by), text })],
+    ["HSET", notesKey(statsId, person), id, json],
     ["EXPIRE", notesKey(statsId, person), NOTES_SECONDS],
     ["SADD", whoKey(statsId), person],
     ["EXPIRE", whoKey(statsId), NOTES_SECONDS],
   ]);
   const notes = await readPersonNotes(statsId, person);
   if (notes.length > MAX_PERSON_NOTES) {
-    const drop = notes.slice(MAX_PERSON_NOTES).map((n) => n.id);
-    await redisPipeline([["HDEL", notesKey(statsId, person), ...drop]]);
+    const dropped = notes.slice(MAX_PERSON_NOTES);
+    await redisPipeline([["HDEL", notesKey(statsId, person), ...dropped.map((n) => n.id)]]);
+    await giveData(room, [{ slot: NOTES_SLOT, bytes: dropped.reduce((sum, n) => sum + noteBytes(n), 0) }]);
     return notes.slice(0, MAX_PERSON_NOTES);
   }
   return notes;
 }
 
-/** Takes one note away; the notes as they are after. */
-export async function removePersonNote(statsId: string, person: string, id: unknown): Promise<PersonNote[]> {
+/** Takes one note away, and gives back its room; the notes as they are after. */
+export async function removePersonNote(statsId: string, person: string, id: unknown, room: DataStore): Promise<PersonNote[]> {
   if (typeof id === "string" && NOTE_ID.test(id) && PERSON_KEY.test(person) && isRedisConfigured()) {
-    await redisPipeline([["HDEL", notesKey(statsId, person), id]]);
+    const gone = (await readPersonNotes(statsId, person)).find((n) => n.id === id);
+    const [removed] = await redisPipeline([["HDEL", notesKey(statsId, person), id]]);
+    if (gone && Number(removed) === 1) await giveData(room, [{ slot: NOTES_SLOT, bytes: noteBytes(gone) }]);
   }
   return readPersonNotes(statsId, person);
 }

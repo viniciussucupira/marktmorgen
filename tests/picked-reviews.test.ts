@@ -19,6 +19,7 @@ import { REVIEW_ID_PATTERN } from "@/lib/review-summary";
 import { LANGUAGES } from "@/lib/store-language";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const STATS = "c".repeat(32);
 const PRODUCT = "knife00001";
@@ -39,7 +40,7 @@ async function main(): Promise<void> {
   part("Shown first, then the newest");
   const ids: string[] = [];
   for (let n = 1; n <= 6; n += 1) {
-    const saved = await saveReview(STATS, { productId: PRODUCT, email: `buyer${n}@example.com`, reference: `cs_test_${n}`, pi: `pi_${n}`, rating: n % 5 + 1, text: `Review ${n}`, name: `Buyer ${n}` }, 1_700_000_000_000 + n * 1000);
+    const saved = await saveReview(STATS, { productId: PRODUCT, email: `buyer${n}@example.com`, reference: `cs_test_${n}`, pi: `pi_${n}`, rating: n % 5 + 1, text: `Review ${n}`, name: `Buyer ${n}` }, ROOM, 1_700_000_000_000 + n * 1000);
     if (saved.state === "created") ids.push(saved.review.id);
   }
   is("six reviews written", ids.length, 6);

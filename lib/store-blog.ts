@@ -21,6 +21,8 @@
  * (lib/store.ts, posts), so the store page links to the blog without asking.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { type Block, aboutBlocks, aboutExcerpt, cleanAbout } from "@/lib/product-about";
 import { slugOf } from "@/lib/product-slug";
 
@@ -177,6 +179,8 @@ export async function savePost(
   id: string | null,
   input: { title: string; body: string; product: string | null; draft: boolean },
   newId: () => string,
+  /** The store whose data room the post takes from (DataRoomError when it does not fit). */
+  room: DataStore,
   now = Math.floor(Date.now() / 1000),
 ): Promise<SaveResult> {
   if (!statsId || !isRedisConfigured()) return { ok: false, reason: "off" };
@@ -194,9 +198,12 @@ export async function savePost(
   const postId = before?.id ?? newId();
   const publishedAt = input.draft ? before?.publishedAt ?? 0 : before?.publishedAt || now;
   const meta = metaOf(postId, input, publishedAt, now);
+  // Its room first: the post's two records and its place among the published, counted as it now is.
+  const bodyJson = JSON.stringify({ body: input.body, product: input.product });
+  await needData(room, [{ slot: `bl:${postId}`, bytes: dataBytes([JSON.stringify(meta), bodyJson], 3), set: true }]);
   const [, , , total] = await redisPipeline([
     ["HSET", metaKey(statsId), postId, JSON.stringify(meta)],
-    ["HSET", bodyKey(statsId), postId, JSON.stringify({ body: input.body, product: input.product })],
+    ["HSET", bodyKey(statsId), postId, bodyJson],
     input.draft ? ["ZREM", pubKey(statsId), postId] : ["ZADD", pubKey(statsId), publishedAt, postId],
     ["ZCARD", pubKey(statsId)],
   ]);
@@ -204,7 +211,7 @@ export async function savePost(
 }
 
 /** Removes a post for good. Says how many are published after it. */
-export async function deletePost(statsId: string | null, id: string): Promise<number | null> {
+export async function deletePost(statsId: string | null, id: string, room: DataStore): Promise<number | null> {
   if (!statsId || !isRedisConfigured() || !POST_ID.test(id)) return null;
   const [, , , total] = await redisPipeline([
     ["HDEL", metaKey(statsId), id],
@@ -212,5 +219,6 @@ export async function deletePost(statsId: string | null, id: string): Promise<nu
     ["ZREM", pubKey(statsId), id],
     ["ZCARD", pubKey(statsId)],
   ]);
+  await giveData(room, [{ slot: `bl:${id}`, bytes: 0, set: true }]);
   return Number(total) || 0;
 }

@@ -12,6 +12,8 @@
  * however long the list is.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import {
   type CrmField,
   CRM_ID,
@@ -49,6 +51,8 @@ const valuesKey = (statsId: string, field: string) => `nl:crm:v:${statsId}:${fie
 const stagesKey = (statsId: string) => `nl:crm:stages:${statsId}`;
 const dealsKey = (statsId: string) => `nl:crm:deals:${statsId}`;
 const PERSON = /^[0-9a-f]{32}$/;
+/** Where people's field values are counted in the store's data room (lib/store-data.ts). */
+const VALUES_SLOT = "crm:v";
 
 const json = (raw: unknown): unknown => {
   if (typeof raw !== "string") return null;
@@ -96,10 +100,16 @@ export async function readValues(statsId: string | null, person: string, fields:
 }
 
 /** Sets one value for one person; "" clears it. False when it is not a value the field keeps. */
-export async function setValue(statsId: string, person: string, field: CrmField, raw: unknown): Promise<boolean> {
+export async function setValue(statsId: string, person: string, field: CrmField, raw: unknown, room: DataStore): Promise<boolean> {
   if (!PERSON.test(person)) return false;
   const value = fieldValue(field, raw);
   if (value === null) return false;
+  // A value takes room in the store's data room first (DataRoomError when it does not fit); one cleared gives it back.
+  const [before] = await redisPipeline([["HGET", valuesKey(statsId, field.id), person]]);
+  const weight = (v: unknown) => (typeof v === "string" && v ? dataBytes([person, v], 1) : 0);
+  const grown = weight(value) - weight(before);
+  if (grown > 0) await needData(room, [{ slot: VALUES_SLOT, bytes: grown }]);
+  else if (grown < 0) await giveData(room, [{ slot: VALUES_SLOT, bytes: -grown }]);
   try {
     const response = await redisPipeline([value ? ["HSET", valuesKey(statsId, field.id), person, value] : ["HDEL", valuesKey(statsId, field.id), person]]);
     if (!Array.isArray(response) || response.length !== 1 || (response[0] !== 0 && response[0] !== 1)) throw new CrmValueWriteUnconfirmed();
@@ -222,17 +232,28 @@ if redis.call("HEXISTS", KEYS[1], ARGV[1]) == 0 and redis.call("HLEN", KEYS[1]) 
 redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
 return 1`;
 
-/** Saves a deal. False when the store already has as many as it may and this one is new. */
-export async function writeDeal(statsId: string, deal: Deal): Promise<boolean> {
+/** Where a deal is counted in the store's data room (lib/store-data.ts): one slot a deal, at what it weighs. */
+export const dealSlot = (id: string) => `dl:${id}`;
+export const dealBytes = (deal: Deal) => dataBytes([deal.id, JSON.stringify(deal)], 1);
+
+/**
+ * Saves a deal. False when the store already has as many as it may and this
+ * one is new. Its room in the store's data room is taken first: DataRoomError
+ * when it does not fit, and nothing is written.
+ */
+export async function writeDeal(statsId: string, deal: Deal, room: DataStore): Promise<boolean> {
   let preflight: unknown;
   try {
     preflight = await redisPipeline([["HEXISTS", dealsKey(statsId), deal.id], ["HLEN", dealsKey(statsId)]]);
   } catch { throw new CrmDealReadUnavailable(); }
   if (!Array.isArray(preflight) || preflight.length !== 2 || (preflight[0] !== 0 && preflight[0] !== 1) || typeof preflight[1] !== "number" || !Number.isSafeInteger(preflight[1]) || preflight[1] < preflight[0]) throw new CrmDealReadUnavailable();
   if (preflight[0] === 0 && preflight[1] >= MAX_DEALS) return false;
+  await needData(room, [{ slot: dealSlot(deal.id), bytes: dealBytes(deal), set: true }]);
   try {
     const saved = await redisPipeline([["EVAL", SAVE_CRM_DEAL, 1, dealsKey(statsId), deal.id, JSON.stringify(deal), MAX_DEALS]]);
     if (!Array.isArray(saved) || saved.length !== 1 || (saved[0] !== 0 && saved[0] !== 1)) throw new CrmDealWriteUnconfirmed();
+    // Full after all: a new deal's room goes back.
+    if (saved[0] === 0) await giveData(room, [{ slot: dealSlot(deal.id), bytes: 0, set: true }]);
     return saved[0] === 1;
   } catch { throw new CrmDealWriteUnconfirmed(); }
 }
@@ -243,13 +264,15 @@ export async function readDeal(statsId: string, id: string, stages: readonly Sta
   return parseDeal(json(raw), stages);
 }
 
-export async function dropDeal(statsId: string, id: string): Promise<boolean> {
+export async function dropDeal(statsId: string, id: string, room: DataStore): Promise<boolean> {
   if (!DEAL_ID.test(id)) return false;
+  let removed: unknown;
   try {
-    const removed = await redisPipeline([["HDEL", dealsKey(statsId), id]]);
-    if (!Array.isArray(removed) || removed.length !== 1 || (removed[0] !== 0 && removed[0] !== 1)) throw new CrmDealWriteUnconfirmed();
-    return removed[0] === 1;
+    removed = await redisPipeline([["HDEL", dealsKey(statsId), id]]);
   } catch { throw new CrmDealWriteUnconfirmed(); }
+  if (!Array.isArray(removed) || removed.length !== 1 || (removed[0] !== 0 && removed[0] !== 1)) throw new CrmDealWriteUnconfirmed();
+  if (removed[0] === 1) await giveData(room, [{ slot: dealSlot(id), bytes: 0, set: true }]);
+  return removed[0] === 1;
 }
 
 /** Everything kept here for a store that is being deleted. */

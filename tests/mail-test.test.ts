@@ -18,6 +18,7 @@ import { campaignViews } from "@/lib/stats";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const OWNER = "owner@example.com";
 type Message = { to: string[]; subject: string; html: string };
@@ -90,7 +91,7 @@ async function main(): Promise<void> {
   let store = (await storeForEmail(OWNER))!;
   const listId = store.listId as string;
   const join = async (from: number, to: number) => {
-    for (let i = from; i < to; i += 1) await upsertContact(listId, `reader${i}@example.com`, { agreed: true, explicit: true, source: "free" });
+    for (let i = from; i < to; i += 1) await upsertContact(listId, `reader${i}@example.com`, { agreed: true, explicit: true, source: "free" }, ROOM);
   };
   const body = "The plan is out.\n\nRead it at https://marktmorgen.com/@harbor today.";
   const test = { subjectB: "Forty dinners, one plan", share: 20, hours: 4, by: "visits" };

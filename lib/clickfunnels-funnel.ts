@@ -511,7 +511,7 @@ export async function saveFunnelImport(store: Store, raw: unknown): Promise<Save
         if (!form || !(await writeForm(statsId, form))) throw new Error("an imported page's form could not be saved");
         asks.form = form.id;
       }
-      await writePage(statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true });
+      await writePage(statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true }, current);
       await redisPipeline([["HSET", ledger, `page:${pageKeyOf(p.checked.page)}`, page.id]]);
     }
 
@@ -520,11 +520,11 @@ export async function saveFunnelImport(store: Store, raw: unknown): Promise<Save
     const existing = await readPageFunnelsStrict(statsId);
     const before = plan.partial ? existing.find((f) => f.id === plan.partial) ?? null : null;
     let funnel;
-    if (before) funnel = await writePageFunnel(statsId, { ...before, steps }, existing);
+    if (before) funnel = await writePageFunnel(statsId, { ...before, steps }, existing, current);
     else {
       let slug = make.funnel.slug;
       for (let n = 2; funnelSlugProblem(slug, existing) !== null && n < 100; n += 1) slug = `${(funnelSlugFrom(make.funnel.name) || "funnel").slice(0, 36)}-${n}`;
-      funnel = await writePageFunnel(statsId, { id: newFunnelId(), name: make.funnel.name, slug, steps, on: false, since: Math.floor(Date.now() / 1000) }, existing);
+      funnel = await writePageFunnel(statsId, { id: newFunnelId(), name: make.funnel.name, slug, steps, on: false, since: Math.floor(Date.now() / 1000) }, existing, current);
     }
     await redisPipeline([["HSET", ledger, `run:${plan.key}`, JSON.stringify({ state: "funnel", funnel: funnel.id, at: Date.now() })]]);
 

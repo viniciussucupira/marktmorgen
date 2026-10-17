@@ -1,4 +1,6 @@
 import { UsageMeter } from "@/components/usage-meter";
+import { dataUsed } from "@/lib/store-data";
+import { dataFullWords, dataWords } from "@/lib/store-data-rules";
 import { isDiscordConfigured } from "@/lib/discord";
 import { RecentSalesSwitch } from "@/components/recent-sales-switch";
 import { firstSaleAt } from "@/lib/yearly-offer";
@@ -856,6 +858,8 @@ export default async function StudioPage({
   const figures = current && may("settings")
     ? await Promise.all(ALLOWANCE_KINDS.map(async (kind) => ({ kind, used: await allowanceUsed(current, kind), limit: allowanceFor(current, kind) })))
     : null;
+  // How full the store's data room is (lib/store-data.ts), and what its orders keep of it.
+  const data = current && may("settings") ? await dataUsed(current).catch(() => null) : null;
   const orderRoom = standing === "paid" && store ? ordersIncluded(store.tier) : TRIAL_ORDERS;
   // A store whose plan has ended and that keeps more than a store with no
   // plan may: the day what it keeps is removed, counted the way the daily
@@ -2386,6 +2390,20 @@ export default async function StudioPage({
                     </dl>
                     <p className="mt-3 text-sm text-ink-soft">
                       {`A page of the studio counts as ${STUDIO_PAGE_UNITS} studio requests, and a contact added or a product given through the API as ${API_WRITE_UNITS} API requests. Past a figure, that use waits for the next month or a larger plan, with a plain message; nothing is billed. Changing or canceling your plan, deleting your store and downloading your sales always work.`}
+                    </p>
+                  </div>
+                ) : null}
+                {data ? (
+                  <div className="mt-6 border-t border-line pt-5">
+                    <p className="font-semibold text-ink">Your data room</p>
+                    <p className="mt-2 text-sm text-ink-soft">{`${dataWords(data.used)} of ${dataWords(data.room)} used, ${dataWords(data.orders)} of it kept for your orders.`}</p>
+                    {data.used >= data.room * 0.9 ? (
+                      <p className="mt-3 notice notice-warn">
+                        {data.used >= data.room ? dataFullWords(data.used, data.room) : "Your data room is nearly full. Delete something you no longer need, such as old posts, drafts, pages or contacts, or move to a larger plan, before it is."}
+                      </p>
+                    ) : null}
+                    <p className="mt-3 text-sm text-ink-soft">
+                      {"It holds your products, pages, posts, courses, contacts, forms and their answers, and what each order keeps. When it is full, what you or your buyers would add is refused until you delete something or move to a larger plan; deleting is never refused, and an order already paid for is never refused."}
                     </p>
                   </div>
                 ) : null}

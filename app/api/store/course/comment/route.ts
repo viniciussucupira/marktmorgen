@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { DataRoomError } from "@/lib/store-data";
 import { cookies } from "next/headers";
 import { originFrom } from "@/lib/request-origin";
 import { fromAnotherSite } from "@/lib/studio-route";
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     if (!comment || comment.lesson !== lessonId) return back("gone");
     if (action === "delete") {
       if (!owner && comment.by !== by) return back("gone");
-      await deleteComment(course.id, id);
+      await deleteComment(course.id, id, store);
       return back("deleted");
     }
     if (!owner) return back("gone");
@@ -87,14 +88,22 @@ export async function POST(request: NextRequest) {
     if (!minute || !day) return back("slow");
   }
   const parent = field("parent", 20);
-  const result = await addComment({
-    courseId: course.id,
-    lessonId,
-    by,
-    text: form.get("text"),
-    name: form.get("name"),
-    parent: COMMENT_ID_PATTERN.test(parent) ? parent : null,
-  });
+  let result: Awaited<ReturnType<typeof addComment>>;
+  try {
+    result = await addComment({
+      courseId: course.id,
+      lessonId,
+      by,
+      text: form.get("text"),
+      name: form.get("name"),
+      parent: COMMENT_ID_PATTERN.test(parent) ? parent : null,
+      room: store,
+    });
+  } catch (error) {
+    // No room in the store's data room: nothing was written (lib/store-data.ts).
+    if (error instanceof DataRoomError) return back("noroom");
+    throw error;
+  }
   if (!result.ok) return back(result.reason);
 
   await tellCreator(store, product, found.lesson.title, result.comment);

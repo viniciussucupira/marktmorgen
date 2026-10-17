@@ -42,6 +42,8 @@ import { idInSegment } from "@/lib/product-slug";
 import { type CallPackage, parseCallPackage } from "@/lib/call-package-rules";
 import { type PodcastRef, parsePodcastRef } from "@/lib/podcast-rules";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { dataBytes } from "@/lib/store-data-rules";
+import { StoreFullError } from "@/lib/store-full";
 import { type ProductFile, parseProductFile } from "@/lib/product-file";
 import { type ProductOption, parseOptions } from "@/lib/product-option";
 import { MAX_LINK_LENGTH } from "@/lib/product-link";
@@ -99,12 +101,8 @@ export const HEAD_BYTES = 120_000;
 /** The most one product's two records may weigh together. */
 export const MAX_PRODUCT_BYTES = 256_000;
 
-/** Thrown by a write that would take a record past its ceiling. */
-export class StoreFullError extends Error {
-  constructor() {
-    super("store_full");
-  }
-}
+/** Thrown by a write that would take a record past its ceiling (lib/store-full.ts). */
+export { StoreFullError };
 
 /** The part of a course a product carries. */
 export type CourseRef = { id: string; lessons: number };
@@ -1024,6 +1022,18 @@ export function productWrites(catalog: string, product: Product): Command[] {
     heavy ? ["SET", extrasKey(catalog, product.id), extras] : ["DEL", extrasKey(catalog, product.id)],
     ["HSET", titlesKey(catalog), product.id, cardValue(product)],
   ];
+}
+
+/**
+ * What one product's records count for in the store's data room
+ * (lib/store-data.ts): its listing, its heavy rest and its card, each under
+ * its own key or field.
+ */
+export function productBytes(product: Product): number {
+  const heavy = product.fields.length > 0 || product.funnel !== null;
+  const listing = JSON.stringify(listingOf(product));
+  const extras = heavy ? JSON.stringify({ fields: product.fields, funnel: product.funnel }) : "";
+  return dataBytes([listing, extras, product.id, cardValue(product)], heavy ? 3 : 2);
 }
 
 /** The writes that forget one product's records. */

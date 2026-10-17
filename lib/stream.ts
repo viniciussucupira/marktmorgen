@@ -82,9 +82,11 @@
  * How long a store's videos have been watched is read from the service too
  * (streamWatched), and what is done with it is in lib/watch.ts.
  */
+import { VIDEO_RECORD_BYTES } from "@/lib/stream-rules";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { STREAM_PEEK_TIMEOUT_MS, STREAM_TIMEOUT_MS, timed } from "@/lib/fetch-timeout";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData } from "@/lib/store-data";
 import { type CaptionProblem, type CaptionTrack, MAX_CAPTION_TRACKS, captionLabel, toVtt } from "@/lib/captions";
 import {
   ABANDONED_AFTER_MS,
@@ -636,9 +638,12 @@ export async function playerFor(pathname: string, now = Date.now()): Promise<Pla
  * the five-minute job goes on trying, so a deleted lesson's video is not
  * kept, and paid for, because of one bad minute.
  */
-export async function dropStream(pathname: string): Promise<boolean> {
+
+
+export async function dropStream(pathname: string, room?: DataStore): Promise<boolean> {
   const parts = readStreamPath(pathname);
   if (!parts) return false;
+  if (room) await giveData(room, [{ slot: "sv", bytes: VIDEO_RECORD_BYTES }]);
   if (!isRedisConfigured()) return true;
   const config = streamConfig();
   if (config) await removeProviderVideo(config, parts.id);
@@ -794,3 +799,5 @@ export async function sweep(deadline: number, now = Date.now()): Promise<{ looke
   }
   return counts;
 }
+
+export { VIDEO_RECORD_BYTES };

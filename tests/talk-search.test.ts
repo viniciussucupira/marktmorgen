@@ -13,6 +13,7 @@ import { say, searchRoom, NO_CHAT } from "@/lib/community-chat";
 import { accept, pairOf, searchMessages, send } from "@/lib/community-dm";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const CM = "cm1";
 const room = { ...NO_CHAT, on: true };
@@ -39,10 +40,10 @@ async function main(): Promise<void> {
   part("One's own messages");
   redis.clear();
   // m1 writes to m2 and to m3. m2 and m3 also talk to each other.
-  await send(CM, dm, "m1", "m2", "Can you send me the invoice template?");
-  await send(CM, dm, "m2", "m1", "Sure, the invoice template is in the files");
-  await send(CM, dm, "m1", "m3", "Loved your invoice post");
-  await send(CM, dm, "m2", "m3", "The invoice from the retreat is attached");
+  await send(CM, dm, "m1", "m2", "Can you send me the invoice template?", ROOM);
+  await send(CM, dm, "m2", "m1", "Sure, the invoice template is in the files", ROOM);
+  await send(CM, dm, "m1", "m3", "Loved your invoice post", ROOM);
+  await send(CM, dm, "m2", "m3", "The invoice from the retreat is attached", ROOM);
   for (const [a, b] of [["m1", "m2"], ["m1", "m3"], ["m2", "m3"]]) await accept(CM, b, pairOf(a, b)).catch(() => {});
 
   const mine = await searchMessages(CM, "m1", queryWords("invoice"));

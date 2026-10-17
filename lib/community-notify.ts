@@ -30,6 +30,11 @@
 import { redisPipeline } from "@/lib/redis";
 import { pushMembers } from "@/lib/community-push";
 import { communityWords } from "@/lib/buyer-words/community";
+import { type DataStore, takeData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
+
+/** Where notices are counted in the store's data room (lib/store-data.ts): one slot for every member's lists. */
+const NOTICES_SLOT = "cm:nt";
 
 const base = (id: string) => `nl:cm:${id}`;
 const listKey = (id: string, who: string) => `${base(id)}:nt:${who}`;
@@ -56,6 +61,8 @@ export type Notice = {
 
 const now = () => Math.floor(Date.now() / 1000);
 const SNIP = 140;
+/** The most one notice weighs: its words at three bytes a character, its ids and its field. */
+export const NOTICE_BYTES = dataBytes(["x".repeat(SNIP * 3 + 160)], 1);
 
 function parse(raw: unknown): Notice | null {
   if (typeof raw !== "string" || !raw) return null;
@@ -87,6 +94,8 @@ export async function tell(
   id: string,
   to: string[],
   notice: Omit<Notice, "at" | "words"> & { words: string },
+  /** The store whose data room the notices take from. */
+  room: DataStore,
   /** Where a phone should be sent, and by what name. Left out, none is sent. */
   phone?: { handle: string; who: string; language?: unknown },
 ): Promise<void> {
@@ -94,12 +103,21 @@ export async function tell(
   if (!who.length) return;
   const row = JSON.stringify({ ...notice, words: notice.words.slice(0, SNIP), at: now() } satisfies Notice);
   try {
-    await redisPipeline(
-      who.flatMap((one) => [
-        ["ZADD", listKey(id, one), now(), row],
-        ["ZREMRANGEBYRANK", listKey(id, one), 0, -(MAX_NOTICES + 1)],
-      ]),
-    );
+    // Each list that is not yet full grows by the notice; a full one lets its
+    // oldest go, and none of its own room changes hands for it (each is
+    // counted at the most a notice weighs). With no room left, nothing is
+    // filed: what it is about was written, and that is what matters.
+    const sizes = await redisPipeline(who.map((one) => ["ZCARD", listKey(id, one)]));
+    const growing = sizes.filter((n) => Number(n) < MAX_NOTICES).length;
+    const taken = growing ? await takeData(room, [{ slot: NOTICES_SLOT, bytes: growing * NOTICE_BYTES }]) : { ok: true as const };
+    if (taken.ok) {
+      await redisPipeline(
+        who.flatMap((one) => [
+          ["ZADD", listKey(id, one), now(), row],
+          ["ZREMRANGEBYRANK", listKey(id, one), 0, -(MAX_NOTICES + 1)],
+        ]),
+      );
+    }
   } catch (error) {
     console.error("filing a community notification failed", error);
   }

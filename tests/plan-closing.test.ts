@@ -49,6 +49,7 @@ import { STREAM_API_ORIGIN, streamPath } from "@/lib/stream-rules";
 import { vaultPath } from "@/lib/vault-rules";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const GB = 1024 * 1024 * 1024;
 const DAY = 24 * 60 * 60 * 1000;
@@ -283,7 +284,7 @@ async function main(): Promise<void> {
       },
     ],
   };
-  await saveCourse(course);
+  await saveCourse(course, ROOM);
   const lessons = await addProduct(ana.email, "Course", "", "99", null);
   if (!lessons.ok) throw new Error("no course product");
   is("a course", (await setProductCourse(ana.email, lessons.product.id, { id: course.id, lessons: 2 })).ok, true);

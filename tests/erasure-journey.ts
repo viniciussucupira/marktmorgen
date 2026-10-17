@@ -26,6 +26,7 @@ import { erasureUnits, erasureWork, workUnits } from "@/lib/erasure-rules";
 import { storesKnownFor } from "@/lib/buyer-library";
 import { storeForEmail } from "@/lib/store";
 import { OWNER, makeWorld, seedPerson, snapshot } from "./erasure-world";
+import { ROOM } from "./data-room";
 
 export type Check = (what: string, got: unknown, want: unknown) => void;
 export type Sent = { to: string; subject: string; text: string };
@@ -44,6 +45,7 @@ const ALLOWED: { pattern: RegExp; why: string }[] = [
   { pattern: /^nl:(health|stats:[0-9a-f]+:ledger)/, why: "ten-minute copies, worked out again when next read" },
   { pattern: /^nl:(sender|wf:day):/, why: "counts of emails and workflow runs, never who" },
   { pattern: /^nl:tasks:doors$/, why: "files waiting for the daily job to delete them, when the file store did not answer" },
+  { pattern: /^nl:data:/, why: "the store's data room, counting what a deletion gave back (lib/store-data.ts), never who" },
 ];
 
 /** What the registry keeps on purpose, so may still name them: their own stop presses, as one-way hashes. */
@@ -120,10 +122,10 @@ export async function runJourney(is: Check, sent: Sent[], counted: { commands: n
 
   // Never emailed again, and no import puts them back.
   is("the store knows the address was deleted", await isSuppressed(listId, tess), true);
-  is("an import leaves them out", await importContactRows(listId, [{ email: tess, name: "Tess", tags: [] }]), ["left"]);
-  await upsertContact(listId, tess, { agreed: true, explicit: false, source: "buyer", productId: world.plain, title: "The Guide" });
+  is("an import leaves them out", await importContactRows(listId, [{ email: tess, name: "Tess", tags: [] }], ROOM), ["left"]);
+  await upsertContact(listId, tess, { agreed: true, explicit: false, source: "buyer", productId: world.plain, title: "The Guide" }, ROOM);
   is("a purchase without their own yes notes the purchase, not a yes", parseContact((await redisPipeline([["HGET", leadsKey(listId), tess]]))[0])?.agreed, false);
-  await upsertContact(listId, tess, { agreed: true, explicit: true, source: "free", sid: store.sid });
+  await upsertContact(listId, tess, { agreed: true, explicit: true, source: "free", sid: store.sid }, ROOM);
   is("their own yes, given again, puts them back and lifts the fingerprint", [parseContact((await redisPipeline([["HGET", leadsKey(listId), tess]]))[0])?.agreed, await isSuppressed(listId, tess)], [true, false]);
 
   // ---------------------------------------------------------------- by the studio's door

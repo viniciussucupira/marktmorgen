@@ -1,4 +1,5 @@
 import { type NextRequest, after } from "next/server";
+import { StoreFullError } from "@/lib/store-full";
 import {
   MAX_MAIL_ADDRESS,
   MAX_MAIL_NAME,
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
       if (emails.length === 0) return fail("no_addresses");
       if (emails.length > MAX_IMPORT) return fail("too_many");
       store = (await ensureListId(ref)) ?? store;
-      const { added, already, full } = await importContacts(store.listId as string, emails);
+      const { added, already, full } = await importContacts(store.listId as string, emails, store);
       // A hundred addresses or more, pasted in: of unknown age, so the next
       // emails go out in portions that double (lib/mail-health.ts).
       await startRamp(healthId(store), added);
@@ -336,6 +337,8 @@ export async function POST(request: NextRequest) {
 
     return fail("invalid");
   } catch (error) {
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof StoreFullError) return fail("store_full", 409);
     console.error("an email action failed", error);
     if (error instanceof BroadcastCancellationUnconfirmed) return fail("broadcast_cancel_unconfirmed", 502);
     if (error instanceof BroadcastWriteUnconfirmed) return fail("broadcast_write_unconfirmed", 502);

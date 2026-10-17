@@ -51,6 +51,20 @@
 import { redisPipeline } from "@/lib/redis";
 import { holdsAll } from "@/lib/community-search";
 import { CREATOR } from "@/lib/community";
+import { type DataStore, giveData, needData, noteData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
+
+/**
+ * Where messages are counted in the store's data room (lib/store-data.ts):
+ * one slot a conversation, its messages as they are kept (the oldest that
+ * falls off gives its room back), its places in the two lists and what each
+ * has read; and one for the people members have declined.
+ */
+const PAIR_SLOT = (pair: string) => `cm:dm:${pair}`;
+const DECLINED_SLOT = "cm:dmx";
+/** A conversation's places in two lists and its two read marks. */
+const PAIR_BYTES = 4 * 96;
+const DECLINED_BYTES = 96;
 
 const base = (id: string) => `nl:cm:${id}`;
 const chatKey = (id: string, pair: string) => `${base(id)}:dm:${pair}`;
@@ -178,6 +192,7 @@ export async function send(
   from: string,
   to: string,
   text: string,
+  room: DataStore,
 ): Promise<SendResult> {
   const blocked = mayMessage(setting, from, to);
   if (blocked) return blocked;
@@ -200,6 +215,12 @@ export async function send(
   // one. The creator writing to a member never is; a member writing to the
   // creator never is either.
   const asking = setting.ask && !Number(already) && from !== CREATOR && to !== CREATOR;
+
+  // Its room first (DataRoomError when it does not fit). A conversation at
+  // MAX_MESSAGES lets its oldest go, and that one's room comes back.
+  const [length, oldest] = await redisPipeline([["LLEN", chatKey(id, pair)], ["LINDEX", chatKey(id, pair), 0]]);
+  const dropped = Number(length) >= MAX_MESSAGES && typeof oldest === "string" ? dataBytes([oldest], 1) : 0;
+  await needData(room, [{ slot: PAIR_SLOT(pair), bytes: dataBytes([JSON.stringify(message)], 1) + (Number(already) ? 0 : PAIR_BYTES) - dropped }]);
 
   await redisPipeline([
     ["RPUSH", chatKey(id, pair), JSON.stringify(message)],
@@ -236,7 +257,7 @@ export async function accept(id: string, who: string, pair: string): Promise<boo
  * reader said no to, in case somebody later wants to read it, is not a
  * kindness to anybody in this exchange.
  */
-export async function decline(id: string, who: string, pair: string): Promise<boolean> {
+export async function decline(id: string, who: string, pair: string, room: DataStore): Promise<boolean> {
   const other = otherIn(pair, who);
   if (!other) return false;
   const [held] = await redisPipeline([["ZSCORE", askedKey(id, who), pair]]);
@@ -247,17 +268,25 @@ export async function decline(id: string, who: string, pair: string): Promise<bo
     ["DEL", chatKey(id, pair), readKey(id, pair)],
     ["SADD", shutKey(id, who), other],
   ]);
+  // The conversation's room comes back; the person declined takes a little,
+  // never refused: saying no must always work.
+  await giveData(room, [{ slot: PAIR_SLOT(pair), bytes: 0, set: true }]);
+  await noteData(room, [{ slot: DECLINED_SLOT, bytes: DECLINED_BYTES }]);
   // Bounded, so one person's refusals cannot grow without end. Dropping the
   // oldest is the right way round: somebody who declined five hundred people
   // is far likelier to meet a new stranger than the first one again.
   const [count] = await redisPipeline([["SCARD", shutKey(id, who)]]);
-  if (Number(count) > MAX_DECLINED) await redisPipeline([["SPOP", shutKey(id, who)]]);
+  if (Number(count) > MAX_DECLINED) {
+    await redisPipeline([["SPOP", shutKey(id, who)]]);
+    await giveData(room, [{ slot: DECLINED_SLOT, bytes: DECLINED_BYTES }]);
+  }
   return true;
 }
 
 /** Lets somebody previously declined write again. */
-export async function unblock(id: string, who: string, other: string): Promise<void> {
-  await redisPipeline([["SREM", shutKey(id, who), other]]);
+export async function unblock(id: string, who: string, other: string, room: DataStore): Promise<void> {
+  const [removed] = await redisPipeline([["SREM", shutKey(id, who), other]]);
+  if (Number(removed) === 1) await giveData(room, [{ slot: DECLINED_SLOT, bytes: DECLINED_BYTES }]);
 }
 
 /** Everyone this person has declined. */

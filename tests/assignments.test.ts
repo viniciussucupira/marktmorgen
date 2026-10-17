@@ -42,6 +42,7 @@ import { writeFeedback } from "@/lib/ai";
 import { claimHandle, storeForEmail, type Listing } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const sent: { to: string; subject: string; text: string }[] = [];
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -109,34 +110,34 @@ async function main(): Promise<void> {
 
   part("Reviewed: waiting, another try, approved");
   const task: Task = { prompt: "Write it.", review: true, gate: true, file: true };
-  await saveTask(course.id, first, task);
+  await saveTask(course.id, first, task, ROOM);
   is("the prompt is kept apart from the outline", (await readTaskFor(course.id, first))?.prompt, "Write it.");
-  const one = await handIn({ courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", task, text: "My first go.", file: file("one"), now: 100 });
+  const one = await handIn({ data: ROOM, courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", task, text: "My first go.", file: file("one"), now: 100 });
   is("handed in, it waits for the creator", one.state, "waiting");
   is("and is in the creator's list", (await waitingWork(course.id)).rows.map((r) => r.who).join(), WHO);
   is("the lesson is not done yet", (await doneLessons(course.id, "student@example.com")).has(first), false);
   is("the next lesson still waits", heldBack(course, await passedQuizzes(course.id, WHO)).has(second), true);
 
-  const again = await review({ courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", verdict: "again", feedback: "Say who it is for." });
+  const again = await review({ data: ROOM, courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", verdict: "again", feedback: "Say who it is for." });
   is("another try asked for", again.ok && again.submission.state, "again");
   is("nothing waits any more", (await waitingWork(course.id)).total, 0);
-  is("work already answered is not answered twice", (await review({ courseId: course.id, lessonId: first, who: WHO, email: "", verdict: "approved", feedback: "" })).ok, false);
+  is("work already answered is not answered twice", (await review({ data: ROOM, courseId: course.id, lessonId: first, who: WHO, email: "", verdict: "approved", feedback: "" })).ok, false);
 
-  const two = await handIn({ courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", task, text: "For beginners.", file: file("two"), now: 200 });
+  const two = await handIn({ data: ROOM, courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", task, text: "For beginners.", file: file("two"), now: 200 });
   is("the old file is handed back to be deleted", two.replaced?.path, "one.pdf");
   is("the second try is counted", (await submissionOf(course.id, first, WHO))?.tries, 2);
   is("and the old answer is cleared with it", (await submissionOf(course.id, first, WHO))?.feedback, "");
-  const three = await handIn({ courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", task, text: "For beginners, again.", file: file("two"), now: 300 });
+  const three = await handIn({ data: ROOM, courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", task, text: "For beginners, again.", file: file("two"), now: 300 });
   is("the same file kept is not deleted", three.replaced, null);
 
-  const yes = await review({ courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", verdict: "approved", feedback: "Clear now." });
+  const yes = await review({ data: ROOM, courseId: course.id, lessonId: first, who: WHO, email: "student@example.com", verdict: "approved", feedback: "Clear now." });
   is("approved", yes.ok && yes.submission.state, "approved");
   is("approving finishes the lesson", (await doneLessons(course.id, "student@example.com")).has(first), true);
   is("and opens the lessons after it", heldBack(course, await passedQuizzes(course.id, WHO)).has(second), false);
 
   part("Not reviewed: handing in is enough");
   const quick: Task = { prompt: "Share a link.", review: false, gate: false, file: false };
-  const handed = await handIn({ courseId: course.id, lessonId: second, who: OTHER, email: "other@example.com", task: quick, text: "Here.", file: null, now: 400 });
+  const handed = await handIn({ data: ROOM, courseId: course.id, lessonId: second, who: OTHER, email: "other@example.com", task: quick, text: "Here.", file: null, now: 400 });
   is("done at once", handed.state, "approved");
   is("the lesson is marked done", (await doneLessons(course.id, "other@example.com")).has(second), true);
   is("nothing waits for the creator", (await waitingWork(course.id)).total, 0);
@@ -149,7 +150,7 @@ async function main(): Promise<void> {
   is("room given back is room again", await takeRoom("store-1", 10), true);
 
   part("Removing an assignment forgets the work and returns its files");
-  const files = await dropTask(course.id, first, "store-1");
+  const files = await dropTask(course.id, first, "store-1", ROOM);
   is("every file still kept for it, to delete: the replaced one went when it was replaced", files.join(), "two.pdf");
   is("the student's work is forgotten", await submissionOf(course.id, first, WHO), null);
   is("and the assignment", await readTaskFor(course.id, first), null);

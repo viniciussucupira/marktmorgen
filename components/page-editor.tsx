@@ -2239,7 +2239,7 @@ export function PageEditor({
               </span>
             </summary>
             <p className="mt-3 text-xs text-ink-soft">
-              The page as it was before each of your last five saves, kept for 30 days after your last save. Loading one changes nothing live until you press Save.
+              The page as it was before each of your last five saves, kept as long as the page is and counted in your store&apos;s data room. Loading one changes nothing live until you press Save.
             </p>
             {versionNote ? (
               <p className="notice notice-error mt-3" role="alert">

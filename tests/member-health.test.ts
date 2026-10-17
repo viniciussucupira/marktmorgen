@@ -21,6 +21,7 @@ import { editCourse, emptyCourse, saveCourse } from "@/lib/course";
 import { addProduct, claimHandle, ensureListId, ensureStatsId, setNudge, setProductCourse, setStripeAccount, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const DAY = 86_400;
 const NOW = Math.floor(Date.now() / 1000);
@@ -82,7 +83,7 @@ async function main(): Promise<void> {
   const added = editCourse(course, { op: "lesson-add", moduleId: course.modules[0].id, title: "One" });
   if (!added.ok) throw new Error("no lesson");
   course = added.course;
-  await saveCourse(course);
+  await saveCourse(course, ROOM);
   await setProductCourse(OWNER, club.product.id, { id: course.id, lessons: 1 });
   let store = (await storeForEmail(OWNER))!;
 
@@ -103,7 +104,7 @@ async function main(): Promise<void> {
     member("sub_Dee000000001", "dee@example.com", { metadata: { store: "harbor", product: club.product.id, kind: "plan" } }),
     member("sub_Eve000000001", "eve@example.com", { status: "canceled" }),
   ];
-  await touchStudent(course.id, "ben@example.com", NOW - 80 * DAY);
+  await touchStudent(course.id, "ben@example.com", NOW - 80 * DAY, ROOM);
   const health = (await memberHealth(store, true))!;
   is("running members only, the lowest first, each with why", health.members.map((m) => [m.email, m.score, m.factors.map((f) => f.reason)]), [
     ["cy@example.com", 0, ["payment", "course-never"]],
@@ -117,7 +118,7 @@ async function main(): Promise<void> {
   is("saved with one", (await setNudge(OWNER, { on: true, address: "1 Main St, Portland, OR 97201" })).ok, true);
   store = (await storeForEmail(OWNER))!;
   for (const email of ["ana@example.com", "cy@example.com"]) {
-    await upsertContact(store.listId as string, email, { agreed: true, explicit: true, source: "buyer", productId: club.product.id, title: "Weeknight Club" });
+    await upsertContact(store.listId as string, email, { agreed: true, explicit: true, source: "buyer", productId: club.product.id, title: "Weeknight Club" }, ROOM);
   }
   await nudgeStore(store, Date.now() + 20_000);
   is("only the member away, who agreed; not the one whose payment failed", mails.map((m) => [m.to].flat()[0]), ["ana@example.com"]);

@@ -88,11 +88,14 @@ export default function DevelopersPage() {
         <p>
           {`A store's keys together also have a figure for each billing month (the month that starts on the day the store's plan renews): ${STORE_ALLOWANCES.creator.api.toLocaleString("en-US")} requests on ${PLAN_TITLES.creator}, ${STORE_ALLOWANCES.pro.api.toLocaleString("en-US")} on ${PLAN_TITLES.pro} and ${STORE_ALLOWANCES.scale.api.toLocaleString("en-US")} on ${PLAN_TITLES.scale}. A contact added or a product given counts as ${API_WRITE_UNITS}. Past it, the answer is 429 `}
           <code className="font-mono">monthly_limit</code>
-          {" until the next billing month, or at once on a larger plan. Nothing is billed for requests."}
+          {" until the next billing month, or at once on a larger plan. Nothing is billed for requests. A write that does not fit the store's data room (its words and records, by plan) is answered 409 "}
+          <code className="font-mono">store_full</code>
+          {", and nothing is written."}
         </p>
         <Code>{`401  {"error": "unauthorized", "message": "Send your API key as: Authorization: Bearer nl_live_…"}
 429  {"error": "rate_limited", "message": "At most ${API_RATE} requests a minute per key. Try again in a minute."}
 429  {"error": "monthly_limit", "message": "Your store's API requests for this month are used: …"}
+409  {"error": "store_full", "message": "Your store's data room is full, so nothing was added. …"}
 502  {"error": "unavailable", "message": "… could not be read just now. Try again in a moment."}`}</Code>
         <p>A missing, mistyped and revoked key all get the same 401.</p>
       </LegalSection>

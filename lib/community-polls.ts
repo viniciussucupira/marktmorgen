@@ -37,6 +37,8 @@
  * moves the count off the old option and on to the new one in the same call.
  */
 import { redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { cleanLine } from "@/lib/community-text";
 
 const base = (id: string) => `nl:cm:${id}`;
@@ -127,6 +129,7 @@ export async function vote(
   poll: Poll,
   who: string,
   choice: string[],
+  room: DataStore,
 ): Promise<boolean> {
   if (pollClosed(poll)) return false;
   const picked = cleanChoice(poll, choice);
@@ -135,6 +138,11 @@ export async function vote(
   const gone = before.filter((one) => !picked.includes(one));
   const added = picked.filter((one) => !before.includes(one));
   if (!gone.length && !added.length) return true;
+  // A vote is counted in its post's slot of the store's data room (lib/community.ts):
+  // a new one takes room first (DataRoomError when it does not fit), one taken back gives it.
+  const weight = (list: string[]) => (list.length ? dataBytes([list.join(",")], 1) : 0);
+  const grown = weight(picked) - weight(before);
+  if (grown > 0) await needData(room, [{ slot: `cm:p:${post}`, bytes: grown }]);
   await redisPipeline([
     ...gone.map((one) => ["HINCRBY", tallyKey(id, post), one, -1]),
     ...added.map((one) => ["HINCRBY", tallyKey(id, post), one, 1]),
@@ -142,6 +150,7 @@ export async function vote(
       ? ["HSET", votesKey(id, post), who, picked.join(",")]
       : ["HDEL", votesKey(id, post), who],
   ]);
+  if (grown < 0) await giveData(room, [{ slot: `cm:p:${post}`, bytes: -grown }]);
   return true;
 }
 

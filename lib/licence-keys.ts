@@ -55,6 +55,8 @@ import { MAX_UPLOAD_KEYS, MAX_POOL_KEYS, MIN_KEY_LENGTH, MAX_KEY_LENGTH, KEY_ALP
 export { MAX_UPLOAD_KEYS, MAX_POOL_KEYS, MIN_KEY_LENGTH, MAX_KEY_LENGTH, KEY_ALPHABET, MAX_KEY_FILE_BYTES, sampleKey, type IssuedKey, type KeyCounts } from "@/lib/licence-key-rules";
 import { saleHandles } from "@/lib/store";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { NIMBUS_FROM, sendEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site-url";
 import type { Listing, Store } from "@/lib/store";
@@ -337,6 +339,13 @@ export async function addKeys(store: Store, product: Listing, keys: string[], or
   let added = 0;
   let known = 0;
   let overflow = 0;
+  // The keys take room in the store's data room first, in the pool and in the
+  // record of every key ever added (DataRoomError when they do not fit); the
+  // ones not kept give theirs back below.
+  const weigh = (list: string[]) => list.reduce((sum, key) => sum + dataBytes([key], 2), 0);
+  const slot = `lk:${product.id}`;
+  await needData(store, [{ slot, bytes: weigh(keys) }]);
+  const notKept: string[] = [];
   for (let i = 0; i < keys.length; i += BATCH) {
     const batch = keys.slice(i, i + BATCH);
     // One key at a time into the set, so the answer says which ones are new.
@@ -346,6 +355,7 @@ export async function addKeys(store: Store, product: Listing, keys: string[], or
     batch.forEach((key, j) => {
       if (Number(fresh[j]) !== 1) {
         known += 1;
+        notKept.push(key);
         return;
       }
       if (room > 0) {
@@ -354,6 +364,7 @@ export async function addKeys(store: Store, product: Listing, keys: string[], or
       } else {
         overflow += 1;
         giveBack.push(key);
+        notKept.push(key);
       }
     });
     const writes: (string | number)[][] = [];
@@ -362,6 +373,7 @@ export async function addKeys(store: Store, product: Listing, keys: string[], or
     if (writes.length) await redisPipeline(writes);
     added += take.length;
   }
+  if (notKept.length) await giveData(store, [{ slot, bytes: weigh(notKept) }]);
   // A top-up means the next low pool is worth another warning.
   if (added > 0) await redisPipeline([["DEL", warnedKey(store, product)]]);
   const served = added > 0 ? await serveWaiting(store, product, origin) : 0;

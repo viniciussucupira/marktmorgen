@@ -14,6 +14,7 @@ import { refreshStoreQuotes } from "@/lib/store-quotes";
 import { QUOTE_CHARS, parseQuotes, quoteText } from "@/lib/store-quotes-rules";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 async function main(): Promise<void> {
   redis.clear();
@@ -26,7 +27,7 @@ async function main(): Promise<void> {
   const day = 86_400_000;
   const base = Date.now() - 20 * day;
   const review = async (n: number, product: string, rating: number, text: string) => {
-    const saved = await saveReview(statsId, { productId: product, email: `r${n}@example.com`, reference: `cs_test_q${n}`, pi: `pi_q${n}`, rating, text, name: `Reader ${n}` }, base + n * day);
+    const saved = await saveReview(statsId, { productId: product, email: `r${n}@example.com`, reference: `cs_test_q${n}`, pi: `pi_q${n}`, rating, text, name: `Reader ${n}` }, ROOM, base + n * day);
     if (saved.state !== "created") throw new Error(`review ${n}: ${saved.state}`);
     return saved.review.id;
   };

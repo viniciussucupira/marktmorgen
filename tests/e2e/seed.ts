@@ -56,11 +56,12 @@ async function main(): Promise<void> {
   const news = await setAnnouncement(OWNER, { text: "New: Knife Skills, ten short lessons", product: ids["Knife Skills"] });
   if (!news.ok) throw new Error("the line of news was refused");
   // Three verified reviews on one product, oldest first, for picking which show first.
-  const statsId = (await ensureStatsId(OWNER))?.statsId;
-  if (!statsId) throw new Error("the store has no statsId");
+  const seeded = await ensureStatsId(OWNER);
+  const statsId = seeded?.statsId;
+  if (!seeded || !statsId) throw new Error("the store has no statsId");
   const reviews: string[] = [];
   for (const [n, rating, text] of [[1, 5, "The rye loaf alone was worth it."], [2, 4, "Clear steps, though the cake took longer."], [3, 5, "My Sunday mornings smell like bread now."]] as const) {
-    const saved = await saveReview(statsId, { productId: ids["Sunday Baking"], email: `reader${n}@example.com`, reference: `cs_test_seed${n}`, pi: `pi_seed${n}`, rating, text, name: `Reader ${n}` }, Date.now() - (10 - n) * 86_400_000);
+    const saved = await saveReview(statsId, { productId: ids["Sunday Baking"], email: `reader${n}@example.com`, reference: `cs_test_seed${n}`, pi: `pi_seed${n}`, rating, text, name: `Reader ${n}` }, seeded, Date.now() - (10 - n) * 86_400_000);
     if (saved.state !== "created") throw new Error(`review ${n} was refused: ${saved.state}`);
     reviews.push(saved.review.id);
   }
@@ -82,7 +83,7 @@ async function main(): Promise<void> {
       { id: "pics0003", kind: "pictures", heading: "A look inside", items: [shot(1, "The rye loaf, sliced", "Week one: rye"), shot(2, "A lemon cake", "Week two: lemon cake"), shot(3, "Cinnamon rolls on a tray", "")] },
     ],
   });
-  await writePage(statsId, ids["Sunday Baking"], withPictures);
+  await writePage(statsId, ids["Sunday Baking"], withPictures, seeded);
   const marked = await setProductPage(OWNER, ids["Sunday Baking"], true);
   if (!marked.ok) throw new Error("the page could not be marked");
   // A long store, past one page of products, for its search.

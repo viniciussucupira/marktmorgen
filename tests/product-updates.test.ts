@@ -23,6 +23,7 @@ import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 import { windowId } from "@/lib/allowance-window";
+import { ROOM } from "./data-room";
 
 const OWNER = "owner@example.com";
 type Message = { to: string; subject: string; text: string; headers?: Record<string, string> };
@@ -95,7 +96,7 @@ async function main(): Promise<void> {
 
   // Ben left the creator's list: an update is still about what he bought, but he said no to their email.
   const store = await load();
-  await upsertContact(store.listId as string, "ben@example.com", { agreed: true, explicit: true, source: "import" });
+  await upsertContact(store.listId as string, "ben@example.com", { agreed: true, explicit: true, source: "import" }, ROOM);
   const ben = (await tokensFor(store.listId as string, ["ben@example.com"], store.handle)).get("ben@example.com");
   if (ben) await unsubscribe(ben);
 

@@ -135,7 +135,7 @@ export async function importBundle(ref: string, store: Store, bundle: FunnelBund
     }
     for (const { ref: pageRef, page } of made) {
       const source = bundle.pages.find((p) => p.ref === pageRef)!;
-      await writePage(statsId, siteKey(page.id), pageForStore(source, products, forms));
+      await writePage(statsId, siteKey(page.id), pageForStore(source, products, forms), store);
     }
     const steps: PageFunnelStep[] = bundle.steps.flatMap((step): PageFunnelStep[] => {
       if (step.kind === "page") return [{ kind: "page", id: made.find((m) => m.ref === step.ref)!.page.id }];
@@ -148,7 +148,7 @@ export async function importBundle(ref: string, store: Store, bundle: FunnelBund
     let slug = base;
     for (let n = 2; funnelSlugProblem(slug, existing) !== null && n < 100; n += 1) slug = `${base.slice(0, 36)}-${n}`;
     started = true;
-    const funnel = await writePageFunnel(statsId, { id: newFunnelId(), name: label, slug, steps, on: false, since: now }, existing);
+    const funnel = await writePageFunnel(statsId, { id: newFunnelId(), name: label, slug, steps, on: false, since: now }, existing, store);
     return { ok: true, funnel, pages: made.map((m) => ({ id: m.page.id, title: m.page.title, slug: m.page.slug })), lines: plan.lines };
   } catch (error) {
     if (!started) throw error;

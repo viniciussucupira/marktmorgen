@@ -1,6 +1,7 @@
 import { DEFAULT_ATTEMPTS, MAX_ATTEMPTS, parseQuiz, readQuiz, saveQuiz, readQuizFor, submitQuiz, type Quiz } from "@/lib/quiz";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const input = { passPercent: 70, required: true, questions: [{ text: "Which is correct?", choices: ["Yes", "No"], correct: [0], explanation: "Yes." }] };
 function quiz(attempts: unknown, existing: Quiz | null = null): Quiz {
@@ -24,20 +25,20 @@ async function main() {
   is("legacy can choose a finite limit", quiz(2, legacy).attempts, 2);
   is("finite quiz cannot gain an unbounded setting", readQuiz({ ...input, attempts: 0 }, quiz(3)).ok, false);
   const finite = quiz(2);
-  await saveQuiz("a".repeat(32), "lesson000001", finite);
+  await saveQuiz("a".repeat(32), "lesson000001", finite, ROOM);
   is("finite limit survives storage", (await readQuizFor("a".repeat(32), "lesson000001"))?.attempts, 2);
   part("Actual submissions respect the limit");
   const wrong = { [finite.questions[0].id]: [1] };
-  is("first try accepted", (await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32))).ok, true);
-  is("second try accepted", (await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32))).ok, true);
-  const blocked = await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32));
+  is("first try accepted", (await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32), undefined, ROOM)).ok, true);
+  is("second try accepted", (await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32), undefined, ROOM)).ok, true);
+  const blocked = await submitQuiz("a".repeat(32), "lesson000001", "learner", finite, wrong, "b".repeat(32), undefined, ROOM);
   is("third try rejected", blocked.ok ? "accepted" : blocked.reason, "no_tries");
-  const fresh = await submitQuiz("a".repeat(32), "lesson000001", "another", finite, wrong, "b".repeat(32));
+  const fresh = await submitQuiz("a".repeat(32), "lesson000001", "another", finite, wrong, "b".repeat(32), undefined, ROOM);
   is("another learner has their own allowance", fresh.ok ? fresh.attempt.used : null, 1);
-  await saveQuiz("a".repeat(32), "legacy000001", legacy);
+  await saveQuiz("a".repeat(32), "legacy000001", legacy, ROOM);
   const old = (await readQuizFor("a".repeat(32), "legacy000001"))!;
-  for (let i = 0; i < 4; i++) await submitQuiz("a".repeat(32), "legacy000001", "legacy-learner", old, { [old.questions[0].id]: [1] });
-  const continued = await submitQuiz("a".repeat(32), "legacy000001", "legacy-learner", old, { [old.questions[0].id]: [1] });
+  for (let i = 0; i < 4; i++) await submitQuiz("a".repeat(32), "legacy000001", "legacy-learner", old, { [old.questions[0].id]: [1] }, undefined, undefined, ROOM);
+  const continued = await submitQuiz("a".repeat(32), "legacy000001", "legacy-learner", old, { [old.questions[0].id]: [1] }, undefined, undefined, ROOM);
   is("legacy allowance is not retroactively capped", continued.ok ? continued.attempt.used : null, 5);
   done();
 }

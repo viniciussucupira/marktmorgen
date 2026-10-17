@@ -1,5 +1,5 @@
 import { apiError, apiOk, apiWriter, readApiBody } from "@/lib/api-guard";
-import { WRITE_ERRORS, changeLeadLabels } from "@/lib/api-write";
+import { WRITE_ERRORS, changeLeadLabels, roomFor } from "@/lib/api-write";
 
 /**
  * POST /api/v1/leads/labels — adds and takes away labels of somebody on the
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const body = await readApiBody(request);
   if (body instanceof Response) return body;
   try {
-    const done = await changeLeadLabels(writer.store, body);
+    const done = await roomFor(() => changeLeadLabels(writer.store, body));
     if (!done.ok) return apiError(WRITE_ERRORS[done.error][0], done.error, WRITE_ERRORS[done.error][1]);
     return apiOk({ data: done.value });
   } catch (error) {

@@ -10,9 +10,10 @@
  *     and says how many it lost, since a picture taken off a page is deleted.
  */
 import { keepPictures, parsePage } from "@/lib/sales-page";
-import { MAX_VERSIONS, VERSION_DAYS, dropPage, readVersions, writePage } from "@/lib/sales-page-store";
+import { MAX_VERSIONS, dropPage, readVersions, writePage } from "@/lib/sales-page-store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const STATS = "s".repeat(16);
 const page = (headline: string, more: Record<string, unknown> = {}) =>
@@ -23,24 +24,25 @@ async function main(): Promise<void> {
 
   part("What each save keeps");
   is("a page never saved has none", await readVersions(STATS, "p1"), []);
-  await writePage(STATS, "p1", page("First"));
+  await writePage(STATS, "p1", page("First"), ROOM);
   is("the first save has nothing before it", (await readVersions(STATS, "p1")).length, 0);
-  await writePage(STATS, "p1", page("Second", { style: "bands" }));
+  await writePage(STATS, "p1", page("Second", { style: "bands" }), ROOM);
   const one = await readVersions(STATS, "p1");
   is("the second keeps the first, read back whole", [one.length, one[0]?.page.blocks[0]?.kind === "hero" ? one[0].page.blocks[0].headline : "", one[0]?.page.style], [1, "First", "plain"]);
   is("with when it was saved over", typeof one[0]?.at === "number" && one[0].at > 0, true);
-  await writePage(STATS, "p1", page("Second", { style: "bands" }));
+  await writePage(STATS, "p1", page("Second", { style: "bands" }), ROOM);
   is("a save that changes nothing keeps nothing", (await readVersions(STATS, "p1")).length, 1);
-  for (const word of ["Third", "Fourth", "Fifth", "Sixth", "Seventh"]) await writePage(STATS, "p1", page(word));
+  for (const word of ["Third", "Fourth", "Fifth", "Sixth", "Seventh"]) await writePage(STATS, "p1", page(word), ROOM);
   const all = await readVersions(STATS, "p1");
   const heads = all.map((v) => (v.page.blocks[0]?.kind === "hero" ? v.page.blocks[0].headline : ""));
   is(`${MAX_VERSIONS} at most, newest first`, heads, ["Sixth", "Fifth", "Fourth", "Third", "Second"]);
 
   part("How long they are kept");
   const ttl = (await redis.pipeline([["TTL", `nl:product:pages:${STATS}:p1`]]))[0];
-  is(`forgotten ${VERSION_DAYS} days after the last save`, ttl, VERSION_DAYS * 86_400);
+  // Since 18 October 2026 kept as long as the page is, counted in the store's data room (lib/store-data.ts).
+  is("kept as long as the page is", ttl, -1);
   is("another product's page keeps its own", await readVersions(STATS, "p2"), []);
-  await dropPage(STATS, "p1");
+  await dropPage(STATS, "p1", ROOM);
   is("and they go with the product", await readVersions(STATS, "p1"), []);
 
   part("Pictures, when a version comes back");

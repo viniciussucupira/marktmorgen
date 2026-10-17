@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         const blocks: PageBlock[] = starter.kinds.map((kind) => emptyBlock(kind));
         const hero = blocks[0];
         if (hero?.kind === "hero") Object.assign(hero, { headline: title, media: "none" });
-        await writePage(saved.store.statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true });
+        await writePage(saved.store.statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true }, saved.store);
       }
       return Response.json({ ok: true, pages: saved.store.sitePages, id: page.id });
     }
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       if (!found) return refuse("unknown", 404);
       const saved = await setSitePages(ref, pages.filter((page) => page.id !== found.id));
       if (!saved.ok) return refuse(saved.reason);
-      const gone = await dropPage(saved.store.statsId, siteKey(found.id)).catch(() => [] as string[]);
+      const gone = await dropPage(saved.store.statsId, siteKey(found.id), saved.store).catch(() => [] as string[]);
       if (gone.length) await del(gone).catch((error: unknown) => console.error("could not delete a removed page's pictures", error));
       return Response.json({ ok: true, pages: saved.store.sitePages });
     }
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
           return refuse("pictures");
         }
       }
-      await writePage(statsId, key, page);
+      await writePage(statsId, key, page, store);
       // When it is out, kept on the list so the menu reads nothing more (lib/site-page-rules.ts).
       const from = outFrom(page);
       if (from !== found.from) await setSitePages(ref, pages.map((p) => (p.id === found.id ? { ...p, from } : p)));

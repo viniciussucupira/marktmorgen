@@ -11,6 +11,8 @@
  *   nl:lc:<course>:seen         string when the studio last showed the creator the comments
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { newItemId } from "@/lib/course";
 import { cleanLine, cleanText } from "@/lib/community-text";
 import {
@@ -32,6 +34,14 @@ const repliesKey = (course: string) => `nl:lc:${course}:r`;
 const namesKey = (course: string) => `nl:lc:${course}:names`;
 const offKey = (course: string) => `nl:lc:${course}:off`;
 const seenKey = (course: string) => `nl:lc:${course}:seen`;
+
+/**
+ * Where a course's comments are counted in the store's data room
+ * (lib/store-data.ts): one slot a course, each comment as its record, its
+ * place under its lesson, in the studio's list and its count of answers.
+ */
+const COMMENTS_SLOT = (course: string) => `lc:${course}`;
+const commentBytes = (comment: LessonComment) => dataBytes([serializeComment(comment)], 4);
 
 /** The studio's list keeps this many of a course's newest comments. */
 const RECENT_KEPT = 1_000;
@@ -91,6 +101,8 @@ export async function addComment(input: {
   name?: unknown;
   parent?: string | null;
   now?: number;
+  /** The store whose data room it takes from (DataRoomError when it does not fit). */
+  room: DataStore;
 }): Promise<AddResult> {
   const text = cleanText(input.text, MAX_LESSON_COMMENT);
   if (!text) return { ok: false, reason: "empty" };
@@ -101,7 +113,10 @@ export async function addComment(input: {
     const given = cleanLine(input.name, MAX_COMMENTER_NAME);
     name = given || (await commenterName(input.courseId, input.by));
     if (!name) return { ok: false, reason: "name" };
-    if (given) await redisPipeline([["HSET", namesKey(input.courseId), input.by, given]]);
+    if (given) {
+      await needData(input.room, [{ slot: COMMENTS_SLOT(input.courseId), bytes: dataBytes([input.by, given], 1) }]);
+      await redisPipeline([["HSET", namesKey(input.courseId), input.by, given]]);
+    }
   }
 
   let parent: LessonComment | null = null;
@@ -126,6 +141,7 @@ export async function addComment(input: {
     parent: parent ? parent.id : null,
     hidden: false,
   };
+  await needData(input.room, [{ slot: COMMENTS_SLOT(input.courseId), bytes: commentBytes(comment) }]);
   await redisPipeline([
     ["HSET", commentsKey(input.courseId), comment.id, serializeComment(comment)],
     ["ZADD", lessonKey(input.courseId, input.lessonId), now, comment.id],
@@ -144,14 +160,18 @@ export async function setHidden(courseId: string, id: string, hidden: boolean): 
   return next;
 }
 
-/** Deletes a comment, and the answers under it. Returns how many went. */
-export async function deleteComment(courseId: string, id: string): Promise<number> {
+/** Deletes a comment, and the answers under it, and gives back their room. Returns how many went. */
+export async function deleteComment(courseId: string, id: string, room: DataStore): Promise<number> {
   const comment = await readComment(courseId, id);
   if (!comment) return 0;
   const gone = [comment.id];
+  let freed = commentBytes(comment);
   if (comment.parent === null) {
     for (const other of await lessonComments(courseId, comment.lesson)) {
-      if (other.parent === comment.id) gone.push(other.id);
+      if (other.parent === comment.id) {
+        gone.push(other.id);
+        freed += commentBytes(other);
+      }
     }
   }
   await redisPipeline([
@@ -161,6 +181,7 @@ export async function deleteComment(courseId: string, id: string): Promise<numbe
     ["HDEL", repliesKey(courseId), comment.id],
     ...(comment.parent ? [["HINCRBY", repliesKey(courseId), comment.parent, -1] as (string | number)[]] : []),
   ]);
+  await giveData(room, [{ slot: COMMENTS_SLOT(courseId), bytes: freed }]);
   return gone.length;
 }
 
@@ -194,20 +215,24 @@ export async function markSeen(courseId: string, now = Math.floor(Date.now() / 1
   await redisPipeline([["SET", seenKey(courseId), String(now)]]);
 }
 
-/** Takes every comment of a course away, with the course. */
-export async function dropComments(courseId: string, lessonIds: string[]): Promise<void> {
+/** Takes every comment of a course away, with the course, and gives back their room. */
+export async function dropComments(courseId: string, lessonIds: string[], room: DataStore): Promise<void> {
   if (!isRedisConfigured()) return;
   await redisPipeline([
     ...[commentsKey, allKey, repliesKey, namesKey, offKey, seenKey].map((k) => ["DEL", k(courseId)]),
     ...lessonIds.map((l) => ["DEL", lessonKey(courseId, l)]),
   ]);
+  await giveData(room, [{ slot: COMMENTS_SLOT(courseId), bytes: 0, set: true }]);
 }
 
 /** Takes away every comment under lessons that are gone from the course. */
-export async function dropLessonComments(courseId: string, lessonIds: string[]): Promise<void> {
+export async function dropLessonComments(courseId: string, lessonIds: string[], room: DataStore): Promise<void> {
   if (!isRedisConfigured() || !lessonIds.length) return;
   const rows = await redisPipeline(lessonIds.map((l) => ["ZREVRANGE", lessonKey(courseId, l), 0, -1]));
   const ids = rows.flatMap((r) => (Array.isArray(r) ? (r as string[]) : []));
+  // What they weighed, read before they go, comes back to the store's data room.
+  const [held] = ids.length ? await redisPipeline([["HMGET", commentsKey(courseId), ...ids]]) : [[]];
+  const freed = commentsFrom(held).reduce((sum, c) => sum + commentBytes(c), 0);
   await redisPipeline([
     ...(ids.length
       ? [
@@ -218,6 +243,7 @@ export async function dropLessonComments(courseId: string, lessonIds: string[]):
       : []),
     ...lessonIds.map((l) => ["DEL", lessonKey(courseId, l)]),
   ]);
+  if (freed) await giveData(room, [{ slot: COMMENTS_SLOT(courseId), bytes: freed }]);
 }
 
 /**

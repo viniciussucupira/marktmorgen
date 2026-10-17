@@ -1,4 +1,6 @@
 import type { NextRequest } from "next/server";
+import { DataRoomError } from "@/lib/store-data";
+import { DATA_FULL_BUYER_WORDS } from "@/lib/store-data-rules";
 import { cookies } from "next/headers";
 import { originFrom } from "@/lib/request-origin";
 import { fromAnotherSite } from "@/lib/studio-route";
@@ -59,7 +61,13 @@ export async function POST(request: NextRequest) {
     if (done && found.lesson.quiz?.required && !passed.has(lessonId)) {
       return new Response(null, { status: 303, headers: { Location: `${base}/${lessonId}#quiz`, "Cache-Control": "no-store" } });
     }
-    await markLesson(product.course.id, access.learner.email, lessonId, done);
+    try {
+      await markLesson(product.course.id, access.learner.email, lessonId, done, store);
+    } catch (error) {
+      // No room in the store's data room: the lesson stays as it was (lib/store-data.ts).
+      if (error instanceof DataRoomError) return new Response(DATA_FULL_BUYER_WORDS, { status: 409, headers: { "Cache-Control": "no-store" } });
+      throw error;
+    }
     // The last lesson done starts what finishing the course starts (lib/course-finish.ts).
     if (done) await noteIfFinished(store, product.id, product.course.id, access.learner.email);
   }

@@ -6,6 +6,7 @@ import { dropPageFunnel, readPageFunnels, writePageFunnel } from "@/lib/page-fun
 import { randomBytes } from "node:crypto";
 import { can } from "@/lib/team-roles";
 import { appendSitePages } from "@/lib/store";
+import { StoreFullError } from "@/lib/store-full";
 import { emptyBlock, parsePage } from "@/lib/sales-page";
 import { writePage } from "@/lib/sales-page-store";
 import { MAX_SITE_PAGES, type SitePage, siteKey, slugProblem } from "@/lib/site-page-rules";
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     if (body.action === "remove") {
       const id = text(body.id, 10);
       if (!FUNNEL_ID.test(id)) return Response.json({ ok: false, error: "unknown" }, { status: 400 });
-      const removed = await dropPageFunnel(statsId, id);
+      const removed = await dropPageFunnel(statsId, id, store, existing);
       return removed ? Response.json({ ok: true }) : Response.json({ ok: false, error: "unknown" }, { status: 404 });
     }
 
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
             asks.form = form.id;
             formsMade[slot.key] = form.id;
           }
-          await writePage(saved.store.statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true });
+          await writePage(saved.store.statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true }, saved.store);
         }
       }
 
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
       let slug = funnelSlugFrom(name) || "funnel";
       for (let n = 2; funnelSlugProblem(slug, existing) !== null && n < 100; n += 1) slug = `${(funnelSlugFrom(name) || "funnel").slice(0, 36)}-${n}`;
       setupStarted = true;
-      const kept = await writePageFunnel(statsId, { id: newFunnelId(), name, slug, steps, on: false, since: Math.floor(Date.now() / 1000) }, existing);
+      const kept = await writePageFunnel(statsId, { id: newFunnelId(), name, slug, steps, on: false, since: Math.floor(Date.now() / 1000) }, existing, store);
       return Response.json({ ok: true, funnel: kept, pages: made.map((m) => ({ id: m.page.id, title: m.page.title, slug: m.page.slug })), forms: formsMade });
     }
 
@@ -171,9 +172,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const kept = await writePageFunnel(statsId, funnel, existing);
+    const kept = await writePageFunnel(statsId, funnel, existing, store);
     return Response.json({ ok: true, funnel: kept });
   } catch (error) {
+    if (error instanceof StoreFullError) return Response.json({ ok: false, error: "store_full", message: error.message }, { status: 409 });
     console.error("saving a funnel of pages failed", error);
     return Response.json({ ok: false, error: setupStarted ? "setup_incomplete" : "server_error" }, { status: 500 });
   }

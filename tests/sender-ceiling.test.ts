@@ -18,6 +18,7 @@ import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 import { windowId } from "@/lib/allowance-window";
+import { ROOM } from "./data-room";
 
 const OWNER = "owner@example.com";
 type Message = { to: string[]; subject: string };
@@ -69,7 +70,7 @@ async function main(): Promise<void> {
   await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "scale", period: paidPeriod() });
   await setMailSettings(OWNER, { fromName: "Harbor Kitchen", address: "1 Main St, Portland, OR 97201" });
   const store = (await storeForEmail(OWNER))!;
-  for (let i = 0; i < 30; i += 1) await upsertContact(store.listId as string, `reader${i}@example.com`, { agreed: true, explicit: true, source: "free" });
+  for (let i = 0; i < 30; i += 1) await upsertContact(store.listId as string, `reader${i}@example.com`, { agreed: true, explicit: true, source: "free" }, ROOM);
 
   is("with room, it is taken as always", await reserve(store, 10), "ok");
   is("and counted against the store's own month", await usedThisMonth(store.listId, windowId(store)), 10);

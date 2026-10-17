@@ -29,6 +29,7 @@ import {
 import { claimPictures, dropPage, releasePictures, writePage } from "@/lib/sales-page-store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const FOLDER = "a".repeat(24);
 const path = (n: number) => `images/${FOLDER}/${String(n).padStart(32, "0")}.webp`;
@@ -95,8 +96,8 @@ async function main(): Promise<void> {
   is("another product's page cannot take one of them", await claimPictures("stats1", "prod_b", [path(2), path(3)]), [path(2)]);
   is("letting go deletes only what that page was showing", await releasePictures("stats1", "prod_b", [path(2), path(3)]), [path(3)]);
   is("and the first page's picture is still its own", await releasePictures("stats1", "prod_a", [path(2)]), [path(2)]);
-  await writePage("stats1", "prod_a", page);
-  is("a product removed takes its page's pictures with it", await dropPage("stats1", "prod_a"), [path(1)]);
+  await writePage("stats1", "prod_a", page, ROOM);
+  is("a product removed takes its page's pictures with it", await dropPage("stats1", "prod_a", ROOM), [path(1)]);
 
   done();
 }

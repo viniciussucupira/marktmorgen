@@ -153,37 +153,55 @@ export class MemoryRedis {
           this.until.set(lookup, this.now() + Number(ttl) * 1000);
           return 1;
         }
-        if (key.startsWith("-- marktmorgen:order-admission:v1\n") && args[0] === "2" && args.length === 8) {
-          const [, countKey, openKey, rawLimit, rawN, rawHour, rawOldest, keep] = args;
-          this.live(countKey);
-          this.live(openKey);
-          const limit = Number(rawLimit), n = Number(rawN), hour = Number(rawHour), oldest = Number(rawOldest);
-          if (![limit, n, hour, oldest].every(Number.isFinite) || n < 1) return -1;
+        if (key.startsWith("-- marktmorgen:order-admission:v3\n") && args[0] === "4" && args.length === 12) {
+          const [, countKey, openKey, roomKey, heldKey, rawLimit, rawN, rawHour, rawOldest, keep, rawRoom, rawBytes] = args;
+          for (const k of [countKey, openKey, roomKey, heldKey]) this.live(k);
+          const limit = Number(rawLimit), n = Number(rawN), hour = Number(rawHour), oldest = Number(rawOldest), room = Number(rawRoom), bytes = Number(rawBytes);
+          if (![limit, n, hour, oldest, room, bytes].every(Number.isFinite) || n < 1 || bytes < 0) return -1;
+          const ledger = this.data.get(roomKey);
+          const used = ledger instanceof Map ? Number(ledger.get("#") ?? "0") : 0;
+          if (!Number.isFinite(used)) return -1;
           const raw = this.data.get(countKey);
           const counted = raw === undefined ? 0 : Number(raw);
           if (!Number.isFinite(counted)) return -1;
-          const open = this.hash(openKey);
-          let held = 0;
-          for (const [at, value] of [...open]) {
-            const when = Number(at), v = Number(value) || 0;
-            if (!Number.isFinite(when) || when < oldest || v <= 0) open.delete(at);
-            else held += v;
-          }
-          if (counted + held + n > limit) return 0;
-          open.set(String(hour), String((Number(open.get(String(hour))) || 0) + n));
+          const sumOf = (target: string) => {
+            const hours = this.hash(target);
+            let sum = 0;
+            for (const [at, value] of [...hours]) {
+              const when = Number(at), v = Number(value) || 0;
+              if (!Number.isFinite(when) || when < oldest || v <= 0) hours.delete(at);
+              else sum += v;
+            }
+            return hours === undefined ? 0 : sum;
+          };
+          const open = sumOf(openKey);
+          const holding = sumOf(heldKey);
+          if (counted + open + n > limit) return 0;
+          if (used + holding + bytes > room) return 2;
+          const hours = this.hash(openKey), held = this.hash(heldKey);
+          hours.set(String(hour), String((Number(hours.get(String(hour))) || 0) + n));
+          held.set(String(hour), String((Number(held.get(String(hour))) || 0) + bytes));
           this.until.set(openKey, this.now() + Number(keep) * 1000);
+          this.until.set(heldKey, this.now() + Number(keep) * 1000);
           return 1;
         }
-        if (key.startsWith("-- marktmorgen:order-admission-settle:v1\n") && args[0] === "1" && args.length === 4) {
-          const [, openKey, field, rawN] = args;
+        if (key.startsWith("-- marktmorgen:order-admission-settle:v2\n") && args[0] === "2" && args.length === 6) {
+          const [, openKey, heldKey, field, rawN, rawBytes] = args;
           this.live(openKey);
-          const n = Number(rawN);
+          this.live(heldKey);
+          const n = Number(rawN), bytes = Number(rawBytes);
           const open = this.data.get(openKey);
-          if (!(open instanceof Map) || !Number.isFinite(n) || n < 1) return 0;
-          const held = Number(open.get(field)) || 0;
-          if (held <= 0) return 0;
-          if (held <= n) open.delete(field);
-          else open.set(field, String(held - n));
+          if (!(open instanceof Map) || !Number.isFinite(n) || n < 1 || !Number.isFinite(bytes) || bytes < 0) return 0;
+          const count = Number(open.get(field)) || 0;
+          if (count <= 0) return 0;
+          if (count <= n) open.delete(field);
+          else open.set(field, String(count - n));
+          const held = this.data.get(heldKey);
+          if (held instanceof Map) {
+            const kept = Number(held.get(field)) || 0;
+            if (kept <= bytes) held.delete(field);
+            else held.set(field, String(kept - bytes));
+          }
           return 1;
         }
         if (key.startsWith("-- marktmorgen:form-save:v1\n") && args[0] === "1" && args.length === 5) {
@@ -296,6 +314,8 @@ export class MemoryRedis {
           }
           return removed;
         }
+        if (key.startsWith("-- marktmorgen:store-data:v1\n") && args[0] === "1") return this.storeData(args.slice(1));
+        if (key.startsWith("-- marktmorgen:capped-count:v1\n")) return this.cappedCount(args);
         if (!key.startsWith("-- marktmorgen:form-opportunity:v1\n") || args[0] !== "1" || args.length !== 5) throw new Error("MemoryRedis: unsupported EVAL");
         const target = args[1];
         this.live(target);
@@ -365,6 +385,9 @@ export class MemoryRedis {
         const held = this.data.get(key);
         return typeof held === "string" ? held : null;
       }
+      case "PERSIST":
+        // Keeps a key for good: 1 when it had an expiry to take off.
+        return this.data.has(key) && this.until.delete(key) ? 1 : 0;
       case "MGET": {
         // Several keys read at once, each as GET would answer it.
         return rest.map(String).map((name) => {
@@ -752,6 +775,108 @@ export class MemoryRedis {
    * unless every host's time is free. scripts/test_host_claims_redis.py runs
    * the script itself against a real Redis.
    */
+  /** lib/store-data.ts, TAKE_DATA: the same steps, in the same order. */
+  private storeData(args: string[]): unknown {
+    const [target, rawLimit, always, month, ...rest] = args;
+    this.live(target);
+    const limit = Number(rawLimit);
+    if (!Number.isFinite(limit) || limit < 0 || !/^\d{4}-\d{2}$/.test(month ?? "") || rest.length % 3 !== 0) return [-1, 0];
+    const held = this.data.get(target);
+    if (held !== undefined && !(held instanceof Map)) throw new Error("WRONGTYPE");
+    const room = this.hash(target);
+    let total = Number(room.get("#") ?? "0");
+    if (!Number.isFinite(total)) return [-1, 0];
+    for (let i = 0; i < rest.length; i += 3) {
+      const [mode, slot, raw] = rest.slice(i, i + 3);
+      if (!Number.isFinite(Number(raw)) || slot === "#" || slot === "~" || slot === "" || (mode !== "s" && mode !== "a")) return [-1, total];
+      if (slot.startsWith("~") && (mode !== "a" || !/^\d{4}-\d{2}$/.test(slot.slice(1)) || slot.slice(1) < month)) return [-1, total];
+    }
+    const months = new Set<string>();
+    let relist = false;
+    for (const m of (room.get("~") ?? "").split(",").filter(Boolean)) {
+      if (m < month) {
+        const held = Number(room.get(`~${m}`) ?? "0") || 0;
+        if (held > 0) total -= held + 64;
+        room.delete(`~${m}`);
+        relist = true;
+      } else months.add(m);
+    }
+    if (total < 0) total = 0;
+    const keep = () => {
+      if (relist) {
+        const list = [...months].sort();
+        if (list.length) room.set("~", list.join(","));
+        else room.delete("~");
+      }
+      room.set("#", String(total));
+    };
+    const now = new Map<string, number>();
+    let delta = 0;
+    for (let i = 0; i < rest.length; i += 3) {
+      const [mode, slot, raw] = rest.slice(i, i + 3);
+      const n = Number(raw);
+      if (slot.startsWith("~")) {
+        const m = slot.slice(1);
+        if (!months.has(m)) {
+          months.add(m);
+          relist = true;
+        }
+      }
+      const old = now.has(slot) ? now.get(slot)! : Number(room.get(slot) ?? "0") || 0;
+      let next = mode === "s" ? n : old + n;
+      if (next < 0) next = 0;
+      next = Math.floor(next);
+      now.set(slot, next);
+      delta += next - old;
+      if (old === 0 && next > 0) delta += 64;
+      else if (old > 0 && next === 0) delta -= 64;
+    }
+    if (delta > 0 && always !== "1" && total + delta > limit) {
+      keep();
+      return [0, total];
+    }
+    for (const [slot, next] of now) {
+      if (next > 0) room.set(slot, String(next));
+      else room.delete(slot);
+    }
+    total = Math.max(0, total + delta);
+    keep();
+    return [1, total];
+  }
+
+  /** lib/capped-count.ts: counts that never grow a hash past its most fields. */
+  private cappedCount(args: string[]): unknown {
+    const n = Number(args[0]);
+    const keys = args.slice(1, 1 + n);
+    const argv = args.slice(1 + n);
+    if (!Number.isInteger(n) || n < 1 || argv.length < n || (argv.length - n) % 3 !== 0) throw new Error("ERR capped-count: arguments");
+    const caps = argv.slice(0, n).map(Number);
+    if (caps.some((cap) => !Number.isInteger(cap) || cap < 1)) throw new Error("ERR capped-count: most");
+    const rest = argv.slice(n);
+    for (let i = 0; i < rest.length; i += 3) {
+      const k = Number(rest[i]);
+      const by = Number(rest[i + 2]);
+      if (!Number.isInteger(k) || k < 1 || k > n || !Number.isInteger(by) || rest[i + 1] === "" || rest[i + 1] === "~") throw new Error("ERR capped-count: count");
+    }
+    const out: number[] = [];
+    for (let i = 0; i < rest.length; i += 3) {
+      const key = keys[Number(rest[i]) - 1];
+      this.live(key);
+      const hash = this.hash(key);
+      const field = rest[i + 1];
+      const by = Number(rest[i + 2]);
+      if (hash.has(field) || hash.size < caps[Number(rest[i]) - 1]) {
+        const next = (Number(hash.get(field)) || 0) + by;
+        hash.set(field, String(next));
+        out.push(next);
+      } else {
+        hash.set("~", String((Number(hash.get("~")) || 0) + by));
+        out.push(0);
+      }
+    }
+    return out;
+  }
+
   private hostClaim(args: string[]): unknown {
     const count = Number(args[0]);
     const keys = args.slice(1, 1 + count);

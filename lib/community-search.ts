@@ -71,7 +71,6 @@
  * lesson called "The $40k month spreadsheet" tells somebody who has not bought it
  * something they did not pay for.
  */
-import { randomBytes } from "node:crypto";
 import { redisPipeline } from "@/lib/redis";
 import { MAX_COMMENTS_PER_POST } from "@/lib/community-text";
 
@@ -140,6 +139,18 @@ export function words(text: string): string[] {
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter((word) => word.length >= MIN_WORD && word.length <= MAX_WORD && !SKIP.has(word));
+}
+
+/**
+ * What one word a thing is found by is counted at in the store's data room
+ * (lib/store-data.ts): its place in the word's sorted set and in the thing's
+ * own set of words, rounded up.
+ */
+export const INDEX_WORD_BYTES = 96;
+
+/** What indexing these parts can add, at the most: every distinct word, at INDEX_WORD_BYTES. */
+export function indexBytes(parts: string[]): number {
+  return distinct(parts).length * INDEX_WORD_BYTES;
 }
 
 /** The distinct words a post is found by, capped, in the order they appear. */
@@ -274,7 +285,8 @@ export async function search(
   }
   // Several words: every one of them has to be there. The working set is this
   // one search's alone and lets go of itself within the minute.
-  const work = `${base(id)}:q:${randomBytes(9).toString("hex")}`;
+  // Web Crypto, so the course and community files the studio's editors share with the server bundle for the browser.
+  const work = `${base(id)}:q:${Array.from(globalThis.crypto.getRandomValues(new Uint8Array(9)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
   try {
     const [count] = await redisPipeline([
       ["ZINTERSTORE", work, used.length, ...used.map((word) => wordKey(id, kind, word)), "AGGREGATE", "MAX"],

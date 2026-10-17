@@ -23,6 +23,7 @@ import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { POST } from "@/app/api/store/crm/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 async function main(): Promise<void> {
   redis.clear();
@@ -116,7 +117,7 @@ async function main(): Promise<void> {
   is("an unknown field, refused", (await call_({ action: "value", person, field: "nope00", value: "x" })).error, "unknown");
   is("read back for the person", await readValues(store.statsId, person, await readFields(store.statsId)), { offer1: "Coaching" });
 
-  await upsertContact(store.listId!, "dana@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(store.listId!, "dana@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   const csv = (await listAsCsv(store, false)).split("\r\n");
   is("the list's file has a column per field", csv[0].endsWith(',"Company","Offer","First call","Seats"'), true);
   is("and the person's answer in it", csv[1].endsWith(',"","Coaching","",""'), true);

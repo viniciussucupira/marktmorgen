@@ -34,6 +34,8 @@ import { rememberBuyers } from "@/lib/buyer-library";
 import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import type { Store } from "@/lib/store";
 
 /** One product one address was given. */
@@ -151,8 +153,17 @@ export async function grantImported(
   atSeconds = Math.floor(Date.now() / 1000),
   /** The store's own id, so each address finds the store in its library (lib/buyer-library.ts). */
   sid = "",
+  /**
+   * The store whose data room an import or the API's gift takes from
+   * (DataRoomError when it does not fit), or null for what an order gives (a
+   * gift, a place, a pre-order, a PayPal purchase), counted with the order
+   * (lib/store-data-rules.ts, ORDER_DATA_BYTES).
+   */
+  room: DataStore | null = null,
 ): Promise<boolean[]> {
   if (!grants.length || !isRedisConfigured()) return grants.map(() => false);
+  // Each grant at the most it weighs: its field, the address's key and place among those brought over, its library.
+  if (room) await needData(room, [{ slot: "imp", bytes: grants.reduce((sum, g) => sum + dataBytes([g.productId, JSON.stringify({ at: atSeconds, job, items: g.items, option: g.option ?? null }), g.email], 3), 0) }]);
   if (sid) await rememberBuyers(sid, grants.map((g) => g.email));
   if (IMPORT_JOB.test(job)) {
     await redisPipeline([...new Set(grants.map((g) => normaliseEmail(g.email)))].map((email) => ["HSETNX", importedWhoKey(statsId), email, String(atSeconds)]));

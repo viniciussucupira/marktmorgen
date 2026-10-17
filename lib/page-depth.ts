@@ -17,11 +17,15 @@
  *   nl:depth:<statsId>:<productId>   hash: <blockId> (stopped there); _n (visitors) until 11 October 2026
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { cappedCount } from "@/lib/capped-count";
+import { DEPTH_FIELDS_MAX, DEPTH_RECORD_BYTES } from "@/lib/page-depth-rules";
 import { BLOCK_ID_PATTERN } from "@/lib/sales-page";
 import { type WhyNot, isWhyNot } from "@/lib/why-not-rules";
 
 const key = (statsId: string, productId: string) => `nl:depth:${statsId}:${productId}`;
 const KEEP_SECONDS = 400 * 86_400;
+
+export { DEPTH_FIELDS_MAX, DEPTH_RECORD_BYTES };
 
 /**
  * Counts one visitor who read down to this block: one command (lib/page-read.ts
@@ -57,8 +61,8 @@ export async function countDepth(statsId: string | null, productId: string, bloc
   if (!statsId || !isRedisConfigured() || !field) return;
   const k = key(statsId, productId);
   try {
-    const [count] = await redisPipeline([["HINCRBY", k, field, 1]]);
-    if (Number(count) === 1) await redisPipeline([["EXPIRE", k, KEEP_SECONDS]]);
+    const [count] = await cappedCount(k, DEPTH_FIELDS_MAX, [{ field, by: 1 }]);
+    if (count === 1) await redisPipeline([["EXPIRE", k, KEEP_SECONDS]]);
   } catch {
     // A measure that fails is a visitor not counted, nothing more.
   }

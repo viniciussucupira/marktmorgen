@@ -28,10 +28,14 @@ import { membershipLine, speech } from "@/lib/buyer-words";
 import { moveWords } from "@/lib/buyer-words/move";
 import { activeIntro } from "@/lib/intro-price";
 import { firstChargeAt, linkSeconds, reminderAt } from "@/lib/move-rules";
+import { giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 
 const invitesKey = (statsId: string) => `nl:mv:${statsId}`;
 const linkKey = (token: string) => `nl:mv:link:${token}`;
 const DUE_KEY = "nl:mv:due";
+/** The slot invites are counted in, in the store's data room. */
+const INVITES_SLOT = "mv";
 const TOKEN_PATTERN = /^[0-9a-f]{40}$/;
 const FIELD_PATTERN = /^[0-9a-f]{32}:[A-Za-z0-9_-]{1,64}$/;
 const LIVE = new Set(["active", "trialing", "past_due"]);
@@ -87,16 +91,27 @@ export async function inviteMembers(
   const statsId = store.statsId;
   if (!rows.length || !statsId || !store.sid || !isRedisConfigured()) return rows.map(() => null);
   const at = Math.floor(now / 1000);
-  const made = rows.map((row) => ({ row, field: inviteField(row.email, row.productId), token: randomBytes(20).toString("hex") }));
-  const answers = await redisPipeline(
-    made.map(({ row, field, token }) => [
-      "HSETNX",
-      invitesKey(statsId),
-      field,
-      JSON.stringify({ e: normaliseEmail(row.email), p: row.productId, o: row.option, r: row.renews, job, at, t: token, kept: 0 } satisfies Invite),
-    ]),
-  );
+  const made = rows.map((row) => {
+    const field = inviteField(row.email, row.productId);
+    const token = randomBytes(20).toString("hex");
+    const value = JSON.stringify({ e: normaliseEmail(row.email), p: row.productId, o: row.option, r: row.renews, job, at, t: token, kept: 0 } satisfies Invite);
+    // Its record for as long as the store is, its link until it expires
+    // (lib/store-data.ts); the record is counted once more when it is kept,
+    // which writes it again at the most a little longer.
+    return { row, field, token, value, bytes: dataBytes([field, value, '"kept":0000000000'], 1), link: dataBytes([linkKey(token), JSON.stringify({ s: statsId, f: field })], 1) };
+  });
+  // Taken before anything is written: an import past the store's room stops
+  // with DataRoomError and says so (lib/imports.ts).
+  const longest = Math.max(...made.map(({ row }) => linkSeconds(row.renews, now)));
+  await needData(store, [
+    { slot: INVITES_SLOT, bytes: made.reduce((sum, m) => sum + m.bytes, 0) },
+    { until: now + longest * 1000, bytes: made.reduce((sum, m) => sum + m.link, 0) },
+  ], now);
+  const answers = await redisPipeline(made.map(({ field, value }) => ["HSETNX", invitesKey(statsId), field, value]));
   const fresh = made.filter((_, i) => Number(answers[i]) === 1);
+  // An address already invited to that membership was not written again: its room goes back.
+  const already = made.filter((_, i) => Number(answers[i]) !== 1).reduce((sum, m) => sum + m.bytes, 0);
+  if (already > 0) await giveData(store, [{ slot: INVITES_SLOT, bytes: already }], now);
   if (fresh.length) {
     const reminders = fresh.flatMap(({ row, field }) => {
       const when = reminderAt(row.renews, now);

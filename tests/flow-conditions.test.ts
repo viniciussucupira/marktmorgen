@@ -28,6 +28,7 @@ import { SITE_URL } from "@/lib/site-url";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const HOUR = 3_600_000;
 const realNow = Date.now;
@@ -113,9 +114,9 @@ async function main(): Promise<void> {
 
   part("Sent only to those it is for");
   // Ana took the free guide; Ben bought the course at a checkout; Cleo came in on an import labeled vip.
-  await upsertContact(list, "ana@example.com", { agreed: true, explicit: true, source: "free", productId: guide.product.id, title: "Pantry Guide" });
-  await upsertContact(list, "ben@example.com", { agreed: true, explicit: true, source: "buyer", productId: course.product.id, title: "Weeknight Course" });
-  await importContactRows(list, [{ email: "cleo@example.com", name: "Cleo", tags: ["vip"] }]);
+  await upsertContact(list, "ana@example.com", { agreed: true, explicit: true, source: "free", productId: guide.product.id, title: "Pantry Guide" }, ROOM);
+  await upsertContact(list, "ben@example.com", { agreed: true, explicit: true, source: "buyer", productId: course.product.id, title: "Weeknight Course" }, ROOM);
+  await importContactRows(list, [{ email: "cleo@example.com", name: "Cleo", tags: ["vip"] }], ROOM);
   store = (await storeForEmail(OWNER))!;
   for (const email of ["ana@example.com", "ben@example.com", "cleo@example.com"]) await enroll(store, email, { joined: true });
   await run();
@@ -170,9 +171,9 @@ async function main(): Promise<void> {
 
   part("Which links somebody used, only if they allowed it");
   // Gus ticked both boxes; Hal only the first; Ivy came in on an import, which can never allow it.
-  await upsertContact(list, "gus@example.com", { agreed: true, explicit: true, clicks: true, source: "free", productId: guide.product.id, title: "Pantry Guide" });
-  await upsertContact(list, "hal@example.com", { agreed: true, explicit: true, source: "free", productId: guide.product.id, title: "Pantry Guide" });
-  await upsertContact(list, "ivy@example.com", { agreed: true, explicit: false, clicks: true, source: "import" });
+  await upsertContact(list, "gus@example.com", { agreed: true, explicit: true, clicks: true, source: "free", productId: guide.product.id, title: "Pantry Guide" }, ROOM);
+  await upsertContact(list, "hal@example.com", { agreed: true, explicit: true, source: "free", productId: guide.product.id, title: "Pantry Guide" }, ROOM);
+  await upsertContact(list, "ivy@example.com", { agreed: true, explicit: false, clicks: true, source: "import" }, ROOM);
   const row = async (email: string) => parseContact((await redis.pipeline([["HGET", leadsKey(list), email]]))[0]);
   is("allowed only by somebody's own tick, with their yes to the list", [Boolean((await row("gus@example.com"))?.clicks), Boolean((await row("hal@example.com"))?.clicks), Boolean((await row("ivy@example.com"))?.clicks)], [true, false, false]);
   const firstClick = { delayHours: 0, subject: "The guide, and the course", body: `Hello.\n\nThe course: ${SITE_URL}/@harbor/p/${course.product.id}` };
@@ -223,14 +224,14 @@ async function main(): Promise<void> {
     (await row("gus@example.com"))?.agreed && !(await row("gus@example.com"))?.unsub,
   ], [0, false, false, true]);
   is("ticking it again after leaving the list asks again: coming back without it, it stays off", await (async () => {
-    await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, clicks: true, source: "free" });
+    await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, clicks: true, source: "free" }, ROOM);
     const jo = await row("jo@example.com");
     // A token, as the first email to Jo would make.
     const t = (await tokensFor(list, ["jo@example.com"], "harbor")).get("jo@example.com")!;
     await unsubscribe(t);
     const left = Boolean((await row("jo@example.com"))?.clicks);
     shift += 1000;
-    await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, source: "free", at: new Date(Date.now()).toISOString() });
+    await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, source: "free", at: new Date(Date.now()).toISOString() }, ROOM);
     return [Boolean(jo?.clicks), left, Boolean((await row("jo@example.com"))?.clicks), (await row("jo@example.com"))?.unsub];
   })(), [true, false, false, false]);
   const withClicks = await listOrder(store, { ...order, sessionId: "cs_test_thanks0000003", email: "kai@example.com", clicks: true });

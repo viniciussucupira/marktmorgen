@@ -68,6 +68,9 @@ import { holdsAnyOf } from "@/lib/community-access";
 import { type CommunityConfig, newItemId } from "@/lib/community";
 import { LockBusyError, setIfHeld, withLock } from "@/lib/redis-lock";
 import { indexEvent, unindexEvent } from "@/lib/community-index";
+import { indexBytes } from "@/lib/community-search";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { communityWords } from "@/lib/buyer-words/community";
 import { LANGUAGES } from "@/lib/store-language";
 import {
@@ -381,6 +384,18 @@ function queueEntries(community: string, handle: string, event: CommunityEvent, 
 export type CreateResult = { ok: true; event: CommunityEvent } | { ok: false; reason: "full" };
 
 /**
+ * The slot an event and everyone coming to it is counted in, in the store's
+ * data room (lib/store-data.ts): its record, its place in the calendar, its
+ * three reminders in the queue, the words it is found by, and each place
+ * taken (RSVP_BYTES).
+ */
+const EVENT_SLOT = (event: string) => `cm:e:${event}`;
+export const RSVP_BYTES = 96;
+function eventBytes(event: CommunityEvent): number {
+  return dataBytes([JSON.stringify(event)], 5) + indexBytes([event.title, event.about]);
+}
+
+/**
  * Puts a new event on the calendar, with its room, and plans its reminders.
  * Refused past MAX_UPCOMING_EVENTS coming up; past MAX_KEPT_EVENTS kept, the
  * oldest that is over is let go to make room.
@@ -393,7 +408,7 @@ export async function createEvent(store: Store, input: EventInput, now = Date.no
     const [raw] = await redisPipeline([["ZRANGEBYSCORE", indexKey(id), "-inf", now - LONGEST_MS, "LIMIT", 0, Number(kept) - MAX_KEPT_EVENTS + 1]]);
     const oldest = (Array.isArray(raw) ? (raw as string[]) : []).filter((e) => ITEM_ID.test(e));
     if (!oldest.length) return { ok: false, reason: "full" };
-    for (const gone of await readEvents(id, oldest)) await forgetEvent(id, gone);
+    for (const gone of await readEvents(id, oldest)) await forgetEvent(id, gone, store);
   }
   const event: CommunityEvent = {
     id: newItemId(),
@@ -409,6 +424,8 @@ export async function createEvent(store: Store, input: EventInput, now = Date.no
     v: 1,
   };
   const entries = queueEntries(id, store.handle, event, now);
+  // Its room first (DataRoomError when it does not fit): nothing is written without it.
+  await needData(store, [{ slot: EVENT_SLOT(event.id), bytes: eventBytes(event), set: true }]);
   await redisPipeline([
     ["SET", eventKey(id, event.id), JSON.stringify(event)],
     ["ZADD", indexKey(id), event.start, event.id],
@@ -444,7 +461,14 @@ async function changeEvent(
       if (typeof next === "string") return { ok: false as const, reason: next };
       const moved = next.start !== before.start || next.minutes !== before.minutes;
       const event = moved ? { ...next, moves: before.moves + 1 } : next;
-      if (!(await setIfHeld(held, eventKey(id, eventId), JSON.stringify(event)))) return { ok: false as const, reason: "busy" as const };
+      // What it grows by takes room first; what it shrinks by is given back after.
+      const grown = eventBytes(event) - eventBytes(before);
+      if (grown > 0) await needData(store, [{ slot: EVENT_SLOT(eventId), bytes: grown }]);
+      if (!(await setIfHeld(held, eventKey(id, eventId), JSON.stringify(event)))) {
+        if (grown > 0) await giveData(store, [{ slot: EVENT_SLOT(eventId), bytes: grown }]);
+        return { ok: false as const, reason: "busy" as const };
+      }
+      if (grown < 0) await giveData(store, [{ slot: EVENT_SLOT(eventId), bytes: -grown }]);
       if (moved) {
         const entries = queueEntries(id, store.handle, event, now);
         await redisPipeline([
@@ -520,12 +544,13 @@ export function readReplay(raw: unknown): Video | null {
   return typeof raw === "string" ? readVideo(raw) : null;
 }
 
-async function forgetEvent(id: string, event: CommunityEvent): Promise<void> {
+async function forgetEvent(id: string, event: CommunityEvent, room: DataStore): Promise<void> {
   await redisPipeline([
     ["DEL", eventKey(id, event.id), rsvpKey(id, event.id), countKey(id, event.id)],
     ["ZREM", indexKey(id), event.id],
   ]);
   await unindexEvent(id, event.id).catch(() => {});
+  await giveData(room, [{ slot: EVENT_SLOT(event.id), bytes: 0, set: true }]);
 }
 
 /** Takes an event away for good: only one that is cancelled or over, so nobody coming is left without word. */
@@ -534,7 +559,7 @@ export async function deleteEvent(store: Store, eventId: string, now = Date.now(
   const event = await readEvent(id, eventId);
   if (!event) return "gone";
   if (!event.cancelled && !isOver(event, now)) return "upcoming";
-  await forgetEvent(id, event);
+  await forgetEvent(id, event, store);
   return "deleted";
 }
 
@@ -617,23 +642,32 @@ export type RsvpResult = "added" | "already" | "full" | "closed";
  * itself, so a request that dies halfway cannot leave a count that says
  * "full" when it is not.
  */
-export async function rsvp(id: string, event: CommunityEvent, member: string, now = Date.now()): Promise<RsvpResult> {
+export async function rsvp(id: string, event: CommunityEvent, member: string, room: DataStore, now = Date.now()): Promise<RsvpResult> {
   if (event.cancelled || isOver(event, now)) return "closed";
+  const [already] = await redisPipeline([["HEXISTS", rsvpKey(id, event.id), member]]);
+  if (Number(already) === 1) return "already";
+  // A place takes room first (DataRoomError when it does not fit), and gives it back when it is not kept.
+  await needData(room, [{ slot: EVENT_SLOT(event.id), bytes: RSVP_BYTES }], now);
   const [added, length] = await redisPipeline([
     ["HSETNX", rsvpKey(id, event.id), member, String(Math.floor(now / 1000))],
     ["HLEN", rsvpKey(id, event.id)],
   ]);
-  if (Number(added) !== 1) return "already";
+  if (Number(added) !== 1) {
+    await giveData(room, [{ slot: EVENT_SLOT(event.id), bytes: RSVP_BYTES }], now);
+    return "already";
+  }
   if (event.cap > 0 && Number(length) > event.cap) {
     await redisPipeline([["HDEL", rsvpKey(id, event.id), member]]);
+    await giveData(room, [{ slot: EVENT_SLOT(event.id), bytes: RSVP_BYTES }], now);
     return "full";
   }
   return "added";
 }
 
 /** Gives a place back. Safe to press twice. */
-export async function cancelRsvp(id: string, event: CommunityEvent, member: string): Promise<boolean> {
+export async function cancelRsvp(id: string, event: CommunityEvent, member: string, room: DataStore): Promise<boolean> {
   const [removed] = await redisPipeline([["HDEL", rsvpKey(id, event.id), member]]);
+  if (Number(removed) === 1) await giveData(room, [{ slot: EVENT_SLOT(event.id), bytes: RSVP_BYTES }]);
   return Number(removed) === 1;
 }
 

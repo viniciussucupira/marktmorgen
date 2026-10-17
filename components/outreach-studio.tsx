@@ -39,6 +39,8 @@ const MESSAGES: Record<string, string> = {
   off: "Writing help is not switched on for this store yet.",
   failed: "The email could not be written just now. Nothing was counted. Try again in a moment.",
   full: "Your list of pitches is full. Mark the old ones as answered or delete old drafts first.",
+  room: STUDIO_MESSAGES.store_full,
+  busy: "This can't be saved right now. Nothing was counted. Try again in a minute.",
   slow: "That was a lot in a short time. Wait a minute, then try again.",
   signed_out: "Your session ended. Log in again.",
   unknown: "That pitch is no longer here. Reload the page.",

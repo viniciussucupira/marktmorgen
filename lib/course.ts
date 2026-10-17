@@ -14,6 +14,9 @@
  * Pure rules at the top, storage at the bottom.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { indexBytes } from "@/lib/community-search";
+import { type DataStore, giveData, needData, noteData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { type ProductFile, parseProductFile } from "@/lib/product-file";
 import { type QuizSetup, parseSetup as parseQuizSetup } from "@/lib/quiz";
 import { type TaskSetup, parseTaskSetup } from "@/lib/assignment-rules";
@@ -507,8 +510,26 @@ export async function readCourses(ids: string[]): Promise<Map<string, Course>> {
   return found;
 }
 
-export async function saveCourse(course: Course): Promise<void> {
-  await redisPipeline([["SET", courseKey(course.id), JSON.stringify(course)]]);
+/**
+ * Where a course is counted in the store's data room (lib/store-data.ts):
+ * its outline in one slot, its lessons' text in another, each lesson's words
+ * as the community's search may index them (lib/community-index.ts) included.
+ */
+const OUTLINE_SLOT = (id: string) => `co:${id}`;
+const BODIES_SLOT = (id: string) => `cb:${id}`;
+const bodyBytes = (text: string) => (text ? dataBytes([text], 1) + indexBytes([text]) : 0);
+
+/**
+ * Writes a course's outline, after taking its room (DataRoomError when it
+ * does not fit). `always` counts it whatever it comes to: what a job writes
+ * that only takes things out (lib/plan-closing.ts).
+ */
+export async function saveCourse(course: Course, room: DataStore, always = false): Promise<void> {
+  const json = JSON.stringify(course);
+  const changes = [{ slot: OUTLINE_SLOT(course.id), bytes: dataBytes([json], 1) + indexBytes(lessonsInOrder(course).map(({ lesson, unit }) => `${lesson.title} ${unit.title}`)), set: true }];
+  if (always) await noteData(room, changes);
+  else await needData(room, changes);
+  await redisPipeline([["SET", courseKey(course.id), json]]);
 }
 
 export async function readBody(courseId: string, lessonId: string): Promise<string> {
@@ -517,19 +538,28 @@ export async function readBody(courseId: string, lessonId: string): Promise<stri
   return typeof raw === "string" ? raw : "";
 }
 
-export async function saveBody(courseId: string, lessonId: string, text: string): Promise<void> {
-  if (text) await redisPipeline([["SET", bodyKey(courseId, lessonId), text.slice(0, MAX_BODY_LENGTH)]]);
+/** Writes a lesson's text, taking what it grows by first (DataRoomError when it does not fit). */
+export async function saveBody(courseId: string, lessonId: string, text: string, room: DataStore): Promise<void> {
+  const next = text.slice(0, MAX_BODY_LENGTH);
+  const before = await readBody(courseId, lessonId);
+  const grown = bodyBytes(next) - bodyBytes(before);
+  if (grown > 0) await needData(room, [{ slot: BODIES_SLOT(courseId), bytes: grown }]);
+  if (next) await redisPipeline([["SET", bodyKey(courseId, lessonId), next]]);
   else await redisPipeline([["DEL", bodyKey(courseId, lessonId)]]);
+  if (grown < 0) await giveData(room, [{ slot: BODIES_SLOT(courseId), bytes: -grown }]);
 }
 
-/** Takes a course's records away. Its files are the caller's to delete. */
-export async function dropCourse(course: Course): Promise<void> {
+/** Takes a course's records away, and gives back their room. Its files are the caller's to delete. */
+export async function dropCourse(course: Course, room: DataStore): Promise<void> {
   const keys = [courseKey(course.id), ...lessonsInOrder(course).map(({ lesson }) => bodyKey(course.id, lesson.id))];
   await redisPipeline(keys.map((key) => ["DEL", key]));
+  await giveData(room, [{ slot: OUTLINE_SLOT(course.id), bytes: 0, set: true }, { slot: BODIES_SLOT(course.id), bytes: 0, set: true }]);
 }
 
-export async function dropBody(courseId: string, lessonId: string): Promise<void> {
+export async function dropBody(courseId: string, lessonId: string, room: DataStore): Promise<void> {
+  const before = await readBody(courseId, lessonId);
   await redisPipeline([["DEL", bodyKey(courseId, lessonId)]]);
+  if (before) await giveData(room, [{ slot: BODIES_SLOT(courseId), bytes: bodyBytes(before) }]);
 }
 
 /** Lesson text, cleaned the same way wherever it is saved from. */

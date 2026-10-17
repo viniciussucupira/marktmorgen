@@ -37,6 +37,7 @@
 import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { dataBytes } from "@/lib/store-data-rules";
 import { MAX_RUN_EVENTS, RUN_KEEP_SECONDS } from "@/lib/flow-limits";
 
 export type RunStatus = "running" | "waiting" | "held" | "done" | "goal" | "ended" | "left" | "failed";
@@ -88,6 +89,10 @@ const dayKey = (listId: string, nowSeconds: number) => `nl:wf:day:${listId}:${ne
 const DAY_KEEP_SECONDS = 3 * 86_400;
 
 const event = (e: RunEvent) => JSON.stringify({ ...e, note: e.note.slice(0, 300) });
+/** The most one event of a run's history weighs: its note of 300 characters, at three bytes each, and the rest. */
+export const RUN_EVENT_BYTES = dataBytes([event({ at: 9_999_999_999, step: 99, stepId: "x".repeat(16), kind: "x".repeat(16), state: "uncertain", note: "€".repeat(300) })], 1);
+/** The bytes a run's record may hold: its address, its note at three bytes a character, and its fields. */
+export const RUN_RECORD_CHARS = 254 + 900 + 200;
 const replied = (value: unknown, length: number): value is unknown[] => Array.isArray(value) && value.length === length;
 
 /**
@@ -116,6 +121,12 @@ export async function admitRuns(listId: string, limit: number, wanted: number, n
   const over = wanted - admitted;
   if (over > 0) await redisPipeline([["HINCRBY", key, "started", -over], ["HINCRBY", key, "refused", over]]).catch(() => {});
   return admitted;
+}
+
+/** Moves runs admitted today to refused: the ones that could not start after all (no room for them, lib/flows.ts). */
+export async function refuseRuns(listId: string, n: number, nowSeconds = Math.floor(Date.now() / 1000)): Promise<void> {
+  if (n <= 0) return;
+  await redisPipeline([["HINCRBY", dayKey(listId, nowSeconds), "started", -n], ["HINCRBY", dayKey(listId, nowSeconds), "refused", n]]).catch(() => {});
 }
 
 /** Today's (UTC) runs started and refused for the daily ceiling; null when it cannot be read. */

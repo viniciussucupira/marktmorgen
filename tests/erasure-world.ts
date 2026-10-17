@@ -40,6 +40,7 @@ import { rememberBuyers } from "@/lib/buyer-library";
 import { noteForErasure } from "@/lib/erasure-index";
 import { normaliseEmail } from "@/lib/auth";
 import { storeKey } from "@/lib/learn";
+import { ROOM } from "./data-room";
 
 export const OWNER = "keeper@example.com";
 
@@ -78,7 +79,7 @@ export async function makeWorld(handle = "erase-shop"): Promise<World> {
     if (!added.ok) throw new Error("no lesson");
     course = added.course;
   }
-  await saveCourse(course);
+  await saveCourse(course, ROOM);
   const set = await setProductCourse(OWNER, made.product.id, { id: course.id, lessons: 2 });
   if (!set.ok) throw new Error("not a course");
   let store = (await storeForEmail(OWNER))!;
@@ -130,7 +131,7 @@ export async function seedPerson(w: World, rawEmail: string, other: string | nul
   const now = second();
 
   // The list, its token and the link use they allowed (lib/contacts.ts, lib/mail-clicks.ts).
-  await upsertContact(listId, email, { agreed: true, explicit: true, source: "free", sid, clicks: true, productId: w.plain, title: "The Guide" });
+  await upsertContact(listId, email, { agreed: true, explicit: true, source: "free", sid, clicks: true, productId: w.plain, title: "The Guide" }, ROOM);
   const token = (await tokensFor(listId, [email], store.handle)).get(email);
   if (!token) throw new Error("no unsubscribe token");
   const keys = await rememberLinkKeys([token]);
@@ -141,16 +142,16 @@ export async function seedPerson(w: World, rawEmail: string, other: string | nul
   await enroll(store, email, { joined: true });
 
   // Fields, deals and notes (lib/crm.ts, lib/buyer-profile.ts).
-  await setValue(statsId, person, w.field, "Gold");
-  await writeDeal(statsId, { id: hex(5), title: `Coaching for ${email}`, email, cents: 50_000, stage: "lead00", note: "Wants a call", createdAt: Date.now(), updatedAt: Date.now() });
-  await addPersonNote(statsId, person, OWNER, `Called ${email} about the course`);
+  await setValue(statsId, person, w.field, "Gold", ROOM);
+  await writeDeal(statsId, { id: hex(5), title: `Coaching for ${email}`, email, cents: 50_000, stage: "lead00", note: "Wants a call", createdAt: Date.now(), updatedAt: Date.now() }, ROOM);
+  await addPersonNote(statsId, person, OWNER, `Called ${email} about the course`, ROOM);
   // A form answer (lib/form-store.ts).
-  await addResponse(statsId, w.formId, { id: hex(16), at: now, page: "/@erase-shop/form/intake", answers: { fmail1: email, fgoal1: "Learn fast" }, outcome: "", joined: false });
+  await addResponse(statsId, w.formId, { id: hex(16), at: now, page: "/@erase-shop/form/intake", answers: { fmail1: email, fgoal1: "Learn fast" }, outcome: "", joined: false }, ROOM);
 
   // The course (lib/learn.ts, lib/course-finish.ts, lib/quiz.ts, lib/assignment.ts, lib/certificate.ts, lib/lesson-comments.ts).
   await recordEnrollment(store, email, w.courseProduct, now - 3_600);
-  await touchStudent(w.courseId, email, now - 3_600);
-  await markLesson(w.courseId, email, w.lessons[0], true);
+  await touchStudent(w.courseId, email, now - 3_600, ROOM);
+  await markLesson(w.courseId, email, w.lessons[0], true, ROOM);
   await mintPass(store, email, "all");
   await redisPipeline([
     ["SET", `nl:learn:paid:${storeKey(store)}:${learner}`, JSON.stringify({ at: now }), "EX", 600],
@@ -160,15 +161,15 @@ export async function seedPerson(w: World, rawEmail: string, other: string | nul
     ["SET", `nl:course:${w.courseId}:quiz:${w.lessons[0]}:tries:${learner}`, "1"],
     ["SET", `nl:course:${w.courseId}:quiz:${w.lessons[0]}:result:${learner}`, JSON.stringify({ score: 3, of: 3 })],
   ]);
-  await markPassed(w.courseId, learner, w.lessons[0]);
+  await markPassed(w.courseId, learner, w.lessons[0], ROOM);
   await takeRoom(storeKey(store), 1_000);
-  await handIn({ courseId: w.courseId, lessonId: w.lessons[1], who: learner, email, task: { prompt: "Write it", review: true, file: true } as never, text: "My work", file: { path: `tasks/${hex(4)}.pdf`, name: "work.pdf", bytes: 1_000, type: "application/pdf" } });
+  await handIn({ data: ROOM, courseId: w.courseId, lessonId: w.lessons[1], who: learner, email, task: { prompt: "Write it", review: true, file: true } as never, text: "My work", file: { path: `tasks/${hex(4)}.pdf`, name: "work.pdf", bytes: 1_000, type: "application/pdf" } });
   const course = { id: w.courseId, modules: [{ id: w.modules[0], title: "Module 1", dripDays: 0, lessons: w.lessons.map((id) => ({ id, title: id })) }], certificate: true, startsAt: null } as never;
-  const issued = await issueCertificate({ store: store.handle, productId: w.courseProduct, course, title: "The Course", creator: store.name, email, who: learner, name: "Tess Taylor" });
+  const issued = await issueCertificate({ room: ROOM, store: store.handle, productId: w.courseProduct, course, title: "The Course", creator: store.name, email, who: learner, name: "Tess Taylor" });
   if (!issued.ok) throw new Error("no certificate");
-  const asked = await addComment({ courseId: w.courseId, lessonId: w.lessons[0], by: learner, text: "How long does this take?", name: "Tess" });
+  const asked = await addComment({ room: ROOM, courseId: w.courseId, lessonId: w.lessons[0], by: learner, text: "How long does this take?", name: "Tess" });
   if (!asked.ok) throw new Error("no comment");
-  await addComment({ courseId: w.courseId, lessonId: w.lessons[0], by: CREATOR_AUTHOR, text: "About an hour.", parent: asked.comment.id });
+  await addComment({ room: ROOM, courseId: w.courseId, lessonId: w.lessons[0], by: CREATOR_AUTHOR, text: "About an hour.", parent: asked.comment.id });
 
   // The community (lib/community*.ts, lib/chat-grant.ts).
   const id = w.communityId;
@@ -187,7 +188,7 @@ export async function seedPerson(w: World, rawEmail: string, other: string | nul
   ]);
   await indexMember(id, named);
   await award(id, learner, 1);
-  await tell(id, [learner], { kind: "reply", post: "p00001", comment: "", by: "creator", words: "Welcome in" } as never);
+  await tell(id, [learner], { kind: "reply", post: "p00001", comment: "", by: "creator", words: "Welcome in" } as never, ROOM);
   await redisPipeline([
     ["SET", `nl:cm:${id}:ps:${learner}`, JSON.stringify([{ endpoint: "https://push.example.com/1", keys: { p256dh: "x", auth: "y" }, kid: "k1", live: false }])],
     ["ZADD", `nl:cm:${id}:ch`, 1, JSON.stringify({ i: Date.now(), a: learner, text: "hello room", at: now, n: "Tess" })],
@@ -283,7 +284,7 @@ export async function seedPerson(w: World, rawEmail: string, other: string | nul
     ["SET", `nl:health:${statsId}`, JSON.stringify({ rows: [{ email }] }), "EX", 600],
   ]);
   // A review (lib/reviews.ts) and the library across stores (lib/buyer-library.ts).
-  const saved = await saveReview(statsId, { productId: w.plain, email, reference: `cs_test_${hex(10)}`, pi: `pi_${hex(10)}`, rating: 5, text: "Loved it", name: "Tess" });
+  const saved = await saveReview(statsId, { productId: w.plain, email, reference: `cs_test_${hex(10)}`, pi: `pi_${hex(10)}`, rating: 5, text: "Loved it", name: "Tess" }, ROOM);
   if (saved.state !== "created") throw new Error(`no review: ${saved.state}`);
   await rememberBuyers(sid, [email]);
 }

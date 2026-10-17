@@ -1,5 +1,7 @@
 import { windowId } from "@/lib/allowance-window";
 import type { NextRequest } from "next/server";
+import { DataRoomError } from "@/lib/store-data";
+import { DATA_FULL_BUYER_WORDS } from "@/lib/store-data-rules";
 import { cookies } from "next/headers";
 import { originFrom } from "@/lib/request-origin";
 import { fromAnotherSite } from "@/lib/studio-route";
@@ -51,11 +53,18 @@ export async function POST(request: NextRequest) {
   const quiz = await readQuizFor(course.id, lessonId);
   if (!quiz || !found.lesson.quiz) return away(`${base}/${lessonId}`);
 
-  const result = await submitQuiz(course.id, lessonId, who, quiz, readAnswers(quiz, form), store.sid, windowId(store));
+  let result: Awaited<ReturnType<typeof submitQuiz>>;
+  try {
+    result = await submitQuiz(course.id, lessonId, who, quiz, readAnswers(quiz, form), store.sid, windowId(store), store);
+  } catch (error) {
+    // No room in the store's data room: the try was not counted (lib/store-data.ts).
+    if (error instanceof DataRoomError) return new Response(DATA_FULL_BUYER_WORDS, { status: 409, headers: { "Cache-Control": "no-store" } });
+    throw error;
+  }
   if (!result.ok && result.reason === "usage_limit") return new Response("This store has reached its monthly quiz submission allowance. It resets at the start of the next UTC month.", { status: 429, headers: { "Cache-Control": "no-store" } });
   if (!result.ok && result.reason === "unavailable") return new Response("Quiz submissions are temporarily unavailable. Please try again later.", { status: 503, headers: { "Cache-Control": "no-store" } });
   if (result.ok && result.grade.passed) {
-    await markLesson(course.id, access.learner.email, lessonId, true);
+    await markLesson(course.id, access.learner.email, lessonId, true, store, true);
     await noteIfFinished(store, product.id, course.id, access.learner.email);
   }
   return away(`${base}/${lessonId}?quiz=marked#quiz`);

@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
         if (about !== "" || saved.about) {
           const marked = await setProductAbout(ref, saved.id, about !== "");
           if (marked.ok && marked.store.statsId) {
-            await writeAbout(marked.store.statsId, saved.id, about);
+            await writeAbout(marked.store.statsId, saved.id, about, marked.store);
             result = { ok: true, product: marked.product };
           }
         }
@@ -269,24 +269,24 @@ export async function POST(request: NextRequest) {
         if (course) had.push(...filesInCourse(course));
         // And the work its students handed in for its assignments (lib/assignment.ts).
         if (course) {
-          const handed = await dropCourseTasks(course, storeKey(removed.store)).catch(() => [] as string[]);
+          const handed = await dropCourseTasks(course, storeKey(removed.store), removed.store).catch(() => [] as string[]);
           had.push(...handed.map((pathname) => ({ pathname })));
         }
-        if (going.about) await dropAbout(removed.store.statsId, id).catch(() => {});
-        if (going.note) await dropThanksNote(removed.store.statsId, id).catch(() => {});
+        if (going.about) await dropAbout(removed.store.statsId, id, removed.store).catch(() => {});
+        if (going.note) await dropThanksNote(removed.store.statsId, id, removed.store).catch(() => {});
         // Its page of blocks, and the reviews of a product nobody can buy any more.
         if (going.page) {
           // And the pictures on that page (lib/sales-page-store.ts).
-          const pictures = await dropPage(removed.store.statsId, id).catch(() => [] as string[]);
+          const pictures = await dropPage(removed.store.statsId, id, removed.store).catch(() => [] as string[]);
           had.push(...pictures.map((pathname) => ({ pathname })));
         }
         // And the photos buyers added to them (lib/reviews.ts).
         const reviewPhotos = await dropReviews(removed.store.statsId, id).catch(() => [] as string[]);
         had.push(...reviewPhotos.map((pathname) => ({ pathname })));
-        if (course) await dropCourse(course).catch((error: unknown) => console.error("could not drop a removed course", error));
+        if (course) await dropCourse(course, removed.store).catch((error: unknown) => console.error("could not drop a removed course", error));
         for (const file of had) {
           // A lesson video the video service keeps is taken away there (lib/stream.ts).
-          if (await dropStream(file.pathname).catch(() => false)) continue;
+          if (await dropStream(file.pathname, removed.store).catch(() => false)) continue;
           await del(file.pathname).catch((error: unknown) => {
             console.error("could not delete the file of a removed product", error);
           });

@@ -9,6 +9,7 @@ import { Icon } from "@/components/icons";
 import { listSizeWords } from "@/lib/contact-rules";
 import { HOME_QUESTIONS } from "@/lib/home-faq";
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
+import { DATA_ROOM_BYTES, dataWords } from "@/lib/store-data-rules";
 import { uploadAllowanceWords } from "@/lib/upload-budget-policy";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { paidVideoWords } from "@/lib/video-admission-rules";
@@ -655,6 +656,7 @@ function PlanCard({
 
       <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>
       <p className="mt-3 text-sm text-ink-soft">Up to {PAID_STORAGE_BYTES[tier] / (1024 ** 3)} GB of stored files and videos. New uploads must fit in the remaining space.</p>
+      <p className="mt-3 text-sm text-ink-soft">A data room of {dataWords(DATA_ROOM_BYTES[tier])} for your store&apos;s words and records: products, pages, posts, contacts and what each order keeps.</p>
 
       <div className="mt-auto pt-8">
         {/*

@@ -160,3 +160,6 @@ export function nextLook(ageMs: number): number {
   if (ageMs < 12 * 60 * 60 * 1000) return 15 * 60 * 1000;
   return 60 * 60 * 1000;
 }
+
+/** What one lesson video's records count for in the store's data room (lib/store-data.ts): taken at its door, given back here. */
+export const VIDEO_RECORD_BYTES = 2_048;

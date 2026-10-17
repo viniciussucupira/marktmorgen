@@ -71,7 +71,7 @@ export async function listOrder(store: Store, order: ListedOrder): Promise<"done
         clicks: order.clicks === true,
         productId: first.id,
         title: first.title,
-      });
+      }, null);
       await enroll(store, order.email, { joined: added.joined, productId: first.id });
       for (const item of rest) {
         if (await noteProduct(store.listId, order.email, item.id, item.title)) {

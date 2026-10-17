@@ -33,6 +33,7 @@ import { openWinBack, readWinBack, sendWinBacks, winbackEmail } from "@/lib/winb
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const DAY = 86_400;
 const now = Date.now();
@@ -119,12 +120,12 @@ async function main(): Promise<void> {
   if (!store?.listId) throw new Error("no list");
   is("on, with its coupon and its address", winbackOn(store), true);
 
-  const agreed = async (email: string) => upsertContact(store!.listId as string, email, { agreed: true, explicit: true, source: "buyer" });
+  const agreed = async (email: string) => upsertContact(store!.listId as string, email, { agreed: true, explicit: true, source: "buyer" }, ROOM);
   await agreed("dana@example.com");
   await agreed("eli@example.com");
   await agreed("gia@example.com");
   await agreed("hal@example.com");
-  await upsertContact(store.listId, "fay@example.com", { agreed: false, explicit: false, source: "buyer" });
+  await upsertContact(store.listId, "fay@example.com", { agreed: false, explicit: false, source: "buyer" }, ROOM);
   for (const [id, email] of [["cus_Dana00001", "dana@example.com"], ["cus_Eli000001", "eli@example.com"], ["cus_Fay000001", "fay@example.com"], ["cus_Gia000001", "gia@example.com"], ["cus_Hal000001", "hal@example.com"]]) {
     customers.set(id, email);
   }

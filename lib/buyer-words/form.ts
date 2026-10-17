@@ -25,6 +25,7 @@ const en = {
     invalid: "One of the answers was not one of the choices. Please try again.",
     limited: "Too many tries for now. Please try again in an hour.",
     closed: "This form is not taking answers right now.",
+    noroom: "This store has no room for more answers right now, so yours was not kept. Please try again later.",
     error: "Something went wrong, and nothing was sent. Please try again.",
   },
 };
@@ -48,6 +49,7 @@ const es: FormWords = {
     invalid: "Una de las respuestas no estaba entre las opciones. Inténtalo de nuevo.",
     limited: "Demasiados intentos por ahora. Inténtalo de nuevo en una hora.",
     closed: "Este formulario no acepta respuestas en este momento.",
+    noroom: "Esta tienda no tiene espacio para más respuestas ahora mismo, así que la tuya no se guardó. Inténtalo de nuevo más tarde.",
     error: "Algo salió mal y no se envió nada. Inténtalo de nuevo.",
   },
 };
@@ -69,6 +71,7 @@ const fr: FormWords = {
     invalid: "L'une des réponses ne faisait pas partie des choix. Réessayez.",
     limited: "Trop de tentatives pour le moment. Réessayez dans une heure.",
     closed: "Ce formulaire n'accepte pas de réponses pour le moment.",
+    noroom: "Cette boutique n'a pas de place pour d'autres réponses en ce moment, donc la vôtre n'a pas été enregistrée. Réessayez plus tard.",
     error: "Une erreur s'est produite et rien n'a été envoyé. Réessayez.",
   },
 };
@@ -90,6 +93,7 @@ const de: FormWords = {
     invalid: "Eine der Antworten war keine der Auswahlmöglichkeiten. Bitte versuchen Sie es erneut.",
     limited: "Zu viele Versuche für den Moment. Bitte versuchen Sie es in einer Stunde erneut.",
     closed: "Dieses Formular nimmt im Moment keine Antworten an.",
+    noroom: "Dieser Shop hat gerade keinen Platz für weitere Antworten, deshalb wurde Ihre nicht gespeichert. Bitte versuchen Sie es später erneut.",
     error: "Etwas ist schiefgegangen, und es wurde nichts gesendet. Bitte versuchen Sie es erneut.",
   },
 };
@@ -111,6 +115,7 @@ const it: FormWords = {
     invalid: "Una delle risposte non era tra le opzioni. Riprova.",
     limited: "Troppi tentativi per ora. Riprova tra un'ora.",
     closed: "Questo modulo al momento non accetta risposte.",
+    noroom: "Questo negozio non ha spazio per altre risposte in questo momento, quindi la tua non è stata salvata. Riprova più tardi.",
     error: "Qualcosa è andato storto e non è stato inviato nulla. Riprova.",
   },
 };
@@ -132,6 +137,7 @@ const nl: FormWords = {
     invalid: "Een van de antwoorden was geen van de keuzes. Probeer het opnieuw.",
     limited: "Te veel pogingen voor nu. Probeer het over een uur opnieuw.",
     closed: "Dit formulier neemt op dit moment geen antwoorden aan.",
+    noroom: "Deze winkel heeft nu geen ruimte voor meer antwoorden, dus het jouwe is niet bewaard. Probeer het later opnieuw.",
     error: "Er ging iets mis en er is niets verstuurd. Probeer het opnieuw.",
   },
 };
@@ -153,6 +159,7 @@ const pt: FormWords = {
     invalid: "Uma das respostas não estava entre as opções. Tente novamente.",
     limited: "Demasiadas tentativas por agora. Tente novamente daqui a uma hora.",
     closed: "Este formulário não está a aceitar respostas neste momento.",
+    noroom: "Esta loja não tem espaço para mais respostas neste momento, por isso a sua não foi guardada. Tente novamente mais tarde.",
     error: "Algo correu mal e nada foi enviado. Tente novamente.",
   },
 };

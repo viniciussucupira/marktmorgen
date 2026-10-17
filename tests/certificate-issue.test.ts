@@ -21,6 +21,7 @@ import { certificateOf, certificatesFor, cleanName, hasFinished, issueCertificat
 import type { Course } from "@/lib/course";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const lesson = (id: string, quiz: { required: boolean } | null = null) => ({ id, title: id, preview: false, video: null, files: [], link: null, hasBody: false, quiz: quiz ? { questions: 3, pass: 2, tries: 3, required: quiz.required } : null }) as unknown as Course["modules"][number]["lessons"][number];
 const course: Course = {
@@ -49,7 +50,7 @@ async function main(): Promise<void> {
   is("one letter, or more than eighty, is not a name", [cleanName("A"), cleanName("x".repeat(81)), cleanName(42)], [null, null, null]);
 
   part("One per student per course");
-  const input = (who: string, name: unknown = "Ana Lopes") => ({ store: "storekey01", productId: "prod01", course, title: "Bookkeeping Basics", creator: "Night School", email: `${who}@example.com`, who, name });
+  const input = (who: string, name: unknown = "Ana Lopes") => ({ store: "storekey01", productId: "prod01", course, title: "Bookkeeping Basics", creator: "Night School", email: `${who}@example.com`, who, name, room: ROOM });
   const first = await issueCertificate(input("ana"));
   is("issued, fresh", first.ok && first.fresh, true);
   const again = await issueCertificate(input("ana", "Another Name"));

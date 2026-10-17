@@ -51,6 +51,7 @@ import { limited } from "@/lib/request-guard";
 import { alertCreator } from "@/lib/phone-alerts";
 import { award, levelOf, pointsOf } from "@/lib/community-points";
 import { restingAway, takeBuyerAction } from "@/lib/buyer-actions";
+import { DataRoomError } from "@/lib/store-data";
 
 /** The most a form here may weigh: a full post with its picture's details. */
 const MAX_FORM_BYTES = 40_000;
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
         mail: form.get("mail") === "1",
         // The creator's questions, when there are any (the page sends one field per question).
         ...(config.questions.length ? { answers: form.getAll("answer").map(String), questions: config.questions } : {}),
-      });
+      }, store);
       return back(`${home}/you`, "saved");
     }
 
@@ -210,7 +211,14 @@ export async function POST(request: NextRequest) {
       const announce = owner && form.get("kind") === "announcement";
       // Not given back if this fails: the post may have been written anyway,
       // and a picture must never end up in two posts.
-      const made = await createPost(id, { space: chosen.id, author: key, title, text, img, kind: announce ? "announcement" : "post", poll });
+      let made: Awaited<ReturnType<typeof createPost>>;
+      try {
+        made = await createPost(id, { space: chosen.id, author: key, title, text, img, kind: announce ? "announcement" : "post", poll }, store);
+      } catch (error) {
+        // No room in the store's data room: nothing was written, and the picture goes back.
+        if (error instanceof DataRoomError && img) await dropCommunityImage(img.path);
+        throw error;
+      }
       if (!made.ok) {
         if (img) await dropCommunityImage(img.path);
         return back(fromPage, "fullposts");
@@ -221,6 +229,7 @@ export async function POST(request: NextRequest) {
           id,
           [...named.values()],
           { kind: "mention", post: made.post.id, comment: "", by: key, words: title || text },
+          store,
           { handle: store.handle, who: owner ? store.name : viewer.member?.n || communityWords(store.language).somebody, language: store.language },
         );
       }
@@ -254,7 +263,7 @@ export async function POST(request: NextRequest) {
       if (!owner && config.questions.length && !viewer.member?.qa) return back(`${home}/you`, "questions");
       if (!owner && !(await within(id, key, "comment"))) return back(postPage, "slow", "reply");
       const parent = field("parent", 12);
-      const made = await addComment(id, post.id, { parent: ITEM_ID.test(parent) ? parent : "", author: key, text });
+      const made = await addComment(id, post.id, { parent: ITEM_ID.test(parent) ? parent : "", author: key, text }, store);
       if (!made.ok) return back(postPage, made.reason === "full" ? "fullcomments" : "gone");
       // Who hears about it: the post's author, the author of the comment this
       // answers, and anybody named in it. A hidden post reaches nobody — one
@@ -267,12 +276,12 @@ export async function POST(request: NextRequest) {
         // a notification nobody can place is a notification nobody opens.
         const doer = owner ? store.name : viewer.member?.n || communityWords(store.language).somebody;
         const phone = { handle: store.handle, who: doer, language: store.language };
-        await tell(id, [post.a], { kind: "reply", post: post.id, comment: made.comment.id, by: key, words: text }, phone);
+        await tell(id, [post.a], { kind: "reply", post: post.id, comment: made.comment.id, by: key, words: text }, store, phone);
         if (above && above.a !== post.a) {
-          await tell(id, [above.a], { kind: "answer", post: post.id, comment: made.comment.id, by: key, words: text }, phone);
+          await tell(id, [above.a], { kind: "answer", post: post.id, comment: made.comment.id, by: key, words: text }, store, phone);
         }
         const others = [...named.values()].filter((one) => one !== post.a && one !== above?.a);
-        await tell(id, others, { kind: "mention", post: post.id, comment: made.comment.id, by: key, words: text }, phone);
+        await tell(id, others, { kind: "mention", post: post.id, comment: made.comment.id, by: key, words: text }, store, phone);
       }
       return back(postPage, "commented", `comment-${made.comment.id}`);
     }
@@ -290,7 +299,7 @@ export async function POST(request: NextRequest) {
       if (!text && !post.img) return back(postPage, "empty", `post-${post.id}`);
       if (linkCount(`${title}\n${text}`) > MAX_LINKS_IN_POST) return back(postPage, "links", `post-${post.id}`);
       if (!owner && !(await within(id, key, "post"))) return back(postPage, "slow", `post-${post.id}`);
-      await editPost(id, post, { title, text });
+      await editPost(id, post, { title, text }, store);
       return back(postPage, "edited", `post-${post.id}`);
     }
 
@@ -302,7 +311,7 @@ export async function POST(request: NextRequest) {
       if (!text) return back(postPage, "empty", `comment-${comment.id}`);
       if (linkCount(text) > MAX_LINKS_IN_COMMENT) return back(postPage, "links", `comment-${comment.id}`);
       if (!owner && !(await within(id, key, "comment"))) return back(postPage, "slow", `comment-${comment.id}`);
-      await editComment(id, post.id, comment, text);
+      await editComment(id, post.id, comment, text, store);
       return back(postPage, "edited", `comment-${comment.id}`);
     }
 
@@ -312,7 +321,7 @@ export async function POST(request: NextRequest) {
       if (!post.poll) return back(fromPage, "gone", `post-${post.id}`);
       if (!owner && !(await within(id, key, "like"))) return back(fromPage, "slow", `post-${post.id}`);
       const picked = form.getAll("choice").map((one) => String(one));
-      const cast = await vote(id, post.id, post.poll, key, picked);
+      const cast = await vote(id, post.id, post.poll, key, picked, store);
       return back(fromPage, cast ? "voted" : "pollclosed", `post-${post.id}`);
     }
 
@@ -320,7 +329,7 @@ export async function POST(request: NextRequest) {
     // the one who gives it: liking your own post is allowed and earns nothing.
     if (action === "like") {
       if (!owner && !(await within(id, key, "like"))) return back(fromPage, "slow", `post-${post.id}`);
-      const added = await toggleLike(id, post.id, key);
+      const added = await toggleLike(id, post.id, key, store);
       if (post.a !== key) await award(id, post.a, added ? 1 : -1);
       return back(fromPage, "liked", `post-${post.id}`);
     }
@@ -329,7 +338,7 @@ export async function POST(request: NextRequest) {
       const comment = await readComment(id, post.id, field("comment", 12));
       if (!comment || (comment.hid && !owner)) return back(postPage, "gone");
       if (!owner && !(await within(id, key, "like"))) return back(postPage, "slow", `comment-${comment.id}`);
-      const added = await toggleCommentLike(id, post.id, comment.id, key);
+      const added = await toggleCommentLike(id, post.id, comment.id, key, store);
       if (comment.a !== key) await award(id, comment.a, added ? 1 : -1);
       return back(postPage, "liked", `comment-${comment.id}`);
     }
@@ -360,7 +369,7 @@ export async function POST(request: NextRequest) {
 
     if (action === "delete") {
       if (!owner && post.a !== key) return back(fromPage, "forbidden");
-      await deletePost(id, post);
+      await deletePost(id, post, store);
       await dropCommunityImage(post.img?.path);
       let next = config;
       if (config.pinned.includes(post.id)) next = withPin(next, post.id, false) ?? next;
@@ -374,7 +383,7 @@ export async function POST(request: NextRequest) {
       if (!comment) return back(postPage, "gone");
       if (action === "delete-comment") {
         if (!owner && comment.a !== key) return back(postPage, "forbidden");
-        await deleteComment(id, post.id, comment);
+        await deleteComment(id, post.id, comment, store);
         return back(postPage, "deleted", "comments");
       }
       await setCommentHidden(id, post.id, comment, action === "hide-comment");
@@ -403,6 +412,8 @@ export async function POST(request: NextRequest) {
     }
     return back(fromPage, "error");
   } catch (error) {
+    // What did not fit in the store's data room was not written (lib/store-data.ts).
+    if (error instanceof DataRoomError) return back(fromPage, "noroom");
     console.error("a community action failed", action, error);
     return back(fromPage, "error");
   }

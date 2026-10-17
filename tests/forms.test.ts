@@ -25,6 +25,7 @@ import { POST as saveForms } from "@/app/api/store/forms/route";
 import { POST as sendForm } from "@/app/api/store/form/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 const quiz = {
   id: "quizquiz01",
@@ -87,7 +88,7 @@ async function main(): Promise<void> {
   const formId = saved.form.id as string;
   await setSitePages(OWNER, [{ id: "pagepage01", slug: "quiz", title: "Quiz", nav: false, target: "", from: 0 }]);
   const store = (await storeForEmail(OWNER))!;
-  await writePage(store.statsId!, siteKey("pagepage01"), { ...parsePage({}), blocks: [{ id: "blk001", kind: "form", heading: "", form: formId }] } as never);
+  await writePage(store.statsId!, siteKey("pagepage01"), { ...parsePage({}), blocks: [{ id: "blk001", kind: "form", heading: "", form: formId }] } as never, ROOM);
 
   const post = (fields: [string, string][]) => {
     const body = new URLSearchParams(fields);
@@ -104,11 +105,11 @@ async function main(): Promise<void> {
   is("a robot filling the hidden field is told it worked, and nothing is kept", [trap.status, (await readResponses(store.statsId, formId)).total], [303, 1]);
 
   part("A step of a funnel");
-  await writePageFunnel(store.statsId!, { id: "funnel0001", name: "Survey", slug: "survey", steps: [{ kind: "page", id: "pagepage01" }, { kind: "product", id: course.product.id }], on: true, since: 1 }, []);
+  await writePageFunnel(store.statsId!, { id: "funnel0001", name: "Survey", slug: "survey", steps: [{ kind: "page", id: "pagepage01" }, { kind: "product", id: course.product.id }], on: true, since: 1 }, [], ROOM);
   const plain = await (
     await saveForms(new NextRequest("https://marktmorgen.com/api/store/forms", { method: "POST", headers: { "content-type": "application/json", cookie: `${SESSION_COOKIE}=${session}` }, body: JSON.stringify({ form: { name: "Survey", fields: [{ id: "gggggg", type: "short", label: "Your name", required: true }] } }) }))
   ).json();
-  await writePage(store.statsId!, siteKey("pagepage01"), { ...parsePage({}), blocks: [{ id: "blk001", kind: "form", heading: "", form: plain.form.id }] } as never);
+  await writePage(store.statsId!, siteKey("pagepage01"), { ...parsePage({}), blocks: [{ id: "blk001", kind: "form", heading: "", form: plain.form.id }] } as never, ROOM);
   const onward = await post([["handle", "formshop"], ["form", plain.form.id], ["page", "pagepage01"], ["f", "funnel0001"], ["q_gggggg", "Dana"]]);
   is("a form with no result leads straight on to the next step", onward.headers.get("location"), `https://marktmorgen.com/@formshop/p/course-${course.product.id}?f=funnel0001`);
 

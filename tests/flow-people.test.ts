@@ -25,6 +25,7 @@ import { claimHandle, ensureListId, ensureStatsId, setMailSettings, setStripeAcc
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const sent: { to: string; subject: string; text: string }[] = [];
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -95,10 +96,10 @@ async function main(): Promise<void> {
   is("a sequence that starts with the form, its steps kept", saved.ok ? [saved.flows[0].trigger, saved.flows[0].formId, saved.flows[0].steps.map((s) => s.action?.do ?? "email")] : saved, ["form", "applyform1", ["field", "deal", "note", "notify", "email"]]);
 
   part("Started by the form, for people on the list");
-  await upsertContact(list, "ana@example.com", { agreed: true, explicit: true, source: "free" });
-  await upsertContact(list, "ben@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(list, "ana@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
+  await upsertContact(list, "ben@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   // Ben already has an open deal: it moves rather than a second one being made.
-  await writeDeal(statsId, { id: "bendeal001", title: "Ben's course", email: "ben@example.com", cents: 9900, stage: offer.id, note: "", createdAt: 1, updatedAt: 1 });
+  await writeDeal(statsId, { id: "bendeal001", title: "Ben's course", email: "ben@example.com", cents: 9900, stage: offer.id, note: "", createdAt: 1, updatedAt: 1 }, ROOM);
   store = (await storeForEmail(OWNER))!;
   for (const email of ["ana@example.com", "ben@example.com", "ana@example.com", "nobody@example.com"]) await enroll(store, email, { joined: false, form: "applyform1" });
   await enroll(store, "ana@example.com", { joined: false, form: "noemail001" });

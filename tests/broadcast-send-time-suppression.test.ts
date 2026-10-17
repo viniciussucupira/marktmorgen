@@ -26,6 +26,7 @@ import { leadsKey, stopWriting, tokensFor, unsubscribe, upsertContact } from "@/
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 type Sent = { to: string[]; headers?: Record<string, string>; text: string };
 
@@ -39,7 +40,7 @@ async function main(): Promise<void> {
   const store = (await storeForEmail(owner))!;
   const listId = store.listId!;
   const everyone = ["stays@example.com", "left@example.com", "bounced@example.com", "spam@example.com", "gone@example.com", "also@example.com"];
-  for (const email of everyone) await upsertContact(listId, email, { agreed: true, explicit: true, source: "free" });
+  for (const email of everyone) await upsertContact(listId, email, { agreed: true, explicit: true, source: "free" }, ROOM);
 
   process.env.RESEND_API_KEY = "re_test_send_time_suppression_only";
   const messages: Sent[] = [];

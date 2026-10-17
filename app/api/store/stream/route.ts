@@ -1,4 +1,5 @@
 import { withinService } from "@/lib/metered-limits";
+import { takeData } from "@/lib/store-data";
 import { reserveStoreUpload } from "@/lib/upload-budget";
 import type { NextRequest } from "next/server";
 import { readKind } from "@/lib/catalog";
@@ -10,6 +11,7 @@ import { fits, storageBrakeFor, storageUsed } from "@/lib/storage-quota";
 import { storeFolder, storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { isStreamConfigured, openUpload } from "@/lib/stream";
+import { VIDEO_RECORD_BYTES } from "@/lib/stream-rules";
 
 /** Doors one store may ask for in an hour. A course of two hundred lessons filled in one sitting asks for two hundred. */
 const DOORS_PER_HOUR = 300;
@@ -68,6 +70,8 @@ export async function POST(request: NextRequest) {
     if (held.available === false) return Response.json({ ok: false, error: "video_unavailable" }, { status: 503 });
     if (!fits(held, bytes)) return Response.json({ ok: false, error: storageRefusal(standing) }, { status: 400 });
     await rememberFolderOwner(folder, ref);
+    // The video's records (what the service says of it, its captions' languages) take room in the store's data room first.
+    if (!(await takeData(store, [{ slot: "sv", bytes: VIDEO_RECORD_BYTES }])).ok) return Response.json({ ok: false, error: "store_full" }, { status: 409 });
 
     const opened = await openUpload({ folder, lessonId, name: safeFileName(text(body.name, 200)), bytes, type });
     if (!opened.ok) {

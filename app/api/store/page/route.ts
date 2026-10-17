@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     const marked = await setProductPage(guarded.ref, id, has);
     if (!marked.ok) return Response.json({ ok: false, error: marked.reason }, { status: 400 });
     if (!marked.store.statsId) return Response.json({ ok: false, error: "server_error" }, { status: 500 });
-    await writePage(marked.store.statsId, id, page);
+    await writePage(marked.store.statsId, id, page, marked.store);
     // A picture taken off the page is deleted, best effort and only after the
     // page that no longer shows it is written.
     const gone = await releasePictures(marked.store.statsId, id, before.filter((path) => !shown.includes(path))).catch(() => [] as string[]);

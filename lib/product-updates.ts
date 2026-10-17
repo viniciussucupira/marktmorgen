@@ -32,7 +32,8 @@
  *   nl:upd:off:<statsId>:<hash> that address pressed stop, kept for good
  *   nl:upd:stop:<token>         who a stop link belongs to
  */
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
+import { deriveKey } from "@/lib/secret-box";
 import { normaliseEmail } from "@/lib/auth";
 import { type BatchMessage, sendBatch } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -204,8 +205,20 @@ async function save(job: UpdateJob): Promise<void> {
   await redisPipeline([["SET", jobKey(job.id), JSON.stringify(job), "EX", KEEP_SECONDS]]);
 }
 
+/**
+ * One stop link for each address a store writes to (since 18 October 2026),
+ * the same in every email: so what the links keep is one record a buyer,
+ * which their order counts for (lib/store-data-rules.ts, ORDER_DATA_BYTES),
+ * not one an email. Signed with a key of our own, so nobody can make the
+ * link of an address; where no key is set, a new one each time, as before.
+ */
+function stopToken(statsId: string, email: string): string {
+  const key = deriveKey("update-stop");
+  return key ? createHmac("sha256", key).update(`${statsId}|${normaliseEmail(email)}`).digest("hex").slice(0, 40) : randomBytes(20).toString("hex");
+}
+
 async function stopLink(store: Store, email: string): Promise<string> {
-  const token = randomBytes(20).toString("hex");
+  const token = stopToken(store.statsId ?? "", email);
   const grant = { s: store.statsId, e: normaliseEmail(email), h: store.handle, n: store.mail?.fromName || store.name };
   await redisPipeline([["SET", stopKey(token), JSON.stringify(grant), "EX", STOP_LINK_SECONDS], ...noteForErasure(store.statsId, email, stopKey(token))]);
   return token;

@@ -7,6 +7,7 @@ import { CrmValueWriteUnconfirmed, setValue } from "@/lib/crm";
 import { type CrmField } from "@/lib/crm-rules";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 async function main() {
   redis.clear();
   const person="a".repeat(32), field: CrmField={id:"cust01",name:"Company",type:"text",options:[]};
@@ -19,26 +20,26 @@ async function main() {
     for(const value of ["Acme", ""]) {
       for(const invalid of [null, {}, [], [null], ["1"], [true], [-1], [2], [1,1], new Error("reply lost")]) {
         reply=invalid;writes=0;let uncertain=false;
-        try { await setValue("contact-check",person,field,value); } catch(error) { uncertain=error instanceof CrmValueWriteUnconfirmed; }
+        try { await setValue("contact-check",person,field,value, ROOM); } catch(error) { uncertain=error instanceof CrmValueWriteUnconfirmed; }
         is("unknown save or clear stays uncertain",uncertain,true);
         is("unknown save or clear is never retried",writes,1);
       }
-      for(const result of [0,1]) { reply=[result];is("numeric acknowledgement confirms save or clear",await setValue("contact-check",person,field,value),true); }
+      for(const result of [0,1]) { reply=[result];is("numeric acknowledgement confirms save or clear",await setValue("contact-check",person,field,value, ROOM),true); }
     }
     part("Applied writes with lost replies are not rolled back");
     applied=true;reply=[];writes=0;let uncertain=false;
-    try {await setValue("contact-check",person,field,"Acme");}catch(error){uncertain=error instanceof CrmValueWriteUnconfirmed;}
+    try {await setValue("contact-check",person,field,"Acme", ROOM);}catch(error){uncertain=error instanceof CrmValueWriteUnconfirmed;}
     is("applied value is still uncertain",uncertain,true);
     is("applied value is preserved",(await original.call(redis,[["HGET",key,person]]))[0],"Acme");
     is("applied save is attempted once",writes,1);
     writes=0;uncertain=false;
-    try {await setValue("contact-check",person,field,"");}catch(error){uncertain=error instanceof CrmValueWriteUnconfirmed;}
+    try {await setValue("contact-check",person,field,"", ROOM);}catch(error){uncertain=error instanceof CrmValueWriteUnconfirmed;}
     is("applied clear is still uncertain",uncertain,true);
     is("cleared value is not recreated",(await original.call(redis,[["HGET",key,person]]))[0],null);
     is("applied clear is attempted once",writes,1);
     part("Invalid person and value are refused before storage");
-    writes=0;is("invalid person refused",await setValue("contact-check","bad",field,"Acme"),false);
-    is("invalid number refused",await setValue("contact-check",person,{...field,type:"number"},"bad"),false);
+    writes=0;is("invalid person refused",await setValue("contact-check","bad",field,"Acme", ROOM),false);
+    is("invalid number refused",await setValue("contact-check",person,{...field,type:"number"},"bad", ROOM),false);
     is("validation refusals perform no writes",writes,0);
     part("API reports unknown contact writes without claiming success");
     redis.pipeline=original;

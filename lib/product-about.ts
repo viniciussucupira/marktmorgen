@@ -16,6 +16,8 @@
  * description each would otherwise be carried by every visitor for nothing.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData, noteData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 
 /** Room for a proper sales page, and still something a person reads. */
 export const MAX_ABOUT_LENGTH = 5_000;
@@ -41,15 +43,22 @@ export async function readAbout(statsId: string | null, productId: string): Prom
   return typeof raw === "string" ? raw.slice(0, MAX_ABOUT_LENGTH) : "";
 }
 
-/** Writes a description, or forgets it when it is empty. */
-export async function writeAbout(statsId: string, productId: string, text: string): Promise<void> {
+/**
+ * Writes a description, or forgets it when it is empty, after taking its
+ * room in the store's data room (DataRoomError when it does not fit).
+ */
+export async function writeAbout(statsId: string, productId: string, text: string, room: DataStore, always = false): Promise<void> {
+  const changes = [{ slot: `ab:${productId}`, bytes: text ? dataBytes([text], 1) : 0, set: true }];
+  if (always) await noteData(room, changes);
+  else await needData(room, changes);
   await redisPipeline([text ? ["SET", aboutKey(statsId, productId), text] : ["DEL", aboutKey(statsId, productId)]]);
 }
 
-/** Forgets the description of a product that is gone. */
-export async function dropAbout(statsId: string | null, productId: string): Promise<void> {
+/** Forgets the description of a product that is gone, and gives back its room. */
+export async function dropAbout(statsId: string | null, productId: string, room: DataStore): Promise<void> {
   if (!statsId || !isRedisConfigured()) return;
   await redisPipeline([["DEL", aboutKey(statsId, productId)]]);
+  await giveData(room, [{ slot: `ab:${productId}`, bytes: 0, set: true }]);
 }
 
 /** A run of text, or an address to link to. */

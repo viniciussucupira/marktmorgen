@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
       const rows = readBatch(job.kind, body.rows);
       if (!rows) return refuse("rows");
       // Counted as they arrive, against the plan's rows for the month (lib/import-limits.ts).
-      const took = await takeImportRows(store, rows.length);
+      const took = await takeImportRows(store, rows.length, Date.now(), Buffer.byteLength(JSON.stringify(rows)));
       if (!took.ok) return refuse(took.reason, took.reason === "unavailable" ? 503 : 429, { limit: took.limit });
       const added = await addRows(store, id, rows);
       return added.ok ? Response.json({ ok: true, import: view(added.job) }) : refuse(added.reason, 409);

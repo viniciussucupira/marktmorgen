@@ -1,4 +1,5 @@
 import { type NextRequest, after } from "next/server";
+import { StoreFullError } from "@/lib/store-full";
 import { setReviewAsk } from "@/lib/store";
 import { refreshStoreQuotes } from "@/lib/store-quotes";
 import { guardStoreWrite, text } from "@/lib/store-request";
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       action === "hide"
         ? await setHidden(statsId, productId, id, body.hidden === true)
         : action === "reply"
-          ? await setReply(statsId, productId, id, text(body.text, MAX_REPLY_TEXT + 200))
+          ? await setReply(statsId, productId, id, text(body.text, MAX_REPLY_TEXT + 200), store)
           : null;
     if (done === null) return Response.json({ ok: false, error: "invalid" }, { status: 400 });
     if (done === "busy") return Response.json({ ok: false, error: "busy" }, { status: 409 });
@@ -82,6 +83,8 @@ export async function POST(request: NextRequest) {
     if (action === "hide") after(() => refreshStoreQuotes(store));
     return Response.json({ ok: true });
   } catch (error) {
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof StoreFullError) return Response.json({ ok: false, error: "store_full" }, { status: 409 });
     console.error("changing a review failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
   }

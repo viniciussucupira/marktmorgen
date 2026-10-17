@@ -42,6 +42,7 @@ import { type AttributionTable, attributionTable } from "@/lib/attribution-rules
 import { bumpsFromMeta } from "@/lib/bundle-rules";
 import { reachRows } from "@/lib/page-read";
 import { PAGE_PARTS } from "@/lib/store-order";
+import { type CappedCount, cappedCount, cappedCountCommand } from "@/lib/capped-count";
 
 /** Days kept, a little over a year, so a year-on-year look is possible. */
 const TTL_SECONDS = 400 * 86400;
@@ -53,6 +54,17 @@ export const STATS_DAYS = 90;
 export const KEPT_DAYS = 400;
 
 const MAX_SOURCES = 40;
+
+/**
+ * The most fields one day's record may have (since 18 October 2026): every
+ * new source, country, term or block a request names was a field kept for
+ * KEPT_DAYS, so what a store's numbers kept grew with its requests. Past
+ * this a day's new names are counted together under "~" (lib/capped-count.ts),
+ * and the day's totals stay right. A day of a busy store names some 60.
+ */
+export const DAY_FIELDS_MAX = 100;
+/** The most fields the all-time record may have between the trims that read it (readLife): its own and LIFE_MAX_FIELDS of counts. */
+export const LIFE_WRITE_MAX = 2_100;
 
 const dayKey = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const countsKey = (statsId: string, day: string) => `nl:stats:${statsId}:${day}`;
@@ -102,10 +114,14 @@ export async function recordHit(
   const day = dayKey(now);
   const counts = countsKey(store.statsId, day);
   const life = lifeKey(store.statsId);
+  // The day's and all-time counts, each hash held to its most fields
+  // (lib/capped-count.ts); the visitors and who is on now beside them.
+  const tally: CappedCount[] = [];
+  const inDay = (field: string) => tally.push({ hash: 0, field, by: 1 });
   const commands: (string | number)[][] = [];
   const both = (field: string) => {
-    commands.push(["HINCRBY", counts, field, 1]);
-    commands.push(["HINCRBY", life, field, 1]);
+    inDay(field);
+    tally.push({ hash: 1, field, by: 1 });
   };
   let pfAt = -1;
   // The position of the day's own count for this kind of hit: when it comes
@@ -118,11 +134,11 @@ export async function recordHit(
       .digest("hex")
       .slice(0, 24);
     const visitors = visitorsKey(store.statsId, day);
-    firstAt = commands.length;
+    firstAt = tally.length;
     // The day's views, and not the all-time record's: since 11 October 2026
     // all-time views are the sum of its sources, which every view adds one to
     // (readLife), so the command is saved on every view (tests/traffic-cost.ts).
-    commands.push(["HINCRBY", counts, "v", 1]);
+    inDay("v");
     both(`r:${hit.source || "direct"}`);
     if (hit.medium) both(`m:${hit.medium}`);
     if (hit.campaign) both(`g:${hit.campaign}`);
@@ -130,8 +146,8 @@ export async function recordHit(
     // record only, like a product page's views: two commands, held in the
     // cost of a visit (tests/traffic-cost.ts), and no all-time figure rather
     // than one that starts on an arbitrary day.
-    if (hit.country) commands.push(["HINCRBY", counts, `k:${hit.country}`, 1]);
-    if (hit.device) commands.push(["HINCRBY", counts, `d:${hit.device}`, 1]);
+    if (hit.country) inDay(`k:${hit.country}`);
+    if (hit.device) inDay(`d:${hit.device}`);
     // Who is here now (readLive): one command, the visitor's day-fingerprint
     // cut short, the page and where they came from. Its expiry is set with the
     // day's first view, below, so the set never outlives a day without views.
@@ -139,7 +155,7 @@ export async function recordHit(
     pfAt = commands.length;
     commands.push(["PFADD", visitors, visitor]);
   } else if (hit.kind === "checkout" && hit.id) {
-    firstAt = commands.length;
+    firstAt = tally.length;
     both("c");
     both(`c:${hit.id}`);
     // The channel the checkout came from (lib/visit-channel.ts), so each
@@ -153,10 +169,10 @@ export async function recordHit(
     // (added 11 October 2026), counted under its channel beside the free
     // products' addresses: everybody who asked to hear from the creator.
     const channel = hit.channel && hit.channel !== "direct" ? hit.channel : "direct";
-    firstAt = commands.length;
+    firstAt = tally.length;
     both(`fs:${channel}`);
   } else if (hit.kind === "link" && hit.id) {
-    firstAt = commands.length;
+    firstAt = tally.length;
     both(`l:${hit.id}`);
   } else if (hit.kind === "product" && hit.id) {
     // A product's own page was opened (each page load sends this once,
@@ -165,13 +181,14 @@ export async function recordHit(
     // day, because every visit's cost is held to what a plan charges for it
     // (tests/traffic-cost.ts). The day's count only, not the all-time
     // record, so "all time" has no figure for it rather than a wrong one.
-    const [opened] = await redisPipeline([["HINCRBY", counts, `pv:${hit.id}`, 1]]);
-    if (Number(opened) === 1) await redisPipeline([["EXPIRE", counts, TTL_SECONDS]]);
+    const [opened] = await cappedCount(counts, DAY_FIELDS_MAX, [{ field: `pv:${hit.id}`, by: 1 }]);
+    if (opened === 1) await redisPipeline([["EXPIRE", counts, TTL_SECONDS]]);
     return null;
   } else {
     return null;
   }
-  const results = await redisPipeline(commands);
+  const [counted, ...results] = await redisPipeline([cappedCountCommand([{ key: counts, most: DAY_FIELDS_MAX }, { key: life, most: LIFE_WRITE_MAX }], tally), ...commands]);
+  const values = Array.isArray(counted) ? counted.map(Number) : [];
   // Written once, not on every hit (11 October 2026: every visit's commands
   // are a cost held to what a plan charges, tests/traffic-cost.ts, and these
   // three were sent on every page view though they change nothing after the
@@ -180,16 +197,18 @@ export async function recordHit(
   // twice — with the day's first write of this kind; the visitors' expiry with
   // the visitor new to the day, who is a visitor for all time too.
   const follow: (string | number)[][] = [];
-  if (firstAt >= 0 && Number(results[firstAt]) === 1) {
+  if (firstAt >= 0 && values[firstAt] === 1) {
     follow.push(["EXPIRE", counts, TTL_SECONDS], ["HSETNX", life, "started", day]);
-    if (hit.kind === "view") follow.push(["EXPIRE", liveKey(store.statsId), 86400]);
+    // Those who were on before today let go once a day, so a store viewed
+    // every day and never looked at live keeps a day of them, not every one.
+    if (hit.kind === "view") follow.push(["ZREMRANGEBYSCORE", liveKey(store.statsId), 0, now - 30 * 60_000], ["EXPIRE", liveKey(store.statsId), 86400]);
   }
   if (pfAt >= 0 && Number(results[pfAt]) === 1) {
     follow.push(["HINCRBY", life, "u", 1], ["EXPIRE", visitorsKey(store.statsId, day), TTL_SECONDS]);
   }
   if (follow.length) await redisPipeline(follow);
   // The store page's views so far today, for the busy-day alert (lib/stats-report.ts).
-  return hit.kind === "view" ? Number(results[firstAt]) || null : null;
+  return hit.kind === "view" ? values[firstAt] || null : null;
 }
 
 /**
@@ -200,7 +219,7 @@ export async function recordHit(
  */
 export async function countReach(statsId: string, field: string, now = Date.now()): Promise<void> {
   if (!isRedisConfigured() || !field.startsWith("sr:")) return;
-  await redisPipeline([["HINCRBY", countsKey(statsId, dayKey(now)), field, 1]]).catch(() => {});
+  await cappedCount(countsKey(statsId, dayKey(now)), DAY_FIELDS_MAX, [{ field, by: 1 }]);
 }
 
 /** One answer's counts: its buyers and their money, and of those, the ones whose sale had no channel. */
@@ -215,12 +234,14 @@ export async function countHeard(statsId: string, answer: string, cents: number,
   if (!isRedisConfigured()) return;
   const counts = countsKey(statsId, dayKey(now));
   await redisPipeline([
-    ["HINCRBY", counts, `h:${answer}`, 1],
-    ...(cents > 0 ? [["HINCRBY", counts, `hc:${answer}`, Math.round(cents)]] : []),
-    // A sale no link credited to any channel: what its buyer said is the only
-    // trace of where it came from (lib/attribution-rules.ts).
-    ...(untracked ? [["HINCRBY", counts, `hu:${answer}`, 1]] : []),
-    ...(untracked && cents > 0 ? [["HINCRBY", counts, `huc:${answer}`, Math.round(cents)]] : []),
+    cappedCountCommand([{ key: counts, most: DAY_FIELDS_MAX }], [
+      { hash: 0, field: `h:${answer}`, by: 1 },
+      ...(cents > 0 ? [{ hash: 0, field: `hc:${answer}`, by: Math.round(cents) }] : []),
+      // A sale no link credited to any channel: what its buyer said is the only
+      // trace of where it came from (lib/attribution-rules.ts).
+      ...(untracked ? [{ hash: 0, field: `hu:${answer}`, by: 1 }] : []),
+      ...(untracked && cents > 0 ? [{ hash: 0, field: `huc:${answer}`, by: Math.round(cents) }] : []),
+    ]),
     ["EXPIRE", counts, TTL_SECONDS],
   ]);
 }
@@ -236,7 +257,7 @@ export async function countHeard(statsId: string, answer: string, cents: number,
 export async function countSearchMiss(statsId: string, words: string[], now = Date.now()): Promise<void> {
   const term = words.join(" ").slice(0, 40).trim();
   if (!term || !isRedisConfigured()) return;
-  await redisPipeline([["HINCRBY", countsKey(statsId, dayKey(now)), `q:${term}`, 1]]).catch(() => {});
+  await cappedCount(countsKey(statsId, dayKey(now)), DAY_FIELDS_MAX, [{ field: `q:${term}`, by: 1 }]);
 }
 
 /** The store page's views and the checkouts started from one day to another, both counted: one read a day, at most 90. */

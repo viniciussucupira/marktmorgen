@@ -1,5 +1,5 @@
 import { apiError, apiOk, apiWriter, readApiBody } from "@/lib/api-guard";
-import { WRITE_ERRORS, giveAccess, takeAccess } from "@/lib/api-write";
+import { WRITE_ERRORS, giveAccess, takeAccess, roomFor } from "@/lib/api-write";
 
 /**
  * POST /api/v1/access — gives a product to an address with no payment, as an
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const body = await readApiBody(request);
   if (body instanceof Response) return body;
   try {
-    const done = await giveAccess(writer.store, writer.keyId, body);
+    const done = await roomFor(() => giveAccess(writer.store, writer.keyId, body));
     if (!done.ok) return apiError(WRITE_ERRORS[done.error][0], done.error, WRITE_ERRORS[done.error][1]);
     return apiOk({ data: done.value });
   } catch (error) {

@@ -311,6 +311,7 @@ export async function recordLead(
 ): Promise<AddResult | null> {
   if (!store.listId || !isRedisConfigured()) return null;
   try {
+    // A free copy is an order: its contact is counted with what the order left (lib/store-data-rules.ts).
     const result = await upsertContact(store.listId, claim.e, {
       agreed: claim.c,
       explicit: claim.c,
@@ -320,7 +321,7 @@ export async function recordLead(
       productId: claim.p,
       title,
       at: claim.at,
-    });
+    }, null);
     if (result.full) console.error("a store's list is full", store.handle);
     return result;
   } catch (error) {

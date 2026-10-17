@@ -1,4 +1,5 @@
 import { withinService } from "@/lib/metered-limits";
+import { StoreFullError } from "@/lib/store-full";
 import type { NextRequest } from "next/server";
 import { guardStoreWrite } from "@/lib/store-request";
 import { ensureStatsId } from "@/lib/store";
@@ -58,15 +59,17 @@ export async function POST(request: NextRequest) {
     if (!store?.statsId) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
     const person = typeof body.person === "string" ? body.person : "";
     if (body.action === "note") {
-      const notes = await addPersonNote(store.statsId, person, guarded.email, body.text);
+      const notes = await addPersonNote(store.statsId, person, guarded.email, body.text, store);
       if (!notes) return Response.json({ ok: false, error: "invalid" }, { status: 400 });
       return Response.json({ ok: true, notes }, noStore);
     }
     if (body.action === "unnote") {
-      return Response.json({ ok: true, notes: await removePersonNote(store.statsId, person, body.id) }, noStore);
+      return Response.json({ ok: true, notes: await removePersonNote(store.statsId, person, body.id, store) }, noStore);
     }
     return Response.json({ ok: false, error: "invalid" }, { status: 400 });
   } catch (error) {
+    // What does not fit in the store's data room is not written (lib/store-data.ts).
+    if (error instanceof StoreFullError) return Response.json({ ok: false, error: "store_full" }, { status: 409 });
     console.error("a buyer's page could not do that", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
   }

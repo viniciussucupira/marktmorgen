@@ -24,6 +24,7 @@ import { BOUNCE_FLOOR, COMPLAINT_FLOOR, PAUSE_DAYS, RAMP_FIRST, RAMP_GAP_MINUTES
 import { advance, store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { ROOM } from "./data-room";
 
 const OWNER = "owner@example.com";
 const SECRET_BYTES = Buffer.from("a-stand-in-secret-for-tests-only");
@@ -87,7 +88,7 @@ async function main(): Promise<void> {
   const store = (await storeForEmail(OWNER))!;
   const list = store.listId as string;
   const id = healthId(store);
-  for (let i = 0; i < 40; i += 1) await upsertContact(list, `reader${i}@example.com`, { agreed: true, explicit: true, source: "import" });
+  for (let i = 0; i < 40; i += 1) await upsertContact(list, `reader${i}@example.com`, { agreed: true, explicit: true, source: "import" }, ROOM);
   is("a store is counted under its own id", [id === store.sid, /^[0-9a-f]{32}$/.test(id)], [true, true]);
 
   const first = await sendTo(store, ["reader0@example.com", "reader1@example.com"], "Hello", "It is ready.", "t:1");
@@ -121,11 +122,11 @@ async function main(): Promise<void> {
   is("the same announcement again changes nothing", (await listHealth(id)).bounced, 1);
   const again = await POST(announce("email.bounced", bounced("reader0@example.com")));
   is("nor does the same address bouncing a second time", [(await again.json()).result, (await listHealth(id)).bounced], ["ignored", 1]);
-  await importContacts(list, ["reader0@example.com"]);
+  await importContacts(list, ["reader0@example.com"], ROOM);
   is("an import does not bring it back", await isMailable(list, "reader0@example.com"), false);
   const later = await sendTo(store, ["reader0@example.com", "reader2@example.com"], "Hello again", "Still ready.", "t:2");
   is("the next email leaves it out", later.done, ["reader2@example.com"]);
-  await upsertContact(list, "reader0@example.com", { agreed: true, explicit: true, source: "free" });
+  await upsertContact(list, "reader0@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   is("only that person's own yes, given since, puts them back", await isMailable(list, "reader0@example.com"), true);
 
   part("What is not a bad address");
@@ -231,7 +232,7 @@ async function main(): Promise<void> {
   await setMailSettings("second@example.com", { fromName: "Orchard Bakes", address: "2 Main St, Portland, OR 97201" });
   const orchard = (await storeForEmail("second@example.com"))!;
   const brought = Array.from({ length: 450 }, (_, i) => `old${i}@example.com`);
-  const result = await importContacts(orchard.listId as string, brought);
+  const result = await importContacts(orchard.listId as string, brought, ROOM);
   await startRamp(healthId(orchard), result.added);
   const news = await createBroadcast(orchard, { subject: "We moved", body: "Hello from the new place.", productId: "", notProductId: "", sendAt: undefined });
   if (!news.ok) throw new Error(`no broadcast: ${news.reason}`);
@@ -260,7 +261,7 @@ async function main(): Promise<void> {
   await setSubscription("third@example.com", { customerId: "cus_Owner00003", subscriptionId: "sub_Owner00003", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings("third@example.com", { fromName: "Meadow Yoga", address: "3 Main St, Portland, OR 97201" });
   const meadow = (await storeForEmail("third@example.com"))!;
-  const good = await importContacts(meadow.listId as string, Array.from({ length: 450 }, (_, i) => `member${i}@example.com`));
+  const good = await importContacts(meadow.listId as string, Array.from({ length: 450 }, (_, i) => `member${i}@example.com`), ROOM);
   await startRamp(healthId(meadow), good.added);
   const hello = await createBroadcast(meadow, { subject: "Hello", body: "The new timetable.", productId: "", notProductId: "", sendAt: undefined });
   if (!hello.ok) throw new Error(`no broadcast: ${hello.reason}`);

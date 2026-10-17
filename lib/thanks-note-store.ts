@@ -5,6 +5,8 @@
  * (lib/product-about.ts).
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { type ThanksNote, parseNote } from "@/lib/thanks-note";
 
 const noteKey = (statsId: string, productId: string) => `nl:product:note:${statsId}:${productId}`;
@@ -21,13 +23,16 @@ export async function readThanksNote(statsId: string | null, productId: string):
   }
 }
 
-/** Writes a note, or forgets it (null). */
-export async function writeThanksNote(statsId: string, productId: string, note: ThanksNote | null): Promise<void> {
-  await redisPipeline([note ? ["SET", noteKey(statsId, productId), JSON.stringify(note)] : ["DEL", noteKey(statsId, productId)]]);
+/** Writes a note, or forgets it (null), after taking its room in the store's data room (DataRoomError when it does not fit). */
+export async function writeThanksNote(statsId: string, productId: string, note: ThanksNote | null, room: DataStore): Promise<void> {
+  const json = note ? JSON.stringify(note) : "";
+  await needData(room, [{ slot: `tn:${productId}`, bytes: json ? dataBytes([json], 1) : 0, set: true }]);
+  await redisPipeline([note ? ["SET", noteKey(statsId, productId), json] : ["DEL", noteKey(statsId, productId)]]);
 }
 
-/** Forgets the note of a product that is gone. */
-export async function dropThanksNote(statsId: string | null, productId: string): Promise<void> {
+/** Forgets the note of a product that is gone, and gives back its room. */
+export async function dropThanksNote(statsId: string | null, productId: string, room: DataStore): Promise<void> {
   if (!statsId || !isRedisConfigured()) return;
   await redisPipeline([["DEL", noteKey(statsId, productId)]]);
+  await giveData(room, [{ slot: `tn:${productId}`, bytes: 0, set: true }]);
 }

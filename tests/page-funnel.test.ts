@@ -44,6 +44,7 @@ import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { funnelWords, FUNNEL_WORDS } from "@/lib/buyer-words/funnel";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM, roomOnly } from "./data-room";
 
 process.env.NIMBUS_DATA_KEY = "a-local-key-for-tests-only-0123456789abcdef";
 
@@ -121,7 +122,7 @@ async function main(): Promise<void> {
     NOW,
   );
   if (!input.ok) throw new Error("not read");
-  const funnel = await writePageFunnel(statsId, input.funnel, []);
+  const funnel = await writePageFunnel(statsId, input.funnel, [], ROOM);
   is("kept and read back", (await readPageFunnels(statsId)).map((f) => [f.name, f.slug, f.steps.length]), [["Launch", "launch", 5]]);
   const states = await stepStates(store, funnel);
   is("each step as the store stands: a page kept back and a draft are passed over", states.map((s) => [s.title, s.open, s.free, s.path]), [
@@ -138,9 +139,9 @@ async function main(): Promise<void> {
   is("the last step leads nowhere on", (await funnelHere(store, funnel.id, "product", course.product.id))?.next, null);
   is("a page that is not a step is opened on its own", await funnelHere(store, funnel.id, "product", "nope000001"), null);
   is("a mark of no funnel is nothing", await funnelHere(store, "zzzzzzzzzz", "page", "videopage1"), null);
-  await writePageFunnel(statsId, { ...funnel, on: false }, [funnel]);
+  await writePageFunnel(statsId, { ...funnel, on: false }, [funnel], ROOM);
   is("a funnel that is off leads nowhere on", await funnelHere(store, funnel.id, "page", "videopage1"), null);
-  await writePageFunnel(statsId, funnel, [funnel]);
+  await writePageFunnel(statsId, funnel, [funnel], ROOM);
 
   part("Its address");
   const go = async (path: string) => {
@@ -152,7 +153,7 @@ async function main(): Promise<void> {
   const guidePath = states[0].path!;
   is("to the first step, with the mark and what the link carried", await go("/@chef/go/launch?utm_source=newsletter&f=zzzzzzzzzz"), [307, `https://marktmorgen.com${guidePath}?f=${funnel.id}&utm_source=newsletter`]);
   is("an address no funnel has leads to the store", await go("/@chef/go/nothing"), [307, "https://marktmorgen.com/@chef"]);
-  await writePageFunnel(statsId, { ...funnel, on: false }, [funnel]);
+  await writePageFunnel(statsId, { ...funnel, on: false }, [funnel], ROOM);
   is("an inactive funnel never redirects to a published product or page", await go("/@chef/go/launch"), [404, null]);
   const previousPipeline = redis.pipeline;
   let snapshotRead = false, readsAfterSnapshot = 0;
@@ -169,7 +170,7 @@ async function main(): Promise<void> {
   } finally { redis.pipeline = previousPipeline; }
   const inactiveCustom = await goRoute(new NextRequest("https://courses.example.com/go/launch"), { params: Promise.resolve({ handle: "@chef", funnel: "launch" }) });
   is("the same inactive boundary applies to a custom-domain request", [inactiveCustom.status, inactiveCustom.headers.get("location")], [404, null]);
-  await writePageFunnel(statsId, funnel, [funnel]);
+  await writePageFunnel(statsId, funnel, [funnel], ROOM);
 
   is("re-enabling restores the marked entry and query forwarding", await go("/@chef/go/launch?utm_source=reopened"), [307, `https://marktmorgen.com${guidePath}?f=${funnel.id}&utm_source=reopened`]);
 
@@ -203,25 +204,25 @@ async function main(): Promise<void> {
   const originalMutationPipeline = redis.pipeline;
   try {
     for (const replies of [[], [null], [undefined], [true], [false], [""], [2], [-1], [1.5], ["invalid"], [{ error: "unavailable" }], [1, 1]]) {
-      redis.pipeline = async () => replies;
+      redis.pipeline = async (commands) => (roomOnly(commands) ? originalMutationPipeline.call(redis, commands) : replies);
       let saveFailed = false;
       let removeFailed = false;
-      try { await writePageFunnel(statsId, funnel, [funnel]); } catch { saveFailed = true; }
-      try { await dropPageFunnel(statsId, funnel.id); } catch { removeFailed = true; }
+      try { await writePageFunnel(statsId, funnel, [funnel], ROOM); } catch { saveFailed = true; }
+      try { await dropPageFunnel(statsId, funnel.id, ROOM); } catch { removeFailed = true; }
       is("unconfirmed save is rejected: " + JSON.stringify(replies), saveFailed, true);
       is("unconfirmed deletion is rejected: " + JSON.stringify(replies), removeFailed, true);
     }
     for (const reply of [0, 1, "0", "1"]) {
-      redis.pipeline = async () => [reply];
+      redis.pipeline = async (commands) => (roomOnly(commands) ? originalMutationPipeline.call(redis, commands) : [reply]);
       let accepted = false;
-      try { accepted = (await writePageFunnel(statsId, funnel, [funnel])).id === funnel.id; } catch {}
+      try { accepted = (await writePageFunnel(statsId, funnel, [funnel], ROOM)).id === funnel.id; } catch {}
       is("only an explicit successful atomic save is accepted " + JSON.stringify(reply), accepted, reply === 1);
-      is("confirmed deletion interprets Redis acknowledgement " + JSON.stringify(reply), await dropPageFunnel(statsId, funnel.id), reply === 1 || reply === "1");
+      is("confirmed deletion interprets Redis acknowledgement " + JSON.stringify(reply), await dropPageFunnel(statsId, funnel.id, ROOM), reply === 1 || reply === "1");
     }
   } finally { redis.pipeline = originalMutationPipeline; }
 
   part("Removing one");
-  is("gone, and a second removal finds nothing", [await dropPageFunnel(statsId, funnel.id), await dropPageFunnel(statsId, funnel.id)], [true, false]);
+  is("gone, and a second removal finds nothing", [await dropPageFunnel(statsId, funnel.id, ROOM), await dropPageFunnel(statsId, funnel.id, ROOM)], [true, false]);
   is("and its address leads to the store", await go("/@chef/go/launch"), [307, "https://marktmorgen.com/@chef"]);
 
   part("An address reserved later");

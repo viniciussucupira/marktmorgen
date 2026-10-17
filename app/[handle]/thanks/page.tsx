@@ -212,7 +212,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
         explicit: true,
         at: new Date(order.created * 1000).toISOString(),
         source: "buyer",
-      }).catch((error) => console.error("adding a buyer to a list failed", error));
+      }, null).catch((error) => console.error("adding a buyer to a list failed", error));
     }
     if (canConfirm(store)) {
       after(() => confirmPurchase(store, sessionId).catch((error) => console.error("confirming a pre-order failed", error)));
@@ -275,7 +275,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
         explicit: true,
         at: new Date(order.created * 1000).toISOString(),
         source: "buyer",
-      }).catch((error) => console.error("adding a buyer to a list failed", error));
+      }, null).catch((error) => console.error("adding a buyer to a list failed", error));
     }
     if (canConfirm(store)) {
       after(() => confirmPurchase(store, sessionId).catch((error) => console.error("delivering a gift failed", error)));
@@ -339,7 +339,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
         explicit: true,
         at: new Date(order.created * 1000).toISOString(),
         source: "buyer",
-      }).catch((error) => console.error("adding a buyer to a list failed", error));
+      }, null).catch((error) => console.error("adding a buyer to a list failed", error));
     }
     if (canConfirm(store)) {
       await confirmPurchase(store, sessionId).catch((error) => console.error("opening the places of a purchase failed", error));

@@ -1,4 +1,6 @@
 import type { NextRequest } from "next/server";
+import { DataRoomError } from "@/lib/store-data";
+import { DATA_FULL_BUYER_WORDS } from "@/lib/store-data-rules";
 import { cookies } from "next/headers";
 import { originFrom } from "@/lib/request-origin";
 import { fromAnotherSite } from "@/lib/studio-route";
@@ -47,16 +49,24 @@ export async function POST(request: NextRequest) {
   const [done, passed] = await Promise.all([doneLessons(course.id, access.learner.email), passedQuizzes(course.id, who)]);
   if (!hasFinished(course, done, passed)) return away(`${base}?cert=unfinished#certificate`);
 
-  const issued = await issueCertificate({
-    store: storeKey(store),
-    productId: product.id,
-    course,
-    title: product.title,
-    creator: store.name,
-    email: access.learner.email,
-    who,
-    name,
-  });
+  let issued: Awaited<ReturnType<typeof issueCertificate>>;
+  try {
+    issued = await issueCertificate({
+      store: storeKey(store),
+      productId: product.id,
+      course,
+      title: product.title,
+      creator: store.name,
+      email: access.learner.email,
+      who,
+      name,
+      room: store,
+    });
+  } catch (error) {
+    // No room in the store's data room: no certificate was written (lib/store-data.ts).
+    if (error instanceof DataRoomError) return new Response(DATA_FULL_BUYER_WORDS, { status: 409, headers: { "Cache-Control": "no-store" } });
+    throw error;
+  }
   if (!issued.ok) return away(`${base}?cert=name#certificate`);
   return away(`${origin}/@${store.handle}/certificate/${issued.certificate.id}${issued.fresh ? "?issued=1" : ""}`);
 }

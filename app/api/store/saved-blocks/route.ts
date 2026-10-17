@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
         // Kept like any save: the page as it was is the newest of its earlier versions, to bring back.
-        await writePage(statsId, key, next);
+        await writePage(statsId, key, next, store);
         done.push(key);
       }
       return Response.json({ ok: true, done, skipped });

@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
   try {
     if (action === "delete") {
       const before = await readReview(statsId, productId, id);
-      const done = await deleteReview(statsId, productId, id);
+      const done = await deleteReview(statsId, productId, id, store);
       if (done === "deleted") {
         after(() => refreshStoreQuotes(store));
         await dropReviewPhoto(before?.photo);
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       rating,
       text: read("text"),
       name: read("name"),
-    });
+    }, store);
     const written = saved.state === "created" || saved.state === "updated";
     if (!written) await dropReviewPhoto(photo);
     // The new photo goes on; one taken off, or replaced, is deleted after the write.

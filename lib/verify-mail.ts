@@ -93,7 +93,7 @@ async function loop(sender: Sender, deadline: number): Promise<Check[]> {
   const kinds = ["bounced", "complained"] as const;
   const started = Date.now();
   try {
-    for (const kind of kinds) await upsertContact(list, to[kind], { agreed: true, explicit: true, source: "import" });
+    for (const kind of kinds) await upsertContact(list, to[kind], { agreed: true, explicit: true, source: "import" }, null);
     const sent = await sendBatch(
       kinds.map((kind) => ({
         from: NIMBUS_FROM,

@@ -96,6 +96,8 @@ export function CommunityPushToggle({
         setError(
           data.error === "full"
             ? t.full
+            : data.error === "noroom"
+              ? t.noroom
             : data.error === "unavailable"
               ? t.unavailable
               : t.failed,

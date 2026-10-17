@@ -54,12 +54,13 @@ const STATUSES = {
 
 /** The file, stamped with its buyer's email when the product asks for it. */
 async function deliver(
+  store: Store,
   product: Listing,
   file: ProductFile,
   sale: { reference: string; email: string | null; paidAt: number },
 ): Promise<Response> {
   if (wantsStamp(product.stamp, file) && sale.email) {
-    const copy = await stampedCopy(file, { reference: sale.reference, email: sale.email, paidAt: sale.paidAt });
+    const copy = await stampedCopy(file, { reference: sale.reference, email: sale.email, paidAt: sale.paidAt }, store);
     if (copy) return serveFile(copy);
   }
   return serveFile(file);
@@ -129,7 +130,7 @@ export async function GET(request: NextRequest) {
       if (!line.delivery.file) return plain(409, say.notADownloadPurchases);
       const item = await readListing(store, line.productId);
       if (!item) return plain(404, say.nothingToDownload);
-      return deliver(item, line.delivery.file, { reference: purchase.reference, email, paidAt: purchase.paidAt });
+      return deliver(store, item, line.delivery.file, { reference: purchase.reference, email, paidAt: purchase.paidAt });
     }
     const delivery = bumped ? bumped.delivery : purchase.main;
     if (!delivery) return plain(404, say.nothingToDownload);
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest) {
     }
     const owner = await readListing(store, bumped ? bumped.id : purchase.productId);
     if (!owner) return serveFile(delivery.file);
-    return deliver(owner, delivery.file, { reference: purchase.reference, email, paidAt: purchase.paidAt });
+    return deliver(store, owner, delivery.file, { reference: purchase.reference, email, paidAt: purchase.paidAt });
   }
 
   const sessionId = request.nextUrl.searchParams.get("session_id") ?? "";
@@ -179,7 +180,7 @@ export async function GET(request: NextRequest) {
     if (!wanted.file) {
       return plain(wanted.link ? 409 : 404, wanted.link ? say.notADownloadOrder : say.noFile);
     }
-    return deliver(wanted, wanted.file, { ...sale, reference: added.reference, paidAt: added.paidAt });
+    return deliver(store, wanted, wanted.file, { ...sale, reference: added.reference, paidAt: added.paidAt });
   }
 
   // A product added at checkout has its own file, asked for by the key the
@@ -192,12 +193,12 @@ export async function GET(request: NextRequest) {
       const inside = pick(added.items, pid);
       if (!inside) return plain(404, say.addedToOrderNoPart);
       if (!inside.file) return plain(inside.link ? 409 : 404, inside.link ? say.notADownloadPurchases : say.noFile);
-      return deliver(inside, inside.file, sale);
+      return deliver(store, inside, inside.file, sale);
     }
     if (!added.file) {
       return plain(added.link ? 409 : 404, added.link ? say.notADownloadOrder : say.noFile);
     }
-    return deliver(added.product, added.file, sale);
+    return deliver(store, added.product, added.file, sale);
   }
 
   // One product of the bundle that was bought, by its id.
@@ -205,7 +206,7 @@ export async function GET(request: NextRequest) {
     const inside = pick(order.items, pid);
     if (!inside) return plain(404, say.noSuchProduct);
     if (!inside.file) return plain(inside.link ? 409 : 404, inside.link ? say.notADownloadPurchases : say.noFile);
-    return deliver(inside, inside.file, sale);
+    return deliver(store, inside, inside.file, sale);
   }
 
   // The file of the option that was bought, when the product has options, and
@@ -221,5 +222,5 @@ export async function GET(request: NextRequest) {
     return plain(404, say.noFile);
   }
 
-  return deliver(order.product, file, sale);
+  return deliver(store, order.product, file, sale);
 }

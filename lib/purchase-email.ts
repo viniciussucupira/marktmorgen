@@ -65,7 +65,7 @@ import { firstCharge } from "@/lib/move-rules";
 import { type SaleKey, activeKeys, keyForSale } from "@/lib/licence-keys";
 import { purchaseRefunded } from "@/lib/refunds";
 import { scheduleReviewAsk } from "@/lib/review-ask";
-import { type BundleSlot, bumpsFromMeta, bundleFromMeta, deliveredIds } from "@/lib/bundle-rules";
+import { type BundleSlot, bumpsFromMeta, bundleFromMeta, deliveredIds, isBundle } from "@/lib/bundle-rules";
 
 const SESSION_ID_PATTERN = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
 const INTENT_ID_PATTERN = /^pi_[A-Za-z0-9]{10,200}$/;
@@ -379,15 +379,15 @@ export async function confirmPurchase(
   sessionId: string,
   known?: SessionRecord,
 ): Promise<ConfirmOutcome> {
-  const read: { session?: SessionRecord } = {};
+  const read: { session?: SessionRecord; items?: number } = {};
   const outcome = await confirmOnce(store, sessionId, known, read);
   // Confirmed now, so it is one of the month's orders (lib/orders.ts): once,
   // by the checkout, and not at all when its sale paid a share.
   if (outcome === "sent") {
     const paid = typeof read.session?.amount_total === "number" ? read.session.amount_total : 0;
-    await countOrder(store, `checkout:${sessionId}`, paid);
+    await countOrder(store, `checkout:${sessionId}`, paid, Date.now(), read.items ?? 1);
     // The hour its checkout was held in gives it back, now that it is counted (lib/order-admission.ts).
-    await settleAdmitted(store, read.session?.metadata?.[ADMITTED_FIELD]);
+    await settleAdmitted(store, read.session?.metadata?.[ADMITTED_FIELD], 1, read.items ?? 1);
   }
   return outcome;
 }
@@ -396,7 +396,7 @@ async function confirmOnce(
   store: Store,
   sessionId: string,
   known: SessionRecord | undefined,
-  read: { session?: SessionRecord },
+  read: { session?: SessionRecord; items?: number },
 ): Promise<ConfirmOutcome> {
   if (!canConfirm(store) || !SESSION_ID_PATTERN.test(sessionId)) return "skip";
   const key = confirmationKey(sessionId);
@@ -421,6 +421,8 @@ async function confirmOnce(
   // A gift through "Support my work" has nothing to hand over or confirm (lib/store-tips.ts).
   if (session.metadata?.kind === "tip") return "skip";
   const listings = await listingsNamed(store, session.metadata);
+  // The products it hands over, a bundle's each, for what it keeps (lib/store-data-rules.ts).
+  read.items = listings.reduce((n, product) => n + (isBundle(product) ? (product.bundle?.length ?? 1) : 1), 0) || 1;
   // Bought for somebody else: handed to them, and the buyer gets a receipt
   // that says so (lib/gifts.ts), instead of the usual confirmation.
   if (session.metadata?.gift) return confirmGift(store, session, key);

@@ -39,6 +39,7 @@ import { redisPipeline } from "@/lib/redis";
 import { withinLimit } from "@/lib/request-guard";
 import { takeAllowance } from "@/lib/store-allowance";
 import { API_WRITE_UNITS } from "@/lib/store-allowance-rules";
+import { DataRoomError } from "@/lib/store-data";
 
 export const ADDS_PER_DAY = 2_000;
 export const GIVES_PER_DAY = 1_000;
@@ -57,7 +58,8 @@ export type WriteError =
   | "not_given_here"
   | "cannot_email"
   | "daily_limit"
-  | "monthly_limit";
+  | "monthly_limit"
+  | "store_full";
 
 type Done<T> = { ok: true; value: T } | { ok: false; error: WriteError };
 
@@ -89,7 +91,7 @@ export async function addLead(store: Store, body: Record<string, unknown>): Prom
   if (!had && !(await withinLimit("api-add", store.sid ?? store.handle, ADDS_PER_DAY, 86_400))) return fail("daily_limit");
   // A contact written is API_WRITE_UNITS of the window's API requests, the request itself one of them.
   if (!had && !(await takeAllowance(store, "api", API_WRITE_UNITS - 1)).ok) return fail("monthly_limit");
-  const [outcome] = await importContactRows(listId, [{ email, name, tags }]);
+  const [outcome] = await importContactRows(listId, [{ email, name, tags }], store);
   if (outcome === "left") return fail("unsubscribed");
   if (outcome === "full") return fail("list_full");
   const fresh = { ...store, listId };
@@ -118,7 +120,7 @@ export async function changeLeadLabels(store: Store, body: Record<string, unknow
     const next = readTags([...kept, ...add.filter((a) => !kept.some((k) => same(k, a)))]);
     after = next;
     return next.length === tags.length && next.every((t, i) => same(t, tags[i])) ? "same" : next;
-  });
+  }, store);
   for (const tag of add.filter((a) => !before.tags.some((t) => same(t, a)) && after.some((t) => same(t, a)))) {
     await enroll(store, email, { joined: false, tag });
   }
@@ -182,7 +184,7 @@ export async function giveAccess(
   if (already) return { ok: true, value: { email, product: product.id, status: "already", emailed: false } };
   if (!(await withinLimit("api-give", store.sid, GIVES_PER_DAY, 86_400))) return fail("daily_limit");
   if (!(await takeAllowance(store, "api", API_WRITE_UNITS - 1)).ok) return fail("monthly_limit");
-  const [isNew] = await grantImported(statsId, `api:${keyId}`, [{ email, productId: product.id, items }], undefined, store.sid);
+  const [isNew] = await grantImported(statsId, `api:${keyId}`, [{ email, productId: product.id, items }], undefined, store.sid, store);
   if (!store.pastBuyers) await setPastBuyers(storeRef(store));
   if (!isNew) return { ok: true, value: { email, product: product.id, status: "already", emailed: false } };
 
@@ -244,4 +246,15 @@ export const WRITE_ERRORS: Record<WriteError, [number, string]> = {
   cannot_email: [409, "Emailing needs your store's plan to be active. Send notify: false, or start your plan."],
   daily_limit: [429, "That is as many as a store may add in a day through the API. Try again tomorrow."],
   monthly_limit: [429, `Your store's API requests for this month are used (each contact added or product given counts as ${API_WRITE_UNITS}). They open again with your next billing month, or at once on a larger plan.`],
+  store_full: [409, "Your store's data room is full, so nothing was added. Delete something you no longer need, such as old posts, drafts, pages or contacts, or move to a larger plan."],
 };
+
+/** A write the store's data room did not fit (lib/store-data.ts) is said as one, not as a failure to try again. */
+export async function roomFor<T>(work: () => Promise<Done<T>>): Promise<Done<T>> {
+  try {
+    return await work();
+  } catch (error) {
+    if (error instanceof DataRoomError) return fail("store_full");
+    throw error;
+  }
+}

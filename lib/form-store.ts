@@ -7,8 +7,15 @@
  *
  * Under the store's own stats id, so they move with the store, as its
  * affiliates and its pages do.
+ *
+ * The answers take room in the store's data room (lib/store-data.ts), one
+ * slot a form, before they are written: an answer that does not fit is not
+ * kept (DataRoomError), and the oldest one let go past KEPT_RESPONSES gives
+ * its room back. The forms themselves are few and bounded (MAX_FORMS).
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type DataStore, giveData, needData } from "@/lib/store-data";
+import { dataBytes } from "@/lib/store-data-rules";
 import { type FormDef, type FormResponse, FORM_RESPONSE_ID, FORM_ID, KEPT_RESPONSES, MAX_FORMS, parseForm } from "@/lib/forms";
 
 const formsKey = (statsId: string) => `nl:forms:${statsId}`;
@@ -67,19 +74,26 @@ export async function writeForm(statsId: string, form: FormDef): Promise<boolean
   return results[0] === 1;
 }
 
-/** Removes a form and every answer kept for it. */
-export async function dropForm(statsId: string, id: string): Promise<boolean> {
+/** Removes a form and every answer kept for it, and gives back the answers' room. */
+export async function dropForm(statsId: string, id: string, room: DataStore): Promise<boolean> {
   const [removed] = await redisPipeline([
     ["HDEL", formsKey(statsId), id],
     ["DEL", responsesKey(statsId, id)],
   ]);
+  await giveData(room, [{ slot: ANSWERS_SLOT(id), bytes: 0, set: true }]);
   return Number(removed) === 1;
 }
 
+const ANSWERS_SLOT = (formId: string) => `fr:${formId}`;
+
 /** Keeps one response, the newest first, and lets the oldest go past KEPT_RESPONSES. */
-export async function addResponse(statsId: string, formId: string, response: FormResponse): Promise<void> {
+export async function addResponse(statsId: string, formId: string, response: FormResponse, room: DataStore): Promise<void> {
+  const json = JSON.stringify(response);
+  const [kept, oldest] = await redisPipeline([["LLEN", responsesKey(statsId, formId)], ["LINDEX", responsesKey(statsId, formId), -1]]);
+  const dropped = Number(kept) >= KEPT_RESPONSES && typeof oldest === "string" ? dataBytes([oldest], 1) : 0;
+  await needData(room, [{ slot: ANSWERS_SLOT(formId), bytes: dataBytes([json], 1) - dropped }]);
   await redisPipeline([
-    ["LPUSH", responsesKey(statsId, formId), JSON.stringify(response)],
+    ["LPUSH", responsesKey(statsId, formId), json],
     ["LTRIM", responsesKey(statsId, formId), 0, KEPT_RESPONSES - 1],
   ]);
 }

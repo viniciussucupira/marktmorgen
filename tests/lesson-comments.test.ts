@@ -32,6 +32,7 @@ import { tellStudent } from "@/lib/lesson-comment-notify";
 import type { Listing } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { ROOM } from "./data-room";
 
 type Sent = { to: string[]; subject: string; text: string };
 const emails: Sent[] = [];
@@ -57,8 +58,8 @@ async function main(): Promise<void> {
   const product = { id: "p1aaaaaa", title: "Sourdough for Beginners" } as Listing;
   const dana = emailKey("dana@example.com");
   const hal = emailKey("hal@example.com");
-  await touchStudent(COURSE, "Dana@Example.com", 1_000);
-  await touchStudent(COURSE, "hal@example.com", 1_000);
+  await touchStudent(COURSE, "Dana@Example.com", 1_000, ROOM);
+  await touchStudent(COURSE, "hal@example.com", 1_000, ROOM);
 
   part("On until the creator says otherwise");
   is("on for a new course", await commentsOn(COURSE), true);
@@ -67,27 +68,27 @@ async function main(): Promise<void> {
   await setCommentsOn(COURSE, true);
 
   part("A name, chosen once");
-  const nameless = await addComment({ courseId: COURSE, lessonId: L1, by: dana, text: "How warm should the kitchen be?" });
+  const nameless = await addComment({ room: ROOM, courseId: COURSE, lessonId: L1, by: dana, text: "How warm should the kitchen be?" });
   is("without a name nothing is written", nameless.ok ? "written" : nameless.reason, "name");
-  const first = await addComment({ courseId: COURSE, lessonId: L1, by: dana, text: "How warm should the kitchen be?", name: "  Dana  ", now: 100 });
+  const first = await addComment({ room: ROOM, courseId: COURSE, lessonId: L1, by: dana, text: "How warm should the kitchen be?", name: "  Dana  ", now: 100 });
   if (!first.ok) throw new Error("no comment");
   is("the name is kept, trimmed", first.comment.name, "Dana");
-  const second = await addComment({ courseId: COURSE, lessonId: L1, by: dana, text: "And the flour?", now: 110 });
+  const second = await addComment({ room: ROOM, courseId: COURSE, lessonId: L1, by: dana, text: "And the flour?", now: 110 });
   is("and used next time without asking", second.ok && second.comment.name, "Dana");
   is("no address anywhere in what is kept", JSON.stringify(await lessonComments(COURSE, L1)).includes("example.com"), false);
-  const empty = await addComment({ courseId: COURSE, lessonId: L1, by: dana, text: " \n\n " });
+  const empty = await addComment({ room: ROOM, courseId: COURSE, lessonId: L1, by: dana, text: " \n\n " });
   is("nothing written is refused", empty.ok ? "written" : empty.reason, "empty");
 
   part("Answers");
-  const answer = await addComment({ courseId: COURSE, lessonId: L1, by: CREATOR_AUTHOR, text: "75 to 80°F.", parent: first.comment.id, now: 120 });
+  const answer = await addComment({ room: ROOM, courseId: COURSE, lessonId: L1, by: CREATOR_AUTHOR, text: "75 to 80°F.", parent: first.comment.id, now: 120 });
   if (!answer.ok) throw new Error("no answer");
   is("the creator needs no name", answer.comment.name, "");
   is("the answer knows its comment", answer.parent?.id, first.comment.id);
-  const deeper = await addComment({ courseId: COURSE, lessonId: L1, by: hal, name: "Hal", text: "Same question", parent: answer.comment.id });
+  const deeper = await addComment({ room: ROOM, courseId: COURSE, lessonId: L1, by: hal, name: "Hal", text: "Same question", parent: answer.comment.id });
   is("an answer to an answer is refused: one level", deeper.ok ? "written" : deeper.reason, "parent");
-  const elsewhere = await addComment({ courseId: COURSE, lessonId: L2, by: hal, name: "Hal", text: "x", parent: first.comment.id });
+  const elsewhere = await addComment({ room: ROOM, courseId: COURSE, lessonId: L2, by: hal, name: "Hal", text: "x", parent: first.comment.id });
   is("an answer from another lesson is refused", elsewhere.ok ? "written" : elsewhere.reason, "parent");
-  const halsAnswer = await addComment({ courseId: COURSE, lessonId: L1, by: hal, name: "Hal", text: "Mine sits by the oven.", parent: first.comment.id, now: 130 });
+  const halsAnswer = await addComment({ room: ROOM, courseId: COURSE, lessonId: L1, by: hal, name: "Hal", text: "Mine sits by the oven.", parent: first.comment.id, now: 130 });
   if (!halsAnswer.ok) throw new Error("no answer");
 
   part("Threads, as each reader sees them");
@@ -112,16 +113,16 @@ async function main(): Promise<void> {
   is("and so still one email", emails.length, 1);
 
   part("Deleting");
-  is("a comment goes with its answers", await deleteComment(COURSE, first.comment.id), 3);
+  is("a comment goes with its answers", await deleteComment(COURSE, first.comment.id, ROOM), 3);
   is("what is left", (await lessonComments(COURSE, L1)).map((c) => c.text), ["And the flour?"]);
-  const onL2 = await addComment({ courseId: COURSE, lessonId: L2, by: hal, text: "Scoring tips?", now: 200 });
+  const onL2 = await addComment({ room: ROOM, courseId: COURSE, lessonId: L2, by: hal, text: "Scoring tips?", now: 200 });
   is("a second lesson", onL2.ok, true);
-  await dropLessonComments(COURSE, [L2]);
+  await dropLessonComments(COURSE, [L2], ROOM);
   is("a lesson deleted takes its comments", (await lessonComments(COURSE, L2)).length, 0);
 
   part("The studio");
   await markSeen(COURSE, 150);
-  await addComment({ courseId: COURSE, lessonId: L1, by: hal, text: "Rye instead?", now: 300 });
+  await addComment({ room: ROOM, courseId: COURSE, lessonId: L1, by: hal, text: "Rye instead?", now: 300 });
   const recent = await recentComments(COURSE);
   is("the newest comments of the course", recent.comments.map((c) => c.text), ["Rye instead?", "And the flour?"]);
   is("and how many came since it last looked", recent.fresh, 1);
