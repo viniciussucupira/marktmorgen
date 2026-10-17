@@ -136,7 +136,7 @@ export function FunnelTypePicker({ products, pagesLeft, canMakePages, funnelsLef
     }
   }
 
-  const reviewHref = `/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}`;
+  const reviewHref = `/studio/funnels${sid ? `?store=${encodeURIComponent(sid)}` : ""}${made?.funnelId ? `#funnel-review-${encodeURIComponent(made.funnelId)}` : ""}`;
   const productsHref = `/studio${sid ? `?store=${encodeURIComponent(sid)}` : ""}#products`;
   const pagesHref = (id: string) => `/studio/site?${sid ? `store=${encodeURIComponent(sid)}&` : ""}page=${encodeURIComponent(id)}`;
 
