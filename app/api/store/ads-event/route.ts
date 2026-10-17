@@ -1,6 +1,7 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { clientIp } from "@/lib/visit";
 import { sendServerPurchase } from "@/lib/ad-events";
 import { hasPixels } from "@/lib/pixels";
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
   if (!handle) return done();
   const store = await storeForHandle(handle).catch(() => null);
   if (!store || !hasPixels(store.pixels)) return done();
-  if (!(await withinLimit("ads-event", `${clientAddress(request)}|${store.handle}`, 10, 600))) return done();
+  if (!(await withinStore("ads-event", `${clientAddress(request)}|${store.handle}`, 10, 600, store))) return done();
   // The page the purchase was on, without its query, which names the order.
   let url = "";
   try {

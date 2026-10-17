@@ -1,3 +1,4 @@
+import { windowId } from "@/lib/allowance-window";
 import { WHO, type Who } from "@/lib/contacts";
 import { lookColours } from "@/lib/store-look";
 import type { Metadata } from "next";
@@ -51,7 +52,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
   const allowance = monthlyAllowance(store);
   const [counts, used, loadedBroadcasts, loadedFlows, listings, loadedDrafts, pause] = await Promise.all([
     listCounts(store.listId),
-    usedThisMonth(store.listId),
+    usedThisMonth(store.listId, windowId(store)),
     listBroadcastsStrict(store.listId).catch(() => null),
     readFlowListStrict(store.listId).catch(() => null),
     // The names of the products a flow or a broadcast can be about: one

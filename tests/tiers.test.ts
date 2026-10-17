@@ -19,6 +19,7 @@ import { choicesFor, liveTiers, previewSwitch, switchTier } from "@/lib/tier-swi
 import { membershipsFor, requestManageLink } from "@/lib/membership-manage";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const emails: { to: string | string[]; text: string; subject: string }[] = [];
 const calls: { method: string; path: string; body: URLSearchParams }[] = [];
@@ -123,7 +124,7 @@ async function main(): Promise<void> {
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
   await setStripeAccount("owner@example.com", "acct_1TestHarbor0001", true);
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const monthly = { interval: "month" as const, trialDays: 0, payments: 0 };
   const a = await addProduct("owner@example.com", "Basic", "", "10", monthly);
   const b = await addProduct("owner@example.com", "Pro", "", "20", monthly);

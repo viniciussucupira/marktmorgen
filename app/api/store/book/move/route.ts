@@ -1,9 +1,10 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { readOrder } from "@/lib/store-checkout";
 import { isCallProduct, moveBooking } from "@/lib/calls";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { readListing } from "@/lib/catalog";
 
 const MAX_BODY_BYTES = 1_000;
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
     });
 
   if (!Number.isFinite(start)) return back("invalid");
-  if (!(await withinLimit("book-move", `${clientAddress(request)}|${store.handle}`, 10, 600))) return back("slow");
+  if (!(await withinStore("book-move", `${clientAddress(request)}|${store.handle}`, 10, 600, store, "buyer"))) return back("slow");
   const order = await readOrder(store, session);
   if (order.state !== "paid" || !order.call || order.product.id !== product.id) {
     return back(order.state === "error" || order.state === "unavailable" ? "error" : "unknown");

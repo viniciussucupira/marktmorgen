@@ -1,7 +1,7 @@
 import { redisPipeline } from "@/lib/redis";
 import { QUIZ_MONTHLY_SUBMISSIONS, QUIZ_USAGE_RETENTION_SECONDS, quizUsageKey } from "@/lib/quiz-usage-rules";
-export async function reserveQuizSubmission(sid: string, now = Date.now()): Promise<"ok" | "usage_limit" | "unavailable"> {
-  const key = quizUsageKey(sid, now);
+export async function reserveQuizSubmission(sid: string, now = Date.now(), window?: string | null): Promise<"ok" | "usage_limit" | "unavailable"> {
+  const key = quizUsageKey(sid, now, window);
   if (!key) return "unavailable";
   try {
     // Atomic increment admits at most the allowance under concurrency.

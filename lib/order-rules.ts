@@ -60,11 +60,14 @@ import { type PlanFields, standingOf } from "@/lib/plan-standing";
  * creator least for what they cost: an order is counted only while no share
  * of its sale is taken, and each figure is far more than the plan's visits
  * sell at an ordinary conversion rate (250 of Store's 2,850 public visits is
- * almost 9%, 750 of Studio's 9,500 about 8%).
+ * almost 9%, 750 of Studio's 9,500 about 8%). The same day, when the uses
+ * that had no monthly figure (the studio, the API, emails, public requests,
+ * calls) were priced in, Store went to 200 and Studio to 450: still 7% and
+ * almost 5% of their public visits.
  */
 export const ORDERS_INCLUDED: Record<Tier, number> = {
-  creator: 250,
-  pro: 750,
+  creator: 200,
+  pro: 450,
   scale: 1_500,
 };
 
@@ -76,10 +79,11 @@ export const ORDERS_INCLUDED: Record<Tier, number> = {
 export const ORDER_CENTS_PER_THOUSAND_OVER = 500;
 
 /**
- * Orders a store has in a month of its free trial before free copies stop,
- * whichever plan the trial is of: what the smallest plan covers.
+ * Orders a store has in its free trial, paid and free copies together,
+ * whichever plan the trial is of (since 17 October 2026; Store's figure
+ * before, for free copies only).
  */
-export const TRIAL_ORDERS = ORDERS_INCLUDED.creator;
+export const TRIAL_ORDERS = 100;
 
 /** The orders a store's plan covers in a month. */
 export function ordersIncluded(tier: Tier): number {
@@ -99,14 +103,27 @@ export function freeCopiesLimitFor(store: PlanFields & { tier?: Tier }, nowSecon
 }
 
 /**
- * Where a store's new paid orders stop in a month, or null where they do not:
- * the plan's figure for a store that pays. A store in its free trial or with
- * no plan has no invoice past which an order could be sold; its paid orders
- * are a funded exposure (docs/funded-exposure-review.md), as before.
+ * Where a store's new orders stop in its window, or null where they do not:
+ * the plan's figure for a store that pays, and since 17 October 2026 the
+ * trial's for a store in its free trial, whose orders were a funded exposure
+ * with no count at all; paid orders and free copies share it there, as they
+ * do on a plan. A store with no plan takes no payment (its checkout is
+ * closed) and gives no free copies (lib/free.ts).
  */
 export function paidOrdersLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = Date.now() / 1000): number | null {
-  return standingOf(store, nowSeconds) === "paid" ? ordersIncluded(store.tier ?? "creator") : null;
+  const standing = standingOf(store, nowSeconds);
+  if (standing === "paid") return ordersIncluded(store.tier ?? "creator");
+  return standing === "trial" ? TRIAL_ORDERS : null;
 }
+
+/**
+ * Orders one booked call is counted as (since 17 October 2026, when calls
+ * stopped being outside every count): its confirmation to the buyer and to
+ * the host, and the two reminders before it, are four emails, two orders'
+ * worth (tests/plan-cost-registry.ts, ORDER_COST). Admitted before the
+ * checkout opens, as any order is (lib/order-admission.ts, lib/calls.ts).
+ */
+export const CALL_ORDER_UNITS = 2;
 
 /** "1,204 orders", "1 order". */
 export function ordersWords(orders: number): string {

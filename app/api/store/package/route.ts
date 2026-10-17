@@ -1,3 +1,4 @@
+import { OrdersPausedError } from "@/lib/order-admission";
 import { channelOfRequest } from "@/lib/visit-channel";
 import { adsCheckout } from "@/lib/ad-events";
 import { type NextRequest, after } from "next/server";
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
     after(() => countHit(request, store, { kind: "checkout", id: product.id }));
     return new Response(null, { status: 303, headers: { Location: made.url, "Cache-Control": "no-store" } });
   } catch (error) {
+    // Past the store's orders (lib/order-admission.ts): it cannot be booked right now, nothing charged.
+    if (error instanceof OrdersPausedError) return away(`/@${store.handle}/book/${product.id}?status=unavailable`);
     console.error("opening a package checkout failed", error);
     return away(`/@${store.handle}/book/${product.id}?status=error`);
   }

@@ -31,6 +31,7 @@ import {
   stateOf,
 } from "@/lib/billing";
 import { ENDED_INDEX } from "@/lib/plan-standing";
+import { allowanceWindow, samePeriod } from "@/lib/allowance-window";
 import { type Store, setSubscription, storeForHandle, storeRef, storesAfter } from "@/lib/store";
 
 const MAX_PAGES = 50;
@@ -64,14 +65,34 @@ export type SyncCounts = {
 export async function recordState(store: Store, state: SubscriptionState): Promise<boolean> {
   if (state.state === "unknown") return false;
   const active = state.state === "active";
-  const plan = active ? { tier: state.tier, cycle: state.cycle, trialEnds: state.trialing ? state.until : 0, shared: state.shared } : null;
+  const plan = active ? { tier: state.tier, cycle: state.cycle, trialEnds: state.trialing ? state.until : 0, shared: state.shared, period: state.period } : null;
   if (
     active === store.subscriptionActive &&
-    (!plan || (plan.tier === store.tier && plan.cycle === store.cycle && plan.trialEnds === store.trialEnds && plan.shared === store.shared))
+    (!plan || (plan.tier === store.tier && plan.cycle === store.cycle && plan.trialEnds === store.trialEnds && plan.shared === store.shared && samePeriod(plan.period, store.period ?? null)))
   ) {
     return false;
   }
   return (await setSubscription(storeRef(store), { active, ...(plan ?? {}) })) !== null;
+}
+
+/**
+ * Reads a paying store's billing month from Stripe when its record has none
+ * the window can be made from (lib/allowance-window.ts): a record from before
+ * the period was kept, or one whose renewal the daily job has not seen yet.
+ * Called by the studio before it counts a request, so the studio is never
+ * shut out by the very thing it would put right. Answers the store as it is
+ * now; unchanged when Stripe cannot be asked.
+ */
+export async function refreshPeriod(store: Store): Promise<Store> {
+  if (!store.subscriptionId || !isBillingConfigured() || allowanceWindow(store)) return store;
+  try {
+    const state = await readSubscription(store.subscriptionId);
+    if (!(await recordState(store, state))) return store;
+    return (await storeForHandle(store.handle)) ?? store;
+  } catch (error) {
+    console.error("reading a store's billing month failed", error);
+    return store;
+  }
 }
 
 /** Brings the store named by one listed subscription in line with it. */

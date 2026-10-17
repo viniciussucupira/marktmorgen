@@ -283,14 +283,24 @@ type LiveNow = { visitors: number; sources: { source: string; visitors: number }
 
 /**
  * Who is on the store right now: asked every half minute while the page is
- * open and in view, and not at all from a tab in the background.
+ * open and in view, and not at all from a tab in the background. Each ask is
+ * one of the store's studio requests (lib/store-allowance-rules.ts), so it
+ * stops after LIVE_ASKS of them, ten minutes, until the page is opened again.
  */
+const LIVE_ASKS = 20;
 function RightNow({ currency }: { currency: string }) {
   const [live, setLive] = useState<LiveNow | null>(null);
+  const [rested, setRested] = useState(false);
   useEffect(() => {
     let stopped = false;
+    let asked = 0;
     const ask = async () => {
       if (document.visibilityState !== "visible") return;
+      if (asked >= LIVE_ASKS) {
+        setRested(true);
+        return;
+      }
+      asked += 1;
       try {
         const response = await fetch("/api/store/live", { cache: "no-store" });
         const body = (await response.json().catch(() => ({}))) as { ok?: boolean } & Partial<LiveNow>;
@@ -312,6 +322,7 @@ function RightNow({ currency }: { currency: string }) {
   if (!live) return null;
   return (
     <div className="mt-6 rounded-[12px] bg-paper px-4 py-4 ring-1 ring-line" aria-live="polite">
+      {rested ? <p className="mb-2 text-xs text-ink-soft">Paused after ten minutes, to save your plan&apos;s studio requests. Reload the page to see it live again.</p> : null}
       <p className="flex items-center gap-2 text-sm font-bold text-ink">
         <span className={`inline-block h-2 w-2 rounded-full ${live.visitors ? "bg-emerald-500" : "bg-line"}`} aria-hidden="true" />
         {live.visitors === 0

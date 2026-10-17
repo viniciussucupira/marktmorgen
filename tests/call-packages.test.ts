@@ -19,6 +19,7 @@ import { boughtByToken, holdSession, packageCheckout, packageState, prepareSessi
 import type { CallSetup } from "@/lib/call-setup";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const emails: { to: string[]; text: string }[] = [];
 const posts: { path: string; body: URLSearchParams }[] = [];
@@ -71,7 +72,7 @@ async function main(): Promise<void> {
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
   await setStripeAccount("owner@example.com", "acct_1TestHarbor0001", true);
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const call = await addProduct("owner@example.com", "Coaching Call", "", "120", null);
   const other = await addProduct("owner@example.com", "Guide", "", "20", null);
   if (!call.ok || !other.ok) throw new Error("no products");

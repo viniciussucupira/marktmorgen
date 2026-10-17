@@ -1,3 +1,4 @@
+import { withinStore } from "@/lib/metered-limits";
 import { StorePagesNav } from "@/components/store-pages-nav";
 import { RecentSales } from "@/components/recent-sales";
 import { recentSales } from "@/lib/recent-sales";
@@ -19,7 +20,6 @@ import { kitShown } from "@/lib/store-kit";
 import { kitWords } from "@/lib/buyer-words/kit";
 import { Icon } from "@/components/icons";
 import { MAX_STORE_SEARCH, STORE_PAGE_SIZE, searchStore, searchWords } from "@/lib/catalog";
-import { withinLimit } from "@/lib/request-guard";
 import { StoreQuotes } from "@/components/store-quotes";
 import { showsRating, storeSummary } from "@/lib/review-summary";
 import { RatingLine } from "@/components/review-list";
@@ -212,7 +212,7 @@ export default async function StorePage({ params, searchParams }: Params) {
   const searchable = visibleCount(store) > STORE_PAGE_SIZE;
   const searchAllowed =
     wantedSearch !== "" && searchable && searchWords(wantedSearch).length > 0
-      ? await withinLimit("store-search", `${(await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"}|${store.handle}`, 30, 600)
+      ? await withinStore("store-search", `${(await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"}|${store.handle}`, 30, 600, store)
       : false;
   const searching = searchAllowed ? wantedSearch : "";
   const results = searching ? await searchStore(store, searching) : null;

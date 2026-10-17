@@ -18,6 +18,7 @@ import { askToJoin, confirmJoin, joinOpen, readJoinToken } from "@/lib/store-joi
 import { leadsKey, parseContact } from "@/lib/contacts";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 type Sent = { to: string[] | string; subject: string; text: string };
 const single: Sent[] = [];
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
   is("a new store has no box", [store.join, joinOpen(store)], [{ on: false, heading: "", line: "" }, false]);
   is("and takes no sign-ups", await askToJoin({ store, email: "dana@example.com", ip: "1.1.1.1", origin }), "closed");
   is("switched on without a subscription in good standing, it still takes none", await setJoin("owner@example.com", { on: true }).then((s) => joinOpen(s!)), false);
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0, period: paidPeriod() });
   await setJoin("owner@example.com", { on: true, heading: "  Weekly   recipes  ", line: "One email on Sundays." });
   store = await fresh();
   is("switched on, with the creator's words tidied", [joinOpen(store), store.join.heading, store.join.line], [true, "Weekly recipes", "One email on Sundays."]);

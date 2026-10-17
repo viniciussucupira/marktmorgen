@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
-import { startChat, visitorSend, visitorThread } from "@/lib/inbox";
+import { startChat, tokenHandle, visitorSend, visitorThread } from "@/lib/inbox";
+import { takePublicRequest } from "@/lib/traffic";
 
 const MAX_BODY_BYTES = 8_000;
 
@@ -26,6 +27,11 @@ export async function POST(request: NextRequest) {
   const answer = (value: unknown, status = 200) => Response.json(value, { status, headers: { "Cache-Control": "no-store" } });
   try {
     if (body.action === "read") {
+      // Each read the open chat makes is one of its store's public requests (lib/traffic.ts).
+      const handle = await tokenHandle(body.token);
+      const store = handle ? await storeForHandle(handle) : null;
+      if (!store) return answer({ ok: false, error: "gone" }, 404);
+      if (!(await takePublicRequest(store, "buyer"))) return answer({ ok: false, error: "limited" }, 429);
       const thread = await visitorThread(body.token);
       return thread ? answer({ ok: true, thread }) : answer({ ok: false, error: "gone" }, 404);
     }

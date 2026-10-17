@@ -23,6 +23,38 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { atSiteAddress, creatorDomain, domainOf } from "@/lib/mail-from";
 import { countSesSent, isSesConfigured, notYetTaken, sesBatch, sesBulkRoom, sesConfig, sesDown, sesReady, sesSend } from "@/lib/ses";
+import { type AllowanceStore, takeAllowance } from "@/lib/store-allowance";
+
+/**
+ * What an email is counted against (added 17 October 2026), said by every
+ * call that sends one, so no email leaves without a figure that bounds it
+ * (tests/plan-cost-registry.ts, EMAIL_SITES, holds each file to the meters
+ * it may name):
+ *
+ *   company  from us to a creator about their own account or plan: sign-in,
+ *            security, plan and usage notices, the scheduled reports. Bounded
+ *            by the account and by the jobs' schedules: a company cost.
+ *   order    one of an order's two emails (its confirmation, and that it
+ *            shipped or was delivered), inside each order's cost.
+ *   monthly  taken from the store's monthly emails before it is sent
+ *            (lib/mail.ts reserve or takeFromMonth, or imports' own).
+ *   store    taken here, before it goes, from the store's window: its emails
+ *            ("email") or its buyers' access emails ("transactional")
+ *            (lib/store-allowance-rules.ts). One that does not fit is not sent.
+ */
+export type EmailMeter =
+  | { by: "company" }
+  | { by: "order" }
+  | { by: "monthly" }
+  | { by: "store"; store: AllowanceStore; kind: "email" | "transactional" };
+
+/** Takes a store's figure for `n` emails before they go; true for the meters already counted elsewhere. */
+async function metered(meter: EmailMeter, n: number): Promise<boolean> {
+  if (meter.by !== "store") return true;
+  const taken = await takeAllowance(meter.store, meter.kind, n);
+  if (!taken.ok) console.error(`an email was not sent: the store's ${meter.kind} figure (${taken.reason})`);
+  return taken.ok;
+}
 
 // Local tests may point this at a mock server on 127.0.0.1; nothing else is
 // accepted, so a test can never reach the real sender.
@@ -119,6 +151,7 @@ async function tellAmazonIsDown(why: string): Promise<void> {
     const [first] = await redisPipeline([["SET", `nl:ses:told:${day}`, "1", "NX", "EX", 2 * 86_400]]);
     if (first === null || !hasResend()) return;
     await viaResend({
+      meter: { by: "company" },
       from: NIMBUS_FROM,
       to: SUPPORT_EMAIL,
       subject: "Amazon SES is not sending: email is going out through Resend",
@@ -174,6 +207,8 @@ function cleanHeaders(headers: Record<string, string> | undefined): Record<strin
 }
 
 type OneMessage = {
+  /** What it is counted against (EmailMeter, above). */
+  meter: EmailMeter;
   from: string;
   to: string;
   subject: string;
@@ -249,6 +284,7 @@ async function viaAmazon(message: OneMessage, to: string): Promise<boolean> {
 export async function sendEmail(message: OneMessage): Promise<boolean> {
   const to = oneAddress(message.to);
   if (!to) return false;
+  if (!isSenderConfigured() || !(await metered(message.meter, 1))) return false;
   if (isSesConfigured() && (await viaAmazon(message, to))) return true;
   return viaResend(message);
 }
@@ -362,6 +398,8 @@ export function cleanTags(tags: Record<string, string> | undefined): { name: str
 export async function sendBatch(
   messages: BatchMessage[],
   batchKey: string,
+  /** What the batch is counted against (EmailMeter). A store's figure that cannot take the whole batch sends none of it. */
+  meter: EmailMeter,
   /**
    * One sender and no other, for the daily check that each of them brings a
    * bounce back (lib/verify-mail.ts). Everything else leaves this out, and
@@ -374,6 +412,7 @@ export async function sendBatch(
   // What actually goes: a message with no address that can be written to is
   // left out below, and is not counted as sent either.
   let going = messages.slice(0, 100).filter((m) => oneAddress(m.to) !== null);
+  if (going.length && !(await metered(meter, going.length))) return "refused";
   let idempotencyKey = batchKey;
   const config = sesConfig();
   if (only === "amazon" && !(config && isSesConfigured())) return "retry";

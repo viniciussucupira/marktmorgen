@@ -1,7 +1,8 @@
+import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { clientAddress, withinLimit } from "@/lib/request-guard";
+import { clientAddress } from "@/lib/request-guard";
 import { affiliatesOn } from "@/lib/affiliates";
 import { connectPayPal, disconnectPayPal, payWithPayPal, readPayPal, setAutoPay, settlePayPal } from "@/lib/paypal-payouts";
 
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
   const op = text(body.op, 20);
   try {
     if (op === "connect") {
-      if (!(await withinLimit("paypal-connect", `${clientAddress(request)}|${store.handle}`, 10, 3600))) return fail("slow", 429);
+      if (!(await withinService("paypal-connect", `${clientAddress(request)}|${store.handle}`, 10, 3600, store))) return fail("slow", 429);
       const result = await connectPayPal(store, text(body.client, 200).trim(), text(body.secret, 200).trim());
       return result.ok ? Response.json({ ok: true, paypal: await readPayPal(store) }) : fail(result.reason);
     }
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
     if (op === "pay") {
       if (!affiliatesOn(store)) return fail("off");
-      if (!(await withinLimit("paypal-pay", store.handle, 6, 3600))) return fail("slow", 429);
+      if (!(await withinService("paypal-pay", store.handle, 6, 3600, store))) return fail("slow", 429);
       const result = await payWithPayPal(store);
       return result.ok ? Response.json(result) : fail(result.reason, result.reason === "error" ? 502 : 409);
     }

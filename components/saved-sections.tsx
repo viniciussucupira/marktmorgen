@@ -15,7 +15,7 @@ const MESSAGES: Record<string, string> = {
   too_big: "Those blocks hold more words than one section can.",
   shape: "One of those blocks would not be kept as it is. Check it is complete and try again.",
   sections_full: "Your library holds as many sections as your plan allows. Remove one to save another.",
-  applies_full: "Pages have been updated from sections as often as your plan allows this month. It opens again on the 1st (UTC), or on a larger plan.",
+  applies_full: "Pages have been updated from sections as often as your plan allows this month. It opens again with your next billing month, or on a larger plan.",
   pages: "Those pages no longer use this section. Reload and try again.",
   forbidden: "Your role cannot change one of those pages.",
   unknown: "That section is gone. Reload the page.",

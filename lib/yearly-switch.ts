@@ -252,7 +252,7 @@ async function tell(store: Store, account: string, found: Found, updated: Record
   const locale = LANGUAGES[parseLanguage(store.language)].locale;
   const paid = found.trialing ? m.yearlyPaidTrial : total > 0 ? m.yearlyPaidCharged(formatMoney(total, currency, locale)) : m.paidNothing;
   const from = `"${m.fromName(store.name.replace(/["\\<>\r\n]/g, "").slice(0, 60))}" <${(NIMBUS_FROM.match(/<([^>]+)>/)?.[1] ?? NIMBUS_FROM).trim()}>`;
-  await sendEmail({
+  await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from,
     to: email,
     subject: m.yearlySubject(found.product.title).slice(0, 200),
@@ -267,7 +267,7 @@ async function tell(store: Store, account: string, found: Found, updated: Record
     replyTo: store.email,
   }).catch((error) => console.error("a move to yearly receipt failed", error));
   if (store.email) {
-    await sendEmail({
+    await sendEmail({ meter: { by: "store", store: store, kind: "email" },
       from: NIMBUS_FROM,
       to: store.email,
       subject: `A member now pays yearly for ${found.product.title}`.slice(0, 200),

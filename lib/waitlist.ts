@@ -10,6 +10,7 @@
  *
  * <store> is the store's statsId, which stays through a change of handle.
  */
+import { withinStore } from "@/lib/metered-limits";
 import { createHash, randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -106,7 +107,7 @@ export async function joinWaitlist(input: {
   if (!(await isSoon(store, product.id))) return "closed";
   const email = normaliseEmail(raw);
   const sid = store.statsId;
-  if (!(await withinLimit("waitlist-ip", `${sid}:${ip}`, 10, 3_600))) return "limited";
+  if (!(await withinStore("waitlist-ip", `${sid}:${ip}`, 10, 3_600, store))) return "limited";
   if (!(await withinLimit("waitlist-address", sha(email), 5, 3_600))) return "limited";
 
   const [existing, size] = await redisPipeline([
@@ -129,7 +130,7 @@ export async function joinWaitlist(input: {
 
   const link = `${origin}/@${store.handle}/waitlist?token=${confirm}`;
   const g = givingWords(store.language);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
     from: sender(store),
     to: email,
     subject: g.waitSubject(product.title).slice(0, 200),
@@ -318,7 +319,7 @@ export async function runLaunches(load: (handle: string) => Promise<Store | null
         const r = render(sender, words.subject, words.body, null, door);
         return { from: fromLine(sender), to: email, subject: r.subject, text: r.text, html: r.html, replyTo: store.email, headers: r.headers };
       });
-      const outcome = await sendBatch(messages, `waitlist:${sid}:${pid}:${job.started}:${job.cursor}`);
+      const outcome = await sendBatch(messages, `waitlist:${sid}:${pid}:${job.started}:${job.cursor}`, { by: "store", store, kind: "email" });
       if (outcome === "retry") {
         await releaseDay(chunk.length);
         break;

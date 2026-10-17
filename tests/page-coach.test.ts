@@ -18,6 +18,7 @@ import { coachChecks, coachScore, scoreWord, steepestDrop } from "@/lib/page-coa
 import { CELL_YES, parsePage } from "@/lib/sales-page";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 let reply = "{}";
 const asked: { system: string; content: string }[] = [];
@@ -87,7 +88,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   const store = (await storeForEmail("owner@example.com"))!;
   reply = `Here:\n${JSON.stringify({
     verdict: "Clear offer. Put a button under the headline.",

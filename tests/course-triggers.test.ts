@@ -20,6 +20,7 @@ import { editCourse, emptyCourse, saveCourse } from "@/lib/course";
 import { addProduct, claimHandle, ensureListId, ensureStatsId, setMailSettings, setProductCourse, setStripeAccount, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const HOUR = 3_600_000;
 const realNow = Date.now;
@@ -70,7 +71,7 @@ async function main(): Promise<void> {
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Harbor0001", subscriptionId: "sub_Harbor0001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_Harbor0001", subscriptionId: "sub_Harbor0001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(OWNER, { fromName: "Harbor Kitchen", address: "1 Main St, Portland, OR 97201" });
   const made = await addProduct(OWNER, "Weeknight Course", "Thirty dinners.", "49", null);
   const guide = await addProduct(OWNER, "Pantry Guide", "A list.", "9", null);

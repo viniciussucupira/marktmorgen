@@ -37,7 +37,7 @@ export function minimumControlRequests(opens: number, authorizedBytes: number): 
   if (opens === 0) return 0;
   return opens + opens + Math.floor((authorizedBytes - opens) / (PIECE_BYTES * PIECES_PER_ASK));
 }
-/** Upload starts a paid store may make in a calendar month. */
+/** Upload starts a paid store may make in a window (lib/allowance-window.ts: a billing month when the store pays). */
 export const PAID_UPLOAD_OPENS = { creator: 50, pro: 300, scale: 600 } as const;
 /**
  * Each paid plan's monthly upload allowance, computed from what the plan
@@ -134,5 +134,5 @@ export function uploadAllowanceWords(scope: UploadBudgetScope, policy: UploadBud
   const unit=bytes>=1_000_000_000?1_000_000_000:bytes>=1_000_000?1_000_000:1;
   const label=unit===1_000_000_000?'GB':unit===1_000_000?'MB':'bytes';
   const shown=Math.floor(bytes/unit*1000)/1000;
-  return 'Product and lesson files: up to '+cap.opens.toLocaleString('en-US')+' upload starts and '+shown.toLocaleString('en-US',{maximumFractionDigits:3})+' '+label+' of newly authorized file data per calendar month. Starting over uses a new allowance. The monthly limit includes '+cap.controlRequests.toLocaleString('en-US')+' requests to start uploads or obtain upload links.';
+  return 'Product and lesson files: up to '+cap.opens.toLocaleString('en-US')+' upload starts and '+shown.toLocaleString('en-US',{maximumFractionDigits:3})+' '+label+' of newly authorized file data per billing month. Starting over uses a new allowance. The monthly limit includes '+cap.controlRequests.toLocaleString('en-US')+' requests to start uploads or obtain upload links.';
 }

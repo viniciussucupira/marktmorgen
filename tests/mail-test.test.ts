@@ -17,6 +17,7 @@ import { MIN_TEST_REACH, chooseSubject, newTest, parseTest, partAt, splitFor } f
 import { campaignViews } from "@/lib/stats";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "owner@example.com";
 type Message = { to: string[]; subject: string; html: string };
@@ -84,7 +85,7 @@ async function main(): Promise<void> {
   if (!made.ok) throw new Error("no store");
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(OWNER, { fromName: "Harbor Kitchen", address: "1 Main St, Portland, OR 97201" });
   let store = (await storeForEmail(OWNER))!;
   const listId = store.listId as string;

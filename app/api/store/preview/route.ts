@@ -1,3 +1,4 @@
+import { takePublicRequest } from "@/lib/traffic";
 import type { NextRequest } from "next/server";
 import { readListing } from "@/lib/catalog";
 import { normaliseHandle, setProductPreview, storeForHandle } from "@/lib/store";
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const store = await storeForHandle(normaliseHandle(params.get("handle") ?? ""));
   if (!store) return plain(404, "There is no such store.");
+  // One of the store's public requests for its window (lib/traffic.ts).
+  if (!(await takePublicRequest(store))) return plain(429, "This store can't show previews right now. Try again later.");
   const product = await readListing(store, (params.get("product") ?? "").slice(0, 40));
   if (!product || product.hidden || product.preview < 1 || !product.file) return plain(404, "This product has no preview.");
   const copy = await previewCopy(product.file, product.preview);

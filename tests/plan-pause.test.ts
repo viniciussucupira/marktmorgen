@@ -20,6 +20,7 @@ import { claimHandle, setSubscription, storeForEmail, storeRef } from "@/lib/sto
 import { onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_plan_pause_only";
 process.env.RESEND_API_KEY = "re_test_plan_pause_only";
@@ -199,7 +200,7 @@ async function main() {
     const store = await storeWith("byhand@example.com", "byhandstore", "sub_ByHand000001");
     const set = await pausePlan(store, 1, NOW);
     const until = set.kind === "paused" ? set.record.until : 0;
-    await setSubscription("byhand@example.com", { subscriptionId: "sub_OtherOne00001", active: true });
+    await setSubscription("byhand@example.com", { subscriptionId: "sub_OtherOne00001", active: true, period: paidPeriod() });
     const before = created.length;
     const counts = await runBreaks(until + 60);
     is("is left alone", [counts.dropped, created.length - before], [1, 0]);

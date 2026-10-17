@@ -14,6 +14,7 @@ import { canSell } from "@/lib/store-checkout";
 import { KIND } from "@/lib/catalog";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 type Sent = { to: string[] | string; subject: string; text: string; reply_to?: string };
 const sent: Sent[] = [];
@@ -62,7 +63,7 @@ async function main(): Promise<void> {
   await claimHandle(owner, "noticeshop", "Notice Shop", "");
   await ensureStatsId(owner);
   await setStripeAccount(owner, "acct_1TestNotice0001", true);
-  await setSubscription(owner, { customerId: "cus_Notice001", subscriptionId: "sub_Notice001", active: true });
+  await setSubscription(owner, { customerId: "cus_Notice001", subscriptionId: "sub_Notice001", active: true, period: paidPeriod() });
   const link = await addStoreLink(owner, "My mixtape", "https://soundcloud.com/someone/a-track");
   const made = await addProduct(owner, "Song Pack", "", "9", null);
   if (!link.ok || !made.ok) throw new Error("setup");

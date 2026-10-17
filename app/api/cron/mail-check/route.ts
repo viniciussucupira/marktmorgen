@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const failedBefore = typeof previous === "string" && previous.includes('"ok":false');
     await redisPipeline([["SET", LAST, JSON.stringify({ at: Date.now(), ok, checks }), "EX", 30 * 86_400]]);
     if (!ok || failedBefore) {
-      await sendEmail({
+      await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: SUPPORT_EMAIL,
         subject: ok ? "Mail check: all passing again" : "Mail check failed: a bounce or a spam report is not finding its way back",

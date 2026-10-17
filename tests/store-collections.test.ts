@@ -49,6 +49,7 @@ import { storeSitemap } from "@/lib/store-sitemap";
 import { GET as readCart } from "@/app/api/store/cart/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "owner@example.com";
 globalThis.fetch = (async (_input: string | URL | Request, init?: RequestInit) => {
@@ -108,7 +109,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0002", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00002", subscriptionId: "sub_Owner00002", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00002", subscriptionId: "sub_Owner00002", active: true, period: paidPeriod() });
   const p: Record<string, string> = {};
   for (const [title, price] of [["Bread", "19"], ["Starter", "9"], ["Pizza", "29"], ["Cakes", "15"], ["Pies", "12"]]) {
     const added = await addProduct(OWNER, title, "", price, null);

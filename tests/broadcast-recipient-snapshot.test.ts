@@ -3,12 +3,13 @@ import { claimHandle, ensureListId, setMailSettings, setSubscription, storeForEm
 import { upsertContact, leadsKey } from "@/lib/contacts";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 async function main() {
   redis.clear();
   const owner = "batch-owner@example.com";
   await claimHandle(owner, "batch-check", "Batch Check", "");
   await ensureListId(owner);
-  await setSubscription(owner, { customerId: "cus_Batch00001", subscriptionId: "sub_Batch00001", active: true, tier: "pro" });
+  await setSubscription(owner, { customerId: "cus_Batch00001", subscriptionId: "sub_Batch00001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(owner, { fromName: "Batch Check", address: "1 Test Street, Test City" });
   const store = (await storeForEmail(owner))!;
   const emails = Array.from({ length: 501 }, (_, i) => "reader" + i + "@example.com");

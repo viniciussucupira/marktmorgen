@@ -166,7 +166,7 @@ async function payday(store: Store, month: string, dayOfMonth: number): Promise<
   if (book.refundsChecked && (await paysAutomatically(store))) {
     const paid = await payWithPayPal(store);
     const { subject, text } = autoPayEmail(paid, book.currency);
-    return sendEmail({ from: NIMBUS_FROM, to: store.email, subject, text, idempotencyKey: `aff-payday-${store.statsId}-${month}` });
+    return sendEmail({ meter: { by: "store", store: store, kind: "email" }, from: NIMBUS_FROM, to: store.email, subject, text, idempotencyKey: `aff-payday-${store.statsId}-${month}` });
   }
   const { subject, text } = paydayEmail({
     storeName: store.name,
@@ -178,7 +178,7 @@ async function payday(store: Store, month: string, dayOfMonth: number): Promise<
     hold: store.affiliates.hold,
     refundsChecked: book.refundsChecked,
   });
-  return sendEmail({
+  return sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: NIMBUS_FROM,
     to: store.email,
     subject,

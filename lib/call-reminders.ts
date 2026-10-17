@@ -71,7 +71,7 @@ async function remindBuyer(store: Store, product: Listing, call: PaidCall, mark:
   const b = bookingWords(store.language);
   const locale = LANGUAGES[parseLanguage(store.language)].locale;
   const isDay = mark === "24";
-  return sendEmail({
+  return sendEmail({ meter: { by: "order" },
     from: storeSender(store),
     to: call.email,
     subject: b.reminderSubject(isDay, product.title, store.name),
@@ -99,7 +99,7 @@ async function remindCreator(store: Store, product: Listing, paid: PaidCall[], c
   const emails = people.map((c) => c.email ?? "a buyer who gave no address");
   const seats = seatsAt(setup, call.start);
   const group = setup.kind === "live" || seats > 1;
-  return sendEmail({
+  return sendEmail({ meter: { by: "order" },
     from: `"Marktmorgen" <${senderAddress()}>`,
     to: store.email,
     subject: `${when(mark)}: ${product.title}, ${readableTime(call.start, setup.tz)}`,

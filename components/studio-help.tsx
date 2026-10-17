@@ -35,7 +35,7 @@ export function StudioHelp({ left: startLeft }: { left: number }) {
       }
       setNote(
         data.error === "used"
-          ? "This month's AI help is used up; it starts again on the 1st. The help center is always open."
+          ? "This month's AI help is used up; it starts again with your next billing month. The help center is always open."
           : data.error === "slow"
             ? "A few questions a minute at most. Ask again in a moment."
             : "No answer just now. Started attempts count toward the monthly allowance. Try again, or open the help center.",

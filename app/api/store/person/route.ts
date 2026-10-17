@@ -1,6 +1,6 @@
+import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { guardStoreWrite } from "@/lib/store-request";
-import { withinLimit } from "@/lib/request-guard";
 import { ensureStatsId } from "@/lib/store";
 import { studioPath } from "@/lib/studio-route";
 import { addPersonNote, findToken, readAddress, removePersonNote } from "@/lib/buyer-profile";
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (body.action === "find") {
       const email = readAddress(body.email);
       if (!email) return Response.json({ ok: false, error: "email" }, { status: 400 });
-      if (!(await withinLimit("person-find", guarded.store.sid || guarded.store.handle, FINDS_PER_HOUR, 60 * 60))) {
+      if (!(await withinService("person-find", guarded.store.sid || guarded.store.handle, FINDS_PER_HOUR, 60 * 60, guarded.store))) {
         return Response.json({ ok: false, error: "limited" }, { status: 429 });
       }
       const token = await findToken(guarded.store, email);

@@ -27,6 +27,7 @@ import { createCheckout } from "@/lib/store-checkout";
 import { purchasesFor } from "@/lib/buyer-orders";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "owner@example.com";
 const checkouts: URLSearchParams[] = [];
@@ -63,7 +64,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const ids: Record<string, string> = {};
   for (const [title, price] of [["Course", "49"], ["Templates", "19"], ["Checklist", "9"], ["Workbook", "29"], ["Planner", "15"]]) {
     const made = await addProduct(OWNER, title, "", price, null);

@@ -7,6 +7,8 @@ import { reserve, reserveDay, usedThisMonth, monthlyAllowance, sendTo } from '@/
 import { PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS } from '@/lib/plan';
 import type { Store } from '@/lib/store';
 import { store as memory } from './redis-stub';
+import { paidPeriod } from './billing-period-fixture';
+import { windowId } from '@/lib/allowance-window';
 const actual=memory.pipeline.bind(memory);
 let reply: unknown[]|undefined;
 let pipelines:(string|number)[][][]=[];
@@ -31,7 +33,7 @@ async function fullStore(){
  const owner='mailbudget@example.com';
  await claimHandle(owner,'mailbudget','Synthetic Mail Budget','');
  await ensureStatsId(owner);await ensureListId(owner);
- await setSubscription(owner,{customerId:'cus_MailBudget0001',subscriptionId:'sub_MailBudget0001',active:true,tier:'pro'});
+ await setSubscription(owner,{customerId:'cus_MailBudget0001',subscriptionId:'sub_MailBudget0001',active:true,tier:'pro',period:paidPeriod()});
  await setMailSettings(owner,{fromName:'Synthetic Mail Budget',address:'1 Test St, Portland, OR 97201'});
  const made=(await storeForEmail(owner))!;
  await upsertContact(made.listId!,'reader@example.com',{agreed:true,explicit:true,source:'free'});
@@ -39,14 +41,14 @@ async function fullStore(){
 }
 test('actual send loop never dispatches after a lost reservation acknowledgement',async()=>{
  const made=await fullStore();reply=[];const result=await sendTo(made,['reader@example.com'],'Synthetic','Test only','lost-reservation');
- assert.equal(result.stopped,'retry');assert.equal(dispatch.calls,0);reply=undefined;assert.equal(await usedThisMonth(made.listId),1);
+ assert.equal(result.stopped,'retry');assert.equal(dispatch.calls,0);reply=undefined;assert.equal(await usedThisMonth(made.listId, windowId(made)),1);
 });
 test('actual provider retry outcomes retain attempted monthly capacity',async()=>{
  const made=await fullStore();
  for(const key of ['first-attempt','second-attempt']){const result=await sendTo(made,['reader@example.com'],'Synthetic','Test only',key);assert.equal(result.stopped,'retry');}
- assert.equal(dispatch.calls,2);assert.equal(await usedThisMonth(made.listId),2);
+ assert.equal(dispatch.calls,2);assert.equal(await usedThisMonth(made.listId, windowId(made)),2);
 });
 test('a provider refusal also cannot replenish dispatched attempt capacity',async()=>{
  const made=await fullStore();dispatch.outcome='refused';const result=await sendTo(made,['reader@example.com'],'Synthetic','Test only','refused-attempt');
- assert.equal(result.stopped,'refused');assert.equal(dispatch.calls,1);assert.equal(await usedThisMonth(made.listId),1);
+ assert.equal(result.stopped,'refused');assert.equal(dispatch.calls,1);assert.equal(await usedThisMonth(made.listId, windowId(made)),1);
 });

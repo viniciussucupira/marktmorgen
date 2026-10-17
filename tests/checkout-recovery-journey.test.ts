@@ -20,6 +20,7 @@ import { readStopToken, remindAbandoned, stopReminders } from "@/lib/checkout-re
 import { stopWriting, tokensFor, unsubscribe, upsertContact } from "@/lib/contacts";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_recovery_journey_only";
 process.env.RESEND_API_KEY = "re_test_recovery_journey_only";
@@ -52,7 +53,7 @@ async function main(): Promise<void> {
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestClay00001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00002", subscriptionId: "sub_Owner00002", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00002", subscriptionId: "sub_Owner00002", active: true, period: paidPeriod() });
   const add = async (title: string, price: string) => {
     const made = await addProduct(OWNER, title, "", price, null);
     if (!made.ok) throw new Error("no product");

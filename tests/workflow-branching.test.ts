@@ -27,6 +27,7 @@ import { addProduct, claimHandle, ensureListId, ensureStatsId, setMailSettings, 
 import { redisPipeline } from "@/lib/redis";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const HOUR = 3_600_000;
 const realNow = Date.now;
@@ -110,7 +111,7 @@ async function main(): Promise<void> {
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestWillow0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Willow0001", subscriptionId: "sub_Willow0001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_Willow0001", subscriptionId: "sub_Willow0001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(OWNER, { fromName: "Willow Studio", address: "1 Main St, Portland, OR 97201" });
   const guide = await addProduct(OWNER, "Planting Guide", "A guide.", "29", null);
   if (!guide.ok) throw new Error("no product");
@@ -209,7 +210,7 @@ async function main(): Promise<void> {
   is("then it goes out", to("Maybe sent").includes("dan@example.com"), true);
 
   part("Runs a day");
-  await setSubscription(OWNER, { customerId: "cus_Willow0001", subscriptionId: "sub_Willow0001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_Willow0001", subscriptionId: "sub_Willow0001", active: true, tier: "pro", period: paidPeriod() });
   store = (await storeForEmail(OWNER))!;
   const today = await runsToday(list);
   // Fill today past Studio's daily runs, then one more is refused.

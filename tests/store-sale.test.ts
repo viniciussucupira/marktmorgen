@@ -12,6 +12,7 @@ import { createCheckout } from "@/lib/store-checkout";
 import { endsWords, parseSale, saleOff, salePrice, saleRunning } from "@/lib/store-sale";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const checkouts: URLSearchParams[] = [];
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -61,7 +62,7 @@ async function main(): Promise<void> {
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
   await setStripeAccount("owner@example.com", "acct_1TestHarbor0001", true);
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const made = await addProduct("owner@example.com", "Bread Book", "", "49", null);
   if (!made.ok) throw new Error("no product");
   await setProductLink("owner@example.com", made.product.id, "https://example.com/bread");

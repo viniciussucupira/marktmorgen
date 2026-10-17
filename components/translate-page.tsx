@@ -10,7 +10,7 @@ import { LANGUAGES, LANGUAGE_CODES, type LanguageCode } from "@/lib/store-langua
 const MESSAGES: Record<string, string> = {
   notes: "There are no words on this page to translate yet.",
   long: `This page is too long to translate at once. Translate a shorter page, or remove a few blocks first.`,
-  used: "Not enough of this month's writing help is left for this page. It starts again on the 1st.",
+  used: "Not enough of this month's writing help is left for this page. It starts again with your next billing month.",
   slow: "A few at a time: wait a minute, then try again.",
   failed: "The translation did not come back just now. Your content was not changed. Started attempts count toward the monthly allowance. Try again in a moment.",
   off: "The writing help is not available right now.",

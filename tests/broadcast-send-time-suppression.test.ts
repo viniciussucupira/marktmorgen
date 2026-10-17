@@ -25,6 +25,7 @@ import { claimHandle, ensureListId, setMailSettings, setSubscription, storeForEm
 import { leadsKey, stopWriting, tokensFor, unsubscribe, upsertContact } from "@/lib/contacts";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 type Sent = { to: string[]; headers?: Record<string, string>; text: string };
 
@@ -33,7 +34,7 @@ async function main(): Promise<void> {
   const owner = "letters@example.com";
   await claimHandle(owner, "letters", "Letters Shop", "");
   await ensureListId(owner);
-  await setSubscription(owner, { customerId: "cus_Letters0001", subscriptionId: "sub_Letters0001", active: true, tier: "pro" });
+  await setSubscription(owner, { customerId: "cus_Letters0001", subscriptionId: "sub_Letters0001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(owner, { fromName: "Letters Shop", address: "4 Paper Lane, Boston, MA 02108" });
   const store = (await storeForEmail(owner))!;
   const listId = store.listId!;

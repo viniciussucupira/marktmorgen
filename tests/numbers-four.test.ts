@@ -39,6 +39,7 @@ import { claimHandle, ensureStatsId, setStripeAccount, setSubscription, storeFor
 import { POST as readRoute } from "@/app/api/store/read/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.NIMBUS_DATA_KEY = "a-local-key-for-tests-only-0123456789abcdef";
 process.env.STRIPE_SECRET_KEY = "sk_test_numbers_four_stand_in";
@@ -275,7 +276,7 @@ async function main(): Promise<void> {
   sessions = pace(50, 1, 9).map((created, i) => ({ ...paid(`cs_test_quiet00000${String(i).padStart(2, "0")}`, 0, 2900), created: Math.floor(created / 1000) }));
   emails.length = 0;
   is("a store with no plan is not written to", await checkQuiet(store, NOW), "skipped");
-  await setSubscription(OWNER, { customerId: "cus_Quiet00001", subscriptionId: "sub_Quiet00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Quiet00001", subscriptionId: "sub_Quiet00001", active: true, period: paidPeriod() });
   store = (await storeForEmail(OWNER))!;
   await setWeeklyOff("harbor", true);
   is("nor one whose creator stopped the emails", await checkQuiet(store, NOW), "skipped");

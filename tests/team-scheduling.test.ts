@@ -51,6 +51,7 @@ import { callRefunded } from "@/lib/meet-links";
 import { readRecord, callScope } from "@/lib/meet-records";
 import { redisPipeline, store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -161,7 +162,7 @@ async function storeWithCalls(email: string, handle: string, account: string, ti
   await claimHandle(email, handle, `${handle} studio`, "");
   await ensureStatsId(email);
   await setStripeAccount(email, account, true);
-  await setSubscription(email, { customerId: `cus_${handle}00001`, subscriptionId: `sub_${handle}00001`, active: true, tier });
+  await setSubscription(email, { customerId: `cus_${handle}00001`, subscriptionId: `sub_${handle}00001`, active: true, tier, period: paidPeriod() });
   const products: CallListing[] = [];
   for (let i = 0; i < count; i += 1) {
     const made = await addProduct(email, `Strategy call ${i + 1}`, "", "120", null);

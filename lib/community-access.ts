@@ -427,7 +427,7 @@ export async function requestCommunityLink(input: {
   const grant: LinkGrant = { e: normaliseEmail(raw), k: storeKey(store), h: store.handle };
   await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", LINK_SECONDS]]);
   const link = `${origin}/api/store/community/open?token=${token}`;
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
     from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
     to: normaliseEmail(raw),
     subject: communityWords(store.language).linkSubject(config.name).slice(0, 200),

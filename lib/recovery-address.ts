@@ -70,7 +70,7 @@ const when = () => new Date().toISOString().replace("T", " ").slice(0, 16);
 
 async function mail(to: string, subject: string, lines: string[]): Promise<boolean> {
   if (!isSenderConfigured()) return false;
-  return sendEmail({ from: NIMBUS_FROM, to, replyTo: "support@marktmorgen.com", subject, text: lines.join("\n") }).catch(() => false);
+  return sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to, replyTo: "support@marktmorgen.com", subject, text: lines.join("\n") }).catch(() => false);
 }
 
 export type StartAnswer = "sent" | "invalid" | "same" | "limited" | "unsent";

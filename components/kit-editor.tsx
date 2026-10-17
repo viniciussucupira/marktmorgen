@@ -91,7 +91,7 @@ export function KitEditor({
       }
       setNote(
         data.error === "used"
-          ? "This month's writing help is used up. It starts again on the 1st."
+          ? "This month's writing help is used up. It starts again with your next billing month."
           : data.error === "notes"
             ? "Add a product, the line under your name or a number first, so there is something to write from."
             : "The writing help did not answer just now. Your content was not changed. Started attempts count toward the monthly allowance.",

@@ -8,10 +8,14 @@
  * Costs are the per-plan worst case of tests/plan-cost-model.ts, the sum of
  * every line of tests/plan-cost-registry.ts (storage, video, visits, orders,
  * email, receipts, the automatic AI ceiling, upload operations, workflows,
- * imports, the ClickFunnels move, shared funnels, quizzes...), and Stripe's
- * card and Billing fees on the charge. An annual plan is twelve full months
- * for ten monthly prices. What the registry lists as OPEN is not in the sum
- * and not certified here.
+ * imports, the ClickFunnels move, shared funnels, quizzes, and since 17
+ * October 2026 the studio, the API, the inbox, store and access emails,
+ * calls to other services, public requests and the share of stores that pay
+ * nothing), and Stripe's card and Billing fees on the charge. One window is
+ * one payment: since that day every allowance follows the store's billing
+ * month (lib/allowance-window.ts), so a monthly plan is one window and an
+ * annual plan twelve, for ten monthly prices. What the registry lists as
+ * OPEN is not in the sum and not certified here.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";

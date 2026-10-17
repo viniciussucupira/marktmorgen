@@ -28,7 +28,10 @@ import { type PlanFields, standingOf } from "@/lib/plan-standing";
 export const VISITS_INCLUDED: Record<Tier, number> = {
   creator: 3_000,
   pro: 10_000,
-  scale: 50_000,
+  // 50,000 until 17 October 2026, when the uses that had no monthly figure
+  // were priced into each plan's worst month (tests/plan-cost-registry.ts):
+  // visits are Scale's largest cost, and 40,000 keeps it at the owner's 60%.
+  scale: 40_000,
 };
 
 /**
@@ -77,11 +80,13 @@ export function roomHourWords(parts: number): string {
 export const SETUP_VISITS = 500;
 
 /**
- * Visits a store has in a month of its free trial, whichever plan the trial
- * is of: what the smallest plan covers. A trial has paid nothing yet, and a
- * larger figure would be handed out for a card number alone.
+ * Visits a store has in its free trial, whichever plan the trial is of. A
+ * trial has paid nothing yet, and a larger figure would be handed out for a
+ * card number alone. Store's figure until 17 October 2026, when what stores
+ * that pay nothing cost came under one shared ceiling (lib/free-pool-rules.ts)
+ * that each paying store carries a share of.
  */
-export const TRIAL_VISITS = VISITS_INCLUDED.creator;
+export const TRIAL_VISITS = 1_000;
 
 /** The visits a store's plan covers in a month. */
 export function visitsIncluded(tier: Tier): number {
@@ -96,6 +101,39 @@ export function visitLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = 
   const standing = standingOf(store, nowSeconds);
   if (standing === "paid") return visitsIncluded(store.tier ?? "creator");
   return standing === "trial" ? TRIAL_VISITS : SETUP_VISITS;
+}
+
+/**
+ * Requests a store's public side may answer in a window (added 17 October
+ * 2026). A visit is counted once a day per person, but a person can open a
+ * page twenty times, search the store, open the cart, a download or the page
+ * after paying: each is a function answering, and none of them was bounded
+ * per store. Now every page drawn and every public request a store answers
+ * (the routes counted with withinStore, lib/public-requests.ts) is counted
+ * in the store's window, and the store rests where its visits rest when the
+ * count reaches REQUESTS_PER_VISIT for each visit of its figure, and
+ * EXTRA_REQUESTS more: public pages at the same 95% as visits, what buyers
+ * already have at the whole figure.
+ *
+ * The visit is costed as three pages (tests/traffic-cost.ts, PAGES_PER_VISIT):
+ * the three requests per visit here are those pages, and EXTRA_REQUESTS are
+ * priced on their own (tests/plan-cost-registry.ts, line public-requests).
+ */
+export const REQUESTS_PER_VISIT = 3;
+export const EXTRA_REQUESTS: Record<Tier, number> = {
+  creator: 500,
+  pro: 2_000,
+  scale: 5_000,
+};
+/** A free trial's extra requests, and a store with no plan's. */
+export const TRIAL_EXTRA_REQUESTS = 300;
+export const SETUP_EXTRA_REQUESTS = 100;
+
+/** The requests a store's window holds, where what buyers have rests; public pages rest at publicVisitLimit of it. */
+export function requestLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = Date.now() / 1000): number {
+  const standing = standingOf(store, nowSeconds);
+  const extra = standing === "paid" ? EXTRA_REQUESTS[store.tier ?? "creator"] ?? EXTRA_REQUESTS.creator : standing === "trial" ? TRIAL_EXTRA_REQUESTS : SETUP_EXTRA_REQUESTS;
+  return REQUESTS_PER_VISIT * visitLimitFor(store, nowSeconds) + extra;
 }
 
 /** "4,812 visits", "1 visit": a count, for a page or an email. */

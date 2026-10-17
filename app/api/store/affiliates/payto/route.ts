@@ -1,8 +1,9 @@
+import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { affiliateCookieName, affiliateForSession, setPayAddress } from "@/lib/affiliates";
-import { fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { fromAnotherSite, limited } from "@/lib/request-guard";
 
 /**
  * A signed-in affiliate choosing the PayPal address they are paid at, from
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     new Response(null, { status: 303, headers: { Location: `${origin}/@${store.handle}/affiliates?status=${status}#payto`, "Cache-Control": "no-store" } });
   const affiliate = await affiliateForSession(store, request.cookies.get(affiliateCookieName(store.handle))?.value);
   if (!affiliate) return back("signedout");
-  if (!(await withinLimit("aff-payto", `${store.handle}|${affiliate.id}`, 5, 3600))) return back("payto-slow");
+  if (!(await withinService("aff-payto", `${store.handle}|${affiliate.id}`, 5, 3600, store))) return back("payto-slow");
   const result = await setPayAddress(store, affiliate, paypal);
   return back(result.ok ? "payto" : "payto-email");
 }

@@ -17,6 +17,7 @@
  * over. A package refunded in full books nothing more. A package with a last
  * day to book is kept a year past it, then dropped.
  */
+import { ADMITTED_FIELD, OrdersPausedError, admitOrders } from "@/lib/order-admission";
 import { createHash, randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { normaliseEmail } from "@/lib/auth";
@@ -152,6 +153,10 @@ export async function packageCheckout(
   const account = store.stripeAccountId;
   const body = packageCheckoutBody(store, product, pkg, origin);
   for (const [key, value] of Object.entries(channel)) body.set(`metadata[${key}]`, value);
+  // A package is an order (lib/order-admission.ts): admitted before Stripe's page opens.
+  const admitted = await admitOrders(store, 1);
+  if (!admitted.ok) throw new OrdersPausedError(admitted.reason);
+  if (admitted.hour !== null) body.set(`metadata[${ADMITTED_FIELD}]`, String(admitted.hour));
   // The share of the sale, when the store's plan has one (lib/platform-share.ts).
   const mayComeOff = store.hasDiscounts && shareBps(store) > 0 ? await codesMayTakeOff(store.stripeAccountId, store.currency) : [];
   applyShare(body, store, { recurring: false, least: leastPaid(linesTotal(body).cents, mayComeOff) });
@@ -198,7 +203,7 @@ export async function recordPackage(input: { store: Store; session: Session; pro
   // the date written its way, in the currency actually paid.
   const b = bookingWords(store.language);
   const said = speechFor(store.language, currency);
-  await sendEmail({
+  await sendEmail({ meter: { by: "order" },
     from: input.from,
     to: email,
     subject: b.packageSubject(total, product.title).slice(0, 200),

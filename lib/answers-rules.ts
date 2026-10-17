@@ -35,7 +35,7 @@ import {PLAN_TITLES} from "@/lib/plan";
  */
 
 /**
- * Answers a store's visitors may be given in a calendar month, by where the
+ * Answers a store's visitors may be given in a window (lib/allowance-window.ts: a billing month when the store pays), by where the
  * store stands with its plan. Lowered on October 17, 2026 with the writing
  * jobs (lib/ai-rules.ts, AI_MONTHLY) to what each plan's 60% after-tax floor
  * leaves room for; Store and the free trial have none.

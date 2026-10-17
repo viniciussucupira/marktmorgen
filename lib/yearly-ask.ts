@@ -117,7 +117,7 @@ export async function askStore(store: Store, deadline: number, now = Date.now())
       });
       const withAddress = { ...store, mail: { fromName: store.mail?.fromName || store.name, address: store.yearlyAsk.address } };
       const rendered = render(withAddress, mail.subject, mail.body, unsub);
-      const ok = await sendEmail({
+      const ok = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
         from: fromLine(withAddress),
         to: row.email,
         subject: rendered.subject,

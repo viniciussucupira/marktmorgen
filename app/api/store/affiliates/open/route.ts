@@ -1,8 +1,9 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { AFFILIATE_SESSION_SECONDS, affiliateCookieName, openAffiliateLink } from "@/lib/affiliates";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
 
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
   if (!store) return new Response("No such store.", { status: 404 });
 
   const page = `${origin}/@${store.handle}/affiliates`;
-  if (!(await withinLimit("aff-open", `${clientAddress(request)}|${store.handle}`, 20, 600))) {
+  if (!(await withinStore("aff-open", `${clientAddress(request)}|${store.handle}`, 20, 600, store))) {
     return new Response(null, { status: 303, headers: { Location: `${page}?status=limited`, "Cache-Control": "no-store" } });
   }
   const result = await openAffiliateLink(store, token).catch((error) => {

@@ -612,7 +612,7 @@ export async function maybeBusyAlert(store: Store, today: number, now = Date.now
     "",
     `This comes at most once a day, on a day that is clearly busier than usual. To stop these emails and the weekly one: ${stopUrl}`,
   ].filter((line, i, all) => line !== "" || all[i - 1] !== "");
-  return sendEmail({
+  return sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: store.email,
     subject: `${store.name} is busy today: ${today.toLocaleString("en-US")} visits so far`.slice(0, 180),

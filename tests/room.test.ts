@@ -25,12 +25,14 @@ import { AWAY_AFTER_MS, GRANT_MS, IDLE_LOOKS, IDLE_MS, LIVE_LOOKS, LIVE_MS, ROOM
 import { passFits, roomPass, slotOf } from "@/lib/chat-pass";
 import { lastSaid, parseChatSetting, quietFor, room, say } from "@/lib/community-chat";
 import { monthKey } from "@/lib/delivery";
+import { allowanceWindow } from "@/lib/allowance-window";
 import { claimHandle, setSubscription, storeFolder, storeForEmail } from "@/lib/store";
 import { isResting, recordParts, recordVisit, trafficIn, visitedFolders, visitsIn } from "@/lib/traffic";
 import { PARTS_PER_VISIT, ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, VISITS_INCLUDED, partsWords, roomHourWords } from "@/lib/traffic-rules";
 import { store as redis } from "./redis-stub";
 import { roomLeaveCost, roomLookCost, roomMinutesCost, visitCost } from "./traffic-cost";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const ROOM = "c".repeat(32);
 const OTHER = "d".repeat(32);
@@ -111,11 +113,13 @@ async function main(): Promise<void> {
 
   part("Leave to ask, and its count");
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  const t1 = Date.UTC(2026, 9, 20, 15, 0, 0);
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod(t1) });
   const paid = (await storeForEmail("owner@example.com"))!;
   const folder = await storeFolder("owner@example.com");
-  const t1 = Date.UTC(2026, 9, 20, 15, 0, 0);
-  const month = monthKey(new Date(t1));
+  // A paying store's visits are its billing month's (lib/allowance-window.ts); a store with no plan's, the calendar month's.
+  const month = allowanceWindow(paid, t1)!.id;
+  const calendar = monthKey(new Date(t1));
   const parts = async () => (await trafficIn(folder, month)).parts;
   const first = leave(await grantRoom(paid, ROOM, { key: ANA, owner: false }, false, false, t1));
   is("a member's page is handed ten minutes at a quiet room's pace", [first.pass, first.ms, first.live], [roomPass(ROOM, t1), GRANT_MS, false]);
@@ -141,25 +145,25 @@ async function main(): Promise<void> {
   is("hundredths of a visit become whole visits, rounded down", [(await trafficIn(folder, month)).visits, await visitsIn(folder, month)], [Math.floor(counted / PARTS_PER_VISIT), Math.floor(counted / PARTS_PER_VISIT)]);
   await recordVisit(paid, "203.0.113.9", t1);
   is("beside the people who came", await trafficIn(folder, month), { people: 1, parts: counted, visits: 1 + Math.floor(counted / PARTS_PER_VISIT) });
-  is("a store whose only visits are its room is known to the daily job", (await visitedFolders(month)).includes(folder), true);
+  is("a store whose only visits are its room is known to the daily job", (await visitedFolders(calendar)).includes(folder), true);
   is("what a page prints of it", [partsWords(ROOM_LIVE_PARTS), partsWords(ROOM_IDLE_PARTS), roomHourWords(ROOM_LIVE_PARTS), roomHourWords(ROOM_IDLE_PARTS)], ["2.6", "0.6", "16", "3.6"]);
-  await recordParts(folder, "owner@example.com", (VISITS_INCLUDED.creator + 2_000) * PARTS_PER_VISIT, t1);
+  await recordParts(paid, (VISITS_INCLUDED.creator + 2_000) * PARTS_PER_VISIT, t1);
   // Since 17 October 2026 visits past a plan are not sold: the room past the figure rests, and nothing is billed.
   is("and past the plan's visits the room rests like the store's other buyer pages", await isResting(paid, t1, "buyer"), true);
-  is("nothing is counted that is not a whole number of hundredths", [await recordParts(folder, null, 0, t1), await recordParts(folder, null, 1.5, t1), await recordParts("nope", null, 5, t1)], [null, null, null]);
+  is("nothing is counted that is not a whole number of hundredths", [await recordParts(paid, 0, t1), await recordParts(paid, 1.5, t1), await recordParts(paid, -5, t1)], [null, null, null]);
 
   part("A store with no plan to charge");
   await claimHandle("free@example.com", "nobill", "No Bill", "");
   const unpaid = (await storeForEmail("free@example.com"))!;
   const free = await storeFolder("free@example.com");
   const some = leave(await grantRoom(unpaid, OTHER, { key: ANA, owner: false }, true, true, t1));
-  is("is given leave while it has visits left, counted like any other", [some.live, (await trafficIn(free, month)).parts], [true, ROOM_LIVE_PARTS]);
-  await recordParts(free, "free@example.com", SETUP_VISITS * PARTS_PER_VISIT, t1);
+  is("is given leave while it has visits left, counted like any other", [some.live, (await trafficIn(free, calendar)).parts], [true, ROOM_LIVE_PARTS]);
+  await recordParts(unpaid, SETUP_VISITS * PARTS_PER_VISIT, t1);
   is("past them its pages rest", await isResting(unpaid, t1), true);
-  const before = (await trafficIn(free, month)).parts;
+  const before = (await trafficIn(free, calendar)).parts;
   is("a leave already handed out runs to its end", leave(await grantRoom(unpaid, OTHER, { key: ANA, owner: false }, true, true, t1 + MINUTE)).ms, GRANT_MS - MINUTE);
   is("and then none is given: the room is read by asking for it", [await grantRoom(unpaid, OTHER, { key: ANA, owner: false }, true, true, t1 + GRANT_MS), await grantRoom(unpaid, OTHER, { key: BIA, owner: false }, false, false, t1)], ["resting", "resting"]);
-  is("nothing more is counted", (await trafficIn(free, month)).parts, before);
+  is("nothing more is counted", (await trafficIn(free, calendar)).parts, before);
   is("its creator is still never refused", leave(await grantRoom(unpaid, OTHER, { key: "creator", owner: true }, false, false, t1)).ms, GRANT_MS);
   is("a paid store at its finite threshold receives no new polling grant", await grantRoom(paid, ROOM, { key: "c3c3c3c3c3c3", owner: false }, false, false, t1), "resting");
   is("the page of a resting room has a button and asks nothing by itself", [/t\.checkNew/.test(page) && /checkNew: "Check for new messages"/.test(roomWordsSource), /pace === "stopped" \|\| restingNow\.current\) return IDLE_MS;/.test(page)], [true, true]);

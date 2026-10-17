@@ -1,8 +1,9 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { CARD_TOKEN_PATTERN, finishCardUpdate, openCardUpdate } from "@/lib/card-update";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   const page = (status: string) => `${origin}/@${store.handle}/manage/card?${CARD_TOKEN_PATTERN.test(token) ? `t=${token}&` : ""}status=${status}`;
   if (!CARD_TOKEN_PATTERN.test(token)) return away(page("expired"));
-  if (!(await withinLimit("manage-card", `${clientAddress(request)}|${store.handle}`, 20, 600))) return away(page("error"));
+  if (!(await withinStore("manage-card", `${clientAddress(request)}|${store.handle}`, 20, 600, store, "buyer"))) return away(page("error"));
 
   const result = await openCardUpdate(store, token, linkOrigin(request, store));
   return away(result.ok ? result.url : page(result.reason));
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
   if (!handle) return new Response("Bad request", { status: 400 });
   const store = await storeForHandle(handle);
   if (!store) return new Response("No such store.", { status: 404 });
-  if (!(await withinLimit("manage-card-back", `${clientAddress(request)}|${store.handle}`, 30, 600))) {
+  if (!(await withinStore("manage-card-back", `${clientAddress(request)}|${store.handle}`, 30, 600, store, "buyer"))) {
     return away(`${origin}/@${store.handle}/manage/card?${CARD_TOKEN_PATTERN.test(token) ? `t=${token}&` : ""}status=error`);
   }
   const status = await finishCardUpdate(store, session);

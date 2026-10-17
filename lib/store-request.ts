@@ -69,7 +69,7 @@ export async function guardStoreWrite(
   if (!permission || (permission !== "member" && !isPermission(permission))) return refuse("invalid", 400);
   const action = typeof body.action === "string" ? body.action.slice(0, 20) : "";
   const result = await studioAccess(request, permission, action);
-  if (!result.ok) return { ok: false, response: refusedJson(result.reason) };
+  if (!result.ok) return { ok: false, response: refusedJson(result.reason, result.message) };
   const { access } = result;
 
   return { ok: true, email: access.email, ref: access.ref, store: access.store, role: access.role, body };

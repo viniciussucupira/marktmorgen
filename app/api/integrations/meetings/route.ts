@@ -1,10 +1,10 @@
+import { withinService } from "@/lib/metered-limits";
 import { type NextRequest, after } from "next/server";
 import { noticeCreator } from "@/lib/account-notice";
 import { isMeetProvider } from "@/lib/call-setup";
 import { ACCOUNT_NAMES, NotConnected, disconnect, logProblem, meetView } from "@/lib/meet-connect";
 import { ProviderError, isConfigured } from "@/lib/meet-providers";
 import { makeTest, moveTest, removeTest } from "@/lib/meet-test";
-import { withinLimit } from "@/lib/request-guard";
 import { guardStoreWrite } from "@/lib/store-request";
 
 /** Changes a store may make here in a minute: each one reaches Google or Zoom. */
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       ? Response.json({ ok: true, view: await meetView(null, store) })
       : Response.json({ ok: false, error: "not_connected" }, { status: 400 });
   }
-  if (!(await withinLimit("meet-manage", store.statsId, PER_MINUTE, 60))) {
+  if (!(await withinService("meet-manage", store.statsId, PER_MINUTE, 60, store))) {
     return Response.json({ ok: false, error: "limited" }, { status: 429 });
   }
   if (action === "test" || action === "movetest" || action === "untest") {

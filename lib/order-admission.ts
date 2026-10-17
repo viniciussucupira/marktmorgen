@@ -29,7 +29,8 @@
  *
  * scripts/test_order_admission_redis.py runs both scripts on a real Redis.
  */
-import { monthKey } from "@/lib/delivery";
+import { allowanceWindow } from "@/lib/allowance-window";
+import { admitNonPaying } from "@/lib/free-pool";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
 import { paidOrdersLimitFor } from "@/lib/order-rules";
@@ -102,13 +103,18 @@ export type Admission = { ok: true; hour: number | null } | { ok: false; reason:
 export async function admitOrders(store: Store, n = 1, now = Date.now()): Promise<Admission> {
   const limit = paidOrdersLimitFor(store, now / 1000);
   if (limit === null) return { ok: true, hour: null };
+  // A store in its free trial holds one of the month's places for stores that pay nothing (lib/free-pool-rules.ts).
+  if (!(await admitNonPaying(store, now))) return { ok: false, reason: "paused" };
   if (!Number.isSafeInteger(n) || n < 1) return { ok: false, reason: "unavailable" };
   if (!isRedisConfigured()) return { ok: false, reason: "unavailable" };
+  // Counted in the store's billing month (lib/allowance-window.ts); none known, none admitted.
+  const window = allowanceWindow(store, now);
+  if (!window) return { ok: false, reason: "unavailable" };
   try {
     const folder = await storeFolder(storeRef(store));
     const hour = hourOf(now);
     const [answer] = await redisPipeline([
-      ["EVAL", ADMIT_ORDERS, 2, countKey(folder, monthKey(new Date(now))), openKey(folder), limit, n, hour, hour - (OPEN_HOURS - 1), (OPEN_HOURS + 1) * 3_600],
+      ["EVAL", ADMIT_ORDERS, 2, countKey(folder, window.id), openKey(folder), limit, n, hour, hour - (OPEN_HOURS - 1), (OPEN_HOURS + 1) * 3_600],
     ]);
     if (Number(answer) === 1) return { ok: true, hour };
     if (Number(answer) === 0) return { ok: false, reason: "paused" };

@@ -1,10 +1,11 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { MANAGE_TOKEN_PATTERN, grantOf } from "@/lib/membership-manage";
 import { offers } from "@/lib/leave-rules";
 import { countLeave, saidField } from "@/lib/leave-flow";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
 const SUB_PATTERN = /^sub_[A-Za-z0-9]{6,64}$/;
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
   const page = new URLSearchParams({ token, sub: subscription });
   if (offers(store.leaving, why)) {
     page.set("why", why);
-    if ((await withinLimit("manage-leave", `${clientAddress(request)}|${store.handle}`, 20, 600)) && (await grantOf(store, token))) {
+    if ((await withinStore("manage-leave", `${clientAddress(request)}|${store.handle}`, 20, 600, store, "buyer")) && (await grantOf(store, token))) {
       await countLeave(store.statsId, saidField(why));
     }
   }

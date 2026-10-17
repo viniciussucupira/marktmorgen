@@ -344,7 +344,7 @@ export async function advanceEventJob(
             });
           }
         }
-        const outcome = await sendBatch(messages, `cmev:${id}:${job.done}:${keys.length}`);
+        const outcome = await sendBatch(messages, `cmev:${id}:${job.done}:${keys.length}`, { by: "store", store, kind: "email" });
         if (outcome !== "sent") {
           const failures = job.failures + 1;
           if (outcome === "refused" || failures >= 5) return await finish("failed", "The email service would not take it. Nothing more was sent.");

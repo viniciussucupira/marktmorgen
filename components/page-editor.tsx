@@ -334,7 +334,7 @@ export function PageEditor({
         setTestHeadline(data.value.headline);
         setTestSub(data.value.sub);
       } else {
-        setTestNote(data.error === "used" ? "This month's writing help is used up. It starts again on the 1st." : data.error === "notes" ? "Write the hero's own headline first." : "No headline came back, and nothing was counted. Try again.");
+        setTestNote(data.error === "used" ? "This month's writing help is used up. It starts again with your next billing month." : data.error === "notes" ? "Write the hero's own headline first." : "No headline came back, and nothing was counted. Try again.");
       }
     } catch {
       setTestNote("No headline came back, and nothing was counted. Try again.");
@@ -2831,7 +2831,7 @@ function PicturesEditor({
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; value?: string; error?: string };
       if (data.ok && data.value) set(i, { alt: data.value });
-      else setError(data.error === "used" ? "This month's writing help is used up. It starts again on the 1st." : "That description did not come back. Write it yourself, or try again in a moment.");
+      else setError(data.error === "used" ? "This month's writing help is used up. It starts again with your next billing month." : "That description did not come back. Write it yourself, or try again in a moment.");
     } catch {
       setError("That description did not come back. Write it yourself, or try again in a moment.");
     } finally {

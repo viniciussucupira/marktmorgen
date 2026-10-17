@@ -1,7 +1,7 @@
+import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { ensureStatsId } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { withinLimit } from "@/lib/request-guard";
 import {
   MAX_ICS_URL,
   addHostIcs,
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   const { email, body } = guarded;
   const store = guarded.store.statsId ? guarded.store : ((await ensureStatsId(guarded.ref)) ?? guarded.store);
   if (!store.statsId) return Response.json({ ok: false, error: "none" }, { status: 400 });
-  if (!(await withinLimit("host-calendar", `${store.statsId}|${email}`, PER_TEN_MINUTES, 600))) {
+  if (!(await withinService("host-calendar", `${store.statsId}|${email}`, PER_TEN_MINUTES, 600, store))) {
     return Response.json({ ok: false, error: "limited" }, { status: 429 });
   }
   const tz = isTimeZone(body.tz) ? (body.tz as string) : "UTC";

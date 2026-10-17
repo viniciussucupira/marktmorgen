@@ -59,7 +59,7 @@ export async function tellStudent(input: {
   const link = `${origin}/@${store.handle}/course/${product.id}/${parent.lesson}#c-${reply.id}`;
   // To the student, in the store's language (lib/buyer-words/courses.ts).
   const w = coursesWords(store.language);
-  return sendEmail({
+  return sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: courseSender(store),
     to,
     subject: w.answeredSubject(store.name).slice(0, 200),

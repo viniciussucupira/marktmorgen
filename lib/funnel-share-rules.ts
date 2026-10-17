@@ -31,25 +31,26 @@
  *
  * Pure and browser-safe.
  */
+import { type WindowFields, windowId } from "@/lib/allowance-window";
 import type { Tier } from "@/lib/plan";
 import { type PlanFields, standingOf } from "@/lib/plan-standing";
 
 export type ShareLimits = {
   /** Share links a store holds at once. */
   shares: number;
-  /** Share links a store makes in a calendar month. */
+  /** Share links a store makes in a window (lib/allowance-window.ts: a billing month when the store pays). */
   sharesPerMonth: number;
   /** Sections in the store's library. */
   savedBlocks: number;
   /** The most one funnel's file or share link may weigh, in bytes. */
   bundleBytes: number;
-  /** Funnels brought into the store in a calendar month: imports, starters and copies. */
+  /** Funnels brought into the store in a window (lib/allowance-window.ts: a billing month when the store pays): imports, starters and copies. */
   importsPerMonth: number;
-  /** Previews of a link, a file or a starter in a calendar month. */
+  /** Previews of a link, a file or a starter in a window (lib/allowance-window.ts: a billing month when the store pays). */
   previewsPerMonth: number;
-  /** Updates of the store's pages from a saved section in a calendar month. */
+  /** Updates of the store's pages from a saved section in a window (lib/allowance-window.ts: a billing month when the store pays). */
   appliesPerMonth: number;
-  /** Funnels downloaded as a file in a calendar month. */
+  /** Funnels downloaded as a file in a window (lib/allowance-window.ts: a billing month when the store pays). */
   exportsPerMonth: number;
 };
 
@@ -81,7 +82,7 @@ export function parseShareDays(raw: unknown): ShareDays | null {
   return (SHARE_DAYS as readonly number[]).includes(value) ? (value as ShareDays) : null;
 }
 
-/** What one link may be read in a calendar month, by everybody together. */
+/** What one link may be read in a window (lib/allowance-window.ts: a billing month when the store pays), by everybody together. */
 export const PREVIEWS_PER_SHARE_MONTH = 300;
 export const IMPORTS_PER_SHARE_MONTH = 50;
 /** Previews one store may ask for in an hour, of any link or file: a burst limit under the month's. */
@@ -89,8 +90,22 @@ export const PREVIEWS_PER_STORE_HOUR = 60;
 /** Pages one update from a saved section may change. */
 export const MAX_APPLY_PAGES = 30;
 
-/** "2026-10": the calendar month (UTC) the monthly counts above are kept under. */
-export function monthOfUse(now = Date.now()): string {
+/**
+ * The window a store's monthly counts above are kept under
+ * (lib/allowance-window.ts): its billing month when it pays us ("2026-10-19"),
+ * the calendar month otherwise ("2026-10"); null when it pays and its period
+ * is not known, and then nothing is counted or done.
+ */
+export function monthOfUse(store: WindowFields, now = Date.now()): string | null {
+  return windowId(store, now);
+}
+
+/**
+ * The calendar month (UTC) one link's reads by other stores are kept under:
+ * they are counted by the link, whoever reads it, so a billing month of the
+ * store that made it touches two of these (tests/plan-cost-registry.ts).
+ */
+export function calendarMonthOfUse(now = Date.now()): string {
   return new Date(now).toISOString().slice(0, 7);
 }
 

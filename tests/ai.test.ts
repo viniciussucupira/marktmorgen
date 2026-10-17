@@ -20,6 +20,8 @@ import { AI_MONTHLY } from "@/lib/ai-rules";
 import { type Course, editCourse } from "@/lib/course";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
+import { windowId } from "@/lib/allowance-window";
 
 let reply: { status: number; text: string } = { status: 200, text: "{}" };
 const asked: { system: string; content: string; model: string }[] = [];
@@ -36,7 +38,7 @@ async function main(): Promise<void> {
   const made = await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   if (!made.ok) throw new Error("no store");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   const store = (await storeForEmail("owner@example.com"))!;
 
   part("No key, no writing help");
@@ -100,7 +102,7 @@ async function main(): Promise<void> {
   is("it is told not to add its own unsubscribe line", asked[asked.length - 1].system.includes("Do not add an unsubscribe line"), true);
 
   part("The month is a ceiling");
-  const key = `nl:ai:${store.statsId}:${new Date().toISOString().slice(0, 7)}`;
+  const key = `nl:ai:${store.statsId}:${windowId(store)}`;
   await redis.pipeline([["SET", key, String(AI_MONTHLY.pro)]]);
   const over = await writeEmail(store, { goal: "announce", product: "", link: "", notes: "hello" });
   is("past it, nothing is asked", over.ok ? "ran" : over.reason, "used");

@@ -29,6 +29,7 @@
  * here too (lib/team.ts), so no route can forget to.
  */
 import type { NextRequest } from "next/server";
+import { redirect } from "next/navigation";
 import { originFrom } from "@/lib/request-origin";
 import { fromAnotherSite as crossSite } from "@/lib/request-guard";
 import { SESSION_COOKIE, emailForSession } from "@/lib/auth";
@@ -36,6 +37,10 @@ import { LOCKED_NEEDS, lockedUntil } from "@/lib/two-step";
 import { type Store, STORE_ID_PATTERN, accountStores, ensureStoreId, storeForEmail, storeForId, storeRef } from "@/lib/store";
 import { type Permission, type Role, PERMISSION_WORDS, can } from "@/lib/team-roles";
 import { logTeam, memberStores, roleIn } from "@/lib/team";
+import { withinLimit } from "@/lib/request-guard";
+import { takeAllowance } from "@/lib/store-allowance";
+import { refreshPeriod } from "@/lib/billing-sync";
+import { ESSENTIAL_NEEDS, ESSENTIAL_PER_DAY, STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
 
 /** The store last chosen in the studio's switcher: only a preference. */
 export const STORE_COOKIE = "nl_store";
@@ -75,8 +80,11 @@ export type Creator = Access & {
   studio: (query?: string) => string;
 };
 
-/** `locked`: a session let in without its second step, for what waits until two-step login turns off (lib/two-step.ts). */
-export type Refusal = "signed_out" | "no_store" | "forbidden" | "gone" | "locked";
+/**
+ * `locked`: a session let in without its second step, for what waits until two-step login turns off (lib/two-step.ts).
+ * `used`: the store's studio requests for its window are used (lib/store-allowance-rules.ts).
+ */
+export type Refusal = "signed_out" | "no_store" | "forbidden" | "gone" | "locked" | "used";
 
 /**
  * What a check asks of a role: one permission, or "member" — any role at all
@@ -156,7 +164,7 @@ export async function studioAccess(
   request: NextRequest,
   need: Need,
   action = "",
-): Promise<{ ok: true; access: Access } | { ok: false; reason: Refusal; store?: Store }> {
+): Promise<{ ok: true; access: Access } | { ok: false; reason: Refusal; store?: Store; message?: string }> {
   const session = request.cookies.get(SESSION_COOKIE)?.value;
   const email = await emailForSession(session);
   if (!email) return { ok: false, reason: "signed_out" };
@@ -169,6 +177,13 @@ export async function studioAccess(
   );
   if (!result.ok) return result;
   const { access } = result;
+  // Every request the studio makes for a store is one of its window's
+  // (lib/store-allowance-rules.ts). Moving to a larger plan, cancelling,
+  // deleting the store, downloading its data and leaving a team are never
+  // refused for it: they have a small daily bound of their own instead.
+  const counted = await countStudio(access.store, need);
+  if (!counted.ok) return { ok: false, reason: "used", store: access.store, message: counted.message };
+  if (counted.store) result.access = { ...result.access, store: counted.store };
   const reading = request.method === "GET" || request.method === "HEAD";
   // The team's own route writes its lines itself, in words of its own.
   // Counting who an email would reach changes nothing, and would fill the log.
@@ -192,9 +207,29 @@ export async function studioAccess(
   return result;
 }
 
+/**
+ * One studio request for a store, taken from its window: `units` of them for
+ * a page drawn. What the owner needs to leave or pay is taken from a small
+ * daily figure instead, so it is never shut out by the month's.
+ */
+export async function countStudio(store: Store, need: Need | null, units = 1): Promise<{ ok: true; store?: Store } | { ok: false; reason: "used" | "unknown" | "pool"; message: string }> {
+  if (need && ESSENTIAL_NEEDS.includes(need)) {
+    return (await withinLimit("studio-essential", store.sid || store.handle, ESSENTIAL_PER_DAY, 86_400))
+      ? { ok: true }
+      : { ok: false, reason: "used", message: "Too many of these today. Try again tomorrow, or write to support." };
+  }
+  // A paying store whose billing month is not known has it read from Stripe first (lib/billing-sync.ts).
+  const current = await refreshPeriod(store);
+  const taken = await takeAllowance(current, "studio", units);
+  if (!taken.ok) return { ok: false, reason: taken.reason, message: taken.message };
+  return current === store ? { ok: true } : { ok: true, store: current };
+}
+
 /** The sentence a refused request is answered with, for a route that answers in JSON. */
-export function refusedJson(reason: Refusal): Response {
+export function refusedJson(reason: Refusal, message = ""): Response {
   switch (reason) {
+    case "used":
+      return Response.json({ ok: false, error: "studio_used", message }, { status: 429 });
     case "signed_out":
       return Response.json({ ok: false, error: "signed_out" }, { status: 401 });
     case "no_store":
@@ -230,6 +265,7 @@ export async function creatorFrom(
     if (result.reason === "no_store") return away(origin, "/studio?stripe=nostore");
     if (result.reason === "gone") return away(origin, "/studio?team=gone");
     if (result.reason === "locked") return away(origin, "/studio?two-step=locked");
+    if (result.reason === "used") return away(origin, studioPath(result.store ?? { sid: "" }, "", "paused"));
     return away(origin, studioPath(result.store ?? { sid: "" }, "team=forbidden"));
   }
   const { access } = result;
@@ -239,7 +275,7 @@ export async function creatorFrom(
 /** The same, for a route that is read by the studio's own code and answers in JSON. */
 export async function jsonAccess(request: NextRequest, need: Need): Promise<Access | Response> {
   const result = await studioAccess(request, need);
-  return result.ok ? result.access : refusedJson(result.reason);
+  return result.ok ? result.access : refusedJson(result.reason, result.message);
 }
 
 type CookieJar = { get(name: string): { value: string } | undefined };
@@ -262,6 +298,7 @@ export async function studioView(
   cookies: CookieJar,
   asked: string | undefined,
   need: Need | null,
+  options: { count?: boolean } = {},
 ): Promise<
   | { ok: true; view: StudioView; fellBack: boolean }
   | { ok: false; reason: Refusal; email: string | null; store?: Store }
@@ -284,6 +321,16 @@ export async function studioView(
   if (access.role === "owner" && !access.store.sid) {
     const named = await ensureStoreId(access.ref);
     if (named) access = { ...access, store: named, ref: storeRef(named) };
+  }
+  // A page drawn is STUDIO_PAGE_UNITS of the store's studio requests. Past
+  // them the studio shows one page that says so, with the way to a larger
+  // plan (app/studio/paused), and draws nothing else.
+  // A page is a page whatever it is about: only the requests that pay,
+  // cancel, delete or take the data away are kept off the figure.
+  if (options.count !== false) {
+    const counted = await countStudio(access.store, null, STUDIO_PAGE_UNITS);
+    if (!counted.ok) redirect(studioPath(access.store, `why=${counted.reason}`, "paused"));
+    if (counted.store) access = { ...access, store: counted.store };
   }
   const [owned, member] = await Promise.all([accountStores(email), memberStores(email)]);
   const stores = [

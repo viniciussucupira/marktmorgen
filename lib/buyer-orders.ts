@@ -551,7 +551,7 @@ export async function requestOrdersLink(input: {
   const count = purchases.length + calls.length;
   const link = `${origin}/@${store.handle}/orders?token=${token}`;
   const words = ordersWords(store.language);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
     from: `"${words.ordersFrom(displayName(name))}" <${senderAddress()}>`,
     to: email,
     subject: words.ordersSubject(name),

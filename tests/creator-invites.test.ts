@@ -20,6 +20,7 @@ import { INVITE_BONUS_CENTS, INVITE_CODE_PATTERN, INVITE_COOKIE, INVITE_HOLD_DAY
 import { GET as accept } from "@/app/invite/[code]/accept/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const DAY = 86_400;
 
@@ -186,10 +187,10 @@ async function main(): Promise<void> {
   is("so does a credit note", paidOn({ amount_paid: 2900, post_payment_credit_notes_amount: 2900 }, 0), 0);
 
   // Everyone who has started paying has a customer.
-  await setSubscription("ana@example.com", { customerId: "cus_Ana0001", subscriptionId: "sub_Ana0001", active: true });
-  await setSubscription("bea@example.com", { customerId: "cus_Bea0001", subscriptionId: "sub_Bea0001", active: true });
-  await setSubscription("cal@example.com", { customerId: "cus_Cal0001", subscriptionId: "sub_Cal0001", active: true });
-  await setSubscription("eve@example.com", { customerId: "cus_Eve0001", subscriptionId: "sub_Eve0001", active: true });
+  await setSubscription("ana@example.com", { customerId: "cus_Ana0001", subscriptionId: "sub_Ana0001", active: true, period: paidPeriod() });
+  await setSubscription("bea@example.com", { customerId: "cus_Bea0001", subscriptionId: "sub_Bea0001", active: true, period: paidPeriod() });
+  await setSubscription("cal@example.com", { customerId: "cus_Cal0001", subscriptionId: "sub_Cal0001", active: true, period: paidPeriod() });
+  await setSubscription("eve@example.com", { customerId: "cus_Eve0001", subscriptionId: "sub_Eve0001", active: true, period: paidPeriod() });
   invoices.set("cus_Bea0001", [
     invoice("in_BeaRecent1", 2900, INSIDE, INSIDE, "pi_bea_recent"),
     invoice("in_BeaRefund1", 2900, PAST, PAST, "pi_bea_refunded"),
@@ -233,7 +234,7 @@ async function main(): Promise<void> {
   is("and is written down as done again", JSON.parse(String(redis.run(["GET", creditKey("in_BeaFirst01")]))).state, "done");
 
   part("Later");
-  await setSubscription("dan@example.com", { customerId: "cus_Dan0001", subscriptionId: "sub_Dan0001", active: true });
+  await setSubscription("dan@example.com", { customerId: "cus_Dan0001", subscriptionId: "sub_Dan0001", active: true, period: paidPeriod() });
   await settleInvites(Date.now() + 60_000, NOW + 12 * DAY * 1000);
   is("Dan started paying: what he earned is on his plan", (balance.get("cus_Dan0001") ?? []).map((t) => t.amount), [-2475]);
   is("Bea's recent payment, out of its window, earned Ana her half", (balance.get("cus_Ana0001") ?? []).map((t) => t.amount), [-1450, -1450]);

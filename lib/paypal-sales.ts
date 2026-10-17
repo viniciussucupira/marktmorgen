@@ -558,7 +558,7 @@ export async function deliverPayPal(input: {
   for (const id of [product.id, ...(items ?? [])]) await input.recordStart(paid.email, id, paid.at);
   const link = (await input.ordersLink(paid.email)) ?? `${base}/orders`;
   const g = givingWords(store.language);
-  await sendEmail({
+  await sendEmail({ meter: { by: "order" },
     from: input.from,
     to: paid.email,
     subject: g.ppSubject(product.title).slice(0, 200),

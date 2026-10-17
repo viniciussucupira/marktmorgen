@@ -138,6 +138,11 @@ import { contactOpen } from "@/lib/store-contact";
 import { visibleCount } from "@/lib/catalog";
 import { storeChecks } from "@/lib/store-coach";
 import { isPaidUp } from "@/lib/billing";
+import { allowanceWindow, calendarWindow, samePeriod } from "@/lib/allowance-window";
+import { ALLOWANCE_KINDS, API_WRITE_UNITS, KIND_WORDS, allowanceFor } from "@/lib/store-allowance-rules";
+import { allowanceUsed } from "@/lib/store-allowance";
+import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
+
 import { isSenderConfigured } from "@/lib/email";
 import { DiscountEditor } from "@/components/discount-editor";
 import { DomainEditor } from "@/components/domain-editor";
@@ -166,7 +171,7 @@ import {
 } from "@/lib/billing";
 import { STORAGE_BRAKE_BYTES, storageBrakeFor, storageUsed, storageWords } from "@/lib/storage-quota";
 import { trafficForAdmission } from "@/lib/traffic";
-import { TRIAL_ORDERS, ordersIncluded, ordersWords } from "@/lib/order-rules";
+import { CALL_ORDER_UNITS, TRIAL_ORDERS, ordersIncluded, ordersWords } from "@/lib/order-rules";
 import { ordersIn } from "@/lib/orders";
 import { BUYER_RESERVE_BPS, SETUP_VISITS, TRIAL_VISITS, countWords, publicVisitLimit, visitLimitFor, visitsIncluded, visitsWords } from "@/lib/traffic-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
@@ -193,6 +198,9 @@ import { ShortLinks } from "@/components/short-links";
 import { readLinks } from "@/lib/short-links";
 import { storeBase } from "@/lib/purchase-email";
 import { feeWords } from "@/lib/fee-words";
+
+/** "October 19": a day of a window, for the studio. */
+const windowDay = (ms: number) => new Date(ms).toLocaleDateString("en-US", { timeZone: "UTC", month: "long", day: "numeric" });
 
 export const metadata: Metadata = {
   title: "Your account — Marktmorgen",
@@ -745,14 +753,14 @@ export default async function StudioPage({
       : Boolean(store?.subscriptionActive);
   const plan =
     live?.state === "active"
-      ? { tier: live.tier, cycle: live.cycle, trialEnds: live.trialing ? live.until : 0, shared: live.shared }
+      ? { tier: live.tier, cycle: live.cycle, trialEnds: live.trialing ? live.until : 0, shared: live.shared, period: live.period }
       : null;
   if (
     store &&
     live &&
     live.state !== "unknown" &&
     (paid !== store.subscriptionActive ||
-      (plan && (plan.tier !== store.tier || plan.cycle !== store.cycle || plan.trialEnds !== store.trialEnds || plan.shared !== store.shared)))
+      (plan && (plan.tier !== store.tier || plan.cycle !== store.cycle || plan.trialEnds !== store.trialEnds || plan.shared !== store.shared || !samePeriod(plan.period, store.period ?? null))))
   ) {
     await setSubscription(ref, { active: paid, ...(plan ?? {}) });
   }
@@ -816,10 +824,15 @@ export default async function StudioPage({
   // What this store has sent out this month, and how long its lesson video
   // was watched: the one thing here that is charged by use, visible to the
   // creator before it is visible on an invoice (lib/watch-rules.ts).
+  // Counted in the store's window: its billing month when it pays us, the
+  // calendar month otherwise (lib/allowance-window.ts). The page reads the
+  // record as refreshed above, so a period just read from Stripe is used.
+  const usageWindow = current ? allowanceWindow(current) : null;
+  const usageId = usageWindow?.id ?? calendarWindow().id;
   const [delivery, watchedReading, trafficReading] = await Promise.all([
     store && may("settings") ? deliveredThisMonth(folder) : Promise.resolve(null),
-    store && may("settings") ? watchedForAdmission(folder) : Promise.resolve(null),
-    store && may("settings") ? trafficForAdmission(folder) : Promise.resolve(null),
+    store && may("settings") ? watchedForAdmission(folder, usageId) : Promise.resolve(null),
+    store && may("settings") ? trafficForAdmission(folder, usageId) : Promise.resolve(null),
   ]);
   const watched = watchedReading ?? 0;
   // Where the store stands with its plan decides how much it may keep and
@@ -837,7 +850,11 @@ export default async function StudioPage({
   const visitLimit = store ? visitLimitFor(store) : null;
   const visitRoom = visitLimit ?? (store ? visitsIncluded(store.tier) : 0);
   // The orders counted this month, the third thing charged by use (lib/order-rules.ts).
-  const ordered = store && may("settings") ? await ordersIn(folder) : 0;
+  const ordered = store && may("settings") ? await ordersIn(folder, usageId) : 0;
+  // What the store has taken of each of its other figures in the window (lib/store-allowance.ts).
+  const figures = current && may("settings")
+    ? await Promise.all(ALLOWANCE_KINDS.map(async (kind) => ({ kind, used: await allowanceUsed(current, kind), limit: allowanceFor(current, kind) })))
+    : null;
   const orderRoom = standing === "paid" && store ? ordersIncluded(store.tier) : TRIAL_ORDERS;
   // A store whose plan has ended and that keeps more than a store with no
   // plan may: the day what it keeps is removed, counted the way the daily
@@ -2240,6 +2257,19 @@ export default async function StudioPage({
                   ever on an invoice, from the same numbers the invoice is
                   made from.
                 */}
+                {/*
+                  The window every figure below is counted in (lib/allowance-window.ts):
+                  the billing month of a store that pays, its trial, or the calendar month.
+                */}
+                <p className="mt-4 rounded-[12px] bg-paper px-4 py-3 text-sm text-ink-soft ring-1 ring-line">
+                  {usageWindow
+                    ? usageWindow.billing
+                      ? `Your billing month: ${windowDay(usageWindow.start)} to ${windowDay(usageWindow.end)} (UTC). Every figure here is counted in it and starts again on ${windowDay(usageWindow.end)}, with your plan\u2019s next month.`
+                      : standing === "trial"
+                        ? `Your free trial: ${windowDay(usageWindow.start)} to ${windowDay(usageWindow.end)} (UTC). Every figure here is counted for the whole trial.`
+                        : `This calendar month: ${windowDay(usageWindow.start)} to ${windowDay(usageWindow.end)} (UTC). Every figure here starts again on the 1st.`
+                    : "Your plan\u2019s billing month has not been read from Stripe yet, so what costs us money waits. It is read when this page opens and once a day; reload in a minute."}
+                </p>
                 <div className="mt-6 border-t border-line pt-5">
                   <UsageMeter label="Video watched this month" used={watchedReading} limit={videoRoom} format={hoursWords}
                     unavailable="Usage measurement is temporarily unavailable. New stream playback is paused until it can be verified."
@@ -2263,7 +2293,7 @@ export default async function StudioPage({
                       <dt className="font-semibold text-ink">Without a paid plan</dt>
                       <dd className="text-ink-soft">
                         {`In the free trial, lesson videos play for ${hoursWords(TRIAL_VIDEO_SECONDS)} a month; before a plan starts and after one ends, for ${hoursWords(SETUP_VIDEO_SECONDS)}. Past that they pause `}
-                        until the plan is paid or the month turns. Nothing is charged for those hours.
+                        until the plan is paid (for a store with no plan, until the month turns). Nothing is charged for those hours.
                       </dd>
                     </div>
                   </dl>
@@ -2282,8 +2312,8 @@ export default async function StudioPage({
                     <p className="mt-4 notice notice-warn">
                       <strong>{visited >= visitLimit ? "Your store\u2019s pages, and your buyers\u2019 pages, are resting." : "Your store\u2019s public pages are resting."}</strong>
                       {visited >= visitLimit
-                        ? ` It has used all ${countWords(visitLimit)} counted visits this month, so courses, the community and podcasts rest too, with a page that tells your buyers their access is kept. Everything opens again when the month turns${standing === "paid" ? " or on a larger plan" : ""}.`
-                        : ` It has reached ${countWords(publicVisitLimit(visitLimit))} of its ${countWords(visitLimit)} counted visits this month. Your buyers\u2019 courses, community and podcasts stay open for the last ${countWords(visitLimit - publicVisitLimit(visitLimit))}. Public pages open again when the month turns${standing === "paid" ? " or on a larger plan" : ""}.`}
+                        ? ` It has used all ${countWords(visitLimit)} counted visits this month, so courses, the community and podcasts rest too, with a page that tells your buyers their access is kept. Everything opens again ${standing === "paid" ? "with your next billing month, or on a larger plan" : standing === "trial" ? "as soon as your plan is paid" : "when the month turns"}.`
+                        : ` It has reached ${countWords(publicVisitLimit(visitLimit))} of its ${countWords(visitLimit)} counted visits this month. Your buyers\u2019 courses, community and podcasts stay open for the last ${countWords(visitLimit - publicVisitLimit(visitLimit))}. Public pages open again ${standing === "paid" ? "with your next billing month, or on a larger plan" : standing === "trial" ? "as soon as your plan is paid" : "when the month turns"}.`}
                     </p>
                   ) : null}
                   <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
@@ -2296,8 +2326,8 @@ export default async function StudioPage({
                     <div>
                       <dt className="font-semibold text-ink">Without a paid plan</dt>
                       <dd className="text-ink-soft">
-                        {`In the free trial a store has ${countWords(TRIAL_VISITS)} visits a month; before a plan starts and after one ends, ${countWords(SETUP_VISITS)}. They stop the same way, `}
-                        until the plan is paid or the month turns. Nothing is charged for visits.
+                        {`In the free trial a store has ${countWords(TRIAL_VISITS)} visits for the whole trial; before a plan starts and after one ends, ${countWords(SETUP_VISITS)} a month. They stop the same way, `}
+                        until the plan is paid (for a store with no plan, until the month turns). Nothing is charged for visits.
                       </dd>
                     </div>
                   </dl>
@@ -2312,25 +2342,45 @@ export default async function StudioPage({
                   <p className="font-semibold text-ink">Orders this month</p>
                   <p className="mt-1 text-ink-soft">
                     {`${ordersWords(ordered)} counted of the ${countWords(orderRoom)} ${
-                      standing === "paid" ? "your plan covers" : "a free trial has before free copies stop"
-                    }. An order is a purchase confirmed, an offer taken after paying, a PayPal order, a place in a purchase for several people, or a free copy sent.${feeWords(COMMISSION_LIVE && store.shared).ordersShared}`}
+                      standing === "paid" ? "your plan covers" : "a free trial has"
+                    }. An order is a purchase confirmed, an offer taken after paying, a PayPal order, a place in a purchase for several people, a package of calls, or a free copy sent; a call booked counts as ${countWords(CALL_ORDER_UNITS)}.${feeWords(COMMISSION_LIVE && store.shared).ordersShared}`}
                   </p>
                   {standing === "paid" && store && ordered >= orderRoom ? (
                     <p className="mt-4 notice notice-warn">
                       <strong>New orders are paused for the month.</strong>
-                      {` Your store has had the ${countWords(orderRoom)} orders your plan covers. A buyer who presses buy is told the store is not taking new orders right now, and nothing is charged; anybody already paying finishes. Orders open again when the month turns, or on a larger plan.`}
+                      {` Your store has had the ${countWords(orderRoom)} orders your plan covers. A buyer who presses buy is told the store is not taking new orders right now, and nothing is charged; anybody already paying finishes. Orders open again with your next billing month, or on a larger plan.`}
                     </p>
                   ) : null}
                   {standing === "trial" && ordered >= TRIAL_ORDERS ? (
                     <p className="mt-4 notice notice-warn">
-                      <strong>Free copies are paused for the month.</strong>
-                      {` Your store has had the ${countWords(TRIAL_ORDERS)} orders a free trial has. Free copies start again as soon as your plan is paid, or when the month turns; paid orders are never stopped in the trial.`}
+                      <strong>New orders are paused for the trial.</strong>
+                      {` Your store has had the ${countWords(TRIAL_ORDERS)} orders a free trial has, paid ones and free copies together. They start again as soon as your plan is paid; anybody already paying finishes.`}
                     </p>
                   ) : null}
                   <p className="mt-3 text-sm text-ink-soft">
-                    {"Orders are never billed. At your plan\u2019s figure new orders pause until the month turns, and we email you the first time a month reaches it. A checkout opened in the last day counts toward the figure until it is paid or closes, so nobody is stopped while paying."}
+                    {"Orders are never billed. At your plan\u2019s figure new orders pause until your next billing month, and we email you the first time a month reaches it. A checkout opened in the last day counts toward the figure until it is paid or closes, so nobody is stopped while paying."}
                   </p>
                 </div>
+                ) : null}
+                {/*
+                  The figures added on 17 October 2026 (lib/store-allowance-rules.ts):
+                  each refused, with a plain message, once its window's figure is used.
+                */}
+                {figures ? (
+                  <div className="mt-6 border-t border-line pt-5">
+                    <p className="font-semibold text-ink">Your other figures this month</p>
+                    <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                      {figures.map((figure) => (
+                        <div key={figure.kind}>
+                          <dt className="font-semibold text-ink">{KIND_WORDS[figure.kind].what}</dt>
+                          <dd className="text-ink-soft">{`${figure.used.toLocaleString("en-US")} of ${figure.limit.toLocaleString("en-US")} ${KIND_WORDS[figure.kind].many} used`}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <p className="mt-3 text-sm text-ink-soft">
+                      {`A page of the studio counts as ${STUDIO_PAGE_UNITS} studio requests, and a contact added or a product given through the API as ${API_WRITE_UNITS} API requests. Past a figure, that use waits for the next month or a larger plan, with a plain message; nothing is billed. Changing or canceling your plan, deleting your store and downloading your sales always work.`}
+                    </p>
+                  </div>
                 ) : null}
               </div>
             ) : null}

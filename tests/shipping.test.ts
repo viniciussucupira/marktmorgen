@@ -23,6 +23,7 @@ import { confirmationFor } from "@/lib/purchase-email";
 import { markShipped, readTracking } from "@/lib/shipments";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "owner@example.com";
 const checkouts: URLSearchParams[] = [];
@@ -64,7 +65,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const book = await addProduct(OWNER, "The Supper Book", "Printed, 120 pages.", "35", null);
   const pdf = await addProduct(OWNER, "Supper PDF", "", "12", null);
   if (!book.ok || !pdf.ok) throw new Error("no product");

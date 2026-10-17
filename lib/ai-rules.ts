@@ -29,7 +29,7 @@ import { PLAN_TITLES } from "@/lib/plan";
 export type AiKind = "product" | "page" | "outline" | "email" | "review" | "block";
 
 /**
- * Writing jobs a store may ask for in a calendar month, by where it stands
+ * Writing jobs a store may ask for in a window (lib/allowance-window.ts: a billing month when the store pays), by where it stands
  * with its plan. Lowered on October 17, 2026 to what each plan's 60%
  * after-tax floor leaves room for once every other allowance is used in full
  * (tests/spend-floor.test.ts shows the sum): Store, which has no room left,

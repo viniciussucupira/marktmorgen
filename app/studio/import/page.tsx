@@ -163,7 +163,7 @@ export default async function StudioImportPage({ searchParams }: Params) {
           <p className="mt-2 max-w-2xl text-sm text-ink-soft">
             {(() => {
               const a = importAllowanceFor(store);
-              return `This month your plan brings in up to ${a.rows.toLocaleString("en-US")} rows, all imports together, with ${a.checks.toLocaleString("en-US")} dry-run batches of contacts or products and ${a.buyerChecks.toLocaleString("en-US")} of past buyers. Moving funnels from ClickFunnels: ${a.pageReads.toLocaleString("en-US")} saved pages read, ${a.funnelChecks.toLocaleString("en-US")} funnel checks and ${a.funnelSaves.toLocaleString("en-US")} funnels made. ${a.movedEmails > 0 ? `Emails to people brought over: ${a.movedEmails.toLocaleString("en-US")} this month.` : "Emails to people brought over count in your plan\u2019s monthly emails."} Each figure starts again on the 1st of the month (UTC).`;
+              return `This month your plan brings in up to ${a.rows.toLocaleString("en-US")} rows, all imports together, with ${a.checks.toLocaleString("en-US")} dry-run batches of contacts or products and ${a.buyerChecks.toLocaleString("en-US")} of past buyers. Moving funnels from ClickFunnels: ${a.pageReads.toLocaleString("en-US")} saved pages read, ${a.funnelChecks.toLocaleString("en-US")} funnel checks and ${a.funnelSaves.toLocaleString("en-US")} funnels made. ${a.movedEmails > 0 ? `Emails to people brought over: ${a.movedEmails.toLocaleString("en-US")} this month.` : "Emails to people brought over count in your plan\u2019s monthly emails."} Each figure starts again with your next billing month (for a store with no plan, on the 1st, UTC).`;
             })()}
           </p>
 

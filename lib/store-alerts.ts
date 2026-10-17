@@ -230,7 +230,7 @@ export async function checkAlerts(store: Store, now = Date.now()): Promise<Alert
     if (chat) await postToChat(chat, [alert.title, ...alert.lines].join("\n")).catch(() => false);
     if (emailing) {
       const stopUrl = `${SITE_URL}/api/store/weekly?h=${encodeURIComponent(store.handle)}&t=${encodeURIComponent(weeklyToken(store.handle))}`;
-      await sendEmail({
+      await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: store.email,
         subject: alert.title.slice(0, 180),

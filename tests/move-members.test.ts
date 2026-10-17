@@ -21,6 +21,7 @@ import { addRows, finishUpload, runImport, sendMoveReminders, startImport } from
 import { moveCounts, openMove, readMove } from "@/lib/move-members";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const DAY = 86_400;
 const now = Date.now();
@@ -109,7 +110,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestHarbor0001", true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const club = await addProduct(OWNER, "The Inner Circle", "", "29", { interval: "month", trialDays: 7, payments: 0 });
   const fixed = await addProduct(OWNER, "Six Months", "", "19", { interval: "month", trialDays: 0, payments: 6 });
   const guide = await addProduct(OWNER, "The Guide", "", "12", null);

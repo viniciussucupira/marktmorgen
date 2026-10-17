@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const failedBefore = typeof previous === "string" && previous.includes('"ok":false');
     await redisPipeline([["SET", LAST, JSON.stringify({ at: Date.now(), ok, checks }), "EX", 30 * 86_400]]);
     if ((!ok || failedBefore) && isSenderConfigured()) {
-      await sendEmail({
+      await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: SUPPORT_EMAIL,
         subject: ok ? "Stripe check: all passing again" : "Stripe check failed: packages, membership tiers or tax documents",

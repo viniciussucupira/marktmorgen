@@ -1,3 +1,4 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { countLeave } from "@/lib/leave-flow";
 import { originFrom } from "@/lib/request-origin";
@@ -5,7 +6,7 @@ import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { MANAGE_TOKEN_PATTERN, linkIsLive } from "@/lib/membership-manage";
 import { switchTier } from "@/lib/tier-switch";
 import { YEARLY_TARGET, switchYearly } from "@/lib/yearly-switch";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
 
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     });
 
   if (!MANAGE_TOKEN_PATTERN.test(token)) return back("expired");
-  if (!(await withinLimit("tier-switch", `${clientAddress(request)}|${store.handle}`, 10, 600))) return back("limited");
+  if (!(await withinStore("tier-switch", `${clientAddress(request)}|${store.handle}`, 10, 600, store, "buyer"))) return back("limited");
 
   // The same membership, paid yearly (lib/yearly-switch.ts). From the emailed
   // link, which opens nothing else, the member comes back to the page that

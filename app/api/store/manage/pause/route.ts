@@ -1,10 +1,11 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { countLeave } from "@/lib/leave-flow";
 import { MANAGE_TOKEN_PATTERN } from "@/lib/membership-manage";
 import { pauseMembership, resumeMembership } from "@/lib/membership-pause";
-import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
+import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 
 const MAX_BODY_BYTES = 1_000;
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     });
 
   if (!MANAGE_TOKEN_PATTERN.test(token)) return back("expired");
-  if (!(await withinLimit("manage-open", `${clientAddress(request)}|${store.handle}`, 20, 600))) return back("limited");
+  if (!(await withinStore("manage-open", `${clientAddress(request)}|${store.handle}`, 20, 600, store, "buyer"))) return back("limited");
 
   if (action === "resume") {
     const result = await resumeMembership(store, token, subscription);

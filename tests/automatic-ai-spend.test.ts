@@ -7,6 +7,7 @@ import { boundedAiRequest } from '../lib/ai-request-rules';
 import { askModel } from '../lib/ai';
 import type { Store } from '@/lib/store';
 import { reset, ledger, opened, calls, seed } from './ai-spend-redis';
+import { calendarPeriod, calendarPeriodId } from './billing-period-fixture';
 
 const now = new Date();
 const month = now.toISOString().slice(0, 7);
@@ -124,22 +125,22 @@ test('a ledger written under any other review is left untouched', async () => {
   assert.equal(JSON.stringify([...ledger.get(key)!]), before);
 });
 
-const studio = { statsId: 'studio1', tier: 'pro', createdAt: 1, subscriptionActive: true, subscriptionId: 'sub_test', trialEnds: 0, planEndedAt: '' } as unknown as Store;
+const studio = { statsId: 'studio1', tier: 'pro', createdAt: 1, subscriptionActive: true, subscriptionId: 'sub_test', trialEnds: 0, planEndedAt: '', period: calendarPeriod() } as unknown as Store;
 test('the provider call reserves exactly the hard bound of its own request before the fetch', async () => {
   reset();
   process.env.ANTHROPIC_API_KEY = 'sk-ant-' + 'x'.repeat(30);
   const old = globalThis.fetch; let fetched = 0;
-  globalThis.fetch = async () => { fetched++; assert.equal(ledger.get(key)!.has('store:studio1'), true); return new Response('busy', { status: 503 }); };
+  globalThis.fetch = async () => { fetched++; assert.equal(ledger.get(key)!.has('store:studio1:' + calendarPeriodId()), true); return new Response('busy', { status: 503 }); };
   try {
     assert.equal(await askModel(studio, 'system words', 'the prompt', 900, 'claude-sonnet-5-5'), null);
     const bounded = boundedAiRequest('system words', 'the prompt', 900, 'claude-sonnet-5-5');
     assert.ok(bounded.ok);
     const hold = aiRequestHoldMicroUsd('claude-sonnet-5-5', bounded.shape)!;
     assert.equal(fetched, 1);
-    assert.equal(ledger.get(key)!.get('store:studio1'), String(hold));
+    assert.equal(ledger.get(key)!.get('store:studio1:' + calendarPeriodId()), String(hold));
     // A failed attempt keeps its reservation; the retry is a new one.
     assert.equal(await askModel(studio, 'system words', 'the prompt', 900, 'claude-sonnet-5-5'), null);
-    assert.equal(ledger.get(key)!.get('store:studio1'), String(2 * hold));
+    assert.equal(ledger.get(key)!.get('store:studio1:' + calendarPeriodId()), String(2 * hold));
   } finally { globalThis.fetch = old; }
 });
 

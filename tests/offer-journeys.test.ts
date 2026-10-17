@@ -49,6 +49,7 @@ import { applyShareToPayment, owedOn, toGiveBack } from "@/lib/platform-share";
 import { salePrice } from "@/lib/store-sale";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const OWNER = "owner@example.com";
 const ACCOUNT = "acct_1TestJourney001";
@@ -114,7 +115,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, ACCOUNT, true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00003", subscriptionId: "sub_Owner00003", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00003", subscriptionId: "sub_Owner00003", active: true, period: paidPeriod() });
   const ids: Record<string, string> = {};
   for (const [title, price] of [["Course", "49"], ["Workbook", "29"], ["Checklist", "9"]]) {
     const made = await addProduct(OWNER, title, "", price, null);

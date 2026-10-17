@@ -24,6 +24,7 @@ import { askToJoin, readJoinToken } from "@/lib/store-join";
 import { claimHandle, ensureListId, ensureStatsId, setMailSettings, setStripeAccount, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const sent: { to: string; subject: string; text: string }[] = [];
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -51,7 +52,7 @@ async function main(): Promise<void> {
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestPeople0001", true);
-  await setSubscription(OWNER, { customerId: "cus_People0001", subscriptionId: "sub_People0001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_People0001", subscriptionId: "sub_People0001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(OWNER, { fromName: "Harbor Kitchen", address: "1 Main St, Portland, OR 97201" });
   let store = (await storeForEmail(OWNER))!;
   const statsId = store.statsId!;

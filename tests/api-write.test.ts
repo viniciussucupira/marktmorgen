@@ -19,6 +19,7 @@ import { POST as postLabels } from "@/app/api/v1/leads/labels/route";
 import { DELETE as deleteAccess, POST as postAccess } from "@/app/api/v1/access/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 type Sent = { to: string | string[]; subject: string; text: string };
 const emails: Sent[] = [];
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const guide = await addProduct(OWNER, "The Guide", "", "12", null);
   const club = await addProduct(OWNER, "The Club", "", "9", { interval: "month", trialDays: 0, payments: 0 });
   if (!guide.ok || !club.ok) throw new Error("no product");

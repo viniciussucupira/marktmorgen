@@ -16,6 +16,8 @@ import { sendBatch, sendEmail, sentKey, sentThisMonth } from "@/lib/email";
 import { SENDER_WAIT_NOTE, listCeiling, reserve, reserveDay, senderQuota, senderRoom, usedThisMonth } from "@/lib/mail";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
+import { windowId } from "@/lib/allowance-window";
 
 const OWNER = "owner@example.com";
 type Message = { to: string[]; subject: string };
@@ -32,7 +34,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   return new Response(JSON.stringify({ id: "email_1" }));
 }) as typeof fetch;
 
-const message = (to: string) => ({ from: "Marktmorgen <hello@marktmorgen.com>", to, subject: "Hello", text: "Hello.", html: "<p>Hello.</p>" });
+const message = (to: string) => ({ meter: { by: "company" } as const, from: "Marktmorgen <hello@marktmorgen.com>", to, subject: "Hello", text: "Hello.", html: "<p>Hello.</p>" });
 
 async function main(): Promise<void> {
   redis.clear();
@@ -51,11 +53,11 @@ async function main(): Promise<void> {
   part("Everything sent is counted, whatever it is");
   await sendEmail({ ...message("buyer@example.com"), subject: "Your login link" });
   is("a login link counts", await sentThisMonth(), 1);
-  await sendBatch([message("a@example.com"), message("b@example.com"), message("not an address")], "batch-1");
+  await sendBatch([message("a@example.com"), message("b@example.com"), message("not an address")], "batch-1", { by: "company" });
   is("a batch counts what actually went, not what could not be addressed", await sentThisMonth(), 3);
   senderDown = true;
   await sendEmail(message("c@example.com"));
-  await sendBatch([message("d@example.com")], "batch-2");
+  await sendBatch([message("d@example.com")], "batch-2", { by: "company" });
   senderDown = false;
   is("what the sender did not take is not counted", await sentThisMonth(), 3);
 
@@ -64,13 +66,13 @@ async function main(): Promise<void> {
   if (!made.ok) throw new Error("no store");
   await ensureStatsId(OWNER);
   await ensureListId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "scale" });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "scale", period: paidPeriod() });
   await setMailSettings(OWNER, { fromName: "Harbor Kitchen", address: "1 Main St, Portland, OR 97201" });
   const store = (await storeForEmail(OWNER))!;
   for (let i = 0; i < 30; i += 1) await upsertContact(store.listId as string, `reader${i}@example.com`, { agreed: true, explicit: true, source: "free" });
 
   is("with room, it is taken as always", await reserve(store, 10), "ok");
-  is("and counted against the store's own month", await usedThisMonth(store.listId), 10);
+  is("and counted against the store's own month", await usedThisMonth(store.listId, windowId(store)), 10);
 
   // Every other store's month, all at once: twenty emails short of the ceiling.
   redis.run(["SET", sentKey(), String(listCeiling() - 20)]);
@@ -78,7 +80,7 @@ async function main(): Promise<void> {
   is("twenty still fit", await reserve(store, 20), "ok");
   single.length = 0;
   is("twenty-one do not, and the reason is the sender, not the store", await reserve(store, 21), "sender");
-  is("nothing was taken from the store's month for them", await usedThisMonth(store.listId), 30);
+  is("nothing was taken from the store's month for them", await usedThisMonth(store.listId, windowId(store)), 30);
   is("a bulk notice is refused the same way", await reserveDay(21), false);
 
   part("The owner is told, once");

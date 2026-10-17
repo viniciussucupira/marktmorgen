@@ -210,7 +210,7 @@ export async function requestCopy(input: {
   const name = store.name;
   const g = givingWords(store.language);
   const link = `${origin}/@${store.handle}/free?token=${token}`;
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "order" },
     from: `"${displayName(name)} via Marktmorgen" <${senderAddress()}>`,
     to: email,
     subject: g.freeSubject(product.title),

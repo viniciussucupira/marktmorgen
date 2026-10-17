@@ -395,7 +395,7 @@ export async function setPayAddress(store: Store, affiliate: Affiliate, raw: str
   await writeAffiliate(store, { ...affiliate, paypal: value });
   if (isSenderConfigured()) {
     const a = affiliatesWords(store.language);
-    await sendEmail({
+    await sendEmail({ meter: { by: "store", store: store, kind: "email" },
       from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
       to: affiliate.email,
       subject: a.payChangedSubject(store.name),
@@ -646,7 +646,7 @@ export async function requestAffiliateLink(input: {
   const name = store.name;
   const a = affiliatesWords(store.language);
   const link = `${origin}/@${store.handle}/affiliates?token=${token}`;
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
     from: `"${displayName(name)} via Marktmorgen" <${senderAddress()}>`,
     to: email,
     subject: typeof known === "string" ? a.yourPageFor(name) : a.linkSubjectNew(name),
@@ -721,7 +721,7 @@ export async function invitePartner(input: {
       titles: named,
     });
     if (!left.ok) return left.reason === "full" ? "full" : "error";
-    await sendEmail({
+    await sendEmail({ meter: { by: "store", store: store, kind: "email" },
       from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
       to: email,
       subject: a.partnerSubject(store.name),
@@ -744,7 +744,7 @@ export async function invitePartner(input: {
   const token = randomBytes(32).toString("hex");
   const grant: LinkGrant = { s: statsId, e: email, n: "Invited as a partner", k: 1, p: share };
   await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", AFFILIATE_LINK_SECONDS]]);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
     to: email,
     subject: a.partnerSubject(store.name),
@@ -904,7 +904,7 @@ export async function openAffiliateLink(store: Store, token: string): Promise<Op
   ]);
 
   if (created && isSenderConfigured() && grant.k !== 1) {
-    await sendEmail({
+    await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
       from: `Marktmorgen <${senderAddress()}>`,
       to: store.email,
       subject: `New affiliate application: ${affiliate.email}`,
@@ -1054,7 +1054,7 @@ export async function decide(store: Store, id: string, decision: Decision): Prom
   await writeAffiliate(store, next);
   if (decision === "approve" && affiliate.status === "pending" && isSenderConfigured()) {
     const a = affiliatesWords(store.language);
-    await sendEmail({
+    await sendEmail({ meter: { by: "store", store: store, kind: "email" },
       from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
       to: affiliate.email,
       subject: a.approvedSubject(store.name),

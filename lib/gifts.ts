@@ -171,7 +171,7 @@ export async function deliverGift(input: {
   const label = gift.o ? product.options.find((o) => o.id === gift.o)?.label ?? "" : "";
   const title = label ? `${product.title} (${label})` : product.title;
   const link = (await input.ordersLink(gift.to)) ?? `${base}/orders`;
-  await sendEmail({
+  await sendEmail({ meter: { by: "order" },
     from: input.from,
     to: gift.to,
     subject: g.giftSubject(who, title).slice(0, 200),
@@ -193,7 +193,7 @@ export async function deliverGift(input: {
   if (buyer) {
     const amount = typeof session.amount_total === "number" ? session.amount_total : product.priceCents;
     const currency = typeof session.currency === "string" && session.currency ? session.currency : store.currency;
-    await sendEmail({
+    await sendEmail({ meter: { by: "order" },
       from: input.from,
       to: buyer,
       subject: g.giftReceiptSubject(title).slice(0, 200),

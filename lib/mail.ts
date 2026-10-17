@@ -22,6 +22,8 @@ import { TRIAL_MONTHLY_EMAILS, canUse, monthlyEmails } from "@/lib/plan";
 import { tokensFor } from "@/lib/contacts";
 import { SITE_URL } from "@/lib/site-url";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
+import { calendarWindow, windowId } from "@/lib/allowance-window";
+import { admitNonPaying } from "@/lib/free-pool";
 import type { Store } from "@/lib/store";
 import { creatorAddress } from "@/lib/mail-from";
 import { type MailTag, taggedLink } from "@/lib/mail-links";
@@ -59,7 +61,13 @@ function displayName(name: string): string {
 export function monthKey(now = new Date()): string {
   return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
 }
-const usedKey = (listId: string, month = monthKey()) => `nl:mail:used:${listId}:${month}`;
+/**
+ * A store's monthly emails, counted in its window: its billing month when it
+ * pays us, the calendar month otherwise (lib/allowance-window.ts). A store
+ * that pays and whose period is not known sends nothing that counts here.
+ */
+const usedKey = (listId: string, window: string) => `nl:mail:used:${listId}:${window}`;
+const windowOf = (store: Store) => windowId(store);
 
 /** Whether a store's pages may ask visitors to hear from the creator: Pro, and set up. */
 export function canWrite(store: Store): boolean {
@@ -77,9 +85,9 @@ export function inTrial(store: Store, nowSeconds = Date.now() / 1000): boolean {
   return store.trialEnds > nowSeconds;
 }
 
-export async function usedThisMonth(listId: string | null): Promise<number> {
-  if (!listId || !isRedisConfigured()) return 0;
-  const [raw] = await redisPipeline([["GET", usedKey(listId)]]);
+export async function usedThisMonth(listId: string | null, window: string | null = calendarWindow().id): Promise<number> {
+  if (!listId || !window || !isRedisConfigured()) return 0;
+  const [raw] = await redisPipeline([["GET", usedKey(listId, window)]]);
   return Number(raw) || 0;
 }
 
@@ -170,7 +178,7 @@ async function tellSenderIsFull(): Promise<void> {
     if (first === null) return;
     const quota = senderQuota();
     const amazon = isSesConfigured() ? await sesReady() : null;
-    await sendEmail({
+    await sendEmail({ meter: { by: "company" },
       from: NIMBUS_FROM,
       to: SUPPORT_EMAIL,
       subject: "List email is waiting: the sender's monthly volume is nearly used",
@@ -248,11 +256,15 @@ export async function reserve(store: Store, n: number): Promise<Reserved> {
   if(n===0)return "ok";
   if(!store.listId)return "month";
   if(!isRedisConfigured())return "unavailable";
+  const window=windowOf(store);
+  if(!window)return "month";
+  // A free trial's emails go out only while it holds one of the month's places (lib/free-pool-rules.ts).
+  if(!(await admitNonPaying(store)))return "month";
   const allowance=monthlyAllowance(store);
   if(!Number.isSafeInteger(allowance) || allowance<0 || n>allowance)return "month";
   try {
     if(!(await senderTakes(n)))return "sender";
-    const key=usedKey(store.listId),cap=dailyCap(),day=dayKey();
+    const key=usedKey(store.listId,window),cap=dailyCap(),day=dayKey();
     const results=await redisPipeline([["INCRBY",key,n],["EXPIRE",key,70*86400],["INCRBY",day,n],["EXPIRE",day,3*86400]]);
     // A missing acknowledgement may still have consumed capacity. Never
     // refund it or dispatch a provider call on an ambiguous response.
@@ -279,9 +291,11 @@ export async function reserve(store: Store, n: number): Promise<Reserved> {
 export async function takeFromMonth(store: Store, n: number): Promise<number> {
   if (!Number.isSafeInteger(n) || n <= 0 || !store.listId || !isRedisConfigured()) return 0;
   const allowance = monthlyAllowance(store);
-  if (!Number.isSafeInteger(allowance) || allowance <= 0) return 0;
+  const window = windowOf(store);
+  if (!Number.isSafeInteger(allowance) || allowance <= 0 || !window) return 0;
+  if (!(await admitNonPaying(store))) return 0;
   try {
-    const key = usedKey(store.listId);
+    const key = usedKey(store.listId, window);
     const results = await redisPipeline([["INCRBY", key, n], ["EXPIRE", key, 70 * 86400]]);
     const total = confirmedCount(results[0], n);
     if (results.length !== 2 || total === null) return 0;
@@ -295,14 +309,16 @@ export async function takeFromMonth(store: Store, n: number): Promise<number> {
 
 /** Gives back to the store's month what takeFromMonth took for emails that did not go. */
 export async function giveBackToMonth(store: Store, n: number): Promise<void> {
-  if (store.listId && Number.isSafeInteger(n) && n > 0) await redisPipeline([["DECRBY", usedKey(store.listId), n]]);
+  const window = windowOf(store);
+  if (store.listId && window && Number.isSafeInteger(n) && n > 0) await redisPipeline([["DECRBY", usedKey(store.listId, window), n]]);
 }
 
 /** Gives back what was taken for a batch that was not sent. */
 export async function release(store: Store, n: number): Promise<void> {
-  if (store.listId && n > 0) {
+  const window = windowOf(store);
+  if (store.listId && window && n > 0) {
     await redisPipeline([
-      ["DECRBY", usedKey(store.listId), n],
+      ["DECRBY", usedKey(store.listId, window), n],
       ["DECRBY", dayKey(), n],
     ]);
   }
@@ -481,7 +497,7 @@ export async function sendTo(
         return { from: fromLine(store), to: email, subject: r.subject, text: r.text, html: r.html, replyTo: store.email, headers: r.headers, tags };
       });
     if (messages.length) await paced();
-    const outcome = await sendBatch(messages, `${keyBase}:${i}:${chunk.length}`);
+    const outcome = await sendBatch(messages, `${keyBase}:${i}:${chunk.length}`, { by: "monthly" });
     if (outcome !== "sent") {
       // Dispatch may have succeeded before its acknowledgement was lost.
       // Keep attempted capacity reserved; retries consume new capacity.

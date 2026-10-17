@@ -18,6 +18,7 @@ import { addProduct, claimHandle, ensureStatsId, setSubscription, storeForEmail 
 import { aiMonthKey } from "@/lib/ai";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 let reply: string | null = null;
 const prompts: string[] = [];
@@ -77,7 +78,7 @@ async function main(): Promise<void> {
   const OWNER = "owner@example.com";
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro" });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", period: paidPeriod() });
   const made = await addProduct(OWNER, "Meal Planner", "", "19");
   if (!made.ok) throw new Error("no product");
   const store = (await storeForEmail(OWNER))!;
@@ -110,14 +111,14 @@ async function main(): Promise<void> {
   reply = JSON.stringify({ themes: [{ title: "Wants a printable version", ids: gathered.filter((g) => /print|PDF/.test(g.text)).map((g) => g.id) }, { title: "Metric units", ids: [gathered.find((g) => /metric/.test(g.text))!.id] }] });
   const first = await makeVoice(store, now);
   if (!first.ok) throw new Error(`no summary: ${first.reason}`);
-  is("made, as one of the month's AI jobs", [first.fresh, first.summary.themes.map((t) => [t.title, t.count]), first.summary.read, Number((await redis.pipeline([["GET", aiMonthKey(store, new Date(now))]]))[0])], [
+  is("made, as one of the month's AI jobs", [first.fresh, first.summary.themes.map((t) => [t.title, t.count]), first.summary.read, Number((await redis.pipeline([["GET", aiMonthKey(store, new Date(now))!]]))[0])], [
     true,
     [["Wants a printable version", 5]],
     { question: 3, review: 3, search: 3 },
     1,
   ]);
   const again = await makeVoice(store, now);
-  is("once a month: asked again, the same summary, nothing more counted", [again.ok && again.fresh, prompts.length, Number((await redis.pipeline([["GET", aiMonthKey(store, new Date(now))]]))[0])], [false, 1, 1]);
+  is("once a month: asked again, the same summary, nothing more counted", [again.ok && again.fresh, prompts.length, Number((await redis.pipeline([["GET", aiMonthKey(store, new Date(now))!]]))[0])], [false, 1, 1]);
   is("read back for the studio", (await readVoice(store, now))?.themes[0].title, "Wants a printable version");
   const nextMonth = new Date(now);
   nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1, 2);

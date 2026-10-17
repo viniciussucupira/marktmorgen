@@ -42,6 +42,7 @@ import { folderFromPathname, recordDelivery } from "@/lib/delivery";
 import { playerFor } from "@/lib/stream";
 import { isStreamPath } from "@/lib/stream-rules";
 import { opened, watchedForAdmission } from "@/lib/watch";
+import { calendarWindow } from "@/lib/allowance-window";
 import type { ProductFile } from "@/lib/product-file";
 import type { Listing, Store } from "@/lib/store";
 import { readKind, readListing } from "@/lib/catalog";
@@ -581,15 +582,16 @@ export type LessonVideo =
  * including for paid plans. Missing, invalid or unreadable limits never mint
  * a player token. This meter does not bound provider bytes, replay or buffering.
  */
-export async function lessonVideo(file: ProductFile, limit: number | null = null): Promise<LessonVideo | null> {
+export async function lessonVideo(file: ProductFile, limit: number | null = null, window: string | null = calendarWindow().id): Promise<LessonVideo | null> {
   if (!isStreamPath(file.pathname)) {
     const src = await signedMedia(file, VIDEO_URL_SECONDS);
     return src ? { kind: "file", src } : null;
   }
   try {
     const folder = folderFromPathname(file.pathname);
-    if (limit === null || !Number.isSafeInteger(limit) || limit < 0 || !folder) return null;
-    const watched = await watchedForAdmission(folder);
+    // Counted in the store's window (lib/allowance-window.ts): none known, no player.
+    if (limit === null || !Number.isSafeInteger(limit) || limit < 0 || !folder || !window) return null;
+    const watched = await watchedForAdmission(folder, window);
     if (watched === null) return null;
     if (watched >= limit) return { kind: "paused" };
     const player = await playerFor(file.pathname);
@@ -678,7 +680,7 @@ export async function sendCourseLink(store: Store, product: Listing, email: stri
   const link = `${origin}/api/store/course/open?token=${token}`;
   // In the store's language (lib/buyer-words/courses.ts).
   const w = coursesWords(store.language);
-  return sendEmail({
+  return sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
     from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
     to: email,
     subject: w.courseSubject(product.title).slice(0, 200),
@@ -764,7 +766,7 @@ async function sendDripEmail(store: Store, product: Listing, unit: CourseModule,
   // In the store's language (lib/buyer-words/courses.ts); the button it
   // names is the course page's own.
   const w = coursesWords(store.language);
-  return sendEmail({
+  return sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: `"${displayName(store.name)} via Marktmorgen" <${senderAddress()}>`,
     to: email,
     subject: w.dripSubject(product.title, unit.title).slice(0, 200),

@@ -268,7 +268,7 @@ async function remindFailed(store: Store, deadline: number): Promise<number> {
         language,
         reminder: step > 1,
       });
-      const ok = await sendEmail({
+      const ok = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
         from: fromStore(store),
         to,
         subject: mail.subject,
@@ -418,7 +418,7 @@ async function noticeCards(store: Store, deadline: number): Promise<number> {
         isPlan: sub.metadata?.kind === "plan",
         language,
       });
-      const ok = await sendEmail({
+      const ok = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
         from: fromStore(store),
         to: email,
         subject: mail.subject,

@@ -51,7 +51,7 @@ export async function fileReport(input: ReportInput, ip: string, origin: string)
     ["SET", reportKey(id), JSON.stringify(report), "EX", REPORT_SECONDS],
     ["SET", tokenKey(token), id, "EX", TOKEN_SECONDS],
   ]);
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: SUPPORT_EMAIL,
     replyTo: report.email,
@@ -149,7 +149,7 @@ export async function takeDown(report: Report, store: Store, action: TakedownAct
     await noteTakedown(ref, null, action.on);
     if (!action.on) {
       // Back on: the creator is told, and nothing is added to the record.
-      await sendEmail({
+      await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: store.email,
         replyTo: SUPPORT_EMAIL,
@@ -162,7 +162,7 @@ export async function takeDown(report: Report, store: Store, action: TakedownAct
     what = "Your store's pages and sales, now switched off";
   }
   await noteTakedown(ref, { at: new Date().toISOString(), what, report: report.id });
-  await sendEmail({
+  await sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: store.email,
     replyTo: SUPPORT_EMAIL,

@@ -447,7 +447,7 @@ async function confirmOnce(
 
   let sent = false;
   try {
-    sent = await sendEmail({
+    sent = await sendEmail({ meter: { by: "order" },
       from: fromStore(store),
       to: letter.to,
       subject: letter.subject,
@@ -633,7 +633,7 @@ export async function confirmOffer(store: Store, offer: TakenOffer): Promise<Con
   if (claimed === null) return "already";
   let sent = false;
   try {
-    sent = await sendEmail({
+    sent = await sendEmail({ meter: { by: "order" },
       from: fromStore(store),
       to: letter.to,
       subject: letter.subject,
@@ -729,7 +729,7 @@ export async function resendPurchase(store: Store, sessionId: string): Promise<R
   const listings = await listingsNamed(store, session.metadata);
   const letter = confirmationFor(store, session, created, await keysFor(store, session, listings), listings, await noteFor(store, session, listings));
   if (!letter) return "unknown";
-  const sent = await sendEmail({
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: fromStore(store),
     to: letter.to,
     subject: letter.subject,

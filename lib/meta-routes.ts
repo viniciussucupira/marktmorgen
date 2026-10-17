@@ -5,6 +5,7 @@
  * how it went, and none answers at all (404) while the deployment has no
  * Meta app.
  */
+import { withinService } from "@/lib/metered-limits";
 import { type NextRequest, after } from "next/server";
 import { SESSION_COOKIE, emailForSession } from "@/lib/auth";
 import { noticeCreator } from "@/lib/account-notice";
@@ -28,7 +29,7 @@ export async function startMeta(request: NextRequest): Promise<Response> {
   const { store, ref, email, origin } = creator;
   const named = store.statsId ? store : await ensureStatsId(ref);
   if (!named?.statsId || !store.sid) return back(origin, store, "error");
-  if (!(await withinLimit("metaads-start", named.statsId, 10, 600))) return back(origin, store, "limited");
+  if (!(await withinService("metaads-start", named.statsId, 10, 600, named))) return back(origin, store, "limited");
   try {
     const url = await beginMeta({ statsId: named.statsId, sid: store.sid, sessionCookie: request.cookies.get(SESSION_COOKIE)?.value ?? "", email, redirect: `${origin}${CALLBACK}` });
     return new Response(null, { status: 303, headers: { Location: url, "Cache-Control": "no-store" } });

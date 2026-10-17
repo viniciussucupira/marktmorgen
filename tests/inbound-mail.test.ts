@@ -25,7 +25,8 @@ import { createHmac } from "node:crypto";
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/mail/inbound/route";
 import { CREATOR_HOURLY, forwardTarget, inboundSigned, isInboundConfigured, parseSender } from "@/lib/inbound-mail";
-import { claimHandle } from "@/lib/store";
+import { claimHandle, setSubscription } from "@/lib/store";
+import { paidPeriod } from "./billing-period-fixture";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -230,6 +231,8 @@ async function main(): Promise<void> {
 
   part("An answer written to a store's own address");
   await claimHandle("ana@example.org", "harborkitchen", "Harbor Kitchen", "");
+  // A store that pays: what is sent on to its creator is one of its store emails for the billing month (lib/store-allowance-rules.ts).
+  await setSubscription("ana@example.org", { customerId: "cus_Harbor0001", subscriptionId: "sub_Harbor0001", active: true, period: paidPeriod() });
   const before = await POST(announce(E, { id: "msg_before" }));
   is("with no domain set apart for creators, it is mail like any other", [(await before.json()).result, sent[4]?.body.to], ["sent", ["inbox@example.net"]]);
   process.env.MARKETING_FROM_DOMAIN = "mail.marktmorgen.com";

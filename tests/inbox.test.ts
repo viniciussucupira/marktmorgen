@@ -25,6 +25,7 @@ import { sendContact } from "@/lib/store-contact";
 import { claimHandle, ensureStatsId, setContact, setFaq, setInboxSetting, setLanguage, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
 import { advance, store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.RESEND_API_KEY = "re_test_inbox_only_a_stand_in";
 process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
@@ -66,7 +67,7 @@ async function main(): Promise<void> {
   part("A store, its chat off");
   await claimHandle(OWNER, "cocina", "Cocina de Ana", "");
   await ensureStatsId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Inbox00001", subscriptionId: "sub_Inbox00001", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription(OWNER, { customerId: "cus_Inbox00001", subscriptionId: "sub_Inbox00001", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   await setLanguage(OWNER, "es");
   await setFaq(OWNER, [{ q: "How many lessons?", a: "Twelve, yours for good." }]);
   let store = (await storeForEmail(OWNER))!;

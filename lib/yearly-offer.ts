@@ -152,7 +152,7 @@ export async function offerYearly(store: Store): Promise<boolean> {
   const [claimed] = await redisPipeline([["SET", offeredKey(subscription), "1", "NX"]]);
   if (claimed === null) return false;
   const { subject, text } = yearlyOfferEmail({ tier: live.tier, trialing: live.trialing });
-  const ok = await sendEmail({ from: NIMBUS_FROM, to: store.email, subject, text, replyTo: SUPPORT_EMAIL });
+  const ok = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: store.email, subject, text, replyTo: SUPPORT_EMAIL });
   if (!ok) {
     // Not sent is not offered: the next store pass cannot try again, because
     // the first sale is already noted, so the mark is taken back and the

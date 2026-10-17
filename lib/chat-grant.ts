@@ -24,7 +24,7 @@
 import { GRANT_MS } from "@/lib/chat-pace";
 import { roomPass } from "@/lib/chat-pass";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { type Store, storeFolder, storeRef } from "@/lib/store";
+import type { Store } from "@/lib/store";
 import { isResting, recordParts } from "@/lib/traffic";
 import { ROOM_IDLE_PARTS, ROOM_LIVE_PARTS } from "@/lib/traffic-rules";
 
@@ -87,7 +87,7 @@ export async function grantRoom(
     const until = upgrade ? held.u : now + GRANT_MS;
     const owed = upgrade ? weight - held.w : weight;
     await redisPipeline([["SET", grantKey(id, reader.key), JSON.stringify({ u: until, w: weight }), "EX", Math.max(1, Math.ceil((until - now) / 1000))]]);
-    await recordParts(await storeFolder(storeRef(store)), storeRef(store), owed, now);
+    await recordParts(store, owed, now);
     return { pass, ms: until - now, live };
   } catch (error) {
     // A count that cannot be kept must not close a room: the page asks by

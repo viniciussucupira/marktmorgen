@@ -1,10 +1,11 @@
 import { isRedisConfigured, redisPipeline } from '@/lib/redis';
-import { standingOf, type PlanFields } from '@/lib/plan-standing';
+import { standingOf } from '@/lib/plan-standing';
+import { type AllowanceWindow, type WindowFields, allowanceWindow } from '@/lib/allowance-window';
 import type { Tier } from '@/lib/plan';
 import { AUTOMATIC_UPLOAD_REVIEW_ID, UPLOAD_BUDGET_RULES, UPLOAD_BUDGET_SCOPES, currentUploadBudgetPolicy, isUploadBudgetConfigured, uploadBudgetSnapshot, uploadLedgerKey, uploadOpenedKey, type UploadBudgetPolicy, type UploadBudgetScope } from '@/lib/upload-budget-policy';
 
 export type UploadBackend = 'r2'|'blob'|'stream';
-export type UploadStore = PlanFields & { statsId: string|null; tier: Tier };
+export type UploadStore = WindowFields & { statsId: string|null; tier: Tier };
 export function uploadScopeFor(store: UploadStore): UploadBudgetScope {
   const standing=standingOf(store);
   return standing==='paid'?store.tier:standing==='none'?'setup':standing;
@@ -120,8 +121,19 @@ redis.call('HSET', KEYS[1], 'policy', ARGV[2])
 return 1
 `;
 
-async function reserve(statsId: string, scope: UploadBudgetScope, action: 'open'|'control', bytes: number, policy: UploadBudgetPolicy|null): Promise<boolean> {
-  if(!isUploadBudgetConfigured(policy) || !isRedisConfigured() || !/^[a-f0-9]{32}$/.test(statsId)
+/**
+ * `window` (17 October 2026): the store's allowance window
+ * (lib/allowance-window.ts). A paying store's monthly allowance follows its
+ * billing month: it is reserved in the ledger of the calendar month that
+ * month began in, under the store and the month's own name, so one payment
+ * buys one month of uploads however many calendar months it touches.
+ */
+async function reserve(statsId: string, scope: UploadBudgetScope, action: 'open'|'control', bytes: number, given: UploadBudgetPolicy|null, window: AllowanceWindow|null): Promise<boolean> {
+  if(!window)return false;
+  const began=window.billing?new Date(window.start):null;
+  if(began && (Date.now()-window.start>32*86_400_000 || window.start-Date.now()>300_000))return false;
+  const policy=began && given?.reviewId===AUTOMATIC_UPLOAD_REVIEW_ID?currentUploadBudgetPolicy(began):given;
+  if(!isUploadBudgetConfigured(policy,began??new Date()) || !isRedisConfigured() || !/^[a-f0-9]{32}$/.test(statsId)
     || !(UPLOAD_BUDGET_SCOPES as readonly string[]).includes(scope)
     || !Number.isSafeInteger(bytes) || bytes<0 || bytes>UPLOAD_BUDGET_RULES.maxInteger
     || (action==='open' && bytes===0) || (action==='control' && bytes!==0))return false;
@@ -129,7 +141,7 @@ async function reserve(statsId: string, scope: UploadBudgetScope, action: 'open'
   if(cap.controlRequests<1 || (action==='open' && (cap.opens<1 || bytes>cap.authorizedBytes)))return false;
   const key=uploadLedgerKey(policy.month), snapshot=uploadBudgetSnapshot(policy);
   const take:(string|number)[]=['EVAL',RESERVE_UPLOAD_BUDGET,1,key,
-      snapshot,statsId,scope,action,bytes,cap.opens,cap.authorizedBytes,cap.controlRequests,
+      snapshot,window.billing?statsId+'@'+window.id:statsId,scope,action,bytes,cap.opens,cap.authorizedBytes,cap.controlRequests,
       company.opens,company.authorizedBytes,company.controlRequests,policy.fundedStores[scope]];
   try{
     if(policy.reviewId!==AUTOMATIC_UPLOAD_REVIEW_ID){
@@ -150,12 +162,12 @@ export async function reserveStoreUpload(store: UploadStore, bytes: number, back
   // Direct Blob/Bunny grants do not establish the same revocable, size-bound
   // session contract. Keep them closed until that provider path is proven.
   if(backend!=='r2')return false;
-  return !!store?.statsId && reserve(store.statsId,uploadScopeFor(store),'open',bytes,policy);
+  return !!store?.statsId && reserve(store.statsId,uploadScopeFor(store),'open',bytes,policy,allowanceWindow(store));
 }
 /** Signing requests share the store's monthly control ceiling.
  * Completing or canceling an existing grant remains accessible; the reviewed
  * per-open liability must include that work and month-boundary carryover.
  */
 export async function reserveUploadControl(store: UploadStore, policy: UploadBudgetPolicy|null=currentUploadBudgetPolicy()): Promise<boolean> {
-  return !!store?.statsId && reserve(store.statsId,uploadScopeFor(store),'control',0,policy);
+  return !!store?.statsId && reserve(store.statsId,uploadScopeFor(store),'control',0,policy,allowanceWindow(store));
 }

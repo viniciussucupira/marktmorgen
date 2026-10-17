@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { storeForId } from "@/lib/store";
 import { LINK_ID, MAX_PASSWORD, cookieFits, cookieName, countOpen, linkStore } from "@/lib/numbers-links";
+import { takePublicRequest } from "@/lib/traffic";
 import { readVerified } from "@/lib/verified-numbers";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -75,7 +76,8 @@ export default async function NumbersLinkPage({ params, searchParams }: Params) 
     );
   }
 
-  if (!(await countOpen(id, now))) {
+  // Each opening is one of the store's public requests for its window (lib/traffic.ts).
+  if (!(await countOpen(id, now)) || !(await takePublicRequest(store, "public", now))) {
     return (
       <Shell>
         <div className="card p-6 sm:p-8">

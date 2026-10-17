@@ -22,6 +22,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { canBeCharged } from "@/lib/watch-rules";
 import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const GB = 1024 * 1024 * 1024;
 const NOW = 1_800_000_000;
@@ -30,7 +31,7 @@ const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 async function main(): Promise<void> {
   part("Where a store stands");
   const never = { subscriptionActive: false, subscriptionId: null, stripeCustomerId: null, trialEnds: 0, planEndedAt: "" };
-  const trial = { subscriptionActive: true, subscriptionId: "sub_Trial00001", stripeCustomerId: "cus_Trial00001", trialEnds: NOW + 86_400, planEndedAt: "" };
+  const trial = { subscriptionActive: true, subscriptionId: "sub_Trial00001", period: paidPeriod(), stripeCustomerId: "cus_Trial00001", trialEnds: NOW + 86_400, planEndedAt: "" };
   const paid = { ...trial, trialEnds: NOW - 86_400 };
   const ended = { ...paid, subscriptionActive: false, planEndedAt: "2026-10-01T00:00:00.000Z" };
   is("a store that never started a plan", standingOf(never, NOW), "none");
@@ -86,7 +87,7 @@ async function main(): Promise<void> {
   is("a new store has no such day, and stands as never started", [(await storeForEmail("ana@example.com"))?.planEndedAt, standingOf((await storeForEmail("ana@example.com"))!)], ["", "none"]);
   await setSubscription("ana@example.com", { active: false });
   is("looking at a store that never started a plan does not end one", (await storeForEmail("ana@example.com"))?.planEndedAt, "");
-  await setSubscription("ana@example.com", { customerId: "cus_Ana0001", subscriptionId: "sub_Ana0001", active: true, trialEnds: Math.floor(Date.now() / 1000) + 86_400 });
+  await setSubscription("ana@example.com", { customerId: "cus_Ana0001", subscriptionId: "sub_Ana0001", active: true, trialEnds: Math.floor(Date.now() / 1000) + 86_400, period: paidPeriod() });
   is("a plan that starts leaves it empty", [(await storeForEmail("ana@example.com"))?.planEndedAt, standingOf((await storeForEmail("ana@example.com"))!)], ["", "trial"]);
   await setSubscription("ana@example.com", { active: false, trialEnds: 0 });
   const first = (await storeForEmail("ana@example.com"))?.planEndedAt ?? "";
@@ -107,7 +108,7 @@ async function main(): Promise<void> {
   is("so does the page about courses", ["paidVideoWords()", "hoursWords(TRIAL_VIDEO_SECONDS)", "hoursWords(SETUP_VIDEO_SECONDS)"].every(piece => read("lib/feature-pages.ts").includes(piece)), true);
   const studio = read("app/studio/page.tsx");
   is("the studio shows a store its own figures", [/storageBrakeFor\(standing, store\.tier\)/.test(studio), /videoLimitFor\(store\)/.test(studio), /SETUP_VIDEO_SECONDS/.test(studio)], [true, true, true]);
-  is("and the lesson page pauses by the store's own hours", /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/.test(read("app/[handle]/course/[product]/[lesson]/page.tsx")), true);
+  is("and the lesson page pauses by the store's own hours", /lessonVideo\(lesson\.video, videoLimitFor\(store\), windowId\(store\)\)/.test(read("app/[handle]/course/[product]/[lesson]/page.tsx")), true);
 
   done();
 }

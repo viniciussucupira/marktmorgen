@@ -156,7 +156,7 @@ export async function sendMoveLink(
 
   // Best effort, and deliberately not awaited into the result: the creator's
   // move must not fail because a notice could not be delivered.
-  void sendEmail({
+  void sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: fromAddress,
     subject: "Someone asked to move your Marktmorgen account",
@@ -169,7 +169,7 @@ export async function sendMoveLink(
     ].join("\n"),
   }).catch(() => undefined);
 
-  return sendEmail({
+  return sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: toAddress,
     subject: "Finish moving your Marktmorgen account",
@@ -263,7 +263,7 @@ export async function sendSignInLink(
   // The link lands on a page that asks for one tap. It deliberately does not
   // land on something a mail filter could spend by merely opening it.
   const link = `${origin}/signin/confirm?token=${token}`;
-  return sendEmail({
+  return sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: address,
     subject: "Your Marktmorgen login link",
@@ -472,7 +472,7 @@ export async function noteSignIn(
     }
     if (Number(count) > 0 && !options.quiet && isSenderConfigured()) {
       const when = new Date().toISOString().replace("T", " ").slice(0, 16);
-      await sendEmail({
+      await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: normaliseEmail(email),
         replyTo: "support@marktmorgen.com",

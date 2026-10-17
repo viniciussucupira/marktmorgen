@@ -8,6 +8,7 @@
  *   nl:affkit:<statsId>:<YYYY-MM>                  drafts the store's affiliates asked for that month
  *   nl:ai:<statsId>:<YYYY-MM>                      the store's month of writing jobs, which each draft is one of (lib/ai.ts)
  */
+import { windowId } from "@/lib/allowance-window";
 import { randomUUID } from "node:crypto";
 import { affiliateCampaignLink } from "@/lib/affiliate-promotion";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -25,7 +26,11 @@ import { productSegment } from "@/lib/product-slug";
 import { DISCLOSURE, DISCLOSURE_SHORT, KIT_PER_DAY, MAX_KIT_NOTE, type AffiliatePosts, finishPost, kitMonthly } from "@/lib/affiliate-kit-rules";
 
 const dayKey = (store: Store, affiliate: Affiliate, now: Date) => `nl:affkit:${store.statsId}:${affiliate.id}:${now.toISOString().slice(0, 10)}`;
-const monthKey = (store: Store, now: Date) => `nl:affkit:${store.statsId}:${now.toISOString().slice(0, 7)}`;
+/** Kits drafted in the store's window (lib/allowance-window.ts); null when none is known. */
+const monthKey = (store: Store, now: Date): string | null => {
+  const window = windowId(store, now.getTime());
+  return window ? `nl:affkit:${store.statsId}:${window}` : null;
+};
 
 /** A product an affiliate earns on: paid, sold once, on the store, and not left out at 0% for them. */
 export function kitProduct(store: Store, affiliate: Affiliate, listing: Listing | null): listing is Listing {
@@ -57,6 +62,7 @@ export async function draftKit(store: Store, affiliate: Affiliate, productId: st
   const day = dayKey(store, affiliate, now);
   const month = monthKey(store, now);
   const jobs = aiMonthKey(store, now);
+  if (!month || !jobs) return { ok: false, reason: "month" };
   const [today, , thisMonth, , storeMonth] = await redisPipeline([
     ["INCR", day],
     ["EXPIRE", day, 2 * 86_400],

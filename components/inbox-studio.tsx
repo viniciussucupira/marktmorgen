@@ -21,7 +21,7 @@ const REASONS: Record<string, string> = {
   none: "That conversation is no longer kept.",
   limited: "That is a lot of answers today. Try again later.",
   assign: "That person cannot answer buyers. Give it to someone whose role can.",
-  used: "This month's writing jobs are used up. They come back on the 1st.",
+  used: "This month's writing jobs are used up. They come back with your next billing month.",
   off: "The writing help is not on for this store.",
   failed: "No suggestion came back. Nothing was counted; try again.",
   notes: "That conversation is no longer kept.",
@@ -80,10 +80,15 @@ export function InboxStudio({
     if (answer.ok && Array.isArray(answer.conversations)) setList(answer.conversations as Conversation[]);
   }, []);
 
-  // New messages while the inbox is open: the list is asked again every minute, while the tab is in view.
+  // New messages while the inbox is open: the list is asked again every minute, while the tab is in view,
+  // thirty times at the most for one opening of the page: each is one of the store's studio requests.
   useEffect(() => {
+    let asked = 0;
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
+      if (document.visibilityState !== "visible") return;
+      if (asked >= 30) return window.clearInterval(timer);
+      asked += 1;
+      void refresh();
     }, 60_000);
     return () => window.clearInterval(timer);
   }, [refresh]);

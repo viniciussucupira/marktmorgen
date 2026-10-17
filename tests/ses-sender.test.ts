@@ -25,6 +25,7 @@ import { HOLD_SECONDS, isSesConfigured, sesConfig, sesSentLast24h, sesState } fr
 import { stringToSign, type SnsMessage } from "@/lib/sns";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const REGION = "us-east-1";
 const TOPIC = `arn:aws:sns:${REGION}:123456789012:marktmorgen-email`;
@@ -94,7 +95,7 @@ const clear = () => {
   amazon.length = 0;
   resend.length = 0;
 };
-const letter = (to: string, subject = "Hello") => ({ from: "Marktmorgen <hello@marktmorgen.com>", to, subject, text: "Hello.", html: "<p>Hello.</p>" });
+const letter = (to: string, subject = "Hello") => ({ meter: { by: "company" } as const, from: "Marktmorgen <hello@marktmorgen.com>", to, subject, text: "Hello.", html: "<p>Hello.</p>" });
 
 let announced = 0;
 function announce(over: Partial<SnsMessage> & { event?: unknown }, opts: { sign?: boolean } = {}): NextRequest {
@@ -147,7 +148,7 @@ async function main(): Promise<void> {
   is("a sign-in link is sent", await sendEmail(letter("buyer@example.com", "Your login link")), true);
   is("through Resend, as it always was", [amazon.length, resend.map((m) => m.to)], [0, ["buyer@example.com"]]);
   is("because Amazon said the account may not write to the public yet", (await sesState())?.why, "sandbox");
-  is("a batch goes the same way", [await sendBatch([letter("a@example.com"), letter("b@example.com")], "k:sandbox"), amazon.length, resend.length], ["sent", 0, 3]);
+  is("a batch goes the same way", [await sendBatch([letter("a@example.com"), letter("b@example.com")], "k:sandbox", { by: "company" }), amazon.length, resend.length], ["sent", 0, 3]);
   const askedSoFar = asked;
   await sendEmail(letter("c@example.com"));
   is("and Amazon is not asked again for every email", asked, askedSoFar);
@@ -175,10 +176,10 @@ async function main(): Promise<void> {
   part("A batch, one email at a time");
   clear();
   const thirty = Array.from({ length: 30 }, (_, i) => ({ ...letter(`reader${i}@example.com`, "News"), tags: { [STORE_TAG]: "a".repeat(32), [LIST_TAG]: "b".repeat(32) } }));
-  is("taken", await sendBatch(thirty, "bc:1:0"), "sent");
+  is("taken", await sendBatch(thirty, "bc:1:0", { by: "company" }), "sent");
   is("all thirty by Amazon, each once", [amazon.length, new Set(amazon.map((a) => a.to)).size, resend.length], [30, 30, 0]);
   is("each carrying whose email it is, for the day one bounces", amazon[0].body.EmailTags, [{ Name: STORE_TAG, Value: "a".repeat(32) }, { Name: LIST_TAG, Value: "b".repeat(32) }]);
-  is("the same batch tried again writes to nobody", [await sendBatch(thirty, "bc:1:0"), amazon.length, resend.length], ["sent", 30, 0]);
+  is("the same batch tried again writes to nobody", [await sendBatch(thirty, "bc:1:0", { by: "company" }), amazon.length, resend.length], ["sent", 30, 0]);
 
   part("No faster than Amazon allows");
   account = approved({ SendQuota: { Max24HourSend: 50_000, MaxSendRate: 14 } });
@@ -186,7 +187,7 @@ async function main(): Promise<void> {
   clear();
   const began = Date.now();
   const twenty = Array.from({ length: 20 }, (_, i) => letter(`pace${i}@example.com`));
-  is("twenty at fourteen a second", await sendBatch(twenty, "bc:pace"), "sent");
+  is("twenty at fourteen a second", await sendBatch(twenty, "bc:pace", { by: "company" }), "sent");
   is("take two seconds' worth of turns, and all arrive", [Date.now() - began >= 900, amazon.length], [true, 20]);
 
   part("Too many a second, for a moment");
@@ -216,7 +217,7 @@ async function main(): Promise<void> {
     return { status: 400, type: "AccountSuspendedException" };
   };
   await sendEmail(letter("next@example.com"));
-  await sendBatch([letter("x@example.com"), letter("y@example.com")], "bc:held");
+  await sendBatch([letter("x@example.com"), letter("y@example.com")], "bc:held", { by: "company" });
   is("so the emails after it go straight to Resend, and the inbox is not told twice", [tries, resend.filter((m) => m.to === SUPPORT).length, resend.filter((m) => m.to !== SUPPORT).length], [0, 1, 4]);
 
   part("Amazon stops halfway through a batch");
@@ -227,7 +228,7 @@ async function main(): Promise<void> {
   // The first five are taken; from the sixth on, the account is paused.
   amazonSays = () => (amazon.length >= 5 ? { status: 400, type: "SendingPausedException", message: "paused" } : { status: 200 });
   const twelve = Array.from({ length: 12 }, (_, i) => letter(`half${i}@example.com`, "News"));
-  is("the batch still counts as sent", await sendBatch(twelve, "bc:half"), "sent");
+  is("the batch still counts as sent", await sendBatch(twelve, "bc:half", { by: "company" }), "sent");
   const everyone = [...amazon.map((a) => a.to), ...resend.filter((m) => m.to !== SUPPORT).map((m) => m.to)];
   is("five by Amazon, seven by Resend", [amazon.length, resend.filter((m) => m.to !== SUPPORT).length], [5, 7]);
   is("everyone once, nobody twice", [everyone.length, new Set(everyone).size], [12, 12]);
@@ -236,14 +237,14 @@ async function main(): Promise<void> {
   askAgain();
   account = approved();
   const before = [amazon.length, resend.length];
-  is("and the whole batch tried again writes to nobody, though Amazon is back", [await sendBatch(twelve, "bc:half"), amazon.length, resend.length], ["sent", ...before]);
+  is("and the whole batch tried again writes to nobody, though Amazon is back", [await sendBatch(twelve, "bc:half", { by: "company" }), amazon.length, resend.length], ["sent", ...before]);
 
   part("An email Amazon will not take for its own sake");
   clear();
   amazonSays = (to) => (to === "odd@example.com" ? { status: 400, type: "BadRequestException", message: "Illegal address" } : { status: 200 });
   is("alone, it is tried with the other sender", [await sendEmail(letter("odd@example.com")), amazon.length, resend.map((m) => m.to)], [true, 0, ["odd@example.com"]]);
   clear();
-  is("in a batch, it does not hold up the others", [await sendBatch([letter("fine1@example.com"), letter("odd@example.com"), letter("fine2@example.com")], "bc:odd"), amazon.map((a) => a.to), resend.length], ["sent", ["fine1@example.com", "fine2@example.com"], 0]);
+  is("in a batch, it does not hold up the others", [await sendBatch([letter("fine1@example.com"), letter("odd@example.com"), letter("fine2@example.com")], "bc:odd", { by: "company" }), amazon.map((a) => a.to), resend.length], ["sent", ["fine1@example.com", "fine2@example.com"], 0]);
   is("and Amazon is not left alone over it", (await sesState())?.ready, true);
   amazonSays = () => ({ status: 200 });
 
@@ -254,9 +255,9 @@ async function main(): Promise<void> {
   clear();
   is("room for list email is four fifths of Amazon's day, on top of Resend's month", await senderRoom(), listCeiling() + 80);
   const fifty = (n: number) => Array.from({ length: 50 }, (_, i) => letter(`day${n}-${i}@example.com`));
-  await sendBatch(fifty(1), "bc:day:1");
+  await sendBatch(fifty(1), "bc:day:1", { by: "company" });
   is("fifty fit, and go by Amazon", [amazon.length, resend.length, await senderRoom()], [50, 0, listCeiling() + 30]);
-  await sendBatch(fifty(2), "bc:day:2");
+  await sendBatch(fifty(2), "bc:day:2", { by: "company" });
   is("fifty more do not: they go by Resend, whole, rather than wait", [amazon.length, resend.length], [50, 50]);
   is("and the rest of Amazon's day is still there for a sign-in link", [await sendEmail(letter("buyer@example.com", "Your login link")), amazon.length, resend.length], [true, 51, 50]);
 
@@ -301,7 +302,7 @@ async function main(): Promise<void> {
   is("after one exchange: the token for the role, and nothing else", exchanges, [{ role: "arn:aws:iam::123456789012:role/marktmorgen-email", token: "aGVhZGVy.cGF5bG9hZA.c2lnbmF0dXJl", action: "AssumeRoleWithWebIdentity" }]);
   const lentHeaders = amazon[0].headers;
   is("signed with the key Amazon lent, and carrying its session", [/Credential=ASIAEXAMPLELENT1\//.test(lentHeaders.authorization), lentHeaders["x-amz-security-token"], /SignedHeaders=content-type;host;x-amz-date;x-amz-security-token,/.test(lentHeaders.authorization)], [true, "session-token-1", true]);
-  await sendBatch([letter("a@example.com"), letter("b@example.com"), letter("c@example.com")], "bc:role");
+  await sendBatch([letter("a@example.com"), letter("b@example.com"), letter("c@example.com")], "bc:role", { by: "company" });
   is("the same lent key serves the emails after it", [amazon.length, exchanges.length], [4, 1]);
   ahead += 56 * 60_000;
   stsAnswersXml = true;
@@ -333,7 +334,7 @@ async function main(): Promise<void> {
   if (!made.ok) throw new Error("no store");
   await ensureStatsId("owner@example.com");
   await ensureListId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro" });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings("owner@example.com", { fromName: "Harbor Kitchen", address: "1 Main St, Portland, OR 97201" });
   const store = (await storeForEmail("owner@example.com"))!;
   const list = store.listId as string;

@@ -241,7 +241,7 @@ export async function sendReviewRequests(
     }
     const outcome = await sendBatch(
       ready.map((item) => item.message),
-      `review-ask:${sha(ready.map((item) => item.entry.reference).join(","))}`,
+      `review-ask:${sha(ready.map((item) => item.entry.reference).join(","))}`, { by: "monthly" },
     );
     if (outcome !== "sent") {
       await release(store, ready.length);

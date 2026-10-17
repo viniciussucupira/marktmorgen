@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { storeForId } from "@/lib/store";
+import { takePublicRequest } from "@/lib/traffic";
 import { LINK_ID, MAX_PASSWORD, cookieName, linkStore, passCookie, passwordFits } from "@/lib/numbers-links";
 
 const MAX_BODY_BYTES = 600;
@@ -31,6 +32,8 @@ export async function POST(request: NextRequest) {
   const link = store?.numbersLinks.find((l) => l.id === id);
   const now = Date.now();
   if (!link || link.expires <= Math.floor(now / 1000)) return back();
+  // A password tried is one of the store's public requests for its window (lib/traffic.ts).
+  if (!store || !(await takePublicRequest(store, "public", now))) return back("?tries=1");
   if (!passwordFits(link, password)) return back("?wrong=1");
   const cookie = passCookie(link, now);
   if (!cookie) return back("?wrong=1");

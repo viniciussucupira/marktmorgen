@@ -119,7 +119,7 @@ async function tellPaused(store: Store, account: string, customer: string, sub: 
   const m = membershipWords(store.language);
   const product = productOfSub(sub);
   const title = (product ? (await readListings(store, [product]).catch(() => []))[0]?.title : "") || store.name;
-  await sendEmail({
+  await sendEmail({ meter: { by: "store", store: store, kind: "email" },
     from: fromCreator(store),
     to: person.email,
     replyTo: store.email,

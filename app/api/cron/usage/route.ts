@@ -6,7 +6,6 @@ import {
   DELIVERY_ALLOWANCE_BYTES,
   FREE_PAUSE_ABOVE_BYTES,
   bytesWords,
-  monthKey,
   ownersOf,
   storesOverAllowance,
 } from "@/lib/delivery";
@@ -16,6 +15,8 @@ import { SITE_URL } from "@/lib/site-url";
 import { SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { watchedFolders, watchedIn } from "@/lib/watch";
 import { firstWord, settleAll, storeOf } from "@/lib/watch-billing";
+import { allowanceWindow, calendarWindow, resetWords } from "@/lib/allowance-window";
+
 import { VIDEO_SECONDS_INCLUDED, canBeCharged, centsWords, videoOwedCents } from "@/lib/watch-rules";
 import { videoUsageNotice } from "@/lib/video-usage-notice";
 import { visitedFolders, visitsIn } from "@/lib/traffic";
@@ -24,6 +25,13 @@ import { SETUP_VISITS, countWords, publicVisitLimit, visitLimitFor, visitsWords 
 import { firstWordOnOrders } from "@/lib/orders-billing";
 import { orderedFolders, ordersIn } from "@/lib/orders";
 import { ORDERS_INCLUDED, ordersWords, paidOrdersLimitFor } from "@/lib/order-rules";
+
+/** The folders a calendar-month index lists this month and the last, once each. */
+async function foldersOfTwoMonths(read: (month: string) => Promise<string[]>): Promise<string[]> {
+  const now = Date.now();
+  const last = calendarWindow(calendarWindow(now).start - 1).id;
+  return [...new Set([...(await read(calendarWindow(now).id)), ...(await read(last))])].sort();
+}
 
 /**
  * The daily run that writes to a creator who has gone past the allowance.
@@ -89,19 +97,22 @@ async function videoRun(): Promise<VideoRun> {
   // plan to charge, the first time their videos are paused. A store with no
   // plan has far fewer hours than one in a trial (lib/plan-standing.ts), so
   // every store watched for at least the smallest figure is looked at.
-  const month = monthKey();
+  // The stores are found by the calendar month (this one and the last, where
+  // a billing month may have begun); each is read in its own window
+  // (lib/allowance-window.ts), and written to once a window.
   let watchedStores: string[] = [];
   try {
-    watchedStores = await watchedFolders(month);
+    watchedStores = await foldersOfTwoMonths(watchedFolders);
   } catch (error) {
     console.error("could not read the stores whose video was watched", error);
   }
   for (const folder of watchedStores) {
     try {
+      const store = await storeOf(folder);
+      const month = store ? allowanceWindow(store)?.id : null;
+      if (!store || !month) continue;
       const seconds = await watchedIn(folder, month);
       if (seconds < SETUP_VIDEO_SECONDS) continue;
-      const store = await storeOf(folder);
-      if (!store) continue;
       const limit = videoLimitFor(store);
       const paused = limit !== null && seconds >= limit;
       const charged = canBeCharged(store) && seconds > VIDEO_SECONDS_INCLUDED;
@@ -111,7 +122,7 @@ async function videoRun(): Promise<VideoRun> {
       const notice = videoUsageNotice({ seconds, limit, standing: standingOf(store),
         legacyChargeCents: charged ? videoOwedCents(seconds) : 0,
         studioUrl: `${SITE_URL}/studio`, supportEmail: SUPPORT_EMAIL });
-      const sent = await sendEmail({
+      const sent = await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: store.email,
         replyTo: SUPPORT_EMAIL,
@@ -143,19 +154,19 @@ type VisitsRun = { stores: number; resting: number; failed: number; told: number
  */
 async function visitsRun(): Promise<VisitsRun> {
   const out: VisitsRun = { stores: 0, resting: 0, failed: 0, told: 0 };
-  const month = monthKey();
   let visited: string[] = [];
   try {
-    visited = await visitedFolders(month);
+    visited = await foldersOfTwoMonths(visitedFolders);
   } catch (error) {
     console.error("could not read the stores that were visited", error);
   }
   for (const folder of visited) {
     try {
+      const store = await storeOf(folder);
+      const month = store ? allowanceWindow(store)?.id : null;
+      if (!store || !month) continue;
       const visits = await visitsIn(folder, month);
       if (visits < publicVisitLimit(SETUP_VISITS)) continue;
-      const store = await storeOf(folder);
-      if (!store) continue;
       const limit = visitLimitFor(store);
       const shown = publicVisitLimit(limit);
       if (visits < shown) continue;
@@ -163,24 +174,24 @@ async function visitsRun(): Promise<VisitsRun> {
       out.resting += 1;
       if (!isSenderConfigured() || !(await firstWordOnVisits(folder, month))) continue;
       const standing = standingOf(store);
-      const sent = await sendEmail({
+      const sent = await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: store.email,
         replyTo: SUPPORT_EMAIL,
         subject: "Your store's pages are resting",
         text: [
-          `Your store has had ${visitsWords(visits)} this month. ${standing === "paid" ? "Your plan covers" : standing === "trial" ? "A free trial has" : "A store without a paid plan has"}`,
-          `${countWords(limit)} a month: its public pages rest at ${countWords(shown)}, and the last`,
+          `Your store has had ${visitsWords(visits)} ${standing === "paid" ? "this billing month" : standing === "trial" ? "in its free trial" : "this month"}. ${standing === "paid" ? "Your plan covers" : standing === "trial" ? "A free trial has" : "A store without a paid plan has"}`,
+          `${countWords(limit)}${standing === "trial" ? "" : " a month"}: its public pages rest at ${countWords(shown)}, and the last`,
           `${countWords(limit - shown)} are kept for what your buyers already have.`,
           "",
           "So your store's page, products and blog are resting: a visitor is told the",
           "page will be open again soon. Your buyers' courses, lessons, community and",
-          "podcasts stay open until the whole month's visits are used, and then rest",
+          "podcasts stay open until all of these visits are used, and then rest",
           "too, with a page that says their access is kept. Nothing is charged for",
           "visits, and nothing anyone bought is taken away.",
           "",
           ...(standing === "paid"
-            ? ["Your pages open again when the month turns, or as soon as you move to a", "larger plan."]
+            ? [resetWords(store), "Moving to a larger plan opens them at once."]
             : PLANS_ON_SALE || standing === "trial"
               ? ["Your pages open again as soon as your plan is paid, or when the month", "turns, whichever comes first."]
               : ["Your pages open again when the month turns. Plans are not on sale yet."]),
@@ -253,7 +264,7 @@ export async function GET(request: NextRequest) {
       continue;
     }
     if (!isSenderConfigured()) break;
-    const sent = await sendEmail({
+    const sent = await sendEmail({ meter: { by: "company" },
       from: NIMBUS_FROM,
       to: email,
       replyTo: SUPPORT_EMAIL,
@@ -298,7 +309,7 @@ export async function GET(request: NextRequest) {
     It is said out loud rather than passed over in silence.
   */
   if (unknown.length > 0 && isSenderConfigured()) {
-    await sendEmail({
+    await sendEmail({ meter: { by: "company" },
       from: NIMBUS_FROM,
       to: SUPPORT_EMAIL,
       subject: `${unknown.length} store(s) over the allowance could not be written to`,
@@ -331,33 +342,34 @@ type OrdersRun = { stores: number; failed: number; told: number };
  */
 async function ordersRun(): Promise<OrdersRun> {
   const out: OrdersRun = { stores: 0, failed: 0, told: 0 };
-  const month = monthKey();
   let ordered: string[] = [];
   try {
-    ordered = await orderedFolders(month);
+    ordered = await foldersOfTwoMonths(orderedFolders);
   } catch (error) {
     console.error("could not read the stores with orders", error);
     return out;
   }
   for (const folder of ordered) {
     try {
+      const store = await storeOf(folder);
+      const month = store ? allowanceWindow(store)?.id : null;
+      if (!store || !month) continue;
       const orders = await ordersIn(folder, month);
       if (orders < Math.min(...Object.values(ORDERS_INCLUDED))) continue;
-      const store = await storeOf(folder);
-      if (!store) continue;
       const limit = paidOrdersLimitFor(store);
       if (limit === null || orders < limit) continue;
       out.stores += 1;
       if (!isSenderConfigured() || !(await firstWordOnOrders(folder, month))) continue;
-      const sent = await sendEmail({
+      const sent = await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
         to: store.email,
         replyTo: SUPPORT_EMAIL,
-        subject: `Your store has had ${ordersWords(orders)} this month`,
+        subject: `Your store has had ${ordersWords(orders)} ${standingOf(store) === "trial" ? "in its free trial" : "this billing month"}`,
         text: [
-          `Your store has had ${ordersWords(orders)} this month, which is the ${countWords(limit)} your plan`,
-          "covers. New orders are paused until the month turns, or until you move to a",
-          "larger plan.",
+          `Your store has had ${ordersWords(orders)} ${standingOf(store) === "trial" ? "in its free trial" : "this billing month"}, which is the ${countWords(limit)} ${standingOf(store) === "trial" ? "a free trial" : "your plan"}`,
+          "covers, so new orders are paused.",
+          resetWords(store),
+          "Moving to a larger plan opens them at once.",
           "",
           "A buyer who presses buy now is told plainly that the store is not taking new",
           "orders right now, and nothing is charged. Anybody who was already paying",
@@ -365,7 +377,7 @@ async function ordersRun(): Promise<OrdersRun> {
           "nothing is asked of you.",
           "",
           "An order is a purchase confirmed, an offer taken after paying, a place in a",
-          "purchase for several people, or a free copy sent. An order whose sale paid",
+          "purchase for several people, or a free copy sent; a call booked counts as two. An order whose sale paid",
           "your plan's share is not counted. Your studio shows the count as it grows,",
           `under your plan: ${SITE_URL}/studio`,
           "",

@@ -14,6 +14,7 @@ import { addProduct, claimHandle, setStripeAccount, setSubscription, storeForEma
 import { dueNudge, nextStep, nudgeEmail, sendTrialNudges } from "@/lib/trial-nudges";
 import { redisPipeline } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_trial_nudges_only";
 process.env.RESEND_API_KEY = "re_test_trial_nudges_only";
@@ -79,9 +80,9 @@ async function main() {
   part("Sent once each, never to a store that sold");
   {
     await claimHandle("nudge@example.com", "nudgestore", "Nudge", "");
-    await setSubscription("nudge@example.com", { subscriptionId: "sub_Nudge0000001", active: true, tier: "creator", cycle: "month", trialEnds: START + 14 * DAY });
+    await setSubscription("nudge@example.com", { subscriptionId: "sub_Nudge0000001", active: true, tier: "creator", cycle: "month", trialEnds: START + 14 * DAY, period: paidPeriod() });
     await claimHandle("sold@example.com", "soldstore", "Sold", "");
-    await setSubscription("sold@example.com", { subscriptionId: "sub_Sold00000001", active: true, tier: "creator", cycle: "month", trialEnds: START + 14 * DAY });
+    await setSubscription("sold@example.com", { subscriptionId: "sub_Sold00000001", active: true, tier: "creator", cycle: "month", trialEnds: START + 14 * DAY, period: paidPeriod() });
     const sold = (await storeForEmail("sold@example.com"))!;
     await redisPipeline([["SET", `nl:firstsale:${sold.sid || `h:${sold.handle}`}`, String(START + DAY)]]);
     await claimHandle("other@example.com", "otherstore", "Other", "");
@@ -100,7 +101,7 @@ async function main() {
   part("A day the job missed");
   {
     await claimHandle("late@example.com", "latestore", "Late", "");
-    await setSubscription("late@example.com", { subscriptionId: "sub_Late00000001", active: true, tier: "creator", cycle: "month", trialEnds: START + 14 * DAY });
+    await setSubscription("late@example.com", { subscriptionId: "sub_Late00000001", active: true, tier: "creator", cycle: "month", trialEnds: START + 14 * DAY, period: paidPeriod() });
     trials = [trial("sub_Late00000001", "latestore")];
     emails.length = 0;
     await sendTrialNudges(START + 10 * DAY);

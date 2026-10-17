@@ -20,6 +20,7 @@ import { streamPath } from "@/lib/stream-rules";
 import type { Store } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const VIDEO = "0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d";
 const PATH = streamPath("a".repeat(32), "lesson000001", VIDEO);
@@ -55,7 +56,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
 const store = {
   handle: "chef",
   subscriptionActive: true,
-  subscriptionId: "sub_Store000001",
+  subscriptionId: "sub_Store000001", period: paidPeriod(),
   stripeCustomerId: "cus_Store000001",
 } as unknown as Store;
 

@@ -30,6 +30,8 @@ import { ANSWERS_MONTHLY, MAX_QUESTION, parseAnswers, questionKey, readQuestion,
 import { answerQuestion, answersAllowance, answersUsed, clearMissed, factsFor, missedQuestions } from "@/lib/answers";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
+import { windowId } from "@/lib/allowance-window";
 
 type Sent = { model: string; max_tokens: number; system: string; messages: { role: string; content: string }[] };
 const asked: Sent[] = [];
@@ -56,7 +58,7 @@ async function main(): Promise<void> {
 
   const owner = "answers@example.com";
   await claimHandle(owner, "answershop", "Answer Shop", "");
-  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0 });
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0, period: paidPeriod() });
   await ensureStatsId(owner);
   const made = await addProduct(owner, "Meal Planner", "A week of dinners, planned.", "27", null);
   if (!made.ok) throw new Error("no product");
@@ -131,7 +133,7 @@ async function main(): Promise<void> {
   part("Past the month's number");
   is("a store on Studio gets its number, and Store none", [answersAllowance({ ...store, trialEnds: 0 }), answersAllowance({ ...store, tier: "creator", trialEnds: 0 })], [ANSWERS_MONTHLY.pro, 0]);
   const now = Date.now();
-  await redis.pipeline([["SET", `nl:ask:${store.statsId}:${new Date(now).toISOString().slice(0, 7)}`, String(answersAllowance(store, now))]]);
+  await redis.pipeline([["SET", `nl:ask:${store.statsId}:${windowId(store, now)}`, String(answersAllowance(store, now))]]);
   reply = '{"known": true, "answer": "Yes."}';
   const closed = await ask("Is there a second volume?", { now });
   is("the box is closed", closed.ok ? "answered" : closed.reason, "closed");
@@ -140,7 +142,7 @@ async function main(): Promise<void> {
   is("an answer already in memory is still given", kept.ok, true);
 
   part("Repeated provider failures stop at the allowance");
-  const quotaKey = `nl:ask:${store.statsId}:${new Date(now).toISOString().slice(0, 7)}`;
+  const quotaKey = `nl:ask:${store.statsId}:${windowId(store, now)}`;
   redis.run(["SET", quotaKey, String(answersAllowance(store, now) - 1)]);
   reply = null;
   const priorCalls = asked.length;

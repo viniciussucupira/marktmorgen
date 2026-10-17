@@ -97,7 +97,7 @@ test("a list email Resend will not take from the creators' domain goes out from 
   try {
     {
       const message = { from: fromLine(store), to: "lee@example.org", subject: "Hello", text: "Hi", html: "<p>Hi</p>" };
-      assert.equal(await sendBatch([message], "batch-1"), "sent");
+      assert.equal(await sendBatch([message], "batch-1", { by: "company" }), "sent");
       assert.deepEqual(asked, [
         { from: ['"Ana at Harbor Kitchen" <harborkitchen@creators.example.org>'], key: "batch-1", status: 403 },
         { from: [`"Ana at Harbor Kitchen" <${NIMBUS_FROM.match(/<([^>]+)>/)?.[1] ?? NIMBUS_FROM}>`], key: "batch-1:site", status: 200 },
@@ -105,7 +105,7 @@ test("a list email Resend will not take from the creators' domain goes out from 
       // And when Resend takes the domain, nothing is sent twice or rewritten.
       refuse = false;
       asked.length = 0;
-      assert.equal(await sendBatch([message], "batch-2"), "sent");
+      assert.equal(await sendBatch([message], "batch-2", { by: "company" }), "sent");
       assert.deepEqual(asked.map((one) => [one.from[0], one.key]), [['"Ana at Harbor Kitchen" <harborkitchen@creators.example.org>', "batch-2"]]);
     }
   } finally {

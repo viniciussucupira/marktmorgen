@@ -1,8 +1,9 @@
+import { withinStore } from "@/lib/metered-limits";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { clientAddress, withinLimit } from "@/lib/request-guard";
+import { clientAddress } from "@/lib/request-guard";
 import { normaliseHandle, storeForPage } from "@/lib/store";
 import { lookStyle } from "@/lib/store-look";
 import { photoUrl } from "@/lib/photo-limits";
@@ -59,7 +60,7 @@ export default async function ReviewPage({ params, searchParams }: Params) {
   const door = readDoor(get);
   const status = get("status");
   const statusProduct = get("product");
-  const allowed = door ? await withinLimit("review-view", `${clientAddress({ headers: await headers() })}|${store.handle}`, VIEWS_PER_TEN_MINUTES, 600) : true;
+  const allowed = door ? await withinStore("review-view", `${clientAddress({ headers: await headers() })}|${store.handle}`, VIEWS_PER_TEN_MINUTES, 600, store) : true;
   const opened = door && allowed ? await openDoor(store, door) : ({ state: allowed ? "no" : "slow" } as const);
 
   let existing = new Map<string, Review | null>();

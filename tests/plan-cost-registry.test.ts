@@ -10,7 +10,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { COST_LINES, NOT_A_COST, OPEN, SCOPES } from "./plan-cost-registry";
+import { COST_LINES, EMAIL_SITES, KIND_LINES, NOT_A_COST, OPEN, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
+import { ALLOWANCE_KINDS, API_WRITE_UNITS, NON_PAYING_ALLOWANCES, STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
+import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
+import { CALL_ORDER_UNITS } from "@/lib/order-rules";
+import { SETUP_EXTRA_REQUESTS, SETUP_VISITS, TRIAL_EXTRA_REQUESTS, TRIAL_VISITS } from "@/lib/traffic-rules";
 import { TIERS } from "@/lib/plan";
 import { PAID_VIDEO_HOURS } from "@/lib/video-admission-rules";
 import { VIDEO_HOURS_INCLUDED } from "@/lib/watch-rules";
@@ -28,21 +32,22 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 const code = ["app", "lib", "components"].flatMap((dir) => walk(dir));
 
-/** Every scope a counter is called with, as tests/plan-cost-registry.ts names them. */
+/** Every scope a counter is called with, as tests/plan-cost-registry.ts names them, and the counters it is called with. */
 function scopesInCode(): Map<string, string[]> {
   const found = new Map<string, string[]>();
   const add = (scope: string, file: string) => found.set(scope, [...(found.get(scope) ?? []), file]);
   for (const file of code) {
     const text = read(file);
-    for (const m of text.matchAll(/\bwithin(?:Limit|Month)\(([^,]+),/g)) {
-      const literals = [...m[1].matchAll(/"([^"]+)"/g)].map((l) => l[1]);
-      if (literals.length) for (const l of literals) add(l, file);
-      else add(`<dynamic:${m[1].trim()}>`, file);
+    for (const m of text.matchAll(/\bwithin(Limit|Month|Store|Service)\(([^,]+),/g)) {
+      const literals = [...m[2].matchAll(/"([^"]+)"/g)].map((l) => l[1]);
+      if (literals.length) for (const l of literals) { add(l, file); counters.set(l, new Set([...(counters.get(l) ?? []), m[1]])); }
+      else add(`<dynamic:${m[2].trim()}>`, file);
     }
     for (const m of text.matchAll(/\bcountUse\(([^,]+),/g)) add(`countUse:${m[1].trim().slice(0, 60)}`, file);
   }
   return found;
 }
+const counters = new Map<string, Set<string>>();
 
 const ids = new Set(COST_LINES.map((line) => line.id));
 const openIds = new Set(OPEN.map((item) => item.id));
@@ -109,4 +114,59 @@ test("nothing is billed for visits or orders: the daily job settles neither, and
     assert.match(text, /owed: \(\) => 0,/, file);
     assert.doesNotMatch(text, /settleUsage|settleAllUsage/, file);
   }
+});
+
+test("a scope priced as a public request or a call out is counted in the store's window, not only per connection", () => {
+  scopesInCode();
+  for (const [scope, kind] of Object.entries(SCOPES)) {
+    if (!("line" in kind)) continue;
+    const used = counters.get(scope);
+    if (kind.line === "public-requests") assert.deepEqual([...(used ?? [])], ["Store"], `${scope}: count it with withinStore (lib/metered-limits.ts)`);
+    if (kind.line === "integrations") assert.deepEqual([...(used ?? [])], ["Service"], `${scope}: count it with withinService (lib/metered-limits.ts)`);
+  }
+});
+
+test("every store figure taken in the code is a kind a line prices", () => {
+  for (const kind of ALLOWANCE_KINDS) assert.ok(ids.has(KIND_LINES[kind]), kind);
+  const taken = new Set<string>();
+  for (const file of code) for (const m of read(file).matchAll(/\btakeAllowance\([^,]+,\s*"([a-z]+)"/g)) taken.add(m[1]);
+  for (const kind of taken) assert.ok((ALLOWANCE_KINDS as readonly string[]).includes(kind), `takeAllowance with "${kind}", which no line prices`);
+  for (const kind of ["studio", "api", "inbox", "integration"]) assert.ok(taken.has(kind) || kind === "integration", `nothing takes ${kind}`);
+});
+
+test("every email sent names a meter, and each file only the meters it may use", () => {
+  const sending = code.filter((file) => /\bsend(?:Email|Batch)\(/.test(read(file).replace(/export async function send(?:Email|Batch)\(/g, "")));
+  const unlisted = sending.filter((file) => !Object.hasOwn(EMAIL_SITES, file));
+  assert.deepEqual(unlisted, [], "add each file that sends email to EMAIL_SITES in tests/plan-cost-registry.ts, with the meters it may use");
+  for (const [file, allowed] of Object.entries(EMAIL_SITES)) {
+    assert.ok(existsSync(join(root, file)), `${file} is not there`);
+    const meters = [...read(file).matchAll(/\bby: "(company|order|monthly|store)"/g)].map((m) => m[1]);
+    assert.ok(meters.length > 0, `${file} sends no metered email: remove it from EMAIL_SITES`);
+    for (const meter of meters) assert.ok(allowed.includes(meter), `${file} counts an email as "${meter}", which EMAIL_SITES does not allow it`);
+    for (const m of read(file).matchAll(/by: "store", store[^}]*kind: "(\w+)"/g)) assert.ok(m[1] === "email" || m[1] === "transactional", `${file}: kind ${m[1]}`);
+  }
+});
+
+test("the units a figure is taken in cost at least what they stand for", () => {
+  // A studio page drawn is STUDIO_PAGE_UNITS studio requests: more than a heavy read of eighty commands and 400 KB.
+  assert.ok(STUDIO_PAGE_UNITS * UNIT_COST.studio >= request("heavy", 80, 400_000));
+  // A contact added or a product given is API_WRITE_UNITS requests: more than a write of sixty commands.
+  assert.ok(API_WRITE_UNITS * UNIT_COST.api >= request("write", 60, 20_000));
+  // A booked call is CALL_ORDER_UNITS orders: its confirmation to buyer and host and its two reminders are four emails.
+  assert.ok(CALL_ORDER_UNITS * 2 >= 4);
+});
+
+test("a store that pays nothing has less of everything than a free trial, and the trial's worst window is priced", () => {
+  for (const standing of ["none", "ended"] as const) for (const kind of ALLOWANCE_KINDS) assert.ok(NON_PAYING_ALLOWANCES[standing][kind] <= NON_PAYING_ALLOWANCES.trial[kind], `${standing} ${kind}`);
+  assert.ok(SETUP_VISITS <= TRIAL_VISITS && SETUP_EXTRA_REQUESTS <= TRIAL_EXTRA_REQUESTS);
+  for (const kind of ALLOWANCE_KINDS) assert.ok(NON_PAYING_ALLOWANCES.trial[kind] <= STORE_ALLOWANCES.creator[kind], `a trial has no more ${kind} than Store`);
+  const worst = nonPayingWorst();
+  assert.ok(Number.isFinite(worst) && worst > 0);
+  console.log(`a store that pays nothing, worst window: $${worst.toFixed(4)}`);
+});
+
+test("the billing period and every figure the owner named on October 17, 2026 have left the open list", () => {
+  const open = new Set(OPEN.map((item) => item.id));
+  for (const id of ["billing-period", "public-requests", "studio-requests", "transactional-email", "rest-api", "inbox", "creator-email", "integrations", "calls", "free-and-trial"]) assert.ok(!open.has(id), id);
+  for (const id of ["public-requests", "studio", "transactional-email", "store-email", "rest-api", "inbox", "integrations", "free-share"]) assert.ok(ids.has(id), id);
 });

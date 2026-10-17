@@ -15,7 +15,7 @@ test("concurrent failed attempts cannot exceed any tier's monthly allowance", as
   const plain = customer("parallel-creator", "creator");
   assert.equal(aiAllowance(plain, now), 0);
   assert.deepEqual(await counted(plain, now, async () => { throw new Error("must not run"); }), {ok: false, reason: "used"});
-  assert.equal(redis.run(["GET", aiMonthKey(plain, new Date(now))]), null);
+  assert.equal(redis.run(["GET", aiMonthKey(plain, new Date(now))!]), null);
   for (const tier of ["pro", "scale"] as const) {
     const store = customer("parallel-" + tier, tier);
     const allowance = aiAllowance(store, now);
@@ -25,7 +25,7 @@ test("concurrent failed attempts cannot exceed any tier's monthly allowance", as
     assert.equal(runs, allowance);
     assert.equal(results.filter(r => !r.ok && r.reason === "used").length, 10);
     assert.equal(await aiLeft(store, now), 0);
-    assert.equal(redis.run(["GET", aiMonthKey(store, new Date(now))]), String(allowance));
+    assert.equal(redis.run(["GET", aiMonthKey(store, new Date(now))!]), String(allowance));
   }
 });
 test("timeouts and unusable answers retain their reservation", async () => {
@@ -40,12 +40,12 @@ test("invalid job weights never execute work or alter accounting", async () => {
   for (const jobs of [0, -1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
     assert.deepEqual(await counted(store, now, async () => { throw new Error("must not run"); }, jobs), {ok: false, reason: "notes"});
   }
-  assert.equal(redis.run(["GET", aiMonthKey(store, new Date(now))]), null);
+  assert.equal(redis.run(["GET", aiMonthKey(store, new Date(now))!]), null);
 });
 test("a refused weighted reservation is returned without starting provider work", async () => {
   const store = customer("weighted");
   const allowance = aiAllowance(store, now);
-  redis.run(["SET", aiMonthKey(store, new Date(now)), allowance - 2]);
+  redis.run(["SET", aiMonthKey(store, new Date(now))!, allowance - 2]);
   const result = await counted(store, now, async () => { throw new Error("must not run"); }, 3);
   assert.deepEqual(result, {ok: false, reason: "used"});
   assert.equal(await aiLeft(store, now), 2);
@@ -65,7 +65,7 @@ test("untrustworthy reservation acknowledgements never authorize work", async ()
 test("unknown allowance displays no remaining jobs", async () => {
   const store = customer("corrupt");
   for (const raw of ["", " ", "invalid", "-1", "1.5", "9007199254740992"]) {
-    redis.run(["SET", aiMonthKey(store, new Date(now)), raw]);
+    redis.run(["SET", aiMonthKey(store, new Date(now))!, raw]);
     assert.equal(await aiLeft(store, now), 0);
   }
 });

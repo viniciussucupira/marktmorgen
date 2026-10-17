@@ -45,6 +45,7 @@ import { importedFor } from "@/lib/imported-purchases";
 import { chargedLine, purchasesFor } from "@/lib/buyer-orders";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const PARTNER_CLIENT = "AZpartnerClientId0123456789";
 const PARTNER_SECRET = "EPpartnerSecret0123456789";
@@ -140,7 +141,7 @@ async function main(): Promise<void> {
 
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
   await ensureStatsId("owner@example.com");
-  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const added = await addProduct("owner@example.com", "Sourdough Guide", "", "49", null);
   if (!added.ok) throw new Error("no product");
   await setProductLink("owner@example.com", added.product.id, "https://example.com/guide");

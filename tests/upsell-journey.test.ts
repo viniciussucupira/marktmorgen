@@ -21,6 +21,7 @@ import { readUpsell, settleUpsells, takeUpsell, newUpsellKey } from "@/lib/upsel
 import { NO_TAX } from "@/lib/tax";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_upsell_journey_only";
 process.env.RESEND_API_KEY = "re_test_upsell_journey_only";
@@ -98,7 +99,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, ACCOUNT, true);
-  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: paidPeriod() });
   const add = async (title: string, price: string) => {
     const result = await addProduct(OWNER, title, "", price, null);
     if (!result.ok) throw new Error(`no product ${title}`);

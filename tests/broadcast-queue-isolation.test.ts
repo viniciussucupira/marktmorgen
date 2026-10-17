@@ -2,12 +2,13 @@ import { advanceAll } from "@/lib/broadcasts";
 import { claimHandle, ensureListId, setMailSettings, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 async function main() {
   redis.clear();
   const owner = "queue-owner@example.com";
   await claimHandle(owner, "queue-check", "Queue Check", "");
   await ensureListId(owner);
-  await setSubscription(owner, { customerId: "cus_Queue00001", subscriptionId: "sub_Queue00001", active: true, tier: "pro" });
+  await setSubscription(owner, { customerId: "cus_Queue00001", subscriptionId: "sub_Queue00001", active: true, tier: "pro", period: paidPeriod() });
   await setMailSettings(owner, { fromName: "Queue Check", address: "1 Test Street, Test City" });
   const store = (await storeForEmail(owner))!;
   const bad = "111111111111111111111111", good = "222222222222222222222222", queue = "nl:mail:queue";
