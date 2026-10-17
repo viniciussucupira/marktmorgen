@@ -95,6 +95,9 @@ async function main(): Promise<void> {
   const store = await load();
   await createCartCheckout(store, [(await readProduct(store, course))!, (await readProduct(store, pattern))!], "https://marktmorgen.com");
   is("every product of a cart, at its own price", [checkouts[0].get("automatic_tax[enabled]"), lines(checkouts[0])], ["true", [["4900", "usd", "exclusive"], ["1900", "usd", "exclusive"]]]);
+  const cartConverts = checkouts[0].get("adaptive_pricing[enabled]");
+  sent = await open(course, [pattern]);
+  is("Stripe is told not to convert the price into the buyer's currency, on a checkout and on a cart", [sent.get("adaptive_pricing[enabled]"), cartConverts], ["false", "false"]);
 
   part("Tax inside the price: every line inclusive, the amount unchanged");
   await setTax(OWNER, { ...NO_TAX, enabled: true, included: true });
