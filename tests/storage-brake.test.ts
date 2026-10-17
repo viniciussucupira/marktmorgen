@@ -55,7 +55,7 @@ test("only an upload is ever refused by it, never a download", () => {
 });
 
 test("the figures read as figures", () => {
-  assert.equal(storageWords(STORAGE_BRAKE_BYTES), "200 GB");
+  assert.equal(storageWords(STORAGE_BRAKE_BYTES), "8 GB");
   assert.equal(storageWords(1.5 * 1024 * GB), "1.5 TB");
   assert.equal(storageWords(2.5 * GB), "2.5 GB");
   assert.equal(storageWords(40 * GB), "40 GB");

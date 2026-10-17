@@ -2187,12 +2187,12 @@ export default async function StudioPage({
                   <div>
                     <dt className="font-semibold text-ink">Files stored</dt>
                     <dd className="text-ink-soft">
-                      {`Up to ${storageWords(storageBrakeFor(standing))} for your store${
+                      {`Up to ${storageWords(storageBrakeFor(standing, store.tier))} for your store${
                         standing === "paid"
                           ? ""
                           : standing === "trial"
-                            ? ` during the free trial, and ${storageWords(STORAGE_BRAKE_BYTES)} from your first payment`
-                            : `, and ${storageWords(storageBrakeFor("trial"))} once a plan's free trial starts`
+                            ? ` during the free trial, and ${storageWords(storageBrakeFor("paid", store.tier))} from your first payment`
+                            : `, and ${storageWords(storageBrakeFor("trial", store.tier))} once a plan's free trial starts`
                       }. `}
                       {standing === "ended"
                         ? `Past that you are asked to delete something before adding more. A store that keeps more than ${storageWords(SETUP_STORAGE_BYTES)} after its plan has ended has ${CLOSING_DAYS} days from the end of the plan, and three emails, before what it keeps is removed.`
@@ -2426,7 +2426,7 @@ export default async function StudioPage({
                           {`Move up to Scale: ${priceWords("scale", billedYearly ? "year" : "month")}`}
                         </summary>
                         <p className="mt-3 text-sm text-ink-soft">
-                          {`Scale is Pro with room for a bigger list: up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, and ${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts instead of ${AI_MONTHLY.pro}. Everything else is the same. `}
+                          {`Scale is Pro with room for a bigger list: up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month instead of ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")}, and ${AI_MONTHLY.scale.toLocaleString("en-US")} AI drafts instead of ${AI_MONTHLY.pro}. Stored capacity is ${storageWords(storageBrakeFor("paid", "scale"))} instead of ${storageWords(storageBrakeFor("paid", "pro"))}. `}
                           {trialing
                             ? "Nothing is charged now. When the trial ends you pay the Scale price instead."
                             : "Today you are charged only the difference for the rest of the period you already paid for, and the Scale price from your next charge on. If your bank asks you to confirm, you are sent to confirm it, and nothing changes until it is paid."}

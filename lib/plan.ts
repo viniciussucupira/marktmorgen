@@ -189,49 +189,17 @@ export const PLAN_TITLES: Record<Tier, string> = {
  */
 export const PRO_ON_SALE = true;
 
-/**
- * Emails a Pro store may send to its list in a calendar month: one-off
- * emails and automatic sequences together. Published, like every limit here.
- *
- * Twenty-five thousand, and the number is set against the price rather than
- * picked for the page. Every email costs us $0.0009 to send, so this is
- * $22.50 at the top, against the $95.83 a $99 subscription leaves after the
- * card fee. It was fifty thousand, which was $45 — nearly half the plan on
- * one line, and enough to put Pro into a loss once every other brake was at
- * its limit too.
- *
- * It is still five full sends a month to a list of five thousand, which is
- * more than almost anybody writes.
+/** Provisional list-email ceilings, all campaigns and sequences combined.
+ * A 4% allocation of annual subscription revenue recognized monthly is used
+ * for this resource-only reduction at the public $0.90/1,000 send rate.
+ * Studio: 5,000 => $4.50; Scale: 10,000 => $9.00, before fixed plan fees,
+ * request/compute costs, other messages and taxes. No free tier is assumed.
+ * These limits do not certify the required after-all-tax net margin.
  */
-export const PRO_MONTHLY_EMAILS = 25_000;
-/** The same, while the free trial runs, so a trial cannot be used to spam. */
+export const PRO_MONTHLY_EMAILS = 5_000;
+/** Funded acquisition exposure still requires a separate reviewed allowance. */
 export const TRIAL_MONTHLY_EMAILS = 1_000;
-
-/**
- * Emails a store on Scale may send to its list in a calendar month.
- *
- * Scale is here because of what happened to the store this one was first
- * measured against. Stan sold one $29 plan and then a $99 one, and a creator
- * who went on to sell ten times as much still paid the same: Sacra put it at
- * $35M of yearly revenue in 2025, growing 24% after 93% the year before, and
- * named the cause as a flat price with nothing to move up to. A store whose
- * list has outgrown Pro had the same wall here: the month's emails ran out
- * and the only answer was to wait for the first of the next one.
- *
- * So this is Pro with three times the email, at the price Kajabi charges for
- * the plan a business of that size is on. It is the same product with a
- * larger number, said as that: nothing is held back from Pro to make it look
- * better.
- *
- * Seventy-five thousand, set against the price like Pro's own number. At
- * $0.0009 an email that is $67.50 at the top. With every other brake at its
- * limit too the plan costs about $102 against the $241 a monthly charge
- * leaves, and against $193 a month on the yearly price: 58% kept in the
- * worst month on the one and 47% on the other, more than Pro keeps on
- * either (tests/plan-margin.test.ts adds it up). A hundred thousand was the
- * first figure, and left 36% on the yearly price.
- */
-export const SCALE_MONTHLY_EMAILS = 75_000;
+export const SCALE_MONTHLY_EMAILS = 10_000;
 
 /** Whether a plan has what Pro switches on: Pro itself, and Scale above it. */
 export function hasPro(tier: Tier): boolean {

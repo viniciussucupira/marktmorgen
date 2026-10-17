@@ -1,3 +1,4 @@
+import { paidStorageBytes } from '@/lib/storage-rules';
 /**
  * No plan may lose money in its own worst case.
  *
@@ -180,7 +181,7 @@ function ordersCost(tier: Tier): number {
 
 /** Everything one store on this plan can run up in a month, at every limit at once. */
 function worstCost(tier: Tier): number {
-  const storage = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB;
+  const storage = (paidStorageBytes(tier) / GB) * STORAGE_PER_GB;
   const free = (FREE_PAUSE_ABOVE_BYTES / GB) * FILE_DELIVERY_PER_GB;
   const video = videoCost();
   const email = monthlyEmails(tier) * PER_EMAIL;
@@ -241,7 +242,7 @@ for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
   test(`${tier}, ${schedule}: no single brake is big enough to swallow the plan by itself`, () => {
     const net = netOf(tier, "month", prices);
     const lines: [string, number][] = [
-      ["storage", (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB],
+      ["storage", (paidStorageBytes(tier) / GB) * STORAGE_PER_GB],
       ["free downloads", (FREE_PAUSE_ABOVE_BYTES / GB) * FILE_DELIVERY_PER_GB],
       ["video", videoCost()],
       ["visits", visitsCost(tier)],
@@ -391,16 +392,11 @@ test("a store nobody can charge cannot be visited past the visits it has", () =>
   assert.equal(TRIAL_VISITS, VISITS_INCLUDED.creator, "a trial of any plan has the smallest plan's visits: it has paid for none");
 });
 
-test("a store nobody can charge cannot watch past the hours it has", () => {
-  // An hour past the plan is paid for by a line on an invoice. A store in
-  // its free trial has no invoice yet, and one with no plan has none at all,
-  // so the hours themselves are the limit there: its video is paused at
-  // them (lib/plan-standing.ts has the figures, tests/plan-standing.test.ts
-  // holds them).
-  // Admission failure and exact-limit behavior are exercised through the real
-  // lessonVideo function in video-admission.test.ts. Check the route wiring here.
+test("lesson pages supply the store's video allowance", () => {
+  // The actual admission behavior, including failed reads and exact exhaustion,
+  // is exercised in video-admission.test.ts. Keep this route wiring check.
   const page = readFileSync(join(process.cwd(), "app/[handle]/course/[product]/[lesson]/page.tsx"), "utf8");
-  assert.match(page, /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/, "and the lesson page must be the one that asks what the store's hours are");
+  assert.match(page, /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/, "the lesson page must supply the store's allowance");
 });
 
 test("a store that pays nothing can cost next to nothing", () => {
@@ -428,8 +424,8 @@ test("a store whose plan ended stops costing more than a store with no plan, on 
   // The dearest store there can be: it pays for one month, runs every limit
   // of its plan in it, cancels, and leaves all a paid plan may keep here
   // until its day. That one month has to have paid for all of it.
-  const kept = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * months;
   for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
+    const kept = (paidStorageBytes(tier) / GB) * STORAGE_PER_GB * months;
     const cost = worstCost(tier) + kept;
     const net = netOf(tier, "month", prices);
     assert.ok(
@@ -493,8 +489,8 @@ test("a break from the plan is paid for by the months before it, at its longest"
   // that never sells or comes back.
   const months = PAID_MONTHS_BEFORE_PAUSE;
   const afterMonths = (WARN_WEEK_DAYS * 2) / 30;
-  const kept = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * (LONGEST_PAUSE_MONTHS + afterMonths);
   for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
+    const kept = (paidStorageBytes(tier) / GB) * STORAGE_PER_GB * (LONGEST_PAUSE_MONTHS + afterMonths);
     const cost = months * worstCost(tier) + kept;
     const net = months * netOf(tier, "month", prices);
     const margin = (net - cost) / net;
@@ -520,15 +516,15 @@ const STRIPE_FEE = (grossCents: number) => (grossCents / 100) * (0.029 + BILLING
  * way a plan can end — cancelled, refunded, unpaid — ends in this, and until
  * October 12, 2026 none of the refund sums below counted it.
  */
-const KEPT_TO_CLOSING = (STORAGE_BRAKE_BYTES / GB) * STORAGE_PER_GB * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30);
+const keptToClosing = (tier: Tier) => (paidStorageBytes(tier) / GB) * STORAGE_PER_GB * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30);
 
 test("the one exposure is the first payment refunded in full: bounded, once per account, and said in writing", () => {
   // A customer pays, runs every brake to its limit, asks the payment back,
   // and leaves everything a paid plan may keep until the closing day. This is
   // the guarantee's whole price, taken once per account (lib/plan.ts REFUND_DAYS).
   for (const [schedule, prices] of SCHEDULES) {
-    const month = worstCost("creator") + STRIPE_FEE(prices.creator.month) + KEPT_TO_CLOSING;
-    const year = worstCost("creator") + STRIPE_FEE(prices.creator.year) + KEPT_TO_CLOSING;
+    const month = worstCost("creator") + STRIPE_FEE(prices.creator.month) + keptToClosing("creator");
+    const year = worstCost("creator") + STRIPE_FEE(prices.creator.year) + keptToClosing("creator");
     assert.ok(month < 27, `${schedule}: a first month given back can cost $${month.toFixed(2)} on one account`);
     assert.ok(year < 35, `${schedule}: a first year given back can cost $${year.toFixed(2)} on one account`);
   }
@@ -550,7 +546,7 @@ for (const [schedule, prices] of SCHEDULES) for (const tier of TIERS) {
     const yearNet = prices[tier].year / 100 - STRIPE_FEE(prices[tier].year);
     const refunded = prices[tier].year / 100 - prices[tier].month / 100 - STRIPE_FEE(prices[tier].year);
     const kept = yearNet - refunded;
-    const cost = worstCost(tier) + KEPT_TO_CLOSING;
+    const cost = worstCost(tier) + keptToClosing(tier);
     assert.ok(kept > cost, `${tier}, ${schedule}: keeps $${kept.toFixed(2)} against $${cost.toFixed(2)}`);
   });
 }

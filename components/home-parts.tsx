@@ -7,7 +7,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import { listSizeWords } from "@/lib/contact-rules";
 import { HOME_QUESTIONS } from "@/lib/home-faq";
-import { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
+import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { uploadAllowanceWords } from "@/lib/upload-budget-policy";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { VIDEO_CENTS_PER_HOUR_OVER, VIDEO_HOURS_INCLUDED, centsWords } from "@/lib/watch-rules";
@@ -651,6 +651,7 @@ function PlanCard({
       </details>
 
       <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>
+      <p className="mt-3 text-sm text-ink-soft">Up to {PAID_STORAGE_BYTES[tier] / (1024 ** 3)} GB of stored files and videos. New uploads must fit in the remaining space.</p>
 
       <div className="mt-auto pt-8">
         {/*
@@ -768,7 +769,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
         <p className="flex gap-2 text-ink-soft">
           <Icon name="download" size={18} className="mt-0.5 shrink-0 text-violet-deep" />
           <span>
-            <strong className="font-semibold text-ink">Up to {STORAGE_BRAKE_BYTES / (1024 ** 3)} GB of stored files and videos.</strong> Uploads pause when there is no room left.
+            <strong className="font-semibold text-ink">Storage: {PAID_STORAGE_BYTES.creator / (1024 ** 3)} GB on Store, {PAID_STORAGE_BYTES.pro / (1024 ** 3)} GB on Studio, and {PAID_STORAGE_BYTES.scale / (1024 ** 3)} GB on Scale.</strong> Uploads pause when there is no room left. A free trial never has more storage than its chosen plan.
           </span>
         </p>
       </div>

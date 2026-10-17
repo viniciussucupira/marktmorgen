@@ -1,62 +1,14 @@
-/**
- * The brake on what one store can keep stored with us.
- *
- * Not a plan limit. A brake.
- *
- * The difference matters, and getting it wrong is how a protection costs
- * more than the thing it protects against. A plan limit goes on the pricing
- * page, a creator comparing two products reads it, and we lose a line to
- * Stan — who publishes no storage limit at all, no file-count limit and no
- * bandwidth limit. Their only published figure is 5 GB a file, which is also
- * ours. Publishing a storage quota would make us visibly worse than them on
- * a page, to guard against a cost that no honest creator will ever reach.
- *
- * So this is set far above any real use, appears nowhere a buyer or a
- * creator is choosing a plan, and exists for one case: a store being used as
- * a file host rather than to sell its owner's own work. Section 5 of the
- * Terms is what says we may act on that; this is what acts, by itself, so
- * nobody has to be watching.
- *
- * Storage was the cost with no measurement of any kind. The only bound on
- * what a store could hold was 2,000 products times a 5 GB file — ten
- * terabytes, about $230 a month, every month, from a creator paying $29,
- * whether or not they ever sold anything.
- *
- * The line falls where it costs nobody anything: a new upload. No buyer is
- * ever refused, nothing already sold is removed, nothing that exists stops
- * working. A store at the brake is asked to delete something before adding
- * more, which is pressure on the person who chose to store the files and
- * never on the person who bought one.
+/** Exact storage measurement and admission. Paid tiers use explicit finite
+ * limits; unavailable or incomplete measurements never authorize new storage.
+ * An upload threshold does not delete existing customer content or prove
+ * a supplier-dollar ceiling, retention funding or the all-tax margin.
  */
 import { filesHeld } from "@/lib/file-store";
-import { SETUP_STORAGE_BYTES, type Standing, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { streamHeld } from "@/lib/stream";
 import { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
-export { STORAGE_BRAKE_BYTES } from "@/lib/storage-rules";
+export { STORAGE_BRAKE_BYTES, storageBrakeFor } from "@/lib/storage-rules";
 
 const GB = 1024 * 1024 * 1024;
-
-/**
- * Where new uploads stop, on every plan.
- *
- * Two hundred gigabytes. At $0.023 a gigabyte a month that is $4.60 at the
- * very top, against the $27.86 a $29 subscription leaves after the card fee.
- *
- * It was five hundred until the worst case of each plan was actually added
- * up rather than eyeballed. At that figure storage alone took $11.50 of a
- * $27.86 plan, and with every other brake at its limit the cheapest plan
- * lost money in its own worst case. A brake is only a brake if the sum of
- * all of them sits well under the revenue they protect.
- *
- * And it is not a number a creator selling their own work meets. Two hundred
- * gigabytes is four hundred half-gigabyte videos, or eighty thousand ebooks,
- * against the two to five gigabytes a real store holds. A store past it is
- * not a storefront any more.
- *
- * It is the same on both plans on purpose: a brake that differs by plan is a
- * plan limit wearing a disguise, and would end up on the pricing page.
- */
-// The value lives in storage-rules so client-safe commercial review reads the same ceiling.
 
 export type StorageUse = { bytes: number; brake: number; left: number; full: boolean; available: boolean };
 
@@ -66,8 +18,9 @@ export type StorageUse = { bytes: number; brake: number; left: number; full: boo
  * Not kept as a counter. A counter has to be incremented everywhere a file
  * is attached and decremented everywhere one is dropped, and the day someone
  * adds a seventh such place without knowing, the counter is wrong in the
- * direction that costs money and nothing ever says so. Reading the folder is
- * one operation, costs a fraction of a cent, and cannot drift.
+ * direction that costs money and nothing ever says so. The provider listings are read completely. Pagination, malformed
+ * responses and provider failures are handled by the strict measurement
+ * adapters; their request costs still need a funded bound.
  *
  * A missing, invalid or incomplete measurement cannot authorize more storage.
  * Existing downloads and content are unaffected; upload doors return a temporary failure.
@@ -87,16 +40,6 @@ export async function storageUsed(folder: string, brake: number = STORAGE_BRAKE_
     console.error("could not read what a store is storing", error);
     return unavailable;
   }
-}
-
-/**
- * Where new uploads stop for a store, by where it stands with its plan
- * (lib/plan-standing.ts). The brake above is every paid plan's; a store in
- * its free trial, and one with no plan at all, have less room, because
- * nothing is yet paying for what they keep.
- */
-export function storageBrakeFor(standing: Standing): number {
-  return standing === "paid" ? STORAGE_BRAKE_BYTES : standing === "trial" ? TRIAL_STORAGE_BYTES : SETUP_STORAGE_BYTES;
 }
 
 /**

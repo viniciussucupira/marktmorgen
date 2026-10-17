@@ -80,7 +80,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         a: [
           feeWords().costLine,
           `Visits and lesson video have finite monthly thresholds. Public pages pause at the plan's counted-visit threshold, and new lesson video playback pauses at ${VIDEO_HOURS_INCLUDED} watched hours. These thresholds do not authorize unlimited overages. Orders beyond the plan's included count retain their separate published billing terms.`,
-          "The price is published on the home page. If it ever changes, existing subscribers are told before it applies to them.",
+          "Sending capacity includes reserved attempts. When a provider cannot confirm delivery, the reservation is retained and a retry uses new capacity. The price is published on the home page. If it ever changes, existing subscribers are told before it applies to them.",
         ],
       },
       {
@@ -305,7 +305,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "How much can my store hold?",
         a: [
-          "A store on a paid plan holds up to 200 GB of files and lesson videos. In a plan's free trial it holds 50 GB. A store with no plan, before one is started or after one has ended, holds 5 GB.",
+          "Paid storage is up to 8 GB on Store, 64 GB on Studio and 128 GB on Scale, for files and lesson videos combined. A free trial has up to 50 GB, capped by the chosen plan: 8 GB on Store and 50 GB on Studio or Scale. A store with no plan, before one starts or after it ends, holds 5 GB.",
           "Past its figure a store is asked to delete something before adding more. While a plan runs, nothing already there stops working and nothing already sold is touched.",
         ],
       },

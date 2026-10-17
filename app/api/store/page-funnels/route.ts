@@ -10,8 +10,10 @@ import { emptyBlock, parsePage } from "@/lib/sales-page";
 import { writePage } from "@/lib/sales-page-store";
 import { MAX_SITE_PAGES, type SitePage, siteKey, slugProblem } from "@/lib/site-page-rules";
 import { choicesOf, freeSlug, funnelType, pagesOf, slotProblem } from "@/lib/funnel-types";
+import { readFunnelFormDrafts } from "@/lib/funnel-form-draft";
+import { readFunnelPageCopy } from "@/lib/funnel-page-copy";
 import { newFormId, parseForm } from "@/lib/forms";
-import { writeForm } from "@/lib/form-store";
+import { canAddForms, writeForm } from "@/lib/form-store";
 
 /**
  * Saves or removes one funnel of pages (lib/page-funnel.ts).
@@ -23,16 +25,17 @@ import { writeForm } from "@/lib/form-store";
  *
  * `{ action: "from-type", type, name, products: { <slot>: <product id> } }`
  * builds one from a funnel type (lib/funnel-types.ts): the store's own pages
- * the type needs, made empty and kept back until the creator lets them out,
+ * the type needs, optionally with author-written pageCopy, kept back until the creator lets them out,
  * and the funnel walking them and the chosen products in the type's order.
  * Making pages needs the permission to change the public page as well.
  */
 export async function POST(request: NextRequest) {
-  const guarded = await guardStoreWrite(request, "products", 12_000);
+  const guarded = await guardStoreWrite(request, "products", 20_000);
   if (!guarded.ok) return guarded.response;
   const { store, body } = guarded;
   if (!store.statsId) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
   const statsId = store.statsId;
+  let setupStarted = false;
 
   try {
     const existing = await readPageFunnels(statsId);
@@ -51,6 +54,10 @@ export async function POST(request: NextRequest) {
       if (existing.length >= MAX_PAGE_FUNNELS) return Response.json({ ok: false, error: "full" }, { status: 400 });
       const name = text(body.name, MAX_FUNNEL_NAME).replace(/\s+/g, " ").trim() || type.label;
       const pages = pagesOf(type);
+      const formDrafts = readFunnelFormDrafts(body.formDrafts, type);
+      if (!formDrafts) return Response.json({ ok: false, error: "form_draft" }, { status: 400 });
+      const pageCopy = readFunnelPageCopy(body.pageCopy, type);
+      if (!pageCopy) return Response.json({ ok: false, error: "page_copy" }, { status: 400 });
       if (store.sitePages.length + pages.length > MAX_SITE_PAGES) return Response.json({ ok: false, error: "pages_full" }, { status: 400 });
 
       // Each product chosen is the store's, once, and the kind the role asks for.
@@ -67,6 +74,9 @@ export async function POST(request: NextRequest) {
         picked[slot.key] = id;
       }
 
+      const formsNeeded = pages.filter(page => page.form && page.blocks.includes("form")).length;
+      if (formsNeeded && !(await canAddForms(statsId, formsNeeded))) return Response.json({ ok: false, error: "forms_full" }, { status: 400 });
+
       // The pages, at addresses of their own, out of the menu: they belong to the funnel.
       const taken = new Set(store.sitePages.map((page) => page.slug));
       const made: { slot: (typeof pages)[number]; page: SitePage }[] = [];
@@ -77,23 +87,35 @@ export async function POST(request: NextRequest) {
         made.push({ slot, page: { id: randomBytes(5).toString("hex"), slug, title: slot.title, nav: false, target: slot.target ? picked[slot.target] : "", from: -1 } });
       }
       if (made.length) {
+        setupStarted = true;
         const saved = await setSitePages(guarded.ref, [...store.sitePages, ...made.map((m) => m.page)]);
-        if (!saved.ok || !saved.store.statsId) return Response.json({ ok: false, error: "server_error" }, { status: 500 });
+        if (!saved.ok || !saved.store.statsId) return Response.json({ ok: false, error: "setup_incomplete" }, { status: 500 });
         for (const { slot, page } of made) {
           const blocks = slot.blocks.map((kind) => emptyBlock(kind));
+          const copy = pageCopy[slot.key];
           const hero = blocks[0];
-          if (hero?.kind === "hero") Object.assign(hero, { headline: slot.title, media: "none" });
+          if (hero?.kind === "hero") Object.assign(hero, { headline: copy?.headline || slot.title, media: "none" });
+          if (copy?.intro) {
+            const intro = emptyBlock("text");
+            if (intro.kind === "text") {
+              intro.body = copy.intro;
+              blocks.splice(1, 0, intro);
+            }
+          }
           // The form the page asks, made with it: questions only, nothing claimed (lib/funnel-types.ts).
           const asks = blocks.find((block) => block.kind === "form");
           if (slot.form && asks?.kind === "form") {
+            const draft = formDrafts[slot.key];
+            const fields = draft?.fields ?? slot.form.fields;
             const form = parseForm({
               id: newFormId(),
               name: `${slot.form.name}: ${name}`.slice(0, 60),
-              fields: slot.form.fields.map((field) => ({ id: newFormId(6), options: [], ...field })),
-              offerList: slot.form.fields.some((field) => field.type === "email"),
+              fields: fields.map((field) => ({ id: newFormId(6), options: [], ...field })),
+              offerList: draft ? draft.offerList : slot.form.fields.some((field) => field.type === "email"),
               updatedAt: Math.floor(Date.now() / 1000),
             });
-            if (form && (await writeForm(saved.store.statsId, form))) asks.form = form.id;
+            if (!form || !(await writeForm(saved.store.statsId, form))) throw new Error("Required funnel form could not be saved");
+            asks.form = form.id;
           }
           await writePage(saved.store.statsId, siteKey(page.id), { ...parsePage({}), blocks, hidden: true });
         }
@@ -106,7 +128,8 @@ export async function POST(request: NextRequest) {
       });
       let slug = funnelSlugFrom(name) || "funnel";
       for (let n = 2; funnelSlugProblem(slug, existing) !== null && n < 100; n += 1) slug = `${(funnelSlugFrom(name) || "funnel").slice(0, 36)}-${n}`;
-      const kept = await writePageFunnel(statsId, { id: newFunnelId(), name, slug, steps, on: true, since: Math.floor(Date.now() / 1000) }, existing);
+      setupStarted = true;
+      const kept = await writePageFunnel(statsId, { id: newFunnelId(), name, slug, steps, on: false, since: Math.floor(Date.now() / 1000) }, existing);
       return Response.json({ ok: true, funnel: kept, pages: made.map((m) => ({ id: m.page.id, title: m.page.title, slug: m.page.slug })) });
     }
 
@@ -131,6 +154,6 @@ export async function POST(request: NextRequest) {
     return Response.json({ ok: true, funnel: kept });
   } catch (error) {
     console.error("saving a funnel of pages failed", error);
-    return Response.json({ ok: false, error: "server_error" }, { status: 500 });
+    return Response.json({ ok: false, error: setupStarted ? "setup_incomplete" : "server_error" }, { status: 500 });
   }
 }

@@ -1,3 +1,4 @@
+import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -452,9 +453,11 @@ export default function TermsPage() {
           {bytesWords(FREE_PAUSE_ABOVE_BYTES)} in that month, and resume when
           the month turns; anything anyone has bought is unaffected. And new
           uploads stop once a store holds as much as it may:{" "}
-          {storageWords(STORAGE_BRAKE_BYTES)} on a paid plan, which is far
-          more than a storefront needs,{" "}
-          {storageWords(TRIAL_STORAGE_BYTES)} in a plan&apos;s free trial, and{" "}
+          {storageWords(PAID_STORAGE_BYTES.creator)} on Store,{" "}
+          {storageWords(PAID_STORAGE_BYTES.pro)} on Studio, and{" "}
+          {storageWords(PAID_STORAGE_BYTES.scale)} on Scale. A free trial has
+          the smaller of {storageWords(TRIAL_STORAGE_BYTES)} and its chosen
+          plan&apos;s storage limit. The threshold is{" "}
           {storageWords(SETUP_STORAGE_BYTES)} for a store with no plan, before
           one is started or after one has ended. That asks you to remove
           something before adding more and changes nothing about what is
@@ -503,7 +506,10 @@ export default function TermsPage() {
           the next month. Scale, at {planPriceWords("scale")} or {planPriceWords("scale", "year")},
           is Studio with up to{" "}
           {SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, counted
-          the same way.
+          the same way. Reserved sending attempts count toward the allowance.
+          If a provider cannot confirm delivery after dispatch, the reservation
+          is retained and a retry uses new capacity. A failed or ambiguous
+          capacity acknowledgement does not authorize a send.
         </p>
         {domains ? (
           <p>

@@ -17,3 +17,9 @@ Numerical allowances and paused availability are shown from the same policy on t
 ## Limits of the evidence
 
 Sixteen reservation tests and eight endpoint tests use synthetic limits, a Redis contract double and mocked providers. They do not execute the production Lua against a real Redis server or exercise paid provider accounts. Supplier replay charges, multipart-operation costs, encoded video expansion, transfer bytes, other upload paths, retention, all taxes and the real minimum customer base remain unresolved. This is not a supplier-dollar ceiling or certification of the required 60% net margin.
+
+## Actual Redis concurrency coverage
+
+The product-checks workflow runs `scripts/test_upload_budget_redis.py` against its isolated Redis service on loopback port 16379. It extracts the exact static application Lua, exercises 64 concurrent starts and allocation claims, exact control exhaustion, lost-reply retention, corrupt counters, policy mismatches, tier changes, expiring ledgers, wrong types and absent ledgers. Denied operations must preserve hash contents. Keys use a random test-only prefix and cleanup touches only those keys. No application credentials or production Redis configuration are read.
+
+The TypeScript tests additionally cover policy validation, REST acknowledgement shape and provider-route admission. Running those mocks is not evidence that the Redis integration job passed; record the actual CI result separately.

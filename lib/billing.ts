@@ -137,7 +137,7 @@ const PRODUCT_IDS: Record<Tier, string> = {
 const PRODUCT_DESCRIPTIONS: Record<Tier, string> = {
   creator: feeWords(COMMISSION_LIVE).storeProduct,
   pro: "Everything in Marktmorgen, and what costs us money to run for you.",
-  scale: "Everything in Marktmorgen Pro, with three times the email to your list.",
+  scale: "Everything in Marktmorgen Studio, with the published Scale email and storage allowances.",
 };
 
 /** The name each price is found by, so there is never a second one. */

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
     // What a store may keep goes by where it stands with its plan (lib/plan-standing.ts).
     const standing = standingOf(store);
-    const held = await storageUsed(folder, storageBrakeFor(standing));
+    const held = await storageUsed(folder, storageBrakeFor(standing, store.tier));
     if (held.available === false) return Response.json({ ok: false, error: "video_unavailable" }, { status: 503 });
     if (!fits(held, bytes)) return Response.json({ ok: false, error: storageRefusal(standing) }, { status: 400 });
     await rememberFolderOwner(folder, ref);

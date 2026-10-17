@@ -128,7 +128,7 @@ async function main(): Promise<void> {
   is("a question too short to be one is not sent", [(await ask("?")).ok, asked.length], [false, 6]);
 
   part("Past the month's number");
-  is("a store on the $29 plan gets its number", answersAllowance({ ...store, trialEnds: 0 }), ANSWERS_MONTHLY.creator);
+  is("a store on the base plan gets its number", answersAllowance({ ...store, trialEnds: 0 }), ANSWERS_MONTHLY.creator);
   const now = Date.now();
   await redis.pipeline([["SET", `nl:ask:${store.statsId}:${new Date(now).toISOString().slice(0, 7)}`, String(answersAllowance(store, now))]]);
   reply = '{"known": true, "answer": "Yes."}';

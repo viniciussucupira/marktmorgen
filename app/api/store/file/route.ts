@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         // The browser does not supply a trusted file size. Limit both parts
         // of the signed authorization to the confirmed room that remains.
         const standing = standingOf(store);
-        const held = await storageUsed(folder, storageBrakeFor(standing));
+        const held = await storageUsed(folder, storageBrakeFor(standing, store.tier));
         if (held.available === false) throw new Error("files_unavailable");
         const maximumSizeInBytes = maximumUploadBytes(held, MAX_FILE_BYTES);
         if (maximumSizeInBytes <= 0) throw new Error(storageRefusal(standing));

@@ -50,7 +50,7 @@ async function main(): Promise<void> {
 
   part("How much it may keep");
   is("a paid plan has the brake every plan has", storageBrakeFor("paid"), STORAGE_BRAKE_BYTES);
-  is("a trial has a quarter of it", [storageBrakeFor("trial"), TRIAL_STORAGE_BYTES], [50 * GB, 50 * GB]);
+  is("a trial is capped by its chosen tier", [storageBrakeFor("trial", "creator"), storageBrakeFor("trial", "pro"), TRIAL_STORAGE_BYTES], [8 * GB, 50 * GB, 50 * GB]);
   is("a store with no plan has five gigabytes, before one or after one", [storageBrakeFor("none"), storageBrakeFor("ended"), SETUP_STORAGE_BYTES], [5 * GB, 5 * GB, 5 * GB]);
   is("which is twelve cents a month at the dearest rate a file is kept at", ((SETUP_STORAGE_BYTES / GB) * 0.023).toFixed(3), "0.115");
   is("and a trial that keeps all it may costs us little over a dollar a month", (TRIAL_STORAGE_BYTES / GB) * 0.023 < 1.2, true);
@@ -62,21 +62,21 @@ async function main(): Promise<void> {
   is("it is what is left that a file has to fit in", [fits(half, 2 * GB), fits(half, 2 * GB + 1), fits({ ...half, brake: 50 * GB, left: 47 * GB }, 5 * GB)], [true, false, true]);
   const over = { bytes: 80 * GB, brake: 5 * GB, left: 0, full: true, available: true };
   is("a store that held more when its plan ended cannot add to it", [fits(over, 1), over.full], [false, true]);
-  const nearly = { bytes: 199 * GB, brake: STORAGE_BRAKE_BYTES, left: GB, full: false, available: true };
-  is("paid uploads must fit the confirmed remaining room", [fits(nearly, GB), fits(nearly, 5 * GB), fits({ ...nearly, bytes: 200 * GB, left: 0, full: true }, 1)], [true, false, false]);
+  const nearly = { bytes: 7 * GB, brake: STORAGE_BRAKE_BYTES, left: GB, full: false, available: true };
+  is("paid uploads must fit the confirmed remaining room", [fits(nearly, GB), fits(nearly, 5 * GB), fits({ ...nearly, bytes: 8 * GB, left: 0, full: true }, 1)], [true, false, false]);
 
   part("What an upload is told");
   is("each standing has its own word", [storageRefusal("paid"), storageRefusal("trial"), storageRefusal("none"), storageRefusal("ended")], ["storage_full", "storage_trial", "storage_setup", "storage_setup"]);
   is("and the studio has a sentence for each", ["storage_full", "storage_trial", "storage_setup"].map((word) => typeof STUDIO_MESSAGES[word] === "string" && STUDIO_MESSAGES[word].length > 40), [true, true, true]);
-  is("with the figures the doors hold a store to", [STUDIO_MESSAGES.storage_trial.includes("up to 50 GB") && STUDIO_MESSAGES.storage_trial.includes("200 GB"), STUDIO_MESSAGES.storage_setup.includes("up to 5 GB"), storageWords(STORAGE_BRAKE_BYTES)], [true, true, "200 GB"]);
+  is("trial refusal points to the tier-specific limit", [STUDIO_MESSAGES.storage_trial.includes("trial storage"), STUDIO_MESSAGES.storage_setup.includes("up to 5 GB"), storageWords(STORAGE_BRAKE_BYTES)], [true, true, "8 GB"]);
   is("a store is not told to start a plan while none can be started", STUDIO_MESSAGES.storage_setup.includes("Start your plan"), PLANS_ON_SALE);
   for (const [name, path] of [["files", "app/api/store/vault/route.ts"], ["lesson videos", "app/api/store/stream/route.ts"]] as const) {
     const door = read(path);
     if (name === "files") {
       const reserved = read("lib/vault-storage.ts");
-      is("R2 admission measures confirmed usage under its shared reservation", [/openReservedVault/.test(door), /storageBrakeFor\(standing\)/.test(door), /storageUsed\(input.folder, limit\)/.test(reserved), /held.available !== true/.test(reserved), /reserveStorage/.test(reserved)], [true, true, true, true, true]);
+      is("R2 admission measures confirmed usage under its shared reservation", [/openReservedVault/.test(door), /storageBrakeFor\(standing, store\.tier\)/.test(door), /storageUsed\(input.folder, limit\)/.test(reserved), /held.available !== true/.test(reserved), /reserveStorage/.test(reserved)], [true, true, true, true, true]);
     } else {
-      is(`the door for ${name} measures a store against its own figure and holds a file to what is left`, [/storageUsed\(folder, storageBrakeFor\(standing\)\)/.test(door), /!fits\(held, bytes\)/.test(door), /storageRefusal\(standing\)/.test(door)], [true, true, true]);
+      is(`the door for ${name} measures a store against its own figure and holds a file to what is left`, [/storageUsed\(folder, storageBrakeFor\(standing, store\.tier\)\)/.test(door), /!fits\(held, bytes\)/.test(door), /storageRefusal\(standing\)/.test(door)], [true, true, true]);
     }
   }
 
@@ -98,14 +98,14 @@ async function main(): Promise<void> {
 
   part("What the pages say");
   const terms = read("app/terms/page.tsx");
-  is("the Terms give all three figures for what a store may keep, from where the doors read them", [/storageWords\(STORAGE_BRAKE_BYTES\)/.test(terms), /storageWords\(TRIAL_STORAGE_BYTES\)/.test(terms), /storageWords\(SETUP_STORAGE_BYTES\)/.test(terms)], [true, true, true]);
+  is("the Terms disclose all paid tiers and the capped trial", [/PAID_STORAGE_BYTES\.creator/.test(terms), /PAID_STORAGE_BYTES\.pro/.test(terms), /PAID_STORAGE_BYTES\.scale/.test(terms), /TRIAL_STORAGE_BYTES/.test(terms), /SETUP_STORAGE_BYTES/.test(terms)], [true, true, true, true, true]);
   is("the Terms disclose finite paid and setup playback thresholds", [/Paid plans and/.test(terms), /VIDEO_HOURS_INCLUDED/.test(terms), /SETUP_VIDEO_HOURS/.test(terms), /New playback pauses/.test(terms)], [true, true, true, true]);
   is("and that a store holding more when its plan ends cannot add to it, with where its date is said", /cannot add to it, and section 8 says how\s+long it keeps what it holds/.test(terms), true);
   const help = read("lib/help-content.ts");
-  is("the help pages disclose storage and finite playback thresholds", [help.includes(`In a plan's free trial it holds ${storageWords(TRIAL_STORAGE_BYTES)}`), help.includes(`holds ${storageWords(SETUP_STORAGE_BYTES)}.`), help.includes("New playback pauses at that threshold")], [true, true, true]);
+  is("the help discloses tier-specific storage and finite playback", [help.includes("8 GB on Store, 64 GB on Studio and 128 GB on Scale"), help.includes("capped by the chosen plan"), help.includes("New playback pauses at that threshold")], [true, true, true]);
   is("so does the page about courses", read("lib/feature-pages.ts").includes(`${VIDEO_HOURS_INCLUDED} hours a month in the free trial, and ${SETUP_VIDEO_HOURS} hours a month before a plan starts and after one ends`), true);
   const studio = read("app/studio/page.tsx");
-  is("the studio shows a store its own figures", [/storageBrakeFor\(standing\)/.test(studio), /videoLimitFor\(store\)/.test(studio), /SETUP_VIDEO_HOURS/.test(studio)], [true, true, true]);
+  is("the studio shows a store its own figures", [/storageBrakeFor\(standing, store\.tier\)/.test(studio), /videoLimitFor\(store\)/.test(studio), /SETUP_VIDEO_HOURS/.test(studio)], [true, true, true]);
   is("and the lesson page pauses by the store's own hours", /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/.test(read("app/[handle]/course/[product]/[lesson]/page.tsx")), true);
 
   done();

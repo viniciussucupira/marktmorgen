@@ -1,3 +1,4 @@
+import { PAID_STORAGE_BYTES } from '../lib/storage-rules';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { POST as vaultPost } from '../app/api/store/vault/route';
@@ -37,4 +38,11 @@ test('unproven direct providers cannot bypass the R2 budget through fallback',as
 });
 test('authentication and ownership refuse requests before consuming capacity',async()=>{
  begin();state.auth=false;assert.equal((await vaultPost(open())).status,401);assert.equal(calls.length,0);state.auth=true;state.owns=false;state.lessonOwned=false;assert.equal((await vaultPost(open())).status,404);assert.equal(calls.length,0);assert.deepEqual(state.events,[]);
+});
+
+test('actual R2 route passes each paid tier storage limit to admission',async()=>{
+ for(const tier of ['creator','pro','scale'] as const){begin();state.store.tier=tier;assert.equal((await vaultPost(open())).status,200);assert.deepEqual(state.storageLimits,[PAID_STORAGE_BYTES[tier]]);}
+});
+test('a Store trial cannot authorize the larger generic trial storage',async()=>{
+ begin();state.store.trialEnds=Math.floor(Date.now()/1000)+86400;assert.equal((await vaultPost(open())).status,200);assert.deepEqual(state.storageLimits,[PAID_STORAGE_BYTES.creator]);
 });

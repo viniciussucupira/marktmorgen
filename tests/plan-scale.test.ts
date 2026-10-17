@@ -5,7 +5,7 @@
  * Why it exists (lib/plan.ts): the store this one was first measured against
  * sold a flat $29 and $99 with nothing to move up to, so a creator who grew
  * paid the same forever, and a list that outgrew its month could only wait.
- * Scale is Pro with three times the email, and nothing taken from Pro to
+ * Scale has its own explicit email and storage allowances, and nothing taken from Pro to
  * make it look better — which is the first thing checked here.
  */
 import { AI_MONTHLY } from "@/lib/ai-rules";
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
   is("email, the domain and the rest are on for it", [canUse(store({ tier: "scale" }), "email"), canUseDomain(store({ tier: "scale" })), canUse(store({ tier: "scale", subscriptionActive: false }), "email")], [true, true, false]);
 
   part("What it gives");
-  is("three times Pro's emails", [monthlyEmails("pro"), monthlyEmails("scale"), SCALE_MONTHLY_EMAILS / PRO_MONTHLY_EMAILS], [25_000, 75_000, 3]);
+  is("Scale has the larger explicit email allowance", [monthlyEmails("pro"), monthlyEmails("scale"), SCALE_MONTHLY_EMAILS / PRO_MONTHLY_EMAILS], [5_000, 10_000, 2]);
   is("a store on it may send that many", monthlyAllowance(store({ tier: "scale" })), SCALE_MONTHLY_EMAILS);
   is("Pro is left exactly as it was", [monthlyAllowance(store({ tier: "pro" })), aiAllowance(store({ tier: "pro" }))], [PRO_MONTHLY_EMAILS, AI_MONTHLY.pro]);
   is("and the plan under it still sends none", monthlyAllowance(store({ tier: "creator" })), 0);
