@@ -148,6 +148,17 @@ export async function hostConnectionView(statsId: string, host: string): Promise
   return c ? { ...viewOf(c), scope: c.scope } : null;
 }
 
+/** Where a host's own Google connection is kept, so a team's page can read every host's in one command (lib/host-calendar.ts, prefetchHosts). */
+export function hostConnectionKey(statsId: string, host: string): string {
+  return connKey(statsId, "google", host);
+}
+
+/** The same view as hostConnectionView, from what was read at hostConnectionKey. */
+export function hostConnectionFrom(raw: unknown): (ConnectionView & { scope: string }) | null {
+  const c = parseConnection(raw, "google");
+  return c ? { ...viewOf(c), scope: c.scope } : null;
+}
+
 // ---- What the studio shows ---------------------------------------------------
 
 export type ConnectionView = {

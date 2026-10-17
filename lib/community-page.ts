@@ -9,6 +9,8 @@
  */
 import { type Viewer, communityViewer } from "@/lib/community-access";
 import { countDay } from "@/lib/day-visit";
+import { isResting } from "@/lib/traffic";
+import { redirect } from "next/navigation";
 import type { Store } from "@/lib/store";
 
 type CookieJar = Parameters<typeof communityViewer>[1];
@@ -16,6 +18,10 @@ type CookieJar = Parameters<typeof communityViewer>[1];
 export async function communityVisitor(store: Store, cookies: CookieJar): Promise<Viewer> {
   const viewer = await communityViewer(store, cookies);
   // Somebody who is in, and is not the creator, whose own days are never counted.
-  if (viewer.state === "in" && !viewer.owner) await countDay(store);
+  if (viewer.state === "in" && !viewer.owner) {
+    // Once the whole month's visits are used, members' pages rest too (lib/traffic-rules.ts).
+    if (await isResting(store, Date.now(), "buyer")) redirect(`/@${store.handle}/resting`);
+    await countDay(store);
+  }
   return viewer;
 }

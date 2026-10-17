@@ -279,13 +279,15 @@ test("an order that paid a share is covered by it several times over, so it is n
   assert.equal(coveredByShare({ ...store, tier: "scale" }, 2700, 1e10, true), false);
 });
 
-test("a store nobody can charge gives free copies only up to a trial's orders", () => {
-  // A free copy costs its email and nobody pays for it. A store with an
-  // invoice is charged past its plan; one in its trial stops giving them at
-  // TRIAL_ORDERS; one with no plan gives none (lib/free.ts, isPaidUp).
+test("free copies stop at the month's orders: the plan's when paid, a trial's in a trial, none without a plan", () => {
+  // A free copy costs its email and nobody pays for it. Since 17 October
+  // 2026 nothing past a plan is billed, so a paid store's free copies stop at
+  // its plan's orders like its paid orders (lib/order-admission.ts); one in
+  // its trial stops giving them at TRIAL_ORDERS; one with no plan gives none
+  // (lib/free.ts, isPaidUp).
   const base = { subscriptionId: "sub_1", planEndedAt: "" };
   const now = 1_000_000;
-  assert.equal(freeCopiesLimitFor({ ...base, subscriptionActive: true, trialEnds: 0 }, now), null);
+  assert.equal(freeCopiesLimitFor({ ...base, subscriptionActive: true, trialEnds: 0, tier: "pro" }, now), ORDERS_INCLUDED.pro);
   assert.equal(freeCopiesLimitFor({ ...base, subscriptionActive: true, trialEnds: now + 10 }, now), TRIAL_ORDERS);
   assert.equal(freeCopiesLimitFor({ ...base, subscriptionActive: false, trialEnds: 0 }, now), 0);
   assert.ok(TRIAL_ORDERS * ORDER_COST < 2, `a trial's orders can cost $${(TRIAL_ORDERS * ORDER_COST).toFixed(2)} with nothing paid`);
@@ -301,11 +303,12 @@ test("every place an order is handed over counts it", () => {
     ["lib/purchase-email.ts", "countOrder(store, `offer:"],
     ["lib/group-buy.ts", "countOrder(store, `place:"],
     ["lib/free.ts", "countOrder(store, `free:"],
+    ["lib/paypal-sales.ts", "countOrder(store, `paypal:"],
   ] as const) {
     assert.ok(readFileSync(join(process.cwd(), file), "utf8").includes(mark), `${file} must count its orders (${mark})`);
   }
   const cron = readFileSync(join(process.cwd(), "app/api/cron/usage/route.ts"), "utf8");
-  assert.match(cron, /settleAllOrders\(\)/, "the daily job must bill orders past a plan");
+  assert.doesNotMatch(cron, /settleAllOrders/, "the daily job never bills orders past a plan: they are not sold (lib/order-admission.ts)");
 });
 
 test("a store nobody can charge cannot be visited past the visits it has", () => {

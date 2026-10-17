@@ -8,12 +8,12 @@ import { formatMoney } from "@/lib/money";
 import { PRO_MONTHLY_EMAILS, REFUND_DAYS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS, PLAN_TITLES } from "@/lib/plan";
 import { healthRuleWords } from "@/lib/mail-health-rules";
 import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords } from "@/lib/delivery";
-import { centsWords, hoursWords } from "@/lib/watch-rules";
+import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
-import { ORDERS_INCLUDED, ORDER_CENTS_PER_THOUSAND_OVER, TRIAL_ORDERS } from "@/lib/order-rules";
-import { ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, VISIT_CENTS_PER_THOUSAND_OVER, countWords, partsWords } from "@/lib/traffic-rules";
+import { ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
+import { BUYER_RESERVE_BPS, ROOM_IDLE_PARTS, ROOM_LIVE_PARTS, SETUP_VISITS, TRIAL_VISITS, VISITS_INCLUDED, countWords, partsWords } from "@/lib/traffic-rules";
 import { ROOM_GRANT_MINUTES } from "@/lib/chat-pace";
 import { STORAGE_BRAKE_BYTES, storageWords } from "@/lib/storage-quota";
 import { INVITE_PROGRAM_OPEN, INVITE_PAUSE_NOTICE, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 16, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 17, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -327,9 +327,12 @@ export default function TermsPage() {
           file, how many emails a month a plan may send,{" "}
           {bytesWords(DELIVERY_ALLOWANCE_BYTES)} of downloads a month per
           store, lesson video watched for {paidVideoWords()} a
-          month per store, and the visits to your store a month that your
-          plan covers. You can see every one of them while you use the
-          Services.
+          month per store, the visits and orders a month your plan covers,
+          and the monthly figures of imports, workflows and shared funnels.
+          You can see every one of them while you use the Services. Use past
+          a plan&apos;s figures is not sold or billed: what needs the figure
+          waits for the next calendar month or a larger plan, as each part of
+          this section says.
           None of them is hidden in this document and then discovered by being
           enforced against you.
         </p>
@@ -343,8 +346,9 @@ export default function TermsPage() {
           Nothing is charged for downloads, inside that figure or past it.
         </p>
         <p>
-          Visits and lesson video have finite monthly admission thresholds.
-          Public pages pause at the recorded counted-visit threshold. New stream
+          Visits, orders and lesson video have finite monthly admission
+          thresholds. Public pages pause at the recorded counted-visit
+          threshold, and a paid store&apos;s new orders at its orders figure. New stream
           playback pauses at the recorded watched-time threshold; an unavailable
           or invalid admission measurement does not authorize new playback.
         </p>
@@ -381,9 +385,18 @@ export default function TermsPage() {
           calendar month: {countWords(VISITS_INCLUDED.creator)} on{" "}
           {PLAN_TITLES.creator}, {countWords(VISITS_INCLUDED.pro)} on{" "}
           {PLAN_TITLES.pro}, and {countWords(VISITS_INCLUDED.scale)} on{" "}
-          {PLAN_TITLES.scale}. At the threshold, public pages rest until the
-          next calendar month or a plan change provides a larger threshold.
-          An unreadable count also pauses new public-page admission.
+          {PLAN_TITLES.scale}. Visits are not billed, and none are sold past
+          that figure. Your store&apos;s public pages (its page, products,
+          blog and collections, and the cards of the checkout script) rest
+          once a month has had {(10_000 - BUYER_RESERVE_BPS) / 100}% of the
+          figure; the last {BUYER_RESERVE_BPS / 100}% are kept for what your
+          buyers already have (courses and lessons, the community and its
+          live room, and private podcasts), which rest once the whole figure
+          is used, with a page that tells your buyers their access is kept.
+          Everything opens again at the next calendar month, or when a plan
+          change provides a larger figure. A checkout already open is never
+          stopped by this. An unreadable count also pauses new public-page
+          admission.
         </p>
         <p>
           A buyer who comes back is a visit like anybody else: a student or
@@ -402,37 +415,38 @@ export default function TermsPage() {
           counted in your own room.
         </p>
         <p>
-          A store with no paid plan has nothing a charge can be added to, so
-          its public pages rest past its visits until the plan is paid or the
-          month turns: {countWords(TRIAL_VISITS)} visits a month in the free
-          trial, and {countWords(SETUP_VISITS)} a month before a plan is
-          started and after one has ended. A visitor to a resting store is
-          told the page will be open again soon. Nothing is charged for those
-          visits, and what a buyer already has is never part of the rest:
-          orders, downloads, lessons, podcasts and memberships stay open. The
-          live room of such a store stops checking by itself and shows new
+          A store with no paid plan rests the same way until the plan is paid
+          or the month turns: {countWords(TRIAL_VISITS)} visits a month in
+          the free trial, and {countWords(SETUP_VISITS)} a month before a plan
+          is started and after one has ended. A visitor to a resting store is
+          told the page will be open again soon. Nothing is charged for
+          visits, and downloads of what a buyer bought are not visits and are
+          never part of the rest. The live room of a resting store
+          stops checking by itself and shows new
           messages when a member asks for them.
         </p>
         <p>
           Orders are counted the same way. An order is one purchase confirmed
           (a bundle or a cart of several products is one), one offer taken
-          after paying, one place taken in a purchase made for several people,
-          or one free copy sent to an address, each counted once. Your plan
-          covers a number of orders in each calendar month:{" "}
+          after paying, one PayPal order, one place in a purchase made for
+          several people, or one free copy sent to an address, each counted
+          once. Your plan covers a number of orders in each calendar month:{" "}
           {countWords(ORDERS_INCLUDED.creator)} on {PLAN_TITLES.creator},{" "}
           {countWords(ORDERS_INCLUDED.pro)} on {PLAN_TITLES.pro}, and{" "}
-          {countWords(ORDERS_INCLUDED.scale)} on {PLAN_TITLES.scale}. Past
-          that, orders are charged rather than limited:{" "}
-          {centsWords(ORDER_CENTS_PER_THOUSAND_OVER)} for each thousand orders
-          above your plan&apos;s figure in a calendar month, counted to the
-          order and rounded down to the cent, added to your next subscription
-          invoice under the published order terms. Nothing is ever refused to a buyer
-          because a store has passed its orders, and you are emailed
-          automatically the first time a month passes them.
+          {countWords(ORDERS_INCLUDED.scale)} on {PLAN_TITLES.scale}. Orders
+          are not billed, and none are sold past that figure: when a paid
+          store reaches it, new orders pause until the next calendar month or
+          a plan change that provides a larger figure. A buyer who tries to
+          buy then is told plainly that the store is not taking new orders
+          right now, and nothing is charged. A checkout opened in the
+          preceding day counts toward the figure until it is paid or closes,
+          so a buyer who is already paying is never stopped and receives
+          everything bought. You are emailed automatically the first time a
+          month reaches the figure.
           {feeWords().ordersShared} In the free trial, free copies stop for
           the month once the store has had {countWords(TRIAL_ORDERS)} orders,
-          until the plan is paid or the month turns; paid orders are never
-          stopped.
+          until the plan is paid or the month turns; paid orders in the trial
+          are not stopped.
         </p>
         <p>
           What we ask in return is that the Services are used to sell your own

@@ -182,7 +182,7 @@ export async function giveAccess(
 
   let emailed = false;
   if (notify && !(await pausedFor(store.sid)) && (await reserveDay(1))) {
-    if ((await reserveMoved(store.sid, 1)) < 1) await releaseDay(1);
+    if ((await reserveMoved(store, 1)) < 1) await releaseDay(1);
     else {
       const a = accessWords(store.language);
       const base = storeBase(store);

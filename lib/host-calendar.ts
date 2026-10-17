@@ -38,15 +38,21 @@ import type { Busy } from "@/lib/call-setup";
 import { readFeed, providerOf } from "@/lib/calendar-sync";
 import { checkUrl, problemWords as fetchProblemWords, SafeFetchError } from "@/lib/safe-fetch";
 import { canSeal, seal, unseal } from "@/lib/secret-box";
-import { NotConnected, accessFor, disconnect, hostConnectionView } from "@/lib/meet-connect";
+import { NotConnected, accessFor, disconnect, hostConnectionFrom, hostConnectionKey, hostConnectionView } from "@/lib/meet-connect";
 import { type GoogleCalendar, MAX_READ_CALENDARS, ProviderError, googleCalendars, googleFreeBusy, grantedParts, hostSyncOn } from "@/lib/meet-providers";
 import { hostId } from "@/lib/host-claims";
 import type { Store } from "@/lib/store";
 
-/** How long a reading is used before the calendar is asked again. */
-export const SYNC_SECONDS = 300;
-/** How old the last good reading may be before the host is blocked. */
-export const STALE_SECONDS = 20 * 60;
+/**
+ * How long a reading is used before the calendar is asked again: fifteen
+ * minutes since 17 October 2026 (five before). Each reading of each host is
+ * part of every plan's worst month (tests/plan-cost-registry.ts); a time a
+ * host's calendar filled in the meantime is still never booked twice through
+ * us, because every hold is claimed on each host's own list (lib/host-claims.ts).
+ */
+export const SYNC_SECONDS = 900;
+/** How old the last good reading may be before the host is blocked: three readings missed. */
+export const STALE_SECONDS = 45 * 60;
 /** How far ahead busy times are read: past the longest booking horizon. */
 export const HOST_LOOKAHEAD_DAYS = 92;
 /** How long the last reading and the last failure are kept, for the studio. */
@@ -177,6 +183,29 @@ function syncWords(error: unknown): string {
   return error instanceof Error ? error.message.slice(0, 300) : "Your calendar could not be read.";
 }
 
+/** What prefetchHosts read for one host: their settings, last reading, last failure and Google connection, as stored. */
+export type HostPrefetch = { cfg: unknown; good: unknown; err: unknown; conn: unknown };
+
+/**
+ * Every host's kept state for a team call's page in one command (added 17
+ * October 2026), instead of two for each host on every view: each view's
+ * commands are part of every plan's worst month (tests/plan-cost-registry.ts).
+ * Throws when it cannot be read, like the per-host reads it stands for.
+ */
+export async function prefetchHosts(store: Pick<Store, "statsId">, emails: string[]): Promise<Map<string, HostPrefetch>> {
+  const out = new Map<string, HostPrefetch>();
+  if (!store.statsId || !emails.length || !isRedisConfigured()) return out;
+  const statsId = store.statsId;
+  const keys = emails.flatMap((email) => {
+    const host = hostId(email);
+    return [cfgKey(host), goodKey(host), errKey(host), hostConnectionKey(statsId, host)];
+  });
+  const [raw] = await redisPipeline([["MGET", ...keys]]);
+  if (!Array.isArray(raw) || raw.length !== keys.length) throw new Error("the hosts' calendars could not be read");
+  emails.forEach((email, i) => out.set(email, { cfg: raw[4 * i], good: raw[4 * i + 1], err: raw[4 * i + 2], conn: raw[4 * i + 3] }));
+  return out;
+}
+
 /**
  * A host's busy times for booking, reading their calendar again when the
  * last reading is older than SYNC_SECONDS (`refresh`), never throwing: what
@@ -186,7 +215,7 @@ export async function hostSync(
   store: Pick<Store, "statsId">,
   email: string,
   tz: string,
-  options: { now?: number; refresh?: boolean; force?: boolean; hooks?: SyncHooks } = {},
+  options: { now?: number; refresh?: boolean; force?: boolean; hooks?: SyncHooks; known?: HostPrefetch } = {},
 ): Promise<HostSync> {
   const now = options.now ?? Date.now();
   if (!store.statsId || !isRedisConfigured()) return result("none", "none", null);
@@ -195,11 +224,10 @@ export async function hostSync(
   let good: Good | null;
   let failure: { at: number; message: string } | null;
   try {
-    const [c, g, e] = await redisPipeline([
-      ["GET", cfgKey(host)],
-      ["GET", goodKey(host)],
-      ["GET", errKey(host)],
-    ]);
+    // One command, not three: this runs for every host on every view of a team call's page
+    // (tests/plan-cost-registry.ts, line team-scheduling).
+    const [raw] = options.known ? [[options.known.cfg, options.known.good, options.known.err]] : await redisPipeline([["MGET", cfgKey(host), goodKey(host), errKey(host)]]);
+    const [c, g, e] = Array.isArray(raw) ? raw : [null, null, null];
     config = parseConfig(c);
     good = parseGood(g);
     failure = parseError(e);
@@ -212,7 +240,7 @@ export async function hostSync(
   if (good && good.source !== source) good = null;
   if (source === "google") {
     if (!hostSyncOn()) return result(source, "off", good, "Google Calendar sync is not switched on for hosts yet. Add your calendar's private iCal address instead.");
-    const conn = await hostConnectionView(store.statsId, host).catch(() => null);
+    const conn = options.known ? hostConnectionFrom(options.known.conn) : await hostConnectionView(store.statsId, host).catch(() => null);
     if (!conn) return result(source, "failed", good, "Google Calendar is not connected.");
     if (conn.broken) return result(source, "failed", good, `Google Calendar needs connecting again: ${conn.broken}`);
     if (!grantedParts(conn.scope).freebusy) return result(source, "scope", good, "Google was connected without permission to see your free/busy times. Connect again and allow it.");

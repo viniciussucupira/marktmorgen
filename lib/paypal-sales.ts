@@ -39,6 +39,8 @@
  * affiliate book and the webhooks count it (lib/stats.ts readPaidSales,
  * lib/paypal-delivery.ts).
  */
+import { admitOrders } from "@/lib/order-admission";
+import { countOrder } from "@/lib/orders";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { addressHash, grantImported, importedKey } from "@/lib/imported-purchases";
 import { plainAmount, formatMoney } from "@/lib/money";
@@ -332,11 +334,15 @@ export function cleanMeta(meta: Record<string, string> | undefined): Record<stri
   return out;
 }
 
-export type OrderResult = { ok: true; url: string; order: string } | { ok: false; reason: "unavailable" | "error" };
+export type OrderResult = { ok: true; url: string; order: string } | { ok: false; reason: "unavailable" | "error" | "paused" };
 
 /** Opens a PayPal order for one product and returns where the buyer approves it. */
 export async function openOrder(store: Store, product: Listing, origin: string, extras: OrderExtras = {}): Promise<OrderResult> {
   if (!paypalReady(store, product) || !store.statsId || !store.paypalSeller || !isRedisConfigured()) return { ok: false, reason: "unavailable" };
+  // One of the month's orders: a paid store's stop at its plan's figure (lib/order-admission.ts),
+  // before PayPal's page opens.
+  const admitted = await admitOrders(store, 1);
+  if (!admitted.ok) return { ok: false, reason: admitted.reason === "paused" ? "paused" : "error" };
   const cents = payPalPrice(store, product);
   const returnUrl = `${origin}/api/store/paypal/return?store=${encodeURIComponent(store.handle)}`;
   const cancelUrl = `${origin}/@${store.handle}/p/${product.id}`;
@@ -573,6 +579,9 @@ export async function deliverPayPal(input: {
     replyTo: store.email,
     idempotencyKey: `nimbus-paypal:${paid.order}`,
   }).catch((error) => console.error("a PayPal purchase email failed", error));
+  // One of the month's orders, like a card checkout's (lib/orders.ts). Not counted until
+  // 17 October 2026, so a store's PayPal sales were in no plan's figure.
+  await countOrder(store, `paypal:${paid.order}`, paid.cents);
 }
 
 /**

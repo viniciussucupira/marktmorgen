@@ -18,6 +18,7 @@
  * products and not others; a discount code box is offered only when nothing
  * was taken off, as on any other checkout here.
  */
+import { ADMITTED_FIELD, OrdersPausedError, admitOrders } from "@/lib/order-admission";
 import type { Product, Store } from "@/lib/store";
 import { KIND, readListings } from "@/lib/catalog";
 import { BUMP_KEYS, MIN_BUNDLE_ITEMS, bundleMeta, deliverableItems } from "@/lib/bundle-rules";
@@ -168,6 +169,10 @@ export async function createCartCheckout(
   let named = isHouseStore(store);
   if (named) body.set(DISPLAY_NAME, store.name);
   let documents = store.tax.ids || store.tax.invoices;
+  // A cart is one order, admitted before Stripe's page opens (lib/order-admission.ts).
+  const admitted = await admitOrders(store, 1);
+  if (!admitted.ok) throw new OrdersPausedError(admitted.reason);
+  if (admitted.hour !== null) body.set(`metadata[${ADMITTED_FIELD}]`, String(admitted.hour));
 
   for (;;) {
     try {

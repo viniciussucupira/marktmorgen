@@ -9,8 +9,8 @@ import { SITE_KINDS, isSiteKey } from "@/lib/site-page-rules";
 import { BLOCK_KINDS, type BlockKind } from "@/lib/sales-page";
 import { type SavedSection, SECTION_WHY, newSectionId, readSectionInput, updateProblem, withSection } from "@/lib/saved-blocks";
 import { dropSection, readSection, readSections, sectionUses, writeSection } from "@/lib/saved-block-store";
-import { countUse, storeUseKey } from "@/lib/funnel-share-store";
-import { APPLIES_PER_DAY, MAX_APPLY_PAGES, shareLimitsFor } from "@/lib/funnel-share-rules";
+import { MONTH_USE_SECONDS, countUse, storeMonthKey } from "@/lib/funnel-share-store";
+import { MAX_APPLY_PAGES, shareLimitsFor, monthOfUse } from "@/lib/funnel-share-rules";
 import type { Store } from "@/lib/store";
 
 const refuse = (error: string, status = 400, extra: Record<string, unknown> = {}) => Response.json({ ok: false, error, ...extra }, { status });
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       const listed = new Set(await sectionUses(statsId, id));
       if (asked.some((key) => !listed.has(key))) return refuse("pages");
       if (asked.some((key) => !mayChange(role, key))) return refuse("forbidden", 403);
-      if (!(await countUse(storeUseKey(statsId, "apply"), APPLIES_PER_DAY, 86_400))) return refuse("applies_full", 429, { limit: APPLIES_PER_DAY });
+      if (!(await countUse(storeMonthKey(statsId, "apply", monthOfUse()), limits.appliesPerMonth, MONTH_USE_SECONDS))) return refuse("applies_full", 429, { limit: limits.appliesPerMonth });
       const titles = new Map([...(await readCards(store)).values()].map((card) => [card.id, card.title]));
       const done: string[] = [];
       const skipped: { key: string; why: string }[] = [];

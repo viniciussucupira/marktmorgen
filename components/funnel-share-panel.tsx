@@ -14,10 +14,13 @@ export type ShareRow = { id: string; name: string; funnelId: string; createdAt: 
 const MESSAGES: Record<string, string> = {
   code: "That does not look like a share code. It starts with mmf_.",
   code_gone: "That link has been revoked, has run out, or was never made. Ask for a new one.",
-  share_busy: "That link has been used as often as it can be today. Try again tomorrow, or ask for the file.",
+  share_busy: "That link has been used as often as it can be this month. Ask the creator for the file instead.",
+  shares_month: "Your store has made as many share links this month as your plan allows. It opens again on the 1st (UTC).",
+  previews_month: "Your store has looked at as many funnels this month as your plan allows. It opens again on the 1st (UTC).",
+  exports_month: "Your store has downloaded as many funnel files this month as your plan allows. It opens again on the 1st (UTC).",
   busy: "Too many previews in the last hour. Try again in a little while.",
   shares_full: "Your store holds as many share links as your plan allows. Revoke one to make another.",
-  imports_full: "Your store has brought in as many funnels today as your plan allows. Try again tomorrow.",
+  imports_full: "Your store has brought in as many funnels this month as your plan allows. It opens again on the 1st (UTC), or on a larger plan.",
   too_big: "This funnel is larger than your plan allows in one file.",
   days: "Choose how long the link should work.",
   unknown: "That funnel is gone. Reload the page.",
@@ -233,7 +236,7 @@ export function FunnelSharePanel({
     <section aria-labelledby="funnel-share-title" className="card min-w-0 p-5 sm:p-8">
       <h2 id="funnel-share-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Copy, share and bring in funnels</h2>
       <p className="mt-1 max-w-2xl text-sm text-ink-soft">
-        {`Make a copy of a funnel here, or share it with another Marktmorgen creator by link or file. They see what it holds before bringing it in, choose their own products for its steps, and get it as a draft. Only the words and the shape go: never your pictures, files, buyers, contacts, answers, reviews, prices or numbers. Your plan: ${limits.shares} share links at once, funnels up to ${bytesWords(limits.bundleBytes)}, ${limits.importsPerDay} funnels brought in a day.`}
+        {`Make a copy of a funnel here, or share it with another Marktmorgen creator by link or file. They see what it holds before bringing it in, choose their own products for its steps, and get it as a draft. Only the words and the shape go: never your pictures, files, buyers, contacts, answers, reviews, prices or numbers. Your plan: ${limits.shares} share links at once, funnels up to ${bytesWords(limits.bundleBytes)}, ${limits.importsPerMonth} funnels brought in and ${limits.sharesPerMonth} share links made a month.`}
       </p>
 
       {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}

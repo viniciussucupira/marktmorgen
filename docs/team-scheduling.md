@@ -21,7 +21,7 @@ A host sets their calendar once, for every store they host on, under **Your cale
 - **A private iCal address**: the existing ICS reader (`readFeed`), sealed at rest. The fallback.
 - **None**: only Marktmorgen bookings block them.
 
-A reading is reused for five minutes and asked again by one request at a time, only while someone looks at a booking page or the host presses Check now. If the last good reading is more than 20 minutes old, or the calendar cannot be read, the Google permission is missing, or Google sync is switched off, **that host is blocked**: none of their times are offered while the other hosts' stay open. The host's page and the team editor show the state and the last successful sync.
+A reading is reused for 15 minutes (five until 17 October 2026, see the cost reasoning) and asked again by one request at a time, only while someone looks at a booking page or the host presses Check now. If the last good reading is more than 45 minutes old, or the calendar cannot be read, the Google permission is missing, or Google sync is switched off, **that host is blocked**: none of their times are offered while the other hosts' stay open. The host's page and the team editor show the state and the last successful sync.
 
 ## Google scopes, and what the owner must do
 
@@ -51,14 +51,14 @@ While the variable is unset, hosts are offered only the iCal address, the studio
 |---|---:|---:|
 | Store (and its free trial) | 1 | 2 |
 | Studio | 5 | 4 |
-| Scale | 10 | 6 |
+| Scale | 10 | 4 |
 | No plan running | 0 | 0 |
 
 After a downgrade the oldest team event types, and the first hosts on each, stay on; the rest are closed for booking, never deleted.
 
 ## Cost reasoning
 
-Google Calendar API calls carry no per-call charge (project quota only; a quota refusal is a failure and blocks the host, never a free slot). Per host, a reading is made at most every five minutes and only while a booking page is viewed (page views are already counted against the plan's visits): at most 288 readings a day, each up to four free/busy requests and about seven Redis commands: about 60,000 Redis commands a host a month in the worst case, roughly $0.12 at Upstash's $0.20 per 100,000. Reading the kept state on each booking page view adds three commands a host to a view already counted as a visit. A store has at most six people, and the per-plan host numbers bound how many are read for its team calls. Bookings send the same number of emails as before (one to the buyer, one creator-side email addressed to the owner when they host, otherwise to the host), so the order allowance's per-order email cost is unchanged. None of this certifies the 60% margin rule; it adds no unbounded cost.
+Google Calendar API calls carry no per-call charge (project quota only; a quota refusal is a failure and blocks the host, never a free slot). Per host, a reading is made at most once every 15 minutes (`SYNC_SECONDS`; five until 17 October 2026) and only while a booking page is viewed (page views are already counted against the plan's visits): at most 96 readings a day, each up to four free/busy requests and about seven Redis commands. Every view of a team call's page reads each host's claims (one command each) and, since 17 October 2026, every host's kept calendar state and Google connection in one `MGET` (`prefetchHosts`; it was four commands a host), plus the round-robin counts. Both are the `team-scheduling` line of `tests/plan-cost-registry.ts`: every host a store's team calls can have read, at every reading of the month, and every later page of every visit a team call's page. Counted that way, Scale's six hosts a team event and five-minute readings came to about $4.19 a month, which Scale paid by the year could not carry; Scale is four hosts a team event since that day (Store 2, Studio 4 unchanged). A store has at most six people, and the per-plan host numbers bound how many are read for its team calls. Bookings send the same number of emails as before (one to the buyer, one creator-side email addressed to the owner when they host, otherwise to the host), so the order allowance's per-order email cost is unchanged. None of this certifies the 60% margin rule; it adds no unbounded cost.
 
 ## Not included (follow-ups)
 

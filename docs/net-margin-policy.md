@@ -12,7 +12,7 @@ All cost categories must be supplied explicitly. Zero is allowed only as an expl
 
 There is no validated commercial review. Paid plans were already closed; they now also depend on the margin gate. New-plan checkout already reads that gate, and plan switching now reads it too. Cancellation and existing customer rights are unchanged.
 
-The current prices, allowances, free trial, full first-payment refund and deferred overage collection have **not** been certified to meet the rule. Existing `tests/plan-margin.test.ts` measures estimated operating economics with lower floors and is not after-tax certification.
+The current prices, allowances, free trial and full first-payment refund have **not** been certified (since 17 October 2026 no visit or order past a plan is sold or billed: public pages rest and a paid store's new orders are admitted only within its figure) to meet the rule. Existing `tests/plan-margin.test.ts` measures estimated operating economics with lower floors and is not after-tax certification.
 
 A free period with positive cost and no revenue is loss-making. A full refund after consumption may leave costs and no retained revenue. Deferred overages may never be collected. Merely increasing a subscription price or adding a reserve does not make those individual cases meet the owner's floor. The calculator is not a runtime prepaid usage ledger.
 

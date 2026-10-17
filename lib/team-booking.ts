@@ -39,7 +39,7 @@ import {
   teamSlots,
 } from "@/lib/team-scheduling-rules";
 import { type ClaimHost, CLAIM_MARGIN_MS, claimHosts, confirmClaim, hostId, readClaims, releaseClaim } from "@/lib/host-claims";
-import { type HostSync, hostSync } from "@/lib/host-calendar";
+import { type HostPrefetch, type HostSync, hostSync, prefetchHosts } from "@/lib/host-calendar";
 import { readTeam } from "@/lib/team";
 import type { Listing, Store } from "@/lib/store";
 
@@ -137,9 +137,12 @@ export async function teamContext(
   const ids = new Map(team.hosts.map((h) => [h.email, hostId(h.email)]));
   const claims = await readClaims([...ids.values()], now);
   const syncs = new Map<string, HostSync>();
+  // Every host's kept state in one command (lib/host-calendar.ts, prefetchHosts); a host whose
+  // state cannot be read is read on their own, and blocked if that fails too.
+  const known = await prefetchHosts(store, team.hosts.map((h) => h.email)).catch(() => new Map<string, HostPrefetch>());
   await Promise.all(
     team.hosts.map(async (h) => {
-      syncs.set(h.email, await hostSync(store, h.email, h.tz, { now, refresh: options.refresh }));
+      syncs.set(h.email, await hostSync(store, h.email, h.tz, { now, refresh: options.refresh, known: known.get(h.email) }));
     }),
   );
   const counts = store.callsId ? await redisPipeline([["HGETALL", rrKey(store.callsId, product.id)]]).catch(() => [[]]) : [[]];

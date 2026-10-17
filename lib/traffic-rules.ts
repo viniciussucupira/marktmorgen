@@ -1,8 +1,24 @@
-/** Legacy visit allowances and postpaid usage billing.
+/** Visit allowances, and where a month's visits stop.
  * A visitor count is not a bound on requests, transferred bytes, database
  * operations or CPU. These figures alone do not prove a funded cost ceiling
  * or the required 60% after-all-tax margin. Provider enforcement and the
  * commercial review must cover every resource at full simultaneous usage.
+ *
+ * Since 17 October 2026 visits past a plan's figure are never sold. A visit
+ * was billed at VISIT_CENTS_PER_THOUSAND_OVER, half a cent for ten, against
+ * about a fortieth of a cent of cost (tests/traffic-cost.ts): more than the
+ * 17.2% of a price that a cost may be and still leave the owner's 60% after
+ * a 27.5% tax. The price is not changed; it is no longer charged. Instead a
+ * month's visits stop at the plan's figure, for every standing:
+ *
+ *   - the store's public pages (its page, products, blog, collections, the
+ *     checkout script's cards) rest at publicVisitLimit, the figure less the
+ *     share kept for buyers (BUYER_RESERVE_BPS);
+ *   - what buyers already have (courses and lessons, the community and its
+ *     live room, a private podcast's feed) goes on until the whole figure,
+ *     then rests too, with a page that says their access is kept;
+ *   - a checkout already open is never part of it: the checkout and the page
+ *     after paying are not visits (lib/order-rules.ts stops new orders).
  */
 import { ROOM_GRANT_MINUTES } from "@/lib/chat-pace";
 import type { Tier } from "@/lib/plan";
@@ -15,8 +31,25 @@ export const VISITS_INCLUDED: Record<Tier, number> = {
   scale: 50_000,
 };
 
-/** What a thousand visits past that cost the creator, in cents. */
+/**
+ * What a thousand visits past that cost the creator, in cents, until 17
+ * October 2026. Kept as the published price it was; nothing is billed at it
+ * any more (see the top of this file).
+ */
 export const VISIT_CENTS_PER_THOUSAND_OVER = 50;
+
+/**
+ * The share of a month's visits kept for buyers' own pages, in hundredths of
+ * a percent: public pages rest at 95% of the figure, so a store whose page is
+ * busy does not shut its students and members out with it.
+ */
+export const BUYER_RESERVE_BPS = 500;
+
+/** Where a store's public pages rest, for a month's figure. */
+export function publicVisitLimit(limit: number): number {
+  if (!Number.isSafeInteger(limit) || limit <= 0) return 0;
+  return limit - Math.floor((limit * BUYER_RESERVE_BPS) / 10_000);
+}
 
 /** The live room is counted in hundredths of a visit. */
 export const PARTS_PER_VISIT = 100;
@@ -55,18 +88,8 @@ export function visitsIncluded(tier: Tier): number {
   return Object.hasOwn(VISITS_INCLUDED, tier) ? VISITS_INCLUDED[tier] : VISITS_INCLUDED.creator;
 }
 
-/**
- * What a month's visits cost past the plan's, in whole cents.
- *
- * To the visit, and rounded down: a part of a cent is never charged.
- */
-export function visitsOwedCents(visits: number, tier: Tier): number {
-  const included = visitsIncluded(tier);
-  if (!Number.isFinite(visits) || visits <= included) return 0;
-  return Math.floor(((visits - included) * VISIT_CENTS_PER_THOUSAND_OVER) / 1000);
-}
-
-/** Finite monthly counted-visit threshold for every standing, including paid plans.
+/** Finite monthly counted-visit threshold for every standing, including paid plans:
+ * where buyers' own pages rest. Public pages rest at publicVisitLimit of it.
  * This is not a request/byte ceiling: provider exposure still needs its own bound.
  */
 export function visitLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = Date.now() / 1000): number {

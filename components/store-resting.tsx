@@ -7,9 +7,8 @@ import { speech } from "@/lib/buyer-words";
 import { blockWords } from "@/lib/buyer-words/blocks";
 
 /**
- * A store's page while it rests (lib/traffic.ts, isResting): a store with
- * no plan that a visit can be charged to, which has had the visits such a
- * store has in a month.
+ * A store's page while it rests (lib/traffic.ts, isResting): a store that
+ * has had the visits its plan, its trial or no plan has in a month.
  *
  * It says so plainly and says nothing of why: a visitor is owed the truth
  * that the page is not there today, and is not owed the store's account.
@@ -17,12 +16,14 @@ import { blockWords } from "@/lib/buyer-words/blocks";
  * stays, and so does the way into the members' community. Nothing here is
  * counted: a page that is resting has stopped adding to the month.
  */
-export function StoreResting({ store, suspended = false }: { store: Store; suspended?: boolean }) {
+export function StoreResting({ store, suspended = false, buyer = false }: { store: Store; suspended?: boolean; buyer?: boolean }) {
   const { w, lang } = speech(store);
   // Switched off after notices about its content (lib/takedown.ts): said as plainly, with no promise of when.
   const bw = blockWords(store.language);
   const title = suspended ? bw.unavailableTitle : w.restingTitle;
-  const body = suspended ? bw.unavailableBody(store.name) : w.restingBody(store.name);
+  // A buyer's own page (a course, the community, a podcast) rests only once the whole month's
+  // visits are used, after the public pages (lib/traffic-rules.ts): it says their access is kept.
+  const body = suspended ? bw.unavailableBody(store.name) : buyer ? w.restingBuyerBody(store.name) : w.restingBody(store.name);
   return (
     <div
       lang={lang.locale}

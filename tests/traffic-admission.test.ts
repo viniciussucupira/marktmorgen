@@ -1,7 +1,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { trafficForAdmission, isResting } from '@/lib/traffic';
-import { visitLimitFor, VISITS_INCLUDED } from '@/lib/traffic-rules';
+import { publicVisitLimit, visitLimitFor, VISITS_INCLUDED } from '@/lib/traffic-rules';
 import { videoLimitFor } from '@/lib/plan-standing';
 import { paidVideoSeconds } from '@/lib/video-admission-rules';
 import { world } from './traffic-admission-world';
@@ -29,8 +29,14 @@ test('acknowledged unused month and exact integer counters are readable',async()
  assert.deepEqual(await trafficForAdmission(folder),{people:0,parts:0,visits:0});
  world.results=[['2998','199']];
  assert.deepEqual(await trafficForAdmission(folder),{people:2998,parts:199,visits:2999});
- assert.equal(await isResting(store),false);
+ // Since 17 October 2026 public pages rest at 95% of the month's figure; buyers' pages at all of it.
+ assert.equal(await isResting(store,undefined,'buyer'),false);
  world.results=[['2998','200']];
+ assert.equal(await isResting(store,undefined,'buyer'),true);
+ const shown=publicVisitLimit(VISITS_INCLUDED.creator);
+ world.results=[[String(shown-1),null]];
+ assert.equal(await isResting(store),false);
+ world.results=[[String(shown),null]];
  assert.equal(await isResting(store),true);
 });
 test('paid pages pause at the threshold and remain paused above it',async()=>{

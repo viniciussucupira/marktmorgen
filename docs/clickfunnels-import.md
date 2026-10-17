@@ -46,17 +46,19 @@ Idempotency: each run is recorded under `nl:imports:cf:<sid>` (`run:<hash>` of p
 
 ## Cost and limits
 
-No AI request, email, file storage, picture download or other outbound fetch is added. The only per-use cost is Redis commands (Upstash's advertised pay-as-you-go price is $0.20 per 100,000 commands, baseline source C06; not verified against the actual plan). Each new path draws on per-store allowances checked before any work, in Redis, by the existing `withinLimit`:
+No AI request, email, file storage, picture download or other outbound fetch is added. The only per-use cost is Redis commands (Upstash's advertised pay-as-you-go price is $0.20 per 100,000 commands, baseline source C06; not verified against the actual plan). Each new path draws on per-store allowances checked before any work, in Redis, by `withinLimit` and, by calendar month, `withinMonth`:
 
-| Path | Allowance | Worst-case commands per call | Worst case per store per 30 days |
-|---|---|---|---|
-| Dry run, contacts/products batch | 400 per 10 min, 2,000 per day, 10,000 per 30 days | 2 reads (list size and the batch's addresses; or the product names) + 6 limiter commands | 80,000 |
-| Dry run, past-buyers batch | 400 per 10 min, 40 per day, 200 per 30 days | product names + only the named products (≤ 500 in a store, plus bundle contents) + 6 | ≈ 101,000 |
-| Read a saved page | 60 per 10 min, 300 per day | 4 limiter commands (conversion is CPU only) | 36,000 |
-| Funnel dry run | 120 per 10 min, 1,500 per 30 days | ≈ 25 reads (ledger, ≤ 40 named products, forms count, funnels) + 4 | ≈ 44,000 |
-| Funnel import | 10 per day, 60 per 30 days | ≈ 200 (the plan again, ≤ 10 pages and forms, the funnel, ≤ 30 boxes and offers through their setters, ledger) | ≈ 12,000 |
+| Path | Allowance (since 17 Oct 2026: per calendar month, by plan, `lib/import-limits.ts`) | Worst-case commands per call |
+|---|---|---|
+| Dry run, contacts/products batch | 400 per 10 min; a month: Store 60, Studio 200, Scale 300 | 2 reads (list size and the batch's addresses; or the product names) + 6 limiter commands |
+| Dry run, past-buyers batch | 400 per 10 min; a month: Store 10, Studio 30, Scale 60 | product names + only the named products (≤ 500 in a store, plus bundle contents) + 6 |
+| Read a saved page | 60 per 10 min; a month: Store 50, Studio 150, Scale 150 | 4 limiter commands (conversion is CPU only) |
+| Funnel dry run | 120 per 10 min; a month: Store 50, Studio 150, Scale 150 | ≈ 25 reads (ledger, ≤ 40 named products, forms count, funnels) + 4 |
+| Funnel import | 10 per day; a month: Store 5, Studio 15, Scale 15 | ≈ 200 (the plan again, ≤ 10 pages and forms, the funnel, ≤ 30 boxes and offers through their setters, ledger) |
 
-Sum of the worst cases ≈ 273,000 commands per store per 30 days, about $0.55 at the advertised price, reachable only by a store exhausting every allowance. Past-buyer imports themselves now read only the products a chunk names instead of the whole catalog, which lowers the existing import's cost. Redis storage stays inside existing caps (contacts 100,000 per list, products 500, own pages 10 at ≤ 120 KB, forms 20, funnels 10; the ledger holds one entry per run and per page, expiring 400 days after the last write). The optional past-buyer email keeps its existing caps (20,000 per store per 30 days and the company daily cap). The limiter fails open only when Redis itself is failing, when the metered work cannot run either. This bounds the feature's own exposure; it does not certify the owner's 60% net margin, and prices and commercial gates are unchanged.
+Until 17 October 2026 these were 30-day windows (10,000 dry-run batches, 200 past-buyer batches, 300 saved pages a day, 1,500 funnel dry runs, 60 funnel imports), about $0.55 of commands per store per 30 days before compute and transfer, which no plan's worst month counted. The ClickFunnels CSVs also run through the existing imports, which had no monthly row figure and sent up to 20,000 emails to people brought over per store in 30 days. Since then (`lib/import-limits.ts`): rows imported a month, all kinds together (Store 1,000, Studio 8,000, Scale 20,000, each upload counting at least 50), imports started (20, 60, 100), steps the studio page asks for (100, 300, 600; past them the five-minute job still finishes every import) and report downloads (20, 60, 100); emails to people brought over come out of the plan's monthly emails on Studio and Scale and are 20 a month on Store. Each path's worst month, with compute and transfer, is a line of `tests/plan-cost-registry.ts` (`clickfunnels` and `imports`), held to the owner's 60% floor by `tests/spend-floor.test.ts`.
+
+Redis storage stays inside existing caps (contacts 100,000 per list, products 500, own pages 10 at ≤ 120 KB, forms 20, funnels 10; the ledger holds one entry per run and per page, expiring 400 days after the last write). The limiter fails open only when Redis itself is failing, when the metered work cannot run either. This bounds the feature's own exposure; it does not certify the owner's 60% net margin, and prices and commercial gates are unchanged.
 
 ## Not included (follow-ups)
 

@@ -90,6 +90,7 @@ export const RESERVED_SLUGS = new Set([
   "p",
   "podcast",
   "renew",
+  "resting",
   "review",
   "thanks",
   "tip",

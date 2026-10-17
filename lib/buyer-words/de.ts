@@ -188,6 +188,7 @@ export const de: BuyerWords = {
     busy: { title: "Jemand anderes kauft das gerade", body: "Es wurde nichts berechnet. Klicken Sie gleich noch einmal auf Kaufen." },
     slow: { title: "Viele Versuche in wenigen Minuten", body: "Es wurde nichts berechnet. Warten Sie ein paar Minuten und klicken Sie dann erneut auf Kaufen." },
     error: { title: "Die Zahlungsseite konnte nicht geöffnet werden", body: "Es wurde nichts berechnet. Versuchen Sie es gleich noch einmal." },
+    paused: { title: "Dieser Shop nimmt gerade keine neuen Bestellungen an", body: "Es wurde nichts berechnet. Neue Bestellungen sind ab Anfang nächsten Monats wieder möglich, oder früher." },
     "paypal-declined": {
       title: "PayPal hat die Zahlung nicht angenommen",
       body: "Es wurde nichts berechnet. Versuchen Sie es mit einer anderen Karte oder einem anderen Konto in PayPal, oder zahlen Sie hier mit Karte.",
@@ -280,6 +281,8 @@ export const de: BuyerWords = {
   restingTitle: "Diese Seite pausiert vorübergehend",
   restingBody: (store) =>
     `Sie ist ab Anfang nächsten Monats wieder geöffnet, oder früher. Alles, was Sie bereits von ${store} haben, gehört weiterhin Ihnen und bleibt zugänglich.`,
+  restingBuyerBody: (store) =>
+    `Ihr Zugang bleibt bestehen: Nichts, was Sie von ${store} haben, geht verloren. Diese Seite ist ab Anfang nächsten Monats wieder geöffnet, oder früher.`,
   restingOwner: "Ist das Ihr Shop? Ihr Studio erklärt, warum, und wie Sie ihn wieder öffnen",
 
   reviewsOf: (title) => `Bewertungen zu ${title}`,

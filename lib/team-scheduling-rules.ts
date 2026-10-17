@@ -88,7 +88,7 @@ export type TeamLimits = { eventTypes: number; hosts: number };
 export const TEAM_LIMITS: Record<Tier, TeamLimits> = {
   creator: { eventTypes: 1, hosts: 2 },
   pro: { eventTypes: 5, hosts: 4 },
-  scale: { eventTypes: 10, hosts: 6 },
+  scale: { eventTypes: 10, hosts: 4 },
 };
 
 /** A store in its free trial: what the Store plan allows. */

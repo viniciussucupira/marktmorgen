@@ -25,6 +25,7 @@
  * The list is keyed by the store's own list id, not by the sign-in address,
  * so moving the account to another address takes the list along untouched.
  */
+import { admitOrders, settleAdmitted } from "@/lib/order-admission";
 import { allValues, readFields } from "@/lib/crm";
 import { personKey } from "@/lib/person-key";
 import { countOrder, storeOrdersThisMonth } from "@/lib/orders";
@@ -185,11 +186,13 @@ export async function requestCopy(input: {
 
   if (!(await within(await ipKey(ip, store.handle), IP_LIMIT))) return "limited";
   if (!(await within(await addressKey(email), ADDRESS_LIMIT))) return "limited";
-  // A store with no invoice to add an order to gives free copies only up to
-  // what a free trial has in a month (lib/order-rules.ts); a store that pays
-  // is never stopped, and its orders past its plan are charged instead.
+  // Free copies stop at what the month allows (lib/order-rules.ts): a trial's
+  // figure in a free trial, nothing without a plan, and for a store that pays
+  // its plan's figure, admitted with its paid orders (lib/order-admission.ts).
   const cap = freeCopiesLimitFor(store);
-  if (cap !== null && (await storeOrdersThisMonth(store)) >= cap) return "unavailable";
+  if ((await storeOrdersThisMonth(store)) >= cap) return "unavailable";
+  const admitted = await admitOrders(store, 1);
+  if (!admitted.ok) return "unavailable";
 
   const token = randomToken();
   const claim: Claim = {
@@ -227,6 +230,7 @@ export async function requestCopy(input: {
   });
   // One of the month's orders (lib/orders.ts): nothing was paid, so it always counts.
   if (sent) await countOrder(store, `free:${token}`, 0);
+  await settleAdmitted(store, admitted.hour);
   return sent ? "sent" : "error";
 }
 

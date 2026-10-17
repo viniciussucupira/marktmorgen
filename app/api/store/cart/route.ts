@@ -1,4 +1,5 @@
 import { type NextRequest, after } from "next/server";
+import { OrdersPausedError } from "@/lib/order-admission";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { readListings, readProduct } from "@/lib/catalog";
@@ -185,6 +186,7 @@ export async function POST(request: NextRequest) {
     for (const product of products) after(() => countHit(request, store, { kind: "checkout", id: product.id }));
     return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });
   } catch (error) {
+    if (error instanceof OrdersPausedError) return away(`/@${store.handle}?status=${error.reason === "paused" ? "paused" : "error"}`);
     console.error("a cart's checkout failed", error);
     after(() => noteCheckoutTrouble(store, error).catch(() => {}));
     return away(`/@${store.handle}?cart=error#cart`);

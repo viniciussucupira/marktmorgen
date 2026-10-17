@@ -153,6 +153,39 @@ export class MemoryRedis {
           this.until.set(lookup, this.now() + Number(ttl) * 1000);
           return 1;
         }
+        if (key.startsWith("-- marktmorgen:order-admission:v1\n") && args[0] === "2" && args.length === 8) {
+          const [, countKey, openKey, rawLimit, rawN, rawHour, rawOldest, keep] = args;
+          this.live(countKey);
+          this.live(openKey);
+          const limit = Number(rawLimit), n = Number(rawN), hour = Number(rawHour), oldest = Number(rawOldest);
+          if (![limit, n, hour, oldest].every(Number.isFinite) || n < 1) return -1;
+          const raw = this.data.get(countKey);
+          const counted = raw === undefined ? 0 : Number(raw);
+          if (!Number.isFinite(counted)) return -1;
+          const open = this.hash(openKey);
+          let held = 0;
+          for (const [at, value] of [...open]) {
+            const when = Number(at), v = Number(value) || 0;
+            if (!Number.isFinite(when) || when < oldest || v <= 0) open.delete(at);
+            else held += v;
+          }
+          if (counted + held + n > limit) return 0;
+          open.set(String(hour), String((Number(open.get(String(hour))) || 0) + n));
+          this.until.set(openKey, this.now() + Number(keep) * 1000);
+          return 1;
+        }
+        if (key.startsWith("-- marktmorgen:order-admission-settle:v1\n") && args[0] === "1" && args.length === 4) {
+          const [, openKey, field, rawN] = args;
+          this.live(openKey);
+          const n = Number(rawN);
+          const open = this.data.get(openKey);
+          if (!(open instanceof Map) || !Number.isFinite(n) || n < 1) return 0;
+          const held = Number(open.get(field)) || 0;
+          if (held <= 0) return 0;
+          if (held <= n) open.delete(field);
+          else open.set(field, String(held - n));
+          return 1;
+        }
         if (key.startsWith("-- marktmorgen:form-save:v1\n") && args[0] === "1" && args.length === 5) {
           const target = args[1];
           this.live(target);

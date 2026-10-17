@@ -1,4 +1,5 @@
 import { startGift } from "@/lib/gifts";
+import { OrdersPausedError } from "@/lib/order-admission";
 import { startGroup } from "@/lib/group-buy";
 import { preorderDay, soonOne } from "@/lib/preorders";
 import { type NextRequest, after } from "next/server";
@@ -286,6 +287,8 @@ export async function POST(request: NextRequest) {
     }
     return new Response(null, { status: 303, headers });
   } catch (error) {
+    // The store's orders for the month are reached (lib/order-admission.ts): said plainly, nothing charged.
+    if (error instanceof OrdersPausedError) return away(`/@${store.handle}?status=${error.reason === "paused" ? "paused" : "error"}`);
     console.error("checkout failed", error);
     // A checkout Stripe would not open: counted, and the creator told (lib/checkout-trouble.ts).
     after(() => noteCheckoutTrouble(store, error).catch(() => {}));

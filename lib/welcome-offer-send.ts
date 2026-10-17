@@ -13,6 +13,7 @@
  *   nl:wo:r:<statsId>:<hash>       that person's reminder is set, once
  *   nl:wo:n:<statsId>              how many people have been offered it, for the studio
  */
+import { OrdersPausedError } from "@/lib/order-admission";
 import { createHash } from "node:crypto";
 import { isSenderConfigured, sendEmail } from "@/lib/email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -191,6 +192,8 @@ export async function openWelcome(store: Store, token: string, origin: string, n
     return { ok: true, url: held.value.url };
   } catch (error) {
     // A coupon the creator deleted in their own dashboard, most likely.
+    // The store's orders for the month are reached (lib/order-admission.ts): not open right now, nothing charged.
+    if (error instanceof OrdersPausedError) return { ok: false, reason: "unavailable" };
     console.error("opening a welcome offer checkout failed", store.handle, error);
     return { ok: false, reason: "refused" };
   }

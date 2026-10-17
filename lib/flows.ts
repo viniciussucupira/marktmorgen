@@ -39,7 +39,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { isMailable, leadsKey, mailable, parseContact } from "@/lib/contacts";
-import { MAX_MAIL_BODY, MAX_SUBJECT, monthlyAllowance, sendTo } from "@/lib/mail";
+import { MAX_MAIL_BODY, MAX_SUBJECT, giveBackToMonth, monthlyAllowance, sendTo, takeFromMonth } from "@/lib/mail";
 import type { Store } from "@/lib/store";
 import { hasProduct, idsOfKind } from "@/lib/catalog";
 import { stepCampaign } from "@/lib/mail-links";
@@ -675,6 +675,8 @@ async function actOnPeople(
   }
   // The owner, told once for everyone who reached the step together: who, and where.
   if (!isSenderConfigured()) return each(emails, "deferred", "Email is not available right now; tried again later.");
+  // One of the store's monthly emails, like every other email a workflow sends (lib/flow-limits.ts).
+  if ((await takeFromMonth(store, 1)) < 1) return each(emails, "failed", "Your monthly emails were used up, so you were not emailed about this step.");
   const shown = emails.slice(0, 50);
   const sent = await sendEmail({
     from: NIMBUS_FROM,
@@ -692,6 +694,7 @@ async function actOnPeople(
     ].join("\n"),
     idempotencyKey: `nimbus-fl-notify:${at.flow.id}:${at.step.id}:${createHash("sha256").update([...emails].sort().join(",")).digest("hex").slice(0, 24)}`,
   }).then((ok) => (ok ? "sent" : "no"), () => "unknown");
+  if (sent === "no") await giveBackToMonth(store, 1).catch(() => {});
   return sent === "sent" ? each(emails, "confirmed", "You were emailed that they reached this step.").map((o) => ({ ...o, changed: true })) : sent === "no" ? each(emails, "failed", "The email to you was not accepted.") : each(emails, "uncertain", "Whether the email to you was sent could not be confirmed.");
 }
 

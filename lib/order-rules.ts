@@ -25,10 +25,18 @@
  *     costs. While no share is taken, every order counts.
  *   - Every plan covers a number of orders in a calendar month
  *     (ORDERS_INCLUDED), more on a larger plan.
- *   - A thousand orders past that are ORDER_CENTS_PER_THOUSAND_OVER cents, to
- *     the order, added to the creator's next invoice by the daily job
- *     (lib/usage-billing.ts). Nothing is ever refused to a buyer for it and
- *     nothing is asked of the creator.
+ *   - Since 17 October 2026 orders past that are not sold. They were billed
+ *     at ORDER_CENTS_PER_THOUSAND_OVER, half a cent an order, against about a
+ *     fifth of a cent of cost: more than the 17.2% of a price a cost may be
+ *     and still leave the owner's 60% after a 27.5% tax. The price is not
+ *     changed; it is no longer charged. Instead a paid store's new orders stop
+ *     at its plan's figure (lib/order-admission.ts): every checkout, cart,
+ *     tip, offer after paying, PayPal order, purchase for several people and
+ *     free copy is admitted only while the month's orders, with the checkouts
+ *     opened in the last day that may still be paid, are under the figure. A
+ *     buyer past it is told plainly that the store is not taking new orders
+ *     right now and nothing is charged; a checkout already open is never cut
+ *     off, so a buyer in the middle of paying finishes, and gets everything.
  *   - A store in its free trial has no invoice to add an order to. A paid
  *     order there still costs its buyer a card payment, which nobody runs up
  *     for fun; a free copy costs nobody anything, so free copies in a trial
@@ -42,22 +50,29 @@ import type { Tier } from "@/lib/plan";
 import { type PlanFields, standingOf } from "@/lib/plan-standing";
 
 /**
- * Orders every plan covers, per store, per calendar month.
+ * Orders every plan covers, per store, per calendar month, and where a paid
+ * store's new orders stop.
  *
- * Store was 500 until October 17, 2026. Paid by the year (twelve months for
- * ten monthly prices) its worst month at every allowance did not keep 60%
- * after the 27.5% tax (tests/spend-floor.test.ts). Orders were the cut that
- * harms a creator least: an order is counted only while no share of its sale
- * is taken, 400 covered orders is more than three thousand visits sell at any
- * ordinary conversion rate, and past it nothing is refused, only billed.
+ * Store was 500 until October 17, 2026 and 400 that day (tests/spend-floor.test.ts);
+ * the same day, when the per-plan worst case came to count every feature
+ * (tests/plan-cost-registry.ts), Store went to 250, Studio from 1,500 to
+ * 750 and Scale from 3,000 to 1,500. Orders are the cut that harms a
+ * creator least for what they cost: an order is counted only while no share
+ * of its sale is taken, and each figure is far more than the plan's visits
+ * sell at an ordinary conversion rate (250 of Store's 2,850 public visits is
+ * almost 9%, 750 of Studio's 9,500 about 8%).
  */
 export const ORDERS_INCLUDED: Record<Tier, number> = {
-  creator: 400,
-  pro: 1_500,
-  scale: 3_000,
+  creator: 250,
+  pro: 750,
+  scale: 1_500,
 };
 
-/** What a thousand orders past that cost the creator, in cents: half a cent an order. */
+/**
+ * What a thousand orders past that cost the creator, in cents, until 17
+ * October 2026: half a cent an order. Kept as the published price it was;
+ * nothing is billed at it any more (see the top of this file).
+ */
 export const ORDER_CENTS_PER_THOUSAND_OVER = 500;
 
 /**
@@ -71,34 +86,30 @@ export function ordersIncluded(tier: Tier): number {
   return ORDERS_INCLUDED[tier] ?? ORDERS_INCLUDED.creator;
 }
 
-/** What a month's orders cost past the plan's, in whole cents, to the order and rounded down. */
-export function ordersOwedCents(orders: number, tier: Tier): number {
-  const included = ordersIncluded(tier);
-  if (!Number.isFinite(orders) || orders <= included) return 0;
-  return Math.floor(((Math.floor(orders) - included) * ORDER_CENTS_PER_THOUSAND_OVER) / 1000);
+/**
+ * How many orders a store may have in a month before free copies stop: the
+ * plan's figure for a store that pays (where its paid orders stop too,
+ * lib/order-admission.ts), the trial's in a trial. A store with no plan gives
+ * no free copies whatever this says (lib/free.ts).
+ */
+export function freeCopiesLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = Date.now() / 1000): number {
+  const standing = standingOf(store, nowSeconds);
+  if (standing === "paid") return ordersIncluded(store.tier ?? "creator");
+  return standing === "trial" ? TRIAL_ORDERS : 0;
 }
 
 /**
- * How many orders a store may have in a month before free copies stop; null
- * for a store that pays, whose orders past its plan are charged instead.
- * A store with no plan gives no free copies whatever this says (lib/free.ts).
+ * Where a store's new paid orders stop in a month, or null where they do not:
+ * the plan's figure for a store that pays. A store in its free trial or with
+ * no plan has no invoice past which an order could be sold; its paid orders
+ * are a funded exposure (docs/funded-exposure-review.md), as before.
  */
-export function freeCopiesLimitFor(store: PlanFields, nowSeconds = Date.now() / 1000): number | null {
-  const standing = standingOf(store, nowSeconds);
-  if (standing === "paid") return null;
-  return standing === "trial" ? TRIAL_ORDERS : 0;
+export function paidOrdersLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = Date.now() / 1000): number | null {
+  return standingOf(store, nowSeconds) === "paid" ? ordersIncluded(store.tier ?? "creator") : null;
 }
 
 /** "1,204 orders", "1 order". */
 export function ordersWords(orders: number): string {
   const counted = Number.isFinite(orders) && orders > 0 ? Math.floor(orders) : 0;
   return `${counted.toLocaleString("en-US")} ${counted === 1 ? "order" : "orders"}`;
-}
-
-/** What one order past a plan costs, in words: "half a cent". */
-export function perOrderWords(centsPerThousand = ORDER_CENTS_PER_THOUSAND_OVER): string {
-  const cents = centsPerThousand / 1000;
-  if (cents === 0.5) return "half a cent";
-  if (cents === 1) return "one cent";
-  return `${Number(cents.toFixed(2))} of a cent`;
 }

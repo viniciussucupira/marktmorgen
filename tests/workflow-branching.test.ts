@@ -102,7 +102,7 @@ async function main(): Promise<void> {
   part("Limits, by plan");
   const view = (tier: "creator" | "pro" | "scale", trialEnds = 0) => ({ tier, subscriptionActive: true, trialEnds });
   is("active workflows: Store none, Studio 10, Scale 20, trial 3", [activeFlowLimit(view("creator")), activeFlowLimit(view("pro")), activeFlowLimit(view("scale")), activeFlowLimit(view("pro", Date.now() / 1000 + 86_400))], [0, 10, 20, TRIAL_ACTIVE_FLOWS]);
-  is("runs a day: Store none, Studio 300, Scale 600, trial 50", [dailyRunLimit(view("creator")), dailyRunLimit(view("pro")), dailyRunLimit(view("scale")), dailyRunLimit(view("pro", Date.now() / 1000 + 86_400))], [0, 300, 600, 50]);
+  is("runs a day: Store none, Studio 25, Scale 40, trial 10", [dailyRunLimit(view("creator")), dailyRunLimit(view("pro")), dailyRunLimit(view("scale")), dailyRunLimit(view("pro", Date.now() / 1000 + 86_400))], [0, 25, 40, 10]);
   is("over the limit after a move down, the oldest switched on keep starting people", startableFlows([{ id: "b", active: true, createdAt: 2 }, { id: "a", active: true, createdAt: 1 }, { id: "c", active: false, createdAt: 0 }], 1).map((f) => f.id), ["a"]);
 
   const OWNER = "willow@example.com";
@@ -212,7 +212,7 @@ async function main(): Promise<void> {
   await setSubscription(OWNER, { customerId: "cus_Willow0001", subscriptionId: "sub_Willow0001", active: true, tier: "pro" });
   store = (await storeForEmail(OWNER))!;
   const today = await runsToday(list);
-  // Fill the rest of today's 300, then one more is refused.
+  // Fill today past Studio's daily runs, then one more is refused.
   await redisPipeline([["HSET", `nl:wf:day:${list}:${new Date(Date.now()).toISOString().slice(0, 10)}`, "started", 300]]);
   await upsertContact(list, "eve@example.com", { agreed: true, explicit: true, source: "free" });
   await enroll(store, "eve@example.com", { joined: false, tag: "lost" });

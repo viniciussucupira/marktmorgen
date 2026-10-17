@@ -141,6 +141,32 @@ export async function withinLimit(scope: string, who: string, limit: number, win
 }
 
 /**
+ * The same counter, by calendar month (UTC) instead of by a window that
+ * starts with the first use. Added 17 October 2026 for the allowances whose
+ * cost sits in each plan's worst month (tests/plan-cost-registry.ts): a
+ * thirty-day window can touch three windows of one calendar month, and a
+ * calendar month holds exactly one of these. Kept 32 days, so the key is
+ * gone after its month. Fails open like withinLimit: when Redis cannot be
+ * asked, the work it guards cannot run either.
+ */
+export async function withinMonth(scope: string, who: string, limit: number, now = Date.now()): Promise<boolean> {
+  if (!isRedisConfigured()) return true;
+  if (!Number.isSafeInteger(limit) || limit <= 0) return false;
+  try {
+    const at = new Date(now);
+    const month = `${at.getUTCFullYear()}-${String(at.getUTCMonth() + 1).padStart(2, "0")}`;
+    const key = `nl:rlm:${scope}:${(await sha256Hex(`nimbus-${scope}:${who}`)).slice(0, 32)}:${month}`;
+    const [, count] = await redisPipeline([
+      ["SET", key, "0", "EX", 32 * 86_400, "NX"],
+      ["INCR", key],
+    ]);
+    return Number(count) <= limit;
+  } catch {
+    return true;
+  }
+}
+
+/**
  * Compares two secrets in time that depends only on their length.
  *
  * Both are hashed first, so even the length of the real secret is not given

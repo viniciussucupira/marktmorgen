@@ -43,6 +43,7 @@
  * the affiliate's credit follow Stripe's answer within minutes, whether or
  * not the buyer ever comes back to the thanks page.
  */
+import { admitOrders, settleAdmitted } from "@/lib/order-admission";
 import { createHash, randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { StripeError, onAccount } from "@/lib/stripe-account";
@@ -292,6 +293,14 @@ export async function takeUpsell(input: {
     const existing = await readUpsell(session, slot);
     return existing?.state === "failed" ? { kind: "failed" } : existing?.state === "declined" ? { kind: "declined" } : { kind: "done" };
   }
+  // An offer taken is one of the month's orders: a paid store's stop at its plan's figure
+  // (lib/order-admission.ts) before anything is charged. Not admitted, the answer is taken
+  // back and the buyer goes on to what they already bought.
+  const admitted = await admitOrders(store, 1);
+  if (!admitted.ok) {
+    await redisPipeline([["DEL", recordKey(session, slot)]]);
+    return { kind: "unavailable" };
+  }
   if (slot) await redisPipeline([["SADD", slotsKey(session), slot], ["EXPIRE", slotsKey(session), RECORD_SECONDS]]);
 
   const method = methodId(view);
@@ -360,6 +369,7 @@ export async function takeUpsell(input: {
       await writeUpsell(session, slot, { state: "paid", product: target.id, ...extra, pi: id, customer, at: Date.now() });
       await unwatchPending(store, session, slot);
       await afterPaid(store, session, target, pi, email);
+      await settleAdmitted(store, admitted.hour);
       return { kind: "done" };
     }
     const next = pi.next_action as { redirect_to_url?: { url?: unknown } } | null;

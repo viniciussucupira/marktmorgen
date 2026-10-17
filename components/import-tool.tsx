@@ -1,5 +1,6 @@
 "use client";
 
+import { IMPORT_ALLOWANCES } from "@/lib/import-limits";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -145,6 +146,9 @@ const MESSAGES: Record<string, string> = {
   state: "This import is no longer taking rows. Start it again.",
   unknown: "That import is no longer here. Start it again.",
   slow: "That was a lot in a short time. Wait a while and try again.",
+  rows_month: "Your plan's imported rows for this month are used. The rest of the file can come in when the month turns, or on a larger plan.",
+  starts_month: "Your plan's imports for this month are started. More can start when the month turns, or on a larger plan.",
+  checks_month: "Your plan's dry runs for this month are used. You can still import the file; dry runs open again when the month turns.",
   signed_out: "Your session ended. Log in again.",
   role: "Only the store's owner and Admins can import.",
   unavailable: "Imports are not switched on yet.",
@@ -785,7 +789,7 @@ export function ImportTool({
                       {`Email each buyer once, to say their purchases moved to ${storeName}`}
                       <span className="block text-ink-soft">
                         {canEmail
-                          ? "One email per buyer, from your store's name, with how to open what they have. Nothing else is sent. Up to 20,000 buyers in 30 days."
+                          ? `One email per buyer, from your store's name, with how to open what they have. Nothing else is sent. On Studio and Scale they count in your monthly emails; on Store, up to ${IMPORT_ALLOWANCES.creator.movedEmails} a month.`
                           : "Needs your store's plan to be active."}
                       </span>
                     </span>

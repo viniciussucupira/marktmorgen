@@ -185,6 +185,7 @@ export const nl: BuyerWords = {
     busy: { title: "Iemand anders koopt dit op dit moment", body: "Er is niets afgeschreven. Druk zo meteen opnieuw op kopen." },
     slow: { title: "Veel pogingen in een paar minuten", body: "Er is niets afgeschreven. Wacht een paar minuten en druk dan opnieuw op kopen." },
     error: { title: "De betaalpagina kon niet worden geopend", body: "Er is niets afgeschreven. Probeer het zo meteen opnieuw." },
+    paused: { title: "Deze winkel neemt nu geen nieuwe bestellingen aan", body: "Er is niets afgeschreven. Nieuwe bestellingen kunnen weer begin volgende maand, of eerder." },
     "paypal-declined": {
       title: "PayPal heeft de betaling niet aangenomen",
       body: "Er is niets afgeschreven. Probeer het opnieuw met een andere kaart of rekening in PayPal, of betaal hier met een kaart.",
@@ -277,6 +278,8 @@ export const nl: BuyerWords = {
   restingTitle: "Deze pagina rust even",
   restingBody: (store) =>
     `Hij is begin volgende maand weer open, of eerder. Alles wat je al van ${store} hebt, blijft van jou en blijft beschikbaar.`,
+  restingBuyerBody: (store) =>
+    `Je toegang blijft: je verliest niets van wat je van ${store} hebt. Deze pagina is begin volgende maand weer open, of eerder.`,
   restingOwner: "Is dit jouw winkel? Je studio legt uit waarom, en hoe je hem weer opent",
 
   reviewsOf: (title) => `Beoordelingen van ${title}`,

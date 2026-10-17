@@ -12,10 +12,11 @@
  *     written for that person, and counted so the studio can say so.
  *
  * Every email a workflow sends is still drawn from the store's monthly email
- * allowance (lib/mail.ts, reserve), before it is sent. The daily run ceiling
+ * allowance (lib/mail.ts, reserve), before it is sent, and since 17 October
+ * 2026 so is its notice to the owner (lib/mail.ts, takeFromMonth). The daily run ceiling
  * bounds what is not email: the database commands each step and its history
- * cost, the webhooks a step queues (lib/webhooks.ts keeps its own retry
- * ceiling) and the owner notices a step sends.
+ * cost and the webhooks a step queues (lib/webhooks.ts keeps its own retry
+ * ceiling).
  *
  * Worst case per run, for the margin review: MAX_STEPS steps, each at most
  * HISTORY_COMMANDS_PER_STEP history commands and QUEUE_COMMANDS_PER_STEP queue
@@ -31,9 +32,18 @@ export const MAX_FLOWS = 20;
 export const ACTIVE_FLOWS_BY_TIER: Record<Tier, number> = { creator: 0, pro: 10, scale: 20 };
 export const TRIAL_ACTIVE_FLOWS = 3;
 
-/** New runs a store may start in one UTC day, all workflows together. */
-export const DAILY_RUNS_BY_TIER: Record<Tier, number> = { creator: 0, pro: 300, scale: 600 };
-export const TRIAL_DAILY_RUNS = 50;
+/**
+ * New runs a store may start in one UTC day, all workflows together.
+ *
+ * 300 on Studio and 600 on Scale until 17 October 2026: at WORST_COMMANDS_PER_RUN
+ * that is $5.73 and $11.46 of database commands a month, which neither plan
+ * keeps the owner's 60% after tax with when paid by the year
+ * (tests/plan-cost-registry.ts). 25 a day is 775 people a month started on
+ * Studio and 40 a day 1,240 on Scale, about what each plan's monthly emails
+ * reach at six emails a person. The free trial goes from 50 to 10.
+ */
+export const DAILY_RUNS_BY_TIER: Record<Tier, number> = { creator: 0, pro: 25, scale: 40 };
+export const TRIAL_DAILY_RUNS = 10;
 
 /** Events one run keeps in its history: a start, each step's attempt and outcome, and its end. */
 export const MAX_RUN_EVENTS = 2 + MAX_STEPS * 3;
@@ -87,6 +97,7 @@ export const WORKFLOW_LIMITS = {
   runKeepSeconds: RUN_KEEP_SECONDS,
   worstCommandsPerRun: WORST_COMMANDS_PER_RUN,
   emailsDrawFromMonthlyAllowance: true,
+  ownerNoticesDrawFromMonthlyAllowance: true,
   webhooksUseStoreEndpointsAndRetryCeiling: true,
   uncertainOutcomesHoldTheRun: true,
 } as const;

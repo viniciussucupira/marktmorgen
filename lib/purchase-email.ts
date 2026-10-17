@@ -34,6 +34,7 @@
  * its license key when it hands one out — kept under the offer's payment,
  * the same reference the thanks page and the list of purchases use.
  */
+import { ADMITTED_FIELD, settleAdmitted } from "@/lib/order-admission";
 import { countOrder } from "@/lib/orders";
 import { shippingWords } from "@/lib/buyer-words/shipping";
 import { shippingAddressOf, wasShipped } from "@/lib/shipping-address";
@@ -385,6 +386,8 @@ export async function confirmPurchase(
   if (outcome === "sent") {
     const paid = typeof read.session?.amount_total === "number" ? read.session.amount_total : 0;
     await countOrder(store, `checkout:${sessionId}`, paid);
+    // The hour its checkout was held in gives it back, now that it is counted (lib/order-admission.ts).
+    await settleAdmitted(store, read.session?.metadata?.[ADMITTED_FIELD]);
   }
   return outcome;
 }
