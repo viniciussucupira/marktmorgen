@@ -1705,19 +1705,24 @@ export async function readBook(store: Store, only?: string): Promise<Book> {
       const read = store.stripeAccountId ? await refundsSince(store, since) : { byIntent: new Map<string, number>(), complete: true };
       refunds = read.byIntent;
       refundsChecked = read.complete;
-      // A chargeback takes the money back as a refund does (disputesSince).
-      // Read with the refunds and judged with them: when either could not be
-      // read in full, what is owed is not known (refundsChecked).
-      if (store.stripeAccountId) {
-        const disputed = await disputesSince(store, since);
-        for (const [pi, cents] of disputed.byIntent) refunds.set(pi, (refunds.get(pi) ?? 0) + cents);
-        refundsChecked = refundsChecked && disputed.complete;
-      }
       // PayPal's refunds in full, named by the payment as the book names it.
       for (const r of await readPayPalRefunds(store.statsId, since)) refunds.set(paypalPaymentId(r.capture), (refunds.get(paypalPaymentId(r.capture)) ?? 0) + r.cents);
     } catch (error) {
       console.error("reading refunds for the affiliate book failed", error);
       refundsChecked = false;
+    }
+    // A chargeback takes the money back as a refund does (disputesSince).
+    // Judged with the refunds: when either could not be read in full, what
+    // is owed is not known (refundsChecked), and no payout is made on it.
+    if (store.stripeAccountId) {
+      try {
+        const disputed = await disputesSince(store, since);
+        for (const [pi, cents] of disputed.byIntent) refunds.set(pi, (refunds.get(pi) ?? 0) + cents);
+        refundsChecked = refundsChecked && disputed.complete;
+      } catch (error) {
+        console.error("reading disputes for the affiliate book failed", error);
+        refundsChecked = false;
+      }
     }
   }
   const settled = everything.map((r) => settleLine(r, r.pi ? refunds.get(r.pi) ?? 0 : 0));
