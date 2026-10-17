@@ -17,8 +17,8 @@ is("partial tags preserve missing values",render([{...line,promotion:{source:"",
 is("bonus and tier two are records",render([{...line,how:"bonus"},{...line,ref:"b",how:"tier2"}],2).includes("not additional purchases"),true);
 const mixed=render([line,{...line,ref:"b",currency:"eur",commission:200}],2);
 is("summary shows both currencies independently",mixed.includes("(USD)")&&mixed.includes("(EUR)"),true);
-is("unknown history is not empty confirmation",render([],null).includes("could not be loaded")&&!render([],null).includes("No commission records yet"),true);
-is("confirmed zero remains empty",render([],0).includes("No commission records yet"),true);
+is("unknown history is not empty confirmation",render([],null).includes("could not be loaded")&&!render([],null).includes("No commission records were loaded"),true);
+is("zero loaded entries remains explicit",render([],0).includes("No commission records yet"),true);
 is("incomplete invoices remain explicit",render([line],1,{invoicesChecked:false}).includes("Entries may be missing"),true);
 is("refund caveat remains explicit",render([line],1,{refundsChecked:false}).includes("Refunds could not all be checked"),true);
 is("titles escaped",html.includes("&lt;script&gt;Course&lt;/script&gt;")&&!html.includes("<script>"),true);

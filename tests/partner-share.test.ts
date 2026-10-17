@@ -28,6 +28,10 @@
  * while they choose.
  */
 import { test } from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { AffiliateCommissionHistory } from "@/components/affiliate-commission-history";
+import { affiliateCreditGroups, type AffiliateCommissionLine } from "@/lib/affiliate-commission-view";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -280,32 +284,29 @@ test("an invitation cannot be used to attach a share nobody checked", () => {
 
 // ---- a moat switched off is not a moat ---------------------------------
 
-test("the creator can see which of the four routes brought each sale", () => {
-  // Three of these were invisible. A creator saw their affiliates earning and
-  // could not tell a sale the link brought from one a code brought with no
-  // click at all, from a buyer who had been theirs for a year, or from a
-  // partner's standing share. Four different things all read as "a sale", and
-  // the three new ones are exactly the ones worth switching on.
-  const studio = readFileSync(join(process.cwd(), "components/affiliate-studio.tsx"), "utf8");
-  assert.match(studio, /const CREDIT_WORDS: Record<Credit, string>/, "each route needs a name a creator recognises");
+test("the creator can see the credit route on each commission record", () => {
+  const kinds = ["click", "code", "buyer", "partner"] as const;
+  const lines: AffiliateCommissionLine[] = kinds.map((how,i) => ({ref:String(i),at:1700000000,title:"Course",aff:"a",base:1000,refunded:0,rate:10,commission:100,status:"earned",how,currency:"usd"}));
+  const html = renderToStaticMarkup(createElement(AffiliateCommissionHistory,{lines,total:lines.length,who:new Map(),refundsChecked:true,invoicesChecked:true}));
   for (const words of ["Their link", "Their code", "A buyer who was already theirs", "Partner share"]) {
-    assert.ok(studio.includes(words), `the book should be able to say "${words}"`);
+    assert.ok(html.includes("10% · " + words), `each record must name its credit route: ${words}`);
   }
-  assert.match(studio, /CREDIT_WORDS\[line\.how\]/, "and say it on the line itself");
-
   const page = readFileSync(join(process.cwd(), "app/studio/affiliates/page.tsx"), "utf8");
-  assert.match(page, /how: line\.how/, "which means the page has to pass it through");
+  assert.match(page, /how: line\.how/, "the page still passes the recorded route");
 });
 
-test("and see the four counted, which is the number that argues for itself", () => {
-  const studio = readFileSync(join(process.cwd(), "components/affiliate-studio.tsx"), "utf8");
-  // Membership payments and monthly bonuses (added 12 October 2026), and the second tier (13 October), are counted beside the four.
-  const at = studio.indexOf('["click", "code", "buyer", "recurring", "bonus", "tier2", "partner"] as const');
-  assert.ok(at > 0, "the four routes should be counted above the book");
-  const block = studio.slice(at, at + 900);
-  assert.match(block, /l\.how === how && l\.commission > 0/, "counting what actually earned, not what was written down");
-  assert.match(block, /rows\.reduce\(\(sum, r\) => sum \+ r\.commission, 0\)/, "with the money beside the count");
-  assert.match(block, /filter\(\(\{ rows \}\) => rows\.length\)/, "and no empty row for a route nobody used");
+test("displayed positive commission records are counted without mixing currencies or inventing purchases", () => {
+  const a: AffiliateCommissionLine = {ref:"a",at:1700000000,title:"Course",aff:"a",base:1000,refunded:0,rate:10,commission:100,status:"earned",how:"click",currency:"usd"};
+  const lines: AffiliateCommissionLine[] = [a,{...a,ref:"b",commission:150},{...a,ref:"c",currency:"eur",commission:200},{...a,ref:"d",how:"code",commission:0},{...a,ref:"e",how:"bonus",commission:300},{...a,ref:"f",how:"tier2",commission:40}];
+  const groups = affiliateCreditGroups(lines);
+  assert.deepEqual(groups.find(g=>g.how==="click"&&g.currency==="usd"),{how:"click",currency:"usd",records:2,commission:250});
+  assert.deepEqual(groups.find(g=>g.how==="click"&&g.currency==="eur"),{how:"click",currency:"eur",records:1,commission:200});
+  assert.equal(groups.some(g=>g.how==="code"),false,"zero-commission routes have no summary group");
+  assert.equal(groups.find(g=>g.how==="bonus")?.records,1);
+  assert.equal(groups.find(g=>g.how==="tier2")?.records,1);
+  const html=renderToStaticMarkup(createElement(AffiliateCommissionHistory,{lines,total:lines.length,who:new Map(),refundsChecked:true,invoicesChecked:true}));
+  assert.ok(html.includes("2 commission records")&&html.includes("(USD)")&&html.includes("(EUR)"));
+  assert.ok(html.includes("not additional purchases"));
 });
 
 test("no number is invented for a store that has the bond switched off", () => {
