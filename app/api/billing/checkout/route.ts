@@ -1,3 +1,4 @@
+import {reserveContractFunding} from '@/lib/contract-funding';
 import type { NextRequest } from "next/server";
 import { away, creatorFrom } from "@/lib/studio-route";
 import { createBillingCheckout, endLapsed, findStoreSubscriptions, isBillingConfigured } from "@/lib/billing";
@@ -9,7 +10,8 @@ import { limited } from "@/lib/request-guard";
 /**
  * Sends the creator to Stripe to start paying us, monthly or yearly.
  *
- * Nothing new is written down here. The subscription only becomes real when
+ * A permanent funding reservation is recorded before opening a new checkout.
+ * The subscription only becomes real when
  * Stripe says it exists, on the way back, so a creator who opens the page and
  * closes it is left exactly as they were.
  *
@@ -76,8 +78,10 @@ export async function POST(request: NextRequest) {
     customerId = owned.find((other) => other.stripeCustomerId)?.stripeCustomerId ?? null;
   }
 
+  const grant=await reserveContractFunding(store.statsId??'',tier,cycle,'checkout');
+  if(!grant)return away(origin,studio('billing=not-open'));
   try {
-    const url = await createBillingCheckout(store, origin, { tier, cycle }, customerId);
+    const url = await createBillingCheckout(store, origin, { tier, cycle }, customerId,grant);
     return new Response(null, { status: 303, headers: { Location: url } });
   } catch (error) {
     console.error("billing checkout failed", error);

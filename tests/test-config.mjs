@@ -30,6 +30,20 @@ export function testAliases(file,root,here){
   aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
   aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
  }
+ if(['contract-funding.test.ts','contract-routes.test.ts'].includes(file)){
+  aliases['@/lib/redis']=join(here,'contract-funding-redis.ts');
+  aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
+  aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
+ }
+ if(file==='contract-routes.test.ts'){
+  aliases['@/lib/contract-funding-rules']=join(here,'contract-funding-approved-policy.ts');
+  aliases['@/lib/commercial-margin']=join(here,'contract-commercial-context.ts');
+  aliases['@/lib/opening']=join(here,'contract-opening-on.ts');
+  aliases['@/lib/studio-route']=join(here,'contract-route-studio.ts');
+  aliases['@/lib/billing']=join(here,'contract-route-billing.ts');
+  aliases['@/lib/store']=join(here,'contract-route-store.ts');
+ }
+ if(file==='contract-billing-metadata.test.ts')aliases['@/lib/plan']=join(here,'contract-billing-plan.ts');
  return aliases;
 }
 export function testEnvironment(env){return{...env,NIMBUS_DATA_KEY:env.NIMBUS_DATA_KEY??'tests-only-not-a-real-deployment-secret'};}
