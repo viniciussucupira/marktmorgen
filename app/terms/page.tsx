@@ -11,7 +11,8 @@ import { DELIVERY_ALLOWANCE_BYTES, FREE_PAUSE_ABOVE_BYTES, bytesWords } from "@/
 import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
-import { CLOSING_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { RELEASE_QUARANTINE_DAYS } from "@/lib/store";
 import { CALL_ORDER_UNITS, ORDERS_INCLUDED, TRIAL_ORDERS } from "@/lib/order-rules";
 import { API_WRITE_UNITS, allowanceListWords } from "@/lib/store-allowance-rules";
 import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 17, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 18, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -265,7 +266,8 @@ export default function TermsPage() {
           </Link>
           : we may take the content down, we tell you and how to answer, and we
           switch off the pages and sales of a store that is the subject of
-          repeated valid notices. Your buyers keep what they already bought.
+          repeated valid notices. Your buyers keep what they already bought
+          for as long as the store is open (section 8).
         </p>
       </LegalSection>
 
@@ -658,7 +660,7 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Cancellation">
+      <LegalSection title="8. Cancellation and closing a store" id="closing">
         <p>
           You may cancel your subscription at any time, for any reason. After
           you cancel, you will not be charged for future billing periods. You
@@ -666,32 +668,76 @@ export default function TermsPage() {
           for, unless a refund applies under our Refund Policy.
         </p>
         <p>
-          When a plan ends, the store stays: its page, its products and their
-          prices, its lessons&rsquo; text and quizzes, its contacts and its
-          orders are kept, and buyers go on downloading what they bought until
-          the day below.
+          <strong className="text-black">A store closes {CLOSING_DAYS} days after its plan ends.</strong>{" "}
+          Until then the store stays as it is: its page, products, prices,
+          files, courses, community, contacts and orders, and buyers go on
+          reaching what they bought. We email the store&rsquo;s owner when the
+          plan ends, {WARN_MONTH_DAYS} days before the closing day and {WARN_WEEK_DAYS} days
+          before it, each time with the date, and a store never closes sooner
+          than a week after the last of those emails. Starting a plan again
+          before that day stops it, and everything stays exactly as it was.
         </p>
         <p>
-          What the store keeps has a date.{" "}
-          {CLOSING_DAYS} days after the plan ended, what the store keeps is
-          removed: the files its products hand over, its lessons&rsquo; videos and downloads, its
-          podcast&rsquo;s episodes, the files its students handed in and the pictures in its community&rsquo;s posts.
-          From that day, buyers can no longer download those files or watch those videos,
-          so a creator who has sold them should start a plan again or give
-          buyers another way to what they bought before then. We email the
-          store&rsquo;s owner when the plan ends, {WARN_MONTH_DAYS} days before that day and {WARN_WEEK_DAYS} days before it,
-          each time with the date, and what a store keeps is never removed sooner than a week after the last of those emails.
-          Starting a plan again before that day stops it. Nothing else is removed, and a file can be put back on a product
-          and a video on a lesson once a plan is started again.
+          On the closing day the files the store keeps are removed (the files
+          its products hand over, its lessons&rsquo; videos and downloads, its
+          podcast&rsquo;s episodes, the files its students handed in and the
+          pictures in its community&rsquo;s posts), and the renewals of the
+          memberships and payment plans sold through it are set to end on the
+          creator&rsquo;s own Stripe account, each at the end of the period its
+          buyer already paid for; any refund remains the creator&rsquo;s
+          decision. Within {ERASE_WITHIN_DAYS} days, and usually the same day,
+          everything else the store keeps with us is deleted: its page and
+          settings, products and prices, pages, posts, courses and the
+          certificates they gave, community, contacts, forms and their
+          answers, numbers, and its buyers&rsquo; access to what they bought
+          from it. Its address is held back from
+          anyone else for {RELEASE_QUARANTINE_DAYS} days. Your account and sign-in stay until you
+          delete them, and you may open a new store.
+        </p>
+        <p>
+          <strong className="text-black">Download what you want to keep before that day.</strong>{" "}
+          The studio offers your whole store as one file: while your plan
+          runs, as often as your plan&rsquo;s studio use allows, and{" "}
+          {ENDED_STORE_EXPORTS === 1 ? "once" : `${ENDED_STORE_EXPORTS} times`}{" "}
+          after it ends, before the closing day, whatever the store&rsquo;s
+          size. It holds your products and their pages, posts,
+          courses with every lesson&rsquo;s text, forms and their answers,
+          contacts and your orders as a spreadsheet. Files and videos
+          download from their own pages. Your students can download their
+          course certificates until the closing day, and not after.
+        </p>
+        <p>
+          <strong className="text-black">What we keep after a store closes.</strong>{" "}
+          No copy of the store&rsquo;s sales. The store sells on your own
+          Stripe account, which holds every sale, refund and payout and is
+          yours to keep: those are your records as the seller. Our own
+          records of the store are our invoices for its plan and any fee we
+          charged, which stay in our billing records for as long as the law
+          requires, and a note of the dates the store ended and closed, kept
+          for about a year.
+        </p>
+        <p>
+          <strong className="text-black">If you bought from a creator&rsquo;s store.</strong>{" "}
+          What you buy from a store is delivered through that store while it
+          is open on Marktmorgen. When it closes, what was bought from it can
+          no longer be downloaded or opened here, and renewals of what you
+          subscribe to there stop at the end of the period you paid for. The
+          creator is told {CLOSING_DAYS} days ahead and asked to give buyers
+          another way to what they bought. Download the files and course
+          certificates you want to keep before then. The store leaves your
+          library on Marktmorgen when it closes; nothing else in it changes.
+          A refund is a matter between you and the creator (section 9).
         </p>
         <p>
           A plan that ended before{" "}
           {new Date(KEEP_NOTHING_FROM).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}{" "}
-          keeps the rule it ended under: a store that keeps{" "}
-          {storageWords(SETUP_STORAGE_BYTES)} or less of files and lesson
-          videos is not affected, and one that keeps more has the date above,
-          which deleting enough to keep {storageWords(SETUP_STORAGE_BYTES)} or
-          less before that day also stops.
+          keeps the rule it ended under: the store and its records stay; a
+          store that keeps {storageWords(SETUP_STORAGE_BYTES)} or less of
+          files and lesson videos is not affected, and one that keeps more has
+          its files removed {CLOSING_DAYS} days after the plan ended, after the
+          same three emails, which deleting enough to keep{" "}
+          {storageWords(SETUP_STORAGE_BYTES)} or less before that day also
+          stops.
         </p>
       </LegalSection>
 

@@ -162,7 +162,7 @@ export async function readSite(raw: string, reader: PageReader = readPage): Prom
 // ---- What is kept ---------------------------------------------------------------
 
 const key = (statsId: string, part: string) => `nl:outreach:${statsId}:${part}`;
-const linkKey = (token: string) => `nl:outreach:stoplink:${token}`;
+export const linkKey = (token: string) => `nl:outreach:stoplink:${token}`;
 const STOP_ALL = "nl:outreach:stop:all";
 /** What one pitch leaves in the store's data room for good: its stop link and a domain's place in the stop lists. */
 export const OUTREACH_TRACE_BYTES = 640;

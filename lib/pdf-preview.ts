@@ -45,7 +45,7 @@ const PREVIEW_SECONDS = 400 * 24 * 60 * 60;
 export const PREVIEW_RECORD_BYTES = 1_024;
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
-const previewKey = (file: ProductFile, pages: number) => `nl:preview:${sha(`${file.pathname}|${file.addedAt}|${pages}`).slice(0, 40)}`;
+export const previewKey = (file: Pick<ProductFile, "pathname" | "addedAt">, pages: number) => `nl:preview:${sha(`${file.pathname}|${file.addedAt}|${pages}`).slice(0, 40)}`;
 
 /** Whether this file can have a preview at all. */
 export function previewable(file: ProductFile | null): file is ProductFile {

@@ -33,7 +33,7 @@ export type Move = {
   n: number;
 };
 
-const movedKey = (session: string) => `nl:call:moved:${session}`;
+export const movedKey = (session: string) => `nl:call:moved:${session}`;
 export const REMINDER_QUEUE = "nl:call:remindq";
 
 /** A move is kept well past any call it could be about. */

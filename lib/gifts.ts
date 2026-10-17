@@ -52,6 +52,8 @@ export type Gift = {
 
 const giftKey = (id: string) => `nl:gift:${id}`;
 const piKey = (pi: string) => `nl:gift:pi:${pi}`;
+/** What one gift keeps, by its id and its payment: for a closed store (lib/closed-store-data.ts). */
+export const giftKeys = (id: string, pi: string): string[] => [...(id ? [giftKey(id), `${giftKey(id)}:giving`] : []), ...(pi ? [piKey(pi)] : [])];
 const anyKey = (sid: string) => `nl:gift:${sid}:any`;
 const anchorKey = (sid: string) => `nl:gift:${sid}:refunds`;
 const seenKey = (sid: string) => `nl:gift:${sid}:seen`;

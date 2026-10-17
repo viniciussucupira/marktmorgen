@@ -163,7 +163,7 @@ import { hoursWords } from "@/lib/watch-rules";
 import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closingOf } from "@/lib/plan-closing";
-import { keptRoomFor } from "@/lib/plan-closing-rules";
+import { ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, closesStore, keptRoomFor } from "@/lib/plan-closing-rules";
 import { MAX_LEADS, listSize } from "@/lib/free";
 import { readableSize } from "@/lib/product-file";
 import {
@@ -868,7 +868,9 @@ export default async function StudioPage({
   const keptNow = closingAt ? (await storageUsed(folder, SETUP_STORAGE_BYTES)).bytes : 0;
   // What it may keep with no date: none for a plan ended from 18 October 2026 (lib/plan-closing-rules.ts).
   const keptRoom = closingAt ? keptRoomFor(closingAt.endedAt) : 0;
-  const closing = closingAt && keptNow > keptRoom ? { ...closingAt, bytes: keptNow, room: keptRoom } : null;
+  // A plan ended from 18 October 2026 closes the whole store on that day, files or none (lib/plan-closing-rules.ts, closesStore).
+  const closesWhole = closingAt ? closesStore(closingAt.endedAt) : false;
+  const closing = closingAt && (closesWhole || keptNow > keptRoom) ? { ...closingAt, bytes: keptNow, room: keptRoom, whole: closesWhole } : null;
   const dayWords = (ms: number) => new Date(ms).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
   // The list is shown once there is something that fills it, or once it holds
   // anybody — a creator who stops giving things away still owns what came in.
@@ -2138,7 +2140,55 @@ export default async function StudioPage({
               />
             ) : null}
 
-            {closing ? (
+            {!closing && may("export") && standing !== "ended" && standing !== "none" ? (
+              <div className="card mt-8 p-6 sm:p-8">
+                <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Your whole store, as one file</p>
+                <p className="mt-2 text-ink-soft">
+                  Your products and their pages, posts, courses with every lesson&rsquo;s text, forms and their answers,
+                  contacts and a summary of your orders. It is counted from your studio&rsquo;s requests by its size.
+                  Files and videos download from their own pages.
+                </p>
+                <form action="/api/store/export" method="get" className="mt-4 max-w-full">
+                  <input type="hidden" name="store" value={store.sid} />
+                  <input type="hidden" name="what" value="store" />
+                  <button type="submit" className="btn btn-secondary">
+                    Download everything
+                  </button>
+                </form>
+              </div>
+            ) : null}
+
+            {closing && closing.whole ? (
+              <div id="closing" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
+                <p className="text-lg font-semibold tracking-[-0.02em] text-ink">
+                  {`Your plan has ended, and your store closes on ${dayWords(closing.day)}`}
+                </p>
+                <p className="mt-4 notice notice-warn">
+                  {`Your plan ended on ${dayWords(closing.endedAt)}. `}
+                  <strong>{`On ${dayWords(closing.day)} your store closes`}</strong>
+                  {`: its files are removed (the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts), the renewals of the memberships and payment plans you sold through it are stopped at Stripe at the end of the period already paid, and within ${ERASE_WITHIN_DAYS} days, usually the same day, everything else it keeps with us is deleted: its page, products, pages, posts, courses and the certificates they gave, community, contacts, forms, numbers and your buyers' access to what they bought.`}
+                </p>
+                <p className="mt-4 text-ink-soft">
+                  {`We keep no copy of your sales: every sale, refund and payout is on your own Stripe account, and stays there. Your account and sign-in stay. Tell your students to download their course certificates before that day: they can until then, and not after. Starting a plan again before that day stops all of it.`}
+                </p>
+                {/* A GET form, not a link: a link may be prefetched, and each prefetch would read the whole store. */}
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <form action="/api/store/export" method="get" className="max-w-full">
+                    <input type="hidden" name="store" value={store.sid} />
+                    <input type="hidden" name="what" value="store" />
+                    <button type="submit" className="btn btn-primary">
+                      Download everything
+                    </button>
+                  </form>
+                  <span className="text-sm text-ink-soft">
+                    {`One file: your products and their pages, posts, courses with every lesson's text, forms and their answers, contacts and your orders as a spreadsheet. ${ENDED_STORE_EXPORTS === 1 ? "Once" : `${ENDED_STORE_EXPORTS} times`} now that your plan has ended, whatever your store's size, so download it when you are ready to keep it. Files and videos download from their own pages.`}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-ink-soft">
+                  {`We email you ${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it, and nothing is removed sooner than a week after the last of those emails.`}
+                </p>
+              </div>
+            ) : closing ? (
               <div id="closing" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
                 <p className="text-lg font-semibold tracking-[-0.02em] text-ink">
                   Your plan has ended, and what your store keeps has a date

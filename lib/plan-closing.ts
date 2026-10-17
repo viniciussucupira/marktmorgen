@@ -40,8 +40,21 @@
  *     those is a reason to do nothing that day, and try the next;
  *   - one store at a time, by the daily job, with what it did written down.
  *
+ * Since 18 October 2026 a plan that ends closes the whole store on that
+ * day (lib/plan-closing-rules.ts, closesStore), whether it keeps files or
+ * not: the same three notices, the same week after the last and the same
+ * check with Stripe, and then, that day, its files are removed, the
+ * renewals of what it sold are stopped at Stripe (lib/closed-store-data.ts,
+ * stopRenewals), and it is put in line for the walk that deletes every
+ * record it keeps in the database (lib/closed-store-data.ts), which runs
+ * within the hour. Nothing of its sales is copied anywhere: they are on the
+ * creator's own Stripe account, which is where a seller's records of them
+ * are (docs/tax-uncertainty.md, question 13). A plan that ended before that
+ * day keeps the rule above.
+ *
  *   nl:plan:ended            the stores whose plan has ended, by the day
- *   nl:plan:closing:<key>    what a store was told and when; when removed
+ *   nl:plan:closing:<key>    what a store was told and when; when removed,
+ *                            and when its records were deleted
  *   nl:plan:closing:after    where a run that ran out of time stopped
  *
  * A store with no plan cannot add to what it keeps past its room
@@ -56,7 +69,8 @@ import { editCourse, filesInCourse, readCourse, saveCourse } from "@/lib/course"
 import { bytesWords } from "@/lib/delivery";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { deleteFile, listFiles } from "@/lib/file-store";
-import { CLOSING_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, keptRoomFor } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closesStore, keptRoomFor } from "@/lib/plan-closing-rules";
+import { type Batched, deleteSalesTraces, markDue, stopRenewals, unmarkDue } from "@/lib/closed-store-data";
 import { communityFolder } from "@/lib/community-image";
 import { forgetPictures, picturesKept } from "@/lib/community-files";
 import { PICTURE_BYTES } from "@/lib/community-picture-rules";
@@ -83,14 +97,26 @@ const stateKey = (key: string) => `nl:plan:closing:${createHash("sha256").update
  * started again and ended again begins from nothing, with every notice
  * still to come.
  */
-type State = { of?: number; ended?: number; month?: number; week?: number; removed?: number; said?: number; fit?: number };
+type State = {
+  of?: number;
+  ended?: number;
+  month?: number;
+  week?: number;
+  removed?: number;
+  said?: number;
+  fit?: number;
+  /** A closing store's renewals stopped at Stripe, its line for the walk, its records deleted (ms). */
+  renewals?: number;
+  due?: number;
+  erased?: number;
+};
 
 function parseState(raw: unknown): State {
   if (typeof raw !== "string") return {};
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
     const out: State = {};
-    for (const name of ["of", "ended", "month", "week", "removed", "said", "fit"] as const) {
+    for (const name of ["of", "ended", "month", "week", "removed", "said", "fit", "renewals", "due", "erased"] as const) {
       if (typeof value[name] === "number" && Number.isFinite(value[name] as number)) out[name] = value[name] as number;
     }
     return out;
@@ -218,6 +244,62 @@ function letter(kind: "ended" | "month" | "week" | "removed", store: Store, held
           : "This is the last notice before that day.",
       "",
       `${SITE_URL}/studio`,
+      "",
+      `Questions: reply to this email or write to ${SUPPORT_EMAIL}.`,
+    ].join("\n"),
+  };
+}
+
+/**
+ * The notices of a store that closes (plans that end from 18 October 2026):
+ * the three before its day. What they say is what lib/closed-store-data.ts
+ * does, and the download they point to is the studio's (app/api/store/export,
+ * what=store), which a store whose plan has ended has ENDED_STORE_EXPORTS of,
+ * its own, never refused for want of room.
+ */
+export function closingLetter(kind: "ended" | "month" | "week", name: string, endedAt: number, day: number, now: number): { subject: string; text: string } {
+  const studio = `${SITE_URL}/studio#closing`;
+  const days = Math.max(1, Math.ceil((day - now) / DAY_MS));
+  return {
+    subject: kind === "ended" ? `${name}: your plan has ended, and your store closes on ${dateWords(day)}` : `${days} days until ${name} closes`,
+    text: [
+      `Your Marktmorgen plan for ${name} ended on ${dateWords(endedAt)}.`,
+      "",
+      kind === "ended" ? "Your store is still there and nothing has been removed." : "Nothing has been removed yet.",
+      `On ${dateWords(day)}, ${CLOSING_DAYS} days after your plan ended, your store closes:`,
+      "",
+      "  - its files are removed: the files your products hand over, your lessons' videos and",
+      "    downloads, your podcast's episodes, the files your students handed in and the",
+      "    pictures in your community's posts;",
+      "  - the renewals of the memberships and payment plans you sold through it are stopped at",
+      "    Stripe, each at the end of the period already paid (refunds stay your decision);",
+      `  - within ${ERASE_WITHIN_DAYS} days, and usually the same day, everything else it keeps with us is`,
+      "    deleted: its page, products and prices, pages and posts, courses and the certificates",
+      "    they gave, community, contacts, forms and their answers, numbers, and your buyers'",
+      "    access to what they bought from it.",
+      "",
+      "We keep no copy of your sales: every sale, refund and payout is on your own Stripe",
+      "account, and stays there. Your Marktmorgen account and your sign-in stay.",
+      "",
+      "Before then:",
+      "",
+      "  - download everything your store keeps as one file, from your studio: your contacts,",
+      "    your orders as a spreadsheet, your products and their pages, your posts, your courses",
+      `    and your forms' answers. Now that your plan has ended you can download it ${ENDED_STORE_EXPORTS === 1 ? "once" : `${ENDED_STORE_EXPORTS} times`},`,
+      "    whatever your store's size, so download it when you are ready to keep it;",
+      "  - tell your students to download their course certificates: they can until that day,",
+      "    and not after;",
+      "  - tell your buyers, and give them another way to what they bought if you sell elsewhere.",
+      "",
+      studio,
+      "",
+      `Starting a plan again before ${dateWords(day)} stops all of it, and everything stays exactly as it is.`,
+      "",
+      kind === "ended"
+        ? `We will write to you again ${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it. Nothing is removed without a notice at least a week old.`
+        : kind === "month"
+          ? `We will write to you once more, ${WARN_WEEK_DAYS} days before that day. Nothing is removed without a notice at least a week old.`
+          : "This is the last notice before that day.",
       "",
       `Questions: reply to this email or write to ${SUPPORT_EMAIL}.`,
     ].join("\n"),
@@ -397,6 +479,8 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   }
   const endedAt = Date.parse(store.planEndedAt);
   if (standingOf(store, now / 1000) !== "ended" || !Number.isFinite(endedAt)) {
+    // A plan runs again: a store in line for the walk is taken out of it.
+    await unmarkDue(key).catch(() => {});
     await redisPipeline([["ZREM", ENDED_INDEX, key], ["DEL", stateKey(key)]]);
     return { key, state: "running" };
   }
@@ -409,8 +493,9 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   // Notices about an earlier ending say nothing about this one.
   const state: State = read.of === endedAt ? read : { of: endedAt };
   const save = (next: State) => redisPipeline([["SET", stateKey(key), JSON.stringify(next)]]);
+  const closes = closesStore(endedAt);
   const send = async (kind: "ended" | "month" | "week" | "removed", day: number, held: number): Promise<boolean> => {
-    const { subject, text } = letter(kind, store, held, endedAt, day, now);
+    const { subject, text } = closes && kind !== "removed" ? closingLetter(kind, store.name, endedAt, day, now) : letter(kind, store, held, endedAt, day, now);
     // The same notice asked for twice in a day is sent once (a record that
     // could not be written after it went out).
     const idempotencyKey = `${stateKey(key)}:${endedAt}:${kind}`;
@@ -422,16 +507,24 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   };
 
   if (state.removed) {
+    // A closing store, after its day: in line for the walk, which deletes its records.
+    if (closes) {
+      if (!state.due) {
+        await markDue(key, now);
+        await save({ ...state, due: now });
+      }
+      return { key, state: "removed", note: "its records are deleted by the next walk" };
+    }
     // Done. All that can be left is the letter saying so, if it could not
     // be sent on the day.
     if (!state.said && isSenderConfigured() && (await send("removed", now, 0))) await save({ ...state, said: now });
     return { key, state: "fits" };
   }
-  if (state.fit && now - state.fit < RECHECK_DAYS * DAY_MS) return { key, state: "fits" };
+  if (!closes && state.fit && now - state.fit < RECHECK_DAYS * DAY_MS) return { key, state: "fits" };
 
   const folder = await storeFolder(storeRef(store));
   const held = (await hands.measure(folder)) + (store.community && hands.pictures ? await hands.pictures(store.community.id) : 0);
-  if (held <= keptRoomFor(endedAt)) {
+  if (!closes && held <= keptRoomFor(endedAt)) {
     // It fits, so whatever it was told no longer stands. Should it ever keep
     // more again (a copy stamped for a buyer is kept in its folder too), it
     // is told from the start, and has its week from that notice.
@@ -481,6 +574,8 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
     return { key, state: "running", note: "Stripe says the plan runs" };
   }
 
+  if (closes) return closingDay(store, key, state, endedAt, folder, now, hands, until, save);
+
   const done = await removeStored(key, hands, until);
   if (!done.clean) return { key, state: "held", note: `removed ${done.files}, and something could not be removed` };
   const after = (await hands.measure(folder)) + (store.community && hands.pictures ? await hands.pictures(store.community.id) : 0);
@@ -489,6 +584,58 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   if (await send("removed", now, 0)) await save({ ...state, removed: now, said: now });
   return { key, state: "removed", note: `${done.files} files` };
 }
+
+/**
+ * A closing store's day, once Stripe has said it has no plan. In order, each
+ * step written down as it is done so a day that stops half-way carries on
+ * the next: the renewals of what it sold stopped at Stripe (nothing it sold
+ * is charged again once it is closed); what its files left under their own
+ * names deleted, which only its products can find (lib/closed-store-data.ts,
+ * deleteSalesTraces); its files removed; and its line for the walk that
+ * deletes its records.
+ */
+async function closingDay(store: Store, key: string, state: State, endedAt: number, folder: string, now: number, hands: Hands, until: number, save: (next: State) => Promise<unknown>): Promise<Closing> {
+  let next: State = state;
+  if (!next.renewals) {
+    try {
+      const stopped = await stopRenewals(store, until);
+      if (!stopped.done) return { key, state: "held", note: "the renewals it sold are not all stopped yet" };
+    } catch (error) {
+      console.error("stopping a closing store's renewals failed", error);
+      return { key, state: "held", note: "Stripe could not be asked to stop its renewals" };
+    }
+    next = { ...next, renewals: now };
+    await save(next);
+  }
+  try {
+    await deleteSalesTraces(store);
+  } catch (error) {
+    console.error("deleting what a closing store's files left failed", error);
+    return { key, state: "held", note: "what its files left could not be deleted" };
+  }
+  const done = await removeStored(key, hands, until);
+  if (!done.clean) return { key, state: "held", note: `removed ${done.files}, and something could not be removed` };
+  const after = (await hands.measure(folder)) + (store.community && hands.pictures ? await hands.pictures(store.community.id) : 0);
+  if (after > keptRoomFor(endedAt)) return { key, state: "held", note: `removed ${done.files} and it still keeps ${bytesWords(after)}` };
+  await markDue(key, now);
+  await save({ ...next, removed: now, due: now });
+  return { key, state: "removed", note: `closed, ${done.files} files: its records are deleted by the next walk` };
+}
+
+/**
+ * What the walk does last for each store it deleted (lib/closed-store-data.ts,
+ * eraseClosed): writes down that it is done, kept a while so a late look at
+ * the store knows. Its owner was told the day in three notices, and is not
+ * written to again.
+ */
+export async function finishClosed(entry: Batched, now = Date.now()): Promise<void> {
+  const key = stateKey(entry.ref);
+  const [raw] = await redisPipeline([["GET", key]]);
+  await redisPipeline([["SET", key, JSON.stringify({ ...parseState(raw), erased: now }), "EX", ERASED_KEPT_DAYS * 86_400]]);
+}
+
+/** How long the closing record of a deleted store is kept: dates only, the company's. */
+export const ERASED_KEPT_DAYS = 400;
 
 const AFTER = "nl:plan:closing:after";
 const PAGE = 200;

@@ -140,7 +140,13 @@ const busyKey = (callsId: string) => `nl:call:busy:${callsId}`;
 // stops two buyers taking the last seat of a group call, and a buyer moving
 // into a time while another books it.
 const lockKey = (callsId: string) => `nl:call:lock:${callsId}`;
-const confirmedKey = (session: string) => `nl:call:confirmed:${session}`;
+export const confirmedKey = (session: string) => `nl:call:confirmed:${session}`;
+/**
+ * How long a call's confirmation mark is kept: well past any call it can be
+ * about (the furthest a call can be booked ahead, and its moves), and then
+ * gone by itself, so a closed store leaves none for good (18 October 2026).
+ */
+export const CONFIRMED_SECONDS = 430 * 86_400;
 
 function readEntries(flat: string[]): { field: string; entry: Entry }[] {
   const out: { field: string; entry: Entry }[] = [];
@@ -1021,7 +1027,7 @@ export async function moveBooking(input: {
       ["HSET", busyKey(callsId), session, JSON.stringify(entry)],
       // Moved before it was ever confirmed: the move email says it all, and
       // no "Booked" email for the old time follows it.
-      ["SET", confirmedKey(session), "1", "NX"],
+      ["SET", confirmedKey(session), "1", "NX", "EX", CONFIRMED_SECONDS],
     ]);
   } catch (error) {
     console.error("moving a booking failed", error);
@@ -1264,7 +1270,7 @@ export async function confirmBooking(input: {
 }): Promise<void> {
   const { store, product, session, start, end, buyerEmail, origin } = input;
   if (!isRedisConfigured() || !store.callsId) return;
-  const [fresh] = await orderWrite(store, [["SET", confirmedKey(session), "1", "NX"]]);
+  const [fresh] = await orderWrite(store, [["SET", confirmedKey(session), "1", "NX", "EX", CONFIRMED_SECONDS]]);
   if (fresh === null) return;
   // Booked: the orders it was admitted as are the window's (lib/orders.ts), once, by the checkout.
   for (let unit = 1; unit <= CALL_ORDER_UNITS; unit += 1) await countOrder(store, `call:${session}:${unit}`, input.amountCents ?? 0);

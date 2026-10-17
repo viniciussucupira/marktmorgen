@@ -1069,7 +1069,8 @@ export async function readPaidSales(store: Store, since: number, pages: number):
       if (page === pages - 1) partial = true;
     }
   };
-  await walk("/checkout/sessions?limit=100", (raw) => {
+  // The two lists are read side by side, so a whole store's sales wait on the longer of them, not both (lib/store-export.ts).
+  const checkouts = walk("/checkout/sessions?limit=100", (raw) => {
     const row = raw as Row;
     const meta = row.metadata ?? {};
     if (!handles.has(meta.store ?? "")) return;
@@ -1089,7 +1090,7 @@ export async function readPaidSales(store: Store, since: number, pages: number):
     });
   });
   // Products taken in one click after paying are charges of their own.
-  await walk("/payment_intents?limit=100", (pi) => {
+  const extras = walk("/payment_intents?limit=100", (pi) => {
     const meta = (pi.metadata ?? {}) as Record<string, string>;
     if (meta.kind !== "upsell" || !handles.has(meta.store ?? "") || pi.status !== "succeeded") return;
     sales.push({
@@ -1111,6 +1112,7 @@ export async function readPaidSales(store: Store, since: number, pages: number):
       paymentIntent: typeof pi.id === "string" ? pi.id : "",
     });
   });
+  await Promise.all([checkouts, extras]);
   sales.sort((a, b) => b.created - a.created);
   return { sales, partial };
 }

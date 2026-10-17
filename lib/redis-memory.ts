@@ -374,6 +374,10 @@ export class MemoryRedis {
         if (!this.data.has(key)) return 0;
         this.until.set(key, this.now() + Number(args[0]));
         return 1;
+      case "EXPIREAT":
+        if (!this.data.has(key)) return 0;
+        this.until.set(key, Number(args[0]) * 1000);
+        return 1;
       case "PTTL": {
         if (!this.data.has(key)) return -2;
         const ends = this.until.get(key);
@@ -591,6 +595,18 @@ export class MemoryRedis {
         return this.set(key).has(args[0]) ? 1 : 0;
       case "SMEMBERS":
         return [...this.set(key)];
+      case "SUNION": {
+        // Read without making any key, as Redis does; a key of another kind is refused.
+        const out = new Set<string>();
+        for (const one of [key, ...args]) {
+          this.live(one);
+          const held = this.data.get(one);
+          if (held === undefined) continue;
+          if (!(held instanceof Set)) throw new Error("WRONGTYPE");
+          for (const member of held) out.add(member);
+        }
+        return [...out];
+      }
       case "SCARD":
         return this.set(key).size;
       case "SSCAN":

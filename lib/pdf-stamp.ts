@@ -42,8 +42,8 @@ export const COPY_RECORD_BYTES = 768;
 /** How long a note about a PDF that could not be stamped stays in the studio. */
 const PROBLEM_SECONDS = 60 * 24 * 60 * 60;
 
-const copyKey = (reference: string, file: ProductFile) => `nl:stamp:copy:${sha(`${reference}|${file.pathname}|${file.addedAt}`).slice(0, 40)}`;
-const problemKey = (pathname: string) => `nl:stamp:problem:${sha(pathname).slice(0, 40)}`;
+export const copyKey = (reference: string, file: Pick<ProductFile, "pathname" | "addedAt">) => `nl:stamp:copy:${sha(`${reference}|${file.pathname}|${file.addedAt}`).slice(0, 40)}`;
+export const problemKey = (pathname: string) => `nl:stamp:problem:${sha(pathname).slice(0, 40)}`;
 
 export type StampProblem = "too_big" | "unreadable";
 

@@ -11,11 +11,13 @@ export const maxDuration = 60;
  * line with Stripe (app/api/cron/plans): looks at each store whose plan has
  * ended, and at what it still keeps (lib/plan-closing.ts).
  *
- * A store that keeps no more than a store with no plan may is left as it
- * is. One that keeps more is written to when its plan ends, two weeks before
- * the day and a week before it; on the day, and never sooner than a week
- * after the last of those, what it keeps is removed, once Stripe itself has
- * said that day that the store has no plan.
+ * Every store whose plan ended since 18 October 2026, and one whose plan
+ * ended before that keeps more than a store with no plan may, is written to
+ * when its plan ends, two weeks before the day and a week before it; on the
+ * day, and never sooner than a week after the last of those, what it keeps
+ * is removed, once Stripe itself has said that day that the store has no
+ * plan, and a store that closes is put in line for the deletion of its
+ * records (app/api/cron/closed-data).
  *
  * A job of its own, with the whole minute to itself, because removing what
  * a large store keeps is many requests, and whatever is not finished is

@@ -35,7 +35,7 @@ import { type Preorder, keptDay, parsePreorder, preorderCounts, preorderOpen, pr
 const soonKey = (sid: string) => `nl:wl:${sid}:soon`;
 const dayKey = (sid: string) => `nl:wl:${sid}:pre`;
 const entriesKey = (sid: string, product: string) => `nl:pre:${sid}:${product}`;
-const piKey = (pi: string) => `nl:pre:pi:${pi}`;
+export const piKey = (pi: string) => `nl:pre:pi:${pi}`;
 const anyKey = (sid: string) => `nl:pre:${sid}:any`;
 const anchorKey = (sid: string) => `nl:pre:${sid}:refunds`;
 const seenKey = (sid: string) => `nl:pre:${sid}:seen`;

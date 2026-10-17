@@ -152,7 +152,7 @@ export async function grantImported(
   job: string,
   grants: { email: string; productId: string; items: string[] | null; option?: string | null }[],
   atSeconds = Math.floor(Date.now() / 1000),
-  /** The store's own id, so each address finds the store in its library (lib/buyer-library.ts). */
+  /** The store's own id, so each address finds the store in its library (lib/buyer-library.ts), for what was bought on Marktmorgen. */
   sid = "",
   /**
    * The store whose data room an import or the API's gift takes from
@@ -165,7 +165,9 @@ export async function grantImported(
   if (!grants.length || !isRedisConfigured()) return grants.map(() => false);
   // Each grant at the most it weighs: its field, the address's key and place among those brought over, its library.
   if (room) await needData(room, [{ slot: "imp", bytes: grants.reduce((sum, g) => sum + dataBytes([g.productId, JSON.stringify({ at: atSeconds, job, items: g.items, option: g.option ?? null }), g.email], 3), 0) }]);
-  if (sid) await rememberBuyers(sid, grants.map((g) => g.email));
+  // Only what was bought on Marktmorgen puts a store in a buyer's library: a gift, a place, a pre-order,
+  // a PayPal purchase (no room given); not an import or the API's gift, which take from the store's room.
+  if (sid && !room) await rememberBuyers(sid, grants.map((g) => g.email));
   if (IMPORT_JOB.test(job)) {
     await redisPipeline([...new Set(grants.map((g) => normaliseEmail(g.email)))].map((email) => ["HSETNX", importedWhoKey(statsId), email, String(atSeconds)]));
   }

@@ -28,6 +28,8 @@ const en = {
   pageTitle: "Your purchases",
   /** A buyer's library across every store (lib/buyer-library.ts), linked from the foot of the list. */
   libraryLink: "Bought from other creators on Marktmorgen too? See everything in one place",
+  /** What a purchase depends on: the store staying open (lib/plan-closing.ts, since 18 October 2026). */
+  whileOpen: "What you bought is here while this store is open on Marktmorgen. A store that closes takes it with it, so download the files you want to keep.",
   notices: {
     email: {
       title: "That does not look like an email address",
@@ -263,6 +265,7 @@ const esWhere = (withPaypal: boolean) => (withPaypal ? "en su propia cuenta de S
 const es: OrdersWords = {
   pageTitle: "Tus compras",
   libraryLink: "¿También compraste a otros creadores en Marktmorgen? Míralo todo en un solo lugar",
+  whileOpen: "Lo que compraste está aquí mientras esta tienda siga abierta en Marktmorgen. Si la tienda cierra, se va con ella: descarga los archivos que quieras conservar.",
   notices: {
     email: {
       title: "Eso no parece una dirección de email",
@@ -472,6 +475,7 @@ const frWhere = (withPaypal: boolean) => (withPaypal ? "sur son propre compte St
 const fr: OrdersWords = {
   pageTitle: "Vos achats",
   libraryLink: `Vous avez aussi acheté chez d'autres créateurs sur Marktmorgen${S}? Retrouvez tout au même endroit`,
+  whileOpen: "Vos achats sont ici tant que cette boutique reste ouverte sur Marktmorgen. Une boutique qui ferme les emporte avec elle : téléchargez les fichiers que vous voulez garder.",
   notices: {
     email: {
       title: "Cette adresse e-mail ne semble pas valide",
@@ -679,6 +683,7 @@ const deWhere = (withPaypal: boolean) => (withPaypal ? "über das eigene Stripe-
 const de: OrdersWords = {
   pageTitle: "Ihre Käufe",
   libraryLink: "Auch bei anderen Creators auf Marktmorgen gekauft? Alles an einem Ort",
+  whileOpen: "Was Sie gekauft haben, finden Sie hier, solange dieser Shop auf Marktmorgen geöffnet ist. Schließt der Shop, verschwindet es mit ihm: Laden Sie die Dateien herunter, die Sie behalten möchten.",
   notices: {
     email: {
       title: "Das sieht nicht nach einer E-Mail-Adresse aus",
@@ -891,6 +896,7 @@ const itThe = (percent: number) => (/^(1|8|11|8\d)$/.test(String(percent)) ? "l'
 const it: OrdersWords = {
   pageTitle: "I tuoi acquisti",
   libraryLink: "Hai acquistato anche da altri creator su Marktmorgen? Trova tutto in un unico posto",
+  whileOpen: "Ciò che hai acquistato è qui finché questo negozio resta aperto su Marktmorgen. Un negozio che chiude lo porta con sé: scarica i file che vuoi conservare.",
   notices: {
     email: {
       title: "Questo non sembra un indirizzo email",
@@ -1099,6 +1105,7 @@ const nlWhere = (withPaypal: boolean) => (withPaypal ? "via het eigen Stripe- of
 const nl: OrdersWords = {
   pageTitle: "Je aankopen",
   libraryLink: "Ook bij andere makers op Marktmorgen gekocht? Zie alles op één plek",
+  whileOpen: "Wat je kocht staat hier zolang deze winkel open is op Marktmorgen. Een winkel die sluit, neemt het mee: download de bestanden die je wilt houden.",
   notices: {
     email: {
       title: "Dat lijkt geen e-mailadres",
@@ -1306,6 +1313,7 @@ const ptWhere = (withPaypal: boolean) => (withPaypal ? "na própria conta Stripe
 const pt: OrdersWords = {
   pageTitle: "As suas compras",
   libraryLink: "Comprou também a outros criadores na Marktmorgen? Veja tudo num só lugar",
+  whileOpen: "O que comprou está aqui enquanto esta loja estiver aberta na Marktmorgen. Uma loja que fecha leva-o consigo: transfira os ficheiros que quer guardar.",
   notices: {
     email: {
       title: "Isso não parece um endereço de email",

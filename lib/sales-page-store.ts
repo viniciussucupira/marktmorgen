@@ -102,12 +102,33 @@ export async function releasePictures(statsId: string, productId: string, paths:
 export async function readPage(statsId: string | null, productId: string): Promise<SalesPage> {
   if (!statsId || !isRedisConfigured()) return { ...EMPTY_PAGE, blocks: [] };
   const [raw] = await redisPipeline([["GET", pageKey(statsId, productId)]]);
+  return pageOf(raw);
+}
+
+function pageOf(raw: unknown): SalesPage {
   if (typeof raw !== "string" || !raw || raw.length > MAX_STORED_PAGE_BYTES) return { ...EMPTY_PAGE, blocks: [] };
   try {
     return parsePage(JSON.parse(raw));
   } catch {
     return { ...EMPTY_PAGE, blocks: [] };
   }
+}
+
+/** Values of many keys, a hundred at a command (MGET): what the whole export reads (lib/store-export.ts). */
+async function readMany(keys: string[]): Promise<unknown[]> {
+  const out: unknown[] = [];
+  for (let i = 0; i < keys.length; i += 100) {
+    const [raw] = await redisPipeline([["MGET", ...keys.slice(i, i + 100)]]);
+    const values = Array.isArray(raw) ? raw : [];
+    for (let n = 0; n < Math.min(100, keys.length - i); n += 1) out.push(values[n] ?? null);
+  }
+  return out;
+}
+
+/** The pages of many products, in their order, a hundred at a command. */
+export async function readPages(statsId: string | null, productIds: string[]): Promise<SalesPage[]> {
+  if (!statsId || !isRedisConfigured()) return productIds.map(() => ({ ...EMPTY_PAGE, blocks: [] }));
+  return (await readMany(productIds.map((id) => pageKey(statsId, id)))).map(pageOf);
 }
 
 /** Whether a page has anything the product's page should draw instead of its plain layout. */

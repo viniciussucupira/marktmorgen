@@ -4,8 +4,12 @@
  *
  *   - an address is noted against a store's id, whatever its capitals, and
  *     nothing else about the purchase is kept;
- *   - a store that hands a purchase over another way — an import, a gift, a
- *     place bought for somebody — is in the library too;
+ *   - a store that hands a purchase over another way — a gift, a place
+ *     bought for somebody — is in the library too, and since 18 October 2026
+ *     what a creator brings over from another platform is not: it was not
+ *     bought on Marktmorgen;
+ *   - each store is kept in the set of the quarter it was noted in, which
+ *     ends on its own day (lib/joined-stores.ts);
  *   - the link is emailed only to an address that bought something, the
  *     answer is the same either way, and it opens the library for that
  *     address only.
@@ -14,6 +18,8 @@ import { libraryOwner, rememberBuyers, requestLibraryLink, storesBoughtFrom } fr
 import { grantImported } from "@/lib/imported-purchases";
 import { claimHandle, ensureStatsId, ensureStoreId, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
+import { PERSON_RECORD_MONTHS } from "@/lib/joined-stores";
+import { ROOM } from "./data-room";
 import { done, is, part } from "./check";
 
 const sent: { to: string; subject: string; text: string }[] = [];
@@ -47,6 +53,11 @@ async function main(): Promise<void> {
   is("and the address itself is nowhere in the key", keys.some((k) => k.includes("buyer")), false);
   await grantImported(beta.statsId!, "job1", [{ email: "buyer@example.com", productId: "p1", items: null }], undefined, beta.sid);
   is("a purchase handed over another way puts its store in too", (await storesBoughtFrom("buyer@example.com")).sort(), [alpha.sid, beta.sid].sort());
+  await grantImported(beta.statsId!, "job2", [{ email: "brought@example.com", productId: "p1", items: null }], undefined, beta.sid, ROOM);
+  is("a purchase brought over from another platform does not", await storesBoughtFrom("brought@example.com"), []);
+  const quarter = keys.find((k) => /^nl:lib:\d{4}q[1-4]:[0-9a-f]{40}$/.test(k)) ?? "";
+  const ttl = Number((await redis.pipeline([["TTL", quarter]]))[0]);
+  is("kept in its quarter's set, which ends three years and at most a quarter on", [quarter !== "", ttl >= 3 * 365 * 86_400 - 86_400, ttl <= PERSON_RECORD_MONTHS * 31 * 86_400], [true, true, true]);
 
   part("Signing in by email");
   is("an address that bought nothing: the same answer, and no email", [await requestLibraryLink({ email: "nobody@example.com", ip: "203.0.113.1", origin: "https://marktmorgen.com" }), sent.length], ["sent", 0]);

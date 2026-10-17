@@ -133,7 +133,7 @@ async function needContacts(room: ContactRoom, pairs: { before: Contact | null; 
 export const leadsKey = (listId: string) => `nl:store:leads:${listId}`;
 export const agreedKey = (listId: string) => `nl:store:leads:${listId}:agreed`;
 export const unsubKey = (listId: string) => `nl:store:leads:${listId}:unsub`;
-const tokenKey = (token: string) => `nl:mail:unsub:${token}`;
+export const tokenKey = (token: string) => `nl:mail:unsub:${token}`;
 export const UNSUB_TOKEN = /^[0-9a-f]{40}$/;
 
 export function parseContact(raw: unknown): Contact | null {

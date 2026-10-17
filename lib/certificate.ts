@@ -129,11 +129,11 @@ function parseCertificate(raw: unknown): Certificate | null {
   }
 }
 
-const certKey = (id: string) => `nl:cert:${id}`;
+export const certKey = (id: string) => `nl:cert:${id}`;
 /** Where a course's certificates are counted in the store's data room (lib/store-data.ts). */
 const CERTS_SLOT = (courseId: string) => `cc:${courseId}`;
 const indexKey = (courseId: string) => `nl:course:${courseId}:certs`;
-const allKey = (courseId: string) => `nl:course:${courseId}:certs:all`;
+export const allKey = (courseId: string) => `nl:course:${courseId}:certs:all`;
 /** Every certificate one student was ever issued for a course, withdrawn ones too (added 17 October 2026), so deleting them finds each. */
 const byKey = (courseId: string, who: string) => `nl:course:${courseId}:certs:by:${who}`;
 /** How many certificates of a course deleting a person looks through for ones issued before byKey was kept. */

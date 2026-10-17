@@ -741,6 +741,9 @@ export async function readPayPalSales(statsId: string | null, since: number, lim
   return { sales, partial };
 }
 
+/** The keys a PayPal order kept, by the order: for a closed store's deletion (lib/closed-store-data.ts). */
+export const paypalOrderKeys = (order: string): string[] => (ORDER_ID.test(order) ? [orderKey(order), paidKey(order)] : []);
+
 /** PayPal sales refunded in full since `since` (seconds): the payment, how much, in what, and when the refund was seen. */
 export async function readPayPalRefundsWithCoverage(statsId: string | null, since: number): Promise<{ rows: { order: string; capture: string; cents: number; currency: string; at: number }[]; partial: boolean }> {
   if (!statsId || !isRedisConfigured()) return { rows: [], partial: false };

@@ -13,7 +13,7 @@ import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules
 import { SETUP_STORAGE_BYTES, SETUP_VIDEO_SECONDS, TRIAL_STORAGE_BYTES } from "@/lib/plan-standing";
 import { PAID_STORAGE_BYTES, storageBrakeFor } from "@/lib/storage-rules";
 import { storageWords } from "@/lib/storage-quota";
-import { CLOSING_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, KEEP_NOTHING_FROM, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
 import { NON_PAYING_DATA_ROOM_BYTES, PAST_CALL_DAYS, dataRoomListWords, dataWords } from "@/lib/store-data-rules";
@@ -357,12 +357,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
-        q: "What happens to my files if my plan ends?",
+        q: "What happens when my plan ends?",
         a: [
-          "Your store stays: its page, your products and their prices, your lessons' text and quizzes, your contacts and your orders. Your buyers go on downloading what they bought until the day below.",
-          `What your store keeps has a date. ${CLOSING_DAYS} days after your plan ended, it is removed: the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts. From that day your buyers can no longer download those files or watch those videos.`,
-          `We email you when the plan ends, ${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it, each time with the date, and nothing is removed sooner than a week after the last of those emails. Your studio shows the date too. Starting a plan again before then stops it; if the day passes, you can put a file back on each product and a video back on each lesson once a plan is started again.`,
-          `A plan that ended before ${new Date(KEEP_NOTHING_FROM).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })} keeps the rule it ended under: a store that keeps ${storageWords(SETUP_STORAGE_BYTES)} or less is not touched, and one that keeps more than ${storageWords(SETUP_STORAGE_BYTES)} has a date, which deleting enough to keep ${storageWords(SETUP_STORAGE_BYTES)} or less also stops.`,
+          `Your store stays as it is for ${CLOSING_DAYS} days: its page, products, files, courses, community, contacts and orders, and your buyers go on reaching what they bought. Then it closes. We email you when the plan ends, ${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it, each time with the date, and nothing is removed sooner than a week after the last of those emails. Your studio shows the date too. Starting a plan again before then stops all of it.`,
+          `On that day your store's files are removed (the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts), and the renewals of the memberships and payment plans you sold through it are stopped at Stripe, each at the end of the period already paid; refunds stay your decision. Within ${ERASE_WITHIN_DAYS} days, usually the same day, everything else it keeps with us is deleted: its page, products, pages, posts, courses and the certificates they gave, community, contacts, forms, numbers and your buyers' access to what they bought from it. Your store leaves your buyers' library on Marktmorgen at once, and nothing else of theirs is touched.`,
+          `Before then, download your whole store as one file from your studio: at any time while your plan runs, and ${ENDED_STORE_EXPORTS === 1 ? "once" : `${ENDED_STORE_EXPORTS} times`} from the notice at the top of your studio once it has ended, whatever your store's size. It holds your products and their pages, posts, courses with every lesson's text, forms and their answers, contacts and your orders as a spreadsheet. Files and videos download from their own pages. Tell your students to download their course certificates, which they can until that day, and tell your buyers, and give them another way to what they bought if you sell elsewhere.`,
+          `What we keep: no copy of your sales. Every sale, refund and payout is on your own Stripe account, and stays there. Our own records of your store are our invoices for your plan, which stay in our billing records. Your account and sign-in stay.`,
+          `A plan that ended before ${new Date(KEEP_NOTHING_FROM).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })} keeps the rule it ended under: the store and its records stay, a store that keeps ${storageWords(SETUP_STORAGE_BYTES)} or less is not touched, and one that keeps more than ${storageWords(SETUP_STORAGE_BYTES)} has a date for its files, which deleting enough to keep ${storageWords(SETUP_STORAGE_BYTES)} or less also stops.`,
         ],
       },
       {

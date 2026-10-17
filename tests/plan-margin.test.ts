@@ -373,7 +373,9 @@ test("a store whose plan ended stops costing more than a store with no plan, on 
   assert.ok(trial < 3, `keeping an unpaid trial's files to its day costs $${trial.toFixed(2)} once`);
   // After the day, either is a store with no plan: the test above.
   const closing = readFileSync(join(process.cwd(), "lib/plan-closing.ts"), "utf8");
-  assert.match(closing, /if \(held <= keptRoomFor\(endedAt\)\)/, "the room a closing store is held to must be the one lib/plan-closing-rules.ts gives: none for a plan ended from 18 October 2026");
+  assert.match(closing, /if \(!closes && held <= keptRoomFor\(endedAt\)\)/, "the room a closing store is held to must be the one lib/plan-closing-rules.ts gives: none for a plan ended from 18 October 2026");
+  // And since that day such a store closes whatever it keeps: nothing of it is kept past its day but what goes by itself (lib/closed-store-data.ts).
+  assert.match(closing, /const closes = closesStore\(endedAt\)/);
   assert.equal(keptRoomFor(KEEP_NOTHING_FROM), 0, "a plan that ends from that day keeps nothing past its day");
   const job = JSON.parse(readFileSync(join(process.cwd(), "vercel.json"), "utf8")) as { crons: { path: string }[] };
   assert.ok(job.crons.some((cron) => cron.path === "/api/cron/closing"), "and the job that does it must be scheduled, or the day never comes");

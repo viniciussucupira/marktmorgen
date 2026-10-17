@@ -37,8 +37,10 @@
  *
  * PER_PAYMENT_LINES (since 18 October 2026) are what one payment can leave
  * behind after its plan ends: what the store keeps until its closing day
- * (lib/plan-closing.ts). They happen once a payment, not once a window, and
- * tests/spend-floor.test.ts adds them once to each payment's worst case.
+ * (lib/plan-closing.ts), and its closing itself (closure). They happen once
+ * a payment at the most, not once a window, and tests/spend-floor.test.ts
+ * adds them once to each payment's worst case: so a store that paid once, a
+ * single month, and closed carries all of it in that payment's own margin.
  */
 import { paidStorageBytes } from "@/lib/storage-rules";
 import { STORE_ALLOWANCES, NON_PAYING_ALLOWANCES, type AllowanceKind } from "@/lib/store-allowance-rules";
@@ -70,9 +72,20 @@ import { SYNC_SECONDS } from "@/lib/host-calendar";
 import { MAX_TEAM } from "@/lib/team";
 import { MAX_TASK_FILE_BYTES, TASK_ROOM_BYTES, TRIAL_TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { COMMUNITY_PICTURES, PICTURE_BYTES, TRIAL_COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
-import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
-import { DATA_ROOM_BYTES, NON_PAYING_DATA_ROOM_BYTES } from "@/lib/store-data-rules";
-import { afterEndByteMonths, reserveBytes } from "./store-data-registry";
+import { CLOSING_DAYS, DEL_BATCH, ENDED_STORE_EXPORTS, FOLLOW_BATCH, RENEWALS_AT_ONCE, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { MAX_STORE_BYTES } from "@/lib/store";
+import { BODIES_PER_READ } from "@/lib/course";
+import { MAX_LEADS } from "@/lib/contact-rules";
+import { DATA_ROOM_BYTES, ENTRY_BYTES, NON_PAYING_DATA_ROOM_BYTES } from "@/lib/store-data-rules";
+import { ORDER_KEY_BYTES } from "@/lib/order-data";
+import { PERSON_RECORD_MONTHS } from "@/lib/joined-stores";
+import { FOLLOWED_FAMILIES } from "@/lib/data-families";
+import { MAX_PRODUCTS } from "@/lib/catalog-rules";
+import { MAX_LESSONS } from "@/lib/course";
+import { MAX_POSTS } from "@/lib/store-blog";
+import { MAX_FORMS } from "@/lib/forms";
+import { EXPORT_COMMANDS, EXPORT_PAGE_SECONDS, EXPORT_STRIPE_PAGES } from "@/lib/store-export";
+import { MARK, cappedByteMonths, closingBytes, followedBytes, reserveBytes } from "./store-data-registry";
 import {
   UPSTASH_MICRO_USD_PER_GB_MONTH, UPSTASH_MICRO_USD_PER_GB_TRANSFER, UPSTASH_MICRO_USD_PER_MILLION_COMMANDS, VERCEL_CALL_MICRO_USD_PER_MILLION,
   VERCEL_CPU_MICRO_USD_PER_HOUR, VERCEL_FUNCTION_GB, VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR,
@@ -90,8 +103,6 @@ export const FETCHED_AHEAD = 1.25;
 export const PER_EMAIL = 0.0009;
 /** An order's pages and jobs, set well over a visit's whole page (tests/traffic-cost.ts). */
 export const ORDER_COMPUTE = 0.0003;
-/** What one order costs at the most: its confirmation, the email that says it shipped, and its compute. */
-export const ORDER_COST = 2 * PER_EMAIL + ORDER_COMPUTE;
 /**
  * The access emails a plan's window holds (lib/store-allowance-rules.ts):
  * since 17 October 2026 counted and refused past the figure, before sending
@@ -111,6 +122,25 @@ export const DB_BYTE_MONTH = micro(UPSTASH_MICRO_USD_PER_GB_MONTH) / 1e9;
 const CALL = micro(VERCEL_CALL_MICRO_USD_PER_MILLION) / 1_000_000;
 const CPU_SECOND = micro(VERCEL_CPU_MICRO_USD_PER_HOUR) / 3600;
 const MEMORY_SECOND = (micro(VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR) * VERCEL_FUNCTION_GB) / 3600;
+
+/**
+ * What an order leaves that outlives its store, for its whole life (18
+ * October 2026): the buyers' library entries it writes, the buyer's and a
+ * gift's recipient's, two at the most, each in a quarter's set kept
+ * PERSON_RECORD_MONTHS at the most (lib/joined-stores.ts), since a closing
+ * store does not take itself out of them buyer by buyer.
+ */
+export const ORDER_LIBRARY = 2 * ENTRY_BYTES * PERSON_RECORD_MONTHS * DB_BYTE_MONTH;
+/** How long one round of renewals stopped at Stripe, and one page of a store's memberships found there, is waited on at the most, held at 2 GB. */
+export const STRIPE_WAIT_SECONDS = 2;
+/**
+ * The membership or payment plan an order may start, stopped at Stripe when
+ * its store closes (lib/closed-store-data.ts, stopRenewals): its share of a
+ * round of RENEWALS_AT_ONCE and of a page of a hundred found.
+ */
+export const ORDER_RENEWAL_STOP = (STRIPE_WAIT_SECONDS / RENEWALS_AT_ONCE + STRIPE_WAIT_SECONDS / 100) * MEMORY_SECOND;
+/** What one order costs at the most: its confirmation, the email that says it shipped, its compute, and what it leaves for its store's closing. */
+export const ORDER_COST = 2 * PER_EMAIL + ORDER_COMPUTE + ORDER_LIBRARY + ORDER_RENEWAL_STOP;
 
 /** The shapes requests are costed at: wall seconds held at 2 GB, and CPU seconds. Review ceilings, not measurements. */
 export const SHAPES = {
@@ -585,23 +615,88 @@ export const PER_PAYMENT_LINES: CostLine[] = [
     monthlyUsd: (tier) => ((paidStorageBytes(tier) + TASK_ROOM_BYTES[tier] + COMMUNITY_PICTURES[tier] * PICTURE_BYTES) / GB) * STORAGE_PER_GB * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30),
     sources: [
       { file: "lib/plan-closing-rules.ts", names: ["CLOSING_DAYS", "KEEP_NOTHING_FROM", "keptRoomFor"] },
-      { file: "lib/plan-closing.ts", names: ["if (held <= keptRoomFor(endedAt))", "communityFolder(store.community.id)", "removeStored"] },
+      { file: "lib/plan-closing.ts", names: ["if (!closes && held <= keptRoomFor(endedAt))", "communityFolder(store.community.id)", "removeStored"] },
     ],
     basis: "All a plan may keep, kept for its closing days and the week a late last notice adds, once after the payment that was the last. A plan that ended before 18 October 2026 keeps the old rule (a store with no plan's room, with no date): a legacy exposure of docs/funded-exposure-review.md, when no plan could yet be bought.",
   },
   {
     id: "retained-data",
     feature: "What a store keeps in the database after its plan ends, until its closing day (18 October 2026)",
-    monthlyUsd: (tier) => (DATA_ROOM_BYTES[tier] * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30) + afterEndByteMonths(tier, CLOSING_DAYS + WARN_WEEK_DAYS)) * DB_BYTE_MONTH,
+    monthlyUsd: (tier) => (DATA_ROOM_BYTES[tier] * ((CLOSING_DAYS + WARN_WEEK_DAYS) / 30) + cappedByteMonths(tier, CLOSING_DAYS + WARN_WEEK_DAYS)) * DB_BYTE_MONTH,
     sources: [
       { file: "lib/store-data-rules.ts", names: ["DATA_ROOM_BYTES", "NON_PAYING_DATA_ROOM_BYTES"] },
       { file: "lib/plan-closing-rules.ts", names: ["CLOSING_DAYS"] },
-      { file: "tests/store-data-registry.ts", names: ["afterEndByteMonths", "partPeak"] },
+      { file: "tests/store-data-registry.ts", names: ["cappedByteMonths", "lifetimeByteMonths", "partAverage"] },
       { file: "docs/funded-exposure-review.md", names: ["What a store keeps in the database after its closing day"] },
+      { file: "lib/closed-store-data.ts", names: ["eraseClosed", "WALK_GAP_MS"] },
     ],
-    basis: "The room full, and every record outside it at the most it holds at once, for the closing days and the week a late last notice adds, each record only as long as it is kept. What the room holds past the closing day is kept for a store's buyers and is not priced here: docs/funded-exposure-review.md says so, for the owner.",
+    basis: "The room full, and every record outside it with no expiry of its own (capped), for the closing days and the week a late last notice adds. A record a unit writes, which goes by itself, is not counted here a second time: each window's share of the database line is at least the whole life of what that window writes (tests/closing-cost.test.ts, lifetimeByteMonths), so it is paid for to its end, past the plan's end and the store's closing. Until 18 October 2026 this line counted those records again, at the most they hold at once.",
+  },
+  {
+    id: "closure",
+    feature: "Closing the store (18 October 2026): its records deleted, its followers read, its whole exports after its plan ended, its last steps",
+    monthlyUsd: (tier) => closureCost(tier).total,
+    sources: [
+      { file: "lib/closed-store-data.ts", names: ["walkPage", "FOLLOWERS", "prepareStore", "stopRenewals", "DEL_BATCH", "FOLLOW_BATCH", "RENEWALS_AT_ONCE"] },
+      { file: "lib/plan-closing-rules.ts", names: ["ENDED_STORE_EXPORTS"] },
+      { file: "app/api/store/export/route.ts", names: ["ENDED_STORE_EXPORTS", "storeExport(store)"] },
+      { file: "lib/store-export.ts", names: ["EXPORT_STRIPE_PAGES", "EXPORT_PAGE_SECONDS", "EXPORT_COMMANDS"] },
+      { file: "lib/joined-stores.ts", names: ["QUARTERS_KEPT", "PERSON_RECORD_MONTHS"] },
+      { file: "lib/plan-closing-rules.ts", names: ["DEL_BATCH", "FOLLOW_BATCH", "RENEWALS_AT_ONCE"] },
+      { file: "tests/store-data-registry.ts", names: ["closingBytes", "followedBytes", "TRIAL_UNITS"] },
+      { file: "lib/data-families.ts", names: ["FOLLOWED_FAMILIES", "CLOSING"] },
+      { file: "lib/order-data.ts", names: ["ORDER_KEY_BYTES"] },
+    ],
+    basis: "Once for each store, so against each of its payments: a store that paid one month and closed carries all of it in that month's margin. Its keys deleted, the room's at the fewest bytes a key it counts can weigh and the rest at a mark's, DEL_BATCH at a command, each name sent back once: no longer than KEY_NAME_BYTES, and never more than that share of a key beside the ORDER_KEY_BYTES the room charges it, which the registry counts beside every key too (what Redis keeps beside it); its ENDED_STORE_EXPORTS whole exports once its plan has ended, its own and never refused, each at the largest store there can be: its room and its record, every product, course, lesson, post and form there can be, read together, and every page of its sales at Stripe; what its followers read, the room and what they read outside it, FOLLOW_BATCH entries at a command; and its last steps' commands, for its owner and every one of its team as a host. The walk's own time is its schedule's. Its id left in a person's records across stores that are the company's (the lists they joined, an affiliate's hub: tests/store-data-registry.ts) is the company's as those records are, and runs out with the quarter it was written in (lib/joined-stores.ts).  Reading the whole database to find its keys is the company's, a scheduled job bounded by its schedule (docs/funded-exposure-review.md). What an order leaves for it, a buyer's library entry and a renewal to stop, is in the order's cost (ORDER_COST); what it writes once its plan has ended is a store that pays nothing's, in the share of those (nonPayingWorst).",
   },
 ];
+
+/** The longest name of a closing store's key, sent back to be deleted: a review ceiling, held to every key a closing store makes (tests/closed-store.test.ts). */
+export const KEY_NAME_BYTES = 128;
+/**
+ * Commands a closing store's last steps take at the most
+ * (lib/closed-store-data.ts, prepareStore): for its owner and each of its
+ * team as a host, fifty pages of their claims and their deletes, and the
+ * stores they serve; and a hundred for its ids, team, keys for the API,
+ * webhooks, email platform, phones, address, record and line in the walk.
+ */
+export const PREPARE_COMMANDS = (1 + MAX_TEAM) * (2 * 50 + 5) + 100;
+
+/** What the whole export reads at the most, for a store of `bytes`: every product, course, lesson, post and form there can be, each read together, and its contacts a thousand at a command (lib/store-export.ts). */
+export function exportCommands(bytes: number): number {
+  // Every lesson there can be: one with no text takes next to nothing of the room, and is read all the same.
+  const lessons = MAX_PRODUCTS * MAX_LESSONS;
+  // The contacts' pages: a thousand at a command, as many as the room can hold and never more than lib/free.ts, listAsCsv, reads (MAX_LEADS).
+  const contacts = Math.min(Math.ceil(bytes / 100 / 1000), MAX_LEADS / 500 + 10);
+  return Math.ceil(EXPORT_COMMANDS.fixed + 3 * Math.ceil(MAX_PRODUCTS / 100) + Math.ceil(MAX_PRODUCTS / 100) + Math.ceil(lessons / BODIES_PER_READ) + Math.ceil(MAX_POSTS / 100) + EXPORT_COMMANDS.form * MAX_FORMS + contacts);
+}
+
+/** What one whole export of a store of `bytes` costs at the most: its reads, its time at 2 GB (a step's ten seconds for every 20 MB), and one list of its sales at Stripe waited on page by page, the other read beside it. */
+export function exportCost(bytes: number, commands = exportCommands(bytes)): number {
+  return request("heavy", commands, bytes) + Math.ceil(bytes / 20_000_000) * request("step", 0) + (EXPORT_STRIPE_PAGES / 2) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
+}
+
+/**
+ * What closing one store costs at the most, once nobody pays for it: a store
+ * of this plan, or a free trial's (`trial`, its room and its units). The
+ * parts are said in the basis of the line closure.
+ */
+export function closureCost(tier: Tier, trial = false): { deletes: number; follows: number; exports: number; prepare: number; total: number } {
+  const room = trial ? NON_PAYING_DATA_ROOM_BYTES.trial : DATA_ROOM_BYTES[tier];
+  const roomKeys = room / ORDER_KEY_BYTES;
+  const keys = roomKeys + closingBytes(tier, trial) / MARK;
+  const outside = followedBytes(tier, trial);
+  const names = ((room + closingBytes(tier, trial)) * KEY_NAME_BYTES) / (ORDER_KEY_BYTES + KEY_NAME_BYTES);
+  const out = {
+    deletes: names * DB_BYTE + Math.ceil(keys / DEL_BATCH) * COMMAND,
+    follows: (room + outside) * DB_BYTE + (Math.ceil((roomKeys + outside / MARK) / FOLLOW_BATCH) + FOLLOWED_FAMILIES.length * 4) * COMMAND,
+    exports: ENDED_STORE_EXPORTS * exportCost(room + MAX_STORE_BYTES),
+    prepare: PREPARE_COMMANDS * COMMAND,
+    total: 0,
+  };
+  out.total = out.deletes + out.follows + out.exports + out.prepare;
+  return out;
+}
 
 /** What one payment of this plan can leave behind after it, in dollars. */
 export function perPaymentCost(tier: Tier): number {
@@ -633,8 +728,11 @@ export function nonPayingWorst(): number {
     + ["imports", "clickfunnels", "funnel-share", "team-scheduling", "quizzes"].reduce((sum, id) => sum + creator(id), 0)
     // Its students' work and its community's pictures, kept for the trial and then to its closing day (lib/plan-closing.ts).
     + ((TRIAL_TASK_ROOM_BYTES + TRIAL_COMMUNITY_PICTURES * PICTURE_BYTES) / GB) * STORAGE_PER_GB * (1 + (CLOSING_DAYS + WARN_WEEK_DAYS) / 30)
-    // Its data room, and what it keeps outside it at Store's figures, which are more than a trial's, for the trial and to its closing day.
-    + (NON_PAYING_DATA_ROOM_BYTES.trial * (1 + (CLOSING_DAYS + WARN_WEEK_DAYS) / 30) + reserveBytes("creator") + afterEndByteMonths("creator", CLOSING_DAYS + WARN_WEEK_DAYS)) * DB_BYTE_MONTH;
+    // Its data room, and what it keeps outside it at Store's figures, which are more than a trial's, for the trial and to its closing day
+    // (what a unit writes is paid for to its end by the window that wrote it, tests/closing-cost.test.ts).
+    + (NON_PAYING_DATA_ROOM_BYTES.trial * (1 + (CLOSING_DAYS + WARN_WEEK_DAYS) / 30) + reserveBytes("creator") + cappedByteMonths("creator", CLOSING_DAYS + WARN_WEEK_DAYS)) * DB_BYTE_MONTH
+    // And its closing, at its room and its units (closure).
+    + closureCost("creator", true).total;
 }
 
 /** Per-use costs that no monthly figure bounds yet: not in worstCost, so nothing here is certified. */

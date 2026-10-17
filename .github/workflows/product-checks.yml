@@ -97,6 +97,10 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_contact_erasure_redis.py
+      - name: Actual Redis closed store deletion checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_closed_store_redis.py
       - name: Actual Redis data room checks
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"

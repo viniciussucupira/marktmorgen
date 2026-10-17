@@ -502,11 +502,15 @@ export async function readCourses(ids: string[]): Promise<Map<string, Course>> {
   const found = new Map<string, Course>();
   const valid = ids.filter((id) => COURSE_ID_PATTERN.test(id));
   if (!isRedisConfigured() || valid.length === 0) return found;
-  const rows = await redisPipeline(valid.map((id) => ["GET", courseKey(id)]));
-  rows.forEach((raw, i) => {
-    const course = parseCourse(raw);
-    if (course) found.set(valid[i], course);
-  });
+  // A hundred at a command (MGET), not a command each: a store's whole export reads every course (lib/store-export.ts).
+  for (let i = 0; i < valid.length; i += 100) {
+    const some = valid.slice(i, i + 100);
+    const [rows] = await redisPipeline([["MGET", ...some.map(courseKey)]]);
+    some.forEach((id, n) => {
+      const course = parseCourse(Array.isArray(rows) ? rows[n] : null);
+      if (course) found.set(id, course);
+    });
+  }
   return found;
 }
 
@@ -536,6 +540,44 @@ export async function readBody(courseId: string, lessonId: string): Promise<stri
   if (!isRedisConfigured() || !COURSE_ID_PATTERN.test(courseId) || !ITEM_ID_PATTERN.test(lessonId)) return "";
   const [raw] = await redisPipeline([["GET", bodyKey(courseId, lessonId)]]);
   return typeof raw === "string" ? raw : "";
+}
+
+/** Many lessons' text at once, a hundred to a command: for a store's whole export (lib/store-export.ts). */
+/** Lesson bodies read together, across courses: how many a command. Each is at most MAX_BODY_LENGTH, so one command carries a few megabytes at the most. */
+export const BODIES_PER_READ = 500;
+
+/** The text of every lesson of these courses, by course and lesson, BODIES_PER_READ at a command whatever course each is of (lib/store-export.ts). */
+export async function readAllBodies(courses: { id: string; lessons: string[] }[]): Promise<Map<string, Record<string, string>>> {
+  const out = new Map<string, Record<string, string>>();
+  const wanted = courses.filter((c) => COURSE_ID_PATTERN.test(c.id)).flatMap((c) => {
+    out.set(c.id, {});
+    return c.lessons.filter((id) => ITEM_ID_PATTERN.test(id)).map((lesson) => ({ course: c.id, lesson }));
+  });
+  if (!isRedisConfigured()) return out;
+  for (let i = 0; i < wanted.length; i += BODIES_PER_READ) {
+    const some = wanted.slice(i, i + BODIES_PER_READ);
+    const [raw] = await redisPipeline([["MGET", ...some.map((w) => bodyKey(w.course, w.lesson))]]);
+    some.forEach((w, n) => {
+      const value = Array.isArray(raw) ? raw[n] : null;
+      out.get(w.course)![w.lesson] = typeof value === "string" ? value : "";
+    });
+  }
+  return out;
+}
+
+export async function readBodies(courseId: string, lessonIds: string[]): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  const ids = lessonIds.filter((id) => ITEM_ID_PATTERN.test(id));
+  if (!isRedisConfigured() || !COURSE_ID_PATTERN.test(courseId)) return out;
+  for (let i = 0; i < ids.length; i += 100) {
+    const some = ids.slice(i, i + 100);
+    const [raw] = await redisPipeline([["MGET", ...some.map((id) => bodyKey(courseId, id))]]);
+    some.forEach((id, n) => {
+      const value = Array.isArray(raw) ? raw[n] : null;
+      out[id] = typeof value === "string" ? value : "";
+    });
+  }
+  return out;
 }
 
 /** Writes a lesson's text, taking what it grows by first (DataRoomError when it does not fit). */

@@ -26,8 +26,14 @@
  * nobody's affiliate, and the answer on the page is the same either way, so
  * the form cannot be used to learn who promotes whom.
  *
- *   nl:affhub:<hash of the address>       the stores it is an affiliate of (a set of ids), kept 3 years after the last
- *   nl:affhub:link:<hash of a token>      the address a link was sent to, for a day
+ *   nl:affhub:<quarter>:<hash of the address>   the stores it was noted an affiliate of in that quarter (a set of ids)
+ *   nl:affhub:link:<hash of a token>            the address a link was sent to, for a day
+ *
+ * Since 18 October 2026 by the quarter, as a buyer's library is
+ * (lib/joined-stores.ts): a store is on the page for at least three years
+ * after it last noted the address, and a store that has closed is never
+ * shown and runs out of it by itself. Until then one set held them all,
+ * kept three years after the last, and is still read until it ends.
  */
 import { storeForId } from "@/lib/store";
 import { createHash, randomBytes } from "node:crypto";
@@ -35,26 +41,24 @@ import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { withinLimit } from "@/lib/request-guard";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { personKeys, personWrite } from "@/lib/joined-stores";
 
 export const HUB_LINK_SECONDS = 24 * 60 * 60;
 export const HUB_TOKEN = /^[0-9a-f]{64}$/;
 /** The most stores one page lists. */
 export const MAX_HUB_STORES = 100;
-const KEEP_SECONDS = 3 * 365 * 86_400;
 const STORE_ID = /^[0-9a-f]{32}$/;
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
-const hubKey = (email: string) => `nl:affhub:${sha(`nimbus-affhub:${normaliseEmail(email)}`).slice(0, 40)}`;
+const HUB = "nl:affhub:";
+const HUB_SALT = "nimbus-affhub";
 const linkKey = (token: string) => `nl:affhub:link:${sha(`nimbus-affhub-link:${token}`).slice(0, 40)}`;
 
 /** Notes that this address is an affiliate of the store with this id. Never throws. */
 export async function rememberAffiliate(sid: string, email: string): Promise<void> {
   if (!STORE_ID.test(sid) || typeof email !== "string" || !EMAIL_PATTERN.test(normaliseEmail(email)) || !isRedisConfigured()) return;
   try {
-    await redisPipeline([
-      ["SADD", hubKey(email), sid],
-      ["EXPIRE", hubKey(email), KEEP_SECONDS],
-    ]);
+    await redisPipeline(personWrite(HUB, HUB_SALT, email, sid));
   } catch (error) {
     console.error("noting an affiliate for their page failed", error);
   }
@@ -63,8 +67,8 @@ export async function rememberAffiliate(sid: string, email: string): Promise<voi
 /** The ids of the stores an address is an affiliate of. */
 export async function storesPromoted(email: string): Promise<string[]> {
   if (!isRedisConfigured()) return [];
-  const [ids] = await redisPipeline([["SMEMBERS", hubKey(email)]]);
-  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string" && STORE_ID.test(id)).slice(0, MAX_HUB_STORES) : [];
+  const [ids] = await redisPipeline([["SUNION", ...personKeys(HUB, HUB_SALT, email)]]);
+  return Array.isArray(ids) ? [...new Set(ids.filter((id): id is string => typeof id === "string" && STORE_ID.test(id)))].slice(0, MAX_HUB_STORES) : [];
 }
 
 export type HubRequest = "sent" | "email" | "limited" | "error";
