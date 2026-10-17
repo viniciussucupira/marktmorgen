@@ -34,7 +34,10 @@ try {
       logLevel: "error",
       alias: {
         "@": root,
-        "@/lib/redis": join(here, "redis-stub.ts"),
+        // REST coverage tests must exercise the real client against their fetch doubles.
+        "@/lib/redis": ["range-traffic-coverage.test.ts", "stats-traffic-coverage.test.ts"].includes(file)
+          ? join(root, "lib/redis.ts")
+          : join(here, "redis-stub.ts"),
         ...(file === "video-admission.test.ts" ? {
           "@/lib/redis": join(here, "video-admission-redis.ts"),
           "@/lib/stream": join(here, "video-admission-stream.ts"),

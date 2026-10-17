@@ -133,7 +133,9 @@ async function main(): Promise<void> {
     session(2000, { channel: "direct", channel_first: "direct" }),
     session(1000, {}),
   ];
+  let invoiceNumber = 0;
   const invoice = (meta: Record<string, string>, amount: number) => ({
+    id: `in_channel_${++invoiceNumber}`,
     status: "paid",
     billing_reason: "subscription_cycle",
     amount_paid: amount,

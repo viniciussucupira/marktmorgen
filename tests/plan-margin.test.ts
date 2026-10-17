@@ -391,16 +391,11 @@ test("a store nobody can charge cannot be visited past the visits it has", () =>
   assert.equal(TRIAL_VISITS, VISITS_INCLUDED.creator, "a trial of any plan has the smallest plan's visits: it has paid for none");
 });
 
-test("a store nobody can charge cannot watch past the hours it has", () => {
-  // An hour past the plan is paid for by a line on an invoice. A store in
-  // its free trial has no invoice yet, and one with no plan has none at all,
-  // so the hours themselves are the limit there: its video is paused at
-  // them (lib/plan-standing.ts has the figures, tests/plan-standing.test.ts
-  // holds them).
-  const learn = readFileSync(join(process.cwd(), "lib/learn.ts"), "utf8");
-  assert.match(learn, /limit !== null && folder && \(await watchedIn\(folder\)\) >= limit/, "the pause for a store with no plan to charge must stay");
+test("lesson pages supply the store's video allowance", () => {
+  // The actual admission behavior, including failed reads and exact exhaustion,
+  // is exercised in video-admission.test.ts. Keep this route wiring check.
   const page = readFileSync(join(process.cwd(), "app/[handle]/course/[product]/[lesson]/page.tsx"), "utf8");
-  assert.match(page, /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/, "and the lesson page must be the one that asks what the store's hours are");
+  assert.match(page, /lessonVideo\(lesson\.video, videoLimitFor\(store\)\)/, "the lesson page must supply the store's allowance");
 });
 
 test("a store that pays nothing can cost next to nothing", () => {

@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { originFrom, linkOrigin } from "@/lib/request-origin";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
       const asked = await askToJoin({ store, email: read.email, ip, origin: linkOrigin(request, store), fromForm: true, formId: def.id }).catch(() => "error" as const);
       joined = asked === "sent";
     }
-    await addResponse(statsId, def.id, { at: Math.floor(Date.now() / 1000), page: page?.id ?? "", answers: read.answers, outcome: outcome?.id ?? "", joined });
+    await addResponse(statsId, def.id, { id: randomBytes(16).toString("hex"), at: Math.floor(Date.now() / 1000), page: page?.id ?? "", answers: read.answers, outcome: outcome?.id ?? "", joined });
     // Somebody already on the list: the sequences that start with this form start now (lib/flows.ts checks they may be written to).
     if (read.email) await enroll(store, read.email, { joined: false, form: def.id });
 

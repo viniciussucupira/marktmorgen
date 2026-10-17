@@ -125,7 +125,7 @@ async function main(): Promise<void> {
   is("a question too short to be one is not sent", [(await ask("?")).ok, asked.length], [false, 6]);
 
   part("Past the month's number");
-  is("a store on the $29 plan gets its number", answersAllowance({ ...store, trialEnds: 0 }), ANSWERS_MONTHLY.creator);
+  is("a store on the base plan gets its number", answersAllowance({ ...store, trialEnds: 0 }), ANSWERS_MONTHLY.creator);
   const now = Date.now();
   await redis.pipeline([["SET", `nl:ask:${store.statsId}:${new Date(now).toISOString().slice(0, 7)}`, String(answersAllowance(store, now))]]);
   reply = '{"known": true, "answer": "Yes."}';
@@ -142,7 +142,7 @@ async function main(): Promise<void> {
     const copy = readFileSync(file, "utf8");
     is(
       `${file} states the month's numbers the code enforces`,
-      [`${said(ANSWERS_MONTHLY.creator)} answers a month on Creator`, `${said(ANSWERS_MONTHLY.pro)} on Pro`, `${said(ANSWERS_MONTHLY.scale)} on Scale`].map((piece) => copy.includes(piece)),
+      [`${said(ANSWERS_MONTHLY.creator)} answers a month on Store`, `${said(ANSWERS_MONTHLY.pro)} on Studio`, `${said(ANSWERS_MONTHLY.scale)} on Scale`].map((piece) => copy.includes(piece)),
       [true, true, true],
     );
   }

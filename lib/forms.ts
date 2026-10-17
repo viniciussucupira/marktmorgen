@@ -347,7 +347,8 @@ export function safeCell(text: string): string {
 }
 
 /** One kept response. */
-export type FormResponse = { at: number; page: string; answers: Answers; outcome: string; joined: boolean };
+export const FORM_RESPONSE_ID = /^[a-f0-9]{32}$/;
+export type FormResponse = { /** Server-generated identity; absent on legacy records. */ id?: string; at: number; page: string; answers: Answers; outcome: string; joined: boolean };
 
 /** The responses as a spreadsheet: when, each question, the result, and whether they asked to hear from the creator. */
 export function responsesCsv(form: FormDef, responses: FormResponse[]): string {
