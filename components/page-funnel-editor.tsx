@@ -37,7 +37,7 @@ const MESSAGES: Record<string, string> = {
   gone: "One of the products was deleted. Choose another.",
   call: "A call is booked on a page of its own, so it cannot be a step.",
   unknown: "That funnel is already gone. Reload the page.",
-  server_error: "Something went wrong. Nothing was changed. Try again.",
+  server_error: "We could not confirm the result. Reload and review your funnels before trying again.",
   ...STUDIO_MESSAGES,
 };
 
