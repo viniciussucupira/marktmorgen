@@ -17,7 +17,7 @@ export async function readFunnelFormReviews(store: Store, funnels: readonly Page
   const pages = new Map(store.sitePages.filter(page => pageOut(page)).map(page => [page.id, page]));
   const references = funnels.flatMap(funnel => funnel.steps.flatMap((step, stepIndex) => step.kind === "page" && pages.has(step.id) ? [{ funnel: funnel.id, page: pages.get(step.id)!, stepIndex }] : []));
   if (!references.length) return result;
-  const unknown = (ref: typeof references[number], detail = "Saved page form bindings could not be checked. Reload before relying on this review."): FunnelLaunchIssue => ({
+  const unknown = (ref: typeof references[number], detail = "Forms on this page could not be checked. Reload before relying on this review."): FunnelLaunchIssue => ({
     code: "forms_unknown", title: `Step ${ref.stepIndex + 1}: ${ref.page.title}`, detail, stepIndex: ref.stepIndex,
   });
   const ids = [...new Set(references.map(ref => ref.page.id))];
@@ -77,9 +77,9 @@ export async function readFunnelFormReviews(store: Store, funnels: readonly Page
       const missing = bindings.filter(binding => binding.form && states.get(binding.form) === "missing").length;
       const uncertain = bindings.filter(binding => binding.form && states.get(binding.form) !== "present" && states.get(binding.form) !== "missing").length;
       const title = `Step ${ref.stepIndex + 1}: ${ref.page.title} · ${version}`;
-      if (empty) issues.push({ code: "form", title, detail: `${empty} form block(s) have no selected form. Choose a form in the page editor before sharing.`, stepIndex: ref.stepIndex });
-      if (missing) issues.push({ code: "form", title, detail: `${missing} form block(s) reference a form no longer available in this store. Select a replacement in the page editor.`, stepIndex: ref.stepIndex });
-      if (uncertain) issues.push({ code: "forms_unknown", title, detail: `${uncertain} form block(s) could not be checked against a confirmed saved form. Reload and review the form before sharing.${limited ? ` This review checks at most ${MAX_FORMS} distinct form definitions; remove stale bindings and reload to check the rest.` : ""}`, stepIndex: ref.stepIndex });
+      if (empty) issues.push({ code: "form", title, detail: `${empty} form ${empty === 1 ? "block has" : "blocks have"} no selected form. Choose a form in the page editor before sharing.`, stepIndex: ref.stepIndex });
+      if (missing) issues.push({ code: "form", title, detail: `${missing} form ${missing === 1 ? "block references" : "blocks reference"} a form no longer available in this store. Select a replacement in the page editor.`, stepIndex: ref.stepIndex });
+      if (uncertain) issues.push({ code: "forms_unknown", title, detail: `${uncertain} form ${uncertain === 1 ? "block could" : "blocks could"} not be checked. Reload and review the selected form before sharing.${limited ? ` This review checks up to ${MAX_FORMS} different forms at a time. Remove old references and reload to check the rest.` : ""}`, stepIndex: ref.stepIndex });
     }
   }
   return result;
