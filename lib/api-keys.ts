@@ -125,6 +125,24 @@ export async function revokeKey(sid: string, id: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Takes every key of a store away, for a store that is deleted (added
+ * 17 October 2026): the lookups first, so none opens anything, then the list.
+ */
+export async function revokeAllKeys(sid: string): Promise<number> {
+  if (!SID_PATTERN.test(sid) || !isRedisConfigured()) return 0;
+  const [raw] = await redisPipeline([["HGETALL", listKey(sid)]]);
+  const flat = Array.isArray(raw) ? raw : raw && typeof raw === "object" ? Object.entries(raw as Record<string, unknown>).flat() : [];
+  const hashes: string[] = [];
+  for (let i = 0; i + 1 < flat.length; i += 2) {
+    const stored = parseStored(flat[i + 1]);
+    if (stored) hashes.push(stored.hash);
+  }
+  if (hashes.length) await redisPipeline(hashes.map((hash) => ["DEL", lookupKey(hash)]));
+  await redisPipeline([["DEL", listKey(sid)]]);
+  return hashes.length;
+}
+
 /** How often "last used" is written: at most once a minute per key, so reading costs no write. */
 const TOUCH_SECONDS = 60;
 
