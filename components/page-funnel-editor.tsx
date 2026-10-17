@@ -6,7 +6,7 @@ import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { readFunnelMutationResult, type FunnelMutation } from "@/lib/funnel-mutation-response";
-import { funnelCompletionMetric, funnelStepMetrics } from "@/lib/funnel-metrics";
+import { funnelReachRatioMetric, funnelStepMetrics } from "@/lib/funnel-metrics";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import {
   MAX_FUNNEL_NAME,
@@ -277,8 +277,8 @@ export function PageFunnelEditor({
                 ))}
               </ol>
               <p className="mt-3 text-xs text-ink-mute">
-                {funnelCompletionMetric(first, last?.seen ?? null)}
-                {`Counted since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed: each person once a step, never you or your team.`}
+                {funnelReachRatioMetric(first, last?.seen ?? null)}
+                {`Approximate counts since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed. Each visitor is counted at most once per step; you and your team are excluded. Visitors may enter at different steps.`}
               </p>
             </li>
           );
