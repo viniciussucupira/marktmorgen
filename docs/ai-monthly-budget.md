@@ -41,3 +41,9 @@ Paid tiers, active trials, setup accounts and ended subscriptions have separate 
 The commercial gate also requires a current, valid AI policy and enough funded paid-tier allocations for the reviewed possible plan mix. Each paid customer's declared AI cost must cover the entire configured monthly ceiling; annual cases include twelve full monthly allocations even though annual revenue is only ten monthly prices. Microdollars are aggregated before rounding upward to cents. Zero paid-tier capacity cannot stand in for funding included AI.
 
 These checks bind the supplied budget to the cost model. They do not establish supplier price accuracy, maximum requests per promised AI job, future funding migrations, customer enrollment reservations, existing rights, refunds or all applicable taxes. The production funding policy and commercial review remain null; paid release stays closed.
+
+## Full entitlement coverage before commercial release
+
+The commercial gate additionally requires each funded scope to cover all accepted writing and visitor calls, at the most expensive reviewed model request ceiling: `(2 × writing jobs + visitor attempts) × maximum reviewed request cost`. Current call envelopes are Store 700, Studio 2,800, Scale 8,000, and trial 140. Setup and ended scopes conservatively use the largest retained plan envelope (8,000 calls). A scope with no funded slots authorizes no spending. These counts are not vendor prices or financial certification. The two-call writing envelope still requires an independent audit whenever dispatch paths change; a request-local call counter is not yet implemented.
+
+The ledger policy snapshot now binds this request and entitlement envelope, so old funding cannot silently approve changed rights. Existing paid/allocation counters and separately funded acquisition scopes remain intact. Actual policies and the commercial review remain null.

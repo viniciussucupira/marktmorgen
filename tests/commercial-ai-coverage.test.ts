@@ -39,3 +39,9 @@ test("zero paid-tier spending cannot pretend that the included AI is funded",()=
   try{p.storeMicroUsd.creator=0;assert.equal(commercialMarginReady(review()),false);}
   finally{p.storeMicroUsd.creator=previous;}
 });
+
+test("a valid ledger with enough money for one call cannot fund all included calls",()=>{
+ const p=policy!, previous=p.storeMicroUsd.creator;
+ try{p.storeMicroUsd.creator=699;assert.equal(commercialMarginReady(review()),false);}
+ finally{p.storeMicroUsd.creator=previous;}
+});

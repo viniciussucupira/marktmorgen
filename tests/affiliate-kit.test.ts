@@ -53,7 +53,7 @@ async function main(): Promise<void> {
   await claimHandle(OWNER, "chef", "Chef Ana", "");
   await ensureStatsId(OWNER);
   await setStripeAccount(OWNER, "acct_1TestChef000001", true);
-  await setSubscription(OWNER, { customerId: "cus_chef", subscriptionId: "sub_chef", active: true });
+  await setSubscription(OWNER, { customerId: "cus_Chef00001", subscriptionId: "sub_Chef00001", active: true });
   await setLanguage(OWNER, "es");
   const plan = await addProduct(OWNER, "Weeknight Plan", "Thirty dinners in thirty minutes.", "29", null);
   const out = await addProduct(OWNER, "Left Out", "", "10", null);

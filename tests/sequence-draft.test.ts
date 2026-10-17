@@ -13,7 +13,7 @@
  */
 import { keepOwnLinks, readDraftedSteps } from "@/lib/sequence-draft";
 import { writeSequence } from "@/lib/ai";
-import { claimHandle, ensureStatsId, setLanguage, storeForEmail } from "@/lib/store";
+import { claimHandle, ensureStatsId, setLanguage, storeForEmail, setSubscription } from "@/lib/store";
 import { aiLeft } from "@/lib/ai";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -60,6 +60,7 @@ async function main(): Promise<void> {
 
   part("Asked of the writer");
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
   await ensureStatsId("owner@example.com");
   await setLanguage("owner@example.com", "de");
   const store = (await storeForEmail("owner@example.com"))!;

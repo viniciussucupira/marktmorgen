@@ -23,7 +23,7 @@ import {HELP_SECTIONS} from "@/lib/help-content";
  *     gets) is never shown, and is not put on the creator's list;
  *   - past the month's number the box is closed and the model is not asked.
  */
-import { addProduct, claimHandle, ensureStatsId, setAnswers, setProductLink, storeForEmail } from "@/lib/store";
+import { addProduct, claimHandle, ensureStatsId, setAnswers, setProductLink, storeForEmail, setSubscription } from "@/lib/store";
 import { readListing } from "@/lib/catalog";
 import { parsePage } from "@/lib/sales-page";
 import { ANSWERS_MONTHLY, MAX_QUESTION, parseAnswers, questionKey, readQuestion, unknownWords } from "@/lib/answers-rules";
@@ -56,6 +56,7 @@ async function main(): Promise<void> {
 
   const owner = "answers@example.com";
   await claimHandle(owner, "answershop", "Answer Shop", "");
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
   await ensureStatsId(owner);
   const made = await addProduct(owner, "Meal Planner", "A week of dinners, planned.", "27", null);
   if (!made.ok) throw new Error("no product");

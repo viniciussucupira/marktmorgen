@@ -1,7 +1,8 @@
+import { aiEntitlementsSnapshot } from '@/lib/ai-entitlement-rules';
 import { SUPPORTED_AI_MODELS } from '@/lib/ai-request-rules';
 /** Reviewed USD microdollar ceilings. Unknown budgets never authorize spending. */
 export const AI_SPEND_RULES = {
-  schema: 3,
+  schema: 4,
   microUsdPerUsd: 1_000_000,
   maxInteger: 1_000_000_000_000,
   reservation: 'full-reviewed-request-ceiling-no-refunds',
@@ -28,7 +29,7 @@ export const CURRENT_AI_SPEND_POLICY: AiSpendPolicy | null = null;
 
 /** Canonical binding to every reviewed monetary ceiling; insertion order cannot change it. */
 export function aiSpendPolicySnapshot(policy: AiSpendPolicy): string {
-  return JSON.stringify([AI_SPEND_RULES.schema, policy.reviewId, policy.month, policy.evidence,
+  return JSON.stringify([AI_SPEND_RULES.schema, policy.reviewId, policy.month, policy.evidence, aiEntitlementsSnapshot(),
     ['claude-sonnet-5-5', 'claude-haiku-5-5'].map(model => [model, policy.requestMicroUsd[model as keyof typeof policy.requestMicroUsd]]),
     AI_BUDGET_TIERS.map(tier => [tier, policy.storeMicroUsd[tier], policy.fundedStores[tier]]), policy.companyMicroUsd]);
 }

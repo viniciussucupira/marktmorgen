@@ -15,7 +15,7 @@
  *   - a failed attempt stays counted; past the month's number it
  *     is closed and the model is not asked.
  */
-import { addProduct, claimHandle, ensureStatsId, setAnswers, storeForEmail } from "@/lib/store";
+import { addProduct, claimHandle, ensureStatsId, setAnswers, storeForEmail, setSubscription } from "@/lib/store";
 import { productIds, readListings } from "@/lib/catalog";
 import { STORE_PAGE, answersAllowance, answersUsed, missedQuestions } from "@/lib/answers";
 import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
@@ -41,6 +41,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = "sk-ant-test-only-a-stand-in-0123456789";
   const owner = "guide@example.com";
   await claimHandle(owner, "guideshop", "Guide Shop", "");
+  await setSubscription(owner, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "creator", trialEnds: 0 });
   await ensureStatsId(owner);
   const add = async (title: string, summary: string, price: string) => {
     const made = await addProduct(owner, title, summary, price, null);

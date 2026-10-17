@@ -1,3 +1,4 @@
+import { AI_ENTITLEMENT_RULES, aiEntitlementsFunded } from '@/lib/ai-entitlement-rules';
 import { CURRENT_UPLOAD_BUDGET_POLICY, UPLOAD_BUDGET_RULES, isUploadBudgetConfigured } from "@/lib/upload-budget-policy";
 /** Client-safe release policy. No secrets, tax rates inferred from residence, or optimistic defaults.
  * Paid plans remain closed until every individual worst case is reviewed and passes the owner's floor.
@@ -42,7 +43,7 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 13,
+ schemaVersion: 14,
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: CURRENT_UPLOAD_BUDGET_POLICY },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
@@ -62,7 +63,7 @@ export const CURRENT_COMMERCIAL_TERMS = {
  trialDays: TRIAL_DAYS,
  refundDays: REFUND_DAYS,
  email: { admission: "strict-counter-ack-retain-dispatched-attempts-v1", trial: TRIAL_MONTHLY_EMAILS, pro: PRO_MONTHLY_EMAILS, scale: SCALE_MONTHLY_EMAILS, maxLeads: MAX_LEADS, maxImport: MAX_IMPORT },
- ai: { financialCoverage: "funded-slots-and-customer-ceilings-v1", spendRules: AI_SPEND_RULES, spendPolicy: CURRENT_AI_SPEND_POLICY, requestLimits: AI_REQUEST_LIMITS, supportedModels: SUPPORTED_AI_MODELS, monthly: AI_MONTHLY, perMinute: AI_PER_MINUTE, maxNotes: MAX_AI_NOTES, pdfPages: READ_PDF_PAGES, pdfJobs: READ_PDF_JOBS },
+ ai: { entitlements: AI_ENTITLEMENT_RULES, financialCoverage: "funded-slots-and-customer-ceilings-v1", spendRules: AI_SPEND_RULES, spendPolicy: CURRENT_AI_SPEND_POLICY, requestLimits: AI_REQUEST_LIMITS, supportedModels: SUPPORTED_AI_MODELS, monthly: AI_MONTHLY, perMinute: AI_PER_MINUTE, maxNotes: MAX_AI_NOTES, pdfPages: READ_PDF_PAGES, pdfJobs: READ_PDF_JOBS },
  storage: { paidBytesByTier: PAID_STORAGE_BYTES, defaultPaidBytes: STORAGE_BRAKE_BYTES, trialNeverExceedsPaidTier: true, trialBytes: TRIAL_STORAGE_BYTES, setupBytes: SETUP_STORAGE_BYTES, maxFileBytes: MAX_FILE_BYTES, maxStampBytes: MAX_STAMP_BYTES },
  video: { paidHoursByTier: PAID_VIDEO_HOURS, trialSeconds: TRIAL_VIDEO_SECONDS, legacyBillingIncludedHours: VIDEO_HOURS_INCLUDED, setupSeconds: SETUP_VIDEO_SECONDS, overageCentsPerHour: VIDEO_CENTS_PER_HOUR_OVER, topHeight: TOP_HEIGHT, maxKeptBytes: MOST_KEPT_BYTES, uploadWindowSeconds: UPLOAD_WINDOW_SECONDS, abandonedAfterMs: ABANDONED_AFTER_MS, giveUpAfterMs: GIVE_UP_AFTER_MS },
  traffic: { included: VISITS_INCLUDED, setup: SETUP_VISITS, trial: TRIAL_VISITS, overageCentsPerThousand: VISIT_CENTS_PER_THOUSAND_OVER, roomLiveParts: ROOM_LIVE_PARTS, roomIdleParts: ROOM_IDLE_PARTS },
@@ -86,7 +87,7 @@ export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT
  const uploadPolicy=CURRENT_UPLOAD_BUDGET_POLICY;
  if(!isUploadBudgetConfigured(uploadPolicy))return false;
  const aiPolicy=CURRENT_AI_SPEND_POLICY;
- if(!isAiSpendPolicyValid(aiPolicy))return false;
+ if(!isAiSpendPolicyValid(aiPolicy)||!aiEntitlementsFunded(aiPolicy))return false;
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
  if(!review.taxEvidence?.trim()||!review.costAndLimitEvidence?.trim())return false;
  if(review.singleCustomerFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
