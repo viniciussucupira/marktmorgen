@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import type { StatsData } from "@/lib/stats";
-import { promotionChoices, promotionLink, type PromotionProduct, type PromotionWindow } from "@/lib/promotion-plan";
+import { promotionChoices, promotionLink, promotionMedium, type PromotionProduct, type PromotionWindow } from "@/lib/promotion-plan";
 import { CAMPAIGN_MEDIA, POST_PLACES, type CampaignMedium } from "@/lib/share-links";
 import { formatMoney } from "@/lib/money";
 import { channelName } from "@/lib/channel-names";
@@ -14,12 +14,13 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
   const [selected, setSelected] = useState("");
   const [source, setSource] = useState("");
   const [campaign, setCampaign] = useState("promotion-" + (data.days.at(-1)?.date ?? range));
-  const [medium, setMedium] = useState<CampaignMedium>("post");
+  const [mediumOverride, setMediumOverride] = useState<CampaignMedium | null>(null);
   const [variant, setVariant] = useState("");
   const [copied, setCopied] = useState("");
   const linkInput = useRef<HTMLInputElement>(null);
   const product = plan.products.find(item => item.id === selected) ?? plan.products[0];
   const channel = source || plan.channel;
+  const medium = promotionMedium(channel, mediumOverride);
   const link = product ? promotionLink(product, channel, campaign, medium, variant) : "";
   if (!product) return null;
   async function copy() {
@@ -53,7 +54,7 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
         <input id={id + "-campaign"} className="field mt-1 w-full" maxLength={60} value={campaign} onChange={event => { setCampaign(event.target.value); setCopied(""); }} />
       </label>
       <label className="text-xs font-semibold text-ink-soft" htmlFor={id + "-medium"}>Promotion type
-        <select id={id + "-medium"} className="field mt-1 w-full" value={medium} onChange={event => { setMedium(event.target.value as CampaignMedium); setCopied(""); }}>
+        <select id={id + "-medium"} className="field mt-1 w-full" value={medium} onChange={event => { setMediumOverride(event.target.value as CampaignMedium); setCopied(""); }}>
           {CAMPAIGN_MEDIA.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       </label>

@@ -6,6 +6,11 @@ export type PromotionProduct = { id: string; title: string; url: string };
 export type PromotionWindow = "d7" | "d30" | "d90";
 export const MAX_PROMOTION_PRODUCTS = 50;
 
+/** Follow the chosen channel until the creator explicitly chooses a promotion type. */
+export function promotionMedium(channel: string, override: CampaignMedium | null = null): CampaignMedium {
+  return override ?? (channel === "email" || channel === "newsletter" ? "email" : "post");
+}
+
 /** Rank only published products supplied by the server; never infer a product/channel pairing. */
 export function promotionChoices(data: StatsData, range: PromotionWindow, products: PromotionProduct[]) {
   const known = paidFiguresComplete(data);
