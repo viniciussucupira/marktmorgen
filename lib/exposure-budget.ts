@@ -39,5 +39,12 @@ export async function reserveFundedExposure(statsId:string,scope:ExposureScope,p
  if(!config)return false;
  const allocation=config.allocations[scope];
  if(allocation.slots===0)return false;
- try{const result=await redisPipeline([['EVAL',RESERVE_EXPOSURE,1,'nl:exposure:v1:'+config.month,config.reviewId,config.binding,scope,statsId,allocation.cents,config.budgetCents,allocation.slots]]);return result.length===1&&result[0]===1;}catch{return false;}
+ try{
+  const result=await redisPipeline([['EVAL',RESERVE_EXPOSURE,1,'nl:exposure:v1:'+config.month,config.reviewId,config.binding,scope,statsId,allocation.cents,config.budgetCents,allocation.slots]]);
+  if(result.length!==1||result[0]!==1)return false;
+  // A delayed acknowledgement cannot authorize work under changed or expired
+  // evidence. Keep the committed reservation even when revalidation refuses.
+  const current=exposureBudgetConfiguration(policy,context);
+  return current!==null&&current.month===config.month&&current.binding===config.binding;
+ }catch{return false;}
 }

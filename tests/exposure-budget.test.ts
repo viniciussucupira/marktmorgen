@@ -17,3 +17,29 @@ test('zero funded scopes and absent current approvals remain off',async()=>{cons
 
 test('reserve accessors and inherited fields are not funding evidence',async()=>{const f=start();let reads=0;Object.defineProperty(f.policy,'reservedFundsCents',{get(){reads++;return 200;}});assert.equal(await reserveFundedExposure('one','trial',f.policy,f.context),false);assert.equal(reads,0);assert.equal(calls.length,0);const inherited=Object.create(exposureFixture().policy);assert.equal(await reserveFundedExposure('one','trial',inherited,f.context),false);});
 test('canonical bindings ignore object insertion order without dropping any cost category',()=>{const f=exposureFixture();const before=exposureBudgetConfiguration(f.policy,f.context)!.binding;const reordered=structuredClone(f.policy);for(const item of Object.values(reordered.review.cases))item.worstCase!.costCeilings=Object.fromEntries(Object.entries(item.worstCase!.costCeilings).reverse());assert.equal(exposureBudgetConfiguration(reordered,f.context)!.binding,before);});
+
+test('terms changed while awaiting Redis deny work without refunding the allocation',async()=>{
+ const f=start();const pending=reserveFundedExposure('one','trial',f.policy,f.context);
+ f.context.termsSnapshot='CHANGED_TERMS';
+ assert.equal(await pending,false);assert.equal(ledger.get(f.key)?.get('reserved'),'100');
+ assert.equal(ledger.get(f.key)?.get('slots:trial'),'1');
+});
+test('funding evidence changed while awaiting Redis cannot authorize provider work',async()=>{
+ for(const edit of [(p:ReturnType<typeof exposureFixture>['policy'])=>{p.reserveEvidence='';},(p:ReturnType<typeof exposureFixture>['policy'])=>{p.reviewId='different_review';}]){
+  const f=start();const pending=reserveFundedExposure('one','trial',f.policy,f.context);edit(f.policy);
+  assert.equal(await pending,false);assert.equal(ledger.get(f.key)?.get('reserved'),'100');
+ }
+});
+test('allocation changes after dispatch leave the existing reservation held',async()=>{
+ const f=start();const pending=reserveFundedExposure('one','trial',f.policy,f.context);
+ f.policy.review=structuredClone(f.context.review!);
+ f.policy.review.cases.trial.worstCase!.costCeilings.ai=95;
+ f.policy.review.cases.trial.worstCase!.costCeilings.other=5;
+ assert.equal(await pending,false);assert.equal(ledger.get(f.key)?.get('reserved'),'100');
+});
+test('a month rollover before acknowledgement refuses new work but retains the receipt',async t=>{
+ t.mock.timers.enable({apis:['Date'],now:Date.UTC(2026,9,31,23,59,59)});
+ const f=start();const pending=reserveFundedExposure('one','trial',f.policy,f.context);
+ t.mock.timers.setTime(Date.UTC(2026,10,1));
+ assert.equal(await pending,false);assert.equal(ledger.get(f.key)?.get('reserved'),'100');
+});
