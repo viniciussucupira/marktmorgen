@@ -58,6 +58,7 @@ import { type KeySetup, activeKeys, parseKeySetup } from "@/lib/key-setup";
 import { type DisplayStyle, type ProductImage, parseDisplay, parseProductImage } from "@/lib/product-image";
 import { deliveredIds, parseBundleItems, parsePick } from "@/lib/bundle-rules";
 import { type ExtraNotes, allExtraNotes } from "@/lib/extras-notes";
+import { parsePairs } from "@/lib/store-collections";
 import type { Store } from "@/lib/store";
 
 /**
@@ -153,6 +154,13 @@ export type Product = {
    * up to three (lib/product-extras.ts, MAX_BUMPS), in the order shown.
    */
   bumps: Bump[];
+  /**
+   * The creator's own picks of other products that go well with this one,
+   * shown on its page and offered in the cart (lib/store-collections.ts),
+   * up to MAX_PAIRS, in the creator's order. Absent on products written
+   * before it, which is none.
+   */
+  pairs?: string[];
   /**
    * What is offered after paying, one offer at a time, each added in one
    * click (lib/funnel.ts). A product saved when there was a single upsell
@@ -372,6 +380,7 @@ export function parseProduct(entry: unknown): Product | null {
     stock: parseStock(value.stock),
     // A record from when a product offered one box reads as a list of one.
     bumps: parseBumps(value.bumps, value.bump),
+    pairs: parsePairs(value.pairs, value.id),
     funnel: parseFunnel(value.funnel) ?? funnelFromUpsell(parseBump(value.upsell)),
     plan: parsePlan(value.plan),
     course: parseCourseRef(value.course),
@@ -423,6 +432,7 @@ export function listingOf(product: Listing): Listing {
     call: product.call,
     stock: product.stock,
     bumps: product.bumps,
+    pairs: product.pairs ?? [],
     plan: product.plan,
     course: product.course,
     podcast: product.podcast ?? null,

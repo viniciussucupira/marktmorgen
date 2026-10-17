@@ -17,7 +17,8 @@ import { planLine, speech, worthLine } from "@/lib/buyer-words";
 import { readAllTimeSales } from "@/lib/stats";
 import { paypalReady } from "@/lib/paypal-sales";
 import { saleClock, salePrice } from "@/lib/store-sale";
-import { preorderDay, soonOne } from "@/lib/preorders";
+import { preorderDay, soonOne, soonState } from "@/lib/preorders";
+import { GoesWellWith, InCollections } from "@/components/store-collections";
 import { canGift } from "@/lib/gift-rules";
 import { canGroup } from "@/lib/group-rules";
 import { answersOn } from "@/lib/answers";
@@ -499,10 +500,23 @@ export default async function ProductPage({ params, searchParams }: Params) {
       return other && other.id !== product.id && !other.hidden && canSellProduct(store, other) ? [{ product: other, count }] : [];
     })
     .slice(0, ALSO_BOUGHT_COUNT);
+  // What the creator picked to go with this one (lib/store-collections.ts): published, in their order.
+  const pairIds = (product.pairs ?? []).filter((id) => id !== product.id);
+  const pairListings = pairIds.length ? await readListings(store, pairIds).catch(() => []) : [];
+  const paired = pairIds.flatMap((id) => {
+    const other = pairListings.find((p) => p.id === id);
+    return other && !other.hidden ? [other] : [];
+  });
+  // Which of them can go in the cart now: one more read, only when there are any (lib/preorders.ts).
+  const pairedSoon = cartOn && paired.length ? (await soonState(store).catch(() => ({ soon: new Set<string>() }))).soon : new Set<string>();
+  const pairedCart = new Set(paired.filter((p) => cartOn && cartable(p) && canSellProduct(store, p) && !pairedSoon.has(p.id)).map((p) => p.id));
+  const shownElsewhere = [...paired.map((p) => p.id), ...alsoBought.map((item) => item.product.id)];
   const more = (
     <>
-      <AlsoBought store={store} title={product.title} items={alsoBought} />
-      <MoreFrom store={store} products={moreFrom(store, product.id, soldCounts?.byProduct ?? null, alsoBought.map((item) => item.product.id))} />
+      <GoesWellWith store={store} title={product.title} items={paired} cartIds={pairedCart} />
+      <AlsoBought store={store} title={product.title} items={alsoBought.filter((item) => !paired.some((p) => p.id === item.product.id))} />
+      <InCollections store={store} productId={product.id} />
+      <MoreFrom store={store} products={moreFrom(store, product.id, soldCounts?.byProduct ?? null, shownElsewhere)} />
     </>
   );
 

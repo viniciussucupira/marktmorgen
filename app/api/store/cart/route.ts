@@ -5,6 +5,7 @@ import { readListings, readProduct } from "@/lib/catalog";
 import { canSell, canSellProduct } from "@/lib/store-checkout";
 import { cartPrice, createCartCheckout } from "@/lib/cart-checkout";
 import { MAX_CART, cartable, dealOff, readCartIds } from "@/lib/cart-rules";
+import { cartPicks } from "@/lib/store-collections";
 import { readSoldCounts } from "@/lib/sold-count";
 import { cartWords } from "@/lib/buyer-words/cart";
 import type { Store } from "@/lib/store";
@@ -55,9 +56,15 @@ export async function GET(request: NextRequest) {
   const deal = dealOff(store.cartDeal, payable.length);
   const total = payable.reduce((sum, item) => sum + salePrice(item.cents, deal), 0);
   const more = store.cartDeal.on && payable.length > 0 && payable.length < store.cartDeal.min ? store.cartDeal.min - payable.length : 0;
-  // What the buyers of what is in the cart also bought (lib/also-bought.ts), on a
-  // store that shows what was bought: up to two that could go in it too, most bought first.
-  const suggest = await suggestions(store, payable.map((item) => ({ id: item.id, title: item.title })), ids, coming.soon, country, locale).catch(() => []);
+  // What could go in it too: first what the creator picked to go with what is
+  // in it (lib/store-collections.ts), said as their pick; then what the buyers
+  // of what is in it also bought (lib/also-bought.ts), on a store that shows
+  // what was bought, said as that count.
+  const inCart = payable.flatMap((item) => {
+    const listing = listings.find((p) => p.id === item.id);
+    return listing ? [{ id: item.id, title: item.title, pairs: listing.pairs ?? [] }] : [];
+  });
+  const suggest = await suggestions(store, inCart, ids, coming.soon, country, locale).catch(() => []);
   return Response.json(
     {
       ok: true,
@@ -71,44 +78,54 @@ export async function GET(request: NextRequest) {
   );
 }
 
-/** How many products the cart suggests at most. */
-const MAX_SUGGEST = 2;
+/** How many products the cart suggests at most, the creator's picks first. */
+const MAX_SUGGEST = 3;
+
+/** One product the open cart offers: the creator's pick, or one counted from real sales. */
+type Suggestion = { id: string; title: string; href: string; price: string; why: string; kind: "pick" | "bought"; count: number };
 
 async function suggestions(
   store: Store,
-  inCart: { id: string; title: string }[],
+  inCart: { id: string; title: string; pairs: string[] }[],
   ids: string[],
   soon: Set<string>,
   country: string,
   locale: string,
-): Promise<{ id: string; title: string; href: string; price: string; why: string; count: number }[]> {
+): Promise<Suggestion[]> {
   if (inCart.length === 0 || ids.length >= MAX_CART || !canSell(store)) return [];
-  const counts = await readSoldCounts(store);
-  if (!counts) return [];
-  // Each other product, with the most buyers it shares with anything in the cart.
+  const words = cartWords(store.language);
+  const titleOf = new Map(inCart.map((item) => [item.id, item.title]));
+  // The creator's picks first, in the order they set them (lib/store-collections.ts).
+  const picks = cartPicks(inCart, [...ids, ...soon]).slice(0, MAX_SUGGEST * 3);
+  // Then each other product with the most buyers it shares with anything in the cart.
+  const counts = await readSoldCounts(store).catch(() => null);
   const best = new Map<string, { count: number; with: string }>();
   for (const item of inCart) {
-    for (const [other, count] of counts.together[item.id] ?? []) {
-      if (ids.includes(other) || soon.has(other)) continue;
+    for (const [other, count] of counts?.together[item.id] ?? []) {
+      if (ids.includes(other) || soon.has(other) || picks.some((pick) => pick.id === other)) continue;
       if ((best.get(other)?.count ?? 0) < count) best.set(other, { count, with: item.title });
     }
   }
-  if (best.size === 0) return [];
   const ranked = [...best.entries()].sort((a, b) => b[1].count - a[1].count).slice(0, MAX_SUGGEST * 3);
-  const listed = await readListings(store, ranked.map(([id]) => id));
-  const words = cartWords(store.language);
-  const out: { id: string; title: string; href: string; price: string; why: string; count: number }[] = [];
-  for (const [id, pair] of ranked) {
-    const product = listed.find((p) => p.id === id);
+  const wanted: { id: string; kind: "pick" | "bought"; why: string; count: number }[] = [
+    ...picks.map((pick) => ({ id: pick.id, kind: "pick" as const, why: words.pickWhy(store.name, titleOf.get(pick.with) ?? ""), count: 0 })),
+    ...ranked.map(([id, pair]) => ({ id, kind: "bought" as const, why: words.suggestWhy(pair.count, pair.with), count: pair.count })),
+  ];
+  if (wanted.length === 0) return [];
+  const listed = await readListings(store, wanted.map((want) => want.id));
+  const out: Suggestion[] = [];
+  for (const want of wanted) {
+    const product = listed.find((p) => p.id === want.id);
     if (!product || !cartable(product) || !canSellProduct(store, product)) continue;
     if (product.keys && (await outOfKeys(store, product).catch(() => true))) continue;
     out.push({
-      id,
+      id: want.id,
       title: product.title,
       href: `/@${store.handle}/p/${productSegment(product)}`,
       price: formatMoney(cartPrice(store, product, country).cents, store.currency, locale),
-      why: words.suggestWhy(pair.count, pair.with),
-      count: pair.count,
+      why: want.why,
+      kind: want.kind,
+      count: want.count,
     });
     if (out.length >= MAX_SUGGEST) break;
   }

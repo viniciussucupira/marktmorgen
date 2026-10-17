@@ -3,6 +3,7 @@ import { RecentSales } from "@/components/recent-sales";
 import { recentSales } from "@/lib/recent-sales";
 import { after } from "next/server";
 import { CartButton } from "@/components/store-cart";
+import { CollectionsNav } from "@/components/store-collections";
 import { offersCart } from "@/lib/cart-checkout";
 import { cartable, readCartIds } from "@/lib/cart-rules";
 import { faqData } from "@/lib/store-faq";
@@ -427,6 +428,8 @@ export default async function StorePage({ params, searchParams }: Params) {
                       <StoreGuideBox handle={store.handle} storeName={store.name} lang={store.language} />
                     </div>
                   ) : null}
+                  {/* The creator's collections, each a page of its own (lib/store-collections.ts). */}
+                  {!searching && page === 1 ? <CollectionsNav store={store} /> : null}
                   {groups.map((group, g) => (
                     <section key={group.products[0].id} className={g > 0 ? "mt-10" : undefined} aria-label={group.title ?? undefined}>
                       {group.title ? (

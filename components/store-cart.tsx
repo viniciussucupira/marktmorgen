@@ -89,8 +89,13 @@ export function AddToCart({
 }
 
 type Line = { id: string; title: string; href: string; price: string; ok: boolean };
-/** Something the buyers of what is in the cart also bought (lib/also-bought.ts), with why it is shown. */
-type Suggestion = { id: string; title: string; href: string; price: string; why: string };
+/**
+ * Something that could go in the cart too, with why it is shown: the
+ * creator's own pick (lib/store-collections.ts) or something the buyers of
+ * what is in it also bought (lib/also-bought.ts). Each under its own heading,
+ * so a pick is never read as a count of buyers.
+ */
+type Suggestion = { id: string; title: string; href: string; price: string; why: string; kind?: "pick" | "bought" };
 
 /**
  * The cart's button, at the top of the page once something is in it, and
@@ -206,37 +211,41 @@ export function CartButton({
                   </li>
                 ))}
               </ul>
-              {suggest.filter((item) => !ids.includes(item.id)).length > 0 && ids.length < MAX_CART ? (
-                <div className="mt-2 rounded-2xl p-3" style={{ background: "var(--st-accent-soft)" }}>
-                  <p className="text-sm font-semibold">{c.suggestHead}</p>
-                  <ul className="mt-2 space-y-2">
-                    {suggest
-                      .filter((item) => !ids.includes(item.id))
-                      .map((item) => (
-                        <li key={item.id} className="flex items-center justify-between gap-3">
-                          <span className="min-w-0">
-                            <a href={item.href} className="st-title-link block text-sm font-semibold">{item.title}</a>
-                            <span className="st-muted block text-xs">{item.why}</span>
-                          </span>
-                          <span className="flex shrink-0 items-center gap-2">
-                            <span className="st-price text-sm tabular-nums">{item.price}</span>
-                            <button
-                              type="button"
-                              className="btn st-btn-ghost btn-sm"
-                              aria-label={`${c.add}: ${item.title}`}
-                              onClick={() => {
-                                const now = read(handle);
-                                if (!now.includes(item.id) && now.length < MAX_CART) write(handle, [...now, item.id]);
-                              }}
-                            >
-                              {c.add}
-                            </button>
-                          </span>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              ) : null}
+              {ids.length < MAX_CART
+                ? (["pick", "bought"] as const).map((kind) => {
+                    const offered = suggest.filter((item) => (item.kind ?? "bought") === kind && !ids.includes(item.id));
+                    if (offered.length === 0) return null;
+                    return (
+                      <div key={kind} className="mt-2 rounded-2xl p-3" style={{ background: "var(--st-accent-soft)" }}>
+                        <p className="text-sm font-semibold">{kind === "pick" ? c.pickHead : c.suggestHead}</p>
+                        <ul className="mt-2 space-y-2">
+                          {offered.map((item) => (
+                            <li key={item.id} className="flex items-center justify-between gap-3">
+                              <span className="min-w-0">
+                                <a href={item.href} className="st-title-link block text-sm font-semibold">{item.title}</a>
+                                <span className="st-muted block text-xs">{item.why}</span>
+                              </span>
+                              <span className="flex shrink-0 items-center gap-2">
+                                <span className="st-price text-sm tabular-nums">{item.price}</span>
+                                <button
+                                  type="button"
+                                  className="btn st-btn-ghost btn-sm"
+                                  aria-label={`${c.add}: ${item.title}`}
+                                  onClick={() => {
+                                    const now = read(handle);
+                                    if (!now.includes(item.id) && now.length < MAX_CART) write(handle, [...now, item.id]);
+                                  }}
+                                >
+                                  {c.add}
+                                </button>
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })
+                : null}
               {payable.length > 0 ? (
                 <form action="/api/store/cart" method="post" target="_top" className="mt-3 space-y-3" data-checkout="">
                   <input type="hidden" name="handle" value={handle} />
@@ -263,6 +272,39 @@ export function CartButton({
           )}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * "Add all N to cart" on a collection's page (lib/store-collections.ts): the
+ * products of it that can go in a cart, added at one press, when they all
+ * fit. Never more than the cart holds: when they do not fit, it says so and
+ * each card's own button stays.
+ */
+export function AddAllToCart({ handle, productIds, lang }: { handle: string; productIds: string[]; lang: LanguageCode }) {
+  const c = cartWords(lang);
+  const ids = useCart(handle);
+  const missing = productIds.filter((id) => !ids.includes(id));
+  if (productIds.length < 2) return null;
+  if (missing.length === 0) return <p className="st-muted mt-4 text-center text-sm">{c.allIn}</p>;
+  const fits = ids.length + missing.length <= MAX_CART;
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        className="btn st-btn btn-block"
+        disabled={!fits}
+        onClick={() => {
+          // Read again at the press: another tab may have changed the cart.
+          const now = read(handle);
+          const add = productIds.filter((id) => !now.includes(id));
+          if (now.length + add.length <= MAX_CART) write(handle, [...now, ...add]);
+        }}
+      >
+        {c.addAll(productIds.length)}
+      </button>
+      {fits ? null : <p className="st-muted mt-1 text-center text-xs">{c.noRoom(MAX_CART)}</p>}
     </div>
   );
 }

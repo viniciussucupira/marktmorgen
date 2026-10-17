@@ -22,7 +22,8 @@
  *   /robots.txt            on its own domain only (app/[handle]/store-robots)
  */
 import { canUseDomain } from "@/lib/domains";
-import { readListings, visibleCount } from "@/lib/catalog";
+import { KIND, readListings, visibleCount } from "@/lib/catalog";
+import { collectionSegment, shownCollections } from "@/lib/store-collections";
 import { productSegment } from "@/lib/product-slug";
 import { pageOut } from "@/lib/site-page-rules";
 import { POSTS_PER_PAGE, postSegment, publishedPosts } from "@/lib/store-blog";
@@ -51,6 +52,9 @@ export async function storeSitemap(store: Store, nowSeconds = Math.floor(Date.no
     if (product.hidden) continue;
     out.push({ url: `${root}/p/${productSegment(product)}` });
   }
+  // The creator's collections with something published in them (lib/store-collections.ts).
+  const items = store.catalog.items.map((item) => ({ id: item.id, hidden: (item.kind & KIND.hidden) !== 0 }));
+  for (const { collection } of shownCollections(store.collections ?? [], items)) out.push({ url: `${root}/shop/${collectionSegment(collection)}` });
   for (const page of store.sitePages) {
     if (pageOut(page, nowSeconds)) out.push({ url: `${root}/${page.slug}` });
   }

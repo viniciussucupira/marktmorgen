@@ -149,6 +149,7 @@ import {
   hasProduct,
 } from "@/lib/catalog";
 import { type Announcement, type StoreSection, parseAnnouncement, parseSections, sectionsWithout } from "@/lib/store-sections";
+import { type Collection, type CollectionsProblem, MAX_PAIRS, collectionsWithout, parseCollections, readCollectionsInput, readProductIds } from "@/lib/store-collections";
 import { type SitePage, parseSitePages, MAX_SITE_PAGES, slugProblem } from "@/lib/site-page-rules";
 import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rules";
 import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
@@ -618,6 +619,12 @@ export type Store = {
    */
   sections: StoreSection[];
   /**
+   * Named groups of the store's products, each with a page of its own
+   * (lib/store-collections.ts). Absent or empty on every store written before
+   * they existed.
+   */
+  collections?: Collection[];
+  /**
    * The store's own pages — About, Start here, Work with me — beside its
    * products (lib/site-page-rules.ts). Empty on every store written before
    * they existed.
@@ -932,6 +939,7 @@ function parseStore(raw: unknown): Store | null {
       posts: typeof value.posts === "number" && Number.isInteger(value.posts) && value.posts > 0 ? Math.min(value.posts, 10_000) : 0,
       exitOffer: typeof value.exitOffer === "string" && /^[A-Za-z0-9_-]{1,40}$/.test(value.exitOffer) ? value.exitOffer : null,
       sections: parseSections(value.sections),
+      collections: parseCollections(value.collections),
       sitePages: parseSitePages(value.sitePages),
       announcement: parseAnnouncement(value.announcement),
       answers: parseAnswers(value.answers),
@@ -1130,6 +1138,7 @@ async function freshStore(fields: {
     order: [...USUAL_ORDER],
     exitOffer: null,
     sections: [],
+    collections: [],
     sitePages: [],
     announcement: null,
     answers: { ...NO_ANSWERS },
@@ -2807,6 +2816,8 @@ export async function removeProduct(
     const tidied: Store = {
       ...store,
       sections: sectionsWithout(store.sections, productIds(store), id),
+      // Taken out of every collection it was in; one left empty goes (lib/store-collections.ts).
+      collections: collectionsWithout(store.collections ?? [], id),
       announcement: store.announcement?.product === id ? { ...store.announcement, product: null } : store.announcement,
       // A page of the store's own whose buttons led to it leads to the store now (lib/site-page-rules.ts).
       sitePages: store.sitePages.map((page) => (page.target === id ? { ...page, target: "" } : page)),
@@ -3752,6 +3763,43 @@ export async function setSections(email: string, raw: unknown): Promise<Sections
     return { ok: true, store: await save({ ...store, sections }) };
   });
   return result ?? { ok: false, reason: "none" };
+}
+
+export type CollectionsResult = { ok: true; store: Store } | { ok: false; reason: "none" | CollectionsProblem };
+
+/**
+ * Sets the store's collections (lib/store-collections.ts): all of them at
+ * once, in the order sent. Each product named has to be one this store has;
+ * anything else is refused as a whole, never quietly dropped.
+ */
+export async function setCollections(email: string, raw: unknown): Promise<CollectionsResult> {
+  const result = await withStore<CollectionsResult>(email, async (store, save) => {
+    const read = readCollectionsInput(raw, store.collections ?? [], (id) => hasProduct(store, id));
+    if (!read.ok) return read;
+    return { ok: true, store: await save({ ...store, collections: read.collections }) };
+  });
+  return result ?? { ok: false, reason: "none" };
+}
+
+export type PairsResult =
+  | { ok: true; store: Store; product: Product }
+  | { ok: false; reason: "none" | "unknown" | "target" | "too_many" };
+
+/**
+ * Sets the products that go well with a product (lib/store-collections.ts),
+ * up to MAX_PAIRS, in the order sent; an empty list for none. Each has to be
+ * another product of this store.
+ */
+export async function setProductPairs(email: string, id: string, raw: unknown): Promise<PairsResult> {
+  if (!Array.isArray(raw)) return { ok: false, reason: "target" };
+  if (raw.length > MAX_PAIRS) return { ok: false, reason: "too_many" };
+  const pairs = readProductIds(raw, MAX_PAIRS, id);
+  if (pairs.length !== raw.length) return { ok: false, reason: "target" };
+  const done = await onProduct<"target">(email, id, (product, store) => {
+    if (pairs.some((other) => !hasProduct(store, other))) return { ok: false, reason: "target" };
+    return { ...product, pairs };
+  });
+  return done.ok ? { ok: true, store: done.store, product: done.product } : done;
 }
 
 /** Switches the answers to visitors' questions on or off, and keeps the creator's notes for them (lib/answers-rules.ts). */

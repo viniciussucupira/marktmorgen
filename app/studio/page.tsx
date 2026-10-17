@@ -81,6 +81,7 @@ import { keepHandle, webhooksView } from "@/lib/webhooks";
 import { PixelEditor } from "@/components/pixel-editor";
 import { ExitOfferEditor } from "@/components/exit-offer-editor";
 import { StoreLayoutEditor } from "@/components/store-layout-editor";
+import { CollectionsEditor } from "@/components/collections-editor";
 import { BuyButtonEditor } from "@/components/buy-button-editor";
 import { lookColours } from "@/lib/store-look";
 import { AnswersEditor } from "@/components/answers-editor";
@@ -653,6 +654,19 @@ async function saleCandidates(store: Store): Promise<{ id: string; title: string
   if (!ids.length) return [];
   const listings = await readListings(store, ids).catch(() => []);
   return listings.filter(saleable).map((p) => ({ id: p.id, title: p.title }));
+}
+
+/**
+ * The store's published products by name, in its order: what a product's
+ * "Goes well with" can pick (lib/store-collections.ts). One read of the
+ * cards, whatever the store's size (lib/catalog.ts, readCards).
+ */
+async function publishedChoices(store: Store): Promise<{ id: string; title: string }[]> {
+  const cards = await readCards(store).catch(() => new Map<string, { title: string }>());
+  return store.catalog.items
+    .filter((item) => (item.kind & KIND.hidden) === 0)
+    .map((item) => ({ id: item.id, title: cards.get(item.id)?.title ?? "" }))
+    .filter((p) => p.title);
 }
 
 /** Memberships that can be tiers: running until canceled, at one price (lib/tier-rules.ts). */
@@ -1415,6 +1429,7 @@ export default async function StudioPage({
                   preorders={await preorderViews(store, (shelf?.products ?? []).map((p) => p.id)).catch(() => ({}))}
                   mailAddress={store.mail?.address ?? store.winback?.address ?? ""}
                   cover={{ accent: store.look.accent, font: store.look.font, name: store.name, language: store.language }}
+                  pairChoices={await publishedChoices(store)}
                 />
               </div>
             ) : (
@@ -1690,6 +1705,7 @@ export default async function StudioPage({
                     <>
                       <ExitOfferEditor current={store.exitOffer} free={free} />
                       {may("page") ? <StoreLayoutEditor sections={store.sections} announcement={store.announcement} products={published} /> : null}
+                      {may("page") ? <CollectionsEditor collections={store.collections ?? []} products={published} handle={store.handle} /> : null}
                       {may("page") ? (
                         <BuyButtonEditor
                           handle={store.handle}
