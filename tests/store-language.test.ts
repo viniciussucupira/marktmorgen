@@ -62,9 +62,9 @@ const SAME: Record<string, Record<string, string[]>> = {
   // "Chat" is the word in these.
   "store chat": { es: ["launcher"], de: ["launcher"], it: ["launcher"], nl: ["launcher"] },
   "store and product pages": {
-    // "Blog" is the word in every one of them.
+    // "Blog" is the word in every one of them, and "Collections" in French.
     es: ["namePlaceholder", "fromCapital", "blog"],
-    fr: ["namePlaceholder", "perPerson", "recommended", "blog"],
+    fr: ["namePlaceholder", "perPerson", "recommended", "blog", "collections"],
     de: ["namePlaceholder", "guarantee", "blog"],
     it: ["namePlaceholder", "blog"],
     nl: ["namePlaceholder", "guarantee", "blog"],

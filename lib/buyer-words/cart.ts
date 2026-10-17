@@ -37,6 +37,11 @@ const en = {
   and: "and",
   suggestHead: "Often bought with these",
   suggestWhy: (n: number, title: string) => `${n} buyers of ${title} also bought it`,
+  pickHead: "Goes well with your cart",
+  pickWhy: (store: string, title: string) => `${store} picked it to go with ${title}`,
+  addAll: (n: number) => `Add all ${n} to cart`,
+  allIn: "All of these are in your cart",
+  noRoom: (max: number) => `A cart holds up to ${max} products: add the ones you want one by one.`,
 };
 
 export type CartWords = typeof en;
@@ -71,6 +76,11 @@ const es: CartWords = {
   and: "y",
   suggestHead: "Se suelen comprar con estos",
   suggestWhy: (n, title) => `${n} compradores de ${title} también lo compraron`,
+  pickHead: "Va bien con tu carrito",
+  pickWhy: (store, title) => `${store} lo eligió para acompañar a ${title}`,
+  addAll: (n) => `Añadir los ${n} al carrito`,
+  allIn: "Todos están en tu carrito",
+  noRoom: (max) => `Un carrito admite hasta ${max} productos: añade uno a uno los que quieras.`,
 };
 
 const fr: CartWords = {
@@ -103,6 +113,11 @@ const fr: CartWords = {
   and: "et",
   suggestHead: "Souvent achetés avec ceux-ci",
   suggestWhy: (n, title) => `${n}${S}acheteurs de ${title} l'ont aussi acheté`,
+  pickHead: "Va bien avec votre panier",
+  pickWhy: (store, title) => `${store} l'a choisi pour aller avec ${title}`,
+  addAll: (n) => `Ajouter les ${n} au panier`,
+  allIn: "Ils sont tous dans votre panier",
+  noRoom: (max) => `Un panier contient jusqu'à ${max} produits${S}: ajoutez un à un ceux que vous voulez.`,
 };
 
 const de: CartWords = {
@@ -135,6 +150,11 @@ const de: CartWords = {
   and: "und",
   suggestHead: "Oft zusammen damit gekauft",
   suggestWhy: (n, title) => `${n} Käufer von ${title} haben es auch gekauft`,
+  pickHead: "Passt gut zu Ihrem Warenkorb",
+  pickWhy: (store, title) => `Von ${store} ausgewählt, passend zu ${title}`,
+  addAll: (n) => `Alle ${n} in den Warenkorb`,
+  allIn: "Alle sind in Ihrem Warenkorb",
+  noRoom: (max) => `Ein Warenkorb fasst bis zu ${max} Produkte: Legen Sie die gewünschten einzeln hinein.`,
 };
 
 const it: CartWords = {
@@ -167,6 +187,11 @@ const it: CartWords = {
   and: "e",
   suggestHead: "Spesso acquistati insieme a questi",
   suggestWhy: (n, title) => `${n} acquirenti di ${title} lo hanno acquistato anche`,
+  pickHead: "Si abbina bene al tuo carrello",
+  pickWhy: (store, title) => `Scelto da ${store} da abbinare a ${title}`,
+  addAll: (n) => `Aggiungi tutti e ${n} al carrello`,
+  allIn: "Sono tutti nel tuo carrello",
+  noRoom: (max) => `Un carrello contiene fino a ${max} prodotti: aggiungi uno alla volta quelli che vuoi.`,
 };
 
 const nl: CartWords = {
@@ -199,6 +224,11 @@ const nl: CartWords = {
   and: "en",
   suggestHead: "Vaak samen hiermee gekocht",
   suggestWhy: (n, title) => `${n} kopers van ${title} kochten het ook`,
+  pickHead: "Past goed bij je winkelwagen",
+  pickWhy: (store, title) => `Door ${store} gekozen bij ${title}`,
+  addAll: (n) => `Alle ${n} in winkelwagen`,
+  allIn: "Ze zitten allemaal in je winkelwagen",
+  noRoom: (max) => `Een winkelwagen bevat tot ${max} producten: voeg de producten die je wilt een voor een toe.`,
 };
 
 const pt: CartWords = {
@@ -231,6 +261,11 @@ const pt: CartWords = {
   and: "e",
   suggestHead: "Muitas vezes comprados com estes",
   suggestWhy: (n, title) => `${n} compradores de ${title} também o compraram`,
+  pickHead: "Combina bem com o seu carrinho",
+  pickWhy: (store, title) => `Escolhido por ${store} para acompanhar ${title}`,
+  addAll: (n) => `Adicionar os ${n} ao carrinho`,
+  allIn: "Estão todos no seu carrinho",
+  noRoom: (max) => `Um carrinho leva até ${max} produtos: adicione um a um os que quiser.`,
 };
 
 export const CART_WORDS: Record<LanguageCode, CartWords> = { en, es, fr, de, it, nl, pt };

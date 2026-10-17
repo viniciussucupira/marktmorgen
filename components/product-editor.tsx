@@ -12,6 +12,7 @@ import { CallEditor, type MeetAccount } from "@/components/call-editor";
 import { CourseToggle } from "@/components/course-toggle";
 import { BundleToggle } from "@/components/bundle-toggle";
 import { CheckoutExtras, bumpChoices } from "@/components/checkout-extras";
+import { PairsEditor } from "@/components/pairs-editor";
 import type { ExtraNotes } from "@/lib/extras-notes";
 import type { BumpChoice, ProductPaging } from "@/lib/catalog";
 import { ProductUpdateBox } from "@/components/product-update-box";
@@ -1510,6 +1511,7 @@ export function ProductEditor({
   preorders = {},
   mailAddress = "",
   cover = null,
+  pairChoices = [],
 }: {
   /** The products shown: every one, or one page of a long list. */
   products: Product[];
@@ -1555,6 +1557,8 @@ export function ProductEditor({
   mailAddress?: string;
   /** The store's color, letters, name and language, for the cover maker (components/cover-maker.tsx). */
   cover?: (CoverLook & { language: LanguageCode }) | null;
+  /** The store's published products, by name: what a product's "Goes well with" can pick (lib/store-collections.ts). */
+  pairChoices?: { id: string; title: string }[];
 }) {
   const router = useRouter();
   const sid = useStudioStore();
@@ -2152,6 +2156,7 @@ export function ProductEditor({
                 ) : null}
 
                 <CheckoutExtras product={product} choices={offerable} named={named} notes={notes[product.id]} />
+                {!product.hidden ? <PairsEditor productId={product.id} initial={product.pairs ?? []} choices={pairChoices} /> : null}
                 <div className="mt-2">
                   <CheckoutFieldsEditor product={product} />
                 </div>

@@ -418,6 +418,12 @@ export async function createCheckout(
     body.set(`line_items[${line}][price_data][unit_amount]`, String(offer.bump.priceCents));
     body.set(`line_items[${line}][price_data][product_data][name]`, offer.target.title);
     body.set(`metadata[${key}]`, offer.target.id);
+    // What it was charged, on every order and not only one that came through
+    // an affiliate's link: a sale credited later from a code typed at
+    // checkout, or from a buyer kept with an affiliate, weighs each product's
+    // own share by it too (lib/affiliates.ts, noteSession), so a product the
+    // creator left out of the programme never earns the front product's rate.
+    body.set(`metadata[${key}_cents]`, String(offer.bump.priceCents));
     if (!recurring) body.set(`payment_intent_data[metadata][${key}]`, offer.target.id);
     added.push({ key, bump: offer.bump, target: offer.target });
   }
@@ -541,10 +547,7 @@ export async function createCheckout(
     body.set("payment_intent_data[metadata][via]", extras.via.aff);
     // Each box rides in the same order: its own share, which may be none, is
     // kept beside it, so it earns what the creator set for that product.
-    added.forEach((a, at) => {
-      body.set(`metadata[${a.key}_cents]`, String(a.bump.priceCents));
-      body.set(`metadata[${a.key}_rate]`, String(addedRates[at]));
-    });
+    added.forEach((a, at) => body.set(`metadata[${a.key}_rate]`, String(addedRates[at])));
   }
 
   // A membership or a payment plan, where the creator credits them

@@ -42,7 +42,7 @@ const CRAWLER_FILES = /^\/(sitemap\.xml|robots\.txt)$/;
 const CRAWLER_ROUTES: Record<string, string> = { "/sitemap.xml": "/store-sitemap", "/robots.txt": "/store-robots" };
 /** A store's map under its address here: /@handle/sitemap.xml. */
 const STORE_SITEMAP = /^\/(?:@|%40)([^/]+)\/sitemap\.xml$/i;
-const STORE_PATHS = /^\/(media-kit|tip|thanks|free|manage|orders|course|book|community|p|affiliates|renew|certificate|review|waitlist|podcast|left|group|blog|join|contact|discord|go|form)(\/|$)/;
+const STORE_PATHS = /^\/(media-kit|tip|thanks|free|manage|orders|course|book|community|p|affiliates|renew|certificate|review|waitlist|podcast|left|group|blog|join|contact|discord|go|form|shop)(\/|$)/;
 
 /**
  * A visitor who followed an affiliate's link (?via=<code>) keeps the code and

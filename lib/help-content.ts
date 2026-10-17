@@ -492,6 +492,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I group products into collections, or suggest what goes with a product?",
+        a: [
+          "Yes, on every plan. In your studio, next to sections, Collections groups products under a name of your own: up to 12 collections of up to 24 products each, in the order you set, and a product can be in more than one. Each collection has its own page at /@you/shop/<name>, which you can link to from anywhere, and your store page shows a link to each one above your products. Only published products are shown in one, and a product you remove is taken out of every collection. On a collection's page, the products that can go in a cart can be added to it together, up to four at a time.",
+          "On each product, \u201cGoes well with\u201d lets you pick up to three of your other products. The product's page shows them as your pick, with \u201cAdd to cart\u201d where they can go in one, and the open cart offers them while that product is in it, above what its buyers really bought with it (that part comes only from your own Stripe sales, from three buyers up, when you show what was bought). Your picks never say anything about other buyers.",
+        ],
+      },
+      {
         q: "Can I sell a bundle of products?",
         a: [
           "Yes, on every plan. Make a product the bundle, give it a price, and choose 2 to 20 of your one-off products to go in it: those with one price and a file, a link or a course with lessons. The buyer gets every one exactly as if bought on its own \u2014 its download or link, its course, its license key, its stamped PDF, its place on their list of purchases and the right to review it \u2014 and your community, if one of them opens it. Your store shows what the products cost on their own next to the bundle's price, worked out from their prices today, only when they really cost more.",
