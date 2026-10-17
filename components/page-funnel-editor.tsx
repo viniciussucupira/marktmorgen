@@ -6,6 +6,7 @@ import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { readFunnelMutationResult, type FunnelMutation } from "@/lib/funnel-mutation-response";
+import { funnelReachRatioMetric, funnelStepMetrics } from "@/lib/funnel-metrics";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import {
   MAX_FUNNEL_NAME,
@@ -23,7 +24,7 @@ export type StepChoice = { kind: PageFunnelStep["kind"]; id: string; title: stri
 /** One saved funnel, with its steps as the store stands and how many people each reached. */
 export type SavedFunnel = {
   funnel: PageFunnel;
-  steps: { title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number; done: number }[];
+  steps: { title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number | null; done: number | null }[];
 };
 
 type Draft = { id: string; name: string; slug: string; slugTouched: boolean; on: boolean; steps: PageFunnelStep[] };
@@ -43,10 +44,6 @@ const MESSAGES: Record<string, string> = {
 };
 
 const key = (step: Pick<PageFunnelStep, "kind" | "id">) => `${step.kind}:${step.id}`;
-
-/** "120 people", "1 person". */
-const people = (n: number) => `${n.toLocaleString("en-US")} ${n === 1 ? "person" : "people"}`;
-const share = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : "–");
 
 /**
  * The studio's funnels of pages (lib/page-funnel.ts): each with its address,
@@ -208,7 +205,7 @@ export function PageFunnelEditor({
 
       <ul className="mt-6 space-y-4">
         {saved.map(({ funnel, steps }) => {
-          const first = steps.find((s) => s.open)?.seen ?? 0;
+          const first = steps.find((s) => s.open)?.seen ?? null;
           const last = [...steps].reverse().find((s) => s.open);
           return (
             <li key={funnel.id} id={`funnel-review-${funnel.id}`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-4 sm:p-5">
@@ -270,8 +267,7 @@ export function PageFunnelEditor({
                       </p>
                       {step.open ? (
                         <p className="mt-0.5 text-ink-soft">
-                          {`${people(step.seen)} opened it`}
-                          {step.product ? ` · ${step.done.toLocaleString("en-US")} ${step.free ? "signed up" : "paid"} (${share(step.done, step.seen)})` : ""}
+                          {funnelStepMetrics(step)}
                         </p>
                       ) : (
                         <p className="mt-0.5 font-semibold text-ink">{step.why}</p>
@@ -281,10 +277,8 @@ export function PageFunnelEditor({
                 ))}
               </ol>
               <p className="mt-3 text-xs text-ink-mute">
-                {last && first > 0
-                  ? `${share(last.seen, first)} of the people who opened the first step reached the last. `
-                  : ""}
-                {`Counted since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed: each person once a step, never you or your team.`}
+                {funnelReachRatioMetric(first, last?.seen ?? null)}
+                {`Approximate counts since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed. Each visitor is counted at most once per step; you and your team are excluded. Visitors may enter at different steps.`}
               </p>
             </li>
           );
