@@ -97,12 +97,22 @@ export function buyerFingerprint(secret: string): string {
 
 type Pass = { e: string; k: string; c: string[] | "all" };
 const passKey = (token: string) => `nl:learn:pass:${sha(token)}`;
+/**
+ * The passes one address holds in one store, by the hash their keys are
+ * made from (added 17 October 2026), so deleting the person can find them:
+ * a pass is kept under its own token, which nothing else can lead back to.
+ */
+const passesKey = (store: Store, email: string) => `nl:learn:passes:${storeKey(store)}:${emailKey(email)}`;
 
 /** Lets this browser in: to every course the address bought here, or to some. */
 export async function mintPass(store: Store, email: string, scope: string[] | "all"): Promise<string> {
   const token = randomBytes(32).toString("hex");
   const pass: Pass = { e: normaliseEmail(email), k: storeKey(store), c: scope };
-  await redisPipeline([["SET", passKey(token), JSON.stringify(pass), "EX", PASS_SECONDS]]);
+  await redisPipeline([
+    ["SET", passKey(token), JSON.stringify(pass), "EX", PASS_SECONDS],
+    ["SADD", passesKey(store, email), sha(token)],
+    ["EXPIRE", passesKey(store, email), PASS_SECONDS],
+  ]);
   return token;
 }
 
@@ -780,4 +790,36 @@ async function sendDripEmail(store: Store, product: Listing, unit: CourseModule,
       w.dripSentBy(store.name),
     ].join("\n"),
   });
+}
+
+// ------------------------------------------------------------ deleting a person
+
+/**
+ * Deletes one person from this store's courses (lib/person-erasure.ts): the
+ * courses written down for them on a thanks page, Stripe's answer kept for
+ * ten minutes, each course's record of when they began and came back, the
+ * lessons they marked done, the drip emails sent them, and every browser
+ * pass let in with their address. What they paid for stays on the
+ * creator's Stripe account, so a buyer who comes back proves it again by
+ * the emailed link, as on any new device.
+ */
+export async function forgetLearnerPerson(
+  store: Store,
+  rawEmail: string,
+  courses: { courseId: string; moduleIds: string[] }[],
+): Promise<number> {
+  if (!isRedisConfigured()) return 0;
+  const email = normaliseEmail(rawEmail);
+  const [held] = await redisPipeline([["SMEMBERS", passesKey(store, email)]]);
+  const passes = (Array.isArray(held) ? held : []).filter((h): h is string => typeof h === "string" && /^[0-9a-f]{64}$/.test(h));
+  const keys = [
+    ledgerKey(store, email),
+    paidCacheKey(store, email),
+    passesKey(store, email),
+    ...passes.map((hash) => `nl:learn:pass:${hash}`),
+    ...courses.flatMap((c) => [doneKey(c.courseId, email), ...c.moduleIds.map((m) => dripMailKey(c.courseId, email, m))]),
+  ];
+  const commands: (string | number)[][] = [["DEL", ...keys], ...courses.map((c) => ["HDEL", studentsKey(c.courseId), emailKey(email)])];
+  const replies = await redisPipeline(commands);
+  return replies.reduce<number>((sum, n) => sum + (Number(n) || 0), 0);
 }

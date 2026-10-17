@@ -96,3 +96,10 @@ export async function grantRoom(
     return null;
   }
 }
+
+/** Deletes the leave one member holds in the room (lib/community-erasure.ts). */
+export async function forgetGrantPerson(id: string, who: string): Promise<number> {
+  if (!isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", grantKey(id, who)]]);
+  return Number(gone) || 0;
+}

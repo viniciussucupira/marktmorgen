@@ -217,6 +217,85 @@ export class MemoryRedis {
           return 1;
         }
         if (key.startsWith("-- marktmorgen:host-claim:v1\n")) return this.hostClaim(args);
+        if (key.startsWith("-- marktmorgen:decr-to-zero:v1\n") && args[0] === "1" && args.length === 2) {
+          this.live(args[1]);
+          const n = Number(this.data.get(args[1]) ?? "0") || 0;
+          if (n <= 0) return 0;
+          this.data.set(args[1], String(n - 1));
+          return n - 1;
+        }
+        if (key.startsWith("-- marktmorgen:lesson-comments-forget:v1\n")) {
+          const count = Number(args[0]);
+          const keys = args.slice(1, 1 + count);
+          const argv = args.slice(1 + count);
+          const [comments, all, replies, names, ...lessonKeys] = keys;
+          const who = argv[0];
+          const lessons = new Map(lessonKeys.map((k, i) => [argv[1 + i], k]));
+          for (const k of keys) this.live(k);
+          const held = this.data.get(comments);
+          const rows = new Map<string, { b?: string; r?: string | null; l?: string }>();
+          if (held instanceof Map) for (const [id, raw] of held) {
+            try { rows.set(id, JSON.parse(raw)); } catch { /* not a comment */ }
+          }
+          const tops = new Set([...rows].filter(([, c]) => c.b === who && !c.r).map(([id]) => id));
+          let gone = 0;
+          for (const [id, c] of rows) {
+            const parent = c.r ?? null;
+            if (c.b !== who && !(parent && tops.has(parent))) continue;
+            if (held instanceof Map) held.delete(id);
+            this.zset(all).splice(0, this.zset(all).length, ...this.zset(all).filter((e) => e.member !== id));
+            this.hash(replies).delete(id);
+            const lessonKey = c.l ? lessons.get(c.l) : undefined;
+            if (lessonKey) this.zset(lessonKey).splice(0, this.zset(lessonKey).length, ...this.zset(lessonKey).filter((e) => e.member !== id));
+            if (parent && !tops.has(parent) && rows.has(parent)) {
+              const counts = this.hash(replies);
+              counts.set(parent, String((Number(counts.get(parent)) || 0) - 1));
+            }
+            gone += 1;
+          }
+          this.hash(names).delete(who);
+          return gone;
+        }
+        if (key.startsWith("-- marktmorgen:list-blank:v1\n")) {
+          const count = Number(args[0]);
+          const keys = args.slice(1, 1 + count);
+          const [value, mark] = [args[1 + count], args[2 + count]];
+          let n = 0;
+          for (const listKey of keys) {
+            this.live(listKey);
+            if (!this.data.has(listKey)) continue;
+            const list = this.list(listKey);
+            list.forEach((item, i) => {
+              if (item === value) {
+                list[i] = mark;
+                n += 1;
+              }
+            });
+          }
+          return n;
+        }
+        if (key.startsWith("-- marktmorgen:form-forget:v1\n")) {
+          const count = Number(args[0]);
+          const keys = args.slice(1, 1 + count);
+          const address = args[1 + count];
+          let removed = 0;
+          for (const listKey of keys) {
+            this.live(listKey);
+            if (!this.data.has(listKey)) continue;
+            const kept = this.list(listKey).filter((raw) => {
+              try {
+                const value = JSON.parse(raw) as { answers?: Record<string, unknown> };
+                const hit = value && typeof value.answers === "object" && value.answers !== null && Object.values(value.answers).some((a) => typeof a === "string" && a.trim().toLowerCase() === address);
+                if (hit) removed += 1;
+                return !hit;
+              } catch {
+                return true;
+              }
+            });
+            this.data.set(listKey, kept);
+          }
+          return removed;
+        }
         if (!key.startsWith("-- marktmorgen:form-opportunity:v1\n") || args[0] !== "1" || args.length !== 5) throw new Error("MemoryRedis: unsupported EVAL");
         const target = args[1];
         this.live(target);
@@ -310,6 +389,16 @@ export class MemoryRedis {
       }
       case "EXISTS":
         return this.data.has(key) ? 1 : 0;
+      case "TYPE": {
+        // As Redis names them, for a test that walks every key (tests/erasure-world.ts).
+        const held = this.data.get(key);
+        if (held === undefined) return "none";
+        if (typeof held === "string") return "string";
+        if (held instanceof Map) return "hash";
+        if (held instanceof Set) return "set";
+        if (Array.isArray(held) && held.length && typeof held[0] === "object") return "zset";
+        return Array.isArray(held) ? "list" : "none";
+      }
 
       case "RPUSH": {
         const list = this.list(key);
@@ -337,6 +426,22 @@ export class MemoryRedis {
         const start = from < 0 ? Math.max(0, list.length + from) : from;
         const end = to < 0 ? list.length + to : to;
         return list.slice(start, end + 1);
+      }
+      case "LREM": {
+        // LREM key count value: count 0 takes every one, as the erasures use it.
+        if (!this.data.has(key)) return 0;
+        const list = this.list(key);
+        const [count, value] = [Number(args[0]), args[1]];
+        let gone = 0;
+        const kept = list.filter((item) => {
+          if (item === value && (count === 0 || gone < Math.abs(count))) {
+            gone += 1;
+            return false;
+          }
+          return true;
+        });
+        this.data.set(key, kept);
+        return gone;
       }
       case "LLEN":
         return this.data.has(key) ? this.list(key).length : 0;

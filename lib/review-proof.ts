@@ -45,6 +45,7 @@ import type { Listing, Store } from "@/lib/store";
 import { readListings } from "@/lib/catalog";
 import { deliveredIds } from "@/lib/bundle-rules";
 import { takesReviews } from "@/lib/house-store";
+import { noteForErasure } from "@/lib/erasure-index";
 
 const SESSION_ID = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
 const INTENT_ID = /^pi_[A-Za-z0-9]{10,200}$/;
@@ -204,7 +205,7 @@ type LinkGrant = { s: string; r: string; e: string };
 export async function mintReviewLink(store: Store, reference: string, email: string): Promise<string> {
   const token = randomBytes(24).toString("hex");
   const grant: LinkGrant = { s: store.statsId ?? "", r: reference, e: email };
-  await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", REVIEW_LINK_SECONDS]]);
+  await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", REVIEW_LINK_SECONDS], ...noteForErasure(store.statsId, email, linkKey(token))]);
   return token;
 }
 

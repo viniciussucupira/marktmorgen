@@ -182,3 +182,15 @@ export async function takeGiven(statsId: string, email: string, productId: strin
   const [gone] = await redisPipeline([["HDEL", key, productId]]);
   return Number(gone) === 1;
 }
+
+/**
+ * Deletes what an import from another platform gave one person here
+ * (lib/person-erasure.ts): the purchases brought over for them, and the mark
+ * that an import brought them. Nothing was paid here for these, so no order
+ * of ours stands behind them; the person loses access to them.
+ */
+export async function forgetImportedPerson(statsId: string | null, email: string): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const replies = await redisPipeline([["DEL", importedKey(statsId, email)], ["HDEL", importedWhoKey(statsId), normaliseEmail(email)]]);
+  return replies.reduce<number>((sum, n) => sum + (Number(n) || 0), 0);
+}

@@ -20,7 +20,7 @@ export default function PrivacyPage() {
   // Named only while the files creators sell are kept there (lib/vault.ts).
   const cloudflare = isVaultConfigured();
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 13, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="October 17, 2026">
       <p>
         Marktmorgen (“Marktmorgen,” “we,” “us,” or “our”) is operated by
         Solrenning, an independent software studio. This Privacy Policy
@@ -1582,9 +1582,13 @@ export default function PrivacyPage() {
         </p>
         <p>
           In practice this means a request about your data as a buyer — a copy
-          of it, a correction, a deletion — is answered by the creator you
-          bought from. Write to them first. If you write to us instead, we will
-          pass it on and tell you we did.
+          of it or a correction — is answered by the creator you bought from.
+          Write to them first. If you write to us instead, we will pass it on
+          and tell you we did. Deleting it you can do yourself, at once, as{" "}
+          <a href="#delete" className="text-black underline underline-offset-2 hover:no-underline">
+            section 8
+          </a>{" "}
+          says; the creator is told it was done.
         </p>
         <p>
           Two things stay ours in that situation: the security of the systems
@@ -1657,11 +1661,16 @@ export default function PrivacyPage() {
         </p>
         <p>
           A creator&apos;s list is kept for as long as their store exists, or
-          until the creator, or the person on it, asks us to remove an address.
-          A request for a free copy whose link is never used is deleted after
-          7 days. An address that unsubscribed from a creator stays on that
-          list, marked as unsubscribed, so it is never written to again; if you
-          ask for it to be deleted entirely instead, it is.
+          until the creator deletes a person from it, or the person deletes
+          themselves (section 8). A request for a free copy whose link is never
+          used is deleted after 7 days. An address that unsubscribed from a
+          creator stays on that list, marked as unsubscribed, so it is never
+          written to again; to have it deleted entirely instead, delete it
+          yourself at{" "}
+          <Link href="/privacy/delete" className="text-black underline underline-offset-2 hover:no-underline">
+            marktmorgen.com/privacy/delete
+          </Link>
+          .
         </p>
         <p>
           A creator&apos;s automatic emails and workflows keep a record of each
@@ -1749,10 +1758,79 @@ export default function PrivacyPage() {
           your data in a portable format; and withdraw consent where processing
           is based on consent.
         </p>
+        <div id="delete" className="space-y-4">
+          <p>
+            <strong className="text-black">Deleting what a store keeps about you.</strong>{" "}
+            You do not have to ask anybody. At{" "}
+            <Link href="/privacy/delete" className="text-black underline underline-offset-2 hover:no-underline">
+              marktmorgen.com/privacy/delete
+            </Link>
+            , or from the link at the foot of any store&apos;s page, type your
+            address. If a store knows it, we email it a link that works for an
+            hour; the page it opens says what will be deleted and what is kept,
+            and pressing its button deletes it, from that store or from every
+            store you bought from (since October 11, 2026) or signed up with
+            yourself (since October 17, 2026). The page says the same whether or
+            not a store knows the address, and a few requests an hour are taken
+            from one address. A creator, or an admin of their store, can do the
+            same from the studio, and the store&apos;s owner is told when you do
+            it, with your address, so they can delete you from their own tools
+            too.
+          </p>
+          <p>
+            What is deleted: your place on the store&apos;s list and every link
+            in its emails to you; what its team noted about you (its fields,
+            notes and deals); your form answers, inbox conversations, reviews
+            and their photos, and waitlist places; your way through its
+            sequences and workflows, and any email still waiting to reach you;
+            your progress, quiz results, handed-in work and its files, lesson
+            comments and certificates in its courses, and your private podcast
+            feeds; your community profile, points, notifications, private
+            conversations and what you said in its room; your Discord
+            account&apos;s link to the store, whose roles are taken back; the
+            record of sending you to the creator&apos;s email platform; what an
+            import from another platform gave you there with no payment here,
+            which you then lose; and the marks that you were sent a reminder or
+            an offer. When the creator deletes you rather than you, two of these
+            stay: your reviews, without your address, because a store may not
+            take a review down by deleting its writer, and what an import gave
+            you, which is how you keep what you bought elsewhere. You can still
+            delete both yourself.
+          </p>
+          <p>
+            What is kept, and why: a one-way fingerprint of your address, under
+            that store, so it never emails you again and no import brings you
+            back, which only you can lift by joining its list again yourself;
+            any stop you pressed on one kind of its emails, also a one-way hash;
+            your payments, which are on the creator&apos;s own Stripe account as
+            their sales and tax records and are not stored by us; and the few
+            order records a purchase still needs for a refund or for delivery,
+            each with only what it needs and for the time section 1 gives it:
+            PayPal orders, license keys you bought, gifts and group places,
+            pre-orders, packages of calls, your place on a booked group
+            call&apos;s guest list until 60 days after it, and when a physical
+            order shipped. The links emailed to you before stop working. A few
+            records are not kept by your address and run out by themselves: a
+            link that opens a page for a day or less; the list of addresses an
+            email already going out is sent down, which passes a deleted address
+            over (until it finishes, at most 60 days); a reminder waiting for its
+            hour, which is then not sent (at most a week); an import&apos;s file
+            (14 days after it began); the events a store&apos;s webhooks already
+            sent to the creator (7 days); and one-way marks that limit how often
+            something is sent or asked (at most 32 days).
+          </p>
+          <p>
+            Not deleted by this yet: posts and comments you wrote in a
+            store&apos;s community, and your likes and poll votes there, stay,
+            shown without your name. Delete them in the community first if you
+            want them gone, or ask the creator. What a creator copied elsewhere
+            (their email platform, their own files) is theirs to delete there.
+          </p>
+        </div>
         <p>
           If you are in the European Economic Area or the United Kingdom, where
           the General Data Protection Regulation (GDPR) or the UK GDPR applies, or in another
-          jurisdiction with similar laws, you may exercise these rights by
+          jurisdiction with similar laws, you may exercise your other rights by
           emailing{" "}
           <a
             href="mailto:support@marktmorgen.com"

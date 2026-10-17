@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { readUnsubToken } from "@/lib/contacts";
 import { STOP_TOKEN, readStopToken } from "@/lib/checkout-recovery";
 import { COMMUNITY_UNSUB, readCommunityUnsub } from "@/lib/community-mail";
@@ -10,6 +11,7 @@ import { REVIEW_STOP, readReviewStop } from "@/lib/review-requests";
 import { affiliatesWords } from "@/lib/buyer-words/affiliates";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 import { countingFor } from "@/lib/mail-clicks";
+import { blockWords } from "@/lib/buyer-words/blocks";
 
 type Query = { [key: string]: string | string[] | undefined };
 
@@ -94,6 +96,14 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
           <>
             <h1 className="t-h3">{a.listDoneTitle}</h1>
             <p className="mt-3 text-ink-soft">{a.listDone(found.email, name)}</p>
+            {/* Leaving the list keeps the address on it, marked, so it is never written to again; this deletes it and the rest (lib/erasure-request.ts). */}
+            {listStore ? (
+              <p className="mt-4 text-sm">
+                <Link href={`/privacy/delete?store=${encodeURIComponent(listStore.handle)}`} prefetch={false} className="underline underline-offset-4">
+                  {blockWords(listStore.language).deleteMyData}
+                </Link>
+              </p>
+            ) : null}
           </>
         ) : (
           <>

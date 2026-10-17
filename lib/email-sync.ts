@@ -47,6 +47,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { after } from "next/server";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { normaliseEmail } from "@/lib/auth";
 import { canSeal, seal, unseal } from "@/lib/secret-box";
 import {
   type EmailProvider,
@@ -702,4 +703,29 @@ export async function forgetStoreSync(statsId: string | null): Promise<void> {
 export async function disconnect(store: Store): Promise<SyncView> {
   if (store.statsId) await writeConfig(store, null);
   return syncView(store);
+}
+
+/**
+ * Deletes the jobs that sent one person to the creator's email platform, and
+ * any still waiting for a try (lib/person-erasure.ts). What the platform
+ * already took is in the creator's own account there, to be deleted there.
+ */
+export async function forgetSyncPerson(statsId: string | null, email: string): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const address = normaliseEmail(email);
+  const [logged] = await redisPipeline([["LRANGE", logKey(statsId), 0, -1]]);
+  const ids = (Array.isArray(logged) ? logged : []).map(String).slice(0, LOG_SIZE * 2);
+  if (!ids.length) return 0;
+  const raws = await redisPipeline(ids.map((id) => ["GET", jobKey(id)]));
+  const theirs = ids.filter((_, i) => {
+    try {
+      const job = JSON.parse(String(raws[i])) as Partial<Job>;
+      return typeof job.email === "string" && normaliseEmail(job.email) === address;
+    } catch {
+      return false;
+    }
+  });
+  if (!theirs.length) return 0;
+  await redisPipeline([["DEL", ...theirs.map(jobKey)], ...theirs.map((id) => ["LREM", logKey(statsId), 0, id]), ["ZREM", QUEUE_KEY, ...theirs.map((id) => `${statsId}|${id}`)]]);
+  return theirs.length;
 }

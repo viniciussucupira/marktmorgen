@@ -17,7 +17,8 @@
  *   - Admin: everything else — the store's address, domain, pixels, tax,
  *     webhooks, discounts, affiliates and their payouts, sending email, the
  *     files of buyers' addresses and sales, and bringing contacts, products
- *     and past buyers over from another platform (lib/imports.ts).
+ *     and past buyers over from another platform (lib/imports.ts), and
+ *     deleting a person and everything kept about them (lib/person-erasure.ts).
  *   - Editor: the catalogue and the page — products, prices, files, courses,
  *     calls, offers after paying, sales pages, the store's name, look and
  *     links, the community's live events — plus moderating the community
@@ -79,7 +80,13 @@ export type Permission =
    * Each writes a great deal at once, and the first and last say who may be
    * emailed and who owns what, so only the owner and admins have it.
    */
-  | "import";
+  | "import"
+  /**
+   * Deleting one person and everything the store keeps about them
+   * (lib/person-erasure.ts): it cannot be undone, and it takes their
+   * records out of every part of the store, so only the owner and admins.
+   */
+  | "erase";
 
 const EVERYTHING: Permission[] = [
   "billing",
@@ -98,12 +105,13 @@ const EVERYTHING: Permission[] = [
   "draft",
   "send",
   "import",
+  "erase",
 ];
 
 /** The table itself. */
 export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
   owner: new Set(EVERYTHING),
-  admin: new Set<Permission>(["settings", "page", "products", "stats", "orders", "export", "community", "events", "reviews", "draft", "send", "import"]),
+  admin: new Set<Permission>(["settings", "page", "products", "stats", "orders", "export", "community", "events", "reviews", "draft", "send", "import", "erase"]),
   editor: new Set<Permission>(["page", "products", "stats", "community", "events", "reviews", "draft"]),
   support: new Set<Permission>(["orders", "community", "reviews"]),
 };
@@ -127,8 +135,8 @@ export const ROLE_NAMES: Record<Role, string> = {
 /** One line each, shown where a role is chosen. */
 export const ROLE_SUMMARIES: Record<TeamRole, string> = {
   admin: "Everything except the plan, the Stripe connection, the team and deleting the store.",
-  editor: "Products, courses, sales pages, the store page, the community's live events, community and review moderation, and email drafts. Cannot send email, touch payments, import from another platform or download buyers' data.",
-  support: "Reads orders and bookings, sends purchase emails again, sees who is coming to live events, and moderates the community and reviews. Cannot edit the store.",
+  editor: "Products, courses, sales pages, the store page, the community's live events, community and review moderation, and email drafts. Cannot send email, touch payments, import from another platform, download buyers' data or delete a person.",
+  support: "Reads orders and bookings, sends purchase emails again, sees who is coming to live events, and moderates the community and reviews. Cannot edit the store or delete a person.",
 };
 
 /** The words an activity log line starts with, per permission. */
@@ -149,4 +157,5 @@ export const PERMISSION_WORDS: Record<Permission, string> = {
   draft: "Email draft",
   import: "Import",
   send: "Email",
+  erase: "People",
 };

@@ -37,6 +37,8 @@ import {
 } from "@/lib/waitlist-rules";
 import { cleanText, cleanLine } from "@/lib/community-text";
 import { productSegment } from "@/lib/product-slug";
+import { noteForErasure } from "@/lib/erasure-index";
+import { blankInLists } from "@/lib/erasure-lists";
 
 const soonKey = (sid: string) => `nl:wl:${sid}:soon`;
 const listKey = (sid: string, pid: string) => `nl:wl:${sid}:${pid}`;
@@ -126,6 +128,8 @@ export async function joinWaitlist(input: {
     ["HSET", listKey(sid, product.id), email, JSON.stringify(entry)],
     ["SET", tokenKey(confirm), grant("confirm"), "EX", CONFIRM_SECONDS],
     ["SET", tokenKey(leave), grant("leave"), "EX", WAIT_SECONDS],
+    ...noteForErasure(sid, email, tokenKey(confirm)),
+    ...noteForErasure(sid, email, tokenKey(leave)),
   ]);
 
   const link = `${origin}/@${store.handle}/waitlist?token=${confirm}`;
@@ -176,7 +180,7 @@ export async function confirmSpot(token: string, store: Store | null): Promise<{
     await redisPipeline([["HSET", listKey(grant.s, grant.p), grant.e, JSON.stringify({ ...entry, ok: now() })]]);
   }
   if (entry.c && store.listId) {
-    await upsertContact(store.listId, grant.e, { agreed: true, explicit: true, clicks: entry.k === true, source: "free", at: new Date().toISOString() }).catch((error) =>
+    await upsertContact(store.listId, grant.e, { agreed: true, explicit: true, clicks: entry.k === true, source: "free", at: new Date().toISOString(), sid: store.sid }).catch((error) =>
       console.error("could not add a waitlist address to a list", error),
     );
   }
@@ -345,4 +349,16 @@ export async function runLaunches(load: (handle: string) => Promise<Store | null
     }
   }
   return sent;
+}
+
+/**
+ * Takes one address off every waitlist of the store, out of any launch email
+ * still going out, and deletes its confirm and leave links (lib/person-erasure.ts).
+ */
+export async function forgetWaitlistPerson(sid: string | null, productIds: string[], email: string): Promise<number> {
+  if (!sid || !isRedisConfigured()) return 0;
+  const address = normaliseEmail(email);
+  const replies = productIds.length ? await redisPipeline(productIds.map((p) => ["HDEL", listKey(sid, p), address])) : [];
+  const blanked = await blankInLists(productIds.map((p) => sendKey(sid, p)), address);
+  return replies.reduce<number>((sum, n) => sum + (Number(n) || 0), 0) + blanked;
 }

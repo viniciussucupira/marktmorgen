@@ -3,7 +3,8 @@ import type { NextRequest } from "next/server";
 import { guardStoreWrite } from "@/lib/store-request";
 import { ensureStatsId } from "@/lib/store";
 import { studioPath } from "@/lib/studio-route";
-import { addPersonNote, findToken, readAddress, removePersonNote } from "@/lib/buyer-profile";
+import { addPersonNote, addressForToken, findToken, forgetFindToken, readAddress, removePersonNote } from "@/lib/buyer-profile";
+import { erasePerson } from "@/lib/person-erasure";
 
 /** How many addresses one store may look up in an hour: each look reads Stripe. */
 const FINDS_PER_HOUR = 200;
@@ -15,9 +16,12 @@ const FINDS_PER_HOUR = 200;
  *   { action: "find", email }            → the address of its page, which carries a token, never the address
  *   { action: "note", person, text }     → adds a note about that person; answers the notes
  *   { action: "unnote", person, id }     → takes one away; answers the notes
+ *   { action: "erase", token, confirm }  → deletes the person the page's token found, and
+ *                                          everything the store keeps about them
+ *                                          (lib/person-erasure.ts); "erase" permission only
  */
 export async function POST(request: NextRequest) {
-  const guarded = await guardStoreWrite(request, "orders", 2_000);
+  const guarded = await guardStoreWrite(request, (body) => (body.action === "erase" ? "erase" : "orders"), 2_000);
   if (!guarded.ok) return guarded.response;
   const { body } = guarded;
   const noStore = { headers: { "Cache-Control": "no-store" } };
@@ -31,6 +35,23 @@ export async function POST(request: NextRequest) {
       const token = await findToken(guarded.store, email);
       if (!token) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
       return Response.json({ ok: true, href: studioPath(guarded.store, `p=${token}`, "people") }, noStore);
+    }
+
+    if (body.action === "erase") {
+      // Typed by whoever presses, so a slip of the mouse deletes nobody.
+      if (body.confirm !== "DELETE") return Response.json({ ok: false, error: "confirm" }, { status: 400 });
+      const token = typeof body.token === "string" ? body.token : "";
+      const email = await addressForToken(guarded.store, token);
+      if (!email) return Response.json({ ok: false, error: "expired" }, { status: 410 });
+      const result = await erasePerson(guarded.store, email, { kind: "team", who: guarded.email, role: guarded.role });
+      if (result.ok) {
+        await forgetFindToken(token);
+        const left = result.notes.includes("discord-roles") ? "&discord=1" : "";
+        return Response.json({ ok: true, records: result.records, notes: result.notes, href: studioPath(guarded.store, `erased=1${left}`, "people") }, noStore);
+      }
+      if (result.reason === "incomplete") return Response.json({ ok: false, error: "incomplete", failed: result.failed }, { status: 503 });
+      if (result.reason === "limit") return Response.json({ ok: false, error: "limited", message: result.message }, { status: 429 });
+      return Response.json({ ok: false, error: result.reason }, { status: result.reason === "email" ? 400 : 503 });
     }
 
     const store = guarded.store.statsId ? guarded.store : await ensureStatsId(guarded.store.email);

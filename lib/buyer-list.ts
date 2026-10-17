@@ -67,6 +67,7 @@ export async function listOrder(store: Store, order: ListedOrder): Promise<"done
         explicit: true,
         at: new Date(order.created * 1000).toISOString(),
         source: "buyer",
+        sid: store.sid,
         clicks: order.clicks === true,
         productId: first.id,
         title: first.title,

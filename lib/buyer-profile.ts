@@ -631,3 +631,16 @@ export async function buyerProfile(store: Store, rawEmail: string): Promise<Buye
     stripeError,
   };
 }
+
+/** Deletes the team's notes about one person (lib/person-erasure.ts). */
+export async function forgetNotesPerson(statsId: string | null, person: string): Promise<number> {
+  if (!statsId || !PERSON_KEY.test(person) || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", notesKey(statsId, person)], ["SREM", whoKey(statsId), person]]);
+  return Number(gone) || 0;
+}
+
+/** Spends a search's token once the person it found is deleted (lib/person-erasure.ts). */
+export async function forgetFindToken(token: string): Promise<void> {
+  if (!FIND_TOKEN.test(token) || !isRedisConfigured()) return;
+  await redisPipeline([["DEL", findKey(token)]]);
+}

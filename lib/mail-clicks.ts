@@ -31,7 +31,7 @@
 import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { type Contact, UNSUB_TOKEN, leadsKey, mailable, readUnsubToken } from "@/lib/contacts";
+import { type Contact, UNSUB_TOKEN, leadsKey, mailable, parseContact, readUnsubToken } from "@/lib/contacts";
 
 /** How long a used link is remembered after the last one, in days. */
 export const CLICK_DAYS = 90;
@@ -114,4 +114,19 @@ export async function stopCounting(token: string): Promise<boolean> {
   }
   await redisPipeline(commands);
   return true;
+}
+
+/**
+ * Deletes what is counted of one person's link use on this list, and the key
+ * their links carried (lib/person-erasure.ts). Run before the list forgets
+ * them, while the token their key was made from can still be read.
+ */
+export async function forgetClicksPerson(listId: string | null, rawEmail: string): Promise<number> {
+  if (!listId || !isRedisConfigured()) return 0;
+  const email = normaliseEmail(rawEmail);
+  const [raw] = await redisPipeline([["HGET", leadsKey(listId), email]]);
+  const token = parseContact(raw)?.t ?? "";
+  const keys = [usedKey(listId, email), ...(UNSUB_TOKEN.test(token) ? [keyIndex(linkKeyOf(token))] : [])];
+  const [gone] = await redisPipeline([["DEL", ...keys]]);
+  return Number(gone) || 0;
 }

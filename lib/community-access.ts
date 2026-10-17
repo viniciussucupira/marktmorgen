@@ -452,3 +452,18 @@ export async function openCommunityLink(token: string): Promise<LinkGrant | null
     return null;
   }
 }
+
+/**
+ * Forgets the answers kept about whether one address may come into the
+ * community and its spaces, and the mark that it was welcomed
+ * (lib/community-erasure.ts).
+ */
+export async function forgetAccessPerson(id: string, email: string, spaceIds: string[], productIds: string[]): Promise<number> {
+  if (!isRedisConfigured()) return 0;
+  const key = emailKey(email);
+  const replies = await redisPipeline([
+    ["DEL", okKey(id, email), ...spaceIds.map((space) => `nl:cm:${id}:sp:ok:${space}:${key}`), ...productIds.map((p) => `nl:cm:${id}:sg:${p}:${key}`)],
+    ["HDEL", `nl:cm:${id}:wel`, key],
+  ]);
+  return replies.reduce<number>((sum, n) => sum + (Number(n) || 0), 0);
+}

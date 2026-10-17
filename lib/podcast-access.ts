@@ -155,3 +155,17 @@ export async function sendFeedLink(input: { store: Store; product: Listing; emai
   });
   return sent ? "sent" : "error";
 }
+
+/**
+ * Deletes one person's private feeds in this store (lib/person-erasure.ts):
+ * the feed's address stops working in their podcast app. A buyer who still
+ * holds the podcast asks for a new one, as on a new device.
+ */
+export async function forgetPodcastPerson(store: Store, productIds: string[], email: string): Promise<number> {
+  if (!store.statsId || !productIds.length || !isRedisConfigured()) return 0;
+  const sid = store.statsId;
+  const tokens = await redisPipeline(productIds.map((p) => ["GET", byKey(sid, p, email)]));
+  const held = tokens.filter((t): t is string => typeof t === "string" && FEED_TOKEN.test(t));
+  const [gone] = await redisPipeline([["DEL", ...productIds.flatMap((p) => [byKey(sid, p, email), okKey(sid, p, email)]), ...held.map(tokenKey)]]);
+  return Number(gone) || 0;
+}

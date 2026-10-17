@@ -373,3 +373,30 @@ export async function searchMessages(id: string, who: string, used: string[]): P
   }
   return hits.sort((a, b) => b.message.at - a.message.at);
 }
+
+/**
+ * Deletes one member's private messages (lib/community-erasure.ts): every
+ * conversation and request they are in, for both people in it, since a
+ * conversation is the two of them; and their lists of conversations,
+ * requests and people they declined. Somebody else's choice to decline them
+ * stays with that person.
+ */
+export async function forgetDmPerson(id: string, who: string): Promise<number> {
+  const [mine, asked] = await redisPipeline([["ZRANGEBYSCORE", inboxKey(id, who), "-inf", "+inf"], ["ZRANGEBYSCORE", askedKey(id, who), "-inf", "+inf"]]);
+  const pairs = [...new Set([...(Array.isArray(mine) ? mine : []), ...(Array.isArray(asked) ? asked : [])].map(String))].filter((p) => p.split(".").includes(who));
+  const commands: (string | number)[][] = [];
+  for (const pair of pairs) {
+    const other = pair.split(".").find((k) => k !== who) ?? "";
+    commands.push(["DEL", chatKey(id, pair), readKey(id, pair)]);
+    if (other) commands.push(["ZREM", inboxKey(id, other), pair], ["ZREM", askedKey(id, other), pair]);
+  }
+  commands.push(["DEL", ...dmKeys(id, who)]);
+  await redisPipeline(commands);
+  return pairs.length;
+}
+
+/** How many conversations and requests one member is in: what deleting them goes through (lib/community-erasure.ts). */
+export async function dmCount(id: string, who: string): Promise<number> {
+  const [mine, asked] = await redisPipeline([["ZCARD", inboxKey(id, who)], ["ZCARD", askedKey(id, who)]]);
+  return (Number(mine) || 0) + (Number(asked) || 0);
+}

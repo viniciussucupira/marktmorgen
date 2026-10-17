@@ -193,3 +193,10 @@ export async function memberHealth(store: Store, fresh = false, now = Date.now()
   if (isRedisConfigured()) await redisPipeline([["SET", cacheKey(store), JSON.stringify(health), "EX", CACHE_SECONDS]]).catch(() => {});
   return health;
 }
+
+/** Lets the ten-minute copy of the members' scores go, so a deleted person is not in it (lib/person-erasure.ts). */
+export async function forgetHealthCopy(store: Store): Promise<number> {
+  if (!store.statsId || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", cacheKey(store)]]);
+  return Number(gone) || 0;
+}

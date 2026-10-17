@@ -449,3 +449,11 @@ export async function resetTries(course: Course, who: string): Promise<void> {
     ]),
   );
 }
+
+/** Deletes one student's tries, results and passes in these courses' quizzes (lib/person-erasure.ts). `who` is lib/learn.ts emailKey. */
+export async function forgetQuizPerson(courses: { courseId: string; lessonIds: string[] }[], who: string): Promise<number> {
+  if (!courses.length || !isRedisConfigured()) return 0;
+  const keys = courses.flatMap((c) => [passedKey(c.courseId, who), ...c.lessonIds.flatMap((l) => [triesKey(c.courseId, l, who), resultKey(c.courseId, l, who)])]);
+  const [gone] = await redisPipeline([["DEL", ...keys]]);
+  return Number(gone) || 0;
+}

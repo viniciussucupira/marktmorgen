@@ -187,3 +187,20 @@ export async function earnedCourses(
   }
   return out;
 }
+
+/**
+ * Deletes one member's points (lib/community-erasure.ts): their all-time
+ * total, what they made on each day still kept, the rewards that reached
+ * them, and the boards worked out from them, which are worked out again.
+ */
+export async function forgetPointsPerson(id: string, who: string, now = Date.now()): Promise<number> {
+  if (!COMMUNITY.test(id) || !MEMBER.test(who) || !isRedisConfigured()) return 0;
+  const today = dayOf(now);
+  const days = Array.from({ length: DAYS_KEPT + 1 }, (_, i) => dayKey(id, today - i));
+  const replies = await redisPipeline([
+    ["ZREM", allKey(id), who],
+    ...days.map((key) => ["ZREM", key, who]),
+    ["DEL", unlockedKey(id, who), boardKey(id, "7"), boardKey(id, "30"), boardKey(id, "all")],
+  ]);
+  return replies.reduce<number>((sum, n) => sum + (Number(n) || 0), 0);
+}

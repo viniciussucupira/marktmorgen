@@ -987,3 +987,21 @@ export async function dismissReport(id: string, key: string): Promise<void> {
 export async function dropSpace(id: string, space: string): Promise<void> {
   await redisPipeline([["DEL", spaceKey(id, space)]]);
 }
+
+/**
+ * Deletes one member's own record (lib/community-erasure.ts): who they are,
+ * their name and answers, their place in the directory, and the counts kept
+ * for their limits. Answers the record as it was, for the keys it names
+ * elsewhere (their handle, their unsubscribe token), or null.
+ */
+export async function forgetMemberRecord(id: string, who: string): Promise<Member | null> {
+  if (!isRedisConfigured()) return null;
+  const [raw] = await redisPipeline([["HGET", membersKey(id), who]]);
+  const member = parseMember(raw);
+  await redisPipeline([
+    ["HDEL", membersKey(id), who],
+    ["ZREM", dirKey(id), who],
+    ["DEL", ...(Object.keys(RATE_LIMITS) as RateKind[]).map((kind) => rateKey(id, who, kind))],
+  ]);
+  return member;
+}

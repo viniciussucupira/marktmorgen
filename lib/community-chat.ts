@@ -272,3 +272,17 @@ export async function searchRoom(id: string, used: string[]): Promise<ChatMessag
   const rows = (Array.isArray(raw) ? raw : []).map(parse).filter((m): m is ChatMessage => m !== null);
   return rows.filter((message) => holdsAll(message.text, used));
 }
+
+/** Deletes what one member said in the room, and their cooldown (lib/community-erasure.ts). */
+export async function forgetChatPerson(id: string, who: string): Promise<number> {
+  const [raw] = await redisPipeline([["ZRANGEBYSCORE", roomKey(id), "-inf", "+inf"]]);
+  const theirs = (Array.isArray(raw) ? raw : []).map(String).filter((row) => {
+    try {
+      return (JSON.parse(row) as Partial<ChatMessage>).a === who;
+    } catch {
+      return false;
+    }
+  });
+  await redisPipeline([["DEL", spokeKey(id, who)], ...(theirs.length ? [["ZREM", roomKey(id), ...theirs]] : [])]);
+  return theirs.length;
+}

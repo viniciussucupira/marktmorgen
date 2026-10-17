@@ -21,6 +21,11 @@
  *
  *   nl:lib:<hash of the address>   the stores it bought from (a set of ids), kept 3 years after the last
  *   nl:lib:link:<hash of a token>  the address a library link was sent to, for a day
+ *   nl:lib:joined:<hash of the address>  the stores whose list it joined itself (a set of ids), kept 3 years after the last
+ *
+ * The last (added 17 October 2026) is not shown anywhere: it is how a person
+ * asking to be deleted from every store (lib/erasure-request.ts) is found in
+ * the stores they joined without buying, by the same one-way hash.
  */
 import { storeForId } from "@/lib/store";
 import { createHash, randomBytes } from "node:crypto";
@@ -28,6 +33,7 @@ import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { withinLimit } from "@/lib/request-guard";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { joinedKey } from "@/lib/joined-stores";
 
 export const LIBRARY_LINK_SECONDS = 24 * 60 * 60;
 export const LIBRARY_TOKEN = /^[0-9a-f]{64}$/;
@@ -39,6 +45,21 @@ const STORE_ID = /^[0-9a-f]{32}$/;
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const libraryKey = (email: string) => `nl:lib:${sha(`nimbus-lib:${normaliseEmail(email)}`).slice(0, 40)}`;
 const linkKey = (token: string) => `nl:lib:link:${sha(`nimbus-lib-link:${token}`).slice(0, 40)}`;
+
+/** The ids of every store an address bought from or joined itself, at most MAX_LIBRARY_STORES. */
+export async function storesKnownFor(email: string): Promise<string[]> {
+  if (!isRedisConfigured()) return [];
+  const [bought, joined] = await redisPipeline([["SMEMBERS", libraryKey(email)], ["SMEMBERS", joinedKey(email)]]);
+  const ids = [...(Array.isArray(bought) ? bought : []), ...(Array.isArray(joined) ? joined : [])].filter((id): id is string => typeof id === "string" && STORE_ID.test(id));
+  return [...new Set(ids)].slice(0, MAX_LIBRARY_STORES);
+}
+
+/** Forgets that this address bought from or joined the store with this id (lib/person-erasure.ts). */
+export async function forgetLibraryPerson(sid: string, email: string): Promise<number> {
+  if (!STORE_ID.test(sid) || !isRedisConfigured()) return 0;
+  const replies = await redisPipeline([["SREM", libraryKey(email), sid], ["SREM", joinedKey(email), sid]]);
+  return replies.reduce<number>((sum, n) => sum + (Number(n) || 0), 0);
+}
 
 /** Notes that these addresses bought something from the store with this id. Never throws. */
 export async function rememberBuyers(sid: string, emails: string[]): Promise<void> {

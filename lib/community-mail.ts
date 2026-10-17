@@ -297,3 +297,10 @@ export async function stopAnnouncements(token: string): Promise<boolean> {
   if (found.member.mail) await setMail(found.community, found.member, false);
   return true;
 }
+
+/** Deletes the record behind a deleted member's unsubscribe link (lib/community-erasure.ts). */
+export async function forgetCommunityUnsub(token: string): Promise<number> {
+  if (!token || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", unsubKey(token)]]);
+  return Number(gone) || 0;
+}

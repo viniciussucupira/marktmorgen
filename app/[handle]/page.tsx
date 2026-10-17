@@ -707,6 +707,12 @@ export default async function StorePage({ params, searchParams }: Params) {
                 {bw.reportPage}
               </Link>
             </p>
+            {/* Anybody this store keeps something about may delete it themselves (lib/erasure-request.ts). */}
+            <p className="mb-4">
+              <Link href={`/privacy/delete?store=${encodeURIComponent(store.handle)}`} prefetch={false} rel="nofollow" className="st-footer-link text-xs">
+                {bw.deleteMyData}
+              </Link>
+            </p>
             {store.look.badge || !canUse(store, "branding") ? (
               <Link href="/" className="st-footer-link text-sm font-semibold">
                 {w.madeWith}

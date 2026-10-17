@@ -8,9 +8,11 @@ import { StudioStorePin } from "@/components/studio-store-pin";
 import { PersonFind } from "@/components/person-find";
 import { PersonNotes } from "@/components/person-notes";
 import { PersonFields } from "@/components/person-fields";
+import { PersonErase } from "@/components/person-erase";
+import { can } from "@/lib/team-roles";
 import { readFields, readValues } from "@/lib/crm";
 import type { CrmField } from "@/lib/crm-rules";
-import { type BuyerProfile, type ProfileMembership, type ProfileOrder, SALE_REFERENCE, addressForSale, addressForToken, buyerProfile } from "@/lib/buyer-profile";
+import { type BuyerProfile, type ProfileMembership, type ProfileOrder, SALE_REFERENCE, addressForSale, addressForToken, buyerProfile, findToken } from "@/lib/buyer-profile";
 import { channelName } from "@/lib/channel-names";
 import { formatMoney } from "@/lib/money";
 import { listSales } from "@/lib/store-checkout";
@@ -95,6 +97,10 @@ export default async function StudioPeoplePage({ searchParams }: Params) {
   // The store's own fields about each person (lib/crm-rules.ts), and this one's answers.
   const fields = profile ? await readFields(store.statsId) : [];
   const values = profile?.person ? await readValues(store.statsId, profile.person, fields) : {};
+  // Deleting the person needs the page's token, never the address in a link (lib/person-erasure.ts).
+  const mayErase = can(view.role, "erase");
+  const eraseToken = profile && email && mayErase ? (token || (await findToken(store, email).catch(() => null)) || "") : "";
+  const erased = query.erased === "1";
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -109,9 +115,15 @@ export default async function StudioPeoplePage({ searchParams }: Params) {
         <main id="content" className="container-page pb-20 pt-10 sm:pt-14">
           <p className="eyebrow">Buyers</p>
           {profile ? (
-            <Profile store={store} profile={profile} fields={fields} values={values} />
+            <Profile store={store} profile={profile} fields={fields} values={values} eraseToken={eraseToken} />
           ) : (
             <>
+              {erased ? (
+                <p className="notice notice-success mt-3" role="status">
+                  That person was deleted from your store, and your store will not email them again. Their payments stay on your Stripe account.
+                  {query.discord === "1" ? " Discord would not take back every role it gave them: remove those in your server." : ""}
+                </p>
+              ) : null}
               <h1 className="t-h2 mt-3">Everything one buyer has done with your store</h1>
               <p className="mt-3 max-w-2xl text-ink-soft">
                 What they paid and when, what was given back, where they found you, their memberships, how far they are in
@@ -186,7 +198,7 @@ async function LatestBuyers({ store }: { store: Store }) {
   );
 }
 
-function Profile({ store, profile, fields, values }: { store: Store; profile: BuyerProfile; fields: CrmField[]; values: Record<string, string> }) {
+function Profile({ store, profile, fields, values, eraseToken }: { store: Store; profile: BuyerProfile; fields: CrmField[]; values: Record<string, string>; eraseToken: string }) {
   const money = (cents: number, currency = profile.currency) => formatMoney(cents, currency);
   const net = profile.paid - profile.refunded;
   const others = Object.entries(profile.otherCurrencies).filter(([, cents]) => cents !== 0);
@@ -372,6 +384,16 @@ function Profile({ store, profile, fields, values }: { store: Store; profile: Bu
         <p className="mt-1 text-sm text-ink-soft">For you and your team only. The buyer never sees them.</p>
         {profile.person ? <PersonNotes person={profile.person} initial={profile.notes} /> : null}
       </section>
+
+      {eraseToken ? (
+        <section aria-labelledby="erase-title" className="card mt-8 p-6 sm:p-8">
+          <h2 id="erase-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Delete this person</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            When someone asks you to delete their data, or you no longer want to keep it: their records go from every part of your store, and your store never emails them again. People can also do it themselves from your store&apos;s privacy link.
+          </p>
+          <PersonErase token={eraseToken} email={profile.email} />
+        </section>
+      ) : null}
     </>
   );
 }

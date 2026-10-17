@@ -65,6 +65,8 @@ import { givingWords } from "@/lib/buyer-words/giving";
 import { type CallListing, slotsForProduct } from "@/lib/calls";
 import { isTimeZone, readableTime, zoneName } from "@/lib/call-setup";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
+import { noteForErasure } from "@/lib/erasure-index";
+import { suppressedCommand, wasSuppressed } from "@/lib/suppression";
 
 /** A checkout that closed longer ago than this is left alone. */
 export const REMIND_WITHIN_SECONDS = 6 * 60 * 60;
@@ -113,7 +115,7 @@ export function productLink(store: Store, productId: string): string {
 async function stopLink(store: Store, email: string): Promise<{ page: string; oneClick: string }> {
   const token = randomBytes(20).toString("hex");
   const grant = { k: store.statsId, e: normaliseEmail(email), h: store.handle, n: store.name };
-  await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", LINK_SECONDS]]);
+  await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", LINK_SECONDS], ...noteForErasure(store.statsId, email, linkKey(token))]);
   return {
     page: `${SITE_URL}/unsubscribe?r=${token}`,
     oneClick: `${SITE_URL}/api/mail/unsubscribe?r=${token}`,
@@ -313,13 +315,16 @@ async function deliver(
   const ids = about.kind === "cart" ? about.items.map((p) => p.id) : [about.product.id];
   // What "once a week" counts: one product, or one cart of the same products in any order.
   const onceFor = about.kind === "cart" ? `cart:${[...ids].sort().join(",")}` : about.product.id;
-  const [sent, off, once, contact] = await redisPipeline([
+  const [sent, off, once, contact, deleted] = await redisPipeline([
     ["EXISTS", sentKey(id)],
     ["EXISTS", offKey(statsId, email)],
     ["EXISTS", onceKey(statsId, email, onceFor)],
     store.listId ? ["HGET", leadsKey(store.listId), normaliseEmail(email)] : ["EXISTS", "nl:none"],
+    suppressedCommand(store.listId, email),
   ]);
   if (Number(sent) === 1 || Number(off) === 1 || Number(once) === 1) return "skip";
+  // Somebody deleted from this store is never written to again (lib/suppression.ts).
+  if (wasSuppressed(deleted)) return "skip";
   // Someone who left the creator's list has said no to their email, and a
   // reminder is their email.
   if (store.listId && parseContact(contact)?.unsub) return "skip";
@@ -413,4 +418,16 @@ async function deliver(
     }
   }
   return ok ? "sent" : "failed";
+}
+
+/**
+ * Forgets that one person heard a reminder about each product this week
+ * (lib/person-erasure.ts). Their press of "stop" is kept: it is their own
+ * no, a one-way hash of the address, and the store's fingerprint of the
+ * deleted address says the same (lib/suppression.ts).
+ */
+export async function forgetRecoveryPerson(statsId: string | null, productIds: string[], email: string): Promise<number> {
+  if (!statsId || !productIds.length || !isRedisConfigured()) return 0;
+  const [gone] = await redisPipeline([["DEL", ...productIds.map((p) => onceKey(statsId, email, p))]]);
+  return Number(gone) || 0;
 }
