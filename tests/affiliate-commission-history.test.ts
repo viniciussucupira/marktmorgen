@@ -20,7 +20,7 @@ is("summary shows both currencies independently",mixed.includes("(USD)")&&mixed.
 is("unknown history is not empty confirmation",render([],null).includes("could not be loaded")&&!render([],null).includes("No commission records were loaded"),true);
 is("zero loaded entries remains explicit",render([],0).includes("No commission records were loaded"),true);
 is("incomplete invoices remain explicit",render([line],1,{invoicesChecked:false}).includes("Entries may be missing"),true);
-is("refund caveat remains explicit",render([line],1,{refundsChecked:false}).includes("Refunds could not all be checked"),true);
+is("refund caveat remains explicit",render([line],1,{refundsChecked:false}).includes("Refunds and chargebacks could not all be checked"),true);
 is("titles escaped",html.includes("&lt;script&gt;Course&lt;/script&gt;")&&!html.includes("<script>"),true);
 is("refund status remains visible",render([{...line,status:"refunded",refunded:1000,commission:0}],1).includes("Refunded"),true);
 is("invalid date does not invent a calendar date",render([{...line,at:0}],1).includes("Date unavailable"),true);
