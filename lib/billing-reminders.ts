@@ -10,7 +10,7 @@
  * charge, and says the date, the amount and the one click that stops it.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { keepCardThatPays, listSubscriptions, pastDueInGrace, periodEnd, planOf } from "@/lib/billing";
+import { isAddOn, keepCardThatPays, listSubscriptions, pastDueInGrace, periodEnd, planOf } from "@/lib/billing";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site-url";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
@@ -102,7 +102,8 @@ export function reminderEmail(reminder: Reminder): { subject: string; text: stri
 /** Which reminder a subscription is due right now, if any. */
 export function dueReminder(subscription: Record<string, unknown>, nowSeconds: number): Reminder | null {
   const id = typeof subscription.id === "string" ? subscription.id : "";
-  if (!id) return null;
+  // An add-on (the Store assistant) is not a plan: these words are about plans.
+  if (!id || isAddOn(subscription)) return null;
   // Set to stop: nothing more will be charged, so there is nothing to warn of.
   if (subscription.cancel_at_period_end === true) return null;
   if (typeof subscription.cancel_at === "number" && subscription.cancel_at > 0) return null;
@@ -164,7 +165,8 @@ const INVOICE_ID = /^in_[A-Za-z0-9]{6,64}$/;
 /** The failed payment a past-due subscription is waiting on, if it can be paid from an email. */
 export function failedPlan(subscription: Record<string, unknown>): FailedPlan | null {
   const id = typeof subscription.id === "string" ? subscription.id : "";
-  if (!id || subscription.status !== "past_due") return null;
+  // An add-on whose payment failed simply stops answering: the plan's words ("your checkout stops") are not about it.
+  if (!id || subscription.status !== "past_due" || isAddOn(subscription)) return null;
   const customer = subscription.customer as { email?: unknown } | string | null;
   const email = customer && typeof customer === "object" && typeof customer.email === "string" ? customer.email.trim() : "";
   const invoice = subscription.latest_invoice as

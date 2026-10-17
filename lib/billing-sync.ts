@@ -21,8 +21,10 @@
  * picks up the next day where it stopped.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { applyListedAssistant } from "@/lib/assistant-billing";
 import {
   type SubscriptionState,
+  isAddOn,
   isBillingConfigured,
   listSubscriptions,
   ownedBy,
@@ -97,6 +99,11 @@ export async function refreshPeriod(store: Store): Promise<Store> {
 
 /** Brings the store named by one listed subscription in line with it. */
 async function applyListed(subscription: Record<string, unknown>, counts: SyncCounts): Promise<void> {
+  // The Store assistant's own subscription: brought in line with its store by its own rules (lib/assistant-billing.ts).
+  if (isAddOn(subscription)) {
+    if (await applyListedAssistant(subscription)) counts.updated += 1;
+    return;
+  }
   const id = typeof subscription.id === "string" ? subscription.id : "";
   const meta = subscription.metadata as Record<string, string> | null | undefined;
   const handle = meta?.store;

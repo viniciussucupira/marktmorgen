@@ -88,6 +88,10 @@ import { BuyButtonEditor } from "@/components/buy-button-editor";
 import { CheckoutScriptEditor } from "@/components/checkout-script-editor";
 import { lookColours } from "@/lib/store-look";
 import { AnswersEditor } from "@/components/answers-editor";
+import { StoreAssistantEditor } from "@/components/store-assistant-editor";
+import { assistantLeft, assistantMissed } from "@/lib/store-assistant";
+import { assistantRefusal, syncAssistant } from "@/lib/assistant-billing";
+import { assistantWindow } from "@/lib/store-assistant-rules";
 import { STORE_PAGE, answersAllowance, answersUsed, missedQuestions } from "@/lib/answers";
 import { readCards, readTitles } from "@/lib/catalog";
 import { TaxEditor } from "@/components/tax-editor";
@@ -179,7 +183,7 @@ import { ordersIn } from "@/lib/orders";
 import { BUYER_RESERVE_BPS, SETUP_VISITS, TRIAL_VISITS, countWords, publicVisitLimit, visitLimitFor, visitsIncluded, visitsWords } from "@/lib/traffic-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { COMMISSION_LIVE, canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
-import { PLANS_ON_SALE } from "@/lib/opening";
+import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { type Permission, type Role, ROLE_NAMES, ROLE_SUMMARIES, can } from "@/lib/team-roles";
 import { MAX_TEAM, readTeam } from "@/lib/team";
@@ -1772,6 +1776,25 @@ export default async function StudioPage({
                           }))}
                         />
                       ) : null}
+                      {may("page")
+                        ? await (async () => {
+                            // The add-on's month as Stripe has it, read again when the snapshot has run out (lib/assistant-billing.ts).
+                            const own = store.assistantPlan && !assistantWindow(store.assistantPlan) && isBillingConfigured() ? await syncAssistant(store).catch(() => store) : store;
+                            return (
+                              <StoreAssistantEditor
+                                setting={own.assistant}
+                                plan={own.assistantPlan}
+                                onSale={ASSISTANT_ON_SALE}
+                                canBill={may("billing")}
+                                refusal={assistantRefusal(own)}
+                                usage={await assistantLeft(own).catch(() => null)}
+                                missed={await assistantMissed(own).catch(() => [])}
+                                notice={typeof params.assistant === "string" ? params.assistant : ""}
+                                pin={pin}
+                              />
+                            );
+                          })()
+                        : null}
                     </>
                   );
                 })()}

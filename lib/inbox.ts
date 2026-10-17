@@ -235,6 +235,25 @@ export async function fileContact(input: { store: Store; email: string; name: st
   return made.ok;
 }
 
+/**
+ * A question the Store assistant hands to the creator (lib/store-assistant.ts):
+ * filed as a chat with the address the buyer typed to be answered, and the
+ * team told by email, as a chat is. Their answer reaches the buyer by email,
+ * and in the store's chat where that is on. Works whether or not the chat is
+ * switched on: the inbox is where the creator answers either way.
+ */
+export async function handOver(input: { store: Store; email: unknown; name: unknown; text: unknown; now?: number }): Promise<ChatResult> {
+  const { store } = input;
+  if (!store.statsId || !isRedisConfigured() || store.suspended || isHouseStore(store) || !store.email) return { ok: false, reason: "closed" };
+  const made = await open({ ...input, source: "chat" }).catch((error) => {
+    if (error instanceof DataRoomError) return { ok: false as const, reason: "closed" as const };
+    throw error;
+  });
+  if (!made.ok) return made;
+  await tellTeam(store, made.conversation, made.messages[0].text).catch((error) => console.error("telling a store of a handed-over question failed", error));
+  return { ok: true, thread: forVisitor(made.conversation, made.messages) };
+}
+
 async function fromToken(token: unknown): Promise<{ statsId: string; id: string; handle: string } | null> {
   if (typeof token !== "string" || !CHAT_TOKEN.test(token) || !isRedisConfigured()) return null;
   const [raw] = await redisPipeline([["GET", tokenKey(token)]]);

@@ -229,6 +229,49 @@ export async function askModel(
   return (data.content ?? []).filter((c) => c.type === "text").map((c) => c.text ?? "").join("").trim() || null;
 }
 
+/** Whether the deployment has a model key at all, for callers that hold their own budget (lib/store-assistant.ts). */
+export function modelKeySet(): boolean {
+  return apiKey() !== null;
+}
+
+/**
+ * One request to the model, already bounded (lib/ai-request-rules.ts), for
+ * a caller that reserved its own worst cost before calling and settles it
+ * after (lib/store-assistant.ts, the Store assistant's pool). Nothing is
+ * reserved here. `billed` is false only when the provider answered with an
+ * error status, which it does not bill; a timeout or a lost connection may
+ * have been billed, and says so.
+ */
+export async function postToModel(body: string, timeoutMs: number): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; billed: boolean }> {
+  const key = apiKey();
+  if (!key) return { ok: false, billed: false };
+  let response: Response;
+  try {
+    response = await timed(timeoutMs, (signal) =>
+      fetch(API, {
+        method: "POST",
+        headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+        body,
+        cache: "no-store",
+        signal,
+      }),
+    );
+  } catch (error) {
+    console.error("the model could not be reached", error);
+    return { ok: false, billed: true };
+  }
+  if (!response.ok) {
+    console.error("the model refused", response.status, (await response.text().catch(() => "")).slice(0, 300));
+    return { ok: false, billed: false };
+  }
+  try {
+    const data = (await response.json()) as unknown;
+    return data && typeof data === "object" && !Array.isArray(data) ? { ok: true, data: data as Record<string, unknown> } : { ok: false, billed: true };
+  } catch {
+    return { ok: false, billed: true };
+  }
+}
+
 /** The most bytes of one picture sent to be described: what the page's own pictures stay well under. */
 export const MAX_DESCRIBED_BYTES = 3_500_000;
 

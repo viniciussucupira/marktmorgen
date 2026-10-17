@@ -139,6 +139,18 @@ export function onPlatformAt(
   return onPlatform(method, path, body, { version, idempotencyKey });
 }
 
+/**
+ * What marks a subscription of ours as an add-on (the Store assistant,
+ * lib/assistant-billing.ts), not a plan, in its metadata. An add-on never
+ * carries `metadata[store]`, so the plan's searches and the daily sync never
+ * read one as a plan; the reminders about a plan's payment pass it over.
+ */
+export const ADD_ON_MARK = "assistant";
+export function isAddOn(subscription: Record<string, unknown>): boolean {
+  const meta = subscription.metadata as Record<string, string> | null | undefined;
+  return meta?.addon === ADD_ON_MARK;
+}
+
 /** Our products at Stripe, one per plan, under names we choose. */
 const PRODUCT_IDS: Record<Tier, string> = {
   creator: "nimbus_labs_creator",

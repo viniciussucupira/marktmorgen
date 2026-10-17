@@ -161,6 +161,7 @@ const BESIDE_PRODUCT = DEPTH_RECORD_BYTES + PRODUCT_SIDE_BYTES;
 import { type Collection, type CollectionsProblem, MAX_PAIRS, collectionsWithout, parseCollections, readCollectionsInput, readProductIds } from "@/lib/store-collections";
 import { type SitePage, parseSitePages, MAX_SITE_PAGES, slugProblem } from "@/lib/site-page-rules";
 import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rules";
+import { type AssistantPlan, type AssistantSetting, NO_ASSISTANT, parseAssistant, parseAssistantPlan } from "@/lib/store-assistant-rules";
 import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
 import { DEFAULT_LANGUAGE, type LanguageCode, parseLanguage } from "@/lib/store-language";
 import { type AdsServerPlatform, parseAdsServer } from "@/lib/ad-consent";
@@ -664,6 +665,14 @@ export type Store = {
    */
   answers: AnswersSetting;
   /**
+   * The Store assistant (lib/store-assistant-rules.ts): whether its chat is
+   * on, and the creator's notes for it. Off on every store until its creator
+   * switches it on, and it answers only while the add-on is paid for.
+   */
+  assistant: AssistantSetting;
+  /** What Stripe last said about the add-on's own subscription, or null when the store never had one. */
+  assistantPlan: AssistantPlan | null;
+  /**
    * A lower price for buyers in countries where money buys less
    * (lib/fair-price.ts), and the deepest discount the creator accepts. Off
    * on every store until its creator switches it on.
@@ -971,6 +980,8 @@ function parseStore(raw: unknown): Store | null {
       sitePages: parseSitePages(value.sitePages),
       announcement: parseAnnouncement(value.announcement),
       answers: parseAnswers(value.answers),
+      assistant: parseAssistant(value.assistant),
+      assistantPlan: parseAssistantPlan(value.assistantPlan),
       fair: parseFair(value.fair),
       cartDeal: parseCartDeal(value.cartDeal),
       // Stores written before a store could pick its language speak English.
@@ -1172,6 +1183,8 @@ async function freshStore(fields: {
     sitePages: [],
     announcement: null,
     answers: { ...NO_ANSWERS },
+    assistant: { ...NO_ASSISTANT },
+    assistantPlan: null,
     fair: { ...DEFAULT_FAIR },
     cartDeal: { ...NO_DEAL },
     language: DEFAULT_LANGUAGE,
@@ -3896,6 +3909,22 @@ export async function setProductPairs(email: string, id: string, raw: unknown): 
 /** Switches the answers to visitors' questions on or off, and keeps the creator's notes for them (lib/answers-rules.ts). */
 export async function setAnswers(email: string, raw: unknown): Promise<Store | null> {
   return patchStore(email, () => ({ answers: parseAnswers(raw) }));
+}
+
+/** Switches the Store assistant's chat on or off, and keeps the creator's notes for it (lib/store-assistant-rules.ts). */
+export async function setAssistant(email: string, raw: unknown): Promise<Store | null> {
+  return patchStore(email, () => ({ assistant: parseAssistant(raw) }));
+}
+
+/** Writes down what Stripe says about the store's add-on subscription (lib/assistant-billing.ts); null forgets it. */
+export async function setAssistantPlan(email: string, plan: AssistantPlan | null): Promise<Store | null> {
+  return patchStore(email, (store) => {
+    const next = plan === null ? null : parseAssistantPlan(plan);
+    if (plan !== null && next === null) return null;
+    // A dispute, once written down, stays: the add-on is not sold to that store again.
+    if (next && store.assistantPlan?.disputedAt && !next.disputedAt) next.disputedAt = store.assistantPlan.disputedAt;
+    return { assistantPlan: next };
+  });
 }
 
 /** Switches fair prices by country on or off, with the deepest discount the creator accepts (lib/fair-price.ts). */

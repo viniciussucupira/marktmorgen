@@ -332,6 +332,7 @@ export class MemoryRedis {
           return 1;
         }
         if (key.startsWith("-- marktmorgen:capped-count:v1\n")) return this.cappedCount(args);
+        if (key.startsWith("-- marktmorgen:assistant-pool:v1\n")) return this.assistantPool(args);
         if (!key.startsWith("-- marktmorgen:form-opportunity:v1\n") || args[0] !== "1" || args.length !== 5) throw new Error("MemoryRedis: unsupported EVAL");
         const target = args[1];
         this.live(target);
@@ -988,6 +989,56 @@ export class MemoryRedis {
     total = Math.max(0, total + delta);
     keep();
     return [1, total];
+  }
+
+  /** lib/store-assistant.ts, ASSISTANT_POOL: the Store assistant's month, reserved, settled and given back. */
+  private assistantPool(args: string[]): unknown {
+    if (args[0] !== "1") throw new Error("ERR assistant-pool: arguments");
+    const key = args[1];
+    const [op, rawHold, third, fourth] = args.slice(2);
+    this.live(key);
+    const held0 = this.data.get(key);
+    if (held0 !== undefined && !(held0 instanceof Map)) return -1;
+    const amount = (value: string | undefined) => (value !== undefined && /^(0|[1-9]\d*)$/.test(value) && Number(value) <= 1e12 ? Number(value) : null);
+    const hold = amount(rawHold);
+    if (hold === null || hold <= 0) return -1;
+    const existing = held0 instanceof Map ? held0 : null;
+    const held = amount(existing?.get("held") ?? "0"), spent = amount(existing?.get("spent") ?? "0");
+    if (held === null || spent === null) return -1;
+    if (op === "reserve") {
+      let cap = amount(third);
+      const ttl = amount(fourth);
+      if (cap === null || ttl === null || ttl <= 0) return -1;
+      const kept = existing?.get("cap");
+      if (kept !== undefined) {
+        const was = amount(kept);
+        if (was === null) return -1;
+        cap = Math.min(cap, was);
+      }
+      if (held + spent + hold > cap) return 0;
+      const hash = this.hash(key);
+      hash.set("held", String(held + hold));
+      hash.set("cap", String(cap));
+      if (!this.until.has(key)) this.until.set(key, this.now() + ttl * 1000);
+      return 1;
+    }
+    if (op === "settle" || op === "release") {
+      if (held < hold) return -1;
+      let settled = 0;
+      if (op === "settle") {
+        const value = amount(third);
+        if (value === null || value > hold) return -1;
+        settled = value;
+      }
+      const hash = this.hash(key);
+      hash.set("held", String(held - hold));
+      if (op === "settle") {
+        hash.set("spent", String(spent + settled));
+        hash.set("n", String((Number(hash.get("n")) || 0) + 1));
+      }
+      return 1;
+    }
+    return -1;
   }
 
   /** lib/capped-count.ts: counts that never grow a hash past its most fields. */

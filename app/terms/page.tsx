@@ -25,6 +25,7 @@ import { INVITE_PROGRAM_OPEN, INVITE_PAUSE_NOTICE, INVITE_BONUS_CENTS, INVITE_HO
 import { feeWords, planPriceWords } from "@/lib/fee-words";
 import { TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
+import { ASSISTANT_KEEP_SECONDS, ASSISTANT_MESSAGES_MONTHLY, ASSISTANT_NAME, ASSISTANT_PRICE_CENTS } from "@/lib/store-assistant-rules";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Marktmorgen",
@@ -453,6 +454,31 @@ export default function TermsPage() {
           by a machine from what is said in the video and may contain
           mistakes; you are responsible for reviewing them before your
           students rely on them.
+        </p>
+        <p id="store-assistant">
+          The {ASSISTANT_NAME} is an add-on, sold for one store at{" "}
+          {formatMoney(ASSISTANT_PRICE_CENTS, "usd")} a month as a subscription
+          of its own, charged to the card your plan is paid with. It is sold
+          only to a store whose plan is paid, after its free trial. Each month
+          of it holds {ASSISTANT_MESSAGES_MONTHLY.toLocaleString("en-US")} AI
+          replies at the most each can cost; a reply that costs less gives the
+          difference back, so a month holds at least that many. When they are
+          used, the chat becomes a form that leaves buyers&apos; questions for
+          you until its next month begins; nothing more is charged. It answers
+          only from what your store publishes and from the notes you write
+          for it, labels every reply as written by AI, and may still be wrong:
+          you are responsible for what your store publishes, which is what it
+          repeats. It never offers a price, a discount or a term you did not
+          publish, and its replies are not an offer or a contract on your
+          behalf. You can stop it at any time; it stays on until the end of
+          the month already paid. If your plan ends, it is set to stop at the
+          end of the month already paid. Its payments are not refunded, except
+          where applicable consumer law requires it. A disputed payment ends
+          it at once, and it is not sold to that store again. A conversation
+          with it is kept for {ASSISTANT_KEEP_SECONDS / 3_600} hours after its
+          last message, without the buyer&apos;s name or address, and is sent
+          to Anthropic&apos;s AI model to write the replies; see the Privacy
+          Policy.
         </p>
         <p>
           A visit is one person opening your store on one day, however many

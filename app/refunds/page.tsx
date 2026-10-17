@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function RefundsPage() {
   return (
-    <LegalPage title="Refund Policy" lastUpdated="October 12, 2026">
+    <LegalPage title="Refund Policy" lastUpdated="October 17, 2026">
       <p>
         This Refund Policy applies to what you pay Marktmorgen, a product of
         Solrenning, an independent software studio, for the creator store at
@@ -119,6 +119,17 @@ export default function RefundsPage() {
           to serve. We offer that once, so you can try the paid plan for real;
           offering it on every month would make every month free for anyone who
           asked, and the plans would have to cost everyone else more.
+        </p>
+      </LegalSection>
+      <LegalSection id="store-assistant" title="5a. The Store assistant add-on">
+        <p>
+          The Store assistant is a subscription of its own, beside your plan.
+          Its payments, the first one included, are not refunded, except where
+          applicable consumer law requires it: the money-back guarantee above
+          is for your plan&apos;s first payment. You can stop it at any time
+          from your studio, and it stays on until the end of the month already
+          paid. If your plan ends, it is set to stop at the end of the month
+          already paid, and nothing more is charged for it.
         </p>
       </LegalSection>
       <LegalSection title="6. Chargebacks">

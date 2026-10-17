@@ -453,6 +453,33 @@ export default function PrivacyPage() {
           details out of a question: it is read by the model and may be read
           by the creator.
         </p>
+        <p id="store-assistant" className="scroll-mt-24">
+          <strong className="text-black">A store&apos;s AI assistant.</strong>{" "}
+          Some stores have the Store assistant, a chat that answers questions
+          on every page of the store, labeled as AI on every reply. If you
+          write to it, what you write, the replies and the conversation so far
+          are sent, with any email address, phone number or link you typed
+          taken out first, to a model run by Anthropic, which writes the reply
+          from what the store has published. Nothing else about you goes with
+          it: not your name, not your address, not your network address. We
+          keep the conversation for 24 hours after its last message, under a
+          random code kept in your browser and nothing that names you, so the
+          chat can carry on while you shop; then it is deleted by itself, and
+          you can delete it at any time with &ldquo;Delete this chat&rdquo;.
+          When it could not answer, the question and the day are kept for up
+          to about four months and shown to the store&apos;s creator, without
+          who asked. The network address your browser connects from is used,
+          for up to a day, only to limit how many questions come from one
+          place. If you ask for your question to go to the creator, you type
+          your email address for their answer, and the question, the
+          conversation and that address go into the store&apos;s inbox, where
+          they are kept and deleted as described under{" "}
+          <a href="#inbox" className="underline">
+            a store&apos;s chat and inbox
+          </a>
+          . Leave personal details out of a question: it is read by the model,
+          and the creator may read it.
+        </p>
         <p id="fair-prices">
           <strong className="text-black">Prices for your country.</strong>{" "}
           Some stores lower their prices for buyers in certain countries. To

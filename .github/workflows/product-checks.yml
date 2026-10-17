@@ -117,3 +117,7 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_data_recount_redis.py
+      - name: Actual Redis Store assistant pool checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_assistant_pool_redis.py

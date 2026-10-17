@@ -11,7 +11,9 @@ import { isHouseStore } from "@/lib/house-store";
 import { DemoStrip } from "@/components/demo-notes";
 import { MailClick } from "@/components/mail-click";
 import { StoreChat } from "@/components/store-chat";
+import { StoreAssistant } from "@/components/store-assistant";
 import { chatOpen } from "@/lib/inbox";
+import { assistantShown } from "@/lib/store-assistant";
 import { lookStyle } from "@/lib/store-look";
 
 /**
@@ -28,7 +30,10 @@ import { lookStyle } from "@/lib/store-look";
  * card to pay with (lib/house-store.ts).
  *
  * And, where the creator turned it on, the chat in the corner of every page
- * of the store (components/store-chat.tsx).
+ * of the store (components/store-chat.tsx); or, where the Store assistant
+ * add-on is on and paid for, the assistant's chat in its place
+ * (components/store-assistant.tsx), which hands the conversation to the same
+ * inbox when it cannot answer.
  */
 const loadStore = cache(async (raw: string) => {
   const decoded = decodeURIComponent(raw);
@@ -82,8 +87,12 @@ export default async function StoreLayout({ children, params }: LayoutProps<"/[h
       <StoreApp />
       {/* A link from a sequence's email, used by somebody who allowed it to be seen (lib/mail-clicks.ts). */}
       {store ? <MailClick /> : null}
-      {/* The chat, where the creator turned it on (lib/inbox.ts): drawn from the store already read, nothing more asked of the server. */}
-      {store && chatOpen(store) ? (
+      {/* The Store assistant, where it is on and paid for (lib/store-assistant.ts), or else the chat, where the creator turned it on (lib/inbox.ts): drawn from the store already read, nothing more asked of the server. */}
+      {store && assistantShown(store) ? (
+        <div className={`st-theme-${store.look.theme}`} style={lookStyle(store.look) as React.CSSProperties}>
+          <StoreAssistant handle={store.handle} storeName={store.name} language={store.language} />
+        </div>
+      ) : store && chatOpen(store) ? (
         <div className={`st-theme-${store.look.theme}`} style={lookStyle(store.look) as React.CSSProperties}>
           <StoreChat handle={store.handle} storeName={store.name} language={store.language} />
         </div>
