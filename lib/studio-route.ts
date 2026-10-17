@@ -173,11 +173,13 @@ export async function studioAccess(
   // The team's own route writes its lines itself, in words of its own.
   // Counting who an email would reach changes nothing, and would fill the log.
   // An import is logged when it starts, finishes uploading or is cancelled,
-  // not for each of the batches and steps in between.
+  // not for each of the batches and steps in between, nor for its dry runs,
+  // which change nothing; a funnel import when it is made.
   const selfLogged =
     request.nextUrl.pathname === "/api/store/team" ||
     action === "count" ||
-    (request.nextUrl.pathname === "/api/store/import" && (action === "rows" || action === "step"));
+    (request.nextUrl.pathname === "/api/store/import" && (action === "rows" || action === "step" || action === "preview")) ||
+    (request.nextUrl.pathname === "/api/store/import/funnel" && (action === "page" || action === "plan"));
   if (access.role !== "owner" && !selfLogged && (!reading || need === "export")) {
     const route = request.nextUrl.pathname.replace(/^\/api\/(store\/)?/, "");
     const detail = action || request.nextUrl.searchParams.get("what") || request.nextUrl.searchParams.get("who") || "";

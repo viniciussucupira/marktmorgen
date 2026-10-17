@@ -11,6 +11,7 @@ import {
   cancelImport,
   finishUpload,
   jobOf,
+  previewImport,
   readBatch,
   reportCsv,
   runImport,
@@ -25,7 +26,9 @@ import {
  *
  *   GET  ?id=<import>                    how it stands
  *   GET  ?id=<import>&report=1           what was not brought in, as a spreadsheet
- *   POST { action: "start", kind, expected, file, agreed, consentColumn, tags, email }
+ *   POST { action: "preview", kind, source, expected, agreed, consentColumn, tags, email, rows }
+ *                                        the dry run of one batch: nothing is written
+ *   POST { action: "start", kind, source, expected, file, agreed, consentColumn, tags, email }
  *   POST { action: "rows", id, rows }    one batch of up to 1,000 rows
  *   POST { action: "finish", id }        every row is sent
  *   POST { action: "step", id }          a few seconds of work, while the page is open
@@ -42,6 +45,21 @@ const STEP_MS = 8_000;
 
 const KINDS = new Set<ImportKind>(["contacts", "products", "purchases", "members"]);
 
+/** What the studio sent about how an import is to be read, for its start and its dry run. */
+function startInput(body: Record<string, unknown>) {
+  return {
+    expected: Number(body.expected),
+    file: text(body.file, 200),
+    agreed: body.agreed === true,
+    consentColumn: body.consentColumn === true,
+    tags: Array.isArray(body.tags) ? body.tags.filter((t): t is string => typeof t === "string").slice(0, 10) : [],
+    email: body.email === true,
+    stopped: body.stopped === true,
+    dateOrder: text(body.dateOrder, 3),
+    source: body.source === "clickfunnels" ? ("clickfunnels" as const) : ("csv" as const),
+  };
+}
+
 /** What the page is told about an import: nothing it does not show. */
 function view(job: ImportJob) {
   return {
@@ -54,8 +72,9 @@ function view(job: ImportJob) {
     expected: job.expected,
     total: job.total,
     done: job.done,
-    counts: job.counts,
+    counts: { ...job.counts, contacts: job.counts.contacts ?? 0, stopped: job.counts.stopped ?? 0 },
     email: job.options.email,
+    source: job.options.source ?? "csv",
   };
 }
 
@@ -106,18 +125,31 @@ export async function POST(request: NextRequest) {
       if (!KINDS.has(kind)) return refuse("invalid");
       // Twenty imports a day is far more than moving a store takes.
       if (!(await withinLimit("import-start", store.sid || guarded.ref, 20, 86_400))) return refuse("slow", 429);
-      const started = await startImport(store, email, kind, {
-        expected: Number(body.expected),
-        file: text(body.file, 200),
-        agreed: body.agreed === true,
-        consentColumn: body.consentColumn === true,
-        tags: Array.isArray(body.tags) ? body.tags.filter((t): t is string => typeof t === "string").slice(0, 10) : [],
-        email: body.email === true,
-        stopped: body.stopped === true,
-        dateOrder: text(body.dateOrder, 3),
-      });
+      const started = await startImport(store, email, kind, startInput(body));
       if (!started.ok) return refuse(started.reason, started.reason === "busy" ? 409 : 400, { limit: started.limit });
       return Response.json({ ok: true, import: view(started.job) });
+    }
+
+    if (action === "preview") {
+      const kind = text(body.kind, 12) as ImportKind;
+      if (!KINDS.has(kind)) return refuse("invalid");
+      // Fifty batches carry the biggest file, as for an import; room for checking it a few times. A
+      // batch of contacts or products costs two reads; one of past buyers reads every product it names,
+      // so those have a smaller allowance: two full files a day, ten in thirty days (docs/clickfunnels-import.md).
+      const who = store.sid || guarded.ref;
+      const buyers = kind === "purchases";
+      if (
+        !(await withinLimit("import-preview", who, 400, 600)) ||
+        !(await withinLimit(buyers ? "import-preview-buyers-day" : "import-preview-day", who, buyers ? 40 : 2_000, 86_400)) ||
+        !(await withinLimit(buyers ? "import-preview-buyers-30d" : "import-preview-30d", who, buyers ? 200 : 10_000, 30 * 86_400))
+      ) {
+        return refuse("slow", 429);
+      }
+      const rows = readBatch(kind, body.rows);
+      if (!rows) return refuse("rows");
+      const preview = await previewImport(store, kind, startInput(body), rows);
+      if (!preview.ok) return refuse(preview.reason, 400, { limit: preview.limit });
+      return Response.json({ ok: true, rows: preview.rows, room: preview.room }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
     if (!IMPORT_ID_PATTERN.test(id)) return refuse("unknown", 404);

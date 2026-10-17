@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { useStudioStore } from "@/components/studio-store-pin";
-import { type ParsedCsv, guessColumn, parseCsv, readConsent } from "@/lib/csv";
+import { type ParsedCsv, csvLine, guessColumn, parseCsv, readConsent } from "@/lib/csv";
+import { CLICKFUNNELS_EXAMPLES, CLICKFUNNELS_HEADERS, CLICKFUNNELS_LAST_NAME, readClickFunnelsStatus } from "@/lib/clickfunnels-csv";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { type DateOrder, datesInFile, letteredDate, readRenewal } from "@/lib/move-rules";
 
@@ -22,9 +23,13 @@ export type ImportView = {
   expected: number;
   total: number;
   done: number;
-  counts: { added: number; already: number; skipped: number; errors: number; mailed: number; unmailed: number };
+  counts: { added: number; already: number; skipped: number; errors: number; mailed: number; unmailed: number; contacts?: number; stopped?: number };
   email: boolean;
+  /** Where the file came from: any platform, or ClickFunnels' own exports. */
+  source?: ImportSource;
 };
+
+export type ImportSource = "csv" | "clickfunnels";
 
 /** Rows sent in one request: the server's own limit (lib/imports.ts, BATCH_ROWS). */
 const BATCH = 1_000;
@@ -57,6 +62,13 @@ const FIELDS: Record<ImportKind, Field[]> = {
   purchases: [
     { key: "email", label: "Email", required: true, names: ["email", "customer email", "buyer email", "purchaser email", "email address"] },
     { key: "product", label: "Product", required: true, names: ["product", "product name", "product id", "item", "course", "title"], hint: "Its name or its id, as in your store here." },
+    {
+      key: "status",
+      label: "Order status",
+      required: false,
+      names: ["status", "order status", "payment status", "billing status", "financial status"],
+      hint: "Optional. Only paid orders give buyers what they bought: refunded, failed and canceled ones are left out.",
+    },
   ],
   members: [
     { key: "email", label: "Email", required: true, names: ["email", "member email", "patron email", "customer email", "subscriber email", "email address"] },
@@ -72,12 +84,48 @@ const FIELDS: Record<ImportKind, Field[]> = {
   ],
 };
 
+/** The same fields, named as ClickFunnels' exports name them (lib/clickfunnels-csv.ts). */
+const CLICKFUNNELS_FIELDS: Record<"contacts" | "products" | "purchases", Field[]> = {
+  contacts: [
+    { key: "email", label: "Email", required: true, names: CLICKFUNNELS_HEADERS.contacts.email },
+    { key: "name", label: "First name", required: false, names: CLICKFUNNELS_HEADERS.contacts.name },
+    { key: "tags", label: "Tags", required: false, names: CLICKFUNNELS_HEADERS.contacts.tags },
+    {
+      key: "consent",
+      label: "Status",
+      required: false,
+      names: CLICKFUNNELS_HEADERS.contacts.consent,
+      hint: "ClickFunnels marks each contact Subscribed, Unsubscribed or Undeliverable. Without this column, everyone comes in as a contact you cannot email.",
+    },
+  ],
+  products: [
+    { key: "title", label: "Product name", required: true, names: CLICKFUNNELS_HEADERS.products.title },
+    { key: "price", label: "Price", required: false, names: CLICKFUNNELS_HEADERS.products.price },
+    { key: "description", label: "Description", required: false, names: CLICKFUNNELS_HEADERS.products.description },
+    { key: "type", label: "Free or paid", required: false, names: CLICKFUNNELS_HEADERS.products.type, hint: "Optional. Without it, a price of 0 or none means free." },
+    { key: "link", label: "Link", required: false, names: CLICKFUNNELS_HEADERS.products.link },
+  ],
+  purchases: [
+    { key: "email", label: "Customer email", required: true, names: CLICKFUNNELS_HEADERS.purchases.email },
+    { key: "product", label: "Product", required: true, names: CLICKFUNNELS_HEADERS.purchases.product, hint: "Its name or its id, as in your store here." },
+    {
+      key: "status",
+      label: "Billing status",
+      required: false,
+      names: CLICKFUNNELS_HEADERS.purchases.status,
+      hint: "Only paid orders give buyers what they bought: refunded, failed and canceled ones are left out.",
+    },
+  ],
+};
+
+const fieldsFor = (kind: ImportKind, source: ImportSource): Field[] => (source === "clickfunnels" && kind !== "members" ? CLICKFUNNELS_FIELDS[kind] : FIELDS[kind]);
+
 const LIMITS: Record<ImportKind, number> = { contacts: 50_000, products: 500, purchases: 20_000, members: 20_000 };
 
 const EXAMPLES: Record<ImportKind, string> = {
   contacts: "email,name,tags,consent\r\nada@example.com,Ada Lovelace,\"vip, buyers\",yes\r\n",
   products: "title,price,description,type,link\r\nThe starter guide,19,A short guide to getting started.,paid,https://example.com/guide\r\nFree checklist,0,One page to print.,free,https://example.com/checklist\r\n",
-  purchases: "email,product\r\nada@example.com,The starter guide\r\n",
+  purchases: "email,product,status\r\nada@example.com,The starter guide,paid\r\n",
   members: "email,membership,renews on,price\r\nada@example.com,The Inner Circle,2026-11-03,\r\n",
 };
 
@@ -101,6 +149,7 @@ const MESSAGES: Record<string, string> = {
   role: "Only the store's owner and Admins can import.",
   unavailable: "Imports are not switched on yet.",
   server_error: "Something went wrong on our side. Nothing more was changed. Try again in a moment.",
+  kind: "This import has no dry run.",
 };
 
 const WORDS: Record<ImportKind, { added: string; already: string; noun: string }> = {
@@ -178,6 +227,18 @@ export function ImportProgress({
           <dt className={`text-xs font-semibold ${job.counts.errors ? "text-danger" : "text-ink-soft"}`}>could not be read</dt>
           <dd className="font-bold tabular-nums text-ink">{job.counts.errors.toLocaleString("en-US")}</dd>
         </div>
+        {job.kind === "contacts" && (job.counts.contacts || job.counts.stopped) ? (
+          <>
+            <div className="rounded-xl bg-paper px-3 py-2">
+              <dt className="text-xs font-semibold text-ink-soft">contacts you cannot email</dt>
+              <dd className="font-bold tabular-nums text-ink">{(job.counts.contacts ?? 0).toLocaleString("en-US")}</dd>
+            </div>
+            <div className="rounded-xl bg-paper px-3 py-2">
+              <dt className="text-xs font-semibold text-ink-soft">no longer emailed</dt>
+              <dd className="font-bold tabular-nums text-ink">{(job.counts.stopped ?? 0).toLocaleString("en-US")}</dd>
+            </div>
+          </>
+        ) : null}
       </dl>
       {job.email && (job.counts.mailed || job.counts.unmailed || job.state === "mailing") ? (
         <p className="mt-2 text-xs text-ink-soft">
@@ -215,6 +276,7 @@ export function ImportTool({
   active,
   canEmail,
   storeName,
+  source = "csv",
 }: {
   kind: ImportKind;
   /** The store's import that is running now, when there is one. */
@@ -222,9 +284,12 @@ export function ImportTool({
   /** Whether buyers may be emailed about their purchases (an active plan). */
   canEmail: boolean;
   storeName: string;
+  /** ClickFunnels' own exports: their column names, its consent statuses, and a dry run before importing. */
+  source?: ImportSource;
 }) {
   const router = useRouter();
-  const fields = FIELDS[kind];
+  const fields = fieldsFor(kind, source);
+  const fromClickFunnels = source === "clickfunnels" && kind !== "members";
   const [parsed, setParsed] = useState<ParsedCsv | null>(null);
   const [fileName, setFileName] = useState("");
   const [mapping, setMapping] = useState<Record<string, number>>({});
@@ -235,6 +300,8 @@ export function ImportTool({
   const [stopped, setStopped] = useState(false);
   const [chosenOrder, setDateOrder] = useState<DateOrder | "">("");
   const [job, setJob] = useState<ImportView | null>(active && active.kind === kind ? active : null);
+  const [dry, setDry] = useState<DryRun | null>(null);
+  const [checking, setChecking] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const stepping = useRef(false);
@@ -303,7 +370,10 @@ export function ImportTool({
     for (const field of fields) guessed[field.key] = guessColumn(read.header, field.names);
     // Kajabi and others keep first and last names apart: joined here.
     const first = guessed.name ?? -1;
-    const last = kind === "contacts" && first >= 0 && /first/i.test(read.header[first] ?? "") ? guessColumn(read.header, ["last name", "surname", "family name"]) : -1;
+    const last =
+      kind === "contacts" && first >= 0 && /first/i.test(read.header[first] ?? "")
+        ? guessColumn(read.header, fromClickFunnels ? CLICKFUNNELS_LAST_NAME : ["last name", "surname", "family name"])
+        : -1;
     setMapping(guessed);
     setLastName(last);
     setParsed(read);
@@ -335,8 +405,66 @@ export function ImportTool({
   const dateOrder: DateOrder | "" = chosenOrder || dates?.proves || "";
   const consentPreview =
     kind === "contacts" && (mapping.consent ?? -1) >= 0
-      ? rows.reduce((n, row) => n + (readConsent(row[4]) === "yes" ? 1 : 0), 0)
+      ? rows.reduce((n, row) => n + ((fromClickFunnels ? readClickFunnelsStatus(row[4]) === "subscribed" : readConsent(row[4]) === "yes") ? 1 : 0), 0)
       : null;
+  // What the dry run was made with: changing any of it makes it out of date.
+  const signature = JSON.stringify([fileName, rows.length, mapping, lastName, agreed, tags, email]);
+  const dryFresh = dry !== null && dry.signature === signature && dry.complete;
+  const canPreview = kind !== "members";
+  const options = () => ({
+    kind,
+    source,
+    expected: rows.length,
+    file: fileName,
+    agreed: kind === "contacts" ? agreed : undefined,
+    consentColumn: kind === "contacts" ? (mapping.consent ?? -1) >= 0 : undefined,
+    tags: kind === "contacts" ? tags.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
+    email: kind === "purchases" ? email : undefined,
+    stopped: kind === "members" ? stopped : undefined,
+    dateOrder: kind === "members" ? dateOrder : undefined,
+  });
+
+  /** The dry run: every row sent to be checked the way the import checks it, a batch at a time; nothing is saved. */
+  async function check() {
+    if (!parsed) return;
+    setError(null);
+    if (missing.length) {
+      setError(`Choose the column for ${missing.map((f) => f.label.toLowerCase()).join(" and ")}.`);
+      return;
+    }
+    if (kind === "contacts" && !agreed && !fromClickFunnels) {
+      setError(MESSAGES.consent);
+      return;
+    }
+    setChecking(1);
+    const collected: PreviewRow[] = [];
+    let room: number | null = null;
+    try {
+      for (let from = 0; from < rows.length; from += BATCH) {
+        const data = (await (
+          await fetch("/api/store/import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "preview", ...options(), rows: rows.slice(from, from + BATCH) }),
+          })
+        ).json().catch(() => ({ ok: false, error: "server_error" }))) as { ok?: boolean; error?: string; rows?: PreviewRow[]; room?: number | null };
+        if (!data.ok || !Array.isArray(data.rows)) {
+          setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+          setDry(null);
+          return;
+        }
+        if (room === null && typeof data.room === "number") room = data.room;
+        collected.push(...data.rows);
+        setChecking(Math.min(rows.length, from + BATCH));
+      }
+      setDry(tally(kind, collected, room, signature));
+    } catch {
+      setError(MESSAGES.server_error);
+      setDry(null);
+    } finally {
+      setChecking(0);
+    }
+  }
 
   async function start() {
     if (!parsed) return;
@@ -345,8 +473,12 @@ export function ImportTool({
       setError(`Choose the column for ${missing.map((f) => f.label.toLowerCase()).join(" and ")}.`);
       return;
     }
-    if (kind === "contacts" && !agreed) {
+    if (kind === "contacts" && !agreed && !fromClickFunnels) {
       setError(MESSAGES.consent);
+      return;
+    }
+    if (fromClickFunnels && !dryFresh) {
+      setError("Check the file first: the dry run shows what each row will become, and nothing is saved until you import.");
       return;
     }
     if (kind === "members" && !stopped) {
@@ -363,18 +495,7 @@ export function ImportTool({
     // "finish" is asked for, the import may already be running.
     let sending = true;
     try {
-      const begun = await post({
-        action: "start",
-        kind,
-        expected: rows.length,
-        file: fileName,
-        agreed: kind === "contacts" ? agreed : undefined,
-        consentColumn: kind === "contacts" ? (mapping.consent ?? -1) >= 0 : undefined,
-        tags: kind === "contacts" ? tags.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
-        email: kind === "purchases" ? email : undefined,
-        stopped: kind === "members" ? stopped : undefined,
-        dateOrder: kind === "members" ? dateOrder : undefined,
-      });
+      const begun = await post({ action: "start", ...options() });
       if (!begun.ok || !begun.import) {
         setError((kind === "members" && begun.error === "email" ? MESSAGES.members_email : MESSAGES[begun.error ?? ""]) ?? MESSAGES.server_error);
         return;
@@ -408,6 +529,7 @@ export function ImportTool({
       }
       setJob(finished.import);
       setParsed(null);
+      setDry(null);
       if (!running(finished.import.state)) {
         toast("Import finished.");
         router.refresh();
@@ -442,7 +564,7 @@ export function ImportTool({
     }
   }
 
-  const example = `data:text/csv;charset=utf-8,${encodeURIComponent(EXAMPLES[kind])}`;
+  const example = `data:text/csv;charset=utf-8,${encodeURIComponent(fromClickFunnels ? CLICKFUNNELS_EXAMPLES[kind] : EXAMPLES[kind])}`;
   const showPicker = !job || !running(job.state);
 
   return (
@@ -559,19 +681,40 @@ export function ImportTool({
 
               {kind === "contacts" ? (
                 <div className="space-y-4 rounded-2xl bg-white p-4 ring-1 ring-line">
-                  <label htmlFor="import-agreed" className="flex cursor-pointer items-start gap-3">
-                    <input id="import-agreed" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 h-5 w-5 shrink-0" />
-                    <span className="text-sm text-ink">
-                      <strong>These people agreed to receive my emails.</strong>{" "}
-                      <span className="text-ink-soft">
-                        Only people who said yes to hearing from you may be imported. Nobody who unsubscribed from your list here is added back,
-                        whatever the file says, and nobody is emailed because of the import.
+                  {fromClickFunnels ? (
+                    <label htmlFor="import-agreed" className="flex cursor-pointer items-start gap-3">
+                      <input id="import-agreed" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 h-5 w-5 shrink-0" />
+                      <span className="text-sm text-ink">
+                        <strong>The contacts marked Subscribed agreed to receive my emails.</strong>{" "}
+                        <span className="text-ink-soft">
+                          Only they can be emailed here, and only with this checked. Everyone else comes in as a contact you cannot email. Those marked
+                          Unsubscribed or Undeliverable are kept as unsubscribed here, so no later import makes them people you email. Nobody is
+                          emailed because of the import.
+                        </span>
                       </span>
-                    </span>
-                  </label>
+                    </label>
+                  ) : (
+                    <label htmlFor="import-agreed" className="flex cursor-pointer items-start gap-3">
+                      <input id="import-agreed" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 h-5 w-5 shrink-0" />
+                      <span className="text-sm text-ink">
+                        <strong>These people agreed to receive my emails.</strong>{" "}
+                        <span className="text-ink-soft">
+                          Only people who said yes to hearing from you may be imported. Nobody who unsubscribed from your list here is added back,
+                          whatever the file says, and nobody is emailed because of the import.
+                        </span>
+                      </span>
+                    </label>
+                  )}
                   {consentPreview !== null ? (
                     <p className="text-sm text-ink-soft">
-                      {`The consent column says yes for ${consentPreview.toLocaleString("en-US")} of ${rows.length.toLocaleString("en-US")} rows. Only those are added.`}
+                      {fromClickFunnels
+                        ? `The Status column says Subscribed for ${consentPreview.toLocaleString("en-US")} of ${rows.length.toLocaleString("en-US")} rows.`
+                        : `The consent column says yes for ${consentPreview.toLocaleString("en-US")} of ${rows.length.toLocaleString("en-US")} rows. Only those are added.`}
+                    </p>
+                  ) : fromClickFunnels ? (
+                    <p className="notice notice-warn text-sm">
+                      No Status column is matched, so every contact comes in as one you cannot email. To bring your subscribers, export your contacts
+                      again in ClickFunnels with the Status field included.
                     </p>
                   ) : null}
                   <label className="block" htmlFor="import-tags">
@@ -650,11 +793,38 @@ export function ImportTool({
                 </div>
               )}
 
+              {dry && dry.signature === signature ? <DryRunReport kind={kind} dry={dry} /> : null}
+
               <div className="flex flex-wrap items-center gap-3">
-                <button type="button" onClick={start} disabled={busy} aria-busy={busy} className="btn btn-primary">
-                  {busy ? "Importing…" : `Import ${rows.length.toLocaleString("en-US")} ${rows.length === 1 ? "row" : "rows"}`}
-                </button>
-                <button type="button" onClick={() => setParsed(null)} disabled={busy} className="btn btn-ghost">
+                {canPreview ? (
+                  <button
+                    type="button"
+                    onClick={check}
+                    disabled={busy || checking > 0}
+                    aria-busy={checking > 0}
+                    className={fromClickFunnels && !dryFresh ? "btn btn-primary" : "btn btn-ghost"}
+                  >
+                    {checking > 0
+                      ? `Checking… ${checking.toLocaleString("en-US")} of ${rows.length.toLocaleString("en-US")}`
+                      : dryFresh
+                        ? "Check the file again"
+                        : "Check the file first (nothing is saved)"}
+                  </button>
+                ) : null}
+                {!fromClickFunnels || dryFresh ? (
+                  <button type="button" onClick={start} disabled={busy || checking > 0} aria-busy={busy} className="btn btn-primary">
+                    {busy ? "Importing…" : `Import ${rows.length.toLocaleString("en-US")} ${rows.length === 1 ? "row" : "rows"}`}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setParsed(null);
+                    setDry(null);
+                  }}
+                  disabled={busy}
+                  className="btn btn-ghost"
+                >
                   Choose another file
                 </button>
               </div>
@@ -669,5 +839,130 @@ export function ImportTool({
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** One row of a dry run, as the server answers it (lib/imports.ts, PreviewRow). */
+type PreviewRow = [line: number, outcome: Outcome, column: string, note: string, value: string, key: string, fresh: 0 | 1];
+type Outcome = "added" | "contact" | "already" | "stopped" | "left" | "skipped" | "error";
+
+/** A whole file's dry run, added up here from the server's answers for each batch. */
+type DryRun = { signature: string; complete: boolean; rows: PreviewRow[]; counts: Record<Outcome, number> };
+
+/**
+ * Adds up the dry run's batches: a row repeated in another batch, which the
+ * server could not see, is left out as the import will leave it out, and
+ * rows past the room the list or the store has left are said not to fit.
+ */
+function tally(kind: ImportKind, collected: PreviewRow[], room: number | null, signature: string): DryRun {
+  const first = new Map<string, number>();
+  let used = 0;
+  const counts: Record<Outcome, number> = { added: 0, contact: 0, already: 0, stopped: 0, left: 0, skipped: 0, error: 0 };
+  const rows = collected
+    .slice()
+    .sort((a, b) => a[0] - b[0])
+    .map((row): PreviewRow => {
+      const [line, outcome, , , value, key, fresh] = row;
+      if (key && outcome !== "skipped" && outcome !== "error") {
+        const earlier = first.get(key);
+        if (earlier !== undefined && earlier !== line) {
+          const words = kind === "contacts" ? "The same address as row" : kind === "products" ? "The same title as row" : "The same buyer and product as row";
+          return [line, "skipped", row[2], `${words} ${earlier}`, value, key, 0];
+        }
+        first.set(key, line);
+      }
+      if (fresh && room !== null) {
+        used += 1;
+        if (used > room) return [line, "error", row[2], kind === "contacts" ? "Your list is full" : "Your store is full", value, key, 0];
+      }
+      return row;
+    });
+  for (const row of rows) counts[row[1]] += 1;
+  return { signature, complete: true, rows, counts };
+}
+
+const OUTCOME_WORDS: Record<Exclude<ImportKind, "members">, Partial<Record<Outcome, string>>> = {
+  contacts: {
+    added: "can be emailed",
+    contact: "contacts you cannot email",
+    already: "already on your list",
+    stopped: "no longer emailed",
+    left: "unsubscribed here, left alone",
+    skipped: "left out",
+    error: "cannot be read",
+  },
+  products: { added: "made as drafts", already: "already in your store", skipped: "left out", error: "cannot be read" },
+  purchases: { added: "given what they bought", skipped: "left out", error: "cannot be read" },
+};
+
+const NO_WORDS: Partial<Record<Outcome, string>> = {};
+
+/** The dry run, shown: what each kind of row will become, the rows worth a look, and all of it as a spreadsheet. */
+function DryRunReport({ kind, dry }: { kind: ImportKind; dry: DryRun }) {
+  const words: Partial<Record<Outcome, string>> = kind === "members" ? NO_WORDS : OUTCOME_WORDS[kind];
+  const shown = (Object.keys(words) as Outcome[]).filter((o) => dry.counts[o] > 0 || o === "added");
+  const notable = dry.rows.filter((row) => row[1] !== "added");
+  // Made when asked for: a file of fifty thousand rows is not kept in the page.
+  const save = () => {
+    const lines = [csvLine(["row", "becomes", "column", "why", "value"])];
+    for (const [line, outcome, column, note, value] of dry.rows) lines.push(csvLine([line, words[outcome] ?? outcome, column, note, value]));
+    const url = URL.createObjectURL(new Blob([`\uFEFF${lines.join("\r\n")}\r\n`], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `dry-run-${kind}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  };
+  return (
+    <section className="rounded-2xl bg-white p-4 ring-1 ring-line" aria-labelledby={`dry-${kind}`} aria-live="polite">
+      <h3 id={`dry-${kind}`} className="text-sm font-bold text-ink">
+        Dry run: what this file will do
+      </h3>
+      <p className="mt-1 text-xs text-ink-soft">
+        Every row was checked the way the import checks it, against your store as it is now. Nothing was saved. The import checks every row
+        again when it runs.
+      </p>
+      <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+        {shown.map((outcome) => (
+          <div key={outcome} className={`rounded-xl px-3 py-2 ${outcome === "added" ? "bg-mint-soft" : outcome === "error" ? "bg-danger-soft" : "bg-paper"}`}>
+            <dt className={`text-xs font-semibold ${outcome === "added" ? "text-mint-deep" : outcome === "error" ? "text-danger" : "text-ink-soft"}`}>{words[outcome]}</dt>
+            <dd className="font-bold tabular-nums text-ink">{dry.counts[outcome].toLocaleString("en-US")}</dd>
+          </div>
+        ))}
+      </dl>
+      {notable.length ? (
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full min-w-[28rem] text-left text-sm">
+            <caption className="text-left text-xs font-bold text-ink-soft">
+              {notable.length > 50 ? `The first 50 of ${notable.length.toLocaleString("en-US")} rows worth a look` : "Rows worth a look"}
+            </caption>
+            <thead>
+              <tr className="text-xs text-ink-mute">
+                <th scope="col" className="px-2 py-2 font-semibold">Row</th>
+                <th scope="col" className="px-2 py-2 font-semibold">Becomes</th>
+                <th scope="col" className="px-2 py-2 font-semibold">Why</th>
+                <th scope="col" className="px-2 py-2 font-semibold">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {notable.slice(0, 50).map(([line, outcome, , note, value]) => (
+                <tr key={line} className="border-t border-line align-top">
+                  <td className="px-2 py-2 tabular-nums text-ink-mute">{line}</td>
+                  <td className={`px-2 py-2 ${outcome === "error" ? "font-semibold text-danger" : "text-ink"}`}>{words[outcome] ?? outcome}</td>
+                  <td className="px-2 py-2 text-ink-soft">{note}</td>
+                  <td className="max-w-[12rem] truncate px-2 py-2 text-ink">{value || <span className="text-ink-mute">—</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      <button type="button" onClick={save} className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-violet-deep underline underline-offset-4">
+        <Icon name="download" size={15} />
+        Download the dry run, every row
+      </button>
+    </section>
   );
 }

@@ -46,6 +46,14 @@
  *
  * Everything but the list of a store's last imports is let go two weeks
  * after the import began.
+ *
+ * Moving from ClickFunnels (added 17 October 2026) is the same three imports
+ * of contacts, products and past buyers, read the way ClickFunnels' exports
+ * are written (lib/clickfunnels-csv.ts), with two differences: a contact
+ * without recorded consent comes in as a contact the creator cannot email
+ * rather than being left out, and an opt-out there is kept here. Before any
+ * import, previewImport is its dry run: every row checked here the way the
+ * import will check it, against the store as it is, and nothing written.
  */
 import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -64,11 +72,11 @@ import {
   storeForId,
   storeRef,
 } from "@/lib/store";
-import { readAllListings, readListings } from "@/lib/catalog";
+import { readAllListings, readListings, readTitles } from "@/lib/catalog";
 import { priceInRange, rangeWords, readMoney } from "@/lib/money";
 import { LINK_PROBLEMS, type LinkProblem, readLink } from "@/lib/product-link";
 import { MAX_ABOUT_LENGTH, cleanAbout, writeAbout } from "@/lib/product-about";
-import { MAX_CONTACT_NAME, importContactRows, readTags } from "@/lib/contacts";
+import { type ContactOutcome, type ImportedContact, MAX_CONTACT_NAME, importContactRows, previewContactRows, readTags } from "@/lib/contacts";
 import { csvLine, readConsent } from "@/lib/csv";
 import { grantImported, importedFor } from "@/lib/imported-purchases";
 import { deliverableItems } from "@/lib/bundle-rules";
@@ -80,8 +88,11 @@ import { storeBase } from "@/lib/purchase-email";
 import { canSell, canSellProduct } from "@/lib/store-checkout";
 import { inviteEmail, inviteMembers, keptAlready, noteKept, dueReminders, remindLater, reminderEmail, readInvite } from "@/lib/move-members";
 import { type DateOrder, MAX_AHEAD_DAYS, MAX_MOVED_MEMBERS, readRenewal } from "@/lib/move-rules";
+import { type ContactConsent, consentFrom, readClickFunnelsStatus, readOrderStatus } from "@/lib/clickfunnels-csv";
 
 export type ImportKind = "contacts" | "products" | "purchases" | "members";
+/** Where the file came from: any platform's spreadsheet, or ClickFunnels' own exports (lib/clickfunnels-csv.ts). */
+export type ImportSource = "csv" | "clickfunnels";
 
 /** The most rows one import may bring, by kind. */
 export const IMPORT_LIMITS: Record<ImportKind, number> = { contacts: 50_000, products: 500, purchases: 20_000, members: MAX_MOVED_MEMBERS };
@@ -96,7 +107,7 @@ export const MAX_REPORT_ROWS = 5_000;
 export const COLUMNS: Record<ImportKind, string[]> = {
   contacts: ["email", "name", "tags", "consent"],
   products: ["title", "price", "description", "type", "link"],
-  purchases: ["email", "product"],
+  purchases: ["email", "product", "status"],
   members: ["email", "product", "renews", "option"],
 };
 
@@ -104,7 +115,7 @@ export const COLUMNS: Record<ImportKind, string[]> = {
 const CELL_CAPS: Record<ImportKind, number[]> = {
   contacts: [MAX_EMAIL_LENGTH, MAX_CONTACT_NAME, 400, 40],
   products: [MAX_TITLE_LENGTH, 30, MAX_ABOUT_LENGTH * 2, 20, 2_000],
-  purchases: [MAX_EMAIL_LENGTH, 200],
+  purchases: [MAX_EMAIL_LENGTH, 200, 60],
   members: [MAX_EMAIL_LENGTH, 200, 60, 120],
 };
 
@@ -172,6 +183,10 @@ export type ImportJob = {
     /** Buyers emailed, and emails the sender refused. */
     mailed: number;
     unmailed: number;
+    /** Contacts: brought in as contacts who may not be emailed. Absent on imports made before it existed. */
+    contacts?: number;
+    /** Contacts: could be emailed until now, and left where the file came from, so no longer here. */
+    stopped?: number;
   };
   options: {
     /** Contacts: the creator confirmed these people agreed to hear from them. */
@@ -187,6 +202,8 @@ export type ImportJob = {
      * chose it from a list for the whole file; "" when they did not need to.
      */
     dateOrder?: DateOrder | "";
+    /** Where the file came from; absent on imports made before ClickFunnels files were read. */
+    source?: ImportSource;
   };
   finishedAt: number;
 };
@@ -241,6 +258,48 @@ export async function storeImports(store: Store): Promise<ImportJob[]> {
 
 export type StartProblem = "busy" | "too_many" | "consent" | "email" | "list" | "store" | "unavailable" | "stripe" | "stopped";
 
+/** What an import is started with, as the studio sends it. */
+export type StartInput = {
+  expected: number;
+  file: string;
+  agreed?: boolean;
+  consentColumn?: boolean;
+  tags?: string[];
+  email?: boolean;
+  stopped?: boolean;
+  dateOrder?: string;
+  source?: ImportSource;
+};
+
+/**
+ * Why an import of this kind cannot start on this store as it stands, or
+ * null when it can. The same checks for the dry run as for the import, so a
+ * dry run never says yes to what the import would refuse; changes nothing.
+ */
+export function startProblem(store: Store, kind: ImportKind, input: StartInput): { reason: StartProblem; limit?: number } | null {
+  if (!isRedisConfigured()) return { reason: "unavailable" };
+  if (!store.sid) return { reason: "store" };
+  const expected = Math.floor(Number(input.expected));
+  if (!Number.isFinite(expected) || expected < 1 || expected > IMPORT_LIMITS[kind]) return { reason: "too_many", limit: IMPORT_LIMITS[kind] };
+  // Contacts come in as people the creator may email only when the creator
+  // says, in so many words, that these people agreed to hear from them. A
+  // per-row consent column narrows that; it never replaces it. A ClickFunnels
+  // file without that word brings everyone in as a contact who may not be
+  // emailed, so it needs no confirmation to start.
+  if (kind === "contacts" && input.agreed !== true && input.source !== "clickfunnels") return { reason: "consent" };
+  if (kind === "products" && store.catalog.items.length >= MAX_PRODUCTS) return { reason: "too_many", limit: MAX_PRODUCTS };
+  // The one email to past buyers is sent from the store's name by our sender:
+  // only for a store in good standing, where email can go out at all.
+  if (kind === "purchases" && input.email === true && (!isSenderConfigured() || !isPaidUp(store))) return { reason: "email" };
+  // Members are always emailed their link, and keeping it is a checkout on
+  // the creator's Stripe account: both have to be possible before anyone is invited.
+  if (kind === "members" && (!isSenderConfigured() || !isPaidUp(store))) return { reason: "email" };
+  if (kind === "members" && !canSell(store)) return { reason: "stripe" };
+  // And only once the creator says they will stop the old renewals, so nobody pays twice.
+  if (kind === "members" && input.stopped !== true) return { reason: "stopped" };
+  return null;
+}
+
 /**
  * Begins an import: the browser has read the file and says how many rows it
  * will send. A store runs one import at a time, so a second waits for the
@@ -250,28 +309,11 @@ export async function startImport(
   store: Store,
   by: string,
   kind: ImportKind,
-  input: { expected: number; file: string; agreed?: boolean; consentColumn?: boolean; tags?: string[]; email?: boolean; stopped?: boolean; dateOrder?: string },
+  input: StartInput,
 ): Promise<{ ok: true; job: ImportJob } | { ok: false; reason: StartProblem; limit?: number }> {
-  if (!isRedisConfigured()) return { ok: false, reason: "unavailable" };
-  if (!store.sid) return { ok: false, reason: "store" };
+  const problem = startProblem(store, kind, input);
+  if (problem) return { ok: false, ...problem };
   const expected = Math.floor(Number(input.expected));
-  if (!Number.isFinite(expected) || expected < 1 || expected > IMPORT_LIMITS[kind]) {
-    return { ok: false, reason: "too_many", limit: IMPORT_LIMITS[kind] };
-  }
-  // Contacts come in only when the creator says, in so many words, that these
-  // people agreed to hear from them. A per-row consent column narrows that;
-  // it never replaces it.
-  if (kind === "contacts" && input.agreed !== true) return { ok: false, reason: "consent" };
-  if (kind === "products" && store.catalog.items.length >= MAX_PRODUCTS) return { ok: false, reason: "too_many", limit: MAX_PRODUCTS };
-  // The one email to past buyers is sent from the store's name by our sender:
-  // only for a store in good standing, where email can go out at all.
-  if (kind === "purchases" && input.email === true && (!isSenderConfigured() || !isPaidUp(store))) return { ok: false, reason: "email" };
-  // Members are always emailed their link, and keeping it is a checkout on
-  // the creator's Stripe account: both have to be possible before anyone is invited.
-  if (kind === "members" && (!isSenderConfigured() || !isPaidUp(store))) return { ok: false, reason: "email" };
-  if (kind === "members" && !canSell(store)) return { ok: false, reason: "stripe" };
-  // And only once the creator says they will stop the old renewals, so nobody pays twice.
-  if (kind === "members" && input.stopped !== true) return { ok: false, reason: "stopped" };
   const ref = storeRef(store);
   if (kind === "contacts" && !store.listId && !(await ensureListId(ref))?.listId) return { ok: false, reason: "list" };
   if ((kind === "purchases" || kind === "products" || kind === "members") && !store.statsId) await ensureStatsId(ref);
@@ -300,13 +342,14 @@ export async function startImport(
     total: 0,
     done: 0,
     cursor: { batch: 0, row: 0 },
-    counts: { added: 0, already: 0, skipped: 0, errors: 0, mailed: 0, unmailed: 0 },
+    counts: { added: 0, already: 0, skipped: 0, errors: 0, mailed: 0, unmailed: 0, contacts: 0, stopped: 0 },
     options: {
       agreed: kind === "contacts" && input.agreed === true,
       consentColumn: kind === "contacts" && input.consentColumn === true,
       tags: kind === "contacts" ? readTags(input.tags ?? []) : [],
       email: (kind === "purchases" && input.email === true) || kind === "members",
       dateOrder: kind === "members" && (input.dateOrder === "mdy" || input.dateOrder === "dmy") ? input.dateOrder : "",
+      source: input.source === "clickfunnels" && kind !== "members" ? "clickfunnels" : "csv",
     },
     finishedAt: 0,
   };
@@ -324,7 +367,8 @@ export function readBatch(kind: ImportKind, raw: unknown): string[][] | null {
   const caps = CELL_CAPS[kind];
   const out: string[][] = [];
   for (const entry of raw) {
-    if (!Array.isArray(entry) || entry.length !== caps.length + 1) return null;
+    // A page loaded before a kind gained a column sends one cell fewer: the missing ones read as empty.
+    if (!Array.isArray(entry) || entry.length < 2 || entry.length > caps.length + 1) return null;
     const line = Number(entry[0]);
     if (!Number.isInteger(line) || line < 1 || line > 10_000_000) return null;
     const cells: string[] = [String(line)];
@@ -444,12 +488,19 @@ async function firstSeen(job: ImportJob, keys: { key: string; line: number }[]):
 
 const isEmail = (email: string) => email.length <= MAX_EMAIL_LENGTH && EMAIL_PATTERN.test(email);
 
-async function contactsStep(job: ImportJob, store: Store, rows: string[][]): Promise<void> {
-  const listId = store.listId;
-  if (!listId) throw new Error("the store has no list");
+/** What a row of contacts holds once it is read, and what it says about consent. */
+type ContactRow = { line: number; email: string; name: string; tags: string[]; consent: ContactConsent; note: string };
+
+/**
+ * Reads a chunk of contacts the way the import and its dry run both read it:
+ * which rows are addresses that can come in, with what they say about
+ * consent, which are left out on purpose, and which cannot be read.
+ */
+function classifyContacts(options: ImportJob["options"], rows: string[][]): { valid: ContactRow[]; problems: Problem[]; skipped: Problem[] } {
   const problems: Problem[] = [];
   const skipped: Problem[] = [];
-  const valid: { line: number; email: string; name: string; tags: string[] }[] = [];
+  const valid: ContactRow[] = [];
+  const fromClickFunnels = options.source === "clickfunnels";
   for (const [lineText, rawEmail, name, tags, consent] of rows) {
     const line = Number(lineText);
     const email = normaliseEmail(rawEmail);
@@ -461,30 +512,53 @@ async function contactsStep(job: ImportJob, store: Store, rows: string[][]): Pro
       problems.push({ line, column: "email", problem: "Not an email address", value: rawEmail });
       continue;
     }
-    if (job.options.consentColumn) {
-      const said = readConsent(consent);
-      if (said === "no") {
+    let said: ContactConsent = "agreed";
+    let note = "";
+    if (fromClickFunnels) {
+      // Every row comes in; what the status says decides only whether it may be emailed.
+      const status = options.consentColumn ? readClickFunnelsStatus(consent) : "none";
+      said = consentFrom(status, options.agreed);
+      note =
+        status === "unknown"
+          ? "The status is not Subscribed, Unsubscribed or Undeliverable, so this contact cannot be emailed"
+          : status === "subscribed" && !options.agreed
+            ? "Subscribed there, but you did not confirm these people agreed, so this contact cannot be emailed"
+            : "";
+    } else if (options.consentColumn) {
+      const answer = readConsent(consent);
+      if (answer === "no") {
         skipped.push({ line, column: "consent", problem: "The consent column does not say they agreed", value: consent });
         continue;
       }
-      if (said === "unknown") {
+      if (answer === "unknown") {
         problems.push({ line, column: "consent", problem: "Not a yes or a no, so they were not added", value: consent });
         continue;
       }
     }
-    valid.push({ line, email, name: name.trim().slice(0, MAX_CONTACT_NAME), tags: [...readTags(tags), ...job.options.tags] });
+    valid.push({ line, email, name: name.trim().slice(0, MAX_CONTACT_NAME), tags: readTags([...readTags(tags), ...options.tags]), consent: said, note });
   }
+  return { valid, problems, skipped };
+}
+
+const asImported = (row: ContactRow): ImportedContact => ({ email: row.email, name: row.name, tags: row.tags, consent: row.consent });
+
+async function contactsStep(job: ImportJob, store: Store, rows: string[][]): Promise<void> {
+  const listId = store.listId;
+  if (!listId) throw new Error("the store has no list");
+  const { valid, problems, skipped } = classifyContacts(job.options, rows);
   const seen = await firstSeen(job, valid.map((v) => ({ key: `e:${v.email}`, line: v.line })));
   const fresh = valid.filter((v, i) => {
     if (seen[i] === null) return true;
     skipped.push({ line: v.line, column: "email", problem: `The same address as row ${seen[i]}`, value: v.email });
     return false;
   });
-  const outcomes = await importContactRows(listId, fresh.map((v) => ({ email: v.email, name: v.name, tags: readTags(v.tags) })));
+  const outcomes = await importContactRows(listId, fresh.map(asImported));
   outcomes.forEach((outcome, i) => {
     const row = fresh[i];
     if (outcome === "added") job.counts.added += 1;
     else if (outcome === "already") job.counts.already += 1;
+    else if (outcome === "contact") job.counts.contacts = (job.counts.contacts ?? 0) + 1;
+    else if (outcome === "stopped") job.counts.stopped = (job.counts.stopped ?? 0) + 1;
     else if (outcome === "left") skipped.push({ line: row.line, column: "email", problem: "Unsubscribed from your list before, so left alone", value: row.email });
     else problems.push({ line: row.line, column: "email", problem: "Your list is full", value: row.email });
   });
@@ -514,13 +588,15 @@ function summaryOf(text: string): string {
   if (flat.length <= MAX_SUMMARY_LENGTH) return flat;
   const cut = flat.slice(0, MAX_SUMMARY_LENGTH - 1);
   const space = cut.lastIndexOf(" ");
-  return `${(space > MAX_SUMMARY_LENGTH / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:.-]+$/, "")}\u2026`;
+  return `${(space > MAX_SUMMARY_LENGTH / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:.-]+$/, "")}…`;
 }
 
-async function productsStep(job: ImportJob, store: Store, rows: string[][]): Promise<void> {
+type ProductRow = { line: number; draft: DraftProduct; about: string };
+
+/** Reads a chunk of products the way the import and its dry run both read it, each checked as the product editor checks it. */
+function classifyProducts(store: Store, rows: string[][]): { valid: ProductRow[]; problems: Problem[] } {
   const problems: Problem[] = [];
-  const skipped: Problem[] = [];
-  const drafts: { line: number; draft: DraftProduct; about: string }[] = [];
+  const valid: ProductRow[] = [];
   for (const [lineText, rawTitle, rawPrice, rawDescription, rawType, rawLink] of rows) {
     const line = Number(lineText);
     const title = rawTitle.replace(/\s+/g, " ").trim();
@@ -574,9 +650,39 @@ async function productsStep(job: ImportJob, store: Store, rows: string[][]): Pro
     const summary = summaryOf(description);
     // The whole description goes on the product's own page when the card cannot hold it.
     const about = description.length > MAX_SUMMARY_LENGTH || description.includes("\n") ? description : "";
-    drafts.push({ line, draft: { title, summary, priceCents, link }, about });
+    valid.push({ line, draft: { title, summary, priceCents, link }, about });
   }
-  const seen = await firstSeen(job, drafts.map((d) => ({ key: `t:${d.draft.title.toLowerCase()}`, line: d.line })));
+  return { valid, problems };
+}
+
+/** How a product's title is compared with the store's: case, and runs of space, do not count. */
+const titleKey = (title: string) => title.replace(/\s+/g, " ").trim().toLowerCase();
+
+/** The titles of every product the store has now, drafts included: one read of the store's product names. */
+async function storeTitles(store: Store): Promise<Set<string>> {
+  return new Set([...(await readTitles(store)).values()].map(titleKey));
+}
+
+/**
+ * The listings a chunk of past buyers names, by id or by title, and what the
+ * bundles among them hold: one read of the names, then only those products,
+ * rather than every product of the store for every chunk.
+ */
+async function listingsNamed(store: Store, rows: string[][]): Promise<Awaited<ReturnType<typeof readListings>>> {
+  const asked = new Set(rows.map((row) => (row[2] ?? "").replace(/\s+/g, " ").trim()).filter(Boolean));
+  const askedTitles = new Set([...asked].map(titleKey));
+  const ids = new Set<string>();
+  for (const [id, title] of await readTitles(store)) if (asked.has(id) || askedTitles.has(titleKey(title))) ids.add(id);
+  if (!ids.size) return [];
+  const first = await readListings(store, ids);
+  const inside = [...new Set(first.flatMap((p) => p.bundle ?? []))].filter((id) => !ids.has(id));
+  return inside.length ? [...first, ...(await readListings(store, inside))] : first;
+}
+
+async function productsStep(job: ImportJob, store: Store, rows: string[][]): Promise<void> {
+  const { valid: drafts, problems } = classifyProducts(store, rows);
+  const skipped: Problem[] = [];
+  const seen = await firstSeen(job, drafts.map((d) => ({ key: `t:${titleKey(d.draft.title)}`, line: d.line })));
   const unseen = drafts.filter((d, i) => {
     if (seen[i] === null) return true;
     skipped.push({ line: d.line, column: "title", problem: `The same title as row ${seen[i]}`, value: d.draft.title });
@@ -587,7 +693,15 @@ async function productsStep(job: ImportJob, store: Store, rows: string[][]): Pro
   const madeBefore = unseen.length
     ? ((await redisPipeline([["HMGET", seenKey(job.id), ...unseen.map((d) => `m:${d.line}`)]]))[0] as unknown[])
     : [];
-  const fresh = unseen.filter((_, i) => !(Array.isArray(madeBefore) && madeBefore[i]));
+  const notMade = unseen.filter((_, i) => !(Array.isArray(madeBefore) && madeBefore[i]));
+  // A product the store already has, by its title, is already there: importing
+  // the same file again, or a second export of the same products, makes no copies.
+  const titles = notMade.length ? await storeTitles(store) : new Set<string>();
+  const fresh = notMade.filter((d) => {
+    if (!titles.has(titleKey(d.draft.title))) return true;
+    job.counts.already += 1;
+    return false;
+  });
   if (fresh.length) {
     let made = await addDraftProducts(storeRef(store), fresh.map((d) => ({ ...d.draft, about: d.about !== "" })));
     let taking = fresh;
@@ -616,24 +730,34 @@ async function productsStep(job: ImportJob, store: Store, rows: string[][]): Pro
   await note(job, problems, "errors");
 }
 
-async function purchasesStep(job: ImportJob, store: Store, rows: string[][]): Promise<void> {
-  const statsId = store.statsId;
-  if (!statsId) throw new Error("the store has no statsId");
+type PurchaseRow = { line: number; email: string; productId: string; bundle: string[] | null };
+
+/** Reads a chunk of past buyers the way the import and its dry run both read it, against the store's products. */
+function classifyPurchases(listings: Awaited<ReturnType<typeof readListings>>, rows: string[][]): { valid: PurchaseRow[]; problems: Problem[]; skipped: Problem[] } {
   const problems: Problem[] = [];
   const skipped: Problem[] = [];
-  const listings = await readAllListings(store);
   const byId = new Map(listings.map((p) => [p.id, p]));
   const byTitle = new Map<string, typeof listings>();
   for (const p of listings) {
-    const key = p.title.replace(/\s+/g, " ").trim().toLowerCase();
+    const key = titleKey(p.title);
     byTitle.set(key, [...(byTitle.get(key) ?? []), p]);
   }
-  const valid: { line: number; email: string; productId: string; bundle: string[] | null }[] = [];
-  for (const [lineText, rawEmail, rawProduct] of rows) {
+  const valid: PurchaseRow[] = [];
+  for (const [lineText, rawEmail, rawProduct, rawStatus = ""] of rows) {
     const line = Number(lineText);
     const email = normaliseEmail(rawEmail);
     if (!isEmail(email)) {
       problems.push({ line, column: "email", problem: email ? "Not an email address" : "No email address", value: rawEmail });
+      continue;
+    }
+    // Only a paid order gives anything: a refunded, failed or canceled one never does.
+    const status = readOrderStatus(rawStatus);
+    if (status === "unpaid") {
+      skipped.push({ line, column: "status", problem: "Not a paid order, so nothing is given", value: rawStatus });
+      continue;
+    }
+    if (status === "unknown") {
+      problems.push({ line, column: "status", problem: "Not a status that can be read: only paid orders are given", value: rawStatus });
       continue;
     }
     const asked = rawProduct.replace(/\s+/g, " ").trim();
@@ -668,6 +792,14 @@ async function purchasesStep(job: ImportJob, store: Store, rows: string[][]): Pr
     }
     valid.push({ line, email, productId: product.id, bundle: items });
   }
+  return { valid, problems, skipped };
+}
+
+async function purchasesStep(job: ImportJob, store: Store, rows: string[][]): Promise<void> {
+  const statsId = store.statsId;
+  if (!statsId) throw new Error("the store has no statsId");
+  const listings = await listingsNamed(store, rows);
+  const { valid, problems, skipped } = classifyPurchases(listings, rows);
   const seen = await firstSeen(job, valid.map((v) => ({ key: `p:${v.email}|${v.productId}`, line: v.line })));
   const fresh = valid.filter((v, i) => {
     if (seen[i] === null) return true;
@@ -687,6 +819,121 @@ async function purchasesStep(job: ImportJob, store: Store, rows: string[][]): Pr
   }
   await note(job, skipped, "skipped");
   await note(job, problems, "errors");
+}
+
+// ---- The dry run -------------------------------------------------------------
+
+/** What one row would become: the same words the import's counts use. */
+export type PreviewOutcome = "added" | "contact" | "already" | "stopped" | "left" | "skipped" | "error";
+
+/**
+ * One row of a dry run: its row number, what it would become, the column and
+ * the reason when there is one, the cell, the key that tells a repeated row
+ * (the same address, title or buyer and product), and 1 when it would take
+ * new room on the list or in the store.
+ */
+export type PreviewRow = [line: number, outcome: PreviewOutcome, column: string, note: string, value: string, key: string, fresh: 0 | 1];
+
+export type PreviewResult =
+  | { ok: true; rows: PreviewRow[]; room: number | null }
+  | { ok: false; reason: StartProblem | "kind"; limit?: number };
+
+/** Kinds a dry run is offered for: those a move from ClickFunnels brings. */
+export const PREVIEW_KINDS: readonly ImportKind[] = ["contacts", "products", "purchases"];
+
+/**
+ * The dry run of one batch of an import: every row read and checked here
+ * exactly as the import will, against the store as it stands, and nothing
+ * written anywhere — no contact, no draft, no purchase, no email, and not the
+ * import's own records. The page sends the file a batch at a time and adds
+ * the answers up; a row repeated in another batch is told by its key.
+ *
+ * It refuses what the import would refuse to start (startProblem), so it
+ * never says yes past a plan's limit, and the import checks every row again
+ * when it runs: what changed in between is what the import goes by.
+ */
+export async function previewImport(store: Store, kind: ImportKind, input: StartInput, raw: string[][]): Promise<PreviewResult> {
+  if (!PREVIEW_KINDS.includes(kind)) return { ok: false, reason: "kind" };
+  const problem = startProblem(store, kind, input);
+  if (problem) return { ok: false, ...problem };
+  const options: ImportJob["options"] = {
+    agreed: kind === "contacts" && input.agreed === true,
+    consentColumn: kind === "contacts" && input.consentColumn === true,
+    tags: kind === "contacts" ? readTags(input.tags ?? []) : [],
+    email: kind === "purchases" && input.email === true,
+    dateOrder: "",
+    source: input.source === "clickfunnels" ? "clickfunnels" : "csv",
+  };
+  const out: PreviewRow[] = [];
+  const told = (list: Problem[], outcome: PreviewOutcome) => {
+    for (const p of list) out.push([p.line, outcome, p.column, p.problem, p.value.slice(0, 300), "", 0]);
+  };
+  // Only the batch's own repeats are found here; the page finds those across batches by key.
+  const repeated = <T extends { line: number }>(rows: T[], keyOf: (row: T) => string, column: string, valueOf: (row: T) => string, words: string): T[] => {
+    const first = new Map<string, number>();
+    return rows.filter((row) => {
+      const key = keyOf(row);
+      const earlier = first.get(key);
+      if (earlier === undefined) {
+        first.set(key, row.line);
+        return true;
+      }
+      out.push([row.line, "skipped", column, `${words} ${earlier}`, valueOf(row), key, 0]);
+      return false;
+    });
+  };
+
+  if (kind === "contacts") {
+    const { valid, problems, skipped } = classifyContacts(options, raw);
+    told(problems, "error");
+    told(skipped, "skipped");
+    const fresh = repeated(valid, (v) => `e:${v.email}`, "email", (v) => v.email, "The same address as row");
+    const { outcomes, room } = await previewContactRows(store.listId, fresh.map(asImported));
+    fresh.forEach((row, i) => {
+      const { outcome, fresh: isNew } = outcomes[i];
+      const words: Record<Exclude<ContactOutcome, "full">, string> = {
+        added: "Added as someone you may email",
+        contact: row.consent === "unsubscribed"
+          ? "Unsubscribed there: added as a contact you cannot email, kept as unsubscribed"
+          : row.consent === "undeliverable"
+            ? "Undeliverable there: added as a contact you cannot email"
+            : row.note || "Added as a contact you cannot email: no recorded consent",
+        already: row.consent === "unsubscribed" || row.consent === "undeliverable"
+          ? "Already on your list, not emailed; now kept as unsubscribed"
+          : "Already on your list: kept as it is, with this file's name and tags added",
+        stopped: row.consent === "undeliverable"
+          ? "On your list and emailed until now: undeliverable there, so no longer emailed"
+          : "On your list and emailed until now: unsubscribed there, so no longer emailed",
+        left: "Unsubscribed from your list here before, so left alone",
+      };
+      out.push([row.line, outcome === "left" ? "left" : outcome, "email", words[outcome], row.email, `e:${row.email}`, isNew ? 1 : 0]);
+    });
+    return { ok: true, rows: out.sort((a, b) => a[0] - b[0]), room };
+  }
+
+  if (kind === "products") {
+    const { valid, problems } = classifyProducts(store, raw);
+    told(problems, "error");
+    const fresh = repeated(valid, (d) => `t:${titleKey(d.draft.title)}`, "title", (d) => d.draft.title, "The same title as row");
+    const titles = fresh.length ? await storeTitles(store) : new Set<string>();
+    for (const d of fresh) {
+      const key = `t:${titleKey(d.draft.title)}`;
+      if (titles.has(titleKey(d.draft.title))) out.push([d.line, "already", "title", "A product with this title is already in your store: no copy is made", d.draft.title, key, 0]);
+      else out.push([d.line, "added", "title", d.draft.priceCents === 0 ? "Made as a free draft" : "Made as a paid draft", d.draft.title, key, 1]);
+    }
+    return { ok: true, rows: out.sort((a, b) => a[0] - b[0]), room: Math.max(0, MAX_PRODUCTS - store.catalog.items.length) };
+  }
+
+  const listings = await listingsNamed(store, raw);
+  const { valid, problems, skipped } = classifyPurchases(listings, raw);
+  told(problems, "error");
+  told(skipped, "skipped");
+  const fresh = repeated(valid, (v) => `p:${v.email}|${v.productId}`, "email", (v) => v.email, "The same buyer and product as row");
+  const titles = new Map(listings.map((p) => [p.id, p.title]));
+  for (const v of fresh) {
+    out.push([v.line, "added", "product", `Given ${titles.get(v.productId) ?? "the product"}, unless they already have it`, v.email, `p:${v.email}|${v.productId}`, 0]);
+  }
+  return { ok: true, rows: out.sort((a, b) => a[0] - b[0]), room: null };
 }
 
 async function membersStep(job: ImportJob, store: Store, rows: string[][], now = Date.now()): Promise<void> {

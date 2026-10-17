@@ -11,9 +11,13 @@ import { ImportProgress, ImportTool, type ImportKind, type ImportView } from "@/
 import { isPaidUp } from "@/lib/billing";
 import { isSenderConfigured } from "@/lib/email";
 import { listCounts } from "@/lib/contacts";
-import { productCount } from "@/lib/catalog";
+import { KIND, productCount, readCards } from "@/lib/catalog";
 import { MAX_PRODUCTS } from "@/lib/store";
 import { moveCounts } from "@/lib/move-members";
+import { formatMoney } from "@/lib/money";
+import { can } from "@/lib/team-roles";
+import { MAX_SITE_PAGES } from "@/lib/site-page-rules";
+import { ClickFunnelsFunnel, type FunnelProduct } from "@/components/clickfunnels-funnel";
 
 export const metadata: Metadata = {
   title: "Moving from another platform — Marktmorgen",
@@ -49,6 +53,14 @@ const TABS: { kind: ImportKind; title: string; text: string; icon: IconName }[] 
   },
 ];
 
+/** Moving from ClickFunnels, in the order it goes best: products first, because buyers and funnels name them. */
+const CLICKFUNNELS_STEPS: { step: "products" | "contacts" | "purchases" | "funnel"; title: string; text: string; icon: IconName }[] = [
+  { step: "products", title: "1. Products", text: "Your Products export, as drafts.", icon: "tag" },
+  { step: "contacts", title: "2. Contacts", text: "Your Contacts export, with each one's Status.", icon: "mail" },
+  { step: "purchases", title: "3. Past buyers", text: "Your Orders export: paid orders only.", icon: "users" },
+  { step: "funnel", title: "4. Funnel pages", text: "Your saved pages, made into a funnel.", icon: "layout" },
+];
+
 const DATE = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
 
 function view(job: ImportJob): ImportView {
@@ -64,6 +76,7 @@ function view(job: ImportJob): ImportView {
     done: job.done,
     counts: job.counts,
     email: job.options.email,
+    source: job.options.source ?? "csv",
   };
 }
 
@@ -81,12 +94,41 @@ export default async function StudioImportPage({ searchParams }: Params) {
   }
   const { view: access } = found;
   const { store } = access;
-  const kind: ImportKind = query.what === "products" || query.what === "purchases" || query.what === "members" ? query.what : "contacts";
-  const [jobs, counts, moved] = await Promise.all([
+  const clickFunnels = query.what === "clickfunnels";
+  const cfStep = CLICKFUNNELS_STEPS.find((s) => s.step === query.step)?.step ?? "products";
+  const kind: ImportKind = clickFunnels
+    ? cfStep === "funnel"
+      ? "products"
+      : cfStep
+    : query.what === "products" || query.what === "purchases" || query.what === "members"
+      ? query.what
+      : "contacts";
+  const canFunnel = can(access.role, "page") && can(access.role, "products");
+  const [jobs, counts, moved, listings] = await Promise.all([
     storeImports(store).catch(() => []),
     listCounts(store.listId).catch(() => null),
     kind === "members" ? moveCounts(store).catch(() => null) : Promise.resolve(null),
+    // One read of every product's name and price; what kind each is, from the store's own index.
+    clickFunnels && cfStep === "funnel" && canFunnel ? readCards(store).catch(() => null) : Promise.resolve(null),
   ]);
+  const funnelProducts: FunnelProduct[] = listings
+    ? store.catalog.items.flatMap((item) => {
+        const card = listings.get(item.id);
+        if (!card) return [];
+        const is = (kind: keyof typeof KIND) => (item.kind & KIND[kind]) !== 0;
+        return [
+          {
+            id: item.id,
+            title: card.title,
+            price: card.priceCents === 0 ? "free" : formatMoney(card.priceCents, store.currency),
+            call: is("call"),
+            // Could be offered at checkout or after paying: checked in full when the funnel is checked.
+            bumpable: is("paid") && !is("call") && !is("recurring") && !is("limited") && item.options.length === 0,
+            hidden: is("hidden"),
+          },
+        ];
+      })
+    : [];
   const running = jobs.find((job) => job.state === "receiving" || job.state === "queued" || job.state === "running" || job.state === "mailing") ?? null;
   const past = jobs.filter((job) => job.id !== running?.id);
   const tab = TABS.find((t) => t.kind === kind)!;
@@ -118,6 +160,99 @@ export default async function StudioImportPage({ searchParams }: Params) {
             listed in a file you can download, with the reason.
           </p>
 
+          <Link
+            href={studioPath(store, "what=clickfunnels", "import")}
+            aria-current={clickFunnels ? "page" : undefined}
+            className={`mt-6 flex min-h-[44px] items-center gap-3 rounded-2xl p-4 ring-1 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-brand sm:max-w-xl ${
+              clickFunnels ? "bg-lilac ring-violet-brand/40" : "bg-white ring-line hover:ring-violet-brand/40"
+            }`}
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-lilac text-violet-deep">
+              <Icon name="door" size={18} />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-semibold text-ink">Move from ClickFunnels</span>
+              <span className="mt-0.5 block text-sm leading-snug text-ink-soft">
+                Contacts with their consent status, products, past buyers and your funnel&apos;s pages, each checked in a dry run first.
+              </span>
+            </span>
+          </Link>
+
+          {clickFunnels ? (
+            <section className="mt-8" aria-labelledby="cf-title">
+              <h2 id="cf-title" className="t-h3">Move from ClickFunnels</h2>
+              <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+                In ClickFunnels, export your Products, Contacts and Orders from their own pages (choose the fields to include, then download the
+                file). Bring them in the order below. Each file is checked first in a dry run that saves nothing, then imported; importing the
+                same file again makes nothing twice.{" "}
+                <Link href="/platform/move-from-clickfunnels" className="font-bold text-violet-deep underline underline-offset-4">
+                  How a move from ClickFunnels works
+                </Link>
+              </p>
+              <nav aria-label="Steps of a move from ClickFunnels" className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {CLICKFUNNELS_STEPS.map((s) => {
+                  const on = s.step === cfStep;
+                  return (
+                    <Link
+                      key={s.step}
+                      href={studioPath(store, `what=clickfunnels&step=${s.step}`, "import")}
+                      aria-current={on ? "step" : undefined}
+                      className={`flex min-h-[44px] items-start gap-3 rounded-2xl p-4 ring-1 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-brand ${
+                        on ? "bg-lilac ring-violet-brand/40" : "bg-white ring-line hover:ring-violet-brand/40"
+                      }`}
+                    >
+                      <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-white text-violet-deep" : "bg-lilac text-violet-deep"}`}>
+                        <Icon name={s.icon} size={18} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-ink">{s.title}</span>
+                        <span className="mt-0.5 block text-sm leading-snug text-ink-soft">{s.text}</span>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
+                <section className="card min-w-0 p-5 sm:p-7" aria-labelledby="cf-step-title">
+                  <h3 id="cf-step-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
+                    {CLICKFUNNELS_STEPS.find((s) => s.step === cfStep)!.title}
+                  </h3>
+                  {cfStep === "funnel" ? (
+                    <div className="mt-5">
+                      {canFunnel ? (
+                        <ClickFunnelsFunnel
+                          products={funnelProducts}
+                          pagesLeft={Math.max(0, MAX_SITE_PAGES - store.sitePages.length)}
+                          funnelsHref={studioPath(store, "", "funnels")}
+                          pagesHref={studioPath(store, "", "pages")}
+                        />
+                      ) : (
+                        <p className="notice notice-warn text-sm">Only the store&apos;s owner and Admins can make pages and funnels.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      {facts[kind] ? <p className="mt-1 text-sm text-ink-soft">{facts[kind]}</p> : null}
+                      <div className="mt-5">
+                        <ImportTool
+                          key={`cf-${kind}`}
+                          kind={kind}
+                          source="clickfunnels"
+                          active={running ? view(running) : null}
+                          canEmail={isPaidUp(store) && isSenderConfigured()}
+                          storeName={store.name}
+                        />
+                      </div>
+                    </>
+                  )}
+                </section>
+                <PastImports past={past} />
+              </div>
+            </section>
+          ) : null}
+
+          {!clickFunnels ? (
+            <>
           <nav aria-label="What to import" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {TABS.map((t) => {
               const on = t.kind === kind;
@@ -159,27 +294,36 @@ export default async function StudioImportPage({ searchParams }: Params) {
               </div>
             </section>
 
-            <aside className="card min-w-0 p-5 sm:p-6" aria-labelledby="past-title">
-              <h2 id="past-title" className="text-base font-semibold text-ink">
-                Your last imports
-              </h2>
-              {past.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-soft">None yet. Each one is listed here for two weeks, with its report.</p>
-              ) : (
-                <ul className="mt-3 space-y-4">
-                  {past.map((job) => (
-                    <li key={job.id}>
-                      <p className="text-sm font-semibold text-ink">{`${TABS.find((t) => t.kind === job.kind)?.title ?? job.kind}${job.file ? `: ${job.file}` : ""}`}</p>
-                      <p className="mb-2 text-xs text-ink-soft">{`${DATE.format(new Date(job.at))} UTC · ${job.total.toLocaleString("en-US")} rows`}</p>
-                      <ImportProgress job={view(job)} compact />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </aside>
+            <PastImports past={past} />
           </div>
+            </>
+          ) : null}
         </main>
       </StudioStorePin>
     </div>
+  );
+}
+
+/** The store's last imports, each with its counts and report. */
+function PastImports({ past }: { past: ImportJob[] }) {
+  return (
+    <aside className="card min-w-0 p-5 sm:p-6" aria-labelledby="past-title">
+      <h2 id="past-title" className="text-base font-semibold text-ink">
+        Your last imports
+      </h2>
+      {past.length === 0 ? (
+        <p className="mt-2 text-sm text-ink-soft">None yet. Each one is listed here for two weeks, with its report.</p>
+      ) : (
+        <ul className="mt-3 space-y-4">
+          {past.map((job) => (
+            <li key={job.id}>
+              <p className="text-sm font-semibold text-ink">{`${TABS.find((t) => t.kind === job.kind)?.title ?? job.kind}${job.options.source === "clickfunnels" ? " from ClickFunnels" : ""}${job.file ? `: ${job.file}` : ""}`}</p>
+              <p className="mb-2 text-xs text-ink-soft">{`${DATE.format(new Date(job.at))} UTC · ${job.total.toLocaleString("en-US")} rows`}</p>
+              <ImportProgress job={view(job)} compact />
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
   );
 }
