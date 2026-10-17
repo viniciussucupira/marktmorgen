@@ -23,7 +23,9 @@
  *   - The research mode reads only the store's own dated records, never the
  *     web, and every statement it keeps cites one of them.
  *   - What it costs is said before it runs, in the same monthly AI uses as
- *     every other draft, weighted by each request's bound (funnelDraftJobs).
+ *     every other draft, weighted by each request's spending hold
+ *     (funnelDraftJobs); each request also reserves that hold from the
+ *     plan's monthly AI budget before it is sent (lib/ai.ts, askModel).
  *
  * Pure and browser-safe.
  */
@@ -34,24 +36,25 @@ import { MAX_ANSWER, MAX_CTA_LABEL, MAX_FIT_ITEMS, MAX_HEADING, MAX_ITEM, MAX_IT
 import { numbersIn } from "@/lib/block-rewrite-rules";
 import { isAiSequenceDraft } from "@/lib/ai-response";
 import type { DraftedStep } from "@/lib/sequence-draft";
+import { WRITING_JOB_MICRO_USD, WRITING_JOB_REFERENCE, aiRequestHoldMicroUsd } from "@/lib/spend-cost-table";
 
 // ------------------------------------------------------------------ cost
 
 /**
- * The bound one of the month's writing jobs is counted at: one whole sales
- * page draft (lib/ai.ts, writePage) asks for at most 3,000 output tokens from
- * well under 16 KiB of instructions and facts. A request is weighted by its
- * own bounds against this one, rounded up, never by what it happened to use,
- * so a draft's weight is known, and said, before it runs.
+ * A request's weight in the month's writing jobs: the most it can cost, as
+ * the spending hold computes it before the fetch (lib/spend-cost-table.ts,
+ * aiRequestHoldMicroUsd, at the writing model's rates), divided by the
+ * priced writing job and rounded up. It is weighed by its own bounds, never
+ * by what it happened to use, so a draft's weight is known, and said, before
+ * it runs.
  */
-export const AI_JOB_BOUND = { outputTokens: 3_000, inputBytes: 16_384 } as const;
-
 export type AiCallBound = { outputTokens: number; inputBytes: number };
 
 /** How many of the month's jobs one request of these bounds counts as: at least one. */
 export function jobsForCall(call: AiCallBound): number {
-  if (!Number.isSafeInteger(call.outputTokens) || !Number.isSafeInteger(call.inputBytes) || call.outputTokens < 1 || call.inputBytes < 1) return Number.NaN;
-  return Math.max(1, Math.ceil(call.outputTokens / AI_JOB_BOUND.outputTokens), Math.ceil(call.inputBytes / AI_JOB_BOUND.inputBytes));
+  const hold = aiRequestHoldMicroUsd(WRITING_JOB_REFERENCE.model, { inputBytes: call.inputBytes, blocks: 1, media: null, maxTokens: call.outputTokens });
+  if (hold === null || !Number.isSafeInteger(call.inputBytes) || call.inputBytes < 1) return Number.NaN;
+  return Math.max(1, Math.ceil(hold / WRITING_JOB_MICRO_USD));
 }
 
 /**
@@ -63,7 +66,7 @@ export function jobsForCall(call: AiCallBound): number {
 export const FUNNEL_AI_CALLS = {
   pages: { outputTokens: 4_500, inputBytes: 16_384 },
   emails: { outputTokens: 3_000, inputBytes: 12_288 },
-  research: { outputTokens: 2_000, inputBytes: 16_384 },
+  research: { outputTokens: 2_000, inputBytes: 12_288 },
 } as const satisfies Record<string, AiCallBound>;
 
 /** The month's AI uses a funnel draft takes, said before it runs. */

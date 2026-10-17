@@ -44,6 +44,7 @@ import {
 import { type FunnelFacts, writeFunnelDraft } from "@/lib/funnel-ai";
 import { SEQUENCE_NAME_MAX, readMailSaveError, sequenceFlowFrom } from "@/lib/funnel-ai-sequence";
 import { productLink } from "@/lib/checkout-recovery";
+import { WRITING_JOB_MICRO_USD, WRITING_JOB_REFERENCE, aiRequestHoldMicroUsd } from "@/lib/spend-cost-table";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -65,7 +66,13 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
 
   part("Its weight is its requests' bounds, said before it runs");
-  is("a job is the bound of one sales page draft; each request rounds up against it", [jobsForCall({ outputTokens: 3_000, inputBytes: 16_384 }), jobsForCall({ outputTokens: 3_001, inputBytes: 100 }), jobsForCall({ outputTokens: 100, inputBytes: 16_385 }), Number.isNaN(jobsForCall({ outputTokens: 0, inputBytes: 1 }))], [1, 2, 2, true]);
+  is("a request is weighed by its spending hold against the priced writing job, rounded up", [
+    jobsForCall({ outputTokens: WRITING_JOB_REFERENCE.shape.maxTokens, inputBytes: WRITING_JOB_REFERENCE.shape.inputBytes }),
+    jobsForCall({ outputTokens: WRITING_JOB_REFERENCE.shape.maxTokens + 1, inputBytes: WRITING_JOB_REFERENCE.shape.inputBytes }),
+    jobsForCall({ outputTokens: 100, inputBytes: 100 }),
+    Number.isNaN(jobsForCall({ outputTokens: 0, inputBytes: 1 })),
+  ], [1, 2, 1, true]);
+  is("the weight covers the hold askModel reserves", Object.values(FUNNEL_AI_CALLS).every((call) => jobsForCall(call) * WRITING_JOB_MICRO_USD >= aiRequestHoldMicroUsd(WRITING_JOB_REFERENCE.model, { inputBytes: call.inputBytes, blocks: 1, media: null, maxTokens: call.outputTokens })!), true);
   is("the draft: pages 2, emails 1; the research 1", [funnelDraftJobs(false), funnelDraftJobs(true), FUNNEL_RESEARCH_JOBS], [2, 3, 1]);
   is("every request stays inside the central request limits", Object.values(FUNNEL_AI_CALLS).every((call) => call.outputTokens <= 6_000 && call.inputBytes <= 65_536), true);
 
@@ -91,7 +98,7 @@ async function main(): Promise<void> {
   const OWNER = "aifunnel@example.com";
   await claimHandle(OWNER, "aifunnel", "Pixel Studio", "");
   await ensureStatsId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_AiFunnel01", subscriptionId: "sub_AiFunnel01", active: true, tier: "creator", trialEnds: 0 });
+  await setSubscription(OWNER, { customerId: "cus_AiFunnel01", subscriptionId: "sub_AiFunnel01", active: true, tier: "pro", trialEnds: 0 });
   const guide = await addProduct(OWNER, "Pricing Checklist", "A one-page checklist for pricing design work.", "0", null);
   const course = await addProduct(OWNER, "Pricing Course", "Six lessons on pricing and pitching.", "99", null);
   const extra = await addProduct(OWNER, "Proposal Templates", "Three proposal templates.", "19", null);

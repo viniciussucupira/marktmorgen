@@ -152,7 +152,7 @@ export function FunnelAiDraftPanel({ type, picked, sid, ai, emailsPossible, onDr
       </div>
       <p className="mt-2 text-xs text-ink-soft" role="status">
         {known
-          ? `The draft uses ${draftJobs} of your monthly AI uses; the summary uses ${FUNNEL_RESEARCH_JOBS}. ${left} left this month. Started attempts count, even if they fail.`
+          ? `The draft uses ${draftJobs} of your monthly AI uses; the summary uses ${FUNNEL_RESEARCH_JOBS}. ${left} left this month. Each request also sets aside the most it could cost from your plan's monthly AI budget, which can run out before the uses do. Started attempts count, even if they fail.`
           : "Reload to check your AI uses before trying again."}
         {drafted ? " Drafting again replaces the words below." : ""}
       </p>
