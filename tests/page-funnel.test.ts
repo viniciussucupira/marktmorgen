@@ -153,8 +153,25 @@ async function main(): Promise<void> {
   is("to the first step, with the mark and what the link carried", await go("/@chef/go/launch?utm_source=newsletter&f=zzzzzzzzzz"), [307, `https://marktmorgen.com${guidePath}?f=${funnel.id}&utm_source=newsletter`]);
   is("an address no funnel has leads to the store", await go("/@chef/go/nothing"), [307, "https://marktmorgen.com/@chef"]);
   await writePageFunnel(statsId, { ...funnel, on: false }, [funnel]);
-  is("off, to the first page without the funnel", await go("/@chef/go/launch"), [307, `https://marktmorgen.com${guidePath}`]);
+  is("an inactive funnel never redirects to a published product or page", await go("/@chef/go/launch"), [404, null]);
+  const previousPipeline = redis.pipeline;
+  let snapshotRead = false, readsAfterSnapshot = 0;
+  try {
+    redis.pipeline = async commands => {
+      if (snapshotRead) readsAfterSnapshot += commands.length;
+      const reply = await previousPipeline.call(redis, commands);
+      if (commands.some(command => command[0] === "HVALS" && command[1] === "nl:pfunnels:" + statsId)) snapshotRead = true;
+      return reply;
+    };
+    const inactive = await goRoute(new NextRequest("https://marktmorgen.com/@chef/go/launch?utm_source=newsletter&affiliate=someone&f=zzzzzzzzzz"), { params: Promise.resolve({ handle: "@chef", funnel: "launch" }) });
+    is("inactive links do not forward tracking or affiliate queries and cannot be cached", [inactive.status, inactive.headers.get("location"), inactive.headers.get("cache-control")], [404, null, "no-store"]);
+    is("inactive funnels require no step or product reads after the funnel lookup", [snapshotRead, readsAfterSnapshot], [true, 0]);
+  } finally { redis.pipeline = previousPipeline; }
+  const inactiveCustom = await goRoute(new NextRequest("https://courses.example.com/go/launch"), { params: Promise.resolve({ handle: "@chef", funnel: "launch" }) });
+  is("the same inactive boundary applies to a custom-domain request", [inactiveCustom.status, inactiveCustom.headers.get("location")], [404, null]);
   await writePageFunnel(statsId, funnel, [funnel]);
+
+  is("re-enabling restores the marked entry and query forwarding", await go("/@chef/go/launch?utm_source=reopened"), [307, `https://marktmorgen.com${guidePath}?f=${funnel.id}&utm_source=reopened`]);
 
   part("Counting each step");
   const visitorA = funnelVisitor(statsId, funnel.id, "203.0.113.9", PHONE);

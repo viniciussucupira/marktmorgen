@@ -11,8 +11,8 @@ import { readPageFunnels, stepStates } from "@/lib/page-funnel-store";
  * carried — utm tags, an affiliate's code — goes along, so the step is
  * credited exactly as a link straight to it would be.
  *
- * A funnel that is off still leads somewhere: its first page, without the
- * funnel. An address no funnel has leads to the store.
+ * An inactive funnel is unavailable, without redirecting to any public step.
+ * An address no funnel has leads to the store.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ handle: string; funnel: string }> }) {
   const { handle: raw, funnel: slug } = await params;
@@ -28,6 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const funnel = (await readPageFunnels(store.statsId).catch(() => [])).find((f) => f.slug === slug.toLowerCase()) ?? null;
   if (!funnel) return away(`/@${store.handle}`);
+  if (!funnel.on) return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
   const states = await stepStates(store, funnel);
   const first = nextOpen(funnel, -1, (step) => states.find((s) => s.step === step)?.open ?? false);
   const path = first >= 0 ? states[first].path : null;
@@ -37,6 +38,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const carried = new URLSearchParams(request.nextUrl.searchParams);
   carried.delete("f");
   const query = carried.toString();
-  const target = funnel.on ? withMark(path, funnel.id) : path;
+  const target = withMark(path, funnel.id);
   return away(query ? `${target}${target.includes("?") ? "&" : "?"}${query}` : target);
 }
