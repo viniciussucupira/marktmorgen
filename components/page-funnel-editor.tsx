@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
+import type { FunnelStepEditorLink } from "@/lib/funnel-editor-links";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -24,7 +26,7 @@ export type StepChoice = { kind: PageFunnelStep["kind"]; id: string; title: stri
 /** One saved funnel, with its steps as the store stands and how many people each reached. */
 export type SavedFunnel = {
   funnel: PageFunnel;
-  steps: { title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number | null; done: number | null }[];
+  steps: { editor?: FunnelStepEditorLink | null; title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number | null; done: number | null }[];
 };
 
 type Draft = { id: string; name: string; slug: string; slugTouched: boolean; on: boolean; steps: PageFunnelStep[] };
@@ -272,6 +274,21 @@ export function PageFunnelEditor({
                       ) : (
                         <p className="mt-0.5 font-semibold text-ink">{step.why}</p>
                       )}
+                      {step.editor ? (
+                        <Link
+                          href={step.editor.href}
+                          prefetch={false}
+                          aria-label={`${step.editor.label}: ${step.title}`}
+                          aria-disabled={locked}
+                          tabIndex={locked ? -1 : undefined}
+                          onClick={(event) => {
+                            if (flight.current || recovery.current) event.preventDefault();
+                          }}
+                          className="mt-1 inline-flex min-h-11 items-center rounded-lg px-2 font-semibold text-violet-deep underline underline-offset-4 aria-disabled:opacity-40"
+                        >
+                          {step.editor.label}
+                        </Link>
+                      ) : null}
                     </div>
                   </li>
                 ))}
