@@ -149,7 +149,9 @@ export default async function StudioAffiliatesPage({ searchParams }: Params) {
             currency: line.currency,
             status: line.status,
             how: line.how,
+            promotion: line.promotion ?? null,
           }))}
+          linesTotal={book?.lines.length ?? null}
           payouts={book?.payouts ?? []}
           refundsChecked={book?.refundsChecked ?? true}
           invoicesChecked={book?.invoicesChecked ?? true}
