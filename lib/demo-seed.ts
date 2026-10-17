@@ -102,6 +102,16 @@ const PHOTO_TIMEOUT_MS = 15_000;
  */
 export const DEMO_STORE = {
   name: "Harbor Kitchen",
+  /**
+   * The plan the demo is on: Studio, so a visitor sees what AI does in a
+   * store (visitor answers, drafting in the studio), which Store does not
+   * include. It is ours to give, and pays nothing, so what it uses is a
+   * company cost held by Studio's own automatic ceilings
+   * (lib/ai-spend-policy.ts, lib/traffic-rules.ts); it writes to nobody
+   * (lib/house-store.ts). Here, not in the step, so a change to it changes
+   * the seed's fingerprint and is brought in line on the next deployment.
+   */
+  tier: "pro",
   bio: "Simple family meals by Jenny, a fictional cook. This is Marktmorgen's demo store: you pay with Stripe's test card, and the file you get is real.",
   look: { theme: "sand", accent: "#e5533d", badge: true, sold: false, font: "modern", backdrop: "glow" } satisfies StoreLook,
   photo: {
@@ -535,12 +545,13 @@ async function ensureStore(pending: string[]): Promise<Store | null> {
     else pending.push(refused("account", done.reason));
   }
   if (!charges) pending.push(refused("account", "no_key"));
-  // The $29 plan, which is ours to give to our own store. No subscription is
-  // written down for it, because there is none: the daily check of
-  // subscriptions and the studio both ask Stripe only about a store that
-  // names one (lib/billing-sync.ts), so neither ever takes this back.
-  if (!store.subscriptionActive || store.tier !== "creator" || store.subscriptionId !== null) {
-    const done = await setSubscription(REF, { active: true, tier: "creator", cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0, shared: false });
+  // The demo's plan (DEMO_STORE.tier), which is ours to give to our own
+  // store. No subscription is written down for it, because there is none:
+  // the daily check of subscriptions and the studio both ask Stripe only
+  // about a store that names one (lib/billing-sync.ts), so neither ever
+  // takes this back.
+  if (!store.subscriptionActive || store.tier !== DEMO_STORE.tier || store.subscriptionId !== null) {
+    const done = await setSubscription(REF, { active: true, tier: DEMO_STORE.tier, cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0, shared: false });
     if (done) store = done;
     else pending.push(refused("plan", "refused"));
   }

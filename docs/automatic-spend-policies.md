@@ -44,14 +44,14 @@ Each paid plan may authorize up to its whole storage allowance in new sold-file 
 
 | Plan, cycle | Paid | Costs allowed | Stripe | Other per month | AI per month | Uploads per month | Total | Room |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Store, month | $22 | $3.79 | $1.0920 | $2.5329 | $0 | $0.0616 | $3.6865 | $0.1035 |
-| Store, year | $220 | $37.93 | $8.2200 | $2.5329 | $0 | $0.0616 | $39.3539 | -$1.4239 |
+| Store, month | $22 | $3.79 | $1.0920 | $2.3229 | $0 | $0.0616 | $3.4765 | $0.3135 |
+| Store, year | $220 | $37.93 | $8.2200 | $2.3229 | $0 | $0.0616 | $36.8339 | $1.0961 |
 | Studio, month | $149 | $25.68 | $5.6640 | $13.1207 | $3.3537 | $0.3923 | $22.5307 | $3.1493 |
 | Studio, year | $1,490 | $256.89 | $53.9400 | $13.1207 | $3.3537 | $0.3923 | $256.3400 | $0.5500 |
 | Scale, month | $349 | $60.17 | $12.8640 | $32.3542 | $6.3691 | $0.7848 | $52.3721 | $7.7979 |
 | Scale, year | $3,490 | $601.72 | $125.9400 | $32.3542 | $6.3691 | $0.7848 | $600.0378 | $1.6822 |
 
-The annual cycle binds. The allowances before this change (Store 100 jobs and 500 answers, Studio 400 and 2,000, Scale 1,000 and 6,000) could not fit, so they were lowered in code and on every public page; no price changed. Store, paid by the year, is $0.6850 short of the floor before any AI or upload ($38.6150 against $37.93) because of its visits, orders and receipt allowances; that is recorded as a known shortfall (a `todo` test) for the owner to decide, and Store gets no AI.
+The annual cycle binds. The allowances before this change (Store 100 jobs and 500 answers, Studio 400 and 2,000, Scale 1,000 and 6,000) could not fit, so they were lowered in code and on every public page; no price changed. Store, paid by the year, was $1.4239 short of the floor ($39.3539 against $37.93), $0.6850 of it before any AI or upload, because of its visits, orders and receipt allowances. On October 17, 2026 Store's covered orders went from 500 to 400 a month (`ORDERS_INCLUDED.creator`, which also sets the free trial's free-copy stop): $0.21 less a month at $0.0021 an order, with no price changed and every other plan's figures as they were. Orders were cut rather than visits because an order is counted only while no share of its sale is taken, 400 orders is far more than 3,000 visits sell at an ordinary conversion rate, and past it nothing is refused, only billed. The test now requires Store to pass on both cycles with at least $1 of room by the year and $0.25 by the month. Store still gets no AI.
 
 ## Ledgers
 
@@ -75,4 +75,4 @@ The commercial gate's own AI coverage check (`aiEntitlementsFunded`) still requi
 - A signed part URL can be replayed until it expires (one hour); each replay is a Class A operation not in the priced allowance, bounded only by the uploader's bandwidth.
 - Paid standing includes a card in Stripe's past-due grace period, as before.
 - A full loss of Redis data (ledger and marker together) would reopen a month at zero. An Anthropic workspace spend limit set once in the console would bound that case independently.
-- The demo store is on Store, so it shows no AI.
+- The demo store is on Studio (`DEMO_STORE.tier` in lib/demo-seed.ts) so the public demo shows the AI features. It pays no subscription, so its usage is a company cost bounded by Studio's own automatic ceilings: at most $3.3537 of AI a month, plus Studio's visit allowance; it sends no email to anybody (lib/house-store.ts).

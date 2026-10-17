@@ -41,9 +41,18 @@
 import type { Tier } from "@/lib/plan";
 import { type PlanFields, standingOf } from "@/lib/plan-standing";
 
-/** Orders every plan covers, per store, per calendar month. */
+/**
+ * Orders every plan covers, per store, per calendar month.
+ *
+ * Store was 500 until October 17, 2026. Paid by the year (twelve months for
+ * ten monthly prices) its worst month at every allowance did not keep 60%
+ * after the 27.5% tax (tests/spend-floor.test.ts). Orders were the cut that
+ * harms a creator least: an order is counted only while no share of its sale
+ * is taken, 400 covered orders is more than three thousand visits sell at any
+ * ordinary conversion rate, and past it nothing is refused, only billed.
+ */
 export const ORDERS_INCLUDED: Record<Tier, number> = {
-  creator: 500,
+  creator: 400,
   pro: 1_500,
   scale: 3_000,
 };

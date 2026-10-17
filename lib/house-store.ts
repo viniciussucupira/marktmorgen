@@ -23,7 +23,8 @@
  *   - It writes to no buyer (lib/purchase-email.ts): a checkout that takes
  *     any address for free must never be a way to send somebody an email.
  *
- * Everything else about it is whatever a store on the $29 plan is.
+ * Everything else about it is whatever a store on its plan (Studio,
+ * DEMO_STORE.tier in lib/demo-seed.ts) is.
  *
  * Nothing is imported here, so a page drawn in the browser can read the
  * store's address without carrying anything else along.
