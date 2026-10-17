@@ -36,12 +36,12 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
     <p className="mt-1 text-sm text-ink-soft">Choose a product and copy a campaign link without leaving your numbers. Nothing is posted or sent for you.</p>
     <div className="mt-3 grid gap-3 sm:grid-cols-2">
       <label className="text-xs font-semibold text-ink-soft" htmlFor={id + "-product"}>Product
-        <select id={id + "-product"} className="field mt-1 w-full" value={product.id} onChange={event => { setSelected(event.target.value); setCopied(""); }}>
+        <select id={id + "-product"} className="field mt-1 w-full" value={product.id} onChange={event => { setSelected(event.target.value); copyRequest.current += 1; setCopied(""); }}>
           {plan.products.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
         </select>
       </label>
       <label className="text-xs font-semibold text-ink-soft" htmlFor={id + "-channel"}>Where you will share it
-        <select id={id + "-channel"} className="field mt-1 w-full" value={channel} onChange={event => { setSource(event.target.value); setCopied(""); }}>
+        <select id={id + "-channel"} className="field mt-1 w-full" value={channel} onChange={event => { setSource(event.target.value); copyRequest.current += 1; setCopied(""); }}>
           {POST_PLACES.map(place => <option key={place.place} value={place.place}>{place.label}</option>)}
         </select>
       </label>
@@ -53,15 +53,15 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
     </> : "No product figures are available in this period."} {plan.channelEvidence ? <>The suggested channel, {channelName(plan.channel)}, is based on store-wide {plan.channelBasis === "sales" ? "gross revenue" : "visits"}; it does not prove this product sold through that channel.</> : "No channel is suggested by measured results; Instagram is the editable starting choice."}</p>
     <div className="mt-3 grid gap-3 sm:grid-cols-2">
       <label className="text-xs font-semibold text-ink-soft" htmlFor={id + "-campaign"}>Campaign name
-        <input id={id + "-campaign"} className="field mt-1 w-full" maxLength={60} value={campaign} onChange={event => { setCampaign(event.target.value); setCopied(""); }} />
+        <input id={id + "-campaign"} className="field mt-1 w-full" maxLength={60} value={campaign} onChange={event => { setCampaign(event.target.value); copyRequest.current += 1; setCopied(""); }} />
       </label>
       <label className="text-xs font-semibold text-ink-soft" htmlFor={id + "-medium"}>Promotion type
-        <select id={id + "-medium"} className="field mt-1 w-full" value={medium} onChange={event => { setMediumOverride(event.target.value as CampaignMedium); setCopied(""); }}>
+        <select id={id + "-medium"} className="field mt-1 w-full" value={medium} onChange={event => { setMediumOverride(event.target.value as CampaignMedium); copyRequest.current += 1; setCopied(""); }}>
           {CAMPAIGN_MEDIA.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       </label>
       <label className="text-xs font-semibold text-ink-soft" htmlFor={id + "-variant"}>Post or ad variant (optional)
-        <input id={id + "-variant"} className="field mt-1 w-full" maxLength={60} value={variant} onChange={event => { setVariant(event.target.value); setCopied(""); }} />
+        <input id={id + "-variant"} className="field mt-1 w-full" maxLength={60} value={variant} onChange={event => { setVariant(event.target.value); copyRequest.current += 1; setCopied(""); }} />
       </label>
     </div>
     <label className="mt-3 block text-xs font-semibold text-ink-soft" htmlFor={id + "-link"}>Your campaign link
