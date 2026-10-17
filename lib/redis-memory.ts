@@ -102,6 +102,37 @@ export class MemoryRedis {
 
     switch (name) {
       case "EVAL": {
+        if (key.startsWith("-- marktmorgen:funnel-save:v1\n") && args[0] === "1" && args.length === 6) {
+          const target = args[1];
+          this.live(target);
+          const held = this.data.get(target);
+          if (held !== undefined && !(held instanceof Map)) return -3;
+          const exists = held instanceof Map && held.has(args[2]);
+          if (args[5] === "new") {
+            if (exists) return -2;
+            if (held instanceof Map && held.size >= Number(args[4])) return 0;
+          } else if (args[5] !== "edit" || !exists) return -2;
+          try {
+            const incoming = JSON.parse(args[3]);
+            if (!incoming || typeof incoming !== "object" || incoming.id !== args[2] || typeof incoming.slug !== "string") return -3;
+            if (held instanceof Map) for (const [id, raw] of held) {
+              const row = JSON.parse(raw);
+              if (!row || typeof row !== "object" || row.id !== id || typeof row.slug !== "string") return -3;
+              if (id !== args[2] && row.slug.toLowerCase() === incoming.slug.toLowerCase()) return -1;
+            }
+          } catch { return -3; }
+          this.hash(target).set(args[2], args[3]);
+          return 1;
+        }
+        if (key.startsWith("-- marktmorgen:form-save:v1\n") && args[0] === "1" && args.length === 5) {
+          const target = args[1];
+          this.live(target);
+          const held = this.data.get(target);
+          if (held !== undefined && !(held instanceof Map)) throw new Error("WRONGTYPE");
+          if (held instanceof Map && !held.has(args[2]) && held.size >= Number(args[4])) return 0;
+          this.hash(target).set(args[2], args[3]);
+          return 1;
+        }
         // Models only the explicitly supported application scripts. Not a Lua interpreter.
         if (key.startsWith("-- marktmorgen:crm-deal-move:v1\n") && args[0] === "1" && args.length === 5) {
           const target = args[1];

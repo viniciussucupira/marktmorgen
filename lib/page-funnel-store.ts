@@ -26,7 +26,6 @@ import {
   type PageFunnel,
   type PageFunnelStep,
   STEP_WHY,
-  newFunnelId,
   nextOpen,
   parsePageFunnels,
   productStepProblem,
@@ -66,21 +65,47 @@ export async function readPageFunnel(statsId: string | null, id: string): Promis
   }
 }
 
-/** Keeps a funnel, new or changed. A new one is given an id no other funnel of the store has. */
+/** A single-field mutation must have exactly one explicit Redis acknowledgement. */
+function confirmedMutation(replies: unknown[]): 0 | 1 {
+  if (replies.length !== 1) throw new Error("Funnel mutation acknowledgement missing");
+  const value = replies[0];
+  if (value === 0 || value === "0") return 0;
+  if (value === 1 || value === "1") return 1;
+  throw new Error("Funnel mutation acknowledgement invalid");
+}
+
+/** Capacity, identity and address ownership are checked with the write. */
+export const SAVE_PAGE_FUNNEL = `-- marktmorgen:funnel-save:v1
+local kind = redis.call("TYPE", KEYS[1]).ok
+if kind ~= "none" and kind ~= "hash" then return -3 end
+local exists = redis.call("HEXISTS", KEYS[1], ARGV[1])
+if ARGV[4] == "new" then
+  if exists == 1 then return -2 end
+  if redis.call("HLEN", KEYS[1]) >= tonumber(ARGV[3]) then return 0 end
+elseif ARGV[4] ~= "edit" or exists == 0 then return -2 end
+local valid, incoming = pcall(cjson.decode, ARGV[2])
+if not valid or type(incoming) ~= "table" or incoming.id ~= ARGV[1] or type(incoming.slug) ~= "string" then return -3 end
+local rows = redis.call("HGETALL", KEYS[1])
+for i = 1, #rows, 2 do
+  local ok, held = pcall(cjson.decode, rows[i + 1])
+  if not ok or type(held) ~= "table" or held.id ~= rows[i] or type(held.slug) ~= "string" then return -3 end
+  if rows[i] ~= ARGV[1] and string.lower(held.slug) == string.lower(incoming.slug) then return -1 end
+end
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
+return 1`;
+
+/** Keeps a funnel without exceeding capacity, duplicating an address or resurrecting a removed record. */
 export async function writePageFunnel(statsId: string, funnel: PageFunnel, existing: readonly PageFunnel[]): Promise<PageFunnel> {
-  let id = funnel.id;
-  const isNew = !existing.some((f) => f.id === id);
-  if (isNew && existing.length >= MAX_PAGE_FUNNELS) throw new Error("too many funnels");
-  while (isNew && existing.some((f) => f.id === id)) id = newFunnelId();
-  const kept = { ...funnel, id };
-  await redisPipeline([["HSET", funnelsKey(statsId), id, JSON.stringify(kept)]]);
-  return kept;
+  const isNew = !existing.some((held) => held.id === funnel.id);
+  const replies = await redisPipeline([["EVAL", SAVE_PAGE_FUNNEL, 1, funnelsKey(statsId), funnel.id, JSON.stringify(funnel), MAX_PAGE_FUNNELS, isNew ? "new" : "edit"]]);
+  if (replies.length !== 1 || replies[0] !== 1) throw new Error("Funnel save could not be confirmed; review saved funnels before retrying");
+  return funnel;
 }
 
 /** Removes a funnel. Its numbers go with it, by their own expiry. */
 export async function dropPageFunnel(statsId: string, id: string): Promise<boolean> {
-  const [removed] = await redisPipeline([["HDEL", funnelsKey(statsId), id]]);
-  return Number(removed) > 0;
+  const replies = await redisPipeline([["HDEL", funnelsKey(statsId), id]]);
+  return confirmedMutation(replies) === 1;
 }
 
 /** What one step is, as the store stands: its title, where it is, and whether it can be shown. */
@@ -181,4 +206,20 @@ export async function readFunnelCounts(statsId: string | null, funnel: PageFunne
   const commands = funnel.steps.flatMap((_, i) => [["PFCOUNT", seenKey(statsId, funnel, i)], ["PFCOUNT", doneKey(statsId, funnel, i)]]);
   const replies = await redisPipeline(commands).catch(() => [] as unknown[]);
   return funnel.steps.map((_, i) => ({ seen: Number(replies[i * 2] ?? 0) || 0, done: Number(replies[i * 2 + 1] ?? 0) || 0 }));
+}
+
+/** Studio analytics: failed, incomplete or malformed reads remain unknown. */
+export async function readFunnelCountsStrict(statsId: string | null, funnel: PageFunnel): Promise<{ seen: number; done: number }[]> {
+  if (!statsId || !isRedisConfigured()) throw new Error("Funnel counts unavailable");
+  const commands = funnel.steps.flatMap((_, i) => [["PFCOUNT", seenKey(statsId, funnel, i)], ["PFCOUNT", doneKey(statsId, funnel, i)]]);
+  const replies = await redisPipeline(commands);
+  if (!Array.isArray(replies) || replies.length !== commands.length) throw new Error("Incomplete funnel counts");
+  const counts: number[] = [];
+  for (let index = 0; index < replies.length; index += 1) {
+    const reply = replies[index];
+    const value = typeof reply === "number" ? reply : typeof reply === "string" && /^\d+$/.test(reply) ? Number(reply) : Number.NaN;
+    if (!Number.isSafeInteger(value) || value < 0) throw new Error("Invalid funnel count");
+    counts.push(value);
+  }
+  return funnel.steps.map((_, i) => ({ seen: counts[i * 2], done: counts[i * 2 + 1] }));
 }

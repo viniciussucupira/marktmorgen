@@ -149,7 +149,7 @@ import {
   hasProduct,
 } from "@/lib/catalog";
 import { type Announcement, type StoreSection, parseAnnouncement, parseSections, sectionsWithout } from "@/lib/store-sections";
-import { type SitePage, parseSitePages } from "@/lib/site-page-rules";
+import { type SitePage, parseSitePages, MAX_SITE_PAGES, slugProblem } from "@/lib/site-page-rules";
 import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rules";
 import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
 import { DEFAULT_LANGUAGE, type LanguageCode, parseLanguage } from "@/lib/store-language";
@@ -3715,6 +3715,26 @@ export async function setSitePages(email: string, raw: unknown): Promise<Section
     const sitePages = parseSitePages(raw);
     if (sitePages.some((page) => page.target && !hasProduct(store, page.target))) return { ok: false, reason: "unknown" };
     return { ok: true, store: await save({ ...store, sitePages, statsId: store.statsId ?? newListId() }) };
+  });
+  return result ?? { ok: false, reason: "none" };
+}
+
+/** Adds pages to the latest store under its existing fenced write lock.
+ * Never replaces pages with a request's older snapshot or silently drops an addition.
+ */
+export async function appendSitePages(email: string, raw: unknown): Promise<SectionsResult> {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_SITE_PAGES) return { ok: false, reason: "unknown" };
+  const added = parseSitePages(raw);
+  if (added.length !== raw.length) return { ok: false, reason: "unknown" };
+  const result = await withStore<SectionsResult>(email, async (store, save) => {
+    if (store.sitePages.length + added.length > MAX_SITE_PAGES) return { ok: false, reason: "unknown" };
+    const pages = [...store.sitePages];
+    for (const page of added) {
+      if (pages.some(held => held.id === page.id) || slugProblem(page.slug, pages) !== null
+        || (page.target && !hasProduct(store, page.target))) return { ok: false, reason: "unknown" };
+      pages.push(page);
+    }
+    return { ok: true, store: await save({ ...store, sitePages: pages, statsId: store.statsId ?? newListId() }) };
   });
   return result ?? { ok: false, reason: "none" };
 }

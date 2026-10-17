@@ -111,7 +111,7 @@ export const PAGES: TopicPage[] = [
         rows: [
           ["Monthly price", "$29 and $99, free for the first 14 days", monthlyRow()],
           ["Paid yearly", "$300 and $948 a year", yearlyRow()],
-          ["Cut of each sale", "0% platform fee", "0% platform fee"],
+          ["Cut of each sale", "0% platform fee", feeWords().short],
           ["Logging in", "An account with a password. Their own signup asks for name, email and password", "A link sent to your email, or a passkey if you add one. No password to invent, and none kept here to be stolen"],
           ["Ways to be paid", "Stripe or PayPal, for every creator", PAYPAL ? "Stripe or PayPal, both paying straight into your own account, with the ways to pay you switch on in Stripe: cards, Apple Pay, Google Pay, Link, Klarna, Afterpay, Affirm, iDEAL and more" : "Stripe, with the ways to pay you switch on in it: cards, Apple Pay, Google Pay, Link, Klarna, Afterpay, Affirm, iDEAL and more. No PayPal yet: it is built and waits on PayPal approving us as a platform"],
           ["Currency", "One per store, chosen from ten", "Any one of 15 per store, from US dollars and euros to yen and Mexican pesos"],

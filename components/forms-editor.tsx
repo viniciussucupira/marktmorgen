@@ -1,5 +1,6 @@
 "use client";
 
+import { FormAnswers } from "@/components/form-answers";
 import { FormResponseDeal } from "@/components/form-response-deal";
 import type { FormDealMatch } from "@/lib/form-deal";
 import type { Stage } from "@/lib/crm-rules";
@@ -30,7 +31,6 @@ import {
   type FormOutcome,
   type FormResponse,
   END,
-  answerText,
   newFormId,
 } from "@/lib/forms";
 
@@ -43,7 +43,7 @@ const MESSAGES: Record<string, string> = {
   full: `A store can have ${MAX_FORMS} forms. Remove one to add another.`,
   unknown: "That form is already gone. Reload the page.",
   invalid: "Something in the form could not be read. Reload the page and try again.",
-  server_error: "Something went wrong. Nothing was changed. Try again.",
+  server_error: "Saving could not be confirmed. Review the saved forms before trying again.",
   ...STUDIO_MESSAGES,
 };
 
@@ -167,7 +167,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                 {total > 0 ? (
                   <a className="btn btn-secondary btn-sm" href={`${exportBase}${form.id}`}>
                     <Icon name="download" size={16} />
-                    Download
+                    Download all answers
                   </a>
                 ) : null}
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setError(null); setDraft(structuredClone(form)); }} disabled={draft !== null || dealDraft !== null}>
@@ -190,37 +190,7 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
               </div>
             </div>
             {open === form.id ? (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[32rem] text-left text-sm">
-                  <thead>
-                    <tr className="text-ink-soft">
-                      <th className="py-2 pr-4 font-semibold">Sent</th>
-                      {form.fields.map((f) => (
-                        <th key={f.id} className="py-2 pr-4 font-semibold">
-                          {f.label}
-                        </th>
-                      ))}
-                      {form.outcomes.length ? <th className="py-2 pr-4 font-semibold">Result</th> : null}
-                      {dealStages.some(stage => stage.kind === "open") ? <th scope="col" className="py-2 pr-4 font-semibold">CRM</th> : null}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {latest.map((r, i) => (
-                      <tr key={`${r.at}-${i}`} className="border-t border-line align-top">
-                        <td className="py-2 pr-4 whitespace-nowrap">{new Date(r.at * 1000).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
-                        {form.fields.map((f) => (
-                          <td key={f.id} className="max-w-[18rem] py-2 pr-4 break-words">
-                            {answerText(f, r.answers[f.id])}
-                          </td>
-                        ))}
-                        {form.outcomes.length ? <td className="py-2 pr-4">{form.outcomes.find((o) => o.id === r.outcome)?.title ?? ""}</td> : null}
-                        {dealStages.some(stage => stage.kind === "open") ? <td className="py-2 pr-4"><button type="button" className="btn btn-secondary btn-sm" disabled={draft !== null || dealDraft !== null || !r.opportunityRef} onClick={() => r.opportunityRef && setDealDraft({ form, response: r, responseRef: r.opportunityRef })}>{r.opportunityRef && existingDeals.some(deal => deal.formResponseRef === r.opportunityRef) ? "View opportunity" : "Review as opportunity"}</button></td> : null}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {total > latest.length ? <p className="mt-2 text-xs text-ink-soft">{`The newest ${latest.length} are shown. Download has all ${total.toLocaleString("en-US")}.`}</p> : null}
-              </div>
+              <FormAnswers form={form} latest={latest} total={total} canReview={dealStages.some(stage => stage.kind === "open")} blocked={draft !== null || dealDraft !== null} existingDeals={existingDeals} onReview={response => response.opportunityRef && setDealDraft({ form, response, responseRef: response.opportunityRef })} />
             ) : null}
           </li>
         ))}

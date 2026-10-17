@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
+import { readFunnelMutationResult, type FunnelMutation } from "@/lib/funnel-mutation-response";
+import { funnelReachRatioMetric, funnelStepMetrics } from "@/lib/funnel-metrics";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import {
   MAX_FUNNEL_NAME,
@@ -22,7 +24,7 @@ export type StepChoice = { kind: PageFunnelStep["kind"]; id: string; title: stri
 /** One saved funnel, with its steps as the store stands and how many people each reached. */
 export type SavedFunnel = {
   funnel: PageFunnel;
-  steps: { title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number; done: number }[];
+  steps: { title: string; open: boolean; why: string; free: boolean; product: boolean; seen: number | null; done: number | null }[];
 };
 
 type Draft = { id: string; name: string; slug: string; slugTouched: boolean; on: boolean; steps: PageFunnelStep[] };
@@ -37,15 +39,11 @@ const MESSAGES: Record<string, string> = {
   gone: "One of the products was deleted. Choose another.",
   call: "A call is booked on a page of its own, so it cannot be a step.",
   unknown: "That funnel is already gone. Reload the page.",
-  server_error: "Something went wrong. Nothing was changed. Try again.",
+  server_error: "We could not confirm the result. Reload and review your funnels before trying again.",
   ...STUDIO_MESSAGES,
 };
 
 const key = (step: Pick<PageFunnelStep, "kind" | "id">) => `${step.kind}:${step.id}`;
-
-/** "120 people", "1 person". */
-const people = (n: number) => `${n.toLocaleString("en-US")} ${n === 1 ? "person" : "people"}`;
-const share = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : "–");
 
 /**
  * The studio's funnels of pages (lib/page-funnel.ts): each with its address,
@@ -68,13 +66,18 @@ export function PageFunnelEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
-  useLeaveGuard(draft !== null && !busy);
+  const flight = useRef(false);
+  const recovery = useRef(false);
+  const [uncertain, setUncertain] = useState(false);
+  const locked = busy || uncertain;
+  useLeaveGuard(draft !== null || busy || uncertain);
 
   const pages = choices.filter((c) => c.kind === "page");
   const products = choices.filter((c) => c.kind === "product");
   const titleOf = (step: PageFunnelStep) => choices.find((c) => key(c) === key(step))?.title ?? "No longer available";
 
   function start(funnel: PageFunnel | null) {
+    if (flight.current || recovery.current) return;
     setError(null);
     setDraft(
       funnel
@@ -84,16 +87,19 @@ export function PageFunnelEditor({
   }
 
   function patch(change: Partial<Draft>) {
+    if (flight.current || recovery.current) return;
     setDraft((d) => (d ? { ...d, ...change } : d));
   }
 
   function setStep(index: number, value: string) {
+    if (flight.current || recovery.current) return;
     const [kind, ...rest] = value.split(":");
     if (kind !== "page" && kind !== "product") return;
     setDraft((d) => (d ? { ...d, steps: d.steps.map((s, i) => (i === index ? { kind, id: rest.join(":") } : s)) } : d));
   }
 
   function move(index: number, by: -1 | 1) {
+    if (flight.current || recovery.current) return;
     setDraft((d) => {
       if (!d) return d;
       const to = index + by;
@@ -105,6 +111,7 @@ export function PageFunnelEditor({
   }
 
   function addStep() {
+    if (flight.current || recovery.current) return;
     setDraft((d) => {
       if (!d || d.steps.length >= MAX_FUNNEL_PAGES) return d;
       const used = new Set(d.steps.map(key));
@@ -113,7 +120,9 @@ export function PageFunnelEditor({
     });
   }
 
-  async function send(body: unknown, done: string) {
+  async function send(body: FunnelMutation, done: string) {
+    if (flight.current || recovery.current) return;
+    flight.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -122,23 +131,34 @@ export function PageFunnelEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (data.ok) {
+      const data: unknown = await response.json().catch(() => null);
+      const result = readFunnelMutationResult(response.status, data, body);
+      if (result.state === "confirmed") {
         toast(done);
         setDraft(null);
         setRemoving(null);
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      if (result.state === "rejected") {
+        setError(MESSAGES[result.error] ?? "This change was declined. Review the request and try again.");
+      } else {
+        recovery.current = true;
+        setUncertain(true);
+        setError(MESSAGES.server_error);
+      }
     } catch {
+      recovery.current = true;
+      setUncertain(true);
       setError(MESSAGES.server_error);
     } finally {
+      flight.current = false;
       setBusy(false);
     }
   }
 
   function save() {
+    if (flight.current || recovery.current) return;
     if (!draft) return;
     const repeated = new Set(draft.steps.map(key)).size !== draft.steps.length;
     if (repeated) {
@@ -163,7 +183,7 @@ export function PageFunnelEditor({
           </p>
         </div>
         {draft === null && saved.length < MAX_PAGE_FUNNELS ? (
-          <button type="button" className="btn btn-primary" onClick={() => start(null)} disabled={choices.length === 0}>
+          <button type="button" className="btn btn-primary" onClick={() => start(null)} disabled={locked || choices.length === 0}>
             <Icon name="plus" size={18} />
             New funnel
           </button>
@@ -185,10 +205,10 @@ export function PageFunnelEditor({
 
       <ul className="mt-6 space-y-4">
         {saved.map(({ funnel, steps }) => {
-          const first = steps.find((s) => s.open)?.seen ?? 0;
+          const first = steps.find((s) => s.open)?.seen ?? null;
           const last = [...steps].reverse().find((s) => s.open);
           return (
-            <li key={funnel.id} className="rounded-2xl border border-line bg-white p-4 sm:p-5">
+            <li key={funnel.id} id={`funnel-review-${funnel.id}`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">
@@ -213,21 +233,21 @@ export function PageFunnelEditor({
                     <Icon name="copy" size={16} />
                     Copy address
                   </button>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => start(funnel)} disabled={draft !== null}>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => start(funnel)} disabled={locked || draft !== null}>
                     Edit
                   </button>
                   {removing === funnel.id ? (
                     <span className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
                       Remove it?
-                      <button type="button" className="btn btn-danger btn-sm" disabled={busy} onClick={() => send({ action: "remove", id: funnel.id }, "Funnel removed.")}>
+                      <button type="button" className="btn btn-danger btn-sm" disabled={locked} onClick={() => send({ action: "remove", id: funnel.id }, "Funnel removed.")}>
                         Yes, remove
                       </button>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(null)}>
+                      <button type="button" className="btn btn-ghost btn-sm" disabled={locked} onClick={() => setRemoving(null)}>
                         Keep it
                       </button>
                     </span>
                   ) : (
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(funnel.id)} disabled={draft !== null}>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setRemoving(funnel.id)} disabled={locked || draft !== null}>
                       Remove
                     </button>
                   )}
@@ -247,8 +267,7 @@ export function PageFunnelEditor({
                       </p>
                       {step.open ? (
                         <p className="mt-0.5 text-ink-soft">
-                          {`${people(step.seen)} opened it`}
-                          {step.product ? ` · ${step.done.toLocaleString("en-US")} ${step.free ? "signed up" : "paid"} (${share(step.done, step.seen)})` : ""}
+                          {funnelStepMetrics(step)}
                         </p>
                       ) : (
                         <p className="mt-0.5 font-semibold text-ink">{step.why}</p>
@@ -258,10 +277,8 @@ export function PageFunnelEditor({
                 ))}
               </ol>
               <p className="mt-3 text-xs text-ink-mute">
-                {last && first > 0
-                  ? `${share(last.seen, first)} of the people who opened the first step reached the last. `
-                  : ""}
-                {`Counted since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed: each person once a step, never you or your team.`}
+                {funnelReachRatioMetric(first, last?.seen ?? null)}
+                {`Approximate counts since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed. Each visitor is counted at most once per step; you and your team are excluded. Visitors may enter at different steps.`}
               </p>
             </li>
           );
@@ -269,7 +286,7 @@ export function PageFunnelEditor({
       </ul>
 
       {draft ? (
-        <div className="mt-6 rounded-2xl border-2 border-violet-brand/40 bg-white p-4 sm:p-6">
+        <fieldset disabled={locked} className="mt-6 min-w-0 rounded-2xl border-2 border-violet-brand/40 bg-white p-4 sm:p-6">
           <p className="font-semibold text-ink">{draft.id ? "Edit the funnel" : "A new funnel"}</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="block" htmlFor="pf-name">
@@ -378,7 +395,7 @@ export function PageFunnelEditor({
             On: its address leads through the steps
           </label>
           <p className="mt-1 text-xs text-ink-soft">
-            Off, the address opens the first step as an ordinary page, and nothing leads on.
+            Off, this funnel address is unavailable. Individual pages and products keep their own visibility.
           </p>
 
           <p className="mt-5 text-xs leading-relaxed text-ink-soft">
@@ -390,13 +407,20 @@ export function PageFunnelEditor({
           {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={save} aria-busy={busy} disabled={busy || !draft.name.trim() || draft.steps.length === 0} className="btn btn-primary">
+            <button type="button" onClick={save} aria-busy={busy} disabled={locked || !draft.name.trim() || draft.steps.length === 0} className="btn btn-primary">
               {busy ? "Saving…" : draft.id ? "Save the funnel" : "Make the funnel"}
             </button>
-            <button type="button" className="btn btn-ghost" onClick={() => { setDraft(null); setError(null); }} disabled={busy}>
+            <button type="button" className="btn btn-ghost" onClick={() => { setDraft(null); setError(null); }} disabled={locked}>
               Cancel
             </button>
           </div>
+        </fieldset>
+      ) : null}
+
+      {uncertain ? (
+        <div className="notice notice-warn mt-4" role="status">
+          <p>Your changes remain here. Reloading will discard this draft and show the saved funnels. Review them before trying again.</p>
+          <button type="button" className="btn btn-ghost mt-3" onClick={() => window.location.reload()}>Reload and review</button>
         </div>
       ) : null}
 
