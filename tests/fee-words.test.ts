@@ -77,3 +77,10 @@ test("the Gumroad post's sums: today's as published, and worked again for the sh
   assert.equal(live.fiveHundred, "Gumroad leaves you $11,360. Your own Stripe leaves you $12,611. The difference is $1,251, in one month, and it comes back every month.");
   assert.ok(!Object.values(live).some((s) => SAYS_NOTHING.test(s)));
 });
+
+test("every public comparison sale-share row follows the published plan offer", async () => {
+  const { PAGES } = await import("@/lib/site-pages");
+  const rows = PAGES.flatMap(page => page.blocks.flatMap(block => block.kind === "table" ? block.rows.filter(row => row[0] === "Cut of each sale").map(row => ({ page: page.slug, ours: row[2] })) : []));
+  assert.ok(rows.length >= 4, "All existing comparison fee rows must be inspected");
+  for (const row of rows) assert.equal(row.ours, feeWords().short, row.page + " must use the published share for all plans");
+});

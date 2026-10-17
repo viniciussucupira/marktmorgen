@@ -111,7 +111,7 @@ export const PAGES: TopicPage[] = [
         rows: [
           ["Monthly price", "$29 and $99, free for the first 14 days", monthlyRow()],
           ["Paid yearly", "$300 and $948 a year", yearlyRow()],
-          ["Cut of each sale", "0% platform fee", "0% platform fee"],
+          ["Cut of each sale", "0% platform fee", feeWords().short],
           ["Logging in", "An account with a password. Their own signup asks for name, email and password", "A link sent to your email, or a passkey if you add one. No password to invent, and none kept here to be stolen"],
           ["Ways to be paid", "Stripe or PayPal, for every creator", PAYPAL ? "Stripe or PayPal, both paying straight into your own account, with the ways to pay you switch on in Stripe: cards, Apple Pay, Google Pay, Link, Klarna, Afterpay, Affirm, iDEAL and more" : "Stripe, with the ways to pay you switch on in it: cards, Apple Pay, Google Pay, Link, Klarna, Afterpay, Affirm, iDEAL and more. No PayPal yet: it is built and waits on PayPal approving us as a platform"],
           ["Currency", "One per store, chosen from ten", "Any one of 15 per store, from US dollars and euros to yen and Mexican pesos"],
@@ -256,7 +256,7 @@ export const PAGES: TopicPage[] = [
         note: "Sources: Beacons' pricing page and their help center articles 'Beacons Products Transaction Fees' and 'When will I receive my payout from Product/Store Sales?', read on September 18, 2026. Plan prices, the fee quoted below and the rows on order bumps, memberships and courses re-checked on their pricing page and help center on September 28, 2026.",
         head: ["", "Beacons", "Marktmorgen"],
         rows: [
-          ["Cut of each sale", "9% on the free and $10 plans. 0% from the $30 plan up", "0%, on every plan"],
+          ["Cut of each sale", "9% on the free and $10 plans. 0% from the $30 plan up", feeWords().short],
           ["Monthly price", "$0, $10, $30 and $100", monthlyRow()],
           ["Whose payment account", "Your own Stripe or PayPal", "Your own Stripe"],
           ["Ways to be paid", "Stripe or PayPal", PAYPAL ? "Stripe or PayPal, both paying straight into your own account" : "Stripe, with the ways to pay you switch on in it. No PayPal yet: it is built and waits on PayPal approving us as a platform"],
