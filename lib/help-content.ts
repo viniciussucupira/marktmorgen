@@ -1,4 +1,5 @@
 import {answerAllowanceWords} from "@/lib/answers-rules";
+import { ASSISTANT_KEEP_SECONDS, ASSISTANT_NAME, assistantAllowanceWords, assistantPriceWords } from "@/lib/store-assistant-rules";
 import { IMPORT_ALLOWANCES, importAllowanceWords } from "@/lib/import-limits";
 import { AI_PLANS_WORDS, aiAllowanceWords } from "@/lib/ai-rules";
 /**
@@ -797,6 +798,15 @@ export const HELP_SECTIONS: HelpSection[] = [
           "Yes, on every plan. Under Inbox in your studio, switch on the chat, and a button shows in the corner of every page of your store. A visitor writes with their email, and their name if they like. Your answer shows in their chat while the page is open, and goes to their email too, with a link back to the conversation, so nobody has to wait on the page. Messages from your contact form land in the same inbox, and still reach your own email as before.",
           "You are emailed when someone writes, at most every half hour for each conversation. In the inbox, give a conversation to someone on your team whose role answers buyers (Admin or Support), keep saved replies for what you are asked often, and close a conversation when it is done: it opens again if they write. Where the writing help is on, \u201cSuggest an answer\u201d writes one from your store's questions and answers and the conversation, for you to change before sending; their address, phone numbers and links are taken out first, and it uses one of the month's writing jobs.",
           "Your answers only ever go to the person who wrote, and only in answer to them. Conversations are kept 180 days after their last message, the newest 500 of them. A visit to your store asks nothing more of our servers for the chat: only writing in it does.",
+        ],
+      },
+      {
+        q: "Can an AI answer my buyers' questions at any hour?",
+        a: [
+          `Yes, with the ${ASSISTANT_NAME}, an add-on at ${assistantPriceWords()}, on any plan once your plan is paid. It is not on sale yet: it opens with Marktmorgen's plans. Once it is on and switched on under Pages in your studio, a chat in the corner of every page of your store answers buyers in their language, only from what you published: your products, their prices and how each is delivered, the questions and refund promises on their pages, your store's questions and answers, and your notes for it. Every reply is labeled as AI.`,
+          "It says when it does not know, and never states a price, a deal, a code, a deadline or a result you did not publish: a reply that names a number or a deal that is not in your store's own words is never shown. A complaint, a refund request, a payment problem, a request for a person, or any question it cannot answer is passed to your inbox with the buyer's email, for you to answer; your answer goes to their email. The questions it could not answer are listed in your studio, with nothing about who asked.",
+          assistantAllowanceWords(),
+          `A conversation is kept for ${ASSISTANT_KEEP_SECONDS / 3_600} hours after its last message, without the buyer's name or address, and the buyer can delete it at once. It is a subscription of its own, charged each month to the card your plan is paid with; stop it at any time and it stays on until the end of the month paid. Its payments are not refunded, except where the law requires it.`,
         ],
       },
       {

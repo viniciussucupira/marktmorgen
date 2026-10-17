@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { FAMILIES, UNITS, afterEndByteMonths, itemBytes, keptParts, partAverage, partPeak, reserveBytes, reservePeakBytes, type Unit } from "./store-data-registry";
-import { COST_LINES, PER_PAYMENT_LINES } from "./plan-cost-registry";
+import { ADD_ON_LINES, COST_LINES, PER_PAYMENT_LINES } from "./plan-cost-registry";
 import { DATA_ROOM_BYTES, ITEM_DATA_BYTES, MAX_ORDER_ITEMS, NON_PAYING_DATA_ROOM_BYTES, ORDER_DATA_BYTES, contentRoomFor, orderDataBytes, orderReserveFor } from "@/lib/store-data-rules";
 import { TIERS } from "@/lib/plan";
 
@@ -46,7 +46,7 @@ test("every key family in the code is in the registry, and every entry is in the
 });
 
 test("each family is bounded one way at least, and what it says can be checked", () => {
-  const lines = new Set([...COST_LINES, ...PER_PAYMENT_LINES].map((line) => line.id));
+  const lines = new Set([...COST_LINES, ...PER_PAYMENT_LINES, ...ADD_ON_LINES].map((line) => line.id));
   const writes = /\b(takeData|needData|needDataBytes|takeDataBytes|keepFor|noteData|giveData|giveDataBytes)\(/;
   for (const [name, family] of Object.entries(FAMILIES)) {
     assert.ok(family.what.length > 3, `${name}: say what it is`);

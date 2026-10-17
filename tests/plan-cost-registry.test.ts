@@ -10,7 +10,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { COST_LINES, EMAIL_SITES, KIND_LINES, NOT_A_COST, OPEN, PER_PAYMENT_LINES, PICTURE_READ, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
+import { ADD_ON_LINES, COST_LINES, EMAIL_SITES, KIND_LINES, NOT_A_COST, OPEN, PER_PAYMENT_LINES, PICTURE_READ, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
+import { assessCustomerWorstCase } from "@/lib/net-margin-rules";
+import { ADD_ON_ROOM_CENTS, assistantMonthWorst } from "@/lib/store-assistant-rules";
 import { laterPageCost } from "./traffic-cost";
 import { PICTURE_REQUEST_UNITS } from "@/lib/buyer-actions";
 import { ALLOWANCE_KINDS, API_WRITE_UNITS, NON_PAYING_ALLOWANCES, STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
@@ -87,7 +89,7 @@ test("every counter in the code is classified: counted in a line, an account or 
 test("every exported limit or cost constant in lib/ is cited by a line, an open item or NOT_A_COST", () => {
   const metered = /(_PER_(DAY|HOUR|MINUTE|MONTH|30_DAYS|STORE|SHARE|TEN_MINUTES)|DAILY|MONTHLY|_INCLUDED|^WORST_|WORST_|ALLOWANCES?$|_LIMITS$|_BY_TIER)/;
   const cited = new Set([
-    ...[...COST_LINES, ...PER_PAYMENT_LINES].flatMap((line) => line.sources.flatMap((s) => s.names)),
+    ...[...COST_LINES, ...PER_PAYMENT_LINES, ...ADD_ON_LINES].flatMap((line) => line.sources.flatMap((s) => s.names)),
     ...OPEN.flatMap((item) => item.names ?? []),
     ...Object.keys(NOT_A_COST),
   ]);
@@ -98,6 +100,29 @@ test("every exported limit or cost constant in lib/ is cited by a line, an open 
     }
   }
   assert.deepEqual(uncited, [], "cite each in a line's sources, an OPEN item's names, or NOT_A_COST with the reason");
+});
+
+test("every add-on is priced against what it collects, holds the owner's 60% alone, and its sources hold what it names", () => {
+  assert.ok(ADD_ON_LINES.some((line) => line.id === "store-assistant"));
+  const addOnIds = new Set(ADD_ON_LINES.map((line) => line.id));
+  assert.equal(addOnIds.size, ADD_ON_LINES.length);
+  for (const line of ADD_ON_LINES) {
+    assert.ok(!ids.has(line.id), `${line.id} is also a plan's line`);
+    const usd = line.monthlyUsd();
+    assert.ok(Number.isFinite(usd) && usd > 0 && line.revenueUsd > 0, line.id);
+    assert.ok(usd <= line.allowedUsd - ADD_ON_ROOM_CENTS / 100 + 1e-9, `${line.id}: $${usd.toFixed(2)} against $${line.allowedUsd.toFixed(2)} allowed, with $${(ADD_ON_ROOM_CENTS / 100).toFixed(2)} kept`);
+    for (const source of line.sources) {
+      assert.ok(existsSync(join(root, source.file)), `${line.id}: ${source.file} is not there`);
+      const text = read(source.file);
+      for (const name of source.names) assert.ok(text.includes(name), `${line.id}: ${source.file} does not hold ${name}`);
+    }
+    console.log(`add-on ${line.id}: collects $${line.revenueUsd.toFixed(2)}, costs at most $${usd.toFixed(2)}, $${line.allowedUsd.toFixed(2)} allowed`);
+  }
+  // The Store assistant, by the repo's own margin model: every cost category explicit, the 27.5% tax rounded up, 60% by integer cents.
+  const month = assistantMonthWorst();
+  const assessed = assessCustomerWorstCase(month.review);
+  assert.equal(assessed.approved, true, JSON.stringify(assessed));
+  assert.ok(assessed.marginBps !== null && assessed.marginBps >= 6_000);
 });
 
 test("the features merged on October 17, 2026 are each a line of the worst month", () => {

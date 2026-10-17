@@ -7,7 +7,8 @@ import { SiteNav } from "@/components/site-nav";
 import { isBillingConfigured } from "@/lib/billing";
 import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, PUBLISHED_PRICE_CENTS as PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS, PUBLISHED_YEAR_PRICE_CENTS as YEAR_PRICE_CENTS } from "@/lib/plan";
 import { isConnectConfigured } from "@/lib/stripe-connect";
-import { PLANS_ON_SALE } from "@/lib/opening";
+import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
+import { ASSISTANT_MESSAGES_MONTHLY, ASSISTANT_NAME, ASSISTANT_PRICE_CENTS } from "@/lib/store-assistant-rules";
 import { isDomainsConfigured } from "@/lib/domains";
 import { feeWords } from "@/lib/fee-words";
 
@@ -158,6 +159,15 @@ const BILLING_LINE = `The subscription that pays us: $${PRICE_CENTS / 100} a mon
  */
 const BILLING_CLOSED_LINE = `Starting a paid plan: the subscription is written, at $${PRICE_CENTS / 100} a month or $${YEAR_PRICE_CENTS / 100} a year and $${PLAN_PRICES.pro.month / 100} or $${PLAN_PRICES.pro.year / 100} on Studio, and $${PLAN_PRICES.scale.month / 100} or $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} on Scale for a bigger list, and it is not on sale until Marktmorgen opens`;
 
+/**
+ * The Store assistant add-on (lib/store-assistant-rules.ts): written and
+ * tested, and nobody can buy it until it is on sale (lib/opening.ts), which
+ * this page counts as not built. Its line of "What shipped" is written the
+ * day it can be bought.
+ */
+const ASSISTANT_LINE = `The ${ASSISTANT_NAME}, an add-on at $${ASSISTANT_PRICE_CENTS / 100} a month for one store: an AI chat on every page of the store that answers only from what you published, labels every reply as AI and hands what it cannot answer to your inbox, ${ASSISTANT_MESSAGES_MONTHLY.toLocaleString("en-US")} replies a month`;
+const ASSISTANT_CLOSED_LINE = `The ${ASSISTANT_NAME}: an AI chat on every page of a store that answers only from what the creator published, labels every reply as AI and hands what it cannot answer to the inbox, ${ASSISTANT_MESSAGES_MONTHLY.toLocaleString("en-US")} replies a month at $${ASSISTANT_PRICE_CENTS / 100} a month for one store; the code is written, and it is not on sale until Marktmorgen opens`;
+
 /** The store on its own domain: built, and live where this deployment can add domains. */
 const DOMAIN_LINE =
   "Your store on your own domain, on Studio: type it in the studio, add the one record we show you, and the certificate is handled for you";
@@ -213,11 +223,13 @@ export default function MissionPage() {
     ...(domains ? [DOMAIN_LINE] : []),
     ...(ready ? [STRIPE_LINE, CHECKOUT_LINE, ORDERS_LINE] : []),
     ...(billing ? [BILLING_LINE] : []),
+    ...(billing && ASSISTANT_ON_SALE ? [ASSISTANT_LINE] : []),
   ];
   const notBuilt = [
     ...(domains ? [] : ["Your own domain for your store"]),
     ...(ready ? [] : [STRIPE_LINE, CHECKOUT_LINE, ORDERS_LINE]),
     ...(billing ? [] : [billingReached ? BILLING_CLOSED_LINE : BILLING_LINE]),
+    ...(billing && ASSISTANT_ON_SALE ? [] : [ASSISTANT_CLOSED_LINE]),
     ...NOT_BUILT,
   ];
   return (

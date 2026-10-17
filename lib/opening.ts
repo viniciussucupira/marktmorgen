@@ -15,9 +15,19 @@
  * enough: the per-customer, after-tax margin review must also be complete.
  */
 import { commercialPlansMayOpen } from "@/lib/commercial-margin";
+import { assistantMeetsFloor } from "@/lib/store-assistant-rules";
 
 const OPENING_REQUESTED: boolean = false;
 export const PLANS_ON_SALE: boolean = commercialPlansMayOpen(OPENING_REQUESTED);
+
+/**
+ * Whether the Store assistant add-on can be bought (lib/assistant-billing.ts):
+ * only when the plans are on sale, behind the same review, and only while
+ * the add-on alone keeps the owner's 60% after tax at its full use
+ * (lib/store-assistant-rules.ts, assistantMeetsFloor). Under the most-tax
+ * reading of docs/tax-uncertainty.md the plans are closed, so this is too.
+ */
+export const ASSISTANT_ON_SALE: boolean = PLANS_ON_SALE && assistantMeetsFloor();
 
 /** What every public page says at its top while plans are not on sale. */
 export const PREVIEW_LINE =

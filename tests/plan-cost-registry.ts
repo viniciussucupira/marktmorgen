@@ -91,6 +91,7 @@ import {
   VERCEL_CPU_MICRO_USD_PER_HOUR, VERCEL_FUNCTION_GB, VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR,
 } from "@/lib/spend-cost-table";
 import { PAGES_PER_VISIT, laterPageCost, visitCost } from "./traffic-cost";
+import { assistantMonthWorst } from "@/lib/store-assistant-rules";
 
 export const GB = 1024 * 1024 * 1024;
 /** Keeping a file, at the dearest of the three stores one may be in. */
@@ -738,6 +739,47 @@ export function nonPayingWorst(): number {
     + closureCost("creator", true).total;
 }
 
+/**
+ * Add-ons (since 17 October 2026): things a store pays for on its own
+ * subscription, beside its plan, priced against what they collect, never
+ * against the plan's price. Each is held to the owner's 60% after the 27.5%
+ * stress tax by itself (tests/plan-cost-registry.test.ts, and the add-on's
+ * own test), with every fee and reserve of its own payment: a plan's worst
+ * month does not change when an add-on is bought, because nothing an add-on
+ * does is taken from the plan's figures but what those figures already
+ * price and refuse past (an inbox message, a store email, a public request).
+ */
+export type AddOnLine = {
+  id: string;
+  feature: string;
+  /** What one payment of it collects, in dollars. */
+  revenueUsd: number;
+  /** Everything one payment of it can cost at full use, in dollars: its use, its payment's fees and its reserves. */
+  monthlyUsd: () => number;
+  /** The most it may cost and keep 60% after the 27.5% tax. */
+  allowedUsd: number;
+  sources: Source[];
+  basis: string;
+};
+
+const assistant = assistantMonthWorst();
+export const ADD_ON_LINES: AddOnLine[] = [
+  {
+    id: "store-assistant",
+    feature: "The Store assistant add-on, $49 a month per store: the AI chat on a store's pages, its pool of replies, its conversations and its list of unanswered questions (17 October 2026)",
+    revenueUsd: assistant.revenueCents / 100,
+    monthlyUsd: () => assistant.totalCents / 100,
+    allowedUsd: assistant.allowedCents / 100,
+    sources: [
+      { file: "lib/store-assistant-rules.ts", names: ["ASSISTANT_PRICE_CENTS", "ASSISTANT_MESSAGES_MONTHLY", "ASSISTANT_INPUT_BYTES", "ASSISTANT_OUTPUT_TOKENS", "ASSISTANT_MESSAGE_COMMANDS", "ASSISTANT_MESSAGE_DB_BYTES", "ASSISTANT_PER_TEN_MINUTES", "ASSISTANT_PER_DAY", "ASSISTANT_STORE_PER_MINUTE", "ADD_ON_FEES", "DISPUTE_RESERVE_BPS", "REFUND_RESERVE_BPS", "REMITTANCE_BPS", "assistantMonthWorst"] },
+      { file: "lib/store-assistant.ts", names: ["ASSISTANT_POOL", "pool(\"reserve\"", "pool(\"settle\"", "pool(\"release\"", "ASSISTANT_KEEP_SECONDS", "ASSISTANT_MISSED_KEPT"] },
+      { file: "app/api/store/assistant/route.ts", names: ["\"assist\"", "\"assist-day\"", "\"assist-store\"", "withinStore(\"assist-read\"", "withinStore(\"assist-handoff\""] },
+      { file: "lib/opening.ts", names: ["ASSISTANT_ON_SALE"] },
+    ],
+    basis: "One payment: every reply of the month's pool at its worst (Haiku 5.5 at 24 KiB in and 320 tokens out, the 10% provider allowance, the 45-second wait at 2 GB, and the message's own commands, bytes and day of keeping), the dearer provider's fee on the whole amount (6.6% + 30 cents), a 1.5% remittance allowance, and reserves of one payment in a hundred refunded and one disputed with both $15 fees. The pool is reserved before each model call and settled at what was billed, so no month can spend past it; handed-over questions are inbox messages and store emails of the plan's own figures (lines inbox, store-email), refused past them.",
+  },
+];
+
 /** Per-use costs that no monthly figure bounds yet: not in worstCost, so nothing here is certified. */
 export type OpenItem = { id: string; what: string; names?: string[] };
 export const OPEN: OpenItem[] = [];
@@ -807,6 +849,11 @@ export const SCOPES: Record<string, ScopeClass> = {
   "podcast-link-address": METERED_EMAIL, "contact-ip": METERED_EMAIL, "contact-store": METERED_EMAIL, "remind-ask": METERED_EMAIL,
   "remind-store": METERED_EMAIL, "resend-sale": METERED_EMAIL, "resend-store": METERED_EMAIL, "creator-inbound": METERED_EMAIL,
   "inbox-reply": METERED_EMAIL, "inbox-tell": METERED_EMAIL,
+  // The Store assistant (an add-on, ADD_ON_LINES): its asks are burst limits under its month's pool, the rest public requests.
+  assist: guard("A burst limit per connection under the Store assistant's monthly pool (add-on line store-assistant)."),
+  "assist-day": guard("A daily limit per connection under the Store assistant's monthly pool (add-on line store-assistant)."),
+  "assist-store": guard("A per-minute limit per store under the Store assistant's monthly pool (add-on line store-assistant)."),
+  "assist-read": PUBLIC, "assist-handoff": PUBLIC,
   "lesson-comment": BURST("buyer-actions"), "lesson-comment-day": BURST("buyer-actions"), "task-hand-in": BURST("buyer-actions"), "task-upload": BURST("buyer-actions"),
   // Per store, under a figure of the window.
   "api-add": BURST("rest-api"), "api-give": BURST("rest-api"),
