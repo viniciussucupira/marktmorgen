@@ -2,7 +2,8 @@
 
 import { useLeaveGuard } from "@/components/leave-guard";
 import { dealActionFilter, filterDeals, type DealActionFilter } from "@/lib/crm-deal-filter";
-import { dealOrder, orderDeals, dealWorklistCsv, type DealOrder } from "@/lib/crm-deal-worklist";
+import { dealOrder, orderDeals, dealWorklistCsv, type DealOrder, type DealView } from "@/lib/crm-deal-worklist";
+import { DealAgenda } from "@/components/deal-agenda";
 import { crmAnswer, type CrmAnswer } from "@/lib/crm-response";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -81,6 +82,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
   const [filter, setFilter] = useState<DealActionFilter>(dealActionFilter(initialFilter));
   const [search, setSearch] = useState("");
   const [responsible, setResponsible] = useState("all");
+  const [view, setView] = useState<DealView>("board");
   const [order, setOrder] = useState<DealOrder>("current");
   const scopedDeals = filterDeals(deals, search, responsible === "all" ? null : responsible === "unassigned" ? "" : responsible.slice(7));
   const responsibleChoices = [...new Set([...assignees, ...deals.flatMap(d => d.assignee ? [d.assignee] : [])])].sort();
@@ -110,7 +112,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
 
   function downloadWorklist() {
     if (!visibleDeals.length || locked || writeUnconfirmed) return;
-    const csv = dealWorklistCsv(visibleDeals, stages, { today, currency, query: search, responsible, filter, order });
+    const csv = dealWorklistCsv(visibleDeals, stages, { today, currency, query: search, responsible, filter, order, view });
     const address = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = address;
@@ -173,9 +175,13 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
         </div>
         <p className="mt-2 text-xs text-ink-mute">Dates use the calendar day shown here, {today} (UTC). Won and lost deals are left out of action filters. Nothing is sent automatically.</p>
 
+        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Deal view">
+          <button type="button" className={`btn btn-sm ${view === "board" ? "btn-primary" : "btn-secondary"}`} aria-pressed={view === "board"} onClick={() => setView("board")}>Board</button>
+          <button type="button" className={`btn btn-sm ${view === "agenda" ? "btn-primary" : "btn-secondary"}`} aria-pressed={view === "agenda"} onClick={() => { setView("agenda"); if (order === "current") setOrder("due"); }}>Agenda</button>
+        </div>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
           <label className="block">
-            <span className="field-label">Order within each stage</span>
+            <span className="field-label">{view === "agenda" ? "Order across all stages" : "Order within each stage"}</span>
             <select className="field mt-2" value={order} onChange={event => setOrder(dealOrder(event.target.value))}>
               <option value="current">Current order</option>
               <option value="due">Earliest action date</option>
@@ -185,7 +191,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
           </label>
           <button type="button" className="btn btn-secondary btn-sm" disabled={!visibleDeals.length || locked || writeUnconfirmed} onClick={downloadWorklist}>Download selected deals</button>
         </div>
-        <p className="mt-2 text-xs text-ink-mute" role="status">{`Showing ${visibleDeals.length.toLocaleString("en-US")} of ${deals.length.toLocaleString("en-US")} loaded deals. The CSV follows these filters and the order within each stage. Recorded values are opportunity estimates, not confirmed revenue.`}</p>
+        <p className="mt-2 text-xs text-ink-mute" role="status">{`Showing ${visibleDeals.length.toLocaleString("en-US")} of ${deals.length.toLocaleString("en-US")} loaded deals. The CSV follows these filters and the ${view === "agenda" ? "order across all stages" : "order within each stage"}. Recorded values are opportunity estimates, not confirmed revenue.`}</p>
 
         {draft ? (
           <fieldset disabled={locked} aria-busy={locked} className="min-w-0 mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
@@ -250,6 +256,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
           </fieldset>
         ) : null}
 
+        {view === "agenda" ? <DealAgenda deals={visibleDeals} stages={stages} currency={currency} today={today} disabled={locked || editing || writeUnconfirmed} onEdit={deal => { setError(null); setDraft(draftFromDeal(deal, currency)); }} /> : (
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {columns.map(({ stage, count, cents }) => (
             <section key={stage.id} aria-label={stage.name} className="min-w-0 rounded-2xl bg-paper p-4 ring-1 ring-line">
@@ -311,6 +318,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
             </section>
           ))}
         </div>
+        )}
         {error && !draft && !stageDraft && !fieldDraft ? (
           <p className="notice notice-error mt-4" role="alert">
             {error}

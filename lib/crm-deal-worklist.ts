@@ -16,14 +16,22 @@ export function orderDeals(deals: readonly Deal[], order: DealOrder): Deal[] {
     return primary || changed(a) - changed(b) || a.id.localeCompare(b.id);
   });
 }
-type WorklistContext = { today: string; currency: string; query: string; responsible: string; filter: string; order: DealOrder };
+export type DealView = "board" | "agenda";
+/** The same row order is used by the view and its export. */
+export function dealWorklistRows(deals: readonly Deal[], stages: readonly Stage[], view: DealView): { deal: Deal; stage: Stage }[] {
+  const byId = new Map(stages.map(stage => [stage.id, stage]));
+  const known = deals.flatMap(deal => { const stage = byId.get(deal.stage); return stage ? [{ deal, stage }] : []; });
+  return view === "agenda" ? known : stages.flatMap(stage => known.filter(row => row.stage.id === stage.id));
+}
+type WorklistContext = { today: string; currency: string; query: string; responsible: string; filter: string; order: DealOrder; view?: DealView };
 /** Only the loaded, selected records supplied by the authorized board, in its stage order.
  * Stored opportunity amounts are estimates, not checkout receipts or confirmed revenue.
  */
 export function dealWorklistCsv(deals: readonly Deal[], stages: readonly Stage[], context: WorklistContext): string {
-  const rows = [csvLine(["deal_id", "title", "contact_email", "stage", "stage_kind", "stored_value_cents", "currency", "next_action", "due_date_utc", "responsible", "note", "calendar_day_utc", "search", "responsible_filter", "action_filter", "order", "scope", "value_definition"])];
-  for (const stage of stages) for (const deal of deals.filter(row => row.stage === stage.id)) {
-    rows.push(csvLine([deal.id, deal.title, deal.email, stage.name, stage.kind, deal.cents, context.currency.toUpperCase(), deal.nextAction ?? "", deal.dueDate ?? "", deal.assignee ?? "", deal.note, context.today, context.query, context.responsible, context.filter, context.order, "loaded_selected_deals", "Stored opportunity estimate; not confirmed revenue"]));
+  const rows = [csvLine(["deal_id", "title", "contact_email", "stage", "stage_kind", "stored_value_cents", "currency", "next_action", "due_date_utc", "responsible", "note", "calendar_day_utc", "search", "responsible_filter", "action_filter", "order", "scope", "value_definition", "view"])];
+  const view = context.view === "agenda" ? "agenda" : "board";
+  for (const { deal, stage } of dealWorklistRows(deals, stages, view)) {
+    rows.push(csvLine([deal.id, deal.title, deal.email, stage.name, stage.kind, deal.cents, context.currency.toUpperCase(), deal.nextAction ?? "", deal.dueDate ?? "", deal.assignee ?? "", deal.note, context.today, context.query, context.responsible, context.filter, context.order, "loaded_selected_deals", "Stored opportunity estimate; not confirmed revenue", view]));
   }
   return rows.join("\r\n") + "\r\n";
 }
