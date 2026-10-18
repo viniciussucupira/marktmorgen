@@ -33,6 +33,8 @@ jobs:
       # on the build above, against the stand-in database and email sender of tests/e2e/services.mjs.
       - name: Agreements signed with a link, in a browser
         run: node tests/e2e/agreements.mjs --no-build
+      - name: Copying a whole store, in a browser
+        run: node tests/e2e/store-copy.mjs --no-build
 
   form-opportunity-redis:
     runs-on: ubuntu-latest

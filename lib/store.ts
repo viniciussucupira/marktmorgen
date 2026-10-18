@@ -3817,6 +3817,87 @@ export async function addDraftProducts(email: string, drafts: DraftProduct[]): P
   return result ?? { ok: false, reason: "none", limit: MAX_PRODUCTS, room: 0 };
 }
 
+export type CopiedResult =
+  | { ok: true; store: Store; made: string[]; held: string[] }
+  | { ok: false; reason: "none" | "too_many"; limit: number; room: number };
+
+/**
+ * Adds products copied from another store of the same account
+ * (lib/store-copy.ts), each already a draft with the id the copy gave it, at
+ * the end of the list, in one write under the store's lock. A product whose
+ * id the store already has is one this same copy already wrote, and is left
+ * as it is: so writing the same step again adds nothing. All of the rest or
+ * none: past the store's ceiling nothing is added. Each one's records take
+ * their room in the data room before they are written, as every product's do.
+ */
+export async function addCopiedProducts(email: string, products: Product[]): Promise<CopiedResult> {
+  const result = await withStore<CopiedResult>(email, async (store, save) => {
+    const have = usedIds(store);
+    for (const link of store.links) have.add(link.id);
+    const held = products.filter((p) => have.has(p.id)).map((p) => p.id);
+    const fresh = products.filter((p) => !have.has(p.id));
+    const room = MAX_PRODUCTS - store.catalog.items.length;
+    if (fresh.length > room) return { ok: false, reason: "too_many", limit: MAX_PRODUCTS, room: Math.max(0, room) };
+    if (!fresh.length) return { ok: true, store, made: [], held };
+    const anyFree = fresh.some((p) => p.priceCents === 0);
+    const next = await save(
+      { ...store, listId: store.listId ?? (anyFree ? newListId() : null), statsId: store.statsId ?? newListId() },
+      { put: fresh.map((p) => ({ ...p, hidden: true })) },
+    );
+    return { ok: true, store: next, made: fresh.map((p) => p.id), held };
+  });
+  return result ?? { ok: false, reason: "none", limit: MAX_PRODUCTS, room: 0 };
+}
+
+/** The store page's setup a copy brings, already mapped to this store's products (lib/store-copy-rules.ts, copiedSetup). */
+export type SetupCopy = {
+  bio: string;
+  look: { theme: string; accent: string; font: string; backdrop: string };
+  links: StoreLink[];
+  socials: Social[];
+  faq: FaqItem[];
+  order: PagePart[];
+  sections: StoreSection[];
+  announcement: Announcement | null;
+};
+
+/**
+ * Puts a copied setup on this store, in one write under its lock: each part
+ * read through the same rules the studio's own setters use, a section only
+ * when this store has its product, the line of news only with a product it
+ * has, the colors and letters without touching whether the store shows its
+ * badge or its counts (those go with the plan, and with this store's own
+ * choice), and the links with ids of their own.
+ */
+export async function applyCopiedSetup(email: string, setup: SetupCopy): Promise<Store | null> {
+  return withStore(email, async (store, save) => {
+    const look = parseLook({ ...store.look, theme: setup.look.theme, accent: setup.look.accent, font: setup.look.font, backdrop: setup.look.backdrop });
+    const taken = usedIds(store);
+    const links = parseStoreLinks(
+      setup.links.map((link, i) => {
+        let id = link.id;
+        if (taken.has(id)) id = `${link.id.slice(0, 6)}${i.toString(36).padStart(4, "0")}`;
+        taken.add(id);
+        return { ...link, id };
+      }),
+    );
+    const sections = parseSections(setup.sections).filter((section) => hasProduct(store, section.at));
+    const read = parseAnnouncement(setup.announcement);
+    const announcement = read ? { text: read.text, product: read.product && hasProduct(store, read.product) ? read.product : null } : null;
+    return save({
+      ...store,
+      bio: setup.bio.slice(0, MAX_BIO_LENGTH),
+      look: { ...look, badge: store.look.badge, sold: store.look.sold },
+      links,
+      socials: parseSocials(setup.socials),
+      faq: parseFaq(setup.faq),
+      order: parseOrder(setup.order),
+      sections,
+      announcement,
+    });
+  });
+}
+
 /**
  * Notes that some buyers were brought over from another platform
  * (lib/imported-purchases.ts), so the store's list of purchases answers them

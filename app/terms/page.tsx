@@ -80,7 +80,15 @@ export default function TermsPage() {
           do in the studio is done for the owner, and the owner remains
           responsible for the store and for what the team does in it under
           these Terms. Only the owner pays for the store, connects its Stripe
-          account, manages its team and deletes it.
+          account, manages its team and deletes it. The owner may also copy
+          one of their stores into another of their own stores: its products,
+          pages, forms and funnels arrive there as drafts, and its store
+          page&apos;s setup when the owner asks for it; never its customers,
+          orders, contacts, emails, answers, reviews, payments, payout
+          details, files or pictures. Each step of a copy is some of the
+          receiving store&apos;s studio requests for its billing month, and
+          what it writes takes room in that store&apos;s data; a copy that
+          does not fit as a whole is refused before anything is written.
         </p>
         <p>
           We may suspend or terminate accounts that violate these Terms or that
