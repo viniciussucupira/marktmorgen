@@ -46,7 +46,7 @@ import { activePwyw, pwywPriceId } from "@/lib/pay-what-you-want";
 import { type Answer, applyCheckoutFields, readAnswers } from "@/lib/checkout-fields";
 import { imageUrl } from "@/lib/product-image";
 import { readMoves } from "@/lib/call-records";
-import { applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
+import { RECOVERY_OPEN_SECONDS, applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
 import { isLive, membershipStatus, soldAMembership } from "@/lib/membership-access";
 import { purchaseRefunded } from "@/lib/refunds";
 import { BUMP_KEYS, type BumpKey, MIN_BUNDLE_ITEMS, bumpsFromMeta, bundleFromMeta, bundleMeta, chosenItems, deliverableItems, picks } from "@/lib/bundle-rules";
@@ -204,6 +204,12 @@ export async function createCheckout(
     buyerKey?: string;
     /** The buyer ticked the box to hear from the creator. */
     news?: boolean;
+    /**
+     * The buyer checked the Store assistant's box for one reminder if they do
+     * not finish (lib/assistant-reminder.ts): the checkout closes after an
+     * hour, so the reminder can follow an hour after that.
+     */
+    remind?: boolean;
     /** And the second box, allowing their link use in sequences to be seen (lib/mail-clicks.ts). */
     clicks?: boolean;
     /**
@@ -702,6 +708,7 @@ export async function createCheckout(
     }
     // Set just before the request, because Stripe counts its minimum from then.
     if (extras.held) body.set("expires_at", String(checkoutClosesAt()));
+    else if (extras.remind && !body.has("expires_at")) body.set("expires_at", String(Math.floor(Date.now() / 1000) + RECOVERY_OPEN_SECONDS));
     return onAccount("POST", store.stripeAccountId as string, "/checkout/sessions", body);
   };
 

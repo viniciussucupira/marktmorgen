@@ -1,3 +1,4 @@
+import { assistReminderShown } from "@/lib/assistant-reminder";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -196,7 +197,7 @@ export default async function CollectionPage({ params }: Params) {
           </Link>
         </div>
         <StoreTracking store={store} presence />
-        {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={null} /> : null}
+        {cartOn ? <CartButton handle={store.handle} lang={store.language} remind={assistReminderShown(store) ? store.name : ""} notice={null} /> : null}
       </main>
     </div>
   );

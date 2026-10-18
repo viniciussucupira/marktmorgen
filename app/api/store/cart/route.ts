@@ -26,6 +26,8 @@ import { countHit } from "@/lib/visit";
 import { clientAddress, fromAnotherSite, limited, withinLimit } from "@/lib/request-guard";
 import { productSegment } from "@/lib/product-slug";
 import { noteCheckoutTrouble } from "@/lib/checkout-trouble";
+import { assistReminderShown, keepAssistReminder } from "@/lib/assistant-reminder";
+import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 
 /**
  * What a cart holds, as the store has it now (`GET ?handle=&ids=a,b`): each
@@ -149,11 +151,20 @@ export async function POST(request: NextRequest) {
 
   let handle = "";
   let ids: string[] = [];
+  // The Store assistant's box for one reminder (lib/assistant-reminder.ts): checked, with an address and the sentence's version.
+  let remind = false;
+  let remindEmail = "";
+  let remindVersion = "";
   try {
     const form = await (await limited(request, 4_000)).formData();
     const h = form.get("handle");
     handle = typeof h === "string" ? normaliseHandle(h.slice(0, 40)) : "";
     ids = readCartIds(form.getAll("id"));
+    remind = form.get("remind") === "yes";
+    const typed = form.get("remind_email");
+    const version = form.get("remind_v");
+    remindEmail = remind && typeof typed === "string" ? normaliseEmail(typed.slice(0, MAX_EMAIL_LENGTH + 1)) : "";
+    remindVersion = remind && typeof version === "string" ? version.slice(0, 40) : "";
   } catch {
     return new Response("Bad request", { status: 400 });
   }
@@ -176,7 +187,9 @@ export async function POST(request: NextRequest) {
       via: request.cookies.get(viaCookieName(store.handle))?.value,
       session: request.cookies.get(affiliateCookieName(store.handle))?.value,
     }).catch(() => null);
+    const reminding = remind && remindEmail.length <= MAX_EMAIL_LENGTH && EMAIL_PATTERN.test(remindEmail) && assistReminderShown(store);
     const opened = await createCartCheckout(store, products, linkOrigin(request, store), {
+      remind: reminding,
       country: readCountry(request.headers.get("x-vercel-ip-country")),
       cameFrom: cameFrom(request.headers.get("referer"), new URL(origin).hostname),
         // The channel this sale is credited to: the page's own tags, else the
@@ -184,6 +197,7 @@ export async function POST(request: NextRequest) {
         channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays), ...(await adsCheckout(request, store)) },
       via,
     });
+    if (reminding) await keepAssistReminder({ store, session: opened.id, email: remindEmail, version: remindVersion });
     for (const product of products) after(() => countHit(request, store, { kind: "checkout", id: product.id }));
     return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });
   } catch (error) {

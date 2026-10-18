@@ -163,6 +163,7 @@ import { type SitePage, parseSitePages, MAX_SITE_PAGES, slugProblem } from "@/li
 import { type AnswersSetting, NO_ANSWERS, parseAnswers } from "@/lib/answers-rules";
 import { type AssistantPlan, type AssistantSetting, NO_ASSISTANT, parseAssistant, parseAssistantPlan } from "@/lib/store-assistant-rules";
 import { type NextOfferSetting, NO_NEXT_OFFER, parseNextOffer } from "@/lib/next-offer-rules";
+import { type AssistReminderSetting, NO_ASSIST_REMINDER, parseAssistReminder } from "@/lib/assistant-reminder-rules";
 import { DEFAULT_FAIR, type FairPricing, parseFair } from "@/lib/fair-price";
 import { DEFAULT_LANGUAGE, type LanguageCode, parseLanguage } from "@/lib/store-language";
 import { type AdsServerPlatform, parseAdsServer } from "@/lib/ad-consent";
@@ -680,6 +681,12 @@ export type Store = {
    */
   nextOffer: NextOfferSetting;
   /**
+   * The Store assistant's checkout reminder (lib/assistant-reminder-rules.ts):
+   * whether its box is offered at checkout. Off on every store until its
+   * creator switches it on.
+   */
+  assistReminder: AssistReminderSetting;
+  /**
    * A lower price for buyers in countries where money buys less
    * (lib/fair-price.ts), and the deepest discount the creator accepts. Off
    * on every store until its creator switches it on.
@@ -990,6 +997,7 @@ function parseStore(raw: unknown): Store | null {
       assistant: parseAssistant(value.assistant),
       assistantPlan: parseAssistantPlan(value.assistantPlan),
       nextOffer: parseNextOffer(value.nextOffer),
+      assistReminder: parseAssistReminder(value.assistReminder),
       fair: parseFair(value.fair),
       cartDeal: parseCartDeal(value.cartDeal),
       // Stores written before a store could pick its language speak English.
@@ -1194,6 +1202,7 @@ async function freshStore(fields: {
     assistant: { ...NO_ASSISTANT },
     assistantPlan: null,
     nextOffer: { ...NO_NEXT_OFFER },
+    assistReminder: { ...NO_ASSIST_REMINDER },
     fair: { ...DEFAULT_FAIR },
     cartDeal: { ...NO_DEAL },
     language: DEFAULT_LANGUAGE,
@@ -3928,6 +3937,11 @@ export async function setAssistant(email: string, raw: unknown): Promise<Store |
 /** Switches the Store assistant's next product after a purchase on or off, and its line in the confirmation email (lib/next-offer-rules.ts). */
 export async function setNextOffer(email: string, raw: unknown): Promise<Store | null> {
   return patchStore(email, () => ({ nextOffer: parseNextOffer(raw) }));
+}
+
+/** Switches the Store assistant's checkout reminder box on or off (lib/assistant-reminder-rules.ts). */
+export async function setAssistReminder(email: string, raw: unknown): Promise<Store | null> {
+  return patchStore(email, () => ({ assistReminder: parseAssistReminder(raw) }));
 }
 
 /** Writes down what Stripe says about the store's add-on subscription (lib/assistant-billing.ts); null forgets it. */

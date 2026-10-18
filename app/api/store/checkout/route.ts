@@ -33,6 +33,8 @@ import { noteCheckoutTrouble } from "@/lib/checkout-trouble";
 import { markFromReferer } from "@/lib/page-funnel";
 import { funnelHere } from "@/lib/page-funnel-store";
 import { listedReturn, listedSite } from "@/lib/embed-sites";
+import { assistReminderOffered, keepAssistReminder } from "@/lib/assistant-reminder";
+import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 
 /** The checkout this browser last opened for a limited product. */
 const HOLD_COOKIE = "nl_stock_hold";
@@ -83,6 +85,12 @@ export async function POST(request: NextRequest) {
   // store's list below; never trusted as sent.
   let siteAsked = "";
   let returnAsked = "";
+  // The Store assistant's box for one reminder if the buyer does not finish
+  // (lib/assistant-reminder.ts): checked, the address typed beside it, and
+  // the version of the sentence the page showed. Never inferred from anything else.
+  let remind = false;
+  let remindEmail = "";
+  let remindVersion = "";
   try {
     const form = await (await limited(request, 8_000)).formData();
     const h = form.get("handle");
@@ -114,6 +122,9 @@ export async function POST(request: NextRequest) {
     wantsPreorder = form.get("preorder") === "yes";
     siteAsked = read("site", 300);
     returnAsked = read("return", 700);
+    remind = form.get("remind") === "yes";
+    remindEmail = remind ? normaliseEmail(read("remind_email", MAX_EMAIL_LENGTH + 1)) : "";
+    remindVersion = remind ? read("remind_v", 40) : "";
   } catch {
     return new Response("Bad request", { status: 400 });
   }
@@ -224,6 +235,8 @@ export async function POST(request: NextRequest) {
       }
     }
     const ads = await adsCheckout(request, store);
+    // Only where the box was offered, for a purchase of the buyer's own, with an address that is one.
+    const reminding = remind && !gift && !group && !preorder && remindEmail.length <= MAX_EMAIL_LENGTH && EMAIL_PATTERN.test(remindEmail) && assistReminderOffered(store, product);
     const held = await withStockHold(store, product, (holding) =>
       createCheckout(store, product, linkOrigin(request, store), optionId, {
         bumps,
@@ -236,6 +249,7 @@ export async function POST(request: NextRequest) {
         // Kept only where the box was offered: the creator writes to their
         // list here, or sends this product's buyers to their email platform.
         news: news && (canWrite(store) || syncTakesBuyer(store, product.id)),
+        remind: reminding,
         // Only where the creator writes to their list here: that is where it is counted.
         clicks: clicks && canWrite(store),
         via,
@@ -271,6 +285,8 @@ export async function POST(request: NextRequest) {
     // they come back from paying.
     const ends = inPlan || (product.recurring !== null && product.recurring.payments > 0);
     if (ends && store.stripeAccountId) await rememberPlan(store.stripeAccountId, held.value.id);
+    // The buyer's yes, kept with the sentence, its version and the time, before they leave for Stripe.
+    if (reminding) await keepAssistReminder({ store, session: held.value.id, email: remindEmail, version: remindVersion });
     // Counted once the buyer is on their way, so the count never slows them.
     after(() => countHit(request, store, { kind: "checkout", id: product.id }));
     if (abTest && bucket !== null) after(() => countTest(store.statsId, product.id, abTest, "c", versionFor(bucket, abTest)));

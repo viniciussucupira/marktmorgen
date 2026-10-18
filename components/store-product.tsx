@@ -27,6 +27,8 @@ import { preorderWords } from "@/lib/buyer-words/preorder";
 import { pickWords } from "@/lib/buyer-words/pick";
 import { PickBundleForm } from "@/components/pick-bundle-form";
 import { AddToCart } from "@/components/store-cart";
+import { AssistReminderBox } from "@/components/assistant-reminder-box";
+import { assistReminderOffered } from "@/lib/assistant-reminder";
 import { type AskWhen, isAskWhen } from "@/lib/ask-when";
 import { type UnitLine, unitLines } from "@/lib/option-units";
 
@@ -855,6 +857,8 @@ export function BuyBox({
           {writes ? <ClicksBox id={`k-${product.id}`} label={w.alsoClicks(store.mail?.fromName || store.name)} className="mb-4" /> : null}
         </>
       ) : null}
+      {/* Starts unchecked: one reminder if this checkout is left unpaid, only when asked for here (lib/assistant-reminder.ts). */}
+      {assistReminderOffered(store, product) ? <AssistReminderBox id={`r-${place}${product.id}`} lang={store.language} store={store.name} className="mb-4" /> : null}
       <button type="submit" className="btn st-btn btn-block">
         <span className="bump-off">
           {pwyw

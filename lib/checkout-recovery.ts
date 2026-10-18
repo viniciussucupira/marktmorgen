@@ -68,6 +68,7 @@ import { isTimeZone, readableTime, zoneName } from "@/lib/call-setup";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 import { noteForErasure } from "@/lib/erasure-index";
 import { suppressedCommand, wasSuppressed } from "@/lib/suppression";
+import { assistRemindKey } from "@/lib/assistant-reminder-rules";
 
 /** A checkout that closed longer ago than this is left alone. */
 export const REMIND_WITHIN_SECONDS = 6 * 60 * 60;
@@ -213,6 +214,10 @@ export async function remindAbandoned(
   const typed = session.customer_details?.email;
   const email = typeof typed === "string" && typed ? typed : typeof session.customer_email === "string" ? session.customer_email : "";
   if (!email) return "skip";
+  // The buyer checked the Store assistant's own box for this checkout
+  // (lib/assistant-reminder.ts): its reminder is the one, an hour on.
+  const [assisted] = await redisPipeline([["EXISTS", assistRemindKey(id)]]);
+  if (Number(assisted) === 1) return "skip";
 
   const created = typeof session.created === "number" ? session.created : closed - RECOVERY_OPEN_SECONDS;
   // A call (lib/calls.ts): its time was held only while the checkout was
@@ -302,6 +307,41 @@ export async function remindAsked(
 }
 
 /**
+ * Sends the Store assistant's reminder for one checkout that closed unpaid
+ * (lib/assistant-reminder.ts), to the address the buyer typed beside the box
+ * they checked at checkout. The same email under the same limits as the
+ * other two; what differs is who said yes, where (`why`), and the AI line
+ * (`note`). Needs the postal address and a checkout of this store that
+ * Stripe says expired; the caller has checked the consent and the timing.
+ */
+export async function remindAssisted(
+  store: Store,
+  session: SessionRecord,
+  input: { email: string; why: string; note?: (products: Listing[]) => Promise<string[]> },
+  nowSeconds = Date.now() / 1000,
+): Promise<RemindOutcome> {
+  if (!store.stripeAccountId || !store.statsId || !store.recovery.address || !input.email) return "skip";
+  const id = typeof session.id === "string" ? session.id : "";
+  if (!SESSION_ID_PATTERN.test(id) || session.status !== "expired") return "skip";
+  const meta = session.metadata ?? {};
+  if (!saleHandles(store).has(meta.store ?? "")) return "skip";
+  const closed = typeof session.expires_at === "number" ? session.expires_at : 0;
+  if (!closed || closed > nowSeconds) return "skip";
+  const created = typeof session.created === "number" ? session.created : closed - RECOVERY_OPEN_SECONDS;
+  const how = { claim: id, since: created, why: input.why, note: input.note };
+  if (meta.cart === "yes") {
+    const items = await cartItems(store, [meta.product, ...BUMP_KEYS.map((key) => meta[key])]);
+    if (items.length === 0) return "skip";
+    return deliver(store, { kind: "cart", items }, input.email, how);
+  }
+  const product = meta.product ? await readListing(store, meta.product) : null;
+  if (!product || product.call || meta.kind === "call" || !canSellProduct(store, product)) return "skip";
+  const left = await stockLeft(store, product).catch(() => null);
+  if (left === 0) return "skip";
+  return deliver(store, { kind: "product", product }, input.email, how);
+}
+
+/**
  * The one email, and everything that stands in front of it whoever agreed:
  * never twice for one checkout, once per address and product in a week,
  * never to an address that pressed stop or left the creator's list, and
@@ -311,7 +351,20 @@ async function deliver(
   store: Store,
   about: { kind: "product"; product: Listing } | { kind: "cart"; items: Listing[] } | { kind: "call"; product: Listing; start: number; tz: string },
   email: string,
-  how: { claim: string; since: number; why: string; subject?: string; lead?: string; only?: string },
+  how: {
+    claim: string;
+    since: number;
+    why: string;
+    subject?: string;
+    lead?: string;
+    only?: string;
+    /**
+     * Lines written for this email once every gate above has let it through
+     * and its room is taken, put under its first line: the Store assistant's
+     * AI line with its label (lib/assistant-reminder.ts). None is fine.
+     */
+    note?: (products: Listing[]) => Promise<string[]>;
+  },
 ): Promise<RemindOutcome> {
   const id = how.claim;
   const statsId = store.statsId as string;
@@ -355,6 +408,8 @@ async function deliver(
   const { w, money } = speech(store);
   const g = givingWords(store.language);
   const stop = await stopLink(store, email);
+  const noted = how.note ? await how.note(about.kind === "cart" ? about.items : [about.product]).catch(() => [] as string[]) : [];
+  const note = noted.length ? ["", ...noted] : [];
   const foot = [how.only ?? g.recoverOnly(how.why), "", g.recoverStop(name, stop.page), `${name} · ${store.recovery.address}`, g.sentWith];
   let subject: string;
   let text: string;
@@ -366,6 +421,7 @@ async function deliver(
     subject = c.mailSubject(name);
     text = [
       c.mailLead(listed, name),
+      ...note,
       "",
       c.mailHere,
       cartLink(store, ids),
@@ -397,6 +453,7 @@ async function deliver(
   subject = how.subject ?? g.recoverSubject(product.title);
   text = [
     how.lead ?? g.recoverLead(product.title, name),
+    ...note,
     "",
     g.recoverHere,
     productLink(store, product.id),

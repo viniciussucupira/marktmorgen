@@ -2312,6 +2312,15 @@ a.chip {
 form:has(input[data-joins]:checked) .ask-clicks { display: flex; }
 
 /*
+   The Store assistant's box for one checkout reminder
+   (components/assistant-reminder-box.tsx; lib/assistant-reminder.ts): the
+   address it needs is shown only once the box is checked, with scripts
+   turned off too; left empty, no reminder is kept.
+*/
+.ask-remind { display: none; }
+form:has(input[data-remind]:checked) .ask-remind { display: block; }
+
+/*
    Boxes at checkout (components/store-product.tsx, BuyBox): the buy button
    says the total of what is checked. Up to three boxes, so a line is written
    for each combination, named by which boxes it holds (t-101 is the first

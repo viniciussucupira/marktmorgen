@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { cartWords } from "@/lib/buyer-words/cart";
 import { MAX_CART } from "@/lib/cart-rules";
 import type { LanguageCode } from "@/lib/store-language";
+import { AssistReminderBox } from "@/components/assistant-reminder-box";
 
 /**
  * A store's cart (lib/cart-rules.ts), kept in the visitor's own browser and
@@ -107,10 +108,13 @@ export function CartButton({
   lang,
   notice,
   restore = [],
+  remind = "",
 }: {
   handle: string;
   lang: LanguageCode;
   notice: "changed" | "error" | null;
+  /** The store's name when its checkout offers the Store assistant's box for one reminder (lib/assistant-reminder.ts); "" when not. */
+  remind?: string;
   /** A cart put back as it was, from a reminder's link or the way back from its checkout (lib/checkout-recovery.ts, cartLink). */
   restore?: string[];
 }) {
@@ -264,6 +268,7 @@ export function CartButton({
                     <span>{c.total}</span>
                     <span className="tabular-nums">{total}</span>
                   </p>
+                  {remind ? <AssistReminderBox id={`r-cart-${handle}`} lang={lang} store={remind} /> : null}
                   <button type="submit" className="btn st-btn btn-block">{c.checkout(total)}</button>
                   <p className="st-muted text-xs">{c.note}</p>
                 </form>
