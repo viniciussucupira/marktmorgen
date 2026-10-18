@@ -553,7 +553,10 @@ export function renderPricingOptimization(): string {
   push("");
   push(`R² ${main.r2.toFixed(3)} (adjusted ${main.adjR2.toFixed(3)}), main; ${robust.r2.toFixed(3)} (adjusted ${robust.adjR2.toFixed(3)}), robustness. Each step up a vendor's ladder multiplies the price by about ${Math.exp(main.beta[1]).toFixed(2)} (main).`);
   push("");
-  push("**How far to trust it.** Thirty-odd plans of a dozen vendors chosen by this work, observational, attributes coded from what each page lists (a page that does not list email marketing is coded as not having it), fees that sometimes include card processing: an association, not a willingness to pay. Only the ladder coefficient is clearly away from zero; email, AI and the fee have intervals that include zero and move a lot when one vendor is left out. It is used here as a diagnostic, not as demand.");
+  const away = main.names.filter((_, i) => i > 0 && (main.ciLow[i] > 0 || main.ciHigh[i] < 0));
+  const near = main.names.filter((_, i) => i > 0 && !(main.ciLow[i] > 0 || main.ciHigh[i] < 0));
+  const flipped = frag.filter((f, i) => i > 0 && f.flips > 0).map((f) => f.name);
+  push(`**How far to trust it.** Thirty-odd plans of a dozen vendors chosen by this work, observational, attributes coded from what each page lists (a page that does not list email marketing is coded as not having it), fees that sometimes include card processing: an association, not a willingness to pay. The 95% interval excludes zero for ${away.join(" and ")}; it includes zero for ${near.join(", ")}; leaving one vendor out flips the sign of ${flipped.length ? flipped.join(" and ") : "none"}. It is used here as a diagnostic, not as demand.`);
   push("");
   push("| Plan | What the main fit predicts a plan with Marktmorgen's attributes (rank, 0% fee, email and AI as on the plan) is priced at | Today (#553) |");
   push("| --- | --- | --- |");

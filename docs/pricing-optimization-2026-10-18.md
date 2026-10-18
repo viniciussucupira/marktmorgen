@@ -120,7 +120,7 @@ Ordinary least squares of the log of each plan's price on its attributes, with h
 
 R² 0.635 (adjusted 0.552), main; 0.678 (adjusted 0.620), robustness. Each step up a vendor's ladder multiplies the price by about 1.81 (main).
 
-**How far to trust it.** Thirty-odd plans of a dozen vendors chosen by this work, observational, attributes coded from what each page lists (a page that does not list email marketing is coded as not having it), fees that sometimes include card processing: an association, not a willingness to pay. Only the ladder coefficient is clearly away from zero; email, AI and the fee have intervals that include zero and move a lot when one vendor is left out. It is used here as a diagnostic, not as demand.
+**How far to trust it.** Thirty-odd plans of a dozen vendors chosen by this work, observational, attributes coded from what each page lists (a page that does not list email marketing is coded as not having it), fees that sometimes include card processing: an association, not a willingness to pay. The 95% interval excludes zero for tier rank within the vendor and fee on a sale, %; it includes zero for fee not stated, email marketing listed, AI listed; leaving one vendor out flips the sign of email marketing listed and AI listed. It is used here as a diagnostic, not as demand.
 
 | Plan | What the main fit predicts a plan with Marktmorgen's attributes (rank, 0% fee, email and AI as on the plan) is priced at | Today (#553) |
 | --- | --- | --- |
