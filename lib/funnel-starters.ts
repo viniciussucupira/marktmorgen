@@ -204,6 +204,138 @@ export const FUNNEL_STARTERS: FunnelStarter[] = [
       ],
     },
   },
+  {
+    id: "membership",
+    label: "Membership, with a page that sells it",
+    hint: "A page about your membership, the membership itself, and a page that says what happens after joining.",
+    bundle: {
+      format: BUNDLE_FORMAT,
+      schema: BUNDLE_SCHEMA,
+      name: "Membership",
+      products: [{ ref: "x1", label: "Your membership", wants: "paid" }],
+      forms: [],
+      steps: [
+        { kind: "page", ref: "p1" },
+        { kind: "product", ref: "x1" },
+        { kind: "page", ref: "p2" },
+      ],
+      pages: [
+        {
+          ref: "p1",
+          title: "Membership",
+          slug: "membership",
+          target: "x1",
+          style: "bands",
+          blocks: [
+            { id: "mb01", kind: "hero", headline: "Join [the name of your membership]", sub: "[Who it is for, and what members get each month.] Members can cancel on their own, at the end of the period they paid for.", media: "none", video: null, button: true },
+            { id: "mb02", kind: "benefits", heading: "What members get", items: ["[The first thing members get]", "[The second thing members get]", "[How often something new arrives]"] },
+            { id: "mb03", kind: "fit", heading: "Is it for you?", yesLabel: "Right for you if you", noLabel: "Not right for you if you", yes: ["[Describe who it suits]"], no: ["[Describe who it does not suit]"] },
+            { id: "mb04", kind: "bio", heading: "", body: "", photo: true },
+            {
+              id: "mb05",
+              kind: "faq",
+              heading: "Questions",
+              items: [
+                { q: "How do I cancel?", a: "Under the membership on this store, press Manage or cancel and follow the emailed link. It ends at the end of the period you paid for." },
+                { q: "What happens after I join?", a: "[Tell them where they find everything and what to do first.]" },
+              ],
+            },
+            { id: "mb06", kind: "cta", label: "Join the membership", note: "" },
+          ],
+        },
+        nextSteps({ title: "Check your email", detail: "Your receipt and how to get in are in your inbox." }),
+      ],
+    },
+  },
+  {
+    id: "course-free-lesson",
+    label: "Free lesson, then the course",
+    hint: "A page about a free lesson, the lesson's own sign-up page, the full course, and a page that says what happens next.",
+    bundle: {
+      format: BUNDLE_FORMAT,
+      schema: BUNDLE_SCHEMA,
+      name: "Free lesson",
+      products: [
+        { ref: "x1", label: "Your free lesson", wants: "free" },
+        { ref: "x2", label: "Your full course", wants: "paid" },
+      ],
+      forms: [],
+      steps: [
+        { kind: "page", ref: "p1" },
+        { kind: "product", ref: "x1" },
+        { kind: "product", ref: "x2" },
+        { kind: "page", ref: "p2" },
+      ],
+      pages: [
+        {
+          ref: "p1",
+          title: "Free lesson",
+          slug: "free-lesson",
+          target: "x1",
+          style: "plain",
+          blocks: [
+            { id: "fl01", kind: "hero", headline: "A free lesson from [your course]", sub: "The first lesson of the course, free. Enter your email on the next page and the link comes to your inbox.", media: "none", video: null, button: true },
+            { id: "fl02", kind: "text", heading: "In this lesson", body: "- [The first thing it covers]\n- [The second thing it covers]" },
+            { id: "fl03", kind: "text", heading: "In the full course", body: "[Say what the rest of the course covers, how many lessons it has, and how long it takes.]" },
+            { id: "fl04", kind: "bio", heading: "", body: "", photo: true },
+            { id: "fl05", kind: "cta", label: "Get the free lesson", note: "" },
+          ],
+        },
+        nextSteps({ title: "Check your email", detail: "Your link is on its way. If it is not there in a few minutes, look in your spam or promotions folder." }),
+      ],
+    },
+  },
+  {
+    id: "paid-call",
+    label: "A paid call",
+    hint: "A page about a call with you, the call itself to book and pay for, and a page that says how to prepare.",
+    bundle: {
+      format: BUNDLE_FORMAT,
+      schema: BUNDLE_SCHEMA,
+      name: "Paid call",
+      products: [{ ref: "x1", label: "Your call", wants: "paid" }],
+      forms: [],
+      steps: [
+        { kind: "page", ref: "p1" },
+        { kind: "product", ref: "x1" },
+        { kind: "page", ref: "p2" },
+      ],
+      pages: [
+        {
+          ref: "p1",
+          title: "Book a call",
+          slug: "book-a-call",
+          target: "x1",
+          style: "cards",
+          blocks: [
+            { id: "pc01", kind: "hero", headline: "A [length]-minute call with me about [your topic]", sub: "[Who it is for, and what you will look at together.] Pick a time that suits you when you book.", media: "none", video: null, button: true },
+            {
+              id: "pc02",
+              kind: "steps",
+              heading: "How it works",
+              items: [
+                { title: "Book", detail: "Choose a time and pay. The meeting link comes with your confirmation." },
+                { title: "Prepare", detail: "[Tell them what to bring or send before the call.]" },
+                { title: "Talk", detail: "[Say what happens on the call and what they leave with.]" },
+              ],
+            },
+            { id: "pc03", kind: "fit", heading: "Is it for you?", yesLabel: "Book if you", noLabel: "Not the right call if you", yes: ["[Describe who it helps]"], no: ["[Describe who it does not help]"] },
+            {
+              id: "pc04",
+              kind: "faq",
+              heading: "Questions",
+              items: [
+                { q: "Can I move my booking?", a: "[Say whether and until when they can move it.]" },
+                { q: "Is it recorded?", a: "[Your answer.]" },
+              ],
+            },
+            { id: "pc05", kind: "cta", label: "Book the call", note: "" },
+          ],
+        },
+        nextSteps({ title: "Check your email", detail: "Your booking, its time and the meeting link are in your inbox." }),
+      ],
+    },
+  },
 ];
 
 export function funnelStarter(id: unknown): FunnelStarter | null {
