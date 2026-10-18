@@ -6,7 +6,7 @@ Reviewed 2026-10-18 UTC. The machine-readable twin is [highlevel-gap-matrix.json
 
 **Identifiers.** Earlier code comments cite a HighLevel audit by H-number (H02 pipelines, H13 upsells, H15 quizzes, H18 workflows, H26 and H27 payment requests and invoices, H29 pay per lead, H36 Conversation AI) whose file is not in the repository. Those numbers keep their meaning here, except H13: no page read here shows HighLevel upsells or order bumps, so H13 is not listed. The others are new.
 
-**Counts:** 16 built, 10 partial, 6 gaps, 5 not planned.
+**Counts:** 17 built, 10 partial, 5 gaps, 5 not planned.
 
 ## Ranked gaps
 
@@ -14,24 +14,23 @@ Gaps and partial rows, by sales impact divided by effort (each 1 to 5; this revi
 
 | Rank | ID | Feature | Marktmorgen | Sales | Effort | Score |
 |---:|---|---|---|---:|---:|---:|
-| 1 | H28 | Documents, contracts and proposals with e-signature | Gap | 4 | 3 | 1.33 |
-| 2 | H14 | Social media planner (scheduling and posting) | Gap | 4 | 5 | 0.80 |
-| 3 | H01 | Website and funnel builder with templates | Partial | 3 | 4 | 0.75 |
-| 4 | H07 | Unified conversations across SMS, email, Instagram, Facebook, WhatsApp and live chat | Partial | 3 | 4 | 0.75 |
-| 5 | H11 | SMS marketing and SMS conversations | Gap | 3 | 4 | 0.75 |
-| 6 | H22 | Workflow AI: automation recommended from a goal | Gap | 2 | 3 | 0.67 |
-| 7 | H04 | Cloning whole funnel setups (snapshots) | Partial | 2 | 4 | 0.50 |
-| 8 | H12 | Inbound and outbound calling | Gap | 2 | 5 | 0.40 |
-| 9 | H17 | Ad Manager: creating ads from inside the product | Partial | 2 | 5 | 0.40 |
-| 10 | H34 | Mobile app | Partial | 2 | 5 | 0.40 |
-| 11 | H08 | Custom dashboards and scheduled reports to any address | Partial | 1 | 3 | 0.33 |
-| 12 | H09 | Prospecting tool (add-on) | Partial | 1 | 3 | 0.33 |
-| 13 | H20 | Reviews AI: replies to reviews | Partial | 1 | 3 | 0.33 |
-| 14 | H05 | Domain management | Partial | 1 | 4 | 0.25 |
-| 15 | H23 | Voice AI: answering phone calls | Gap | 1 | 5 | 0.20 |
-| 16 | H35 | Branded client portal app (add-on) | Partial | 1 | 5 | 0.20 |
+| 1 | H14 | Social media planner (scheduling and posting) | Gap | 4 | 5 | 0.80 |
+| 2 | H01 | Website and funnel builder with templates | Partial | 3 | 4 | 0.75 |
+| 3 | H07 | Unified conversations across SMS, email, Instagram, Facebook, WhatsApp and live chat | Partial | 3 | 4 | 0.75 |
+| 4 | H11 | SMS marketing and SMS conversations | Gap | 3 | 4 | 0.75 |
+| 5 | H22 | Workflow AI: automation recommended from a goal | Gap | 2 | 3 | 0.67 |
+| 6 | H04 | Cloning whole funnel setups (snapshots) | Partial | 2 | 4 | 0.50 |
+| 7 | H12 | Inbound and outbound calling | Gap | 2 | 5 | 0.40 |
+| 8 | H17 | Ad Manager: creating ads from inside the product | Partial | 2 | 5 | 0.40 |
+| 9 | H34 | Mobile app | Partial | 2 | 5 | 0.40 |
+| 10 | H08 | Custom dashboards and scheduled reports to any address | Partial | 1 | 3 | 0.33 |
+| 11 | H09 | Prospecting tool (add-on) | Partial | 1 | 3 | 0.33 |
+| 12 | H20 | Reviews AI: replies to reviews | Partial | 1 | 3 | 0.33 |
+| 13 | H05 | Domain management | Partial | 1 | 4 | 0.25 |
+| 14 | H23 | Voice AI: answering phone calls | Gap | 1 | 5 | 0.20 |
+| 15 | H35 | Branded client portal app (add-on) | Partial | 1 | 5 | 0.20 |
 
-**Built from this matrix:** H19 in #549 (the creator's public review page named in every review request).
+**Built from this matrix:** H19 in #549 (the creator's public review page named in every review request); H28 in #552 (proposals and agreements signed electronically by the person they were sent to, with the exact text and its SHA-256 recorded).
 
 ## Every row
 
@@ -86,7 +85,7 @@ Gaps and partial rows, by sales impact divided by effort (each 1 to 5; this revi
 | H25 | Booking calendars | [HL01](https://www.gohighlevel.com/pricing) | Built | [`lib/calls.ts`](../lib/calls.ts), [`lib/team-booking.ts`](../lib/team-booking.ts), [`lib/calendar-sync.ts`](../lib/calendar-sync.ts) | Paid and free calls, team event types (round robin, collective) and two-way Google Calendar sync for hosts. |
 | H26 | Payments by link | [HL01](https://www.gohighlevel.com/pricing) | Built | [`lib/payment-requests.ts`](../lib/payment-requests.ts), [`lib/payment-request-rules.ts`](../lib/payment-request-rules.ts) | A custom amount requested from one person by an emailed link, paid on the creator's own Stripe account. Not sent by text message. |
 | H27 | Invoicing | [HL01](https://www.gohighlevel.com/pricing) | Built | [`lib/payment-requests.ts`](../lib/payment-requests.ts), [`lib/tax.ts`](../lib/tax.ts) | A payment request with lines and a due date, with Stripe's invoice where the creator switched it on. |
-| H28 | Documents, contracts and proposals with e-signature | [HL04](https://www.gohighlevel.com/no-code-website-builder), [HL06](https://help.gohighlevel.com/support/solutions/articles/155000000594-how-to-use-documents-contracts-) | Gap | — | Not built. Payment requests exist; nothing records a signature on an agreement. |
+| H28 | Documents, contracts and proposals with e-signature | [HL04](https://www.gohighlevel.com/no-code-website-builder), [HL06](https://help.gohighlevel.com/support/solutions/articles/155000000594-how-to-use-documents-contracts-) | Built | [`lib/agreement-rules.ts`](../lib/agreement-rules.ts), [`lib/agreement-store.ts`](../lib/agreement-store.ts), [`lib/agreements.ts`](../lib/agreements.ts), [`app/[handle]/sign/[agreement]/page.tsx`](../app/%5Bhandle%5D/sign/%5Bagreement%5D/page.tsx), [`app/api/store/agreement-sign/route.ts`](../app/api/store/agreement-sign/route.ts), [`tests/agreements.test.ts`](../tests/agreements.test.ts), [`docs/agreements-esign.md`](../docs/agreements-esign.md) | Built 18 Oct 2026: one person signs a proposal or agreement written in plain text with optional lines, by typing their full name and the address it was sent to and checking a consent sentence; the exact text, its SHA-256, the version, name, time and an HMAC of the IP are recorded, an edit is a new version needing a new signature, both sides get the signed copy as email and HTML file, and an open payment request can be attached. Not built: templates, uploaded PDFs, placed fields (initials, dates, checkboxes), several signers or a signing order, and payments collected inside the document. No claim is made that a signature is legally binding. |
 | H29 | Affiliate manager: pay per lead and per sale | [HL09](https://help.gohighlevel.com/support/solutions/articles/155000003637-how-does-the-affiliate-manager-work-) | Built | [`lib/affiliates.ts`](../lib/affiliates.ts), [`lib/affiliate-leads.ts`](../lib/affiliate-leads.ts), [`lib/affiliate-payouts.ts`](../lib/affiliate-payouts.ts), [`lib/paypal-payouts.ts`](../lib/paypal-payouts.ts) | Commissions per sale and per confirmed lead, two tiers, refunds and disputes settled, PayPal batches from the creator's own account. |
 | H30 | Payment providers beyond Stripe and PayPal | [HL01](https://www.gohighlevel.com/pricing) | Not planned | — | Sales go through the creator's own Stripe or PayPal. NMI, Authorize.net, Square, Adyen and Razorpay are not connected. |
 

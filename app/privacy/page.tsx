@@ -416,6 +416,24 @@ export default function PrivacyPage() {
           request. The payment itself is made on the creator&apos;s own Stripe
           account and kept there, under Stripe&apos;s privacy policy.
         </p>
+        <p id="agreements">
+          <strong className="text-black">Proposals and agreements.</strong>{" "}
+          When a store sends you a proposal or an agreement to sign, we keep
+          the email address and the name the creator typed, each version of
+          its text exactly as it was sent, with its SHA-256 fingerprint, and
+          when it was emailed to you. If you sign it, we also keep the name you
+          typed, the time, the sentence you checked, the version you signed,
+          and a one-way code made from your internet address with a key of
+          ours: never the address itself, and it cannot be turned back into
+          it. The address you type when signing is compared with the one it
+          was sent to and not kept beside it. It is kept for 400 days from the
+          day the agreement was made and then deleted by itself; the creator
+          can delete it sooner. Deleting yourself from that store (the privacy
+          link at the foot of its pages) deletes every agreement of yours
+          there, signed or not. The signed copy emailed to you and to the
+          creator stays with each of you. You are not added to the
+          creator&apos;s list by an agreement.
+        </p>
         <p id="gifts">
           <strong className="text-black">Gifts.</strong>{" "}
           When you buy something as a gift, we keep the recipient&apos;s email

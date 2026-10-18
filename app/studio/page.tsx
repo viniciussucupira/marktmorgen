@@ -1209,6 +1209,8 @@ export default async function StudioPage({
                       { href: studioPath(store, "", "deals"), title: "Deals and fields", text: "Sales you are talking through, in pipelines and stages, and the fields you keep about each person.", icon: "chart" as const },
                       // A custom amount for one person, paid on the creator's own Stripe (lib/payment-requests.ts).
                       { href: studioPath(store, "", "requests"), title: "Payment requests", text: "Ask one person to pay a custom amount, with lines, a due date and a receipt, by email.", icon: "receipt" as const },
+                      // A proposal or agreement for one person to sign, with the exact text recorded (lib/agreement-rules.ts).
+                      { href: studioPath(store, "", "agreements"), title: "Agreements", text: "Send one person a proposal or agreement to read and sign, with each version's exact text recorded.", icon: "receipt" as const },
                     ]
                   : []),
                 // The credit lands on the plan, so whoever may handle the plan (lib/creator-invites.ts).

@@ -165,6 +165,23 @@ export default function TermsPage() {
           payment requests off for a store that misuses them.
         </p>
         <p>
+          <strong className="text-black">Proposals and agreements.</strong>{" "}
+          You may send a proposal or an agreement for electronic signature
+          only to a person you deal with, who expects it. You write its terms
+          and you are responsible for them; Marktmorgen is not a party to it,
+          provides no legal advice or templates, and does not check what it
+          says. What we record when it is signed is the exact text shown, its
+          SHA-256 fingerprint, the version, the name typed, the time, the
+          consent sentence checked and a one-way code made from the
+          signer&apos;s internet address. We do not promise that a signature
+          made here is valid or enforceable for any purpose or in any place:
+          that depends on the law where the parties are and on what the
+          document is, and some documents need another form. Never sign, or
+          ask anyone to sign, for someone else. Each email it sends is one of
+          your store&apos;s emails for the month. We may switch agreements off
+          for a store that misuses them.
+        </p>
+        <p>
           <strong className="text-black">Reviews.</strong> Reviews on your
           store come only from buyers whose payment your Stripe account
           confirms. You may answer a review and hide one. You may not offer
