@@ -17,6 +17,7 @@ import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, PRO_MONTHLY_EMAILS, SCALE_MONTHLY
 import { AI_PLANS_WORDS, aiAllowanceWords } from "@/lib/ai-rules";
 import { SHARE_LIMITS, bytesWords } from "@/lib/funnel-share-rules";
 import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
+import { SAMPLE_VIEWS } from "@/lib/funnel-diagnosis";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { workflowLimitWords } from "@/lib/flow-limits";
 import { pipelineLimitWords } from "@/lib/crm-rules";
@@ -1144,6 +1145,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "sparkle", title: "A first draft of the whole funnel, with AI", body: "On " + AI_PLANS_WORDS + ", the funnel's review step can draft every new page's words, the form's questions, offers from your own products and three follow-up emails, from the products you chose and what you type: who it is for, what they get and the proof you actually have. Before it runs it says how many of your monthly AI uses it takes: 2, or 3 with the emails, from the same monthly AI budget as every draft. It fills the setup's fields for you to change, invents no testimonial, result, number or deadline, removes any sentence with a number your products and words do not carry, and marks what only you know ⟦like this⟧. A page holding one stays hidden until you replace it, and the emails are saved only if you check the box, as a sequence that is switched off.", href: "/platform/ai-writing" },
           { icon: "type", title: "Forms, surveys and quizzes", body: "Up to 12 questions on one of your own pages: short and long answers, an email, one or several choices, a scale of 1 to 10. A quiz shows each person the result their answers point at, or, scored, the result whose range holds their total of points, with their score and a product of yours for it; the studio checks every total has exactly one result before it saves. Every answer is kept for you, as a file too, and on a step of a funnel sending it leads on to the next." },
           { icon: "chart", title: "Counted step by step", body: "How many people opened each step, and how many signed up or paid there, each person once a step, never you or your team." },
+          { icon: "target", title: "What the counts point to", body: `Under each funnel, the counts are read for you, free and without AI: a step nobody reached after the one before it, a product step nobody paid at, and the largest fall between two steps, each with a link to the step to look at. Nothing is judged until a step has been opened ${SAMPLE_VIEWS} times, and it never says why.` },
           { icon: "door", title: "Nobody is trapped", body: "A paid step says “No thanks, continue” under its buy box, and a step you take off or keep back is passed over instead of leading nowhere." },
         ],
       },
