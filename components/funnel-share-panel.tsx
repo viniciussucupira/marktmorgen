@@ -43,14 +43,20 @@ const MESSAGES: Record<string, string> = {
   bundle_forms: "One of the file's forms would not be kept as it is written.",
   bundle_products: "The file's products do not match where it uses them.",
   server_error: "We could not confirm the result. Reload and review your funnels before trying again.",
+  owner_only: "Only the account's owner can copy a funnel into another of its stores.",
+  not_yours: "That store is not another store of this account. Reload the page.",
+  target_used: "That store has used its studio requests for this billing month.",
   ...STUDIO_MESSAGES,
 };
 
 const day = (seconds: number) => new Date(seconds * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 
 type Preview = {
-  source: { code: string } | { bundle: unknown } | { starter: string };
+  source: { code: string } | { bundle: unknown } | { starter: string } | { funnel: string; to: string };
   from: string;
+  /** For a copy into another store of the account: which one, and what the copy leaves out. */
+  to?: { sid: string; name: string };
+  left?: string[];
   outline: BundleOutline;
   products: ReceiverProduct[];
   room: ImportRoom;
@@ -75,6 +81,7 @@ export function FunnelSharePanel({
   limits,
   starters,
   sid,
+  otherStores = [],
 }: {
   /** The store this page was drawn for, so a download opens the same store's file. */
   sid: string;
@@ -83,6 +90,8 @@ export function FunnelSharePanel({
   shares: ShareRow[] | null;
   limits: ShareLimits;
   starters: { id: string; label: string; hint: string }[];
+  /** The account's other stores, for the owner: where a funnel can be copied to. */
+  otherStores?: { sid: string; name: string }[];
 }) {
   const router = useRouter();
   const [picked, setPicked] = useState(funnels[0]?.id ?? "");
@@ -95,7 +104,8 @@ export function FunnelSharePanel({
   const [preview, setPreview] = useState<Preview | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
-  const [result, setResult] = useState<{ lines: PlanLine[]; left: string[] } | null>(null);
+  const [result, setResult] = useState<{ lines: PlanLine[]; left: string[]; to?: string } | null>(null);
+  const [copyTo, setCopyTo] = useState(otherStores[0]?.sid ?? "");
   const fileInput = useRef<HTMLInputElement>(null);
   const chosen = funnels.some((f) => f.id === picked) ? picked : funnels[0]?.id ?? "";
 
@@ -115,7 +125,7 @@ export function FunnelSharePanel({
 
   async function openPreview(source: Preview["source"]) {
     await run("preview", async () => {
-      const { data } = await post({ action: "preview", ...source });
+      const { data } = await post("to" in source ? { action: "copy-preview", ...source } : { action: "preview", ...source });
       if (data.ok !== true) {
         setError(MESSAGES[String(data.error)] ?? MESSAGES.server_error);
         return;
@@ -129,6 +139,7 @@ export function FunnelSharePanel({
         products: data.products as ReceiverProduct[],
         room: data.room as ImportRoom,
         sizeStop: plan.lines.find((line) => line.level === "stop" && line.text.startsWith("It weighs")) ?? null,
+        ...(data.to && typeof data.to === "object" ? { to: data.to as { sid: string; name: string }, left: (data.left as string[]) ?? [] } : {}),
       });
       setMapping({});
       setName(outline.name);
@@ -194,13 +205,14 @@ export function FunnelSharePanel({
   async function bringIn() {
     if (!preview || !canImport) return;
     await run("import", async () => {
-      const { data } = await post({ action: "import", ...preview.source, products: plan?.mapped ?? {}, name });
+      const copying = "to" in preview.source;
+      const { data } = await post({ action: copying ? "copy" : "import", ...preview.source, products: plan?.mapped ?? {}, name });
       if (data.ok !== true) {
         setError(MESSAGES[String(data.error)] ?? MESSAGES.server_error);
         return;
       }
-      toast("Funnel brought in as a draft.");
-      setResult({ lines: (data.lines as PlanLine[]) ?? [], left: [] });
+      toast(copying ? `Copied into ${preview.to?.name ?? "your other store"} as a draft.` : "Funnel brought in as a draft.");
+      setResult({ lines: (data.lines as PlanLine[]) ?? [], left: copying ? ((data.left as string[]) ?? []) : [], ...(copying ? { to: preview.to?.name ?? "your other store" } : {}) });
       setPreview(null);
       setCode("");
       router.refresh();
@@ -282,6 +294,30 @@ export function FunnelSharePanel({
             <p className="mt-2 text-xs text-ink-soft">
               A copy keeps your words, videos and products and leaves the pictures on the original pages. A link or file is a snapshot of the funnel as it is now; your later changes are not in it.
             </p>
+            {otherStores.length ? (
+              <form
+                className="mt-4 flex flex-wrap items-end gap-3 border-t border-line pt-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (chosen && copyTo) void openPreview({ funnel: chosen, to: copyTo });
+                }}
+              >
+                <label className="block min-w-0 flex-1" htmlFor="fs-copy-to">
+                  <span className="field-label">Copy it into another of your stores</span>
+                  <select id="fs-copy-to" className="field" value={copyTo} onChange={(e) => setCopyTo(e.target.value)}>
+                    {otherStores.map((s) => (
+                      <option key={s.sid} value={s.sid}>{s.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <button type="submit" className="btn btn-secondary" disabled={busy !== null || !copyTo} aria-busy={busy === "preview"}>
+                  Preview the copy there
+                </button>
+                <p className="basis-full text-xs text-ink-soft">
+                  It keeps your words, videos, about text, deadlines and what was said about you elsewhere, since both stores are yours. Pictures stay on the original pages. You choose that store&apos;s products for its steps, and it arrives there as a draft.
+                </p>
+              </form>
+            ) : null}
           </>
         )}
 
@@ -388,7 +424,7 @@ export function FunnelSharePanel({
           <div className="mt-5 rounded-2xl border-2 border-violet-brand/40 bg-white p-4 sm:p-5">
             <p className="font-semibold text-ink">{preview.outline.name}</p>
             <p className="mt-1 text-xs text-ink-mute">
-              {`${preview.from ? `Shared by ${preview.from} · ` : ""}${preview.outline.steps.length} ${preview.outline.steps.length === 1 ? "step" : "steps"} · ${preview.outline.pages.length} ${preview.outline.pages.length === 1 ? "page" : "pages"} · ${preview.outline.forms.length} ${preview.outline.forms.length === 1 ? "form" : "forms"} · ${bytesWords(preview.outline.bytes)}`}
+              {`${preview.to ? `From ${preview.from} into ${preview.to.name} · ` : preview.from ? `Shared by ${preview.from} · ` : ""}${preview.outline.steps.length} ${preview.outline.steps.length === 1 ? "step" : "steps"} · ${preview.outline.pages.length} ${preview.outline.pages.length === 1 ? "page" : "pages"} · ${preview.outline.forms.length} ${preview.outline.forms.length === 1 ? "form" : "forms"} · ${bytesWords(preview.outline.bytes)}`}
             </p>
             <ol className="mt-3 space-y-1 text-sm">
               {preview.outline.steps.map((step, i) => {
@@ -404,7 +440,7 @@ export function FunnelSharePanel({
 
             {preview.outline.products.length ? (
               <div className="mt-4 space-y-3">
-                <p className="field-label">Your products for it</p>
+                <p className="field-label">{preview.to ? `${preview.to.name}'s products for it` : "Your products for it"}</p>
                 {preview.outline.products.map((slot) => (
                   <label key={slot.ref} className="block" htmlFor={`fs-map-${slot.ref}`}>
                     <span className="text-sm text-ink">{`${slot.label}`}<span className="ml-1 text-ink-mute">{`(${slot.wants === "free" ? "free" : "paid"}${slot.step ? ", a step" : ""})`}</span></span>
@@ -434,11 +470,17 @@ export function FunnelSharePanel({
                   <span className={line.level === "stop" ? "font-semibold text-ink" : "text-ink-soft"}>{line.text}</span>
                 </li>
               ))}
+              {(preview.left ?? []).map((text) => (
+                <li key={`left-${text}`} className="flex gap-2">
+                  <Icon name="info" size={16} className="mt-0.5 shrink-0 text-violet-deep" />
+                  <span className="text-ink-soft">{text}</span>
+                </li>
+              ))}
             </ul>
 
             <div className="mt-5 flex flex-wrap gap-3">
               <button type="button" className="btn btn-primary" disabled={busy !== null || !canImport} aria-busy={busy === "import"} onClick={() => void bringIn()}>
-                {busy === "import" ? "Bringing it in…" : "Bring it in as a draft"}
+                {busy === "import" ? (preview.to ? "Copying…" : "Bringing it in…") : preview.to ? `Copy it into ${preview.to.name} as a draft` : "Bring it in as a draft"}
               </button>
               <button type="button" className="btn btn-ghost" disabled={busy !== null} onClick={() => setPreview(null)}>Cancel</button>
             </div>
@@ -447,7 +489,7 @@ export function FunnelSharePanel({
 
         {result ? (
           <div className="notice notice-success mt-4" role="status">
-            <p className="font-semibold text-ink">Made as a draft. It is in the list above, off, with its pages kept back.</p>
+            <p className="font-semibold text-ink">{result.to ? `Made in ${result.to} as a draft: open that store to find it, off, with its pages kept back.` : "Made as a draft. It is in the list above, off, with its pages kept back."}</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-soft">
               {[...result.left, ...result.lines.filter((line) => line.level !== "ok").map((line) => line.text)].map((text) => <li key={text}>{text}</li>)}
             </ul>

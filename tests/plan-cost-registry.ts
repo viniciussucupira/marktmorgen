@@ -855,6 +855,8 @@ export const SCOPES: Record<string, ScopeClass> = {
   "import-rows": line("imports"), "import-report": line("imports"), "import-report-month": line("imports"),
   "countUse:shareMonthKey(opened.id": line("funnel-share"), "countUse:storeMonthKey(statsId": line("funnel-share"),
   "countUse:storeMonthKey(store.statsId": line("funnel-share"), "countUse:storeUseKey(statsId": line("funnel-share"), "countUse:key: string": line("funnel-share"),
+  // A copy into another store of the same account (18 October 2026): the destination's own previews and imports, the same line.
+  "countUse:storeMonthKey(to.statsId": line("funnel-share"), "countUse:storeUseKey(to.statsId": line("funnel-share"),
   ai: line("ai"), ask: line("ai"), "ask-day": line("ai"), "ask-store": line("ai"), "chat-summary": line("ai"),
   "embed-open": line("embed"), checkout: line("orders"), upsell: line("orders"), "group-place": line("orders"),
   book: line("orders"), "paypal-return": line("orders"),

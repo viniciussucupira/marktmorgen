@@ -26,6 +26,7 @@ import { canUseDomain } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site-url";
 import { FunnelSharePanel } from "@/components/funnel-share-panel";
 import { listShares } from "@/lib/funnel-share-store";
+import { accountStores } from "@/lib/store";
 import { shareLimitsFor } from "@/lib/funnel-share-rules";
 import { FUNNEL_STARTERS } from "@/lib/funnel-starters";
 import { aiAvailableFor, aiLeft } from "@/lib/ai";
@@ -151,6 +152,13 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
   const typeProducts: TypeProduct[] = [...cards.values()].map((p) => ({ id: p.id, title: p.title, free: free.has(p.id), call: calls.has(p.id), draft: drafts.has(p.id) }));
   // Copying, sharing and bringing in funnels (lib/funnel-bundle.ts): the store's links, never their codes.
   const canShare = can(view.role, "page");
+  // The account's other stores, for its owner alone: where a funnel can be copied to (app/api/store/funnel-share).
+  const otherStores =
+    canShare && view.role === "owner"
+      ? (await accountStores(view.email).catch(() => []))
+          .filter((other) => other.sid !== store.sid && other.email.toLowerCase() === view.email.toLowerCase())
+          .map((other) => ({ sid: other.sid, name: other.name || `@${other.handle}` }))
+      : [];
   const shares = canShare ? await listShares(store.statsId).then((list) => list.map((entry) => ({ id: entry.id, name: entry.name, funnelId: entry.funnelId, createdAt: entry.createdAt, expiresAt: entry.expiresAt, hint: entry.hint }))).catch(() => null) : null;
   // Writing with AI where this store's plan has it (lib/ai.ts, aiAvailableFor), and whether a drafted follow-up can be saved as a switched-off sequence.
   const aiOn = aiAvailableFor(store) && can(view.role, "page") ? { on: true, left: await aiLeft(store).catch(() => 0) } : { on: false, left: 0 };
@@ -217,6 +225,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
               limits={shareLimitsFor(store)}
               starters={FUNNEL_STARTERS.map(({ id, label, hint }) => ({ id, label, hint }))}
               sid={store.sid}
+              otherStores={otherStores}
             />
           </div>
         ) : null}

@@ -131,8 +131,9 @@ const emptyLeft = (): LeftOut => ({ pictures: 0, videos: 0, bios: 0, guarantees:
 
 /**
  * A store's funnel as a file. `mode` "share" leaves out what is about the
- * sender in person (above); "own" is a copy inside the same store, which
- * keeps it. Pictures are left out either way: a picture belongs to the one
+ * sender in person (above); "own" is a copy for the same creator, which
+ * keeps it: inside the same store, or (18 October 2026) into another store
+ * of the same account, where all of it is still theirs. Pictures are left out either way: a picture belongs to the one
  * page that shows it (lib/sales-page-store.ts) and is deleted with it.
  */
 export function buildBundle(source: BundleSource, mode: "share" | "own"): { bundle: FunnelBundle; left: LeftOut; productIds: Record<string, string> } {

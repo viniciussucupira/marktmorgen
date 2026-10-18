@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { jsonAccess } from "@/lib/studio-route";
+import { countStudio, jsonAccess } from "@/lib/studio-route";
 import { can } from "@/lib/team-roles";
 import { fileHeaders } from "@/lib/request-guard";
 import { FUNNEL_ID } from "@/lib/page-funnel";
@@ -24,7 +24,7 @@ import {
   calendarMonthOfUse,
 } from "@/lib/funnel-share-rules";
 import { SITE_URL } from "@/lib/site-url";
-import type { Store } from "@/lib/store";
+import { STORE_ID_PATTERN, type Store, accountStores, storeRef } from "@/lib/store";
 
 const refuse = (error: string, status = 400, extra: Record<string, unknown> = {}) => Response.json({ ok: false, error, ...extra }, { status });
 
@@ -79,6 +79,25 @@ async function sourceOf(body: Record<string, unknown>, store: Store, want: "prev
   return { ok: true, kind: "code", shareId: opened.id, from: opened.from, outline: outlineOf(read.bundle), bundle: read.bundle };
 }
 
+/**
+ * Another store of the same account, for a copy between them (18 October
+ * 2026): only the account's owner may make one, from one of its stores into
+ * another of them. A team member of a store, or a store of anyone else, is
+ * never a destination, so a funnel cannot leave the account this way.
+ */
+async function otherOwnStore(email: string, store: Store, role: string, raw: unknown): Promise<{ ok: true; store: Store } | { ok: false; response: Response }> {
+  if (role !== "owner" || email.toLowerCase() !== store.email.toLowerCase()) return { ok: false, response: refuse("owner_only", 403) };
+  const to = typeof raw === "string" ? raw : "";
+  if (!STORE_ID_PATTERN.test(to) || to === store.sid) return { ok: false, response: refuse("not_yours", 404) };
+  const target = (await accountStores(email)).find((s) => s.sid === to && s.email.toLowerCase() === email.toLowerCase());
+  if (!target) return { ok: false, response: refuse("not_yours", 404) };
+  if (!target.statsId) return { ok: false, response: refuse("unavailable", 503) };
+  // A request into that store is one of its own studio requests (lib/store-allowance-rules.ts).
+  const counted = await countStudio(target, "page");
+  if (!counted.ok) return { ok: false, response: refuse("target_used", 429) };
+  return { ok: true, store: counted.store ?? target };
+}
+
 const mappingOf = (raw: unknown): Record<string, string> => {
   const out: Record<string, string> = {};
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
@@ -98,6 +117,9 @@ const mappingOf = (raw: unknown): Record<string, string> => {
  *   { action: "import", code | bundle | starter, products, name? }
  *                                            makes it here as a draft: pages kept back, funnel off
  *   { action: "clone", funnel }              a copy of one of this store's funnels, in this store
+ *   { action: "copy-preview", funnel, to }   what a copy would make in another store of this account, nothing written
+ *   { action: "copy", funnel, to, products, name? }
+ *                                            the copy, made there as a draft (the account's owner only)
  *
  * A funnel's pages are part of the public page and its steps are products, so
  * every action needs both permissions (lib/team-roles.ts).
@@ -161,6 +183,50 @@ export async function POST(request: NextRequest) {
         { ok: true, from: source.from, outline: source.outline, plan, products: receiver.products, room: receiver.room, limits },
         { headers: { "Cache-Control": "private, no-store" } },
       );
+    }
+
+    if (action === "copy-preview" || action === "copy") {
+      const target = await otherOwnStore(guarded.email, store, role, body.to);
+      if (!target.ok) return target.response;
+      const to = target.store;
+      const toLimits = shareLimitsFor(to);
+      const toMonth = monthOfUse(to);
+      if (!to.statsId || !toMonth) return refuse("unavailable", 503);
+      const funnelId = text(body.funnel, 10);
+      if (!FUNNEL_ID.test(funnelId)) return refuse("unknown", 404);
+      if (action === "copy-preview") {
+        // A preview is the destination's, as a preview of a link or file would be.
+        if (!(await countUse(storeUseKey(to.statsId, "preview"), PREVIEWS_PER_STORE_HOUR, 3_600))) return refuse("busy", 429);
+        if (!(await countUse(storeMonthKey(to.statsId, "preview", toMonth), toLimits.previewsPerMonth, MONTH_USE_SECONDS))) return refuse("previews_month", 429, { limit: toLimits.previewsPerMonth });
+      } else {
+        // Reading it out of this store is one of its exports, bringing it into the other one of its imports;
+        // both are counted before anything is written, and kept when it fails.
+        if (!(await countUse(storeMonthKey(statsId, "export", month), limits.exportsPerMonth, MONTH_USE_SECONDS))) return refuse("exports_month", 429, { limit: limits.exportsPerMonth });
+        if (!(await countUse(storeMonthKey(to.statsId, "import", toMonth), toLimits.importsPerMonth, MONTH_USE_SECONDS))) return refuse("imports_full", 429, { limit: toLimits.importsPerMonth });
+      }
+      // The same creator's copy: their about text, videos, deadline and quotes stay; pictures never come along.
+      const collected = await collectBundle(store, funnelId, "own");
+      if (!collected) return refuse("unknown", 404);
+      const outline = outlineOf(collected.bundle);
+      const destination = { sid: to.sid, name: to.name || `@${to.handle}` };
+      if (action === "copy-preview") {
+        const receiver = await receiverOf(to);
+        const plan = planImport(outline, receiver.products, receiver.room, mappingOf(body.products));
+        if (outline.bytes > toLimits.bundleBytes) {
+          plan.ok = false;
+          plan.lines.unshift({ level: "stop", text: `It weighs ${bytesWords(outline.bytes)}; ${destination.name}'s plan brings in funnels up to ${bytesWords(toLimits.bundleBytes)}.` });
+        }
+        return Response.json(
+          { ok: true, from: store.name || `@${store.handle}`, to: destination, outline, plan, products: receiver.products, room: receiver.room, limits: toLimits, left: leftOutWords(collected.left) },
+          { headers: { "Cache-Control": "private, no-store" } },
+        );
+      }
+      // Read as strictly as any file, against the destination's own size limit.
+      const check = readBundle(collected.bundle, { maxBytes: toLimits.bundleBytes, own: true });
+      if (!check.ok) return refuse(check.error === "too_big" ? "too_big" : `bundle_${check.error}`, 400, { limit: bytesWords(toLimits.bundleBytes) });
+      const result = await importBundle(storeRef(to), to, check.bundle, mappingOf(body.products), text(body.name, 60) || collected.funnel.name);
+      if (!result.ok) return refuse(result.error, result.error === "setup_incomplete" ? 500 : 400, { lines: result.lines ?? [] });
+      return Response.json({ ok: true, to: destination, funnel: result.funnel, pages: result.pages, lines: result.lines, left: leftOutWords(collected.left) });
     }
 
     if (action === "import" || action === "clone") {
