@@ -12,6 +12,7 @@ import type { PageFacts } from "@/lib/page-facts";
 import { MAX_LONG_ANSWER, MAX_SHORT_ANSWER, type FormDef, type FormField, branches } from "@/lib/forms";
 import { FormBranching } from "@/components/form-branching";
 import { formWords } from "@/lib/buyer-words/form";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * The blocks of a product's page, drawn (lib/sales-page.ts says what each is).
@@ -94,7 +95,7 @@ export function Line({ pieces, preview }: { pieces: Piece[]; preview?: boolean }
         piece.href && !preview ? (
           <a key={i} href={piece.href} target="_blank" rel="noopener noreferrer nofollow ugc">
             {piece.text}
-          </a>
+          <NewTab /></a>
         ) : (
           <span key={i}>{piece.text}</span>
         ),
@@ -402,7 +403,7 @@ export function BlockView({ block, ctx, reviews }: { block: PageBlock; ctx: Bloc
                       data-caption={picture.caption || undefined}
                     >
                       {image}
-                    </a>
+                    <NewTab /></a>
                   )}
                   {picture.caption ? <figcaption className="st-muted mt-2 text-sm leading-snug">{picture.caption}</figcaption> : null}
                 </figure>
@@ -586,7 +587,7 @@ export function BlockView({ block, ctx, reviews }: { block: PageBlock; ctx: Bloc
                         <a href={item.url} target="_blank" rel="noopener noreferrer nofollow ugc" className="sp-quote-link">
                           {w.quoteSource(host)}
                           <Icon name="arrow-up-right" size={14} />
-                        </a>
+                        <NewTab /></a>
                       )}
                     </figcaption>
                   </figure>

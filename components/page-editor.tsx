@@ -100,6 +100,7 @@ import { READ_PDF_JOBS, READ_PDF_PAGES } from "@/lib/ai-rules";
 import type { PageFacts } from "@/lib/page-facts";
 import { blockWords } from "@/lib/buyer-words/blocks";
 import type { LanguageCode } from "@/lib/store-language";
+import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -1733,7 +1734,7 @@ export function PageEditor({
           <a href={pageHref} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-violet-deep underline-offset-4 hover:underline">
             Open the live page
             <Icon name="external" size={15} />
-          </a>
+          <NewTab /></a>
         </div>
       </div>
       {shareUrl && sharing ? (

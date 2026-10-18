@@ -2,6 +2,7 @@ import { PlainText } from "@/components/sales-blocks";
 import { VideoEmbed } from "@/components/video-embed";
 import { linkHost } from "@/lib/product-link";
 import type { ThanksNote } from "@/lib/thanks-note";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * The creator's own note after paying (lib/thanks-note.ts), on the thank-you
@@ -24,7 +25,7 @@ export function ThanksNoteView({ note, heading, lang, preview = false }: { note:
         <div className="mt-6">
           <a href={preview ? undefined : note.button.url} target="_blank" rel="noopener noreferrer nofollow" className="btn st-btn">
             {note.button.label}
-          </a>
+          <NewTab /></a>
           <p className="st-muted mt-2 text-xs">{linkHost(note.button.url)}</p>
         </div>
       ) : null}

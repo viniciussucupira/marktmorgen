@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { blockWords } from "@/lib/buyer-words/blocks";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * A sales page's pictures, seen large without leaving the page (added
@@ -110,7 +111,7 @@ export function PictureViewer({ lang }: { lang: unknown }) {
               {shown.caption ? <p>{shown.caption}</p> : null}
               <a href={shown.src} target="_blank" rel="noopener noreferrer" className="pv-original">
                 {w.viewerOriginal}
-              </a>
+              <NewTab /></a>
             </div>
             {many ? (
               <button type="button" className="pv-button" onClick={() => go(1)} aria-label={w.viewerNext}>

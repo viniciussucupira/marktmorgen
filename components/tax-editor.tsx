@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import type { TaxSetting } from "@/lib/tax";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -89,7 +90,7 @@ export function TaxEditor({
                 </span>{" "}
                 <a href={STRIPE_TAX_SETTINGS} target="_blank" rel="noopener noreferrer" className="link font-semibold">
                   Open tax settings in Stripe
-                </a>
+                <NewTab /></a>
               </>
             ) : (
               <span className="text-ink-soft">Stripe could not be asked about your tax setup just now.</span>
@@ -152,7 +153,7 @@ export function TaxEditor({
               and payment plans are already invoiced by Stripe at every payment, so this covers single payments.{" "}
               <a href={STRIPE_EMAIL_SETTINGS} target="_blank" rel="noopener noreferrer" className="link font-semibold">
                 Open Customer emails in Stripe
-              </a>
+              <NewTab /></a>
             </p>
           </fieldset>
 

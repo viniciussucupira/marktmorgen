@@ -22,6 +22,7 @@ import { StoreTracking } from "@/components/store-tracking";
 import { readListing } from "@/lib/catalog";
 import { speech } from "@/lib/buyer-words";
 import { type BookingWords, bookingWords } from "@/lib/buyer-words/booking";
+import { NewTab } from "@/components/new-tab";
 
 type Params = {
   params: Promise<{ handle: string; product: string }>;
@@ -323,7 +324,7 @@ async function MovePage({
               {room ? (
                 <a href={room} rel="noopener noreferrer nofollow" target="_blank" className="btn st-btn">
                   {roomLabel(room, store.language)}
-                </a>
+                <NewTab language={store.language} /></a>
               ) : null}
               <a href={icsLink("", store, session)} className="btn btn-secondary">
                 {b.addNewTime}

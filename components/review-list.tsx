@@ -5,6 +5,7 @@ import { speechFor } from "@/lib/buyer-words";
 import { DEFAULT_LANGUAGE, type LanguageCode } from "@/lib/store-language";
 import { imageUrl } from "@/lib/product-image";
 import { GIVING_WORDS } from "@/lib/buyer-words/giving";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * The store's words for its reviews, in its language (lib/store-language.ts).
@@ -103,7 +104,7 @@ export function ReviewItem({
             decoding="async"
             className="h-28 w-28 overflow-hidden rounded-xl bg-[var(--st-line)] object-cover text-[0px] sm:h-32 sm:w-32"
           />
-        </a>
+        <NewTab /></a>
       ) : null}
       {review.reply ? (
         <div className="rv-reply">

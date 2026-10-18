@@ -8,6 +8,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { DEFAULT_PLACE, MAX_PLACE, embedPlace } from "@/lib/embed-rules";
 import { MAX_CAMPAIGN, MAX_EMBED_SITES, type ScriptMode, listedReturn, readEmbedSites } from "@/lib/embed-sites";
 import { BUILDERS, MAX_LINK_TEXT, cspLines, loaderHash, scriptCode } from "@/lib/embed-sdk";
+import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -235,7 +236,7 @@ export function CheckoutScriptEditor({
             <Link href="/developers/checkout-script" target="_blank" className="btn btn-secondary btn-sm">
               <Icon name="external" size={15} />
               What it does, and its events
-            </Link>
+            <NewTab /></Link>
           </div>
           <p className="mt-3 text-sm text-ink-soft">
             The link works on its own, without the script. Paste the script once per page: every link on the page shares it. It sets no cookie,

@@ -73,6 +73,7 @@ import { listedReturn, listedSite, purchaseReturn } from "@/lib/embed-sites";
 import { eventIdFor } from "@/lib/webhooks";
 import { Suspense } from "react";
 import { NextOfferCard } from "@/components/next-offer-card";
+import { NewTab } from "@/components/new-tab";
 
 export async function generateMetadata({ params }: Pick<Params, "params">): Promise<Metadata> {
   const { handle } = await params;
@@ -870,7 +871,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                         className="btn st-btn"
                       >
                         {roomLabel(booked.room, store.language)}
-                      </a>
+                      <NewTab language={store.language} /></a>
                     ) : null}
                     <a
                       href={`/api/store/ics?handle=${encodeURIComponent(store.handle)}&session_id=${encodeURIComponent(sessionId ?? "")}`}
@@ -962,7 +963,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     className="btn st-btn btn-lg mt-7"
                   >
                     {t.openWhatYouBought}
-                  </a>
+                  <NewTab language={store.language} /></a>
                   <p className="st-muted mt-5 text-sm">
                     {t.keptOnBy(linkHost(order.link), store.name)}
                     <span className="break-all font-semibold" style={{ color: "var(--st-text)" }}>
@@ -1005,7 +1006,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     <>
                       <a href={order.link} rel="noopener noreferrer nofollow" target="_blank" className="link mt-1 inline-block font-semibold">
                         {t.openIt}
-                      </a>
+                      <NewTab language={store.language} /></a>
                       <p className="st-muted mt-1 text-sm">
                         {t.keptOnSave(linkHost(order.link), store.name)}
                         <span className="break-all font-semibold" style={{ color: "var(--st-text)" }}>{order.link}</span>
@@ -1045,7 +1046,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                         className="btn st-btn mt-3"
                       >
                         {t.openIt}
-                      </a>
+                      <NewTab language={store.language} /></a>
                       <p className="st-muted mt-3 break-all text-sm">{added.link}</p>
                     </>
                   ) : added.file ? (
@@ -1079,7 +1080,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     <>
                       <a href={added.product.link} rel="noopener noreferrer nofollow" target="_blank" className="btn st-btn mt-3">
                         {t.openIt}
-                      </a>
+                      <NewTab language={store.language} /></a>
                       <p className="st-muted mt-3 break-all text-sm">{added.product.link}</p>
                     </>
                   ) : added.product.file ? (

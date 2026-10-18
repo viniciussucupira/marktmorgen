@@ -12,6 +12,7 @@ import {
   MAX_COLLECTION_TITLE,
   collectionSegment,
 } from "@/lib/store-collections";
+import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
   title: "Give every collection a name.",
@@ -174,7 +175,7 @@ export function CollectionsEditor({
                       {"Its page: "}
                       <a className="underline" href={`/@${handle}/shop/${collectionSegment({ id: row.id, title: row.title || "collection" })}`} target="_blank" rel="noreferrer">
                         {`/@${handle}/shop/${collectionSegment({ id: row.id, title: row.title || "collection" })}`}
-                      </a>
+                      <NewTab /></a>
                     </p>
                   ) : (
                     <p className="mt-3 text-xs text-ink-mute">Its page address appears once it is saved.</p>

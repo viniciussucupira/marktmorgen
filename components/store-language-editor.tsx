@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LANGUAGES, LANGUAGE_CODES, type LanguageCode } from "@/lib/store-language";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * The language a store speaks to its buyers (lib/store-language.ts).
@@ -87,7 +88,7 @@ export function StoreLanguageEditor({ language, handle }: { language: LanguageCo
           {status.ok ? (
             <a href={`/@${handle}`} target="_blank" rel="noopener" className="font-semibold underline underline-offset-4">
               See your store
-            </a>
+            <NewTab /></a>
           ) : null}
         </p>
       ) : null}

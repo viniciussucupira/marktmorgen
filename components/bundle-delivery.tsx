@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Listing } from "@/lib/store";
 import { linkHost } from "@/lib/product-link";
+import { NewTab } from "@/components/new-tab";
 
 /** One product of a bundle, as a buyer who paid for it opens it. */
 export type BundleLine = {
@@ -93,7 +94,7 @@ export function BundleDelivery({
                 <>
                   <a href={product.link} rel="noopener noreferrer nofollow" target="_blank" className="btn st-btn mt-3">
                     {words.openIt}
-                  </a>
+                  <NewTab /></a>
                   <p className="st-muted mt-2 break-all text-xs">
                     {words.keptOn.replace("{host}", linkHost(product.link)).replace("{link}", product.link)}
                   </p>

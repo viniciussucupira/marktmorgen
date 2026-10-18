@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { MAX_HELP_QUESTION } from "@/lib/ai-rules";
+import { NewTab } from "@/components/new-tab";
 
 type Answer = { answer: string; sources: { id: string; q: string }[] };
 
@@ -79,7 +80,7 @@ export function StudioHelp({ left: startLeft }: { left: number }) {
                 <li key={source.id}>
                   <Link href={`/help#${source.id}`} target="_blank" rel="noopener" className="font-semibold text-ink-soft underline underline-offset-4 hover:text-violet-deep">
                     {source.q}
-                  </Link>
+                  <NewTab /></Link>
                 </li>
               ))}
             </ul>

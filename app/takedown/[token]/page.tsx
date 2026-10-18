@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 import { TakedownButton } from "@/components/takedown-actions";
 import { openReport, reportedProduct } from "@/lib/takedown";
+import { NewTab } from "@/components/new-tab";
 
 export const metadata: Metadata = { title: "A notice — Marktmorgen", robots: { index: false, follow: false } };
 
@@ -24,7 +25,7 @@ export default async function TakedownPage({ params }: Params) {
   return (
     <LegalPage title={report.kind === "copyright" ? "Copyright notice" : "Notice of illegal content"} eyebrow={`Notice ${report.id}`} effective={null} legalNav={false} lastUpdated={new Date(report.at).toLocaleString("en-US", { dateStyle: "long", timeStyle: "short", timeZone: "UTC" }) + " UTC"}>
       <LegalSection title="What it says">
-        <p><strong className="text-black">Where:</strong> <a href={report.url} target="_blank" rel="noopener noreferrer nofollow" className="underline underline-offset-2 [overflow-wrap:anywhere]">{report.url}</a></p>
+        <p><strong className="text-black">Where:</strong> <a href={report.url} target="_blank" rel="noopener noreferrer nofollow" className="underline underline-offset-2 [overflow-wrap:anywhere]">{report.url}<NewTab /></a></p>
         <p className="whitespace-pre-line [overflow-wrap:anywhere]"><strong className="text-black">{report.kind === "copyright" ? "The work:" : "Why:"}</strong> {report.work}</p>
         {report.original ? <p className="[overflow-wrap:anywhere]"><strong className="text-black">Original:</strong> {report.original}</p> : null}
         <p><strong className="text-black">From:</strong> {report.name} &lt;{report.email}&gt;{report.contact ? `, ${report.contact}` : ""}</p>

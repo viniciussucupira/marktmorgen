@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { NewTab } from "@/components/new-tab";
 
 /** What the two buttons say, in the store's language (lib/buyer-words/courses.ts). */
 export type CertificateActionWords = { print: string; copy: string; copied: string; prompt: string; addToLinkedIn: string; shareOnLinkedIn: string; downloadPdf?: string };
@@ -29,10 +30,10 @@ export function CertificateActions({ url, linkedIn, pdf, words = ENGLISH }: { ur
         <>
           <a href={linkedIn.add} target="_blank" rel="noopener noreferrer" className="btn st-btn">
             {words.addToLinkedIn}
-          </a>
+          <NewTab /></a>
           <a href={linkedIn.share} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
             {words.shareOnLinkedIn}
-          </a>
+          <NewTab /></a>
         </>
       ) : null}
       {pdf ? (

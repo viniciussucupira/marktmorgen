@@ -26,6 +26,7 @@ import { videoLimitFor } from "@/lib/plan-standing";
 import { speech } from "@/lib/buyer-words";
 import { type CoursesWords, coursesWords } from "@/lib/buyer-words/courses";
 import type { LanguageCode } from "@/lib/store-language";
+import { NewTab } from "@/components/new-tab";
 
 type Params = {
   params: Promise<{ handle: string; product: string; lesson: string }>;
@@ -230,7 +231,7 @@ export default async function LessonPage({ params, searchParams }: Params) {
             {lesson.link ? (
               <a href={lesson.link} target="_blank" rel="noopener noreferrer nofollow" className="btn st-btn mt-6">
                 {w.openSite(linkHost(lesson.link))}
-              </a>
+              <NewTab language={store.language} /></a>
             ) : null}
 
             {lesson.files.length ? (

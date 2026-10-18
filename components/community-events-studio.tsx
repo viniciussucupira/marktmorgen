@@ -15,6 +15,7 @@ import {
   MAX_UPCOMING_EVENTS,
 } from "@/lib/community-text";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 /** One event, as the studio shows it: everything but the member-facing page's checks. */
 export type StudioEvent = {
@@ -387,7 +388,7 @@ function EventRow({
             className={small}
           >
             Start in Zoom
-          </a>
+          <NewTab /></a>
         ) : null}
         {canManage && !event.over && !event.cancelled ? (
           <>

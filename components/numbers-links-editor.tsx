@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -128,7 +129,7 @@ export function NumbersLinksEditor({ links, now }: { links: LinkRow[]; now: numb
       {made ? (
         <p className="notice mt-4 text-sm [overflow-wrap:anywhere]" role="status" data-numbers-link-made>
           {`New link for ${made.label}: `}
-          <a href={made.url} target="_blank" rel="noopener" className="font-semibold text-violet-deep underline underline-offset-4">{made.url}</a>
+          <a href={made.url} target="_blank" rel="noopener" className="font-semibold text-violet-deep underline underline-offset-4">{made.url}<NewTab /></a>
           {". Send the password apart from it, by another message."}
         </p>
       ) : null}

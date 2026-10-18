@@ -15,6 +15,7 @@ import {
 import { PROVIDER_NAMES, readVideo } from "@/lib/sales-page";
 import { AUDIO_NAMES, readAudio } from "@/lib/audio-embed";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 /** What a link plays on the page, by name: "the YouTube video", "the Spotify player"; null when it plays nothing. */
 function playable(url: string): { name: string; what: string } | null {
@@ -400,7 +401,7 @@ export function LinkEditor({ links, folder }: { links: StoreLink[]; folder: stri
                       className="text-ink-soft underline underline-offset-4 transition hover:text-violet-deep"
                     >
                       Open it to check
-                    </a>
+                    <NewTab /></a>
                   )}
                   <button
                     type="button"
