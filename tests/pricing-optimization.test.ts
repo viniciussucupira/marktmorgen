@@ -28,7 +28,17 @@ test("it changes nothing in force: today's prices, and nothing on sale", () => {
 });
 
 test("the program's input is what the repository's margin code gives today (run node scripts/pricing-optimization.mjs)", () => {
-  assert.deepEqual(JSON.parse(read(INPUT_FILE)), JSON.parse(JSON.stringify(milpInput())), `${INPUT_FILE} is stale`);
+  // Numbers are compared to a part in a billion: floating-point functions may differ in their last bit between Node versions.
+  const close = (a: unknown, b: unknown, path: string): void => {
+    if (typeof a === "number" && typeof b === "number") { assert.ok(Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a)), `${INPUT_FILE} is stale at ${path}: ${a} against ${b}`); return; }
+    if (a && b && typeof a === "object" && typeof b === "object") {
+      assert.deepEqual(Object.keys(a).sort(), Object.keys(b).sort(), `${INPUT_FILE} is stale at ${path}`);
+      for (const k of Object.keys(a)) close((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k], `${path}.${k}`);
+      return;
+    }
+    assert.equal(a, b, `${INPUT_FILE} is stale at ${path}`);
+  };
+  close(JSON.parse(read(INPUT_FILE)), JSON.parse(JSON.stringify(milpInput())), "input");
   assert.ok(linearityGap() <= 3, "the linear usage stays within the safety cents");
 });
 

@@ -296,7 +296,8 @@ export function milpInput(): MilpInput {
         roomYear: unitUnder(monthCents * 10, 0, SIZING_READING, true).usageRoomCents - PLAN_ROOM.year - SAFETY_CENTS,
         netAtOnes: unitAt(tier, "month", monthCents, ones()).netCents,
         usageMonthAtOnes: usageFor(tier, "month", ones()),
-        demand: Object.fromEntries(ELASTICITIES.map((e) => [String(e), demand(tier, monthCents, e)])),
+        // Twelve significant digits: Math.pow may differ in its last bit between Node versions.
+        demand: Object.fromEntries(ELASTICITIES.map((e) => [String(e), Number(demand(tier, monthCents, e).toPrecision(12))])),
       })),
       baseMonth: base("month"), baseYear: base("year"), coefMonth: coef("month"), coefYear: coef("year"),
     };
