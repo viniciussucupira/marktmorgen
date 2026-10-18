@@ -78,6 +78,7 @@ import { MAX_PRODUCTS } from "@/lib/catalog-rules";
 import { CLOSING, FOLLOWED_FAMILIES } from "@/lib/data-families";
 import { CLOSING_DAYS } from "@/lib/plan-closing-rules";
 import { NON_PAYING_ALLOWANCES } from "@/lib/store-allowance-rules";
+import { ASSIST_REMINDERS_PER_STORE_DAY } from "@/lib/assistant-reminder-rules";
 import { SETUP_EXTRA_REQUESTS, SETUP_VISITS, TRIAL_EXTRA_REQUESTS, TRIAL_VISITS } from "@/lib/traffic-rules";
 import { TRIAL_ORDERS } from "@/lib/order-rules";
 import { TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
@@ -251,6 +252,10 @@ export const FAMILIES: Record<string, Family> = {
   "nl:assist:missed:@lib/store-assistant.ts": { what: "Questions the Store assistant could not answer, for the creator", line: "store-assistant" },
   "nl:assist:next:@lib/next-offer.ts": short("The one next product the Store assistant chose for an order, and whether the buyer dismissed it", "order", 3, KB),
   "nl:assist:nextlock:@lib/next-offer.ts": short("An order's next product being chosen, a minute", "order", 1, MARK),
+  // At most ASSIST_REMINDERS_PER_STORE_DAY yeses a store a day, each the address, the sentence checked and when (768 bytes at the most), gone in three days.
+  "nl:assist:remind:@lib/assistant-reminder-rules.ts": short("A buyer's yes to one checkout reminder, three days from the checkout", "day", 3, ASSIST_REMINDERS_PER_STORE_DAY * LINK_BYTES),
+  "nl:assist:remindwho:@lib/assistant-reminder.ts": short("The checkouts one address said yes on, by a one-way hash, three days", "day", 3, ASSIST_REMINDERS_PER_STORE_DAY * KEY),
+  "nl:assist:remindq@lib/assistant-reminder.ts": company("Store assistant checkout reminders due", "One sorted set for every store, each member a store, its handle and a checkout, never an address, gone when sent or dropped within hours: at most ASSIST_REMINDERS_PER_STORE_DAY a store a day."),
   "nl:ask:@lib/answers.ts": short("Visitors' answers counted in the window", "day", 40, 128),
   "nl:ask:a:@lib/answers.ts": short("An answer already given to a question about a page, a day", "ai", 1, 8 * KB),
   "nl:ask:missed:@lib/answers.ts": { what: "Questions a page did not answer, for the creator", parts: [capped(100 * KB, "The newest MISSED_KEPT, trimmed on every write.", src("lib/answers.ts", "MISSED_KEPT", "LTRIM"))] },

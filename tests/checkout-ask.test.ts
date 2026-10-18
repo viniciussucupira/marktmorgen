@@ -70,10 +70,11 @@ test("it is taken off the queue before anything is sent, and never put back", ()
   assert.match(body, /store\.statsId !== ask\.statsId/, "and only for the store it was asked on");
 });
 
-test("both kinds of yes go through the one set of limits", () => {
+test("every kind of yes goes through the one set of limits", () => {
   const src = code("lib/checkout-recovery.ts");
-  assert.equal((src.match(/return deliver\(store, \{ kind: "product", product \},/g) ?? []).length, 2, "Stripe's box and the buyer's own ask");
-  assert.equal((src.match(/return deliver\(store, \{ kind: "cart", items \},/g) ?? []).length, 2, "and the same two for a whole cart");
+  // Stripe's box, the buyer's own ask, and the Store assistant's box at checkout (lib/assistant-reminder.ts, remindAssisted).
+  assert.equal((src.match(/return deliver\(store, \{ kind: "product", product \},/g) ?? []).length, 3, "Stripe's box, the buyer's own ask and the assistant's box");
+  assert.equal((src.match(/return deliver\(store, \{ kind: "cart", items \},/g) ?? []).length, 3, "and the same three for a whole cart");
   const deliver = src.slice(src.indexOf("async function deliver("));
   for (const guard of ["offKey(statsId, email)", "onceKey(statsId, email, onceFor)", "parseContact(contact)?.unsub", "paidSince(store, email, ids, how.since)"]) {
     assert.ok(deliver.includes(guard), `the one email is always behind ${guard}`);

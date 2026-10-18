@@ -1,3 +1,4 @@
+import { assistReminderShown } from "@/lib/assistant-reminder";
 import { withinStore } from "@/lib/metered-limits";
 import { StorePagesNav } from "@/components/store-pages-nav";
 import { RecentSales } from "@/components/recent-sales";
@@ -721,7 +722,7 @@ export default async function StorePage({ params, searchParams }: Params) {
             <StoreTracking store={store} countVisit />
             {/* Which items of the page are reached and clicked, on its first page and outside a search only (lib/page-read.ts). */}
             {page === 1 && !searching ? <StoreReach token={readToken(store.statsId, STORE_SCOPE)} /> : null}
-            {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}
+            {cartOn ? <CartButton handle={store.handle} lang={store.language} remind={assistReminderShown(store) ? store.name : ""} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}
             <ExitOfferSlot store={store} />
           </div>
         </div>

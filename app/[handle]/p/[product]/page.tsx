@@ -1,3 +1,4 @@
+import { assistReminderShown } from "@/lib/assistant-reminder";
 import { StickyBuy } from "@/components/sticky-buy";
 import { RecentSales } from "@/components/recent-sales";
 import { recentSales } from "@/lib/recent-sales";
@@ -527,7 +528,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
       </Link>
       <StoreTracking store={store} presence product={product.id} />
       {here ? <FunnelBeacon handle={store.handle} funnel={here.funnel.id} kind="product" id={product.id} /> : null}
-      {cartOn ? <CartButton handle={store.handle} lang={store.language} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}
+      {cartOn ? <CartButton handle={store.handle} lang={store.language} remind={assistReminderShown(store) ? store.name : ""} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}
     </div>
   );
 

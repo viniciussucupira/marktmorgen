@@ -33,7 +33,7 @@ import { LANGUAGES } from "@/lib/store-language";
 import { type CameFrom, hasSource } from "@/lib/came-from";
 import { isHouseStore } from "@/lib/house-store";
 import { MAX_CART, dealOff } from "@/lib/cart-rules";
-import { applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
+import { RECOVERY_OPEN_SECONDS, applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
 import { applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
 import { codesMayTakeOff } from "@/lib/discount";
 
@@ -77,6 +77,8 @@ export async function createCartCheckout(
     channel?: Record<string, string>;
     /** The affiliate whose link the buyer followed, still inside the store's window (lib/affiliates.ts). */
     via?: { aff: string; rate: number; own?: number | null } | null;
+    /** The buyer checked the Store assistant's box for one reminder (lib/assistant-reminder.ts): the checkout closes after an hour. */
+    remind?: boolean;
   } = {},
 ): Promise<{ url: string; id: string }> {
   if (!store.stripeAccountId) throw new Error("This store has no account");
@@ -177,6 +179,7 @@ export async function createCartCheckout(
 
   for (;;) {
     try {
+      if (extras.remind && !body.has("expires_at")) body.set("expires_at", String(Math.floor(Date.now() / 1000) + RECOVERY_OPEN_SECONDS));
       const session = await onAccount("POST", store.stripeAccountId, "/checkout/sessions", body);
       if (typeof session.url !== "string" || !session.url || typeof session.id !== "string") throw new Error("Stripe did not return a checkout URL");
       return { url: session.url, id: session.id };

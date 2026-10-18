@@ -501,6 +501,32 @@ export default function PrivacyPage() {
           mentioned in your order&apos;s confirmation email; no separate email
           is sent for it.
         </p>
+        <p id="store-assistant-reminder" className="scroll-mt-24">
+          <strong className="text-black">A reminder you ask for at checkout.</strong>{" "}
+          Where a store with the Store assistant has switched it on, its
+          checkout shows an unchecked box, &ldquo;Email me a reminder if I
+          don&apos;t finish this order&rdquo; (in the store&apos;s language).
+          Only if you check it and type your email address beside it do we
+          keep that address, the sentence you checked, its version and the
+          time, with the reference of that checkout, and send you one email
+          from the store about an hour after that checkout closes unpaid. We
+          rely on your consent for it, and typing an address without checking
+          the box is never taken as one. To make sure you are not reminded of
+          something you paid for, the store&apos;s own Stripe account is asked
+          whether that checkout was paid and whether that address paid for the
+          same products since; the answer is used for that and not kept. An AI
+          model run by Anthropic may write one short line of that email from
+          the products&apos; titles and descriptions, labeled as written by AI;
+          it is sent nothing about you. The email has a link that stops that
+          store&apos;s reminders to you at once, and a one-click unsubscribe
+          your mail app can use; pressing either withdraws your consent and
+          keeps a one-way hash of your address for that store, as described
+          under a reminder after an unpaid checkout above, so it never sends
+          you one again. What you typed is deleted by itself three days after
+          the checkout opened, sent or not, and at once if the store deletes
+          you or you ask it to delete you. It is not shown to the creator and
+          does not add you to any list.
+        </p>
         <p id="fair-prices">
           <strong className="text-black">Prices for your country.</strong>{" "}
           Some stores lower their prices for buyers in certain countries. To

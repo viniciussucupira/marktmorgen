@@ -31,6 +31,7 @@ import { IMPORT_ALLOWANCES } from "@/lib/import-limits";
 import { IMPORTS_PER_SHARE_MONTH, PREVIEWS_PER_SHARE_MONTH, SHARE_LIMITS } from "@/lib/funnel-share-rules";
 import { TEAM_LIMITS } from "@/lib/team-scheduling-rules";
 import { NEXT_OFFER_CHOICES, NEXT_OFFER_KEEP_SECONDS, NEXT_OFFER_OUTPUT_TOKENS, NEXT_OFFER_PRODUCTS, NEXT_OFFER_REQUEST_UNITS } from "@/lib/next-offer-rules";
+import { ASSIST_REMINDERS_PER_STORE_DAY, ASSIST_REMIND_KEEP_SECONDS, ASSIST_REMIND_OUTPUT_TOKENS, ASSIST_REMIND_PRODUCTS, ASSIST_REMIND_REQUEST_UNITS, ASSIST_REMIND_VERSION } from "@/lib/assistant-reminder-rules";
 import { ADD_ON_FEES, ASSISTANT_INPUT_BYTES, ASSISTANT_KEEP_SECONDS, ASSISTANT_MESSAGES_MONTHLY, ASSISTANT_MODEL, ASSISTANT_OUTPUT_TOKENS, ASSISTANT_PRICE_CENTS, DISPUTE_RESERVE_BPS, REFUND_RESERVE_BPS, REMITTANCE_BPS } from "@/lib/store-assistant-rules";
 export const REQUIRED_MARGIN_SCENARIOS=[
  "creator_month_full","creator_year_full","pro_month_full","pro_year_full","scale_month_full","scale_year_full",
@@ -52,7 +53,7 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
- schemaVersion: 20,
+ schemaVersion: 21,
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: AUTOMATIC_UPLOAD_BUDGET_CEILINGS },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
@@ -71,7 +72,9 @@ export const CURRENT_COMMERCIAL_TERMS = {
  // Since 17 October 2026 (schema 19): the Store assistant add-on, its price, its pool and the reserves its own payment carries.
  storeAssistant: { priceCents: ASSISTANT_PRICE_CENTS, messagesMonthly: ASSISTANT_MESSAGES_MONTHLY, model: ASSISTANT_MODEL, inputBytes: ASSISTANT_INPUT_BYTES, outputTokens: ASSISTANT_OUTPUT_TOKENS, keepSeconds: ASSISTANT_KEEP_SECONDS, fees: ADD_ON_FEES, disputeReserveBps: DISPUTE_RESERVE_BPS, refundReserveBps: REFUND_RESERVE_BPS, remittanceBps: REMITTANCE_BPS, refunds: "law-only", sold: "paid-plan-only",
   // Since 17 October 2026 (schema 20): its next product after a purchase, from the same pool at the same worst cost per reply, its reads counted as public requests.
-  nextOffer: { pool: "shared", products: NEXT_OFFER_PRODUCTS, choices: NEXT_OFFER_CHOICES, outputTokens: NEXT_OFFER_OUTPUT_TOKENS, keepSeconds: NEXT_OFFER_KEEP_SECONDS, requestUnits: NEXT_OFFER_REQUEST_UNITS, email: "confirmation-only-with-consent" } },
+  nextOffer: { pool: "shared", products: NEXT_OFFER_PRODUCTS, choices: NEXT_OFFER_CHOICES, outputTokens: NEXT_OFFER_OUTPUT_TOKENS, keepSeconds: NEXT_OFFER_KEEP_SECONDS, requestUnits: NEXT_OFFER_REQUEST_UNITS, email: "confirmation-only-with-consent" },
+  // Since 17 October 2026 (schema 21): one checkout reminder asked for at checkout, its AI line from the same pool at the same worst cost per reply, its email from the store's own figure, its reads counted as public requests.
+  reminder: { pool: "shared", products: ASSIST_REMIND_PRODUCTS, outputTokens: ASSIST_REMIND_OUTPUT_TOKENS, keepSeconds: ASSIST_REMIND_KEEP_SECONDS, requestUnits: ASSIST_REMIND_REQUEST_UNITS, perStoreDay: ASSIST_REMINDERS_PER_STORE_DAY, consent: ASSIST_REMIND_VERSION, email: "store-email-figure", basis: "explicit-checkbox-only", perCheckout: 1 } },
  basePlanRevenueCeilings: BASE_PLAN_REVENUE_CEILINGS,
  minimumNetMarginBps: MINIMUM_NET_MARGIN_BPS,
  costCategories: CUSTOMER_COST_CATEGORIES,

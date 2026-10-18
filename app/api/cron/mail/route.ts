@@ -16,6 +16,7 @@ import { runEventQueue } from "@/lib/community-event-mail";
 import { SITE_URL } from "@/lib/site-url";
 import { sweepCheckouts } from "@/lib/checkout-sweep";
 import { sendAsked } from "@/lib/checkout-ask";
+import { sendAssistReminders } from "@/lib/assistant-reminder";
 import { deliverDue, watchStripe } from "@/lib/webhooks";
 import { settlePendingOffers } from "@/lib/upsell";
 import { sendReviewRequests } from "@/lib/review-requests";
@@ -55,6 +56,8 @@ export const maxDuration = 60;
  *
  *    0–12 s  the checkout pass
  *   –16 s    the one-click offers waiting on Stripe
+ *   –22 s    the Store assistant's checkout reminders (lib/assistant-reminder.ts):
+ *            one piece is a Stripe read and at most 8 s of the model
  *   –30 s    the creators' emails: broadcasts, sequence steps, waitlist launches, community
  *            announcements (the announcements check each member's access
  *            25 at a time, lib/mail.ts CHECKED_BATCH_SIZE, so one piece is
@@ -118,6 +121,13 @@ async function run(request: NextRequest, started: number): Promise<Response> {
       await sendAsked(storeForHandle, started + 20_000);
     } catch (error) {
       console.error("sending asked-for checkout reminders failed", error);
+    }
+    // The Store assistant's reminders, asked for with its box at checkout
+    // (lib/assistant-reminder.ts): due an hour after the checkout closed.
+    try {
+      await sendAssistReminders(storeForHandle, started + 22_000);
+    } catch (error) {
+      console.error("sending the Store assistant's checkout reminders failed", error);
     }
     let offers = null;
     try {

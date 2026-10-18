@@ -1784,6 +1784,8 @@ export default async function StudioPage({
                               <StoreAssistantEditor
                                 setting={own.assistant}
                                 next={own.nextOffer}
+                                remind={own.assistReminder}
+                                postal={own.recovery.address !== ""}
                                 plan={own.assistantPlan}
                                 onSale={ASSISTANT_ON_SALE}
                                 canBill={may("billing")}

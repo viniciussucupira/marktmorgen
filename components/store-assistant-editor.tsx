@@ -13,6 +13,9 @@ import {
   assistantPriceWords,
 } from "@/lib/store-assistant-rules";
 import type { NextOfferSetting } from "@/lib/next-offer-rules";
+import type { AssistReminderSetting } from "@/lib/assistant-reminder-rules";
+import { ASSIST_REMIND_KEEP_SECONDS } from "@/lib/assistant-reminder-rules";
+import { assistReminderWords } from "@/lib/buyer-words/assistant-reminder";
 
 const DATE = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 const FAILED = "It could not be saved just now. Try again in a moment.";
@@ -44,6 +47,8 @@ const NOTICES: Record<string, string> = {
 export function StoreAssistantEditor({
   setting,
   next,
+  remind,
+  postal,
   plan,
   onSale,
   canBill,
@@ -55,6 +60,9 @@ export function StoreAssistantEditor({
 }: {
   setting: AssistantSetting;
   next: NextOfferSetting;
+  remind: AssistReminderSetting;
+  /** Whether the store gave the postal address its reminders carry (components/recovery-editor.tsx). */
+  postal: boolean;
   plan: AssistantPlan | null;
   onSale: boolean;
   canBill: boolean;
@@ -69,14 +77,15 @@ export function StoreAssistantEditor({
   const [notes, setNotes] = useState(setting.notes);
   const [nextOn, setNextOn] = useState(next.on);
   const [nextEmail, setNextEmail] = useState(next.email);
-  const [busy, setBusy] = useState<"save" | "clear" | "next" | null>(null);
+  const [remindOn, setRemindOn] = useState(remind.on);
+  const [busy, setBusy] = useState<"save" | "clear" | "next" | "remind" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const changed = on !== setting.on || notes.trim() !== setting.notes;
   const active = Boolean(plan?.active && plan.period);
 
   const nextChanged = nextOn !== next.on || (nextOn && nextEmail) !== next.email;
 
-  async function post(body: Record<string, unknown>, what: "save" | "clear" | "next", said: string) {
+  async function post(body: Record<string, unknown>, what: "save" | "clear" | "next" | "remind", said: string) {
     setBusy(what);
     setError(null);
     try {
@@ -238,6 +247,47 @@ export function StoreAssistantEditor({
             aria-busy={busy === "next"}
           >
             {busy === "next" ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+
+      <div id="assistant-reminder" className="mt-7 scroll-mt-32 border-t border-line pt-6">
+        <p className="font-semibold text-ink">After a checkout left unpaid: one reminder, only when asked for</p>
+        <p className="mt-1 text-sm text-ink-soft">
+          Your checkout shows an unchecked box, &ldquo;{assistReminderWords("en").box}&rdquo; (in your store&apos;s language), with a place for the
+          buyer&apos;s email once it is checked. Only a buyer who checks it and types an address gets one email from you, about an hour after
+          that checkout closes unpaid: what they left, its link and today&apos;s price, the sentence they checked and the day, your postal
+          address and a link that stops your reminders at once. Never when they paid, paid for it since, or stopped or left your emails, and
+          never twice for one checkout. An AI adds one short, neutral line about those products from your own descriptions, labeled as
+          written by AI, with no price, deal, deadline or claim; each line is one reply of the month, and once those are used the same email
+          goes without it. The email is one of your store&apos;s own emails for the month, and is not sent when those are used. What the buyer
+          typed is deleted {ASSIST_REMIND_KEEP_SECONDS / 86_400} days after the checkout opened.
+        </p>
+        {!postal ? (
+          <p className="notice mt-3" role="status">
+            Add the postal address your reminders carry, under{" "}
+            <a href="#checkout-reminders" className="underline">
+              Checkout reminders
+            </a>
+            , first: US law asks every email about buying something to include one. Until you do, the box is not shown and nothing is sent.
+          </p>
+        ) : null}
+        <label className="mt-4 flex min-h-11 cursor-pointer items-start gap-3 text-sm font-semibold text-ink">
+          <input type="checkbox" checked={remindOn} onChange={(event) => setRemindOn(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-violet-brand" />
+          <span>
+            Offer one reminder at checkout
+            <span className="block font-normal text-ink-soft">Shown while the add-on is paid for and your postal address is given.</span>
+          </span>
+        </label>
+        <div className="mt-3">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => void post({ remind: { on: remindOn } }, "remind", remindOn ? (postal ? "Saved. The box shows at checkout while the add-on is paid for." : "Saved. Add your postal address and the box shows at checkout.") : "Saved. No reminder is offered at checkout.")}
+            disabled={busy !== null || remindOn === remind.on}
+            aria-busy={busy === "remind"}
+          >
+            {busy === "remind" ? "Saving…" : "Save"}
           </button>
         </div>
       </div>

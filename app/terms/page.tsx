@@ -498,6 +498,24 @@ export default function TermsPage() {
           own order decides. It is a suggestion, not an offer of different
           terms: a purchase that follows it is an ordinary sale of yours.
         </p>
+        <p id="store-assistant-reminder">
+          The {ASSISTANT_NAME} can also, when you switch it on and have given
+          the postal address your checkout reminders carry, show an unchecked
+          box at your checkout for one reminder by email if the buyer does not
+          finish. It is sent only to a buyer who checked that box and typed an
+          address, at most once for each checkout, about an hour after it
+          closed unpaid, in your name, with your postal address and a link that
+          stops your reminders at once; never when the checkout was paid, when
+          that address paid for the same products since, or stopped or left
+          your emails. Its AI line, labeled as written by AI, comes from your
+          own product descriptions and is one reply of the add-on&apos;s month;
+          when those are used the same email goes without it. Each reminder is
+          one of your store&apos;s own emails for the month and is not sent once
+          those are used. You are the sender of these emails and responsible
+          for what your products&apos; pages say, which they repeat, and for
+          the postal address you give being one where you receive mail. Without
+          that address the box is not shown and nothing is sent.
+        </p>
         <p>
           A visit is one person opening your store on one day, however many
           of its pages they look at. People are told apart by the network
