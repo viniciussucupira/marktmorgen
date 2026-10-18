@@ -216,6 +216,20 @@ export default function PrivacyPage() {
           totals, never a person.
         </p>
         <p>
+          <strong className="text-black">Copying a store into another of your stores.</strong>{" "}
+          When a creator copies one of their stores into another store they
+          own, only what they made comes across: products, pages, forms with
+          their questions, funnels and, if they ask, the store page&apos;s
+          setup. No personal data of anyone comes across: no customer,
+          order, contact, email address on a list, answer to a form, review,
+          payment, payout detail or file. Social profiles that reach the
+          creator in person (an email address, WhatsApp or Telegram) stay on
+          the store they were set on. To let a copy go on after an
+          interruption without making anything twice, we keep a record of
+          its progress for seven days, holding the two stores, the
+          products&apos; ids and what is done, and nothing about a person.
+        </p>
+        <p>
           <strong className="text-black">A store&apos;s own people are not counted.</strong>{" "}
           Visits by the store&apos;s owner or a member of its team while signed
           in are left out of its counts. A creator can also mark a browser they

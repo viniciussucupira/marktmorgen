@@ -2139,6 +2139,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         title: "Your account, and more than one store",
         items: [
           { icon: "store", title: "Up to five stores", body: "Each with its own address, products, buyers, Stripe account and plan. You switch between them at the top of your studio." },
+          { icon: "copy", title: "One store copied into another", body: "Open a new store with everything you made in another: its products, pages, forms and funnels arrive as drafts, and its store page's setup if you ask. You see what it makes and what it leaves out before anything is written, and a copy that does not fit as a whole is refused. Customers, orders, contacts, emails, answers, reviews, payments, files and pictures never come across." },
           { icon: "key", title: "Passkeys, if you want them", body: "Sign in with the face, fingerprint or PIN that unlocks your phone or laptop. Up to ten per account, and the emailed link keeps working." },
           { icon: "alert", title: "A new browser, an email", body: "After your first sign-in, signing in from a browser your account has not used before sends you an email saying when, how and in which browser." },
           { icon: "refresh", title: "Purchase emails sent again", body: "From your list of sales, to the address the buyer paid with, never to one typed in." },

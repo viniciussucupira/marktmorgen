@@ -117,7 +117,7 @@ HighLevel and ClickFunnels are also covered row by row in [highlevel-gap-matrix.
 | Documents and contracts with e-signature (H2) | (a) | `lib/agreement-store.ts`, `lib/agreements.ts` (#552) |
 | HighLevel mobile app | (a) partly | The studio installs from the browser with push notifications: `lib/web-push.ts` |
 | Courses, communities, API | (a) | `lib/course.ts`, `lib/community.ts`, `lib/api-keys.ts` |
-| Copying a whole setup (snapshots) | (a) partly, (b) whole store | A funnel is copied by file or into another store (`lib/funnel-bundle.ts`). Copying a whole store's setup into another of the creator's stores would use only that store's data room. |
+| Copying a whole setup (snapshots) | (a) | A funnel is copied by file or into another store (`lib/funnel-bundle.ts`); a whole store into another of the creator's stores, as drafts: `lib/store-copy.ts` (docs/store-copy.md). |
 | Sub-accounts, SaaS mode, white-label app, rebilling | (d) | Reselling the platform to agencies' clients is another business. |
 | HIPAA compliance | (d) | Not offered, and no page may claim it. |
 | WhatsApp, dedicated email IPs, domain purchasing | (c) | Each is a supplier charge. |
@@ -166,8 +166,8 @@ This order is this review's judgment, not a measurement.
 1. **Newsletter issues published on the store** (Kajabi). Built in #554. A creator chooses, per sent email, to publish it as a page of the store, with a list of past issues: a reason to subscribe and a page to share. No new cost: the text is already kept, the pages are the store's public requests, and the index is counted in the data room.
 2. **Instagram AutoDM** (Stan). High value to creators who sell from Instagram. Blocked on the owner's Meta app review before any code can be used live.
 3. **More starting pages and funnels** (HighLevel templates). Content only; no cost per use. Every starting page must hold no invented testimonial, figure or urgency. Built in #555: three more starter funnels with first words (a membership, a free lesson, a paid call).
-4. **Copying a whole store's setup into another store of the same account** (HighLevel snapshots). Uses only the receiving store's data room.
+4. **Copying a whole store's setup into another store of the same account** (HighLevel snapshots). Uses only the receiving store's data room. Built: `lib/store-copy.ts`, `app/studio/copy` (docs/store-copy.md), charged to the receiving store's studio requests and data room, with no new per-use cost.
 5. **A scheduled report to an address outside the team** (HighLevel). One of the store's emails each time; low value, since team members already receive it, and it needs the owner's decision to send store numbers outside the team.
 6. **Social planner** (HighLevel). Blocked on each platform's app review.
 
-Built from this list: item 1 in #554 (`lib/letters.ts`, `app/[handle]/letters`, `tests/letters.test.ts`); item 3 in #555 (`lib/funnel-starters.ts`). Each other item will be its own tested pull request.
+Built from this list: item 1 in #554 (`lib/letters.ts`, `app/[handle]/letters`, `tests/letters.test.ts`); item 3 in #555 (`lib/funnel-starters.ts`); item 4 in the store copy (`lib/store-copy.ts`). Each other item will be its own tested pull request.

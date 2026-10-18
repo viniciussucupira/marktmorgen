@@ -494,6 +494,8 @@ export const FAMILIES: Record<string, Family> = {
   "nl:fshare:@lib/funnel-share-store.ts": { what: "Share links and their snapshots", line: "funnel-share" },
   "nl:fshare:n:@lib/funnel-share-store.ts": short("A link's reads counted a month", "day", 62, 128),
   "nl:fshares:@lib/funnel-share-store.ts": { what: "A store's share links", line: "funnel-share" },
+  "nl:copy:@lib/store-copy.ts": room("A copy of a whole store's progress, seven days, counted in the receiving store's data room until it goes", "lib/store-copy.ts"),
+  "nl:copy:lock:@lib/store-copy.ts": short("One step of a store copy at a time, a minute", "studio", 1, 128),
   "nl:fuse:@lib/funnel-share-store.ts": { what: "A store's imports and previews counted, by the share and the month", parts: [capped(64 * KEY, "A count a share link used and a month, two months.")] },
   "nl:fuse:m:@lib/funnel-share-store.ts": short("A store's uses counted a month", "day", 62, 128),
 

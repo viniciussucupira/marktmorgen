@@ -796,6 +796,15 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Can I copy a whole store into another of my stores?",
+        a: [
+          "Yes, if you own both. Open the store you want to copy, then Copy this store in your studio, choose the store to copy into and press See what it makes. It lists what it would make there and what it leaves out, and nothing is written until you press Copy.",
+          "Its products come across with their words, prices, schedules, checkout questions, boxes at checkout, offers after paying, long descriptions and pages of blocks, each kept off the store until you publish it there. Its own pages arrive out of the menu and kept back from visitors, its forms and quizzes with their questions and no answers, and its funnels off. Check the box and the store page's setup comes too, replacing that store's: the about line, colors and letters, links, social profiles, questions and answers, the order of its parts, its sections and its line of news.",
+          "Never copied: customers, orders, contacts, emails, form answers, reviews, numbers, payments, payout details, taxes, the domain, the email sender and its address, the team, integrations and keys, and every file and picture, which are the first store's: upload them again there. A call, a course, a private podcast, a product with options or licence keys is not copied, and the list says which. Both stores must sell in the same currency.",
+          "A copy is made in steps, each some of the receiving store's studio requests for its billing month, and everything it writes takes room in that store's data. When it does not fit as a whole, in products, pages, forms, funnels, data or the month's studio requests, nothing is written and the list says why. If a step stops, press the button again: the copy goes on from where it stopped and never makes anything twice.",
+        ],
+      },
+      {
         q: "Can I reuse a section on several pages?",
         a: [
           `Yes, on every plan. In the page editor, open Saved sections and save up to ${MAX_SECTION_BLOCKS} blocks of the page under a name; then add it to any other page of your store, product pages and your own pages alike. A headline at the top and the reviews cannot be in a section, because a page has one of each.`,

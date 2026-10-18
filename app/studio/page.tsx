@@ -3033,6 +3033,18 @@ export default async function StudioPage({
                 </section>
               ) : null}
 
+              {role === "owner" && view && view.owned > 1 ? (
+                <section aria-labelledby="copy-store-title" className="mt-8 border-t border-line pt-6">
+                  <h3 id="copy-store-title" className="font-semibold text-ink">Copy this store</h3>
+                  <p className="mt-2 text-sm text-ink-soft">
+                    Its products, pages, forms and funnels, and its store page&apos;s setup if you choose, into another of your stores as drafts. Never its customers, orders, contacts, emails, payments, files or pictures.
+                  </p>
+                  <Link href={studioPath(store, "", "copy")} className="link mt-3 inline-block text-sm font-semibold">
+                    Copy it into another store
+                  </Link>
+                </section>
+              ) : null}
+
               {store.extra && may("delete") ? (
                 <details className="mt-8 border-t border-line pt-6">
                   <summary className="cursor-pointer text-sm font-bold text-ink underline underline-offset-2">
