@@ -327,23 +327,9 @@ export function renderPackCostDecomposition(): string {
   push("");
   push("No rate in use is shown too high by its own page at its dearest tier. Two are higher than they must be **only if something is built**: list email sent by Amazon SES alone (option 4), and stored bytes proven to be in R2. One may be **too low**: video delivery at $0.005 a GB holds only while Bunny Stream's library stays on the Volume tier; on the Standard tier the dearest region is twelve times that. That is an open item for the owner (the library's setting in Bunny's dashboard, which nothing here can read), not a reason to lower anything.");
   push("");
-  push("## Option 1: a line on the renewal invoice");
+  push("## Option 1: a line on the renewal invoice (not offered)");
   push("");
-  push("The same amount added to the store's next renewal invoice instead of its own payment: it pays only the fee's percentages (no fixed fee, no dispute fees of its own: the invoice's own plan unit reserves those), but it is used before it is paid.");
-  push("");
-  push("| Pack | As its own prepaid payment | As a line on the renewal | Per unit as a line | Net as a line | Lost if the invoice is never paid | The same, ten times the amount: line price, per unit |");
-  push("| --- | --- | --- | --- | --- | --- | --- |");
-  for (const pack of PACKS) {
-    const l1 = lineOption(pack), l10 = lineOption(pack, 10);
-    push(`| ${pack.what} | ${usd(packPriceCents(pack))} | ${usd(l1.priceCents)} | ${perUnit(pack, l1.priceCents)} | ${pctOf(l1.unit.netBps)} | ${usd2(l1.unpaidLossCents)} | ${usd(l10.priceCents)}, ${perUnit(l10.pack, l10.priceCents)} |`);
-  }
-  push("");
-  push(`It removes factor 3 only, and only the pack's own fixed cents, so the email line is ${usd2((lineOption(EMAIL()).priceCents / EMAIL().units) * 1_000)} a thousand instead of ${usd2((email.priceCents / EMAIL().units) * 1_000)}. In exchange it creates the non-payment exposure of AGENTS.md ("funded exposures"): use that happened before an invoice that is never paid. Its bound, per store and per window:`);
-  push("");
-  push("- **A ceiling on what may be used before payment.** The window's figure can rise past the plan's by at most a set amount (one pack's worth, say); the meters that refuse past a plan's figure today (lib/email.ts, lib/traffic.ts, lib/order-admission.ts, lib/ai-spend.ts, lib/storage-quota.ts, lib/video-admission-rules.ts) would refuse past that ceiling the same way. A store whose last invoice is unpaid gets no ceiling until it pays.");
-  push(`- **Its cost per case** is the use's cost at that ceiling (the column above: ${usd2(lineOption(EMAIL()).unpaidLossCents)} for 2,500 list emails), and no fee, because a failed invoice charges none. It must be entered under the \`non_payment\` scope of the funded-exposure review (lib/funded-exposure-rules.ts) with a maximum number of cases a month, and paid from the reviewed company exposure ceiling added to the fixed costs, which raises the minimum paying base.`);
-  push("- **A card pre-authorization** would bound it by a hold instead; how long a hold lasts at Stripe was not read today, and a window lasts up to 31 days, so it is not evaluated here.");
-  push("- **What must be built:** the ceiling above each window's figure, invoice items added to the renewal invoice at Stripe, pausing the ceiling on `past_due`, the exposure review's `non_payment` case with its count, and the terms.");
+  push(`Not offered, by the owner's rule of 18 October 2026: the customer always pays first, then receives, so every pack, credit and per-use service is prepaid and stops at zero. Billed after use it would save only a pack's own fixed cents (2,500 list emails at ${usd(lineOption(EMAIL()).priceCents)} instead of ${usd(email.priceCents)}) and create a non-payment exposure to fund; \`lineOption\` keeps the arithmetic for the record.`);
   push("");
   push("## Option 2: larger packs");
   push("");
@@ -370,7 +356,7 @@ export function renderPackCostDecomposition(): string {
   push("");
   push("Each rate column is per the unit its pack prints (per 1,000 visits, per order with its emails, per 1,000 list emails, per writing job with 5 answers, per GB of storage for a window and its closing days, per video hour watched).");
   push("");
-  push("Credits do what larger packs do without asking the buyer to guess which resource they will need, and they stay prepaid: nothing is used before it is paid, so no non-payment exposure. What they need besides the packs:");
+  push("Credits do what larger packs do without asking the buyer to guess which resource they will need, and they stay prepaid: nothing is used before it is paid, and use stops automatically when the balance reaches zero. What they need besides the packs:");
   push("");
   push("- a balance per store, taken before each use the way the window's figures are taken today, and refused when empty (each meter would draw on the plan's figure first and the balance after);");
   push("- a fixed life for a credit (say twelve months), because an unused balance is an obligation; a refund only while none of it was used (Hazelsong's rule for packs), so the 14-day money-back refund's funded exposure (docs/funded-exposure-review.md) is unchanged in kind;");
@@ -406,7 +392,6 @@ export function renderPackCostDecomposition(): string {
   push("| --- | --- | --- |");
   const rows: [string, number][] = [
     ["The proposal: 2,500 in a prepaid pack", (email.priceCents / EMAIL().units) * 1_000],
-    ["Option 1: 2,500 as a line on the renewal (non-payment exposure)", (lineOption(EMAIL()).priceCents / EMAIL().units) * 1_000],
     ["Option 2: 100,000 in a prepaid pack", (sizeOption(EMAIL(), 40).priceCents / sizeOption(EMAIL(), 40).pack.units) * 1_000],
     ["Option 3: from a $250 prepaid credit", c250.centsPerDisplay],
     ["Option 3: from a $1,000 prepaid credit", bestEmail.centsPerDisplay],
@@ -418,7 +403,7 @@ export function renderPackCostDecomposition(): string {
   push("");
   push("## The one structural option that does the most");
   push("");
-  push(`**Prepaid credits bought in larger amounts (option 3).** It is the only option that lowers factors 3 and 4 for every resource at once while staying prepaid: no non-payment exposure to fund (option 1 adds one and saves only the fixed cents), and no bet by the buyer on one resource (option 2). At $250 a credit buys list email at ${usd2(c250.centsPerDisplay)} a thousand, at $1,000 ${usd2(bestEmail.centsPerDisplay)}, against ${usd2((email.priceCents / EMAIL().units) * 1_000)} in the proposal's pack; every other resource falls the same way (table above). Its floor is factors 1 and 2, about ${x(el.floorAndTax * el.percentages)} a unit's cost, which no structure removes while the 60% rule and the receiving model stand.`);
+  push(`**Prepaid credits bought in larger amounts (option 3).** It is the only option that lowers factors 3 and 4 for every resource at once while staying prepaid, as the owner's rule requires (bought before use, stopping at zero), and with no bet by the buyer on one resource (option 2). At $250 a credit buys list email at ${usd2(c250.centsPerDisplay)} a thousand, at $1,000 ${usd2(bestEmail.centsPerDisplay)}, against ${usd2((email.priceCents / EMAIL().units) * 1_000)} in the proposal's pack; every other resource falls the same way (table above). Its floor is factors 1 and 2, about ${x(el.floorAndTax * el.percentages)} a unit's cost, which no structure removes while the 60% rule and the receiving model stand.`);
   push("");
   push(`For email specifically the larger lever is the supplier, not the structure: sending what a credit buys through Amazon SES alone (option 4) takes the $1,000 credit's rate to ${usd2(sesCredit(100_000))} a thousand. Even so it stays ${x(sesCredit(100_000) / HIGHLEVEL_PER_THOUSAND_CENTS)} HighLevel's rate: a creator who sends a lot of email will still compare it with ClickFunnels' and Kajabi's allowances.`);
   push("");
