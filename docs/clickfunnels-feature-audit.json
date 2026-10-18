@@ -609,10 +609,15 @@
       "source": "S21",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Shared copies become independent; frameworks carry other resources.",
-      "evidencePath": "lib/funnel-types.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Portable native funnel bundles were not established.",
-      "improvement": "Export bounded versioned bundles with compatibility and repair reports."
+      "evidencePath": "lib/funnel-bundle.ts",
+      "marktmorgenEvidence": "D",
+      "current": "A funnel is written as a versioned file (format marktmorgen-funnel, schema 1), capped by plan in bytes, read strictly (unknown format, later version, unknown block or field, scripts and pictures refused), and brought in as a draft with a preview that maps its products to the receiver's own and lists what to fix or what stops it. It goes by file, by a share link (hashed at rest, revocable, expiring, capped by plan and by month) or, since 18 October 2026, as a copy into another store of the same account (the account's owner only; a teammate or anyone else's store is refused). Only words and shape go: never pictures, files, buyers, contacts, answers, reviews, prices, product, store or payment ids; a share to another creator also leaves out the sender's about text, videos, deadlines and quotes. Every read and write is inside the plans' priced monthly figures. Not browser, load or live-provider evidence.",
+      "improvement": "Measure the copy and import journeys in clicks against ClickFunnels' share flow in an authenticated session.",
+      "testEvidence": [
+        "tests/funnel-share.test.ts",
+        "tests/funnel-copy-account.test.ts",
+        "tests/funnel-sharing-review.test.ts"
+      ]
     },
     {
       "id": "F06",
@@ -1653,9 +1658,9 @@
     "status": "Not certified; do not activate commercial entitlements from this report"
   },
   "evidenceCounts": {
-    "D": 29,
+    "D": 30,
     "C/U": 31,
-    "U": 10
+    "U": 9
   },
   "verification": {
     "reviewedAt": "2026-10-17 UTC",
@@ -1675,6 +1680,11 @@
         "id": "F23",
         "date": "2026-10-18 UTC",
         "note": "Moved U to D on tests/workflow-retries.test.ts and tests/workflow-branching.test.ts. The evidence path is cited at main, not at sourceRevision, where lib/flow-retry.ts did not exist yet."
+      },
+      {
+        "id": "F05",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/funnel-share.test.ts, tests/funnel-copy-account.test.ts and tests/funnel-sharing-review.test.ts. The evidence path is cited at main, not at sourceRevision, where lib/funnel-bundle.ts did not exist yet."
       }
     ]
   }
