@@ -38,6 +38,7 @@ import { SITE_URL } from "@/lib/site-url";
 import { ASK_DUE_KEY, type AskEntry, dueAt, readAskMember } from "@/lib/review-ask";
 import { mintReviewLink, provePurchase } from "@/lib/review-proof";
 import { readReview, reviewId } from "@/lib/reviews";
+import { REVIEW_SITES, parseReviewElsewhere } from "@/lib/review-elsewhere";
 import { type Store, storeForHandle } from "@/lib/store";
 import { speech } from "@/lib/buyer-words";
 import { givingWords } from "@/lib/buyer-words/giving";
@@ -123,6 +124,8 @@ export function requestText(store: Store, titles: string[], paidAt: number, link
   const name = store.mail?.fromName || store.name;
   const g = givingWords(store.language);
   const what = titles.length === 1 ? titles[0] : g.listAnd(titles.slice(0, -1).join(", "), titles[titles.length - 1]);
+  // The creator's public review page, the same in every request (lib/review-elsewhere.ts): read again here, never trusted as stored.
+  const elsewhere = parseReviewElsewhere(store.reviewAsk.elsewhere?.url);
   return {
     subject: g.askSubject(titles[0]).slice(0, 150),
     body: [
@@ -130,6 +133,7 @@ export function requestText(store: Store, titles: string[], paidAt: number, link
       "",
       g.askHow,
       link,
+      ...(elsewhere ? ["", g.askElsewhere(name, REVIEW_SITES[elsewhere.site].name), elsewhere.url] : []),
       "",
       g.askShows(name),
       "",
