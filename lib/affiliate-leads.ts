@@ -30,6 +30,7 @@
 import { createHash } from "node:crypto";
 import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { LockBusyError, withLock } from "@/lib/redis-lock";
 import { DataRoomError, giveData, needData } from "@/lib/store-data";
 import { dataBytes } from "@/lib/store-data-rules";
 import type { Store } from "@/lib/store";
@@ -53,6 +54,20 @@ const LEADS_SLOT = "aff:leads";
 export const MAX_LEAD_DECISIONS = 200;
 /** Bookings whose moves are read at once when a decision needs them. */
 const MOVES_AT_ONCE = 200;
+/**
+ * The lock a decision or a person's deletion holds while it reads the leads
+ * and writes them back (docs/security-audit-2026-10-18.md, MM-SA-09): ten
+ * seconds at the most, waited for up to five. Both hands read, change and
+ * write whole records, so without it an approval that had read a lead before
+ * the person's deletion wrote their address back, a deletion that had read it
+ * before its approval wrote it back open, and an approval that had read it
+ * before a reversal paid a lead marked fake. Its own family, so the store's
+ * data room never counts it (lib/data-families.ts). The lock's own two
+ * commands ride inside the studio request (or the erasure) that decides.
+ */
+const leadsLockKey = (statsId: string) => `nl:aff:leads:lock:${statsId}`;
+const LOCK_SECONDS = 10;
+const LOCK_WAIT_MS = 5_000;
 
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 
@@ -200,7 +215,7 @@ export async function bookingEnds(leads: LeadRecord[]): Promise<Map<string, numb
 }
 
 export type LeadDecision = "approve" | "reverse" | "reopen";
-export type DecisionResult = { ok: true; changed: number } | { ok: false; reason: "unknown" | "reason" | "not_ready" };
+export type DecisionResult = { ok: true; changed: number } | { ok: false; reason: "unknown" | "reason" | "not_ready" | "busy" };
 
 /**
  * The creator's decision on leads, one or many at once:
@@ -218,29 +233,38 @@ export type DecisionResult = { ok: true; changed: number } | { ok: false; reason
  */
 export async function decideLeads(store: Store, ids: string[], decision: LeadDecision, why: string = ""): Promise<DecisionResult> {
   if (!store.statsId || !isRedisConfigured()) return { ok: false, reason: "unknown" };
+  const statsId = store.statsId;
   const wanted = [...new Set(ids.filter((id) => /^[0-9a-f]{24}$/.test(id)))].slice(0, MAX_LEAD_DECISIONS);
   if (!wanted.length) return { ok: false, reason: "unknown" };
   if (decision === "reverse" && !(LEAD_REASONS as readonly string[]).includes(why)) return { ok: false, reason: "reason" };
-  const all = await readLeads(store);
-  const byId = new Map(all.map((l) => [l.id, l]));
-  const chosen = wanted.map((id) => byId.get(id)).filter((l): l is LeadRecord => Boolean(l));
-  if (chosen.length !== wanted.length) return { ok: false, reason: "unknown" };
-  const now = Math.floor(Date.now() / 1000);
-  let next: LeadRecord[];
-  if (decision === "approve") {
-    // Judged as the book judges them: the caps, the budget and a booking's call where its buyer moved it.
-    const status = new Map(settleLeads(all, now, () => 0, await bookingEnds(chosen)).map((s) => [s.lead.id, s.status]));
-    if (chosen.some((l) => status.get(l.id) !== "needs approval")) return { ok: false, reason: "not_ready" };
-    next = chosen.map((l) => ({ ...l, state: "approved", d: now, why: "" }));
-  } else if (decision === "reverse") {
-    if (chosen.some((l) => l.state === "reversed")) return { ok: false, reason: "not_ready" };
-    next = chosen.map((l) => ({ ...l, state: "reversed", d: now, why: why as LeadReason }));
-  } else {
-    if (chosen.some((l) => l.state !== "reversed")) return { ok: false, reason: "not_ready" };
-    next = chosen.map((l) => ({ ...l, state: "open", d: 0, why: "" }));
+  try {
+    // Read, judged and written under the leads' lock, so nothing another hand wrote meanwhile is written over (MM-SA-09).
+    return await withLock(leadsLockKey(statsId), LOCK_SECONDS, LOCK_WAIT_MS, async (): Promise<DecisionResult> => {
+      const all = await readLeads(store);
+      const byId = new Map(all.map((l) => [l.id, l]));
+      const chosen = wanted.map((id) => byId.get(id)).filter((l): l is LeadRecord => Boolean(l));
+      if (chosen.length !== wanted.length) return { ok: false, reason: "unknown" };
+      const now = Math.floor(Date.now() / 1000);
+      let next: LeadRecord[];
+      if (decision === "approve") {
+        // Judged as the book judges them: the caps, the budget and a booking's call where its buyer moved it.
+        const status = new Map(settleLeads(all, now, () => 0, await bookingEnds(chosen)).map((s) => [s.lead.id, s.status]));
+        if (chosen.some((l) => status.get(l.id) !== "needs approval")) return { ok: false, reason: "not_ready" };
+        next = chosen.map((l) => ({ ...l, state: "approved", d: now, why: "" }));
+      } else if (decision === "reverse") {
+        if (chosen.some((l) => l.state === "reversed")) return { ok: false, reason: "not_ready" };
+        next = chosen.map((l) => ({ ...l, state: "reversed", d: now, why: why as LeadReason }));
+      } else {
+        if (chosen.some((l) => l.state !== "reversed")) return { ok: false, reason: "not_ready" };
+        next = chosen.map((l) => ({ ...l, state: "open", d: 0, why: "" }));
+      }
+      await redisPipeline(next.map((l) => ["HSET", leadsKey(statsId), l.id, JSON.stringify(l)]));
+      return { ok: true, changed: next.length };
+    });
+  } catch (error) {
+    if (error instanceof LockBusyError) return { ok: false, reason: "busy" };
+    throw error;
   }
-  await redisPipeline(next.map((l) => ["HSET", leadsKey(store.statsId as string), l.id, JSON.stringify(l)]));
-  return { ok: true, changed: next.length };
 }
 
 /**
@@ -252,13 +276,18 @@ export async function decideLeads(store: Store, ids: string[], decision: LeadDec
  */
 export async function forgetLeadPerson(store: Store, email: string): Promise<number> {
   if (!store.statsId || !isRedisConfigured() || !email) return 0;
-  const id = leadId(store.statsId, email);
-  const [raw] = await redisPipeline([["HGET", leadsKey(store.statsId), id]]);
-  const lead = parseLead(raw);
-  if (!lead || !lead.email) return 0;
-  const json = JSON.stringify({ ...lead, email: "" });
-  await redisPipeline([["HSET", leadsKey(store.statsId), id, json]]);
-  const freed = dataBytes([id, String(raw)], 1) - dataBytes([id, json], 1);
-  if (freed > 0) await giveData(store, [{ slot: LEADS_SLOT, bytes: freed }]);
-  return 1;
+  const statsId = store.statsId;
+  const id = leadId(statsId, email);
+  // Under the leads' lock, so a decision being written at the same moment cannot write the address back (MM-SA-09).
+  // A busy lock throws, and the erasure reports this part as not done and tries again (lib/person-erasure.ts).
+  return withLock(leadsLockKey(statsId), LOCK_SECONDS, LOCK_WAIT_MS, async () => {
+    const [raw] = await redisPipeline([["HGET", leadsKey(statsId), id]]);
+    const lead = parseLead(raw);
+    if (!lead || !lead.email) return 0;
+    const json = JSON.stringify({ ...lead, email: "" });
+    await redisPipeline([["HSET", leadsKey(statsId), id, json]]);
+    const freed = dataBytes([id, String(raw)], 1) - dataBytes([id, json], 1);
+    if (freed > 0) await giveData(store, [{ slot: LEADS_SLOT, bytes: freed }]);
+    return 1;
+  });
 }
