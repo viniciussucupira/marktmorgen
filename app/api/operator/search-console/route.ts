@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE, emailForSession } from "@/lib/auth";
-import { fromAnotherSite } from "@/lib/request-guard";
+import { fromAnotherSite, limited } from "@/lib/request-guard";
 import { originFrom } from "@/lib/request-origin";
 import { beginSearchConsole, disconnectSearchConsole, isOperator } from "@/lib/search-console";
 
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   if (fromAnotherSite(request)) return notFound;
   const email = await emailForSession(request.cookies.get(SESSION_COOKIE)?.value ?? "").catch(() => null);
   if (!isOperator(email)) return notFound;
-  const form = await request.formData().catch(() => null);
+  const form = await limited(request, 4_000).then((r) => r.formData()).catch(() => null);
   const origin = originFrom(request);
   if (form?.get("action") === "disconnect") {
     await disconnectSearchConsole();

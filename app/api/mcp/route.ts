@@ -1,4 +1,5 @@
 import { apiStore } from "@/lib/api-guard";
+import { limited } from "@/lib/request-guard";
 import { products, storeInfo } from "@/lib/api-read";
 import { readNumbers, summaryOf } from "@/lib/stats-report";
 import type { StatsData } from "@/lib/stats";
@@ -103,10 +104,14 @@ export async function GET() {
   return new Response("This MCP server answers POST only.", { status: 405, headers: { Allow: "POST" } });
 }
 
+/** The most one JSON-RPC message may weigh: far past any call a tool takes. */
+const MAX_RPC_BYTES = 16_000;
+
 export async function POST(request: Request) {
   let message: Rpc;
   try {
-    message = (await request.json()) as Rpc;
+    // Read only as far as MAX_RPC_BYTES, whether or not a length was declared (docs/security-audit-2026-10-18.md, MM-SA-10).
+    message = (await (await limited(request, MAX_RPC_BYTES)).json()) as Rpc;
   } catch {
     return failure(null, -32700, "Parse error");
   }

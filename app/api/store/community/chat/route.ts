@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { fromAnotherSite } from "@/lib/studio-route";
+import { limited } from "@/lib/request-guard";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { CREATOR, readMembers, within } from "@/lib/community";
 import { communityViewer } from "@/lib/community-access";
@@ -62,7 +63,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   if (fromAnotherSite(request)) return new Response("forbidden", { status: 403 });
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+  // Read only as far as 8_000 bytes, whether or not a length was declared (docs/security-audit-2026-10-18.md, MM-SA-10).
+  const body = (await limited(request, 8_000).then((r) => r.json()).catch(() => null)) as Record<string, unknown> | null;
   if (!body) return Response.json({ ok: false, error: "bad" }, { status: 400 });
   const text = (value: unknown, max: number) => (typeof value === "string" ? value.trim().slice(0, max) : "");
 

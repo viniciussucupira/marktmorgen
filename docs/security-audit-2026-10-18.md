@@ -29,12 +29,13 @@ that no fault remains.
 | MM-SA-05 | Medium | Strangers typing addresses into a store's sign-up box, waitlists or affiliate form could spend the month's access emails, and buyers were then sent no link to what they had bought | Fixed: #567 |
 | MM-SA-06 | Low | The sign-in link's per-address throttle counts strangers' requests | Listed, not fixed |
 | MM-SA-07 | Low | Buyers' links (downloads, orders, a private feed) travel in query strings | Listed, not fixed |
-| MM-SA-08 | Low | Product pictures are kept outside the storage figure and never swept when unattached | Listed, not fixed |
+| MM-SA-08 | Low | Pictures (products, links, pages, emails, reviews) are kept outside the storage figure and never swept when unattached: what a store keeps of them grows month over month, and no line of the cost registry prices it | Owner's decision needed |
 | MM-SA-09 | Low | An affiliate's leads were decided by read, change and write without a lock: an approval racing a person's deletion wrote their address back, a deletion racing an approval wrote the lead back open, and an approval racing a reversal paid a lead marked fake | Fixed: #569 |
-| MM-SA-10 | Low | The v1 API reads a body with no declared length whole before checking its own ceiling | Listed, not fixed |
+| MM-SA-10 | Low | A body with no declared length was read whole before its ceiling was checked: the v1 API, the MCP server, the community's chat, push and messages doors (anybody can post to them), the weekly email's switch and the operator's Search Console form | Fixed: #570 |
 | MM-SA-11 | Info | Pacing by connection is per machine: many machines at once are the host firewall's to stop | Owner's step |
+| MM-SA-12 | Info | An agreement's signer types the address it was sent to, which the agreement's own text prints: it proves holding the emailed link, not more | Left as it is |
 
-The checks for the six fixed findings are `tests/security/*.redis-run.ts`,
+The checks for the seven fixed findings are `tests/security/*.redis-run.ts`,
 run by `scripts/security-redis.mjs` through `scripts/test_security_redis.py`
 in the `form-opportunity-redis` job of `.github/workflows/product-checks.yml`
 ("Actual Redis security checks"). Each fails on the code before its fix and
@@ -228,17 +229,37 @@ origin only, never the path or the query. **Decision: left as it is.** A
 podcast app and a mail client can only follow an address; moving the token
 after `#` would break both.
 
-### MM-SA-08: product pictures outside the storage figure
+### MM-SA-08: pictures outside the storage figure
 
-A product picture (`app/api/store/image/upload`) is written to the store's
-picture folder, which the storage figure (`lib/storage-quota.ts`) does not
-read, and a picture uploaded but never attached is never swept. Each upload is
-a studio request, so the month's studio figure bounds how many (2,000 a month
-on Store, at most a megabyte each), but what is kept grows month over month
-until the store closes. **Decision: the owner's.** Either count the picture
-folder in the storage figure or sweep unattached pictures after a day; both
-change what a plan holds, and the storage line of the cost registry must move
-with it.
+**Where.** Every picture the studio or a buyer adds is written under the
+account's picture folder, `images/<folder>/` (`lib/product-image.ts`,
+`imagePath`): a product's (`app/api/store/image/upload`), a link's, a page's
+blocks (`app/api/store/page`, `app/api/store/site-page`), a picture made by
+the AI writer (`app/api/store/ai`), an email's (`lib/mail-pictures.ts`) and a
+review's photo (`lib/review-photo.ts`). The storage figure
+(`lib/storage-quota.ts`, `storageUsed`) reads `stores/<folder>/` and the vault
+only, so none of these counts in it; one replaced or taken off is deleted, but
+one uploaded and never attached, or left in a page that was edited, is never
+swept. They go only when the store closes.
+
+**What it can cost.** Each picture door is a studio request (2,000 a month on
+Store, 5,000 on Pro, 15,000 on Scale) of at most a megabyte, so a store can add
+about 2 GB a month on Store and 15 GB on Scale, and keep all of it month after
+month: after a year about $0.55 a month of storage on Store and $4.14 on
+Scale, growing for as long as the store pays. A review photo (400 KB) is a
+buyer action, an email picture (300 KB) a studio request. **No line of
+`tests/plan-cost-registry.ts` prices this**, and under the owner's rule a cost
+no figure bounds counts as failing.
+
+**Decision needed from the owner** (it changes what a plan holds, so it is not
+made here): (a) count the picture folder inside the plan's storage figure, so
+the storage line already priced covers it and a picture door is refused past
+the figure, exactly as a file is; or (b) give pictures a figure of their own,
+a place taken before each door is given and given back when one is deleted or
+a door goes unused for a day, as the community's pictures have
+(`lib/community-picture-rules.ts`), with its own line in the registry. The
+audit recommends (a): one figure, already priced, and no visible limit
+lowered. Until one is chosen, MM-SA-08 stays open in this document.
 
 ### MM-SA-09: affiliate lead approvals without a lock (fixed, #569)
 
@@ -268,14 +289,32 @@ expiring by itself and never counted in the data room; its two commands ride
 inside the studio request or the erasure that decides, so no cost-table
 figure moves.
 
-### MM-SA-10: bodies with no declared length
+### MM-SA-10: bodies with no declared length (fixed, #570)
 
-`proxy.ts` refuses a body over the ceiling by its declared length, and one
-sent with `transfer-encoding` and no length. The v1 API's `readApiBody`
-(`lib/api-guard.ts`) then reads the body whole before checking its own
-ceiling, so a body with no declared length at all is read before it is
-refused. Only a holder of an API key reaches it, and the host limits a
-function's body to 4.5 MB. **Decision: left as it is.**
+**Where.** `readApiBody` (`lib/api-guard.ts`), `app/api/mcp`,
+`app/api/store/community/chat`, `.../community/push`,
+`.../community/messages`, `app/api/store/weekly` and
+`app/api/operator/search-console`.
+
+`proxy.ts` refuses a body over its ceiling by its declared length, and one
+sent chunked with none. A body sent over HTTP/2 needs neither, and these
+readers took it whole (`request.text()`, `.json()`, `.formData()`) before
+looking at its size: each request then held up to the host's own ceiling,
+4.5 MB, in a function's memory and parsed it. The v1 API needs a key, the
+weekly switch its link and the Search Console form the operator; the MCP
+server and the three community doors are read before anything else is asked,
+so anybody could send them.
+
+**Proof.** `tests/security/bounded-bodies.redis-run.ts` sends each of the real
+handlers a two-megabyte body with no length and counts what it pulled: on the
+old code every one read all of it (5 of 6 checks failed).
+
+**Fix (#570).** Each reads through `limited` (`lib/request-guard.ts`), which
+stops at its ceiling whether or not a length was declared: 4,000 bytes for
+the v1 API (now counted in bytes, not characters), 16,000 for an MCP message,
+8,000 for the chat and push, 32,000 for a private message (its 2,000
+characters written out as a form), 2,000 for the weekly switch and 4,000 for
+the Search Console form. No store command is added.
 
 ## Info
 
@@ -287,6 +326,47 @@ bounds what they can cost but not whether a store's buyers are kept waiting.
 **Owner's step:** add a rate rule in Vercel → the project → Firewall for
 `/api/store/*` and `/api/image/*`, per address, and turn on Attack Challenge
 Mode during an attack.
+
+### MM-SA-12: what an agreement's signature shows
+
+To sign, the person types their name and the address the agreement was sent
+to (`lib/agreement-store.ts`, `signAgreement`). The agreement's own text
+prints that address ("To: name <address>", `agreementText`), so typing it
+proves only that the signer holds the link, which is what the emailed link
+already proves: the id is 128 random bits, sent only to that address, on a
+page that is never indexed and whose views are paced and counted. **Decision:
+left as it is.** The link is the proof, as with the e-signature services that
+email one; the page and the record say what was recorded and claim nothing
+past it (`docs/agreements-esign.md`).
+
+## Second pass, after the first fixes
+
+What changed on `main` after the first pass was read again on 18 Oct 2026:
+the agreements and e-signatures of #552 and #558, the three starter funnels
+of #555, the published emails of #554, the store copy of #561 and the
+prepaid-credits analysis of #563. Besides MM-SA-12, nothing was found:
+
+- **Agreements.** The id is 128 random bits; a page view and a signature are
+  paced per connection and counted in the store's window; a browser signed in
+  to the store's studio cannot sign; a signature lands only on the latest,
+  unsigned version whose fingerprint the page showed, under the agreement's
+  lock; every email is one of the store's own for the month, its headers
+  cleaned, its subject cut; the signed copy's HTML is escaped and loads
+  nothing. Creating, revising and sending need the role that may email for
+  the store, and each send is bounded (eight an agreement, a day apart).
+- **Published emails.** Only an email this store sent can be published, by a
+  role that may email for it; the page draws it with `bodyHtml`, every word
+  escaped and only https links, and each view is one of the store's counted
+  requests.
+- **The store copy.** Only the account's owner copies, from one of its stores
+  into another of the same address (`ownTarget`); every step is charged to the
+  other store's studio requests before it reads or writes, takes its room in
+  that store's data room first, runs under that store's lock, and writes only
+  ids worked out from the copy's own, so a retry adds nothing. Products come
+  across hidden, without files, pictures, keys, calls, courses or podcasts;
+  nothing of customers, orders, payments or the team comes across.
+- **Funnels and credits.** #555 adds static starter text, #563 an analysis:
+  neither adds a route or a write.
 
 ## What was checked and held
 
@@ -334,4 +414,6 @@ Mode during an attack.
 ## Owner's steps
 
 1. Add the Firewall rate rule in MM-SA-11.
-2. Decide MM-SA-08 (count the picture folder, or sweep unattached pictures).
+2. Decide MM-SA-08: count the picture folder in the plan's storage figure (the
+   audit's recommendation), or give pictures a figure and a registry line of
+   their own.
