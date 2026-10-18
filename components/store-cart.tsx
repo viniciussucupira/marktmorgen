@@ -97,6 +97,11 @@ type Line = { id: string; title: string; href: string; price: string; ok: boolea
  * so a pick is never read as a count of buyers.
  */
 type Suggestion = { id: string; title: string; href: string; price: string; why: string; kind?: "pick" | "bought" };
+/**
+ * The creator's own bundle that holds what is in the cart and makes it cost
+ * less (lib/cart-bundle.ts): the swap takes out what it holds and puts it in.
+ */
+type BundleSwap = { id: string; title: string; href: string; price: string; holds: string; save: string; replaces: string[] };
 
 /**
  * The cart's button, at the top of the page once something is in it, and
@@ -135,6 +140,7 @@ export function CartButton({
   const [deal, setDeal] = useState<{ percent: number; saved: string } | null>(null);
   const [next, setNext] = useState<{ more: number; percent: number } | null>(null);
   const [suggest, setSuggest] = useState<Suggestion[]>([]);
+  const [bundle, setBundle] = useState<BundleSwap | null>(null);
   const panel = useRef<HTMLDivElement>(null);
   const wanted = ids.join(",");
 
@@ -143,13 +149,14 @@ export function CartButton({
     let live = true;
     fetch(`/api/store/cart?${new URLSearchParams({ handle, ids: wanted })}`)
       .then((r) => r.json())
-      .then((data: { ok?: boolean; items?: Line[]; total?: string; deal?: { percent: number; saved: string } | null; next?: { more: number; percent: number } | null; suggest?: Suggestion[] }) => {
+      .then((data: { ok?: boolean; items?: Line[]; total?: string; deal?: { percent: number; saved: string } | null; next?: { more: number; percent: number } | null; suggest?: Suggestion[]; bundle?: BundleSwap | null }) => {
         if (!live || !data.ok) return;
         setLines(data.items ?? []);
         setTotal(data.total ?? "");
         setDeal(data.deal ?? null);
         setNext(data.next ?? null);
         setSuggest(data.suggest ?? []);
+        setBundle(data.bundle ?? null);
       })
       .catch(() => {});
     return () => {
@@ -215,6 +222,34 @@ export function CartButton({
                   </li>
                 ))}
               </ul>
+              {bundle && !ids.includes(bundle.id) && bundle.replaces.every((id) => ids.includes(id)) ? (
+                <div className="mt-2 rounded-2xl p-3" style={{ background: "var(--st-accent-soft)" }} data-cart-bundle="">
+                  <p className="text-sm font-semibold">{c.bundleHead}</p>
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <span className="min-w-0">
+                      <a href={bundle.href} className="st-title-link block text-sm font-semibold">{bundle.title}</a>
+                      <span className="st-muted block text-xs">{bundle.holds}</span>
+                      <span className="block text-xs font-semibold" style={{ color: "var(--st-accent-text)" }}>{bundle.save}</span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2">
+                      <span className="st-price text-sm tabular-nums">{bundle.price}</span>
+                      <button
+                        type="button"
+                        className="btn st-btn-ghost btn-sm"
+                        aria-label={c.swapFor(bundle.title)}
+                        onClick={() => {
+                          // Read again at the press: another tab may have changed the cart.
+                          const now = read(handle);
+                          if (!bundle.replaces.every((id) => now.includes(id))) return;
+                          write(handle, [...now.filter((id) => !bundle.replaces.includes(id) && id !== bundle.id), bundle.id]);
+                        }}
+                      >
+                        {c.swap}
+                      </button>
+                    </span>
+                  </div>
+                </div>
+              ) : null}
               {ids.length < MAX_CART
                 ? (["pick", "bought"] as const).map((kind) => {
                     const offered = suggest.filter((item) => (item.kind ?? "bought") === kind && !ids.includes(item.id));
