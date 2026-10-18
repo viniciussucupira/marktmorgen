@@ -59,28 +59,45 @@ TODAY = [CID[i] for i in D["todayIds"]]
 G = np.array(D["bins"]["middles"], dtype=float)
 POPS = {p["id"]: p for p in D["populations"]}
 PROC_BPS, PROC_FIXED = D["processing"]["bps"] / 10_000, D["processing"]["fixedCents"] / 100
-KEEP = D["commissionKeep"]["sizing"]
+KEEPS = dict(sizing=D["commissionKeep"]["sizing"], gate=D["commissionKeep"]["mostTax"])
+# The reading every net is taken under: "sizing" (the most favorable reading the owner may later confirm, which
+# sizes every limit) or "gate" (the most-tax reading of lib/tax-gate.ts). Only the company Monte Carlo is run under
+# both; everything else is the sizing reading, and the document says so beside every figure.
+READING = ["sizing"]
+
+
+def keep():
+    return KEEPS[READING[0]]
 COMPS = D["competitors"]
 PACKS = {p["id"]: p for p in D["packs"]}
 D_COMMISSIONS = {t: sorted({c["commissionBps"] for c in CANDS if c["template"] == t}) for t in TEMPLATES}
 USAGE_KEYS = [0, 15, 30, 60, 100]
 
 
-def base_params(pop="platform-customers", eta=3.0, asc=0.0):
+def base_params(pop="platform-customers", eta=None, asc=None):
+    eta = M["base"]["eta"] if eta is None else eta
+    asc = M["base"]["asc"] if asc is None else asc
     return dict(pop=pop, eta=eta, asc=asc, paymentsAsc=M["paymentsAsc"], hassle=M["hassleUsd"],
                 aov=M["aovUsd"]["base"], conv=M["conversion"]["base"], epo=M["emailsPerOrder"]["base"],
-                usage=M["usage"]["base"], churn=tuple(M["churn"]["base"]), horizon=M["horizon"]["base"],
+                usage=M["usage"]["base"], yearly=M["yearlyShare"]["base"], churn=tuple(M["churn"]["base"]), horizon=M["horizon"]["base"],
                 weights=np.array(POPS[pop]["weights"], dtype=float))
 
 
-def net_at(c, u):
-    """The subscription's monthly net, in dollars, at a usage share, interpolated between the levels the margin code computed."""
-    pts = [c["netMonthCents"][f"u{k}"] for k in USAGE_KEYS]
+def interp(table, u):
+    pts = [table[f"u{k}"] for k in USAGE_KEYS]
     x = u * 100
     for a, b, na, nb in zip(USAGE_KEYS, USAGE_KEYS[1:], pts, pts[1:]):
         if x <= b:
             return (na + (nb - na) * (x - a) / (b - a)) / 100
     return pts[-1] / 100
+
+
+def net_at(c, u, yearly):
+    """The subscription's net a month, in dollars, at a usage share, interpolated between the levels the margin code
+    computed: a share `yearly` of payers on the yearly payment (a twelfth of its net a month), the rest monthly; under
+    the reading READING."""
+    m, y = ("netMonthCents", "netYearMonthCents") if READING[0] == "sizing" else ("gateNetMonthCents", "gateNetYearMonthCents")
+    return (1 - yearly) * interp(c[m], u) + yearly * interp(c[y], u)
 
 
 def needs(p):
@@ -116,7 +133,8 @@ def pack_cost(over, small, large):
         ns = max(0, int(math.ceil(rem / s["units"])))
         price = nl * l["priceCents"] + ns * s["priceCents"]
         if best is None or price < best[0]:
-            best = (price, nl * l["netCents"] + ns * s["netCents"], nl + ns)
+            nk = "netCents" if READING[0] == "sizing" else "gateNetCents"
+            best = (price, nl * l[nk] + ns * s[nk], nl + ns)
     return best[0] / 100, best[1] / 100, best[2]
 
 
@@ -125,7 +143,7 @@ _ours_cache = {}
 
 def ours(j, p, with_packs):
     """For candidate j: all-in cost, monthly profit, and feasibility in each bin."""
-    key = (j, with_packs, p["aov"], p["conv"], p["epo"], p["usage"])
+    key = (j, with_packs, p["aov"], p["conv"], p["epo"], p["usage"], p["yearly"], READING[0])
     if key in _ours_cache:
         return _ours_cache[key]
     c = CANDS[j]
@@ -133,7 +151,7 @@ def ours(j, p, with_packs):
     orders, visits, emails = needs(p)
     comm = c["commissionBps"] / 10_000
     cost = c["monthCents"] / 100 + comm * G + PROC_BPS * G + PROC_FIXED * orders
-    prof = np.full(len(G), net_at(c, p["usage"])) + KEEP * comm * G
+    prof = np.full(len(G), net_at(c, p["usage"], p["yearly"])) + keep() * comm * G
     ok = np.ones(len(G), dtype=bool)
     head = np.full(len(G), c["headroomMonthCents"] / 100)
     for b in range(len(G)):
@@ -167,7 +185,7 @@ _head_cache = {}
 def headroom(j, p, with_packs):
     """What one subscriber of candidate j leaves above 60% of its revenue a month at full use, in each bin: the plan's own room (headroomMonthCents) and the room of the packs it buys there, each at full use; the commission counted as zero."""
     ours(j, p, with_packs)
-    return _head_cache[(j, with_packs, p["aov"], p["conv"], p["epo"], p["usage"])]
+    return _head_cache[(j, with_packs, p["aov"], p["conv"], p["epo"], p["usage"], p["yearly"], READING[0])]
 
 
 def cash_path(net, new_per_month, fixed, months, churn):
@@ -257,7 +275,7 @@ def evaluate(design, with_packs, p, detail=False):
     subs = 1000 * float(np.sum(w * P.sum(axis=0)))
     comm = 0.0
     for k, j in enumerate(design):
-        comm += 1000 * float(np.sum(w * P[k] * lts[k] * KEEP * CANDS[j]["commissionBps"] / 10_000 * G))
+        comm += 1000 * float(np.sum(w * P[k] * lts[k] * keep() * CANDS[j]["commissionBps"] / 10_000 * G))
     return profit, subs, (comm / profit if profit > 0 else 0.0)
 
 
@@ -494,8 +512,11 @@ def poisson_inverse(u, lam):
     return n
 
 
-def company_draw(p, reach, ramp, fixed_usd, Dm, pk, used, U, simulate=True):
-    """One draw: for every design, the expected 60-month cash, and (simulate) one realization: cash, whether month 60's room above 60% covers the fixed costs."""
+def company_draw(p, reach, ramp, fixed_usd, Dm, pk, used, U, simulate=True, trough=False):
+    """One draw: for every design, the expected 60-month cash, and (simulate) one realization: cash, whether month 60's
+    room above 60% covers the fixed costs; with `trough`, also the lowest cumulative cash of the draw's expected month
+    by month path (the arrivals and churn of its own parameters, without the Poisson noise), at most 0: what the owner
+    must carry before the company pays for itself."""
     V, PR, H, C = candidate_tables(p, used)
     inc = comp_inclusive(p)
     wsum, wt = ramp_weights(ramp)
@@ -524,20 +545,33 @@ def company_draw(p, reach, ramp, fixed_usd, Dm, pk, used, U, simulate=True):
     months_paid = np.clip(ns * e1 + ng * e2 + np.sqrt(ns * v1 + ng * v2) * Z, n, T * n)
     cash = (pr * months_paid * mask).sum(axis=(1, 2)) - T * fixed_usd
     room = (ns * hh * mask).sum(axis=(1, 2))
-    return expected, cash, room >= fixed_usd
+    if not trough:
+        return expected, cash, room >= fixed_usd
+    r = 1.0 - g(C)
+    arrive = lam * mask
+    payers = np.zeros(lam.shape)
+    cum = np.zeros(lam.shape[0])
+    low = np.zeros(lam.shape[0])
+    for month in range(T):
+        payers = payers * r + arrive * wt[month]
+        cum += (pr * payers).sum(axis=(1, 2)) - fixed_usd
+        low = np.minimum(low, cum)
+    return expected, cash, room >= fixed_usd, low
 
 
 def draw_params(rng):
     """Every parameter of one Monte Carlo draw (the demand model's ranges, and the company's)."""
     pop_ids = list(POPS)
     pop = POPS[pop_ids[rng.integers(len(pop_ids))]]
-    sigma = pop["sigma"] * rng.uniform(0.85, 1.15)
+    sigma = pop["sigma"] * rng.uniform(*M["mc"]["sigmaScale"])
     edges = [e if e is not None else math.inf for e in D["bins"]["edges"]]
     cdf = [0.0 if e <= 0 else (1.0 if math.isinf(e) else float(norm.cdf((math.log(e) - pop["mu"]) / sigma))) for e in edges]
-    p = dict(pop=pop["id"], eta=rng.uniform(1.2, 5.5), asc=rng.uniform(-1.0, 0.7), paymentsAsc=rng.uniform(-2.0, 0.0), hassle=rng.uniform(2, 10),
-             aov=float(np.exp(rng.uniform(math.log(15), math.log(60)))), conv=float(np.exp(rng.uniform(math.log(0.02), math.log(0.08)))),
-             epo=float(np.exp(rng.uniform(math.log(10), math.log(40)))), usage=rng.uniform(0.1, 0.7),
-             churn=(rng.uniform(0.01, 0.03), rng.uniform(0.1, 0.3)), horizon=M["horizon"]["base"], weights=np.diff(cdf))
+    R = M["mc"]
+    lu = lambda k: float(np.exp(rng.uniform(math.log(R[k][0]), math.log(R[k][1]))))
+    p = dict(pop=pop["id"], eta=rng.uniform(*R["eta"]), asc=rng.uniform(*R["asc"]), paymentsAsc=rng.uniform(*R["paymentsAsc"]), hassle=rng.uniform(*R["hassleUsd"]),
+             aov=lu("aovUsd"), conv=lu("conversion"), epo=lu("emailsPerOrder"), usage=rng.uniform(*R["usage"]),
+             churn=(rng.uniform(*R["churnFloor"]), rng.uniform(*R["churnCap"])), horizon=M["horizon"]["base"], weights=np.diff(cdf),
+             yearly=rng.uniform(M["yearlyShare"]["low"], M["yearlyShare"]["high"]))
     reach = float(np.exp(rng.uniform(math.log(CO["reach"]["low"]), math.log(CO["reach"]["high"]))))
     ramp = rng.uniform(CO["rampMonths"]["low"], CO["rampMonths"]["high"])
     fixed = NAMED_FIXED_USD + rng.uniform(CO["unreviewedFixedCents"]["low"], CO["unreviewedFixedCents"]["high"]) / 100
@@ -545,7 +579,7 @@ def draw_params(rng):
     return p, reach, ramp, fixed, U
 
 
-def company_rows(design_list, seed, start, stop):
+def company_rows(design_list, seed, start, stop, reading="sizing", trough=False):
     """Draws start..stop-1 of the company's Monte Carlo for every design: the seeded generator is replayed through the
     earlier draws (draw_params takes the same numbers whatever is done with them), and `used`, the logit normalizer's
     set of candidates, is always the whole design list's, so a range computed alone equals the same range of one run."""
@@ -556,18 +590,28 @@ def company_rows(design_list, seed, start, stop):
     n, k = len(design_list), stop - start
     edges = np.exp(np.linspace(math.log(CO["reach"]["low"]), math.log(CO["reach"]["high"]), 4))
     rows = dict(start=start, stop=stop, e=np.zeros((k, n)), cash=np.zeros((k, n), dtype=np.float32), neg=np.zeros((k, n), dtype=bool),
-                consol=np.zeros((k, n), dtype=bool), band=np.zeros(k, dtype=int))
-    for t in range(k):
-        p, reach, ramp, fixed, U = draw_params(rng)
-        rows["band"][t] = min(2, int(np.searchsorted(edges, reach, side="right") - 1))
+                consol=np.zeros((k, n), dtype=bool), band=np.zeros(k, dtype=int), trough=np.zeros((k, n), dtype=np.float32) if trough else None)
+    saved = READING[0]
+    READING[0] = reading
+    try:
+        for t in range(k):
+            p, reach, ramp, fixed, U = draw_params(rng)
+            rows["band"][t] = min(2, int(np.searchsorted(edges, reach, side="right") - 1))
+            _ours_cache.clear()
+            _head_cache.clear()
+            _comp_cache.clear()
+            res = company_draw(p, reach, ramp, fixed, Dm, pk, used, U, trough=trough)
+            e, c, consol = res[:3]
+            rows["e"][t] = e
+            rows["cash"][t] = c
+            rows["neg"][t] = c < 0
+            rows["consol"][t] = consol
+            if trough:
+                rows["trough"][t] = res[3]
+    finally:
+        READING[0] = saved
         _ours_cache.clear()
         _head_cache.clear()
-        _comp_cache.clear()
-        e, c, consol = company_draw(p, reach, ramp, fixed, Dm, pk, used, U)
-        rows["e"][t] = e
-        rows["cash"][t] = c
-        rows["neg"][t] = c < 0
-        rows["consol"][t] = consol
     return rows
 
 
@@ -594,11 +638,18 @@ def company_summarize(chunks, n, draws):
     out = []
     pct = np.percentile(cash, [5, 50, 95], axis=0)
     mean = cash.mean(axis=0, dtype=np.float64)
+    TR = np.concatenate([r["trough"] for r in chunks]) if chunks[0].get("trough") is not None else None
+    if TR is not None:
+        tpct = np.percentile(TR, [5, 50], axis=0)
+        tdeep = {x: (TR < -x).mean(axis=0) for x in TROUGH_LEVELS}
     for i in range(n):
         pl = lose[i] / draws
-        out.append(dict(draws=draws, expected=float(exp_sum[i] / draws), simulatedMean=float(mean[i]), p5=float(pct[0, i]), p50=float(pct[1, i]), p95=float(pct[2, i]),
-                        pLoss=float(pl), pCashLoss=float(lose_cash[i] / draws), pNotConsolidated=float(not_consol[i] / draws), se=float(math.sqrt(max(pl * (1 - pl), 1e-12) / draws)),
-                        pLossByReach=[float(band_lose[k, i] / band_n[k]) if band_n[k] else None for k in range(3)], reachBands=[float(x) for x in edges]))
+        row = dict(draws=draws, expected=float(exp_sum[i] / draws), simulatedMean=float(mean[i]), p5=float(pct[0, i]), p50=float(pct[1, i]), p95=float(pct[2, i]),
+                   pLoss=float(pl), pCashLoss=float(lose_cash[i] / draws), pNotConsolidated=float(not_consol[i] / draws), se=float(math.sqrt(max(pl * (1 - pl), 1e-12) / draws)),
+                   pLossByReach=[float(band_lose[k, i] / band_n[k]) if band_n[k] else None for k in range(3)], reachBands=[float(x) for x in edges])
+        if TR is not None:
+            row.update(troughP5=float(tpct[0, i]), troughP50=float(tpct[1, i]), pTroughBelow={str(x): float(tdeep[x][i]) for x in TROUGH_LEVELS})
+        out.append(row)
     return out
 
 
@@ -616,10 +667,15 @@ class LocalExecutor:
 EXECUTOR = [LocalExecutor()]
 
 
-def company_monte_carlo(design_list, draws, seed):
-    """The company's 60 months for every design, over `draws` draws with common random numbers: expected cash, its percentiles, and the probabilities of each kind of loss."""
+# The trough levels reported: the share of draws whose expected path takes cumulative cash below minus each (dollars).
+TROUGH_LEVELS = (500, 2_000, 5_000)
+
+
+def company_monte_carlo(design_list, draws, seed, reading="sizing", trough=False):
+    """The company's 60 months for every design, over `draws` draws with common random numbers: expected cash, its percentiles, and the probabilities of each kind of loss (and, with `trough`, the lowest cumulative cash on the way), under `reading`."""
     design_list = [(list(plans), bool(pk)) for plans, pk in design_list]
-    return EXECUTOR[0].draws(("company", design_list, seed), draws, lambda a, b: company_rows(design_list, seed, a, b),
+    spec = ("company", design_list, seed) if (reading, trough) == ("sizing", False) else ("company", design_list, seed, reading, trough)
+    return EXECUTOR[0].draws(spec, draws, lambda a, b: company_rows(design_list, seed, a, b, reading, trough),
                              lambda chunks: company_summarize(chunks, len(design_list), draws))
 
 
@@ -812,6 +868,7 @@ def main():
     }
     def find(tpl, dollars, size, bps):
         return CID[f"{tpl}-{dollars}-{size}-c{bps}"]
+    named["today + Start $54 + 0%"] = (TODAY + [find("start", 54, "max", 0)], True)
     for dollars in (29, 39, 49):
         for bps in (0, 500, 1000):
             named[f"today + Start ${dollars} + {bps / 100:g}%"] = (TODAY + [find("start", dollars, "max", bps)], True)
@@ -825,10 +882,10 @@ def main():
         designs[remember(plans, pk, f"named: {name}")]["names"].append(name)
 
     # The grid the company rule is weighed on: every combination of a Start (none, half size, or the largest size at
-    # $29 or $49), a Store price, a Growth (none, half size, or the largest at $129 or $199), a Studio price and a Scale
+    # $29, $49 or $54, the anti-Stan maximum), a Store price, a Growth (none, half size, or the largest at $129 or $199), a Studio price and a Scale
     # price, with packs and no commission (commission variants of the best are added below).
     by_tpl = lambda t: [j for j, c in enumerate(CANDS) if c["template"] == t and c["commissionBps"] == 0]
-    starts = [None] + [j for j in by_tpl("start") if CANDS[j]["size"] == "half" or CANDS[j]["monthCents"] in (2_900, 4_900)]
+    starts = [None] + [j for j in by_tpl("start") if CANDS[j]["size"] == "half" or CANDS[j]["monthCents"] in (2_900, 4_900, 5_400)]
     growths = [None] + [j for j in by_tpl("growth") if CANDS[j]["size"] == "half" or CANDS[j]["monthCents"] in (12_900, 19_900)]
     import itertools
     for combo in itertools.product(starts, by_tpl("creator"), growths, by_tpl("pro"), by_tpl("scale")):
@@ -944,9 +1001,13 @@ def main():
             add_final(r)
     add_final(regret_best)
     finals = [by_key[k] for k in final_keys]
-    fin = company_monte_carlo([(list(r["plans"]), r["packs"]) for r in finals], CO["finalDraws"], CO["finalSeed"])
-    for r, o in zip(finals, fin):
+    fin = company_monte_carlo([(list(r["plans"]), r["packs"]) for r in finals], CO["finalDraws"], CO["finalSeed"], trough=True)
+    # The same draws under the gate reading (the most-tax reading of lib/tax-gate.ts): the cash a design would leave if
+    # the reading with more tax is the one that holds. No plan keeps 60% there, so nothing is consolidated at 60%.
+    fin_gate = company_monte_carlo([(list(r["plans"]), r["packs"]) for r in finals], CO["finalDraws"], CO["finalSeed"], reading="gate", trough=True)
+    for r, o, og in zip(finals, fin, fin_gate):
         r["company"]["final"] = o
+        r["company"]["gate"] = og
     print(f"  {len(finals)} designs drawn again on {CO['finalDraws']} draws", flush=True)
 
     choice = {}
@@ -987,13 +1048,14 @@ def main():
         return evaluate(rec["plans"], rec["packs"], dict(base, **kw))
     b0 = evaluate(rec["plans"], rec["packs"], base)
     sens = [
-        dict(parameter="price sensitivity eta (1.5 / 5)", low=at(eta=1.5), base=b0, high=at(eta=5.0)),
-        dict(parameter="preference for Marktmorgen (-0.7 / +0.5)", low=at(asc=-0.7), base=b0, high=at(asc=0.5)),
-        dict(parameter="average order value ($15 / $60)", low=at(aov=15), base=b0, high=at(aov=60)),
-        dict(parameter="conversion per visit (2% / 8%)", low=at(conv=0.02), base=b0, high=at(conv=0.08)),
-        dict(parameter="average usage of allowances (15% / 60%)", low=at(usage=0.15), base=b0, high=at(usage=0.6)),
+        dict(parameter=f"price sensitivity eta ({M['eta'][0]:g} / {M['eta'][-1]:g})", low=at(eta=M["eta"][0]), base=b0, high=at(eta=M["eta"][-1])),
+        dict(parameter=f"preference for Marktmorgen ({M['asc'][0]:g} / {M['asc'][-1]:g})", low=at(asc=M["asc"][0]), base=b0, high=at(asc=M["asc"][-1])),
+        dict(parameter=f"average order value (${M['aovUsd']['low']:g} / ${M['aovUsd']['high']:g})", low=at(aov=M["aovUsd"]["low"]), base=b0, high=at(aov=M["aovUsd"]["high"])),
+        dict(parameter=f"conversion per visit ({M['conversion']['low']:.1%} / {M['conversion']['high']:.1%})", low=at(conv=M["conversion"]["low"]), base=b0, high=at(conv=M["conversion"]["high"])),
+        dict(parameter=f"average usage of allowances ({M['usage']['low']:.0%} / {M['usage']['high']:.0%})", low=at(usage=M["usage"]["low"]), base=b0, high=at(usage=M["usage"]["high"])),
+        dict(parameter=f"yearly payers ({M['yearlyShare']['low']:.0%} / {M['yearlyShare']['high']:.0%})", low=at(yearly=M["yearlyShare"]["low"]), base=b0, high=at(yearly=M["yearlyShare"]["high"])),
         dict(parameter="churn (low / high)", low=at(churn=tuple(M["churn"]["low"])), base=b0, high=at(churn=tuple(M["churn"]["high"]))),
-        dict(parameter="emails per order (10 / 40)", low=at(epo=10), base=b0, high=at(epo=40)),
+        dict(parameter=f"emails per order ({M['emailsPerOrder']['low']:g} / {M['emailsPerOrder']['high']:g})", low=at(epo=M["emailsPerOrder"]["low"]), base=b0, high=at(epo=M["emailsPerOrder"]["high"])),
         dict(parameter="horizon (12 / 36 months)", low=at(horizon=12), base=b0, high=at(horizon=36)),
         dict(parameter="population (Gumroad sellers / Linktree full-time)", low=at(weights=np.array(POPS["gumroad-sellers"]["weights"])), base=b0, high=at(weights=np.array(POPS["linktree-fulltime"]["weights"]))),
     ]
@@ -1052,7 +1114,7 @@ def main():
                     monteCarlo={k: round(v, 4) for k, v in mc[r["key"]].items()} if r["key"] in mc else None,
                     horizon={k: round(v, 2) for k, v in r["horizon"].items()},
                     revenueBySales=[None if x is None else round(x, 4) for x in r["revenueBySales"]],
-                    company=dict(screen=rnd(co.get("screen")), final=rnd(co.get("final")), worst=rnd(co.get("worst"))))
+                    company=dict(screen=rnd(co.get("screen")), final=rnd(co.get("final")), gate=rnd(co.get("gate")), worst=rnd(co.get("worst"))))
 
     pareto = []
     for admissible_only in (False, True):

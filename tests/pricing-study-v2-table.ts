@@ -42,7 +42,8 @@ import { assessMinimumCustomerBase } from "@/lib/customer-base-rules";
 import {
   DISPUTE_RESERVE_BPS, MOST_TAX_READING, PROVIDER_FEES, REFUND_RESERVE_BPS, SIZING_READING, unitUnder, type Reading, type UnitResult,
 } from "@/lib/receiving-costs";
-import { COST_LINES, GB, PER_PAYMENT_LINES } from "./plan-cost-registry";
+import { COST_LINES, GB, PER_PAYMENT_LINES, nonPayingWorst } from "./plan-cost-registry";
+import { FREE_POOL_BASE_STORES } from "@/lib/free-pool-rules";
 import { figures, tidy, type Printed } from "./limits-proposal-table";
 import { PACKS, atScale, packPriceCents, packUnit, type Pack } from "./pricing-usage-proposal-table";
 
@@ -174,7 +175,7 @@ const PRINTED_OF: Record<string, Printed> = {
 export type Template = "start" | "creator" | "growth" | "pro" | "scale";
 /** The templates: today's three plans at their limits, and two new plans sized down from Store and from Studio. */
 export const TEMPLATES: Record<Template, { title: string; base: Tier; sized: boolean; today: boolean; grid: number[]; commissions: number[] }> = {
-  start: { title: "Start (new)", base: "creator", sized: true, today: false, grid: [1_900, 2_400, 2_900, 3_400, 3_900, 4_900], commissions: [0, 200, 350, 500, 750, 1_000] },
+  start: { title: "Start (new)", base: "creator", sized: true, today: false, grid: [1_900, 2_400, 2_900, 3_400, 3_900, 4_400, 4_900, 5_400], commissions: [0, 200, 350, 500, 750, 1_000] },
   creator: { title: PLAN_TITLES.creator, base: "creator", sized: false, today: true, grid: [6_900, 7_900, 8_900, 9_900, 11_900, 14_900], commissions: [0, 200, 350, 500] },
   growth: { title: "Growth (new)", base: "pro", sized: true, today: false, grid: [12_900, 14_900, 19_900, 24_900, 29_900], commissions: [0, 100, 200, 350, 500] },
   pro: { title: PLAN_TITLES.pro, base: "pro", sized: false, today: true, grid: [44_900, 49_900, 54_900, 59_900, 69_900], commissions: [0, 100, 200, 350] },
@@ -206,27 +207,39 @@ function lineShare(base: Tier, fig: Record<Printed, number[]>, id: Printed): num
  * A plan's usage at full use of every figure, in cents, for one payment: every
  * line of the worst month for every window the payment reaches, and what it
  * leaves after its plan ends. At share 1 it is exactly
- * tests/margin-alignment-table.ts planUnits' usage (held in the test).
+ * tests/margin-alignment-table.ts planUnits' usage (held in
+ * tests/pricing-study-v2.test.ts). Split into the lines that do not move with
+ * how much a store uses (FIXED_LINES: its studio, its share of the stores that
+ * pay nothing, and the lines that cost nothing) and the rest, which do
+ * (what it keeps after its plan ends included: it is what it stored).
  */
-export function usageAt(base: Tier, cycle: Cycle, share: number): number {
+export function usageParts(base: Tier, cycle: Cycle, share: number): { fixed: number; variable: number } {
   const fig = sizedFigures(base, share);
-  let monthly = 0;
+  let fixed = 0, variable = 0;
   for (const line of COST_LINES) {
     const usd = line.monthlyUsd(base);
-    if ((FIXED_LINES as readonly string[]).includes(line.id) || share >= 1) monthly += usd;
-    else if (line.id in PRINTED_OF) monthly += usd * lineShare(base, fig, PRINTED_OF[line.id]);
-    else monthly += usd * share;
+    if ((FIXED_LINES as readonly string[]).includes(line.id)) fixed += usd;
+    else if (share >= 1) variable += usd;
+    else if (line.id in PRINTED_OF) variable += usd * lineShare(base, fig, PRINTED_OF[line.id]);
+    else variable += usd * share;
   }
   let after = 0;
   for (const line of PER_PAYMENT_LINES) {
     const usd = line.monthlyUsd(base);
     after += line.id === "retained-files" && share < 1 ? usd * share : usd;
   }
-  return centsUp(months(cycle) * monthly + after);
+  return { fixed: months(cycle) * fixed, variable: months(cycle) * variable + after };
 }
+export function usageAt(base: Tier, cycle: Cycle, share: number): number {
+  const u = usageParts(base, cycle, share);
+  return centsUp(u.fixed + u.variable);
+}
+/** One payment's unit under a reading; `usageShare` is the share of every allowance used, which scales only the lines that move with use. */
 export function planUnit(base: Tier, cycle: Cycle, monthCents: number, share: number, reading: Reading = SIZING_READING, usageShare = 1): UnitResult {
   const price = cycle === "year" ? yearOf(monthCents) : monthCents;
-  return unitUnder(price, Math.ceil(usageAt(base, cycle, share) * usageShare), reading, true);
+  if (usageShare >= 1) return unitUnder(price, usageAt(base, cycle, share), reading, true);
+  const u = usageParts(base, cycle, share);
+  return unitUnder(price, centsUp(u.fixed + u.variable * usageShare), reading, true);
 }
 export function keepsWithRoom(base: Tier, monthCents: number, share: number): boolean {
   return (["month", "year"] as const).every((cycle) => {
@@ -247,8 +260,13 @@ export const USAGE_LEVELS = [0, 0.15, 0.3, 0.6, 1] as const;
 export type Candidate = {
   id: string; template: Template; title: string; base: Tier; size: Size; share: number; monthCents: number; commissionBps: number;
   figures: { visits: number; orders: number; listEmails: number; aiJobs: number; aiAnswers: number; storageGb: number; videoHours: number; accessEmails: number; storeEmails: number };
-  /** Net of one monthly payment, in cents, with this share of every allowance used. */
+  /** Net of one monthly payment, in cents, with this share of every allowance used (sizing reading). */
   netMonthCents: Record<string, number>;
+  /** A twelfth of one yearly payment's net, in cents, at the same usage shares (sizing reading): what a yearly payer leaves a month. */
+  netYearMonthCents: Record<string, number>;
+  /** The same two under the most-tax reading (the gate, lib/tax-gate.ts gateReading()). */
+  gateNetMonthCents: Record<string, number>;
+  gateNetYearMonthCents: Record<string, number>;
   revenueMonthCents: number;
   /** What the price leaves above the floor and the spend floor's room, in cents, at full use: what raising a printed figure may spend. */
   lpRoomCents: { month: number; year: number };
@@ -288,6 +306,9 @@ export function candidates(): Candidate[] {
               storageGb: fig.storage[0] / GB, videoHours: fig.video[0], accessEmails: fig["transactional-email"][0], storeEmails: fig["store-email"][0],
             },
             netMonthCents: Object.fromEntries(USAGE_LEVELS.map((u) => [usageKey(u), planUnit(t.base, "month", monthCents, share, SIZING_READING, u).netCents])),
+            netYearMonthCents: Object.fromEntries(USAGE_LEVELS.map((u) => [usageKey(u), Math.floor(planUnit(t.base, "year", monthCents, share, SIZING_READING, u).netCents / 12)])),
+            gateNetMonthCents: Object.fromEntries(USAGE_LEVELS.map((u) => [usageKey(u), planUnit(t.base, "month", monthCents, share, MOST_TAX_READING, u).netCents])),
+            gateNetYearMonthCents: Object.fromEntries(USAGE_LEVELS.map((u) => [usageKey(u), Math.floor(planUnit(t.base, "year", monthCents, share, MOST_TAX_READING, u).netCents / 12)])),
             revenueMonthCents: month.revenueCents,
             lpRoomCents: { month: month.usageRoomCents - month.usageCents - PLAN_ROOM.month, year: year.usageRoomCents - year.usageCents - PLAN_ROOM.year },
             netBps: { month: month.netBps, year: year.netBps },
@@ -311,11 +332,12 @@ export const TODAY_IDS = TIERS.map((tier) => `${tier}-${PLAN_PRICES[tier].month 
 // ------------------------------------------------------------- packs, commission, competitors
 
 /** The prepaid packs a design may sell (tests/pricing-usage-proposal-table.ts), at the size proposed there and four times larger. */
-export function packs(): { id: string; raises: string; units: number; priceCents: number; netCents: number; mostTaxNetBps: number }[] {
+export function packs(): { id: string; raises: string; units: number; priceCents: number; netCents: number; gateNetCents: number; mostTaxNetBps: number }[] {
   const wanted = PACKS.filter((p) => ["visits", "orders", "list-email"].includes(p.id));
   return wanted.flatMap((p) => [p, atScale(p, 4)].map((pack: Pack, i) => {
     const u = packUnit(pack);
-    return { id: `${pack.id}${i ? "-x4" : ""}`, raises: pack.id, units: pack.units, priceCents: packPriceCents(pack), netCents: u.netCents, mostTaxNetBps: packUnit(pack, MOST_TAX_READING).netBps };
+    const g = packUnit(pack, MOST_TAX_READING);
+    return { id: `${pack.id}${i ? "-x4" : ""}`, raises: pack.id, units: pack.units, priceCents: packPriceCents(pack), netCents: u.netCents, gateNetCents: g.netCents, mostTaxNetBps: g.netBps };
   }));
 }
 
@@ -385,31 +407,60 @@ export function competitors(): Competitor[] {
  * cross the three populations with three price sensitivities and three
  * preferences for Marktmorgen; the Monte Carlo draws every parameter.
  */
-/** Company fixed costs the analysis can name: half of Delaware ($400), California ($800) and the owner's INSS ($4,520.30), from docs/tax-uncertainty.md; the registered agent, domains and tools are not reviewed here, so this is a lower bound. */
+/** Company fixed costs the analysis can name: half of Delaware ($400), California ($800) and the owner's INSS ($4,520.30), from docs/tax-uncertainty.md. */
 export const SHARED_FIXED_ANNUAL_CENTS = Math.round((40_000 + 80_000 + 452_030) / 2);
-export const NAMED_FIXED_MONTHLY_CENTS = Math.round(SHARED_FIXED_ANNUAL_CENTS / 12);
+/**
+ * The free pool's base places (lib/free-pool-rules.ts FREE_POOL_BASE_STORES), each at the worst window a store
+ * that pays nothing can cost (tests/plan-cost-registry.ts nonPayingWorst): "a fixed cost, covered by the minimum
+ * paid base", which the company pays whatever its payers. The places added per paying store are inside each
+ * plan's free-share line.
+ */
+export const FREE_POOL_FIXED_MONTHLY_CENTS = Math.ceil(FREE_POOL_BASE_STORES * nonPayingWorst() * 100);
+/** Every fixed cost the analysis can name, a month: the shared ones and the free pool's base places. The registered agent, domains, tools and the funded-exposure ceiling (docs/funded-exposure-review.md) are not reviewed here: MODEL.company.unreviewedFixedCents draws them. */
+export const NAMED_FIXED_MONTHLY_CENTS = Math.round(SHARED_FIXED_ANNUAL_CENTS / 12) + FREE_POOL_FIXED_MONTHLY_CENTS;
 
 export const MODEL = {
-  /** Price sensitivity: utility falls by eta for each natural-log unit of a creator's all-in monthly cost. */
-  eta: [1.5, 3, 5],
-  /** Marktmorgen's preference against a competitor platform of the same cost, in log-odds: an unknown brand (−0.7), even (0), the richer feature set preferred (+0.5). */
-  asc: [-0.7, 0, 0.5],
+  /**
+   * Price sensitivity: utility falls by eta for each natural-log unit of a creator's all-in monthly cost. Named at
+   * 1, 2 and 4, the base 2 (docs/research/demand-evidence-v2-2026-10-18.json: a randomized SMB subscription price test,
+   * NBER w23775, and Tellis's 1988 meta-analysis put category and brand elasticities about there).
+   */
+  eta: [1, 2, 4],
+  /**
+   * Marktmorgen's preference against a competitor platform of the same cost, in log-odds: a new brand with no reviews
+   * (−1.5: Spiegel Research Center 2017, reviews raised conversion 2.9 to 4.8 times), a smaller handicap (−0.7, the
+   * base), even (0). Nothing supports a new entrant above its incumbents.
+   */
+  asc: [-1.5, -0.7, 0],
+  /** The base scenario of the program and of every table that names one. */
+  base: { eta: 2, asc: -0.7 },
+  /** The Monte Carlo's ranges, each drawn uniformly (log-uniformly where marked): every parameter of the model at once. */
+  mc: {
+    eta: [1, 5.5], asc: [-1.5, 0.3], paymentsAsc: [-2, 0], hassleUsd: [2, 10],
+    aovUsd: [15, 70], conversion: [0.015, 0.08], emailsPerOrder: [10, 150], usage: [0.1, 0.7],
+    churnFloor: [0.01, 0.03], churnCap: [0.15, 0.35], sigmaScale: [0.85, 1.15],
+    logUniform: ["aovUsd", "conversion", "emailsPerOrder"],
+  },
   /** The preference for a payments-only tool (no storefront, courses or community) against a creator platform, in log-odds. */
   paymentsAsc: -1,
   /** Dollars a month added to every all-in cost inside the logarithm, so a tool that costs nothing is not infinitely preferred. */
   hassleUsd: 5,
   /** Average order value, dollars (Stan: over half of its GMV from downloads priced $4 to $30, sacra-stan-2026). */
-  aovUsd: { base: 30, low: 15, high: 60 },
+  aovUsd: { base: 30, low: 15, high: 70 },
   /** Orders per store visit. */
-  conversion: { base: 0.04, low: 0.02, high: 0.08 },
+  conversion: { base: 0.025, low: 0.015, high: 0.08 },
   /** A creator selling at least this much a month keeps an email list and sends to it. */
   emailFromUsd: 1_000,
   /** List emails a month per order a month, for those who email. */
-  emailsPerOrder: { base: 20, low: 10, high: 40 },
+  emailsPerOrder: { base: 30, low: 10, high: 150 },
   /** Share of every allowance a paying store uses on average (the floor is at full use; this is only for the expected profit). */
   usage: { base: 0.3, low: 0.15, high: 0.6 },
+  /** Share of paying customers on the yearly payment (each leaves a twelfth of its yearly net a month). No sale has been open; the Monte Carlo draws it. */
+  // docs/research/demand-evidence-v2-2026-10-18.json yearlyShare: RevenueCat SOSA 2025, yearly is 20.7% of Business
+  // app subscriptions and 41.4% of all; Paddle models 10-20% uptake; no creator-tool figure exists.
+  yearlyShare: { base: 0.25, low: 0.1, high: 0.45 },
   /** Monthly churn: floor + (cap − floor) × cost / (cost + sales); Stan's 13% a month (sacra-stan-2024) at its $29 price and typical sales sits inside it. */
-  churn: { base: [0.02, 0.2], low: [0.01, 0.1], high: [0.03, 0.3] },
+  churn: { base: [0.02, 0.25], low: [0.01, 0.15], high: [0.03, 0.35] },
   /** Months the profit of one month's cohort is counted over. */
   horizon: { base: 24, values: [12, 24, 36] },
   /** A store needs at most this many packs a month before it is treated as unable to use the plan. */
@@ -485,9 +536,15 @@ export const MODEL = {
    */
   company: {
     months: 60,
-    reach: { low: 100, high: 10_000 },
-    rampMonths: { low: 6, high: 36 },
-    unreviewedFixedCents: { low: 0, high: 50_000 },
+    // Creators a month reaching a pricing page with Marktmorgen among the alternatives, at full ramp, and the months
+    // to get there (docs/research/demand-evidence-v2-2026-10-18.json reach and reachGrowth: TrustMRR's median verified
+    // project implies about 25 to 225; Senja's self-reported 16,500 to 18,800 visits a month by its second year).
+    reach: { low: 30, high: 10_000 },
+    rampMonths: { low: 6, high: 60 },
+    // Not reviewed here, so drawn: at least half of Hazelsong's $125 registered agent and Marktmorgen's own host and
+    // mail plans at Vercel Pro's and Resend Pro's $20 a month each (the figures Hazelsong's cost table carries;
+    // Marktmorgen's own invoices are not in this repository), $45 in all; at most $500 more.
+    unreviewedFixedCents: { low: 4_500, high: 50_000 },
     draws: 1_000,
     finalDraws: 10_000,
     seed: 20_261_019,
@@ -1061,19 +1118,22 @@ export function renderPricingStudyV2(): string {
   push("");
   push(`Other evidence read and not fitted: Patreon (Graphtreon's count, 2019): more than 4,300 of 132,500 creators (about 3.2%) earned $1,000 a month or more, and creators at $500 a month churned under 1% a year; Linktree's 2022 survey: 46% of full-time creators under $1,000 a year and 66% of creators treat it as a side hustle; Kajabi (company release, August 2025): over 100 thousand creators, nearly 1,800 past $1M, and 60% arriving after outgrowing an entry-level platform; Thinkific 2025: ARPU $175 a month, GMV $460.0M, net income $1.3M; Stan: ARR about $40M (Sacra estimate, April 2026), 13% gross churn a month (2024). Sources are in the dataset.`);
   push("");
-  push("**How they choose.** Each creator picks among the competitor plans that can serve its needs and Marktmorgen's plans on offer, by multinomial logit. Utility is a preference minus η times the logarithm of the all-in monthly cost (the subscription, the commission or fee on its sales, Stripe's 2.9% + 30¢ processing where the vendor's fee does not include it, and the prepaid packs a plan's figures make it buy) plus a hassle cost. Needs: orders = sales ÷ the average order value; visits = orders ÷ conversion; a list of email at 20 emails per order for a creator selling $1,000 a month or more. A Marktmorgen plan that cannot serve a need (Store and Start send no list email; figures without packs) is not a choice for that creator. Each subscriber churns at a monthly rate that rises with what the platform costs against what the creator sells; the profit of one month's cohort is counted over the horizon.");
+  push(`**How they choose.** Each creator picks among the competitor plans that can serve its needs and Marktmorgen's plans on offer, by multinomial logit. Utility is a preference minus η times the logarithm of the all-in monthly cost (the subscription, the commission or fee on its sales, Stripe's 2.9% + 30¢ processing where the vendor's fee does not include it, and the prepaid packs a plan's figures make it buy) plus a hassle cost. Needs: orders = sales ÷ the average order value; visits = orders ÷ conversion; a list of email at ${MODEL.emailsPerOrder.base} emails per order for a creator selling $${num(MODEL.emailFromUsd)} a month or more. A Marktmorgen plan that cannot serve a need (Store and Start send no list email; figures without packs) is not a choice for that creator. Each subscriber churns at a monthly rate that rises with what the platform costs against what the creator sells; the profit of one month's cohort is counted over the horizon.`);
   push("");
   push("| Parameter | Base | Range | Basis |");
   push("| --- | --- | --- | --- |");
-  push(`| Price sensitivity η (per log unit of all-in cost) | 3 | ${MODEL.eta.join(", ")} (named), 1.2 to 5.5 (Monte Carlo) | assumption; no price test exists |`);
-  push(`| Preference for Marktmorgen, log-odds | 0 | ${MODEL.asc.join(", ")}; −1 to 0.7 | assumption: an unknown brand against a richer feature set (docs/zero-cost-value-2026-10-18.md) |`);
-  push(`| Preference for a payments-only tool (no storefront) | ${MODEL.paymentsAsc} | −2 to 0 | assumption |`);
-  push(`| Hassle cost inside the logarithm | $${MODEL.hassleUsd} | $2 to $10 | assumption |`);
-  push(`| Average order value | $${MODEL.aovUsd.base} | $${MODEL.aovUsd.low} to $${MODEL.aovUsd.high} | Stan: over half its GMV from downloads priced $4 to $30 (sacra-stan-2026) |`);
-  push(`| Orders per visit | ${pct(MODEL.conversion.base, 0)} | ${pct(MODEL.conversion.low, 0)} to ${pct(MODEL.conversion.high, 0)} | assumption |`);
-  push(`| List emails per order, from $${num(MODEL.emailFromUsd)} a month of sales | ${MODEL.emailsPerOrder.base} | ${MODEL.emailsPerOrder.low} to ${MODEL.emailsPerOrder.high} | assumption (Kajabi's six-figure creator: a list of about 4,000 for 309 paying customers) |`);
-  push(`| Average use of the allowances | ${pct(MODEL.usage.base, 0)} | ${pct(MODEL.usage.low, 0)} to ${pct(MODEL.usage.high, 0)} | assumption; the floor is always held at full use |`);
-  push(`| Churn a month, floor and cap | ${MODEL.churn.base.map((x) => pct(x, 0)).join(" / ")} | ${MODEL.churn.low.map((x) => pct(x, 0)).join(" / ")} to ${MODEL.churn.high.map((x) => pct(x, 0)).join(" / ")} | calibrated so a $29 plan for a typical seller sits near Stan's 13% (sacra-stan-2024) |`);
+  const mc = MODEL.mc;
+  const rng = (r: readonly number[], f: (x: number) => string = (x) => `${x}`) => `${f(r[0])} to ${f(r[1])}`;
+  push(`| Price sensitivity η (per log unit of all-in cost) | ${MODEL.base.eta} | ${MODEL.eta.join(", ")} (named), ${rng(mc.eta)} (Monte Carlo) | evidence: a randomized SMB subscription price test (NBER w23775) and Tellis's 1988 meta-analysis center near 2 (docs/research/demand-evidence-v2-2026-10-18.json); no price test of Marktmorgen exists |`);
+  push(`| Preference for Marktmorgen, log-odds | ${MODEL.base.asc} | ${MODEL.asc.join(", ")}; ${rng(mc.asc)} | evidence for the handicap of a brand with no reviews: Spiegel Research Center 2017 (reviews raised conversion 2.9 to 4.8 times); nothing supports a new entrant above its incumbents |`);
+  push(`| Preference for a payments-only tool (no storefront) | ${MODEL.paymentsAsc} | ${rng(mc.paymentsAsc)} | assumption |`);
+  push(`| Hassle cost inside the logarithm | $${MODEL.hassleUsd} | ${rng(mc.hassleUsd, (x) => `$${x}`)} | assumption |`);
+  push(`| Average order value | $${MODEL.aovUsd.base} | $${MODEL.aovUsd.low} to $${MODEL.aovUsd.high} (log-uniform) | Stan: over half its GMV from downloads priced $4 to $30 (sacra-stan-2026); $67 average per sale in 2025 as Stan reports it |`);
+  push(`| Orders per visit | ${pct(MODEL.conversion.base, 1)} | ${pct(MODEL.conversion.low, 1)} to ${pct(MODEL.conversion.high, 0)} (log-uniform) | Littledata: Shopify stores average 1.4%, the top fifth above 3.3%; Linktree's self-reported $1.25 of sales per commerce click |`);
+  push(`| List emails per order, from $${num(MODEL.emailFromUsd)} a month of sales | ${MODEL.emailsPerOrder.base} | ${MODEL.emailsPerOrder.low} to ${MODEL.emailsPerOrder.high} (log-uniform) | no direct creator measure; campaign conversion of 0.08% (Omnisend) to 1.07% (Klaviyo, one category) allows values well above 40 |`);
+  push(`| Average use of the allowances | ${pct(MODEL.usage.base, 0)} | ${rng(mc.usage, (x) => pct(x, 0))} | assumption; the floor is always held at full use |`);
+  push(`| Payers on the yearly payment | ${pct(MODEL.yearlyShare.base, 0)} | ${pct(MODEL.yearlyShare.low, 0)} to ${pct(MODEL.yearlyShare.high, 0)} | RevenueCat SOSA 2025 (yearly 20.7% of Business app subscriptions, 41.4% of all); Paddle models 10-20%; a yearly payer leaves a twelfth of its yearly net a month (less than a monthly one) |`);
+  push(`| Churn a month, floor and cap | ${MODEL.churn.base.map((x) => pct(x, 0)).join(" / ")} | floor ${rng(mc.churnFloor, (x) => pct(x, 0))}, cap ${rng(mc.churnCap, (x) => pct(x, 0))} | Stan 13% gross a month (sacra-stan-2024); RevenueCat monthly plans about 13.7%; ChartMogul above $500 ARPA about 2.1% |`);
   push(`| Horizon | ${MODEL.horizon.base} months | ${MODEL.horizon.values.join(", ")} | assumption |`);
   push(`| Commission kept per dollar | ${input.commissionKeep.sizing.toFixed(4)} (sizing reading) | ${input.commissionKeep.mostTax.toFixed(4)} (most-tax reading) | remittance 1.5%, refund 1%, dispute 1% reserves, ${COMMISSION_UNREVIEWED_BPS / 100}% for unreviewed costs of taking a share, then the profit tax |`);
   push("");

@@ -18,9 +18,12 @@ import { PLANS_ON_SALE } from "@/lib/opening";
 import { COMMISSION_BPS, COMMISSION_LIVE, PLAN_PRICES, TIERS } from "@/lib/plan";
 import { figures } from "./limits-proposal-table";
 import { GB } from "./plan-cost-registry";
+import { planUnits } from "./margin-alignment-table";
+import { SIZING_READING, unitUnder } from "@/lib/receiving-costs";
+import type { Cycle, Tier } from "@/lib/plan";
 import {
   DATA_FILE, DOC_FILE, INPUT_FILE, MODEL, TEMPLATES, TODAY_IDS, antiStan, candidateById, candidates, cashPath, composition, dataset,
-  frontierOf, inPool, isStanProof, ownersChoice, pools, renderPricingStudyV2, studyInput, studyOutput, verifiedDesign, type StudyInput,
+  frontierOf, inPool, isStanProof, ownersChoice, planUnit, pools, renderPricingStudyV2, usageAt, studyInput, studyOutput, verifiedDesign, type StudyInput,
 } from "./pricing-study-v2-table";
 
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
@@ -64,6 +67,15 @@ test("today's three plans enter the study with today's prices and printed figure
   }
 });
 
+test("at full size the study's usage and margins are the margin alignment's, unit for unit", () => {
+  for (const u of planUnits(false)) {
+    const [tier, cycle] = u.id.split("-") as [Tier, Cycle];
+    assert.equal(usageAt(tier, cycle, 1), u.usageCents, `${u.id}: usage`);
+    const ours = planUnit(tier, cycle, PLAN_PRICES[tier].month, 1);
+    assert.equal(ours.netCents, unitUnder(u.priceCents, u.usageCents, SIZING_READING, true).netCents, `${u.id}: net`);
+  }
+});
+
 test("the solver's input is what the repository's margin code gives today (run node scripts/pricing-study-v2.mjs)", () => {
   const close = (a: unknown, b: unknown, path: string): void => {
     if (typeof a === "number" && typeof b === "number") { assert.ok(Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a)), `${INPUT_FILE} is stale at ${path}: ${a} against ${b}`); return; }
@@ -93,10 +105,10 @@ test("every plan of every design keeps 60% with room on both intervals and fails
 
 // ------------------------------------------------------------- the deterministic model, written again
 
-type Params = { eta: number; asc: number; paymentsAsc: number; hassle: number; aov: number; conv: number; epo: number; usage: number; churn: readonly number[]; horizon: number };
+type Params = { eta: number; asc: number; paymentsAsc: number; hassle: number; aov: number; conv: number; epo: number; usage: number; yearly: number; churn: readonly number[]; horizon: number };
 const baseParams = (D: StudyInput): Params => {
   const M = D.model;
-  return { eta: 3, asc: 0, paymentsAsc: M.paymentsAsc, hassle: M.hassleUsd, aov: M.aovUsd.base, conv: M.conversion.base, epo: M.emailsPerOrder.base, usage: M.usage.base, churn: M.churn.base, horizon: M.horizon.base };
+  return { eta: M.base.eta, asc: M.base.asc, paymentsAsc: M.paymentsAsc, hassle: M.hassleUsd, aov: M.aovUsd.base, conv: M.conversion.base, epo: M.emailsPerOrder.base, usage: M.usage.base, yearly: M.yearlyShare.base, churn: M.churn.base, horizon: M.horizon.base };
 };
 /** Each candidate in each sales bin, written again from the input alone: all-in cost, monthly profit, room above 60% at full use, and whether it can serve the bin; and the competitors' inclusive value. */
 function cells(D: StudyInput, withPacks: boolean, p: Params) {
@@ -127,12 +139,13 @@ function cells(D: StudyInput, withPacks: boolean, p: Params) {
     return [best![0] / 100, best![1] / 100, best![2]];
   };
   const keys = [0, 15, 30, 60, 100];
-  const netAt = (c: (typeof D.candidates)[number], u: number) => {
-    const pts = keys.map((k) => c.netMonthCents[`u${k}`]);
+  const interp = (table: Record<string, number>, u: number) => {
+    const pts = keys.map((k) => table[`u${k}`]);
     const x = u * 100;
     for (let i = 0; i < keys.length - 1; i += 1) if (x <= keys[i + 1]) return (pts[i] + ((pts[i + 1] - pts[i]) * (x - keys[i])) / (keys[i + 1] - keys[i])) / 100;
     return pts[pts.length - 1] / 100;
   };
+  const netAt = (c: (typeof D.candidates)[number], u: number) => (1 - p.yearly) * interp(c.netMonthCents, u) + p.yearly * interp(c.netYearMonthCents, u);
   const table = D.candidates.map((c) => {
     const comm = c.commissionBps / 10_000;
     const f = c.figures;
