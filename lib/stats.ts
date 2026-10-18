@@ -25,7 +25,8 @@ import { creativeRowsFrom } from "@/lib/creative-results";
  * Sales are not counted here. They are read from the creator's own Stripe
  * account, which is the only record of money that deserves the name.
  */
-import { type Paid, paypalPaymentId, readPayPalRefundsWithCoverage, readPayPalSales } from "@/lib/paypal-sales";
+import { type Paid, paypalPaymentId, readPayPalRefundsWithCoverage, readPayPalSales, sellsThroughPayPal } from "@/lib/paypal-sales";
+import { DISPUTE_TAKES, type Entry, type KeptWindow, keptByCurrency } from "@/lib/retained-revenue";
 import { buyerChannelsFrom, type BuyerChannels } from "@/lib/buyer-channel-rules";
 import { type DiscountRow, discountImpact } from "@/lib/discount-impact";
 import { saleHandles } from "@/lib/store";
@@ -792,6 +793,22 @@ export type SalesStats = {
   /** Refunds by product over the 90 days. */
   refundsByProduct?: Record<string, { refunds: number; cents: number }>;
   /**
+   * Disputes opened in each window that the bank holds or the buyer won, by
+   * the channel of the sale disputed (added 18 October 2026); null when they
+   * could not be read. "unrecorded" is a payment not among the sales read.
+   */
+  disputesIn?: Record<"d7" | "d30" | "d90", { source: string; disputes: number; cents: number }[]> | null;
+  /** Every dispute page was read; true with no Stripe account, where there is none to read. */
+  disputesComplete?: boolean;
+  /**
+   * What each currency kept in each window: sales and renewals in, refunds
+   * and disputes out, never converted or added across currencies
+   * (lib/retained-revenue.ts). Added 18 October 2026.
+   */
+  keptIn?: Record<"d7" | "d30" | "d90", KeptWindow>;
+  /** The store sells through PayPal too, whose disputes are not read. */
+  paypalDisputesUnread?: boolean;
+  /**
    * The money each channel brought on each of the 90 days, first sales and
    * renewals together, in the store's currency (added 11 October 2026): what
    * says on which day a channel's ads had paid for themselves
@@ -1175,7 +1192,28 @@ export function renewalsFrom(
   return { ...out, bySource, bySourceDay };
 }
 
-async function readRenewals(store: Store, since: number, now: number, pages: number): Promise<SalesStats["renewals"]> {
+/**
+ * Each paid renewal of this store as one entry, in whatever currency it was
+ * paid (lib/retained-revenue.ts): the same invoices renewalsFrom counts, but
+ * not limited to the store's currency, so a line in another currency is
+ * reconciled with its own renewals. Pure on what it is handed.
+ */
+export function renewalEntries(store: Store, invoices: Record<string, unknown>[]): Entry[] {
+  const handles = saleHandles(store);
+  const out: Entry[] = [];
+  for (const invoice of invoices) {
+    if (invoice.status !== "paid" || invoice.billing_reason !== "subscription_cycle") continue;
+    const meta = invoiceMeta(invoice);
+    if (!handles.has(meta.store ?? "")) continue;
+    const cents = typeof invoice.amount_paid === "number" ? invoice.amount_paid : 0;
+    if (cents <= 0) continue;
+    const source = "channel" in meta ? (meta.channel === "direct" ? "" : meta.channel) : meta.utm_source || UNRECORDED;
+    out.push({ day: dayKey((typeof invoice.created === "number" ? invoice.created : 0) * 1000), cents, currency: currencyOf(invoice), source });
+  }
+  return out;
+}
+
+async function readRenewals(store: Store, since: number, now: number, pages: number): Promise<SalesStats["renewals"] & { entries: Entry[] }> {
   const invoices: Record<string, unknown>[] = [];
   let after = "";
   const seen = new Set<string>();
@@ -1194,7 +1232,47 @@ async function readRenewals(store: Store, since: number, now: number, pages: num
     if (!after) break;
     if (page === pages - 1) partial = true;
   }
-  return { ...renewalsFrom(store, invoices, now, store.currency), partial };
+  return { ...renewalsFrom(store, invoices, now, store.currency), partial, entries: renewalEntries(store, invoices) };
+}
+
+/** One dispute as Stripe lists it, only in a state that takes the money (DISPUTE_TAKES). */
+export type DisputeRow = { created: number; cents: number; currency: string; paymentIntent: string };
+
+/** How many pages of a hundred disputes are read for the numbers; the affiliate book reads as many. */
+const DISPUTE_PAGES = 3;
+
+/**
+ * The disputes opened on the creator's account since `since` (seconds) that
+ * the bank is holding or the buyer won. At most DISPUTE_PAGES pages of a
+ * hundred; `partial` when there were more.
+ */
+async function readDisputes(store: Store, since: number, pages = DISPUTE_PAGES): Promise<{ rows: DisputeRow[]; partial: boolean }> {
+  const out: DisputeRow[] = [];
+  let after = "";
+  const seen = new Set<string>();
+  let partial = false;
+  for (let page = 0; page < pages; page += 1) {
+    const list = (await onAccount(
+      "GET",
+      store.stripeAccountId as string,
+      `/disputes?limit=100&created[gte]=${since}${after ? `&starting_after=${encodeURIComponent(after)}` : ""}`,
+    )) as { data?: unknown; has_more?: unknown };
+    const rows = financialPage(list, seen);
+    for (const row of rows) {
+      if (typeof row.status !== "string" || !DISPUTE_TAKES.has(row.status)) continue;
+      const raw = row.payment_intent;
+      const pi = typeof raw === "string" ? raw : raw && typeof raw === "object" && typeof (raw as { id?: unknown }).id === "string" ? (raw as { id: string }).id : "";
+      const cents = typeof row.amount === "number" && row.amount > 0 ? row.amount : 0;
+      if (!cents) continue;
+      out.push({ created: typeof row.created === "number" ? row.created * 1000 : 0, cents, currency: currencyOf(row), paymentIntent: pi });
+    }
+    if (!list.has_more) break;
+    const last = rows[rows.length - 1];
+    after = typeof last.id === "string" ? last.id : "";
+    if (!after) { partial = true; break; }
+    if (page === pages - 1) partial = true;
+  }
+  return { rows: out, partial };
 }
 
 /** One refund as Stripe lists it: when, how much, in what, and the payment it gave back. */
@@ -1240,7 +1318,7 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   // as they did when only they were read.
   const sinceBefore = Math.floor(now / 1000) - 2 * STATS_DAYS * 86400;
   // Read beside the sales; a store whose renewals cannot be read still sees its sales.
-  const [{ sales: read, partial: readPartial }, renewals, refundRead] = await Promise.all([
+  const [{ sales: read, partial: readPartial }, renewalRead, refundRead, disputeRead] = await Promise.all([
     readPaidSales(store, sinceBefore, 20),
     store.stripeAccountId
       ? readRenewals(store, since, now, 10).catch((error) => {
@@ -1264,7 +1342,20 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
         partial: stripe.partial || paypal.partial,
       };
     })(),
+    // Chargebacks: money the bank holds or the buyer won. None to read without a Stripe account.
+    store.stripeAccountId
+      ? readDisputes(store, since).catch((error): null => {
+          console.error("reading disputes failed", error);
+          return null;
+        })
+      : Promise.resolve({ rows: [] as DisputeRow[], partial: false }),
   ]);
+  const renewalEntryRows = renewalRead?.entries ?? [];
+  let renewals: SalesStats["renewals"] = undefined;
+  if (renewalRead) {
+    const { d7, d30, d90, partial: renewalsPartial, bySource, bySourceDay } = renewalRead;
+    renewals = { d7, d30, d90, partial: renewalsPartial, bySource, bySourceDay };
+  }
   const refundRows = refundRead?.rows ?? null;
   const cut7 = dayKey(now - 6 * 86400_000);
   const cut30 = dayKey(now - 29 * 86400_000);
@@ -1411,6 +1502,47 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   out.channelDays = channelDays;
   out.buyers = buyersFrom(read, store.currency, now);
   out.buyerChannels = buyerChannelsFrom(read, store.currency, now, readPartial);
+  if (disputeRead) {
+    // A dispute is credited to the channel of the sale it takes back, as a refund is.
+    const byPayment = new Map(read.filter((sale) => sale.paymentIntent).map((sale) => [sale.paymentIntent, sale]));
+    const disputesFrom = (cut: string) => {
+      const by = new Map<string, { source: string; disputes: number; cents: number }>();
+      for (const dispute of disputeRead.rows) {
+        if (dayKey(dispute.created) < cut || dispute.currency !== store.currency) continue;
+        const sale = dispute.paymentIntent ? byPayment.get(dispute.paymentIntent) : undefined;
+        const source = sale ? sale.source : UNRECORDED;
+        const row = by.get(source) ?? { source, disputes: 0, cents: 0 };
+        row.disputes += 1;
+        row.cents += dispute.cents;
+        by.set(source, row);
+      }
+      return [...by.values()].sort((a, b) => b.cents - a.cents || a.source.localeCompare(b.source));
+    };
+    out.disputesIn = { d7: disputesFrom(cut7), d30: disputesFrom(cut30), d90: disputesFrom(cut90) };
+  } else {
+    out.disputesIn = null;
+  }
+  out.disputesComplete = disputeRead !== null && !disputeRead.partial;
+  out.paypalDisputesUnread = sellsThroughPayPal(store);
+  {
+    // What each currency kept (lib/retained-revenue.ts): every reading as entries with its channel.
+    const byPayment = new Map(read.filter((sale) => sale.paymentIntent).map((sale) => [sale.paymentIntent, sale]));
+    const placed = (paymentIntent: string) => (paymentIntent ? byPayment.get(paymentIntent)?.source : undefined) ?? UNRECORDED;
+    out.keptIn = keptByCurrency(
+      {
+        sales: { entries: sales.map((sale) => ({ day: dayKey(sale.created), cents: sale.cents, currency: sale.currency, source: sale.source })), complete: !readPartial },
+        renewals: store.stripeAccountId ? { entries: renewalEntryRows, complete: Boolean(renewals && !renewals.partial) } : null,
+        refunds: refundRead
+          ? { entries: refundRead.rows.map((r) => ({ day: dayKey(r.created), cents: r.cents, currency: r.currency, source: placed(r.paymentIntent) })), complete: !refundRead.partial }
+          : null,
+        disputes: disputeRead
+          ? { entries: disputeRead.rows.map((d) => ({ day: dayKey(d.created), cents: d.cents, currency: d.currency, source: placed(d.paymentIntent) })), complete: !disputeRead.partial }
+          : null,
+      },
+      dayKey(now),
+      store.currency,
+    );
+  }
   out.paymentsComplete = !partial && (!store.stripeAccountId || Boolean(renewals && !renewals.partial));
   out.cashflowComplete = out.paymentsComplete && !readPartial && refundRead !== null && !refundRead.partial &&
     !(out.refundsIn?.d90 ?? []).some((r) => r.source === UNRECORDED);
@@ -1748,6 +1880,12 @@ export type StatsData = {
   refunds: Record<"d7" | "d30" | "d90", { source: string; refunds: number; cents: number }[]> | null;
   /** Refunds over the last 90 days, by product. */
   refundsByProduct: Record<string, { refunds: number; cents: number }>;
+  /** Disputes opened in the window that took money, by the channel of the sale; null when they could not be read. */
+  disputes?: Record<"d7" | "d30" | "d90", { source: string; disputes: number; cents: number }[]> | null;
+  disputesComplete?: boolean;
+  /** What each currency kept in each window (SalesStats.keptIn). */
+  kept?: Record<"d7" | "d30" | "d90", KeptWindow> | null;
+  paypalDisputesUnread?: boolean;
   /** Each channel's money by the day over the 90 days, renewals included (SalesStats.channelDays). */
   channelDays?: ChannelDays;
   /** Refund amounts on the UTC day recorded; null means no complete ledger was read. */
@@ -2009,6 +2147,10 @@ export function studioStats(
     salesCountries: sales?.byCountryIn ?? { d7: [], d30: [], d90: [] },
     refunds: sales?.refundsIn ?? null,
     refundsByProduct: sales?.refundsByProduct ?? {},
+    disputes: sales?.disputesIn ?? null,
+    disputesComplete: sales?.disputesComplete ?? false,
+    kept: sales?.keptIn ?? null,
+    paypalDisputesUnread: sales?.paypalDisputesUnread ?? false,
     channelDays: sales?.channelDays ?? {},
     refundDays: sales?.refundDays ?? null,
     buyers: sales?.buyers ? { d7: sales.buyers.d7, d30: sales.buyers.d30, d90: sales.buyers.d90 } : null,

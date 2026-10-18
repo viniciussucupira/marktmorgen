@@ -1284,7 +1284,7 @@
       "clickfunnels": "Upfront, recurring, cart value and earnings-per-click views.",
       "evidencePath": "lib/mail-revenue.ts",
       "marktmorgenEvidence": "C/U",
-      "current": "Email revenue aggregation exists; full funnel reconciliation unproven.",
+      "current": "Revenue, renewals, refunds and (since 18 October 2026) disputes are read from the creator's Stripe account and reconciled by currency and by channel (lib/retained-revenue.ts, see F52); email revenue is aggregated per broadcast and sequence. Kept money by funnel and by affiliate is not reconciled yet.",
       "improvement": "Reconcile retained revenue by funnel, page, channel and affiliate."
     },
     {
@@ -1294,10 +1294,15 @@
       "source": "S15",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Date and first/last-visit UTM filters.",
-      "evidencePath": "lib/mail-revenue.ts",
-      "marktmorgenEvidence": "C/U",
-      "current": "Campaign tagging and revenue reading exist.",
-      "improvement": "Declare model/window, unknown attribution and FX basis."
+      "evidencePath": "lib/retained-revenue.ts",
+      "marktmorgenEvidence": "D",
+      "current": "The numbers declare their model and window and show what attribution cannot place. Money by channel is credited to the page's tags, else the last visit within the store's attribution window (7, 30, 60 or 90 days; lib/attribution-rules.ts), set beside the first visit and what buyers said. Since 18 October 2026 each window also shows what the store kept, one line per currency it was paid in: paid at checkout plus renewals, less refunds and less disputes the bank holds or the buyer won (read from the creator's Stripe account), never converted or added across currencies; a line whose purchase, renewal, refund or dispute reading is incomplete shows no kept figure and names the missing reading. The store currency's kept money is split by channel with the part that has no channel recorded (direct) or could not be matched to a sale (unrecorded) shown, beside the sentence that a channel does not show it caused the sale. Disputes also come out of the money-by-source table's totals. Not browser, load or live-provider evidence.",
+      "improvement": "Reconcile the same kept money by funnel and by affiliate; PayPal disputes are not read.",
+      "testEvidence": [
+        "tests/retained-revenue.test.ts",
+        "tests/attribution.test.ts",
+        "tests/cashflow-reading.test.ts"
+      ]
     },
     {
       "id": "F53",
@@ -1691,8 +1696,8 @@
     "status": "Not certified; do not activate commercial entitlements from this report"
   },
   "evidenceCounts": {
-    "D": 37,
-    "C/U": 31,
+    "D": 38,
+    "C/U": 30,
     "U": 2
   },
   "verification": {
@@ -1753,6 +1758,11 @@
         "id": "F59",
         "date": "2026-10-18 UTC",
         "note": "Moved U to D on tests/embed-sdk.test.ts, tests/embed.test.ts: the code had shipped on 17 October 2026 and the row was stale. The evidence path is cited at main."
+      },
+      {
+        "id": "F52",
+        "date": "2026-10-18 UTC",
+        "note": "Moved C/U to D on tests/retained-revenue.test.ts with tests/attribution.test.ts and tests/cashflow-reading.test.ts: kept money by currency (orders, renewals, refunds and disputes, never converted), unknown attribution shown, and no causal claim (priority 4). The evidence path is cited at main, not at sourceRevision, where lib/retained-revenue.ts did not exist yet."
       }
     ]
   }
