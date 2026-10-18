@@ -344,15 +344,13 @@
         "HL01",
         "HL08"
       ],
-      "marktmorgen": "partial",
+      "marktmorgen": "built",
       "evidence": [
         "lib/review-requests.ts",
+        "lib/review-elsewhere.ts",
         "lib/reviews.ts"
       ],
-      "note": "One email asks each buyer, some days after buying, for a review on the store, shown as a verified purchase. It does not point buyers to the creator's own Google, Trustpilot or other public review page.",
-      "sales": 2,
-      "effort": 1,
-      "score": 2.0
+      "note": "One email asks each buyer, some days after buying, for a review on the store, shown as a verified purchase, and since 18 October 2026 also names the creator's own Google, Trustpilot or Facebook page, the same for every buyer. By email only, once per order; not by text message and not repeated until clicked."
     },
     {
       "id": "H20",
@@ -666,15 +664,6 @@
   "ranking": [
     {
       "rank": 1,
-      "id": "H19",
-      "feature": "Reputation management: review requests to a public review site",
-      "marktmorgen": "partial",
-      "sales": 2,
-      "effort": 1,
-      "score": 2.0
-    },
-    {
-      "rank": 2,
       "id": "H28",
       "feature": "Documents, contracts and proposals with e-signature",
       "marktmorgen": "gap",
@@ -683,7 +672,7 @@
       "score": 1.33
     },
     {
-      "rank": 3,
+      "rank": 2,
       "id": "H14",
       "feature": "Social media planner (scheduling and posting)",
       "marktmorgen": "gap",
@@ -692,7 +681,7 @@
       "score": 0.8
     },
     {
-      "rank": 4,
+      "rank": 3,
       "id": "H01",
       "feature": "Website and funnel builder with templates",
       "marktmorgen": "partial",
@@ -701,7 +690,7 @@
       "score": 0.75
     },
     {
-      "rank": 5,
+      "rank": 4,
       "id": "H07",
       "feature": "Unified conversations across SMS, email, Instagram, Facebook, WhatsApp and live chat",
       "marktmorgen": "partial",
@@ -710,7 +699,7 @@
       "score": 0.75
     },
     {
-      "rank": 6,
+      "rank": 5,
       "id": "H11",
       "feature": "SMS marketing and SMS conversations",
       "marktmorgen": "gap",
@@ -719,7 +708,7 @@
       "score": 0.75
     },
     {
-      "rank": 7,
+      "rank": 6,
       "id": "H22",
       "feature": "Workflow AI: automation recommended from a goal",
       "marktmorgen": "gap",
@@ -728,7 +717,7 @@
       "score": 0.67
     },
     {
-      "rank": 8,
+      "rank": 7,
       "id": "H04",
       "feature": "Cloning whole funnel setups (snapshots)",
       "marktmorgen": "partial",
@@ -737,7 +726,7 @@
       "score": 0.5
     },
     {
-      "rank": 9,
+      "rank": 8,
       "id": "H12",
       "feature": "Inbound and outbound calling",
       "marktmorgen": "gap",
@@ -746,7 +735,7 @@
       "score": 0.4
     },
     {
-      "rank": 10,
+      "rank": 9,
       "id": "H17",
       "feature": "Ad Manager: creating ads from inside the product",
       "marktmorgen": "partial",
@@ -755,7 +744,7 @@
       "score": 0.4
     },
     {
-      "rank": 11,
+      "rank": 10,
       "id": "H34",
       "feature": "Mobile app",
       "marktmorgen": "partial",
@@ -764,7 +753,7 @@
       "score": 0.4
     },
     {
-      "rank": 12,
+      "rank": 11,
       "id": "H08",
       "feature": "Custom dashboards and scheduled reports to any address",
       "marktmorgen": "partial",
@@ -773,7 +762,7 @@
       "score": 0.33
     },
     {
-      "rank": 13,
+      "rank": 12,
       "id": "H09",
       "feature": "Prospecting tool (add-on)",
       "marktmorgen": "partial",
@@ -782,7 +771,7 @@
       "score": 0.33
     },
     {
-      "rank": 14,
+      "rank": 13,
       "id": "H20",
       "feature": "Reviews AI: replies to reviews",
       "marktmorgen": "partial",
@@ -791,7 +780,7 @@
       "score": 0.33
     },
     {
-      "rank": 15,
+      "rank": 14,
       "id": "H05",
       "feature": "Domain management",
       "marktmorgen": "partial",
@@ -800,7 +789,7 @@
       "score": 0.25
     },
     {
-      "rank": 16,
+      "rank": 15,
       "id": "H23",
       "feature": "Voice AI: answering phone calls",
       "marktmorgen": "gap",
@@ -809,7 +798,7 @@
       "score": 0.2
     },
     {
-      "rank": 17,
+      "rank": 16,
       "id": "H35",
       "feature": "Branded client portal app (add-on)",
       "marktmorgen": "partial",
@@ -819,10 +808,16 @@
     }
   ],
   "counts": {
-    "partial": 11,
-    "built": 15,
+    "partial": 10,
+    "built": 16,
     "not_planned": 5,
     "gap": 6
   },
-  "builtFromThis": []
+  "builtFromThis": [
+    {
+      "id": "H19",
+      "pr": "#549",
+      "note": "the creator's public review page named in every review request"
+    }
+  ]
 }

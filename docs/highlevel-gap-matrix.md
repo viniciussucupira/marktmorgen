@@ -6,7 +6,7 @@ Reviewed 2026-10-18 UTC. The machine-readable twin is [highlevel-gap-matrix.json
 
 **Identifiers.** Earlier code comments cite a HighLevel audit by H-number (H02 pipelines, H13 upsells, H15 quizzes, H18 workflows, H26 and H27 payment requests and invoices, H29 pay per lead, H36 Conversation AI) whose file is not in the repository. Those numbers keep their meaning here, except H13: no page read here shows HighLevel upsells or order bumps, so H13 is not listed. The others are new.
 
-**Counts:** 15 built, 11 partial, 6 gaps, 5 not planned.
+**Counts:** 16 built, 10 partial, 6 gaps, 5 not planned.
 
 ## Ranked gaps
 
@@ -14,23 +14,24 @@ Gaps and partial rows, by sales impact divided by effort (each 1 to 5; this revi
 
 | Rank | ID | Feature | Marktmorgen | Sales | Effort | Score |
 |---:|---|---|---|---:|---:|---:|
-| 1 | H19 | Reputation management: review requests to a public review site | Partial | 2 | 1 | 2.00 |
-| 2 | H28 | Documents, contracts and proposals with e-signature | Gap | 4 | 3 | 1.33 |
-| 3 | H14 | Social media planner (scheduling and posting) | Gap | 4 | 5 | 0.80 |
-| 4 | H01 | Website and funnel builder with templates | Partial | 3 | 4 | 0.75 |
-| 5 | H07 | Unified conversations across SMS, email, Instagram, Facebook, WhatsApp and live chat | Partial | 3 | 4 | 0.75 |
-| 6 | H11 | SMS marketing and SMS conversations | Gap | 3 | 4 | 0.75 |
-| 7 | H22 | Workflow AI: automation recommended from a goal | Gap | 2 | 3 | 0.67 |
-| 8 | H04 | Cloning whole funnel setups (snapshots) | Partial | 2 | 4 | 0.50 |
-| 9 | H12 | Inbound and outbound calling | Gap | 2 | 5 | 0.40 |
-| 10 | H17 | Ad Manager: creating ads from inside the product | Partial | 2 | 5 | 0.40 |
-| 11 | H34 | Mobile app | Partial | 2 | 5 | 0.40 |
-| 12 | H08 | Custom dashboards and scheduled reports to any address | Partial | 1 | 3 | 0.33 |
-| 13 | H09 | Prospecting tool (add-on) | Partial | 1 | 3 | 0.33 |
-| 14 | H20 | Reviews AI: replies to reviews | Partial | 1 | 3 | 0.33 |
-| 15 | H05 | Domain management | Partial | 1 | 4 | 0.25 |
-| 16 | H23 | Voice AI: answering phone calls | Gap | 1 | 5 | 0.20 |
-| 17 | H35 | Branded client portal app (add-on) | Partial | 1 | 5 | 0.20 |
+| 1 | H28 | Documents, contracts and proposals with e-signature | Gap | 4 | 3 | 1.33 |
+| 2 | H14 | Social media planner (scheduling and posting) | Gap | 4 | 5 | 0.80 |
+| 3 | H01 | Website and funnel builder with templates | Partial | 3 | 4 | 0.75 |
+| 4 | H07 | Unified conversations across SMS, email, Instagram, Facebook, WhatsApp and live chat | Partial | 3 | 4 | 0.75 |
+| 5 | H11 | SMS marketing and SMS conversations | Gap | 3 | 4 | 0.75 |
+| 6 | H22 | Workflow AI: automation recommended from a goal | Gap | 2 | 3 | 0.67 |
+| 7 | H04 | Cloning whole funnel setups (snapshots) | Partial | 2 | 4 | 0.50 |
+| 8 | H12 | Inbound and outbound calling | Gap | 2 | 5 | 0.40 |
+| 9 | H17 | Ad Manager: creating ads from inside the product | Partial | 2 | 5 | 0.40 |
+| 10 | H34 | Mobile app | Partial | 2 | 5 | 0.40 |
+| 11 | H08 | Custom dashboards and scheduled reports to any address | Partial | 1 | 3 | 0.33 |
+| 12 | H09 | Prospecting tool (add-on) | Partial | 1 | 3 | 0.33 |
+| 13 | H20 | Reviews AI: replies to reviews | Partial | 1 | 3 | 0.33 |
+| 14 | H05 | Domain management | Partial | 1 | 4 | 0.25 |
+| 15 | H23 | Voice AI: answering phone calls | Gap | 1 | 5 | 0.20 |
+| 16 | H35 | Branded client portal app (add-on) | Partial | 1 | 5 | 0.20 |
+
+**Built from this matrix:** H19 in #549 (the creator's public review page named in every review request).
 
 ## Every row
 
@@ -63,7 +64,7 @@ Gaps and partial rows, by sales impact divided by effort (each 1 to 5; this revi
 | H14 | Social media planner (scheduling and posting) | [HL01](https://www.gohighlevel.com/pricing), [HL07](https://help.gohighlevel.com/support/solutions/articles/155000005063-getting-started-setup-social-planner) | Gap | — | Not built. The share links and post drafting below exist, but nothing posts to or schedules on a social platform. Each platform needs its own app review and connection. |
 | H16 | Content AI: posts, emails and campaign copy | [HL01](https://www.gohighlevel.com/pricing), [HL02](https://www.gohighlevel.com/post/highlevel-101-everything-you-need-to-know) | Built | [`lib/ai.ts`](../lib/ai.ts) | Drafts social posts (writePosts), emails, sequences, blog posts and affiliate posts on plans with AI writing, for the creator to edit. |
 | H17 | Ad Manager: creating ads from inside the product | [HL01](https://www.gohighlevel.com/pricing), [HL11](https://help.gohighlevel.com/support/solutions/articles/155000002433-overview-of-ad-manager) | Partial | [`lib/meta-ads.ts`](../lib/meta-ads.ts), [`lib/ad-spend.ts`](../lib/ad-spend.ts) | A Meta ad account is connected read-only, and what campaigns spent comes into the numbers beside what they brought. No ads are created or published from Marktmorgen. |
-| H19 | Reputation management: review requests to a public review site | [HL01](https://www.gohighlevel.com/pricing), [HL08](https://help.gohighlevel.com/support/solutions/articles/48000980328-how-to-customize-the-review-request-messages-sms-email-) | Partial | [`lib/review-requests.ts`](../lib/review-requests.ts), [`lib/reviews.ts`](../lib/reviews.ts) | One email asks each buyer, some days after buying, for a review on the store, shown as a verified purchase. It does not point buyers to the creator's own Google, Trustpilot or other public review page. |
+| H19 | Reputation management: review requests to a public review site | [HL01](https://www.gohighlevel.com/pricing), [HL08](https://help.gohighlevel.com/support/solutions/articles/48000980328-how-to-customize-the-review-request-messages-sms-email-) | Built | [`lib/review-requests.ts`](../lib/review-requests.ts), [`lib/review-elsewhere.ts`](../lib/review-elsewhere.ts), [`lib/reviews.ts`](../lib/reviews.ts) | One email asks each buyer, some days after buying, for a review on the store, shown as a verified purchase, and since 18 October 2026 also names the creator's own Google, Trustpilot or Facebook page, the same for every buyer. By email only, once per order; not by text message and not repeated until clicked. |
 | H20 | Reviews AI: replies to reviews | [HL01](https://www.gohighlevel.com/pricing), [HL02](https://www.gohighlevel.com/post/highlevel-101-everything-you-need-to-know) | Partial | [`lib/ai.ts`](../lib/ai.ts), [`lib/reviews.ts`](../lib/reviews.ts) | A reply to a store review can be drafted with AI (replyToReview) and is posted only by the creator. Google and Facebook reviews are not read. |
 | H21 | Online listings management (add-on) | [HL01](https://www.gohighlevel.com/pricing) | Not planned | — | Out of scope for an online creator store. |
 
