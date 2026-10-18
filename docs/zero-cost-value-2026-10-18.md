@@ -101,7 +101,7 @@ HighLevel and ClickFunnels are also covered row by row in [highlevel-gap-matrix.
 | Templates for pages and funnels | (a) partly, (b) more | Eight funnel kinds, starters and three page styles exist (`lib/funnel-starters.ts`, `lib/funnel-types.ts`). More starting pages are content, with no cost per use. |
 | Domain management | (a) partly, (c) buying | Connecting a domain: `lib/domains.ts`. Buying one is a registrar charge. |
 | CRM and pipelines | (a) | `lib/crm.ts` |
-| Custom dashboards and reporting | (a) partly, (b) scheduled to any address | `lib/stats-report.ts`, `lib/custom-range-view.ts`. A scheduled report to an address the creator types would be one of the store's emails. |
+| Custom dashboards and reporting | (a) partly, (b) scheduled to any address | `lib/stats-report.ts`, `lib/custom-range-view.ts`. The weekly email already goes to the creator and up to five team members they choose, each checked against the team when it goes. Any other address, such as an accountant's, would be one of the store's emails; it is kept to the team on purpose today, because the numbers are private. |
 | Email marketing | (a) | `lib/broadcasts.ts` |
 | SMS marketing | (c) | A carrier charge per message. |
 | Inbound and outbound calling | (c) | Per minute. |
@@ -167,7 +167,7 @@ This order is this review's judgment, not a measurement.
 2. **Instagram AutoDM** (Stan). High value to creators who sell from Instagram. Blocked on the owner's Meta app review before any code can be used live.
 3. **More starting pages and funnels** (HighLevel templates). Content only; no cost per use. Every starting page must hold no invented testimonial, figure or urgency.
 4. **Copying a whole store's setup into another store of the same account** (HighLevel snapshots). Uses only the receiving store's data room.
-5. **A scheduled report to an address the creator types** (HighLevel). One of the store's emails each time.
+5. **A scheduled report to an address outside the team** (HighLevel). One of the store's emails each time; low value, since team members already receive it, and it needs the owner's decision to send store numbers outside the team.
 6. **Social planner** (HighLevel). Blocked on each platform's app review.
 
 Built from this list: item 1 in #554 (`lib/letters.ts`, `app/[handle]/letters`, `tests/letters.test.ts`). Each other item will be its own tested pull request.
