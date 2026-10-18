@@ -585,10 +585,14 @@
       "source": "S03",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Conversation generates designed funnels and copy.",
-      "evidencePath": "lib/funnel-types.ts",
-      "marktmorgenEvidence": "U",
-      "current": "A complete integrated AI launch was not established.",
-      "improvement": "Generate schema-validated drafts after funded admission; never auto-publish."
+      "evidencePath": "lib/funnel-ai.ts",
+      "marktmorgenEvidence": "D",
+      "current": "On the plans with AI writing (Studio and Scale), the guided setup's review step drafts the whole funnel from the store's own records: every new page's headline and introduction, copy only for blocks the page type has, the form's questions (subscribing always starts off), offers mapped to the store's own paid one-off products (nothing is created or priced) and follow-up emails saved switched off through the Email Studio. A sentence with a number no record carries is removed; a part only the creator knows is marked and keeps the page from being shown. Counted in writing jobs and reserved against the plan's AI budget before any request; pages are created hidden and the funnel disabled, so nothing is published. It does not design layouts or make pictures or videos. Not browser, load or live-provider evidence.",
+      "improvement": "Measure draft-to-launch time against ClickFunnels' AI builder in an authenticated session; evaluate drafted copy before widening it.",
+      "testEvidence": [
+        "tests/funnel-ai.test.ts",
+        "tests/funnel-types.test.ts"
+      ]
     },
     {
       "id": "F04",
@@ -597,10 +601,13 @@
       "source": "S03",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Research mode proposes audience, funnel and design.",
-      "evidencePath": "lib/outreach.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Whole-funnel market research was not established.",
-      "improvement": "Show dated sources, uncertainty and evidence; never invent market facts."
+      "evidencePath": "lib/funnel-ai.ts",
+      "marktmorgenEvidence": "D",
+      "current": "A summary of who the funnel is for and how the offer reads, from the store's own dated records only: what the creator typed, products as saved, verified review counts and averages, 30-day visit counts and unanswered visitor questions with their dates. Every statement kept cites one of those sources and holds every number it states; labels and dates come from the store, never the model; the store's own uncertainty lines are always shown. It never searches the web (webSearch: false), so it does not propose markets beyond the store's records. Counted as one writing job. Not browser, load or live-provider evidence.",
+      "improvement": "Add outside market sources only with dated citations a person can open, never invented market facts.",
+      "testEvidence": [
+        "tests/funnel-ai.test.ts"
+      ]
     },
     {
       "id": "F05",
@@ -674,10 +681,16 @@
       "source": "S28",
       "clickfunnelsEvidence": "V-index",
       "clickfunnels": "Documentation lists universal blocks and custom HTML/CSS/JS.",
-      "evidencePath": "lib/sales-page.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Full equivalent reusable-block coverage unestablished.",
-      "improvement": "Use safe reusable sections; offer sandboxed extensibility only after review."
+      "evidencePath": "lib/saved-blocks.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Saved sections are the reusable blocks: up to 8 plain-text blocks kept under a name in the store's library (10, 30 or 50 by plan), put on any page edited with the page editor, and changed once and offered to every page that carries them, written only to the pages the creator checks; a hero, the reviews and pictures never travel in a section. Custom HTML, CSS or JavaScript on a store page is deliberately not offered: a script there could read buyers' checkout and forms. The sandboxed way out is the other direction: the checkout script and overlay for the creator's own HTML pages (row F59). Not browser, load or live-provider evidence.",
+      "improvement": "Offer a sandboxed custom block only after a security review shows it can reach no buyer data and make no outside request.",
+      "testEvidence": [
+        "tests/saved-sections.test.ts",
+        "tests/page-blocks.test.ts",
+        "tests/sales-blocks-render.test.ts",
+        "tests/store-sections.test.ts"
+      ]
     },
     {
       "id": "F11",
@@ -1112,10 +1125,15 @@
       "source": "S13",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "One-on-one, collective and round-robin formats.",
-      "evidencePath": "lib/calendar-sync.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Calendar feeds exist; equivalent team scheduling unverified.",
-      "improvement": "Audit host allocation, capacity and timezone behavior before promising parity."
+      "evidencePath": "lib/team-scheduling-rules.ts",
+      "marktmorgenEvidence": "D",
+      "current": "One-on-one calls with weekly hours, plus team event types: round robin (the free host with the fewest bookings of the event so far, then fewest coming up, then by address) and collective (only times every host is free). Each host has their own week in their own time zone (daylight saving read at the exact instant), gap, notice and daily cap; a host's time is claimed atomically across every store, and a host whose calendar could not be read is never offered. Hosts can connect their own Google Calendar (free/busy read, the booking written, moved and deleted there). Team events are closed on the Store plan. Not browser, load or live-provider evidence.",
+      "improvement": "Measure setup and booking clicks against ClickFunnels Appointments in an authenticated session.",
+      "testEvidence": [
+        "tests/team-scheduling.test.ts",
+        "tests/call-packages.test.ts",
+        "tests/call-reminder.test.ts"
+      ]
     },
     {
       "id": "F41",
@@ -1372,10 +1390,14 @@
       "source": "S14",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Browser page tokens and externally hosted checkout are documented.",
-      "evidencePath": "lib/api-write.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Equivalent external-page SDK unestablished.",
-      "improvement": "Build only after validated demand, security and finite spend envelopes."
+      "evidencePath": "lib/embed-sdk.ts",
+      "marktmorgenEvidence": "D",
+      "current": "A link and a short script, written into the creator's own page so a view costs this site nothing, open a product's checkout card or the sign-up form over any website, or as a page; the buyer pays on Stripe's page on the creator's own Stripe account. The script reads only the pressed link, takes messages only from this site's origin and its own frame, and raises page events (open, ready, checkout, optin, close, purchase). Only sites on the store's list may frame the card, which is counted as a store visit inside the plan's figures; one product can also be embedded as a card or a button. No browser page tokens or API secrets in the page. Not browser, load or live-provider evidence.",
+      "improvement": "Measure the embed journey on real builder sites; add an authenticated page API only after demand and a finite spend envelope.",
+      "testEvidence": [
+        "tests/embed-sdk.test.ts",
+        "tests/embed.test.ts"
+      ]
     },
     {
       "id": "F60",
@@ -1474,7 +1496,7 @@
       "clickfunnels": "Complete native builder/app parity not verified.",
       "evidencePath": "components/home-parts.tsx",
       "marktmorgenEvidence": "U",
-      "current": "Public site distinguishes installable PWA from a native app.",
+      "current": "Public site distinguishes the installable web app from a native app. Left U on 18 October 2026: a native application needs Apple Developer Program and Google Play developer accounts in the owner's name (a purchase and identity verification, which an agent may not make), store listings that print the seller's legal details, and a separate codebase whose upkeep is a cost no plan prices. The web app is never described as native.",
       "improvement": "Measure mobile tasks; never describe PWA as a native application."
     },
     {
@@ -1498,7 +1520,7 @@
       "clickfunnels": "Changelog records improvements; private architecture remains unknown.",
       "evidencePath": "lib/page-funnel-store.ts",
       "marktmorgenEvidence": "U",
-      "current": "Comparative latency, uptime and load results not established.",
+      "current": "Comparative latency, uptime and load results not established. Left U on 18 October 2026: a comparison needs ClickFunnels pages measured beside Marktmorgen's from an authenticated ClickFunnels account on matched networks, and uptime needs months of outside probing by a monitoring service; both need third-party accounts, and this environment cannot reach live sites. No speed or uptime figure is published until measured.",
       "improvement": "Use matched fixtures/networks and publish measured percentiles only."
     },
     {
@@ -1669,9 +1691,9 @@
     "status": "Not certified; do not activate commercial entitlements from this report"
   },
   "evidenceCounts": {
-    "D": 32,
+    "D": 37,
     "C/U": 31,
-    "U": 7
+    "U": 2
   },
   "verification": {
     "reviewedAt": "2026-10-17 UTC",
@@ -1706,6 +1728,31 @@
         "id": "F54",
         "date": "2026-10-18 UTC",
         "note": "Moved U to D on tests/funnel-diagnosis.test.ts with tests/funnel-ai.test.ts. The evidence path is cited at main, not at sourceRevision, where lib/funnel-diagnosis.ts did not exist yet."
+      },
+      {
+        "id": "F03",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/funnel-ai.test.ts, tests/funnel-types.test.ts: the code had shipped on 17 October 2026 and the row was stale. The evidence path is cited at main."
+      },
+      {
+        "id": "F04",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/funnel-ai.test.ts: the code had shipped on 17 October 2026 and the row was stale. The evidence path is cited at main."
+      },
+      {
+        "id": "F10",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/saved-sections.test.ts, tests/page-blocks.test.ts, tests/sales-blocks-render.test.ts, tests/store-sections.test.ts: the code had shipped on 17 October 2026 and the row was stale. The evidence path is cited at main."
+      },
+      {
+        "id": "F40",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/team-scheduling.test.ts, tests/call-packages.test.ts, tests/call-reminder.test.ts: the code had shipped on 17 October 2026 and the row was stale. The evidence path is cited at main."
+      },
+      {
+        "id": "F59",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/embed-sdk.test.ts, tests/embed.test.ts: the code had shipped on 17 October 2026 and the row was stale. The evidence path is cited at main."
       }
     ]
   }
