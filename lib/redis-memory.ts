@@ -225,6 +225,15 @@ export class MemoryRedis {
           this.hash(target).set(args[2], args[4]);
           return 1;
         }
+        if (key.startsWith("-- marktmorgen:crm-pipelines-save:v1\n") && args[0] === "1" && args.length === 4) {
+          const target = args[1];
+          this.live(target);
+          const held = this.data.get(target);
+          if (held !== undefined && typeof held !== "string") throw new Error("WRONGTYPE");
+          if ((held ?? "") !== args[2]) return -1;
+          this.data.set(target, args[3]);
+          return 1;
+        }
         if (key.startsWith("-- marktmorgen:crm-deal-save:v1\n") && args[0] === "1" && args.length === 5) {
           const target = args[1];
           this.live(target);

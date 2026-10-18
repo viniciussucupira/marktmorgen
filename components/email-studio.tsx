@@ -65,6 +65,8 @@ const MESSAGES: Record<string, string> = {
   step: "Every email needs a subject, some text, and a wait of up to a year. A condition needs its product, or its label, and one on the email before needs an email right before it. A label needs its words, and another sequence has to still be there. A field needs a value it keeps, a deal a stage, and a note its words.",
   tag: "Write the label that starts the sequence.",
   form: "Choose one of your forms that asks for an email address.",
+  stage: "Choose one of your pipelines' stages.",
+  stage_taken: "Another workflow already starts from that stage. A stage starts one workflow; that one can start others with a step.",
   unknown: "That is not there anymore. Reload the page.",
   send: "The email service did not take it just now. Nothing was sent; try again in a moment.",
   signed_out: "Your session ended. Log in again.",
@@ -1540,6 +1542,8 @@ type FlowDraft = {
   formId: string;
   /** For "form" on a quiz: the one result that starts it, or "" for everyone who sends it. */
   formOutcome: string;
+  /** The deal stage that starts it, for "stage". */
+  stageId: string;
   active: boolean;
   steps: StepDraft[];
   /** When it ends early: never, once they have bought anything, once they get one product, or once they carry a label. */
@@ -1722,6 +1726,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
       triggerTag: "",
       formId: "",
       formOutcome: "",
+      stageId: "",
       active: false,
       steps: [blankStep("0", "hours", first)],
       goal: "",
@@ -1737,6 +1742,7 @@ function toDraft(flow: FlowRow | null, products: { id: string }[]): FlowDraft {
     triggerTag: flow.tag ?? "",
     formId: flow.formId ?? "",
     formOutcome: flow.formOutcome ?? "",
+    stageId: flow.stageId ?? "",
     active: flow.active,
     steps: flow.steps.map((s) => stepToDraft(s, first)),
     goal: !flow.goal ? "" : "any" in flow.goal ? "any" : "tag" in flow.goal ? "tag" : "product",
@@ -1830,6 +1836,8 @@ function Flows({
         ? `Starts when someone who agreed to hear from you opens ${products.find((p) => p.id === f.productId)?.title ?? "a course"} for the first time`
       : f.trigger === "abandoned"
         ? `Starts when someone on your list, who agreed on the checkout page to hear from you, leaves a checkout of ${products.find((p) => p.id === f.productId)?.title ?? "a product"} unpaid`
+      : f.trigger === "stage"
+        ? `Starts when a deal with someone on your list enters “${automation.stages.find((x) => x.id === f.stageId)?.name ?? "a stage no longer in your pipelines"}”`
       : f.trigger === "bought"
         ? "Starts the first time someone who agreed to hear from you buys anything"
         : `Starts when someone who agreed to hear from you gets ${products.find((p) => p.id === f.productId)?.title ?? "a product"}`;
@@ -1858,6 +1866,7 @@ function Flows({
         tag: draft.trigger === "tagged" ? draft.triggerTag : null,
         formId: draft.trigger === "form" ? draft.formId : null,
         formOutcome: draft.trigger === "form" ? draft.formOutcome : "",
+        stageId: draft.trigger === "stage" ? draft.stageId : "",
         // A new workflow is saved paused whatever is sent; switching on is its own step.
         active: draft.id ? draft.active : false,
         steps: draft.steps.map((s) => {
@@ -1910,7 +1919,7 @@ function Flows({
   }) : [];
   const draftIssues = draft ? flowConfigurationIssues({
     id: draft.id ?? "", name: draft.name, trigger: draft.trigger, active: draft.active, createdAt: 0,
-    productId: draft.productId, tag: draft.triggerTag, formId: draft.formId, ...(draft.trigger === "form" && draft.formOutcome ? { formOutcome: draft.formOutcome } : {}),
+    productId: draft.productId, tag: draft.triggerTag, formId: draft.formId, ...(draft.trigger === "form" && draft.formOutcome ? { formOutcome: draft.formOutcome } : {}), ...(draft.trigger === "stage" ? { stageId: draft.stageId } : {}),
     goal: goalOf(draft) ?? undefined,
     steps: draftSteps,
   }, { products, courses, paidProducts, flows, ...automation, assignees }) : [];
@@ -2136,11 +2145,13 @@ function Flows({
                 setDraft((current) => {
                   if (!current) return current;
                   const trigger: FlowTrigger =
-                    e.target.value === "product" ? "product" : e.target.value === "bought" ? "bought" : e.target.value === "tagged" ? "tagged" : e.target.value === "finished" ? "finished" : e.target.value === "form" ? "form" : e.target.value === "started" ? "started" : e.target.value === "abandoned" ? "abandoned" : "joined";
+                    e.target.value === "product" ? "product" : e.target.value === "bought" ? "bought" : e.target.value === "tagged" ? "tagged" : e.target.value === "finished" ? "finished" : e.target.value === "form" ? "form" : e.target.value === "started" ? "started" : e.target.value === "abandoned" ? "abandoned" : e.target.value === "stage" ? "stage" : "joined";
                   // Finishing and opening are only for a course: the first course, when the product chosen is not one.
                   const productId = (trigger === "finished" || trigger === "started") && !courses.includes(current.productId) ? (courses[0] ?? current.productId) : current.productId;
                   // A sequence that starts with a purchase cannot end at one.
                   const formId = trigger === "form" && !automation.forms.some((x) => x.id === current.formId) ? (automation.forms[0]?.id ?? "") : current.formId;
+                  // A deal stage: the first stage of the first pipeline, when none of the store's is chosen yet.
+                  if (trigger === "stage") return { ...current, trigger, formId, stageId: automation.stages.some((x) => x.id === current.stageId) ? current.stageId : (automation.stages[0]?.id ?? "") };
                   // An abandoned checkout ends once they buy that product, unless another end that stops at a purchase was chosen.
                   if (trigger === "abandoned") return { ...current, trigger, productId, formId, ...(current.goal === "any" || current.goal === "product" ? {} : { goal: "product" as const, goalProduct: productId }) };
                   return { ...current, trigger, productId, formId, goal: trigger === "bought" && current.goal === "any" ? "" : current.goal };
@@ -2155,8 +2166,22 @@ function Flows({
               {courses.length ? <option value="started">Someone who agreed to hear from you opens a course for the first time</option> : null}
               {products.length ? <option value="abandoned">Someone on your list leaves a checkout unpaid, having agreed to hear from you</option> : null}
               {automation.forms.length ? <option value="form">Someone on your list sends a form</option> : null}
+              {automation.stages.length ? <option value="stage">A deal with someone on your list enters a stage</option> : null}
             </select>
           </label>
+          {draft.trigger === "stage" ? (
+            <label className="block">
+              <span className="field-label">Which stage</span>
+              <select className="field mt-2" value={draft.stageId} onChange={(e) => setDraft({ ...draft, stageId: e.target.value })}>
+                {automation.stages.map((st) => (
+                  <option key={st.id} value={st.id}>{st.name}</option>
+                ))}
+              </select>
+              <span className="mt-2 block text-sm text-ink-soft">
+                When your team makes a deal in this stage on Deals, or moves one to it from another stage or pipeline. Only for the person the deal names by email, if they are on your list and agreed to hear from you; each person starts it once. A deal made from a form response, moved by a workflow step, or moved because you removed its stage starts nothing. One workflow per stage; it can start others with a step.
+              </span>
+            </label>
+          ) : null}
           {draft.trigger === "form" ? (
             <label className="block">
               <span className="field-label">Which form</span>

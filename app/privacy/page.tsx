@@ -1816,6 +1816,10 @@ export default function PrivacyPage() {
           when you ask to be deleted, when the creator erases you from their
           workflows, removes the workflow, or deletes the store. Deleting it
           also deletes any of its emails or steps still waiting to reach you.
+          A workflow may start when a creator&apos;s team moves a deal that
+          names your address into a stage they chose; it starts only while you
+          are on their list and agreed to hear from them, and nothing new is
+          kept about you for it beyond the deal and the workflow&apos;s record.
         </p>
         <p>
           A community&apos;s posts, comments, pictures and member records are

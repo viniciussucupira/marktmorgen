@@ -19,6 +19,7 @@
  *
  * Pure and browser-safe: the studio and the routes read these rules.
  */
+import type { Tier } from "@/lib/plan";
 
 export const MAX_CRM_FIELDS = 10;
 export const MAX_FIELD_NAME = 40;
@@ -220,4 +221,166 @@ export function dealFollowUps(stages: readonly Stage[], deals: readonly Deal[], 
     upcoming: rows.filter(d => d.nextAction && validCrmDate(d.dueDate) && d.dueDate > today),
     unplanned: rows.filter(d => !d.nextAction || !validCrmDate(d.dueDate)),
   };
+}
+
+/*
+ * Pipelines (added 17 October 2026, HighLevel audit H02): more than one deal
+ * board, each with its own ordered stages. A creator who sells coaching and
+ * also takes brand partnerships keeps two roads, each with its own "won".
+ *
+ * A deal names a stage, never a pipeline: stage ids are unique across every
+ * pipeline of a store, so the pipeline a deal is in is the one its stage is
+ * in. Moving a deal to another pipeline is moving it to one of that
+ * pipeline's stages, and every deal saved before pipelines existed is in
+ * the first pipeline, unchanged (its stages are the ones the store had).
+ *
+ * Totals are what the deals' recorded values add up to, stage by stage and
+ * open, won and lost: no probability, weighting or forecast is invented.
+ */
+export const MAX_PIPELINE_NAME = 40;
+/** The most pipelines any store keeps, whatever its plan; a store that moves to a smaller plan keeps what it made. */
+export const MAX_PIPELINES = 10;
+/** Pipelines a store may have by plan; a store with no active plan keeps the one board it always had. */
+export const PIPELINES_BY_TIER: Record<Tier, number> = { creator: 2, pro: 5, scale: 10 };
+export const TRIAL_PIPELINES = 2;
+export const UNPAID_PIPELINES = 1;
+/** The pipeline every store starts with, and the one deals saved before pipelines existed are in. */
+export const FIRST_PIPELINE_ID = "sales0";
+export const FIRST_PIPELINE_NAME = "Sales";
+
+export type Pipeline = { id: string; name: string; stages: Stage[] };
+
+type PlanView = { tier: Tier; subscriptionActive: boolean; trialEnds: number };
+
+/** How many pipelines this store may have. */
+export function pipelineLimit(store: PlanView, nowSeconds = Date.now() / 1000): number {
+  if (!store.subscriptionActive) return UNPAID_PIPELINES;
+  if (store.trialEnds > nowSeconds) return TRIAL_PIPELINES;
+  return PIPELINES_BY_TIER[store.tier] ?? UNPAID_PIPELINES;
+}
+
+/** The limits in one sentence, for the help and feature pages. */
+export function pipelineLimitWords(): string {
+  return `Pipelines: ${PIPELINES_BY_TIER.creator} on Store, ${PIPELINES_BY_TIER.pro} on Studio, ${PIPELINES_BY_TIER.scale} on Scale (${TRIAL_PIPELINES} during the free trial), each with up to ${MAX_STAGES} stages; up to ${MAX_DEALS.toLocaleString("en-US")} deals across all of them.`;
+}
+
+/** The first pipeline as a store had it before pipelines: its board's stages, under the first pipeline's name. */
+export const firstPipeline = (stages: readonly Stage[]): Pipeline => ({ id: FIRST_PIPELINE_ID, name: FIRST_PIPELINE_NAME, stages: [...stages] });
+
+/** A pipeline as sent or stored, made safe: a name, and stages that parseStages accepts in full. */
+export function parsePipeline(raw: unknown): Pipeline | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const value = raw as Record<string, unknown>;
+  const id = typeof value.id === "string" && CRM_ID.test(value.id) ? value.id : "";
+  const name = oneLine(value.name, MAX_PIPELINE_NAME);
+  const sent = Array.isArray(value.stages) ? value.stages : [];
+  const stages = sent.length <= MAX_STAGES ? parseStages(sent) : null;
+  // Every stage sent is kept, or none: a stage silently dropped would hide its deals.
+  if (!id || !name || !stages || stages.length !== sent.length) return null;
+  return { id, name, stages };
+}
+
+/** A store's pipelines as stored or sent: each valid, at most MAX_PIPELINES, no id twice, no stage id in two. Null when any is not. */
+export function parsePipelines(raw: unknown): Pipeline[] | null {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_PIPELINES) return null;
+  const out: Pipeline[] = [];
+  const stageIds = new Set<string>();
+  for (const entry of raw) {
+    const pipeline = parsePipeline(entry);
+    if (!pipeline || out.some((p) => p.id === pipeline.id || p.name.toLowerCase() === pipeline.name.toLowerCase())) return null;
+    for (const stage of pipeline.stages) {
+      if (stageIds.has(stage.id)) return null;
+      stageIds.add(stage.id);
+    }
+    out.push(pipeline);
+  }
+  return out;
+}
+
+/** Every stage of every pipeline, in order: what a deal's stage is checked against. */
+export const allStages = (pipelines: readonly Pipeline[]): Stage[] => pipelines.flatMap((p) => p.stages);
+
+/** The pipeline a stage is in. */
+export const pipelineOf = (pipelines: readonly Pipeline[], stageId: string): Pipeline | undefined => pipelines.find((p) => p.stages.some((s) => s.id === stageId));
+
+/** A stage's name as a list of every stage shows it: with its pipeline's name once a store has more than one. */
+export function stageLabel(pipelines: readonly Pipeline[], stage: Pick<Stage, "id" | "name">): string {
+  if (pipelines.length < 2) return stage.name;
+  const pipeline = pipelineOf(pipelines, stage.id);
+  return pipeline ? `${pipeline.name}: ${stage.name}` : stage.name;
+}
+
+/** Every stage, named with its pipeline when there is more than one (for a form's or a workflow's choice of stage). */
+export const labeledStages = (pipelines: readonly Pipeline[]): Stage[] => allStages(pipelines).map((s) => ({ ...s, name: stageLabel(pipelines, s) }));
+
+export type PipelineTotals = { pipeline: Pipeline; deals: number; open: { count: number; cents: number }; won: { count: number; cents: number }; lost: { count: number; cents: number } };
+
+/** What a pipeline's deals add up to, by what their stages mean: recorded values, nothing weighted or forecast. */
+export function pipelineTotals(pipeline: Pipeline, deals: readonly Deal[]): PipelineTotals {
+  const kind = new Map(pipeline.stages.map((s) => [s.id, s.kind]));
+  const out: PipelineTotals = { pipeline, deals: 0, open: { count: 0, cents: 0 }, won: { count: 0, cents: 0 }, lost: { count: 0, cents: 0 } };
+  for (const deal of deals) {
+    const k = kind.get(deal.stage);
+    if (!k) continue;
+    out.deals += 1;
+    out[k].count += 1;
+    out[k].cents += deal.cents;
+  }
+  return out;
+}
+
+export type PipelineChange = { ok: true; pipelines: Pipeline[]; moves: Record<string, string> } | { ok: false; error: "pipelines" | "pipeline_limit" | "pipeline_last" | "unknown" | "moves" };
+
+/**
+ * A change to one pipeline, checked against the store's pipelines now: its
+ * name and stages saved (a new id adds it), or (`remove`) the pipeline taken
+ * away. `moves` says, for each stage that goes, which stage still kept its
+ * deals go to; a stage that goes with deals in it and no such choice is
+ * refused ("moves"), so a deal is never deleted or moved where the creator
+ * did not say; for a pipeline removed, `moves` may be one stage for all of
+ * its deals. `counts` is how many deals each stage holds now.
+ */
+export function changePipeline(
+  current: readonly Pipeline[],
+  change: { pipeline?: unknown; remove?: string },
+  moves: unknown,
+  counts: ReadonlyMap<string, number>,
+  limit: number,
+): PipelineChange {
+  let next: Pipeline[];
+  if (change.remove !== undefined) {
+    if (!current.some((p) => p.id === change.remove)) return { ok: false, error: "unknown" };
+    if (current.length < 2) return { ok: false, error: "pipeline_last" };
+    next = current.filter((p) => p.id !== change.remove);
+  } else {
+    const pipeline = parsePipeline(change.pipeline);
+    if (!pipeline) return { ok: false, error: "pipelines" };
+    const at = current.findIndex((p) => p.id === pipeline.id);
+    // A new pipeline counts against the plan's number; an existing one may always be edited.
+    if (at < 0 && current.length >= Math.min(limit, MAX_PIPELINES)) return { ok: false, error: "pipeline_limit" };
+    next = at < 0 ? [...current, pipeline] : current.map((p, i) => (i === at ? pipeline : p));
+  }
+  const checked = parsePipelines(next);
+  if (!checked) return { ok: false, error: "pipelines" };
+  const kept = new Set(allStages(checked).map((s) => s.id));
+  // One stage for every deal that has to move (a pipeline removed), or a stage for each stage removed.
+  const asked = moves && typeof moves === "object" && !Array.isArray(moves) ? (moves as Record<string, unknown>) : {};
+  const out: Record<string, string> = {};
+  for (const stage of allStages(current)) {
+    if (kept.has(stage.id) || !(counts.get(stage.id) ?? 0)) continue;
+    const target = typeof moves === "string" ? moves : Object.hasOwn(asked, stage.id) ? asked[stage.id] : undefined;
+    if (typeof target !== "string" || !kept.has(target)) return { ok: false, error: "moves" };
+    out[stage.id] = target;
+  }
+  return { ok: true, pipelines: checked, moves: out };
+}
+
+/** A new pipeline's stages to start from: the usual road, with ids of its own. */
+export function starterStages(newId: () => string = () => newCrmId()): Stage[] {
+  return [
+    { id: newId(), name: "New", kind: "open" },
+    { id: newId(), name: "Talking", kind: "open" },
+    { id: newId(), name: "Won", kind: "won" },
+    { id: newId(), name: "Lost", kind: "lost" },
+  ];
 }

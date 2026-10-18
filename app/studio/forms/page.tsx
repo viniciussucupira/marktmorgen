@@ -10,6 +10,7 @@ import { readForms, readResponses } from "@/lib/form-store";
 import { readCards } from "@/lib/catalog";
 import { readTeam } from "@/lib/team";
 import { readOpportunityReview, type OpportunityReviewData } from "@/lib/crm";
+import { labeledStages } from "@/lib/crm-rules";
 import { can } from "@/lib/team-roles";
 
 export const metadata: Metadata = {
@@ -40,11 +41,12 @@ export default async function StudioFormsPage({ searchParams }: Params) {
   const reads = can(view.role, "export");
   const forms = await readForms(store.statsId);
   const canCreateDeals = reads && can(view.role, "orders") && forms.length > 0;
-  const emptyReview: OpportunityReviewData = { available: false, stages: [], deals: [] };
+  const emptyReview: OpportunityReviewData = { available: false, stages: [], deals: [], pipelines: [] };
   const [reviewData, team] = canCreateDeals
     ? await Promise.all([readOpportunityReview(store.statsId), readTeam(store.sid).catch(() => null)])
     : [emptyReview, null] as const;
-  const dealStages = reviewData.stages;
+  // Each stage named with its pipeline once there is more than one (lib/crm-rules.ts).
+  const dealStages = reviewData.pipelines.length ? labeledStages(reviewData.pipelines) : reviewData.stages;
   const existingDeals = reviewData.deals.map(({ id, title, email, stage, formResponseRef }) => ({ id, title, email, stage, formResponseRef }));
   const dealAssignees = team ? [...new Set([store.email, ...team.members.filter(member => can(member.role, "orders")).map(member => member.email)])] : [];
   const saved: SavedForm[] = await Promise.all(

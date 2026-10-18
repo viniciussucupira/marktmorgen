@@ -4,7 +4,10 @@
  *
  *   nl:crm:fields:<statsId>          the fields (JSON)
  *   nl:crm:v:<statsId>:<field id>    hash  person (lib/buyer-profile.ts, personKey) -> value
- *   nl:crm:stages:<statsId>          the deals' stages (JSON); the default ones until changed
+ *   nl:crm:stages:<statsId>          the first pipeline's stages (JSON), as the board had them
+ *                                    before pipelines; kept as a copy of the first pipeline's
+ *   nl:crm:pipes:<statsId>           the pipelines and their stages (JSON, lib/crm-rules.ts);
+ *                                    absent until the creator first changes one, and then it wins
  *   nl:crm:deals:<statsId>           hash  deal id -> deal (JSON)
  *
  * A value is kept under the person's key, never the address (as a note
@@ -21,8 +24,14 @@ import {
   DEFAULT_STAGES,
   DEAL_ID,
   MAX_DEALS,
+  type Pipeline,
+  type PipelineChange,
   type Stage,
+  allStages,
+  changePipeline,
   fieldValue,
+  firstPipeline,
+  parsePipelines,
   parseDeal,
   parseFields,
   parseStages,
@@ -45,14 +54,21 @@ export class CrmSchemaReadUnavailable extends Error {
 export class CrmSchemaWriteUnconfirmed extends Error {
   constructor() { super("CRM configuration change could not be confirmed"); this.name = "CrmSchemaWriteUnconfirmed"; }
 }
+/** Somebody else changed the pipelines between this change's read and its write: nothing was written. */
+export class CrmSchemaConflict extends Error {
+  constructor() { super("CRM configuration changed meanwhile"); this.name = "CrmSchemaConflict"; }
+}
 
 const fieldsKey = (statsId: string) => `nl:crm:fields:${statsId}`;
 const valuesKey = (statsId: string, field: string) => `nl:crm:v:${statsId}:${field}`;
 const stagesKey = (statsId: string) => `nl:crm:stages:${statsId}`;
 const dealsKey = (statsId: string) => `nl:crm:deals:${statsId}`;
+const pipesKey = (statsId: string) => `nl:crm:pipes:${statsId}`;
 const PERSON = /^[0-9a-f]{32}$/;
 /** Where people's field values are counted in the store's data room (lib/store-data.ts). */
 const VALUES_SLOT = "crm:v";
+/** Where the pipelines are counted in it: one slot, at what their record weighs. */
+const PIPES_SLOT = "crm:pipes";
 
 const json = (raw: unknown): unknown => {
   if (typeof raw !== "string") return null;
@@ -132,25 +148,42 @@ export async function allValues(statsId: string | null, fields: CrmField[]): Pro
   );
 }
 
-export async function readStages(statsId: string | null): Promise<Stage[]> {
-  if (!statsId || !isRedisConfigured()) return DEFAULT_STAGES;
-  const [raw] = await redisPipeline([["GET", stagesKey(statsId)]]);
-  return parseStages(json(raw)) ?? DEFAULT_STAGES;
+/**
+ * The store's pipelines: the saved ones once the creator has changed one,
+ * and until then the board it always had, as the first pipeline.
+ */
+export async function readPipelines(statsId: string | null): Promise<Pipeline[]> {
+  if (!statsId || !isRedisConfigured()) return [firstPipeline(DEFAULT_STAGES)];
+  const [pipes, legacy] = await redisPipeline([["GET", pipesKey(statsId)], ["GET", stagesKey(statsId)]]);
+  return parsePipelines(json(pipes)) ?? [firstPipeline(parseStages(json(legacy)) ?? DEFAULT_STAGES)];
 }
 
-/** Move only the exact snapshot reviewed; never resurrect a deleted opportunity. */
-export const MOVE_CRM_DEAL = `-- marktmorgen:crm-deal-move:v1
-local current = redis.call("HGET", KEYS[1], ARGV[1])
-if not current then return 0 end
-if current ~= ARGV[2] then return -1 end
-redis.call("HSET", KEYS[1], ARGV[1], ARGV[3])
-return 1`;
+/** Every stage of every pipeline, in order: what a deal's stage is read against. */
+export async function readStages(statsId: string | null): Promise<Stage[]> {
+  return allStages(await readPipelines(statsId));
+}
 
-/** Saves the stages; a deal in a stage that is gone moves to the first open one. */
-export async function writeStages(statsId: string, stages: Stage[]): Promise<Stage[]> {
-  const first = stages.find(s => s.kind === "open");
-  if (!first) throw new CrmSchemaReadUnavailable();
-  const moved: { id: string; before: string; record: Record<string, unknown> }[] = [];
+/** The pipelines exactly as saved, for a change: an unreadable or malformed record never stands in for the defaults. */
+async function pipelineSnapshot(statsId: string): Promise<{ raw: string; pipelines: Pipeline[] }> {
+  try {
+    const response = await redisPipeline([["GET", pipesKey(statsId)], ["GET", stagesKey(statsId)]]);
+    if (!Array.isArray(response) || response.length !== 2) throw new CrmSchemaReadUnavailable();
+    const [pipes, legacy] = response;
+    if (pipes !== null) {
+      if (typeof pipes !== "string") throw new CrmSchemaReadUnavailable();
+      const pipelines = parsePipelines(json(pipes));
+      if (!pipelines) throw new CrmSchemaReadUnavailable();
+      return { raw: pipes, pipelines };
+    }
+    // Before any pipeline was saved, the board's own stages, as the board has always read them.
+    if (legacy !== null && typeof legacy !== "string") throw new CrmSchemaReadUnavailable();
+    return { raw: "", pipelines: [firstPipeline(parseStages(json(legacy)) ?? DEFAULT_STAGES)] };
+  } catch { throw new CrmSchemaReadUnavailable(); }
+}
+
+/** Every deal as saved, whole, for a change of stages: an incomplete read never authorizes one. */
+async function dealSnapshot(statsId: string): Promise<{ id: string; before: string; record: Record<string, unknown> }[]> {
+  const out: { id: string; before: string; record: Record<string, unknown> }[] = [];
   try {
     const response = await redisPipeline([["HGETALL", dealsKey(statsId)]]);
     if (!Array.isArray(response) || response.length !== 1 || !Array.isArray(response[0]) || response[0].length % 2 !== 0) throw new CrmSchemaReadUnavailable();
@@ -164,18 +197,93 @@ export async function writeStages(statsId: string, stages: Stage[]): Promise<Sta
       const record = raw as Record<string, unknown>;
       if (record.id !== id || typeof record.stage !== "string" || !CRM_ID.test(record.stage)) throw new CrmSchemaReadUnavailable();
       seen.add(id);
-      // Preserve every saved field; moving stages must not normalize away unrelated data.
-      if (!stages.some(stage => stage.id === record.stage)) moved.push({ id, before: flat[i + 1] as string, record: { ...record, stage: first.id } });
+      out.push({ id, before: flat[i + 1] as string, record });
     }
   } catch { throw new CrmSchemaReadUnavailable(); }
+  return out;
+}
+
+/** Saves the pipelines only over the exact record read before (one key, compare and set): a concurrent change is never overwritten. */
+export const SAVE_CRM_PIPELINES = `-- marktmorgen:crm-pipelines-save:v1
+local current = redis.call("GET", KEYS[1])
+if (current or "") ~= ARGV[1] then return -1 end
+redis.call("SET", KEYS[1], ARGV[2])
+return 1`;
+
+/**
+ * Writes pipelines over the snapshot read, then the first pipeline's copy
+ * for the board's old key, then moves each deal whose stage went to the
+ * stage `target` names, over its exact record (MOVE_CRM_DEAL).
+ */
+async function writePipelines(statsId: string, snapshotRaw: string, pipelines: Pipeline[], moved: { id: string; before: string; record: Record<string, unknown> }[], room: DataStore): Promise<void> {
+  const record = JSON.stringify(pipelines);
+  // Their room in the store's data room first (DataRoomError when they do not fit, and nothing is written).
+  await needData(room, [{ slot: PIPES_SLOT, bytes: dataBytes([record], 1), set: true }]);
+  let saved: unknown;
   try {
-    const saved = await redisPipeline([["SET", stagesKey(statsId), JSON.stringify(stages)]]);
-    if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== "OK") throw new CrmSchemaWriteUnconfirmed();
+    saved = await redisPipeline([["EVAL", SAVE_CRM_PIPELINES, 1, pipesKey(statsId), snapshotRaw, record]]);
+  } catch { throw new CrmSchemaWriteUnconfirmed(); }
+  if (Array.isArray(saved) && saved.length === 1 && saved[0] === -1) {
+    // Nothing was written: the room goes back to what the saved record weighs.
+    await giveData(room, [{ slot: PIPES_SLOT, bytes: snapshotRaw ? dataBytes([snapshotRaw], 1) : 0, set: true }]).catch(() => {});
+    throw new CrmSchemaConflict();
+  }
+  if (!Array.isArray(saved) || saved.length !== 1 || saved[0] !== 1) throw new CrmSchemaWriteUnconfirmed();
+  try {
+    const copied = await redisPipeline([["SET", stagesKey(statsId), JSON.stringify(pipelines[0].stages)]]);
+    if (!Array.isArray(copied) || copied.length !== 1 || copied[0] !== "OK") throw new CrmSchemaWriteUnconfirmed();
     if (moved.length) {
       const response = await redisPipeline(moved.map(({ id, before, record }) => ["EVAL", MOVE_CRM_DEAL, 1, dealsKey(statsId), id, before, JSON.stringify(record)]));
       if (!Array.isArray(response) || response.length !== moved.length || Array.from(response).some(value => value !== 0 && value !== 1)) throw new CrmSchemaWriteUnconfirmed();
     }
   } catch { throw new CrmSchemaWriteUnconfirmed(); }
+}
+
+/**
+ * Saves one pipeline, adds one, or removes one (lib/crm-rules.ts,
+ * changePipeline), with the deals of every stage that goes moved where
+ * `moves` says. A refusal writes nothing. Moves made here start no
+ * workflow: a stage removed is not a deal entering a stage.
+ */
+export async function savePipelineChange(statsId: string, change: { pipeline?: unknown; remove?: string }, moves: unknown, limit: number, room: DataStore): Promise<PipelineChange> {
+  const deals = await dealSnapshot(statsId);
+  const { raw, pipelines: current } = await pipelineSnapshot(statsId);
+  const counts = new Map<string, number>();
+  for (const d of deals) counts.set(String(d.record.stage), (counts.get(String(d.record.stage)) ?? 0) + 1);
+  const result = changePipeline(current, change, moves, counts, limit);
+  if (!result.ok) return result;
+  const kept = new Set(allStages(result.pipelines).map((s) => s.id));
+  const fallback = result.pipelines[0].stages.find((s) => s.kind === "open")!.id;
+  // A deal whose stage was already in no pipeline (written by an older board) is brought back to the first pipeline's first open stage.
+  const moved = deals.filter((d) => !kept.has(String(d.record.stage))).map((d) => ({ ...d, record: { ...d.record, stage: result.moves[String(d.record.stage)] ?? fallback } }));
+  await writePipelines(statsId, raw, result.pipelines, moved, room);
+  return result;
+}
+
+/** Move only the exact snapshot reviewed; never resurrect a deleted opportunity. */
+export const MOVE_CRM_DEAL = `-- marktmorgen:crm-deal-move:v1
+local current = redis.call("HGET", KEYS[1], ARGV[1])
+if not current then return 0 end
+if current ~= ARGV[2] then return -1 end
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[3])
+return 1`;
+
+/**
+ * Saves the first pipeline's stages, as the board did before pipelines (the
+ * studio's older "stages" request): a deal in a stage that is gone moves to
+ * the first open one of them.
+ */
+export async function writeStages(statsId: string, stages: Stage[], room: DataStore): Promise<Stage[]> {
+  const first = stages.find(s => s.kind === "open");
+  if (!first) throw new CrmSchemaReadUnavailable();
+  const deals = await dealSnapshot(statsId);
+  const { raw, pipelines: current } = await pipelineSnapshot(statsId);
+  const next = parsePipelines([{ ...current[0], stages }, ...current.slice(1)]);
+  if (!next) throw new CrmSchemaReadUnavailable();
+  const kept = new Set(allStages(next).map(s => s.id));
+  // Preserve every saved field; moving stages must not normalize away unrelated data.
+  const moved = deals.filter(d => !kept.has(String(d.record.stage))).map(d => ({ ...d, record: { ...d.record, stage: first.id } }));
+  await writePipelines(statsId, raw, next, moved, room);
   return stages;
 }
 
@@ -189,17 +297,23 @@ export async function readDeals(statsId: string | null, stages: readonly Stage[]
     .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-export type OpportunityReviewData = { available: boolean; stages: Stage[]; deals: Deal[] };
+export type OpportunityReviewData = { available: boolean; stages: Stage[]; deals: Deal[]; pipelines: Pipeline[] };
 
 /** A complete link/contact review read; unknown storage never means no opportunities. */
 export async function readOpportunityReview(statsId: string | null): Promise<OpportunityReviewData> {
-  const unavailable: OpportunityReviewData = { available: false, stages: [], deals: [] };
+  const unavailable: OpportunityReviewData = { available: false, stages: [], deals: [], pipelines: [] };
   if (!statsId || !isRedisConfigured()) return unavailable;
   try {
-    const replies = await redisPipeline([["GET", stagesKey(statsId)], ["HGETALL", dealsKey(statsId)]]);
-    if (!Array.isArray(replies) || replies.length !== 2 || !Array.isArray(replies[1]) || replies[1].length % 2 !== 0) return unavailable;
+    const replies = await redisPipeline([["GET", stagesKey(statsId)], ["HGETALL", dealsKey(statsId)], ["GET", pipesKey(statsId)]]);
+    if (!Array.isArray(replies) || replies.length !== 3 || !Array.isArray(replies[1]) || replies[1].length % 2 !== 0) return unavailable;
     let stages: Stage[];
-    if (replies[0] === null) stages = DEFAULT_STAGES;
+    let pipelines: Pipeline[] | null = null;
+    if (replies[2] !== null) {
+      if (typeof replies[2] !== "string") return unavailable;
+      pipelines = parsePipelines(json(replies[2]));
+      if (!pipelines) return unavailable;
+      stages = allStages(pipelines);
+    } else if (replies[0] === null) stages = DEFAULT_STAGES;
     else {
       if (typeof replies[0] !== "string") return unavailable;
       const raw = json(replies[0]);
@@ -222,7 +336,7 @@ export async function readOpportunityReview(statsId: string | null): Promise<Opp
       seen.add(id);
       deals.push(deal);
     }
-    return { available: true, stages, deals: deals.sort((a, b) => b.updatedAt - a.updatedAt) };
+    return { available: true, stages, deals: deals.sort((a, b) => b.updatedAt - a.updatedAt), pipelines: pipelines ?? [firstPipeline(stages)] };
   } catch { return unavailable; }
 }
 
@@ -279,7 +393,7 @@ export async function dropDeal(statsId: string, id: string, room: DataStore): Pr
 export async function forgetCrm(statsId: string | null): Promise<void> {
   if (!statsId || !isRedisConfigured()) return;
   const fields = await readFields(statsId);
-  await redisPipeline([["DEL", fieldsKey(statsId), stagesKey(statsId), dealsKey(statsId), ...fields.map((f) => valuesKey(statsId, f.id))]]);
+  await redisPipeline([["DEL", fieldsKey(statsId), stagesKey(statsId), pipesKey(statsId), dealsKey(statsId), ...fields.map((f) => valuesKey(statsId, f.id))]]);
 }
 
 /**

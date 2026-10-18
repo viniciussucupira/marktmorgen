@@ -499,6 +499,8 @@ export const COST_LINES: CostLine[] = [
       { file: "lib/store-allowance-rules.ts", names: ["STORE_ALLOWANCES", "studio"] },
       { file: "lib/studio-allowance-rules.ts", names: ["STUDIO_PAGE_UNITS", "ESSENTIAL_PER_DAY", "ESSENTIAL_NEEDS"] },
       { file: "lib/studio-route.ts", names: ["countStudio", "studio-essential"] },
+      // A deal entering a stage takes one more studio request before the workflow its stage starts is checked (17 October 2026).
+      { file: "lib/deal-stage-trigger.ts", names: ["STAGE_TRIGGER_UNITS", "countStudio(store, null, STAGE_TRIGGER_UNITS)"] },
       { file: "app/studio/paused/page.tsx", names: [`SHOWN_PER_DAY = ${PAUSED_PER_DAY};`, "studio-paused"] },
     ],
     basis: "Every studio request of the window at the studio shape; a page drawn takes STUDIO_PAGE_UNITS of them, more than a heavy read costs (held below). Past the figure the studio shows one page, drawn at most PAUSED_PER_DAY times a day; changing or canceling the plan, deleting the store and downloading its sales take a small daily figure instead.",
@@ -818,6 +820,7 @@ export const NOT_A_COST: Record<string, string> = {
   REQUEST_LIMITS: "How many payment requests a store keeps open and in all: each costs only the store emails it sends (line store-email), the order its payment becomes (line orders) and its record in the data room (line database-storage).",
   NON_PAYING_REQUEST_LIMITS: "The same for a store that pays nothing: its emails and orders are in its own figures (nonPayingWorst), its records in its data room.",
   NON_PAYING_ALLOWANCES: "The figures of a store that pays nothing: in nonPayingWorst (line free-share).",
+  PIPELINES_BY_TIER: "How many deal pipelines a store keeps: a setting in one record counted in the store's data room (tests/store-data-registry.ts, nl:crm:pipes:); changing or moving deals are studio requests (line studio), and a deal entering a stage takes one more before its workflow is checked (lib/deal-stage-trigger.ts, STAGE_TRIGGER_UNITS).",
 };
 
 /** What a scope of a counter in the code is: counted in a line, an abuse guard, or open. */

@@ -2,12 +2,13 @@ import type { NextRequest } from "next/server";
 import { StoreFullError } from "@/lib/store-full";
 import { guardStoreWrite } from "@/lib/store-request";
 import { ensureStatsId } from "@/lib/store";
-import { DEAL_ID, newCrmId, readFollowUp, parseDeal, parseFields, parseStages } from "@/lib/crm-rules";
+import { DEAL_ID, newCrmId, pipelineLimit, readFollowUp, parseDeal, parseFields, parseStages } from "@/lib/crm-rules";
+import { dealEnteredStage } from "@/lib/deal-stage-trigger";
 import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
-import { CrmValueWriteUnconfirmed, CrmSchemaReadUnavailable, CrmSchemaWriteUnconfirmed, CrmDealReadUnavailable, CrmDealWriteUnconfirmed, dropDeal, readDeal, readFields, readStages, setValue, writeDeal, writeFields, writeStages } from "@/lib/crm";
+import { CrmSchemaConflict, CrmValueWriteUnconfirmed, CrmSchemaReadUnavailable, CrmSchemaWriteUnconfirmed, savePipelineChange, CrmDealReadUnavailable, CrmDealWriteUnconfirmed, dropDeal, readDeal, readFields, readStages, setValue, writeDeal, writeFields, writeStages } from "@/lib/crm";
 
-/** Ten fields of ten choices, or a deal with its note, as JSON. */
+/** Ten fields of ten choices, a pipeline with its stages and moves, or a deal with its note, as JSON. */
 const MAX_BODY_BYTES = 20_000;
 
 /**
@@ -16,8 +17,12 @@ const MAX_BODY_BYTES = 20_000;
  *
  *   { action: "fields", fields }               saves the fields; a field taken away takes its answers
  *   { action: "value", person, field, value }   one person's answer to one field; "" clears it
- *   { action: "stages", stages }               saves the deals' stages
- *   { action: "deal", deal }                    saves a deal, new without an id
+ *   { action: "stages", stages }               saves the first pipeline's stages (older studio pages)
+ *   { action: "pipeline", pipeline, moves }     saves one pipeline, or adds one with a new id;
+ *                                              `moves` names where each removed stage's deals go
+ *   { action: "unpipeline", id, moveTo }        removes a pipeline; its deals go to the stage `moveTo`
+ *   { action: "deal", deal }                    saves a deal, new without an id; a deal that enters
+ *                                              a stage starts the workflow that stage starts
  *   { action: "undeal", id }                    removes one
  */
 export async function POST(request: NextRequest) {
@@ -45,7 +50,16 @@ export async function POST(request: NextRequest) {
     if (body.action === "stages") {
       const stages = parseStages(body.stages);
       if (!stages) return refuse("stages");
-      return Response.json({ ok: true, stages: await writeStages(statsId, stages) });
+      return Response.json({ ok: true, stages: await writeStages(statsId, stages, store) });
+    }
+    if (body.action === "pipeline" || body.action === "unpipeline") {
+      const removing = body.action === "unpipeline";
+      const id = typeof body.id === "string" ? body.id : "";
+      const moveTo = typeof body.moveTo === "string" ? body.moveTo : "";
+      // Removing a pipeline sends every deal in it to the one stage the creator chose.
+      const moves = removing ? moveTo : body.moves;
+      const result = await savePipelineChange(statsId, removing ? { remove: id } : { pipeline: body.pipeline }, moves, pipelineLimit(store), store);
+      return result.ok ? Response.json({ ok: true, pipelines: result.pipelines, moved: Object.keys(result.moves).length }) : refuse(result.error, result.error === "unknown" ? 404 : 400);
     }
     const stages = await readStages(statsId);
     if (body.action === "deal") {
@@ -64,7 +78,9 @@ export async function POST(request: NextRequest) {
       const deal = parseDeal({ ...existing, ...raw, ...follow.value, formResponseRef: existing?.formResponseRef, id: existing?.id ?? newCrmId(10), createdAt: existing?.createdAt ?? now, updatedAt: now }, stages);
       if (!deal) return refuse(typeof raw.title === "string" && raw.title.trim() ? "stage" : "title");
       if (!(await writeDeal(statsId, deal, store))) return refuse("full");
-      return Response.json({ ok: true, deal });
+      // Saved first: the workflow its stage starts never holds up, or undoes, the deal itself.
+      const workflows = await dealEnteredStage(store, deal, existing);
+      return Response.json({ ok: true, deal, workflows });
     }
     if (body.action === "undeal") {
       const id = typeof body.id === "string" ? body.id : "";
@@ -77,6 +93,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof CrmValueWriteUnconfirmed) return refuse("crm_write_unconfirmed", 502);
     if (error instanceof CrmSchemaReadUnavailable) return refuse("crm_schema_read_unavailable", 503);
     if (error instanceof CrmSchemaWriteUnconfirmed) return refuse("crm_write_unconfirmed", 502);
+    if (error instanceof CrmSchemaConflict) return refuse("crm_conflict", 409);
     if (error instanceof CrmDealReadUnavailable) return refuse("crm_deal_read_unavailable", 503);
     if (error instanceof CrmDealWriteUnconfirmed) return refuse("crm_write_unconfirmed", 502);
     console.error("saving a store's fields or deals failed", error);

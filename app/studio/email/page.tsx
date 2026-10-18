@@ -21,7 +21,8 @@ import { healthId, pauseWords, pausedFor } from "@/lib/mail-health";
 import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, publishedPriceWords as priceWords, publishedYearSaving as yearSaving } from "@/lib/plan";
 import { EmailStudio } from "@/components/email-studio";
 import { readForms } from "@/lib/form-store";
-import { readFields, readStages } from "@/lib/crm";
+import { readFields, readPipelines } from "@/lib/crm";
+import { labeledStages } from "@/lib/crm-rules";
 import { listDraftsStrict } from "@/lib/mail-drafts";
 import { can } from "@/lib/team-roles";
 import { trialOffered } from "@/lib/billing";
@@ -215,7 +216,8 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             automation={{
               forms: (await readForms(store.statsId).catch(() => [])).filter((f) => f.fields.some((x) => x.type === "email")).map((f) => ({ id: f.id, name: f.name, outcomes: f.outcomes.map((o) => ({ id: o.id, title: o.title })) })),
               fields: (await readFields(store.statsId).catch(() => [])).map((f) => ({ id: f.id, name: f.name, type: f.type, options: f.options })),
-              stages: (await readStages(store.statsId).catch(() => [])).map((st) => ({ id: st.id, name: st.name })),
+              // Each stage named with its pipeline once there is more than one (lib/crm-rules.ts).
+              stages: labeledStages(await readPipelines(store.statsId).catch(() => [])).map((st) => ({ id: st.id, name: st.name })),
             }}
             workflowLimits={{
               maxActive: activeFlowLimit(store),
