@@ -39,7 +39,7 @@ import { speechFor } from "@/lib/buyer-words";
 import { requestWords } from "@/lib/buyer-words/requests";
 import { type Store, saleHandles, storeForId } from "@/lib/store";
 import { type PaymentRequest, statusOf, nextReminderAt, canSendAgain } from "@/lib/payment-request-rules";
-import { delayReminder, dropReminder, dueReminders, holdForCheckout, letGo, markPaid, requestOf, saveRequest } from "@/lib/payment-request-store";
+import { changeRequest, delayReminder, dropReminder, dueReminders, holdForCheckout, letGo, markPaid, requestOf } from "@/lib/payment-request-store";
 
 /** A reminder that could not go is tried again a day later, never sooner. */
 const RETRY_MS = 86_400_000;
@@ -107,11 +107,11 @@ export async function sendRequestEmail(store: Store, request: PaymentRequest, no
     text,
     idempotencyKey: `nimbus-payreq:${request.id}:${request.sent.length}`,
   }).catch(() => false);
-  const next: PaymentRequest = sent
-    ? { ...request, sent: [...request.sent, now], failed: "" }
-    : { ...request, failed: "Not sent: your store's emails for this month may be used, or email could not be sent just now. You can send it again from here." };
-  await saveRequest(next, now);
-  return { sent, request: next };
+  // Written onto the record as it is now, not as it was read before the email
+  // went: a payment made while it was being sent stays paid (MM-SA-02).
+  const failed = "Not sent: your store's emails for this month may be used, or email could not be sent just now. You can send it again from here.";
+  const done = await changeRequest(store, request.id, (current) => ({ next: sent ? { ...current, sent: [...current.sent, now], failed: "" } : { ...current, failed }, answer: null }), now);
+  return { sent, request: done?.request ?? request };
 }
 
 /**
@@ -149,8 +149,8 @@ export async function sendDueReminders(deadline: number, now = Date.now()): Prom
       }
       const next = nextReminderAt(request, now);
       if (next === null || next > now) {
-        // Closed, expired or not yet due: written back, which takes it off the list or puts it at its day.
-        await saveRequest(request, now);
+        // Closed, expired or not yet due: written back as it is now, which takes it off the list or puts it at its day.
+        await changeRequest(store!, id, (current) => ({ next: current, answer: null }), now).catch(() => null);
         counts.skipped += 1;
         continue;
       }
@@ -200,7 +200,14 @@ export async function openRequestCheckout(store: Store, id: string, origin: stri
       }
     }
     const opened = await createRequestCheckout(store, request, origin, now);
-    await saveRequest({ ...request, session: opened.id, sessionAt: now }, now);
+    // Kept only on a request still open: one paid or canceled while Stripe
+    // was opening this checkout keeps what it became, and the checkout just
+    // opened is closed again so nobody can pay it twice (MM-SA-02).
+    const kept = await changeRequest(store, request.id, (current) => (statusOf(current, now) === "open" ? { next: { ...current, session: opened.id, sessionAt: now }, answer: true } : { next: null, answer: false }), now);
+    if (!kept?.answer) {
+      await onAccount("POST", store.stripeAccountId, `/checkout/sessions/${encodeURIComponent(opened.id)}/expire`, new URLSearchParams()).catch((error: unknown) => console.error("closing a checkout opened for a request that was paid meanwhile failed", error));
+      return { ok: false, reason: "gone" };
+    }
     return { ok: true, url: opened.url };
   } catch (error) {
     if (error instanceof OrdersPausedError) return { ok: false, reason: error.reason === "paused" ? "paused" : "error" };
@@ -325,9 +332,12 @@ export async function refreshRefunds(store: Store, requests: PaymentRequest[], n
   for (const r of paid) {
     const refunded = back.get(r.payment) ?? 0;
     if (refunded > r.refunded) {
-      const next: PaymentRequest = { ...r, refunded, state: refunded >= (r.amountPaid || r.total) ? "refunded" : "paid" };
-      changed.set(r.id, next);
-      await saveRequest(next, now).catch(() => undefined);
+      const done = await changeRequest(store, r.id, (current) =>
+        current.payment === r.payment && refunded > current.refunded
+          ? { next: { ...current, refunded, state: refunded >= (current.amountPaid || current.total) ? "refunded" : current.state }, answer: null }
+          : { next: null, answer: null },
+      now).catch(() => null);
+      if (done) changed.set(r.id, done.request);
     }
   }
   return requests.map((r) => changed.get(r.id) ?? r);
