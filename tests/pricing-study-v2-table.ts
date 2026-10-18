@@ -773,7 +773,7 @@ export function planCell(row: CompositionRow, c: Candidate, packsOn: boolean): s
   if (row.feature.startsWith("Marktmorgen's name off") || row.feature === "Own domain") return studioOrScale ? "yes" : "no";
   if (row.feature.startsWith("Email to a list")) return c.figures.listEmails ? `${c.figures.listEmails.toLocaleString("en-US")} a month` : "no";
   if (row.feature.startsWith("AI writing")) return c.figures.aiJobs ? `${c.figures.aiJobs} jobs, ${c.figures.aiAnswers} answers a month` : "no";
-  if (row.feature.startsWith("Storage")) return `${c.figures.storageGb.toLocaleString("en-US")} GB, ${c.figures.videoHours} video hours`;
+  if (row.feature.startsWith("Storage")) return `${c.figures.storageGb.toLocaleString("en-US")} GB, ${c.figures.videoHours} video hour${c.figures.videoHours === 1 ? "" : "s"}`;
   if (row.feature.startsWith("Prepaid packs")) return packsOn ? "yes" : "no";
   return "add-on";
 }
@@ -819,7 +819,7 @@ function planWords(id: string): string {
 }
 function figureWords(c: Candidate): string {
   const f = c.figures;
-  return `${num(f.visits)} visits, ${num(f.orders)} orders, ${num(f.listEmails)} list emails, ${f.aiJobs ? `${f.aiJobs} AI writing jobs and ${f.aiAnswers} answers` : "no AI"}, ${num(f.storageGb)} GB, ${f.videoHours} video hours, ${num(f.accessEmails)} access and ${num(f.storeEmails)} store emails a month`;
+  return `${num(f.visits)} visits, ${num(f.orders)} orders, ${num(f.listEmails)} list emails, ${f.aiJobs ? `${f.aiJobs} AI writing jobs and ${f.aiAnswers} answers` : "no AI"}, ${num(f.storageGb)} GB, ${f.videoHours} video hour${f.videoHours === 1 ? "" : "s"}, ${num(f.accessEmails)} access and ${num(f.storeEmails)} store emails a month`;
 }
 const scenarioWords = (id: string) => {
   const [pop, eta, asc] = id.split("|");
@@ -880,7 +880,7 @@ export function renderPricingStudyV2(): string {
   push(`Prepaid packs: **${rec.packs ? "on" : "off"}**${rec.packs ? `, sold before use and stopping at zero: ${input.packs.map((p) => `${num(p.units)} ${p.raises} ${usd(p.priceCents)} (net ${usd(p.netCents)})`).join("; ")}. Each keeps 60% on its own payment, used in full.` : "."} Add-ons: the Store assistant stays at ${usd(ASSISTANT_PRICE_CENTS)} a month and AI captions at ${usd(CENTS_PER_MINUTE)} a minute a language (at least ${usd(MIN_CENTS)}), each keeping 60% on its own payment.`);
   push("");
   const rc = F(rec);
-  push(`**The company over ${co.months} months** (${num(rc.draws)} Monte Carlo draws of every demand parameter, the reach, its ramp and the fixed costs; the model's units are dollars of cash after each payer's own profit tax and the fixed costs): expected **${money(rc.expected)}**, 5th to 95th percentile ${money(rc.p5)} to ${money(rc.p95)}, median ${money(rc.p50)}. **Probability of loss ${ppt(rc.pLoss)}** (± ${ppt(rc.se)}): of which the ${co.months} months' cash ends negative in ${ppt(rc.pCashLoss)} of the draws, and at month ${co.months} the paying customers' room above 60% does not yet cover the month's fixed costs (the company is not at 60% consolidated) in ${ppt(rc.pNotConsolidated)}. The lowest probability of loss among the designs that meet the rules is p* = ${ppt(pStar)}; ${oc.choices.recommended.eligible.length} designs are within ${ppt(co.lossTolerance)} of it, and this one earns the most of them. Today's price list with packs: expected ${money(F(byName("today + packs")).expected)}, probability of loss ${ppt(F(byName("today + packs")).pLoss)}; without packs ${money(F(today).expected)} and ${ppt(F(today).pLoss)}.`);
+  push(`**The company over ${co.months} months** (${num(rc.draws)} Monte Carlo draws of every demand parameter, the reach, its ramp and the fixed costs; the model's units are dollars of cash after each payer's own profit tax and the fixed costs): expected **${money(rc.expected)}**, 5th to 95th percentile ${money(rc.p5)} to ${money(rc.p95)}, median ${money(rc.p50)}. **Probability of loss ${ppt(rc.pLoss)}** (± ${ppt(rc.se)}): of which the ${co.months} months' cash ends negative in ${ppt(rc.pCashLoss)} of the draws, and at month ${co.months} the paying customers' room above 60% does not yet cover the month's fixed costs (the company is not at 60% consolidated) in ${ppt(rc.pNotConsolidated)}. The lowest probability of loss among the designs that meet the rules is p* = ${ppt(pStar)}; ${oc.choices.recommended.eligible.length === 1 ? "only this design is" : `${oc.choices.recommended.eligible.length} designs are`} within ${ppt(co.lossTolerance)} of it${oc.choices.recommended.eligible.length === 1 ? "" : ", and this one earns the most of them"}. Today's price list with packs: expected ${money(F(byName("today + packs")).expected)}, probability of loss ${ppt(F(byName("today + packs")).pLoss)}; without packs ${money(F(today).expected)} and ${ppt(F(today).pLoss)}.`);
   push("");
   const w = rec.company.worst!;
   const leastNeed = byId.get(out.screened.leastReachNeededDesign);
