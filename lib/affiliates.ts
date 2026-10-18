@@ -652,7 +652,9 @@ export async function requestAffiliateLink(input: {
   const name = store.name;
   const a = affiliatesWords(store.language);
   const link = `${origin}/@${store.handle}/affiliates?token=${token}`;
-  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
+  // A new applicant's address is one only they have said is theirs: it takes
+  // only the share of access emails kept for those (ASKED_SHARE_BPS).
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional", asked: typeof known !== "string" },
     from: `"${displayName(name)} via Marktmorgen" <${senderAddress()}>`,
     to: email,
     subject: typeof known === "string" ? a.yourPageFor(name) : a.linkSubjectNew(name),

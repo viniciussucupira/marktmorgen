@@ -84,7 +84,7 @@ export async function askToJoin(input: { store: Store; email: string; clicks?: b
   await redisPipeline([["SET", tokenKey(token), JSON.stringify(grant), "EX", JOIN_SECONDS], ...noteForErasure(store.statsId, grant.e, tokenKey(token))]);
 
   const w = joinWords(store.language);
-  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional", asked: true },
     from: sender(store),
     to: email,
     subject: w.mailSubject(store.name).slice(0, 200),

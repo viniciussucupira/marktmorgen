@@ -17,7 +17,7 @@ import { admitNonPaying } from "@/lib/free-pool";
 import { POOL_FULL_WORDS } from "@/lib/free-pool-rules";
 import type { Tier } from "@/lib/plan";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { type AllowanceKind, allowanceFor, usedWords } from "@/lib/store-allowance-rules";
+import { type AllowanceKind, allowanceFor, askedCeiling, usedWords } from "@/lib/store-allowance-rules";
 
 export type AllowanceStore = WindowFields & { tier?: Tier; sid?: string; statsId?: string | null; handle?: string };
 
@@ -31,9 +31,16 @@ function idOf(store: AllowanceStore): string | null {
   return raw ? createHash("sha256").update(`allowance:${raw}`).digest("hex").slice(0, 32) : null;
 }
 
-/** Takes `n` of a kind from the store's window, or refuses with the sentence to show. */
-export async function takeAllowance(store: AllowanceStore, kind: AllowanceKind, n = 1, now = Date.now()): Promise<Taken> {
-  const limit = allowanceFor(store, kind, now / 1000);
+/**
+ * Takes `n` of a kind from the store's window, or refuses with the sentence to
+ * show. `asked`: a confirmation to an address a visitor typed, which may take
+ * the figure only to askedCeiling of it, so the rest is kept for the buyers it
+ * is for (lib/store-allowance-rules.ts, ASKED_SHARE_BPS). It is counted in the
+ * same figure, by the same two commands.
+ */
+export async function takeAllowance(store: AllowanceStore, kind: AllowanceKind, n = 1, now = Date.now(), asked = false): Promise<Taken> {
+  const whole = allowanceFor(store, kind, now / 1000);
+  const limit = asked ? askedCeiling(whole) : whole;
   const refuse = (reason: "used" | "unknown" | "pool", message: string): Taken => ({ ok: false, reason, limit, message });
   if (!Number.isSafeInteger(n) || n < 1) return refuse("unknown", "That could not be counted. Try again.");
   const window = allowanceWindow(store, now);
