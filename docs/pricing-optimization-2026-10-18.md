@@ -187,6 +187,33 @@ Solver: scipy.optimize.milp (HiGHS), scipy 1.x.
 | Studio | 1.02× ($889 against $889) | 1.02× ($889 against $889) | 1.94× ($119 against $449) | 3.76× ($119 against $449) |
 | Scale | 1.02× ($1,989 against $1,989) | 1.02× ($1,989 against $1,989) | 1.91× ($269 against $979) | 3.64× ($269 against $979) |
 
+**Each cut alone.** The same, one figure at a time cut to a tenth of #553's (rounded down as a page prints it), every other kept: the lowest price that keeps 60%, and the profit index over A's best in the two scenarios where a cut can lower the price.
+
+| Plan | Figure cut to a tenth | Its figure after the cut | Lowest price that keeps 60% | ε −1.5: over A | ε −2: over A |
+| --- | --- | --- | --- | --- | --- |
+| Store | video | 1 | $69 | 1.00× | 1.00× |
+| Store | storage | 0.5 GB | $69 | 1.00× | 1.00× |
+| Store | orders | 20 | $69 | 1.01× | 1.01× |
+| Store | store-email | 7 | $69 | 1.00× | 1.00× |
+| Store | transactional-email | 15 | $69 | 1.00× | 1.00× |
+| Store | visits | 340 | $59 | 1.09× | 1.18× |
+| Studio | ai | 4 | $379 | 1.09× | 1.18× |
+| Studio | video | 3 | $439 | 1.01× | 1.02× |
+| Studio | storage | 4 GB | $429 | 1.03× | 1.05× |
+| Studio | orders | 45 | $429 | 1.02× | 1.05× |
+| Studio | store-email | 30 | $439 | 1.01× | 1.02× |
+| Studio | transactional-email | 40 | $439 | 1.01× | 1.02× |
+| Studio | list-email | 700 | $309 | 1.20× | 1.45× |
+| Studio | visits | 1,000 | $389 | 1.07× | 1.15× |
+| Scale | ai | 8 | $849 | 1.07× | 1.15× |
+| Scale | video | 6 | $959 | 1.01× | 1.02× |
+| Scale | storage | 8 GB | $939 | 1.02× | 1.05× |
+| Scale | orders | 150 | $919 | 1.03× | 1.07× |
+| Scale | store-email | 80 | $969 | 1.01× | 1.01× |
+| Scale | transactional-email | 100 | $959 | 1.01× | 1.02× |
+| Scale | list-email | 1,000 | $789 | 1.11× | 1.24× |
+| Scale | visits | 4,000 | $759 | 1.13× | 1.29× |
+
 ## 4. At least the best competitor in the band, on every attribute (alternative B)
 
 For each plan, each attribute Marktmorgen and its band's competitors both state, against the best competitor in the band (the largest finite figure; "unlimited" on a page is a figure no finite limit can equal). A video bandwidth in GB is turned into hours watched at the heaviest viewing the registry prices (1080p, fetched ahead). AI is not compared: the units (credits, words, writing jobs) do not convert.

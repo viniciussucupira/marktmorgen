@@ -330,6 +330,17 @@ export function exhaustive(tier: Tier, alt: Alternative, e: number): { monthCent
   }
   return best;
 }
+/** One figure cut to a tenth of #553's, every other kept: the lowest price that keeps 60%, and the profit index over A's best per scenario. */
+export function eachCut(tier: Tier): { id: Printed; figure: string; monthCents: number; ratio: Record<string, number> }[] {
+  return ORDER.filter((id) => firstFigure(tier, id) > 0).map((id) => {
+    const shares = printedShares(tier, { ...ones(), [id]: ALTERNATIVES.C });
+    const monthCents = grid(tier).find((m) => keeps(tier, m, shares))!;
+    const ratio = Object.fromEntries(ELASTICITIES.map((e) => [String(e), profit(tier, monthCents, shares, e) / exhaustive(tier, "A", e)!.profit]));
+    const n = firstFigure(tier, id) * shares[id];
+    return { id, figure: id === "storage" ? `${num(n / GB)} GB` : num(Math.round(n)), monthCents, ratio };
+  });
+}
+
 /** A program's solution as a page would print it, checked by the repository's code. */
 export function verified(sol: MilpSolution): { tier: Tier; monthCents: number; shares: Shares; keeps: boolean; month: UnitResult; year: UnitResult; profit: number }[] {
   const e = Number(sol.scenario);
@@ -600,6 +611,13 @@ export function renderPricingOptimization(): string {
   push("| Plan | " + ELASTICITIES.map((e) => `ε ${e}: C over A`).join(" | ") + " |");
   push("| --- | " + ELASTICITIES.map(() => "---").join(" | ") + " |");
   for (const tier of TIERS) push(`| ${PLAN_TITLES[tier]} | ` + ELASTICITIES.map((e) => { const a = exhaustive(tier, "A", e)!, c = exhaustive(tier, "C", e)!; return `${(c.profit / a.profit).toFixed(2)}× (${usd(c.monthCents)} against ${usd(a.monthCents)})`; }).join(" | ") + " |");
+  push("");
+
+  push("**Each cut alone.** The same, one figure at a time cut to a tenth of #553's (rounded down as a page prints it), every other kept: the lowest price that keeps 60%, and the profit index over A's best in the two scenarios where a cut can lower the price.");
+  push("");
+  push("| Plan | Figure cut to a tenth | Its figure after the cut | Lowest price that keeps 60% | ε −1.5: over A | ε −2: over A |");
+  push("| --- | --- | --- | --- | --- | --- |");
+  for (const tier of TIERS) for (const c of eachCut(tier)) push(`| ${PLAN_TITLES[tier]} | ${c.id} | ${c.figure} | ${usd(c.monthCents)} | ${c.ratio["-1.5"].toFixed(2)}× | ${c.ratio["-2"].toFixed(2)}× |`);
   push("");
 
   // ---------------- superiority
