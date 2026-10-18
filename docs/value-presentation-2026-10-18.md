@@ -38,12 +38,12 @@ There is no demand data, so the price that maximizes profit cannot be measured; 
 
 | Unit | Floor at the limits before this change | Floor at the limits in force | Price | Net at full use (sizing reading) | Closest competitor plan, its price | Its limits beside ours |
 | --- | --- | --- | --- | --- | --- | --- |
-| Store monthly | $60.50 | $62.65 ($67.60 with room) | **$69** | 60.31% | Stan Creator, $29 | Stan: products and customers open, no email; Store: 3,400 visits, 200 orders, 5 GB storage, 4 video hours, no list email or AI |
-| Store yearly | $551.65 | $577.75 ($597.60 with room) | **$690** (ten months) | 60.59% | Stan Creator, $300 | as above |
-| Studio monthly | $365.83 | $401.20 ($405.90 with room) | **$449** | 60.38% | Kajabi Growth, $249; ClickFunnels Scale, $197; HighLevel Unlimited, $297 | Kajabi Growth: 25,000 contacts, 50 products, 500 AI credits, emails open; ClickFunnels Scale: 75,000 contacts, 300,000 emails a month; Studio: 10,000 visits, 450 orders, 7,000 list emails, 40 AI writing jobs and 250 answers, 40 GB storage, 32 video hours |
-| Studio yearly | $3,977.83 | $4,403.10 ($4,422.80 with room) | **$4,490** (ten months) | 60.07% | Kajabi Growth, $199 a month yearly | as above |
-| Scale monthly | $835.40 | $870.60 ($875.53 with room) | **$999** | 60.47% | Kajabi Pro, $499; HighLevel Agency Pro, $497 | Kajabi Pro: 100,000 contacts, unlimited products, 1,000 AI credits, emails open; Scale: 40,000 visits, 1,500 orders, 10,000 list emails, 80 AI writing jobs and 400 answers, 80 GB storage, 64 video hours |
-| Scale yearly | $9,338.48 | $9,763.63 ($9,783.45 with room) | **$9,990** (ten months) | 60.08% | Kajabi Pro, $399 a month yearly | as above |
+| Store monthly | $60.50 | $62.83 ($67.70 with room) | **$69** | 60.31% | Stan Creator, $29 | Stan: products and customers open, no email; Store: 3,400 visits, 200 orders, 5 GB storage, 4 video hours, no list email or AI |
+| Store yearly | $551.65 | $578.98 ($598.35 with room) | **$690** (ten months) | 60.59% | Stan Creator, $300 | as above |
+| Studio monthly | $365.83 | $401.45 ($406.60 with room) | **$449** | 60.38% | Kajabi Growth, $249; ClickFunnels Scale, $197; HighLevel Unlimited, $297 | Kajabi Growth: 25,000 contacts, 50 products, 500 AI credits, emails open; ClickFunnels Scale: 75,000 contacts, 300,000 emails a month; Studio: 10,000 visits, 450 orders, 7,000 list emails, 40 AI writing jobs and 250 answers, 40 GB storage, 32 video hours |
+| Studio yearly | $3,977.83 | $4,406.00 ($4,425.70 with room) | **$4,490** (ten months) | 60.06% | Kajabi Growth, $199 a month yearly | as above |
+| Scale monthly | $835.40 | $871.65 ($876.63 with room) | **$999** | 60.46% | Kajabi Pro, $499; HighLevel Agency Pro, $497 | Kajabi Pro: 100,000 contacts, unlimited products, 1,000 AI credits, emails open; Scale: 40,000 visits, 1,500 orders, 10,000 list emails, 80 AI writing jobs and 400 answers, 80 GB storage, 64 video hours |
+| Scale yearly | $9,338.48 | $9,775.80 ($9,795.18 with room) | **$9,990** (ten months) | 60.07% | Kajabi Pro, $399 a month yearly | as above |
 | Store assistant add-on, a month | $61.20 ($65.90 with room) | the same | **$69** (was $49), 700 replies | 60.40% | HighLevel AI Employee, $50 or $97 a month per sub-account (no reply count on the page) | ours: 700 replies a month in the store's chat, handed to the creator when it cannot answer |
 | AI captions | $3.99 a minute a language needs an $850 minimum; $6.00 needs $32.00 | the same | **$6.00 a minute a language, never less than $35** (was 25¢ and $2) | 60.00% at its worst length | none of the pages above prices captions | — |
 
@@ -57,8 +57,8 @@ No visible limit was cut. The room each round price left above its floor, on the
 
 | Plan | Raised | Why this line | Room left |
 | --- | --- | --- | --- |
-| Studio | List emails 5,000 → **7,000** a month | Emails a month is the figure every leader prints (ClickFunnels 50,000 to 1.2M, Kajabi and Stan Creator Pro "unlimited") | Studio yearly keeps 60.07% |
-| Scale | List emails 8,000 → **10,000** a month | the same | Scale yearly keeps 60.08% |
+| Studio | List emails 5,000 → **7,000** a month | Emails a month is the figure every leader prints (ClickFunnels 50,000 to 1.2M, Kajabi and Stan Creator Pro "unlimited") | Studio yearly keeps 60.06% |
+| Scale | List emails 8,000 → **10,000** a month | the same | Scale yearly keeps 60.07% |
 | Store | Visits 3,000 → **3,400** a month | Store has no list email to raise; visitors are the line ClickFunnels leaves open | Store monthly keeps 60.31% |
 
 Matching a leader outright is not possible at these prices: 43,000 more emails on Studio to reach ClickFunnels Launch's 50,000 would cost $38.70 a month at full use, and so about $760 a month more of price. The Store assistant's 700 replies stay: the $69 price leaves 39¢ of room, too little for a round step.
