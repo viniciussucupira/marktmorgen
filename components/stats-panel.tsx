@@ -20,6 +20,7 @@ import { PaymentComparisonPanel } from "@/components/payment-comparison";
 import { PaymentMixPanel } from "@/components/payment-mix";
 import { DailyCashflowPanel } from "@/components/daily-cashflow";
 import { RefundActivityPanel } from "@/components/refund-activity";
+import { KeptByCurrency } from "@/components/kept-by-currency";
 import { WeeklyCohortsPanel } from "@/components/weekly-cohorts";
 import { RevenueQuality, BuyerChannelsPanel } from "@/components/revenue-quality";
 import { READ_MIN_VISITORS, READ_SAMPLE } from "@/lib/page-read-sample";
@@ -522,6 +523,9 @@ export function StatsPanel({
   // Refunds over the 90 days, by the channel of the sale given back (lib/stats.ts, readRefunds).
   const refunds90 = new Map((data.refunds?.d90 ?? []).map((row) => [row.source || "direct", row]));
   const withRefundColumn = refunds90.size > 0;
+  // Disputes the bank holds or the buyer won, by the channel of the sale disputed; only once every page was read.
+  const disputes90 = new Map((data.disputesComplete ? data.disputes?.d90 ?? [] : []).map((row) => [row.source || "direct", row]));
+  const withDisputeColumn = disputes90.size > 0;
   // The few things worth acting on, in words (lib/insights.ts).
   const insights = range === "all" ? [] : insightsFrom(data, range, spends, 4, insightContext);
   const sid = useStudioStore();
@@ -851,7 +855,12 @@ export function StatsPanel({
                     Refunded
                   </th>
                 ) : null}
-                {withRenewalColumn || withRefundColumn ? (
+                {withDisputeColumn ? (
+                  <th scope="col" className="py-1 pl-3 text-right font-semibold" title="Disputes opened in these 90 days that the bank holds or the buyer won, under the channel of the sale disputed">
+                    Disputed
+                  </th>
+                ) : null}
+                {withRenewalColumn || withRefundColumn || withDisputeColumn ? (
                   <>
                     <th scope="col" className="py-1 pl-3 text-right font-semibold">Total</th>
                     <th scope="col" className="py-1 pl-3 text-right font-semibold" title="The total for each sale: what one buyer from the channel came to, renewals in and refunds out">
@@ -873,9 +882,12 @@ export function StatsPanel({
                   {withRefundColumn ? (
                     <td className="py-1 pl-3 text-right tabular-nums">{refunds90.get(row.source)?.cents ? `−${money(refunds90.get(row.source)!.cents)}` : "—"}</td>
                   ) : null}
-                  {withRenewalColumn || withRefundColumn ? (
+                  {withDisputeColumn ? (
+                    <td className="py-1 pl-3 text-right tabular-nums">{disputes90.get(row.source)?.cents ? `−${money(disputes90.get(row.source)!.cents)}` : "—"}</td>
+                  ) : null}
+                  {withRenewalColumn || withRefundColumn || withDisputeColumn ? (
                     (() => {
-                      const total = row.cents + row.renewalCents - (refunds90.get(row.source)?.cents ?? 0);
+                      const total = row.cents + row.renewalCents - (refunds90.get(row.source)?.cents ?? 0) - (disputes90.get(row.source)?.cents ?? 0);
                       return (
                         <>
                           <td className="py-1 pl-3 text-right font-semibold tabular-nums text-ink">{money(total)}</td>
@@ -896,6 +908,8 @@ export function StatsPanel({
             Switzerland and Brazil), or a browser asks not to be followed, only the page&apos;s tags count.
             {withRenewalColumn ? " A renewal counts under the channel its membership or plan was sold through." : ""}
             {withRefundColumn ? " A refund counts under the channel of the sale it gave back, on the day it was given." : ""}
+            {withDisputeColumn ? " A dispute counts under the channel of the sale it takes back, on the day it was opened, before Stripe's dispute fee." : ""}
+            {!data.disputesComplete ? " Disputes could not all be read, so the totals do not take them out." : ""}
             {refunds90.get("unrecorded")?.cents
               ? ` Refunds of renewals, or of sales from before the last 180 days, are not under any channel: ${money(refunds90.get("unrecorded")!.cents)} in these 90 days.`
               : ""}
@@ -1024,6 +1038,7 @@ export function StatsPanel({
       {range !== "all" ? <PaymentMixPanel data={data} range={range} /> : null}
       {range !== "all" ? <PaymentComparisonPanel data={data} range={range} /> : null}
       {range !== "all" ? <DailyCashflowPanel data={data} range={range} spends={spends} /> : null}
+      {range !== "all" ? <KeptByCurrency data={data} range={range} /> : null}
       {range !== "all" ? <RefundActivityPanel data={data} range={range} /> : null}
       {salesHere && range !== "all" && days.length > 0 && data.buyerChannels ? (
         <BuyerChannelsPanel window={data.buyerChannels[range]} currency={data.currency} historyPartial={data.buyerChannels.historyPartial} period={{ from: days[0].date, to: days[days.length - 1].date }} />

@@ -85,6 +85,7 @@ import { orderWrite } from "@/lib/order-data";
 import { dataBytes } from "@/lib/store-data-rules";
 import { affiliatePromotionFrom, readAffiliatePromotion, type AffiliatePromotion } from "@/lib/affiliate-promotion";
 import { onAccount } from "@/lib/stripe-account";
+import { DISPUTE_TAKES } from "@/lib/retained-revenue";
 import { isSettled } from "@/lib/instant-pay";
 import { SITE_URL } from "@/lib/site-url";
 import {
@@ -131,12 +132,7 @@ const RATE_WINDOW_SECONDS = 60 * 60;
 const REFUND_PAGES = 10;
 /** And of a hundred disputes, which are far fewer. */
 const DISPUTE_PAGES = 3;
-/**
- * The states of a Stripe dispute in which the money is not the creator's:
- * held by the bank while it is answered or reviewed, or taken back for good.
- * An inquiry (warning_*) takes nothing, and a dispute won gives it back.
- */
-const DISPUTE_TAKES = new Set(["needs_response", "under_review", "lost"]);
+// DISPUTE_TAKES, the dispute states that take the money, is lib/retained-revenue.ts's: the numbers read the same set.
 
 /** The cookie an affiliate's own browser is signed in with, one per store. */
 export function affiliateCookieName(handle: string): string {

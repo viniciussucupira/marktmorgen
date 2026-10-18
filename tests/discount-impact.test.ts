@@ -108,7 +108,7 @@ async function main(): Promise<void> {
     ],
     refundsRead: true,
   });
-  is("with nothing more asked of Stripe than the sales, renewals and refunds", [...new Set(asked)].sort(), ["/checkout/sessions", "/invoices", "/payment_intents", "/refunds"]);
+  is("with nothing more asked of Stripe than the sales, renewals, refunds and disputes the numbers read anyway", [...new Set(asked)].sort(), ["/checkout/sessions", "/disputes", "/invoices", "/payment_intents", "/refunds"]);
 
   part("Members by how they joined");
   is("from what the checkout wrote on the membership", [entryOf({}), entryOf({ intro: "3" }), entryOf({ winback: "yes" }), entryOf({ discount: "code" }), entryOf({ discount: "sale" }), entryOf({ discount: "x" })], ["full", "intro", "comeback", "code", "sale", "full"]);
