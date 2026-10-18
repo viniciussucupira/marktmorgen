@@ -18,7 +18,7 @@ import { speechFor } from "@/lib/buyer-words";
 import { type AgreementWords, agreementWords } from "@/lib/buyer-words/agreements";
 import { type Store } from "@/lib/store";
 import { type Agreement, type AgreementVersion, type Signature, MAX_SENDS, canSendAgain, latestOf } from "@/lib/agreement-rules";
-import { agreementOf, readVersion, saveAgreement } from "@/lib/agreement-store";
+import { agreementOf, changeAgreement, readVersion } from "@/lib/agreement-store";
 
 /** Where an agreement is read and signed: the store's own address or domain, /sign/<id>. */
 export function agreementLink(store: Store, a: Pick<Agreement, "id">): string {
@@ -63,9 +63,10 @@ export async function sendAgreementEmail(store: Store, a: Agreement, version: Ag
     text,
     idempotencyKey: `nimbus-agree:${a.id}:${a.sent.length}`,
   }).catch(() => false);
-  const next: Agreement = sent ? { ...a, sent: [...a.sent, now], failed: "" } : { ...a, failed: NOT_SENT };
-  await saveAgreement(next, now);
-  return { sent, agreement: next };
+  // Written onto the record as it is now: a signature or a version given
+  // while the email was on its way stays (MM-SA-03).
+  const next = await changeAgreement(store, a.id, (current) => (sent ? { ...current, sent: [...current.sent, now], failed: "" } : { ...current, failed: NOT_SENT }), now);
+  return { sent, agreement: next ?? a };
 }
 
 /** One more email of the link by hand, within the same counts (lib/agreement-rules.ts, canSendAgain). */
@@ -174,8 +175,7 @@ export async function sendSignedCopies(store: Store, a: Agreement, version: Agre
         idempotencyKey: `nimbus-agree-copy:${a.id}:${version.n}:creator`,
       }).catch(() => false)
     : false;
-  const fresh = await agreementOf(store, a.id).catch(() => null);
-  if (fresh) await saveAgreement({ ...fresh, copies: fresh.copies + (signer ? 1 : 0) + (creator ? 1 : 0), failed: signer ? "" : NOT_SENT }, now).catch(() => undefined);
+  await changeAgreement(store, a.id, (current) => ({ ...current, copies: current.copies + (signer ? 1 : 0) + (creator ? 1 : 0), failed: signer ? "" : NOT_SENT }), now).catch(() => undefined);
   return { signer, creator };
 }
 
@@ -203,6 +203,6 @@ export async function resendSignedCopy(store: Store, id: string, now = Date.now(
     attachments: [{ filename: `signed-${a.id.slice(0, 8)}-v${version.n}.html`, content: Buffer.from(html, "utf8").toString("base64") }],
     idempotencyKey: `nimbus-agree:${a.id}:${a.sent.length}`,
   }).catch(() => false);
-  await saveAgreement(sent ? { ...a, sent: [...a.sent, now], copies: a.copies + 1, failed: "" } : { ...a, failed: NOT_SENT }, now);
+  await changeAgreement(store, a.id, (current) => (sent ? { ...current, sent: [...current.sent, now], copies: current.copies + 1, failed: "" } : { ...current, failed: NOT_SENT }), now);
   return { ok: true, sent };
 }
