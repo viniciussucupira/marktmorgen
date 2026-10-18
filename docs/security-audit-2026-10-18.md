@@ -30,11 +30,11 @@ that no fault remains.
 | MM-SA-06 | Low | The sign-in link's per-address throttle counts strangers' requests | Listed, not fixed |
 | MM-SA-07 | Low | Buyers' links (downloads, orders, a private feed) travel in query strings | Listed, not fixed |
 | MM-SA-08 | Low | Product pictures are kept outside the storage figure and never swept when unattached | Listed, not fixed |
-| MM-SA-09 | Low | An affiliate's leads are decided by read, change and write without a lock: two approvals at once can pass a cap, and one racing a deletion writes the address back | Listed, not fixed |
+| MM-SA-09 | Low | An affiliate's leads were decided by read, change and write without a lock: an approval racing a person's deletion wrote their address back, a deletion racing an approval wrote the lead back open, and an approval racing a reversal paid a lead marked fake | Fixed: #569 |
 | MM-SA-10 | Low | The v1 API reads a body with no declared length whole before checking its own ceiling | Listed, not fixed |
 | MM-SA-11 | Info | Pacing by connection is per machine: many machines at once are the host firewall's to stop | Owner's step |
 
-The checks for the five fixed findings are `tests/security/*.redis-run.ts`,
+The checks for the six fixed findings are `tests/security/*.redis-run.ts`,
 run by `scripts/security-redis.mjs` through `scripts/test_security_redis.py`
 in the `form-opportunity-redis` job of `.github/workflows/product-checks.yml`
 ("Actual Redis security checks"). Each fails on the code before its fix and
@@ -49,9 +49,10 @@ passes after it.
    counted with `{ shared: true }`.
 2. **A record two hands can write is changed under its lock, from what is
    stored now.** A payment request through `changeRequest`, an agreement
-   through `changeAgreement`; a slow step (an email, a provider's answer)
-   never sits between a read and the write it decides. A lock is released
-   only by its holder.
+   through `changeAgreement`, a program's leads under their lock in
+   `decideLeads` and `forgetLeadPerson`; a slow step (an email, a provider's
+   answer) never sits between a read and the write it decides. A lock is
+   released only by its holder.
 3. **A picture, photo or icon is read only at the address the CDN keeps**,
    and every answer a function gives is paced (`lib/picture-pace.ts`). A new
    route that serves a cached file does the same.
@@ -239,17 +240,33 @@ folder in the storage figure or sweep unattached pictures after a day; both
 change what a plan holds, and the storage line of the cost registry must move
 with it.
 
-### MM-SA-09: affiliate lead approvals without a lock
+### MM-SA-09: affiliate lead approvals without a lock (fixed, #569)
 
-`decideLeads` in `lib/affiliate-leads.ts` reads the store's leads, judges
-them and writes the chosen ones back, with nothing between. Two approvals at
-the same moment can each pass a cap or budget the other has already used, and
-an approval that read a lead before a person's deletion
-(`forgetLeadPerson`) writes the lead back with that person's address on it.
-Only the creator, or a team member, decides leads, and the cap is on what the
-creator pays out of their own sales. **Decision: left for a follow-up**, with
-the same `withLock` pattern as MM-SA-02 around `decideLeads` and
-`forgetLeadPerson`.
+**Where.** `decideLeads` and `forgetLeadPerson` in `lib/affiliate-leads.ts`.
+
+A decision read the store's leads, judged them and wrote the chosen ones
+back whole; a person's deletion read their lead and wrote it back without the
+address. Nothing held either hand off the other, so an approval that had read
+a lead before the person's deletion wrote their address back (undoing the
+deletion), a deletion that had read a lead before its approval wrote it back
+open (the affiliate's approved commission lost), and an approval that had
+read a lead before a team member reversed it as fake paid a lead marked not
+genuine. The caps and the budget themselves were not passed by a race: they
+are judged over every lead in the order confirmed, whatever its state, so two
+approvals at once read the same answer.
+
+**Proof.** `tests/security/affiliate-leads-lock.redis-run.ts` holds each slow
+hand at its read against a real Redis while the other writes: on the old code
+3 of 5 checks failed (the address back, the approval lost, the fake lead
+approved).
+
+**Fix (#569).** Both run under `nl:aff:leads:lock:<statsId>` (`withLock`, ten
+seconds, waited for up to five) and read again under it. A busy lock answers
+the studio `busy` (409, "reload and try again") and makes the erasure report
+that part as not done, to be tried again. The lock is its own key family,
+expiring by itself and never counted in the data room; its two commands ride
+inside the studio request or the erasure that decides, so no cost-table
+figure moves.
 
 ### MM-SA-10: bodies with no declared length
 
