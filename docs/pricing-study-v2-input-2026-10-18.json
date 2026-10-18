@@ -8335,12 +8335,12 @@
     "low": 0,
     "high": 50000
    },
-   "draws": 3000,
-   "finalDraws": 20000,
+   "draws": 1000,
+   "finalDraws": 10000,
    "seed": 20261019,
    "finalSeed": 20261020,
    "lossTolerance": 0.01,
-   "finalWindow": 0.03
+   "finalWindow": 0.05
   },
   "noLoss": {
    "churn": 0.13,
