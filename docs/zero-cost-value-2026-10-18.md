@@ -52,7 +52,7 @@ HighLevel and ClickFunnels are also covered row by row in [highlevel-gap-matrix.
 | --- | --- | --- |
 | Online courses | (a) | `lib/course.ts` |
 | Communities | (a) | `lib/community.ts` |
-| Newsletters, by email and published on the web | (a) email, (b) web | Email: `lib/broadcasts.ts`. Not built: a sent email published as a page of the store. The text is already kept; its pages would be the store's public requests. |
+| Newsletters, by email and published on the web | (a) | Email: `lib/broadcasts.ts`. A sent email published as a page of the store, chosen one at a time: `lib/letters.ts` (#554). |
 | Coaching with programs, scheduling and payments | (a) | `lib/calls.ts`, `lib/call-packages.ts` |
 | Digital downloads | (a) | `lib/product-file.ts`, `lib/delivery.ts` |
 | Memberships with tiered access | (a) | `lib/membership-access.ts`, `lib/tier-switch.ts` |
@@ -163,11 +163,11 @@ HighLevel and ClickFunnels are also covered row by row in [highlevel-gap-matrix.
 
 This order is this review's judgment, not a measurement.
 
-1. **Newsletter issues published on the store** (Kajabi). A creator chooses, per sent email, to publish it as a page of the store, with a list of past issues: a reason to subscribe and a page to share. No new cost: the text is already kept, the pages are the store's public requests, and the index is counted in the data room.
+1. **Newsletter issues published on the store** (Kajabi). Built in #554. A creator chooses, per sent email, to publish it as a page of the store, with a list of past issues: a reason to subscribe and a page to share. No new cost: the text is already kept, the pages are the store's public requests, and the index is counted in the data room.
 2. **Instagram AutoDM** (Stan). High value to creators who sell from Instagram. Blocked on the owner's Meta app review before any code can be used live.
 3. **More starting pages and funnels** (HighLevel templates). Content only; no cost per use. Every starting page must hold no invented testimonial, figure or urgency.
 4. **Copying a whole store's setup into another store of the same account** (HighLevel snapshots). Uses only the receiving store's data room.
 5. **A scheduled report to an address the creator types** (HighLevel). One of the store's emails each time.
 6. **Social planner** (HighLevel). Blocked on each platform's app review.
 
-Built from this list: none yet. Each will be its own tested pull request, named here when it merges.
+Built from this list: item 1 in #554 (`lib/letters.ts`, `app/[handle]/letters`, `tests/letters.test.ts`). Each other item will be its own tested pull request.
