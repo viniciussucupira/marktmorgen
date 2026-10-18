@@ -41,17 +41,20 @@ import { type AllowanceStore, takeAllowance } from "@/lib/store-allowance";
  *   store    taken here, before it goes, from the store's window: its emails
  *            ("email") or its buyers' access emails ("transactional")
  *            (lib/store-allowance-rules.ts). One that does not fit is not sent.
+ *            `asked`: a confirmation to an address a visitor typed, which may
+ *            use only part of the access emails (ASKED_SHARE_BPS), so a
+ *            stranger cannot spend the links buyers are sent.
  */
 export type EmailMeter =
   | { by: "company" }
   | { by: "order" }
   | { by: "monthly" }
-  | { by: "store"; store: AllowanceStore; kind: "email" | "transactional" };
+  | { by: "store"; store: AllowanceStore; kind: "email" | "transactional"; asked?: boolean };
 
 /** Takes a store's figure for `n` emails before they go; true for the meters already counted elsewhere. */
 async function metered(meter: EmailMeter, n: number): Promise<boolean> {
   if (meter.by !== "store") return true;
-  const taken = await takeAllowance(meter.store, meter.kind, n);
+  const taken = await takeAllowance(meter.store, meter.kind, n, Date.now(), meter.asked === true);
   if (!taken.ok) console.error(`an email was not sent: the store's ${meter.kind} figure (${taken.reason})`);
   return taken.ok;
 }

@@ -84,6 +84,28 @@ export function allowanceFor(store: PlanFields & { tier?: Tier }, kind: Allowanc
   return NON_PAYING_ALLOWANCES[standing][kind];
 }
 
+/**
+ * The share of a store's access emails ("transactional") that confirmations
+ * to an address nobody has shown is anybody's may take, in hundredths of a
+ * percent (18 October 2026, docs/security-audit-2026-10-18.md, MM-SA-05).
+ *
+ * The sign-up box, a waitlist and the affiliate form email whatever address a
+ * visitor types, and each was paid from the same figure as the links buyers
+ * are sent to what they bought. Limited only by the hour, per connection and
+ * per address, a script from many connections could spend the month's figure
+ * on made-up addresses, and every buyer who asked for their link afterward
+ * was sent nothing. Those confirmations now stop at this share of the figure,
+ * and the rest is kept for buyers: the figure itself, and what it costs, is
+ * unchanged.
+ */
+export const ASKED_SHARE_BPS = 5_000;
+
+/** Where confirmations to typed addresses stop, for a figure of `limit`. */
+export function askedCeiling(limit: number): number {
+  if (!Number.isSafeInteger(limit) || limit <= 0) return 0;
+  return Math.floor((limit * ASKED_SHARE_BPS) / 10_000);
+}
+
 /** A contact added or a product given through the API is this many of the window's API requests, the request included (lib/api-write.ts). */
 export const API_WRITE_UNITS = 5;
 

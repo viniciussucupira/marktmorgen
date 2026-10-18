@@ -139,7 +139,7 @@ export async function joinWaitlist(input: {
 
   const link = `${origin}/@${store.handle}/waitlist?token=${confirm}`;
   const g = givingWords(store.language);
-  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional" },
+  const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional", asked: true },
     from: sender(store),
     to: email,
     subject: g.waitSubject(product.title).slice(0, 200),
