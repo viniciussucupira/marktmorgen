@@ -25,10 +25,10 @@ import { cameFrom } from "@/lib/came-from";
 import { channelOfRequest } from "@/lib/visit-channel";
 import { adsCheckout } from "@/lib/ad-events";
 import { codeCookieName, readLinkCode } from "@/lib/code-link";
-import { AB_COOKIE, abMeta, count as countTest, readBucket, readCounts, versionFor, winner } from "@/lib/headline-test";
+import { AB_COOKIE, abMeta, count as countTest, expectedShareB, readBucket, readCounts, versionFor, winner } from "@/lib/headline-test";
 import { readPage } from "@/lib/sales-page-store";
 import { readCountry } from "@/lib/fair-price";
-import { pageShown, runningTest } from "@/lib/sales-page";
+import { pageShown, runningTest, declaredMeasure } from "@/lib/sales-page";
 import { noteCheckoutTrouble } from "@/lib/checkout-trouble";
 import { markFromReferer } from "@/lib/page-funnel";
 import { funnelHere } from "@/lib/page-funnel-store";
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
       const test = page ? runningTest(page) : null;
       if (page && test && pageShown(page)) {
         const counts = await readCounts(store.statsId, product.id, test).catch(() => null);
-        if (counts && !winner(counts, product.priceCents > 0 ? "money" : "checkouts")) {
+        if (counts && !winner(counts, product.priceCents > 0 ? "money" : "checkouts", { declared: declaredMeasure(page), shareB: expectedShareB(test) })) {
           abTest = test;
           ab = abMeta(test, versionFor(bucket, test));
         }

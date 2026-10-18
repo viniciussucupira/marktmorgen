@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { StoreFullError, imageFolder, isFree, setProductPage } from "@/lib/store";
 import { productIdFor, readListing } from "@/lib/catalog";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { EMPTY_PAGE, MAX_BLOCKS, copyOfPage, oversized, pageProblem, parsePage, picturePaths } from "@/lib/sales-page";
+import { EMPTY_PAGE, MAX_BLOCKS, copyOfPage, declareMeasure, oversized, pageProblem, parsePage, picturePaths } from "@/lib/sales-page";
 import { jsonAccess } from "@/lib/studio-route";
 import { claimPictures, readPage, releasePictures, writePage } from "@/lib/sales-page-store";
 import { del } from "@/lib/blob";
@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
     // has to be a file in this store's own picture folder that really is a
     // picture, not the product's own picture under another name, and not
     // one another product's page is already showing.
-    const before = store.statsId && product.page ? picturePaths(await readPage(store.statsId, id)) : [];
+    const stored = store.statsId && product.page ? await readPage(store.statsId, id) : null;
+    const before = stored ? picturePaths(stored) : [];
     const shown = picturePaths(page);
     const fresh = shown.filter((path) => !before.includes(path));
     if (fresh.length > 0) {
@@ -85,7 +86,9 @@ export async function POST(request: NextRequest) {
     const marked = await setProductPage(guarded.ref, id, has);
     if (!marked.ok) return Response.json({ ok: false, error: marked.reason }, { status: 400 });
     if (!marked.store.statsId) return Response.json({ ok: false, error: "server_error" }, { status: 500 });
-    await writePage(marked.store.statsId, id, page, marked.store);
+    // A running test declares, once, the measure it is decided by (lib/headline-test-rules.ts, rule 2).
+    const saved = declareMeasure(page, stored, isFree(product) ? "checkouts" : "money");
+    await writePage(marked.store.statsId, id, saved, marked.store);
     // A picture taken off the page is deleted, best effort and only after the
     // page that no longer shows it is written.
     const gone = await releasePictures(marked.store.statsId, id, before.filter((path) => !shown.includes(path))).catch(() => [] as string[]);
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
       await del(gone).catch((error: unknown) => console.error("could not delete pictures taken off a page", error));
     }
     // The page as it was kept, so the editor shows exactly that without starting over.
-    return Response.json({ ok: true, blocks: page.blocks.length, page });
+    return Response.json({ ok: true, blocks: saved.blocks.length, page: saved });
   } catch (error) {
     if (error instanceof StoreFullError) return Response.json({ ok: false, error: "store_full" }, { status: 409 });
     console.error("saving a product page failed", error);

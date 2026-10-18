@@ -834,7 +834,7 @@
       "evidencePath": "lib/headline-test-rules.ts",
       "marktmorgenEvidence": "D",
       "current": "Headline and whole-page A/B tests split by a cookie set only where consent is not required, counted per version, with paid sales read from Stripe once per checkout.",
-      "improvement": "Audit repeated looks, traffic imbalance and refund maturity before automation.",
+      "improvement": "Subtract refunds per version; the repeated-look line, the split check and the waiting period are in F20.",
       "testEvidence": [
         "tests/page-variant.test.ts",
         "tests/headline-test.test.ts",
@@ -850,9 +850,10 @@
       "clickfunnels": "A universal statistical guarantee was not established.",
       "evidencePath": "lib/headline-test-rules.ts",
       "marktmorgenEvidence": "D",
-      "current": "Explicit insufficient-data states: money needs 200 views and 10 paid sales per version and a 97.5% chance; sign-ups need 200 views, at least 5 expected sign-ups per version and 95% significance. No repeated-look correction or refund maturity yet.",
-      "improvement": "Add a repeated-look (sequential) correction and refund maturity before automatic winners; no guaranteed uplift.",
+      "current": "Explicit insufficient-data states (money needs 200 views and 10 paid sales per version; sign-ups need 200 views and at least 5 expected sign-ups per version). Since 18 October 2026 the decision holds however often it is read: an asymptotic confidence-sequence line (Waudby-Smith et al., arXiv:2103.06476, Theorem 2.2) at a 5% chance of a false winner over the whole test, |z| >= 3.04 at 2,000 views instead of a fixed 1.96; in seeded synthetic A/A tests read every 50 visitors it called a false winner 3.3% of the time against 30.5% for the fixed line. The measure (money or sign-ups) is declared when the test is saved and a price change mid-test stops a winner; the split is checked against the test's own share of groups (sample ratio mismatch at p < 0.001 stops a winner); a money test is not decided before 14 days. Refunds are not subtracted per version. No guaranteed uplift.",
+      "improvement": "Subtract refunds per version before a money winner; measure decision times on real traffic.",
       "testEvidence": [
+        "tests/experiment-reliability.test.ts",
         "tests/experiment-insufficient-data.test.ts",
         "tests/money-tests.test.ts"
       ]
@@ -1573,7 +1574,10 @@
       "effort": 1,
       "scope": "Reuse existing page editors and already-loaded page/product identities.",
       "acceptance": "One navigation from a saved step to the correct store and editor; hide removed/unauthorized targets; disable prefetch and preserve save recovery.",
-      "score": 16
+      "score": 16,
+      "status": "met",
+      "statusEvidence": "lib/funnel-editor-links.ts, components/page-funnel-editor.tsx (prefetch={false}); tests/funnel-editor-links.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 2,
@@ -1583,7 +1587,10 @@
       "effort": 3,
       "scope": "Integrate existing pages, forms, products, bumps, offers and consented follow-up drafts.",
       "acceptance": "Every warning links to its real editor; no unapproved publication/send/payment; partial failures remain recoverable.",
-      "score": 6.666666666666667
+      "score": 6.666666666666667,
+      "status": "met",
+      "statusEvidence": "lib/funnel-launch-review.ts, components/page-funnel-editor.tsx (each finding links its step's editor); tests/funnel-launch-review.test.ts, tests/funnel-step-review.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 3,
@@ -1593,7 +1600,10 @@
       "effort": 3,
       "scope": "Extend existing bounded imports with a versioned ClickFunnels adapter.",
       "acceptance": "Preview every row/resource, duplicates, consent and unsupported scripts; repeat-safe bounded application; no copied vendor assets.",
-      "score": 6.666666666666667
+      "score": 6.666666666666667,
+      "status": "met in code; real ClickFunnels exports unverified (F55, F56 stay C/U)",
+      "statusEvidence": "lib/clickfunnels-csv.ts, lib/clickfunnels-funnel.ts, docs/clickfunnels-import.md; tests/clickfunnels-import.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 4,
@@ -1603,7 +1613,10 @@
       "effort": 4,
       "scope": "Reuse campaign tags and Stripe events; declare attribution and money definitions.",
       "acceptance": "Orders/refunds/disputes/renewals reconcile by currency; unknown attribution visible; no claim that attribution proves causal lift.",
-      "score": 6.25
+      "score": 6.25,
+      "status": "met (F52, 18 October 2026)",
+      "statusEvidence": "lib/retained-revenue.ts, components/kept-by-currency.tsx; tests/retained-revenue.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 5,
@@ -1613,7 +1626,10 @@
       "effort": 4,
       "scope": "Audit existing two-tier book, coupons, hub and creator-owned PayPal batches.",
       "acceptance": "No duplicate payout after a lost response; refund/dispute correction and reserve policy tested; no live transfer in development.",
-      "score": 5
+      "score": 5,
+      "status": "met in code",
+      "statusEvidence": "lib/affiliates.ts (refunds and disputes settle every commission), lib/affiliate-payouts.ts, lib/paypal-payouts.ts (PayPal idempotency key); tests/affiliate-reversals.test.ts, tests/paypal-payouts.test.ts, tests/pending-payouts.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 6,
@@ -1623,7 +1639,10 @@
       "effort": 4,
       "scope": "Review existing revenue-based headline tests instead of adding another test engine.",
       "acceptance": "Predeclared measure, repeated-look policy, allocation checks, refund maturity and insufficient-data state.",
-      "score": 4
+      "score": 4,
+      "status": "met (F20, 18 October 2026); refunds not subtracted per version",
+      "statusEvidence": "lib/headline-test-rules.ts (boundary, splitMismatch, testState), lib/sales-page.ts (declareMeasure); tests/experiment-reliability.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 7,
@@ -1633,7 +1652,9 @@
       "effort": 4,
       "scope": "Use shared content/network/device fixtures and real navigation traces.",
       "acceptance": "Desktop/mobile task completion and latency percentiles recorded; publish fewer-clicks/faster claims only after comparable measurements.",
-      "score": 4
+      "score": 4,
+      "status": "open: needs matched browser and network measurements this work cannot make honestly",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 8,
@@ -1643,7 +1664,10 @@
       "effort": 5,
       "scope": "Original structured pages and follow-up drafts from owned product facts.",
       "acceptance": "Funded maximum request cost reserved before every call; bounded input/output/tools/retries; schema validation and human review; no invented proof or autonomous publication.",
-      "score": 3
+      "score": 3,
+      "status": "met in code (F03, F04)",
+      "statusEvidence": "lib/funnel-ai.ts; tests/funnel-ai.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 9,
@@ -1653,7 +1677,10 @@
       "effort": 4,
       "scope": "Deterministic readiness checks first; model explanations only after budget approval.",
       "acceptance": "Each recommendation cites its actual page/data, has a reversible action and handles insufficient evidence.",
-      "score": 3
+      "score": 3,
+      "status": "partly met: deterministic checks only (F54, F06); no model explanations",
+      "statusEvidence": "lib/funnel-diagnosis.ts, lib/funnel-launch-review.ts; tests/funnel-diagnosis.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 10,
@@ -1663,7 +1690,10 @@
       "effort": 4,
       "scope": "Integrate approved prices, currencies and tax readiness.",
       "acceptance": "Transparent country override, signed prices, refund/renewal consistency and no hidden conversion.",
-      "score": 2.25
+      "score": 2.25,
+      "status": "partly met: percentage fair prices by country through the creator's Stripe coupons (F16); arbitrary per-country price lists not offered",
+      "statusEvidence": "lib/fair-price.ts; tests/fair-price.test.ts",
+      "statusDate": "2026-10-18 UTC"
     },
     {
       "rank": 11,
@@ -1673,7 +1703,9 @@
       "effort": 5,
       "scope": "Only eligible cohorts with sufficient histories and approved data collection.",
       "acceptance": "Out-of-time evaluation, calibration, drift, uncertainty and no-data fallback; no guaranteed revenue prediction.",
-      "score": 2.4
+      "score": 2.4,
+      "status": "open: needs eligible cohorts with sufficient history",
+      "statusDate": "2026-10-18 UTC"
     }
   ],
   "commercial": {
@@ -1763,6 +1795,11 @@
         "id": "F52",
         "date": "2026-10-18 UTC",
         "note": "Moved C/U to D on tests/retained-revenue.test.ts with tests/attribution.test.ts and tests/cashflow-reading.test.ts: kept money by currency (orders, renewals, refunds and disputes, never converted), unknown attribution shown, and no causal claim (priority 4). The evidence path is cited at main, not at sourceRevision, where lib/retained-revenue.ts did not exist yet."
+      },
+      {
+        "id": "F20",
+        "date": "2026-10-18 UTC",
+        "note": "Stays D, now on tests/experiment-reliability.test.ts as well: a line valid under repeated looks, a declared measure, a split check and refund maturity (priority 6). Each priority now carries a status with its evidence; ranks 1 to 6 and 8 are met in code, 9 and 10 partly, 7 and 11 open."
       }
     ]
   }
