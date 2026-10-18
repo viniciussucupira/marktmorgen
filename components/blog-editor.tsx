@@ -6,6 +6,7 @@ import { AiAssist } from "@/components/ai-assist";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 const MAX_TITLE = 120;
 const MAX_BODY = 20_000;
@@ -131,7 +132,7 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
           <a href={post.href} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
             View it
             <Icon name="external" size={15} />
-          </a>
+          <NewTab /></a>
         ) : null}
         {post.id ? (
           <button type="button" className="btn btn-ghost ml-auto text-danger" disabled={busy !== null} onClick={() => void remove()}>

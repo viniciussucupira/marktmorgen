@@ -26,6 +26,7 @@ import { type PurchaseItems } from "@/lib/buyer-orders";
 import { BundleDelivery } from "@/components/bundle-delivery";
 import { speech } from "@/lib/buyer-words";
 import { type OrdersWords, ordersWords } from "@/lib/buyer-words/orders";
+import { NewTab } from "@/components/new-tab";
 
 type Params = {
   params: Promise<{ handle: string }>;
@@ -70,6 +71,7 @@ function DeliveryButton({
   delivery,
   item,
   words,
+  language,
 }: {
   handle: string;
   token: string;
@@ -78,13 +80,15 @@ function DeliveryButton({
   /** The product bought, or one ticked at checkout by the key its order names it under. */
   item: "main" | BumpKey;
   words: OrdersWords;
+  /** The store's language, for what a screen reader is told about the new tab. */
+  language: unknown;
 }) {
   if (delivery.link) {
     return (
       <span className="block">
         <a href={delivery.link} rel="noopener noreferrer" target="_blank" className="btn st-btn btn-block">
           {item !== "main" ? words.openTitle(delivery.title) : words.openIt}
-        </a>
+        <NewTab language={language} /></a>
         <span className="st-muted mt-2 block break-all text-xs">{words.keptOn(linkHost(delivery.link), delivery.link)}</span>
       </span>
     );
@@ -117,7 +121,7 @@ function BookedCallCard({ call, store, words }: { call: BookedCall; store: Store
         {call.room ? (
           <a href={call.room} rel="noopener noreferrer nofollow" target="_blank" className="btn st-btn btn-block">
             {words.roomLabels[roomKind(call.room)]}
-          </a>
+          <NewTab language={store.language} /></a>
         ) : (
           <p className="st-muted text-sm">{words.linkBeforeCall(store.name)}</p>
         )}
@@ -443,11 +447,11 @@ export default async function OrdersPage({ params, searchParams }: Params) {
                             <p className="st-label">{words.alsoIn(purchase.option)}</p>
                           ) : null}
                           {purchase.main ? (
-                            <DeliveryButton handle={store.handle} token={token} purchase={purchase} delivery={purchase.main} item="main" words={words} />
+                            <DeliveryButton handle={store.handle} token={token} purchase={purchase} delivery={purchase.main} item="main" words={words} language={store.language} />
                           ) : null}
                           {purchase.added.map((added) =>
                             added.delivery ? (
-                              <DeliveryButton key={added.key} handle={store.handle} token={token} purchase={purchase} delivery={added.delivery} item={added.key} words={words} />
+                              <DeliveryButton key={added.key} handle={store.handle} token={token} purchase={purchase} delivery={added.delivery} item={added.key} words={words} language={store.language} />
                             ) : null,
                           )}
                         </div>

@@ -18,6 +18,7 @@ import {
   tagged,
 } from "@/lib/embed-rules";
 import { productSegment } from "@/lib/product-slug";
+import { NewTab } from "@/components/new-tab";
 
 type Kind = "card" | "button";
 
@@ -182,7 +183,7 @@ export function BuyButtonEditor({
           ) : (
             <a href={tagged(`/@${handle}/p/${productSegment(product)}`, place)} target="_blank" rel="noopener" style={buttonStyle(fill, onFill)}>
               {words}
-            </a>
+            <NewTab /></a>
           )}
         </div>
       </div>
@@ -199,7 +200,7 @@ export function BuyButtonEditor({
         <a href={kind === "card" ? embedPath(handle, product.id) : `/@${handle}/p/${productSegment(product)}`} target="_blank" rel="noopener" className="btn btn-secondary btn-sm">
           <Icon name="external" size={15} />
           {kind === "card" ? "Open the card" : "Open where it leads"}
-        </a>
+        <NewTab /></a>
       </div>
       <p className="mt-4 text-sm text-ink-soft">
         The buy button opens Stripe&apos;s checkout in a new tab, on your own Stripe account, with the same price, sale and discount codes as your

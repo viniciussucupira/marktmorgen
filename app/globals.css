@@ -241,6 +241,19 @@ body {
   box-shadow: 0 0 0 6px rgba(11, 17, 25, 0.75);
 }
 
+/*
+ * A link that opens a new tab, drawn without its store's language at hand
+ * (components/new-tab.tsx): the words come from the nearest lang attribute.
+ * Kept in step with lib/new-tab-words.ts.
+ */
+.new-tab-note:empty::after { content: " (opens in a new tab)"; }
+:lang(es) .new-tab-note:empty::after { content: " (se abre en una pestaña nueva)"; }
+:lang(fr) .new-tab-note:empty::after { content: " (s’ouvre dans un nouvel onglet)"; }
+:lang(de) .new-tab-note:empty::after { content: " (öffnet sich in einem neuen Tab)"; }
+:lang(it) .new-tab-note:empty::after { content: " (si apre in una nuova scheda)"; }
+:lang(nl) .new-tab-note:empty::after { content: " (opent in een nieuw tabblad)"; }
+:lang(pt) .new-tab-note:empty::after { content: " (abre num novo separador)"; }
+
 /* Headings share one face and one rhythm. */
 .font-display {
   font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;

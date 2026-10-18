@@ -25,6 +25,7 @@ import {
   pitchText,
 } from "@/lib/outreach-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 type Site = { domain: string; home: string; company: string; about: string; found: (FoundAddress & { refuses: boolean })[] };
 
@@ -120,7 +121,7 @@ function PitchCard({ pitch, onChange, onGone }: { pitch: Pitch; onChange: (next:
         {`Address printed on their own website, read ${day(pitch.foundAt)}: `}
         <a href={pitch.page} target="_blank" rel="noopener noreferrer nofollow" className="link break-all">
           {pitch.page}
-        </a>
+        <NewTab /></a>
       </p>
 
       {draft ? (
@@ -381,7 +382,7 @@ export function OutreachStudio({ sender: saved, pitches: first, left, on, storeU
                 {`No address at ${found.domain} is printed on the pages we read. Many businesses use a contact form instead: `}
                 <a href={found.home} target="_blank" rel="noopener noreferrer nofollow" className="link">
                   open their site
-                </a>
+                <NewTab /></a>
                 {" and look for it. Nothing is written to an address that the business did not publish itself."}
               </p>
             ) : (
@@ -399,7 +400,7 @@ export function OutreachStudio({ sender: saved, pitches: first, left, on, storeU
                             {"Printed on "}
                             <a href={a.page} target="_blank" rel="noopener noreferrer nofollow" className="link break-all">
                               {a.page}
-                            </a>
+                            <NewTab /></a>
                           </span>
                           {problem ? <span className="mt-1 block text-xs font-semibold text-ink">{PITCH_PROBLEMS[problem]}</span> : null}
                         </span>

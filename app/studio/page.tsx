@@ -205,6 +205,7 @@ import { ShortLinks } from "@/components/short-links";
 import { readLinks } from "@/lib/short-links";
 import { storeBase } from "@/lib/purchase-email";
 import { feeWords } from "@/lib/fee-words";
+import { NewTab } from "@/components/new-tab";
 
 /** "October 19": a day of a window, for the studio. */
 const windowDay = (ms: number) => new Date(ms).toLocaleDateString("en-US", { timeZone: "UTC", month: "long", day: "numeric" });
@@ -1575,12 +1576,12 @@ export default async function StudioPage({
                                   className="inline-flex min-h-11 -my-2.5 items-center text-sm font-semibold text-violet-deep underline underline-offset-4"
                                 >
                                   Start in Zoom
-                                </a>
+                                <NewTab /></a>
                               ) : null}
                               {room ? (
                                 <a href={room} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 -my-2.5 items-center text-sm font-semibold text-violet-deep underline underline-offset-4">
                                   {roomLabel(room) === "Join the call" ? "Join" : roomLabel(room)}
-                                </a>
+                                <NewTab /></a>
                               ) : null}
                             </span>
                           </div>

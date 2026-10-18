@@ -9,6 +9,7 @@ import type { WayGroup, WaysToPay } from "@/lib/payment-methods";
 import type { CurrencyShortfall } from "@/lib/store";
 import { useStudioHref } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 /** What each kind of amount is called in the list of ones that are too small. */
 const SHORT_WORDS: Record<CurrencyShortfall["what"], string> = {
@@ -225,7 +226,7 @@ export function PaymentsPanel({
           >
             Turn more on in Stripe
             <Icon name="arrow-up-right" size={16} />
-          </a>
+          <NewTab /></a>
           <p className="mt-2 text-xs text-ink-soft">
             Opens your payment method settings in your own Stripe dashboard. Marktmorgen never switches one on or off for
             you: each is your agreement with Stripe. If Stripe shows a choice of settings at the top of that page, pick

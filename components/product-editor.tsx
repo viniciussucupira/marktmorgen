@@ -72,6 +72,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { productSegment } from "@/lib/product-slug";
 import { feeWords } from "@/lib/fee-words";
 import { COMMISSION_LIVE } from "@/lib/plan";
+import { NewTab } from "@/components/new-tab";
 
 /** The sentences about amounts, in the store's own currency (lib/money.ts). */
 const optionPrice = (currency: Currency) => `Type an amount ${rangeWords(currency)}, like ${priceExample(currency, 39)}.`;
@@ -1260,7 +1261,7 @@ function FileBlock({
               className="text-ink-soft underline underline-offset-4 transition hover:text-violet-deep"
             >
               Open it to check
-            </a>
+            <NewTab /></a>
             <button
               type="button"
               onClick={() => {
@@ -1947,7 +1948,7 @@ export function ProductEditor({
                     <>
                       <a href={`/@${handle}/p/${productSegment(product)}`} target="_blank" rel="noopener noreferrer" className={quiet}>
                         Its page
-                      </a>
+                      <NewTab /></a>
                       <button
                         type="button"
                         disabled={busy}

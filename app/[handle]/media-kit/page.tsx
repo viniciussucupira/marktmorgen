@@ -17,6 +17,7 @@ import { contactOpen } from "@/lib/store-contact";
 import { PrintButton } from "@/components/print-button";
 import { SITE_URL } from "@/lib/site-url";
 import { readVerified } from "@/lib/verified-numbers";
+import { NewTab } from "@/components/new-tab";
 
 type Params = { params: Promise<{ handle: string }> };
 
@@ -124,7 +125,7 @@ export default async function MediaKitPage({ params }: Params) {
                     {url && /^https:\/\//.test(url) ? (
                       <a href={url} target="_blank" rel="me noopener noreferrer" className="st-card st-link-card px-5 py-4 text-left">
                         <span className="flex items-center gap-4">{inner}</span>
-                      </a>
+                      <NewTab language={store.language} /></a>
                     ) : (
                       <div className="st-card flex items-center gap-4 px-5 py-4">{inner}</div>
                     )}

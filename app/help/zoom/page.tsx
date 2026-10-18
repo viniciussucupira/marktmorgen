@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
+import { NewTab } from "@/components/new-tab";
 
 export const metadata: Metadata = {
   title: "Zoom app guide — Marktmorgen",
@@ -100,7 +101,7 @@ export default function ZoomGuidePage() {
           </li>
           <li>
             <strong className="text-black">From Zoom.</strong> Sign in at{" "}
-            <a href="https://marketplace.zoom.us/" className={link} rel="noopener noreferrer" target="_blank">marketplace.zoom.us</a>, open{" "}
+            <a href="https://marketplace.zoom.us/" className={link} rel="noopener noreferrer" target="_blank">marketplace.zoom.us<NewTab /></a>, open{" "}
             <strong className="text-black">Manage</strong>, then <strong className="text-black">Added Apps</strong>, and click{" "}
             <strong className="text-black">Remove</strong> next to Marktmorgen. Zoom tells us at once; we forget the connection and
             its tokens, and the store&apos;s owner is emailed.

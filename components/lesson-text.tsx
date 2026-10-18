@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * A lesson's text, the way the creator typed it: paragraphs separated by a
@@ -16,7 +17,7 @@ function Linked({ text }: { text: string }) {
         i % 2 === 1 ? (
           <a key={i} href={part} target="_blank" rel="noopener noreferrer nofollow ugc" className="break-words underline underline-offset-2">
             {part}
-          </a>
+          <NewTab /></a>
         ) : (
           <Fragment key={i}>{part}</Fragment>
         ),

@@ -26,6 +26,7 @@ import { DateLeaf, eventTimeIn, eventWhenIn, lengthIn, placesWords } from "@/com
 import { DoorTimer, LocalTime, RoomEmbed } from "@/components/community-event-room";
 import { VideoEmbed } from "@/components/video-embed";
 import { productSegment } from "@/lib/product-slug";
+import { NewTab } from "@/components/new-tab";
 
 type Params = {
   params: Promise<{ handle: string; event: string }>;
@@ -201,9 +202,9 @@ export default async function CommunityEventPage({ params, searchParams }: Param
                     <>
                       <div className="mt-4 flex flex-wrap items-center gap-3">
                         {hostLink ? (
-                          <a href={hostLink} target="_blank" rel="noopener noreferrer" className="btn st-btn">{w.startZoomHost}</a>
+                          <a href={hostLink} target="_blank" rel="noopener noreferrer" className="btn st-btn">{w.startZoomHost}<NewTab language={store.language} /></a>
                         ) : null}
-                        <a href={way} target="_blank" rel="noopener noreferrer" className={hostLink ? "cm-pill" : "btn st-btn"}>{openWords}</a>
+                        <a href={way} target="_blank" rel="noopener noreferrer" className={hostLink ? "cm-pill" : "btn st-btn"}>{openWords}<NewTab language={store.language} /></a>
                         <span className="st-muted min-w-0 break-all text-sm">{way}</span>
                       </div>
                       {place && !viewer.owner ? (

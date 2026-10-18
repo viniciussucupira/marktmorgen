@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 type DnsRecord = { type: "A" | "CNAME" | "TXT"; name: string; value: string; why: string };
 type Status = { name: string; live: boolean; records: DnsRecord[] };
@@ -118,7 +119,7 @@ export function DomainEditor({
           Your store opens on{" "}
           <a className="underline underline-offset-2" href={`https://${domain}`} target="_blank" rel="noreferrer">
             {`https://${domain}`}
-          </a>
+          <NewTab /></a>
           , with its own certificate.
         </p>
       ) : (

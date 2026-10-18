@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { CAMPAIGN_MEDIA, type CampaignMedium, campaignLink, POST_PLACES, postName, qrFileName, qrSvg, shareLinks, taggedFor } from "@/lib/share-links";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * Sharing a page (added 8 October 2026): its address to copy, a QR code to
@@ -102,7 +103,7 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
             {shareLinks(url, title).map((link) => (
               <a key={link.place} href={link.href} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm ring-1 ring-line">
                 {link.label}
-              </a>
+              <NewTab /></a>
             ))}
             {canShare ? (
               <button

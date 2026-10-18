@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "@/components/toast";
+import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
   tracking: "Paste a tracking link that starts with https://, or leave it empty.",
@@ -49,7 +50,7 @@ export function MarkShipped({
           {done.tracking ? (
             <>
               {" "}
-              <a href={done.tracking} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Tracking</a>
+              <a href={done.tracking} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Tracking<NewTab /></a>
             </>
           ) : null}
         </p>

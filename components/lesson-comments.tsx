@@ -9,6 +9,7 @@ import {
 } from "@/lib/lesson-comments-rules";
 import { type CoursesWords, coursesWords } from "@/lib/buyer-words/courses";
 import { LANGUAGES, type LanguageCode, parseLanguage } from "@/lib/store-language";
+import { NewTab } from "@/components/new-tab";
 
 /** The notices that say something went wrong, as opposed to that it went through. */
 const WARNINGS = new Set(["empty", "name", "slow", "parent", "replies", "full", "gone", "off"]);
@@ -40,7 +41,7 @@ function Words({ text }: { text: string }) {
         part.kind === "link" ? (
           <a key={i} href={part.href} target="_blank" rel="nofollow ugc noopener noreferrer">
             {part.text}
-          </a>
+          <NewTab /></a>
         ) : (
           <span key={i}>{part.text}</span>
         ),

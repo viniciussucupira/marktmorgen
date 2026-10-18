@@ -10,6 +10,7 @@ import { MAX_REPLY_TEXT } from "@/lib/review-summary";
 import { AiOn } from "@/components/ai-assist";
 import { DEFAULT_ASK_DAYS, MAX_ASK_DAYS, MIN_ASK_DAYS } from "@/lib/review-ask";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -209,7 +210,7 @@ export function ReviewRow({ review }: { review: StudioReview }) {
           <a href={review.photo} target="_blank" rel="noopener">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={review.photo} alt="The buyer's photo" className="h-24 w-24 rounded-xl object-cover ring-1 ring-line" loading="lazy" />
-          </a>
+          <NewTab /></a>
           <button
             type="button"
             className="btn btn-ghost btn-sm"

@@ -76,6 +76,7 @@ import { SHOWN_FROM, readSoldCounts, refreshSoldCounts, stale } from "@/lib/sold
 import { readAllTimeSales } from "@/lib/stats";
 import { isResting } from "@/lib/traffic";
 import { StoreResting } from "@/components/store-resting";
+import { NewTab } from "@/components/new-tab";
 
 /** What a try at "Support my work" may come back with (app/api/store/tip). */
 const TIP_PROBLEMS = new Set(["amount", "limited", "closed", "error"]);
@@ -557,7 +558,7 @@ export default async function StorePage({ params, searchParams }: Params) {
                       <p className="px-5 py-3 text-center text-sm sm:px-6">
                         <a href={link.url} data-link={link.id} target="_blank" rel="noopener noreferrer nofollow ugc" className="st-footer-link">
                           {bw.videoOpen(AUDIO_NAMES[audio.provider])}
-                        </a>
+                        <NewTab language={store.language} /></a>
                       </p>
                     </li>
                   );
@@ -571,7 +572,7 @@ export default async function StorePage({ params, searchParams }: Params) {
                           <p className="px-5 py-3 text-center text-sm sm:px-6">
                             <a href={link.url} data-link={link.id} target="_blank" rel="noopener noreferrer nofollow ugc" className="st-footer-link">
                               {bw.videoOpen(PROVIDER_NAMES[video.provider])}
-                            </a>
+                            <NewTab language={store.language} /></a>
                           </p>
                         </li>
                       );
@@ -614,7 +615,7 @@ export default async function StorePage({ params, searchParams }: Params) {
                             </span>
                             <span aria-hidden="true" />
                           </span>
-                        </a>
+                        <NewTab language={store.language} /></a>
                       </li>
                     );
                   })}

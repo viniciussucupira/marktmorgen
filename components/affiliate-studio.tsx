@@ -39,6 +39,7 @@ import { StoreField } from "@/components/studio-store-pin";
 import { LeadReview, type LeadRow, LeadTerms, type LeadTermsState } from "@/components/affiliate-leads-studio";
 import { MAX_LEAD_BUDGET_CENTS, MAX_LEAD_CAP, MAX_LEAD_CENTS, MAX_LEAD_HOLD_DAYS, MIN_LEAD_BUDGET_CENTS, MIN_LEAD_CENTS, MIN_LEAD_HOLD_DAYS } from "@/lib/affiliate-lead-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -1414,7 +1415,7 @@ function Member({
           )}
           <a href={row.link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm text-ink-soft underline-offset-4 hover:underline [overflow-wrap:anywhere]">
             {row.link.replace(/^https:\/\//, "")}
-          </a>
+          <NewTab /></a>
         </div>
       )}
       {error}

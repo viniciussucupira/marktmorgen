@@ -11,6 +11,7 @@ import { MAX_QUERY_LENGTH } from "@/lib/community-search";
 import { withMentions } from "@/lib/community-mentions";
 import type { PollView } from "@/lib/community-polls";
 import { productSegment } from "@/lib/product-slug";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * The pieces every community page is made of: the bar across the top, a
@@ -202,7 +203,7 @@ export function PostText({
           part.kind === "link" ? (
             <a key={i} href={part.href} target="_blank" rel="nofollow ugc noopener noreferrer">
               {part.text}
-            </a>
+            <NewTab /></a>
           ) : (
             <span key={i}>{part.text}</span>
           ),
@@ -216,7 +217,7 @@ export function PostText({
         part.kind === "link" ? (
           <a key={i} href={part.href} target="_blank" rel="nofollow ugc noopener noreferrer">
             {part.text}
-          </a>
+          <NewTab /></a>
         ) : part.kind === "mention" ? (
           <Link key={i} href={`/@${store!.handle}/community/members`} className="cm-mention">
             {part.text}

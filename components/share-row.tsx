@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/icons";
+import { NewTab } from "@/components/new-tab";
 
 /**
  * Sharing an article: the address copied to the clipboard, or handed to one
@@ -35,11 +36,11 @@ export function ShareRow({ url, title }: { url: string; title: string }) {
       <a href={x} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
         Share on X
         <Icon name="arrow-up-right" size={16} />
-      </a>
+      <NewTab /></a>
       <a href={linkedin} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
         Share on LinkedIn
         <Icon name="arrow-up-right" size={16} />
-      </a>
+      <NewTab /></a>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { AiOn } from "@/components/ai-assist";
 import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { BlogEditor } from "@/components/blog-editor";
 import { allPosts, postSegment, readPost } from "@/lib/store-blog";
+import { NewTab } from "@/components/new-tab";
 
 export const metadata: Metadata = {
   title: "Blog — Marktmorgen",
@@ -101,7 +102,7 @@ export default async function StudioBlogPage({ searchParams }: Params) {
                   {store.posts > 0 ? (
                     <a href={`/@${store.handle}/blog`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost mt-4">
                       Open your blog
-                    </a>
+                    <NewTab /></a>
                   ) : null}
                 </div>
               )}

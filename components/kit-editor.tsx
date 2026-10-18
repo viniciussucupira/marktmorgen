@@ -18,6 +18,7 @@ import {
   kitShown,
 } from "@/lib/store-kit";
 import { SOCIALS, SOCIAL_NETWORKS, type SocialNetwork } from "@/lib/store-socials";
+import { NewTab } from "@/components/new-tab";
 
 type AudienceRow = { key: number; n: SocialNetwork; count: string; views: string };
 type RateRow = { key: number; t: string; price: string };
@@ -285,7 +286,7 @@ export function KitEditor({
         {kitShown(kit) ? (
           <a href={address} target="_blank" rel="noopener" className="text-sm font-bold text-ink-soft underline underline-offset-4">
             Open it
-          </a>
+          <NewTab /></a>
         ) : null}
       </div>
     </section>

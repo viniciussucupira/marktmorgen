@@ -8,6 +8,7 @@ import type { MeetProvider } from "@/lib/call-setup";
 import type { MeetView } from "@/lib/meet-connect";
 import type { TestMeeting } from "@/lib/meet-test";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { NewTab } from "@/components/new-tab";
 
 /** Each account as the studio describes it: what it makes, and what connecting it lets us do. */
 const ACCOUNTS: Record<
@@ -234,7 +235,7 @@ export function MeetingConnections({
                       <p className="mt-2 break-all text-sm">
                         <a href={tests[provider].link} target="_blank" rel="noopener noreferrer" className="link">
                           {tests[provider].link}
-                        </a>
+                        <NewTab /></a>
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button
