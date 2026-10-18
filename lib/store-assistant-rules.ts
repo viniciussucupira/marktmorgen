@@ -1,5 +1,5 @@
 /**
- * The Store assistant (added 17 October 2026): a paid add-on, $49 a month
+ * The Store assistant (added 17 October 2026): a paid add-on, $69 a month ($49 until 18 October 2026)
  * for one store, that answers buyers' questions in a chat on every page of
  * the store, at any hour, from what the creator published and nothing else.
  * Rules the browser can read too; the part that asks the model, counts and
@@ -56,8 +56,8 @@ import { DISPUTE_COUNTER_FEE_CENTS, DISPUTE_FEE_CENTS, DISPUTE_RESERVE_BPS, MOST
 /** The largest store record (lib/store.ts, MAX_STORE_BYTES), read once a message; held equal in tests/store-assistant.test.ts. */
 export const STORE_RECORD_BYTES = 1_000_000;
 
-/** What the add-on costs, a month, for one store. Never changed to fit a test: limits are. */
-export const ASSISTANT_PRICE_CENTS = 4_900;
+/** What the add-on costs, a month, for one store: set by the owner on 18 October 2026 (11:21), never changed to fit a test. */
+export const ASSISTANT_PRICE_CENTS = 6_900;
 /** The name it is sold under, on every page and on the Stripe invoice. */
 export const ASSISTANT_NAME = "Store assistant";
 /** What every reply is shown under, in the store's language too (lib/buyer-words/assistant.ts). */

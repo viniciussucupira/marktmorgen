@@ -2549,7 +2549,7 @@ export default async function StudioPage({
                         <p className="mt-3 text-sm text-ink-soft">
                           {trialing
                             ? `Nothing is charged now. When the trial ends you pay ${priceWords(tier, "month")} instead of ${priceWords(tier, "year")}.`
-                            : `From today you pay ${priceWords(tier, "month")}. What is left of the year you paid for is kept as credit on your account and pays the months until it runs out, so nothing is charged until then. Monthly costs $${yearSaving(tier) / 100} more over a year.`}
+                            : `From today you pay ${priceWords(tier, "month")}. What is left of the year you paid for is kept as credit on your account and pays the months until it runs out, so nothing is charged until then. Monthly costs $${(yearSaving(tier) / 100).toLocaleString("en-US")} more over a year.`}
                         </p>
                         <form action={`/api/billing/switch${pin}`} method="post" className="mt-3">
                           <input type="hidden" name="cycle" value="month" />
@@ -2561,17 +2561,17 @@ export default async function StudioPage({
                     ) : (
                       <details className="mt-4" open={firstSale > 0}>
                         <summary className="cursor-pointer text-sm font-bold text-ink underline underline-offset-2">
-                          {`Pay yearly and save $${yearSaving(tier) / 100}`}
+                          {`Pay yearly and save $${(yearSaving(tier) / 100).toLocaleString("en-US")}`}
                         </summary>
                         {firstSale > 0 ? (
                           <p className="mt-3 text-sm font-semibold text-ink-soft">
-                            {`Your store made its first sale on ${new Date(firstSale * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}. If you plan to keep selling, the yearly plan costs $${yearSaving(tier) / 100} less than twelve monthly payments.`}
+                            {`Your store made its first sale on ${new Date(firstSale * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}. If you plan to keep selling, the yearly plan costs $${(yearSaving(tier) / 100).toLocaleString("en-US")} less than twelve monthly payments.`}
                           </p>
                         ) : null}
                         <p className="mt-3 text-sm text-ink-soft">
                           {trialing
-                            ? `Nothing is charged now. When the trial ends you pay $${(PLAN_PRICES[tier].year / 100).toLocaleString("en-US")} for the year, instead of ${priceWords(tier, "month")} — $${yearSaving(tier) / 100} less over the year.`
-                            : `You are charged $${(PLAN_PRICES[tier].year / 100).toLocaleString("en-US")} today, less what is left of the month you already paid for, and the year starts today. That is $${yearSaving(tier) / 100} less than twelve monthly payments. If your bank asks you to confirm, you are sent to confirm it, and nothing changes until it is paid.`}
+                            ? `Nothing is charged now. When the trial ends you pay $${(PLAN_PRICES[tier].year / 100).toLocaleString("en-US")} for the year, instead of ${priceWords(tier, "month")} — $${(yearSaving(tier) / 100).toLocaleString("en-US")} less over the year.`
+                            : `You are charged $${(PLAN_PRICES[tier].year / 100).toLocaleString("en-US")} today, less what is left of the month you already paid for, and the year starts today. That is $${(yearSaving(tier) / 100).toLocaleString("en-US")} less than twelve monthly payments. If your bank asks you to confirm, you are sent to confirm it, and nothing changes until it is paid.`}
                         </p>
                         <form action={`/api/billing/switch${pin}`} method="post" className="mt-3">
                           <input type="hidden" name="cycle" value="year" />
@@ -2774,8 +2774,8 @@ export default async function StudioPage({
                         className="btn btn-secondary btn-wrap"
                       >
                         {withTrial
-                          ? `Or pay yearly: ${priceWords("creator", "year")} after the trial, $${yearSaving("creator") / 100} less`
-                          : `Or pay yearly: ${priceWords("creator", "year")}, $${yearSaving("creator") / 100} less`}
+                          ? `Or pay yearly: ${priceWords("creator", "year")} after the trial, $${(yearSaving("creator") / 100).toLocaleString("en-US")} less`
+                          : `Or pay yearly: ${priceWords("creator", "year")}, $${(yearSaving("creator") / 100).toLocaleString("en-US")} less`}
                       </button>
                     </form>
                     {withTrial ? (
@@ -2811,7 +2811,7 @@ export default async function StudioPage({
                               : `Start Pro \u2014 ${priceWords("pro", "month")}, from today`}
                           </button>
                           <button type="submit" name="cycle" value="year" className="btn btn-secondary btn-wrap">
-                            {`Or Pro yearly: ${priceWords("pro", "year")}, $${yearSaving("pro") / 100} less`}
+                            {`Or Pro yearly: ${priceWords("pro", "year")}, $${(yearSaving("pro") / 100).toLocaleString("en-US")} less`}
                           </button>
                         </form>
                         {/* Said, not sold: almost nobody starts with a list this
@@ -2832,7 +2832,7 @@ export default async function StudioPage({
                                 : `Start Scale \u2014 ${priceWords("scale", "month")}, from today`}
                             </button>
                             <button type="submit" name="cycle" value="year" className="btn btn-secondary btn-wrap">
-                              {`Or Scale yearly: ${priceWords("scale", "year")}, $${yearSaving("scale") / 100} less`}
+                              {`Or Scale yearly: ${priceWords("scale", "year")}, $${(yearSaving("scale") / 100).toLocaleString("en-US")} less`}
                             </button>
                           </form>
                         </details>

@@ -21,6 +21,7 @@ import {
   PLAN_PRICES,
   PUBLISHED_PLAN_PRICES,
   PRICES_WITHOUT_COMMISSION,
+  LEGACY_PLAN_PRICES,
   COMMISSION_LIVE,
   PRICE_CENTS,
   TRIAL_DAYS,
@@ -532,11 +533,14 @@ export function planOf(subscription: Record<string, unknown>): { tier: Tier; cyc
   if (named) return { ...named, amountCents, shared: isSharedPrice(named.tier, named.cycle, amountCents) };
   const cycle: Cycle = recurring?.interval === "year" ? "year" : "month";
   const meta = subscription.metadata as Record<string, string> | null | undefined;
-  // An unnamed price is read by what it charges: at or above a plan's price
-  // is that plan, the dearest first.
+  // An unnamed price is read by what it charges: a plan's price on any list
+  // published (today's, or one before 18 October 2026) is that plan; failing
+  // that, at or above a plan's price today is that plan, the dearest first.
+  const exact = (["scale", "pro", "creator"] as const).find((plan) =>
+    amountCents > 0 && [PLAN_PRICES, PRICES_WITHOUT_COMMISSION, ...LEGACY_PLAN_PRICES].some((list) => list[plan][cycle] === amountCents));
   const paysFor = (plan: Tier) => amountCents > 0 && amountCents >= Math.min(PLAN_PRICES[plan][cycle], PRICES_WITHOUT_COMMISSION[plan][cycle]);
   const tier: Tier =
-    meta?.tier === "scale" || paysFor("scale") ? "scale" : meta?.tier === "pro" || paysFor("pro") ? "pro" : "creator";
+    exact ?? (meta?.tier === "scale" || paysFor("scale") ? "scale" : meta?.tier === "pro" || paysFor("pro") ? "pro" : "creator");
   return { tier, cycle, amountCents, shared: isSharedPrice(tier, cycle, amountCents) };
 }
 

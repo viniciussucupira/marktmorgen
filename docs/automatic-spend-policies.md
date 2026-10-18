@@ -40,6 +40,8 @@ Each paid plan may authorize up to its whole storage allowance in new sold-file 
 
 ## The 60% floor, per plan
 
+**Historical (17 October 2026).** The table below is at the prices and the lighter fee model of that day. Since 18 October 2026 every unit is held to `lib/receiving-costs.ts`, and since the owner's price decision of that day (11:21) the price list is $69 / $690, $449 / $4,490 and $999 / $9,990: `docs/margin-alignment-2026-10-18.md` (generated) and `docs/value-presentation-2026-10-18.md` have the figures in force.
+
 `tests/spend-floor.test.ts` adds, for each plan and billing cycle, Stripe's card and Billing fees, twelve (or one) full months of the per-plan worst case in `tests/plan-cost-model.ts` (storage at the dearest store, video, visits, orders, list email and receipts), the AI ceiling and the upload operations, and compares the sum with P x 5/29, the most a paid period may cost before a 27.5% tax and still keep 60%:
 
 | Plan, cycle | Paid | Costs allowed | Stripe | Other per month | AI per month | Uploads per month | Total | Room |

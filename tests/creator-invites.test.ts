@@ -153,7 +153,7 @@ async function main(): Promise<void> {
 
   part("Terms stay with the invitation");
   const beaRecord = JSON.parse(String(redis.run(["GET", byKey(bea.sid)])));
-  is("new invites snapshot the offered terms", beaRecord.terms, currentInviteTerms());
+  is("new invites snapshot the terms on offer: while the program is paused, the original ones", beaRecord.terms, INVITE_PROGRAM_OPEN ? currentInviteTerms() : readInviteTerms(undefined));
   is("legacy records retain their original bonus", parseBy(JSON.stringify({ r: ana.sid, at: 1 }))?.terms?.bonusCents, 2900);
   is("unknown versions are not legacy offers", readInviteTerms({ version: 2, sharePercent: 50, bonusCents: 2900 }), null);
   is("invalid stored terms do not earn credit", parseBy(JSON.stringify({ r: ana.sid, at: 1, terms: null })), null);
@@ -211,7 +211,7 @@ async function main(): Promise<void> {
   const ana$ = balance.get("cus_Ana0001") ?? [];
   is("Ana: half of Bea's first payment, once", ana$.map((t) => t.amount), [-1450]);
   is("in dollars", ana$[0]?.currency, "usd");
-  is("Bea: her own credit after her first payment", (balance.get("cus_Bea0001") ?? []).map((t) => t.amount), [-INVITE_BONUS_CENTS]);
+  is("Bea: her own credit after her first payment", (balance.get("cus_Bea0001") ?? []).map((t) => t.amount), [-(INVITE_PROGRAM_OPEN ? INVITE_BONUS_CENTS : readInviteTerms(undefined)!.bonusCents)]);
   is("the refunded payment earned nothing", JSON.parse(String(redis.run(["GET", creditKey("in_BeaRefund1")]))).state, "none");
   is("the payment inside its refund window is not read yet", redis.run(["EXISTS", creditKey("in_BeaRecent1")]), 0);
   is("Cal had paid us before: nothing for anyone", (balance.get("cus_Cal0001") ?? []).length, 0);

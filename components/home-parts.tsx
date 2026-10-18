@@ -18,7 +18,9 @@ import { ORDERS_INCLUDED } from "@/lib/order-rules";
 import { allowanceListWords } from "@/lib/store-allowance-rules";
 import {
   COMMISSION_BPS,
+  COMMISSION_PLANS_PUBLISHED,
   PUBLISHED_PLAN_PRICES as PLAN_PRICES,
+  monthlyEmails,
   PLAN_TITLES,
   PRO_MONTHLY_EMAILS,
   REFUND_DAYS,
@@ -527,23 +529,51 @@ function monthlyEquivalent(yearCents: number): string {
  * laying out — one label, one answer, per line, inside the card they belong
  * to, so nobody has to reconstruct the deal from prose.
  */
+/** The share of each sale a plan's card shows: none since 18 October 2026, when the offer with a share stopped being published (lib/plan.ts). */
+function shareShown(tier: Tier): number {
+  return COMMISSION_PLANS_PUBLISHED ? COMMISSION_BPS[tier] : 0;
+}
+
+/** "$4,490". */
+function usdWhole(cents: number): string {
+  return `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+}
+
+/**
+ * The figures a buyer holds up against another tool's card, from the
+ * constants the product enforces (docs/value-presentation-2026-10-18.md):
+ * the leaders print contacts, emails a month, products and AI on the card
+ * itself, so these are printed under the price rather than only in the list.
+ */
+function planFigures(tier: Tier): string[] {
+  const n = (x: number) => x.toLocaleString("en-US");
+  const emails = monthlyEmails(tier);
+  return [
+    `${n(VISITS_INCLUDED[tier])} visits a month`,
+    `${n(ORDERS_INCLUDED[tier])} orders a month`,
+    emails > 0 ? `${n(emails)} list emails a month` : "Email to your list on Studio and Scale",
+    AI_MONTHLY[tier] > 0 ? `${n(AI_MONTHLY[tier])} AI writing jobs and ${n(ANSWERS_MONTHLY[tier])} visitor answers a month` : "AI writing on Studio and Scale",
+    `${n(PAID_STORAGE_BYTES[tier] / 1024 ** 3)} GB of storage`,
+  ];
+}
+
 function PlanTerms({ tier, yearly }: { tier: Tier; yearly: boolean }) {
   const { month, year } = PLAN_PRICES[tier];
-  const charged = yearly ? year / 100 : month / 100;
+  const charged = (yearly ? year : month) / 100;
   const rows: [string, string][] = [
     // Not open yet (lib/opening.ts): said first, in the card it is about.
     ...(PLANS_ON_SALE ? [] : [["On sale", "Not yet. Marktmorgen is still being built, and these are the terms this plan opens with."] as [string, string]]),
     ["Free trial", `${TRIAL_DAYS} days. Your card is taken when it starts, so you can sell before you decide.`],
     [
       "First charge",
-      `$${charged} ${yearly ? "for the year" : "for the month"}, on the day the trial ends. We email you a week before.`,
+      `$${charged.toLocaleString("en-US")} ${yearly ? "for the year" : "for the month"}, on the day the trial ends. We email you a week before.`,
     ],
     [
       "Money back",
       `Ask within ${REFUND_DAYS} days of your first payment and it comes back in full, for any reason or none. A yearly plan is refunded for the months you have not started, at any time, less Stripe's card fee.`,
     ],
     ["Cancelling", "Two clicks in your studio, any time. Inside the trial, the card is never charged."],
-    ["Fees", `${COMMISSION_BPS[tier] / 100}% of each sale. Stripe charges its own processing fee separately.`],
+    ["Fees", `${shareShown(tier) / 100}% of each sale. Stripe charges its own processing fee separately.`],
   ];
   return (
     <dl className="mt-6 divide-y divide-line border-t border-line text-[0.8125rem] leading-relaxed">
@@ -605,16 +635,24 @@ function PlanCard({
 
       <p className="mt-7 flex items-baseline gap-2">
         <span className="text-[3.5rem] font-semibold leading-none tracking-[-0.05em] text-ink tabular-nums">
-          ${yearly ? year / 100 : month / 100}
+          {usdWhole(yearly ? year : month)}
         </span>
         <span className="text-ink-mute">{yearly ? "a year" : "a month"}</span>
       </p>
-      <p className="mt-2 font-semibold text-violet-deep">{`${COMMISSION_BPS[tier] / 100}% of sales`}</p>
+      <p className="mt-2 font-semibold text-violet-deep">{`${shareShown(tier) / 100}% of sales`}</p>
       <p className="mt-2 min-h-[1.5rem] text-[0.9375rem] text-ink-soft">
         {yearly
-          ? `One payment of $${year / 100}, once a year — $${monthlyEquivalent(year)} a month, $${saving} less than paying monthly.`
-          : `Billed every month. Or $${year / 100} once a year, which is $${saving} less.`}
+          ? `One payment of ${usdWhole(year)}, once a year — $${monthlyEquivalent(year)} a month, ${usdWhole(saving * 100)} less than paying monthly${year === month * 10 ? ": two months free" : ""}.`
+          : `Billed every month. Or ${usdWhole(year)} once a year, which is ${usdWhole(saving * 100)} less${year === month * 10 ? ": two months free" : ""}.`}
       </p>
+      <ul className="mt-5 space-y-1.5 text-[0.9375rem] text-ink" aria-label={`What ${PLAN_TITLES[tier]} holds`}>
+        {planFigures(tier).map((line) => (
+          <li key={line} className="flex gap-2">
+            <Icon name="check" size={16} className="mt-1 shrink-0 text-mint-deep" />
+            <span>{line}</span>
+          </li>
+        ))}
+      </ul>
 
       {/*
         Three groups open, the whole list one press away.
@@ -704,7 +742,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
                 the switch says what it is for without doing the arithmetic of
                 two plans at once in six words. */}
             <span className="rounded-full bg-mint-soft px-2 py-0.5 text-[0.75rem] font-semibold text-mint-deep">
-              {`save up to $${Math.max(...TIERS.map(yearSaving)) / 100}`}
+              {`two months free, up to ${usdWhole(Math.max(...TIERS.map(yearSaving)))}`}
             </span>
           </button>
         </div>
@@ -740,11 +778,11 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
         />
         <PlanCard
           tier="scale"
-          bestFor="For an established business with a larger list and no percentage fee on sales."
+          bestFor="For an established business with a larger list, more visits and more orders every month."
           groups={[
             { icon: "check", title: "Everything in Studio", body: "The same selling tools and email features, with larger allowances." },
             { icon: "mail", title: "More room to grow", body: `Up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails, ${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits and ${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month.` },
-            { icon: "percent", title: "0% platform fee on sales", body: "Stripe charges its own processing fees separately." },
+            { icon: "sparkle", title: "More AI and more room", body: `${AI_MONTHLY.scale.toLocaleString("en-US")} AI writing jobs and ${ANSWERS_MONTHLY.scale.toLocaleString("en-US")} visitor answers a month, and ${PAID_STORAGE_BYTES.scale / (1024 ** 3)} GB of storage.` },
           ]}
           perks={[`Everything in ${PLAN_TITLES.pro}`, `${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month`, `${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits a month`, `${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month`, `${AI_MONTHLY.scale.toLocaleString("en-US")} AI writing jobs and ${ANSWERS_MONTHLY.scale.toLocaleString("en-US")} visitor answers a month`, `Each billing month: ${allowanceListWords("scale")}`]}
           featured={false}

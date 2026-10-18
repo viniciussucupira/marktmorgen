@@ -26,7 +26,7 @@ import { type PlanFields, standingOf } from "@/lib/plan-standing";
 
 /** Visits every plan covers, per store, per calendar month. */
 export const VISITS_INCLUDED: Record<Tier, number> = {
-  creator: 3_000,
+  creator: 3_400,
   pro: 10_000,
   // 50,000 until 17 October 2026, when the uses that had no monthly figure
   // were priced into each plan's worst month (tests/plan-cost-registry.ts):

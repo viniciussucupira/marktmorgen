@@ -28,9 +28,9 @@
 import { CAPTION_LANGUAGES, MAX_CAPTION_TRACKS } from "@/lib/captions";
 
 /** What a minute of video costs, for each language, in cents. */
-export const CENTS_PER_MINUTE = 25;
+export const CENTS_PER_MINUTE = 600;
 /** The least one request is charged, in cents: a card's own fee is thirty cents, and a short video's minutes do not cover it. */
-export const MIN_CENTS = 200;
+export const MIN_CENTS = 3_500;
 /** Languages asked for at once: the one spoken, and up to two more. */
 export const MAX_AUTO_LANGUAGES = 3;
 /** The longest video captions are written for, in minutes. */

@@ -225,7 +225,7 @@ Measure both products from an authenticated dashboard with equivalent plan, fixt
 
 ## 8. Worst-case economic constraints
 
-Approved public subscription prices remain **Store $22 + 6.25%, Studio $149 + 2.75%, Scale $349 + 0%**; annual prices are **$220/$1,490/$3,490**. Creator sale proceeds are not platform revenue. Stress tests use zero platform commission and simultaneous maximum use.
+Approved public subscription prices were **Store $22 + 6.25%, Studio $149 + 2.75%, Scale $349 + 0%**, annual **$220/$1,490/$3,490**, until the owner's price decision of 18 October 2026 (11:21): since then **Store $69, Studio $449, Scale $999 a month, $690/$4,490/$9,990 a year, and 0% of each sale** (docs/value-presentation-2026-10-18.md). The table below is at the earlier prices. Creator sale proceeds are not platform revenue. Stress tests use zero platform commission and simultaneous maximum use.
 
 Let S be earned subscription revenue for the evaluated period and C_all every applicable non-overlapping cost and tax, including allocated fixed obligations, refunds/disputes, provider use, support, platform affiliate commissions and approved business/owner tax treatment. Required profit is at least 0.60 × S, so C_all must be at most 0.40 × S. Use the stricter contracted customer-payment basis if applicable; never silently remove an expense or indirect-tax obligation to improve the percentage.
 

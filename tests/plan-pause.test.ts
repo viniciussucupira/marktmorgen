@@ -141,9 +141,9 @@ async function main() {
   {
     const record = { subscription: "sub_x", customer: "cus_x", paymentMethod: "pm_x", tier: "creator" as const, from: NOW, until: NOW + 61 * DAY, told: 0 };
     const set = pauseEmail("set", record);
-    is("set: when the checkout closes and when it opens", set.text.includes("Your store keeps taking payments until") && set.text.includes("starts again by itself, at $29 a month"), true);
+    is("set: when the checkout closes and when it opens", set.text.includes("Your store keeps taking payments until") && set.text.includes("starts again by itself, at $69 a month"), true);
     const soon = pauseEmail("soon", record);
-    is("a week before: the charge and how to stop it", soon.text.includes("your card is charged $29") && soon.text.includes("one click"), true);
+    is("a week before: the charge and how to stop it", soon.text.includes("your card is charged $69") && soon.text.includes("one click"), true);
     const failed = pauseEmail("failed", record);
     is("failed: nothing was charged", failed.text.includes("Nothing was charged."), true);
   }

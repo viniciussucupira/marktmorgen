@@ -23,27 +23,44 @@ export const TIERS: readonly Tier[] = ["creator", "pro", "scale"];
 export type Cycle = "month" | "year";
 
 /**
- * Historical subscription-only prices. Preserve existing subscriptions and
- * recognize their tiers even after the published offer changes.
+ * The prices on sale and published, in cents (owner's decision, 18 October
+ * 2026, 11:21: "preço: o que maximiza o meu lucro. limites: combinação que
+ * potencializa o que maximiza meu lucro + o que cliente percebe alto valor +
+ * não remover limites visíveis"; and 11:22: "preço e limites = preço e
+ * limites de cada plano"). Each is the lowest round price at or above what
+ * keeps 60% net at full use of every allowance under lib/receiving-costs.ts
+ * (the sizing reading, the commission counted as zero), with the room the
+ * spend floor test keeps, and the year is ten monthly payments
+ * (docs/value-presentation-2026-10-18.md has the method, the floors and the
+ * competitors read). These do not open a sale: lib/opening.ts does that.
  */
 export const PRICES_WITHOUT_COMMISSION: Record<Tier, Record<Cycle, number>> = {
-  creator: { month: 2900, year: 30000 },
-  pro: { month: 9900, year: 94800 },
-  // What Kajabi charges for its middle plan, monthly and yearly, read from its
-  // pricing page on October 6, 2026. See SCALE_MONTHLY_EMAILS for why it exists.
-  scale: { month: 24900, year: 238800 },
+  creator: { month: 6900, year: 69000 },
+  pro: { month: 44900, year: 449000 },
+  scale: { month: 99900, year: 999000 },
 };
 
 /**
- * Owner-approved offer: Store $22 + 6.25%, Studio $149 + 2.75%,
- * Scale $349 + 0%. Annual subscriptions cost ten monthly payments.
- * These prices are not proof of the required 60% after-tax net margin.
+ * Until 18 October 2026 there were two price lists: a lower one that went
+ * with a share of each sale (Store $22 + 6.25%, Studio $149 + 2.75%, Scale
+ * $349) and one without ($29, $99, $249). With the commission counted as
+ * zero by the owner's rule, a lower price "with commission" can never be
+ * justified on margin, so the variant is set equal to the one price list:
+ * one subscription, nothing taken from a sale. The machinery for a share
+ * (lib/platform-share.ts) stays, switched off (COMMISSION_LIVE false), and
+ * isSharedPrice below can never be true while the two lists are equal.
  */
-export const PRICES_WITH_COMMISSION: Record<Tier, Record<Cycle, number>> = {
-  creator: { month: 2200, year: 22000 },
-  pro: { month: 14900, year: 149000 },
-  scale: { month: 34900, year: 349000 },
-};
+export const PRICES_WITH_COMMISSION: Record<Tier, Record<Cycle, number>> = PRICES_WITHOUT_COMMISSION;
+
+/**
+ * The price lists published before 18 October 2026, kept only so that a
+ * subscription begun on one of them, if any, is still read as the right plan
+ * (lib/billing.ts planOf). Nobody subscribed on them: no sale was ever open.
+ */
+export const LEGACY_PLAN_PRICES: readonly Record<Tier, Record<Cycle, number>>[] = [
+  { creator: { month: 2900, year: 30000 }, pro: { month: 9900, year: 94800 }, scale: { month: 24900, year: 238800 } },
+  { creator: { month: 2200, year: 22000 }, pro: { month: 14900, year: 149000 }, scale: { month: 34900, year: 349000 } },
+];
 
 /** The share of each sale that goes with PRICES_WITH_COMMISSION, in basis points. */
 export const COMMISSION_BPS: Record<Tier, number> = { creator: 625, pro: 275, scale: 0 };
@@ -74,14 +91,17 @@ export const COMMISSION_BPS: Record<Tier, number> = { creator: 625, pro: 275, sc
  */
 export const COMMISSION_LIVE = false;
 
-/** The approved offer is published independently of unvalidated fee collection. */
-export const COMMISSION_PLANS_PUBLISHED = true;
+/**
+ * Whether the offer with a share of each sale is published. False since 18
+ * October 2026: one price list, and 0% of a sale (PRICES_WITH_COMMISSION).
+ */
+export const COMMISSION_PLANS_PUBLISHED = false;
 
 /** Every price we charge, in cents: the set that is on sale. */
 export const PLAN_PRICES: Record<Tier, Record<Cycle, number>> = COMMISSION_LIVE ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
 
-/** Approved public offer; publishing it does not change existing billing. */
-export const PUBLISHED_PLAN_PRICES = PRICES_WITH_COMMISSION;
+/** The published price list: the one on sale, since 18 October 2026 the same as PLAN_PRICES. */
+export const PUBLISHED_PLAN_PRICES = COMMISSION_PLANS_PUBLISHED ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
 export const PUBLISHED_PRICE_CENTS = PUBLISHED_PLAN_PRICES.creator.month;
 export const PUBLISHED_YEAR_PRICE_CENTS = PUBLISHED_PLAN_PRICES.creator.year;
 export function publishedYearSaving(tier: Tier): number {
@@ -189,17 +209,18 @@ export const PLAN_TITLES: Record<Tier, string> = {
  */
 export const PRO_ON_SALE = true;
 
-/** Provisional list-email ceilings, all campaigns and sequences combined.
- * A 4% allocation of annual subscription revenue recognized monthly is used
- * for this resource-only reduction at the public $0.90/1,000 send rate.
- * Studio: 5,000 => $4.50; Scale: 8,000 => $7.20, before fixed plan fees,
- * request/compute costs, other messages and taxes. No free tier is assumed.
- * These limits do not certify the required after-all-tax net margin.
+/** List-email ceilings, all campaigns and sequences combined, at the public
+ * $0.90/1,000 send rate. Raised on 18 October 2026 with the price list
+ * (docs/value-presentation-2026-10-18.md): every list email is the line every
+ * competitor prints on its card, so the room the round prices leave went
+ * here first. Studio: 7,000 => $6.30; Scale: 10,000 => $9.00 a month, each
+ * plan still keeping 60% at full use (tests/spend-floor.test.ts). No free
+ * tier is assumed. These limits do not certify the all-tax net margin.
  */
-export const PRO_MONTHLY_EMAILS = 5_000;
+export const PRO_MONTHLY_EMAILS = 7_000;
 /** Funded acquisition exposure still requires a separate reviewed allowance. */
 export const TRIAL_MONTHLY_EMAILS = 300;
-export const SCALE_MONTHLY_EMAILS = 8_000;
+export const SCALE_MONTHLY_EMAILS = 10_000;
 
 /** Whether a plan has what Pro switches on: Pro itself, and Scale above it. */
 export function hasPro(tier: Tier): boolean {

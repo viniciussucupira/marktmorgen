@@ -151,13 +151,14 @@ const ORDERS_LINE =
  * The line about our own income, which belongs to whether billing can reach
  * Stripe from this deployment rather than to whether we have written the code.
  */
-const BILLING_LINE = `The subscription that pays us: $${PRICE_CENTS / 100} a month or $${YEAR_PRICE_CENTS / 100} a year, or $${PLAN_PRICES.pro.month / 100} and $${PLAN_PRICES.pro.year / 100} on Studio, or $${PLAN_PRICES.scale.month / 100} and $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} on Scale for a bigger list, free for the first ${TRIAL_DAYS} days, with an email a week before the first charge, canceled in two clicks from your studio`;
+const usd = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+const BILLING_LINE = `The subscription that pays us: ${usd(PRICE_CENTS)} a month or ${usd(YEAR_PRICE_CENTS)} a year on Store, or ${usd(PLAN_PRICES.pro.month)} and ${usd(PLAN_PRICES.pro.year)} on Studio, or ${usd(PLAN_PRICES.scale.month)} and ${usd(PLAN_PRICES.scale.year)} on Scale for a bigger list, free for the first ${TRIAL_DAYS} days, with an email a week before the first charge, canceled in two clicks from your studio`;
 
 /**
  * The same line while plans are not on sale (lib/opening.ts): the code is
  * there and nobody can press it, which this page counts as not built.
  */
-const BILLING_CLOSED_LINE = `Starting a paid plan: the subscription is written, at $${PRICE_CENTS / 100} a month or $${YEAR_PRICE_CENTS / 100} a year and $${PLAN_PRICES.pro.month / 100} or $${PLAN_PRICES.pro.year / 100} on Studio, and $${PLAN_PRICES.scale.month / 100} or $${(PLAN_PRICES.scale.year / 100).toLocaleString("en-US")} on Scale for a bigger list, and it is not on sale until Marktmorgen opens`;
+const BILLING_CLOSED_LINE = `Starting a paid plan: the subscription is written, at ${usd(PRICE_CENTS)} a month or ${usd(YEAR_PRICE_CENTS)} a year on Store, ${usd(PLAN_PRICES.pro.month)} or ${usd(PLAN_PRICES.pro.year)} on Studio, and ${usd(PLAN_PRICES.scale.month)} or ${usd(PLAN_PRICES.scale.year)} on Scale for a bigger list, and it is not on sale until Marktmorgen opens`;
 
 /**
  * The Store assistant add-on (lib/store-assistant-rules.ts): written and
@@ -248,7 +249,7 @@ export default function MissionPage() {
                 <span className="serif font-normal text-[#cfc4ff]">to be paid for their work</span>
               </h1>
               <p className="t-lead mt-6 max-w-2xl text-white/80">
-                The subscription and the plan&apos;s share of sales should both be clear before you choose. That is the whole idea, and
+                What you pay us, and what we take from a sale, should both be clear before you choose. That is the whole idea, and
                 everything we build is judged against it.
               </p>
             </div>

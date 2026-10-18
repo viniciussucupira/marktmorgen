@@ -63,7 +63,7 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
       /** Under the buy box in the product editor. */
       editor: "Marktmorgen takes no cut of the sale.",
       /** The 404 page's card about pricing. */
-      pricingCard: "Two plans to start on, and 0% of your sales on every plan.",
+      pricingCard: "Three plans, and 0% of your sales on every plan.",
       /** The mission page's promise about charging. */
       missionPromise: "One subscription, written in one line. No cut of your sales, no fee that appears at the last screen, no feature listed on the site that does not exist in the product.",
       /** The mission page, on how we make money. */
@@ -112,7 +112,7 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
       /** PayPal, on the comparison with Stan. */
       paypal: "Yes, on every plan. The buyer pays into your own PayPal account and we take nothing",
       /** The comparison with Stan: where the two charge alike. */
-      sameAsStan: { title: "Where we are the same", body: `0% of each sale, the same ${dollars(p.creator.month)} and ${dollars(p.pro.month)} a month, or ${dollars(p.creator.year)} and ${dollars(p.pro.year)} a year, and a 14-day free trial on both.` },
+      sameAsStan: { title: "Where we charge differently", body: `Stan charges $29 or $99 a month (its pricing page, updated July 22, 2026, read October 18, 2026) and nothing from a sale. We charge ${dollars(p.creator.month)}, ${dollars(p.pro.month)} or ${dollars(p.scale.month)} a month, or ${dollars(p.creator.year)}, ${dollars(p.pro.year)} or ${dollars(p.scale.year)} a year, and nothing from a sale either, for the limits printed on each plan. Both have a 14-day free trial.` },
       /** The $27 file, on Gumroad and here. */
       gumroad: {
         ours: `We take nothing. Stripe charges you its own published rate on your own account — about $${card.toFixed(2)} on $27 — so you keep $${kept}, and you pay us a fixed monthly price.`,
@@ -122,12 +122,12 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
       /** The $27 file, on Beacons and here. */
       beacons: {
         ours: `Our cut is 0%, Stripe takes about $${card.toFixed(2)}, so you keep $${kept} — and you pay ${dollars(p.creator.month)} that month.`,
-        evenOut: `The 9% costs $2.43 a sale, so their free plan and our ${dollars(p.creator.month)} cost you the same at about 12 sales of $27 a month. At a hundred sales, their 9% is $243 that month and ours is ${dollars(p.creator.month)}. Against their $30 plan there is no money in it at all: one dollar.`,
+        evenOut: `The 9% costs $2.43 a sale, so their free plan and our ${dollars(p.creator.month)} cost you the same at about ${Math.round(p.creator.month / 243)} sales of $27 a month. At a hundred sales, their 9% is $243 that month and ours is ${dollars(p.creator.month)}. Against their $30 plan, ours costs ${dollars(p.creator.month - 3000)} more a month.`,
       },
       /** The help center's answer to "what will it cost?". */
-      costLine: `One subscription — ${dollars(p.creator.month)} a month, or ${dollars(p.pro.month)} a month on Pro, less if you pay yearly — and 0% of your sales. The card fee your payment processor charges is paid to them, on your own account, and we never take a cut on top of it.`,
+      costLine: `One subscription — ${dollars(p.creator.month)} a month on Store, ${dollars(p.pro.month)} on Studio or ${dollars(p.scale.month)} on Scale, less if you pay yearly — and 0% of your sales. The card fee your payment processor charges is paid to them, on your own account, and we never take a cut on top of it.`,
       /** What you pay Marktmorgen, in one answer. */
-      whatYouPay: `Your plan — ${dollars(p.creator.month)} a month, or ${dollars(p.pro.month)} on Pro — and nothing from your sales. The first 14 days are free, and you cancel in two clicks from your studio.`,
+      whatYouPay: `Your plan — ${dollars(p.creator.month)} a month on Store, ${dollars(p.pro.month)} on Studio or ${dollars(p.scale.month)} on Scale — and nothing from your sales. The first 14 days are free, and you cancel in two clicks from your studio.`,
       /** The post comparing us with Stan. */
       blogMoney: "The money. On Marktmorgen, the buyer pays into your own Stripe account. We never hold your balance and we take 0% of your sales — not 0% with an asterisk that points at a cut somewhere else. What we charge is the subscription, and that is the whole of what we charge.",
       blogStan: "Stan also advertises 0% transaction fees on their home page, and charges a subscription. On that point we are the same, and we would rather say so than pretend otherwise. Where we differ is whose payment account the sale lands in, which decides who controls payouts, receipts and refunds.",
@@ -201,14 +201,14 @@ export function planPriceWords(tier: Tier, cycle: "month" | "year" = "month", li
 
 /** A comparison table's row about our monthly price. */
 export function monthlyRow(live = COMMISSION_PLANS_PUBLISHED): string {
-  if (!live) return `${dollars(PRICES_WITHOUT_COMMISSION.creator.month)} and ${dollars(PRICES_WITHOUT_COMMISSION.pro.month)}, free for the first 14 days`;
+  if (!live) return `${dollars(PRICES_WITHOUT_COMMISSION.creator.month)}, ${dollars(PRICES_WITHOUT_COMMISSION.pro.month)} or ${dollars(PRICES_WITHOUT_COMMISSION.scale.month)}, free for the first 14 days`;
   const p = PRICES_WITH_COMMISSION;
   return `${dollars(p.creator.month)} + ${percent(COMMISSION_BPS.creator)} of each sale, ${dollars(p.pro.month)} + ${percent(COMMISSION_BPS.pro)}, or ${dollars(p.scale.month)}, free for the first 14 days`;
 }
 
 /** A comparison table's row about our yearly price. */
 export function yearlyRow(live = COMMISSION_PLANS_PUBLISHED): string {
-  if (!live) return `${dollars(PRICES_WITHOUT_COMMISSION.creator.year)} and ${dollars(PRICES_WITHOUT_COMMISSION.pro.year)} a year`;
+  if (!live) return `${dollars(PRICES_WITHOUT_COMMISSION.creator.year)}, ${dollars(PRICES_WITHOUT_COMMISSION.pro.year)} or ${dollars(PRICES_WITHOUT_COMMISSION.scale.year)} a year`;
   const p = PRICES_WITH_COMMISSION;
   return `${dollars(p.creator.year)}, ${dollars(p.pro.year)} or ${dollars(p.scale.year)} a year, with the same share of each sale`;
 }
@@ -237,7 +237,7 @@ export function gumroadSums(live = COMMISSION_PLANS_PUBLISHED) {
   const whole = (x: number) => `$${Math.round(x).toLocaleString("en-US")}`;
   // Where the monthly price is paid back by what is kept per sale over Gumroad.
   const even = Math.round(p.creator.month / 100 / (3.2 - share("creator")));
-  const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+  const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "twenty-one", "twenty-two", "twenty-three", "twenty-four", "twenty-five", "twenty-six", "twenty-seven", "twenty-eight", "twenty-nine", "thirty"];
   const evenWord = words[even] ?? String(even);
   const title = evenWord.charAt(0).toUpperCase() + evenWord.slice(1);
   const plan = `${dollars(p.creator.month)} monthly plan${live ? ` and ${percent(COMMISSION_BPS.creator)} of each sale` : ""}`;

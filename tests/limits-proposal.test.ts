@@ -22,39 +22,38 @@ test("the document is what the numbers render today (run node scripts/limits-pro
   assert.match(read(DOC), /^# Limits proposal, 18 October 2026 — a PROPOSAL, nothing here is in force/);
 });
 
-test("every proposed figure is a cut, never a raise, and a reachable plan keeps 60% at the figures as printed", () => {
-  for (const schedule of ["published", "without"] as const) for (const p of proposals(schedule)) {
+test("every proposed figure is a cut, never a raise, and at the price list of 18 October 2026 no cut is proposed", () => {
+  for (const p of proposals()) {
     const today = figures(p.tier);
     for (const id of ORDER) p.proposed[id].forEach((n, i) => assert.ok(n <= today[id][i], `${p.tier} ${p.cycle} ${id}: ${n} above today's ${today[id][i]}`));
-    if (p.feasible) assert.ok(p.netBps >= 6_000, `${schedule} ${p.tier} ${p.cycle} keeps ${p.netBps}`);
+    // The owner chose prices over cuts (11:21): every plan keeps 60% at today's figures, so nothing is cut.
+    assert.ok(p.feasible && p.cut.length === 0 && p.todayNetBps >= 6_000, `${p.tier} ${p.cycle} keeps ${p.todayNetBps} and would cut ${p.cut.join(", ")}`);
   }
-  // Under the published prices every plan but Store monthly is reachable; Store monthly misses even with every printed line at zero.
-  const published = proposals("published");
-  assert.deepEqual(published.filter((p) => !p.feasible).map((p) => `${p.tier}-${p.cycle}`), ["creator-month"]);
-  assert.ok(published.find((p) => p.tier === "creator" && p.cycle === "month")!.atZeroBps < 6_000);
 });
 
-test("the Store assistant's input cap: the largest that keeps 60%, one byte more misses", () => {
+test("the Store assistant's input cap: today's keeps 60% with its room at $69, and the largest cap is where one byte more misses", () => {
   const cap = assistantInputCap(false), room = assistantInputCap(true);
-  assert.ok(cap < ASSISTANT_INPUT_BYTES && room <= cap);
+  assert.ok(room <= cap && ASSISTANT_INPUT_BYTES <= room);
   assert.equal(assistantAt(cap).meets, true);
   assert.equal(assistantAt(cap + 1).meets, false);
   assert.equal(assistantAt(room).withRoom, true);
   assert.equal(assistantAt(room + 1).withRoom, false);
-  assert.equal(assistantAt(ASSISTANT_INPUT_BYTES).meets, false, "today's cap misses, which is why it is proposed");
+  assert.equal(assistantAt(ASSISTANT_INPUT_BYTES).withRoom, true, "today's cap keeps 60% with its room at the price set on 18 October 2026");
 });
 
-test("AI captions: today's price misses at every minimum, the proposed ones keep 60%, and captions are not on sale", () => {
-  assert.equal(captionsTodayAnyMinimum(), false);
-  assert.ok(captionsWorstBps(CENTS_PER_MINUTE, MIN_CENTS) < 6_000);
+test("AI captions: today's price keeps 60% at every length, the lowest that would is listed, and captions are not on sale", () => {
+  assert.equal(captionsTodayAnyMinimum(), true);
+  assert.ok(captionsWorstBps(CENTS_PER_MINUTE, MIN_CENTS) >= 6_000);
   const lowest = captionsPrice();
   assert.ok(captionsWorstBps(lowest.perMinute, lowest.minimum) >= 6_000);
+  assert.ok(lowest.perMinute <= CENTS_PER_MINUTE);
   assert.deepEqual([perMinuteHolds(lowest.perMinute), perMinuteHolds(lowest.perMinute - 1)], [true, false]);
   for (const o of captionsOptions()) {
     assert.ok(captionsWorstBps(o.perMinute, o.minimum) >= 6_000);
     assert.ok(o.minimum === 25 || captionsWorstBps(o.perMinute, o.minimum - 25) < 6_000);
     assert.equal(captionsMinimumFor(o.perMinute), o.minimum);
   }
+  assert.ok(MIN_CENTS >= captionsMinimumFor(CENTS_PER_MINUTE), "today's minimum is at or above the lowest that keeps every length");
   // Not on sale: charged only to a store with an active subscription, and none can be started while the plans are closed.
   assert.equal(PLANS_ON_SALE, false);
   assert.match(read("lib/auto-captions.ts"), /if \(!store\.subscriptionActive \|\| !store\.subscriptionId \|\| !store\.stripeCustomerId\) return \{ ok: false, reason: "plan" \};/);

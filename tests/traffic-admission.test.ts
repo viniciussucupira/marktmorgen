@@ -28,11 +28,12 @@ test('inherited and unknown tiers cannot bypass the smallest paid threshold',asy
 });
 test('acknowledged unused month and exact integer counters are readable',async()=>{
  assert.deepEqual(await trafficForAdmission(folder),{people:0,parts:0,visits:0});
- world.results=[['2998','199']];
- assert.deepEqual(await trafficForAdmission(folder),{people:2998,parts:199,visits:2999});
+ const near=VISITS_INCLUDED.creator-2;
+ world.results=[[String(near),'199']];
+ assert.deepEqual(await trafficForAdmission(folder),{people:near,parts:199,visits:near+1});
  // Since 17 October 2026 public pages rest at 95% of the month's figure; buyers' pages at all of it.
  assert.equal(await isResting(store,undefined,'buyer'),false);
- world.results=[['2998','200']];
+ world.results=[[String(near),'200']];
  assert.equal(await isResting(store,undefined,'buyer'),true);
  const shown=publicVisitLimit(VISITS_INCLUDED.creator);
  world.results=[[String(shown-1),null]];
