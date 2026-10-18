@@ -8,6 +8,7 @@
  *   nl:traffic:n:<folder>:<window>   visits, added up, in the store's window
  *   nl:traffic:x:<folder>:<window>   the live room, in hundredths of a visit
  *   nl:traffic:r:<folder>:<window>   pages drawn and public requests answered
+ *   nl:traffic:c:<folder>:<window>   each connection's share of them, by day (MM-SA-01)
  *   nl:traffic:folders:<month>       the stores that had any, that calendar month
  *
  * The window is the store's billing month when it pays us, and the calendar
@@ -33,18 +34,20 @@
  * the way round a figure that is billed from has to err.
  */
 import { createHash, createHmac } from "node:crypto";
+import { headers } from "next/headers";
 import { rememberFolderOwner } from "@/lib/delivery";
 import { type AllowanceWindow, WINDOW_ID, allowanceWindow, calendarWindow, keepSecondsFor } from "@/lib/allowance-window";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { admitNonPaying } from "@/lib/free-pool";
 import { deriveKey } from "@/lib/secret-box";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
-import { PARTS_PER_VISIT, publicVisitLimit, requestLimitFor, visitLimitFor, visitorAddress } from "@/lib/traffic-rules";
+import { PARTS_PER_VISIT, SHARE_BATCH, clientDayShare, publicVisitLimit, requestLimitFor, shareAddress, visitLimitFor, visitorAddress } from "@/lib/traffic-rules";
 
 const dayKey = (folder: string, day: string) => `nl:traffic:day:${folder}:${day}`;
 const countKey = (folder: string, month: string) => `nl:traffic:n:${folder}:${month}`;
 const partsKey = (folder: string, month: string) => `nl:traffic:x:${folder}:${month}`;
 const requestsKey = (folder: string, window: string) => `nl:traffic:r:${folder}:${window}`;
+const shareKey = (folder: string, window: string) => `nl:traffic:c:${folder}:${window}`;
 const foldersKey = (month: string) => `nl:traffic:folders:${month}`;
 
 /** A day's set is kept until the day after it is over, and a little longer. */
@@ -226,7 +229,7 @@ export async function trafficForAdmission(folder: string, month = calendarWindow
  * room, a private podcast), which rests at the whole month's figure
  * (lib/traffic-rules.ts).
  */
-export async function isResting(store: Store, now = Date.now(), who: "public" | "buyer" = "public"): Promise<boolean> {
+export async function isResting(store: Store, now = Date.now(), who: "public" | "buyer" = "public", from: { shared?: boolean } = {}): Promise<boolean> {
   try {
     const window = allowanceWindow(store, now);
     if (!window) return true;
@@ -236,8 +239,11 @@ export async function isResting(store: Store, now = Date.now(), who: "public" | 
     const folder = await storeFolder(storeRef(store));
     const traffic = await trafficForAdmission(folder, window.id);
     if (traffic === null || traffic.visits >= limit) return true;
-    // The page about to be drawn is one of the window's requests.
-    return !(await countRequest(folder, store, window, who, now));
+    // The page about to be drawn is one of the window's requests, and one of
+    // its connection's share of the day, unless it is asked for by a service
+    // many people's apps share (a podcast app's servers), which is bounded
+    // by its own feed instead.
+    return !(await countRequest(folder, store, window, who, now, 1, from.shared ? null : await askingConnection()));
   } catch { return true; }
 }
 
@@ -247,13 +253,16 @@ export async function isResting(store: Store, now = Date.now(), who: "public" | 
  * requests and what buyers have at all of them (lib/traffic-rules.ts,
  * requestLimitFor). A count that cannot be made is a request refused.
  */
-async function countRequest(folder: string, store: Store, window: AllowanceWindow, who: "public" | "buyer", now: number, units = 1): Promise<boolean> {
+async function countRequest(folder: string, store: Store, window: AllowanceWindow, who: "public" | "buyer", now: number, units = 1, client: string | null = null): Promise<boolean> {
   const whole = requestLimitFor(store, now / 1000);
   const limit = who === "buyer" ? whole : publicVisitLimit(whole);
   if (!Number.isSafeInteger(limit) || limit <= 0 || !FOLDER_PATTERN.test(folder)) return false;
   if (!Number.isSafeInteger(units) || units < 1) return false;
   // A store that pays nothing answers only while it holds one of the month's places (lib/free-pool-rules.ts).
   if (!(await admitNonPaying(store, now))) return false;
+  // One connection's share of the day first (lib/traffic-rules.ts, clientDayShare):
+  // past it this connection alone is refused, and nothing is counted against the store.
+  if (client && (await overShare(folder, window, whole, client, units, now))) return false;
   const key = requestsKey(folder, window.id);
   const [count] = await redisPipeline([["INCRBY", key, units]]);
   const n = Number(count);
@@ -275,10 +284,68 @@ export async function takePublicRequest(store: Store, who: "public" | "buyer" = 
   try {
     const window = allowanceWindow(store, now);
     if (!window) return false;
-    return await countRequest(await storeFolder(storeRef(store)), store, window, who, now, units);
+    return await countRequest(await storeFolder(storeRef(store)), store, window, who, now, units, await askingConnection());
   } catch {
     return false;
   }
+}
+
+/**
+ * A connection's requests this server has answered and not yet added to its
+ * share, and the connections it has seen refused, each by store, window, day
+ * and connection. Forgotten all at once when either grows past MAX_HELD:
+ * what is forgotten is at most a batch per connection, and a refusal is
+ * learned again at the next batch.
+ */
+const heldShare = new Map<string, number>();
+const refusedShare = new Set<string>();
+const MAX_HELD = 20_000;
+
+/**
+ * Whether this request takes its connection past its share of the day
+ * (lib/traffic-rules.ts, clientDayShare). Added to the share SHARE_BATCH
+ * requests at a time, with the share's expiry in the same write; a share that
+ * cannot be read refuses the request, as a count that cannot be made does.
+ */
+async function overShare(folder: string, window: AllowanceWindow, whole: number, client: string, units: number, now: number): Promise<boolean> {
+  const day = new Date(now).toISOString().slice(0, 10);
+  const field = `${day}:${fingerprint(`${day}|${folder}|share|${client}`)}`;
+  const local = `${folder}|${window.id}|${field}`;
+  if (refusedShare.has(local)) return true;
+  const held = (heldShare.get(local) ?? 0) + units;
+  if (held < SHARE_BATCH) {
+    if (heldShare.size >= MAX_HELD) heldShare.clear();
+    heldShare.set(local, held);
+    return false;
+  }
+  heldShare.delete(local);
+  const [taken] = await redisPipeline([
+    ["HINCRBY", shareKey(folder, window.id), field, held],
+    ["EXPIRE", shareKey(folder, window.id), keepSecondsFor(window, now)],
+  ]);
+  const total = Number(taken);
+  if (!Number.isSafeInteger(total) || total < held) return true;
+  if (total <= clientDayShare(whole)) return false;
+  if (refusedShare.size >= MAX_HELD) refusedShare.clear();
+  refusedShare.add(local);
+  return true;
+}
+
+/**
+ * The connection the request being answered came from, as the share counts it
+ * (lib/traffic-rules.ts, shareAddress): read from the request Next.js is
+ * answering. Null outside a request (a scheduled job), which counts against
+ * the store's window alone, as everything did before the share.
+ */
+async function askingConnection(): Promise<string | null> {
+  let from: Headers;
+  try {
+    from = await headers();
+  } catch {
+    return null;
+  }
+  const ip = from.get("x-forwarded-for")?.split(",")[0]?.trim() || from.get("x-real-ip") || "";
+  return shareAddress(ip) || null;
 }
 
 /** The store's requests in its window so far, for the studio. */

@@ -784,6 +784,8 @@ export const FAMILIES: Record<string, Family> = {
   "nl:tier:@lib/tier-switch.ts": short("A membership's lock while it changes tier", "request", 1, 128, REQ("tier switch")),
   "nl:tier:price:@lib/tier-switch.ts": { what: "A price made for a tier switch, per product and currency: counted with its product (PRODUCT_SIDE_BYTES)", room: ["lib/store.ts"] },
   "nl:traffic:day:@lib/traffic.ts": short("Who came that day, each once", "request", 2, 64),
+  // One field a connection a day, written SHARE_BATCH requests at a time and kept with the window (MM-SA-01): at most a tenth of the window's requests, 64 bytes each.
+  "nl:traffic:c:@lib/traffic.ts": { what: "Each connection's share of the window's requests, by day", parts: [per("request", 33, 7, "A field for every ten requests at the most, kept to the window's end and a day.")] },
   "nl:traffic:folders:@lib/traffic.ts": company("The stores with visits, a month", "One set a month for every store."),
   "nl:traffic:n:@lib/traffic.ts": { what: "Visits in the window", parts: [capped(14 * KEY, "One a window, 400 days.")] },
   "nl:traffic:r:@lib/traffic.ts": { what: "Requests in the window", parts: [capped(2 * KEY, "One a window.")] },

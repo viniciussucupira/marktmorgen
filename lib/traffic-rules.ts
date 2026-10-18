@@ -136,6 +136,61 @@ export function requestLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds 
   return REQUESTS_PER_VISIT * visitLimitFor(store, nowSeconds) + extra;
 }
 
+/**
+ * The most of a store's window one connection may take in a day (added 18
+ * October 2026; docs/security-audit-2026-10-18.md, MM-SA-01).
+ *
+ * The window bounds what a store costs, and past it the store rests for
+ * everybody. Until this nothing told one connection apart from another, so a
+ * script on one machine could spend a creator store's month of requests in a
+ * few minutes (made-up download links were enough) and shut its buyers out
+ * until the month turned. Now each connection's requests are counted for the
+ * day as well, and past its share it alone is refused, without counting
+ * against the store: the store's own figure, and everything that rests at
+ * it, is exactly what it was.
+ *
+ * The share is the larger of CLIENT_DAY_SHARE_MIN and a CLIENT_DAY_SHARE_PARTS
+ * part of the window (300 a day on a creator store, 640 on Pro, 2,500 on
+ * Scale), which a person, a household or a class behind one address does not
+ * come near in a day on one store, and which leaves a single machine at most
+ * that part of the window a day. It does not stop many machines at once: that
+ * is the host's firewall's to stop, and the store's figure still bounds what
+ * any number of them can cost.
+ *
+ * A connection's requests are added to its share SHARE_BATCH at a time, by
+ * each server that answers them (lib/traffic.ts, overShare): one write, with
+ * its expiry, for every SHARE_BATCH requests, so the share adds
+ * SHARE_COMMANDS_PER_REQUEST to a request at the most, and one that asks less
+ * often than that on a server adds nothing. A connection can therefore pass
+ * its share by fewer than SHARE_BATCH requests on each server before it is
+ * refused, which the share's size leaves room for.
+ */
+export const CLIENT_DAY_SHARE_MIN = 300;
+export const CLIENT_DAY_SHARE_PARTS = 50;
+export const SHARE_BATCH = 10;
+/** The commands one batch writes (HINCRBY and EXPIRE), spread over the requests it holds. */
+export const SHARE_COMMANDS_PER_REQUEST = 2 / SHARE_BATCH;
+
+/** One connection's share of a day, for a window of `whole` requests. */
+export function clientDayShare(whole: number): number {
+  if (!Number.isSafeInteger(whole) || whole <= 0) return 0;
+  return Math.max(CLIENT_DAY_SHARE_MIN, Math.floor(whole / CLIENT_DAY_SHARE_PARTS));
+}
+
+/**
+ * The connection a share is counted for: an address of the old kind as it
+ * is, and the new kind by its first three groups (a /48), which is what one
+ * site is handed. Telling the new kind apart by a /64, as a visit does, would
+ * let one machine with a /48 of its own (a free tunnel hands one out) be
+ * sixty-five thousand connections. "" when there is no address to go by.
+ */
+export function shareAddress(ip: string): string {
+  const address = visitorAddress(ip);
+  if (!address || address === "unknown") return "";
+  const v6 = /^([0-9a-f]{1,4}):([0-9a-f]{1,4}):([0-9a-f]{1,4}):[0-9a-f]{1,4}::\/64$/.exec(address);
+  return v6 ? `${v6[1]}:${v6[2]}:${v6[3]}::/48` : address;
+}
+
 /** "4,812 visits", "1 visit": a count, for a page or an email. */
 export function visitsWords(visits: number): string {
   const counted = Number.isFinite(visits) && visits > 0 ? Math.floor(visits) : 0;
