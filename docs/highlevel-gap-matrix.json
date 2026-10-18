@@ -817,7 +817,7 @@
     },
     {
       "id": "H28",
-      "pr": "#PRNUM",
+      "pr": "#552",
       "note": "proposals and agreements signed electronically by the person they were sent to, with the exact text and its SHA-256 recorded"
     }
   ]

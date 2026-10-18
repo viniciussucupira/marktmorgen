@@ -30,7 +30,7 @@ Gaps and partial rows, by sales impact divided by effort (each 1 to 5; this revi
 | 14 | H23 | Voice AI: answering phone calls | Gap | 1 | 5 | 0.20 |
 | 15 | H35 | Branded client portal app (add-on) | Partial | 1 | 5 | 0.20 |
 
-**Built from this matrix:** H19 in #549 (the creator's public review page named in every review request); H28 in #PRNUM (proposals and agreements signed electronically by the person they were sent to, with the exact text and its SHA-256 recorded).
+**Built from this matrix:** H19 in #549 (the creator's public review page named in every review request); H28 in #552 (proposals and agreements signed electronically by the person they were sent to, with the exact text and its SHA-256 recorded).
 
 ## Every row
 
