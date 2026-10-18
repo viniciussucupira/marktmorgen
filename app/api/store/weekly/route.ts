@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { normaliseHandle } from "@/lib/store";
+import { limited } from "@/lib/request-guard";
 import { leaveWeeklyTeam, setWeeklyOff, weeklyMemberTokenOk, weeklyTokenOk } from "@/lib/stats-report";
 
 /**
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
   }
   const asked = read(request);
   if (!asked) return page("Link not recognized", "<p>This link is not one we recognize.</p>", 400);
-  const form = await request.formData().catch(() => null);
+  const form = await limited(request, 2_000).then((r) => r.formData()).catch(() => null);
   const off = form?.get("do") !== "on";
   await setWeeklyOff(asked.handle, off);
   const action = `/api/store/weekly?h=${encodeURIComponent(asked.handle)}&t=${encodeURIComponent(asked.token)}`;

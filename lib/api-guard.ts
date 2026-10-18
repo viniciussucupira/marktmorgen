@@ -14,7 +14,7 @@
  */
 import { keyFromHeader, resolveKey } from "@/lib/api-keys";
 import { storeForId, type Store } from "@/lib/store";
-import { withinLimit } from "@/lib/request-guard";
+import { BodyTooLarge, limited, withinLimit } from "@/lib/request-guard";
 import { takeAllowance } from "@/lib/store-allowance";
 
 /** Requests one key may make in a minute. Generous for a sync, a wall for a runaway loop. */
@@ -80,11 +80,12 @@ export async function readApiBody(request: Request): Promise<Record<string, unkn
   const bad = () => apiError(400, "invalid", "Send a JSON object as the body, with Content-Type: application/json.");
   if (Number(request.headers.get("content-length") ?? "0") > MAX_BODY_BYTES) return apiError(413, "too_large", `The body may be up to ${MAX_BODY_BYTES} bytes.`);
   try {
-    const text = await request.text();
-    if (text.length > MAX_BODY_BYTES) return apiError(413, "too_large", `The body may be up to ${MAX_BODY_BYTES} bytes.`);
+    // Read only as far as the ceiling, whether or not a length was declared (docs/security-audit-2026-10-18.md, MM-SA-10).
+    const text = await (await limited(request, MAX_BODY_BYTES)).text();
     const parsed: unknown = JSON.parse(text);
     return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : bad();
-  } catch {
+  } catch (error) {
+    if (error instanceof BodyTooLarge) return apiError(413, "too_large", `The body may be up to ${MAX_BODY_BYTES} bytes.`);
     return bad();
   }
 }

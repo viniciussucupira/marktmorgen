@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { fromAnotherSite } from "@/lib/studio-route";
+import { limited } from "@/lib/request-guard";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { CREATOR, within } from "@/lib/community";
 import { communityViewer } from "@/lib/community-access";
@@ -34,7 +35,8 @@ const PAIR = /^(creator|[0-9a-f]{12,64})\.(creator|[0-9a-f]{12,64})$/;
  */
 export async function POST(request: NextRequest) {
   const origin = originFrom(request);
-  const form = await request.formData().catch(() => null);
+  // Read only as far as 32 KB (a message's 2,000 characters, written out as a form), whether or not a length was declared (MM-SA-10).
+  const form = await limited(request, 32_000).then((r) => r.formData()).catch(() => null);
   if (!form) return new Response("Bad Request", { status: 400 });
   const field = (name: string, max: number) => String(form.get(name) ?? "").trim().slice(0, max);
   const handle = normaliseHandle(field("handle", 60));
