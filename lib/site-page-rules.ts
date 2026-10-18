@@ -85,6 +85,8 @@ export const RESERVED_SLUGS = new Set([
   "manage",
   "manifest.webmanifest",
   "media-kit",
+  // Emails a store published (app/[handle]/letters).
+  "letters",
   "move",
   "orders",
   "p",

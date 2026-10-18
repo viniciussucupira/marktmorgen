@@ -1,0 +1,124 @@
+/**
+ * Emails published on the store (lib/letter-rules.ts says what one is).
+ *
+ *   nl:letters:s:<sid>   the store's published emails: id -> when published
+ *   nl:letters:i:<id>    one published email's copy, as JSON, for LETTER_KEEP_DAYS from publishing
+ *
+ * The copy and its entry are counted in the store's data room before they are
+ * written (lib/store-data.ts), until the day the copy goes by itself.
+ */
+import { createHash } from "node:crypto";
+import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import type { Store } from "@/lib/store";
+import { dataBytes } from "@/lib/store-data-rules";
+import { takeData } from "@/lib/store-data";
+import type { Broadcast } from "@/lib/broadcasts";
+import { LETTER_ID, LETTER_KEEP_DAYS, MAX_PUBLISHED_LETTERS, type Letter, parseLetter } from "@/lib/letter-rules";
+
+const DAY = 86_400_000;
+const listKey = (sid: string) => `nl:letters:s:${sid}`;
+const recordKey = (id: string) => `nl:letters:i:${id}`;
+/** A published email's own key, for the walk that closes a store's records (lib/closed-store-data.ts). */
+export const letterRecordKey = recordKey;
+
+/** The id an email is published under: from the store and the email, so it is always the same and never the email's own id. */
+export function letterIdFor(sid: string, broadcastId: string): string {
+  return createHash("sha256").update(`nimbus-letter:${sid}:${broadcastId}`).digest("hex").slice(0, 20);
+}
+
+/** What one published copy takes from the data room: itself and its entry in the list. */
+export function letterRoomBytes(letter: Letter): number {
+  return dataBytes([JSON.stringify(letter), letter.id], 2);
+}
+
+export type Published = { ok: true; letter: Letter } | { ok: false; reason: "not_sent" | "full" | "too_many" | "unavailable"; message: string };
+
+/**
+ * Publishes one email the store sent: a copy of its subject and words as
+ * they were sent, written once, at its own address. Publishing it again
+ * writes the copy again and starts its days afresh.
+ */
+export async function publishLetter(store: Store, broadcast: Broadcast, now = Date.now()): Promise<Published> {
+  if (!isRedisConfigured() || !store.sid) return { ok: false, reason: "unavailable", message: "This can't be saved right now. Try again in a minute." };
+  if (!store.listId || broadcast.listId !== store.listId || broadcast.status !== "sent") return { ok: false, reason: "not_sent", message: "Only an email this store has sent can be published." };
+  const letter: Letter = {
+    id: letterIdFor(store.sid, broadcast.id),
+    sid: store.sid,
+    subject: broadcast.subject,
+    body: broadcast.body,
+    sentAt: broadcast.finishedAt ? broadcast.finishedAt * 1000 : broadcast.sendAt * 1000,
+    publishedAt: now,
+  };
+  try {
+    // Entries whose copy has gone by itself leave the count first.
+    const [, count, already] = await redisPipeline([
+      ["ZREMRANGEBYSCORE", listKey(store.sid), "-inf", String(now - LETTER_KEEP_DAYS * DAY)],
+      ["ZCARD", listKey(store.sid)],
+      ["ZSCORE", listKey(store.sid), letter.id],
+    ]);
+    if (already === null && Number(count) >= MAX_PUBLISHED_LETTERS) return { ok: false, reason: "too_many", message: `Your store keeps ${MAX_PUBLISHED_LETTERS} published emails at most. Take one off first.` };
+    const room = await takeData(store, [{ until: now + LETTER_KEEP_DAYS * DAY, bytes: letterRoomBytes(letter) }], now);
+    if (!room.ok) return room.reason === "full" ? { ok: false, reason: "full", message: room.message } : { ok: false, reason: "unavailable", message: "This can't be saved right now. Try again in a minute." };
+    await redisPipeline([
+      ["SET", recordKey(letter.id), JSON.stringify(letter), "EX", LETTER_KEEP_DAYS * 86_400],
+      ["ZADD", listKey(store.sid), String(now), letter.id],
+      ["EXPIRE", listKey(store.sid), LETTER_KEEP_DAYS * 86_400],
+    ]);
+    return { ok: true, letter };
+  } catch (error) {
+    console.error("publishing an email failed", error);
+    return { ok: false, reason: "unavailable", message: "This can't be saved right now. Try again in a minute." };
+  }
+}
+
+/** Takes a published email off the store: its copy is deleted. */
+export async function unpublishLetter(store: Pick<Store, "sid">, id: string): Promise<boolean> {
+  if (!LETTER_ID.test(id) || !isRedisConfigured() || !store.sid) return false;
+  const [, removed] = await redisPipeline([["DEL", recordKey(id)], ["ZREM", listKey(store.sid), id]]);
+  return Number(removed) === 1;
+}
+
+/** One of this store's published emails, or null. */
+export async function readLetter(store: Pick<Store, "sid">, id: string): Promise<Letter | null> {
+  if (!LETTER_ID.test(id) || !isRedisConfigured() || !store.sid) return null;
+  const [raw] = await redisPipeline([["GET", recordKey(id)]]);
+  if (typeof raw !== "string") return null;
+  try {
+    const letter = parseLetter(JSON.parse(raw));
+    return letter && letter.sid === store.sid ? letter : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The store's published emails, newest first; [] when there are none or they cannot be read. */
+export async function listLetters(store: Pick<Store, "sid">): Promise<Letter[]> {
+  if (!isRedisConfigured() || !store.sid) return [];
+  try {
+    const [ids] = await redisPipeline([["ZREVRANGE", listKey(store.sid), 0, MAX_PUBLISHED_LETTERS - 1]]);
+    const list = Array.isArray(ids) ? ids.map(String).filter((id) => LETTER_ID.test(id)) : [];
+    if (!list.length) return [];
+    const [raws] = await redisPipeline([["MGET", ...list.map(recordKey)]]);
+    const values = Array.isArray(raws) ? raws : [];
+    const out: Letter[] = [];
+    list.forEach((_, i) => {
+      try {
+        const letter = typeof values[i] === "string" ? parseLetter(JSON.parse(values[i] as string)) : null;
+        if (letter && letter.sid === store.sid) out.push(letter);
+      } catch {
+        // A copy that cannot be read is not shown.
+      }
+    });
+    return out;
+  } catch (error) {
+    console.error("reading published emails failed", error);
+    return [];
+  }
+}
+
+/** The ids of the store's published emails, for the studio to say which are. */
+export async function publishedLetterIds(store: Pick<Store, "sid">): Promise<Set<string>> {
+  if (!isRedisConfigured() || !store.sid) return new Set();
+  const [ids] = await redisPipeline([["ZREVRANGE", listKey(store.sid), 0, MAX_PUBLISHED_LETTERS - 1]]).catch(() => [[]]);
+  return new Set(Array.isArray(ids) ? ids.map(String) : []);
+}

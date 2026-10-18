@@ -18,7 +18,7 @@ export const COUNTED_FAMILIES: readonly string[] = [
   "nl:call:busy:", "nl:call:confirmed:", "nl:callteam:", "nl:callteam:rr:", "nl:catalog:", "nl:cert:",
   "nl:cm:", "nl:cm:unsub:", "nl:course:", "nl:crm:deals:", "nl:crm:pipes:", "nl:crm:v:", "nl:data:", "nl:dc:addr:",
   "nl:dc:mem:", "nl:dc:prod:", "nl:depth:", "nl:erased:", "nl:esync:tags:", "nl:form:r:", "nl:imp:buy:",
-  "nl:imp:who:", "nl:inbox:", "nl:inbox:tok:", "nl:intro:c:", "nl:keys:", "nl:lc:", "nl:learn:enr:",
+  "nl:imp:who:", "nl:inbox:", "nl:inbox:tok:", "nl:intro:c:", "nl:keys:", "nl:lc:", "nl:learn:enr:", "nl:letters:i:", "nl:letters:s:",
   "nl:lib:", "nl:mail:bc:", "nl:mail:bcs:", "nl:mail:enr:", "nl:mail:flowq", "nl:mail:flows:", "nl:mail:mk:",
   "nl:mail:unsub:", "nl:mv:", "nl:mv:link:", "nl:outreach:", "nl:outreach:stoplink:",
   "nl:payreq:due", "nl:payreq:o:", "nl:payreq:p:", "nl:payreq:r:", "nl:payreq:s:", "nl:person:",
@@ -279,6 +279,8 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:nudge:": E, "nl:nudge:count:": E, "nl:nudge:cursor": C,
   "nl:orders:folders:": I, "nl:orders:link:": X(1), "nl:orders:n:": E, "nl:orders:open:": E, "nl:orders:seen:": X(45),
   "nl:outreach:": E, "nl:outreach:stop:all": C, "nl:outreach:stoplink:": T("nl:outreach:"),
+  // Emails published on the store (lib/letters.ts): the store's list goes, and each copy through it.
+  "nl:letters:s:": E, "nl:letters:i:": T("nl:letters:s:", 400),
   "nl:pause:": E, "nl:pause:due": I, "nl:pause:last:": E,
   "nl:pay:currencies:": E,
   // Payment requests (lib/payment-request-store.ts): the store's lists go, and each request through them; its reminders and its place in the sweep's list are taken out.
@@ -366,7 +368,7 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
  * read can be priced without the walk (tests/plan-cost-registry.ts, closure).
  */
 export const FOLLOWED_FAMILIES = [
-  "nl:agree:s:", "nl:cal:cfg:", "nl:cm:", "nl:course:", "nl:erase:ix:", "nl:fshares:", "nl:inbox:", "nl:learn:passes:", "nl:mail:bcs:",
+  "nl:agree:s:", "nl:cal:cfg:", "nl:cm:", "nl:course:", "nl:erase:ix:", "nl:fshares:", "nl:inbox:", "nl:learn:passes:", "nl:letters:s:", "nl:mail:bcs:",
   "nl:mv:", "nl:outreach:", "nl:payreq:s:", "nl:pkg:s:", "nl:pod:by:", "nl:ppsell:sales:", "nl:slink:store:", "nl:store:leads:",
 ] as const;
 

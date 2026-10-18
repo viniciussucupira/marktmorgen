@@ -1,4 +1,5 @@
 import { ASSIST_REMINDER_WORDS } from "@/lib/buyer-words/assistant-reminder";
+import { LETTER_KEEP_DAYS, MAX_PUBLISHED_LETTERS } from "@/lib/letter-rules";
 import {answerAllowanceWords} from "@/lib/answers-rules";
 import { ASSISTANT_KEEP_SECONDS, ASSISTANT_NAME, assistantAllowanceWords, assistantPriceWords } from "@/lib/store-assistant-rules";
 import { IMPORT_ALLOWANCES, importAllowanceWords } from "@/lib/import-limits";
@@ -680,6 +681,13 @@ export const HELP_SECTIONS: HelpSection[] = [
           "A sequence can also follow your courses. It can start when someone who agreed to hear from you finishes a course, every lesson done, which is the moment to offer the next one; and any of its emails can go only to those who have, or have not, opened or finished a course. Wait three days after the purchase, send only to those who have not opened it, and the reminder reaches exactly the people who need it.",
           "You can also choose who gets an email by what your store knows about them: everyone who has spent at least an amount with you, everyone who first found you through one channel, like Instagram or a podcast, or everyone who has bought before but not in the last 30, 60, 90, 180 or 365 days. These are worked out from your own Stripe account when the email goes out, so they match buyers only, and nothing extra is recorded about anyone. Save any choice as a group with a name, up to 20, and pick it again for the next email.",
           "Someone on your team with the Editor role can write drafts, up to 20 per store; you or an Admin read them and send them. And, if you switch it on, one email asks each buyer for a review, 3 to 30 days after buying, counted in the same monthly emails.",
+        ],
+      },
+      {
+        q: "Can I publish an email I sent on my store?",
+        a: [
+          `Yes. In the list of what you sent, press Publish on your store under a sent email. It gets a page of your store, such as /@yourname/letters/…, and /@yourname/letters lists every email you published, newest first, in your store's look. Nothing is published by itself: you choose each one, and you are asked first, because anyone can read it once it is published, including people who are not on your list. An email you sent to the buyers of one product may hold what they paid for.`,
+          `What is published is a copy of its subject and words as they went out, with its links as you typed them, and nothing about who received it. Take it off and the copy is deleted. A published email stays for ${LETTER_KEEP_DAYS} days from the day you published it, up to ${MAX_PUBLISHED_LETTERS} at once, each counted in your store's data like anything else it keeps. Share the list's address wherever you share your store, or add it as a link on your store page.`,
         ],
       },
       {

@@ -86,6 +86,7 @@ import { calendarKeys } from "@/lib/calendar-sync";
 import { packageKeys } from "@/lib/call-packages";
 import { requestRecordKey } from "@/lib/payment-request-store";
 import { agreementKeys } from "@/lib/agreement-store";
+import { letterRecordKey } from "@/lib/letters";
 import { passKeyOfHash } from "@/lib/learn";
 
 export const DUE_KEY = "nl:closed:due";
@@ -452,6 +453,15 @@ export const FOLLOWERS: Readonly<Record<string, Follower>> = {
     find: async (keys) => {
       const out: string[] = [];
       for (const key of keys) for (const id of await membersOf(key)) if (/^[0-9a-f]{32}$/.test(id)) out.push(...agreementKeys(id));
+      return out;
+    },
+  },
+  // A store's published emails: each one's copy, kept by its id.
+  "nl:letters:s:": {
+    match: () => true,
+    find: async (keys) => {
+      const out: string[] = [];
+      for (const key of keys) for (const id of await membersOf(key)) if (/^[0-9a-f]{20}$/.test(id)) out.push(letterRecordKey(id));
       return out;
     },
   },
