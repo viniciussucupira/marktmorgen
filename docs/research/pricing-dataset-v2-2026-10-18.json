@@ -1,0 +1,258 @@
+{
+  "schema": 2,
+  "accessed": "18 October 2026",
+  "note": "Every figure is what the page named in its source showed on the day it was read (UTC), through the web fetch of this session. null means the page did not state it; \"unlimited\" is the page's own word; a price that did not render is recorded as such and never estimated. Prices are US dollars. yearlyUsd is the yearly total where the page states one; perMonthBilledYearlyUsd is the per-month figure a page prints beside \"billed annually\". feeOnSalePct is the fee the page names for a sale on that plan (feeIncludesProcessing says whether the page folds card processing into it). Nothing is estimated; secondary sources are marked as such. The demand evidence block records the figures the demand model is calibrated on, each with its source and date; where a page refused the fetch, the figure is what the search result's own text showed, and that is said.",
+  "sources": [
+    { "id": "stan-blog", "url": "https://stan.store/blog/stan-store-pricing/", "accessed": "18 October 2026", "type": "vendor pricing article (Stan's own)", "note": "Page shows \"Updated: Jul 22, 2026\"." },
+    { "id": "stan-help", "url": "https://help.stan.store/article/31-creator-vs-creator-pro", "accessed": "18 October 2026", "type": "vendor help article", "note": "\"Last updated on June 23, 2026\"." },
+    { "id": "kajabi", "url": "https://www.kajabi.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "The annual column shows $143 / $199 / $399 a month beside \"Billed annually ($179/mo)\" etc.; the page does not reconcile the two." },
+    { "id": "highlevel", "url": "https://www.gohighlevel.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page" },
+    { "id": "highlevel-guide", "url": "https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide", "accessed": "18 October 2026", "type": "vendor help article", "note": "\"Modified on: Sat, 22 Aug, 2026\"." },
+    { "id": "clickfunnels", "url": "https://support.myclickfunnels.com/docs/clickfunnels-pricing/", "accessed": "18 October 2026", "type": "vendor help article", "note": "\"Last updated\" Oct 12, 2026." },
+    { "id": "thinkific", "url": "https://www.thinkific.com/pricing/", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "Savings lines ($173, $330) do not equal the difference of the printed prices ($168, $324); recorded as printed." },
+    { "id": "teachable", "url": "https://www.teachable.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "Cards say \"7-day free trial. 30-day guarantee.\"; a pop-up offers 30 days and a banner \"3 months for the price of 1\" (promotions)." },
+    { "id": "kit", "url": "https://kit.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "Prices are labeled \"For 1,000 email subscribers\"; Pro's $50 is struck from $66 as a first-year offer." },
+    { "id": "circle", "url": "https://circle.so/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "\"Prices displayed in USD, based on annual billing\"; no monthly-billing price shown." },
+    { "id": "skool", "url": "https://www.skool.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "A Monthly/Yearly toggle with \"2 months free!\" but no yearly amounts rendered." },
+    { "id": "whop", "url": "https://whop.com/network/pricing/", "accessed": "18 October 2026", "type": "vendor pricing page" },
+    { "id": "patreon-fees", "url": "https://support.patreon.com/hc/en-us/articles/11111747095181-Creator-fees-overview", "accessed": "18 October 2026", "type": "vendor help article", "note": "\"Updated September 11, 2026\"." },
+    { "id": "gumroad", "url": "https://gumroad.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page" },
+    { "id": "linktree", "url": "https://linktr.ee/s/pricing", "accessed": "18 October 2026", "type": "vendor pricing page (prices not rendered)", "note": "Every plan showed \"/mo\" with no amount. No Linktree price is used." },
+    { "id": "linktree-help", "url": "https://linktr.ee/help/en/articles/5434140-an-overview-of-paid-features-available-on-linktree", "accessed": "18 October 2026", "type": "vendor help article", "note": "Last updated October 14, 2026; features per plan, no prices." },
+    { "id": "beacons", "url": "https://beacons.ai/i/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "Creator Max shows $100 a month and $900 a year; the page's \"2 months free!\" badge does not match that pair." },
+    { "id": "systeme", "url": "https://systeme.io/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "The plan comparison table did not render (cells read \"null:\"); figures are from the FAQ and feature text." },
+    { "id": "podia", "url": "https://www.podia.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "\"Billed yearly\" was the selected view; monthly-billing prices are not stated on the page." },
+    { "id": "payhip", "url": "https://payhip.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page" },
+    { "id": "mighty", "url": "https://www.mightynetworks.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "Only Launch's yearly figure ($950) is shown, in a calculator section." },
+    { "id": "lemonsqueezy", "url": "https://www.lemonsqueezy.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page" },
+    { "id": "shopify-starter", "url": "https://www.shopify.com/starter", "accessed": "18 October 2026", "type": "vendor product page (Starter price not stated)", "note": "The page says \"Try Shopify for $1/month\" and links to the pricing page; no Starter plan price is stated there either. No Shopify Starter price is used." },
+    { "id": "shopify-pricing", "url": "https://www.shopify.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page", "note": "Basic $39 a month ($29 yearly), card rates from 2.9% + 30¢, 2% third-party transaction fee; the Starter plan does not appear." },
+    { "id": "kofi", "url": "https://ko-fi.com/pricing", "accessed": "18 October 2026", "type": "vendor pricing page" },
+    { "id": "sacra-stan-2024", "url": "https://sacra.com/research/stan-store-in-bio/", "accessed": "18 October 2026", "type": "research note (Sacra, February 1, 2024)", "note": "Stan's figures in this note are not labeled estimates by Sacra; Linktree's are (\"Sacra-estimated\")." },
+    { "id": "sacra-stan-2026", "url": "https://sacra.com/c/stan", "accessed": "18 October 2026", "type": "research profile (Sacra, 2026)", "note": "\"Sacra estimates that Stan hit $40M in annual recurring revenue in April 2026\"; ARPC \"~$437\"." },
+    { "id": "gumroad-july-2025", "url": "https://x.com/shl/status/1951391560588992795", "accessed": "18 October 2026", "type": "X post by Gumroad's CEO (@shl), text as shown in the search result; the page itself refused the fetch (robots)", "note": "\"In July: 37,006 creators made money on Gumroad 25,459 creators made over $10 8,507 creators made over $100 1,536 creators made over $1,000 110 creators made over $10,000\" (July 2025)." },
+    { "id": "gumroad-2020", "url": "https://x.com/shl/status/1346163369225584640", "accessed": "18 October 2026", "type": "X post by Gumroad's CEO (@shl), text as shown in the search result; the page itself was not fetched", "note": "\"Collectively, @gumroad creators earned $142 million in 2020, up 94% over last year: 6 creators made at least $1,000,000 179 made at least $100,000 1,853 made at least $10,000 7,945 made at least $1,000 20,591 made at least $100 45,917 made something!\"" },
+    { "id": "sacra-gumroad", "url": "https://sacra.com/research/gumroad-android-creator-economy/", "accessed": "18 October 2026", "type": "research note (Sacra, March 4, 2021)", "note": "Confirms 45,917 creators sold in 2020 and $142M GMV; blended take rate \"around 6.5%\"." },
+    { "id": "techcrunch-patreon-2019", "url": "https://techcrunch.com/2019/02/12/patreon-business", "accessed": "18 October 2026", "type": "press analysis (TechCrunch, February 12, 2019) quoting Graphtreon's estimates and Patreon", "note": "Graphtreon counts 132,500 creators with at least one patron; \"more than 4,300 creators earn at least $1,000 per month\"; \"more than 9,200 earn $500 or more\"; annual churn under 1% for creators earning $500 a month." },
+    { "id": "techcrunch-linktree-report", "url": "https://techcrunch.com/?p=2302999", "accessed": "18 October 2026", "type": "press report (TechCrunch, April 20, 2022) on Linktree's Creator Report (survey of 9,500 Linktree users)", "note": "\"46% of full-time creators make less than $1,000 annually\"; \"Only 12% of full-time creators are making more than $50,000 per year\"; \"66% of creators see their online pursuits as a side hustle\"." },
+    { "id": "kajabi-release", "url": "https://www.businesswire.com/news/home/20250806424975/en/$10B-in-Creator-Revenue-and-Climbing-Kajabi-Creators-Are-Achieving-Long-Term-Financial-Success", "accessed": "18 October 2026", "type": "company press release (Business Wire, August 6, 2025; promotional, unaudited)", "note": "\"over $10B in creator revenue\"; \"Over 100 thousand creators and entrepreneurs\"; \"nearly 1,800 Kajabi creators have reached millionaire status\"; \"60% of creators migrate to Kajabi after outgrowing entry-level platforms\"." },
+    { "id": "thinkific-results", "url": "https://www.newswire.ca/news-releases/thinkific-announces-fourth-quarter-and-full-year-2025-financial-results-827221860.html", "accessed": "18 October 2026", "type": "public company results release (March 5, 2026; IFRS, US dollars)", "note": "Revenue $73.2M (subscription $59.8M, commerce $13.4M, up 32%); ARPU $175 a month (\"average monthly Revenue per Paying Customer in the quarter\"); GMV $460.0M; GPV $273.5M; gross margin 73%; net income $1.3M." },
+    { "id": "recurly", "url": "https://www.recurly.com/research/churn-rate-benchmarks", "accessed": "18 October 2026", "type": "vendor benchmark page (Recurly, \"updated with July 2026 data\")", "note": "SaaS median total churn 3.22% (the page's own labeling of the period is inconsistent); voluntary 2.34% and involuntary 1.25% averages across industries; the sample size is not stated. Used only as an order of magnitude." }
+  ],
+  "vendors": [
+    {
+      "name": "Stan", "sources": ["stan-blog", "stan-help"], "freeTier": null, "trialDays": 14,
+      "highlighted": "none badged; the FAQ points beginners to Creator and calls Creator Pro \"built for scaling\"",
+      "yearlyFraming": "\"Billed Annually\" column with \"save $48\" and \"save $240\"",
+      "plans": [
+        { "name": "Creator", "monthlyUsd": 29, "yearlyUsd": 300, "perMonthBilledYearlyUsd": 25, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "products": "unlimited", "customers": "unlimited", "courses": "unlimited", "emailsPerMonth": null, "contacts": null, "storage": null, "video": null, "ai": null, "seats": null }, "leadsWith": "Mobile- and desktop-friendly storefront", "notes": "Creator-only list: storefront, calendar and booking, analytics, course builder, recurring subscriptions, lead magnets, community, Instagram AutoDM." },
+        { "name": "Creator Pro", "monthlyUsd": 99, "yearlyUsd": 948, "perMonthBilledYearlyUsd": 79, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "products": "unlimited", "customers": "unlimited", "emailsPerMonth": "unlimited", "contacts": null, "storage": null, "video": null, "ai": null, "seats": null }, "leadsWith": "Everything in Creator, plus discount codes", "notes": "Pro-only: discount codes, limited-quantity offers, upsells and order bumps, Stan Payments, Afterpay, Klarna, funnels, affiliate management, import contacts, email broadcast, email flows, pixels (Meta, Google, Pinterest, TikTok)." }
+      ]
+    },
+    {
+      "name": "Kajabi", "sources": ["kajabi"], "freeTier": null, "trialDays": null,
+      "highlighted": "Pro, \"Most Popular\"", "yearlyFraming": "toggle \"Annual (Save 20%)\"; \"Save $432/year\", \"Save $600/year\", \"Save $1200/year\"",
+      "usageAddOns": "Contacts in blocks of 25,000 for $125 a month; AI credits \"$15/mo for 500\" top-up (marked coming)",
+      "plans": [
+        { "name": "Basic", "monthlyUsd": 179, "yearlyUsd": null, "perMonthBilledYearlyUsd": 143, "feeOnSalePct": 0, "feeIncludesProcessing": false, "processing": "Kajabi Payments 2.9% + 30¢; third-party gateway fee 2%", "limits": { "products": 5, "contacts": 2500, "emailsPerMonth": "unlimited", "websites": 1, "communities": 1, "seats": 2, "ai": "0 credits", "storage": null, "video": null }, "leadsWith": "Your business is working. Now it's time to get it in front of more people." },
+        { "name": "Growth", "monthlyUsd": 249, "yearlyUsd": null, "perMonthBilledYearlyUsd": 199, "feeOnSalePct": 0, "feeIncludesProcessing": false, "processing": "Kajabi Payments 2.8% + 30¢; third-party gateway fee 1%", "limits": { "products": 50, "contacts": 25000, "emailsPerMonth": "unlimited", "websites": 1, "communities": 1, "seats": 11, "ai": "500 credits", "storage": null, "video": null }, "leadsWith": "Already bringing in revenue? Let's automate, elevate and scale." },
+        { "name": "Pro", "monthlyUsd": 499, "yearlyUsd": null, "perMonthBilledYearlyUsd": 399, "feeOnSalePct": 0, "feeIncludesProcessing": false, "processing": "Kajabi Payments 2.7% + 30¢; third-party gateway fee 0.5%", "limits": { "products": "unlimited", "contacts": 100000, "emailsPerMonth": "unlimited", "websites": 3, "communities": 3, "seats": 26, "ai": "1,000 credits", "storage": null, "video": null }, "leadsWith": "No limits, full customization and dedicated support." }
+      ]
+    },
+    {
+      "name": "HighLevel", "sources": ["highlevel", "highlevel-guide"], "freeTier": null, "trialDays": 14,
+      "highlighted": "Unlimited, \"MOST POPULAR\"", "yearlyFraming": "\"Save with annual\" toggle; the yearly price is ten monthly payments; no saving figure printed",
+      "usageAddOns": "Email $0.675 per 1,000 across all plans; premium workflow actions $0.01 per execution; AI Employee $50 or $97 a month per sub-account; usage-based charges for SMS, calling and AI with no rate on the pricing page",
+      "plans": [
+        { "name": "Starter", "monthlyUsd": 97, "yearlyUsd": 970, "perMonthBilledYearlyUsd": null, "feeOnSalePct": null, "limits": { "subAccounts": 3, "contacts": "unlimited", "seats": "unlimited", "emailsPerMonth": "usage based", "ai": "usage based", "storage": null, "video": null, "products": null }, "leadsWith": "Perfect for smaller businesses and solo marketers" },
+        { "name": "Unlimited", "monthlyUsd": 297, "yearlyUsd": 2970, "perMonthBilledYearlyUsd": null, "feeOnSalePct": null, "limits": { "subAccounts": "unlimited", "contacts": "unlimited", "seats": "unlimited", "emailsPerMonth": "usage based", "ai": "usage based" }, "leadsWith": "Built for growing agencies" },
+        { "name": "Agency Pro", "monthlyUsd": 497, "yearlyUsd": 4970, "perMonthBilledYearlyUsd": null, "feeOnSalePct": null, "limits": { "subAccounts": "unlimited", "contacts": "unlimited", "seats": "unlimited", "emailsPerMonth": "usage based", "ai": "usage based" }, "leadsWith": "Ideal for SaaSPRENEURs & Agencies looking to go SaaS" }
+      ]
+    },
+    {
+      "name": "ClickFunnels", "sources": ["clickfunnels"], "freeTier": null, "trialDays": 14,
+      "highlighted": "Scale, \"Most popular\"", "yearlyFraming": "\"Annual Discount\" column: ten monthly payments; 30-day money-back after the trial",
+      "plans": [
+        { "name": "Launch", "monthlyUsd": 97, "yearlyUsd": 970, "perMonthBilledYearlyUsd": null, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "workspaces": 1, "seats": 2, "contacts": 10000, "emailsPerMonth": 50000, "courses": 3, "customDomains": 5, "visitors": "unlimited", "funnels": "unlimited (limited time)", "ai": "1M words", "storage": null }, "leadsWith": "Includes all the tools to launch your business online." },
+        { "name": "Scale", "monthlyUsd": 197, "yearlyUsd": 1970, "perMonthBilledYearlyUsd": null, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "workspaces": 5, "seats": 5, "contacts": 75000, "emailsPerMonth": 300000, "courses": 6, "customDomains": "unlimited", "visitors": "unlimited", "ai": "2M words" } },
+        { "name": "Optimize", "monthlyUsd": 297, "yearlyUsd": 2970, "perMonthBilledYearlyUsd": null, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "workspaces": 10, "seats": 10, "contacts": 150000, "emailsPerMonth": 750000, "courses": 10, "customDomains": "unlimited", "visitors": "unlimited", "ai": "5M words" } },
+        { "name": "Dominate", "monthlyUsd": null, "yearlyUsd": 5997, "perMonthBilledYearlyUsd": null, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "workspaces": 20, "seats": 20, "contacts": 400000, "emailsPerMonth": 1200000, "courses": 20, "customDomains": "unlimited", "visitors": "unlimited", "ai": "10M words" } }
+      ]
+    },
+    {
+      "name": "Thinkific", "sources": ["thinkific"], "freeTier": null, "trialDays": 30,
+      "highlighted": "Start, \"Most Popular\"", "yearlyFraming": "toggle \"Annual (Save 25%)\"; per-month annual prices; \"Save $173\", \"Save $330\", \"Save $660\" \"by billing annually\"",
+      "plans": [
+        { "name": "Basic", "monthlyUsd": 54, "yearlyUsd": null, "perMonthBilledYearlyUsd": 40, "feeOnSalePct": null, "processing": "Thinkific Payments 2.9%; third-party gateway fee varies by plan (not stated)", "limits": { "students": 10000, "courses": "unlimited", "videoBandwidthGbPerMonth": 100, "communities": 1, "digitalDownloads": 5, "coachingAndWebinars": 5, "seats": 1, "storage": null, "emailsPerMonth": null, "ai": null }, "leadsWith": "For experts publishing their first course and building an audience from scratch." },
+        { "name": "Start", "monthlyUsd": 109, "yearlyUsd": null, "perMonthBilledYearlyUsd": 82, "feeOnSalePct": null, "limits": { "students": 10000, "courses": "unlimited", "videoBandwidthGbPerMonth": 200, "communities": 1, "digitalDownloads": "unlimited", "coachingAndWebinars": "unlimited", "seats": 2 }, "leadsWith": "Everything you need to sell, engage, and grow — with full commerce tools from day one." },
+        { "name": "Grow", "monthlyUsd": 219, "yearlyUsd": null, "perMonthBilledYearlyUsd": 164, "feeOnSalePct": null, "limits": { "students": 10000, "courses": "unlimited", "videoBandwidthGbPerMonth": 400, "communities": 3, "digitalDownloads": "unlimited", "coachingAndWebinars": "unlimited", "seats": 6 }, "leadsWith": "More selling power, deeper analytics, and professional support — everything Grow-stage businesses need." }
+      ]
+    },
+    {
+      "name": "Teachable", "sources": ["teachable"], "freeTier": null, "trialDays": 7,
+      "highlighted": "Builder, \"Popular\"", "yearlyFraming": "Yearly toggle \"22% OFF\"; per-month annual prices; \"Save $120\", \"Save $240\", \"Save $600\"",
+      "plans": [
+        { "name": "Starter", "monthlyUsd": 39, "yearlyUsd": null, "perMonthBilledYearlyUsd": 29, "feeOnSalePct": 7.5, "feeIncludesProcessing": false, "processing": "US cards 2.9% + 30¢", "limits": { "products": 5, "seats": 1, "students": "unlimited", "videoStorage": "up to 1 TB", "emailsPerMonth": null, "ai": "Create with AI (no cap stated)", "storage": null }, "leadsWith": "Basic tools for getting your business started" },
+        { "name": "Builder", "monthlyUsd": 89, "yearlyUsd": null, "perMonthBilledYearlyUsd": 69, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "products": 10, "seats": 1, "students": "unlimited", "videoStorage": "up to 1 TB", "affiliates": "included" }, "leadsWith": "Essential features to build your multi-product offering" },
+        { "name": "Growth", "monthlyUsd": 189, "yearlyUsd": null, "perMonthBilledYearlyUsd": 139, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "products": 50, "seats": 5, "students": "unlimited", "videoStorage": "up to 1 TB", "affiliates": "included" }, "leadsWith": "Powerful tools for growing your revenue and audience" }
+      ]
+    },
+    {
+      "name": "Kit", "sources": ["kit"], "freeTier": "Free: $0, up to 10,000 subscribers, 1 user, unlimited landing pages, forms and broadcasts; no automations or sequences", "trialDays": 14,
+      "highlighted": "none labeled; Pro carries \"LIMITED TIME PRO OFFER\" and \"EXTRA 25% OFF FIRST YEAR\"", "yearlyFraming": "\"Pay yearly—save 17%\"; Creator \"$390 billed yearly\", \"Save $78 per year\"; Pro \"$593 billed first year\"",
+      "plans": [
+        { "name": "Free", "monthlyUsd": 0, "yearlyUsd": null, "feeOnSalePct": 3.5, "feeIncludesProcessing": true, "feeNote": "commerce fee \"3.5% + 30c\" on every plan; \"Kit only takes 0.6% of the total fees\"", "limits": { "subscribers": 10000, "seats": 1, "landingPagesAndForms": "unlimited", "broadcasts": "unlimited", "automations": "none", "sequences": "none" }, "leadsWith": "For creators just starting out" },
+        { "name": "Creator", "monthlyUsd": 33, "yearlyUsd": 390, "perMonthBilledYearlyUsd": null, "priceBasis": "for 1,000 email subscribers; prices for other counts not shown", "feeOnSalePct": 3.5, "feeIncludesProcessing": true, "limits": { "seats": 2, "automations": "unlimited", "sequences": "unlimited" }, "leadsWith": "For growing creators" },
+        { "name": "Pro", "monthlyUsd": 50, "listMonthlyUsd": 66, "yearlyUsd": 593, "yearlyNote": "first year only; renews at the standard rate (not stated)", "priceBasis": "for 1,000 email subscribers", "feeOnSalePct": 3.5, "feeIncludesProcessing": true, "limits": { "seats": "unlimited" }, "leadsWith": "For scaling creators" }
+      ]
+    },
+    {
+      "name": "Circle", "sources": ["circle"], "freeTier": null, "trialDays": 14,
+      "highlighted": "\"MOST POPULAR\" appears above the Business card", "yearlyFraming": "prices shown are \"based on annual billing\"; no monthly-billing price or saving line",
+      "usageAddOns": "Email Hub $99 a month for 10,000 contacts; extra AI credits $10 per 1,000; extra admin $10 a month; extra moderators $20 a month per 10; extra live hours $50 a month per 10",
+      "plans": [
+        { "name": "Professional", "monthlyUsd": null, "perMonthBilledYearlyUsd": 89, "feeOnSalePct": 2, "feeIncludesProcessing": false, "limits": { "members": "unlimited", "admins": 3, "moderators": 10, "spaces": 20, "storageGb": 200, "liveStreamAttendees": 100, "liveHours": 10, "ai": "2,500 credits a month", "workflows": "not included" }, "leadsWith": "The essentials to launch and run your digital business." },
+        { "name": "Business", "monthlyUsd": null, "perMonthBilledYearlyUsd": 199, "feeOnSalePct": 1, "feeIncludesProcessing": false, "limits": { "members": "unlimited", "admins": 5, "moderators": 15, "spaces": 30, "storageGb": 500, "liveStreamAttendees": 200, "liveHours": 15, "ai": "2,500 credits a month", "workflows": 20, "apiRequests": 5000 }, "leadsWith": "Run on autopilot with workflows, APIs, and our MCP." },
+        { "name": "Scale", "monthlyUsd": null, "perMonthBilledYearlyUsd": 419, "feeOnSalePct": 1, "feeIncludesProcessing": false, "limits": { "members": "unlimited", "admins": 10, "moderators": 100, "spaces": 100, "storageGb": 1000, "liveStreamAttendees": 500, "liveHours": 20, "ai": "5,000 credits a month", "workflows": "unlimited", "apiRequests": 30000 }, "leadsWith": "Scale your business with AI agents, unlimited workflows, and higher limits." }
+      ]
+    },
+    {
+      "name": "Skool", "sources": ["skool"], "freeTier": null, "trialDays": 14,
+      "highlighted": "none stated", "yearlyFraming": "\"2 months free!\" badge on the toggle; yearly amounts not rendered",
+      "plans": [
+        { "name": "Hobby", "monthlyUsd": 9, "yearlyUsd": null, "feeOnSalePct": 10, "feeIncludesProcessing": null, "limits": { "members": "unlimited", "courses": "unlimited", "videos": "unlimited", "liveCalls": "unlimited" }, "leadsWith": "Unlimited members" },
+        { "name": "Pro", "monthlyUsd": 99, "yearlyUsd": null, "feeOnSalePct": 2.9, "feeIncludesProcessing": null, "limits": { "members": "unlimited", "courses": "unlimited", "videos": "unlimited", "liveCalls": "unlimited" }, "leadsWith": "Unlimited members" }
+      ]
+    },
+    {
+      "name": "Whop", "sources": ["whop"], "freeTier": "pay-as-you-go: \"No setup fees, no monthly costs\"", "trialDays": null, "highlighted": "none", "yearlyFraming": "none (no subscription)",
+      "plans": [
+        { "name": "Pay-as-you-go", "monthlyUsd": 0, "feeOnSalePct": 2.7, "feeFixedUsd": 0.30, "feeIncludesProcessing": true, "feeNote": "card 2.7% + $0.30; +1.5% international cards; +1% currency conversion; dispute $15; optional 3DS $0.03, Radar $0.07, Orchestration 0.8%, Billing 0.5%, Tax and remittance 2% (\"6% + $0.30\" with everything enabled); payouts: ACH $2.50, RTP 4% + $2.50, wire $23", "limits": { "products": null, "members": null, "storage": null } }
+      ]
+    },
+    {
+      "name": "Patreon", "sources": ["patreon-fees"], "freeTier": "no monthly fee", "trialDays": null, "highlighted": "none", "yearlyFraming": "none (no subscription)",
+      "plans": [
+        { "name": "Standard (creators who published after August 4, 2025)", "monthlyUsd": 0, "feeOnSalePct": 10, "feeIncludesProcessing": false, "processing": "USD cards and Apple Pay 2.9% + $0.30; PayPal from non-US members 3.9% + $0.30; currency conversion 2.5%; payout fees by method (e.g. direct deposit $0.25)", "limits": { "videoHosting": "up to 100 hours a month with paying fans", "tiers": null, "posts": null }, "notes": "Legacy plans: Founders 5%, Pro 8%, Pro + Merch 11% (closed to new creators); one-time purchases 5% to 12%." }
+      ]
+    },
+    {
+      "name": "Gumroad", "sources": ["gumroad"], "freeTier": "no monthly fee", "trialDays": null, "highlighted": "none", "yearlyFraming": "none",
+      "plans": [
+        { "name": "Direct sales", "monthlyUsd": 0, "feeOnSalePct": 10, "feeFixedUsd": 0.50, "feeIncludesProcessing": true, "feeNote": "\"10% + $0.50 per transaction\" on direct sales; 30% on Discover sales; Gumroad is merchant of record and remits sales tax", "limits": { "products": null, "storage": null, "emailsPerMonth": null } }
+      ]
+    },
+    {
+      "name": "Linktree", "sources": ["linktree", "linktree-help"], "freeTier": "Free: \"Free with restrictions\", unlimited basic links, email and phone sign-ups", "trialDays": 7,
+      "highlighted": "Pro, \"Recommended\"", "yearlyFraming": "buttons link to frequency=annual; no amounts rendered",
+      "plans": [
+        { "name": "Starter", "monthlyUsd": null, "priceNote": "not rendered (\"/mo\" with no amount)", "feeOnSalePct": null, "limits": { "insightsHistoryDays": 90, "featuredLinks": "unlimited", "galleryImages": 3, "instagramAutoReplyPerMonth": 1500 }, "leadsWith": "Everything in Free, plus:" },
+        { "name": "Pro", "monthlyUsd": null, "priceNote": "not rendered", "feeOnSalePct": 0, "feeNote": "\"Sell and earn with 0% fees\"; FAQ: \"we currently only charge USD$0.25 per payout\"; \"Transaction and processing fees may apply\"", "limits": { "insightsHistoryDays": 365, "galleryImages": "unlimited", "instagramAutoReplyPerMonth": 2500 }, "leadsWith": "Everything in Starter, plus:" },
+        { "name": "Premium", "monthlyUsd": null, "priceNote": "not rendered", "feeOnSalePct": null, "limits": { "insightsHistory": "lifetime", "instagramAutoReplyPerMonth": "unlimited", "admins": "included" }, "leadsWith": "Everything in Pro, plus:" }
+      ]
+    },
+    {
+      "name": "Beacons", "sources": ["beacons"], "freeTier": "Free: $0 \"Free forever\", 9% transaction fee, 50 email sends a month, 30 daily AI credits", "trialDays": null,
+      "highlighted": "none badged; Creator Plus is featured in the \"Save BIG\" section", "yearlyFraming": "toggle \"Annually\" with \"2 months free!\"; yearly totals shown as a per-month figure ($8.33, $25, $83.3)",
+      "plans": [
+        { "name": "Free", "monthlyUsd": 0, "yearlyUsd": null, "feeOnSalePct": 9, "feeIncludesProcessing": false, "limits": { "emailsPerMonth": 50, "websites": "1 website, 1 page", "ai": "30 daily credits", "courses": "1, no video hosting", "contacts": "unlimited", "products": "unlimited", "storage": null }, "leadsWith": "Build and customize" },
+        { "name": "Creator", "monthlyUsd": 10, "yearlyUsd": 100, "perMonthBilledYearlyUsd": 8.33, "feeOnSalePct": 9, "feeIncludesProcessing": false, "limits": { "emailsPerMonth": 500, "websites": "1 website, 3 pages", "ai": "300 daily credits", "courses": "1, no video hosting", "contacts": "unlimited", "products": "unlimited" }, "leadsWith": "Claim your brand" },
+        { "name": "Creator Plus", "monthlyUsd": 30, "yearlyUsd": 300, "perMonthBilledYearlyUsd": 25, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "emailsPerMonth": "unlimited", "websites": "5 websites, 5 pages each", "ai": "unlimited daily credits (card); per-tool daily caps in the table", "courses": "unlimited videos with hosting", "contacts": "unlimited", "products": "unlimited" }, "leadsWith": "Drive sales and partnerships" },
+        { "name": "Creator Max", "monthlyUsd": 100, "yearlyUsd": 900, "perMonthBilledYearlyUsd": 83.3, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "emailsPerMonth": "unlimited", "websites": "10 websites, 10 pages each", "ai": "unlimited", "courses": "unlimited videos with hosting", "contacts": "unlimited", "products": "unlimited" }, "leadsWith": "Grow without limits" }
+      ]
+    },
+    {
+      "name": "Systeme.io", "sources": ["systeme"], "freeTier": "Free: $0, never expires; 2,000 contacts, 3 funnels, 1 course, 1 blog, 1 custom domain, 1 email campaign, 500 students, unlimited emails sent", "trialDays": null,
+      "highlighted": "none stated", "yearlyFraming": "\"Annual billing\" toggle: \"2 months free\"; yearly amounts not rendered",
+      "plans": [
+        { "name": "Startup", "monthlyUsd": 17, "yearlyUsd": null, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "contacts": 5000, "funnels": 10, "courses": 5, "emailsPerMonth": "unlimited", "storage": "unlimited" } },
+        { "name": "Webinar", "monthlyUsd": 47, "yearlyUsd": null, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "contacts": 10000, "funnels": 50, "courses": 20, "emailsPerMonth": "unlimited", "storage": "unlimited", "evergreenWebinars": "included" } },
+        { "name": "Unlimited", "monthlyUsd": 97, "yearlyUsd": null, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "contacts": "unlimited", "funnels": "unlimited", "courses": "unlimited", "emailsPerMonth": "unlimited", "storage": "unlimited", "automationRules": "unlimited" } }
+      ]
+    },
+    {
+      "name": "Podia", "sources": ["podia"], "freeTier": null, "trialDays": 14,
+      "highlighted": "none stated", "yearlyFraming": "\"Billed yearly\" view: a per-month price and the annual total; no saving line; monthly-billing prices not stated",
+      "plans": [
+        { "name": "Mover", "monthlyUsd": null, "perMonthBilledYearlyUsd": 42, "yearlyUsd": 504, "feeOnSalePct": 5, "feeIncludesProcessing": false, "limits": { "emailSubscribers": 100, "customers": "unlimited", "products": 50, "videos": 500, "spaces": 25 }, "leadsWith": "Just getting started" },
+        { "name": "Shaker", "monthlyUsd": null, "perMonthBilledYearlyUsd": 84, "yearlyUsd": 1008, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "emailSubscribers": 500, "customers": "unlimited", "products": 150, "videos": 1000, "spaces": 100, "assistants": 1, "affiliates": "included", "upsells": "included" }, "leadsWith": "More room to grow" },
+        { "name": "Earthquaker", "monthlyUsd": null, "perMonthBilledYearlyUsd": 150, "yearlyUsd": 1800, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "emailSubscribers": 1000, "customers": "unlimited", "products": "unlimited", "videos": "unlimited", "spaces": "unlimited", "assistants": "unlimited" }, "leadsWith": "Going all-in, no limits" }
+      ]
+    },
+    {
+      "name": "Payhip", "sources": ["payhip"], "freeTier": "Free Forever: $0, 5% transaction fee, all features, unlimited products and revenue", "trialDays": null, "highlighted": "none stated", "yearlyFraming": "not stated",
+      "plans": [
+        { "name": "Free Forever", "monthlyUsd": 0, "feeOnSalePct": 5, "feeIncludesProcessing": false, "limits": { "products": "unlimited", "revenue": "unlimited" }, "leadsWith": "+5% transaction fee" },
+        { "name": "Plus", "monthlyUsd": 29, "feeOnSalePct": 2, "feeIncludesProcessing": false, "limits": { "products": "unlimited", "revenue": "unlimited" }, "leadsWith": "+2% transaction fee" },
+        { "name": "Pro", "monthlyUsd": 99, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": { "products": "unlimited", "revenue": "unlimited" }, "leadsWith": "No transaction fee" }
+      ]
+    },
+    {
+      "name": "Mighty Networks", "sources": ["mighty"], "freeTier": null, "trialDays": 14,
+      "highlighted": "none badged; the FAQ calls Growth \"the most popular plan\" (trials run on Growth)", "yearlyFraming": "\"2 Months Free\" badge on annual billing; only Launch's $950 a year is shown",
+      "plans": [
+        { "name": "Launch", "monthlyUsd": 79, "yearlyUsd": 950, "feeOnSalePct": 2, "feeIncludesProcessing": false, "limits": { "members": "unlimited", "hosts": 3, "moderators": 10, "spaces": "unlimited", "storageGb": 200, "streamingHoursPerMonth": 20, "viewersPerStream": 100, "landingPages": 1, "apiRequestsPerMonth": 5000 }, "leadsWith": "Launch a thriving community for impact, cost savings, or ~$500/month in earnings." },
+        { "name": "Scale", "monthlyUsd": 179, "yearlyUsd": null, "feeOnSalePct": 1, "feeIncludesProcessing": false, "limits": { "members": "unlimited", "hosts": 5, "moderators": 15, "storageGb": 500, "streamingHoursPerMonth": 30, "viewersPerStream": 200, "apiRequestsPerMonth": 50000 }, "leadsWith": "When you're ready to scale beyond your first $500/month, add programs, or connect your favorite tools." },
+        { "name": "Growth", "monthlyUsd": 354, "yearlyUsd": null, "feeOnSalePct": 0.5, "feeIncludesProcessing": false, "limits": { "members": "unlimited", "hosts": 10, "moderators": 100, "storageGb": 1000, "streamingHoursPerMonth": 40, "viewersPerStream": 1000, "landingPages": 3, "apiRequestsPerMonth": 300000 }, "leadsWith": "When you're ready for growth expertise and more support from our team." }
+      ]
+    },
+    {
+      "name": "Lemon Squeezy", "sources": ["lemonsqueezy"], "freeTier": "\"It's free to start — no trial, no contract, no risk\"; email marketing $0 up to 500 subscribers", "trialDays": null, "highlighted": "none", "yearlyFraming": "none",
+      "plans": [
+        { "name": "Pay per transaction", "monthlyUsd": 0, "feeOnSalePct": 5, "feeFixedUsd": 0.50, "feeIncludesProcessing": true, "feeNote": "\"5% + 50¢ per transaction\"; merchant of record; \"Some payments may be subject to additional fees\"", "limits": { "products": null, "storage": null } }
+      ]
+    },
+    {
+      "name": "Shopify Starter", "sources": ["shopify-starter", "shopify-pricing"], "freeTier": null, "trialDays": 3,
+      "highlighted": "not applicable", "yearlyFraming": "not stated",
+      "plans": [
+        { "name": "Starter", "monthlyUsd": null, "priceNote": "not stated on the pages read (the Starter page offers \"$1/month\" to start and links to the pricing page, where the Starter plan does not appear; Basic is $39 a month, $29 yearly, 2.9% + 30¢ online card rate, 2% third-party transaction fee)", "feeOnSalePct": null, "limits": {} }
+      ]
+    },
+    {
+      "name": "Ko-fi", "sources": ["kofi"], "freeTier": "Ko-fi free (FAQ): 0% on tips, 5% on memberships, shop and commissions, no advanced features", "trialDays": null, "highlighted": "none stated", "yearlyFraming": "not stated",
+      "plans": [
+        { "name": "Standard", "monthlyUsd": 0, "feeOnSalePct": 5, "feeIncludesProcessing": false, "limits": {}, "notes": "The card gives Standard a 5% fee on tips; the FAQ's free tier gives 0% on tips; the page does not reconcile them." },
+        { "name": "Gold", "monthlyUsd": 12, "feeOnSalePct": 0, "feeIncludesProcessing": false, "limits": {}, "leadsWith": "0% service fee" }
+      ]
+    }
+  ],
+  "notRead": [
+    "Sellfy, Fourthwall, Kartra, Squarespace: not read in this work; nothing is asserted about them.",
+    "Linktree's prices did not render; Shopify's Starter price is not stated on the pages read; Systeme.io's plan table did not render (FAQ figures used); Podia's monthly-billing prices are not on its page."
+  ],
+  "demandEvidence": {
+    "gumroadJuly2025": {
+      "source": "gumroad-july-2025", "period": "July 2025, one month", "unit": "creators who made money on Gumroad that month",
+      "madeMoney": 37006, "over10": 25459, "over100": 8507, "over1000": 1536, "over10000": 110,
+      "note": "Thresholds are monthly earnings in dollars. Creators who made nothing that month are not in the count."
+    },
+    "gumroad2020": {
+      "source": "gumroad-2020", "period": "calendar year 2020", "unit": "creators who earned something in the year",
+      "madeSomething": 45917, "atLeast100": 20591, "atLeast1000": 7945, "atLeast10000": 1853, "atLeast100000": 179, "atLeast1000000": 6, "totalEarnedUsd": 142000000,
+      "note": "Thresholds are annual earnings; 45,917 confirmed by sacra-gumroad."
+    },
+    "patreon2019": {
+      "source": "techcrunch-patreon-2019", "period": "early 2019", "unit": "creators with at least one patron (Graphtreon's count, an estimate from Patreon's API)",
+      "creatorsWithPatron": 132500, "atLeast1000PerMonth": 4300, "atLeast500PerMonth": 9200,
+      "churn": "annual churn under 1% for creators earning $500 a month; leaving is \"very rare\" above $1,000 a month (the author's reading of Patreon's data)",
+      "note": "The counts are \"more than\" figures from a Graphtreon contributor; Patreon did not disclose its own."
+    },
+    "linktreeCreatorReport2022": {
+      "source": "techcrunch-linktree-report", "period": "survey of 9,500 Linktree users, reported April 20, 2022",
+      "fullTimeUnder1000PerYearPct": 46, "fullTimeOver50000PerYearPct": 12, "sideHustlePct": 66
+    },
+    "stan": {
+      "sources": ["sacra-stan-2024", "sacra-stan-2026"],
+      "arrEnd2023Usd": 14700000, "customersEnd2023": 300000, "arpcEarly2024Usd": 491, "monthlyGrossChurn2024Pct": 13,
+      "arrApril2026UsdEstimate": 40000000, "activeCreators2026": "80,000+", "arpc2026UsdEstimate": 437, "ebitdaMarginEstimate": "approximately 40%", "growth": "93% YoY in 2024 to 24% in 2025",
+      "gmvNote": "over 50% of GMV from digital downloads priced $4 to $30; 45% of GMV from TikTok and Instagram traffic",
+      "affiliate": "20% of referred customers' subscription fees in perpetuity",
+      "note": "The 2026 figures are Sacra estimates. The 2024 note's figures are not labeled estimates by Sacra but are not company filings either."
+    },
+    "kajabi": { "source": "kajabi-release", "creatorRevenueUsd": "over $10B cumulative", "creators": "over 100 thousand", "millionaires": "nearly 1,800", "migration": "60% of creators migrate to Kajabi after outgrowing entry-level platforms", "sixFigureCreatorProfile": "1,000 to 10,000 followers, an email list of about 4,000, 309 paying customers" },
+    "thinkific": { "source": "thinkific-results", "revenue2025Usd": 73200000, "subscriptionRevenue2025Usd": 59800000, "commerceRevenue2025Usd": 13400000, "arpuMonthlyUsdQ4": 175, "gmv2025Usd": 460000000, "gpv2025Usd": 273500000, "grossMarginPct": 73, "netIncome2025Usd": 1300000 },
+    "linktreeSacra": { "source": "sacra-stan-2024", "arrUsdEstimate": 49000000, "customersEstimate": 340000, "arpcUsdEstimate": 144, "note": "Sacra-estimated, February 2024." },
+    "recurly": { "source": "recurly", "saasMedianTotalChurnPct": 3.22, "note": "The page's period labeling is inconsistent; used only as an order of magnitude for a software subscription's churn." }
+  }
+}
