@@ -1,0 +1,520 @@
+# The pricing study (scripts/pricing-study-v2.py) split across runners: scripts/pricing-study-v2-shard.py says how.
+# A push to compute/pricing-v2-* runs it; each stage is {SHARDS} shards computing a slice of the next part (the programs'
+# tasks, or a range of a Monte Carlo's draws) and one merge that puts that part together and runs on to the next.
+# The result is pushed to compute-results/pricing-v2-<run id> (the runner's artifacts cannot be read from where the study
+# is written). Never on main; it touches no other workflow.
+name: Pricing study shards
+on:
+  push:
+    branches: ["compute/pricing-v2-*"]
+permissions:
+  contents: read
+concurrency:
+  group: pricing-study-shards-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  SHARDS: "20"
+  # One vector path on every runner (some have AVX-512, some do not), so every shard rounds the same way.
+  NPY_DISABLE_CPU_FEATURES: "X86_V4 AVX512_ICL AVX512_SPR"
+  PYTHONHASHSEED: "0"
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+jobs:
+  shard-1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: true
+      matrix:
+        index: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - name: Slice ${{ matrix.index }} of the next part
+        run: python scripts/pricing-study-v2-shard.py shard --index ${{ matrix.index }} --count "$SHARDS" --state state --shards out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-1-${{ matrix.index }}
+          path: out
+          retention-days: 7
+          if-no-files-found: error
+  merge-1:
+    needs: [shard-1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      status: ${{ steps.merge.outputs.status }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: shard-1-*
+          path: shards
+          merge-multiple: true
+      - name: Put the part together and run on to the next
+        id: merge
+        run: python scripts/pricing-study-v2-shard.py merge --count "$SHARDS" --state state --shards shards
+      - name: Keep the output with the state
+        if: steps.merge.outputs.status == 'done'
+        run: cp docs/pricing-study-v2-output-2026-10-18.json state/
+      - name: Every shard file's digest
+        run: |
+          (cd shards && sha256sum *.pkl) > state/shards-1.sha256
+          python - <<'PY'
+          import glob, json, pickle
+          rows = []
+          for name in sorted(glob.glob("shards/*.pkl")):
+              with open(name, "rb") as f:
+                  p = pickle.load(f)
+              rows.append(dict(file=name.split("/")[-1], kind=p["kind"], index=p["index"], seconds=round(p["seconds"], 1), cpu=p["cpu"]))
+          json.dump(rows, open("state/shards-1.json", "w"), indent=1)
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: state-1
+          path: state
+          retention-days: 7
+          if-no-files-found: error
+  shard-2:
+    needs: [merge-1]
+    if: needs.merge-1.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: true
+      matrix:
+        index: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-1
+          path: state
+      - name: Slice ${{ matrix.index }} of the next part
+        run: python scripts/pricing-study-v2-shard.py shard --index ${{ matrix.index }} --count "$SHARDS" --state state --shards out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-2-${{ matrix.index }}
+          path: out
+          retention-days: 7
+          if-no-files-found: error
+  merge-2:
+    needs: [merge-1, shard-2]
+    if: needs.merge-1.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      status: ${{ steps.merge.outputs.status }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-1
+          path: state
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: shard-2-*
+          path: shards
+          merge-multiple: true
+      - name: Put the part together and run on to the next
+        id: merge
+        run: python scripts/pricing-study-v2-shard.py merge --count "$SHARDS" --state state --shards shards
+      - name: Keep the output with the state
+        if: steps.merge.outputs.status == 'done'
+        run: cp docs/pricing-study-v2-output-2026-10-18.json state/
+      - name: Every shard file's digest
+        run: |
+          (cd shards && sha256sum *.pkl) > state/shards-2.sha256
+          python - <<'PY'
+          import glob, json, pickle
+          rows = []
+          for name in sorted(glob.glob("shards/*.pkl")):
+              with open(name, "rb") as f:
+                  p = pickle.load(f)
+              rows.append(dict(file=name.split("/")[-1], kind=p["kind"], index=p["index"], seconds=round(p["seconds"], 1), cpu=p["cpu"]))
+          json.dump(rows, open("state/shards-2.json", "w"), indent=1)
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: state-2
+          path: state
+          retention-days: 7
+          if-no-files-found: error
+  shard-3:
+    needs: [merge-2]
+    if: needs.merge-2.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: true
+      matrix:
+        index: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-2
+          path: state
+      - name: Slice ${{ matrix.index }} of the next part
+        run: python scripts/pricing-study-v2-shard.py shard --index ${{ matrix.index }} --count "$SHARDS" --state state --shards out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-3-${{ matrix.index }}
+          path: out
+          retention-days: 7
+          if-no-files-found: error
+  merge-3:
+    needs: [merge-2, shard-3]
+    if: needs.merge-2.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      status: ${{ steps.merge.outputs.status }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-2
+          path: state
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: shard-3-*
+          path: shards
+          merge-multiple: true
+      - name: Put the part together and run on to the next
+        id: merge
+        run: python scripts/pricing-study-v2-shard.py merge --count "$SHARDS" --state state --shards shards
+      - name: Keep the output with the state
+        if: steps.merge.outputs.status == 'done'
+        run: cp docs/pricing-study-v2-output-2026-10-18.json state/
+      - name: Every shard file's digest
+        run: |
+          (cd shards && sha256sum *.pkl) > state/shards-3.sha256
+          python - <<'PY'
+          import glob, json, pickle
+          rows = []
+          for name in sorted(glob.glob("shards/*.pkl")):
+              with open(name, "rb") as f:
+                  p = pickle.load(f)
+              rows.append(dict(file=name.split("/")[-1], kind=p["kind"], index=p["index"], seconds=round(p["seconds"], 1), cpu=p["cpu"]))
+          json.dump(rows, open("state/shards-3.json", "w"), indent=1)
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: state-3
+          path: state
+          retention-days: 7
+          if-no-files-found: error
+  shard-4:
+    needs: [merge-3]
+    if: needs.merge-3.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: true
+      matrix:
+        index: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-3
+          path: state
+      - name: Slice ${{ matrix.index }} of the next part
+        run: python scripts/pricing-study-v2-shard.py shard --index ${{ matrix.index }} --count "$SHARDS" --state state --shards out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-4-${{ matrix.index }}
+          path: out
+          retention-days: 7
+          if-no-files-found: error
+  merge-4:
+    needs: [merge-3, shard-4]
+    if: needs.merge-3.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      status: ${{ steps.merge.outputs.status }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-3
+          path: state
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: shard-4-*
+          path: shards
+          merge-multiple: true
+      - name: Put the part together and run on to the next
+        id: merge
+        run: python scripts/pricing-study-v2-shard.py merge --count "$SHARDS" --state state --shards shards
+      - name: Keep the output with the state
+        if: steps.merge.outputs.status == 'done'
+        run: cp docs/pricing-study-v2-output-2026-10-18.json state/
+      - name: Every shard file's digest
+        run: |
+          (cd shards && sha256sum *.pkl) > state/shards-4.sha256
+          python - <<'PY'
+          import glob, json, pickle
+          rows = []
+          for name in sorted(glob.glob("shards/*.pkl")):
+              with open(name, "rb") as f:
+                  p = pickle.load(f)
+              rows.append(dict(file=name.split("/")[-1], kind=p["kind"], index=p["index"], seconds=round(p["seconds"], 1), cpu=p["cpu"]))
+          json.dump(rows, open("state/shards-4.json", "w"), indent=1)
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: state-4
+          path: state
+          retention-days: 7
+          if-no-files-found: error
+  shard-5:
+    needs: [merge-4]
+    if: needs.merge-4.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: true
+      matrix:
+        index: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-4
+          path: state
+      - name: Slice ${{ matrix.index }} of the next part
+        run: python scripts/pricing-study-v2-shard.py shard --index ${{ matrix.index }} --count "$SHARDS" --state state --shards out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-5-${{ matrix.index }}
+          path: out
+          retention-days: 7
+          if-no-files-found: error
+  merge-5:
+    needs: [merge-4, shard-5]
+    if: needs.merge-4.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      status: ${{ steps.merge.outputs.status }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-4
+          path: state
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: shard-5-*
+          path: shards
+          merge-multiple: true
+      - name: Put the part together and run on to the next
+        id: merge
+        run: python scripts/pricing-study-v2-shard.py merge --count "$SHARDS" --state state --shards shards
+      - name: Keep the output with the state
+        if: steps.merge.outputs.status == 'done'
+        run: cp docs/pricing-study-v2-output-2026-10-18.json state/
+      - name: Every shard file's digest
+        run: |
+          (cd shards && sha256sum *.pkl) > state/shards-5.sha256
+          python - <<'PY'
+          import glob, json, pickle
+          rows = []
+          for name in sorted(glob.glob("shards/*.pkl")):
+              with open(name, "rb") as f:
+                  p = pickle.load(f)
+              rows.append(dict(file=name.split("/")[-1], kind=p["kind"], index=p["index"], seconds=round(p["seconds"], 1), cpu=p["cpu"]))
+          json.dump(rows, open("state/shards-5.json", "w"), indent=1)
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: state-5
+          path: state
+          retention-days: 7
+          if-no-files-found: error
+  shard-6:
+    needs: [merge-5]
+    if: needs.merge-5.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: true
+      matrix:
+        index: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-5
+          path: state
+      - name: Slice ${{ matrix.index }} of the next part
+        run: python scripts/pricing-study-v2-shard.py shard --index ${{ matrix.index }} --count "$SHARDS" --state state --shards out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-6-${{ matrix.index }}
+          path: out
+          retention-days: 7
+          if-no-files-found: error
+  merge-6:
+    needs: [merge-5, shard-6]
+    if: needs.merge-5.outputs.status == 'pending'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      status: ${{ steps.merge.outputs.status }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy, the versions the study was written with
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-5
+          path: state
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: shard-6-*
+          path: shards
+          merge-multiple: true
+      - name: Put the part together and run on to the next
+        id: merge
+        run: python scripts/pricing-study-v2-shard.py merge --count "$SHARDS" --state state --shards shards
+      - name: Keep the output with the state
+        if: steps.merge.outputs.status == 'done'
+        run: cp docs/pricing-study-v2-output-2026-10-18.json state/
+      - name: Every shard file's digest
+        run: |
+          (cd shards && sha256sum *.pkl) > state/shards-6.sha256
+          python - <<'PY'
+          import glob, json, pickle
+          rows = []
+          for name in sorted(glob.glob("shards/*.pkl")):
+              with open(name, "rb") as f:
+                  p = pickle.load(f)
+              rows.append(dict(file=name.split("/")[-1], kind=p["kind"], index=p["index"], seconds=round(p["seconds"], 1), cpu=p["cpu"]))
+          json.dump(rows, open("state/shards-6.json", "w"), indent=1)
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: state-6
+          path: state
+          retention-days: 7
+          if-no-files-found: error
+  publish:
+    needs: [merge-1, merge-2, merge-3, merge-4, merge-5, merge-6]
+    if: ${{ always() && (needs.merge-1.outputs.status == 'done' || needs.merge-2.outputs.status == 'done' || needs.merge-3.outputs.status == 'done' || needs.merge-4.outputs.status == 'done' || needs.merge-5.outputs.status == 'done' || needs.merge-6.outputs.status == 'done') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: The state that finished
+        id: which
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          for s in 6 5 4 3 2 1; do
+            if [ "$(jq -r --arg j "merge-$s" '.[$j].outputs.status' <<<"$NEEDS")" = done ]; then echo "stage=$s" >> "$GITHUB_OUTPUT"; break; fi
+          done
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: state-${{ steps.which.outputs.stage }}
+          path: state
+      - name: Push the result to compute-results/pricing-v2-${{ github.run_id }}
+        env:
+          RUN: ${{ github.run_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "compute-results/pricing-v2-$RUN"
+          cp state/pricing-study-v2-output-2026-10-18.json docs/pricing-study-v2-output-2026-10-18.json
+          mkdir -p "compute-results/pricing-v2-$RUN"
+          cp state/timings.json state/shards-*.json state/shards-*.sha256 "compute-results/pricing-v2-$RUN/"
+          cp -r state/cache "compute-results/pricing-v2-$RUN/cache"
+          git add docs/pricing-study-v2-output-2026-10-18.json "compute-results/pricing-v2-$RUN"
+          git commit -m "Pricing study v2: sharded run $RUN of ${{ github.sha }}"
+          git push origin "compute-results/pricing-v2-$RUN"

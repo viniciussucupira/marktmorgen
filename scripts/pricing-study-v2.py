@@ -545,13 +545,39 @@ def draw_params(rng):
     return p, reach, ramp, fixed, U
 
 
-def company_monte_carlo(design_list, draws, seed):
-    """The company's 60 months for every design, over `draws` draws with common random numbers: expected cash, its percentiles, and the probabilities of each kind of loss."""
+def company_rows(design_list, seed, start, stop):
+    """Draws start..stop-1 of the company's Monte Carlo for every design: the seeded generator is replayed through the
+    earlier draws (draw_params takes the same numbers whatever is done with them), and `used`, the logit normalizer's
+    set of candidates, is always the whole design list's, so a range computed alone equals the same range of one run."""
     Dm, pk, used = design_matrix(design_list)
     rng = np.random.default_rng(seed)
-    n = len(design_list)
+    for _ in range(start):
+        draw_params(rng)
+    n, k = len(design_list), stop - start
+    edges = np.exp(np.linspace(math.log(CO["reach"]["low"]), math.log(CO["reach"]["high"]), 4))
+    rows = dict(start=start, stop=stop, e=np.zeros((k, n)), cash=np.zeros((k, n), dtype=np.float32), neg=np.zeros((k, n), dtype=bool),
+                consol=np.zeros((k, n), dtype=bool), band=np.zeros(k, dtype=int))
+    for t in range(k):
+        p, reach, ramp, fixed, U = draw_params(rng)
+        rows["band"][t] = min(2, int(np.searchsorted(edges, reach, side="right") - 1))
+        _ours_cache.clear()
+        _head_cache.clear()
+        _comp_cache.clear()
+        e, c, consol = company_draw(p, reach, ramp, fixed, Dm, pk, used, U)
+        rows["e"][t] = e
+        rows["cash"][t] = c
+        rows["neg"][t] = c < 0
+        rows["consol"][t] = consol
+    return rows
+
+
+def company_summarize(chunks, n, draws):
+    """The Monte Carlo's figures from its draws, accumulated in draw order (the chunks of company_rows, in any order)."""
+    chunks = sorted(chunks, key=lambda r: r["start"])
+    assert [r["start"] for r in chunks] == [0] + [r["stop"] for r in chunks[:-1]] and chunks[-1]["stop"] == draws, "draws missing or repeated"
+    E, cash, NEG, CONS = (np.concatenate([r[x] for r in chunks]) for x in ("e", "cash", "neg", "consol"))
+    BAND = np.concatenate([r["band"] for r in chunks])
     exp_sum = np.zeros(n)
-    cash = np.zeros((draws, n), dtype=np.float32)
     lose_cash = np.zeros(n)
     not_consol = np.zeros(n)
     lose = np.zeros(n)
@@ -559,19 +585,12 @@ def company_monte_carlo(design_list, draws, seed):
     band_lose = np.zeros((3, n))
     band_n = np.zeros(3)
     for t in range(draws):
-        p, reach, ramp, fixed, U = draw_params(rng)
-        band = min(2, int(np.searchsorted(edges, reach, side="right") - 1))
-        _ours_cache.clear()
-        _head_cache.clear()
-        _comp_cache.clear()
-        e, c, consol = company_draw(p, reach, ramp, fixed, Dm, pk, used, U)
-        exp_sum += e
-        cash[t] = c
-        lose_cash += c < 0
-        not_consol += ~consol
-        lose += (c < 0) | ~consol
-        band_lose[band] += (c < 0) | ~consol
-        band_n[band] += 1
+        exp_sum += E[t]
+        lose_cash += NEG[t]
+        not_consol += ~CONS[t]
+        lose += NEG[t] | ~CONS[t]
+        band_lose[BAND[t]] += NEG[t] | ~CONS[t]
+        band_n[BAND[t]] += 1
     out = []
     pct = np.percentile(cash, [5, 50, 95], axis=0)
     mean = cash.mean(axis=0, dtype=np.float64)
@@ -581,6 +600,53 @@ def company_monte_carlo(design_list, draws, seed):
                         pLoss=float(pl), pCashLoss=float(lose_cash[i] / draws), pNotConsolidated=float(not_consol[i] / draws), se=float(math.sqrt(max(pl * (1 - pl), 1e-12) / draws)),
                         pLossByReach=[float(band_lose[k, i] / band_n[k]) if band_n[k] else None for k in range(3)], reachBands=[float(x) for x in edges]))
     return out
+
+
+class LocalExecutor:
+    """Runs the expensive, independent parts in this process. scripts/pricing-study-v2-shard.py replaces it with one that
+    splits them across machines (programs by task, Monte Carlos by range of draws) and gives back the same values."""
+
+    def programs(self, tasks, run):
+        return [run(t) for t in tasks]
+
+    def draws(self, spec, draws, rows, summarize):
+        return summarize([rows(0, draws)])
+
+
+EXECUTOR = [LocalExecutor()]
+
+
+def company_monte_carlo(design_list, draws, seed):
+    """The company's 60 months for every design, over `draws` draws with common random numbers: expected cash, its percentiles, and the probabilities of each kind of loss."""
+    design_list = [(list(plans), bool(pk)) for plans, pk in design_list]
+    return EXECUTOR[0].draws(("company", design_list, seed), draws, lambda a, b: company_rows(design_list, seed, a, b),
+                             lambda chunks: company_summarize(chunks, len(design_list), draws))
+
+
+def cohort_rows(pool, seed, start, stop):
+    """Draws start..stop-1 of the cohort Monte Carlo: each design's profit in the demand model, the generator replayed through the earlier draws."""
+    rng = np.random.default_rng(seed)
+    for _ in range(start):
+        draw_params(rng)
+    out = np.zeros((stop - start, len(pool)))
+    for t in range(stop - start):
+        p, _, _, _, _ = draw_params(rng)
+        _ours_cache.clear()
+        _head_cache.clear()
+        _comp_cache.clear()
+        for i, (plans, packs) in enumerate(pool):
+            out[t, i] = evaluate(plans, packs, p)
+    return dict(start=start, stop=stop, profit=out)
+
+
+def cohort_monte_carlo(pool, draws, seed):
+    pool = [(list(plans), bool(pk)) for plans, pk in pool]
+
+    def summarize(chunks):
+        chunks = sorted(chunks, key=lambda r: r["start"])
+        assert [r["start"] for r in chunks] == [0] + [r["stop"] for r in chunks[:-1]] and chunks[-1]["stop"] == draws, "draws missing or repeated"
+        return np.concatenate([r["profit"] for r in chunks])
+    return EXECUTOR[0].draws(("cohort", pool, seed), draws, lambda a, b: cohort_rows(pool, seed, a, b), summarize)
 
 
 def worst_reach_needed(design_list):
@@ -640,42 +706,68 @@ def label_of(design, with_packs):
     return " · ".join(parts) + (" · packs" if with_packs else "")
 
 
-def programs(base, scenarios, remember):
-    """The mixed-integer program on the base scenario (every plan count, with and without packs, all designs and admissible ones) and on every named scenario, with the logit search from each solution."""
-    milp_runs = []
+def program_tasks(scenarios):
+    """The programs' independent tasks, in the order their designs are remembered."""
+    tasks = []
     for with_packs in (False, True):
         for admissible_only in (False, True):
             for k in range(1, 6):
                 if admissible_only and k < 3:
                     continue
-                r, tables = solve_milp(base, k, with_packs, admissible_only)
-                bf = brute_force(k, *tables, admissible_only) if k <= 2 else None
-                milp_runs.append(dict(k=k, packs=with_packs, admissibleOnly=admissible_only, status=r["status"], objective=round(r["objective"], 6),
-                                      value=round(r["value"], 6), plans=[CANDS[j]["id"] for j in r["plans"]],
-                                      bruteForce=None if bf is None else round(bf, 6), seconds=round(r["seconds"], 1)))
-                remember(r["plans"], with_packs, f"program, base scenario, {k} plans" + (", today's three kept" if admissible_only else ""))
-                print(f"  base k={k} packs={with_packs} kept={admissible_only}: {r['seconds']:.0f}s", flush=True)
-
-    # The program on every named scenario (today's three kept, packs on), then the logit search from each solution in its own scenario.
+                tasks.append(("base", with_packs, admissible_only, k))
     for sc in scenarios:
-        p = base_params(sc["population"], sc["eta"], sc["asc"])
-        for k in (4, 5):
-            r, _ = solve_milp(p, k, True, True)
-            remember(r["plans"], True, f"program, {sc['id']}, {k} plans")
-            ls, _ = local_search(r["plans"], True, p, True, k)
-            remember(ls, True, f"logit search, {sc['id']}, {k} plans")
-            # The same without the smallest plan (Start): the owner's no-loss rule weighs the lowest net a payer can bring.
-            no_start = [j for j in r["plans"] if CANDS[j]["template"] != "start"]
-            ls2, _ = local_search(no_start, True, p, True, len(no_start), exclude=("start",))
-            remember(ls2, True, f"logit search without Start, {sc['id']}, {len(no_start)} plans")
-        ls3, _ = local_search(TODAY, True, p, True, 3, exclude=("start", "growth"))
-        remember(ls3, True, f"logit search from today's three, {sc['id']}")
-        r, _ = solve_milp(p, 2, True, False)
-        remember(r["plans"], True, f"program, {sc['id']}, 2 plans, unrestricted")
-        ls, _ = local_search(r["plans"], True, p, False, 2)
-        remember(ls, True, f"logit search, {sc['id']}, 2 plans, unrestricted")
-        print(f"  {sc['id']} done", flush=True)
+        tasks.append(("scenario", sc["id"], sc["population"], sc["eta"], sc["asc"]))
+    return tasks
 
+
+def run_program_task(task):
+    """One task: the designs it remembers, in order, and its program's record (base tasks only)."""
+    calls = []
+
+    def remember(plans, with_packs, origin):
+        calls.append((list(plans), with_packs, origin))
+
+    if task[0] == "base":
+        _, with_packs, admissible_only, k = task
+        r, tables = solve_milp(base_params(), k, with_packs, admissible_only)
+        bf = brute_force(k, *tables, admissible_only) if k <= 2 else None
+        rec = dict(k=k, packs=with_packs, admissibleOnly=admissible_only, status=r["status"], objective=round(r["objective"], 6),
+                   value=round(r["value"], 6), plans=[CANDS[j]["id"] for j in r["plans"]],
+                   bruteForce=None if bf is None else round(bf, 6), seconds=round(r["seconds"], 1))
+        remember(r["plans"], with_packs, f"program, base scenario, {k} plans" + (", today's three kept" if admissible_only else ""))
+        print(f"  base k={k} packs={with_packs} kept={admissible_only}: {r['seconds']:.0f}s", flush=True)
+        return calls, rec
+
+    # The program on a named scenario (today's three kept, packs on), then the logit search from each solution in its own scenario.
+    _, sid, population, eta, asc = task
+    p = base_params(population, eta, asc)
+    for k in (4, 5):
+        r, _ = solve_milp(p, k, True, True)
+        remember(r["plans"], True, f"program, {sid}, {k} plans")
+        ls, _ = local_search(r["plans"], True, p, True, k)
+        remember(ls, True, f"logit search, {sid}, {k} plans")
+        # The same without the smallest plan (Start): the owner's no-loss rule weighs the lowest net a payer can bring.
+        no_start = [j for j in r["plans"] if CANDS[j]["template"] != "start"]
+        ls2, _ = local_search(no_start, True, p, True, len(no_start), exclude=("start",))
+        remember(ls2, True, f"logit search without Start, {sid}, {len(no_start)} plans")
+    ls3, _ = local_search(TODAY, True, p, True, 3, exclude=("start", "growth"))
+    remember(ls3, True, f"logit search from today's three, {sid}")
+    r, _ = solve_milp(p, 2, True, False)
+    remember(r["plans"], True, f"program, {sid}, 2 plans, unrestricted")
+    ls, _ = local_search(r["plans"], True, p, False, 2)
+    remember(ls, True, f"logit search, {sid}, 2 plans, unrestricted")
+    print(f"  {sid} done", flush=True)
+    return calls, None
+
+
+def programs(base, scenarios, remember):
+    """The mixed-integer program on the base scenario (every plan count, with and without packs, all designs and admissible ones) and on every named scenario, with the logit search from each solution."""
+    milp_runs = []
+    for calls, rec in EXECUTOR[0].programs(program_tasks(scenarios), run_program_task):
+        for plans, with_packs, origin in calls:
+            remember(plans, with_packs, origin)
+        if rec is not None:
+            milp_runs.append(rec)
     return milp_runs
 
 
@@ -875,20 +967,12 @@ def main():
     check.update(expectedCashUsd=float(e_[0]), payers60=float(n_[0]), room60Usd=float(h_[0]))
 
     # Cohort Monte Carlo (the demand model's own profit, for the tables below): the 25 best by mean profit, the recommendation and the named ones.
-    rng = np.random.default_rng(M["seed"])
     ranked = sorted(results, key=lambda r: -r["meanProfit"])
     mc_pool = []
     for r in ranked[:25] + [rec, regret_best, no_comm] + [x for x in results if x["names"]] + ([nxt] if nxt else []):
         if r["key"] not in [x["key"] for x in mc_pool]:
             mc_pool.append(r)
-    draws = np.zeros((M["monteCarloDraws"], len(mc_pool)))
-    for t in range(M["monteCarloDraws"]):
-        p, _, _, _, _ = draw_params(rng)
-        _ours_cache.clear()
-        _head_cache.clear()
-        _comp_cache.clear()
-        for i, r in enumerate(mc_pool):
-            draws[t, i] = evaluate(r["plans"], r["packs"], p)
+    draws = cohort_monte_carlo([(r["plans"], r["packs"]) for r in mc_pool], M["monteCarloDraws"], M["seed"])
     best_idx = draws.argmax(axis=1)
     mc = {}
     for i, r in enumerate(mc_pool):
