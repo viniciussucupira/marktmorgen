@@ -102,7 +102,10 @@ export async function POST(request: NextRequest) {
       const decision = body.decision === "approve" || body.decision === "reverse" || body.decision === "reopen" ? body.decision : null;
       if (!decision || !ids.length) return fail("unknown");
       const done = await decideLeads(store, ids, decision, text(body.why, 20));
-      return done.ok ? Response.json({ ok: true, changed: done.changed }) : fail(done.reason === "reason" ? "lead_reason" : done.reason === "not_ready" ? "lead_not_ready" : "unknown");
+      if (done.ok) return Response.json({ ok: true, changed: done.changed });
+      // Another decision on this program's leads is being written this moment (MM-SA-09): the studio says to reload and try again.
+      if (done.reason === "busy") return fail("busy", 409);
+      return fail(done.reason === "reason" ? "lead_reason" : done.reason === "not_ready" ? "lead_not_ready" : "unknown");
     }
     if (action === "approve" || action === "decline" || action === "remove" || action === "restore") {
       const done = await decide(store, text(body.id, 20), action);
