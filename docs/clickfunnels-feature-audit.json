@@ -1300,10 +1300,14 @@
       "source": "S03",
       "clickfunnelsEvidence": "U",
       "clickfunnels": "Fully autonomous causal funnel optimization was not established.",
-      "evidencePath": "lib/funnel-metrics.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Complete evidence-linked diagnosis unestablished.",
-      "improvement": "Start with deterministic checks and sample-aware suggestions, then evaluate AI."
+      "evidencePath": "lib/funnel-diagnosis.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Deterministic, sample-aware and free: under each saved funnel the studio reads the counts it already shows (people who opened each step, and who paid or signed up at a product step) and points to a step nobody reached after one opened at least 30 times, a product step opened 30 times that nobody paid or signed up at, and the largest fall between two steps when under half, each linking to the step's own editor. Nothing is judged until a step has been opened 30 times; an unreadable count is named and never read as zero; a closed step is left to the launch review. Since 17 October 2026 the AI first draft's review also lists store-record checks (no proof, thin or draft products, unanswered questions, small samples). No model, no store read and no cause is claimed. Not browser, load or live-provider evidence.",
+      "improvement": "Evaluate AI suggestions against these deterministic findings, and add ranges for rates once same-visitor step paths exist.",
+      "testEvidence": [
+        "tests/funnel-diagnosis.test.ts",
+        "tests/funnel-ai.test.ts"
+      ]
     },
     {
       "id": "F55",
@@ -1665,9 +1669,9 @@
     "status": "Not certified; do not activate commercial entitlements from this report"
   },
   "evidenceCounts": {
-    "D": 31,
+    "D": 32,
     "C/U": 31,
-    "U": 8
+    "U": 7
   },
   "verification": {
     "reviewedAt": "2026-10-17 UTC",
@@ -1697,6 +1701,11 @@
         "id": "F13",
         "date": "2026-10-18 UTC",
         "note": "Moved U to D on tests/cart-bundle.test.ts with the existing cart, bump, bundle and upsell tests. The evidence path is cited at main, not at sourceRevision, where lib/cart-bundle.ts did not exist yet."
+      },
+      {
+        "id": "F54",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/funnel-diagnosis.test.ts with tests/funnel-ai.test.ts. The evidence path is cited at main, not at sourceRevision, where lib/funnel-diagnosis.ts did not exist yet."
       }
     ]
   }

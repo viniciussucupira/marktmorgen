@@ -11,6 +11,7 @@ import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { readFunnelMutationResult, type FunnelMutation } from "@/lib/funnel-mutation-response";
 import { funnelReachRatioMetric, funnelStepMetrics } from "@/lib/funnel-metrics";
+import { DIAGNOSIS_NOTE, funnelFindings } from "@/lib/funnel-diagnosis";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import {
   MAX_FUNNEL_NAME,
@@ -217,6 +218,7 @@ export function PageFunnelEditor({
           const launchIssues = [...funnelLaunchIssues(funnel.on, steps, paymentReview?.available ?? null), ...pageIssues];
           const first = steps.find((s) => s.open)?.seen ?? null;
           const last = [...steps].reverse().find((s) => s.open);
+          const findings = funnelFindings(steps);
           return (
             <li key={funnel.id} id={`funnel-review-${funnel.id}`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -316,6 +318,38 @@ export function PageFunnelEditor({
                 {funnelReachRatioMetric(first, last?.seen ?? null)}
                 {`Approximate counts since ${new Date(funnel.since * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}, when its steps were last changed. Each visitor is counted at most once per step; you and your team are excluded. Visitors may enter at different steps.`}
               </p>
+              {findings.length ? (
+                <div className="mt-3 rounded-xl border border-line p-3 text-sm" aria-label={`What the counts of ${funnel.name} point to`}>
+                  <p className="font-semibold text-ink">What the counts point to</p>
+                  <ul className="mt-2 space-y-2">
+                    {findings.map((finding, index) => {
+                      const editor = finding.stepIndex === undefined ? null : steps[finding.stepIndex]?.editor ?? null;
+                      return (
+                        <li key={`${finding.code}-${index}`}>
+                          <p className="font-semibold text-ink">{finding.title}</p>
+                          <p className="text-ink-soft">{finding.detail}</p>
+                          {editor ? (
+                            <Link
+                              href={editor.href}
+                              prefetch={false}
+                              aria-label={`${editor.label}: step ${(finding.stepIndex ?? 0) + 1}`}
+                              aria-disabled={locked}
+                              tabIndex={locked ? -1 : undefined}
+                              onClick={(event) => {
+                                if (flight.current || recovery.current) event.preventDefault();
+                              }}
+                              className="mt-1 inline-flex min-h-11 items-center rounded-lg px-2 font-semibold text-violet-deep underline underline-offset-4 aria-disabled:opacity-40"
+                            >
+                              {editor.label}
+                            </Link>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="mt-2 text-xs text-ink-mute">{DIAGNOSIS_NOTE}</p>
+                </div>
+              ) : null}
             </li>
           );
         })}
