@@ -9,6 +9,7 @@
  *   nl:payreq:due                  reminders waiting: "<sid>|<id>" -> when due, read by the daily job
  *   nl:payreq:stores               stores with open requests, read by the five-minute job (lib/checkout-sweep.ts)
  *   nl:payreq:lock:<id>            a checkout being opened for it, a minute
+ *   nl:payreq:w:<id>               its record being changed, ten seconds at the most
  *
  * Every request is counted in the store's data room before it is written
  * (lib/store-data.ts), at its record, its four index entries and what its
@@ -17,6 +18,12 @@
  * figure is: added, read back, and given back when over, so two at once can
  * never both pass a full count.
  *
+ * Every change to a record is read again and written under its own lock
+ * (changeRequest), so one hand never writes back what it read before another
+ * hand's change: a reminder that was still being emailed, or a checkout still
+ * being opened at Stripe, could otherwise put a paid request back to open
+ * (docs/security-audit-2026-10-18.md, MM-SA-02).
+ *
  * Nothing here is the record of a payment: that is the checkout and the
  * charge on the creator's own Stripe account, read by every door that asks
  * (lib/refunds.ts). What is kept here is what the creator asked for and
@@ -24,6 +31,7 @@
  */
 import { personKey } from "@/lib/person-key";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { withLock } from "@/lib/redis-lock";
 import { type Store } from "@/lib/store";
 import { dataBytes } from "@/lib/store-data-rules";
 import { takeData } from "@/lib/store-data";
@@ -54,6 +62,7 @@ const personSet = (sid: string, email: string) => `nl:payreq:p:${sid}:${personKe
 const DUE = "nl:payreq:due";
 const STORES = "nl:payreq:stores";
 const lockKey = (id: string) => `nl:payreq:lock:${id}`;
+const writeKey = (id: string) => `nl:payreq:w:${id}`;
 
 /** What a record may still grow by after it is written: a checkout's id, a payment's, the times it was sent, a reason. */
 export const RECORD_GROWTH_BYTES = 768;
@@ -171,7 +180,30 @@ export async function requestOf(store: Pick<Store, "sid">, id: string): Promise<
   return request && store.sid && request.sid === store.sid ? request : null;
 }
 
-/** Writes a request back as it now is, for the rest of the days it is kept, and keeps its open entry and reminder in step. */
+/**
+ * The one way a request's record is changed after it is made: under its write
+ * lock, `change` is handed the record as it is now and says what it becomes
+ * (null leaves it as it is) and what to answer. Null when the request is not
+ * one of this store's. Throws LockBusyError (lib/redis-lock.ts) when another
+ * change held it for longer than five seconds: nothing was written.
+ */
+export async function changeRequest<T>(
+  store: Pick<Store, "sid">,
+  id: string,
+  change: (current: PaymentRequest) => { next: PaymentRequest | null; answer: T },
+  now = Date.now(),
+): Promise<{ request: PaymentRequest; answer: T } | null> {
+  if (!ID_PATTERN.test(id) || !isRedisConfigured()) return null;
+  return withLock(writeKey(id), 10, 5_000, async () => {
+    const current = await requestOf(store, id);
+    if (!current) return null;
+    const { next, answer } = change(current);
+    if (next) await saveRequest(next, now);
+    return { request: next ?? current, answer };
+  });
+}
+
+/** Writes a request back as it now is, for the rest of the days it is kept, and keeps its open entry and reminder in step. Only under its write lock (changeRequest), or when it is first made. */
 export async function saveRequest(request: PaymentRequest, now = Date.now()): Promise<void> {
   const member = `${request.sid}|${request.id}`;
   const open = statusOf(request, now) === "open";
@@ -223,12 +255,11 @@ export async function openCount(sid: string, now = Date.now()): Promise<number> 
 
 /** Withdraws an open request: its link stops taking payment and no reminder goes. */
 export async function cancelRequest(store: Store, id: string, now = Date.now()): Promise<PaymentRequest | "not_open" | null> {
-  const request = await requestOf(store, id);
-  if (!request) return null;
-  if (statusOf(request, now) !== "open") return "not_open";
-  const done: PaymentRequest = { ...request, state: "canceled", closedAt: now };
-  await saveRequest(done, now);
-  return done;
+  const done = await changeRequest(store, id, (request) =>
+    statusOf(request, now) !== "open" ? { next: null, answer: "not_open" as const } : { next: { ...request, state: "canceled", closedAt: now }, answer: "canceled" as const },
+  now);
+  if (!done) return null;
+  return done.answer === "not_open" ? "not_open" : done.request;
 }
 
 /** Deletes a request that is no longer open from the store's list. Its payment, if any, stays on the creator's Stripe. */
@@ -276,21 +307,21 @@ const intentOf = (value: unknown): string =>
  * still paid it (its checkout was opened while it was open), so it is paid.
  */
 export async function markPaid(store: Pick<Store, "sid">, id: string, session: PaidSession, now = Date.now()): Promise<{ request: PaymentRequest; fresh: boolean } | null> {
-  const request = await requestOf(store, id);
-  if (!request) return null;
-  if (request.state === "paid" || request.state === "refunded") return { request, fresh: false };
-  const paid: PaymentRequest = {
-    ...request,
-    state: "paid",
-    paidAt: typeof session.created === "number" ? Math.min(now, session.created * 1000) : now,
-    amountPaid: typeof session.amount_total === "number" ? session.amount_total : request.total,
-    payment: intentOf(session.payment_intent).slice(0, 255),
-    session: typeof session.id === "string" ? session.id.slice(0, 255) : request.session,
-    failed: "",
-    closedAt: now,
-  };
-  await saveRequest(paid, now);
-  return { request: paid, fresh: true };
+  const done = await changeRequest(store, id, (request) => {
+    if (request.state === "paid" || request.state === "refunded") return { next: null, answer: false };
+    const paid: PaymentRequest = {
+      ...request,
+      state: "paid",
+      paidAt: typeof session.created === "number" ? Math.min(now, session.created * 1000) : now,
+      amountPaid: typeof session.amount_total === "number" ? session.amount_total : request.total,
+      payment: intentOf(session.payment_intent).slice(0, 255),
+      session: typeof session.id === "string" ? session.id.slice(0, 255) : request.session,
+      failed: "",
+      closedAt: now,
+    };
+    return { next: paid, answer: true };
+  }, now);
+  return done ? { request: done.request, fresh: done.answer } : null;
 }
 
 /** Requests whose reminder is due, at most `limit`, as "<sid>|<id>". */

@@ -616,6 +616,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:payreq:due@lib/payment-request-store.ts": room("Payment request reminders waiting for their day: an entry each, counted with its request in its store's room", "lib/payment-request-store.ts"),
   "nl:payreq:stores@lib/payment-request-store.ts": company("The stores with open payment requests", "One member a store, read once a run by the five-minute job and let go when it has none open: the job's own index, like its cursor."),
   "nl:payreq:lock:@lib/payment-request-store.ts": short("A payment request's checkout being opened, a minute", "request", 1, MARK, REQ("pay-request")),
+  "nl:payreq:w:@lib/payment-request-store.ts": short("A payment request's record being changed, ten seconds at the most", "request", 1, MARK, REQ("pay-request")),
   "nl:pay:currencies:@lib/payment-methods.ts": { what: "The currencies a Stripe account takes, cached", parts: [capped(KB, "One a store.")] },
   "nl:dun:report:@lib/payment-recovery-report.ts": { what: "Failed renewals, cached", parts: [capped(256 * KB, "One cached view.")] },
   "nl:dun:card:@lib/payment-recovery.ts": { what: "A card already asked about", parts: [per("own", 60, MARK, "Per card asked about by email.", MAIL("card ask"))] },
