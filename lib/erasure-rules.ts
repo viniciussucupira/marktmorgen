@@ -67,11 +67,12 @@ export type ErasureSize = {
 /**
  * Commands every erasure sends whatever the store: each module's own, workflows at their cap, a sync log at its length,
  * and (since 18 October 2026) a person's payment requests at their cap, four commands each for twice MAX_PER_PERSON
- * (lib/payment-request-store.ts): 260 before them.
+ * (lib/payment-request-store.ts): 260 before them; and (since 18 October 2026) a person's agreements at their cap, two
+ * commands each for twice MAX_PER_PERSON (lib/agreement-store.ts), with every version's key named: 460 before them.
  */
-export const ERASE_FIXED_COMMANDS = 460;
+export const ERASE_FIXED_COMMANDS = 550;
 /** Bytes every erasure moves whatever the store: keys, small records, a sync log's jobs, the store's own record read again, and those commands. */
-export const ERASE_FIXED_BYTES = 290_000;
+export const ERASE_FIXED_BYTES = 310_000;
 /** Per thing counted: [commands, bytes]. */
 export const ERASE_PER: Record<keyof ErasureSize, [number, number]> = {
   products: [16, 4_000],

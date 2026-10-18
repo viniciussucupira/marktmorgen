@@ -13,7 +13,8 @@
 
 /** Families counted in a store's data room. */
 export const COUNTED_FAMILIES: readonly string[] = [
-  "nl:ab:", "nl:adsrv:ctx:", "nl:adsrv:sent:", "nl:aff:", "nl:blog:body:", "nl:blog:meta:", "nl:blog:pub:",
+  "nl:ab:", "nl:adsrv:ctx:", "nl:adsrv:sent:", "nl:aff:",
+  "nl:agree:p:", "nl:agree:r:", "nl:agree:s:", "nl:agree:v:", "nl:blog:body:", "nl:blog:meta:", "nl:blog:pub:",
   "nl:call:busy:", "nl:call:confirmed:", "nl:callteam:", "nl:callteam:rr:", "nl:catalog:", "nl:cert:",
   "nl:cm:", "nl:cm:unsub:", "nl:course:", "nl:crm:deals:", "nl:crm:pipes:", "nl:crm:v:", "nl:data:", "nl:dc:addr:",
   "nl:dc:mem:", "nl:dc:prod:", "nl:depth:", "nl:erased:", "nl:esync:tags:", "nl:form:r:", "nl:imp:buy:",
@@ -36,7 +37,7 @@ export const ELSEWHERE_FAMILIES: readonly string[] = [
   "nl:", "nl:*", "nl:2fa:", "nl:2fa:hold:", "nl:2fa:locked:", "nl:2fa:lockedset:", "nl:2fa:rescue:",
   "nl:2fa:setup:", "nl:ab:paid:", "nl:account:stores:", "nl:adsrv:", "nl:adsrv:last:", "nl:adsrv:sub:",
   "nl:aff:link:", "nl:aff:payday:", "nl:aff:payday:lock", "nl:aff:seen:", "nl:aff:session:", "nl:affhub:",
-  "nl:affhub:link:", "nl:affkit:", "nl:ai-spend:v2:{", "nl:ai-spend:v2:{YYYY-MM}", "nl:ai:", "nl:alert:",
+  "nl:affhub:link:", "nl:affkit:", "nl:agree:lock:", "nl:ai-spend:v2:{", "nl:ai-spend:v2:{YYYY-MM}", "nl:ai:", "nl:alert:",
   "nl:alert:seen:", "nl:allow:", "nl:api:k:", "nl:api:keys:", "nl:ask:", "nl:ask:a:", "nl:ask:missed:",
   "nl:assist:c:", "nl:assist:missed:", "nl:assist:next:", "nl:assist:nextlock:", "nl:assist:pool:", "nl:assist:remind:", "nl:assist:remindq", "nl:assist:remindwho:",
   "nl:auth:devices:", "nl:auth:fresh:", "nl:auth:link:", "nl:auth:move:", "nl:auth:rec:",
@@ -183,6 +184,8 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:adsrv:": E, "nl:adsrv:ctx:": X(4), "nl:adsrv:last:": E, "nl:adsrv:sent:": X(3), "nl:adsrv:sub:": X(400),
   "nl:aff:": E, "nl:aff:link:": X(1), "nl:aff:payday:": E, "nl:aff:payday:lock": C, "nl:aff:seen:": X(2), "nl:aff:session:": X(30),
   "nl:affhub:": L, "nl:affhub:link:": Cr(1), "nl:affkit:": E,
+  // Proposals and agreements (lib/agreement-store.ts): the store's lists go, and each agreement and its versions through them.
+  "nl:agree:s:": E, "nl:agree:p:": E, "nl:agree:r:": T("nl:agree:s:", 400), "nl:agree:v:": T("nl:agree:s:", 400), "nl:agree:lock:": X(1),
   "nl:ai-spend:v2:{": C, "nl:ai-spend:v2:{YYYY-MM}": C, "nl:ai:": E,
   "nl:alert:": E, "nl:alert:seen:": Cr(2), "nl:allow:": E,
   "nl:api:k:": T("prepare"), "nl:api:keys:": E,
@@ -363,7 +366,7 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
  * read can be priced without the walk (tests/plan-cost-registry.ts, closure).
  */
 export const FOLLOWED_FAMILIES = [
-  "nl:cal:cfg:", "nl:cm:", "nl:course:", "nl:erase:ix:", "nl:fshares:", "nl:inbox:", "nl:learn:passes:", "nl:mail:bcs:",
+  "nl:agree:s:", "nl:cal:cfg:", "nl:cm:", "nl:course:", "nl:erase:ix:", "nl:fshares:", "nl:inbox:", "nl:learn:passes:", "nl:mail:bcs:",
   "nl:mv:", "nl:outreach:", "nl:payreq:s:", "nl:pkg:s:", "nl:pod:by:", "nl:ppsell:sales:", "nl:slink:store:", "nl:store:leads:",
 ] as const;
 

@@ -518,12 +518,17 @@
         "HL04",
         "HL06"
       ],
-      "marktmorgen": "gap",
-      "evidence": [],
-      "note": "Not built. Payment requests exist; nothing records a signature on an agreement.",
-      "sales": 4,
-      "effort": 3,
-      "score": 1.33
+      "marktmorgen": "built",
+      "evidence": [
+        "lib/agreement-rules.ts",
+        "lib/agreement-store.ts",
+        "lib/agreements.ts",
+        "app/[handle]/sign/[agreement]/page.tsx",
+        "app/api/store/agreement-sign/route.ts",
+        "tests/agreements.test.ts",
+        "docs/agreements-esign.md"
+      ],
+      "note": "Built 18 Oct 2026: one person signs a proposal or agreement written in plain text with optional lines, by typing their full name and the address it was sent to and checking a consent sentence; the exact text, its SHA-256, the version, name, time and an HMAC of the IP are recorded, an edit is a new version needing a new signature, both sides get the signed copy as email and HTML file, and an open payment request can be attached. Not built: templates, uploaded PDFs, placed fields (initials, dates, checkboxes), several signers or a signing order, and payments collected inside the document. No claim is made that a signature is legally binding."
     },
     {
       "id": "H29",
@@ -664,15 +669,6 @@
   "ranking": [
     {
       "rank": 1,
-      "id": "H28",
-      "feature": "Documents, contracts and proposals with e-signature",
-      "marktmorgen": "gap",
-      "sales": 4,
-      "effort": 3,
-      "score": 1.33
-    },
-    {
-      "rank": 2,
       "id": "H14",
       "feature": "Social media planner (scheduling and posting)",
       "marktmorgen": "gap",
@@ -681,7 +677,7 @@
       "score": 0.8
     },
     {
-      "rank": 3,
+      "rank": 2,
       "id": "H01",
       "feature": "Website and funnel builder with templates",
       "marktmorgen": "partial",
@@ -690,7 +686,7 @@
       "score": 0.75
     },
     {
-      "rank": 4,
+      "rank": 3,
       "id": "H07",
       "feature": "Unified conversations across SMS, email, Instagram, Facebook, WhatsApp and live chat",
       "marktmorgen": "partial",
@@ -699,7 +695,7 @@
       "score": 0.75
     },
     {
-      "rank": 5,
+      "rank": 4,
       "id": "H11",
       "feature": "SMS marketing and SMS conversations",
       "marktmorgen": "gap",
@@ -708,7 +704,7 @@
       "score": 0.75
     },
     {
-      "rank": 6,
+      "rank": 5,
       "id": "H22",
       "feature": "Workflow AI: automation recommended from a goal",
       "marktmorgen": "gap",
@@ -717,7 +713,7 @@
       "score": 0.67
     },
     {
-      "rank": 7,
+      "rank": 6,
       "id": "H04",
       "feature": "Cloning whole funnel setups (snapshots)",
       "marktmorgen": "partial",
@@ -726,7 +722,7 @@
       "score": 0.5
     },
     {
-      "rank": 8,
+      "rank": 7,
       "id": "H12",
       "feature": "Inbound and outbound calling",
       "marktmorgen": "gap",
@@ -735,7 +731,7 @@
       "score": 0.4
     },
     {
-      "rank": 9,
+      "rank": 8,
       "id": "H17",
       "feature": "Ad Manager: creating ads from inside the product",
       "marktmorgen": "partial",
@@ -744,7 +740,7 @@
       "score": 0.4
     },
     {
-      "rank": 10,
+      "rank": 9,
       "id": "H34",
       "feature": "Mobile app",
       "marktmorgen": "partial",
@@ -753,7 +749,7 @@
       "score": 0.4
     },
     {
-      "rank": 11,
+      "rank": 10,
       "id": "H08",
       "feature": "Custom dashboards and scheduled reports to any address",
       "marktmorgen": "partial",
@@ -762,7 +758,7 @@
       "score": 0.33
     },
     {
-      "rank": 12,
+      "rank": 11,
       "id": "H09",
       "feature": "Prospecting tool (add-on)",
       "marktmorgen": "partial",
@@ -771,7 +767,7 @@
       "score": 0.33
     },
     {
-      "rank": 13,
+      "rank": 12,
       "id": "H20",
       "feature": "Reviews AI: replies to reviews",
       "marktmorgen": "partial",
@@ -780,7 +776,7 @@
       "score": 0.33
     },
     {
-      "rank": 14,
+      "rank": 13,
       "id": "H05",
       "feature": "Domain management",
       "marktmorgen": "partial",
@@ -789,7 +785,7 @@
       "score": 0.25
     },
     {
-      "rank": 15,
+      "rank": 14,
       "id": "H23",
       "feature": "Voice AI: answering phone calls",
       "marktmorgen": "gap",
@@ -798,7 +794,7 @@
       "score": 0.2
     },
     {
-      "rank": 16,
+      "rank": 15,
       "id": "H35",
       "feature": "Branded client portal app (add-on)",
       "marktmorgen": "partial",
@@ -809,15 +805,20 @@
   ],
   "counts": {
     "partial": 10,
-    "built": 16,
+    "built": 17,
     "not_planned": 5,
-    "gap": 6
+    "gap": 5
   },
   "builtFromThis": [
     {
       "id": "H19",
       "pr": "#549",
       "note": "the creator's public review page named in every review request"
+    },
+    {
+      "id": "H28",
+      "pr": "#PRNUM",
+      "note": "proposals and agreements signed electronically by the person they were sent to, with the exact text and its SHA-256 recorded"
     }
   ]
 }

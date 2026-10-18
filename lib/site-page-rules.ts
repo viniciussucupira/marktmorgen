@@ -92,6 +92,8 @@ export const RESERVED_SLUGS = new Set([
   "pay",
   "podcast",
   "renew",
+  // A proposal or agreement's page to sign (app/[handle]/sign/[agreement]).
+  "sign",
   "resting",
   "review",
   "thanks",

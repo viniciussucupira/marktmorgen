@@ -880,7 +880,7 @@ export const SCOPES: Record<string, ScopeClass> = {
   "ads-event": PUBLIC, "aff-join": PUBLIC, "aff-open": PUBLIC, "book-move": PUBLIC, "cart-read": PUBLIC, "come-back": PUBLIC, "course-start": PUBLIC,
   "discord-join": PUBLIC, download: PUBLIC, "form-ip": PUBLIC, heard: PUBLIC, "join-ip": PUBLIC, "manage-card": PUBLIC, "manage-card-back": PUBLIC,
   "manage-leave": PUBLIC, "manage-open": PUBLIC, "move-open": PUBLIC, "podcast-link-ip": PUBLIC, review: PUBLIC, "review-view": PUBLIC,
-  "store-search": PUBLIC, "thanks-view": PUBLIC, "tier-switch": PUBLIC, tip: PUBLIC, "pay-request": PUBLIC, "pay-request-view": PUBLIC, "waitlist-ip": PUBLIC, "welcome-open": PUBLIC,
+  "store-search": PUBLIC, "thanks-view": PUBLIC, "tier-switch": PUBLIC, tip: PUBLIC, "pay-request": PUBLIC, "pay-request-view": PUBLIC, "agreement-sign": PUBLIC, "agreement-view": PUBLIC, "waitlist-ip": PUBLIC, "welcome-open": PUBLIC,
   "course-start-order": BURST("public-requests"), "review-order": BURST("public-requests"), "join-address": BURST("public-requests"),
   "waitlist-address": BURST("public-requests"), "numbers-link": BURST("public-requests"), preview: BURST("public-requests"),
   "affhub-address": METERED_EMAIL, "affhub-ip": METERED_EMAIL, "library-address": METERED_EMAIL, "library-ip": METERED_EMAIL,
@@ -941,4 +941,6 @@ export const EMAIL_SITES: Record<string, string[]> = {
   "lib/welcome-offer-send.ts": STORE, "lib/winback-send.ts": STORE, "lib/yearly-ask.ts": STORE, "lib/yearly-switch.ts": STORE,
   // A payment request and its reminders are the store's own emails; its receipt is its order's (18 October 2026).
   "lib/payment-requests.ts": STORE, "lib/payment-request-store.ts": ORDER,
+  // A proposal or agreement to sign, its new versions and its signed copies are the store's own emails (18 October 2026).
+  "lib/agreements.ts": STORE,
 };

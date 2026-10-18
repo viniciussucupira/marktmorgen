@@ -38,6 +38,7 @@ import { PLAN_AT, feeWords, planPriceWords, yearSavingWords } from "@/lib/fee-wo
 import { IMPORTS_PER_SHARE_MONTH, MAX_SHARE_DAYS, PREVIEWS_PER_SHARE_MONTH, SHARE_LIMITS, bytesWords } from "@/lib/funnel-share-rules";
 import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
 import { ERASE_STUDIO_UNITS } from "@/lib/erasure-rules";
+import { KEEP_DAYS as AGREEMENT_KEEP_DAYS, MAX_VERSIONS, SIGN_DAYS } from "@/lib/agreement-rules";
 import { KEEP_DAYS, MAX_AUTO_REMINDERS, MAX_LINES, MAX_PER_PERSON, MAX_SENDS, OPEN_DAYS, REMIND_EVERY_DAYS, REQUEST_LIMITS } from "@/lib/payment-request-rules";
 
 /** An anchor for one answer, from its question. */
@@ -192,6 +193,15 @@ export const HELP_SECTIONS: HelpSection[] = [
         a: [
           feeWords().fromASale,
           "Stripe charges its own processing fee on each payment, published on Stripe's own pricing page, and that is taken on your account by Stripe.",
+        ],
+      },
+      {
+        q: "How do I send a proposal or an agreement to sign?",
+        a: [
+          `Open Agreements in your studio, write a title and the text in plain words (with lines and amounts if you want them) and send it to one person. They get one email from your store's name with a link to a page that shows the exact text. To sign, they type their full name and the email address it was sent to, and check "I agree to sign this electronically, and I am the person it was sent to." The link takes a signature for ${SIGN_DAYS} days.`,
+          `What is recorded: the exact text they read, its SHA-256 fingerprint, the version number, the name they typed, the time, the sentence they checked, and a one-way code made from their internet address, never the address itself. Both of you get the signed copy by email, with the text and the record in the email and in an attached HTML file, and the page can be printed or saved as PDF. Each of those emails is one of your store's emails for the month.`,
+          `A version that was sent never changes. Changing it writes a new version (up to ${MAX_VERSIONS}), which needs a new signature; an earlier signature stays recorded against the text it signed. Nobody may sign for the person it was sent to: the address they type must be the one it went to, and a browser signed in to your studio can't sign it. You can attach one of your open payment requests, shown once it is signed. Each agreement is kept ${AGREEMENT_KEEP_DAYS} days, then deleted by itself.`,
+          "Marktmorgen is not a law firm and gives no legal advice or templates. Whether an agreement can be enforced depends on the law where you and they are and on what it says: some documents, such as wills, may need another form. Ask a lawyer where it matters.",
         ],
       },
       {
