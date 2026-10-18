@@ -863,10 +863,14 @@
       "source": "S28",
       "clickfunnelsEvidence": "V-index",
       "clickfunnels": "Conditional paths, goals, delays and split tests are indexed.",
-      "evidencePath": "lib/flows.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Complete visual-workflow action parity unverified.",
-      "improvement": "Add deterministic preview, stop rules and bounded retries."
+      "evidencePath": "lib/flow-retry.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Any step can branch IF/ELSE (skip, end or jump to a later step), routes only go forward, and a goal (bought anything, got a product, carries a label) is checked before every step. A deterministic preview runs the job's own routing on a sample contact, typed in or read from the list, and sends, saves and writes nothing. Every way a run stops is listed beside the preview (lib/flow-stop-rules.ts). Waits are bounded: a wait with a known end is tried once at that end, anything else with a growing delay, at most 3 waits a run and 35 days a step, then the run stops with nothing done; the creator may try a held step again once a run. Waits and retries are in the per-run worst case (419 commands), with the runs a day lowered to keep each plan's cost. No split-test step beyond the existing A/B halves, no date trigger, no visual canvas. Not browser, load or live-provider evidence.",
+      "improvement": "Add a date trigger and a split-test step, each within the same per-run worst case.",
+      "testEvidence": [
+        "tests/workflow-retries.test.ts",
+        "tests/workflow-branching.test.ts"
+      ]
     },
     {
       "id": "F24",
@@ -877,7 +881,7 @@
       "clickfunnels": "Contact action history includes workflow progress.",
       "evidencePath": "lib/flow-runs.ts",
       "marktmorgenEvidence": "D",
-      "current": "Every run keeps each effect as attempted (written before it happens), then confirmed, failed or uncertain, plus skipped, goal and end, for 400 days; an uncertain outcome holds the run and is never retried by itself. A run's history counts attempted, confirmed, failed and uncertain separately; an attempt with no outcome, or one the creator marked as gone through, stays uncertain (lib/run-effects.ts). Bounded by construction: at most 62 events a run (a step that waits writes nothing; a creator's choice keeps the latest 20), at most 16,000 runs a workflow (the plan's runs a day for 400 days), each charged to the store's data room before it starts, and erased with a person, a workflow or a store. Not browser, load or live-provider evidence.",
+      "current": "Every run keeps each effect as attempted (written before it happens), then confirmed, failed or uncertain, plus skipped, goal and end, for 400 days; an uncertain outcome holds the run and is never retried by itself. A run's history counts attempted, confirmed, failed and uncertain separately; an attempt with no outcome, or one the creator marked as gone through, stays uncertain (lib/run-effects.ts). Bounded by construction: at most 62 events a run (a step that waits writes nothing; a creator's choice keeps the latest 20), at most 11,600 runs a workflow (the plan's runs a day for 400 days), each charged to the store's data room before it starts, and erased with a person, a workflow or a store. Not browser, load or live-provider evidence.",
       "improvement": "Show the four counts across a workflow's runs, not only per run, without a read per run.",
       "testEvidence": [
         "tests/workflow-run-history.test.ts",
@@ -1649,9 +1653,9 @@
     "status": "Not certified; do not activate commercial entitlements from this report"
   },
   "evidenceCounts": {
-    "D": 28,
+    "D": 29,
     "C/U": 31,
-    "U": 11
+    "U": 10
   },
   "verification": {
     "reviewedAt": "2026-10-17 UTC",
@@ -1666,6 +1670,11 @@
         "id": "F24",
         "date": "2026-10-18 UTC",
         "note": "Moved U to D on tests/workflow-run-history.test.ts and tests/workflow-branching.test.ts. The evidence path is cited at main, not at sourceRevision, where lib/flow-runs.ts did not exist yet."
+      },
+      {
+        "id": "F23",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/workflow-retries.test.ts and tests/workflow-branching.test.ts. The evidence path is cited at main, not at sourceRevision, where lib/flow-retry.ts did not exist yet."
       }
     ]
   }

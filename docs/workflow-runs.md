@@ -24,10 +24,27 @@ A run's history in the studio counts its effects four ways, kept apart (`lib/run
 What a run keeps is bounded by construction, not by trimming what the job writes (`lib/flow-runs.ts`):
 
 - **Events a run keeps: at most `MAX_RUN_EVENTS` (62).** A run visits each step at most once and each visit writes at most an attempt and its outcome, or a skip, so without the creator it writes at most 2 + 2 × 20 = 42. A step that has to wait (the month's emails ran out, no room to send, the deals board could not be read) takes its attempt back out of the history (`LREM` of that exact event), so a month of waiting writes nothing; until 18 October 2026 every try wrote a new "attempted", which grew the history past what the data room was charged for (`runBytes`). Each choice the creator makes for a held run keeps only the latest `KEPT_AFTER_CHOICE` (20) events, which leaves room for everything the run can still write; the history then says its earliest events are no longer kept.
-- **Runs a workflow keeps: at most `MAX_RUNS_KEPT_PER_FLOW` (16,000).** A person starts a workflow at most once while the start is remembered (400 days), and a store starts at most its plan's runs a day across all workflows (40 on Scale). The index is never trimmed, so every run in it can still be erased.
+- **Runs a workflow keeps: at most `MAX_RUNS_KEPT_PER_FLOW` (11,600 since 18 October 2026, when the runs a day went down; 16,000 before).** A person starts a workflow at most once while the start is remembered (400 days), and a store starts at most its plan's runs a day across all workflows (29 on Scale). The index is never trimmed, so every run in it can still be erased.
 - **Days: 400** after the run ends (`RUN_KEEP_SECONDS`), or until it is erased (below).
 
 Cost: no new command on the job's path. A wait's `LREM` takes the place of the event it used to write; the creator's choice adds one `LTRIM`, once per choice. `tests/workflow-run-history.test.ts` checks the counting rules, a step tried again twelve times while waiting, and thirty "try it again" choices on one run.
+
+## Waits, retries and stop rules (18 October 2026, audit row F23)
+
+A step that cannot go yet **waits** and is tried again by itself (`lib/flow-retry.ts`). Until 18 October 2026 a wait was tried again every 10 minutes or 6 hours for as long as its cause lasted, with nothing counting it: unbounded database work that was not in `WORST_COMMANDS_PER_RUN`. Now:
+
+- A wait whose end is known is tried **once, at that end**: the month's emails a minute after the store's allowance window turns, the company's daily room just after the next UTC day, a pause on the store's email a minute after it ends.
+- Anything else (the sending service's ceiling, a new list's portion, a read that did not answer, the deals board, email not configured) is tried again after a delay that grows threefold: 10 minutes, 30, 90, 4.5 hours, 13.5 hours, then a day.
+- Every wait is counted on the run (`waits`, and `waitAt` for when the current step began waiting). A run waits **`MAX_WAITS_PER_RUN` (3) times** at the most, all steps together, and one step **`MAX_WAIT_DAYS_PER_STEP` (35) days**. One wait past that, or a count that cannot be read, and the run **stops** at that step with nothing done, written as failed with the reason, and it leaves the queue.
+- The creator's **"Try it again"** on a held run is taken **`MAX_RETRIES_BY_YOU` (1) time** per run (`retries` on the run). After that the studio offers only "It went through: continue" and "End this run", and says why.
+
+**Stop rules, explicit.** `lib/flow-stop-rules.ts` lists every way a run of a workflow stops. From the workflow itself: its goal, each condition that ends the run, each step that goes to the end, and its last step. From the engine: leaving the list; a pause, a removed step or email leaving the plan; a refused email; the wait bounds; and the hold with its one retry. The studio shows the list under the preview, before the workflow is switched on. Each rule is one the job enforces, and the job makes no stop that is not on the list.
+
+**The preview** is the same routing code as the job (`previewRun`), run in the browser on the sample. It sends nothing, saves nothing and runs no database command (`tests/workflow-retries.test.ts` counts them: zero).
+
+**Cost.** One wait costs at most `WAIT_COMMANDS_PER_TRY` (32) commands for a batch of one person: measured 21 for a wait on the day's room and 30 for the month's emails. `WORST_COMMANDS_PER_RUN` now counts every step, the one creator retry (one more step) and every wait: 8 + 21 × 15 + 3 × 32 = 419, from 308. To keep each plan's worst month at or under what it was, without touching a price, the new runs a day went down from 25, 40 and 10 to 18 (Studio), 29 (Scale) and 7 (trial). `tests/spend-floor.test.ts` keeps its $0.25 and $1 of room on every plan.
+
+**Not bounded by a count:** a step put back because the attempt itself could not be written, or because the job failed before it, is tried again in 10 minutes. Both need the store to fail, and a count kept in that same store cannot be read then either.
 
 ## Erasure
 
@@ -46,17 +63,20 @@ The abandoned-checkout claim (`nl:wf:abandoned:<checkout session id>`, 2 days) h
 | Workflows kept | email not on plan | 20 | 20 | 20 |
 | Steps per workflow | | 20 | 20 | 20 |
 | Switched on at once | 0 | 10 | 20 | 3 |
-| New runs per UTC day, all workflows | 0 | 25 | 40 | 10 |
+| New runs per UTC day, all workflows | 0 | 18 | 29 | 7 |
+| Waits per run, all steps | | 3 | 3 | 3 |
+| Days one step may wait | | 35 | 35 | 35 |
+| "Try it again" on a held run | | 1 | 1 | 1 |
 
 Runs past the daily ceiling are refused before any record is written, their start claim is given back, and the refusals are counted and shown. A store that moves to a smaller plan keeps its workflows; only the oldest switched-on ones up to the new limit start new runs. The limits are in `CURRENT_COMMERCIAL_TERMS.workflows`, so changing any of them invalidates an earlier margin review.
 
 ## Cost reasoning
 
-Emails draw on the existing monthly allowance and its supplier reservation; nothing here adds an email that bypasses it. Owner notices use the platform sender once per group of people. Webhook events reuse the store's endpoints (at most 5) and the existing seven-try retry ceiling. The non-email cost is Redis commands. `WORST_COMMANDS_PER_RUN` (8 to start, plus 20 steps × (9 history + 6 queue/contact) = 308) is a review ceiling, not a measured average. At Upstash's published $0.20 per 100,000 commands (baseline doc C06), the daily run ceilings first set (300 and 600) gave about $5.73 a month for Studio and $11.46 for Scale, which neither plan's worst month could carry paid by the year. Since 17 October 2026 they are 25 and 40 (10 in the free trial): $0.48 and $0.76 a month (25 or 40 × 31 × 308 commands), the `workflows` line of `tests/plan-cost-registry.ts`. The owner's notice step now takes one of the store's monthly emails before it is sent (`lib/mail.ts`, `takeFromMonth`); with none left the step is marked failed with that reason, and the run goes on. Erasure adds a bounded number of commands per request (per workflow: 5 deletions plus 2 queue removals). The figures are inputs for the margin review. They are not proof that any plan meets the 60% after-tax floor.
+Emails draw on the existing monthly allowance and its supplier reservation; nothing here adds an email that bypasses it. Owner notices use the platform sender once per group of people. Webhook events reuse the store's endpoints (at most 5) and the existing seven-try retry ceiling. The non-email cost is Redis commands. `WORST_COMMANDS_PER_RUN` (8 to start, plus 20 steps × (9 history + 6 queue/contact) = 308) is a review ceiling, not a measured average. At Upstash's published $0.20 per 100,000 commands (baseline doc C06), the daily run ceilings first set (300 and 600) gave about $5.73 a month for Studio and $11.46 for Scale, which neither plan's worst month could carry paid by the year. Since 17 October 2026 they were 25 and 40 (10 in the free trial): $0.48 and $0.76 a month (25 or 40 × 31 × 308 commands). Since 18 October 2026 waits and retries are counted (419 commands a run) and the ceilings are 18 and 29 (7 in the trial): $0.47 and $0.75 a month, the `workflows` line of `tests/plan-cost-registry.ts`. The owner's notice step now takes one of the store's monthly emails before it is sent (`lib/mail.ts`, `takeFromMonth`); with none left the step is marked failed with that reason, and the run goes on. Erasure adds a bounded number of commands per request (per workflow: 5 deletions plus 2 queue removals). The figures are inputs for the margin review. They are not proof that any plan meets the 60% after-tax floor.
 
 ## Verification
 
-`tests/workflow-run-history.test.ts` (20 checks) covers the four counts and the bounds above. `tests/workflow-branching.test.ts` (62 checks) covers erasure (above), routes, preview determinism, plan limits, save validation, explicit activation, IF/ELSE delivery, label goals, step history, the daily ceiling, a lost provider answer that is held rather than resent, an attempt left open by a stopped job, and the creator's one-time resolution. Existing sequence tests were updated only where new workflows now need an explicit switch on. Everything runs against the in-memory Redis double and a stand-in email provider. No real messages, Stripe accounts or customer records are used.
+`tests/workflow-run-history.test.ts` covers the four counts and the bounds above. `tests/workflow-retries.test.ts` covers when a wait is tried again, the wait and retry bounds, what one wait costs, the stop rules and a preview with no database command. `tests/workflow-branching.test.ts` (62 checks) covers erasure (above), routes, preview determinism, plan limits, save validation, explicit activation, IF/ELSE delivery, label goals, step history, the daily ceiling, a lost provider answer that is held rather than resent, an attempt left open by a stopped job, and the creator's one-time resolution. Existing sequence tests were updated only where new workflows now need an explicit switch on. Everything runs against the in-memory Redis double and a stand-in email provider. No real messages, Stripe accounts or customer records are used.
 
 ## Not included
 
