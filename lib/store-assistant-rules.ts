@@ -51,6 +51,7 @@ import { AI_CALL_INFRA_MICRO_USD, ANTHROPIC_RATES, PROVIDER_CHARGES_BPS, UPSTASH
 import { maximumPretaxCostCents } from "@/lib/cost-envelope";
 import { assessCustomerWorstCase, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
 import { MAX_STORED_PAGE_BYTES } from "@/lib/sales-page";
+import { DISPUTE_COUNTER_FEE_CENTS, DISPUTE_FEE_CENTS, DISPUTE_RESERVE_BPS, MOST_TAX_READING, PROVIDER_FEES, REFUND_RESERVE_BPS, REMITTANCE_BPS, SIZING_READING, STRIPE_TOTAL_BPS, chargedOf, providerFeeCents, receivingOf, unitUnder } from "@/lib/receiving-costs";
 
 /** The largest store record (lib/store.ts, MAX_STORE_BYTES), read once a message; held equal in tests/store-assistant.test.ts. */
 export const STORE_RECORD_BYTES = 1_000_000;
@@ -308,47 +309,47 @@ export function assistantPoolMicroUsd(): number {
 // ----------------------------------------------------------------- the add-on's own month, against the owner's floor
 
 /**
- * The fee at the dearer of the two payment providers the owner may use, on
- * the whole (tax-inclusive) amount, read 17 October 2026:
+ * The fee at the dearer of the two payment providers the owner may use, in
+ * the one model every plan and add-on is held to since 18 October 2026
+ * (lib/receiving-costs.ts): on the AMOUNT CHARGED, the price plus the
+ * buyer's sales tax added on top at its highest (27%). Read 17 October 2026:
  *   Stripe (stripe.com/pricing): 2.9% + 30¢ a card, + 1.5% for an
  *   international card, + 1% when currency is converted, + 0.7% Billing,
  *   + 0.5% Tax: 6.6% + 30¢, the "most expensive payment fee" of
  *   docs/tax-uncertainty.md.
  *   Paddle (merchant of record): 5% + 50¢.
- * The add-on is its own subscription, so it pays its own fixed fee.
+ * The add-on is its own subscription, so it pays its own fixed fee. Until
+ * that day the fee here was taken on the price alone, as if no tax were
+ * added on top.
  */
 export const ADD_ON_FEES = {
-  stripe: { bps: 660, cents: 30 },
-  paddle: { bps: 500, cents: 50 },
+  stripe: { bps: STRIPE_TOTAL_BPS, cents: PROVIDER_FEES.stripe.fixedCents },
+  paddle: { bps: PROVIDER_FEES.paddle.bps, cents: PROVIDER_FEES.paddle.fixedCents },
 } as const;
-/** Stripe's fee for a dispute received, and for one countered (stripe.com/pricing, 17 October 2026). */
-export const DISPUTE_FEE_CENTS = 1_500;
-export const DISPUTE_COUNTER_FEE_CENTS = 1_500;
 /**
- * A reserve set aside from every payment for disputes: one payment in a
- * hundred lost in full with both fees. Stripe's and the card networks'
- * monitoring programs act below that rate, the first payment asks the bank
- * to authenticate the card (lib/assistant-billing.ts), and a store whose
- * add-on payment is disputed has it ended at once and is not sold it again
- * (AssistantPlan.disputedAt), so one store cannot be the exposure twice.
+ * Stripe's fees for a dispute, and the reserves set aside from every payment
+ * (lib/receiving-costs.ts): one payment in a hundred lost in full with both
+ * fees, one in a hundred refunded in full, and the remittance allowance.
+ * Stripe's and the card networks' monitoring programs act below that rate,
+ * the first payment asks the bank to authenticate the card
+ * (lib/assistant-billing.ts), and a store whose add-on payment is disputed
+ * has it ended at once and is not sold it again (AssistantPlan.disputedAt),
+ * so one store cannot be the exposure twice. Payments are not refunded
+ * except where consumer law requires it (app/refunds).
  */
-export const DISPUTE_RESERVE_BPS = 100;
-/** Payments are not refunded except where consumer law requires it (app/refunds); a reserve for that: one in a hundred refunded in full. */
-export const REFUND_RESERVE_BPS = 100;
-/** Bringing the money from the company's account to the owner's: a deliberately high allowance for wire and exchange costs (IOF is a tax, in docs/tax-uncertainty.md). */
-export const REMITTANCE_BPS = 150;
+export { DISPUTE_FEE_CENTS, DISPUTE_COUNTER_FEE_CENTS, DISPUTE_RESERVE_BPS, REFUND_RESERVE_BPS, REMITTANCE_BPS };
 /** The room kept under the floor so a later change cannot spend the add-on back to its edge, as the plans keep theirs (tests/spend-floor.test.ts). */
 export const ADD_ON_ROOM_CENTS = 25;
 
-const pct = (cents: number, bps: number) => Math.ceil((cents * bps) / 10_000);
-
-/** The dearer provider's fee on one payment, in cents. */
+/** The dearer provider's fee on one payment of the add-on, on the amount charged, in cents. */
 export function addOnFeeCents(cents = ASSISTANT_PRICE_CENTS): number {
-  return Math.max(...Object.values(ADD_ON_FEES).map((fee) => pct(cents, fee.bps) + fee.cents));
+  return providerFeeCents(chargedOf(cents, SIZING_READING), true);
 }
 
 export type AddOnMonth = {
   revenueCents: number;
+  /** What the buyer is charged: the price and the sales tax added on top. */
+  chargedCents: number;
   feeCents: number;
   remittanceCents: number;
   disputeReserveCents: number;
@@ -363,14 +364,11 @@ export type AddOnMonth = {
 
 /** One month of the add-on, every message used at its worst, every fee and reserve counted, in whole cents rounded up. */
 export function assistantMonthWorst(messages = ASSISTANT_MESSAGES_MONTHLY): AddOnMonth {
-  const revenueCents = ASSISTANT_PRICE_CENTS;
-  const feeCents = addOnFeeCents(revenueCents);
-  const remittanceCents = pct(revenueCents, REMITTANCE_BPS);
-  const disputeReserveCents = pct(revenueCents + DISPUTE_FEE_CENTS + DISPUTE_COUNTER_FEE_CENTS, DISPUTE_RESERVE_BPS);
-  const refundReserveCents = pct(revenueCents, REFUND_RESERVE_BPS);
+  const received = receivingOf(ASSISTANT_PRICE_CENTS, SIZING_READING, true);
+  const { revenueCents, chargedCents, feeCents, remittanceCents, disputeReserveCents, refundReserveCents } = received;
   const aiCents = Math.ceil((messages * assistantMessageWorstMicroUsd()) / 10_000);
   const allowedCents = maximumPretaxCostCents(revenueCents, PLANNING_PROFIT_TAX_FLOOR_BPS) ?? 0;
-  const totalCents = feeCents + remittanceCents + disputeReserveCents + refundReserveCents + aiCents;
+  const totalCents = received.totalCents + aiCents;
   const pretax = revenueCents - totalCents;
   const review: CustomerWorstCase = {
     collectedRevenueCents: revenueCents,
@@ -394,7 +392,7 @@ export function assistantMonthWorst(messages = ASSISTANT_MESSAGES_MONTHLY): AddO
     allTaxesReviewed: true,
     revenueCollected: true,
   };
-  return { revenueCents, feeCents, remittanceCents, disputeReserveCents, refundReserveCents, aiCents, allowedCents, totalCents, roomCents: allowedCents - totalCents, review };
+  return { revenueCents, chargedCents, feeCents, remittanceCents, disputeReserveCents, refundReserveCents, aiCents, allowedCents, totalCents, roomCents: allowedCents - totalCents, review };
 }
 
 /** Whether the add-on alone keeps the owner's floor, with its room to spare: what the release gate and the tests read. */
@@ -404,16 +402,17 @@ export function assistantMeetsFloor(messages = ASSISTANT_MESSAGES_MONTHLY): bool
 }
 
 /**
- * The add-on under the most-tax reading of docs/tax-uncertainty.md (rule 19):
- * VAT of up to 27% inside the price, the dearest fee, US federal tax up to
- * 37%, Brazilian tax of 27.5% with no credit for it, and IOF on the money
+ * The add-on under the most-tax reading of docs/tax-uncertainty.md (rule 19,
+ * lib/receiving-costs.ts MOST_TAX_READING): VAT of 27% inside the price, the
+ * dearest fee, US federal 37%, California 13.3%, Brazil 27.5% and IOF 0.38%
+ * on profit with no credit, ISS at 5% of revenue, and IOF on the money
  * brought home. Its net share of revenue, which is below 60% at any limit:
- * so it stays closed with the plans until an accountant confirms a lower one.
+ * so it stays closed with the plans.
  */
 export function assistantMostTaxNetShare(): number {
   const month = assistantMonthWorst();
-  const net = month.revenueCents / 1.27 - month.totalCents;
-  return Math.max(0, (net * (1 - 0.37) * (1 - 0.275) * (1 - 0.035)) / month.revenueCents);
+  const unit = unitUnder(ASSISTANT_PRICE_CENTS, month.aiCents, MOST_TAX_READING, true);
+  return Math.max(0, unit.netBps / 10_000);
 }
 
 // ----------------------------------------------------------------- public words, from these numbers

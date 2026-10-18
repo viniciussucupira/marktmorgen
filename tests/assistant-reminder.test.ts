@@ -37,7 +37,9 @@ import { pool } from "@/lib/store-assistant";
 import {
   ADD_ON_ROOM_CENTS,
   ASSISTANT_MESSAGE_COMMANDS,
+  ASSISTANT_MESSAGES_MONTHLY,
   ASSISTANT_MODEL,
+  ASSISTANT_PRICE_CENTS,
   assistantMeetsFloor,
   assistantMessageExtraMicroUsd,
   assistantMessageWorstMicroUsd,
@@ -46,6 +48,8 @@ import {
   assistantSettledMicroUsd,
   assistantWindow,
 } from "@/lib/store-assistant-rules";
+import { receivingOf } from "@/lib/receiving-costs";
+import { ASSISTANT_ON_SALE } from "@/lib/opening";
 import { ASSIST_REMIND_KEEP_SECONDS, ASSIST_REMIND_OUTPUT_TOKENS, ASSIST_REMIND_VERSION, neutralLine, parseAssistReminder, withinReminderReply } from "@/lib/assistant-reminder-rules";
 import { ASSIST_REMIND_SYSTEM, assistReminderOffered, forgetAssistReminderPerson, assistReminderShown, keepAssistReminder, remindFromConsent, sendAssistReminders } from "@/lib/assistant-reminder";
 import { ASSIST_REMINDER_WORDS } from "@/lib/buyer-words/assistant-reminder";
@@ -135,7 +139,9 @@ async function main(): Promise<void> {
   const month = assistantMonthWorst();
   const net = (month.revenueCents - month.totalCents - Math.ceil(((month.revenueCents - month.totalCents) * 2_750) / 10_000)) / month.revenueCents;
   console.log(`  the add-on's month: $${(month.totalCents / 100).toFixed(2)} of $${(month.allowedCents / 100).toFixed(2)} allowed, ${(net * 100).toFixed(2)}% net after 27.5%`);
-  is("so the add-on's month is unchanged and keeps the owner's floor with its room", [assistantMeetsFloor(), month.roomCents >= ADD_ON_ROOM_CENTS, net >= 0.6], [true, true, true]);
+  // Unchanged: the month is the chat's worst reply times the pool, received in the one model of lib/receiving-costs.ts.
+  // That month keeps the floor or is not on sale (docs/margin-alignment-2026-10-18.md).
+  is("so the add-on's month is unchanged, and keeps the owner's floor with its room or is not on sale", [month.totalCents, assistantMeetsFloor() === (month.roomCents >= ADD_ON_ROOM_CENTS && net >= 0.6), ASSISTANT_ON_SALE && !assistantMeetsFloor()], [receivingOf(ASSISTANT_PRICE_CENTS).totalCents + Math.ceil((ASSISTANT_MESSAGES_MONTHLY * assistantMessageWorstMicroUsd()) / 10_000), true, false]);
 
   part("Off until switched on, paid for and with a postal address");
   await claimHandle(OWNER, "ovenshop", "Oven Shop", "Recipes for busy weeknights.");
