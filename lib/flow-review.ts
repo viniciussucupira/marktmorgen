@@ -29,6 +29,7 @@ export function flowConfigurationIssues(flow: Flow, context: FlowReviewContext):
   if (flow.steps.length > MAX_STEPS) issues.push("This workflow has more than " + MAX_STEPS + " steps. Remove steps before saving.");
   const badRoute = checkRoutes(flow.steps);
   if (badRoute !== null) issues.push("Step " + (badRoute + 1) + ": a branch must go forward to a later step of this workflow. Choose a later step, or the end.");
+  if (flow.trigger === "stage" && !context.stages.some(stage => stage.id === flow.stageId)) issues.push("The deal stage that starts this workflow is no longer in your pipelines. Choose a current stage.");
   if (flow.trigger === "form" && !context.forms.some(form => form.id === flow.formId)) issues.push("The trigger form is unavailable for this sequence. Choose a form that collects an email address.");
   else if (flow.trigger === "form" && flow.formOutcome && !context.forms.find(form => form.id === flow.formId)?.outcomes?.some(o => o.id === flow.formOutcome)) issues.push("The quiz result that starts this workflow is no longer in the form. Choose one of its results, or everyone who sends it.");
   if (flow.goal && "productId" in flow.goal && !productExists(flow.goal.productId)) issues.push("The product used to end this sequence is unavailable. Review the goal.");

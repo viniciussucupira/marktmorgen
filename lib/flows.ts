@@ -64,8 +64,8 @@ import {
 } from "@/lib/flow-rules";
 import { changeLabels, readTags } from "@/lib/contacts";
 import { type ActionContext } from "@/lib/flow-rules";
-import { CrmDealReadUnavailable, readFields, readStages, readDeals, setValue, writeDeal } from "@/lib/crm";
-import { newCrmId } from "@/lib/crm-rules";
+import { CrmDealReadUnavailable, readFields, readPipelines, readStages, readDeals, setValue, writeDeal } from "@/lib/crm";
+import { allStages, newCrmId, pipelineOf } from "@/lib/crm-rules";
 import { personKey } from "@/lib/person-key";
 import { readForm } from "@/lib/form-store";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
@@ -106,12 +106,18 @@ export type Flow = {
    * address in it, while on the list (added 13 October 2026); "started":
    * opened the course `productId` is for the first time; "abandoned": left a
    * checkout of `productId` unpaid after agreeing, on Stripe's page, to hear
-   * from the creator, while also on the list (both added 17 October 2026).
+   * from the creator, while also on the list (both added 17 October 2026);
+   * "stage": the store's team made or moved a deal with their address into
+   * the stage `stageId` of one of its pipelines (added 17 October 2026,
+   * lib/deal-stage-trigger.ts), while they are on the list and agreed to
+   * hear from the creator.
    */
   trigger: FlowTrigger;
   productId: string | null;
   /** The label that starts it, for "tagged". */
   tag?: string;
+  /** The deal stage that starts it, for "stage": at most one workflow a stage (saveFlow). */
+  stageId?: string;
   /** The form that starts it, for "form" (lib/forms.ts). */
   formId?: string;
   /**
@@ -221,7 +227,7 @@ const starterOf = (raw: unknown): Flow["starter"] => (raw === "welcome" || raw =
 
 export type FlowResult =
   | { ok: true; flows: Flow[] }
-  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "form" | "steps" | "step" | "route" | "goal" | "too_many" | "active_limit" | "unknown" | "setup" | "plan" | "placeholder" };
+  | { ok: false; reason: "name" | "trigger" | "product" | "tag" | "form" | "steps" | "step" | "route" | "goal" | "too_many" | "active_limit" | "unknown" | "setup" | "plan" | "placeholder" | "stage" | "stage_taken" };
 
 /**
  * Adds a sequence, or replaces one with the same id. Checked whole every time.
@@ -257,6 +263,9 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>, opts:
   const formOutcome = trigger === "form" && typeof raw.formOutcome === "string" ? raw.formOutcome : "";
   // The store's fields and stages, for a step that sets one or moves a deal (lib/crm.ts).
   const [crmFields, stages] = await Promise.all([readFields(store.statsId), readStages(store.statsId)]);
+  // A stage of one of the store's pipelines; one workflow a stage, so a deal entering it starts one run at the most.
+  const stageId = trigger === "stage" && typeof raw.stageId === "string" ? raw.stageId : "";
+  if (trigger === "stage" && !stages.some((st) => st.id === stageId)) return { ok: false, reason: "stage" };
   const rawSteps = Array.isArray(raw.steps) ? raw.steps : [];
   // Who may be made responsible for a deal: the owner, or a teammate who can see orders, as on the deals board.
   const assigns = rawSteps.some((s) => s && typeof s === "object" && (s as { action?: { do?: unknown } }).action?.do === "assign");
@@ -289,6 +298,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>, opts:
   if (trigger === "abandoned" && !(goal && ("any" in goal || "productId" in goal))) return { ok: false, reason: "goal" };
   const at = id ? flows.findIndex((f) => f.id === id) : -1;
   if (id && at < 0) return { ok: false, reason: "unknown" };
+  if (trigger === "stage" && flows.some((f) => f.id !== id && f.trigger === "stage" && f.stageId === stageId)) return { ok: false, reason: "stage_taken" };
   if (!id && flows.length >= MAX_FLOWS) return { ok: false, reason: "too_many" };
   const active = at >= 0 ? raw.active === true : opts.activate === true;
   if (active && !(at >= 0 && flows[at].active) && flows.filter((f) => f.active && f.id !== id).length >= activeFlowLimit(store)) return { ok: false, reason: "active_limit" };
@@ -302,6 +312,7 @@ export async function saveFlow(store: Store, raw: Record<string, unknown>, opts:
     ...(tag ? { tag } : {}),
     ...(formId ? { formId } : {}),
     ...(formOutcome ? { formOutcome } : {}),
+    ...(stageId ? { stageId } : {}),
     steps,
     active,
     createdAt: at >= 0 ? flows[at].createdAt : Math.floor(Date.now() / 1000),
@@ -454,7 +465,7 @@ export async function flowsStartedFor(flows: Flow[], email: string): Promise<str
  * Starts whichever sequences this event begins, for this person. Never
  * throws: the list must never cost anyone what they asked for.
  */
-export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string; form?: string; formOutcome?: string; started?: string; abandoned?: string }): Promise<void> {
+export async function enroll(store: Store, email: string, event: { joined: boolean; productId?: string; tag?: string; finished?: string; form?: string; formOutcome?: string; started?: string; abandoned?: string; stage?: string }): Promise<void> {
   try {
     if (!store.listId || monthlyAllowance(store) === 0) return;
     // Whether what they just got is sold for money: the store's own index
@@ -472,6 +483,7 @@ export async function enroll(store: Store, email: string, event: { joined: boole
           (f.trigger === "finished" && event.finished && f.productId === event.finished) ||
           (f.trigger === "started" && event.started && f.productId === event.started) ||
           (f.trigger === "abandoned" && event.abandoned && f.productId === event.abandoned) ||
+          (f.trigger === "stage" && event.stage && f.stageId === event.stage) ||
           (f.trigger === "form" && event.form && f.formId === event.form && (!f.formOutcome || f.formOutcome === event.formOutcome))),
     );
     if (!flows.length) return;
@@ -678,7 +690,8 @@ async function actOnPeople(
     return out;
   }
   if (action.do === "deal" || action.do === "assign") {
-    const stages = await readStages(statsId);
+    const pipelines = await readPipelines(statsId);
+    const stages = allStages(pipelines);
     let deals: Awaited<ReturnType<typeof readDeals>>;
     try {
       deals = await readDeals(statsId, stages);
@@ -695,10 +708,12 @@ async function actOnPeople(
     }
     const stage = action.do === "deal" ? stages.find((s) => s.id === action.stage) : undefined;
     if (action.do === "deal" && !stage) return each(emails, "failed", "The deal stage was removed from your board.");
+    // A deal step works in the pipeline of its stage: their open deal there moves, and another pipeline's deal is left as it is.
+    const inPipeline = stage ? new Set(pipelineOf(pipelines, stage.id)?.stages.map((s) => s.id) ?? []) : null;
     const out: Acted[] = [];
     for (const email of emails) {
       // Their open deal moves; with none open, a new one is made for them.
-      const open = deals.find((d) => d.email === email && stages.find((s) => s.id === d.stage)?.kind === "open");
+      const open = deals.find((d) => d.email === email && (!inPipeline || inPipeline.has(d.stage)) && stages.find((s) => s.id === d.stage)?.kind === "open");
       let deal;
       if (action.do === "assign") {
         if (!open) {
@@ -729,6 +744,7 @@ async function actOnPeople(
         out.push(error instanceof CrmDealReadUnavailable ? { email, state: "deferred", note: "Your deals board could not be read; tried again in a few minutes." } : { email, state: "uncertain", note: "Whether the deal was saved could not be confirmed." });
       }
     }
+    // A deal a step moves starts no workflow of its stage (lib/deal-stage-trigger.ts): a step that starts another workflow does that, priced as its own step.
     return out;
   }
   // The owner, told once for everyone who reached the step together: who, and where.

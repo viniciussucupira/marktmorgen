@@ -10,16 +10,17 @@ import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
 import { readFields, readOpportunityReview } from "@/lib/crm";
 import { DealsUnavailable } from "@/components/deals-unavailable";
+import { pipelineLimit } from "@/lib/crm-rules";
 
 export const metadata: Metadata = {
-  title: "Deals and fields — Marktmorgen",
+  title: "Deals, pipelines and fields — Marktmorgen",
   robots: { index: false, follow: false },
 };
 
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
 /**
- * A store's deals and its own fields about each person (lib/crm-rules.ts),
+ * A store's deals, in its pipelines, and its own fields about each person (lib/crm-rules.ts),
  * for a role that may read orders with buyers' addresses ("orders"): a deal
  * names a person, and a field is something kept about one.
  */
@@ -50,16 +51,16 @@ export default async function StudioDealsPage({ searchParams }: Params) {
       <StudioStorePin sid={store.sid}>
         <main id="content" className="container-page pb-20 pt-10 sm:pt-14">
           <p className="eyebrow">Deals and fields</p>
-          <h1 className="t-h2 mt-3">Your deals and what you keep about people</h1>
+          <h1 className="t-h2 mt-3">Your deals, pipelines and what you keep about people</h1>
           <p className="mt-3 max-w-2xl text-ink-soft">
-            Only your team sees any of this, and nothing here sends anything to anybody. Each person&apos;s answers to your fields are on their page under{" "}
+            Only your team sees any of this. Nothing here sends anything by itself; a workflow you set to start from a stage, under Email, can. Each person&apos;s answers to your fields are on their page under{" "}
             <a className="underline underline-offset-4" href={studioPath(store, "", "people")}>
               Buyers
             </a>
             .
           </p>
           <div className="mt-8">
-            {available ? <DealsBoard key={(store.sid || store.handle) + ":" + dealActionFilter(query.followup)} deals={inventory.deals} stages={inventory.stages} fields={fields} currency={store.currency} assignees={assignees} today={today} initialFilter={dealActionFilter(query.followup)} requestHref={can(view.role, "send") ? studioPath(store, "", "requests") : undefined} /> : <DealsUnavailable storeId={store.sid} buyersHref={studioPath(store, "", "people")} fields={fields} followup={dealActionFilter(query.followup)} />}
+            {available ? <DealsBoard key={(store.sid || store.handle) + ":" + dealActionFilter(query.followup)} deals={inventory.deals} stages={inventory.stages} pipelines={inventory.pipelines} pipelineMax={pipelineLimit(store)} fields={fields} currency={store.currency} assignees={assignees} today={today} initialFilter={dealActionFilter(query.followup)} requestHref={can(view.role, "send") ? studioPath(store, "", "requests") : undefined} /> : <DealsUnavailable storeId={store.sid} buyersHref={studioPath(store, "", "people")} fields={fields} followup={dealActionFilter(query.followup)} />}
           </div>
         </main>
       </StudioStorePin>

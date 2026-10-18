@@ -18,6 +18,7 @@ import { SHARE_LIMITS, bytesWords } from "@/lib/funnel-share-rules";
 import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { workflowLimitWords } from "@/lib/flow-limits";
+import { pipelineLimitWords } from "@/lib/crm-rules";
 import { EXPECTATION, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
 import type { TopicPage } from "@/lib/site-pages";
 import { PLAN_AT, feeWords } from "@/lib/fee-words";
@@ -719,7 +720,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           { icon: "sparkle", title: "A first draft with AI, on " + AI_PLANS_WORDS, body: "Pick what the email is for and which product it is about, say it in a few words, and the subject and body are filled in for you to read and change, with the product's link. Your unsubscribe link and postal address are added at the bottom as always." },
           { icon: "chat", title: "Announcements to your community", body: "A post in your community can also go by email to the members who asked for it, counted in the same monthly emails.", href: "/platform/community" },
           { icon: "star", title: "One email that asks for a review", body: "Switch it on and each buyer is asked once per order, 3 to 30 days after buying, for an honest review. Counted in the same monthly emails.", href: "/platform/reviews" },
-          { icon: "list", title: "Fields of your own, and deals", body: "Up to 10 things you keep about each person — their company, a date, which offer interests them — filled in on their page and written into your list's file as columns. And deals: people you are talking to about a sale made outside a checkout, with what each is worth, on stages you name, open, won or lost, added up stage by stage. Only your team sees them, and nothing in them sends anything to anybody." },
+          { icon: "list", title: "Fields of your own, and deals in pipelines", body: "Up to 10 things you keep about each person — their company, a date, which offer interests them — filled in on their page and written into your list's file as columns. And deals: people you are talking to about a sale made outside a checkout, with what each is worth, in pipelines of their own (coaching, partnerships), each with stages you name and order, open, won or lost. Each pipeline adds up its open, won and lost deals from the values you recorded, nothing forecast; removing a stage or a pipeline asks where its deals go. " + pipelineLimitWords() + " Only your team sees them. A workflow can start when your team moves a deal with someone on your list into a stage you choose." },
           { icon: "type", title: "Drafts your team can write", body: "Up to 20 drafts per store. An Editor writes one; you or an Admin reads it and sends it.", href: "/platform/teams-and-stores" },
         ],
       },
@@ -740,7 +741,7 @@ export const FEATURE_PAGES: TopicPage[] = [
           "No open counts, on purpose: nothing in an email reports back. A visit is a page of your store opened through one of the email's links, so a link to anywhere else is not counted, and a sale is one made on the page a link opened; somebody who comes back later by themselves is not counted for it.",
           "A test compares two subject lines, not two versions of the email itself, and only for a one-off email, not a sequence.",
           `During the free trial a store sends up to ${TRIAL_EMAILS} emails; the full ${PRO_EMAILS} opens with the first payment.`,
-          `${workflowLimitWords()} A step that acts gives or takes off a label, starts another workflow, sets a field, moves or assigns a deal, writes a note, emails you or tells your webhooks: it does not wait for a reply, read an open, send a text message, or grant or take away access to a course or community, and a label an import brought starts nothing. Branches only go forward, so a run never loops.`,
+          `${workflowLimitWords()} A workflow starts from a deal stage only when your team makes or moves a deal there, not when a form response becomes a deal, a workflow step moves it, or a stage is removed; each stage starts one workflow. A step that acts gives or takes off a label, starts another workflow, sets a field, moves or assigns a deal, writes a note, emails you or tells your webhooks: it does not wait for a reply, read an open, send a text message, or grant or take away access to a course or community, and a label an import brought starts nothing. Branches only go forward, so a run never loops.`,
           `Every store sends from the same sender, so one bad list could cost everyone their inbox. ${healthRuleWords()} Nothing waiting is lost.`,
           rampRuleWords(),
         ],

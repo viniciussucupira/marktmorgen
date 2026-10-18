@@ -20,13 +20,19 @@ import {
   MAX_DEAL_NOTE,
   MAX_DEAL_TITLE,
   MAX_FIELD_NAME,
+  MAX_PIPELINE_NAME,
   MAX_STAGE_NAME,
   MAX_STAGES,
+  type Pipeline,
   type Stage,
   type StageKind,
   boardTotals,
   dealFollowUps,
+  firstPipeline,
   newCrmId,
+  pipelineTotals,
+  stageLabel,
+  starterStages,
 } from "@/lib/crm-rules";
 
 const MESSAGES: Record<string, string> = {
@@ -39,6 +45,11 @@ const MESSAGES: Record<string, string> = {
   unknown: "That is already gone. Reload the page.",
   fields: "Each field needs a name of its own, and a choice needs at least two options.",
   stages: "Keep at least one open stage, one won and one lost, each with a name.",
+  pipelines: "Give the pipeline a name no other pipeline has, and keep at least one open stage, one won and one lost, each with a name.",
+  pipeline_limit: "Your plan has as many pipelines as it can keep. Remove one, or move to a larger plan.",
+  pipeline_last: "A store keeps at least one pipeline.",
+  moves: "Choose where the deals of each stage you remove go.",
+  crm_conflict: "Somebody else changed your pipelines a moment ago, so nothing was saved. Reload the page and make your change again.",
   server_error: "The change could not be confirmed. Check the saved CRM data before trying again.",
   crm_schema_read_unavailable: "The saved CRM configuration could not be checked before this change. Your current work is still here. Try again shortly.",
   crm_deal_read_unavailable: "Saved deals could not be checked before this change. Your current work is still here. Try again shortly.",
@@ -68,8 +79,26 @@ const KIND_WORDS: Record<StageKind, string> = { open: "Open", won: "Won", lost: 
  * who it is with, and a way to move it on. The stages are the store's own,
  * and so are the fields kept about each person, made here too.
  */
-export function DealsBoard({ deals, stages, fields, currency, assignees, today, initialFilter = "all", requestHref }: { deals: Deal[]; stages: Stage[]; fields: CrmField[]; currency: string; assignees: string[]; today: string; initialFilter?: DealActionFilter; /** The payment requests page, for a role that may send them; a deal with a person links to it, filled in. */ requestHref?: string }) {
+type PipelineDraft = { id: string; name: string; stages: Stage[]; isNew: boolean; moves: Record<string, string>; removeTo: string };
+
+/** The stages of every pipeline, grouped, for a choice of stage: a deal can be put in any pipeline. */
+function StageOptions({ pipelines, except }: { pipelines: readonly Pipeline[]; except?: ReadonlySet<string> }) {
+  const shown = pipelines.map(p => ({ ...p, stages: p.stages.filter(s => !except?.has(s.id)) })).filter(p => p.stages.length);
+  if (shown.length < 2) return <>{shown.flatMap(p => p.stages).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</>;
+  return <>{shown.map(p => <optgroup key={p.id} label={p.name}>{p.stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</optgroup>)}</>;
+}
+
+export function DealsBoard({ deals, stages: everyStage, pipelines: savedPipelines, pipelineMax = 1, fields, currency, assignees, today, initialFilter = "all", requestHref }: { deals: Deal[]; stages: Stage[]; /** The store's pipelines (lib/crm-rules.ts); the first holds the board it always had. */ pipelines?: Pipeline[]; /** How many pipelines the store's plan may have. */ pipelineMax?: number; fields: CrmField[]; currency: string; assignees: string[]; today: string; initialFilter?: DealActionFilter; /** The payment requests page, for a role that may send them; a deal with a person links to it, filled in. */ requestHref?: string }) {
   const router = useRouter();
+  const pipelines: Pipeline[] = savedPipelines?.length ? savedPipelines : [firstPipeline(everyStage)];
+  const [pipelineId, setPipelineId] = useState(pipelines[0].id);
+  const pipeline = pipelines.find(p => p.id === pipelineId) ?? pipelines[0];
+  // This pipeline's stages and deals: what the board, its filters, its agenda and its file show.
+  const stages = pipeline.stages;
+  const here = new Set(stages.map(s => s.id));
+  const pipelineDeals = deals.filter(d => here.has(d.stage));
+  const allTotals = pipelines.map(p => pipelineTotals(p, deals));
+  const [pipelineDraft, setPipelineDraft] = useState<PipelineDraft | null>(null);
   const money = (cents: number) => formatMoney(cents, currency);
   const [draft, setDraft] = useState<DealDraft | null>(null);
   const dealNameInput = useRef<HTMLInputElement>(null);
@@ -80,18 +109,17 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
   const [writeUnconfirmed, setWriteUnconfirmed] = useState(false);
   const locked = busy || refreshing;
   const [error, setError] = useState<string | null>(null);
-  const [stageDraft, setStageDraft] = useState<Stage[] | null>(null);
   const [fieldDraft, setFieldDraft] = useState<(CrmField & { optionsText: string })[] | null>(null);
   const [filter, setFilter] = useState<DealActionFilter>(dealActionFilter(initialFilter));
   const [search, setSearch] = useState("");
   const [responsible, setResponsible] = useState("all");
   const [view, setView] = useState<DealView>("board");
   const [order, setOrder] = useState<DealOrder>("current");
-  const scopedDeals = filterDeals(deals, search, responsible === "all" ? null : responsible === "unassigned" ? "" : responsible.slice(7));
+  const scopedDeals = filterDeals(pipelineDeals, search, responsible === "all" ? null : responsible === "unassigned" ? "" : responsible.slice(7));
   const responsibleChoices = [...new Set([...assignees, ...deals.flatMap(d => d.assignee ? [d.assignee] : [])])].sort();
   const followUps = dealFollowUps(stages, scopedDeals, today);
   const visibleIds = filter === "all" ? null : new Set(followUps[filter as keyof typeof followUps].map(d => d.id));
-  const totals = boardTotals(stages, deals);
+  const totals = boardTotals(stages, pipelineDeals);
   const visibleDeals = orderDeals(scopedDeals.filter(d => !visibleIds || visibleIds.has(d.id)), order);
   const columns = boardTotals(stages, visibleDeals);
   const selectionChanged = !!search || responsible !== "all" || filter !== "all" || order !== (view === "agenda" ? "due" : "current");
@@ -105,7 +133,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
     const answer = await call(body);
     setBusy(false);
     if (answer.ok) {
-      toast(done);
+      toast(answer.workflows === "not_checked" ? `${done} Your studio requests for this month are used up, so the workflow its stage starts was not checked.` : done);
       after?.();
       startRefresh(() => router.refresh());
       return;
@@ -116,11 +144,11 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
 
   function downloadWorklist() {
     if (!visibleDeals.length || locked || writeUnconfirmed) return;
-    const csv = dealWorklistCsv(visibleDeals, stages, { today, currency, query: search, responsible, filter, order, view });
+    const csv = dealWorklistCsv(visibleDeals, stages.map(s => ({ ...s, name: stageLabel(pipelines, s) })), { today, currency, query: search, responsible, filter, order, view });
     const address = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = address;
-    link.download = "deal-worklist-" + today + ".csv";
+    link.download = "deal-worklist-" + (pipelines.length > 1 ? pipeline.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" : "") + today + ".csv";
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -145,9 +173,42 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
   const original = draft?.id ? deals.find(deal => deal.id === draft.id) : null;
   const initialDeal = original ? draftFromDeal(original, currency) : { id: "", title: "", email: "", value: "", stage: firstOpen, note: "", nextAction: "", dueDate: "", assignee: "" };
   const initialFields = fields.map(field => ({ ...field, optionsText: field.options.join(", ") }));
-  const dirty = (draft !== null && JSON.stringify(draft) !== JSON.stringify(initialDeal)) || (stageDraft !== null && JSON.stringify(stageDraft) !== JSON.stringify(stages)) || (fieldDraft !== null && JSON.stringify(fieldDraft) !== JSON.stringify(initialFields));
+  const pipelineDirty = pipelineDraft !== null && (pipelineDraft.isNew || pipelineDraft.name !== pipeline.name || JSON.stringify(pipelineDraft.stages) !== JSON.stringify(pipeline.stages));
+  const dirty = (draft !== null && JSON.stringify(draft) !== JSON.stringify(initialDeal)) || pipelineDirty || (fieldDraft !== null && JSON.stringify(fieldDraft) !== JSON.stringify(initialFields));
   useLeaveGuard(dirty);
-  const editing = draft !== null || stageDraft !== null || fieldDraft !== null;
+  const editing = draft !== null || pipelineDraft !== null || fieldDraft !== null;
+  // How many deals each saved stage holds now: a stage removed with deals in it asks where they go.
+  const dealsIn = (stageId: string) => deals.filter(d => d.stage === stageId).length;
+
+  function savePipeline() {
+    if (!pipelineDraft || locked || writeUnconfirmed) return;
+    const kept = new Set(pipelineDraft.stages.map(s => s.id));
+    const gone = pipelineDraft.isNew ? [] : pipeline.stages.filter(s => !kept.has(s.id) && dealsIn(s.id) > 0);
+    if (gone.some(s => !pipelineDraft.moves[s.id])) {
+      setError(MESSAGES.moves);
+      return;
+    }
+    const moves = Object.fromEntries(gone.map(s => [s.id, pipelineDraft.moves[s.id]]));
+    void run({ action: "pipeline", pipeline: { id: pipelineDraft.id, name: pipelineDraft.name, stages: pipelineDraft.stages }, moves }, pipelineDraft.isNew ? "Pipeline added." : gone.length ? "Pipeline saved, and its deals moved." : "Pipeline saved.", () => { if (pipelineDraft.isNew) setPipelineId(pipelineDraft.id); setPipelineDraft(null); });
+  }
+
+  function removePipeline() {
+    if (!pipelineDraft || pipelineDraft.isNew || locked || writeUnconfirmed) return;
+    const holding = pipelineDeals.length;
+    if (holding && !pipelineDraft.removeTo) {
+      setError(MESSAGES.moves);
+      return;
+    }
+    void run({ action: "unpipeline", id: pipeline.id, moveTo: pipelineDraft.removeTo }, holding ? `Pipeline removed; its ${holding === 1 ? "deal was" : `${holding} deals were`} moved.` : "Pipeline removed.", () => { setPipelineId(pipelines.find(p => p.id !== pipeline.id)?.id ?? pipelines[0].id); setPipelineDraft(null); });
+  }
+
+  const moveStage = (from: number, to: number) => {
+    if (!pipelineDraft || to < 0 || to >= pipelineDraft.stages.length) return;
+    const next = [...pipelineDraft.stages];
+    const [one] = next.splice(from, 1);
+    next.splice(to, 0, one);
+    setPipelineDraft({ ...pipelineDraft, stages: next });
+  };
 
   return (
     <div className="space-y-8">
@@ -161,7 +222,7 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
               Deals
             </h2>
             <p className="mt-1 text-sm text-ink-soft">
-              {`People you are talking to about something sold outside a checkout: a coaching package, a custom project. ${open.reduce((n, t) => n + t.count, 0)} open, worth ${money(open.reduce((n, t) => n + t.cents, 0))}; won so far, ${money(won.reduce((n, t) => n + t.cents, 0))}.`}
+              {`People you are talking to about something sold outside a checkout: a coaching package, a custom project.${pipelines.length > 1 ? ` In ${pipeline.name}:` : ""} ${open.reduce((n, t) => n + t.count, 0)} open, worth ${money(open.reduce((n, t) => n + t.cents, 0))}; won so far, ${money(won.reduce((n, t) => n + t.cents, 0))}.`}
             </p>
           </div>
           {draft === null ? (
@@ -172,8 +233,38 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
           ) : null}
         </div>
 
+        <div className="mt-5" role="group" aria-label="Pipelines">
+          <div className="flex flex-wrap items-center gap-2">
+            {allTotals.map(t => (
+              <button key={t.pipeline.id} type="button" aria-pressed={t.pipeline.id === pipeline.id} disabled={editing && t.pipeline.id !== pipeline.id} className={`btn btn-sm ${t.pipeline.id === pipeline.id ? "btn-primary" : "btn-secondary"}`} onClick={() => { setPipelineId(t.pipeline.id); setError(null); }}>
+                {t.pipeline.name}
+                <span className="tabular-nums opacity-80">{` · ${t.open.count} open`}</span>
+              </button>
+            ))}
+            {pipelines.length < pipelineMax ? (
+              <button type="button" className="btn btn-ghost btn-sm" disabled={locked || editing || writeUnconfirmed} onClick={() => { setError(null); setPipelineDraft({ id: newCrmId(), name: "", stages: starterStages(), isNew: true, moves: {}, removeTo: "" }); }}>
+                <Icon name="plus" size={16} />
+                New pipeline
+              </button>
+            ) : null}
+          </div>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full min-w-[32rem] text-left text-sm">
+              <caption className="sr-only">What each pipeline&apos;s deals add up to</caption>
+              <thead><tr className="text-ink-soft">{["Pipeline", "Open", "Won", "Lost"].map(label => <th key={label} scope="col" className="py-2 pr-4 font-semibold">{label}</th>)}</tr></thead>
+              <tbody>{allTotals.map(t => (
+                <tr key={t.pipeline.id} className="border-t border-line">
+                  <th scope="row" className="py-2 pr-4 font-semibold text-ink [overflow-wrap:anywhere]">{t.pipeline.name}</th>
+                  {(["open", "won", "lost"] as const).map(k => <td key={k} className="py-2 pr-4 tabular-nums text-ink-soft">{`${t[k].count} · ${money(t[k].cents)}`}</td>)}
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-ink-mute">{`Each total adds up the values recorded on its deals, in ${currency.toUpperCase()}. Nothing is weighted or forecast. You have ${pipelines.length} of the ${pipelineMax} ${pipelineMax === 1 ? "pipeline" : "pipelines"} your plan keeps.`}</p>
+        </div>
+
         <div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="block"><span className="field-label">Find a deal</span><input type="search" className="field mt-2" maxLength={80} value={search} onChange={e => setSearch(e.target.value)} placeholder="Name, email, next action or note" /></label><label className="block"><span className="field-label">Responsible teammate</span><select className="field mt-2" value={responsible} onChange={e => setResponsible(e.target.value)}><option value="all">Everyone</option><option value="unassigned">Unassigned</option>{responsibleChoices.map(email => <option key={email} value={"person:" + email}>{email}{assignees.includes(email) ? "" : " (no longer eligible)"}</option>)}</select></label></div>
-        <p className="mt-2 text-xs text-ink-mute">The summary above includes all deals. Action counts and columns follow your search and teammate selection.</p>
+        <p className="mt-2 text-xs text-ink-mute">{`The summary above includes all of ${pipelines.length > 1 ? `this pipeline's` : "your"} deals. Action counts and columns follow your search and teammate selection.`}</p>
         <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Filter deals by next action">
           {([{ key: "all", label: "All deals" }, { key: "overdue", label: `Overdue (${followUps.overdue.length})` }, { key: "today", label: `Due today (${followUps.today.length})` }, { key: "upcoming", label: `Upcoming (${followUps.upcoming.length})` }, { key: "unplanned", label: `No dated action (${followUps.unplanned.length})` }]).map(item => <button key={item.key} type="button" aria-pressed={filter === item.key} className={`btn btn-sm ${filter === item.key ? "btn-primary" : "btn-secondary"}`} onClick={() => setFilter(dealActionFilter(item.key))}>{item.label}</button>)}
         </div>
@@ -217,13 +308,9 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
                 <input className="field mt-2" inputMode="decimal" value={draft.value} placeholder="1500" onChange={(e) => setDraft({ ...draft, value: e.target.value })} />
               </label>
               <label className="block">
-                <span className="field-label">Stage</span>
+                <span className="field-label">{pipelines.length > 1 ? "Pipeline and stage" : "Stage"}</span>
                 <select className="field mt-2" value={draft.stage} onChange={(e) => setDraft({ ...draft, stage: e.target.value })}>
-                  {stages.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
+                  <StageOptions pipelines={pipelines} />
                 </select>
               </label>
               <label className="block sm:col-span-2">
@@ -293,18 +380,14 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
                       {deal.note ? <p className="mt-2 whitespace-pre-line text-ink-soft [overflow-wrap:anywhere]">{deal.note}</p> : null}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <label className="min-w-0 flex-1">
-                          <span className="sr-only">{`Move ${deal.title}`}</span>
+                          <span className="sr-only">{pipelines.length > 1 ? `Move ${deal.title} to a stage or another pipeline` : `Move ${deal.title}`}</span>
                           <select
                             className="field"
                             value={deal.stage}
                             disabled={locked || editing || writeUnconfirmed}
-                            onChange={(e) => void run({ action: "deal", deal: { ...deal, stage: e.target.value } }, "Deal moved.")}
+                            onChange={(e) => void run({ action: "deal", deal: { ...deal, stage: e.target.value } }, here.has(e.target.value) ? "Deal moved." : `Deal moved to ${pipelines.find(p => p.stages.some(st => st.id === e.target.value))?.name ?? "another pipeline"}.`)}
                           >
-                            {stages.map((s) => (
-                              <option key={s.id} value={s.id}>
-                                {s.name}
-                              </option>
-                            ))}
+                            <StageOptions pipelines={pipelines} />
                           </select>
                         </label>
                         <button
@@ -334,52 +417,98 @@ export function DealsBoard({ deals, stages, fields, currency, assignees, today, 
           ))}
         </div>
         )}
-        {error && !draft && !stageDraft && !fieldDraft ? (
+        {error && !draft && !pipelineDraft && !fieldDraft ? (
           <p className="notice notice-error mt-4" role="alert">
             {error}
           </p>
         ) : null}
 
         <div className="mt-6">
-          {stageDraft ? (
+          {pipelineDraft ? (
             <fieldset disabled={locked} aria-busy={locked} className="min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-6">
-            <legend className="sr-only">Deal stages</legend>
-              <p className="font-semibold text-ink">Stages, in order</p>
-              <ol className="mt-3 space-y-2">
-                {stageDraft.map((stage, i) => (
+              <legend className="sr-only">{pipelineDraft.isNew ? "New pipeline" : "Pipeline and its stages"}</legend>
+              <label className="block">
+                <span className="field-label">{pipelineDraft.isNew ? "Name of the new pipeline" : "Pipeline name"}</span>
+                <input className="field mt-2" maxLength={MAX_PIPELINE_NAME} value={pipelineDraft.name} placeholder="Partnerships" onChange={e => setPipelineDraft({ ...pipelineDraft, name: e.target.value })} />
+              </label>
+              <p className="mt-4 font-semibold text-ink">Stages, in order</p>
+              <ol className="mt-3 space-y-3">
+                {pipelineDraft.stages.map((stage, i) => (
                   <li key={stage.id} className="flex flex-wrap items-center gap-2">
-                    <input className="field min-w-0 flex-1" aria-label={`Stage ${i + 1}`} maxLength={MAX_STAGE_NAME} value={stage.name} onChange={(e) => setStageDraft(stageDraft.map((s, j) => (j === i ? { ...s, name: e.target.value } : s)))} />
-                    <select className="field w-auto" aria-label={`What stage ${i + 1} means`} value={stage.kind} onChange={(e) => setStageDraft(stageDraft.map((s, j) => (j === i ? { ...s, kind: e.target.value as StageKind } : s)))}>
+                    <input className="field min-w-0 flex-1" aria-label={`Stage ${i + 1}`} maxLength={MAX_STAGE_NAME} value={stage.name} onChange={(e) => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.map((s, j) => (j === i ? { ...s, name: e.target.value } : s)) })} />
+                    <select className="field w-auto" aria-label={`What stage ${i + 1} means`} value={stage.kind} onChange={(e) => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.map((s, j) => (j === i ? { ...s, kind: e.target.value as StageKind } : s)) })}>
                       <option value="open">Open</option>
                       <option value="won">Won</option>
                       <option value="lost">Lost</option>
                     </select>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setStageDraft(stageDraft.filter((_, j) => j !== i))} aria-label={`Remove stage ${i + 1}`}>
+                    <button type="button" className="btn btn-secondary btn-sm" disabled={i === 0} onClick={() => moveStage(i, i - 1)} aria-label={`Move stage ${i + 1} up`}>Up</button>
+                    <button type="button" className="btn btn-secondary btn-sm" disabled={i === pipelineDraft.stages.length - 1} onClick={() => moveStage(i, i + 1)} aria-label={`Move stage ${i + 1} down`}>Down</button>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.filter((_, j) => j !== i) })} aria-label={`Remove stage ${i + 1}`}>
                       <Icon name="minus" size={16} />
                     </button>
                   </li>
                 ))}
               </ol>
-              {stageDraft.length < MAX_STAGES ? (
-                <button type="button" className="btn btn-secondary btn-sm mt-3" onClick={() => setStageDraft([...stageDraft, { id: newCrmId(), name: "", kind: "open" }])}>
+              {pipelineDraft.stages.length < MAX_STAGES ? (
+                <button type="button" className="btn btn-secondary btn-sm mt-3" onClick={() => setPipelineDraft({ ...pipelineDraft, stages: [...pipelineDraft.stages, { id: newCrmId(), name: "", kind: "open" }] })}>
                   <Icon name="plus" size={16} />
                   Add a stage
                 </button>
               ) : null}
-              <p className="mt-3 text-xs text-ink-soft">A deal in a stage you remove moves to the first open stage.</p>
+              <p className="mt-3 text-xs text-ink-soft">{`Up to ${MAX_STAGES} stages, with at least one open, one won and one lost.`}</p>
+              {(() => {
+                if (pipelineDraft.isNew) return null;
+                const kept = new Set(pipelineDraft.stages.map(s => s.id));
+                const gone = pipeline.stages.filter(s => !kept.has(s.id) && dealsIn(s.id) > 0);
+                if (!gone.length) return null;
+                // Where they can go: a stage kept in this pipeline (named), or any stage of another one.
+                const targets: Pipeline[] = [{ ...pipeline, stages: pipelineDraft.stages.filter(s => s.name.trim()) }, ...pipelines.filter(p => p.id !== pipeline.id)];
+                return (
+                  <div className="mt-4 space-y-3 rounded-xl bg-paper p-4 ring-1 ring-line">
+                    <p className="text-sm font-semibold text-ink">The stages you removed still hold deals. Choose where each one&apos;s deals go; none is deleted.</p>
+                    {gone.map(s => (
+                      <label key={s.id} className="block">
+                        <span className="field-label">{`${s.name}: ${dealsIn(s.id)} ${dealsIn(s.id) === 1 ? "deal" : "deals"} go to`}</span>
+                        <select className="field mt-2" value={pipelineDraft.moves[s.id] ?? ""} onChange={e => setPipelineDraft({ ...pipelineDraft, moves: { ...pipelineDraft.moves, [s.id]: e.target.value } })}>
+                          <option value="">Choose a stage</option>
+                          <StageOptions pipelines={targets} />
+                        </select>
+                      </label>
+                    ))}
+                    <p className="text-xs text-ink-soft">Moving them this way starts no workflow.</p>
+                  </div>
+                );
+              })()}
               <div className="mt-4 flex flex-wrap gap-3">
-                <button type="button" className="btn btn-primary" disabled={locked || writeUnconfirmed} onClick={() => void run({ action: "stages", stages: stageDraft }, "Stages saved.", () => setStageDraft(null))}>
-                  Save stages
+                <button type="button" className="btn btn-primary" disabled={locked || writeUnconfirmed} onClick={savePipeline}>
+                  {pipelineDraft.isNew ? "Add pipeline" : "Save pipeline"}
                 </button>
-                <button type="button" className="btn btn-secondary" disabled={locked} onClick={() => setStageDraft(null)}>
+                <button type="button" className="btn btn-secondary" disabled={locked} onClick={() => { setPipelineDraft(null); setError(null); }}>
                   Cancel
                 </button>
               </div>
-            {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
-          </fieldset>
+              {!pipelineDraft.isNew && pipelines.length > 1 ? (
+                <div className="mt-6 space-y-3 border-t border-line pt-4">
+                  <p className="text-sm font-semibold text-ink">{`Remove ${pipeline.name}`}</p>
+                  {pipelineDeals.length ? (
+                    <label className="block">
+                      <span className="field-label">{`Its ${pipelineDeals.length} ${pipelineDeals.length === 1 ? "deal goes" : "deals go"} to`}</span>
+                      <select className="field mt-2" value={pipelineDraft.removeTo} onChange={e => setPipelineDraft({ ...pipelineDraft, removeTo: e.target.value })}>
+                        <option value="">Choose a stage of another pipeline</option>
+                        <StageOptions pipelines={pipelines.filter(p => p.id !== pipeline.id)} />
+                      </select>
+                    </label>
+                  ) : <p className="text-sm text-ink-soft">It holds no deals.</p>}
+                  <button type="button" className="btn btn-secondary" disabled={locked || writeUnconfirmed || (pipelineDeals.length > 0 && !pipelineDraft.removeTo)} onClick={removePipeline}>
+                    Remove this pipeline
+                  </button>
+                </div>
+              ) : null}
+              {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
+            </fieldset>
           ) : (
-            <button type="button" className="btn btn-secondary btn-sm" disabled={locked || editing || writeUnconfirmed} onClick={() => setStageDraft(structuredClone(stages))}>
-              Change the stages
+            <button type="button" className="btn btn-secondary btn-sm" disabled={locked || editing || writeUnconfirmed} onClick={() => { setError(null); setPipelineDraft({ id: pipeline.id, name: pipeline.name, stages: structuredClone(pipeline.stages), isNew: false, moves: {}, removeTo: "" }); }}>
+              {pipelines.length > 1 ? `Change ${pipeline.name} and its stages` : "Change the pipeline and its stages"}
             </button>
           )}
         </div>

@@ -27,6 +27,7 @@ import { isDomainsConfigured } from "@/lib/domains";
 import { TEAM_LIMITS, teamLimitWords } from "@/lib/team-scheduling-rules";
 import { PLAN_TITLES, PRO_MONTHLY_EMAILS, REFUND_DAYS, TRIAL_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS } from "@/lib/plan";
 import { workflowLimitWords } from "@/lib/flow-limits";
+import { pipelineLimitWords } from "@/lib/crm-rules";
 import { PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS } from "@/lib/plan-pause-rules";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { formatMoney } from "@/lib/money";
@@ -830,7 +831,9 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "Can I keep my own details about people, and track deals?",
         a: [
           "Yes, on every plan, under Deals and fields in your studio. A field is something you keep about each person: up to 10, each text, a number, a date or one of a few choices you name. You fill it in on the person's page under Buyers, and your list's file has a column for each. Taking a field away takes every answer to it.",
-          "A deal is somebody you are talking to about a sale that does not happen at your checkout, such as a coaching package or a project, with what it is worth in your store's currency. It sits on a stage you name, each open, won or lost, and each stage is added up. A store keeps up to 1,000 deals. Only people on your team who see your orders see any of it, and nothing in it emails anybody.",
+          "A deal is somebody you are talking to about a sale that does not happen at your checkout, such as a coaching package or a project, with what it is worth in your store's currency. It sits on a stage you name, each open, won or lost, and each stage is added up. Only people on your team who see your orders see any of it, and nothing in it emails anybody by itself.",
+          "Deals sit in pipelines: one for coaching and one for brand partnerships, say, each with its own stages in the order you choose. You rename, reorder, add and remove stages; removing a stage that still holds deals asks you where they go, and removing a pipeline moves its deals to a stage of another, so no deal is deleted that way. A deal moves to any stage of any pipeline. Each pipeline shows what its open, won and lost deals add up to, from the values you recorded: nothing is weighted or forecast. " + pipelineLimitWords(),
+          "A workflow can start when a deal enters a stage you choose: when your team makes a deal in that stage, or moves one there. It starts only for the person the deal names by email, only if they are on your list and agreed to hear from you, and once per person, like every workflow. A deal made from a form response, moved by a workflow step, or moved because you removed its stage starts nothing. Each stage starts one workflow at most, which can start others with a step. On a plan with workflows, a deal entering a stage takes one more studio request, for that check.",
         ],
       },
       {
