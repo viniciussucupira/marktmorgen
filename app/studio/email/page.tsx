@@ -12,6 +12,7 @@ import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { listCounts } from "@/lib/contacts";
 import { listBroadcastsStrict } from "@/lib/broadcasts";
+import { letterIdFor, publishedLetterIds } from "@/lib/letters";
 import { broadcastMoney, flowMoney, readMailRevenue, readMailVisits } from "@/lib/mail-revenue";
 import { sellsSomething } from "@/lib/mail-starters";
 import { readFlowStatsStrict } from "@/lib/flow-stats";
@@ -78,6 +79,12 @@ export default async function StudioEmailPage({ searchParams }: Params) {
     readMailVisits(store, broadcasts.filter((b) => b.status === "sent" && b.tagged).map((b) => b.id)),
   ]);
   const trial = allowance > 0 && inTrial(store);
+  // Which sent emails are published on the store (lib/letters.ts): one read.
+  const published = broadcasts.some((b) => b.status === "sent") ? await publishedLetterIds(store) : new Set<string>();
+  const letterPath = (id: string) => {
+    const letter = letterIdFor(store.sid, id);
+    return published.has(letter) ? `/@${store.handle}/letters/${letter}` : null;
+  };
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -201,6 +208,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
               money: broadcastMoney(revenue, b.id),
               visits: visits?.[b.id] ?? null,
               test: b.test,
+              published: letterPath(b.id),
             }))}
             currency={store.currency}
             sells={sellsSomething(store)}
