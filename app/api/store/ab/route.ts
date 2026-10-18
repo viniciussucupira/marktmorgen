@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
 import { jsonAccess } from "@/lib/studio-route";
 import { readPage } from "@/lib/sales-page-store";
-import { runningTest } from "@/lib/sales-page";
-import { readCounts } from "@/lib/headline-test";
+import { declaredMeasure, runningTest } from "@/lib/sales-page";
+import { expectedShareB, readCounts } from "@/lib/headline-test";
 
 /** How a product's page test is going, a second headline or a second version: `?id=<product>` (lib/headline-test.ts). */
 export async function GET(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const test = runningTest(page);
     if (!test) return Response.json({ ok: false, error: "none" }, { status: 404 });
     const counts = await readCounts(store.statsId, id, test);
-    return Response.json({ ok: true, counts, currency: store.currency }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json({ ok: true, counts, currency: store.currency, declared: declaredMeasure(page), shareB: expectedShareB(test) }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("reading a page test failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

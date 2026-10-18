@@ -24,7 +24,7 @@ import { SharePanel } from "@/components/share-panel";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { BlockRewrite } from "@/components/block-rewrite";
 import { type CourseOutline, insideFromCourse } from "@/lib/course-outline-items";
-import { MIN_EXPECTED_SIGNUPS, MIN_SALES, MIN_VIEWS, WIN_CHANCE, type Counts, chanceBBetter, daysLeft, perVisitor, rate, winner } from "@/lib/headline-test-rules";
+import { MIN_EXPECTED_SIGNUPS, MIN_SALES, MIN_VIEWS, REFUND_DAYS, type Counts, type Measure, boundary, chanceBBetter, daysLeft, perVisitor, rate, testState } from "@/lib/headline-test-rules";
 import { formatMoney } from "@/lib/money";
 import { type BlockContext, type FeaturedCard, HeroView, PageSections } from "@/components/sales-blocks";
 import { RatingLine, ReviewsSection } from "@/components/review-list";
@@ -2706,15 +2706,19 @@ function times(n: number, word: string): string {
 function TestResults({ productId, running, what, sold }: { productId: string; running: boolean; what: "headline" | "page"; sold: boolean }) {
   const [counts, setCounts] = useState<Counts | null>(null);
   const [currency, setCurrency] = useState("usd");
+  const [declared, setDeclared] = useState<Measure | null>(null);
+  const [shareB, setShareB] = useState(0.5);
   useEffect(() => {
     if (!running) return;
     let live = true;
     fetch(`/api/store/ab?id=${encodeURIComponent(productId)}`, { cache: "no-store" })
       .then((r) => r.json())
-      .then((data: { ok?: boolean; counts?: Counts; currency?: string }) => {
+      .then((data: { ok?: boolean; counts?: Counts; currency?: string; declared?: Measure | null; shareB?: number }) => {
         if (live && data.ok && data.counts) {
           setCounts(data.counts);
           if (data.currency) setCurrency(data.currency);
+          setDeclared(data.declared === "money" || data.declared === "checkouts" ? data.declared : null);
+          if (typeof data.shareB === "number" && data.shareB > 0 && data.shareB < 1) setShareB(data.shareB);
         }
       })
       .catch(() => {});
@@ -2725,7 +2729,9 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
   if (!running) return <p className="text-xs text-ink-soft">Save the page and the test starts with the next visitor.</p>;
   if (!counts) return null;
   const measure = sold ? "money" : "checkouts";
-  const won = winner(counts, measure);
+  const standing = testState(counts, measure, { declared, shareB });
+  const won = standing.winner;
+  const line = Math.round(boundary(counts.va + counts.vb) * 100) / 100;
   const page = what === "page";
   const [a, b] = page ? ["Version A", "Version B"] : ["First headline", "Second headline"];
   const money = (cents: number) => formatMoney(Math.round(cents), currency);
@@ -2756,7 +2762,16 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
             ? page
               ? "Version A wins. Your page now shows it to everybody. Keep version A and save, or change version B and save to test again."
               : "The first headline wins. Your page now shows it to everybody. Switch the test off, or try another second headline."
-            : `Still running: no clear winner yet. Each needs at least ${enough}, and a ${Math.round(WIN_CHANCE * 1000) / 10}% chance of ${sold ? "bringing more money per visitor" : "bringing more sign-ups"}.`}
+            : standing.state === "measure_changed"
+              ? `No winner can be called: this test was started on ${declared === "money" ? "money per visitor" : "sign-ups"} and the product is now ${sold ? "sold for money" : "free"}. Change ${page ? "version B" : "the second headline"} and save to start a new test.`
+              : standing.state === "split"
+                ? `No winner while the split is off: the versions were seen ${times(counts.va, "time")} and ${times(counts.vb, "time")}, further from the share each should get than chance allows. Something may be counting one version more (a cached page, a link that always opens one); the test goes on counting.`
+                : standing.state === "maturing"
+                  ? `One version is ahead, but a test decided by money waits until it has run ${REFUND_DAYS} days, so early sales can still be refunded. Refunds are not taken out of either version's money.`
+                  : `Still running: no clear winner yet. Each needs at least ${enough}, and a lead clear enough to hold however often the test is read (now ${line} standard errors).`}
+      </p>
+      <p className="mt-1 text-xs text-ink-soft">
+        {`The test is read on every visit, so the line a winner must cross is set to call a false winner no more than one time in twenty over the whole test, not at each look.${declared ? ` Decided by ${declared === "money" ? "money per visitor" : "sign-ups"}, as when it was saved.` : ""}`}
       </p>
       {!won ? (
         <p className="mt-1 text-xs text-ink-soft">
