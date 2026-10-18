@@ -45,7 +45,7 @@
 import { paidStorageBytes } from "@/lib/storage-rules";
 import { STORE_ALLOWANCES, NON_PAYING_ALLOWANCES, type AllowanceKind } from "@/lib/store-allowance-rules";
 import { ESSENTIAL_PER_DAY } from "@/lib/studio-allowance-rules";
-import { EXTRA_REQUESTS, REQUESTS_PER_VISIT, TRIAL_EXTRA_REQUESTS, TRIAL_VISITS } from "@/lib/traffic-rules";
+import { EXTRA_REQUESTS, REQUESTS_PER_VISIT, SHARE_COMMANDS_PER_REQUEST, TRIAL_EXTRA_REQUESTS, TRIAL_VISITS } from "@/lib/traffic-rules";
 import { TRIAL_ORDERS } from "@/lib/order-rules";
 import { TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { TRIAL_VIDEO_HOURS } from "@/lib/video-admission-rules";
@@ -227,9 +227,12 @@ export function figureCost(allowances: Record<AllowanceKind, number>, kind: Allo
  * Commands each counted public request adds for a paying store: its count
  * (lib/traffic.ts, countRequest). A route's own burst limit is part of the
  * route, inside the later page it is costed at; a store that pays nothing
- * reads its place as well (nonPayingWorst).
+ * reads its place as well (nonPayingWorst). Since 18 October 2026 also its
+ * connection's share of the day, written a batch of requests at a time
+ * (lib/traffic-rules.ts, SHARE_COMMANDS_PER_REQUEST; docs/security-audit-2026-10-18.md,
+ * MM-SA-01), priced on every request of the window.
  */
-export const REQUEST_COMMANDS = 1;
+export const REQUEST_COMMANDS = 1 + SHARE_COMMANDS_PER_REQUEST;
 
 /** What one request costs: its call, CPU, memory, database commands and the bytes it moves through the database. */
 export function request(shape: keyof typeof SHAPES, commands: number, bytes = 0): number {

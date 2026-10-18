@@ -47,7 +47,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   // Once the store has used the whole month's visits, a subscriber's feed rests like the
   // store's other buyer pages (lib/traffic-rules.ts): the app is told to come back later,
   // and nothing in the feed is taken away.
-  if (allowed && !own && (await isResting(store, Date.now(), "buyer"))) {
+  // Asked by the app maker's servers, which many subscribers share: bounded by the feed's own reads, not by a connection's share of the day.
+  if (allowed && !own && (await isResting(store, Date.now(), "buyer", { shared: true }))) {
     return new Response("This feed is resting for now. It opens again with the store's next month.", { status: 503, headers: { "Retry-After": String(6 * 3600), "Cache-Control": "no-store" } });
   }
   // A subscriber whose app asked today is that day's visit to the store,

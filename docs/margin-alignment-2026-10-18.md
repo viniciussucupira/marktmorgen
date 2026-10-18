@@ -17,12 +17,12 @@ Under that model no unit kept 60% at the prices published before the owner's dec
 
 | Unit | Revenue | Charged | Receiving | Usage at full use | Usage room | Floor | Floor with room | Net | Short of 60% | On sale |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Store monthly ($69) | $69.00 | $87.63 | $9.02 | $2.56 | $2.87 | $62.65 | $67.60 | 60.31% | — | no |
-| Store yearly ($690) | $690.00 | $876.30 | $84.49 | $28.78 | $34.47 | $577.75 | $597.60 | 60.59% | — | no |
-| Studio monthly ($449) | $449.00 | $570.23 | $55.21 | $19.78 | $22.20 | $401.20 | $405.90 | 60.38% | — | no |
-| Studio yearly ($4,490) | $4,490.00 | $5,702.30 | $546.26 | $223.46 | $227.87 | $4,403.10 | $4,422.80 | 60.07% | — | no |
-| Scale monthly ($999) | $999.00 | $1,268.73 | $122.04 | $43.68 | $50.20 | $870.60 | $875.53 | 60.47% | — | no |
-| Scale yearly ($9,990) | $9,990.00 | $12,687.30 | $1,214.62 | $496.28 | $507.79 | $9,763.63 | $9,783.45 | 60.08% | — | no |
+| Store monthly ($69) | $69.00 | $87.63 | $9.02 | $2.57 | $2.87 | $62.83 | $67.70 | 60.31% | — | no |
+| Store yearly ($690) | $690.00 | $876.30 | $84.49 | $28.83 | $34.47 | $578.98 | $598.35 | 60.59% | — | no |
+| Studio monthly ($449) | $449.00 | $570.23 | $55.21 | $19.80 | $22.20 | $401.45 | $406.60 | 60.38% | — | no |
+| Studio yearly ($4,490) | $4,490.00 | $5,702.30 | $546.26 | $223.61 | $227.87 | $4,406.00 | $4,425.70 | 60.06% | — | no |
+| Scale monthly ($999) | $999.00 | $1,268.73 | $122.04 | $43.73 | $50.20 | $871.65 | $876.63 | 60.46% | — | no |
+| Scale yearly ($9,990) | $9,990.00 | $12,687.30 | $1,214.62 | $496.89 | $507.79 | $9,775.80 | $9,795.18 | 60.07% | — | no |
 | Store assistant add-on ($69/mo, 700 replies) | $69.00 | $87.63 | $9.02 | $2.48 | $2.87 | $61.20 | $65.90 | 60.40% | — | no |
 | AI captions, 1 language (6 min, $36.00) | $36.00 | $45.72 | $5.00 | $1.20 | $1.20 | — | — | 60.00% | — | no |
 | AI captions, 2 languages (3 min, $36.00) | $36.00 | $45.72 | $5.00 | $0.90 | $1.20 | — | — | 60.61% | — | no |
@@ -34,18 +34,18 @@ All 10 units keep 60% under the sizing reading. AI captions ($6.00 a minute a la
 
 | Unit | Net at full use | Short of 60% |
 | --- | --- | --- |
-| Store monthly ($29) | 55.72% | $1.24 |
-| Store yearly ($300) | 56.58% | $10.25 |
-| Studio monthly ($99) | 48.73% | $11.15 |
-| Studio yearly ($948) | 46.55% | $127.48 |
-| Scale monthly ($249) | 50.77% | $22.96 |
-| Scale yearly ($2,388) | 48.60% | $272.15 |
+| Store monthly ($29) | 55.68% | $1.25 |
+| Store yearly ($300) | 56.57% | $10.28 |
+| Studio monthly ($99) | 48.72% | $11.16 |
+| Studio yearly ($948) | 46.54% | $127.58 |
+| Scale monthly ($249) | 50.76% | $22.99 |
+| Scale yearly ($2,388) | 48.58% | $272.59 |
 | Store monthly ($22) with a share of each sale, counted as zero | 53.18% | $1.50 |
-| Store yearly ($220) with a share of each sale, counted as zero | 53.99% | $13.21 |
-| Studio monthly ($149) with a share of each sale, counted as zero | 53.75% | $9.31 |
-| Studio yearly ($1,490) with a share of each sale, counted as zero | 52.78% | $107.50 |
-| Scale monthly ($349) with a share of each sale, counted as zero | 54.48% | $19.26 |
-| Scale yearly ($3,490) with a share of each sale, counted as zero | 53.36% | $231.49 |
+| Store yearly ($220) with a share of each sale, counted as zero | 53.97% | $13.25 |
+| Studio monthly ($149) with a share of each sale, counted as zero | 53.74% | $9.32 |
+| Studio yearly ($1,490) with a share of each sale, counted as zero | 52.77% | $107.60 |
+| Scale monthly ($349) with a share of each sale, counted as zero | 54.46% | $19.30 |
+| Scale yearly ($3,490) with a share of each sale, counted as zero | 53.35% | $231.94 |
 
 ## Every reading, net kept
 
@@ -53,12 +53,12 @@ The candidate design choices, each applied on its own and together. EU hosting r
 
 | Unit | Sizing reading: 27.5% on profit, the buyer's tax on top at 27% | Sizing reading, business-only sales (tax on top 15%) | Most-tax reading: 27% VAT inside, 78.18% on profit, ISS 5% of revenue | EU hosting (no US tax): 28.68% on profit, ISS 5% of revenue, tax on top 27% | EU hosting, ISS 0% (Fortaleza consultation) | EU hosting, business-only sales (tax on top 15%) | EU hosting, ISS 0% and business-only sales |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Store monthly ($69) | 60.31% | 60.97% | 12.11% | 54.34% | 59.34% | 54.98% | 59.98% |
-| Store yearly ($690) | 60.59% | 61.25% | 12.22% | 54.61% | 59.61% | 55.26% | 60.26% |
-| Studio monthly ($449) | 60.38% | 61.05% | 12.14% | 54.40% | 59.40% | 55.05% | 60.05% |
-| Studio yearly ($4,490) | 60.07% | 60.73% | 12.02% | 54.09% | 59.09% | 54.74% | 59.74% |
-| Scale monthly ($999) | 60.47% | 61.13% | 12.17% | 54.48% | 59.48% | 55.13% | 60.13% |
-| Scale yearly ($9,990) | 60.08% | 60.74% | 12.02% | 54.10% | 59.10% | 54.75% | 59.75% |
+| Store monthly ($69) | 60.31% | 60.97% | 12.09% | 54.33% | 59.33% | 54.97% | 59.97% |
+| Store yearly ($690) | 60.59% | 61.25% | 12.21% | 54.60% | 59.60% | 55.25% | 60.25% |
+| Studio monthly ($449) | 60.38% | 61.04% | 12.14% | 54.40% | 59.40% | 55.05% | 60.05% |
+| Studio yearly ($4,490) | 60.06% | 60.73% | 12.02% | 54.09% | 59.09% | 54.74% | 59.74% |
+| Scale monthly ($999) | 60.46% | 61.13% | 12.17% | 54.48% | 59.48% | 55.13% | 60.13% |
+| Scale yearly ($9,990) | 60.07% | 60.74% | 12.02% | 54.10% | 59.10% | 54.75% | 59.75% |
 | Store assistant add-on ($69/mo, 700 replies) | 60.40% | 61.05% | 12.12% | 54.42% | 59.42% | 55.07% | 60.07% |
 | AI captions, 1 language (6 min, $36.00) | 60.00% | 60.63% | 11.96% | 54.02% | 59.02% | 54.66% | 59.66% |
 | AI captions, 2 languages (3 min, $36.00) | 60.61% | 61.25% | 12.20% | 54.61% | 59.61% | 55.25% | 60.25% |
