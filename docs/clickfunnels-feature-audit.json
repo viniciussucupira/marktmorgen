@@ -721,10 +721,17 @@
       "source": "S17",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Store upsells can lead to funnels or collections.",
-      "evidencePath": "lib/bundles.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Complete collection/cart parity unestablished.",
-      "improvement": "Prioritize creator-relevant bundles over a generic storefront rewrite."
+      "evidencePath": "lib/cart-bundle.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Cross-sells use only the creator's own products, at their published prices: bundles of 2 to 20 products (fixed, or any N a buyer picks), up to three boxes at checkout, offers after paying, a cart of up to four products with an optional buy-more deal, collections with their own pages, the creator's \"goes well with\" picks, and counted also-bought suggestions. Since 18 October 2026 the open cart offers one of the creator's bundles in place of the cart products it holds, only when that makes the whole cart cost less with the deal counted both ways, and says the exact saving; it reads only bundles the store record already carries for its first page. No generic storefront rewrite. Not browser, load or live-provider evidence.",
+      "improvement": "Offer bundles beyond the first page in the cart without a read per cart open, and measure the cart's click path against ClickFunnels Store.",
+      "testEvidence": [
+        "tests/cart-bundle.test.ts",
+        "tests/store-collections.test.ts",
+        "tests/several-bumps.test.ts",
+        "tests/pick-bundle.test.ts",
+        "tests/upsell-journey.test.ts"
+      ]
     },
     {
       "id": "F14",
@@ -1658,9 +1665,9 @@
     "status": "Not certified; do not activate commercial entitlements from this report"
   },
   "evidenceCounts": {
-    "D": 30,
+    "D": 31,
     "C/U": 31,
-    "U": 9
+    "U": 8
   },
   "verification": {
     "reviewedAt": "2026-10-17 UTC",
@@ -1685,6 +1692,11 @@
         "id": "F05",
         "date": "2026-10-18 UTC",
         "note": "Moved U to D on tests/funnel-share.test.ts, tests/funnel-copy-account.test.ts and tests/funnel-sharing-review.test.ts. The evidence path is cited at main, not at sourceRevision, where lib/funnel-bundle.ts did not exist yet."
+      },
+      {
+        "id": "F13",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/cart-bundle.test.ts with the existing cart, bump, bundle and upsell tests. The evidence path is cited at main, not at sourceRevision, where lib/cart-bundle.ts did not exist yet."
       }
     ]
   }

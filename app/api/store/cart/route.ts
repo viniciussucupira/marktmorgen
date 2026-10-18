@@ -7,6 +7,7 @@ import { readListings, readProduct } from "@/lib/catalog";
 import { canSell, canSellProduct } from "@/lib/store-checkout";
 import { cartPrice, createCartCheckout } from "@/lib/cart-checkout";
 import { MAX_CART, cartable, dealOff, readCartIds } from "@/lib/cart-rules";
+import { bestBundleSwap } from "@/lib/cart-bundle";
 import { cartPicks } from "@/lib/store-collections";
 import { readSoldCounts } from "@/lib/sold-count";
 import { cartWords } from "@/lib/buyer-words/cart";
@@ -69,6 +70,7 @@ export async function GET(request: NextRequest) {
     return listing ? [{ id: item.id, title: item.title, pairs: listing.pairs ?? [] }] : [];
   });
   const suggest = await suggestions(store, inCart, ids, coming.soon, country, locale).catch(() => []);
+  const bundle = bundleSwap(store, payable, ids, coming.soon, country, locale);
   return Response.json(
     {
       ok: true,
@@ -77,9 +79,49 @@ export async function GET(request: NextRequest) {
       next: more > 0 ? { more, percent: store.cartDeal.percent } : null,
       total: formatMoney(total, store.currency, locale),
       suggest,
+      bundle,
     },
     { headers: { "Cache-Control": "private, no-store" } },
   );
+}
+
+/**
+ * The creator's own bundle that holds what is in the cart and makes the cart
+ * cost less, when there is one (lib/cart-bundle.ts): only the bundles the
+ * store's record already carries for its first page, so nothing more is read.
+ */
+function bundleSwap(
+  store: Store,
+  payable: { id: string; title: string; cents: number }[],
+  ids: string[],
+  soon: Set<string>,
+  country: string,
+  locale: string,
+) {
+  if (payable.length === 0 || !canSell(store)) return null;
+  const offers = store.catalog.head.filter(
+    (product) => product.bundle && !ids.includes(product.id) && !soon.has(product.id) && !product.keys && cartable(product) && canSellProduct(store, product),
+  );
+  if (offers.length === 0) return null;
+  const swap = bestBundleSwap(
+    payable.map((line) => ({ id: line.id, cents: line.cents })),
+    offers.map((product) => ({ id: product.id, cents: cartPrice(store, product, country).cents, items: product.bundle ?? [] })),
+    store.cartDeal,
+  );
+  if (!swap) return null;
+  const product = offers.find((p) => p.id === swap.id)!;
+  const words = cartWords(store.language);
+  const titles = payable.filter((line) => swap.replaces.includes(line.id)).map((line) => line.title);
+  const held = titles.length > 1 ? `${titles.slice(0, -1).join(", ")} ${words.and} ${titles.at(-1)}` : titles[0];
+  return {
+    id: product.id,
+    title: product.title,
+    href: `/@${store.handle}/p/${productSegment(product)}`,
+    price: formatMoney(cartPrice(store, product, country).cents, store.currency, locale),
+    holds: words.bundleHolds(held, swap.more),
+    save: words.bundleSave(formatMoney(swap.before - swap.after, store.currency, locale)),
+    replaces: swap.replaces,
+  };
 }
 
 /** How many products the cart suggests at most, the creator's picks first. */
