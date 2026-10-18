@@ -17,6 +17,18 @@ Added 17 October 2026 on top of the existing sequence engine (`lib/flows.ts`); t
 
 The next step is queued before the attempt is cleared. If clearing fails, the next step finds the attempt open and holds the run instead of repeating anything.
 
+### Counted four ways, and bounded (18 October 2026)
+
+A run's history in the studio counts its effects four ways, kept apart (`lib/run-effects.ts`, computed in the browser from the events the history already returned, so it costs nothing to show): **attempted**, **confirmed**, **failed** and **uncertain**. An attempt with no outcome written yet is uncertain, never done, and so is an uncertain step the creator marked as gone through: the choice is shown beside it, and it stays counted as uncertain because nobody but the creator said it happened.
+
+What a run keeps is bounded by construction, not by trimming what the job writes (`lib/flow-runs.ts`):
+
+- **Events a run keeps: at most `MAX_RUN_EVENTS` (62).** A run visits each step at most once and each visit writes at most an attempt and its outcome, or a skip, so without the creator it writes at most 2 + 2 × 20 = 42. A step that has to wait (the month's emails ran out, no room to send, the deals board could not be read) takes its attempt back out of the history (`LREM` of that exact event), so a month of waiting writes nothing; until 18 October 2026 every try wrote a new "attempted", which grew the history past what the data room was charged for (`runBytes`). Each choice the creator makes for a held run keeps only the latest `KEPT_AFTER_CHOICE` (20) events, which leaves room for everything the run can still write; the history then says its earliest events are no longer kept.
+- **Runs a workflow keeps: at most `MAX_RUNS_KEPT_PER_FLOW` (16,000).** A person starts a workflow at most once while the start is remembered (400 days), and a store starts at most its plan's runs a day across all workflows (40 on Scale). The index is never trimmed, so every run in it can still be erased.
+- **Days: 400** after the run ends (`RUN_KEEP_SECONDS`), or until it is erased (below).
+
+Cost: no new command on the job's path. A wait's `LREM` takes the place of the event it used to write; the creator's choice adds one `LTRIM`, once per choice. `tests/workflow-run-history.test.ts` checks the counting rules, a step tried again twelve times while waiting, and thirty "try it again" choices on one run.
+
 ## Erasure
 
 The run index (`nl:wf:runs:<flowId>`) lists every run of the last 400 days; it is not trimmed, so every record can be found and deleted. Three paths erase:
@@ -44,7 +56,7 @@ Emails draw on the existing monthly allowance and its supplier reservation; noth
 
 ## Verification
 
-`tests/workflow-branching.test.ts` (62 checks) covers erasure (above), routes, preview determinism, plan limits, save validation, explicit activation, IF/ELSE delivery, label goals, step history, the daily ceiling, a lost provider answer that is held rather than resent, an attempt left open by a stopped job, and the creator's one-time resolution. Existing sequence tests were updated only where new workflows now need an explicit switch on. Everything runs against the in-memory Redis double and a stand-in email provider. No real messages, Stripe accounts or customer records are used.
+`tests/workflow-run-history.test.ts` (20 checks) covers the four counts and the bounds above. `tests/workflow-branching.test.ts` (62 checks) covers erasure (above), routes, preview determinism, plan limits, save validation, explicit activation, IF/ELSE delivery, label goals, step history, the daily ceiling, a lost provider answer that is held rather than resent, an attempt left open by a stopped job, and the creator's one-time resolution. Existing sequence tests were updated only where new workflows now need an explicit switch on. Everything runs against the in-memory Redis double and a stand-in email provider. No real messages, Stripe accounts or customer records are used.
 
 ## Not included
 

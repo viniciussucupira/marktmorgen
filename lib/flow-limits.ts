@@ -51,6 +51,13 @@ export const MAX_RUN_EVENTS = 2 + MAX_STEPS * 3;
 export const RUNS_LISTED = 50;
 /** How long a run and its history are kept: as long as the start itself is remembered. */
 export const RUN_KEEP_SECONDS = 400 * 86_400;
+/**
+ * The most runs one workflow can keep: a person starts it at most once while
+ * the start is remembered (RUN_KEEP_SECONDS), and a store starts at most its
+ * plan's runs a day across all its workflows. A ceiling by construction, not
+ * a trim (lib/flow-runs.ts), so every run in it can still be erased.
+ */
+export const MAX_RUNS_KEPT_PER_FLOW = Math.max(...Object.values(DAILY_RUNS_BY_TIER), TRIAL_DAILY_RUNS) * Math.ceil(RUN_KEEP_SECONDS / 86_400);
 
 /** Ceilings for the margin review's per-run arithmetic. */
 export const RUN_START_COMMANDS = 8;

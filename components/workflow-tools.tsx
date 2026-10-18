@@ -11,6 +11,8 @@ import { useEffect, useState } from "react";
 import { type FlowAction, type FlowGoal, type StepCondition, isCourseIf } from "@/lib/flow-rules";
 import { END, type RoutedStep, type SampleContact, previewRun } from "@/lib/flow-paths";
 import type { RunEvent, RunRecord } from "@/lib/flow-runs";
+import { MAX_RUN_EVENTS } from "@/lib/flow-limits";
+import { runEffects } from "@/lib/run-effects";
 
 type Answer = Record<string, unknown> & { ok?: boolean; error?: string };
 type Request = (payload: Record<string, unknown>) => Promise<Answer>;
@@ -292,6 +294,29 @@ const RUN_ERRORS: Record<string, string> = {
   flow_write_unconfirmed: "Your choice could not be confirmed. Reload this run's history before choosing again.",
 };
 
+/**
+ * One run's effects counted four ways, kept apart (lib/run-effects.ts): an
+ * effect nobody confirmed is uncertain, never done, even once you chose to
+ * continue past it.
+ */
+function RunEffectCounts({ events }: { events: readonly RunEvent[] }) {
+  const { counts, markedByYou, trimmed, effects } = runEffects(events);
+  const waiting = effects.filter((e) => e.waiting).length;
+  return (
+    <div className="mt-3 text-sm" data-run-effects>
+      <p className="flex flex-wrap gap-2">
+        <span className="tag">{`Attempted ${n(counts.attempted)}`}</span>
+        <span className="tag tag-live">{`Confirmed ${n(counts.confirmed)}`}</span>
+        <span className="tag text-danger">{`Failed ${n(counts.failed)}`}</span>
+        <span className="tag tag-next">{`Uncertain ${n(counts.uncertain)}`}</span>
+      </p>
+      {waiting ? <p className="mt-1 text-ink-soft">{`${n(waiting)} of them ${waiting === 1 ? "has" : "have"} no outcome written yet, so ${waiting === 1 ? "it is" : "they are"} counted as uncertain, not done.`}</p> : null}
+      {markedByYou ? <p className="mt-1 text-ink-soft">{`You marked ${n(markedByYou)} uncertain ${markedByYou === 1 ? "step" : "steps"} as gone through. ${markedByYou === 1 ? "It stays" : "They stay"} counted as uncertain: the outcome was never confirmed.`}</p> : null}
+      {trimmed ? <p className="mt-1 text-ink-soft">{`A run keeps its latest ${n(MAX_RUN_EVENTS)} events; its earliest ones are no longer kept, and the counts are of what is.`}</p> : null}
+    </div>
+  );
+}
+
 /** A workflow's runs, newest first, and one run's history step by step. */
 export function WorkflowRuns({ flowId, steps, request }: { flowId: string; steps: readonly MapStep[]; request: Request }) {
   const [runs, setRuns] = useState<RunRecord[] | null>(null);
@@ -381,6 +406,7 @@ export function WorkflowRuns({ flowId, steps, request }: { flowId: string; steps
             <span className={open.run.status === "held" ? "tag tag-next" : "tag"}>{RUN_STATUS_WORDS[open.run.status] ?? open.run.status}</span>
           </div>
           <p className="mt-1 text-sm text-ink-soft">{`Started ${when(open.run.startedAt)}${open.run.note ? ` · ${open.run.note}` : ""}`}</p>
+          <RunEffectCounts events={open.events} />
           <ol className="mt-3 space-y-2 text-sm">
             {open.events.map((e, i) => (
               <li key={i} className="flex flex-wrap gap-x-2">
