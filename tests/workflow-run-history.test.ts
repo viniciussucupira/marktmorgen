@@ -6,15 +6,14 @@
  *
  *   - an attempt with no outcome, and an uncertain step the creator marked as
  *     gone through, are counted uncertain, never confirmed;
- *   - a step that waits (the month's emails ran out) and is tried again many
- *     times writes nothing new to the run's history, so a month of waiting
- *     cannot grow it past what the store's data room was charged for;
- *   - the creator's "try it again", over and over, keeps a run's history at
- *     MAX_RUN_EVENTS at the most, and the history says its earliest events
- *     were let go;
+ *   - a step that waits (the month's emails ran out) and is tried again
+ *     writes nothing new to the run's history, so waiting cannot grow it
+ *     past what the store's data room was charged for;
+ *   - a creator's choice on a held run keeps its history within
+ *     MAX_RUN_EVENTS, and the history says its earliest events were let go;
  *   - the bound on a workflow's runs follows from the plan's runs a day.
  */
-import { DAILY_RUNS_BY_TIER, MAX_RUNS_KEPT_PER_FLOW, MAX_RUN_EVENTS, MAX_STEPS, RUN_KEEP_SECONDS, TRIAL_DAILY_RUNS } from "@/lib/flow-limits";
+import { DAILY_RUNS_BY_TIER, MAX_RETRIES_BY_YOU, MAX_RUNS_KEPT_PER_FLOW, MAX_RUN_EVENTS, MAX_STEPS, RUN_KEEP_SECONDS, TRIAL_DAILY_RUNS } from "@/lib/flow-limits";
 import { KEPT_AFTER_CHOICE, personOf, readRun, type RunEvent } from "@/lib/flow-runs";
 import { enroll, resolveHeldRun, saveFlow, sendDueSteps, setFlowActive } from "@/lib/flows";
 import { runEffects } from "@/lib/run-effects";
@@ -27,7 +26,6 @@ import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 import { ROOM } from "./data-room";
 
-const HOUR = 3_600_000;
 const realNow = Date.now;
 let shift = 0;
 Date.now = () => realNow() + shift;
@@ -97,51 +95,45 @@ async function main(): Promise<void> {
   await setFlowActive(store, flowId, true);
   store = (await storeForEmail(OWNER))!;
 
-  part("A step that waits a long time writes nothing new");
+  part("A step that waits writes nothing new");
   await upsertContact(list, "ivy@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "ivy@example.com", { joined: false, tag: "wait" });
   const ivy = personOf("ivy@example.com");
-  // The month's emails are used up, every time the step comes round.
-  const spend = async () => {
-    const window = windowId(store);
-    if (window) await redisPipeline([["SET", `nl:mail:used:${list}:${window}`, 1_000_000_000]]);
-  };
-  for (let i = 0; i < 12; i += 1) {
-    await spend();
-    await run();
-    shift += 6 * HOUR;
-  }
+  // The month's emails are used up when the step comes round.
+  const used = () => `nl:mail:used:${list}:${windowId(store)}`;
+  await redisPipeline([["SET", used(), 1_000_000_000]]);
+  await run();
   const waiting = await readRun(flowId, ivy);
-  is("tried twelve times and still waiting: nothing was sent", [waiting?.run.status, sent.includes("Waited for")], ["waiting", false]);
+  is("it waits: nothing was sent", [waiting?.run.status, sent.includes("Waited for")], ["waiting", false]);
   is("and its history is still just its start", waiting?.events.map((e) => e.state), ["started"]);
-  await redisPipeline([["DEL", `nl:mail:used:${list}:${windowId(store)}`]]);
+  // Tried again when it is due (lib/flow-retry.ts: when the month turns), with room this time.
+  const [flat] = await redisPipeline([["ZRANGEBYSCORE", "nl:mail:flowq", 0, "+inf", "WITHSCORES"]]);
+  const due = Number((flat as string[])[(flat as string[]).findIndex((m) => m.endsWith("|ivy@example.com")) + 1]);
+  shift += (due - Math.floor(Date.now() / 1000) + 1) * 1000;
+  await redisPipeline([["DEL", used()]]);
   await run();
   const through = await readRun(flowId, ivy);
   is("once there is room it goes out, written down once: attempted, then confirmed", [sent.filter((s) => s === "Waited for").length, through?.events.map((e) => e.state)], [1, ["started", "attempted", "confirmed"]]);
   is("counted as one attempt, confirmed", runEffects(through?.events ?? []).counts, { attempted: 1, confirmed: 1, failed: 0, uncertain: 0 });
 
-  part("Trying a held step again, over and over, keeps the history bounded");
+  part("A held run's history stays bounded, whatever came before the creator's choice");
   await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "jo@example.com", { joined: false, tag: "wait" });
   const jo = personOf("jo@example.com");
   resendDown = true;
   await run();
   is("a lost answer holds the run", (await readRun(flowId, jo))?.run.status, "held");
-  const choices: string[] = [];
-  for (let i = 0; i < 30; i += 1) {
-    choices.push(await resolveHeldRun(store, flowId, jo, "retry"));
-    await run();
-  }
+  is(`trying it again is taken ${MAX_RETRIES_BY_YOU} time${MAX_RETRIES_BY_YOU === 1 ? "" : "s"}, then refused`, [await resolveHeldRun(store, flowId, jo, "retry"), (await run(), await resolveHeldRun(store, flowId, jo, "retry"))], ["ok", "retry_limit"]);
   resendDown = false;
-  const longest = await readRun(flowId, jo);
-  is("thirty retries were each taken once, and each was held again", [choices.every((c) => c === "ok"), longest?.run.status], [true, "held"]);
-  is(`its history never passes ${MAX_RUN_EVENTS} events`, (longest?.events.length ?? 0) <= MAX_RUN_EVENTS, true);
-  const counted = runEffects(longest?.events ?? []);
-  is("its earliest events were let go, and it says so", counted.trimmed, true);
-  is("every attempt it kept is uncertain: none was confirmed", [counted.counts.confirmed, counted.counts.uncertain === counted.counts.attempted, counted.counts.attempted > 0], [0, true, true]);
-  is("going on past it is the creator's word, and it stays counted as uncertain", await resolveHeldRun(store, flowId, jo, "continue"), "ok");
-  const after = runEffects((await readRun(flowId, jo))?.events ?? []);
-  is("shown as marked by you, and not confirmed", [after.markedByYou, after.counts.confirmed], [1, 0]);
+  // As if a history had grown long before these bounds existed: a choice still leaves it within MAX_RUN_EVENTS.
+  const log = `nl:wf:log:${flowId}:${jo}`;
+  await redisPipeline([["RPUSH", log, ...Array.from({ length: 80 }, (_, i) => JSON.stringify({ at: i, step: 0, stepId: "a000000000000001", kind: "email", state: "skipped", note: "" }))]]);
+  is("going on past it is the creator's word", await resolveHeldRun(store, flowId, jo, "continue"), "ok");
+  const kept = (await readRun(flowId, jo))?.events ?? [];
+  is(`the choice keeps the latest ${KEPT_AFTER_CHOICE} events, room for all that can follow`, kept.length, KEPT_AFTER_CHOICE);
+  const counted = runEffects(kept);
+  is("the history says its earliest events were let go", counted.trimmed, true);
+  is("its last event is the creator's choice, and nothing it kept counts as confirmed", [kept.at(-1)?.state, counted.counts.confirmed], ["resolved", 0]);
 
   done();
 }

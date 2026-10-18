@@ -23,7 +23,8 @@
  * shows it with three choices for the creator: it went through, continue;
  * try it again, knowing it may arrive twice; or end the run.
  *
- *   nl:wf:run:<flowId>:<person>   hash: email, status, step, note, startedAt, updatedAt, open
+ *   nl:wf:run:<flowId>:<person>   hash: email, status, step, note, startedAt, updatedAt, open,
+ *                                 waits, waitAt ("<step>:<first wait>"), retries (lib/flow-retry.ts)
  *   nl:wf:log:<flowId>:<person>   list of JSON events, oldest first, at most MAX_RUN_EVENTS
  *   nl:wf:runs:<flowId>           zset: person → last change, every run of the last 400 days
  *                                 (complete, so a person or a store can be erased in full)
@@ -93,6 +94,10 @@ export type RunRecord = {
   updatedAt: number;
   /** "<index>:<stepId>" while an attempt has no known outcome; "" otherwise. */
   open: string;
+  /** Times this run has waited, all steps together (lib/flow-retry.ts). */
+  waits: number;
+  /** Times the creator chose "try it again" for it. */
+  retries: number;
 };
 
 export class FlowRunUnavailable extends Error {
@@ -213,6 +218,49 @@ export async function claimAttempts(flowId: string, emails: string[], index: num
   return { claimed, open };
 }
 
+/**
+ * Counts one more wait for each of these people at step `index`, and says,
+ * for each, how many waits their run has had and since when this step has
+ * been waiting (lib/flow-retry.ts decides). Null for anyone whose count could
+ * not be read: an unknown count is not room for one more wait.
+ */
+export async function countWaits(flowId: string, emails: string[], index: number, nowSeconds = Math.floor(Date.now() / 1000)): Promise<Map<string, { waits: number; since: number } | null>> {
+  const out = new Map<string, { waits: number; since: number } | null>();
+  if (!emails.length) return out;
+  const reply = await redisPipeline(emails.flatMap((email) => [["HINCRBY", runKey(flowId, personOf(email)), "waits", 1], ["HGET", runKey(flowId, personOf(email)), "waitAt"]])).catch(() => null);
+  const fresh: (string | number)[][] = [];
+  emails.forEach((email, i) => {
+    const waits = Array.isArray(reply) ? reply[2 * i] : null;
+    const at = Array.isArray(reply) ? reply[2 * i + 1] : undefined;
+    if (!Array.isArray(reply) || reply.length !== 2 * emails.length || typeof waits !== "number" || !Number.isSafeInteger(waits) || waits < 1 || (at !== null && typeof at !== "string")) {
+      out.set(email, null);
+      return;
+    }
+    const [step, since] = typeof at === "string" ? at.split(":").map(Number) : [NaN, NaN];
+    if (step === index && Number.isSafeInteger(since) && since > 0) {
+      out.set(email, { waits, since });
+      return;
+    }
+    // This step's first wait: its clock starts now.
+    out.set(email, { waits, since: nowSeconds });
+    fresh.push(["HSET", runKey(flowId, personOf(email)), "waitAt", `${index}:${nowSeconds}`]);
+  });
+  if (fresh.length) await redisPipeline(fresh).catch(() => {});
+  return out;
+}
+
+/**
+ * Counts the creator's "try it again" on a run, and answers whether it is
+ * within `limit`; one past it is taken back. False when it cannot be counted.
+ */
+export async function countRetry(flowId: string, person: string, limit: number): Promise<boolean> {
+  const reply = await redisPipeline([["HINCRBY", runKey(flowId, person), "retries", 1]]).catch(() => null);
+  if (!replied(reply, 1) || typeof reply[0] !== "number" || !Number.isSafeInteger(reply[0])) return false;
+  if (reply[0] <= limit) return true;
+  await redisPipeline([["HINCRBY", runKey(flowId, person), "retries", -1]]).catch(() => {});
+  return false;
+}
+
 export type Settled = {
   email: string;
   state: "confirmed" | "failed" | "uncertain" | "deferred";
@@ -297,6 +345,8 @@ function parseRun(person: string, raw: unknown): RunRecord | null {
     startedAt: num("startedAt", 0),
     updatedAt: num("updatedAt", 0),
     open: map.get("open") ?? "",
+    waits: Math.max(0, num("waits", 0)),
+    retries: Math.max(0, num("retries", 0)),
   };
 }
 

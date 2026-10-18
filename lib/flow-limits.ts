@@ -41,9 +41,16 @@ export const TRIAL_ACTIVE_FLOWS = 3;
  * (tests/plan-cost-registry.ts). 25 a day is 775 people a month started on
  * Studio and 40 a day 1,240 on Scale, about what each plan's monthly emails
  * reach at six emails a person. The free trial goes from 50 to 10.
+ *
+ * 25, 40 and 10 until 18 October 2026, when a run's waits and the creator's
+ * "try it again" were bounded and counted in WORST_COMMANDS_PER_RUN (308 to
+ * 419 commands, below): at the same plans' rooms that is 18 on Studio, 29 on
+ * Scale and 7 during the free trial, so each plan's workflows cost no more
+ * than before (18 x 419 < 25 x 308, 29 x 419 < 40 x 308, 7 x 419 < 10 x 308).
+ * 18 a day is 558 people a month on Studio, 29 a day 899 on Scale.
  */
-export const DAILY_RUNS_BY_TIER: Record<Tier, number> = { creator: 0, pro: 25, scale: 40 };
-export const TRIAL_DAILY_RUNS = 10;
+export const DAILY_RUNS_BY_TIER: Record<Tier, number> = { creator: 0, pro: 18, scale: 29 };
+export const TRIAL_DAILY_RUNS = 7;
 
 /** Events one run keeps in its history: a start, each step's attempt and outcome, and its end. */
 export const MAX_RUN_EVENTS = 2 + MAX_STEPS * 3;
@@ -59,11 +66,51 @@ export const RUN_KEEP_SECONDS = 400 * 86_400;
  */
 export const MAX_RUNS_KEPT_PER_FLOW = Math.max(...Object.values(DAILY_RUNS_BY_TIER), TRIAL_DAILY_RUNS) * Math.ceil(RUN_KEEP_SECONDS / 86_400);
 
+/**
+ * Waits, bounded (18 October 2026). A step that cannot go yet (the month's
+ * emails ran out, no room to send today, email to the list is paused, the
+ * deals board could not be read) is tried again later, by itself, and that
+ * is a retry like any other: it costs database commands each time. Until
+ * this date nothing counted them, so a run could wait and be tried again
+ * every few hours for as long as the cause lasted, and none of it was in
+ * WORST_COMMANDS_PER_RUN.
+ *
+ *   - MAX_WAITS_PER_RUN: times one run may wait, all its steps together. A
+ *     wait for something with a known end (the month turning, the next UTC
+ *     day, a pause's end) is tried once, at that end; anything else is tried
+ *     again with a growing delay (lib/flow-retry.ts). One more wait past it
+ *     and the run stops there, nothing done at that step, and its history
+ *     says why.
+ *   - MAX_WAIT_DAYS_PER_STEP: the longest one step may keep waiting, from its
+ *     first wait.
+ *   - MAX_RETRIES_BY_YOU: times the creator may choose "try it again" for a
+ *     held run. Each runs the step again (it may arrive twice), so each is
+ *     counted as one more step in the worst case.
+ */
+export const MAX_WAITS_PER_RUN = 3;
+export const MAX_WAIT_DAYS_PER_STEP = 35;
+export const MAX_RETRIES_BY_YOU = 1;
+
 /** Ceilings for the margin review's per-run arithmetic. */
 export const RUN_START_COMMANDS = 8;
 export const HISTORY_COMMANDS_PER_STEP = 9;
 export const QUEUE_COMMANDS_PER_STEP = 6;
-export const WORST_COMMANDS_PER_RUN = RUN_START_COMMANDS + MAX_STEPS * (HISTORY_COMMANDS_PER_STEP + QUEUE_COMMANDS_PER_STEP);
+/**
+ * One wait, at the most, for a batch of one person (the dearest case; a
+ * batch shares its reads): the job's queue scans, take and lease (6), the
+ * store and its workflows (3), the person's row (1), the attempt claimed
+ * and written (2), what the send read before stopping (up to 9 when the
+ * month's emails ran out: the pause, the day, the sender, the month's count
+ * taken and given back), the wait counted (3), the attempt cleared and taken
+ * back out of the history (4), the step put back in the queue (1), and the
+ * lease let go (1). Measured at 21 for a wait on the day's room and 30 for
+ * the month's emails (tests/workflow-retries.test.ts); 32 with room to spare.
+ */
+export const WAIT_COMMANDS_PER_TRY = 32;
+export const WORST_COMMANDS_PER_RUN =
+  RUN_START_COMMANDS +
+  (MAX_STEPS + MAX_RETRIES_BY_YOU) * (HISTORY_COMMANDS_PER_STEP + QUEUE_COMMANDS_PER_STEP) +
+  MAX_WAITS_PER_RUN * WAIT_COMMANDS_PER_TRY;
 
 type PlanView = { tier: Tier; subscriptionActive: boolean; trialEnds: number };
 const inTrial = (store: PlanView, nowSeconds: number) => store.trialEnds > nowSeconds;
@@ -103,6 +150,9 @@ export const WORKFLOW_LIMITS = {
   maxRunEvents: MAX_RUN_EVENTS,
   runKeepSeconds: RUN_KEEP_SECONDS,
   worstCommandsPerRun: WORST_COMMANDS_PER_RUN,
+  maxWaitsPerRun: MAX_WAITS_PER_RUN,
+  maxWaitDaysPerStep: MAX_WAIT_DAYS_PER_STEP,
+  maxRetriesByYou: MAX_RETRIES_BY_YOU,
   emailsDrawFromMonthlyAllowance: true,
   ownerNoticesDrawFromMonthlyAllowance: true,
   webhooksUseStoreEndpointsAndRetryCeiling: true,

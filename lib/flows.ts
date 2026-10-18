@@ -1,8 +1,10 @@
 import { readFlowListStrict } from "@/lib/flow-list";
 import { FLOW_TRIGGERS, type FlowTrigger, MAX_FLOW_WAIT_HOURS } from "@/lib/flow-rules";
-import { MAX_FLOWS, MAX_STEPS, RUN_KEEP_SECONDS, activeFlowLimit, dailyRunLimit, startableFlows } from "@/lib/flow-limits";
+import { MAX_FLOWS, MAX_RETRIES_BY_YOU, MAX_STEPS, RUN_KEEP_SECONDS, activeFlowLimit, dailyRunLimit, startableFlows } from "@/lib/flow-limits";
+import { type WaitReason, nextTry, stopWaiting } from "@/lib/flow-retry";
+import { allowanceWindow } from "@/lib/allowance-window";
 import { END, afterIndex, checkRoutes, elseIndex } from "@/lib/flow-paths";
-import { RUN_EVENT_BYTES, RUN_RECORD_CHARS, type Settled, admitRuns, claimAttempts, forgetHeldCommand, forgetIndexCommand, forgetPersonCommands, noteRuns, openRuns, personOf, readRun, refuseRuns, releaseHold, runPeople, settleAttempts } from "@/lib/flow-runs";
+import { RUN_EVENT_BYTES, RUN_RECORD_CHARS, type Settled, admitRuns, claimAttempts, countRetry, countWaits, forgetHeldCommand, forgetIndexCommand, forgetPersonCommands, noteRuns, openRuns, personOf, readRun, refuseRuns, releaseHold, runPeople, settleAttempts } from "@/lib/flow-runs";
 import { readTeam } from "@/lib/team";
 import { can } from "@/lib/team-roles";
 /**
@@ -561,7 +563,7 @@ export function runGoneBy(flow: Pick<Flow, "steps">, nowSeconds: number): number
 }
 
 /** What came of an action for one person, for the run's history (lib/flow-runs.ts). */
-type Acted = { email: string; state: "confirmed" | "failed" | "deferred" | "uncertain"; note: string; /** Confirmed, and something was actually changed (not "already had it"): what the "actions done" count counts. */ changed?: boolean };
+type Acted = { email: string; state: "confirmed" | "failed" | "deferred" | "uncertain"; note: string; /** Confirmed, and something was actually changed (not "already had it"): what the "actions done" count counts. */ changed?: boolean; /** Why it waits, for a deferred one (lib/flow-retry.ts). */ wait?: WaitReason };
 const each = (emails: string[], state: Acted["state"], note: string): Acted[] => emails.map((email) => ({ email, state, note }));
 
 /**
@@ -697,7 +699,7 @@ async function actOnPeople(
       deals = await readDeals(statsId, stages);
     } catch {
       // Nothing was written: tried again later, which is safe.
-      return each(emails, "deferred", "Your deals board could not be read; tried again in a few minutes.");
+      return each(emails, "deferred", "Your deals board could not be read; tried again in a few minutes.").map((o) => ({ ...o, wait: "board" as const }));
     }
     const now = Math.floor(Date.now() / 1000);
     if (action.do === "assign") {
@@ -741,14 +743,14 @@ async function actOnPeople(
           out.push({ email, state: "failed", note: "The deal was not written: the store's data room is full." });
           continue;
         }
-        out.push(error instanceof CrmDealReadUnavailable ? { email, state: "deferred", note: "Your deals board could not be read; tried again in a few minutes." } : { email, state: "uncertain", note: "Whether the deal was saved could not be confirmed." });
+        out.push(error instanceof CrmDealReadUnavailable ? { email, state: "deferred", note: "Your deals board could not be read; tried again in a few minutes.", wait: "board" } : { email, state: "uncertain", note: "Whether the deal was saved could not be confirmed." });
       }
     }
     // A deal a step moves starts no workflow of its stage (lib/deal-stage-trigger.ts): a step that starts another workflow does that, priced as its own step.
     return out;
   }
   // The owner, told once for everyone who reached the step together: who, and where.
-  if (!isSenderConfigured()) return each(emails, "deferred", "Email is not available right now; tried again later.");
+  if (!isSenderConfigured()) return each(emails, "deferred", "Email is not available right now; tried again later.").map((o) => ({ ...o, wait: "email_off" as const }));
   // One of the store's monthly emails, like every other email a workflow sends (lib/flow-limits.ts).
   if ((await takeFromMonth(store, 1)) < 1) return each(emails, "failed", "Your monthly emails were used up, so you were not emailed about this step.");
   const shown = emails.slice(0, 50);
@@ -772,6 +774,37 @@ async function actOnPeople(
   return sent === "sent" ? each(emails, "confirmed", "You were emailed that they reached this step.").map((o) => ({ ...o, changed: true })) : sent === "no" ? each(emails, "failed", "The email to you was not accepted.") : each(emails, "uncertain", "Whether the email to you was sent could not be confirmed.");
 }
 
+/**
+ * People at a step that has to wait: each wait is counted on their run, and
+ * each is tried again when lib/flow-retry.ts says, or stops there with
+ * nothing done when the run has waited as often or as long as it may. What
+ * comes back is the queue's new entries and each person's outcome.
+ */
+async function waitOrStop(
+  flowId: string,
+  group: string,
+  index: number,
+  people: { email: string; reason: WaitReason; note: string }[],
+  nowSeconds: number,
+  known: { windowEnd?: number | null; pauseUntil?: number | null } = {},
+): Promise<{ queue: (string | number)[][]; outcomes: Settled[] }> {
+  const queue: (string | number)[][] = [];
+  const outcomes: Settled[] = [];
+  if (!people.length) return { queue, outcomes };
+  const counted = await countWaits(flowId, people.map((p) => p.email), index, nowSeconds);
+  for (const p of people) {
+    const count = counted.get(p.email) ?? null;
+    const stop = stopWaiting(count, nowSeconds);
+    if (stop || !count) {
+      outcomes.push({ email: p.email, state: "failed", note: stop ?? "Stopped here.", to: -1, status: "ended" });
+      continue;
+    }
+    queue.push(["ZADD", QUEUE, nextTry(p.reason, count.waits, nowSeconds, known), `${group}|${p.email}`]);
+    outcomes.push({ email: p.email, state: "deferred", note: p.note, to: index });
+  }
+  return { queue, outcomes };
+}
+
 export type ResolveChoice = "continue" | "retry" | "end";
 export const RESOLVE_CHOICES: readonly ResolveChoice[] = ["continue", "retry", "end"];
 
@@ -781,7 +814,7 @@ export const RESOLVE_CHOICES: readonly ResolveChoice[] = ["continue", "retry", "
  * "retry" (do that step again, knowing it may arrive twice) or "end". Only
  * one answer is ever taken for a hold.
  */
-export async function resolveHeldRun(store: Store, flowId: string, person: string, choice: ResolveChoice): Promise<"ok" | "unknown" | "not_held" | "paused"> {
+export async function resolveHeldRun(store: Store, flowId: string, person: string, choice: ResolveChoice): Promise<"ok" | "unknown" | "not_held" | "paused" | "retry_limit"> {
   if (!store.listId) return "unknown";
   const flows = await readFlowListStrict(store.listId);
   const flow = flows.find((f) => f.id === flowId);
@@ -791,6 +824,8 @@ export async function resolveHeldRun(store: Store, flowId: string, person: strin
   const { run } = found;
   if (run.status !== "held" || !run.open || !run.email) return "not_held";
   if (choice !== "end" && !flow.active) return "paused";
+  // Trying again is bounded (lib/flow-limits.ts): past it, continue or end.
+  if (choice === "retry" && (run.retries >= MAX_RETRIES_BY_YOU || !(await countRetry(flowId, person, MAX_RETRIES_BY_YOU)))) return "retry_limit";
   // Where the step is now: an edit may have moved it, or taken it out.
   const at = flow.steps.findIndex((s) => s.id === run.open.split(":")[1]);
   const target = choice === "end" ? -1 : choice === "retry" ? at : at >= 0 ? afterIndex(flow.steps, at) : -1;
@@ -979,12 +1014,12 @@ export async function sendDueSteps(
         const confirmed = all.filter((o) => o.state === "confirmed" && o.changed).map((o) => o.email);
         // A failed action is written down and the run goes on: one missing deal does not stop the emails after it.
         const onwards = all.filter((o) => o.state === "confirmed" || o.state === "failed").map((o) => o.email);
-        const deferred = all.filter((o) => o.state === "deferred").map((o) => o.email);
-        const after: (string | number)[][] = [...queueNext(onwards), ...deferred.map((email) => ["ZADD", QUEUE, now + 600, `${group}|${email}`])];
+        const waiting = await waitOrStop(flow.id, group, index, all.filter((o) => o.state === "deferred").map((o) => ({ email: o.email, reason: o.wait ?? "retry", note: o.note })), now);
+        const after: (string | number)[][] = [...queueNext(onwards), ...waiting.queue];
         if (confirmed.length) after.push(["HINCRBY", statsKey(flow.id), "acted", confirmed.length]);
         if (after.length) await redisPipeline(after);
         queued = true;
-        await settleAttempts(listId, flow.id, index, step.id, kind, settled(all), now);
+        await settleAttempts(listId, flow.id, index, step.id, kind, [...settled(all.filter((o) => o.state !== "deferred")), ...waiting.outcomes], now);
         return;
       }
 
@@ -1007,13 +1042,17 @@ export async function sendDueSteps(
           counts.dropped += rest.length;
           outcomes.push(...rest.map((email) => ({ email, state: "failed" as const, note: "The sender refused this email as it is, so the run ended.", to: -1, status: "failed" as const })));
         } else {
-          // Tried again later rather than lost: next month, or once the sender takes it.
-          const later = result.stopped === "allowance" || result.stopped === "day" || result.stopped === "sender" || result.stopped === "paused" ? 6 * 3600 : result.stopped === "portion" ? 900 : 600;
+          // Tried again later rather than lost: when the month turns, at the next day, at the pause's end, or after
+          // a growing delay; and at most MAX_WAITS_PER_RUN times a run (lib/flow-retry.ts).
+          const reason: WaitReason = result.stopped === "allowance" || result.stopped === "day" || result.stopped === "sender" || result.stopped === "paused" || result.stopped === "portion" ? result.stopped : "retry";
           const why =
-            result.stopped === "allowance" ? "Waiting: this month's emails ran out. It goes out when the month turns." : result.stopped === "day" || result.stopped === "portion" || result.stopped === "sender" ? "Waiting for room to send; it goes out by itself." : result.stopped === "paused" ? "Waiting: email to your list is paused for now." : "Waiting to be tried again in a few minutes; it was not sent.";
-          commands.push(...rest.map((email) => ["ZADD", QUEUE, now + later, `${group}|${email}`]));
-          outcomes.push(...rest.map((email) => ({ email, state: "deferred" as const, note: why, to: index })));
-          counts.later += rest.length;
+            result.stopped === "allowance" ? "Waiting: this month's emails ran out. It goes out when the month turns." : result.stopped === "day" || result.stopped === "portion" || result.stopped === "sender" ? "Waiting for room to send; it goes out by itself." : result.stopped === "paused" ? "Waiting: email to your list is paused for now." : "Waiting to be tried again later; it was not sent.";
+          const window = allowanceWindow(store, now * 1000);
+          const waiting = await waitOrStop(flow.id, group, index, rest.map((email) => ({ email, reason, note: why })), now, { windowEnd: window ? Math.floor(window.end / 1000) : null, pauseUntil: result.pause?.until ?? null });
+          commands.push(...waiting.queue);
+          outcomes.push(...waiting.outcomes);
+          counts.later += waiting.queue.length;
+          counts.dropped += waiting.outcomes.length - waiting.queue.length;
         }
       }
       if (result.done.length) {

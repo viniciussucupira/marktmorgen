@@ -11,8 +11,9 @@ import { useEffect, useState } from "react";
 import { type FlowAction, type FlowGoal, type StepCondition, isCourseIf } from "@/lib/flow-rules";
 import { END, type RoutedStep, type SampleContact, previewRun } from "@/lib/flow-paths";
 import type { RunEvent, RunRecord } from "@/lib/flow-runs";
-import { MAX_RUN_EVENTS } from "@/lib/flow-limits";
+import { MAX_RETRIES_BY_YOU, MAX_RUN_EVENTS } from "@/lib/flow-limits";
 import { runEffects } from "@/lib/run-effects";
+import { stopRules } from "@/lib/flow-stop-rules";
 
 type Answer = Record<string, unknown> & { ok?: boolean; error?: string };
 type Request = (payload: Record<string, unknown>) => Promise<Answer>;
@@ -248,6 +249,14 @@ export function WorkflowPreview({
       <p className="mt-2 text-xs text-ink-soft">
         {`${n(result.path.filter((p) => p.outcome === "runs" && !steps[p.index].action).length)} emails on this path. A purchase or a click in the middle of a real run can change it; the goal is checked before every step.`}
       </p>
+      <div className="mt-3 text-sm" data-stop-rules>
+        <p className="font-semibold text-ink">When a run stops</p>
+        <ul className="mt-1 list-disc space-y-1 pl-5 text-ink-soft">
+          {stopRules({ steps, goal }, { condition: conditionText, product: title }).map((rule, i) => (
+            <li key={i}>{rule.text}</li>
+          ))}
+        </ul>
+      </div>
       {confirm ? (
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button type="button" className="btn btn-primary btn-sm" disabled={confirm.busy} aria-busy={confirm.busy} onClick={confirm.onConfirm}>{confirm.label}</button>
@@ -292,6 +301,7 @@ const RUN_ERRORS: Record<string, string> = {
   run_paused: "Switch the workflow on first: a paused workflow sends nothing, so continuing would only end the run.",
   unknown: "That run is not there any more. Reload the page.",
   flow_write_unconfirmed: "Your choice could not be confirmed. Reload this run's history before choosing again.",
+  run_retry_limit: `This run has been tried again ${MAX_RETRIES_BY_YOU} times, the most one run may. Choose whether it went through, or end it.`,
 };
 
 /**
@@ -430,9 +440,10 @@ export function WorkflowRuns({ flowId, steps, request }: { flowId: string; steps
             <div className="notice notice-warn mt-3 text-sm">
               <p className="font-semibold">What should happen with this step?</p>
               <p className="mt-1">Its outcome could not be confirmed, so it was not repeated. Check what you can (the person&apos;s inbox, their page, your deals board), then choose.</p>
+              <p className="mt-1">{open.run.retries >= MAX_RETRIES_BY_YOU ? `It has been tried again ${n(MAX_RETRIES_BY_YOU)} times, the most one run may: choose whether it went through, or end it.` : `A run may be tried again up to ${n(MAX_RETRIES_BY_YOU)} times; this one has been tried again ${n(open.run.retries)} ${open.run.retries === 1 ? "time" : "times"}.`}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => resolve("continue")}>It went through: continue</button>
-                <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => resolve("retry")}>Try it again (may arrive twice)</button>
+                <button type="button" className="btn btn-secondary btn-sm" disabled={busy || open.run.retries >= MAX_RETRIES_BY_YOU} onClick={() => resolve("retry")}>Try it again (may arrive twice)</button>
                 <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => resolve("end")}>End this run</button>
               </div>
             </div>
