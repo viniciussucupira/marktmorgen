@@ -276,6 +276,8 @@ export type Candidate = {
   worstNetPerPayerCents: number;
   /** What one payer of this plan leaves above 60% of its revenue a month at full use, the commission counted as zero (the lower of a monthly payment and a yearly one's twelfth): what covers the fixed costs at 60% consolidated. */
   headroomMonthCents: number;
+  /** The same under the most-tax reading (the gate): negative for every plan, since none keeps 60% there. */
+  gateHeadroomMonthCents: number;
   /** Paying customers needed, every one on this plan at full use, before the company keeps 60% consolidated (lib/customer-base-rules.ts), for the named fixed costs and for them plus the unreviewed allowance of MODEL.company. */
   minimumBase: { named: number | null; withUnreviewed: number | null };
 };
@@ -315,6 +317,10 @@ export function candidates(): Candidate[] {
             mostTaxNetBps: planUnit(t.base, "month", monthCents, share, MOST_TAX_READING).netBps,
             worstNetPerPayerCents: Math.min(month.netCents, Math.floor(year.netCents / 12)),
             headroomMonthCents: Math.min(month.netCents - 0.6 * month.revenueCents, (year.netCents - 0.6 * year.revenueCents) / 12),
+            gateHeadroomMonthCents: (() => {
+              const gm = planUnit(t.base, "month", monthCents, share, MOST_TAX_READING), gy = planUnit(t.base, "year", monthCents, share, MOST_TAX_READING);
+              return Math.min(gm.netCents - 0.6 * gm.revenueCents, (gy.netCents - 0.6 * gy.revenueCents) / 12);
+            })(),
             minimumBase: {
               named: baseForPlan(t.base, monthCents, share, NAMED_FIXED_MONTHLY_CENTS),
               withUnreviewed: baseForPlan(t.base, monthCents, share, NAMED_FIXED_MONTHLY_CENTS + MODEL.company.unreviewedFixedCents.high),
@@ -432,15 +438,26 @@ export const MODEL = {
    * base), even (0). Nothing supports a new entrant above its incumbents.
    */
   asc: [-1.5, -0.7, 0],
-  /** The base scenario of the program and of every table that names one. */
-  base: { eta: 2, asc: -0.7 },
+  /**
+   * The base scenario of the program and of every table that names one (coordinator, 18 October 2026, from
+   * docs/research/demand-evidence-v2-2026-10-18.json modelValidation): Gumroad's sellers with the high churn pair are
+   * the only setting inside the evidence on revenue per payer, payers above $1,000 a month, the top plan's share of
+   * revenue and Stan's 13% churn. The other two populations stay as named scenarios (sensitivities).
+   */
+  base: { eta: 2, asc: -0.7, population: "gumroad-sellers" },
   /** The Monte Carlo's ranges, each drawn uniformly (log-uniformly where marked): every parameter of the model at once. */
   mc: {
+    populations: ["gumroad-sellers"],
     eta: [1, 5.5], asc: [-1.5, 0.3], paymentsAsc: [-2, 0], hassleUsd: [2, 10],
     aovUsd: [15, 70], conversion: [0.015, 0.08], emailsPerOrder: [10, 150], usage: [0.1, 0.7],
-    churnFloor: [0.01, 0.03], churnCap: [0.15, 0.35], sigmaScale: [0.85, 1.15],
+    // Around the central pair (0.03, 0.35); Stan's 13% gross churn a month sits inside it.
+    churnFloor: [0.02, 0.04], churnCap: [0.25, 0.45], sigmaScale: [0.85, 1.15],
     logUniform: ["aovUsd", "conversion", "emailsPerOrder"],
   },
+  /** The demand stress (coordinator, 18 October 2026): no observed self-serve creator pays more than Kajabi Pro's $499 a month (docs/research/demand-evidence-v2-2026-10-18.json topTiers), so the company Monte Carlo is drawn again with no demand, and with half, for every plan above this price. */
+  stress: { aboveCents: 49_900 },
+  /** The demand evidence's reach (low, central, high) and central ramp, for the base a design can reach. */
+  reachEvidence: { reach: [30, 300, 10_000], rampMonths: 30 },
   /** The preference for a payments-only tool (no storefront, courses or community) against a creator platform, in log-odds. */
   paymentsAsc: -1,
   /** Dollars a month added to every all-in cost inside the logarithm, so a tool that costs nothing is not infinitely preferred. */
@@ -460,7 +477,7 @@ export const MODEL = {
   // app subscriptions and 41.4% of all; Paddle models 10-20% uptake; no creator-tool figure exists.
   yearlyShare: { base: 0.25, low: 0.1, high: 0.45 },
   /** Monthly churn: floor + (cap − floor) × cost / (cost + sales); Stan's 13% a month (sacra-stan-2024) at its $29 price and typical sales sits inside it. */
-  churn: { base: [0.02, 0.25], low: [0.01, 0.15], high: [0.03, 0.35] },
+  churn: { base: [0.03, 0.35], low: [0.02, 0.25], high: [0.04, 0.45] },
   /** Months the profit of one month's cohort is counted over. */
   horizon: { base: 24, values: [12, 24, 36] },
   /** A store needs at most this many packs a month before it is treated as unable to use the plan. */
@@ -592,9 +609,13 @@ export function antiStan(d: DesignResult): { entryUsd: number; limitUsd: number;
   return { entryUsd, limitUsd, affordable: entryUsd <= limitUsd, growth, grows: d.packs && d.plans.length >= A.minPlans && rev.length >= 2 && rev[rev.length - 1] >= A.growthRatio * rev[0] };
 }
 /** The company's 60 months for one design over a set of draws (scripts/pricing-study-v2.py company_monte_carlo). */
-export type CompanyStats = { draws: number; expected: number; simulatedMean: number; p5: number; p50: number; p95: number; pLoss: number; pCashLoss: number; pNotConsolidated: number; se: number; pLossByReach: (number | null)[]; reachBands: number[];
+export type CompanyStats = { draws: number; expected: number; simulatedMean: number; p5: number; p50: number; p95: number; pLoss: number; pCashLoss: number; pNotConsolidated: number; se: number; pLossByReach: (number | null)[]; pCashLossByReach?: (number | null)[]; reachBands: number[];
   /** The lowest cumulative cash of each draw's expected month-by-month path (at most 0), its 5th percentile and median, and the share of draws below minus each level in dollars (final draws only). */
-  troughP5?: number; troughP50?: number; pTroughBelow?: Record<string, number> };
+  troughP5?: number; troughP50?: number; pTroughBelow?: Record<string, number>;
+  /** The median month of the lowest point, the median month cumulative cash turns positive for good (61 = not within 60 months), and the share of draws where it never does. */
+  troughMonthP50?: number; breakEvenP50?: number; pNoBreakEven?: number;
+  /** The probability of a cash loss in each third of the unreviewed fixed costs drawn. */
+  pCashLossByFixed?: (number | null)[] };
 /** Rule (b) in its worst scenario (scripts/pricing-study-v2.py worst_reach_needed). */
 export type WorstB = { minimumBase: number | null; payers60PerReach: number; reachNeeded: number | null; reachNeededMix: number | null; scenario: string | null; meets: boolean };
 export const isStanProof = (d: DesignResult) => { const a = antiStan(d); return a.affordable && a.grows; };
@@ -619,15 +640,15 @@ export const inPool = (designs: DesignResult[], filters: Filter[]) => designs.fi
 /** The owner's rule (18 October 2026): the lowest probability of loss p*, then the highest expected 60-month profit within MODEL.company.lossTolerance of p* (ties: the lower probability, then the id). Only designs drawn again on the final draws count. */
 export function chooseDesign(designs: DesignResult[]): { chosen: DesignResult; pStar: number; eligible: DesignResult[] } {
   const pool = designs.filter((d) => d.company.final);
-  const pStar = Math.min(...pool.map((d) => d.company.final!.pLoss));
-  const eligible = pool.filter((d) => d.company.final!.pLoss <= pStar + MODEL.company.lossTolerance + 1e-12);
+  const pStar = Math.min(...pool.map((d) => d.company.final!.pCashLoss));
+  const eligible = pool.filter((d) => d.company.final!.pCashLoss <= pStar + MODEL.company.lossTolerance + 1e-12);
   const r2 = (x: number) => Math.round(x * 100) / 100;
-  const chosen = [...eligible].sort((a, b) => r2(b.company.final!.expected) - r2(a.company.final!.expected) || a.company.final!.pLoss - b.company.final!.pLoss || (a.id < b.id ? -1 : 1))[0];
+  const chosen = [...eligible].sort((a, b) => r2(b.company.final!.expected) - r2(a.company.final!.expected) || a.company.final!.pCashLoss - b.company.final!.pCashLoss || a.company.final!.pNotConsolidated - b.company.final!.pNotConsolidated || (a.id < b.id ? -1 : 1))[0];
   return { chosen, pStar, eligible };
 }
 /** Designs no other beats on both expected profit and probability of loss, from the safest up. */
 export function frontierOf(designs: DesignResult[]): DesignResult[] {
-  const pool = designs.filter((d) => d.company.final).sort((a, b) => a.company.final!.pLoss - b.company.final!.pLoss || b.company.final!.expected - a.company.final!.expected || (a.id < b.id ? -1 : 1));
+  const pool = designs.filter((d) => d.company.final).sort((a, b) => a.company.final!.pCashLoss - b.company.final!.pCashLoss || b.company.final!.expected - a.company.final!.expected || (a.id < b.id ? -1 : 1));
   const out: DesignResult[] = [];
   let best = -Infinity;
   for (const d of pool) if (d.company.final!.expected > best + 1e-9) { out.push(d); best = d.company.final!.expected; }
@@ -704,7 +725,7 @@ export type DesignResult = {
   monteCarlo: { mean: number; p5: number; p50: number; p95: number; probBest: number } | null;
   horizon: Record<string, number>;
   revenueBySales: (number | null)[];
-  company: { screen: CompanyStats | null; final: CompanyStats | null; gate?: CompanyStats | null; worst: WorstB | null };
+  company: { screen: CompanyStats | null; final: CompanyStats | null; gate?: CompanyStats | null; stressZero?: CompanyStats | null; stressHalf?: CompanyStats | null; worst: WorstB | null };
 };
 export type StudyOutput = {
   solver: string;
@@ -719,6 +740,7 @@ export type StudyOutput = {
   frontier: string[];
   screened: { designs: number; draws: number; finalDesigns: number; finalDraws: number; grid: Record<string, number>; ruleBFeasible: boolean; leastReachNeeded: number | null; leastReachNeededDesign: string };
   companyCheck: { design: string; reach: number; rampMonths: number; fixedCents: number; population: string; expectedCashUsd: number; payers60: number; room60Usd: number };
+  reachCheck: { design: string; fixedUsd: number; rampMonths: number; minimumBase: number | null; at: { reach: number; expectedCashUsd: number; payers60: number; room60Usd: number; payersForConsolidated: number | null }[] }[];
   paretoByCount: { k: number; admissibleOnly: boolean; design: string; meanProfit: number; worstRegret: number }[];
   hypothesis: { design: string; label: string; meanProfit: number; worstRegret: number; commissionShare: number; subscribersPer1000: number }[];
   elasticity: { plan: string; byScenario: Record<string, number> }[];

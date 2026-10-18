@@ -173,7 +173,7 @@ function cells(D: StudyInput, withPacks: boolean, p: Params) {
 function deterministicModel(D: StudyInput, withPacks: boolean) {
   const M = D.model;
   const G = D.bins.middles;
-  const pop = D.populations.find((x) => x.id === "platform-customers")!;
+  const pop = D.populations.find((x) => x.id === D.model.base.population)!;
   const p = baseParams(D);
   const { table: per, inc } = cells(D, withPacks, p);
   const edges = [0, 0.5, 0.8, 0.9, 0.95, 0.975, 0.99, 0.995, 0.998, 0.999, 0.9995, 0.9999, 1];
@@ -204,7 +204,7 @@ function deterministicModel(D: StudyInput, withPacks: boolean) {
 /** The company's expected 60 months for one design at fixed values, written again from the input alone. */
 function companyExpected(D: StudyInput, plans: string[], withPacks: boolean, reach: number, ramp: number, fixedUsd: number) {
   const T = D.model.company.months;
-  const pop = D.populations.find((x) => x.id === "platform-customers")!;
+  const pop = D.populations.find((x) => x.id === D.model.base.population)!;
   const { table, inc } = cells(D, withPacks, baseParams(D));
   const index = new Map(D.candidates.map((c, i) => [c.id, i]));
   const js = plans.map((id) => index.get(id)!);
@@ -259,6 +259,7 @@ test("the named scenarios and the Monte Carlo are the ones the document describe
     assert.equal(f.draws, MODEL.company.finalDraws, d.id);
     assert.ok(f.pLoss >= Math.max(f.pCashLoss, f.pNotConsolidated) - 1e-12 && f.pLoss <= f.pCashLoss + f.pNotConsolidated + 1e-12, `${d.id}: a loss is a cash loss or no 60% consolidated, or both`);
     assert.ok(f.p5 <= f.p50 && f.p50 <= f.p95, d.id);
+    assert.equal(d.company.gate!.pNotConsolidated, 1, `${d.id}: under the gate reading no plan keeps 60%, so the company is never at 60% consolidated`);
   }
 });
 
@@ -289,10 +290,10 @@ test("the recommendation follows the owner's rules: 60% per customer, today's pl
   assert.ok(a.grows, "what a subscriber pays grows with its sales");
   assert.ok(withoutCommission(out.bestWithoutCommission), "a design without commission is given too");
   const pool = inPool(out.designs, pools(out.screened.ruleBFeasible).recommended).filter((d) => d.company.final);
-  const pStar = Math.min(...pool.map((d) => d.company.final!.pLoss));
-  assert.ok(rec.company.final!.pLoss <= pStar + MODEL.company.lossTolerance + 1e-12, "within one point of the lowest probability of loss");
-  for (const d of pool) if (d.company.final!.pLoss <= pStar + MODEL.company.lossTolerance + 1e-12) assert.ok(Math.round(d.company.final!.expected * 100) <= Math.round(rec.company.final!.expected * 100), d.id);
-  if (oc.next) assert.ok(oc.next.company.final!.pLoss > pStar + MODEL.company.lossTolerance, "the next frontier design lies outside the tolerance");
+  const pStar = Math.min(...pool.map((d) => d.company.final!.pCashLoss));
+  assert.ok(rec.company.final!.pCashLoss <= pStar + MODEL.company.lossTolerance + 1e-12, "within one point of the lowest probability of a cash loss");
+  for (const d of pool) if (d.company.final!.pCashLoss <= pStar + MODEL.company.lossTolerance + 1e-12) assert.ok(Math.round(d.company.final!.expected * 100) <= Math.round(rec.company.final!.expected * 100), d.id);
+  if (oc.next) assert.ok(oc.next.company.final!.pCashLoss > pStar + MODEL.company.lossTolerance, "the next frontier design lies outside the tolerance");
   const meetsAll = out.designs.some((d) => d.admissible && isStanProof(d) && d.company.worst?.meets);
   if (!out.screened.ruleBFeasible) assert.equal(meetsAll, false, "rule (b) is reported as infeasible only when no design written out meets it");
   assert.ok(frontierOf(pool).some((d) => d.id === rec.id) || pool.some((d) => d.id === rec.id));

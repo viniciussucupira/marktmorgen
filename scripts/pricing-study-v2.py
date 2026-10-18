@@ -64,6 +64,10 @@ KEEPS = dict(sizing=D["commissionKeep"]["sizing"], gate=D["commissionKeep"]["mos
 # sizes every limit) or "gate" (the most-tax reading of lib/tax-gate.ts). Only the company Monte Carlo is run under
 # both; everything else is the sizing reading, and the document says so beside every figure.
 READING = ["sizing"]
+# A demand stress on the company Monte Carlo (coordinator, 18 October 2026): no observed self-serve creator pays more
+# than Kajabi Pro's $499 a month, so every plan above M["stress"]["aboveCents"] is drawn again with no demand
+# ("zero") or half its logit weight ("half"), so profit is never overstated. None for the ordinary run.
+STRESS = [None]
 
 
 def keep():
@@ -74,7 +78,8 @@ D_COMMISSIONS = {t: sorted({c["commissionBps"] for c in CANDS if c["template"] =
 USAGE_KEYS = [0, 15, 30, 60, 100]
 
 
-def base_params(pop="platform-customers", eta=None, asc=None):
+def base_params(pop=None, eta=None, asc=None):
+    pop = M["base"]["population"] if pop is None else pop
     eta = M["base"]["eta"] if eta is None else eta
     asc = M["base"]["asc"] if asc is None else asc
     return dict(pop=pop, eta=eta, asc=asc, paymentsAsc=M["paymentsAsc"], hassle=M["hassleUsd"],
@@ -153,7 +158,7 @@ def ours(j, p, with_packs):
     cost = c["monthCents"] / 100 + comm * G + PROC_BPS * G + PROC_FIXED * orders
     prof = np.full(len(G), net_at(c, p["usage"], p["yearly"])) + keep() * comm * G
     ok = np.ones(len(G), dtype=bool)
-    head = np.full(len(G), c["headroomMonthCents"] / 100)
+    head = np.full(len(G), c["headroomMonthCents" if READING[0] == "sizing" else "gateHeadroomMonthCents"] / 100)
     for b in range(len(G)):
         extra_cost, extra_net, count = 0.0, 0.0, 0
         for need, cap, small, large, allowed in (
@@ -463,6 +468,8 @@ def candidate_tables(p, used):
             PR[k, i] = prof
             H[k, i] = headroom(j, p, with_packs)
             C[k, i] = cf + (cc - cf) * cost / (cost + G + 1e-9)
+            if STRESS[0] and CANDS[j]["monthCents"] > M["stress"]["aboveCents"]:
+                V[k, i] = -np.inf if STRESS[0] == "zero" else V[k, i] - math.log(2)
     return V, PR, H, C
 
 
@@ -552,16 +559,22 @@ def company_draw(p, reach, ramp, fixed_usd, Dm, pk, used, U, simulate=True, trou
     payers = np.zeros(lam.shape)
     cum = np.zeros(lam.shape[0])
     low = np.zeros(lam.shape[0])
+    low_month = np.zeros(lam.shape[0])
+    even = np.full(lam.shape[0], T + 1.0)
     for month in range(T):
         payers = payers * r + arrive * wt[month]
         cum += (pr * payers).sum(axis=(1, 2)) - fixed_usd
-        low = np.minimum(low, cum)
-    return expected, cash, room >= fixed_usd, low
+        deeper = cum < low
+        low = np.where(deeper, cum, low)
+        low_month = np.where(deeper, month + 1, low_month)
+        even = np.where((cum >= 0) & (even > T), month + 1, even)
+        even = np.where(cum < 0, T + 1.0, even)
+    return expected, cash, room >= fixed_usd, (low, low_month, even)
 
 
 def draw_params(rng):
     """Every parameter of one Monte Carlo draw (the demand model's ranges, and the company's)."""
-    pop_ids = list(POPS)
+    pop_ids = M["mc"]["populations"]
     pop = POPS[pop_ids[rng.integers(len(pop_ids))]]
     sigma = pop["sigma"] * rng.uniform(*M["mc"]["sigmaScale"])
     edges = [e if e is not None else math.inf for e in D["bins"]["edges"]]
@@ -579,7 +592,7 @@ def draw_params(rng):
     return p, reach, ramp, fixed, U
 
 
-def company_rows(design_list, seed, start, stop, reading="sizing", trough=False):
+def company_rows(design_list, seed, start, stop, reading="sizing", trough=False, stress=None):
     """Draws start..stop-1 of the company's Monte Carlo for every design: the seeded generator is replayed through the
     earlier draws (draw_params takes the same numbers whatever is done with them), and `used`, the logit normalizer's
     set of candidates, is always the whole design list's, so a range computed alone equals the same range of one run."""
@@ -590,13 +603,17 @@ def company_rows(design_list, seed, start, stop, reading="sizing", trough=False)
     n, k = len(design_list), stop - start
     edges = np.exp(np.linspace(math.log(CO["reach"]["low"]), math.log(CO["reach"]["high"]), 4))
     rows = dict(start=start, stop=stop, e=np.zeros((k, n)), cash=np.zeros((k, n), dtype=np.float32), neg=np.zeros((k, n), dtype=bool),
-                consol=np.zeros((k, n), dtype=bool), band=np.zeros(k, dtype=int), trough=np.zeros((k, n), dtype=np.float32) if trough else None)
-    saved = READING[0]
-    READING[0] = reading
+                consol=np.zeros((k, n), dtype=bool), band=np.zeros(k, dtype=int), fixedBand=np.zeros(k, dtype=int),
+                trough=np.zeros((k, n), dtype=np.float32) if trough else None, troughMonth=np.zeros((k, n), dtype=np.int8) if trough else None,
+                breakEven=np.zeros((k, n), dtype=np.int8) if trough else None)
+    lo_f, hi_f = CO["unreviewedFixedCents"]["low"] / 100, CO["unreviewedFixedCents"]["high"] / 100
+    saved, saved_stress = READING[0], STRESS[0]
+    READING[0], STRESS[0] = reading, stress
     try:
         for t in range(k):
             p, reach, ramp, fixed, U = draw_params(rng)
             rows["band"][t] = min(2, int(np.searchsorted(edges, reach, side="right") - 1))
+            rows["fixedBand"][t] = min(2, int(3 * (fixed - NAMED_FIXED_USD - lo_f) / (hi_f - lo_f)))
             _ours_cache.clear()
             _head_cache.clear()
             _comp_cache.clear()
@@ -607,9 +624,9 @@ def company_rows(design_list, seed, start, stop, reading="sizing", trough=False)
             rows["neg"][t] = c < 0
             rows["consol"][t] = consol
             if trough:
-                rows["trough"][t] = res[3]
+                rows["trough"][t], rows["troughMonth"][t], rows["breakEven"][t] = res[3]
     finally:
-        READING[0] = saved
+        READING[0], STRESS[0] = saved, saved_stress
         _ours_cache.clear()
         _head_cache.clear()
     return rows
@@ -621,12 +638,14 @@ def company_summarize(chunks, n, draws):
     assert [r["start"] for r in chunks] == [0] + [r["stop"] for r in chunks[:-1]] and chunks[-1]["stop"] == draws, "draws missing or repeated"
     E, cash, NEG, CONS = (np.concatenate([r[x] for r in chunks]) for x in ("e", "cash", "neg", "consol"))
     BAND = np.concatenate([r["band"] for r in chunks])
+    FBAND = np.concatenate([r["fixedBand"] for r in chunks])
     exp_sum = np.zeros(n)
     lose_cash = np.zeros(n)
     not_consol = np.zeros(n)
     lose = np.zeros(n)
     edges = np.exp(np.linspace(math.log(CO["reach"]["low"]), math.log(CO["reach"]["high"]), 4))
     band_lose = np.zeros((3, n))
+    band_cash = np.zeros((3, n))
     band_n = np.zeros(3)
     for t in range(draws):
         exp_sum += E[t]
@@ -634,21 +653,31 @@ def company_summarize(chunks, n, draws):
         not_consol += ~CONS[t]
         lose += NEG[t] | ~CONS[t]
         band_lose[BAND[t]] += NEG[t] | ~CONS[t]
+        band_cash[BAND[t]] += NEG[t]
         band_n[BAND[t]] += 1
     out = []
     pct = np.percentile(cash, [5, 50, 95], axis=0)
     mean = cash.mean(axis=0, dtype=np.float64)
     TR = np.concatenate([r["trough"] for r in chunks]) if chunks[0].get("trough") is not None else None
     if TR is not None:
+        TM = np.concatenate([r["troughMonth"] for r in chunks]).astype(float)
+        BE = np.concatenate([r["breakEven"] for r in chunks]).astype(float)
         tpct = np.percentile(TR, [5, 50], axis=0)
         tdeep = {x: (TR < -x).mean(axis=0) for x in TROUGH_LEVELS}
+        tm50 = np.percentile(TM, 50, axis=0)
+        be50 = np.percentile(BE, 50, axis=0)
+        never = (BE > CO["months"]).mean(axis=0)
+    fcash = [(NEG[FBAND == k].mean(axis=0) if (FBAND == k).any() else None) for k in range(3)]
     for i in range(n):
         pl = lose[i] / draws
         row = dict(draws=draws, expected=float(exp_sum[i] / draws), simulatedMean=float(mean[i]), p5=float(pct[0, i]), p50=float(pct[1, i]), p95=float(pct[2, i]),
                    pLoss=float(pl), pCashLoss=float(lose_cash[i] / draws), pNotConsolidated=float(not_consol[i] / draws), se=float(math.sqrt(max(pl * (1 - pl), 1e-12) / draws)),
-                   pLossByReach=[float(band_lose[k, i] / band_n[k]) if band_n[k] else None for k in range(3)], reachBands=[float(x) for x in edges])
+                   pLossByReach=[float(band_lose[k, i] / band_n[k]) if band_n[k] else None for k in range(3)],
+                   pCashLossByReach=[float(band_cash[k, i] / band_n[k]) if band_n[k] else None for k in range(3)], reachBands=[float(x) for x in edges])
+        row["pCashLossByFixed"] = [None if f is None else float(f[i]) for f in fcash]
         if TR is not None:
-            row.update(troughP5=float(tpct[0, i]), troughP50=float(tpct[1, i]), pTroughBelow={str(x): float(tdeep[x][i]) for x in TROUGH_LEVELS})
+            row.update(troughP5=float(tpct[0, i]), troughP50=float(tpct[1, i]), pTroughBelow={str(x): float(tdeep[x][i]) for x in TROUGH_LEVELS},
+                       troughMonthP50=float(tm50[i]), breakEvenP50=float(be50[i]), pNoBreakEven=float(never[i]))
         out.append(row)
     return out
 
@@ -671,11 +700,11 @@ EXECUTOR = [LocalExecutor()]
 TROUGH_LEVELS = (500, 2_000, 5_000)
 
 
-def company_monte_carlo(design_list, draws, seed, reading="sizing", trough=False):
-    """The company's 60 months for every design, over `draws` draws with common random numbers: expected cash, its percentiles, and the probabilities of each kind of loss (and, with `trough`, the lowest cumulative cash on the way), under `reading`."""
+def company_monte_carlo(design_list, draws, seed, reading="sizing", trough=False, stress=None):
+    """The company's 60 months for every design, over `draws` draws with common random numbers: expected cash, its percentiles, and the probabilities of each kind of loss (and, with `trough`, the lowest cumulative cash on the way, its month and the month cash turns positive for good), under `reading` and the demand `stress`."""
     design_list = [(list(plans), bool(pk)) for plans, pk in design_list]
-    spec = ("company", design_list, seed) if (reading, trough) == ("sizing", False) else ("company", design_list, seed, reading, trough)
-    return EXECUTOR[0].draws(spec, draws, lambda a, b: company_rows(design_list, seed, a, b, reading, trough),
+    spec = ("company", design_list, seed) if (reading, trough, stress) == ("sizing", False, None) else ("company", design_list, seed, reading, trough, stress)
+    return EXECUTOR[0].draws(spec, draws, lambda a, b: company_rows(design_list, seed, a, b, reading, trough, stress),
                              lambda chunks: company_summarize(chunks, len(design_list), draws))
 
 
@@ -729,20 +758,26 @@ def worst_reach_needed(design_list):
                  meets=bool(math.isfinite(need[i]) and need[i] <= CO["reach"]["low"])) for i in range(len(design_list))]
 
 
+# What "loss" ranks by (coordinator, 18 October 2026): the probability that the 60 months' cumulative cash is negative.
+# Being below 60% consolidated is reported beside it, never folded into it.
+LOSS_KEY = "pCashLoss"
+
+
 def choose(designs, key="final"):
-    """The owner's rule on a pool: the lowest probability of loss p*, then the highest expected profit within the tolerance of p* (ties: lower probability of loss, then the id)."""
+    """The owner's rule on a pool: the lowest probability that the 60 months' cumulative cash is negative p*, then the highest expected profit within the tolerance of p* (ties: lower probability of a cash loss, then of not being at 60% consolidated, then the id)."""
     pool = [d for d in designs if d["company"].get(key)]
     if not pool:
         return None, None
-    pstar = min(d["company"][key]["pLoss"] for d in pool)
-    elig = [d for d in pool if d["company"][key]["pLoss"] <= pstar + CO["lossTolerance"] + 1e-12]
-    best = min(elig, key=lambda d: (-round(d["company"][key]["expected"], 2), d["company"][key]["pLoss"], d["id"]))
+    L = LOSS_KEY
+    pstar = min(d["company"][key][L] for d in pool)
+    elig = [d for d in pool if d["company"][key][L] <= pstar + CO["lossTolerance"] + 1e-12]
+    best = min(elig, key=lambda d: (-round(d["company"][key]["expected"], 2), d["company"][key][L], d["company"][key]["pNotConsolidated"], d["id"]))
     return best, pstar
 
 
 def frontier(designs, key="final"):
-    """Designs no other beats on both expected profit and probability of loss, from the safest up."""
-    pool = sorted([d for d in designs if d["company"].get(key)], key=lambda d: (d["company"][key]["pLoss"], -d["company"][key]["expected"], d["id"]))
+    """Designs no other beats on both expected profit and probability of a cash loss, from the safest up."""
+    pool = sorted([d for d in designs if d["company"].get(key)], key=lambda d: (d["company"][key][LOSS_KEY], -d["company"][key]["expected"], d["id"]))
     out, best = [], -math.inf
     for d in pool:
         if d["company"][key]["expected"] > best + 1e-9:
@@ -940,8 +975,8 @@ def main():
     # and every plan at once at its smallest share; screened on the same draws.
     seeds = []
     mp = pool(results, main_filters)
-    pstar = min(r["company"]["screen"]["pLoss"] for r in mp)
-    near = sorted([r for r in mp if r["company"]["screen"]["pLoss"] <= pstar + CO["finalWindow"]], key=lambda r: -r["company"]["screen"]["expected"])[:8]
+    pstar = min(r["company"]["screen"][LOSS_KEY] for r in mp)
+    near = sorted([r for r in mp if r["company"]["screen"][LOSS_KEY] <= pstar + CO["finalWindow"]], key=lambda r: -r["company"]["screen"]["expected"])[:8]
     seeds = near + sorted(mp, key=lambda r: -r["company"]["screen"]["expected"])[:4]
     before = set(designs)
     for sd in seeds:
@@ -989,8 +1024,8 @@ def main():
             final_keys.append(r["key"])
     for name, filters in POOLS.items():
         pl = pool(results, filters)
-        ps_ = min(r["company"]["screen"]["pLoss"] for r in pl)
-        for r in sorted([r for r in pl if r["company"]["screen"]["pLoss"] <= ps_ + CO["finalWindow"]], key=lambda r: -r["company"]["screen"]["expected"])[:40]:
+        ps_ = min(r["company"]["screen"][LOSS_KEY] for r in pl)
+        for r in sorted([r for r in pl if r["company"]["screen"][LOSS_KEY] <= ps_ + CO["finalWindow"]], key=lambda r: -r["company"]["screen"]["expected"])[:40]:
             add_final(r)
         for r in frontier(pl, "screen")[:60]:
             add_final(r)
@@ -1005,9 +1040,14 @@ def main():
     # The same draws under the gate reading (the most-tax reading of lib/tax-gate.ts): the cash a design would leave if
     # the reading with more tax is the one that holds. No plan keeps 60% there, so nothing is consolidated at 60%.
     fin_gate = company_monte_carlo([(list(r["plans"]), r["packs"]) for r in finals], CO["finalDraws"], CO["finalSeed"], reading="gate", trough=True)
-    for r, o, og in zip(finals, fin, fin_gate):
+    # And under the demand stress: every plan above $499 a month with no demand, and with half.
+    fin_zero = company_monte_carlo([(list(r["plans"]), r["packs"]) for r in finals], CO["finalDraws"], CO["finalSeed"], trough=True, stress="zero")
+    fin_half = company_monte_carlo([(list(r["plans"]), r["packs"]) for r in finals], CO["finalDraws"], CO["finalSeed"], trough=True, stress="half")
+    for r, o, og, oz, oh in zip(finals, fin, fin_gate, fin_zero, fin_half):
         r["company"]["final"] = o
         r["company"]["gate"] = og
+        r["company"]["stressZero"] = oz
+        r["company"]["stressHalf"] = oh
     print(f"  {len(finals)} designs drawn again on {CO['finalDraws']} draws", flush=True)
 
     choice = {}
@@ -1021,11 +1061,30 @@ def main():
     nxt = next((r for r in fr if r["company"]["final"]["expected"] > rec["company"]["final"]["expected"] + 1e-9), None)
     # The cheapest check of the rule in TypeScript: the recommendation's expected cash at fixed values, recomputed by the test.
     check_p = base_params()
-    check = dict(design=rec["id"], reach=1_000, rampMonths=24, fixedCents=D["namedFixedMonthlyCents"] + 25_000, population="platform-customers")
+    check = dict(design=rec["id"], reach=1_000, rampMonths=24, fixedCents=D["namedFixedMonthlyCents"] + 25_000, population=M["base"]["population"])
     Dm_, pk_, used_ = design_matrix([(list(rec["plans"]), rec["packs"])])
     _ours_cache.clear(); _head_cache.clear(); _comp_cache.clear()
     e_, n_, h_ = company_draw(check_p, check["reach"], check["rampMonths"], check["fixedCents"] / 100, Dm_, pk_, used_, None, simulate=False)
     check.update(expectedCashUsd=float(e_[0]), payers60=float(n_[0]), room60Usd=float(h_[0]))
+
+    # The realistic base: payers at month 60 at the demand evidence's reach (low, central, high) in the central scenario,
+    # the central ramp and the middle of the fixed costs, against the payers the design's own mix needs for 60%
+    # consolidated (its room above 60% covering the fixed costs) and the repository's minimum base (every customer on
+    # its least plan).
+    reach_rows = []
+    rc_fixed = NAMED_FIXED_USD + (CO["unreviewedFixedCents"]["low"] + CO["unreviewedFixedCents"]["high"]) / 200
+    for r in [rec] + ([nxt] if nxt else []) + [no_comm] + [x for x in finals if "today + packs" in x["names"] or "today" in x["names"]]:
+        if any(x["design"] == r["id"] for x in reach_rows):
+            continue
+        Dm_, pk_, used_ = design_matrix([(list(r["plans"]), r["packs"])])
+        row = dict(design=r["id"], fixedUsd=rc_fixed, rampMonths=M["reachEvidence"]["rampMonths"], minimumBase=r["company"]["worst"]["minimumBase"], at=[])
+        for reach in M["reachEvidence"]["reach"]:
+            _ours_cache.clear(); _head_cache.clear(); _comp_cache.clear()
+            e_, n_, h_ = company_draw(base_params(), reach, M["reachEvidence"]["rampMonths"], rc_fixed, Dm_, pk_, used_, None, simulate=False)
+            per = float(h_[0]) / max(float(n_[0]), 1e-300)
+            row["at"].append(dict(reach=reach, expectedCashUsd=float(e_[0]), payers60=float(n_[0]), room60Usd=float(h_[0]),
+                                  payersForConsolidated=None if per <= 0 else rc_fixed / per))
+        reach_rows.append(row)
 
     # Cohort Monte Carlo (the demand model's own profit, for the tables below): the 25 best by mean profit, the recommendation and the named ones.
     ranked = sorted(results, key=lambda r: -r["meanProfit"])
@@ -1114,7 +1173,8 @@ def main():
                     monteCarlo={k: round(v, 4) for k, v in mc[r["key"]].items()} if r["key"] in mc else None,
                     horizon={k: round(v, 2) for k, v in r["horizon"].items()},
                     revenueBySales=[None if x is None else round(x, 4) for x in r["revenueBySales"]],
-                    company=dict(screen=rnd(co.get("screen")), final=rnd(co.get("final")), gate=rnd(co.get("gate")), worst=rnd(co.get("worst"))))
+                    company=dict(screen=rnd(co.get("screen")), final=rnd(co.get("final")), gate=rnd(co.get("gate")), stressZero=rnd(co.get("stressZero")),
+                                 stressHalf=rnd(co.get("stressHalf")), worst=rnd(co.get("worst"))))
 
     pareto = []
     for admissible_only in (False, True):
@@ -1148,7 +1208,7 @@ def main():
         solver=f"scipy {scipy.__version__} (milp and linprog, HiGHS); numpy {np.__version__}",
         scenarios=scenarios, milp=milp_runs, designs=designs_out,
         recommended=rec["id"], bestWithoutCommission=no_comm["id"], nextFrontier=nxt["id"] if nxt else None, regretBest=regret_best["id"],
-        choice=choice, frontier=[r["id"] for r in fr], screened=screened, companyCheck=check,
+        choice=choice, frontier=[r["id"] for r in fr], screened=screened, companyCheck=check, reachCheck=reach_rows,
         paretoByCount=pareto, hypothesis=hyp, elasticity=elast,
         sensitivity=[{k: (round(v, 2) if isinstance(v, float) else v) for k, v in s.items()} for s in sens], lp=lp_out,
         monteCarloDraws=M["monteCarloDraws"],
