@@ -33,12 +33,36 @@
  * <person> is the same hash of the address the start itself is kept under,
  * never the address; the address is a field of the run, as it is a row of
  * the creator's own list.
+ *
+ * How much a run keeps is bounded by construction, never by trimming what
+ * the job writes (18 October 2026). A run visits each step at most once
+ * (routes only go forward, lib/flow-paths.ts) and each visit writes at most
+ * an attempt and its outcome, or one skip; it starts once and ends once. So
+ * without the creator a run writes at most 2 + 2 × MAX_STEPS events. Two
+ * things could add more, and both are closed:
+ *
+ *   - A step that has to wait (the month's emails ran out, no room to send,
+ *     the deals board could not be read) is tried again later. Its attempt is
+ *     taken back out of the history when it turns out to be a wait
+ *     (settleAttempts, "deferred"), so a wait of a month writes nothing.
+ *   - The creator's choice for a held run ("continue" or "try it again")
+ *     opens the step again. Each choice keeps only the run's latest
+ *     KEPT_AFTER_CHOICE events, so what may follow it (2 + 2 × MAX_STEPS)
+ *     still fits in MAX_RUN_EVENTS, the most the store's data room was
+ *     charged for (lib/flows.ts, runBytes). The studio says when a run's
+ *     earliest events were let go (lib/run-effects.ts, trimmed).
+ *
+ * A workflow's runs are bounded too: one person starts a workflow at most
+ * once while the start is remembered (400 days, lib/flows.ts), and a store
+ * starts at most its plan's runs a day across all its workflows
+ * (lib/flow-limits.ts), so a workflow keeps at most MAX_RUNS_KEPT_PER_FLOW
+ * runs, each charged to the store's data room before it starts.
  */
 import { createHash } from "node:crypto";
 import { normaliseEmail } from "@/lib/auth";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { dataBytes } from "@/lib/store-data-rules";
-import { MAX_RUN_EVENTS, RUN_KEEP_SECONDS } from "@/lib/flow-limits";
+import { MAX_RUN_EVENTS, MAX_STEPS, RUN_KEEP_SECONDS } from "@/lib/flow-limits";
 
 export type RunStatus = "running" | "waiting" | "held" | "done" | "goal" | "ended" | "left" | "failed";
 export const RUN_STATUSES: readonly RunStatus[] = ["running", "waiting", "held", "done", "goal", "ended", "left", "failed"];
@@ -87,6 +111,9 @@ const indexKey = (flowId: string) => `nl:wf:runs:${flowId}`;
 const heldKey = (listId: string) => `nl:wf:held:${listId}`;
 const dayKey = (listId: string, nowSeconds: number) => `nl:wf:day:${listId}:${new Date(nowSeconds * 1000).toISOString().slice(0, 10)}`;
 const DAY_KEEP_SECONDS = 3 * 86_400;
+
+/** Events kept when the creator chooses for a held run: room is left for everything that can follow it. */
+export const KEPT_AFTER_CHOICE = MAX_RUN_EVENTS - (2 + 2 * MAX_STEPS);
 
 const event = (e: RunEvent) => JSON.stringify({ ...e, note: e.note.slice(0, 300) });
 /** The most one event of a run's history weighs: its note of 300 characters, at three bytes each, and the rest. */
@@ -219,8 +246,10 @@ export async function settleAttempts(listId: string, flowId: string, index: numb
     }
     const status: RunStatus = o.status ?? (o.state === "deferred" ? "waiting" : o.to < 0 ? (o.state === "failed" ? "failed" : "done") : "running");
     commands.push(["HDEL", run, "open"]);
-    // A wait is a status, not an event: a month that runs out is not written down forty times.
+    // A wait is a status, not an event: a month that runs out is not written down forty times,
+    // and the attempt claimAttempts wrote for this try is taken back out (the same event, word for word).
     if (o.state !== "deferred") commands.push(["RPUSH", log, event({ at: nowSeconds, step: index, stepId, kind, state: o.state, note: o.note })]);
+    else commands.push(["LREM", log, -1, event({ at: nowSeconds, step: index, stepId, kind, state: "attempted", note: "" })]);
     commands.push(["HSET", run, "email", normaliseEmail(o.email), "status", status, "step", o.state === "deferred" ? index : o.to, "note", o.state === "deferred" ? o.note.slice(0, 300) : "", "updatedAt", nowSeconds]);
     // In the index at every write, so a run started before history existed can be found and erased too.
     commands.push(["ZADD", indexKey(flowId), nowSeconds, person]);
@@ -334,6 +363,8 @@ export async function releaseHold(listId: string, flowId: string, person: string
   if (!replied(removed, 1) || removed[0] !== 1) return false;
   await redisPipeline([
     ["RPUSH", logKey(flowId, person), event({ at: nowSeconds, step: Number(open.split(":")[0]) || 0, stepId: open.split(":")[1] ?? "", kind: "run", state: "resolved", note })],
+    // Room for whatever the run does after this choice (above): the history never passes MAX_RUN_EVENTS.
+    ["LTRIM", logKey(flowId, person), -KEPT_AFTER_CHOICE, -1],
     ["HSET", run, "status", status, "step", step, "note", "", "updatedAt", nowSeconds],
     ["ZREM", heldKey(listId), `${flowId}|${person}`],
     ["ZADD", indexKey(flowId), nowSeconds, person],

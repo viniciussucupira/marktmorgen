@@ -875,10 +875,14 @@
       "source": "S16",
       "clickfunnelsEvidence": "V",
       "clickfunnels": "Contact action history includes workflow progress.",
-      "evidencePath": "lib/flows.ts",
-      "marktmorgenEvidence": "U",
-      "current": "Complete per-run history unestablished.",
-      "improvement": "Show attempted, confirmed, failed and uncertain effects separately."
+      "evidencePath": "lib/flow-runs.ts",
+      "marktmorgenEvidence": "D",
+      "current": "Every run keeps each effect as attempted (written before it happens), then confirmed, failed or uncertain, plus skipped, goal and end, for 400 days; an uncertain outcome holds the run and is never retried by itself. A run's history counts attempted, confirmed, failed and uncertain separately; an attempt with no outcome, or one the creator marked as gone through, stays uncertain (lib/run-effects.ts). Bounded by construction: at most 62 events a run (a step that waits writes nothing; a creator's choice keeps the latest 20), at most 16,000 runs a workflow (the plan's runs a day for 400 days), each charged to the store's data room before it starts, and erased with a person, a workflow or a store. Not browser, load or live-provider evidence.",
+      "improvement": "Show the four counts across a workflow's runs, not only per run, without a read per run.",
+      "testEvidence": [
+        "tests/workflow-run-history.test.ts",
+        "tests/workflow-branching.test.ts"
+      ]
     },
     {
       "id": "F25",
@@ -1645,9 +1649,9 @@
     "status": "Not certified; do not activate commercial entitlements from this report"
   },
   "evidenceCounts": {
-    "D": 27,
+    "D": 28,
     "C/U": 31,
-    "U": 12
+    "U": 11
   },
   "verification": {
     "reviewedAt": "2026-10-17 UTC",
@@ -1656,6 +1660,13 @@
       "D": 5,
       "C/U": 49,
       "U": 16
-    }
+    },
+    "followUps": [
+      {
+        "id": "F24",
+        "date": "2026-10-18 UTC",
+        "note": "Moved U to D on tests/workflow-run-history.test.ts and tests/workflow-branching.test.ts. The evidence path is cited at main, not at sourceRevision, where lib/flow-runs.ts did not exist yet."
+      }
+    ]
   }
 }
