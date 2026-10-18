@@ -114,7 +114,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
               <li>Import the list you already have, and take it with you as a file whenever you like.</li>
             </ul>
             <p className="mt-4 text-sm text-ink-soft">
-              {`${priceWords("pro", "month")}, or ${priceWords("pro", "year")} — $${yearSaving("pro") / 100} less. Everything else in your store stays exactly as it is.`}
+              {`${priceWords("pro", "month")}, or ${priceWords("pro", "year")} — $${(yearSaving("pro") / 100).toLocaleString("en-US")} less. Everything else in your store stays exactly as it is.`}
             </p>
             {!can(role, "billing") ? (
               <p className="mt-5 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink-soft">

@@ -18,7 +18,7 @@ import { ASSISTANT_PRICE_CENTS, addOnFeeCents, assistantMeetsFloor, assistantMon
 import {
   MOST_TAX_READING, READINGS, SIZING_READING, STRESS_PROFIT_TAX_BPS, costBudgetCents, providerFeeCents, receivingOf, unitUnder,
 } from "@/lib/receiving-costs";
-import { allUnits, evaluate, renderMarginAlignment } from "./margin-alignment-table";
+import { allUnits, evaluate, floorPriceCents, renderMarginAlignment, roomKept } from "./margin-alignment-table";
 import { netOf } from "./plan-cost-model";
 
 const DOC = "docs/margin-alignment-2026-10-18.md";
@@ -76,4 +76,32 @@ test("no unit on sale misses 60%, and while any misses, nothing is on sale", () 
     assert.equal(commercialMarginReady(), false);
   }
   assert.equal(assistantMeetsFloor(), evaluate(units.find((u) => u.id === "store-assistant")!).meetsFloor && assistantMonthWorst().roomCents >= 25);
+});
+
+test("every unit on the price list (owner, 18 October 2026, 11:21) keeps 60% at full use, at or above its floor with the room kept", () => {
+  for (const unit of allUnits(PLANS_ON_SALE, ASSISTANT_ON_SALE)) {
+    assert.equal(evaluate(unit).meetsFloor, true, `${unit.id} misses 60% at full use`);
+    if (unit.id.startsWith("captions")) continue;
+    const floor = floorPriceCents(unit.usageCents);
+    // The floor is exact: one cent less misses.
+    assert.equal(unitUnder(floor, unit.usageCents).meetsFloor, true);
+    assert.equal(unitUnder(floor - 1, unit.usageCents).meetsFloor, false, `${unit.id}: the floor is not the lowest price`);
+    assert.ok(unit.priceCents >= floorPriceCents(unit.usageCents, roomKept(unit)), `${unit.id}: $${unit.priceCents / 100} is under its floor with room`);
+  }
+  // The yearly price is ten monthly payments on every plan, and still keeps the room.
+  for (const tier of TIERS) assert.equal(PRICES_WITH_COMMISSION[tier].year, PRICES_WITH_COMMISSION[tier].month * 10);
+});
+
+test("the value presentation prints the price list and the floors in force as the code computes them", () => {
+  const doc = readFileSync(join(process.cwd(), "docs/value-presentation-2026-10-18.md"), "utf8");
+  const usd = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
+  const usd2 = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  for (const unit of allUnits(PLANS_ON_SALE, ASSISTANT_ON_SALE).filter((u) => !u.id.startsWith("captions"))) {
+    assert.ok(doc.includes(`**${usd(unit.priceCents)}`), `${unit.id}: the price ${usd(unit.priceCents)} is not in the value presentation`);
+    assert.ok(doc.includes(usd2(floorPriceCents(unit.usageCents))), `${unit.id}: its floor ${usd2(floorPriceCents(unit.usageCents))} is not in the value presentation`);
+    assert.ok(doc.includes(usd2(floorPriceCents(unit.usageCents, roomKept(unit)))), `${unit.id}: its floor with room is not in the value presentation`);
+    assert.ok(doc.includes(`${(evaluate(unit).netBps / 100).toFixed(2)}%`), `${unit.id}: its net is not in the value presentation`);
+  }
+  assert.match(doc, /preço: o que maximiza o meu lucro/);
+  assert.doesNotMatch(doc, /\bsmall\b|unlimited (visits|orders|emails|storage) on (Store|Studio|Scale)/i);
 });

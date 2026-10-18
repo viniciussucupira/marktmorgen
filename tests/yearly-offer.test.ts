@@ -85,7 +85,7 @@ async function main() {
   {
     const mail = yearlyOfferEmail({ tier: "creator", trialing: false });
     is("the subject", mail.subject, "Your store just made its first sale");
-    is("it says the saving at the published prices", mail.text.includes("paying yearly costs $300 instead of twelve payments of $29: $48 less over the year"), true);
+    is("it says the saving at the published prices", mail.text.includes("paying yearly costs $690 instead of twelve payments of $69: $138 less over the year"), true);
     is("it says it is the only time", mail.text.includes("This is the only time we will write to you about it."), true);
     is("it names nothing that ends", /expires|ends soon|today only|limited/i.test(mail.text), false);
     const trial = yearlyOfferEmail({ tier: "creator", trialing: true });

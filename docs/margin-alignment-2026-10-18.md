@@ -9,82 +9,64 @@ Marktmorgen's base plans were held to a lighter fee model than its own Store ass
 - a profit tax of at least 27.5% (the sizing reading), and the floor: 60% of revenue kept after every cost and every tax;
 - every allowance of the plan used in full, for every window one payment reaches (one a month, twelve a year), plus what the store keeps after its plan ends; the commission on sales counted as zero.
 
-The owner's decision (18 October 2026): no cut to any limit the customer sees, no price change, no change to the number of plans. Paid sales stay closed (lib/opening.ts, PLANS_ON_SALE, behind lib/commercial-margin.ts).
+Under that model no unit kept 60% at the prices published before the owner's decision. The owner's decision (18 October 2026, 11:21, in his words): "preço: o que maximiza o meu lucro. limites: combinação que potencializa o que maximiza meu lucro + o que cliente percebe alto valor + não remover limites visíveis", and (11:22) "preço e limites = preço e limites de cada plano". So the prices changed, no limit a customer sees was cut, and the commission variant became the same price list (docs/value-presentation-2026-10-18.md has the method and the competitors). Paid sales stay closed (lib/opening.ts, PLANS_ON_SALE, behind lib/commercial-margin.ts, the tax gate and the EU art. 9a gate).
 
 ## Every unit at full use, sizing reading
 
-“Was” is the model each unit was held to before this change (a plan: 3.6% + 30¢ on the price, no reserve; the add-on: 6.6% + 30¢ on the price with its reserves; AI captions: the card's 2.9% + 30¢); “Now” is the aligned one. “Usage room” is the most the unit's use may cost and keep 60%; “Printed lines only” is the net if every line of the worst month other than the printed ones (storage, video hours, visits, orders, emails, AI drafts) cost nothing, which bounds what any cut to a hidden limit could ever achieve.
+“Floor” is the lowest price at which the unit's full use keeps 60%; “with room” adds the room the spend floor test keeps under a unit on sale (25¢ a month, $1 a year, the add-on's 25¢). “Usage room” is the most the unit's use may cost at its price and keep 60%.
 
-| Unit | Revenue | Charged | Receiving | Usage at full use | Usage room | Net, was | Net, now | Short of 60% | Printed lines only | On sale |
+| Unit | Revenue | Charged | Receiving | Usage at full use | Usage room | Floor | Floor with room | Net | Short of 60% | On sale |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Store monthly ($22) | $22.00 | $27.94 | $3.29 | $2.45 | $0.50 | 60.77% | 53.54% | $1.42 | 56.36% | no |
-| Store yearly ($220) | $220.00 | $279.40 | $27.37 | $27.44 | $10.56 | 60.74% | 54.43% | $12.24 | 57.18% | no |
-| Studio monthly ($149) | $149.00 | $189.23 | $18.74 | $17.98 | $6.94 | 60.98% | 54.63% | $8.00 | 56.83% | no |
-| Studio yearly ($1490) | $1490.00 | $1892.30 | $181.70 | $201.82 | $75.19 | 60.05% | 53.83% | $91.81 | 55.80% | no |
-| Scale monthly ($349) | $349.00 | $443.23 | $43.05 | $41.88 | $17.12 | 61.12% | 54.85% | $17.95 | 56.97% | no |
-| Scale yearly ($3490) | $3490.00 | $4432.30 | $424.74 | $474.65 | $176.98 | 60.02% | 53.81% | $215.81 | 55.77% | no |
-| Store monthly ($29) | $29.00 | $36.83 | $4.15 | $2.45 | $0.85 | 63.00% | 56.00% | $1.16 | 58.10% | no |
-| Store yearly ($300) | $300.00 | $381.00 | $37.07 | $27.44 | $14.65 | 63.18% | 56.91% | $9.27 | 58.92% | no |
-| Studio monthly ($99) | $99.00 | $125.73 | $12.66 | $17.98 | $4.40 | 56.49% | 50.06% | $9.84 | 53.36% | no |
-| Studio yearly ($948) | $948.00 | $1203.96 | $115.81 | $201.82 | $47.63 | 54.43% | 48.20% | $111.79 | 51.29% | no |
-| Scale monthly ($249) | $249.00 | $316.23 | $30.91 | $41.88 | $12.02 | 57.60% | 51.30% | $21.65 | 54.27% | no |
-| Scale yearly ($2388) | $2388.00 | $3032.76 | $290.82 | $474.65 | $120.90 | 55.47% | 49.26% | $256.47 | 52.12% | no |
-| Store assistant add-on ($49/mo) | $49.00 | $62.23 | $6.60 | $2.48 | $1.84 | 60.59% | 59.06% | $0.46 | 59.06% | no |
-| AI captions, 1 language (8 min, $2.00) | $2.00 | $2.54 | $1.01 | $1.60 | −$0.67 | 1.00% | −30.50% | $1.81 | −30.50% | no |
-| AI captions, 2 languages (4 min, $2.00) | $2.00 | $2.54 | $1.01 | $1.20 | −$0.67 | 15.50% | −10.50% | $1.41 | −10.50% | no |
-| AI captions, 3 languages (3 min, $2.25) | $2.25 | $2.86 | $1.05 | $1.20 | −$0.67 | 21.77% | 0.00% | $1.35 | 0.00% | no |
+| Store monthly ($69) | $69.00 | $87.63 | $9.02 | $2.56 | $2.87 | $62.65 | $67.60 | 60.31% | — | no |
+| Store yearly ($690) | $690.00 | $876.30 | $84.49 | $28.78 | $34.47 | $577.75 | $597.60 | 60.59% | — | no |
+| Studio monthly ($449) | $449.00 | $570.23 | $55.21 | $19.78 | $22.20 | $401.20 | $405.90 | 60.38% | — | no |
+| Studio yearly ($4,490) | $4,490.00 | $5,702.30 | $546.26 | $223.46 | $227.87 | $4,403.10 | $4,422.80 | 60.07% | — | no |
+| Scale monthly ($999) | $999.00 | $1,268.73 | $122.04 | $43.68 | $50.20 | $870.60 | $875.53 | 60.47% | — | no |
+| Scale yearly ($9,990) | $9,990.00 | $12,687.30 | $1,214.62 | $496.28 | $507.79 | $9,763.63 | $9,783.45 | 60.08% | — | no |
+| Store assistant add-on ($69/mo, 700 replies) | $69.00 | $87.63 | $9.02 | $2.48 | $2.87 | $61.20 | $65.90 | 60.40% | — | no |
+| AI captions, 1 language (6 min, $36.00) | $36.00 | $45.72 | $5.00 | $1.20 | $1.20 | — | — | 60.00% | — | no |
+| AI captions, 2 languages (3 min, $36.00) | $36.00 | $45.72 | $5.00 | $0.90 | $1.20 | — | — | 60.61% | — | no |
+| AI captions, 3 languages (2 min, $36.00) | $36.00 | $45.72 | $5.00 | $0.80 | $1.20 | — | — | 60.80% | — | no |
 
-16 of 16 units miss 60% under the sizing reading. 16 of those would still miss with every hidden line at zero, so no cut to a limit the customer never sees can close them; none could be closed that way.
+All 10 units keep 60% under the sizing reading. AI captions ($6.00 a minute a language, never less than $35.00) are shown at their worst length for each number of languages.
 
-## What would close the gap: every reading, net kept
+## Before the decision: the prices published until 18 October 2026, at the limits in force
 
-The candidate design choices, each applied on its own and together. EU hosting removes the US federal tax (Brazil 15% + IOF 0.38% + California 13.3% on profit remain, and ISS 5% of revenue); ISS 0% needs a favorable answer to the Fortaleza consultation; business-only sales put the buyer's tax on top at 15% instead of 27%. The most-tax reading (rule 19) stacks every tax and must fail everywhere.
+| Unit | Net at full use | Short of 60% |
+| --- | --- | --- |
+| Store monthly ($29) | 55.72% | $1.24 |
+| Store yearly ($300) | 56.58% | $10.25 |
+| Studio monthly ($99) | 48.73% | $11.15 |
+| Studio yearly ($948) | 46.55% | $127.48 |
+| Scale monthly ($249) | 50.77% | $22.96 |
+| Scale yearly ($2,388) | 48.60% | $272.15 |
+| Store monthly ($22) with a share of each sale, counted as zero | 53.18% | $1.50 |
+| Store yearly ($220) with a share of each sale, counted as zero | 53.99% | $13.21 |
+| Studio monthly ($149) with a share of each sale, counted as zero | 53.75% | $9.31 |
+| Studio yearly ($1,490) with a share of each sale, counted as zero | 52.78% | $107.50 |
+| Scale monthly ($349) with a share of each sale, counted as zero | 54.48% | $19.26 |
+| Scale yearly ($3,490) with a share of each sale, counted as zero | 53.36% | $231.49 |
+
+## Every reading, net kept
+
+The candidate design choices, each applied on its own and together. EU hosting removes the US federal tax (Brazil 15% + IOF 0.38% + California 13.3% on profit remain, and ISS 5% of revenue); ISS 0% needs a favorable answer to the Fortaleza consultation; business-only sales put the buyer's tax on top at 15% instead of 27%. The most-tax reading (rule 19) stacks every tax and must fail everywhere: it is the gate (lib/tax-gate.ts), so nothing opens.
 
 | Unit | Sizing reading: 27.5% on profit, the buyer's tax on top at 27% | Sizing reading, business-only sales (tax on top 15%) | Most-tax reading: 27% VAT inside, 78.18% on profit, ISS 5% of revenue | EU hosting (no US tax): 28.68% on profit, ISS 5% of revenue, tax on top 27% | EU hosting, ISS 0% (Fortaleza consultation) | EU hosting, business-only sales (tax on top 15%) | EU hosting, ISS 0% and business-only sales |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Store monthly ($22) | 53.54% | 54.18% | 9.46% | 47.68% | 52.68% | 48.31% | 53.31% |
-| Store yearly ($220) | 54.43% | 55.10% | 9.86% | 48.55% | 53.55% | 49.20% | 54.20% |
-| Studio monthly ($149) | 54.63% | 55.28% | 9.93% | 48.73% | 53.73% | 49.38% | 54.38% |
-| Studio yearly ($1490) | 53.83% | 54.50% | 9.63% | 47.96% | 52.96% | 48.61% | 53.61% |
-| Scale monthly ($349) | 54.85% | 55.51% | 10.02% | 48.96% | 53.96% | 49.61% | 54.61% |
-| Scale yearly ($3490) | 53.81% | 54.47% | 9.63% | 47.94% | 52.94% | 48.59% | 53.59% |
-| Store monthly ($29) | 56.00% | 56.62% | 10.38% | 50.06% | 55.06% | 50.68% | 55.68% |
-| Store yearly ($300) | 56.91% | 57.56% | 10.80% | 50.98% | 55.98% | 51.63% | 56.63% |
-| Studio monthly ($99) | 50.06% | 50.72% | 8.18% | 44.24% | 49.24% | 44.89% | 49.89% |
-| Studio yearly ($948) | 48.20% | 48.86% | 7.48% | 42.42% | 47.42% | 43.07% | 48.07% |
-| Scale monthly ($249) | 51.30% | 51.96% | 8.66% | 45.46% | 50.46% | 46.12% | 51.12% |
-| Scale yearly ($2388) | 49.26% | 49.92% | 7.88% | 43.45% | 48.45% | 44.10% | 49.10% |
-| Store assistant add-on ($49/mo) | 59.06% | 59.71% | 11.63% | 53.10% | 58.10% | 53.75% | 58.75% |
-| AI captions, 1 language (8 min, $2.00) | −30.50% | −30.00% | −71.98% | −35.50% | −30.50% | −35.00% | −30.00% |
-| AI captions, 2 languages (4 min, $2.00) | −10.50% | −10.00% | −46.50% | −15.50% | −10.50% | −15.00% | −10.00% |
-| AI captions, 3 languages (3 min, $2.25) | 0.00% | 0.44% | −32.77% | −5.34% | 0.00% | −4.89% | 0.44% |
-
-## Which unit misses, by how much, and what would close it
-
-| Unit | Net now | Short of 60% | Use would have to fall by | Closed by a candidate reading |
-| --- | --- | --- | --- | --- |
-| Store monthly ($22) | 53.54% | $1.42 | $1.95 (79.59% of its use) | none |
-| Store yearly ($220) | 54.43% | $12.24 | $16.88 (61.52% of its use) | none |
-| Studio monthly ($149) | 54.63% | $8.00 | $11.04 (61.40% of its use) | none |
-| Studio yearly ($1490) | 53.83% | $91.81 | $126.63 (62.74% of its use) | none |
-| Scale monthly ($349) | 54.85% | $17.95 | $24.76 (59.12% of its use) | none |
-| Scale yearly ($3490) | 53.81% | $215.81 | $297.67 (62.71% of its use) | none |
-| Store monthly ($29) | 56.00% | $1.16 | $1.60 (65.31% of its use) | none |
-| Store yearly ($300) | 56.91% | $9.27 | $12.79 (46.61% of its use) | none |
-| Studio monthly ($99) | 50.06% | $9.84 | $13.58 (75.53% of its use) | none |
-| Studio yearly ($948) | 48.20% | $111.79 | $154.19 (76.40% of its use) | none |
-| Scale monthly ($249) | 51.30% | $21.65 | $29.86 (71.30% of its use) | none |
-| Scale yearly ($2388) | 49.26% | $256.47 | $353.75 (74.53% of its use) | none |
-| Store assistant add-on ($49/mo) | 59.06% | $0.46 | $0.64 (25.81% of its use) | none |
-| AI captions, 1 language (8 min, $2.00) | −30.50% | $1.81 | all of it, and receiving alone misses by $0.67 | none |
-| AI captions, 2 languages (4 min, $2.00) | −10.50% | $1.41 | all of it, and receiving alone misses by $0.67 | none |
-| AI captions, 3 languages (3 min, $2.25) | 0.00% | $1.35 | all of it, and receiving alone misses by $0.67 | none |
+| Store monthly ($69) | 60.31% | 60.97% | 12.11% | 54.34% | 59.34% | 54.98% | 59.98% |
+| Store yearly ($690) | 60.59% | 61.25% | 12.22% | 54.61% | 59.61% | 55.26% | 60.26% |
+| Studio monthly ($449) | 60.38% | 61.05% | 12.14% | 54.40% | 59.40% | 55.05% | 60.05% |
+| Studio yearly ($4,490) | 60.07% | 60.73% | 12.02% | 54.09% | 59.09% | 54.74% | 59.74% |
+| Scale monthly ($999) | 60.47% | 61.13% | 12.17% | 54.48% | 59.48% | 55.13% | 60.13% |
+| Scale yearly ($9,990) | 60.08% | 60.74% | 12.02% | 54.10% | 59.10% | 54.75% | 59.75% |
+| Store assistant add-on ($69/mo, 700 replies) | 60.40% | 61.05% | 12.12% | 54.42% | 59.42% | 55.07% | 60.07% |
+| AI captions, 1 language (6 min, $36.00) | 60.00% | 60.63% | 11.96% | 54.02% | 59.02% | 54.66% | 59.66% |
+| AI captions, 2 languages (3 min, $36.00) | 60.61% | 61.25% | 12.20% | 54.61% | 59.61% | 55.25% | 60.25% |
+| AI captions, 3 languages (2 min, $36.00) | 60.80% | 61.44% | 12.27% | 54.80% | 59.80% | 55.44% | 60.44% |
 
 ## For the owner
 
-- Nothing here opens a sale. The plans, the add-on and AI captions stay closed: no unit on sale may miss 60% (tests/spend-floor.test.ts), and the commercial review is still absent (lib/commercial-margin.ts).
-- No hidden limit was lowered: the “Printed lines only” column shows that with every limit the customer never sees at zero, 12 of the 12 base-plan units that miss still miss, so such a cut cannot close them. Every cut that could is to a printed limit (visits, orders, video hours, storage, AI drafts, emails), which the owner has ruled out.
-- None of the candidate design choices closes any unit that misses, on its own or together: receiving one payment and using the plan in full take more than the floor leaves of revenue (17.24% after a 27.5% tax, less under every candidate reading, whose profit tax is higher). What would close the base plans: a price change, cuts to printed limits, or a cheaper way to receive payments (for example without the Stripe Tax and Billing surcharges, or domestic cards only), each the owner's decision.
-- The Store assistant add-on misses by $0.46: the one lever that is not a printed limit is the input it sends the model for each reply (lib/store-assistant-rules.ts, ASSISTANT_INPUT_BYTES and ASSISTANT_FACTS_BYTES), and cutting it shortens the catalog the assistant reads for a buyer's question, which a buyer sees; it was not cut.
-- Use past a plan (visits, orders, video hours) is not sold since 17 October 2026, so it is no unit here; at the old published prices it would not pay its way under this model either (tests/plan-margin.test.ts).
-- AI captions are a charge of their own at 25¢ a minute a language against a cost of up to 10¢ a minute a language and 10¢ more: their price, not a hidden limit, is what misses.
+- Nothing here opens a sale. The plans, the add-on and AI captions stay closed: the gate reading is the most-tax one (every unit far below 60%), EU art. 9a is not built (lib/deemed-supplier.ts), and the commercial review is still absent (lib/commercial-margin.ts).
+- No limit a customer sees was cut. Each unit's price is at or above its floor with room; the room the round prices left was spent raising printed limits where competitors print more (docs/value-presentation-2026-10-18.md).
+- The floor is about twenty times what a plan's full use costs, because receiving one payment takes about 12% of revenue (the fee on the price with the buyer's tax on top, remittance, refund and dispute reserves) and the 60% floor after a 27.5% tax leaves 17.24% for every cost; each dollar a month of use needs about twenty dollars of price.
+- AI captions are a charge of their own at $6.00 a minute a language, never less than $35.00, against a cost of up to 10¢ a minute a language and 10¢ more.

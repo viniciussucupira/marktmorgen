@@ -2,9 +2,10 @@
  * Captions written by AI for a lesson's video (lib/auto-captions.ts, added 11
  * October 2026). What is checked:
  *
- *   - the price: a quarter a minute for each language, minutes rounded up,
- *     never under a dollar, and it covers what the service charges at its
- *     dearest, the card's fee included;
+ *   - the price: since 18 October 2026 six dollars a minute for each
+ *     language, minutes rounded up, never under $35, which keeps 60% at its
+ *     dearest under the one receiving model (lib/receiving-costs.ts, held in
+ *     tests/margin-alignment.test.ts), the card's fee included;
  *   - charged first, on an invoice of its own paid at once, and only then is
  *     the service asked; a declined card leaves nothing asked and nothing owed;
  *   - the service told the language spoken and those to translate into, and
@@ -70,8 +71,8 @@ async function main(): Promise<void> {
   process.env.BUNNY_STREAM_TOKEN_KEY = "bunny-token-key-only-a-stand-in";
 
   part("The price");
-  is("a quarter a minute for each language, minutes rounded up", [autoCaptionCents(600, 1), autoCaptionCents(601, 2), autoCaptionCents(90 * 60, 3)], [250, 550, 6750]);
-  is("never under two dollars; nothing for a video with no length", [autoCaptionCents(30, 1), autoCaptionCents(0, 1)], [MIN_CENTS, 0]);
+  is("six dollars a minute for each language, minutes rounded up", [autoCaptionCents(600, 1), autoCaptionCents(601, 2), autoCaptionCents(90 * 60, 3)], [6000, 13200, 162000]);
+  is("never under the minimum; nothing for a video with no length", [autoCaptionCents(30, 1), autoCaptionCents(0, 1)], [MIN_CENTS, 0]);
   // At its dearest: ten cents a language, a dime more if the spoken one is counted apart, and the card's 2.9% and 30 cents.
   const worst = (minutes: number, languages: number) => minutes * (languages + 1) * 10 + autoCaptionCents(minutes * 60, languages) * 0.029 + 30;
   is("it pays for itself at its dearest, at every length from one minute to four hours, one language or three", Array.from({ length: 240 }, (_, i) => i + 1).every((m) => [1, 2, 3].every((n) => autoCaptionCents(m * 60, n) > worst(m, n))), true);
@@ -80,7 +81,7 @@ async function main(): Promise<void> {
     readAutoAsk("en", ["es", "fr", "de"]),
     readAutoAsk("klingon", []),
   ], [["en", "es"], null, null]);
-  is("the rate the page and the terms say", CENTS_PER_MINUTE, 25);
+  is("the rate the page and the terms say", [CENTS_PER_MINUTE, MIN_CENTS], [600, 3500]);
 
   // A video the service has finished, ten minutes long.
   await redis.pipeline([["SET", `nl:stream:v:${VIDEO}`, JSON.stringify({ id: VIDEO, path: PATH, name: "Knife skills.mp4", type: "video/mp4", bytes: 1, state: "ready", at: Date.now(), seconds: 600, width: 1920, height: 1080, settled: true })]]);
@@ -100,7 +101,7 @@ async function main(): Promise<void> {
     invoice.body.get("pending_invoice_items_behavior"),
     invoice.body.get("default_payment_method"),
     stripePaths().filter((p) => p.endsWith("/finalize") || p.endsWith("/pay")).length,
-  ], [500, "500", "exclude", "pm_card_on_file", 2]);
+  ], [12000, "12000", "exclude", "pm_card_on_file", 2]);
   const transcribe = bunny.find((b) => b.path.includes("/transcribe"))!;
   is("the service told the language spoken and the one to translate into, and nothing else it charges for", transcribe.body, {
     sourceLanguage: "en",
@@ -118,7 +119,7 @@ async function main(): Promise<void> {
   is("English first: listed, Spanish still on its way", [await syncAutoCaptions(VIDEO), (await streamCaptions([PATH]))[PATH]?.map((t) => t.lang), (await autoWriting([PATH]))[PATH]], ["waiting", ["en"], ["es"]]);
   stripe = [];
   const late = Date.now() + (GIVE_UP_HOURS + 1) * 3_600_000;
-  is("Spanish never came: half refunded, and nothing more is waited for", [await syncAutoCaptions(VIDEO, late), stripe.find((s) => s.path === "POST /refunds")?.body.get("amount"), stripe.find((s) => s.path === "POST /refunds")?.body.get("payment_intent"), (await autoWriting([PATH]))[PATH]], ["done", "250", "pi_Captions000001", undefined]);
+  is("Spanish never came: half refunded, and nothing more is waited for", [await syncAutoCaptions(VIDEO, late), stripe.find((s) => s.path === "POST /refunds")?.body.get("amount"), stripe.find((s) => s.path === "POST /refunds")?.body.get("payment_intent"), (await autoWriting([PATH]))[PATH]], ["done", "6000", "pi_Captions000001", undefined]);
 
   part("Only where it should");
   is("not again in a language it has", (await requestAutoCaptions(store, PATH, "en", [])).ok ? "asked" : "refused", "refused");

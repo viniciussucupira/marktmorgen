@@ -20,7 +20,7 @@ let pipelines:(string|number)[][][]=[];
 }) as typeof memory.pipeline;
 const store={listId:'a'.repeat(32),tier:'pro',subscriptionActive:true,trialEnds:0} as Store;
 beforeEach(()=>{memory.clear();reply=undefined;pipelines=[];process.env.MARKETING_DAILY_CAP='100000';dispatch.calls=0;dispatch.outcome='retry';});
-test('lowered paid list caps are the actual runtime allowances',()=>{assert.equal(monthlyAllowance(store),5000);assert.equal(monthlyAllowance({...store,tier:'scale'}),8000);assert.equal(PRO_MONTHLY_EMAILS,5000);assert.equal(SCALE_MONTHLY_EMAILS,8000);});
+test('paid list caps (raised 18 October 2026 with the new prices) are the actual runtime allowances',()=>{assert.equal(monthlyAllowance(store),7000);assert.equal(monthlyAllowance({...store,tier:'scale'}),10000);assert.equal(PRO_MONTHLY_EMAILS,7000);assert.equal(SCALE_MONTHLY_EMAILS,10000);});
 test('an acknowledged exact reservation consumes the monthly capacity',async()=>{assert.equal(await reserve(store,3),'ok');assert.equal(await usedThisMonth(store.listId),3);});
 test('missing, partial or corrupt counter acknowledgements cannot authorize',async()=>{
  for(const value of [[],[1,1],[1,1,1],[1,1,1,1,1],[undefined,1,1,1],[true,1,1,1],['01',1,1,1],[-1,1,1,1],[0,1,1,1],[1.5,1,1,1],[NaN,1,1,1],[Infinity,1,1,1],[1,0,1,1],[1,1,1,0],[1,true,1,1]]){reply=value;assert.equal(await reserve(store,1),'unavailable');}

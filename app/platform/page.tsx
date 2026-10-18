@@ -22,7 +22,7 @@ const GROUPS: { key: NonNullable<TopicPage["group"]>; title: string; line: strin
   { key: "grow", title: "Grow", line: "Your list, your reviews, your numbers, your affiliates, your team, your other tools, your own domain, and the way in from another platform." },
 ];
 
-const dollars = (cents: number) => `$${cents / 100}`;
+const dollars = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 
 /** Every feature page, grouped the way a creator thinks about a store. */
 export default function PlatformIndex() {
@@ -41,7 +41,7 @@ export default function PlatformIndex() {
               Everything your store does <span className="serif font-normal text-violet-deep">today</span>
             </h1>
             <p className="t-lead nb-fade-up nb-delay-2 mt-5 max-w-2xl text-ink-soft">
-              {`Each feature has its own page: how it works, who it is for, what it does not do yet, and the plan it comes with. Everything on the ${dollars(PLAN_PRICES.creator.month)} plan is on Pro too.`}
+              {`Each feature has its own page: how it works, who it is for, what it does not do yet, and the plan it comes with. Everything on the ${dollars(PLAN_PRICES.creator.month)} Store plan is on Studio and Scale too.`}
             </p>
             <div className="nb-fade-up nb-delay-3 mt-8 flex flex-wrap items-center gap-3">
               <Link href="/signin" className="btn btn-primary btn-lg">
@@ -73,8 +73,8 @@ export default function PlatformIndex() {
                 statusLabel: p.badge.label,
                 plan:
                   p.plan === "pro"
-                    ? `Pro, ${dollars(PLAN_PRICES.pro.month)} a month`
-                    : `${dollars(PLAN_PRICES.creator.month)} plan, and Pro`,
+                    ? `Studio, ${dollars(PLAN_PRICES.pro.month)} a month`
+                    : `${dollars(PLAN_PRICES.creator.month)} Store plan, and Studio`,
               }))}
             />
           </section>

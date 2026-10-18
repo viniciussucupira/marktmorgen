@@ -84,6 +84,8 @@ import assert from "node:assert/strict";
 import {
   COMMISSION_BPS,
   COMMISSION_LIVE,
+  COMMISSION_PLANS_PUBLISHED,
+  isSharedPrice,
   PLAN_PRICES,
   PRICES_WITH_COMMISSION,
   PRICES_WITHOUT_COMMISSION,
@@ -130,12 +132,12 @@ import {
  * none — 30% kept in the worst month, 15% paid yearly, never a loss — while
  * every plan without a share keeps the floors it was sold under.
  */
+// Since 18 October 2026 the two are one price list (lib/plan.ts), so one schedule is held.
 const SCHEDULES: [string, Prices][] = [
   ["on sale", PRICES_WITHOUT_COMMISSION],
-  ["with a share of each sale", PRICES_WITH_COMMISSION],
 ];
 function floor(prices: Prices, tier: Tier, cycle: Cycle): number {
-  const shared = prices === PRICES_WITH_COMMISSION && COMMISSION_BPS[tier] > 0 && tier === "creator";
+  const shared = COMMISSION_PLANS_PUBLISHED && prices === PRICES_WITH_COMMISSION && COMMISSION_BPS[tier] > 0 && tier === "creator";
   if (cycle === "month") return shared ? 0.3 : 0.45;
   return shared ? 0.15 : 0.4;
 }
@@ -466,8 +468,10 @@ test("the one exposure is the first payment refunded in full: bounded, once per 
   for (const [schedule, prices] of SCHEDULES) {
     const month = worstCost("creator") + STRIPE_FEE(prices.creator.month) + keptToClosing("creator");
     const year = worstCost("creator") + STRIPE_FEE(prices.creator.year) + keptToClosing("creator");
-    assert.ok(month < 27, `${schedule}: a first month given back can cost $${month.toFixed(2)} on one account`);
-    assert.ok(year < 35, `${schedule}: a first year given back can cost $${year.toFixed(2)} on one account`);
+    // Bounded, and once per account; since the prices of 18 October 2026 a refunded first year is dearer, because
+    // the card fee Stripe keeps grows with the charge: it is a funded exposure (docs/funded-exposure-review.md).
+    assert.ok(month < 15, `${schedule}: a first month given back can cost $${month.toFixed(2)} on one account`);
+    assert.ok(year < 65, `${schedule}: a first year given back can cost $${year.toFixed(2)} on one account`);
   }
   const policy = readFileSync(join(process.cwd(), "app/refunds/page.tsx"), "utf8");
   assert.match(policy, /first payment on your account/, "the guarantee must say it is for the first payment, or every month is free for anyone who asks");
@@ -515,24 +519,17 @@ test("while the share is off, nothing is taken from a sale and the prices on sal
   }
 });
 
-test("the share decided: what each plan takes, and where the cheaper plan changes", () => {
+test("the commission variant decided on 18 October 2026: the same price list, no share published or taken", () => {
+  // The owner's price decision (lib/plan.ts): with the commission counted as zero, a lower price that goes with a
+  // share of each sale cannot keep 60%, so the variant is the one price list and no store can be on a shared price.
+  assert.deepEqual(PRICES_WITH_COMMISSION, PRICES_WITHOUT_COMMISSION);
+  assert.equal(COMMISSION_PLANS_PUBLISHED, false);
+  assert.equal(COMMISSION_LIVE, false);
+  for (const tier of TIERS) for (const cycle of ["month", "year"] as const) assert.equal(isSharedPrice(tier, cycle, PRICES_WITH_COMMISSION[tier][cycle]), false);
+  // The rates once proposed are kept for the machinery, and nothing reads them while the switches are off.
   assert.deepEqual(COMMISSION_BPS, { creator: 625, pro: 275, scale: 0 });
-  assert.deepEqual(
-    Object.fromEntries(TIERS.map((t) => [t, PRICES_WITH_COMMISSION[t].month])),
-    { creator: 2200, pro: 14900, scale: 34900 },
-  );
   // Each year is ten months for twelve.
   for (const tier of TIERS) assert.equal(PRICES_WITH_COMMISSION[tier].year, PRICES_WITH_COMMISSION[tier].month * 10);
-  // What a month costs a creator who sells this many dollars, on each plan.
-  const bill = (tier: Tier, sales: number) => PRICES_WITH_COMMISSION[tier].month / 100 + (sales * COMMISSION_BPS[tier]) / 10_000;
-  const cheapest = (sales: number) => TIERS.reduce((a, b) => (bill(b, sales) < bill(a, sales) ? b : a));
-  // Store to Studio at about $3,630 a month of sales, Studio to Scale at about $7,270: the figures lib/plan.ts states.
-  assert.equal(cheapest(3_600), "creator");
-  assert.equal(cheapest(3_650), "pro");
-  assert.equal(cheapest(7_250), "pro");
-  assert.equal(cheapest(7_300), "scale");
-  // Every plan is the cheapest somewhere, or it is a plan nobody should be sold.
-  assert.deepEqual([...new Set([0, 1_000, 5_000, 50_000].map(cheapest))], ["creator", "pro", "scale"]);
 });
 
 test("a share is rounded down, and never taken from nothing", () => {

@@ -23,7 +23,7 @@ const BADGE_CLASS = {
   proof: "tag tag-brand",
 } as const;
 
-const dollars = (cents: number) => `$${cents / 100}`;
+const dollars = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 
 const PLAN_LINE = {
   creator: `On the ${dollars(PLAN_PRICES.creator.month)} plan, and on Pro`,

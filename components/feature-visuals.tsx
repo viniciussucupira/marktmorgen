@@ -1,4 +1,4 @@
-import { COMMISSION_BPS } from "@/lib/plan";
+import { COMMISSION_BPS, COMMISSION_PLANS_PUBLISHED } from "@/lib/plan";
 import { Icon, type IconName } from "@/components/icons";
 import { BumpDemo, OptionsDemo } from "@/components/feature-demos";
 
@@ -156,8 +156,8 @@ function StripeVisual() {
           <Row icon="receipt" title="Your bank" sub="On the payout schedule you set at Stripe" />
         </div>
         <p className="mt-4 flex items-center justify-between rounded-[var(--r-md)] bg-sand px-4 py-3 text-[12.5px] text-ink-soft">
-          <span>Planned Store fee on this sale</span>
-          <span className="text-[15px] font-semibold text-ink">{`${(Math.floor(2700 * COMMISSION_BPS.creator / 10000) / 100).toFixed(2)}`}</span>
+          <span>Marktmorgen&apos;s fee on this sale</span>
+          <span className="text-[15px] font-semibold text-ink">{`$${(Math.floor(2700 * (COMMISSION_PLANS_PUBLISHED ? COMMISSION_BPS.creator : 0) / 10000) / 100).toFixed(2)}`}</span>
         </p>
       </div>
     </Window>

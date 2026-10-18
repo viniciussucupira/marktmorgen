@@ -18,7 +18,7 @@ import { sendEmail } from "@/lib/email";
 import { countStudio } from "@/lib/studio-route";
 import { ESSENTIAL_PER_DAY, STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
 import { isResting, takePublicRequest } from "@/lib/traffic";
-import { REQUESTS_PER_VISIT, EXTRA_REQUESTS, publicVisitLimit, requestLimitFor } from "@/lib/traffic-rules";
+import { REQUESTS_PER_VISIT, EXTRA_REQUESTS, VISITS_INCLUDED, publicVisitLimit, requestLimitFor } from "@/lib/traffic-rules";
 import { claimHandle, setSubscription, storeFolder, storeForEmail, type Store } from "@/lib/store";
 import { allowanceWindow } from "@/lib/allowance-window";
 
@@ -104,7 +104,7 @@ test("a store's public side rests at its requests as at its visits, and what buy
   await setSubscription("public@example.com", { customerId: "cus_Public00001", subscriptionId: "sub_Public00001", active: true, period: paidPeriod() });
   const store = (await storeForEmail("public@example.com"))!;
   const whole = requestLimitFor(store);
-  assert.equal(whole, REQUESTS_PER_VISIT * 3_000 + EXTRA_REQUESTS.creator);
+  assert.equal(whole, REQUESTS_PER_VISIT * VISITS_INCLUDED.creator + EXTRA_REQUESTS.creator);
   const folder = await storeFolder("public@example.com");
   const key = `nl:traffic:r:${folder}:${allowanceWindow(store)!.id}`;
   assert.equal(await isResting(store), false);

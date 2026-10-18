@@ -7,7 +7,7 @@ import { done, is } from "./check";
 const costs = (n = 0) => Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key => [key, key === "other" ? n : 0]));
 const funded = (gross: number): CustomerWorstCase => fundedCustomerWithAi(gross,Math.floor(gross*.65));
 const review = (): CommercialMarginReview => ({ companyBase:zeroFixedCompanyFixture, priceAndRightsSnapshot: CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, taxEvidence: "TEST ONLY", costAndLimitEvidence: "TEST ONLY", allocatedFixedCostsVerified:true, fundedExposure:zeroExposureFixture(), prepaidUsageEnforced: true, scenarios: Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key => [key, funded(BASE_PLAN_REVENUE_CEILINGS[key] ?? 10000)])) });
-is("all six approved subscription ceilings", BASE_PLAN_REVENUE_CEILINGS, { creator_month_full: 2200, creator_year_full: 22000, pro_month_full: 14900, pro_year_full: 149000, scale_month_full: 34900, scale_year_full: 349000 });
+is("all six subscription ceilings are the price list of 18 October 2026", BASE_PLAN_REVENUE_CEILINGS, { creator_month_full: 6900, creator_year_full: 69000, pro_month_full: 44900, pro_year_full: 449000, scale_month_full: 99900, scale_year_full: 999000 });
 is("hypothetical exact-floor model remains assessable", commercialMarginReady(review()), true);
 for (const [key, ceiling] of Object.entries(BASE_PLAN_REVENUE_CEILINGS) as [MarginScenario, number][]) {
  const inflated = funded(ceiling + 1);

@@ -1,5 +1,8 @@
 /**
- * A PROPOSAL, not a change (18 October 2026): for each base plan, the
+ * A PROPOSAL, not a change (18 October 2026), superseded the same day at
+ * 11:21 by the owner's decision to set prices instead (lib/plan.ts): at the
+ * price list every plan keeps 60% at today's limits, so no cut is proposed
+ * any more and the tables below show it. For each base plan, the
  * smallest set of cuts to the printed limits (visits, orders, video hours,
  * storage, AI drafts and answers, emails) that would bring it to 60% at the
  * sizing reading of lib/receiving-costs.ts; the Store assistant's input cap
@@ -11,7 +14,7 @@
  * from renderLimitsProposal(); tests/limits-proposal.test.ts fails when the
  * file on disk is not what this renders.
  */
-import { PRICES_WITH_COMMISSION, PRICES_WITHOUT_COMMISSION, PLAN_TITLES, TIERS, monthlyEmails, type Cycle, type Tier } from "@/lib/plan";
+import { PLAN_PRICES, PLAN_TITLES, TIERS, monthlyEmails, type Cycle, type Tier } from "@/lib/plan";
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { PAID_VIDEO_HOURS } from "@/lib/video-admission-rules";
 import { VISITS_INCLUDED } from "@/lib/traffic-rules";
@@ -143,9 +146,9 @@ export function propose(tier: Tier, cycle: Cycle, priceCents: number): Proposal 
   };
 }
 
-export function proposals(schedule: "published" | "without"): Proposal[] {
-  const prices = schedule === "published" ? PRICES_WITH_COMMISSION : PRICES_WITHOUT_COMMISSION;
-  return TIERS.flatMap((tier) => (["month", "year"] as const).map((cycle) => propose(tier, cycle, prices[tier][cycle])));
+/** Since 18 October 2026 one price list (lib/plan.ts): published and on sale are the same. */
+export function proposals(): Proposal[] {
+  return TIERS.flatMap((tier) => (["month", "year"] as const).map((cycle) => propose(tier, cycle, PLAN_PRICES[tier][cycle])));
 }
 
 /** The Store assistant at an input cap: whether its month keeps 60%, and with its 25-cent room. */
@@ -157,7 +160,7 @@ export function assistantAt(inputBytes: number): { meets: boolean; withRoom: boo
 }
 /** The largest input cap, in bytes, that keeps 60% (with the room when asked). */
 export function assistantInputCap(withRoom: boolean): number {
-  let lo = 0, hi = ASSISTANT_INPUT_BYTES;
+  let lo = 0, hi = 16 * ASSISTANT_INPUT_BYTES;
   while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); const a = assistantAt(mid); if (withRoom ? a.withRoom : a.meets) lo = mid; else hi = mid - 1; }
   return lo;
 }
@@ -180,7 +183,7 @@ export function perMinuteHolds(perMinute: number): boolean {
 }
 /** The lowest price per minute (whole cents) that keeps 60% on the longest video, and the lowest minimum (25-cent steps) that then keeps every shorter one. */
 export function captionsPrice(): { perMinute: number; minimum: number } {
-  let perMinute = CENTS_PER_MINUTE;
+  let perMinute = 1;
   while (!perMinuteHolds(perMinute)) perMinute += 1;
   let minimum = 25;
   while (captionsWorstBps(perMinute, minimum) < 6_000) minimum += 25;
@@ -226,9 +229,9 @@ export const COMPETITORS = [
     source: "kajabi.com/pricing, read 18 October 2026.",
   },
   {
-    name: "Stan Creator $29, Creator Pro $99 a month",
-    figures: "Email marketing on the $99 plan only, with no number of emails in the readings on file; up to 5,000 imported contacts per store. No figure for visits, orders, storage, video hours or AI in the readings on file.",
-    source: "Stan's pricing page read 20 September 2026 and its help center read 27–28 September 2026, as recorded in lib/feature-pages.ts and lib/help-content.ts. Its pricing page could not be fetched on 18 October 2026 (the fetch was refused), so nothing newer is asserted.",
+    name: "Stan Creator $29 ($300 a year), Creator Pro $99 ($948 a year)",
+    figures: "0% transaction fees; the FAQ says unlimited products to unlimited customers on either plan; Creator Pro includes \"unlimited emails\" (email broadcasts and flows on Creator Pro only). No figure for contacts, storage, visits, orders, video hours or AI.",
+    source: "Stan's own article \"Stan Store Pricing\", stan.store/blog/stan-store-pricing/, last updated July 22, 2026, read 18 October 2026 (docs/value-presentation-2026-10-18.md).",
   },
 ] as const;
 
@@ -240,7 +243,7 @@ export const COMPARE: Record<Printed, string> = {
   orders: "No competitor above publishes a figure for orders.",
   "store-email": "No competitor above publishes a figure for these.",
   "transactional-email": "No competitor above publishes a figure for these.",
-  "list-email": "ClickFunnels Launch 50,000 a month; Kajabi \"Unlimited\"; Stan: on its $99 plan, no figure on file. Competitors are far more generous.",
+  "list-email": "ClickFunnels Launch 50,000 a month; Kajabi \"Unlimited\"; Stan Creator Pro \"unlimited emails\". Competitors are far more generous.",
   visits: "ClickFunnels advertises unlimited visitors; Kajabi shows no bandwidth figure. Competitors do not limit it.",
 };
 
@@ -250,14 +253,14 @@ export function renderLimitsProposal(plansOnSale: boolean, captionsOnSale: boole
   out.push("");
   out.push("<!-- Generated by `node scripts/limits-proposal.mjs` from tests/limits-proposal-table.ts. Do not edit by hand: tests/limits-proposal.test.ts fails when this file is stale. -->");
   out.push("");
-  out.push("No limit in code is changed by this document. It answers one question for the owner: under the aligned receiving model (lib/receiving-costs.ts, docs/margin-alignment-2026-10-18.md), what is the smallest set of cuts to the PRINTED limits (visits, orders, video hours, storage, AI drafts and answers, emails) that would bring each base plan to 60% net at the sizing reading, every allowance used in full, the commission counted as zero? Prices, the number of plans and every hidden limit stay as they are.");
+  out.push("Superseded the same day: on 18 October 2026 at 11:21 the owner decided to change prices rather than cut limits (lib/plan.ts, docs/value-presentation-2026-10-18.md). This document now shows that at the price list no cut is needed. No limit in code is changed by this document. It answered one question for the owner: under the aligned receiving model (lib/receiving-costs.ts, docs/margin-alignment-2026-10-18.md), what is the smallest set of cuts to the PRINTED limits (visits, orders, video hours, storage, AI drafts and answers, emails) that would bring each base plan to 60% net at the sizing reading, every allowance used in full, the commission counted as zero?");
   out.push("");
   out.push("## How the cuts are chosen");
   out.push("");
   out.push(`Lines are cut in this order, each down to at most ${FLOOR_SHARE * 100}% of today's figure (never below one hour of video or half a GiB of storage) before the next one is touched, and the last one only as far as needed: ${ORDER.map((id) => NAMES[id]).join(" → ")}. First come the lines a store is least likely to reach in full and where competitors give less or nothing (AI on entry plans, video watched, storage); then orders and the emails that go with them; then list emails and visits, which competitors give far more generously or do not limit at all. A proposed figure is rounded down to two significant figures (storage to half a GiB, video to whole hours) and the plan is computed again at the rounded figures. Each line's cost is linear in its figure; only storage's share of what a store keeps after its plan ends is taken off with it, so the proposal never counts on a saving it cannot show.`);
   out.push("");
-  for (const [schedule, title] of [["published", "Published prices (with commission, counted as zero)"], ["without", "Prices without commission"]] as const) {
-    const rows = proposals(schedule);
+  for (const title of ["The price list since 18 October 2026, 11:21 (no commission)"]) {
+    const rows = proposals();
     out.push(`## ${title}`);
     out.push("");
     out.push(`| Line | ${rows.map((p) => `${PLAN_TITLES[p.tier]} ${p.cycle === "year" ? "yearly" : "monthly"} ($${p.priceCents / 100})`).join(" | ")} |`);
@@ -296,7 +299,7 @@ export function renderLimitsProposal(plansOnSale: boolean, captionsOnSale: boole
   const factsAt = (cap: number) => Math.max(0, cap - rest);
   out.push("## Store assistant: the input cap that would keep 60%");
   out.push("");
-  out.push(`Today each reply may send the model ${count(ASSISTANT_INPUT_BYTES)} bytes (lib/store-assistant-rules.ts, ASSISTANT_INPUT_BYTES), of which ${count(ASSISTANT_FACTS_BYTES)} are the store's facts; the add-on keeps ${pctOf(assistantAt(ASSISTANT_INPUT_BYTES).netBps)}. The 700 replies a month, the price and everything else stay.`);
+  out.push(`Today each reply may send the model ${count(ASSISTANT_INPUT_BYTES)} bytes (lib/store-assistant-rules.ts, ASSISTANT_INPUT_BYTES), of which ${count(ASSISTANT_FACTS_BYTES)} are the store's facts; at ${usd(ASSISTANT_PRICE_CENTS)} a month and ${count(ASSISTANT_MESSAGES_MONTHLY)} replies the add-on keeps ${pctOf(assistantAt(ASSISTANT_INPUT_BYTES).netBps)}${assistantAt(ASSISTANT_INPUT_BYTES).withRoom ? ", with its room: no cut to the input is proposed" : ""}. The rows below are the largest caps the price would carry.`);
   out.push("");
   out.push(`| Input cap | Of which the store's facts | About how many of the ${ASSISTANT_PRODUCTS} products read, at today's average of ${Math.round(perProduct)} bytes each | Net |`);
   out.push("| --- | --- | --- | --- |");
@@ -304,14 +307,14 @@ export function renderLimitsProposal(plansOnSale: boolean, captionsOnSale: boole
   out.push(`| ${count(meets)} (the largest that keeps 60%) | ${count(factsAt(meets))} | ${Math.floor(factsAt(meets) / perProduct)} | ${pctOf(assistantAt(meets).netBps)} |`);
   out.push(`| ${count(room)} (the largest that keeps 60% with the add-on's ${ADD_ON_ROOM_CENTS}¢ room, what assistantMeetsFloor asks) | ${count(factsAt(room))} | ${Math.floor(factsAt(room) / perProduct)} | ${pctOf(assistantAt(room).netBps)} |`);
   out.push("");
-  out.push("The conversation and the rules keep their share; only the catalog text shrinks, so a buyer asking about a product past the cut is told more products exist and is answered less well.");
+  out.push(assistantAt(ASSISTANT_INPUT_BYTES).withRoom ? "Nothing is cut: today's cap already keeps 60% with its room at the price set on 18 October 2026." : "The conversation and the rules keep their share; only the catalog text shrinks, so a buyer asking about a product past the cut is told more products exist and is answered less well.");
   out.push("");
   const price = captionsPrice();
   out.push("## AI captions: the price that would keep 60%");
   out.push("");
   out.push(`Today: ${CENTS_PER_MINUTE}¢ a minute for each language, never less than ${usd(MIN_CENTS)}, against the service's 10¢ a minute a language and 10¢ more should it count the spoken language apart. At its worst over every length (1 to ${MAX_AUTO_MINUTES} minutes) and 1 to ${MAX_AUTO_LANGUAGES} languages, it keeps ${pctOf(captionsWorstBps(CENTS_PER_MINUTE, MIN_CENTS))}. ${captionsTodayAnyMinimum() ? "A higher minimum alone would be enough." : `No minimum charge alone can fix it: at ${CENTS_PER_MINUTE}¢ a minute the longest video misses on its own (${pctOf(unitUnder(MAX_AUTO_MINUTES * CENTS_PER_MINUTE, MAX_AUTO_MINUTES * 20, SIZING_READING, true).netBps)} at ${MAX_AUTO_MINUTES} minutes in one language).`}`);
   out.push("");
-  out.push(`The lowest price per minute that keeps 60% on the longest video is ${usd(price.perMinute)} a minute a language, but so close to the edge that the minimum charge would have to be ${usd(price.minimum)}. A little higher, the minimum falls to something a page could print:`);
+  out.push(`The lowest price per minute that keeps 60% on the longest video is ${usd(price.perMinute)} a minute a language, but so close to the edge that the minimum charge would have to be ${usd(price.minimum)}. A little higher, the minimum falls to something a page could print${captionsWorstBps(CENTS_PER_MINUTE, MIN_CENTS) >= 6_000 ? ` (since 18 October 2026 the price is ${usd(CENTS_PER_MINUTE)} a minute a language and never less than ${usd(MIN_CENTS)}, which keeps every length at 60%)` : ""}:`);
   out.push("");
   out.push("| Price a minute a language | Minimum charge that keeps every length at 60% |");
   out.push("| --- | --- |");
@@ -321,8 +324,8 @@ export function renderLimitsProposal(plansOnSale: boolean, captionsOnSale: boole
   out.push("");
   out.push("## For the owner");
   out.push("");
-  out.push("- Every proposed figure is a cut to a limit the customer sees, which the owner ruled out on 18 October 2026; this document only shows what it would take. Nothing is in force and nothing opens a sale.");
-  out.push("- The cuts are deep because receiving a payment and using a plan in full already take more than the 17.24% of revenue the floor leaves after a 27.5% tax; the alternatives remain a price change or a cheaper way to receive payments.");
+  out.push("- Every proposed figure would be a cut to a limit the customer sees, which the owner ruled out on 18 October 2026. The same day (11:21) he chose a price change instead: at the price list every plan, the Store assistant and AI captions keep 60% with no cut, and no figure above is proposed (docs/value-presentation-2026-10-18.md). Nothing here opens a sale.");
+  out.push("- Cuts were deep because receiving a payment and using a plan in full take more than the 17.24% of revenue the floor leaves after a 27.5% tax; that is why the prices are about twenty times the cost of a plan's full use.");
   out.push("");
   return out.join("\n");
 }

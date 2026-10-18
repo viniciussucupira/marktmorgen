@@ -61,14 +61,14 @@ async function main(): Promise<void> {
 
   part("What it is");
   is("three plans, the least first", TIERS, ["creator", "pro", "scale"]);
-  is("the price, monthly and yearly", [priceWords("scale", "month"), priceWords("scale", "year"), yearSaving("scale") / 100], ["$249 a month", "$2,388 a year", 600]);
+  is("the price, monthly and yearly", [priceWords("scale", "month"), priceWords("scale", "year"), yearSaving("scale") / 100], ["$999 a month", "$9,990 a year", 1998]);
   is("what a receipt calls it", PLAN_NAMES.scale, "Marktmorgen Scale");
   is("it is read as a plan", [parseTier("scale"), parseTier("enterprise")], ["scale", null]);
   is("it has everything Pro switches on", [hasPro("creator"), hasPro("pro"), hasPro("scale")], [false, true, true]);
   is("email, the domain and the rest are on for it", [canUse(store({ tier: "scale" }), "email"), canUseDomain(store({ tier: "scale" })), canUse(store({ tier: "scale", subscriptionActive: false }), "email")], [true, true, false]);
 
   part("What it gives");
-  is("Scale has the larger explicit email allowance", [monthlyEmails("pro"), monthlyEmails("scale"), SCALE_MONTHLY_EMAILS / PRO_MONTHLY_EMAILS], [5_000, 8_000, 1.6]);
+  is("Scale has the larger explicit email allowance", [monthlyEmails("pro"), monthlyEmails("scale"), SCALE_MONTHLY_EMAILS / PRO_MONTHLY_EMAILS], [7_000, 10_000, 10 / 7]);
   is("a store on it may send that many", monthlyAllowance(store({ tier: "scale" })), SCALE_MONTHLY_EMAILS);
   is("Pro is left exactly as it was", [monthlyAllowance(store({ tier: "pro" })), aiAllowance(store({ tier: "pro" }))], [PRO_MONTHLY_EMAILS, AI_MONTHLY.pro]);
   is("and the plan under it still sends none", monthlyAllowance(store({ tier: "creator" })), 0);
