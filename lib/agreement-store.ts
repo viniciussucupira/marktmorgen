@@ -16,11 +16,17 @@
  * again under it, so a signature can only ever land on the version the
  * signer read (its number and fingerprint must still be the latest), and an
  * edit made while someone is signing becomes a new version that needs its
- * own signature.
+ * own signature. Every other change to the record (what the emails about it
+ * write down) is made under the same lock on the record as it is then
+ * (changeAgreement), never on one read before an email went: written back
+ * as it had been read, it took off a signature or a version given while the
+ * email was on its way (docs/security-audit-2026-10-18.md, MM-SA-03). The
+ * lock is let go of only by whoever holds it (lib/redis-lock.ts).
  */
 import { createHash, createHmac } from "node:crypto";
 import { personKey } from "@/lib/person-key";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type Held, LockBusyError, releaseLock, takeLock, withLock } from "@/lib/redis-lock";
 import { type Store } from "@/lib/store";
 import { dataBytes } from "@/lib/store-data-rules";
 import { takeData } from "@/lib/store-data";
@@ -218,11 +224,35 @@ export async function saveAgreement(a: Agreement, now = Date.now()): Promise<voi
   await redisPipeline([["SET", recordKey(a.id), JSON.stringify(a), "EX", keepSeconds(a, now)]]);
 }
 
-async function hold(id: string): Promise<boolean> {
-  const [held] = await redisPipeline([["SET", lockKey(id), "1", "NX", "EX", 10]]);
-  return held !== null;
+/** The agreement's lock, taken at once or not at all: null when somebody else holds it. */
+async function hold(id: string): Promise<Held | null> {
+  try {
+    return await takeLock(lockKey(id), 10, 0);
+  } catch (error) {
+    if (error instanceof LockBusyError) return null;
+    throw error;
+  }
 }
-const letGo = (id: string) => redisPipeline([["DEL", lockKey(id)]]).catch(() => undefined);
+const letGo = (held: Held) => releaseLock(held);
+
+/**
+ * Changes one of this store's agreements as it is now, under its lock,
+ * waiting up to five seconds for a signature or a new version to finish:
+ * `change` is handed the record and returns what it becomes, or null to
+ * leave it. Null when the agreement is gone; throws LockBusyError when the
+ * lock stayed taken, with nothing written.
+ */
+export async function changeAgreement(store: Pick<Store, "sid">, id: string, change: (current: Agreement) => Agreement | null, now = Date.now()): Promise<Agreement | null> {
+  if (!ID_PATTERN.test(id) || !isRedisConfigured()) return null;
+  return withLock(lockKey(id), 10, 5_000, async () => {
+    const current = await agreementOf(store, id);
+    if (!current) return null;
+    const next = change(current);
+    if (!next) return current;
+    await saveAgreement(next, now);
+    return next;
+  });
+}
 
 /**
  * A new version of an agreement, from what the studio sent: its text is
@@ -231,7 +261,8 @@ const letGo = (id: string) => redisPipeline([["DEL", lockKey(id)]]).catch(() => 
  */
 export async function reviseAgreement(store: Store, id: string, draft: AgreementDraft, now = Date.now()): Promise<Changed> {
   if (!isRedisConfigured() || !store.sid) return unavailable();
-  if (!(await hold(id))) return { ok: false, reason: "busy", message: "Someone is signing it or it is being changed right now. Try again in a moment." };
+  const held = await hold(id);
+  if (!held) return { ok: false, reason: "busy", message: "Someone is signing it or it is being changed right now. Try again in a moment." };
   try {
     const a = await agreementOf(store, id);
     if (!a) return { ok: false, reason: "gone", message: "That agreement is gone. Reload the page." };
@@ -257,7 +288,7 @@ export async function reviseAgreement(store: Store, id: string, draft: Agreement
     console.error("a new version of an agreement failed", error);
     return unavailable();
   } finally {
-    await letGo(id);
+    await letGo(held);
   }
 }
 
@@ -275,7 +306,8 @@ export async function signAgreement(store: Store, id: string, input: SignInput, 
   if (!name) return { ok: false, reason: "name" };
   if (input.consent !== true) return { ok: false, reason: "consent" };
   if (!isRedisConfigured() || !store.sid) return { ok: false, reason: "error" };
-  if (!(await hold(id))) return { ok: false, reason: "busy" };
+  const held = await hold(id);
+  if (!held) return { ok: false, reason: "busy" };
   try {
     const a = await agreementOf(store, id);
     if (!a || statusOf(a, now) !== "open") return { ok: false, reason: "closed" };
@@ -293,7 +325,7 @@ export async function signAgreement(store: Store, id: string, input: SignInput, 
     console.error("signing an agreement failed", error);
     return { ok: false, reason: "error" };
   } finally {
-    await letGo(id);
+    await letGo(held);
   }
 }
 
@@ -328,7 +360,8 @@ export async function listAgreements(store: Store): Promise<Agreement[] | null> 
 
 /** Withdraws one waiting for a signature: its link stops taking one. A signed version stays signed. */
 export async function withdrawAgreement(store: Store, id: string, now = Date.now()): Promise<Agreement | "not_open" | "busy" | null> {
-  if (!(await hold(id))) return "busy";
+  const held = await hold(id);
+  if (!held) return "busy";
   try {
     const a = await agreementOf(store, id);
     if (!a) return null;
@@ -338,7 +371,7 @@ export async function withdrawAgreement(store: Store, id: string, now = Date.now
     await saveAgreement(done, now);
     return done;
   } finally {
-    await letGo(id);
+    await letGo(held);
   }
 }
 
