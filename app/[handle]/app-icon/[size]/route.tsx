@@ -2,7 +2,8 @@ import { ImageResponse } from "next/og";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { readPhoto } from "@/lib/store-photo";
 import { lookColours } from "@/lib/store-look";
-import { type IconSize, iconVersion, isIconSize, monogram } from "@/lib/store-app";
+import { connectionRefusal, readRefusal } from "@/lib/picture-pace";
+import { type IconSize, iconUrl, iconVersion, isIconSize, monogram } from "@/lib/store-app";
 
 /**
  * A store's icon on a home screen, as a PNG at 180, 192 or 512 pixels.
@@ -12,6 +13,11 @@ import { type IconSize, iconVersion, isIconSize, monogram } from "@/lib/store-ap
  * store's name on the store's own colour. Either way it is drawn from what
  * the store already has, and its address carries a fingerprint of that
  * (lib/store-app.ts), so a browser may keep it for a year.
+ *
+ * It is drawn only at that address: any other query string, an old
+ * fingerprint or none, is sent to it first, and what a function answers is
+ * paced (lib/picture-pace.ts). Until 18 October 2026 every query string was
+ * a photo read and a drawing, counted by nothing.
  */
 export async function GET(
   request: Request,
@@ -22,14 +28,21 @@ export async function GET(
   const match = /^(\d{3})\.png$/.exec(file);
   const size = match ? Number(match[1]) : 0;
   if (!decoded.startsWith("@") || !isIconSize(size)) return missing();
+  const refused = connectionRefusal(request);
+  if (refused) return refused;
 
   try {
     const store = await storeForHandle(normaliseHandle(decoded));
     if (!store) return missing();
-    const asked = new URL(request.url).searchParams.get("v");
-    // The fingerprint in the address matches: this exact picture may be kept
-    // for good. An old or missing one is answered with today's, briefly.
-    const cache = asked === iconVersion(store) ? "public, max-age=31536000, immutable" : "public, max-age=3600";
+    // Drawn only at the address with today's fingerprint and nothing else, which
+    // may be kept for good; any other is sent there, briefly, before anything
+    // is read or drawn.
+    if (new URL(request.url).search !== `?v=${iconVersion(store)}`) {
+      return new Response(null, { status: 307, headers: { Location: iconUrl(store, size), "Cache-Control": "public, max-age=3600" } });
+    }
+    const busy = readRefusal(`icon:${store.handle}/${size}`);
+    if (busy) return busy;
+    const cache = "public, max-age=31536000, immutable";
 
     const photo = store.photoId ? await readPhoto(store.photoId).catch(() => null) : null;
     const drawn = photo ? await scaled(photo.bytes, size) : null;
