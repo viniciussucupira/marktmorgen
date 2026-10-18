@@ -36,9 +36,12 @@ async function main(): Promise<void> {
   redis.clear();
 
   part("Decided by money");
-  const moreCheckoutsLessMoney = counts(sold(1000, 40, 30, 4900), sold(1000, 90, 12, 4900));
-  is("more checkouts and less money does not win: the first does", [winner(moreCheckoutsLessMoney, "checkouts"), winner(moreCheckoutsLessMoney, "money")], ["b", "a"]);
-  is("money per visitor", perVisitor(moreCheckoutsLessMoney.ra ?? 0, 1000), 147);
+  // A month old, so a money test is past the days it waits for refunds (lib/headline-test-rules.ts, rule 4),
+  // and enough of it to cross a line that holds however often it is read (rule 1).
+  const moreCheckoutsLessMoney = counts(sold(2000, 80, 60, 4900), sold(2000, 180, 24, 4900), Date.UTC(2026, 8, 1));
+  const readAt = { now: Date.UTC(2026, 9, 12) };
+  is("more checkouts and less money does not win: the first does", [winner(moreCheckoutsLessMoney, "checkouts", readAt), winner(moreCheckoutsLessMoney, "money", readAt)], ["b", "a"]);
+  is("money per visitor", perVisitor(moreCheckoutsLessMoney.ra ?? 0, 2000), 147);
   is("not before each has its paid sales", winner(counts(sold(1000, 10, MIN_SALES - 1, 4900), sold(1000, 10, 40, 4900)), "money"), null);
   is("not before each has its views", winner(counts(sold(MIN_VIEWS - 1, 10, 30, 4900), sold(1000, 10, 60, 4900)), "money"), null);
   const close = counts(sold(800, 30, 20, 4900), sold(800, 30, 22, 4900));
@@ -49,7 +52,8 @@ async function main(): Promise<void> {
   const day = 86_400_000;
   const now = Date.UTC(2026, 9, 12);
   // 100 views a version a day, 2% buy: 10 sales take 500 views each.
-  is("from the traffic so far: 500 views each, 200 had, 100 a day", daysLeft(counts(sold(200, 8, 4, 4900), sold(200, 8, 4, 4900), now - 2 * day), "money", now), 3);
+  // The views take 3 more days; a money test also waits until it is REFUND_DAYS (14) days old, which is 12 more.
+  is("from the traffic so far: 500 views each, 200 had, 100 a day, and the 14 days a money test waits", daysLeft(counts(sold(200, 8, 4, 4900), sold(200, 8, 4, 4900), now - 2 * day), "money", now), 12);
   is("sign-ups need only the views", daysLeft(counts(sold(100, 8, 0, 0), sold(100, 8, 0, 0), now - day), "checkouts", now), 1);
   is("not before a day has passed or anything sold", [daysLeft(counts(sold(10, 1, 0, 0), sold(10, 1, 0, 0), now - day), "money", now), daysLeft(counts(sold(10, 1, 1, 100), sold(10, 1, 0, 0)), "money", now)], [null, null]);
 

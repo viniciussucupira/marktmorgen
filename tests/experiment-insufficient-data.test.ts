@@ -31,7 +31,8 @@ is("nor 1 against 8", winner(signups(200, 1, 200, 8)), null);
 is("traffic split unevenly: the smaller side is the one that must have enough", winner(signups(200, 0, 2_000, 30)), null);
 
 part("Sign-ups: enough to say");
-is("0 against 10 on 200 views each: the second wins", winner(signups(200, 0, 200, 10)), "b");
+// Since 18 October 2026 the line holds however often the test is read (tests/experiment-reliability.test.ts), so a small first look needs a little more.
+is("0 against 15 on 300 views each: the second wins", winner(signups(300, 0, 300, 15)), "b");
 is("40 against 12 on 500 each: the first wins", winner(signups(500, 40, 500, 12)), "a");
 is("close on plenty of data: still running", winner(signups(2_000, 100, 2_000, 110)), null);
 is("the floor is the textbook one: five expected each", MIN_EXPECTED_SIGNUPS, 5);
@@ -41,7 +42,8 @@ is("each needs its paid sales", winner(money(1_000, MIN_SALES - 1, 1_000, 40), "
 is("each needs its views", winner(money(MIN_VIEWS - 1, 30, 1_000, 60), "money"), null);
 is("nothing sold: no chance to state", chanceBBetter(money(500, 0, 500, 0)), null);
 is("a close race with its sales: still running", winner(money(1_000, 30, 1_000, 33), "money"), null);
-is("a clear one: decided", winner(money(1_000, 15, 1_000, 60), "money"), "b");
+// A money test also waits REFUND_DAYS days for refunds (rule 4).
+is("a clear one, a month old: decided", winner({ ...money(1_000, 15, 1_000, 60), t0: Date.UTC(2026, 8, 1) }, "money", { now: Date.UTC(2026, 9, 17) }), "b");
 
 part("How long a sign-up test has left");
 const now = Date.UTC(2026, 9, 17);

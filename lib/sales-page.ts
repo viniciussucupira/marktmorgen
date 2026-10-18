@@ -462,8 +462,52 @@ export function bandsOf(style: PageStyle, blocks: { screens?: BlockShow }[]): { 
   });
 }
 
-export type HeadlineTest = { id: string; headline: string; sub: string };
-export type PageVariant = { id: string; blocks: PageBlock[] };
+/**
+ * What a test is measured by, declared when it is saved (lib/headline-test-rules.ts,
+ * rule 2): money for a product sold, sign-ups for a free one. Absent on a
+ * test saved before 18 October 2026.
+ */
+export type TestMeasure = "money" | "checkouts";
+export type HeadlineTest = { id: string; headline: string; sub: string; measure?: TestMeasure };
+export type PageVariant = { id: string; blocks: PageBlock[]; measure?: TestMeasure };
+
+/** A measure as stored or sent: one of the two, or none. */
+export function parseMeasure(raw: unknown): TestMeasure | undefined {
+  return raw === "money" || raw === "checkouts" ? raw : undefined;
+}
+
+/** The measure a page's running test was saved with, or null when it has none or was saved before measures were. */
+export function declaredMeasure(page: Pick<SalesPage, "test" | "variant">): TestMeasure | null {
+  return (page.variant ? page.variant.measure : page.test?.measure) ?? null;
+}
+
+/**
+ * The page as it is saved: its running test declares the measure it will be
+ * decided by. A test already running with the same id keeps the measure it
+ * started with, so changing the price mid-test cannot change what it is
+ * scored on; a new test takes the product's measure now.
+ */
+export function declareMeasure(page: SalesPage, before: Pick<SalesPage, "test" | "variant"> | null, measure: TestMeasure): SalesPage {
+  // What the browser sent is never taken: the measure is the server's alone.
+  const of = (id: string): TestMeasure | undefined => {
+    if (before?.variant?.id === id) return before.variant.measure;
+    if (before?.test?.id === id) return before.test.measure;
+    return measure;
+  };
+  if (page.variant) {
+    const { measure: _sent, ...variant } = page.variant;
+    void _sent;
+    const m = of(variant.id);
+    return { ...page, variant: m ? { ...variant, measure: m } : variant };
+  }
+  if (page.test) {
+    const { measure: _sent, ...test } = page.test;
+    void _sent;
+    const m = of(test.id);
+    return { ...page, test: m ? { ...test, measure: m } : test };
+  }
+  return page;
+}
 
 export const EMPTY_PAGE: SalesPage = { blocks: [], seoTitle: "", seoDescription: "", next: null, test: null, variant: null, style: "plain", hidden: false, showFrom: 0 };
 
@@ -915,7 +959,8 @@ function parseVariant(raw: unknown, first: PageBlock[], pictures: Set<string>): 
   if (first.length === 0 || !raw || typeof raw !== "object") return null;
   const blocks = parseBlocks((raw as Record<string, unknown>).blocks, pictures);
   if (blocks.length === 0 || sameBlocks(first, blocks)) return null;
-  return { id: variantId(first, blocks), blocks };
+  const measure = parseMeasure((raw as Record<string, unknown>).measure);
+  return { id: variantId(first, blocks), blocks, ...(measure ? { measure } : {}) };
 }
 
 /**
@@ -929,7 +974,8 @@ function parseTest(raw: unknown, hero: HeroBlock | null): HeadlineTest | null {
   const headline = line(value.headline, MAX_HEADLINE);
   const sub = lines(value.sub, MAX_SUBHEADLINE);
   if (!headline || (headline === hero.headline && sub === hero.sub)) return null;
-  return { id: testId(hero, { headline, sub }), headline, sub };
+  const measure = parseMeasure(value.measure);
+  return { id: testId(hero, { headline, sub }), headline, sub, ...(measure ? { measure } : {}) };
 }
 
 /** What is wrong with a page the studio sent, in a word the studio can explain; null when nothing. */

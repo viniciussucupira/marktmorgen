@@ -1,5 +1,6 @@
 "use client";
 
+import { ELSEWHERE_NOTE, MAX_REVIEW_URL, parseReviewElsewhere } from "@/lib/review-elsewhere";
 import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -13,6 +14,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
   days: `Pick between ${MIN_ASK_DAYS} and ${MAX_ASK_DAYS} days.`,
+  elsewhere: "That is not a review page on Google, Trustpilot or Facebook. Paste the https address of your page there.",
   email: "Review requests are email, so they need Pro with your email set up (the sender name and postal address). Set that up in Email first.",
   busy: "Someone else changed this review at the same moment. Try again.",
   missing: "That review is not there anymore: its buyer may have deleted it. Reload the page.",
@@ -36,24 +38,30 @@ async function post(body: Record<string, unknown>): Promise<string | null> {
 }
 
 /** The review-request email: off, or on some days after buying. */
-export function ReviewAskEditor({ days, canEmail }: { days: number; canEmail: boolean }) {
+export function ReviewAskEditor({ days, canEmail, elsewhere = "" }: { days: number; canEmail: boolean; elsewhere?: string }) {
   const router = useRouter();
   const [on, setOn] = useState(days > 0);
   const [value, setValue] = useState(days > 0 ? days : DEFAULT_ASK_DAYS);
+  const [page, setPage] = useState(elsewhere);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const dirty = on !== days > 0 || (on && value !== days);
+  const dirty = on !== days > 0 || (on && value !== days) || page.trim() !== elsewhere;
 
   async function save() {
-    setBusy(true);
     setError(null);
-    const problem = await post({ action: "ask", days: on ? value : 0 });
+    // The same rule the server holds (lib/review-elsewhere.ts), said before anything is sent.
+    if (page.trim() && !parseReviewElsewhere(page)) {
+      setError(MESSAGES.elsewhere);
+      return;
+    }
+    setBusy(true);
+    const problem = await post({ action: "ask", days: on ? value : 0, elsewhere: page.trim() });
     setBusy(false);
     if (problem) {
       setError(problem);
       return;
     }
-    toast(on ? "Review requests switched on." : "Review requests switched off.");
+    toast(on ? "Review requests saved." : "Review requests switched off.");
     router.refresh();
   }
 
@@ -71,6 +79,23 @@ export function ReviewAskEditor({ days, canEmail }: { days: number; canEmail: bo
               <option key={d} value={d}>{`${d} days`}</option>
             ))}
           </select>
+        </label>
+      ) : null}
+      {on ? (
+        <label htmlFor="ask-elsewhere" className="mt-3 block max-w-xl">
+          <span className="field-label">Your public review page (optional)</span>
+          <input
+            id="ask-elsewhere"
+            type="url"
+            inputMode="url"
+            className="field"
+            maxLength={MAX_REVIEW_URL}
+            placeholder="https://g.page/r/…/review"
+            value={page}
+            onChange={(e) => setPage(e.target.value)}
+            aria-describedby="ask-elsewhere-note"
+          />
+          <span id="ask-elsewhere-note" className="mt-1 block text-xs text-ink-soft">{ELSEWHERE_NOTE}</span>
         </label>
       ) : null}
       <p className="mt-2 text-sm text-ink-soft">

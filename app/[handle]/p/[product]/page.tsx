@@ -28,7 +28,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { cookies, headers } from "next/headers";
-import { AB_COOKIE, count as countTest, readBucket, readCounts, versionFor, winner } from "@/lib/headline-test";
+import { AB_COOKIE, count as countTest, expectedShareB, readBucket, readCounts, versionFor, winner } from "@/lib/headline-test";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { cache } from "react";
 import { type Listing, type Store, isFree, normaliseHandle, storeForPage } from "@/lib/store";
@@ -50,7 +50,7 @@ import { isHouseStore } from "@/lib/house-store";
 import { sellsInTestMode } from "@/lib/stripe-connect";
 import { DemoNote } from "@/components/demo-notes";
 import { SITE_URL } from "@/lib/site-url";
-import { EMPTY_PAGE, type SalesPage, asVersion, livePage, runningTest } from "@/lib/sales-page";
+import { EMPTY_PAGE, type SalesPage, asVersion, livePage, runningTest, declaredMeasure } from "@/lib/sales-page";
 import { readPage } from "@/lib/sales-page-store";
 import { type Summary, REVIEWS_ON_PAGE, average, showsRating, summaryOf, visibleReviews } from "@/lib/reviews";
 import { BuyBox, GiftBox, GroupBox, PriceTag, ProductFacts, RemindBox, pageAction, productPath, saleNow } from "@/components/store-product";
@@ -128,7 +128,8 @@ async function shownVersion(store: Store, productId: string, page: SalesPage, so
   if (!test) return page;
   const counts = await readCounts(store.statsId, productId, test).catch(() => null);
   // A product sold for money is decided by the money each version brings (lib/headline-test-rules.ts).
-  const won = counts ? winner(counts, sold ? "money" : "checkouts") : null;
+  // Valid however often it is read, on the measure the test was saved with, and only on an even split (lib/headline-test-rules.ts).
+  const won = counts ? winner(counts, sold ? "money" : "checkouts", { declared: declaredMeasure(page), shareB: expectedShareB(test) }) : null;
   const bucket = readBucket((await cookies()).get(AB_COOKIE)?.value);
   const version = won ?? (bucket !== null ? versionFor(bucket, test) : "a");
   if (!won && bucket !== null) after(() => countTest(store.statsId, productId, test, "v", version));
