@@ -12,7 +12,7 @@ This file is the durable handoff for whoever works on Hazelsong or Marktmorgen n
 
 1. 60% net margin after every tax, per paying customer at full use of every entitlement, and company-wide from a computed minimum base (17 Oct 2026, verbatim in AGENTS.md / CLAUDE.md). Limits are lowered, never prices; protections act on their own.
 2. Free accounts, trials and refunds: automatic ceiling paid by the company ("Teto mínimo pago pela empresa").
-3. Rule 19: where tax law is unclear, use the reading with MORE tax; open questions are in docs/tax-uncertainty.md. Under that reading 60% is unreachable, so paid sales stay closed until an accountant confirms a lower reading.
+3. Rule 19: where tax law is unclear, use the reading with MORE tax; open questions are in docs/tax-uncertainty.md. Under that reading 60% is unreachable, so paid sales stay closed; since 18 Oct 2026 a doubt is closed only by an official text or a recorded consultation answer (docs/tax-consultations.md) (the owner uses no accountant).
 
 ## State at the end of 17 Oct 2026
 
@@ -23,4 +23,4 @@ This file is the durable handoff for whoever works on Hazelsong or Marktmorgen n
 
 - Marktmorgen: closed stores keep creator-side records after the closing day (bounded per store, not over time); community posts of an erased person stay as "A member"; PR #331 (Codex growth orchestration) is not reviewed.
 - Hazelsong: drafts #38 (owner-flagged parts: free-plan holds, fail-closed rate limiter, Deepgram/OpenAI fallback removal, 30-day media deletion), #162 (atomic storage reservations), #189 (retention margin evidence); free accounts' stored files/testimonials have no count ceiling, so free sign-ups stay paused; scripts/allowances-public.mjs has a stale assertion ("every write a reader can see throws the copy away").
-- Owner only: accountant (docs/tax-uncertainty.md, 13 questions), forming the Delaware LLC, US Stripe account and prices, supplier spend caps (Vercel, Upstash, Resend, Anthropic, Google), archiving off-sale prices in Paddle, legal review of the erasure choices (#527).
+- Owner only: the consultations to the Receita and to Fortaleza (docs/tax-consultations.md; 27 questions in docs/tax-uncertainty.md), registering the LLC in the EU's non-Union OSS and for UK VAT before any store sells (docs/eu-vat-article-9a.md), forming the Delaware LLC, US Stripe account and prices, supplier spend caps (Vercel, Upstash, Resend, Anthropic, Google), archiving off-sale prices in Paddle, legal review of the erasure choices (#527).

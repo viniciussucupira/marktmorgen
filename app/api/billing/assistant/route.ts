@@ -10,7 +10,8 @@ import { limited } from "@/lib/request-guard";
  * The Store assistant add-on's billing (lib/assistant-billing.ts), from the
  * studio. POST `action=start` sends the owner to Stripe to start it, only
  * while it is on sale (lib/opening.ts, ASSISTANT_ON_SALE: closed with the
- * plans until the margin review and the accountant's answers exist), and
+ * plans until the margin review, the tax gate and the deemed-supplier records
+ * exist, lib/opening.ts), and
  * only for a store whose plan is paid; `action=stop` sets it to stop at the
  * end of the month paid, `action=resume` takes that back. GET is where
  * Stripe sends the owner back: nothing is believed until Stripe says what
