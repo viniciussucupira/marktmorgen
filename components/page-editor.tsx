@@ -2731,7 +2731,7 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
   const measure = sold ? "money" : "checkouts";
   const standing = testState(counts, measure, { declared, shareB });
   const won = standing.winner;
-  const line = Math.round(boundary(counts.va + counts.vb) * 100) / 100;
+  const edge = Math.round(boundary(counts.va + counts.vb) * 100) / 100;
   const page = what === "page";
   const [a, b] = page ? ["Version A", "Version B"] : ["First headline", "Second headline"];
   const money = (cents: number) => formatMoney(Math.round(cents), currency);
@@ -2768,7 +2768,7 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
                 ? `No winner while the split is off: the versions were seen ${times(counts.va, "time")} and ${times(counts.vb, "time")}, further from the share each should get than chance allows. Something may be counting one version more (a cached page, a link that always opens one); the test goes on counting.`
                 : standing.state === "maturing"
                   ? `One version is ahead, but a test decided by money waits until it has run ${REFUND_DAYS} days, so early sales can still be refunded. Refunds are not taken out of either version's money.`
-                  : `Still running: no clear winner yet. Each needs at least ${enough}, and a lead clear enough to hold however often the test is read (now ${line} standard errors).`}
+                  : `Still running: no clear winner yet. Each needs at least ${enough}, and a lead clear enough to hold however often the test is read (now ${edge} standard errors).`}
       </p>
       <p className="mt-1 text-xs text-ink-soft">
         {`The test is read on every visit, so the line a winner must cross is set to call a false winner no more than one time in twenty over the whole test, not at each look.${declared ? ` Decided by ${declared === "money" ? "money per visitor" : "sign-ups"}, as when it was saved.` : ""}`}
