@@ -6,6 +6,7 @@ import { guardStoreWrite, text } from "@/lib/store-request";
 import { MAX_REPLY_TEXT, REVIEW_ID_PATTERN, markSeen, setHidden, setReply, setReviewPhoto } from "@/lib/reviews";
 import { dropReviewPhoto } from "@/lib/review-photo";
 import { MAX_ASK_DAYS, MIN_ASK_DAYS } from "@/lib/review-ask";
+import { parseReviewElsewhere } from "@/lib/review-elsewhere";
 import { canWrite } from "@/lib/mail";
 
 const PRODUCT_ID = /^[a-z0-9]{6,40}$/;
@@ -18,6 +19,7 @@ const PRODUCT_ID = /^[a-z0-9]{6,40}$/;
  *   { action: "photo", product, id }          take the buyer's photo off it, and delete it
  *   { action: "seen", items | all }           take reviews out of the queue of new ones
  *   { action: "ask", days }                   the review-request email: 3 to 30 days, or 0 for off
+ *   { action: "ask", days, elsewhere }        and the creator's public review page, "" for none
  *
  * There is no action that changes what a buyer wrote or the stars they gave,
  * and none that deletes a review: only its buyer can (lib/reviews.ts). A
@@ -41,7 +43,18 @@ export async function POST(request: NextRequest) {
       }
       // Switching it on needs what every email to people needs here.
       if (days > 0 && !canWrite(store)) return Response.json({ ok: false, error: "email" }, { status: 400 });
-      await setReviewAsk(guarded.ref, { days });
+      // The creator's public review page (lib/review-elsewhere.ts): "" takes it off, absent keeps it.
+      let elsewhere = store.reviewAsk.elsewhere;
+      if ("elsewhere" in body) {
+        const typed = typeof body.elsewhere === "string" ? body.elsewhere.trim() : "";
+        if (!typed) elsewhere = undefined;
+        else {
+          const page = parseReviewElsewhere(typed);
+          if (!page) return Response.json({ ok: false, error: "elsewhere" }, { status: 400 });
+          elsewhere = page;
+        }
+      }
+      await setReviewAsk(guarded.ref, elsewhere ? { days, elsewhere } : { days });
       return Response.json({ ok: true });
     }
 

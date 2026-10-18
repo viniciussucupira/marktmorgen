@@ -308,6 +308,7 @@ const en = {
   askLead: (what: string, store: string, date: string) =>
     `You bought ${what} from ${store} on ${date}. If you have a minute, ${store} would like to know what you think, good or bad.`,
   askHow: "Give it one to five stars and a few words here:",
+  askElsewhere: (store: string, site: string) => `If you would also like to, you can review ${store} on ${site}. It is the same for everyone asked, and entirely up to you:`,
   askShows: (store: string) =>
     `Your review appears on ${store}'s page marked as a verified purchase, under the name you choose. Your email address is never shown. The same link lets you change or delete it for 60 days.`,
   askOnly: "This is the only email about reviewing this order.",
@@ -631,6 +632,7 @@ const es: GivingWords = {
   askLead: (what, store, date) =>
     `Compraste ${what} en ${store} el ${date}. Si tienes un minuto, a ${store} le gustaría saber qué te parece, para bien o para mal.`,
   askHow: "Dale de una a cinco estrellas y unas palabras aquí:",
+  askElsewhere: (store, site) => `Si además quieres, puedes reseñar ${store} en ${site}. Se lo pedimos igual a todos y es totalmente opcional:`,
   askShows: (store) =>
     `Tu reseña aparece en la página de ${store} marcada como compra verificada, con el nombre que elijas. Tu dirección de email nunca se muestra. El mismo enlace te permite cambiarla o eliminarla durante 60 días.`,
   askOnly: "Este es el único email sobre la reseña de este pedido.",
@@ -944,6 +946,7 @@ const fr: GivingWords = {
   askLead: (what, store, date) =>
     `Vous avez acheté ${what} chez ${store} le ${date}. Si vous avez une minute, ${store} aimerait savoir ce que vous en pensez, en bien ou en mal.`,
   askHow: `Donnez-lui une à cinq étoiles et quelques mots ici${S}:`,
+  askElsewhere: (store, site) => `Si vous le souhaitez aussi, vous pouvez laisser un avis sur ${store} sur ${site}. C'est la même demande pour tout le monde, et entièrement libre${S}:`,
   askShows: (store) =>
     `Votre avis apparaît sur la page de ${store}, marqué comme achat vérifié, sous le nom de votre choix. Votre adresse e-mail n'est jamais affichée. Le même lien vous permet de le modifier ou de le supprimer pendant 60 jours.`,
   askOnly: "C'est le seul e-mail concernant l'avis sur cette commande.",
@@ -1257,6 +1260,7 @@ const de: GivingWords = {
   askLead: (what, store, date) =>
     `Sie haben ${what} am ${date} bei ${store} gekauft. Wenn Sie eine Minute haben, möchte ${store} gern wissen, was Sie davon halten – ob gut oder schlecht.`,
   askHow: "Vergeben Sie hier ein bis fünf Sterne und ein paar Worte:",
+  askElsewhere: (store, site) => `Wenn Sie möchten, können Sie ${store} auch auf ${site} bewerten. Alle werden gleich gefragt, und es ist ganz Ihnen überlassen:`,
   askShows: (store) =>
     `Ihre Bewertung erscheint auf der Seite von ${store}, als verifizierter Kauf gekennzeichnet, unter dem Namen, den Sie wählen. Ihre E-Mail-Adresse wird nie angezeigt. Mit demselben Link können Sie sie 60 Tage lang ändern oder löschen.`,
   askOnly: "Das ist die einzige E-Mail zur Bewertung dieser Bestellung.",
@@ -1574,6 +1578,7 @@ const it: GivingWords = {
   askLead: (what, store, date) =>
     `Hai acquistato ${what} da ${store} in data ${date}. Se hai un minuto, ${store} vorrebbe sapere cosa ne pensi, nel bene o nel male.`,
   askHow: "Dagli da una a cinque stelle e qualche parola qui:",
+  askElsewhere: (store, site) => `Se ti va, puoi recensire ${store} anche su ${site}. Lo chiediamo allo stesso modo a tutti ed è del tutto facoltativo:`,
   askShows: (store) =>
     `La tua recensione compare sulla pagina di ${store} segnata come acquisto verificato, con il nome che scegli. Il tuo indirizzo email non viene mai mostrato. Lo stesso link ti permette di modificarla o eliminarla per 60 giorni.`,
   askOnly: "Questa è l'unica email sulla recensione di questo ordine.",
@@ -1884,6 +1889,7 @@ const nl: GivingWords = {
   askLead: (what, store, date) =>
     `Je hebt ${what} op ${date} bij ${store} gekocht. Als je een minuutje hebt, wil ${store} graag weten wat je ervan vindt, goed of slecht.`,
   askHow: "Geef het hier één tot vijf sterren en een paar woorden:",
+  askElsewhere: (store, site) => `Als je wilt, kun je ${store} ook beoordelen op ${site}. Iedereen krijgt dezelfde vraag, en het is helemaal aan jou:`,
   askShows: (store) =>
     `Je beoordeling verschijnt op de pagina van ${store}, gemarkeerd als geverifieerde aankoop, onder de naam die je kiest. Je e-mailadres wordt nooit getoond. Met dezelfde link kun je haar 60 dagen lang wijzigen of verwijderen.`,
   askOnly: "Dit is de enige e-mail over het beoordelen van deze bestelling.",
@@ -2201,6 +2207,7 @@ const pt: GivingWords = {
   askLead: (what, store, date) =>
     `Comprou ${what} a ${store} em ${date}. Se tiver um minuto, ${store} gostaria de saber o que achou, seja bom ou mau.`,
   askHow: "Dê-lhe de uma a cinco estrelas e algumas palavras aqui:",
+  askElsewhere: (store, site) => `Se também quiser, pode avaliar ${store} no ${site}. O pedido é igual para todos e é totalmente opcional:`,
   askShows: (store) =>
     `A sua avaliação aparece na página de ${store} marcada como compra verificada, com o nome que escolher. O seu endereço de email nunca é mostrado. A mesma ligação permite-lhe alterá-la ou eliminá-la durante 60 dias.`,
   askOnly: "Este é o único email sobre a avaliação desta encomenda.",

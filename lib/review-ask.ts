@@ -16,10 +16,16 @@
  *                      scored by when the email is due, in seconds
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { type ReviewElsewhere, parseReviewElsewhere } from "@/lib/review-elsewhere";
 
 export type ReviewAsk = {
   /** Days after buying that the one email goes out; 0 is off. */
   days: number;
+  /**
+   * The creator's own page on a public review site, named in every request
+   * after the store's own link (lib/review-elsewhere.ts); absent is none.
+   */
+  elsewhere?: ReviewElsewhere;
 };
 
 export const MIN_ASK_DAYS = 3;
@@ -37,9 +43,11 @@ const STATS_ID = /^[0-9a-f]{32}$/;
 export function parseReviewAsk(raw: unknown): ReviewAsk {
   if (!raw || typeof raw !== "object") return { ...NO_ASK };
   const days = (raw as { days?: unknown }).days;
-  return typeof days === "number" && Number.isInteger(days) && days >= MIN_ASK_DAYS && days <= MAX_ASK_DAYS
-    ? { days }
-    : { ...NO_ASK };
+  // Kept while the email is off too, so switching it back on does not lose it.
+  const stored = (raw as { elsewhere?: unknown }).elsewhere;
+  const elsewhere = parseReviewElsewhere(stored && typeof stored === "object" ? (stored as { url?: unknown }).url : stored);
+  const on = typeof days === "number" && Number.isInteger(days) && days >= MIN_ASK_DAYS && days <= MAX_ASK_DAYS ? days : 0;
+  return elsewhere ? { days: on, elsewhere } : { days: on };
 }
 
 /** One entry on the list, as it is kept. */
