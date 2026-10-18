@@ -1309,6 +1309,27 @@ async function readRefunds(store: Store, since: number, pages: number): Promise<
   return { rows: out, partial };
 }
 
+/**
+ * The refunds made on the creator's account since `since` (seconds), for a
+ * reader outside this file that has to take refunds off sales it read itself
+ * (lib/path-facts.ts). The same reading the numbers use.
+ */
+export function readStoreRefunds(store: Store, since: number, pages: number): Promise<{ rows: RefundRow[]; partial: boolean }> {
+  return readRefunds(store, since, pages);
+}
+
+/**
+ * The store's all-time record as it is kept, in one command and without
+ * filling it from the days (readLife does that, from the studio's numbers):
+ * where visits came from (r:<source>), the addresses asked for (fs:<channel>)
+ * and the visitors (u). Empty when there is none.
+ */
+export async function readLifeRecord(statsId: string | null): Promise<Map<string, number>> {
+  if (!statsId || !isRedisConfigured()) return new Map();
+  const [raw] = await redisPipeline([["HGETALL", lifeKey(statsId)]]);
+  return new Map(pairs(raw));
+}
+
 /** Sales in the last STATS_DAYS days, by day, by product, and for each window. */
 export async function readSales(store: Store, now = Date.now()): Promise<SalesStats | null> {
   if (!readsSales(store)) return null;

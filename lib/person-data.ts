@@ -157,6 +157,7 @@ export const PERSON_DATA: PersonData[] = [
   { file: "lib/team.ts", how: "account", what: "A store's team and invitations" },
   { file: "lib/store.ts", how: "account", what: "Which stores an account owns" },
   { file: "lib/phone-alerts.ts", how: "account", what: "The creator's own phone, and one-way marks of events already told" },
+  { file: "lib/path.ts", how: "account", what: "The store owner's own Path: their four answers, the days they opened it and the best level reached; nothing about a buyer, and deleted with the store" },
   { file: "lib/stats-report.ts", how: "none", what: "Weekly reports to the store's own team; no buyer's address" },
   { file: "lib/traffic.ts", how: "none", what: "Visits counted by a keyed one-way fingerprint of the network address, two days; no email address" },
   { file: "lib/answers.ts", how: "none", what: "Answers to visitors' questions, never who asked" },
