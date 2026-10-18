@@ -14,7 +14,8 @@ import { ADD_ON_LINES, ASSIST_REMIND_READ, COST_LINES, EMAIL_SITES, KIND_LINES, 
 import { NEXT_OFFER_REQUEST_UNITS } from "@/lib/next-offer-rules";
 import { ASSIST_REMIND_REQUEST_UNITS } from "@/lib/assistant-reminder-rules";
 import { assessCustomerWorstCase } from "@/lib/net-margin-rules";
-import { ADD_ON_ROOM_CENTS, assistantMonthWorst } from "@/lib/store-assistant-rules";
+import { ADD_ON_ROOM_CENTS, assistantMeetsFloor, assistantMonthWorst } from "@/lib/store-assistant-rules";
+import { ASSISTANT_ON_SALE } from "@/lib/opening";
 import { laterPageCost } from "./traffic-cost";
 import { PICTURE_REQUEST_UNITS } from "@/lib/buyer-actions";
 import { ALLOWANCE_KINDS, API_WRITE_UNITS, NON_PAYING_ALLOWANCES, STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
@@ -104,7 +105,7 @@ test("every exported limit or cost constant in lib/ is cited by a line, an open 
   assert.deepEqual(uncited, [], "cite each in a line's sources, an OPEN item's names, or NOT_A_COST with the reason");
 });
 
-test("every add-on is priced against what it collects, holds the owner's 60% alone, and its sources hold what it names", () => {
+test("every add-on is priced against what it collects, holds the owner's 60% alone or is not on sale, and its sources hold what it names", () => {
   assert.ok(ADD_ON_LINES.some((line) => line.id === "store-assistant"));
   const addOnIds = new Set(ADD_ON_LINES.map((line) => line.id));
   assert.equal(addOnIds.size, ADD_ON_LINES.length);
@@ -112,7 +113,8 @@ test("every add-on is priced against what it collects, holds the owner's 60% alo
     assert.ok(!ids.has(line.id), `${line.id} is also a plan's line`);
     const usd = line.monthlyUsd();
     assert.ok(Number.isFinite(usd) && usd > 0 && line.revenueUsd > 0, line.id);
-    assert.ok(usd <= line.allowedUsd - ADD_ON_ROOM_CENTS / 100 + 1e-9, `${line.id}: $${usd.toFixed(2)} against $${line.allowedUsd.toFixed(2)} allowed, with $${(ADD_ON_ROOM_CENTS / 100).toFixed(2)} kept`);
+    // Since 18 October 2026 received in the one model of lib/receiving-costs.ts; an add-on past its allowance may not be on sale (docs/margin-alignment-2026-10-18.md).
+    if (usd > line.allowedUsd - ADD_ON_ROOM_CENTS / 100 + 1e-9) assert.equal(line.onSale, false, `${line.id}: $${usd.toFixed(2)} against $${line.allowedUsd.toFixed(2)} allowed, with $${(ADD_ON_ROOM_CENTS / 100).toFixed(2)} kept, and on sale`);
     for (const source of line.sources) {
       assert.ok(existsSync(join(root, source.file)), `${line.id}: ${source.file} is not there`);
       const text = read(source.file);
@@ -123,8 +125,9 @@ test("every add-on is priced against what it collects, holds the owner's 60% alo
   // The Store assistant, by the repo's own margin model: every cost category explicit, the 27.5% tax rounded up, 60% by integer cents.
   const month = assistantMonthWorst();
   const assessed = assessCustomerWorstCase(month.review);
-  assert.equal(assessed.approved, true, JSON.stringify(assessed));
-  assert.ok(assessed.marginBps !== null && assessed.marginBps >= 6_000);
+  // Meeting the floor is the review approving it with its room; on sale needs both (lib/opening.ts).
+  assert.equal(assistantMeetsFloor(), assessed.approved && month.roomCents >= ADD_ON_ROOM_CENTS, JSON.stringify(assessed));
+  if (ASSISTANT_ON_SALE) assert.ok(assessed.approved && assessed.marginBps !== null && assessed.marginBps >= 6_000, JSON.stringify(assessed));
 });
 
 test("the features merged on October 17, 2026 are each a line of the worst month", () => {

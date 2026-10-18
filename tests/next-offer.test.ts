@@ -32,6 +32,7 @@ import { FEATURE_PAGES } from "@/lib/feature-pages";
 import { HELP_SECTIONS } from "@/lib/help-content";
 import { PERSON_DATA } from "@/lib/person-data";
 import { ASSISTANT_MESSAGE_COMMANDS, ASSISTANT_MESSAGE_DB_BYTES, ASSISTANT_MODEL, ASSISTANT_PRODUCTS, STORE_RECORD_BYTES, assistantMeetsFloor, assistantMessageExtraMicroUsd, assistantMessageWorstMicroUsd, assistantPoolMicroUsd, assistantSettledMicroUsd, assistantWindow } from "@/lib/store-assistant-rules";
+import { ASSISTANT_ON_SALE } from "@/lib/opening";
 import {
   NEXT_OFFER_CHOICES,
   NEXT_OFFER_OUTPUT_TOKENS,
@@ -106,7 +107,8 @@ async function main(): Promise<void> {
   );
   is("the store record priced is the largest", STORE_RECORD_BYTES, MAX_STORE_BYTES);
   is("its model request at every cap holds no more than a chat message's worst", aiRequestHoldMicroUsd(ASSISTANT_MODEL, { inputBytes: 24_576, blocks: 1, media: null, maxTokens: NEXT_OFFER_OUTPUT_TOKENS })! + assistantMessageExtraMicroUsd() <= assistantMessageWorstMicroUsd(), true);
-  is("so the add-on's month is unchanged, and still keeps the owner's floor", assistantMeetsFloor(), true);
+  // The month is the chat's worst reply times the pool; it keeps the floor or is not on sale (docs/margin-alignment-2026-10-18.md).
+  is("so the add-on's month is unchanged, and it keeps the owner's floor or is not on sale", ASSISTANT_ON_SALE && !assistantMeetsFloor(), false);
 
   part("Off until switched on and paid for");
   await claimHandle(OWNER, "nextshop", "Next Shop", "Recipes for busy weeknights.");

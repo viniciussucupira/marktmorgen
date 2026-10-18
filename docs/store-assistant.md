@@ -25,20 +25,20 @@ Worst case of one message, `assistantMessageWorstMicroUsd()` = **$0.003539**:
 - model hold at the caps (`ASSISTANT_INPUT_BYTES` 24,576 bytes counted as tokens + framing, `ASSISTANT_OUTPUT_TOKENS` 320), the cost table's 10% provider allowance (invoice tax, FX, remittance to the provider) and the 45-second function wait at 2 GB: **$0.003339** (`aiRequestHoldMicroUsd`, `lib/spend-cost-table.ts`);
 - the message's own database work: 40 commands, the store record (1 MB at most), 40 products and 6 stored pages read, the conversation read and written, and a day of keeping it plus four months of one unanswered question: **$0.000200**.
 
-One payment of $49 at full use (`assistantMonthWorst()`), all in whole cents rounded up:
+One payment of $49 at full use (`assistantMonthWorst()`), all in whole cents rounded up, received in the one model every plan and add-on is held to since 18 October 2026 (`lib/receiving-costs.ts`; `docs/margin-alignment-2026-10-18.md` is generated from it and holds the figures for every unit):
 
 | Line | Cents |
 |---|---:|
-| Dearer provider's fee on the whole (tax-inclusive) amount: Stripe 2.9% + 1.5% international + 1% conversion + 0.7% Billing + 0.5% Tax = 6.6% + 30¢ (Paddle 5% + 50¢ is cheaper) | 354 |
-| Remittance allowance, 1.5% | 74 |
-| Dispute reserve: 1 payment in 100 lost with both $15 fees | 79 |
+| Dearer provider's fee on the amount charged, $49 plus the buyer's tax on top at 27% ($62.23): Stripe 2.9% + 1.5% international + 1% conversion + 0.7% Billing + 0.5% Tax = 6.6% + 30¢ (Paddle 5% + 50¢ is cheaper) | 444 |
+| Remittance allowance, 1.5% of revenue | 74 |
+| Dispute reserve: 1 payment in 100 lost with both $15 fees, on the amount charged | 93 |
 | Refund reserve: 1 payment in 100 refunded (refunds only where the law requires) | 49 |
 | AI: 700 replies at the worst | 248 |
-| **Total** | **804** |
+| **Total** | **908** |
 | Most a payment may cost and keep 60% after 27.5% (P × 5/29, `maximumPretaxCostCents`) | 844 |
-| Room kept (`ADD_ON_ROOM_CENTS` ≥ 25) | 40 |
+| Room kept (`ADD_ON_ROOM_CENTS` ≥ 25) | −64 |
 
-Net after 27.5%: **60.59%** (`assessCustomerWorstCase`, integer cents). 750 replies would leave 22¢ of room and 800 only 4¢, below the 25¢ kept; 700 keeps it. Under the most-tax reading (VAT 27% inside the price, US 37%, Brazil 27.5% without credit, IOF) the add-on keeps about 27%: it fails like everything else, so it stays closed.
+Net after 27.5%: **59.06%**, $0.46 short of 60%. Until 18 October 2026 the fee and the dispute reserve were taken on the price alone (354 and 79 cents), as if no tax were added on top, which kept 60.59%. The one lever that is not a printed figure is the input sent to the model per reply (`ASSISTANT_INPUT_BYTES`, `ASSISTANT_FACTS_BYTES`); cutting it shortens the catalog the assistant reads for a buyer, which a buyer sees, and the owner ruled out cutting what a customer sees (18 October 2026). So `assistantMeetsFloor()` is false and the add-on is not on sale (`ASSISTANT_ON_SALE`), whatever the plans do. Under the most-tax reading (VAT 27% inside the price, US 37%, California 13.3%, Brazil 27.5% and IOF without credit, ISS 5% of revenue) it keeps about 12%: it fails like everything else.
 
 Emails and inbox messages a hand-over makes are taken from the plan's own figures (`inbox`, `store-email` lines of `tests/plan-cost-registry.ts`) and refused past them, so a plan's worst month is unchanged by the add-on. Non-AI requests of the chat (read, delete, hand-over) are public requests of the store's window (`withinStore`).
 
