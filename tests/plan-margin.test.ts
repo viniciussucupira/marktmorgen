@@ -113,8 +113,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
-  GB, STORAGE_PER_GB, FILE_DELIVERY_PER_GB, STREAM_STORAGE_PER_GB, PER_EMAIL, ORDER_COST, BILLING_RATE,
-  aiCeilingUsd, hourCost, netOf, ordersCost, perPaymentCost, videoCost, visitsCost, worstCost, type Prices,
+  GB, STORAGE_PER_GB, FILE_DELIVERY_PER_GB, STREAM_STORAGE_PER_GB, PER_EMAIL, ORDER_COST,
+  aiCeilingUsd, hourCost, lineKeptShare, netOf, providerFeeUsd, ordersCost, perPaymentCost, videoCost, visitsCost, worstCost, type Prices,
 } from "./plan-cost-model";
 
 /**
@@ -227,7 +227,7 @@ test("an hour of video past what a plan covers brings in well over what it costs
   // The one thing charged by use. What reaches us for an hour is the price
   // less the card fee's percentage (its thirty cents is on the invoice the
   // hour is added to, and is paid with the plan either way).
-  const kept = (VIDEO_CENTS_PER_HOUR_OVER / 100) * (1 - 0.029);
+  const kept = (VIDEO_CENTS_PER_HOUR_OVER / 100) * lineKeptShare();
   const cost = hourCost();
   const margin = (kept - cost) / kept;
   assert.ok(
@@ -237,24 +237,26 @@ test("an hour of video past what a plan covers brings in well over what it costs
   );
 });
 
-test("a thousand visits past what a plan covers bring in well over what they cost", () => {
-  // The other thing charged by use, held to the same floor as an hour of
-  // video: what reaches us for a thousand visits, against a thousand of the
-  // heavy visitor a visit is costed as.
-  const kept = (VISIT_CENTS_PER_THOUSAND_OVER / 100) * (1 - 0.029);
+test("a thousand visits past what a plan covers are not sold: at the published price they would not pay their way", () => {
+  // Visits past a plan were billed at VISIT_CENTS_PER_THOUSAND_OVER until
+  // 17 October 2026 and are not billed since (lib/traffic-rules.ts; the
+  // usage job settles none, tests/plan-cost-registry.test.ts). Since
+  // 18 October 2026, received in the one model of lib/receiving-costs.ts (the
+  // fee on the amount charged with the buyer's tax on top, remittance and
+  // reserves), the old price keeps under the 45% this held it to, so it must
+  // stay unsold: the store rests past its figure instead.
+  const kept = (VISIT_CENTS_PER_THOUSAND_OVER / 100) * lineKeptShare();
   const cost = 1000 * visitCost();
   const margin = (kept - cost) / kept;
-  assert.ok(
-    margin >= 0.45,
-    `a thousand visits past the plan bring in $${kept.toFixed(4)} and cost $${cost.toFixed(4)}, which keeps ${(margin * 100).toFixed(0)}%. ` +
-      "A price near what the visits cost is a slower loss.",
-  );
+  console.log(`a thousand visits past the plan would bring in $${kept.toFixed(4)} and cost $${cost.toFixed(4)}, keeping ${(margin * 100).toFixed(0)}% before tax`);
+  const job = readFileSync(join(process.cwd(), "app/api/cron/usage/route.ts"), "utf8");
+  assert.doesNotMatch(job, /settleAllVisits|visitsOwedCents/, "visits past a plan must not be billed while the price does not pay for them");
 });
 
 test("a thousand orders past what a plan covers bring in well over what they cost", () => {
   // The third thing charged by use, held to the same floor: what reaches us
   // for a thousand orders, against a thousand of the dearest order there is.
-  const kept = (ORDER_CENTS_PER_THOUSAND_OVER / 100) * (1 - 0.029 - BILLING_RATE);
+  const kept = (ORDER_CENTS_PER_THOUSAND_OVER / 100) * lineKeptShare();
   const cost = 1000 * ORDER_COST;
   const margin = (kept - cost) / kept;
   assert.ok(
@@ -443,9 +445,11 @@ test("a break from the plan is paid for by the months before it, at its longest"
  * 12 October 2026: the first payment is refunded in full within REFUND_DAYS;
  * a yearly plan is refunded for the months not started, the months used
  * kept at the monthly price; a renewal is not refunded. Stripe keeps its
- * processing fee on a refund and never returns the fee for a dispute.
+ * processing fee on a refund and never returns the fee for a dispute. The fee
+ * is the one model's (lib/receiving-costs.ts): the dearer provider's, on the
+ * amount charged with the buyer's tax on top.
  */
-const STRIPE_FEE = (grossCents: number) => (grossCents / 100) * (0.029 + BILLING_RATE) + 0.3;
+const STRIPE_FEE = (grossCents: number) => providerFeeUsd(grossCents);
 
 /**
  * What a store's files cost after its plan ends, until its closing day: all a

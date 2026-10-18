@@ -12,6 +12,7 @@ import { VISITS_INCLUDED } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED } from "@/lib/order-rules";
 import { AUTOMATIC_AI_STORE_MICRO_USD } from "@/lib/ai-spend-policy";
 import { uploadWorstCostMicroUsd } from "@/lib/upload-budget-policy";
+import { PROVIDER_FEES, SIZING_READING, chargedOf, providerFeeCents, receivingOf } from "@/lib/receiving-costs";
 import { visitCost } from "./traffic-cost";
 import { COST_LINES, ORDER_COST, hourCost } from "./plan-cost-registry";
 export { PER_PAYMENT_LINES, perPaymentCost } from "./plan-cost-registry";
@@ -30,18 +31,43 @@ export function uploadOpsUsd(tier: Tier): number {
   return uploadWorstCostMicroUsd(tier) / 1_000_000;
 }
 
-/** What Stripe Billing takes of a subscription charge, on top of the card fee. */
-export const BILLING_RATE = 0.007;
+/**
+ * What Stripe Billing takes of a subscription charge, on top of the card fee.
+ * Kept as a name for the older sums that quote it; every fee is now the one
+ * model of lib/receiving-costs.ts (6.6% + 30 cents at the dearer provider,
+ * on the amount charged with the buyer's tax on top, and the remittance,
+ * refund and dispute reserves).
+ */
+export const BILLING_RATE = PROVIDER_FEES.stripe.billingBps / 10_000;
 
 /**
- * What reaches us for one month of a plan, after Stripe takes its cut: one
- * monthly charge, or a twelfth of the yearly one.
+ * What reaches us for one month of a plan, after receiving it costs every
+ * fee and reserve (lib/receiving-costs.ts, the sizing reading): one monthly
+ * charge, or a twelfth of the yearly one. Before 18 October 2026 this was
+ * 2.9% + 0.7% + 30 cents on the price with no reserve, lighter than the
+ * add-on's model in the same repository.
  */
 export type Prices = Record<Tier, Record<Cycle, number>>;
 export function netOf(tier: Tier, cycle: Cycle = "month", prices: Prices = PLAN_PRICES): number {
-  const gross = prices[tier][cycle] / 100;
-  const kept = gross - (gross * (0.029 + BILLING_RATE) + 0.3);
+  const received = receivingOf(prices[tier][cycle], SIZING_READING, true);
+  const kept = (received.revenueCents - received.totalCents) / 100;
   return cycle === "year" ? kept / 12 : kept;
+}
+
+/** The dearer provider's fee on one charge of this many cents, on the amount charged, in dollars: what it keeps when the charge is refunded. */
+export function providerFeeUsd(grossCents: number): number {
+  return providerFeeCents(chargedOf(grossCents, SIZING_READING), true) / 100;
+}
+
+/**
+ * What one line on a renewal invoice keeps, as a share of its price: only the
+ * percentages of the fee (on the amount charged), the remittance and the
+ * reserves, no fixed fee.
+ */
+export function lineKeptShare(): number {
+  const big = 1_000_000;
+  const r = receivingOf(big, SIZING_READING, false);
+  return (r.revenueCents - r.totalCents) / big;
 }
 
 /** The hours of video a plan covers, all of them watched. */

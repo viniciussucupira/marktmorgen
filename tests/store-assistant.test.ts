@@ -132,11 +132,15 @@ async function main(): Promise<void> {
   is("the store record read with every message is priced at its largest", STORE_RECORD_BYTES, MAX_STORE_BYTES);
   is("a reply that reports no tokens settles at the worst; a short one at less", [assistantSettledMicroUsd(undefined), assistantSettledMicroUsd({ input_tokens: 3_000, output_tokens: 60 }) < worst, assistantSettledMicroUsd({ input_tokens: 10_000_000, output_tokens: 99_999 })], [worst, true, worst]);
   const month = assistantMonthWorst();
-  is("the dearer provider's fee on the whole $49: Stripe at 6.6% + 30 cents", [month.feeCents, addOnFeeCents()], [354, 354]);
+  is("the dearer provider's fee on the whole amount charged ($49 and the buyer's tax on top at 27%): Stripe at 6.6% + 30 cents", [month.chargedCents, month.feeCents, addOnFeeCents()], [6_223, 444, 444]);
   is("the pool is every message at its worst", assistantPoolMicroUsd(), ASSISTANT_MESSAGES_MONTHLY * worst);
   const assessed = assessCustomerWorstCase(month.review);
   console.log(`  a month: $${(month.revenueCents / 100).toFixed(2)} in; fee $${(month.feeCents / 100).toFixed(2)}, remittance $${(month.remittanceCents / 100).toFixed(2)}, disputes $${(month.disputeReserveCents / 100).toFixed(2)}, refunds $${(month.refundReserveCents / 100).toFixed(2)}, AI $${(month.aiCents / 100).toFixed(2)}; $${(month.totalCents / 100).toFixed(2)} of $${(month.allowedCents / 100).toFixed(2)} allowed; margin ${(assessed.marginBps! / 100).toFixed(2)}%`);
-  is("the add-on alone, every reply used at its worst, keeps 60% after the 27.5% tax, with room kept", [assessed.approved, assessed.marginBps! >= 6_000, month.roomCents >= ADD_ON_ROOM_CENTS, assistantMeetsFloor()], [true, true, true, true]);
+  // Since 18 October 2026 every plan and add-on is received in one model (lib/receiving-costs.ts), and under it
+  // the add-on at its full use keeps 59.06%, $0.46 short (docs/margin-alignment-2026-10-18.md). No limit a buyer
+  // or creator sees was cut for it, so it is not on sale: the floor is never assumed, it is read here.
+  is("the add-on alone, every reply used at its worst, keeps 60% after the 27.5% tax with room kept, or is not on sale", [assessed.approved && month.roomCents >= ADD_ON_ROOM_CENTS, assistantMeetsFloor(), ASSISTANT_ON_SALE && !assistantMeetsFloor()], [assistantMeetsFloor(), assessed.approved && month.roomCents >= ADD_ON_ROOM_CENTS, false]);
+  is("and today it misses, so it is closed", [assistantMeetsFloor(), ASSISTANT_ON_SALE], [false, false]);
   is("one more hundred replies would not", assistantMeetsFloor(ASSISTANT_MESSAGES_MONTHLY + 100), false);
   is("under the most-tax reading it is far below 60%", assistantMostTaxNetShare() < 0.6, true);
   is("so it is not on sale while the plans are not", [PLANS_ON_SALE, ASSISTANT_ON_SALE], [false, false]);
