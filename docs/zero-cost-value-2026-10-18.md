@@ -165,9 +165,9 @@ This order is this review's judgment, not a measurement.
 
 1. **Newsletter issues published on the store** (Kajabi). Built in #554. A creator chooses, per sent email, to publish it as a page of the store, with a list of past issues: a reason to subscribe and a page to share. No new cost: the text is already kept, the pages are the store's public requests, and the index is counted in the data room.
 2. **Instagram AutoDM** (Stan). High value to creators who sell from Instagram. Blocked on the owner's Meta app review before any code can be used live.
-3. **More starting pages and funnels** (HighLevel templates). Content only; no cost per use. Every starting page must hold no invented testimonial, figure or urgency.
+3. **More starting pages and funnels** (HighLevel templates). Content only; no cost per use. Every starting page must hold no invented testimonial, figure or urgency. Built in #555: three more starter funnels with first words (a membership, a free lesson, a paid call).
 4. **Copying a whole store's setup into another store of the same account** (HighLevel snapshots). Uses only the receiving store's data room.
 5. **A scheduled report to an address outside the team** (HighLevel). One of the store's emails each time; low value, since team members already receive it, and it needs the owner's decision to send store numbers outside the team.
 6. **Social planner** (HighLevel). Blocked on each platform's app review.
 
-Built from this list: item 1 in #554 (`lib/letters.ts`, `app/[handle]/letters`, `tests/letters.test.ts`). Each other item will be its own tested pull request.
+Built from this list: item 1 in #554 (`lib/letters.ts`, `app/[handle]/letters`, `tests/letters.test.ts`); item 3 in #555 (`lib/funnel-starters.ts`). Each other item will be its own tested pull request.
