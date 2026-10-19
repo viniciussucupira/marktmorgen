@@ -32,7 +32,7 @@ const API = /^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.VERCEL_API_BASE ?? ""
 // variable), because an id survives a rename and a name does not: the project
 // was renamed from nimbus-labs to marktmorgen on 12 Oct 2026, and every call
 // by the old name has answered "not found" since.
-function project(): string {
+function vercelProject(): string {
   return process.env.VERCEL_DOMAINS_PROJECT?.trim() || process.env.VERCEL_PROJECT_ID?.trim() || "marktmorgen";
 }
 const TEAM = process.env.VERCEL_DOMAINS_TEAM?.trim() || "viniciussucupira";
@@ -192,10 +192,10 @@ function hostPart(name: string, apex: string): string {
 
 /** What Vercel sees for a domain, and what is still missing. */
 export async function domainStatus(name: string, store: Pick<Store, "sid">): Promise<DomainStatus | null> {
-  const project = await vercel("GET", `/v9/projects/${project()}/domains/${name}`);
+  const project = await vercel("GET", `/v9/projects/${vercelProject()}/domains/${name}`);
   if (project.status !== 200) return null;
   const proved = await domainProved(name);
-  const config = await vercel("GET", `/v6/domains/${name}/config?projectIdOrName=${project()}`);
+  const config = await vercel("GET", `/v6/domains/${name}/config?projectIdOrName=${vercelProject()}`);
   const apex = typeof project.body.apexName === "string" ? project.body.apexName : name;
   const verified = project.body.verified === true;
   const misconfigured = config.status !== 200 || config.body.misconfigured !== false;
@@ -256,11 +256,11 @@ export async function connectDomain(store: Store, raw: string): Promise<ConnectR
   const [claimed] = await redisPipeline([["SET", domainKey(name), `${UNPROVED}${store.handle}`, "NX", "EX", UNPROVED_SECONDS]]);
   if (claimed === null) return { ok: false, reason: "taken" };
 
-  const added = await vercel("POST", `/v10/projects/${project()}/domains`, { name });
+  const added = await vercel("POST", `/v10/projects/${vercelProject()}/domains`, { name });
   // Already on this project (a second press, or added by hand) is fine;
   // on somebody else's is not.
   const alreadyHere =
-    added.status === 409 && (await vercel("GET", `/v9/projects/${project()}/domains/${name}`)).status === 200;
+    added.status === 409 && (await vercel("GET", `/v9/projects/${vercelProject()}/domains/${name}`)).status === 200;
   if (added.status !== 200 && !alreadyHere) {
     await redisPipeline([["DEL", domainKey(name)]]);
     cache.delete(name);
@@ -274,7 +274,7 @@ export async function connectDomain(store: Store, raw: string): Promise<ConnectR
 
 /** Asks Vercel to check the proving record again, for a domain in use elsewhere. */
 export async function verifyDomain(name: string): Promise<void> {
-  await vercel("POST", `/v9/projects/${project()}/domains/${name}/verify`);
+  await vercel("POST", `/v9/projects/${vercelProject()}/domains/${name}/verify`);
 }
 
 /** Takes a domain off a store. The marktmorgen.com address carries on as before. */
@@ -284,7 +284,7 @@ export async function disconnectDomain(name: string, handles: string[]): Promise
   const [raw] = await redisPipeline([["GET", domainKey(name)]]);
   const holder = typeof raw === "string" ? raw.replace(/^\?/, "") : "";
   if (holder && !handles.includes(holder)) return true;
-  const removed = await vercel("DELETE", `/v9/projects/${project()}/domains/${name}`);
+  const removed = await vercel("DELETE", `/v9/projects/${vercelProject()}/domains/${name}`);
   if (removed.status !== 200 && removed.status !== 404) return false;
   await redisPipeline([["DEL", domainKey(name)]]);
   cache.delete(name);
