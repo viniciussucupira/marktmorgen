@@ -32,6 +32,7 @@ import {
   goalWords,
   forbiddenIn,
 } from "@/lib/path-rules";
+import {pathGrowthMissions} from "@/lib/path-growth-rules";
 import { done, is, part } from "./check";
 
 const root = process.cwd();
@@ -126,5 +127,10 @@ part("The documented level list matches the active display names");
  is("retired display name absent from Path documentation",documented.includes(retired),false);
  is("retired display name absent from every current level",LEVELS.some(level=>LEVEL_NAMES[level].includes(retired)),false);
  is("High Sun remains the fourth level",LEVEL_NAMES[LEVELS[3]],"High Sun");
+}
+part("All six post-sale missions in every evidence state");
+for(const value of [null,false,true] as const){
+ const missions=pathGrowthMissions({realSale:true,fileProducts:value===null?null:value?2:0,listEmailSent:value,repeatBuyer:value,postPurchaseOffer:value,buyerReview:value,keptOrders:value===null?null:value?10:0});
+ for(const mission of missions)for(const text of [mission.title,mission.why,mission.closesOn,...mission.steps])is("post-sale copy "+mission.id,forbiddenIn(text),null);
 }
 done();

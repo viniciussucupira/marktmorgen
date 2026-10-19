@@ -574,3 +574,34 @@ export async function forgetReviewsPerson(statsId: string | null, productIds: st
   }
   return { records, photos };
 }
+
+/** Narrow Path witness: current buyer-posted text, scoped to listed products.
+ * No review content or buyer reference is returned to the Path page. */
+export async function pathBuyerReview(statsId:string|null,listed:ReadonlySet<string>,limit:number):Promise<boolean|null>{
+ if(!statsId||!STATS_ID_PATTERN.test(statsId)||!isRedisConfigured())return null;
+ if(!Number.isSafeInteger(limit)||limit<1||limit>10)throw new Error("Invalid review witness bound");
+ const index=await redisPipeline([["ZREVRANGEBYSCORE",allKey(statsId),"+inf","-inf","LIMIT",0,limit],["ZCARD",allKey(statsId)]]);
+ if(!Array.isArray(index)||index.length!==2||!Array.isArray(index[0])||!Number.isSafeInteger(index[1])||Number(index[1])<0)return null;
+ const members=index[0] as unknown[];
+ if(members.length>limit||new Set(members).size!==members.length)return null;
+ const refs: {product:string;id:string}[]=[];
+ for(const member of members){
+  if(typeof member!=="string")return null;
+  const [product,id,...extra]=member.split("|");
+  if(extra.length||!PRODUCT_ID_PATTERN.test(product)||!REVIEW_ID_PATTERN.test(id))return null;
+  refs.push({product,id});
+ }
+ if(!refs.length)return index[1]===0?false:null;
+ const raw=await redisPipeline(refs.map(ref=>["HGET",productKey(statsId,ref.product),ref.id]));
+ if(!Array.isArray(raw)||raw.length!==refs.length)return null;
+ let unknown=false;
+ for(let i=0;i<refs.length;i++){
+  const review=parseReview(raw[i]);
+  if(!review||review.id!==refs[i].id||review.productId!==refs[i].product){unknown=true;continue;}
+  if(!listed.has(review.productId)||review.hidden||review.refunded||!review.text.trim())continue;
+  if(/^cs_live_[A-Za-z0-9]{10,200}$/.test(review.reference))return true;
+  // An intent id does not prove live mode; no test or ambiguous order is promoted.
+  unknown=true;
+ }
+ return unknown||Number(index[1])>refs.length?null:false;
+}

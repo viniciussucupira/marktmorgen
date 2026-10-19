@@ -91,7 +91,9 @@ function parseMoney(raw: unknown): PathMoney | null {
   if (!Number.isFinite(at) || at <= 0 || !Number.isSafeInteger(real) || real < 0) return null;
   if (cents !== null && (!Number.isSafeInteger(cents) || cents < 0)) return null;
   if (typeof m.currency !== "string" || !isCurrency(m.currency)) return null;
-  return { at, test: m.test === true, real, cents, currency: m.currency };
+  const g=m.growth&&typeof m.growth==="object"?m.growth as Record<string,unknown>:null;
+  const validGrowth=g&&(g.repeatBuyer===null||typeof g.repeatBuyer==="boolean")&&(g.keptOrders===null||Number.isSafeInteger(g.keptOrders)&&Number(g.keptOrders)>=0);
+  return { at, test: m.test === true, real, cents, currency: m.currency,...(validGrowth?{growth:{repeatBuyer:g.repeatBuyer as boolean|null,keptOrders:g.keptOrders as number|null}}:{}) };
 }
 
 /** A record as kept, made safe: null for anything that is not one. Pure. */

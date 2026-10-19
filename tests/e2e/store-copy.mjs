@@ -25,6 +25,7 @@ import { fieldFocusPixels,mountFieldFocusFixture } from "./field-focus.mjs";
 import { checkGrowthAndContact } from "./growth-contact.mjs";
 import { checkPathReminder, checkPathAnswers } from "./path-reminder.mjs";
 import { checkPathBoardReplies } from "./path-board-replies.mjs";
+import {checkPostSalePath} from "./path-growth.mjs";
 import { checkPathCardText } from "./path-card-text.mjs";
 
 async function storePlaceholderContrast(field){
@@ -87,6 +88,8 @@ const env = {
   UPSTASH_REDIS_REST_TOKEN: "local",
   RESEND_API_KEY: "re_local_only_a_stand_in",
   RESEND_API_BASE: FAKE,
+  STRIPE_DEMO_SECRET_KEY: "sk_test_local_only_a_stand_in",
+  STRIPE_CONNECT_API_BASE: FAKE,
   NEXT_FONT_GOOGLE_MOCKED_RESPONSES: join(here, "google-fonts-mock.cjs"),
   E2E_FONT_ORIGIN: FAKE,
   NEXT_TELEMETRY_DISABLED: "1",
@@ -150,7 +153,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { session, second, abProduct, abStore, contactToken } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -708,6 +711,7 @@ try {
   const afterLeave=await owner.evaluate(async sid=>(await fetch("/api/store/path?store="+sid)).json(),pathSid);
   is("withdrawal preserves private Path answers",afterLeave.path.answers.subject,"Sourdough");
   is("withdrawal removes exported membership",afterLeave.path.board,null);
+  await checkPostSalePath({browser,LOCAL,services,session:growthSession,sid:growthSid,product:growthProduct,axeSource,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;

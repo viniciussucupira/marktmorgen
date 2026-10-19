@@ -498,6 +498,13 @@ export async function startServices(port) {
   return {
     emails: () => [...emails],
     checkouts: () => [...sessions.values()],
+    /** Local-only synthetic list evidence, added after unrelated checkout assertions. */
+    seedPathGrowth: (handle,product) => {
+      for(let n=1;n<=2;n++){
+        const id="cs_live_pathgrowth00000"+n;
+        sessions.set(id,{id,object:"checkout.session",status:"complete",payment_status:"paid",livemode:true,amount_total:1000,currency:"usd",created:Math.floor(Date.now()/1000)-n,payment_intent:"pi_pathgrowth00000"+n,metadata:{store:handle,product},customer_details:{email:"repeat-path@example.test"}});
+      }
+    },
     coupons: () => [...coupons],
     unknown: () => [...unknown],
     adEvents: () => [...adEvents],

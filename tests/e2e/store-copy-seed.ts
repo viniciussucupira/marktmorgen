@@ -1,10 +1,11 @@
+import {DEMO_CONNECTED_ACCOUNT} from "@/lib/demo-account";
 import { readFields, writeFields } from "@/lib/crm";
 import { findToken } from "@/lib/buyer-profile";
 import { KIND } from "@/lib/catalog";
 import {writePage} from "@/lib/sales-page-store";
 import {parsePage} from "@/lib/sales-page";
 import {redisPipeline} from "@/lib/redis";
-import {setProductPage,storeForEmail} from "@/lib/store";
+import {setProductPage,setProductFile,setStripeAccount,storeForEmail} from "@/lib/store";
 import { startPath } from "@/lib/path";
 import { mayNotify } from "@/lib/path-rules";
 /**
@@ -44,6 +45,25 @@ async function main(): Promise<void> {
   if(!reminderZone)throw new Error("No daytime test zone");
   const reminderStarted=await startPath(second.store,{goalCents:0,goalCurrency:"usd",skills:"",subject:"",minutes:15,audience:"none",timeZone:reminderZone},reminderNow-86400000);
   if(!reminderStarted.ok)throw new Error("No synthetic Path");
-  console.log(JSON.stringify({ session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+
+  // Separate synthetic owner: post-sale Path evidence never changes the copy fixtures.
+  const growthOwner="path-growth-owner@example.test";
+  const growthClaim=await claimHandle(growthOwner,"growthpath","Growth Path","Guides.");
+  if(!growthClaim.ok)throw Error("No growth store");
+  await setSubscription(growthOwner,{active:true,tier:"creator",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0});
+  await ensureStatsId(growthOwner);
+  const growthProducts:string[]=[];
+  for(const title of ["First guide","Second guide"]){
+    const added=await addProduct(growthOwner,title,"Synthetic file guide.","10",null);
+    if(!added.ok)throw Error("No growth product");
+    growthProducts.push(added.product.id);
+    const attached=await setProductFile(growthOwner,added.product.id,{pathname:"stores/path-growth/"+added.product.id+"/guide.pdf",name:"guide.pdf",bytes:100,contentType:"application/pdf",addedAt:new Date().toISOString()});
+    if(!attached.ok)throw Error("No growth file");
+  }
+  if(!(await setStripeAccount(growthOwner,DEMO_CONNECTED_ACCOUNT,true)).ok)throw Error("No growth synthetic account");
+  const growthStore=(await storeForEmail(growthOwner))!;
+  if(!(await startPath(growthStore,{goalCents:0,goalCurrency:"usd",skills:"Teaching",subject:"Guides",minutes:15,audience:"none",timeZone:"America/New_York"})).ok)throw Error("No growth Path");
+  const growthSession=await openSession(growthOwner);
+  console.log(JSON.stringify({ growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

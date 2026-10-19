@@ -1,3 +1,6 @@
+import {PathGrowthMissions} from "@/components/path-growth-missions";
+import {readPathGrowth} from "@/lib/path-growth-facts";
+import {pathGrowthMissions} from "@/lib/path-growth-rules";
 import { PathBoard } from "@/components/path-board";
 import { readPathBoardRows } from "@/lib/path-board";
 import { PathCheckoutNotice } from "@/components/path-checkout-notice";
@@ -17,7 +20,7 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { allowanceUsed } from "@/lib/store-allowance";
 import { allowanceFor } from "@/lib/store-allowance-rules";
 import { pathPlanLine } from "@/lib/path-plan";
-import { readPath, visitPath } from "@/lib/path";
+import { chargeStudio, readPath, visitPath } from "@/lib/path";
 import { LEVEL_NAMES, LEVELS, PATH_SLOGAN, PATH_TITLE, goalWords, localDay, pathProgress, streakOf, type Place } from "@/lib/path-rules";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
@@ -39,8 +42,11 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
  const record=visited?.record || saved;
  const progress=visited && record?pathProgress(visited.facts,record.answers,record.startedAt,now):null;
  const streak=record?streakOf(record.checkins,localDay(record.answers.timeZone,now)):null;
- const planLine=pathPlanLine(await allowanceUsed(store,"studio",now),allowanceFor(store,"studio",now/1000));
  const boardRows=record?.board?await readPathBoardRows(record.board.token).catch(()=>null):[];
+ const growth=record&&progress?.complete?await readPathGrowth(store,record.money,chargeStudio(store)).catch(()=>null):null;
+ const growthMissions=growth?pathGrowthMissions(growth.facts):[];
+ const growthHref=(place:"products"|"email"|"people"|"reviews"|"numbers")=>place==="products"||place==="numbers"?studioPath(store)+"#"+place:studioPath(store,"",place);
+ const planLine=pathPlanLine(await allowanceUsed(store,"studio",now),allowanceFor(store,"studio",now/1000));
  const mission=progress?.today;
  const campaign=pathCampaign(mission);
  const hrefFor=(place:Place)=>place.store?"/@"+encodeURIComponent(store.handle):studioPath(store,"",place.page || "")+(place.hash || "");
@@ -66,6 +72,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
      {mission?<div className="mt-4 rounded-2xl border border-line bg-white p-6"><h3 className="text-xl font-semibold">{mission.title}</h3><p className="mt-3">{mission.why}</p><ol className="mt-4 list-decimal space-y-2 pl-6">{mission.steps.map(step=><li key={step}>{step}</li>)}</ol><p className="mt-4 text-sm text-ink-soft">Recorded when: {mission.closesOn}</p><a className="btn btn-primary mt-5" href={hrefFor(mission.place)}>{mission.place.label}</a></div>:<p className="mt-3">Keep listening to your customers and improving what you offer. Your reached level stays with you.</p>}
      {campaign?<aside className="mt-4 rounded-xl border border-line bg-white p-5" aria-label="Campaigns for this mission"><p>{campaign.why}</p><a className="btn mt-4" href={studioPath(store,"campaignGoal="+campaign.goal,"funnels")+"#campaign-starters"}>Explore campaigns for this mission</a><p className="mt-3 text-sm text-ink-soft">Browsing does not create anything or use your preview allowance. Choose a campaign, review its requirements and adapt it to your own offer.</p></aside>:null}
     </section>
+    <PathGrowthMissions missions={growthMissions} hrefFor={growthHref} read={Boolean(growth?.read)} moneyAt={record.money?.at??null}/>
     <PathMissions missions={[...progress.days,...progress.traffic]} hrefFor={hrefFor}/>
     <PathBoard key={record.board?.token || "not-joined"} joined={Boolean(record.board)} alias={record.board?"Creator "+record.board.token.slice(0,12):null} rows={boardRows} privacyHref={studioPath(store,"","path/privacy")}/>
     <PathReminderButton phoneUrl={studioPath(store,"","phone")}/>
