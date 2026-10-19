@@ -9,6 +9,8 @@ export type StudioTool = {
   icon: IconName;
   /** A word beside the title, such as the plan it belongs to. */
   tag?: string;
+  /** Counted tools may opt out of automatic route prefetch. */
+  prefetch?: false;
 };
 
 /**
@@ -31,6 +33,7 @@ export function StudioTools({ tools }: { tools: StudioTool[] }) {
           <li key={tool.href} className="min-w-0">
             <Link
               href={tool.href}
+              prefetch={tool.prefetch}
               className="group flex h-full min-h-[44px] flex-col gap-2 rounded-2xl bg-white p-4 ring-1 ring-line transition-shadow hover:ring-violet-brand/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-brand motion-reduce:transition-none"
             >
               <span className="flex items-center justify-between gap-2">

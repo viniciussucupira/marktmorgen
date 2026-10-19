@@ -1,3 +1,4 @@
+import { cachedOfferListings, savedOfferIssues } from "@/lib/funnel-offer-review";
 import type { Store } from "@/lib/store";
 import { MAX_PAGE_FUNNELS, MAX_FUNNEL_PAGES, type PageFunnel } from "@/lib/page-funnel";
 import { MAX_SITE_PAGES, pageOut, siteKey } from "@/lib/site-page-rules";
@@ -14,7 +15,7 @@ const MAX_QUIZ_FINDINGS_PER_PAGE = 8;
 const MAX_REVIEW_FORM_BYTES = 64 * 1024;
 
 /** Only saved page/form definitions: no answers, writes, email or provider calls. Two batches at most across all funnels. */
-export async function readFunnelFormReviews(store: Store, funnels: readonly PageFunnel[]): Promise<Map<string, FunnelLaunchIssue[]>> {
+export async function readFunnelFormReviews(store: Store, funnels: readonly PageFunnel[], options: { reviewOffers?: boolean } = {}): Promise<Map<string, FunnelLaunchIssue[]>> {
   const result = new Map(funnels.map(funnel => [funnel.id, [] as FunnelLaunchIssue[]]));
   const pages = new Map(store.sitePages.filter(page => pageOut(page)).map(page => [page.id, page]));
   const references = funnels.flatMap(funnel => funnel.steps.flatMap((step, stepIndex) => step.kind === "page" && pages.has(step.id) ? [{ funnel: funnel.id, page: pages.get(step.id)!, stepIndex }] : []));
@@ -79,6 +80,8 @@ export async function readFunnelFormReviews(store: Store, funnels: readonly Page
     && new Set(catalogItems.map(product => product.id)).size === catalogItems.length
     ? new Map(catalogItems.map(product => [product.id, product]))
     : null;
+  const cached = options.reviewOffers ? cachedOfferListings(store) : [];
+  const cachedById = new Map(cached.map(product => [product.id,product]));
   for (const ref of references) {
     const page = inspected.get(ref.page.id);
     const issues = result.get(ref.funnel)!;
@@ -106,6 +109,13 @@ export async function readFunnelFormReviews(store: Store, funnels: readonly Page
             quizIssues.push({ ...finding, code: "quiz_product", detail: "This result recommends a product no longer in this store. Choose another product under Forms." });
           } else if ((product.kind & KIND.hidden) !== 0) {
             quizIssues.push({ ...finding, code: "quiz_product", detail: "This result recommends a draft product. Publish the product or choose another recommendation under Forms." });
+          } else if (options.reviewOffers) {
+            const listing = cachedById.get(outcome.product);
+            if (!listing) quizIssues.push({ ...finding, code: "quiz_unknown", detail: "The recommended offer's delivery and payment configuration were not checked from the records already loaded. Review the product before sharing." });
+            else {
+              if (listing.hidden) quizIssues.push({ ...finding, code: "quiz_product", detail: "The recommended offer is now a draft. Review its publication or choose another recommendation." });
+              else for (const detail of savedOfferIssues(store,listing,cached)) quizIssues.push({ ...finding, code: "quiz_product", detail });
+            }
           }
         }
       }

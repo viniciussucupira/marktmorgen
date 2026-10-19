@@ -1,3 +1,5 @@
+import { writeFields } from "@/lib/crm";
+import { findToken } from "@/lib/buyer-profile";
 import { KIND } from "@/lib/catalog";
 import {writePage} from "@/lib/sales-page-store";
 import {parsePage} from "@/lib/sales-page";
@@ -28,6 +30,10 @@ async function main(): Promise<void> {
   await writePage(abStore.statsId,abProduct,abPage,abStore);
   if(!(await setProductPage(OWNER,abProduct,true)).ok)throw Error("Synthetic page was not indexed");
   await redisPipeline([["HSET",`nl:ab:${abStore.statsId}:${abProduct}:${abPage.test.id}`,"va","NaN"]]);
+  if(!abStore.statsId)throw Error("No contact fixture store");
+  await writeFields(abStore.statsId,[{id:"company001",name:"Company",type:"text",options:[]},{id:"segment001",name:"Segment",type:"choice",options:["New","Returning"]}]);
+  const contactToken=await findToken(abStore,"contact-fixture@example.test");
+  if(!contactToken)throw Error("No contact fixture token");
   const second = await createStore(OWNER, "secondshop", "Second Coaching", "");
   if (!second.ok) throw new Error("no second");
   await ensureStatsId(storeRef(second.store));
@@ -37,6 +43,6 @@ async function main(): Promise<void> {
   if(!reminderZone)throw new Error("No daytime test zone");
   const reminderStarted=await startPath(second.store,{goalCents:0,goalCurrency:"usd",skills:"",subject:"",minutes:15,audience:"none",timeZone:reminderZone},reminderNow-86400000);
   if(!reminderStarted.ok)throw new Error("No synthetic Path");
-  console.log(JSON.stringify({ session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid }));
+  console.log(JSON.stringify({ session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

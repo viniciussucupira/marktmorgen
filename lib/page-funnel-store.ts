@@ -174,6 +174,8 @@ export type StepState = {
   open: boolean;
   /** Said to the creator when it is not open. */
   why: string;
+  /** Studio-only opt-in; never serialized by the public navigation callers. */
+  reviewProduct?: Listing;
 };
 
 /**
@@ -181,7 +183,7 @@ export type StepState = {
  * catalog for the products it names: what the studio shows, and what a page
  * needs to know where "next" is.
  */
-export async function stepStates(store: Store, funnel: Pick<PageFunnel, "steps">, options: { strictProducts?: boolean } = {}): Promise<StepState[]> {
+export async function stepStates(store: Store, funnel: Pick<PageFunnel, "steps">, options: { strictProducts?: boolean; includeReviewProduct?: boolean } = {}): Promise<StepState[]> {
   const productIds = funnel.steps.filter((s) => s.kind === "product").map((s) => s.id);
   const listings: Listing[] = productIds.length
     ? options.strictProducts ? await readListings(store, productIds) : await readListings(store, productIds).catch(() => [])
@@ -208,6 +210,7 @@ export async function stepStates(store: Store, funnel: Pick<PageFunnel, "steps">
       free: product ? product.priceCents === 0 : false,
       open: problem === null,
       why: problem ? STEP_WHY[problem] : "",
+      ...(options.includeReviewProduct && product ? { reviewProduct: product } : {}),
     };
   });
 }
