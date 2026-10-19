@@ -204,11 +204,13 @@ try {
   const copyChecklist=launchChecklist.getByRole("button",{name:"Copy checklist",exact:true});
   await copyChecklist.focus();
   await owner.keyboard.press("Enter");
-  await owner.getByText("Launch checklist copied. Review it before sharing.",{exact:true}).waitFor();
+  await owner.locator(".nb-toast-text").filter({hasText:"Launch checklist copied. Review it before sharing."}).waitFor();
+  is("clipboard success is announced once",await owner.getByRole("status").filter({hasText:"Launch checklist copied. Review it before sharing."}).count(),1);
   is("clipboard gets exactly the reviewed checklist",await owner.evaluate(()=>window.__copiedChecklist),checklistText);
   await owner.evaluate(()=>{window.__refuseChecklistClipboard=true;});
   await copyChecklist.click();
-  await owner.getByText("Select the checklist text and copy it.",{exact:true}).waitFor();
+  await owner.locator(".nb-toast-text").filter({hasText:"Select the checklist text and copy it."}).waitFor();
+  is("refused clipboard selects text for manual copy",await checklistField.evaluate(field=>document.activeElement===field&&field.selectionStart===0&&field.selectionEnd===field.value.length),true);
   is("clipboard refusal leaves readable selectable text",await checklistField.inputValue(),checklistText);
   is("copying the checklist never mutates a funnel",checklistMutations,0);
   owner.off("request",watchChecklist);
