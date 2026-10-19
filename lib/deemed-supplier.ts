@@ -68,6 +68,11 @@ export type DeemedSupplierRecord = {
 export const DEEMED_SUPPLIER_RECORDS: readonly DeemedSupplierRecord[] = [];
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
+function calendarDay(value: unknown): boolean {
+  if (typeof value !== "string" || !DAY.test(value)) return false;
+  const date = new Date(value + "T00:00:00Z");
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 const said = (value: unknown) => typeof value === "string" && value.trim().length > 0;
 
 /** Every reason sales must stay closed under the deemed-supplier rules: empty only when each jurisdiction has a complete record. */
@@ -83,7 +88,7 @@ export function deemedSupplierProblems(records: readonly DeemedSupplierRecord[] 
     if (record.treatment !== "collect" && record.treatment !== "refuse-consumers") out.push(`${jurisdiction}: treatment`);
     if (!said(record.implementedIn)) out.push(`${jurisdiction}: implementedIn`);
     if (!said(record.evidence)) out.push(`${jurisdiction}: evidence`);
-    if (typeof record.recordedOn !== "string" || !DAY.test(record.recordedOn) || Number.isNaN(Date.parse(`${record.recordedOn}T00:00:00Z`))) out.push(`${jurisdiction}: recordedOn`);
+    if (!calendarDay(record.recordedOn)) out.push(`${jurisdiction}: recordedOn`);
     if (record.treatment === "collect" && !said(record.registration)) out.push(`${jurisdiction}: a tax collected needs its registration`);
   }
   return out;

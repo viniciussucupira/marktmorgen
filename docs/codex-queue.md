@@ -69,7 +69,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 7. **[C-UE] Construir tratamento de IVA europeu do art.9a em docs/eu-vat-article-9a.md: OSS não-UE desde a primeira venda, duas provas de localização coerentes (24b/24f), retenção art.63c por10anos; imposto no comprador ou repasse, nunca na comissão. Dividir em PRs por caminho de checkout e prova.**
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **em andamento (auditoria dos caminhos/registro; primeiro endurecimento de data em branch codex/tax-record-calendar)**.
    - Custo e margem: Custo de cálculo, registros10anos, evidências e operação ainda não aprovado: calcular fornecedor pago mais caro, mensal/anual por plano, antes/depois; registrar no plan-cost-registry e spend-floor, reservar tetos antes do trabalho. Falta de conta é reprovação, não zero.
 
 8. **[C-UK] Depois da UE, implementar tratamento do Reino Unido pela leitura com mais imposto, em todos os caminhos aplicáveis.**
@@ -490,3 +490,10 @@ B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de d
    - Evidência: [PR #626](https://github.com/viniciussucupira/marktmorgen/pull/626), commit `c261e2380e6f6579748566be41a0bbee95cb4001`; incorporado19/10/2026 20:29:32 de Fortaleza, produção20:30:23.
    - Validação: Product39340663256/Redis/security39340663211 completos; editor real abre seletor e mostra check marks sem POST;7rotas do domínio com marcador exato; sem error/fatal23:26:43–23:31:43UTC. Escopo parcial B2; nomes técnicos e conteúdo salvo preservados.
    - Custo e margem: Sem chamadas, registros ou mensagens adicionais; M0 antes=depois, leitura mais onerosa ainda reprovada.
+
+
+82. **[C-UE-RECORD] Recusar datas fiscais impossíveis no registro de tratamentos**
+   - Pedido: P2 C-UE; endurecimento encontrado na auditoria de19/10/2026.
+   - Estado: **em andamento; testes sintéticos de calendário e gate completo antes de incorporar**.
+   - Evidência: lib/deemed-supplier.ts e tests/tax-gate.test.ts; não cria registro real nem implementa coleta/retenção/OSS.
+   - Custo e margem: Apenas validação local constante do registro existente, sem chamada/registro/mensagem adicional. M0 antes=depois para todos os planos/intervalos; leitura mais onerosa ainda reprovada.

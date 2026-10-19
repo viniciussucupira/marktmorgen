@@ -113,3 +113,12 @@ When it is built, each jurisdiction's record goes into `DEEMED_SUPPLIER_RECORDS`
 
 - From 1 Jul 2021 an electronic interface that facilitates a distance sale of goods imported in consignments of up to EUR 150, or a supply of goods within the EU by a seller not established in the EU, is deemed to have received and supplied the goods (Directive art. 14a; "facilitates", Regulation art. 5b). Neither was re-read today.
 - **OPEN**, reading used: Marktmorgen facilitates (it sets the terms and authorises the charge). The next build refuses those sales rather than register for the Union OSS and appoint an import OSS intermediary.
+
+
+## Implementation checkpoint19October2026: record admission
+
+Current official [EU consolidated text](https://eur-lex.europa.eu/eli/reg_impl/2011/282/2025-04-14/eng) was read directly for arts.9a,24b,24f and63c on19October2026, resolving the prior tool-access gap for those provisions. Article9a distinguishes participating platforms from payment processing alone. The general location rule uses two consistent evidence items; the limited single-item simplification refers to establishments in a Member State. Article24f includes billing, IP/geolocation and banking evidence; article63c specifies transaction, tax, payment and location records. This recheck does not resolve registrations, all other provisions, country rates, transaction classification or the complete launch gate.
+
+Before admitting any future implemented treatment, lib/deemed-supplier.ts now requires a real calendar day, not merely a parseable timestamp. JavaScript can normalize February31 into March; accepting that as the recorded date weakens the evidence registry. Synthetic gate tests reject impossible month ends and non-leap February29, retain valid leap dates and show that no actual record or sales permission is created. This is registry hardening only, not implemented VAT collection, location evidence, OSS filing or ten-year retention. The existing empty registry and closed commercial gates stay intact.
+
+No additional provider/data/storage/message operations, record retention or plan entitlement are added. Only constant-time local validation of the existing small registry changes; M0 before/after costs and margins remain unchanged for all plans/months/years. The most-tax model still fails60%. Before implementing collection or retention, calculate their paid worst-case cost and enforced reservations; unknown cost is not zero. Queue C-UE stays in progress.
