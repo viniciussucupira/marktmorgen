@@ -51,3 +51,10 @@ And one more question for consultation 1, section V:
 ## Answers received
 
 None yet. Each answer is recorded here as: consultation number, authority, date of the answer, its number or protocol, the link or document, and the reading it closes; and in `CONSULTATION_ANSWERS` (`lib/tax-gate.ts`) with the same fields.
+
+
+## Evidence-date validation19October2026
+
+The answer registry now rejects impossible calendar dates, including February31 and non-leap February29, instead of accepting JavaScript's normalization into a later month. Valid leap days remain valid. This is structural evidence validation, not an authority/source verification or an answer to a consultation. No consultation was filed, no message sent, no actual answer added and no question closed. The most-tax reading and closed sales gate remain unchanged.
+
+Synthetic tests exercise invalid/valid calendar boundaries against the actual consultationProblems function and show that the actual answer list stays empty. No added provider, database, storage or message operation, price, allowance or entitlement; only bounded local date validation. M0 before/after is unchanged for every plan and billing interval, and the binding most-tax model still fails60%.

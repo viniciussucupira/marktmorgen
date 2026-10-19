@@ -81,6 +81,11 @@ export type ConsultationAnswer = {
 export const CONSULTATION_ANSWERS: readonly ConsultationAnswer[] = [];
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
+function calendarDay(value: unknown): boolean {
+  if (typeof value !== "string" || !DAY.test(value)) return false;
+  const date = new Date(value + "T00:00:00Z");
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 
 /** What is wrong with the recorded answers: empty when every one is complete. */
 export function consultationProblems(answers: readonly ConsultationAnswer[] = CONSULTATION_ANSWERS): string[] {
@@ -89,7 +94,7 @@ export function consultationProblems(answers: readonly ConsultationAnswer[] = CO
     const at = `consultation answer ${i + 1}`;
     if (!Number.isInteger(answer?.question) || answer.question < 1 || answer.question > TAX_QUESTIONS) out.push(`${at}: question`);
     if (!(CONSULTATION_AUTHORITIES as readonly string[]).includes(answer?.authority)) out.push(`${at}: authority`);
-    if (typeof answer?.date !== "string" || !DAY.test(answer.date) || Number.isNaN(Date.parse(`${answer.date}T00:00:00Z`))) out.push(`${at}: date`);
+    if (!calendarDay(answer?.date)) out.push(`${at}: date`);
     for (const key of ["source", "reading"] as const) if (typeof answer?.[key] !== "string" || !answer[key].trim()) out.push(`${at}: ${key}`);
   });
   return out;

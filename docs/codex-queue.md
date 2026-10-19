@@ -497,3 +497,10 @@ B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de d
    - Estado: **em andamento; testes sintéticos de calendário e gate completo antes de incorporar**.
    - Evidência: lib/deemed-supplier.ts e tests/tax-gate.test.ts; não cria registro real nem implementa coleta/retenção/OSS.
    - Custo e margem: Apenas validação local constante do registro existente, sem chamada/registro/mensagem adicional. M0 antes=depois para todos os planos/intervalos; leitura mais onerosa ainda reprovada.
+
+
+83. **[C-ANSWER-RECORD] Recusar datas impossíveis também nas respostas fiscais registradas**
+   - Pedido: P2 C; mesma falha de normalização encontrada na auditoria de19/10/2026.
+   - Estado: **em andamento; branch codex/tax-answer-calendar; depende de629**.
+   - Evidência: lib/tax-gate.ts e tests/tax-gate.test.ts; lista real de respostas continua vazia, sem protocolo, consulta enviada ou hipótese menos onerosa criada.
+   - Custo e margem: Validação local limitada, sem chamadas/registros/mensagens adicionais; todos os custos/margens M0 antes=depois, leitura mais onerosa ainda reprovada.
