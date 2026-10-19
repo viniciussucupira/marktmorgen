@@ -538,6 +538,7 @@ export const COST_LINES: CostLine[] = [
       { file: "lib/path-atomic.ts", names: ["WRITE_PATH", "FORGET_PATH", "PATH_DATA_CHANGE"] },
       { file: "components/path-missions.tsx", names: ["PathMissions"] },
       { file: "lib/path-campaign.ts", names: ["pathCampaign"] },
+      { file: "lib/path-checkout.ts", names: ["pathCheckoutNotice"] },
       { file: "components/path-studio-reminder.tsx", names: ["readStudioPathInvitation", "PathStudioReminder"] },
       { file: "lib/path-studio-reminder.ts", names: ["readPath", "readStudioPathInvitation"] },
       { file: "lib/path-reminder-rules.ts", names: ["PATH_REMINDER_UNITS"] },

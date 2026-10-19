@@ -146,10 +146,10 @@ part("The reminder");
 {
   const progress = pathProgress(facts({ titlePublished: true }), answers, START, START + DAY);
   const reminder = reminderOf(progress, { days: 3, restLeft: 2, today: false });
-  is("names the day and the mission, no amount", reminder, { title: "Day 2 of your path", body: "Sell your first digital product. 3 days in a row so far." });
+  is("names the day and the mission, no amount", reminder, { title: "Day 2 of your path", body: "Prepare your first digital product. 3 days in a row so far." });
   is("none once the path is complete", reminderOf(pathProgress(facts({ realSales: 1, titlePublished: true }), answers, START, START + DAY), { days: 0, restLeft: 2, today: false }), null);
   is("forbidden words are caught", forbiddenIn("Learn passive income secrets"), "passive income");
-  is("and an ordinary line passes", forbiddenIn("Sell your first digital product"), null);
+  is("and an ordinary line passes", forbiddenIn("Prepare your first digital product"), null);
 }
 
 done();

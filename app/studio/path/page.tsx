@@ -1,3 +1,8 @@
+import { PathCheckoutNotice } from "@/components/path-checkout-notice";
+import { pathCheckoutNotice } from "@/lib/path-checkout";
+import { PLANS_ON_SALE } from "@/lib/opening";
+import { canSell } from "@/lib/store-checkout";
+import { sellsInTestMode } from "@/lib/stripe-connect";
 import { pathCampaign } from "@/lib/path-campaign";
 import { PathMissions } from "@/components/path-missions";
 import { PathReminderButton } from "@/components/path-reminder-button";
@@ -23,6 +28,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
  const access=found.view;const store=access.store;
  if(access.role!=="owner")redirect(studioPath(store,"team=forbidden"));
  const now=new Date().getTime();
+ const checkout=pathCheckoutNotice({plansOpen:PLANS_ON_SALE,suspended:Boolean(store.suspended),checkoutReady:canSell(store),testMode:sellsInTestMode(store)});
  const reading=await readPath(store).then(record=>({record,failed:false})).catch(()=>({record:null,failed:true}));
  const saved=reading.record;
  const result=saved?await visitPath(store,saved,now).then(value=>({value,failed:false})).catch(()=>({value:null,failed:true})):null;
@@ -39,6 +45,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
   <StudioHeader current={store} role={access.role} stores={access.stores} owned={access.owned} action={{href:studioPath(store),label:"Back to the studio",short:"Studio"}}/>
   <StudioStorePin sid={store.sid}><main id="content" className="container-page break-words pb-20 pt-10">
    <p className="eyebrow">Marktmorgen Path</p><Link className="mt-3 inline-block underline" href="/platform/path">How Path works</Link><h1 className="t-h2 mt-3">{PATH_TITLE}</h1><p className="mt-3 text-ink-soft">{PATH_SLOGAN}</p>
+   <PathCheckoutNotice notice={checkout} reviewHref={checkout.state==="preview"?"/mission":checkout.state==="live"?null:studioPath(store)+"#stripe"}/>
    {planLine?<aside className="notice mt-6" aria-label="Your studio usage"><p>{planLine}</p><Link className="mt-2 inline-block underline" href="/pricing">Review plans</Link></aside>:null}
    {failed?<p role="alert" className="notice notice-error mt-6">Your Path could not be read just now. Please try again in a moment.</p>:null}
    {progress && record?<>
