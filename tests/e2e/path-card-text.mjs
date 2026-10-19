@@ -51,6 +51,15 @@ export async function checkPathCardText({owner,axeSource}){
    assert.equal(await field.evaluate(node=>document.activeElement===node&&node.selectionStart===0&&node.selectionEnd===node.value.length),true);
    assert.equal(await field.inputValue(),privateText);
    assert.equal(await copy.isEnabled(),true);
+   await page.evaluate(()=>{
+    window.__cardOriginalObjectURL=URL.createObjectURL;
+    URL.createObjectURL=()=>{throw Error("Synthetic blocked download");};
+   });
+   await region.getByRole("button",{name:"Download card",exact:true}).click();
+   await region.getByRole("status").filter({hasText:"The card download could not be requested."}).waitFor();
+   assert.equal(await field.inputValue(),privateText);
+   assert.equal(await field.evaluate(node=>document.activeElement===node&&node.selectionStart===0&&node.selectionEnd===node.value.length),true);
+   await page.evaluate(()=>{URL.createObjectURL=window.__cardOriginalObjectURL;});
    await page.addScriptTag({content:axeSource});
    const violations=await region.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(rule=>rule.id));
    assert.deepEqual(violations,[]);

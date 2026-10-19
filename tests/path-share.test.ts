@@ -18,4 +18,9 @@ is("plain text opt-in contains verified money",pathShareText(input,true)?.includ
 is("plain text opt-in contains reading",pathShareText(input,true)?.includes("Reading: 2026-10-18T00:00:00.000Z"),true);
 is("plain text unknown money omitted",pathShareText({...input,moneyCents:null},true)?.includes("Sales kept"),false);
 is("invalid share has no text",pathShareText({...input,level:99}),null);
+is("SVG references its text description",pathShareSvg(input)?.includes('aria-describedby="description"'),true);
+is("SVG description contains private text",pathShareSvg(input)?.includes('<desc id="description">Marktmorgen Path'),true);
+is("SVG private description omits money",pathShareSvg(input)?.match(/<desc[^>]*>([\s\S]*?)<\/desc>/)?.[1].includes("Sales kept"),false);
+is("SVG opt-in description includes money",pathShareSvg(input,true)?.match(/<desc[^>]*>([\s\S]*?)<\/desc>/)?.[1].includes("Sales kept after refunds: $1,234"),true);
+is("SVG opt-in description includes reading",pathShareSvg(input,true)?.match(/<desc[^>]*>([\s\S]*?)<\/desc>/)?.[1].includes("Reading: 2026-10-18"),true);
 done();

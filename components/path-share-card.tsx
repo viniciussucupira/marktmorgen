@@ -22,11 +22,18 @@ export function PathShareCard({input}:{input:PathShareInput}){
   }finally{locked.current=false;setCopying(false);}
  }
  function download(){
-  const svg=pathShareSvg(input,includeMoney);if(!svg)return;
-  const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}));
-  const link=document.createElement("a");link.href=url;link.download="marktmorgen-path.svg";link.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-  setMessage("Card download requested. Check your browser’s downloads.");
+  let url:string|undefined;
+  try{
+   const svg=pathShareSvg(input,includeMoney);if(!svg)return;
+   url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}));
+   const link=document.createElement("a");link.href=url;link.download="marktmorgen-path.svg";link.click();
+   setMessage("Card download requested. Check your browser’s downloads.");
+  }catch{
+   textField.current?.focus();textField.current?.select();
+   setMessage("The card download could not be requested. You can copy the card text below instead.");
+  }finally{
+   if(url){const downloadUrl=url;setTimeout(()=>URL.revokeObjectURL(downloadUrl),1000);}
+  }
  }
  return <section className="mt-8" aria-labelledby="path-share-title"><h2 id="path-share-title" className="t-h3">Your card to share</h2>
   <p className="mt-3 text-ink-soft">Choose what appears on your card, then download it to share yourself.</p>
