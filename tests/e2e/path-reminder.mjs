@@ -89,7 +89,7 @@ export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
     await route.fulfill({status,contentType:"application/json",body:JSON.stringify(body)});
    });
    await page.goto(LOCAL+"/studio/path?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
-   const form=page.getByRole("form",{name:"Your Path answers",exact:true});
+   const form=page.getByRole("form",{name:"Your Path answers",exact:true,includeHidden:true});
    async function reveal(){
     await form.waitFor({state:"attached"});
     const details=page.locator("details").filter({has:form});
