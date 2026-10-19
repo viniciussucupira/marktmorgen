@@ -1,0 +1,16 @@
+import {pathShare,pathShareSvg,type PathShareInput} from "@/lib/path-share";
+import {done,is,part} from "./check";
+const input:PathShareInput={level:3,days:14,moneyCents:123400,currency:"usd",moneyAt:Date.UTC(2026,9,18)};
+part("Sharing exposes only what the owner chooses");
+is("kept display name",pathShare(input)?.level,"High Sun");
+is("days on the Path",pathShare(input)?.days,"14 days on the Path");
+is("money private by default",pathShare(input)?.money,null);
+is("amount absent from default download",pathShareSvg(input)?.includes("1,234"),false);
+is("explicit yes shows verified reading",pathShare(input,true)?.money,"$1,234");
+is("reading time is included",pathShare(input,true)?.reading,"Reading: 2026-10-18T00:00:00.000Z");
+is("unknown money stays unknown",pathShare({...input,moneyCents:null},true)?.money,null);
+is("invalid level has no card",pathShare({...input,level:99}),null);
+is("invalid day count has no card",pathShare({...input,days:NaN}),null);
+is("invalid date cannot break the download",pathShare({...input,moneyAt:1e20},true)?.money,null);
+is("a card has accessible text",pathShareSvg(input)?.includes("<title"),true);
+done();

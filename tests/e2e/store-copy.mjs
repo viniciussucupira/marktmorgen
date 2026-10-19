@@ -170,6 +170,16 @@ try {
   is("Path never asks to tick completion", await owner.locator('main input[type="checkbox"]').count(), 0);
   await owner.reload({waitUntil:"networkidle"});
   is("Path persists the answers", await owner.locator('input[name="subject"]').inputValue(), "Sourdough");
+  const cardDownload=owner.waitForEvent("download");
+  await owner.getByRole("button",{name:"Download card",exact:true}).click();
+  const card=await cardDownload;
+  is("the owner can download their card",card.suggestedFilename(),"marktmorgen-path.svg");
+  const cardStream=await card.createReadStream();
+  if(!cardStream)throw new Error("The card download could not be read");
+  let cardText="";
+  for await(const chunk of cardStream)cardText+=chunk.toString();
+  is("the default card keeps sales private",cardText.includes("Sales kept after refunds"),false);
+  is("the card contains the reached level",cardText.includes("First Light"),true);
   for (const width of [390, 1280]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
     await ctx.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
