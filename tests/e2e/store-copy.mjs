@@ -605,6 +605,8 @@ try {
       }
       if(width===390){
         const legacy=await signin.addStyleTag({content:"#success-contrast-fixture .tag-live,#success-contrast-fixture .notice-success{color:var(--mint-deep)!important}"});
+        // Wait for the browser's style/transition frame before sampling.
+        await signin.waitForFunction(()=>[...document.querySelectorAll("#success-contrast-fixture .tag-live,#success-contrast-fixture .notice-success")].every(node=>getComputedStyle(node).color==="rgb(11, 106, 77)"));
         // Measure the same actual computed CSS guard in both directions.
         // A scoped axe result alone must not make the negative control pass.
         for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
@@ -614,6 +616,7 @@ try {
           console.log("  former success contrast "+selector+": "+reading.ratio.toFixed(3));
         }
         await legacy.evaluate(node=>node.remove());
+        await signin.waitForFunction(()=>[...document.querySelectorAll("#success-contrast-fixture .tag-live,#success-contrast-fixture .notice-success")].every(node=>getComputedStyle(node).color==="rgb(7, 85, 62)"));
         for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
           is("restored success copy exceeds7:1 "+selector,(await successReading(selector)).ratio>=7,true);
           await checkSignInErrorContrast(signin,selector,"Restored success copy "+selector);
