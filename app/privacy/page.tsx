@@ -1,4 +1,5 @@
-import {RETURN_PRIVACY_LINE} from "@/lib/path-return-rules";
+import {PATH_WORDING_PRIVACY} from "@/lib/path-wording-rules";
+import {RETURN_PRIVACY_LINE} {PATH_WORDING_PRIVACY} from "@/lib/path-return-rules";
 import { PAST_CALL_DAYS } from "@/lib/store-data-rules";
 import { CLOSING_DAYS, ERASE_WITHIN_DAYS } from "@/lib/plan-closing-rules";
 import type { Metadata } from "next";

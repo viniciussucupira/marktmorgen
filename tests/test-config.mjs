@@ -10,6 +10,13 @@ export function testAliases(file,root,here){
   for(const name of ['store','catalog','course','delivery','storage-quota','stream','vault','vault-storage','request-guard','store-request','studio-route','blob','metered-limits'])aliases['@/lib/'+name]=join(here,'upload-route-world.ts');
   aliases['@vercel/blob/client']=join(here,'upload-route-world.ts');
  }
+ if(file==='path-wording-route.test.ts'){
+  for(const name of ['studio-route','path-board-rules','path-reminder','store-request','store','path-rules','path','path-wording','path-wording-source','request-guard','ai-rules'])aliases['@/lib/'+name]=join(here,'path-wording-route-world.ts');
+ }
+ if(file==='path-wording-provider.test.ts'){
+  aliases['@/lib/redis']=join(here,'path-wording-provider-world.ts');
+  aliases['@/lib/ai-spend']=join(root,'lib/ai-spend.ts');
+ }
  if(file==='path-growth-facts.test.ts')for(const name of ['redis','catalog','broadcasts','reviews'])aliases['@/lib/'+name]=join(here,'path-growth-world.ts');
  if(file==='path-reminder-push.test.ts')aliases['@/lib/web-push']=join(here,'path-push-world.ts');
  if(file==='deals-board-pipelines-render.test.ts')aliases['next/navigation']=join(here,'next-navigation-stub.ts');

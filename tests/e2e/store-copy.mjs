@@ -25,6 +25,7 @@ import { fieldFocusPixels,mountFieldFocusFixture } from "./field-focus.mjs";
 import { checkGrowthAndContact } from "./growth-contact.mjs";
 import { checkPathReminder, checkPathAnswers } from "./path-reminder.mjs";
 import { checkPathBoardReplies } from "./path-board-replies.mjs";
+import {checkPathWording} from "./path-wording.mjs";
 import {checkPathScripts} from "./path-scripts.mjs";
 import {checkReturnPath} from "./path-return.mjs";
 import {checkPostSalePath} from "./path-growth.mjs";
@@ -90,6 +91,8 @@ const env = {
   UPSTASH_REDIS_REST_TOKEN: "local",
   RESEND_API_KEY: "re_local_only_a_stand_in",
   RESEND_API_BASE: FAKE,
+  ANTHROPIC_API_KEY: "sk-ant-local_only_"+"x".repeat(30),
+  ANTHROPIC_API_BASE: FAKE,
   STRIPE_DEMO_SECRET_KEY: "sk_test_local_only_a_stand_in",
   STRIPE_CONNECT_API_BASE: FAKE,
   NEXT_FONT_GOOGLE_MOCKED_RESPONSES: join(here, "google-fonts-mock.cjs"),
@@ -155,7 +158,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -716,6 +719,7 @@ try {
   await checkPostSalePath({browser,LOCAL,services,session:growthSession,sid:growthSid,product:growthProduct,axeSource,is});
   await checkReturnPath({browser,LOCAL,session:returnSession,sid:returnSid,otherSid:growthSid,axeSource,is});
   await checkPathScripts({browser,LOCAL,session:growthSession,sid:growthSid,axeSource,is});
+  await checkPathWording({browser,LOCAL,services,session:wordingSession,sid:wordingSid,trialSession:wordingTrialSession,trialSid:wordingTrialSid,axeSource,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;

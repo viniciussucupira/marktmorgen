@@ -1,5 +1,9 @@
 import { creatorFrom, countStudio } from "@/lib/studio-route";
 import { PATH_BOARD_JOIN_UNITS } from "@/lib/path-board-rules";
+import {writePathWording} from "@/lib/path-wording";
+import {currentWordingSource} from "@/lib/path-wording-source";
+import {withinLimit} from "@/lib/request-guard";
+import {AI_PER_MINUTE} from "@/lib/ai-rules";
 import { sendPathReminder } from "@/lib/path-reminder";
 import type { NextRequest } from "next/server";
 import { guardStoreWrite } from "@/lib/store-request";
@@ -25,6 +29,13 @@ export async function POST(request: NextRequest) {
   try {
     const store = guarded.store.sid ? guarded.store : await ensureStoreId(storeRef(guarded.store));
     if (!store?.sid) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
+    if(body.action==="wording"){
+      if(!(await withinLimit("ai",store.sid,AI_PER_MINUTE,60)))return Response.json({ok:false,error:"slow"},{status:429,headers:{"Cache-Control":"no-store"}});
+      const record=await readPath(store);
+      const source=record?currentWordingSource(store,record):null;
+      if(!source||body.mission!==source.mission)return Response.json({ok:false,error:"changed"},{status:409,headers:{"Cache-Control":"no-store"}});
+      return Response.json(await writePathWording(store,source),{headers:{"Cache-Control":"no-store"}});
+    }
     if(body.action==="board_join" || body.action==="board_leave") {
       if(body.action==="board_join") {
         if(body.consent!==true)return Response.json({ok:false,error:"consent"},{status:400});

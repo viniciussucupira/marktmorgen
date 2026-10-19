@@ -1,3 +1,4 @@
+import {PATH_WORDING_WORDS,PATH_WORDING_PRIVACY} from "@/lib/path-wording-rules";
 /**
  * Marktmorgen Path never says what it must not (lib/path-rules.ts,
  * FORBIDDEN_PHRASES and FORBIDDEN_MARKS; 18 October 2026). What is checked:
@@ -159,4 +160,6 @@ for(const platform of SCRIPT_PLATFORMS)for(const title of ["A guide","Bread & bu
  is("fixed script "+platform,forbiddenIn(script??""),null);
 }
 
+part("Optional wording controls and privacy");
+for(const text of [...Object.values(PATH_WORDING_WORDS),PATH_WORDING_PRIVACY])is("optional wording copy",forbiddenIn(text),null);
 done();
