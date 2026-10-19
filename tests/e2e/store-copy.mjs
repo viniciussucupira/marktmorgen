@@ -1,3 +1,4 @@
+import {checkPublicAmericanEnglish} from "./public-us-english.mjs";
 import {checkPathCertificates} from "./path-certificates.mjs";
 /**
  * Copying a whole store into another of the account's stores
@@ -722,6 +723,7 @@ try {
   await checkPathScripts({browser,LOCAL,session:growthSession,sid:growthSid,axeSource,is});
   await checkPathWording({browser,LOCAL,services,session:wordingSession,sid:wordingSid,trialSession:wordingTrialSession,trialSid:wordingTrialSid,axeSource,is});
   await checkPathCertificates({browser,LOCAL,session:growthSession,sid:growthSid,otherSession:wordingSession,axeSource,is});
+  await checkPublicAmericanEnglish({browser,LOCAL,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;
