@@ -490,7 +490,7 @@ export const LEVEL_NAMES: Record<Level, string> = {
   "first-light": "First Light",
   sunrise: "Sunrise",
   morning: "Morning",
-  midday: "Midday",
+  midday: "High Sun",
   "golden-hour": "Golden Hour",
   zenith: "Zenith",
 };

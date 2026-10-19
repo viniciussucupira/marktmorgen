@@ -78,7 +78,7 @@ part("The words drawn, for every answer and every state");
   is("none says what it must not", [...found], []);
   is("the slogan, word for word", PATH_SLOGAN, "Every step is real. Every sale is yours.");
   is("the title, word for word", PATH_TITLE, "From first light to first sale.");
-  is("the levels' names", LEVELS.map((l) => LEVEL_NAMES[l]), ["First Light", "Sunrise", "Morning", "Midday", "Golden Hour", "Zenith"]);
+  is("the levels' names", LEVELS.map((l) => LEVEL_NAMES[l]), ["First Light", "Sunrise", "Morning", "High Sun", "Golden Hour", "Zenith"]);
   is("the goal is the person's own and predicts nothing", goalWords({ goalCents: 300_000, goalCurrency: "usd" }, "usd"), "Your goal: $3,000 a month. It is yours, and nothing here predicts it.");
   is("a goal in another currency is not shown as this one", goalWords({ goalCents: 300_000, goalCurrency: "eur" }, "usd"), "");
 }
