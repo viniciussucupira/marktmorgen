@@ -89,7 +89,7 @@ part("Levels");
   is("First Light: a title and a product", LEVEL_NAMES[["first-light", "sunrise", "morning", "midday", "golden-hour", "zenith"][levelNow(facts({ titlePublished: true, listedProducts: 1 }))] as keyof typeof LEVEL_NAMES], "First Light");
   is("Sunrise: the first real sale", levelNow(facts({ titlePublished: true, listedProducts: 1, realSales: 1, revenueCents: 2_000, currency: "usd" })), 1);
   is("Morning at $100 kept", levelNow(facts({ realSales: 3, revenueCents: 10_000, currency: "usd" })), 2);
-  is("Midday at $1,000", levelNow(facts({ realSales: 30, revenueCents: 100_000, currency: "usd" })), 3);
+  is("High Sun at $1,000", levelNow(facts({ realSales: 30, revenueCents: 100_000, currency: "usd" })), 3);
   is("Golden Hour at $10,000", levelNow(facts({ realSales: 300, revenueCents: 1_000_000, currency: "usd" })), 4);
   is("Zenith at $100,000", levelNow(facts({ realSales: 3000, revenueCents: 10_000_000, currency: "usd" })), 5);
   is("unknown money moves no level past Sunrise", levelNow(facts({ realSales: 30, revenueCents: null })), 1);

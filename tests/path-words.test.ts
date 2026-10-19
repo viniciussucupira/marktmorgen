@@ -118,4 +118,13 @@ part("Every Path file in the code");
   is("none of them says it", bad, []);
 }
 
+part("The documented level list matches the active display names");
+{
+ const documented=readFileSync(join(root,"docs/marktmorgen-path.md"),"utf8");
+ const retired=["Mid","day"].join("");
+ is("current name and unchanged threshold documented",documented.includes("Morning $100, High Sun $1,000"),true);
+ is("retired display name absent from Path documentation",documented.includes(retired),false);
+ is("retired display name absent from every current level",LEVELS.some(level=>LEVEL_NAMES[level].includes(retired)),false);
+ is("High Sun remains the fourth level",LEVEL_NAMES[LEVELS[3]],"High Sun");
+}
 done();
