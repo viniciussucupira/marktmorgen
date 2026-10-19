@@ -6,8 +6,8 @@ its commission variants and its final draw, and the cohort's), which are split b
 staged executor there and runs main() again at every stage:
 
     shard  --index i --count n   main() runs, every part already in the state is read back, and at the first
-                                 part that is not, this machine computes its slice of it (programs i, i+n, i+2n...,
-                                 or draws [D*i/n, D*(i+1)/n)), writes it to the shards directory and stops;
+                                 part that is not, this machine computes its slice of it (the program tasks assign()
+                                 deals it, longest first, or draws [D*i/n, D*(i+1)/n)), writes it to the shards directory and stops;
     merge                        main() runs; the first missing part is put together from the shards' files
                                  (tasks in their order, draws stacked in draw order and accumulated by the study's
                                  own company_summarize), kept in the state, and main() goes on until the next
@@ -49,6 +49,24 @@ def load_study():
 def cpu_dispatch():
     from numpy._core._multiarray_umath import __cpu_dispatch__, __cpu_features__
     return sorted(k for k in __cpu_dispatch__ if __cpu_features__.get(k))
+
+
+def task_weight(task):
+    """A guess of a program task's cost, for dealing the tasks out (measured on run 39175464110: a named scenario's
+    chains take minutes, the base programs seconds to a minute); it only decides which machine runs what."""
+    if task[0] == "scenario":
+        return 3.0 if task[-1] < 2 else 2.0
+    return 0.5 + 0.25 * task[3] + (0.5 if task[2] else 0.0)
+
+
+def assign(tasks, n):
+    """The tasks dealt to n machines, longest first, each to the least loaded (ties: lowest index): the same on every machine."""
+    load, out = [0.0] * n, [[] for _ in range(n)]
+    for t in sorted(range(len(tasks)), key=lambda t: (-task_weight(tasks[t]), t)):
+        m = min(range(n), key=lambda m: (load[m], m))
+        out[m].append(t)
+        load[m] += task_weight(tasks[t])
+    return out
 
 
 class Stop(Exception):
@@ -106,7 +124,11 @@ class StagedExecutor:
             pending_path.unlink()
         timings = json.loads(self.timings_path.read_text()) if self.timings_path.exists() else []
         sec = [p["seconds"] for p in parts]
-        timings.append(dict(kind=kind, size=size, key=key, shards=n, cpu=list(next(iter(cpus))), slowestShardSeconds=round(max(sec), 1),
+        extra = {}
+        if getattr(self, "task_seconds", None) is not None and kind == "programs":
+            extra = dict(taskSeconds=[self.task_seconds[i] for i in sorted(self.task_seconds)])
+            self.task_seconds = None
+        timings.append(dict(kind=kind, size=size, key=key, shards=n, **extra, cpu=list(next(iter(cpus))), slowestShardSeconds=round(max(sec), 1),
                             meanShardSeconds=round(sum(sec) / n, 1), totalShardSeconds=round(sum(sec), 1), assembleSeconds=round(time.time() - t0, 1)))
         self.timings_path.write_text(json.dumps(timings, indent=1) + "\n")
         print(f"  merged {kind} ({size}) from {n} shards: slowest {max(sec):.0f}s, total {sum(sec):.0f}s", flush=True)
@@ -114,10 +136,15 @@ class StagedExecutor:
 
     def programs(self, tasks, run):
         def compute(i, n):
-            return [(t, run(tasks[t])) for t in range(i, len(tasks), n)]
+            out = []
+            for t in assign(tasks, n)[i]:
+                t0 = time.time()
+                out.append((t, run(tasks[t]), round(time.time() - t0, 1)))
+            return out
 
         def assemble(parts):
-            got = dict(x for part in parts for x in part)
+            got = {t: r for part in parts for t, r, _ in part}
+            self.task_seconds = {t: s for part in parts for t, _, s in part}
             assert sorted(got) == list(range(len(tasks))), "a program task is missing or repeated"
             return [got[t] for t in range(len(tasks))]
         return self._part("programs", ("programs", tasks), f"{len(tasks)} tasks", compute, assemble)

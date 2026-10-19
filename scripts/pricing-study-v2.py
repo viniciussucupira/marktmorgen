@@ -806,8 +806,11 @@ def program_tasks(scenarios):
                 if admissible_only and k < 3:
                     continue
                 tasks.append(("base", with_packs, admissible_only, k))
+    # A named scenario is three independent chains (the program at 4 plans and its searches, the same at 5, and the
+    # search from today's three with the unrestricted 2-plan program), remembered in this order.
     for sc in scenarios:
-        tasks.append(("scenario", sc["id"], sc["population"], sc["eta"], sc["asc"]))
+        for part in range(3):
+            tasks.append(("scenario", sc["id"], sc["population"], sc["eta"], sc["asc"], part))
     return tasks
 
 
@@ -830,9 +833,10 @@ def run_program_task(task):
         return calls, rec
 
     # The program on a named scenario (today's three kept, packs on), then the logit search from each solution in its own scenario.
-    _, sid, population, eta, asc = task
+    _, sid, population, eta, asc, part = task
     p = base_params(population, eta, asc)
-    for k in (4, 5):
+    if part < 2:
+        k = 4 + part
         r, _ = solve_milp(p, k, True, True)
         remember(r["plans"], True, f"program, {sid}, {k} plans")
         ls, _ = local_search(r["plans"], True, p, True, k)
@@ -841,6 +845,7 @@ def run_program_task(task):
         no_start = [j for j in r["plans"] if CANDS[j]["template"] != "start"]
         ls2, _ = local_search(no_start, True, p, True, len(no_start), exclude=("start",))
         remember(ls2, True, f"logit search without Start, {sid}, {len(no_start)} plans")
+        return calls, None
     ls3, _ = local_search(TODAY, True, p, True, 3, exclude=("start", "growth"))
     remember(ls3, True, f"logit search from today's three, {sid}")
     r, _ = solve_milp(p, 2, True, False)
