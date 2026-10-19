@@ -287,7 +287,7 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   // The owner's Path (lib/path.ts): deleted by the prepare step (forgetPath).
   "nl:path:": E,
   // Shared indexes survive; prepare/forgetPath removes only this store's member and reverse field.
-  "nl:path:board:v1": C, "nl:path:board:owners:v1": C,
+  "nl:path:board:v1": D("prepare"), "nl:path:board:owners:v1": D("prepare"),
   "nl:pause:": E, "nl:pause:due": I, "nl:pause:last:": E,
   "nl:pay:currencies:": E,
   // Payment requests (lib/payment-request-store.ts): the store's lists go, and each request through them; its reminders and its place in the sweep's list are taken out.
