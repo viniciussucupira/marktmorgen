@@ -1,0 +1,28 @@
+name: Dependency security
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: dependency-security-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+      - name: Test audit and runtime policy failures
+        run: python3 scripts/test_dependency_audit.py
+      - name: Audit all dependencies and production dependencies
+        run: |
+          npm audit --json > audit-all.json || true
+          npm audit --omit=dev --json > audit-production.json || true
+          python3 scripts/check_dependency_audit.py audit-all.json audit-production.json

@@ -29,6 +29,8 @@ jobs:
         run: npm test
       - name: Production build and route types
         run: npm run build
+      - name: Verify reviewed development dependencies stay outside runtime
+        run: python3 scripts/check_dependency_runtime.py .next
       # The signing flow in a real browser (the runner's own Chrome through playwright-core: no browser is downloaded),
       # on the build above, against the stand-in database and email sender of tests/e2e/services.mjs.
       - name: Agreements signed with a link, in a browser
