@@ -94,7 +94,7 @@ Resources:
             Condition:
               StringEquals:
                 "oidc.vercel.com/viniciussucupira:aud": https://vercel.com/viniciussucupira
-                "oidc.vercel.com/viniciussucupira:sub": owner:viniciussucupira:project:nimbus-labs:environment:production
+                "oidc.vercel.com/viniciussucupira:sub": owner:viniciussucupira:project:marktmorgen:environment:production
       Policies:
         - PolicyName: send-email-and-read-limits
           PolicyDocument:

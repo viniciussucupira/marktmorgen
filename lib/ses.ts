@@ -126,7 +126,7 @@ function hostToken(): string | null {
 export const TRUSTED_TOKEN = {
   iss: "https://oidc.vercel.com/viniciussucupira",
   aud: "https://vercel.com/viniciussucupira",
-  sub: "owner:viniciussucupira:project:nimbus-labs:environment:production",
+  sub: "owner:viniciussucupira:project:marktmorgen:environment:production",
 };
 
 /**
