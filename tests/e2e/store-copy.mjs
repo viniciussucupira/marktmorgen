@@ -573,7 +573,9 @@ try {
       await signin.emulateMedia({forcedColors:"none",reducedMotion:"reduce"});
       let loginRequests=0;
       await signin.route("**/api/auth/request",async route=>{loginRequests++;await route.abort();});
+      const backgroundAlerts=await signin.getByRole("alert").count();
       const email=signin.locator("#signin-email");
+      const emailForm=email.locator("xpath=ancestor::form");
       await email.fill("missing-domain");
       await email.press("Tab");
       await signin.locator("#signin-hint").waitFor();
@@ -582,7 +584,8 @@ try {
       await checkSignInErrorContrast(signin,"#signin-hint","Email hint at "+width);
       await signin.getByRole("button",{name:"Email me a link",exact:true}).click();
       await signin.locator("#signin-error").waitFor();
-      is("submitted invalid email has one alert at "+width,await signin.getByRole("alert").count(),1);
+      is("submitted invalid email has one alert at "+width,await emailForm.getByRole("alert").count(),1);
+      is("submit adds only one alert beyond page navigation at "+width,await signin.getByRole("alert").count(),backgroundAlerts+1);
       is("submitted error describes its field at "+width,await email.getAttribute("aria-describedby"),"signin-error");
       await checkSignInErrorContrast(signin,"#signin-error","Submitted email error at "+width);
       await email.fill("");
@@ -591,7 +594,8 @@ try {
       await checkSignInErrorContrast(signin,"#signin-error","Empty email error at "+width);
       await email.fill("synthetic@example.test");
       is("correction clears invalid state at "+width,await email.getAttribute("aria-invalid"),null);
-      is("correction removes stale alerts at "+width,await signin.getByRole("alert").count(),0);
+      is("correction removes stale alerts at "+width,await emailForm.getByRole("alert").count(),0);
+      is("correction restores baseline page alerts at "+width,await signin.getByRole("alert").count(),backgroundAlerts);
       is("invalid attempts never request login email at "+width,loginRequests,0);
       is("sign-in errors fit at "+width,await signin.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
 
