@@ -58,7 +58,7 @@ export function FunnelStarterGallery({ starters, busy, onChoose }: { starters: S
           <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={() => { setGoal("all"); setQuery(""); }}>Show all campaigns</button>
         </div>
       )}
-      <p className="mt-3 text-xs text-ink-soft">Browsing and comparing campaigns uses no AI drafts or server previews. Creating one uses your existing funnel and page allowances. Nothing publishes or sends an email here.</p>
+      <p className="mt-3 text-xs text-ink-soft">Browsing and comparing campaigns does not use your AI or funnel preview allowance. Creating one uses your existing funnel, form and page allowances. Nothing publishes or sends an email here.</p>
     </div>
   );
 }
