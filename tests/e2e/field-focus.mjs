@@ -81,7 +81,11 @@ export async function mountFieldFocusFixture(page,{surface,kind,invalid=false,cl
     Object.assign(label.style,{display:"block",marginBottom:"8px",color:surface==="#111827"?"white":"black"});
     const field=document.createElement(kind);
     field.id="field-focus-target";field.className=className;
-    if(kind==="select"){
+    if(kind==="button"){
+      field.type="button";field.textContent="Continue";
+    }else if(kind==="a"){
+      field.href="#synthetic-focus-only";field.textContent="Creator profile";
+    }else if(kind==="select"){
       for(const text of ["First choice","Second choice"]){const option=document.createElement("option");option.textContent=text;field.append(option);}
     }else if(kind==="textarea"){field.rows=3;field.readOnly=true;field.value="Read-only checklist text";}
     else {field.type="text";field.placeholder="Synthetic field";}
