@@ -290,15 +290,32 @@ try {
   }
   // Recovery uses a synthetic, coherent successful response; no payment is made.
   let allocation=0;
-  await owner.route("**/api/store/ab?**",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,currency:"usd",declared:null,shareB:allocation,counts:{va:1000,vb:1000,ca:30,cb:90,sa:30,sb:90,ra:30000,rb:90000,qa:30000000,qb:90000000,t0:Date.now()-30*86400000}})}));
-  await open(owner,abUrl);
+  let experimentAgeDays=30;
+  await owner.route("**/api/store/ab?**",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,currency:"usd",declared:null,shareB:allocation,counts:{va:1000,vb:1000,ca:30,cb:90,sa:30,sb:90,ra:30000,rb:90000,qa:30000000,qb:90000000,t0:Date.now()-experimentAgeDays*86400000}})}));
+  await owner.goto(abUrl,{waitUntil:"domcontentloaded",timeout:60_000});
   await owner.getByText(unavailableText,{exact:true}).waitFor();
   is("invalid allocation is not silently replaced with an even split",await owner.locator("[data-test-results]").count(),0);
   allocation=0.5;
-  await open(owner,abUrl);
+  await owner.goto(abUrl,{waitUntil:"domcontentloaded",timeout:60_000});
   await owner.locator("[data-test-results]").waitFor();
   await owner.getByText("The second headline wins. Your page now shows it to everybody. Make it the hero's own headline and switch the test off to keep it.",{exact:true}).waitFor();
   is("a coherent successful reading replaces the failure notice",await owner.getByText(unavailableText,{exact:true}).count(),0);
+  const paymentBasisText="Gross buyer payments are measured here, including any tax collected at checkout. Refunds, disputes and payment fees are not deducted. This is not net revenue or profit.";
+  for(const width of [390,1280]){
+    await owner.setViewportSize({width,height:900});
+    for(const age of [1,30]){
+      experimentAgeDays=age;
+      await owner.goto(abUrl,{waitUntil:"domcontentloaded",timeout:60_000});
+      const basis=owner.getByText(paymentBasisText,{exact:true});
+      await basis.waitFor();
+      is("paid results disclose the actual measurement at "+width+" age "+age,await basis.isVisible(),true);
+      is("gross payment basis fits at "+width+" age "+age,await basis.evaluate(node=>node.scrollWidth<=node.clientWidth),true);
+      if(age===1)await owner.getByText("One version is ahead, but a test decided by gross payments waits until it has run 14 days. This waiting period does not deduct refunds from either version.",{exact:true}).waitFor();
+      else await owner.getByText("The second headline wins. Your page now shows it to everybody. Make it the hero's own headline and switch the test off to keep it.",{exact:true}).waitFor();
+      await owner.addScriptTag({content:axeSource});
+      is("paid experiment result accessibility at "+width+" age "+age,await owner.evaluate(async()=>(await window.axe.run("#headline-test",{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22a","wcag22aa"]}})).violations.map(v=>v.id)),[]);
+    }
+  }
   await owner.unroute("**/api/store/ab?**");
   const quotaDir=mkdtempSync(join(tmpdir(),"mm-path-quota-"));
   const quotaFile=join(quotaDir,"quota.cjs");

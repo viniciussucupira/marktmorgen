@@ -20,7 +20,8 @@ async function main(): Promise<void> {
   await ensureStatsId(OWNER);
   for (const t of ["One session", "Four sessions", "Free checklist"]) await addProduct(OWNER, t, "Words.", t.startsWith("Free") ? "0" : "40", null);
   const abStore=(await storeForEmail(OWNER))!;
-  const abProduct=abStore.catalog.items[0].id;
+  const abProduct=abStore.catalog.items.find(product=>!product.free)?.id;
+  if(!abProduct)throw Error("No paid synthetic experiment product");
   const abPage=parsePage({blocks:[{id:"abhero01",kind:"hero",headline:"One session",sub:"A local synthetic fixture",media:"none",video:null}],test:{headline:"Try a coaching session",sub:""}});
   if(!abPage.test || !abStore.statsId)throw Error("No synthetic experiment");
   await writePage(abStore.statsId,abProduct,abPage,abStore);
