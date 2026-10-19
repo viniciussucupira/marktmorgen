@@ -5,6 +5,8 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
  const errors=[];
  const growth=await owner.context().newPage();
  growth.on("pageerror",error=>errors.push(String(error)));
+ let previews=0;
+ await growth.route("**/api/store/funnel-share*",async route=>{previews++;await route.abort();});
  try {
   await growth.emulateMedia({reducedMotion:"reduce"});
   for(const width of [320,390,768,1280]) {
@@ -17,6 +19,32 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
     const hrefs=await growth.locator('main a').evaluateAll(nodes=>nodes.map(node=>node.getAttribute("href")));
     assert(hrefs.length>=7&&hrefs.every(href=>href&&href.includes("store="+second)),"all growth destinations preserve selected store");
     assert.equal(await growth.locator("main").getByText("Your next steps",{exact:true}).count(),1);
+    const campaigns=growth.getByRole("region",{name:"Campaigns for this goal",exact:true});
+    if(goal==="retention"){
+      assert.equal(await campaigns.count(),0,"retention is not assigned an unrelated acquisition campaign");
+    }else{
+      await campaigns.waitFor();
+      const cards=campaigns.locator(":scope > ul > li");
+      assert.equal(await cards.count(),{leads:2,sales:1,services:2}[goal]);
+      for(const details of await cards.locator("details").all()){
+        const summary=details.locator("summary");
+        await summary.focus();await summary.press("Enter");
+        assert.equal(await details.getAttribute("open"),"","native keyboard disclosure opens");
+        assert((await details.locator("ol > li").count())>0,"real template has journey steps");
+        await summary.press("Enter");
+        assert.equal(await details.getAttribute("open"),null,"native keyboard disclosure closes");
+      }
+      if(width===390){
+        const names=await cards.locator("h3").allTextContents();
+        await campaigns.getByRole("link",{name:"Explore matching campaigns",exact:true}).click();
+        await growth.locator("#starter-goal").waitFor();
+        assert.equal(await growth.locator("#starter-goal").inputValue(),goal);
+        assert.equal(new URL(growth.url()).searchParams.get("store"),second);
+        assert.deepEqual(await growth.locator("#campaign-starters h4").allTextContents(),names,"destination uses the same actual template catalog");
+        await growth.goBack({waitUntil:"domcontentloaded"});
+        await growth.getByRole("heading",{name:"Choose your next business goal",exact:true}).waitFor();
+      }
+    }
     assert.equal(await growth.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
     await growth.addScriptTag({content:axeSource});
     const scan=await growth.evaluate(async()=>{const result=await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}});return result.violations.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)}));});
@@ -24,6 +52,7 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
    }
    console.log("  ok    growth4 goals preserve store/selection/AA/fit at "+width);
   }
+  assert.equal(previews,0,"goal discovery and keyboard previews never request metered campaign setup");
  } finally {await growth.close();}
  for(const width of [390,1280]) {
   const contact=await owner.context().newPage();
