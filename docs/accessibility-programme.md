@@ -51,3 +51,11 @@ controlled representative tasks and network/device measurements.
 
 Changes affect shared readability and test/documentation coverage only. No AI,
 provider call,record,price,allowance or fiscal/commercial gate change.
+
+## Standard field focus follow-up
+
+Delivery19 strengthens standard field focus and measures actual Tab paint area,
+including forced-colours emulation and synthetic invalid/readonly/select cases.
+See docs/accessibility-field-focus.md. This partially addresses the standard
+field focus entry; custom fields,all journeys/clipping and manual assistive/user
+coverage remain open.

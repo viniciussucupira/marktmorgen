@@ -1363,6 +1363,23 @@ a.chip {
   border-color: var(--danger);
   box-shadow: 0 0 0 4px rgba(200, 51, 43, 0.12);
 }
+/*
+ * Keyboard focus: two opaque 3px bands. The deep outline and white inner
+ * band are more than9:1 apart, so at least one remains distinct on a solid
+ * surface. Keep the invalid border; the focus bands are outside the field.
+ */
+.field:focus-visible {
+  outline: 3px solid var(--violet-deep);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px #fff;
+}
+@media (forced-colors: active) {
+  .field:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+    box-shadow: none;
+  }
+}
 .field-error {
   font-size: 0.875rem;
   font-weight: 600;
