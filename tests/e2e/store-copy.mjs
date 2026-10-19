@@ -572,6 +572,38 @@ try {
       // intercepted locally: this test cannot send a login message.
       await signin.evaluate(()=>document.querySelector("#field-focus-fixture")?.remove());
       await signin.emulateMedia({forcedColors:"none",reducedMotion:"reduce"});
+      // Disposable samples use the actual built shared CSS, with no app
+      // records or provider requests. This is component evidence, not every journey.
+      await signin.evaluate(()=>{
+        const root=document.createElement("section");
+        root.id="success-contrast-fixture";
+        root.style.cssText="position:relative;background:#fff;color:#111827;padding:16px";
+        for(const [className,text] of [["tag tag-live","Live"],["notice notice-success","Your changes are saved."]]){
+          const node=document.createElement("p");
+          node.className=className;
+          node.textContent=text;
+          root.append(node);
+        }
+        document.body.append(root);
+      });
+      for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
+        await signin.locator(selector).scrollIntoViewIfNeeded();
+        await checkSignInErrorContrast(signin,selector,"Shared success copy "+selector+" at "+width);
+      }
+      if(width===390){
+        const legacy=await signin.addStyleTag({content:"#success-contrast-fixture .tag-live,#success-contrast-fixture .notice-success{color:var(--mint-deep)!important}"});
+        const rejected=await signin.evaluate(async()=>{
+          const report=await window.axe.run([document.querySelector("#success-contrast-fixture")],{runOnly:{type:"rule",values:["color-contrast-enhanced"]}});
+          return report.violations.filter(rule=>rule.id==="color-contrast-enhanced").reduce((count,rule)=>count+rule.nodes.length,0);
+        });
+        is("success contrast guard rejects both former colours",rejected,2);
+        await legacy.evaluate(node=>node.remove());
+        for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
+          await checkSignInErrorContrast(signin,selector,"Restored success copy "+selector);
+        }
+      }
+      await signin.evaluate(()=>document.querySelector("#success-contrast-fixture").remove());
+      await signin.locator("#signin-email").scrollIntoViewIfNeeded();
       let loginRequests=0;
       await signin.route("**/api/auth/request",async route=>{loginRequests++;await route.abort();});
       const backgroundAlerts=await signin.getByRole("alert").count();

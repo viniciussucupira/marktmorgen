@@ -93,3 +93,14 @@ violations and no incomplete readings on the visible hint/alerts. Tests also
 check field descriptions,invalid state,a single alert,correction cleanup and
 zero login API requests. Requests are intercepted locally;no message is sent.
 Other routes,colours,assistive technologies and user research remain open.
+
+## Shared success copy
+The shared light-surface live tag and success notice use a separate darker
+success-text token on their existing mint surface. Existing mint action/border
+tokens, messages, status behavior and all commercial controls are unchanged.
+A palette guard requires7.25:1 reserve. Synthetic native samples in the real
+built app at320/390/768/1280 use actual shared CSS and axe enhanced contrast,
+with actual passes and no incomplete results. At390 a negative control must
+reject both former colours, then the restored styles must pass again.
+This is component-level evidence; it does not certify every rendered route,
+custom override, screen reader or whole-product AAA.

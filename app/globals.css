@@ -69,6 +69,7 @@
   /* semantic — green only for money and success, red only for errors */
   --mint: #15a37a;
   --mint-deep: #0b6a4d;
+  --mint-text: #07553e; /* success copy on mint-soft, separate from action/border colours */
   --mint-soft: #e5f6ef;
   --mint-lift: #6fe3ba;
   --amber: #8a4f00;
@@ -1105,7 +1106,7 @@ html {
 }
 .tag-live {
   background: var(--mint-soft);
-  color: var(--mint-deep);
+  color: var(--mint-text);
 }
 .tag-live::before,
 .tag-next::before {
@@ -1417,7 +1418,7 @@ a.chip {
 .notice-success {
   border-color: #bfe6d6;
   background: var(--mint-soft);
-  color: var(--mint-deep);
+  color: var(--mint-text);
 }
 .notice-warn {
   border-color: #f2d8a8;
