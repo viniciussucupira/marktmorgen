@@ -1237,6 +1237,23 @@ export default function PrivacyPage() {
           maker, such as Apple, Google or Mozilla. We keep a mark of each event
           sent for 40 days, so it is never sent twice.
         </p>
+        <p id="path">
+          <strong className="text-black">Marktmorgen Path.</strong> When a
+          store&apos;s owner begins Path, we keep their four answers (a monthly
+          goal of their own, what they know how to do and want to make
+          something about, the minutes a day they have and where their
+          audience is), their time zone, the days they opened Path (the latest
+          60), the best level the store reached and when, and for ten minutes
+          at a time the last reading of the store&apos;s own counts and money:
+          visits from social networks, visitors, short links, addresses left
+          on the store, and the paid orders and refunds on the creator&apos;s
+          own Stripe account, as counts and amounts, never who bought. The
+          goal is only ever shown to its owner as their goal; nothing in Path
+          predicts what anybody will earn. Missions are read from what the
+          store already records and are never stored as done. Path belongs to
+          the store&apos;s owner, is never shown to anybody else, and is deleted
+          when the owner deletes it from Path, or with the store.
+        </p>
         <p id="reviews">
           <strong className="text-black">Reviews.</strong> A buyer can review
           what they paid for. We check the order on the creator&apos;s own

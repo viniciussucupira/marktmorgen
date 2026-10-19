@@ -52,6 +52,14 @@ function parse(raw: unknown): Kept | null {
 
 const shown = ({ code, name, place, target, made }: Kept): ShortLink => ({ code, name, place, target, made });
 
+/** How many short links a store has made, in one command: what the path's post-link missions count (lib/path-facts.ts). */
+export async function countLinks(statsId: string | null): Promise<number> {
+  if (!statsId || !isRedisConfigured()) return 0;
+  const [raw] = await redisPipeline([["HLEN", storeKey(statsId)]]);
+  const n = Number(raw);
+  return Number.isSafeInteger(n) && n > 0 ? n : 0;
+}
+
 /** A store's links, the newest first. */
 export async function readLinks(statsId: string | null): Promise<ShortLink[]> {
   if (!statsId || !isRedisConfigured()) return [];

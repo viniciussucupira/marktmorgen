@@ -88,6 +88,7 @@ import { requestRecordKey } from "@/lib/payment-request-store";
 import { agreementKeys } from "@/lib/agreement-store";
 import { letterRecordKey } from "@/lib/letters";
 import { passKeyOfHash } from "@/lib/learn";
+import { forgetPath } from "@/lib/path";
 
 export const DUE_KEY = "nl:closed:due";
 export const BATCH_KEY = "nl:closed:batch";
@@ -226,6 +227,8 @@ export async function prepareStore(store: Store, now = Date.now()): Promise<Batc
   await forgetStoreWebhooks(store.statsId);
   await forgetStoreSync(store.statsId);
   await forgetStorePhones(store.statsId);
+  // The owner's path: their answers and the days they showed up (lib/path.ts).
+  await forgetPath(store);
   if (store.domain?.name) extra.push(domainKey(store.domain.name));
   await del(extra);
   await closeStoreRecord(store);

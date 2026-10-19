@@ -12,6 +12,7 @@ import { forgetPersonNotes } from "@/lib/buyer-profile";
 import { forgetStoreWebhooks } from "@/lib/webhooks";
 import { revokeAllKeys } from "@/lib/api-keys";
 import { endLapsed, findStoreSubscriptions, isBillingConfigured } from "@/lib/billing";
+import { forgetPath } from "@/lib/path";
 
 /**
  * The studio's switcher, and the door out for a store.
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
       // sealed key to its email platform, its phones' push addresses, the
       // notes its team wrote about buyers (lib/buyer-profile.ts), its
       // workflows, its webhook endpoints with their secrets and its API keys.
-      await Promise.all([forgetStoreSync(result.store.statsId), forgetStorePhones(result.store.statsId), forgetPersonNotes(result.store.statsId), forgetCrm(result.store.statsId), forgetRecentSales(result.store.statsId), forgetStoreWorkflows(result.store), forgetStoreWebhooks(result.store.statsId), revokeAllKeys(result.store.sid)]).catch((error: unknown) =>
+      await Promise.all([forgetStoreSync(result.store.statsId), forgetStorePhones(result.store.statsId), forgetPersonNotes(result.store.statsId), forgetCrm(result.store.statsId), forgetRecentSales(result.store.statsId), forgetStoreWorkflows(result.store), forgetStoreWebhooks(result.store.statsId), revokeAllKeys(result.store.sid), forgetPath(result.store)]).catch((error: unknown) =>
         console.error("forgetting a deleted store's integrations failed", error),
       );
       // Back to the owner's first store, and the switcher forgets this one.

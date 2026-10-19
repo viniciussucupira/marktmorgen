@@ -85,6 +85,8 @@ import { MAX_LESSONS } from "@/lib/course";
 import { MAX_POSTS } from "@/lib/store-blog";
 import { MAX_FORMS } from "@/lib/forms";
 import { EXPORT_COMMANDS, EXPORT_PAGE_SECONDS, EXPORT_STRIPE_PAGES } from "@/lib/store-export";
+import { PATH_REFUND_PAGES, PATH_SALE_PAGES } from "@/lib/path-facts";
+import { LIFE_WRITE_MAX } from "@/lib/stats";
 import { MARK, cappedByteMonths, closingBytes, followedBytes, reserveBytes } from "./store-data-registry";
 import {
   UPSTASH_MICRO_USD_PER_GB_MONTH, UPSTASH_MICRO_USD_PER_GB_TRANSFER, UPSTASH_MICRO_USD_PER_MILLION_COMMANDS, VERCEL_CALL_MICRO_USD_PER_MILLION,
@@ -239,6 +241,19 @@ export function request(shape: keyof typeof SHAPES, commands: number, bytes = 0)
   const { seconds, cpu } = SHAPES[shape];
   return CALL + cpu * CPU_SECOND + seconds * MEMORY_SECOND + commands * COMMAND + bytes * DB_BYTE;
 }
+
+/**
+ * One reading of Marktmorgen Path's money and counts (lib/path.ts, visitPath):
+ * the numbers' all-time record at LIFE_WRITE_MAX fields of up to 96 bytes
+ * each with the path's own record, the links counted, the record written,
+ * and every page of the creator's Stripe account it reads waited on one
+ * after another. Counted as PATH_READ_UNITS studio requests, taken before it
+ * runs (tests/plan-cost-registry.test.ts holds the units above it).
+ */
+/** Path page's own bounded reads, including one actual studio-usage count. Money refreshes are separately reserved as PATH_READ_UNITS. */
+export const PATH_PAGE = request("heavy", 41, 70_000);
+
+export const PATH_READ = request("heavy", 12, LIFE_WRITE_MAX * 96 + 16_384) + (PATH_SALE_PAGES + PATH_REFUND_PAGES) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
 
 /** One host's calendar read: its commands, and the wait for the calendar, held at 2 GB inside the page that asked. */
 export const TEAM_READING = 7 * COMMAND + 1 * MEMORY_SECOND + 0.05 * CPU_SECOND;
@@ -515,6 +530,9 @@ export const COST_LINES: CostLine[] = [
       { file: "lib/studio-route.ts", names: ["countStudio", "studio-essential"] },
       // A deal entering a stage takes one more studio request before the workflow its stage starts is checked (17 October 2026).
       { file: "lib/deal-stage-trigger.ts", names: ["STAGE_TRIGGER_UNITS", "countStudio(store, null, STAGE_TRIGGER_UNITS)"] },
+      // Marktmorgen Path reading its store's money and counts again takes PATH_READ_UNITS studio requests first, at most once every PATH_MONEY_SECONDS (18 October 2026).
+      { file: "lib/path.ts", names: ["PATH_READ_UNITS", "countStudio(store, null, units)"] },
+      { file: "lib/path-facts.ts", names: ["PATH_SALE_PAGES", "PATH_REFUND_PAGES", "PATH_MONEY_SECONDS"] },
       { file: "app/studio/paused/page.tsx", names: [`SHOWN_PER_DAY = ${PAUSED_PER_DAY};`, "studio-paused"] },
     ],
     basis: "Every studio request of the window at the studio shape; a page drawn takes STUDIO_PAGE_UNITS of them, more than a heavy read costs (held below). Past the figure the studio shows one page, drawn at most PAUSED_PER_DAY times a day; changing or canceling the plan, deleting the store and downloading its sales take a small daily figure instead.",
