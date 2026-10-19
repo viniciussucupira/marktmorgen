@@ -435,6 +435,12 @@ try {
       is(path+" at "+width+": no horizontal overflow",await owner.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
     }
   }
+  // Compile the production palette function; do not duplicate theme colours.
+  const paintDir=mkdtempSync(join(tmpdir(),"mm-field-paint-"));
+  const paintFile=join(paintDir,"look.cjs");
+  await build({entryPoints:[join(root,"lib/store-look.ts")],bundle:true,platform:"node",format:"cjs",outfile:paintFile,logLevel:"error"});
+  const {lookStyle,THEMES,ACCENTS}=require(paintFile);
+  rmSync(paintDir,{recursive:true,force:true});
   for(const width of [320,390,768,1280]){
     const guest=await browser.newContext({viewport:{width,height:900}});
     try{
@@ -453,7 +459,30 @@ try {
       is("email keyboard focus at "+width+": opaque3px outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&parseFloat(focus.offset)>=3,true);
       is("email keyboard focus at "+width+": rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
       console.log("  focus pixels email "+width+": "+focus.contrastingPixels+" / minimum "+focus.minimumArea);
+      const storePaint=lookStyle({theme:"night",accent:"#ffff00"});
+      const storeTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
+      const storeFocus=await fieldFocusPixels(signin,storeTarget);
+      is("store input focus at "+width+": rendered3:1 pixel area",storeFocus.contrastingPixels>=storeFocus.minimumArea,true);
       if(width===390){
+        for(const theme of THEMES){
+          for(const accent of ACCENTS){
+            const paint=lookStyle({theme:theme.id,accent:accent.hex});
+            const target=await mountFieldFocusFixture(signin,{surface:paint["--st-bg"],kind:"input",className:"st-field",paint});
+            const reading=await fieldFocusPixels(signin,target);
+            is("store input "+theme.id+"/"+accent.label+": rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
+          }
+          const paint=lookStyle({theme:theme.id,accent:"#ffff00"});
+          for(const kind of ["select","textarea"]){
+            const target=await mountFieldFocusFixture(signin,{surface:paint["--st-card"],kind,className:"st-field",paint});
+            const reading=await fieldFocusPixels(signin,target);
+            is("store "+kind+" "+theme.id+"/custom yellow card: rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
+          }
+        }
+        const oldStoreTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
+        const oldStoreStyle=await signin.addStyleTag({content:".st-field:focus-visible{outline:none!important;box-shadow:0 0 0 3px var(--st-accent-soft)!important}"});
+        const oldStoreFocus=await fieldFocusPixels(signin,oldStoreTarget);
+        is("store pixel guard rejects former suppressed outline",oldStoreFocus.contrastingPixels<oldStoreFocus.minimumArea,true);
+        await oldStoreStyle.evaluate(node=>node.remove());
         for(const surface of ["#ffffff","#111827","#888888"]){
           for(const kind of ["input","select","textarea"]){
             const target=await mountFieldFocusFixture(signin,{surface,kind});
@@ -473,6 +502,12 @@ try {
         is("pixel guard rejects the former suppressed-outline style",baseline.contrastingPixels<baseline.minimumArea,true);
         await oldSuppression.evaluate(node=>node.remove());
         await signin.emulateMedia({forcedColors:"active",reducedMotion:"reduce"});
+        for(const kind of ["input","select","textarea"]){
+          const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className:"st-field",paint:storePaint});
+          const reading=await fieldFocusPixels(signin,target);
+          is("store "+kind+" forced colours: system outline",reading.style==="solid"&&parseFloat(reading.width)>=3&&reading.shadow==="none"&&reading.forcedColorAdjust==="auto",true);
+          is("store "+kind+" forced colours: rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
+        }
         for(const kind of ["input","select","textarea"]){
           const target=await mountFieldFocusFixture(signin,{surface:"#ffffff",kind});
           const forced=await fieldFocusPixels(signin,target);

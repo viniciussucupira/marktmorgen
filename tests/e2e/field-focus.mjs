@@ -60,8 +60,8 @@ export async function fieldFocusPixels(page,field) {
 }
 
 /** Real CSS controls on explicit synthetic flat surfaces; does not claim a customer-theme audit. */
-export async function mountFieldFocusFixture(page,{surface,kind,invalid=false}) {
-  await page.evaluate(({surface,kind,invalid})=>{
+export async function mountFieldFocusFixture(page,{surface,kind,invalid=false,className="field",paint={}}) {
+  await page.evaluate(({surface,kind,invalid,className,paint})=>{
     document.querySelector("#field-focus-fixture")?.remove();
     window.scrollTo({top:0,left:0,behavior:"instant"});
     const panel=document.createElement("section");
@@ -69,6 +69,10 @@ export async function mountFieldFocusFixture(page,{surface,kind,invalid=false}) 
     panel.setAttribute("aria-label","Synthetic field focus fixture");
     panel.className=surface==="#111827"?"on-dark":"";
     Object.assign(panel.style,{position:"fixed",zIndex:"2147483000",top:"24px",left:"16px",right:"16px",padding:"24px",backgroundColor:surface});
+    for(const [name,value] of Object.entries(paint)){
+      if(name.startsWith("--"))panel.style.setProperty(name,value);
+      else panel.style[name]=value;
+    }
     const before=document.createElement("button");
     before.type="button"; before.textContent="Before the synthetic field";
     Object.assign(before.style,{display:"block",marginBottom:"24px",color:surface==="#111827"?"white":"black"});
@@ -76,7 +80,7 @@ export async function mountFieldFocusFixture(page,{surface,kind,invalid=false}) 
     label.htmlFor="field-focus-target";label.textContent="Synthetic "+kind+" field";
     Object.assign(label.style,{display:"block",marginBottom:"8px",color:surface==="#111827"?"white":"black"});
     const field=document.createElement(kind);
-    field.id="field-focus-target";field.className="field";
+    field.id="field-focus-target";field.className=className;
     if(kind==="select"){
       for(const text of ["First choice","Second choice"]){const option=document.createElement("option");option.textContent=text;field.append(option);}
     }else if(kind==="textarea"){field.rows=3;field.readOnly=true;field.value="Read-only checklist text";}
@@ -84,6 +88,6 @@ export async function mountFieldFocusFixture(page,{surface,kind,invalid=false}) 
     if(invalid)field.setAttribute("aria-invalid","true");
     panel.append(before,label,field);
     document.body.append(panel);
-  },{surface,kind,invalid});
+  },{surface,kind,invalid,className,paint});
   return page.locator("#field-focus-target");
 }

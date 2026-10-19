@@ -2182,6 +2182,20 @@ a.chip {
   border-color: var(--st-accent-text);
   box-shadow: 0 0 0 3px var(--st-accent-soft);
 }
+/* Keyboard focus stays distinct even when a creator picks a very pale or
+   dark accent. Each opaque band is large enough to be seen on its own. */
+.st-field:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px #fff;
+}
+@media (forced-colors: active) {
+  .st-field:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+    box-shadow: none;
+  }
+}
 /* "A question before you buy?" on a product's page, and its answer. */
 .st-ask {
   border-radius: 1rem;
