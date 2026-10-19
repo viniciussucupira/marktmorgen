@@ -1,3 +1,5 @@
+import {PathSocialScripts} from "@/components/path-social-scripts";
+import {pathScriptProducts} from "@/lib/path-scripts";
 import {RETURN_HEADING} from "@/lib/path-return-rules";
 import {PathGrowthMissions} from "@/components/path-growth-missions";
 import {readPathGrowth} from "@/lib/path-growth-facts";
@@ -76,7 +78,8 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
      {campaign?<aside className="mt-4 rounded-xl border border-line bg-white p-5" aria-label="Campaigns for this mission"><p>{campaign.why}</p><a className="btn mt-4" href={studioPath(store,"campaignGoal="+campaign.goal,"funnels")+"#campaign-starters"}>Explore campaigns for this mission</a><p className="mt-3 text-sm text-ink-soft">Browsing does not create anything or use your preview allowance. Choose a campaign, review its requirements and adapt it to your own offer.</p></aside>:null}
     </section>
     {!returning?<><PathGrowthMissions missions={growthMissions} hrefFor={growthHref} read={Boolean(growth?.read)} moneyAt={record.money?.at??null}/>
-    <PathMissions missions={[...progress.days,...progress.traffic]} hrefFor={hrefFor}/></>:null}
+    <PathMissions missions={[...progress.days,...progress.traffic]} hrefFor={hrefFor}/>
+    <PathSocialScripts products={pathScriptProducts(store)} answers={{audience:record.answers.audience,minutes:record.answers.minutes}} productsHref={studioPath(store)+"#products"}/></>:null}
     <PathBoard key={record.board?.token || "not-joined"} joined={Boolean(record.board)} alias={record.board?"Creator "+record.board.token.slice(0,12):null} rows={boardRows} privacyHref={studioPath(store,"","path/privacy")}/>
     <PathReminderButton phoneUrl={studioPath(store,"","phone")}/>
     <PathShareCard input={{level:record.best,days:progress.dayOnPath,moneyCents:record.money?.currency===store.currency?record.money.cents:null,currency:store.currency,moneyAt:record.money?.at || null}}/>

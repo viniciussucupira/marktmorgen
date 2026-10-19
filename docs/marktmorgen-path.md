@@ -286,9 +286,10 @@ inline error and focus correction; existing parser and bounds are unchanged.
    keys, reached levels and money thresholds are unchanged; no data migration.
 2. **Post-sale growth missions — complete (PR #613).** Six bounded server-fact
    missions, unknown states and their quota reservations are described below.
-3. **Return mission after seven local days.** Implementation and validation
-   contract are recorded below; production evidence remains in continuity.
-4. **Fixed Instagram, TikTok and YouTube post scripts — pending.**
+3. **Return mission after seven local days — complete (PR #616).** Published
+   as delivery 38 after the domain, version and full checks were confirmed.
+4. **Fixed Instagram, TikTok and YouTube post scripts.** Implementation and
+   validation contract are recorded below; production evidence is kept separately.
 5. **Optional paid, reserved and fact-checked AI mission wording — pending.**
 6. **Private, accessible level certificates with money opt-in — pending.**
 7. **Imported products/pages recognised without imported leads/sales — pending.**
@@ -335,3 +336,16 @@ The optional owner-requested phone reminder uses the existing quiet-hours admiss
 Costs stay within the existing measured atomic write, capped four-KB Path read envelope and unchanged reminder reservation. The stored comparison marker is measured in the existing data-room slot, including refusal when full. No prices, visible plan limits, tax rates, sales switches or supplier ceilings change. A pending return also avoids reading the additional post-sale catalog evidence. None of this certifies the sixty-percent all-tax net margin.
 
 Validation contract: regression reproduced against the old midnight counter; local dates and both DST transitions in Los Angeles, New York, London, Berlin and Sydney; malformed history refusal; factual completion and reload persistence; private parser/export and deletion; stale-write refusal and actual Redis slot accounting; unchanged reminder admission and reservations; authenticated mobile/desktop browser checks including a forged client-only success reply; path-words and full exact-head CI. Automated checks do not certify NVDA, VoiceOver, TalkBack or comprehensive WCAG AAA. Publication and delivery numbering require the live domain and exact version afterward.
+
+
+## Ordered Path item 4: fixed social post scripts
+
+The owner can choose Instagram, TikTok or YouTube and adapt a fixed script using a published product name already loaded with the store. The saved audience selects the initial platform; the saved time available selects a short or longer preparation cue. Private free-text answers, personal goals, money, buyer identities, prices, availability and results are not inputs to the script. It never invents a product benefit: bracketed demonstration, explanation and link cues require the creator to check their own published facts and replace the cues before sharing.
+
+Only up to three safe published names from the first eight cached head listings and first eight legacy inline listings are offered. Every choice must also exist in that store's own visible index; hidden, foreign, duplicate, malformed, oversized, instruction-like or earnings/pressure names are omitted. This is a bounded preview of already-loaded products, not a claim to list the entire catalog. The review link keeps the selected store. No additional database/provider/model request, key, saved draft, schedule, email or posting integration is introduced.
+
+Platform/product selection stays in the browser. Copy is an explicit action with a named read-only native text area. Clipboard refusal selects that same field for manual copy and never announces that it was copied; overlapping copy attempts are blocked and stale fields cannot receive a success message. Selecting or copying does not change mission facts. The small return-day focus from item 3 continues to show only its one mission.
+
+Reference patterns checked on 19 October 2026: HighLevel's official [Social Planner setup](https://help.gohighlevel.com/support/solutions/articles/155000005063-launchpad-setup-social-planner) separates creation, review and publication; ClickFunnels' official [publishing and sharing guide](https://support.myclickfunnels.com/docs/how-to-publish-and-share-your-funnel-url/) directs creators to review the public destination and copy its address. These are reference patterns, not integrations or evidence of conversion improvement.
+
+Validation contract: published own-catalog filtering and bounds; all three fixed scripts; safe text/refusal and no private goal/free-text inputs; Path wording; actual rendered labels/empty states/response bound; authenticated 390/1280 native selection, keyboard copy, clipboard-refusal fallback, same-store links, no AI/completion requests and automated accessibility checks. Existing guidance was rendered before the change and its named social-script-field assertion failed. Full exact-head CI, actual Redis and live domain/version confirmation are required before delivery numbering. Real assistive technology testing and comprehensive AAA remain separate work. No pricing, visible limit, financial gate, margin assumption or quiet-hours behavior changes, and no tax-margin certification is claimed.

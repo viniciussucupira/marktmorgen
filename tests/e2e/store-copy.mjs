@@ -25,6 +25,7 @@ import { fieldFocusPixels,mountFieldFocusFixture } from "./field-focus.mjs";
 import { checkGrowthAndContact } from "./growth-contact.mjs";
 import { checkPathReminder, checkPathAnswers } from "./path-reminder.mjs";
 import { checkPathBoardReplies } from "./path-board-replies.mjs";
+import {checkPathScripts} from "./path-scripts.mjs";
 import {checkReturnPath} from "./path-return.mjs";
 import {checkPostSalePath} from "./path-growth.mjs";
 import { checkPathCardText } from "./path-card-text.mjs";
@@ -714,6 +715,7 @@ try {
   is("withdrawal removes exported membership",afterLeave.path.board,null);
   await checkPostSalePath({browser,LOCAL,services,session:growthSession,sid:growthSid,product:growthProduct,axeSource,is});
   await checkReturnPath({browser,LOCAL,session:returnSession,sid:returnSid,otherSid:growthSid,axeSource,is});
+  await checkPathScripts({browser,LOCAL,session:growthSession,sid:growthSid,axeSource,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;
