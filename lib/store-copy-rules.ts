@@ -100,7 +100,7 @@ export const SKIP_WORDS: Record<SkipReason, string> = {
   podcast: "a private podcast, whose episodes are this store's",
   package: "a package of calls booked on your calendar",
   options: "options that each deliver their own thing",
-  keys: "licence keys, which are this store's own",
+  keys: "license keys, which are this store's own",
   bundle: "a bundle holding a product that is not copied",
 };
 

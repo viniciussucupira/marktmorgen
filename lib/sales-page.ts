@@ -123,7 +123,7 @@ export const BLOCK_KINDS: { kind: BlockKind; label: string; hint: string }[] = [
   { kind: "countdown", label: "Countdown", hint: "Days, hours and minutes to one real moment, the same for every visitor: a launch price ending, doors closing, a live session starting." },
   { kind: "fit", label: "Who it is for", hint: `Two short lists side by side: who it is for, and who it is not for. Up to ${MAX_FIT_ITEMS} points each.` },
   { kind: "steps", label: "How it works", hint: `Up to ${MAX_STEPS} numbered steps, from paying to the result, drawn as a path.` },
-  { kind: "compare", label: "Comparison", hint: `A table of up to ${MAX_COMPARE_ROWS} rows: this product beside another way of getting there, with ticks, crosses or a few words.` },
+  { kind: "compare", label: "Comparison", hint: `A table of up to ${MAX_COMPARE_ROWS} rows: this product beside another way of getting there, with check marks, crosses or a few words.` },
   { kind: "bonuses", label: "Bonuses", hint: `Up to ${MAX_BONUSES} extras that come with it, each on its own card.` },
   { kind: "feature", label: "Picture and text", hint: "One of your pictures beside a heading and a few paragraphs, the picture on the left or the right. Several in a row make the page read like a story." },
   { kind: "quotes", label: "Said elsewhere", hint: `Up to ${MAX_QUOTES} things people said about it in public — a post, a video, a comment — each with a link to where it was said, so a visitor can check it.` },

@@ -1,6 +1,6 @@
 # Fila de trabalho do Codex — Marktmorgen
 
-Estado registrado em19/10/2026,19:43 de Fortaleza. Esta é uma fila de execução e evidência, não uma promessa de resultado, conformidade AAA ou margem fiscal certificada. Código remoto é a fonte canônica. Não refazer trabalho do Claude.
+Estado registrado em19/10/2026, após mesclagens623–625 (horários exatos nas entradas). Esta é uma fila de execução e evidência, não uma promessa de resultado, conformidade AAA ou margem fiscal certificada. Código remoto é a fonte canônica. Não refazer trabalho do Claude.
 
 ## Proveniência e prioridade
 
@@ -54,7 +54,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 4. **[B2] Revisar inglês americano página por página: mensagens, erros, estados vazios, e-mails, aria-label, alt e textos de testes; manter inventário de áreas e PRs pequenos, sem alterar significado.**
    - Pedido: P2 B2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (branch codex/us-english-shared-copy; áreas públicas/legais, após PR #623)**.
+   - Estado: **em andamento (branch codex/us-english-composer-copy; áreas públicas/legais, após PR #623)**.
    - Custo e margem: Sem novo fornecedor; medir eventual mudança de payload dentro dos tetos existentes. M0 permanece referência, sem certificação fiscal.
 
 5. **[B3] Adicionar teste de texto da plataforma que recuse grafias britânicas comuns: colour, centre, organise, licence, cancelled, behaviour, afterwards e tick/untick; distinguir texto exibido de código, citações e dados.**
@@ -431,6 +431,24 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Custo e margem: Não refazer cadastro nem criar conta; nenhuma cobrança nova autorizada.
 
 
+78. **[B2-PUBLIC] Primeira área pública: homepage, preços, missão e ajuda,18fontes revistas**
+   - Pedido: P2 B2;19/10/2026, hora original não fornecida.
+   - Estado: **feito (PR #623, mesclado em 19/10, 20:10, horário de Fortaleza; publicação confirmada)**.
+   - Custo e margem: nenhum novo fornecedor/chamada/registro; envelope existente e M0 antes=depois, leitura vinculante ainda reprova60%.
+   - Evidência: [PR #623](https://github.com/viniciussucupira/marktmorgen/pull/623), commit `aa669a9d9198e017c20426b1b2cc83be407eb2be`.
+
+79. **[B2-LEGAL] Área legal e entrada de conta:12fontes e descrição de feedback na privacidade**
+   - Pedido: P2 B2;19/10/2026, hora original não fornecida.
+   - Estado: **feito (PR #624, mesclado em 19/10, 20:12, horário de Fortaleza; publicação confirmada)**.
+   - Custo e margem: nenhum novo fornecedor/chamada/registro; envelope existente e M0 antes=depois, leitura vinculante ainda reprova60%.
+   - Evidência: [PR #624](https://github.com/viniciussucupira/marktmorgen/pull/624), commit `437c2779350951f2ed98760df42d9fc43c208f7f`.
+
+80. **[B2-SHARED] Documentos do estúdio e textos compartilhados de Meta/afiliados/recursos**
+   - Pedido: P2 B2;19/10/2026, hora original não fornecida.
+   - Estado: **feito (PR #625, mesclado em 19/10, 20:15, horário de Fortaleza; confirmação de publicação em andamento)**.
+   - Custo e margem: nenhum novo fornecedor/chamada/registro; envelope existente e M0 antes=depois, leitura vinculante ainda reprova60%.
+   - Evidência: [PR #625](https://github.com/viniciussucupira/marktmorgen/pull/625), commit `9725e09b7198ae2f4f2eeea9f61bc230a30977bd`.
+
 ## Fontes do levantamento fornecidas pelo dono
 
 Levantamento informado como feito em fontes oficiais em19/10/2026; não refeito para a criação desta fila. Conferir cada capacidade no código e guardar a prova nas matrizes, sem tratar preço/medição fornecida como medição própria.
@@ -460,3 +478,5 @@ B2 segunda área:12fontes legais/entrada de conta inspecionadas, incluindo priva
 PR624 integra a correção de Pricing do PR623 após os dois testes completos identificarem o mesmo rótulo britânico herdado; preserva a revisão legal, os testes visíveis e o histórico de621/622. Nova verificação completa obrigatória, sem rerun isolado.
 
 B2 próxima área: documentos do estúdio/entrada de conta e16componentes/catálogo de recursos lidos; corrigidos apenas textos exibidos de Meta, afiliação e explicações públicas. Identificadores/statuses legados preservados. Casos reais de navegador ampliados. Produtores de e-mail da plataforma e componentes ainda não revisados seguem em andamento; não antecipar B2 feito.
+
+B2 composição/importação: correções pontuais de check marks/license em instruções do editor, razão de não copiar produto, modelo novo e erro interno, sem reescrever conteúdo já salvo. Verificação de navegador abre seletor real sem salvar ou chamar IA. O B2 completo segue em andamento; fontes restantes/e-mails mistos ainda pendentes.
