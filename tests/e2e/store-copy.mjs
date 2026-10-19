@@ -25,6 +25,7 @@ import { fieldFocusPixels,mountFieldFocusFixture } from "./field-focus.mjs";
 import { checkGrowthAndContact } from "./growth-contact.mjs";
 import { checkPathReminder, checkPathAnswers } from "./path-reminder.mjs";
 import { checkPathBoardReplies } from "./path-board-replies.mjs";
+import { checkPathCardText } from "./path-card-text.mjs";
 
 async function storePlaceholderContrast(field){
   return field.evaluate(node=>{
@@ -313,6 +314,7 @@ try {
   await open(owner,LOCAL+campaignUrl.pathname+"?store="+campaignUrl.searchParams.get("store")+"&campaignGoal=unknown#campaign-starters");
   is("invalid campaign goals fall back to all",await owner.getByLabel("What do you want to do?").inputValue(),"all");
   await open(owner,LOCAL+"/studio/path?store="+campaignUrl.searchParams.get("store"));
+  await checkPathCardText({owner,axeSource});
   is("sales sharing starts switched off",await owner.getByLabel("Include sales kept after refunds",{exact:true}).isChecked(),false);
   await owner.getByRole("button",{name:"Send your current mission",exact:true}).click();
   await owner.waitForFunction(()=>Boolean(document.querySelector('section[aria-labelledby="path-reminder-title"] [role="status"]')?.textContent));
