@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -29,7 +30,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
  return <div className="min-h-screen bg-paper text-ink">
   <StudioHeader current={store} role={access.role} stores={access.stores} owned={access.owned} action={{href:studioPath(store),label:"Back to the studio",short:"Studio"}}/>
   <StudioStorePin sid={store.sid}><main id="content" className="container-page pb-20 pt-10">
-   <p className="eyebrow">Marktmorgen Path</p><a className="mt-3 inline-block underline" href="/platform/path">How Path works</a><h1 className="t-h2 mt-3">{PATH_TITLE}</h1><p className="mt-3 text-ink-soft">{PATH_SLOGAN}</p>
+   <p className="eyebrow">Marktmorgen Path</p><Link className="mt-3 inline-block underline" href="/platform/path">How Path works</Link><h1 className="t-h2 mt-3">{PATH_TITLE}</h1><p className="mt-3 text-ink-soft">{PATH_SLOGAN}</p>
    {failed?<p role="alert" className="notice notice-error mt-6">Your Path could not be read just now. Please try again in a moment.</p>:null}
    {progress && record?<>
     <section className="mt-8 rounded-2xl border border-line bg-white p-6" aria-label="Your progress">
