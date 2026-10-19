@@ -155,6 +155,10 @@ try {
   await owner.getByLabel("Name, for you", { exact: true }).fill("Browser waitlist campaign");
   await owner.getByRole("button", { name: "Bring it in as a draft", exact: true }).click();
   await owner.getByText("Made as a draft. It is in the list above, off, with its pages kept back.", { exact: true }).waitFor();
+  // A success notice precedes router.refresh(). Read a fresh page to prove
+  // persistence rather than racing the asynchronous refresh of the list.
+  await owner.reload({ waitUntil: "networkidle" });
+  await owner.getByText("Browser waitlist campaign", { exact: true }).first().waitFor();
   is("a new waitlist campaign is saved by the real import", await owner.getByText("Browser waitlist campaign", { exact: true }).count() > 0, true);
   for (const width of [390, 1280]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
