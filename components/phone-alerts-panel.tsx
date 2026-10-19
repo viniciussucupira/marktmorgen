@@ -12,6 +12,7 @@ const MAX_DEVICES = 10;
 
 /** Every event, in the order the studio lists them, with what each one says. */
 const EVENTS: { key: PhoneEvent; label: string; hint: string }[] = [
+  { key: "path", label: "Path", hint: "Your current mission, requested from Path, on online devices during your local daytime" },
   { key: "sale", label: "Sales", hint: "Every paid order: the amount and what was bought" },
   { key: "booking", label: "Bookings", hint: "A call or a seat booked: what, when, and what was paid" },
   { key: "report", label: "Community reports", hint: "A member reported a post or a comment" },
@@ -90,7 +91,7 @@ export function PhoneAlertsPanel({ view: initial }: { view: PhoneView }) {
   const [support, setSupport] = useState<Support>("checking");
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [thisId, setThisId] = useState<string | null>(null);
-  const [chosen, setChosen] = useState<PhoneEvent[]>(ALL);
+  const [chosen, setChosen] = useState<PhoneEvent[]>(ALL.filter((event) => event !== "path"));
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [installer, setInstaller] = useState<InstallEvent | null>(null);

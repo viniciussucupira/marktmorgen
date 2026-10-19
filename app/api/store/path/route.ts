@@ -1,3 +1,4 @@
+import { sendPathReminder } from "@/lib/path-reminder";
 import type { NextRequest } from "next/server";
 import { guardStoreWrite } from "@/lib/store-request";
 import { ensureStoreId, storeRef } from "@/lib/store";
@@ -22,6 +23,10 @@ export async function POST(request: NextRequest) {
   try {
     const store = guarded.store.sid ? guarded.store : await ensureStoreId(storeRef(guarded.store));
     if (!store?.sid) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
+    if (body.action === "remind") {
+      const result = await sendPathReminder(store);
+      return Response.json(result, {status: result.ok ? 200 : result.reason === "allowance" ? 429 : 409, headers: {"Cache-Control":"no-store"}});
+    }
     if (body.action === "forget") {
       await forgetPath(store);
       return Response.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
