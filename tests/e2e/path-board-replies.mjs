@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 /** All board POSTs intercepted; actual persistence remains covered by store-copy. */
-export async function checkPathBoardReplies({owner,LOCAL,sid,axeSource,joined}){
+export async function checkPathBoardReplies({owner,axeSource,joined}){
  const errors=[];
+ const pathUrl=owner.url();
  for(const width of [390,1280]){
   const page=await owner.context().newPage();
   page.on("pageerror",error=>errors.push(String(error)));
@@ -27,7 +28,7 @@ export async function checkPathBoardReplies({owner,LOCAL,sid,axeSource,joined}){
    const action=region.getByRole("button",{name:joined?"Leave the mission board":"Join the mission board",exact:true});
    const consent=region.getByRole("checkbox");
    async function open(){
-    await page.goto(LOCAL+"/studio/path?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
+    await page.goto(pathUrl,{waitUntil:"domcontentloaded",timeout:60000});
     await action.waitFor();
     if(!joined){
      assert.equal(await consent.isChecked(),false);
