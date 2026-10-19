@@ -80,7 +80,7 @@ store already keeps; the table says which, and what the path does with it.
    day to do next; there is no "missed" or "behind".
 4. **Levels by cumulative real money kept** (paid live orders less refunds,
    in the store's currency): First Light (title and a product), Sunrise (the
-   first real sale), Morning $100, Midday $1,000, Golden Hour $10,000, Zenith
+   first real sale), Morning $100, High Sun $1,000, Golden Hour $10,000, Zenith
    $100,000; other currencies on the scale `lib/money.ts` already sets prices
    on, never a conversion. Never "Hero" or "Games" (`FORBIDDEN_MARKS`).
 5. **Streak**: the days the owner opened the path, in their own days. Sunday
@@ -147,14 +147,11 @@ policy says so (`/privacy#path`).
 
 ## 6. Open decisions for the owner
 
-1. **"Midday"** is also the name of a business app for freelancers and founders
-   (midday.ai). Proposed in its place: **"High Sun"**. One line
-   (`LEVEL_NAMES`) changes it.
-2. **What a lead is.** Today: an address left on the store, counted when the
+1. **What a lead is.** Today: an address left on the store, counted when the
    store sends its confirmation email (`fs:`), so an import never counts. The
    stricter reading, an address that used its confirmation link, would need
    either a walk of the list or a new counter on the confirmation; not built.
-3. **PayPal sales** carry no test mode and are not counted toward Day 7 or a
+2. **PayPal sales** carry no test mode and are not counted toward Day 7 or a
    level yet.
 
 ## 7. What it will not do
@@ -277,3 +274,37 @@ corrupt-record cleanup and physical shared allocation at 1/16/128 entries.
 The real-browser fixture covers explicit consent, persistence, mobile/desktop axe,
 quota exhaustion, owner-only Path download and withdrawal without lost answers.
 No real payment, third-party message or provider read is triggered by board join.
+
+## Ordered Path continuation (19 October 2026)
+
+Prerequisite PR #611 is published: the optional personal goal has an associated
+inline error and focus correction; existing parser and bounds are unchanged.
+
+1. **High Sun — complete.** The display name was already active in LEVEL_NAMES.
+   Stale documentation and test labels are now aligned, and path-words checks the
+   documented level list and rejects the retired display name. Stable internal
+   keys, reached levels and money thresholds are unchanged; no data migration.
+2. **Post-sale growth missions — pending.** Server facts for second deliverable,
+   sent list email, repeat buyer, configured offer, consented testimonial and ten
+   paid sales after refunds must be audited and bounded before implementation.
+3. **Return mission after seven local days — pending.**
+4. **Fixed Instagram, TikTok and YouTube post scripts — pending.**
+5. **Optional paid, reserved and fact-checked AI mission wording — pending.**
+6. **Private, accessible level certificates with money opt-in — pending.**
+7. **Imported products/pages recognised without imported leads/sales — pending.**
+8. **Creator-local weekly factual studio summary — pending.**
+9. **Server-confirmed live PayPal sales with refunds — pending.**
+10. **Leads counted after confirmation-link use — pending.**
+11. **Creator-controlled store badge, off by default — pending.**
+12. **Private aggregate activation/time-to-first-sale owner panel — pending.**
+13. **Optional six-person pseudonymous groups — pending.**
+14. **German, French and Dutch Path with prohibited-language checks — pending.**
+15. **Actual NVDA, VoiceOver and TalkBack evidence — pending.** Automated browser
+    checks do not certify these assistive technologies.
+
+Each item has its own PR after checking current main, concurrent work and existing
+features. All new product copy remains covered by path-words. Creator-local quiet
+hours and days use the existing rules, including DST and dispatch margin. No trial
+AI, unreserved supplier cost, inferred mission completion, public money or weaker
+commercial/tax gate is permitted. This list records scope, not proof of the60%
+net-after-tax requirement. Remaining items are not claimed built or tested.

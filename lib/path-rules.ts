@@ -481,12 +481,7 @@ export function pathProgress(facts: PathFacts, answers: Pick<PathAnswers, "minut
 export const LEVELS = ["first-light", "sunrise", "morning", "midday", "golden-hour", "zenith"] as const;
 export type Level = (typeof LEVELS)[number];
 
-/**
- * The levels' names (owner, 18 October 2026). "Midday" is also the name of
- * a business app for freelancers and founders (midday.ai); docs/marktmorgen-path.md
- * proposes "High Sun" in its place, for the owner to decide. One place, so a
- * change is one line.
- */
+/** Display names approved by the owner; stable level keys preserve existing records. */
 export const LEVEL_NAMES: Record<Level, string> = {
   "first-light": "First Light",
   sunrise: "Sunrise",
