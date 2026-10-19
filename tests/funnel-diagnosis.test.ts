@@ -57,6 +57,10 @@ is("an unread step is named, and its neighbor is not called unreached", unread.m
 is("and it is never read as zero", unread[0].detail, "Step 2: the counts could not be read just now, so it is left out. Reload to try again.");
 is("a step visitors cannot open is left to the launch review", codes([page("Guide", 200), page("Video", 0, false), page("Sales", 150)]), []);
 
+const crowded=funnelFindings([...Array.from({length:9},(_,i)=>product("Offer "+i,100,0)),product("Unread orders",100,null)]);
+is("availability warning survives the eight-finding display cap",crowded[0].code,"unavailable");
+is("the bounded diagnosis stays at eight findings",crowded.length,8);
+
 part("Honest words");
 const all = [broken, unpaid, fall, unread, funnelFindings([page("Guide", 3)])].flat().map((f) => `${f.title} ${f.detail}`).join(" ") + " " + DIAGNOSIS_NOTE;
 is("no finding claims a cause", /\bbecause\b|\bcaused\b|\bwill (sell|convert|increase)\b|guarantee/i.test(all), false);

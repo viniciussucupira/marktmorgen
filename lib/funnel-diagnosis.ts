@@ -144,5 +144,7 @@ export function funnelFindings(steps: readonly DiagnosisStep[]): FunnelFinding[]
       detail: `${list(unavailable)}: the counts could not be read just now, so ${unavailable.length === 1 ? "it is" : "they are"} left out. Reload to try again.`,
     });
   }
-  return out.slice(0, 8);
+  // Keep unavailable data visible even when many other findings fill the display limit.
+  const missing=out.find(finding=>finding.code==="unavailable");
+  return (missing?[missing,...out.filter(finding=>finding!==missing)]:out).slice(0,8);
 }
