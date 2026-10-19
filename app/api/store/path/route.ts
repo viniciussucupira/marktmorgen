@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
     const started = await startPath(store, read.answers);
     if (!started.ok) {
       return Response.json(
-        { ok: false, error: started.reason, message: started.reason === "full" ? "Your store has no room to keep this right now. Nothing was changed." : "This can't be saved right now. Try again in a minute." },
-        { status: started.reason === "full" ? 409 : 503 },
+        { ok: false, error: started.reason, message: started.reason === "full" ? "Your store has no room to keep this right now. Nothing was changed." : started.reason === "conflict" ? "Your Path changed while saving. Reload and try again." : "This can't be saved right now. Try again in a minute." },
+        { status: started.reason === "full" || started.reason === "conflict" ? 409 : 503 },
       );
     }
     return Response.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });

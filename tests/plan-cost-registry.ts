@@ -253,9 +253,9 @@ export function request(shape: keyof typeof SHAPES, commands: number, bytes = 0)
 /** Path page's own bounded reads, including one actual studio-usage count. Money refreshes are separately reserved as PATH_READ_UNITS. */
 /** Owner-only Path push: up to ten devices in parallel, eight-second timeout, no full-config rewrite for expired devices. Reserved before dispatch. */
 export const PATH_REMINDER_PUSH = request("wait", 45, 500_000);
-export const PATH_PAGE = request("heavy", 41, 70_000);
+export const PATH_PAGE = request("heavy", 42, 70_000);
 
-export const PATH_READ = request("heavy", 12, LIFE_WRITE_MAX * 96 + 16_384) + (PATH_SALE_PAGES + PATH_REFUND_PAGES) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
+export const PATH_READ = request("heavy", 14, LIFE_WRITE_MAX * 96 + 16_384) + (PATH_SALE_PAGES + PATH_REFUND_PAGES) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
 
 /** One host's calendar read: its commands, and the wait for the calendar, held at 2 GB inside the page that asked. */
 export const TEAM_READING = 7 * COMMAND + 1 * MEMORY_SECOND + 0.05 * CPU_SECOND;
@@ -534,6 +534,7 @@ export const COST_LINES: CostLine[] = [
       { file: "lib/deal-stage-trigger.ts", names: ["STAGE_TRIGGER_UNITS", "countStudio(store, null, STAGE_TRIGGER_UNITS)"] },
       // Marktmorgen Path reading its store's money and counts again takes PATH_READ_UNITS studio requests first, at most once every PATH_MONEY_SECONDS (18 October 2026).
       { file: "lib/path.ts", names: ["PATH_READ_UNITS", "countStudio(store, null, units)"] },
+      { file: "lib/path-atomic.ts", names: ["WRITE_PATH", "FORGET_PATH", "PATH_DATA_CHANGE"] },
       { file: "lib/path-reminder-rules.ts", names: ["PATH_REMINDER_UNITS"] },
       { file: "lib/path-reminder.ts", names: ["sendPathReminder", "PATH_REMINDER_UNITS"] },
       { file: "lib/path-facts.ts", names: ["PATH_SALE_PAGES", "PATH_REFUND_PAGES", "PATH_MONEY_SECONDS"] },

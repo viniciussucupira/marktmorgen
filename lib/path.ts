@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+import { WRITE_PATH, FORGET_PATH } from "@/lib/path-atomic";
 /**
  * Where a store's Marktmorgen Path is kept (lib/path-rules.ts says what it
  * is): one small record, counted in the store's data room like everything
@@ -33,8 +35,8 @@
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Store } from "@/lib/store";
-import { dataBytes } from "@/lib/store-data-rules";
-import { giveData, takeData } from "@/lib/store-data";
+import { dataBytes, contentRoomFor } from "@/lib/store-data-rules";
+import { dataKey, monthOf } from "@/lib/store-data";
 import { type PathAnswers, AUDIENCES, LEVELS, MINUTES, cleanLine, MAX_SKILLS, MAX_SUBJECT, localDay, validTimeZone, withCheckin, levelKept, type PathFacts } from "@/lib/path-rules";
 import { type PathCounts, type PathMoney, PATH_REFUND_PAGES, PATH_SALE_PAGES, countsFresh, factsFrom, moneyFresh, readPathCounts, readPathMoney } from "@/lib/path-facts";
 import { countStudio } from "@/lib/studio-route";
@@ -47,6 +49,8 @@ export const PATH_SLOT = "path";
 const SID = /^[0-9a-f]{32}$/;
 
 export type PathRecord = {
+  /** Opaque write token; absent on legacy records. Never reused after deletion. */
+  revision?: string;
   answers: PathAnswers;
   startedAt: number;
   checkins: string[];
@@ -105,6 +109,7 @@ export function parsePath(raw: unknown): PathRecord | null {
   if (!Number.isFinite(startedAt) || startedAt <= 0) return null;
   const best = Number(value.b);
   return {
+    revision: typeof value.r === "string" ? value.r : "",
     answers: {
       goalCents: goal,
       goalCurrency: typeof a.goalCurrency === "string" && isCurrency(a.goalCurrency) ? a.goalCurrency : "usd",
@@ -125,7 +130,7 @@ export function parsePath(raw: unknown): PathRecord | null {
 
 /** The record as it is written. Pure. */
 export function pathJson(record: PathRecord): string {
-  return JSON.stringify({ v: 1, a: record.answers, at: record.startedAt, c: record.checkins, b: record.best, bAt: record.bestAt, m: record.money, n: record.counts });
+  return JSON.stringify({ v: 1, r: record.revision ?? "", a: record.answers, at: record.startedAt, c: record.checkins, b: record.best, bAt: record.bestAt, m: record.money, n: record.counts });
 }
 
 /** The store's path, or null when it has not begun one (or nothing can be read). */
@@ -136,30 +141,32 @@ export async function readPath(store: Pick<Store, "sid">): Promise<PathRecord | 
 }
 
 /**
- * Writes the record, its room taken first (set, so a record rewritten never
- * grows the room by more than it weighs). False when the room is full or
- * cannot be counted: nothing is written then.
+ * Compares the saved revision and changes the record and its data-room slot
+ * atomically. A stale snapshot, full room or unreadable meter changes neither.
  */
-async function writePath(store: Store, record: PathRecord, now: number): Promise<boolean> {
-  if (!SID.test(store.sid) || !isRedisConfigured()) return false;
-  const json = pathJson(record);
-  const taken = await takeData(store, [{ slot: PATH_SLOT, bytes: dataBytes(json), set: true }], now);
-  if (!taken.ok) return false;
-  await redisPipeline([["SET", key(store.sid), json]]);
-  return true;
+type PathWriteResult = { ok: true; record: PathRecord } | { ok: false; reason: "full" | "unavailable" | "conflict" };
+async function writePath(store: Store, record: PathRecord, now: number, expected: string | null): Promise<PathWriteResult> {
+  const room = dataKey(store);
+  if (!SID.test(store.sid) || !room || !isRedisConfigured()) return { ok: false, reason: "unavailable" };
+  const next: PathRecord = { ...record, revision: randomBytes(16).toString("hex") };
+  const json = pathJson(next);
+  const [reply] = await redisPipeline([["EVAL", WRITE_PATH, 2, room, key(store.sid), contentRoomFor(store, now / 1000), monthOf(now), dataBytes(json), expected ?? "", expected === null ? "1" : "0", json]]);
+  const state = Array.isArray(reply) ? Number(reply[0]) : NaN;
+  if (state === 1) return { ok: true, record: next };
+  return { ok: false, reason: state === 0 ? "full" : state === -2 ? "conflict" : "unavailable" };
 }
 
 /**
  * Begins the path, or changes its answers: the day it began is kept when it
  * already had one, and so is everything it remembered.
  */
-export async function startPath(store: Store, answers: PathAnswers, now = Date.now()): Promise<{ ok: true; record: PathRecord } | { ok: false; reason: "full" | "unavailable" }> {
+export async function startPath(store: Store, answers: PathAnswers, now = Date.now()): Promise<{ ok: true; record: PathRecord } | { ok: false; reason: "full" | "unavailable" | "conflict" }> {
   if (!SID.test(store.sid) || !isRedisConfigured()) return { ok: false, reason: "unavailable" };
   const before = await readPath(store);
   const record: PathRecord = before
     ? { ...before, answers }
     : { answers, startedAt: now, checkins: [localDay(answers.timeZone, now)], best: -1, bestAt: 0, money: null, counts: null };
-  return (await writePath(store, record, now)) ? { ok: true, record } : { ok: false, reason: "full" };
+  return writePath(store, record, now, before ? before.revision ?? "" : null);
 }
 
 /** Takes a reading's studio requests; false when the studio's figure has no room for it (the kept reading is shown then). */
@@ -191,13 +198,24 @@ export async function visitPath(store: Store, record: PathRecord, now = Date.now
   const best = levelKept(record.best, read);
   const next: PathRecord = { ...record, checkins, money, counts, best, bestAt: best > record.best ? now : record.bestAt };
   if (best !== record.best) changed = true;
-  if (changed) await writePath(store, next, now).catch((error) => console.error("keeping a store's path failed", store.handle, error));
+  if (changed) {
+    const written = await writePath(store, next, now, record.revision ?? "").catch((error) => {
+      console.error("keeping a store's path failed", store.handle, error);
+      return { ok: false as const, reason: "unavailable" as const };
+    });
+    if (written.ok) return { record: written.record, facts: read };
+    // A concurrent save, deletion or full room must not present an unkept level as kept.
+    const kept = (await readPath(store).catch(() => null)) ?? record;
+    return { record: kept, facts: factsFrom(store, kept.counts, kept.money) };
+  }
   return { record: next, facts: read };
 }
 
 /** Forgets the store's path: from its deletion and its closing. Safe to call twice. */
 export async function forgetPath(store: Store): Promise<void> {
   if (!SID.test(store.sid) || !isRedisConfigured()) return;
-  await redisPipeline([["DEL", key(store.sid)]]);
-  await giveData(store, [{ slot: PATH_SLOT, bytes: 0, set: true }]);
+  const room = dataKey(store);
+  if (!room) return;
+  const [reply] = await redisPipeline([["EVAL", FORGET_PATH, 2, room, key(store.sid), monthOf(Date.now())]]);
+  if (!Array.isArray(reply) || Number(reply[0]) !== 1) throw new Error("the Path could not be forgotten");
 }
