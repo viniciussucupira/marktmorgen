@@ -296,8 +296,9 @@ export function dayMissions(facts: PathFacts, answers: Pick<PathAnswers, "minute
       id: "test",
       day: 3,
       title: "Make a test purchase in Stripe's test mode",
-      why: "A test purchase proves the whole way through: the button, the checkout and the file, with no card charged.",
+      why: "Use Stripe test mode to review the buying journey without a real card charge. The recorded checkout does not verify file access or delivery.",
       steps: [
+        "Confirm that your store is in Stripe test mode before entering any test-card details. If it is live, skip this mission; do not use a real card.",
         "Open one of your products on your store and press its button.",
         "Pay with Stripe's test card 4242 4242 4242 4242, any future date and any three digits.",
         "Check that the thanks page hands over the file.",
@@ -305,7 +306,7 @@ export function dayMissions(facts: PathFacts, answers: Pick<PathAnswers, "minute
       closesOn:
         facts.testPurchase === "unavailable"
           ? "Your store's checkout runs live, where Stripe has no test mode for it. This day is left open, it does not hold the path back, and you are never asked to buy from yourself with a real card."
-          : "Closes when Stripe records a paid checkout in test mode on your store.",
+          : "Closes when Stripe records a paid checkout in test mode on your store. File access and delivery still need a manual check.",
       place: { label: "Your store", store: true },
       state: facts.testPurchase,
     },

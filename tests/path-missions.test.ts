@@ -27,4 +27,16 @@ const allOpen = [...dayMissions(NO_FACTS, longest), ...trafficMissions(NO_FACTS)
 const worst = renderToStaticMarkup(createElement(PathMissions, { missions: allOpen, hrefFor }));
 is("bounded mission guidance stays below 30 KB of the page's 70 KB bound", Buffer.byteLength(worst, "utf8") < 30_000, true);
 is("native disclosures work without an added script", worst.includes("<script"), false);
+part("A recorded test checkout is not delivery verification");
+for(const state of ["open","done"] as const){
+ const testMission=dayMissions({...NO_FACTS,testMode:true,testPurchase:state},answers)[2];
+ const markup=renderToStaticMarkup(createElement(PathMissions,{missions:[testMission],hrefFor}));
+ is("checkout state preserved:"+state,testMission.state,state);
+ is("recorded and open checkout both disclose manual delivery check:"+state,markup.includes("File access and delivery still need a manual check."),true);
+ is("no assertion that the whole journey is proved:"+state,testMission.why.includes("proves the whole way"),false);
+ if(state==="open"){
+  is("confirm test mode before card entry",testMission.steps[0].includes("Confirm that your store is in Stripe test mode"),true);
+  is("live checkout never asks for real card",testMission.steps[0].includes("do not use a real card"),true);
+ }
+}
 done();
