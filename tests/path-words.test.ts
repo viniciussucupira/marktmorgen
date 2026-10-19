@@ -103,6 +103,7 @@ part("Every Path file in the code");
   walk("lib", (_, name) => /^path[-.]/.test(name));
   walk("components", (_, name) => /^path[-.]/.test(name));
   walk("app", (path) => /(^|\/)path(\/|$)/.test(path.replace(/\\/g, "/")) && /\.(ts|tsx)$/.test(path));
+  files.push("lib/phone-alerts.ts", "components/phone-alerts-panel.tsx");
   is("the files are found", files.length >= 4, true);
   const bad: string[] = [];
   for (const file of files) {

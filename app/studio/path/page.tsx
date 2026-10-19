@@ -1,3 +1,4 @@
+import { PathReminderButton } from "@/components/path-reminder-button";
 import { PathShareCard } from "@/components/path-share-card";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -53,6 +54,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
      {mission?<div className="mt-4 rounded-2xl border border-line bg-white p-6"><h3 className="text-xl font-semibold">{mission.title}</h3><p className="mt-3">{mission.why}</p><ol className="mt-4 list-decimal space-y-2 pl-6">{mission.steps.map(step=><li key={step}>{step}</li>)}</ol><p className="mt-4 text-sm text-ink-soft">Recorded when: {mission.closesOn}</p><a className="btn btn-primary mt-5" href={href}>{mission.place.label}</a></div>:<p className="mt-3">Keep listening to your customers and improving what you offer. Your reached level stays with you.</p>}
     </section>
     <section className="mt-8" aria-labelledby="path-missions"><h2 id="path-missions" className="t-h3">Your missions</h2><ul className="mt-4 grid gap-3">{[...progress.days,...progress.traffic].map(m=><li key={m.id} className="rounded-xl border border-line bg-white p-4"><h3 className="font-semibold">{m.title}</h3><p className="mt-1 text-sm">{m.state==="done"?"Recorded":m.state==="unavailable"?"Available only in Stripe test mode; continue with the other missions.":"Ready when you are"}</p><p className="mt-2 text-sm text-ink-soft">{m.closesOn}</p></li>)}</ul></section>
+    <PathReminderButton phoneUrl={studioPath(store,"","phone")}/>
     <PathShareCard input={{level:record.best,days:progress.dayOnPath,moneyCents:record.money?.currency===store.currency?record.money.cents:null,currency:store.currency,moneyAt:record.money?.at || null}}/>
     <details className="mt-8"><summary className="cursor-pointer py-3 font-semibold">Your answers and privacy</summary><PathOnboarding currency={store.currency} answers={record.answers}/></details>
    </>:!failed?<PathOnboarding currency={store.currency}/>:null}

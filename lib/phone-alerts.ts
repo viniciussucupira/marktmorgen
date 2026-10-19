@@ -57,6 +57,7 @@
  *   nl:phone:st:<statsId>           device -> how the last send went
  *   nl:phone:seen:<hash>            an event already sent, forty days
  */
+import { maySendPathReminder } from "@/lib/path-reminder-rules";
 import { createHash, randomBytes } from "node:crypto";
 import { after } from "next/server";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -66,7 +67,7 @@ import { type Permission, type Role, can } from "@/lib/team-roles";
 import { memberStores, readTeam } from "@/lib/team";
 import { type PushFetchHooks, type Subscription, readSubscription, sendPush, vapidKeys, vapidKeysFor } from "@/lib/web-push";
 
-export const PHONE_EVENTS = ["sale", "booking", "report", "affiliate", "live", "comment", "alert"] as const;
+export const PHONE_EVENTS = ["sale", "booking", "report", "affiliate", "live", "comment", "alert", "path"] as const;
 export type PhoneEvent = (typeof PHONE_EVENTS)[number];
 
 /** Devices one person may have on one store. */
@@ -90,11 +91,12 @@ const EVENT_NEEDS: Record<PhoneEvent, Permission[]> = {
   live: ["community"],
   comment: ["products"],
   alert: ["stats"],
+  path: [],
 };
 
 /** The events a role may be told about, in the studio's order. */
 export function eventsFor(role: Role): PhoneEvent[] {
-  return PHONE_EVENTS.filter((event) => EVENT_NEEDS[event].some((need) => can(role, need)));
+  return PHONE_EVENTS.filter((event) => event === "path" ? role === "owner" : EVENT_NEEDS[event].some((need) => can(role, need)));
 }
 /** Reports, and applications, a store's devices are told about in an hour, at most, of each. */
 export const QUIET_PER_HOUR = 20;
@@ -336,13 +338,13 @@ async function deliver(store: Store, device: Device, event: PhoneEvent | "test",
     // A newer report or application replaces one still waiting at the push service.
     topic: event === "report" || event === "affiliate" || event === "comment" ? `nimbus-${event}` : undefined,
     // A live event's notice is no use once the event has started.
-    ttlSeconds: event === "test" ? 600 : event === "live" ? 900 : 86400,
+    ttlSeconds: event === "path" ? 0 : event === "test" ? 600 : event === "live" ? 900 : 86400,
     hooks: hooksForTests,
     keys: vapidKeysFor(device.kid),
   });
   const state: DeviceState = { at: Date.now(), ok: result.ok, status: result.status, error: result.error };
   await redisPipeline([["HSET", stateKey(statsId), device.id, JSON.stringify(state)]]);
-  if (result.gone) {
+  if (result.gone && event !== "path") {
     // Read again, so a device added a moment ago is never lost with this one.
     const config = await readConfig(statsId);
     if (config && config.devices.some((d) => d.id === device.id)) {
@@ -364,8 +366,9 @@ export async function alertCreator(
   store: Store,
   event: PhoneEvent,
   alert: Alert,
-  options: { seed: string; at?: number },
+  options: { seed: string; at?: number; pathTimeZone?: string },
 ): Promise<number> {
+  if (event === "path" && !maySendPathReminder(options.pathTimeZone || "", Date.now())) return 0;
   if (!store.statsId || !isRedisConfigured()) return 0;
   const keys = vapidKeys();
   if (!keys) return 0;
@@ -374,7 +377,8 @@ export async function alertCreator(
   const at = options.at ?? Date.now();
   // A checkout is dated when it was opened, not when it was paid: an hour's
   // grace lets one paid just after a device was turned on still reach it.
-  const wanting = (config?.devices ?? []).filter((d) => d.events.includes(event) && vapidKeysFor(d.kid) !== null && d.addedAt <= at + GRACE_MS);
+  const eligible = (config?.devices ?? []).filter((d) => d.events.includes(event) && vapidKeysFor(d.kid) !== null && d.addedAt <= at + GRACE_MS && (event !== "path" || ownerOf(store, d) === normaliseEmail(store.email)));
+  const wanting = event === "path" ? eligible.slice(0, MAX_DEVICES) : eligible;
   if (!wanting.length) return 0;
   // Only to a person whose role, now, may see this (EVENT_NEEDS).
   const roles = await rolesOf(store, wanting);
@@ -392,7 +396,7 @@ export async function alertCreator(
     ]);
     if (Number(count) > QUIET_PER_HOUR) return 0;
   }
-  await soon(() => Promise.all(listening.map((device) => deliver(store, device, event, alert))));
+  await soon(() => Promise.all(listening.map((device) => event === "path" && !maySendPathReminder(options.pathTimeZone || "", Date.now()) ? Promise.resolve(null) : deliver(store, device, event, alert))));
   return listening.length;
 }
 
@@ -496,7 +500,7 @@ export async function addDevice(
     ...subscription,
     kid: keys.kid,
     label: deviceLabel(userAgent),
-    events: chosen.length ? chosen : allowed,
+    events: chosen.length ? chosen : allowed.filter((event) => event !== "path"),
     lv: 1,
     addedAt: now,
     who: whoFor(store, person),

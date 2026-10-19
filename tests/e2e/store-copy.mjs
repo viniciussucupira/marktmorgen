@@ -171,6 +171,9 @@ try {
   await owner.reload({waitUntil:"networkidle"});
   is("Path persists the answers", await owner.locator('input[name="subject"]').inputValue(), "Sourdough");
   is("sales sharing starts switched off",await owner.getByLabel("Include sales kept after refunds",{exact:true}).isChecked(),false);
+  await owner.getByRole("button",{name:"Send your current mission",exact:true}).click();
+  await owner.waitForFunction(()=>Boolean(document.querySelector('section[aria-labelledby="path-reminder-title"] [role="status"]')?.textContent));
+  is("a requested reminder has a visible result",await owner.locator('section[aria-labelledby="path-reminder-title"] [role="status"]').isVisible(),true);
   const cardDownload=owner.waitForEvent("download");
   await owner.getByRole("button",{name:"Download card",exact:true}).click();
   const card=await cardDownload;
