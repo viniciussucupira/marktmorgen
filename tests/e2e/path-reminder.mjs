@@ -75,7 +75,8 @@ export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
  for(const width of [390,1280]){
   const page=await owner.context().newPage();
   page.on("pageerror",error=>errors.push(String(error)));
-  let mode="invalid",requests=0,release;
+  let mode="invalid",requests=0,release,beforeUnloads=0;
+  page.on("dialog",dialog=>{if(dialog.type()==="beforeunload"){beforeUnloads++;void dialog.accept();}});
   const gate=new Promise(resolve=>{release=resolve;});
   try{
    await page.setViewportSize({width,height:900});
@@ -102,6 +103,17 @@ export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
    const save=form.getByRole("button",{name:"Save your answers",exact:true});
    const draft="Kept skills "+width;
    await skills.fill(draft);await subject.fill("Kept subject");
+   assert.equal(await page.evaluate(()=>{const event=new Event("beforeunload",{cancelable:true});window.dispatchEvent(event);return event.defaultPrevented;}),true,"edited answers protect tab close/reload");
+   const currentUrl=page.url();
+   await page.evaluate(()=>{const link=document.createElement("a");link.id="path-draft-leave";link.href="/studio";link.textContent="Synthetic leave Path";document.body.append(link);});
+   const leaving=page.waitForEvent("dialog");
+   const click=page.locator("#path-draft-leave").click();
+   const confirmation=await leaving;
+   assert.equal(confirmation.type(),"confirm");
+   await confirmation.dismiss();await click;
+   assert.equal(page.url(),currentUrl);
+   assert.equal(await skills.inputValue(),draft,"declined departure retains answers");
+   await page.locator("#path-draft-leave").evaluate(node=>node.remove());
    await save.click();
    await form.getByRole("alert").filter({hasText:"Review your answers and try again."}).waitFor();
    assert.equal(await skills.inputValue(),draft);assert.equal(await save.isEnabled(),true);
@@ -135,7 +147,9 @@ export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
    mode="confirmed";await page.reload({waitUntil:"domcontentloaded"});await reveal();
    await skills.fill(draft);await subject.fill("Kept subject");
    assert.equal(await form.evaluate(node=>node.checkValidity()),true,"confirmed save uses a valid completed form");
+   const unloadsBeforeSave=beforeUnloads;
    await Promise.all([page.waitForNavigation({waitUntil:"domcontentloaded"}),save.click()]);
+   assert.equal(beforeUnloads,unloadsBeforeSave,"acknowledged save removes leave guard before reload");
    await reveal();
    console.log("  ok    Path answers pending/retained/refusal/uncertainty/single-flight/confirmed reload/AA/fit at "+width);
   }finally{release?.();await page.close();}

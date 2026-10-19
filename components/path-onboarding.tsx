@@ -1,10 +1,16 @@
 "use client";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AUDIENCES, AUDIENCE_WORDS, MINUTES, type PathAnswers } from "@/lib/path-rules";
 import { readMoney, parseCurrency, moneyField, decimalsOf } from "@/lib/money";
 import { readPathWriteReply } from "@/lib/path-write-response";
+import { useLeaveGuard } from "@/components/leave-guard";
 export function PathOnboarding({currency, answers}: {currency: string; answers?: PathAnswers}) {
  const [busy,setBusy]=useState(false);
+ const [dirty,setDirty]=useState(false);
+ const [acknowledged,setAcknowledged]=useState(false);
+ useLeaveGuard(dirty&&!acknowledged);
+ // The leave guard cleans up before this effect reloads an acknowledged write.
+ useEffect(()=>{if(acknowledged)window.location.reload();},[acknowledged]);
  const [uncertain,setUncertain]=useState(false);
  const locked=useRef(false);
  const [message,setMessage]=useState("");
@@ -14,7 +20,7 @@ export function PathOnboarding({currency, answers}: {currency: string; answers?:
   try {
    const response=await fetch("/api/store/path",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
    const result=readPathWriteReply(response.status,await response.json());
-   if(result.state==="saved"){window.location.reload();return;}
+   if(result.state==="saved"){setAcknowledged(true);return;}
    setMessage(result.message);
    if(result.state==="uncertain")setUncertain(true);
    else locked.current=false;
@@ -30,7 +36,7 @@ export function PathOnboarding({currency, answers}: {currency: string; answers?:
   if(goalCents===null){setMessage("Please enter a plain amount in your store's currency.");return;}
   void request({action:"start",answers:{goalCents,skills:form.get("skills"),subject:form.get("subject"),minutes:Number(form.get("minutes")),audience:form.get("audience"),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"}});
  }
- return <form onSubmit={submit} aria-label={answers?"Your Path answers":"Start your Path"} aria-busy={busy} className="mt-6 grid max-w-xl gap-5">
+ return <form onChange={()=>setDirty(true)} onSubmit={submit} aria-label={answers?"Your Path answers":"Start your Path"} aria-busy={busy} className="mt-6 grid max-w-xl gap-5">
   <label className="grid gap-2 font-semibold">1. What is your personal monthly goal?
    <span className="text-sm font-normal text-ink-soft">Optional, in {currency.toUpperCase()}. Your own goal, without a forecast.</span>
    <input className="field" disabled={busy} name="goal" type="number" min="0" step={decimalsOf(currency)===0?"1":"0.01"} defaultValue={answers?.goalCurrency===currency?moneyField(answers.goalCents,currency):"0"}/>
