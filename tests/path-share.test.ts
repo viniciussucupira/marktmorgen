@@ -1,4 +1,4 @@
-import {pathShare,pathShareSvg,type PathShareInput} from "@/lib/path-share";
+import {pathShare,pathShareSvg,pathShareText,type PathShareInput} from "@/lib/path-share";
 import {done,is,part} from "./check";
 const input:PathShareInput={level:3,days:14,moneyCents:123400,currency:"usd",moneyAt:Date.UTC(2026,9,18)};
 part("Sharing exposes only what the owner chooses");
@@ -13,4 +13,9 @@ is("invalid level has no card",pathShare({...input,level:99}),null);
 is("invalid day count has no card",pathShare({...input,days:NaN}),null);
 is("invalid date cannot break the download",pathShare({...input,moneyAt:1e20},true)?.money,null);
 is("a card has accessible text",pathShareSvg(input)?.includes("<title"),true);
+is("plain text private by default",pathShareText(input)?.includes("1,234"),false);
+is("plain text opt-in contains verified money",pathShareText(input,true)?.includes("Sales kept after refunds: $1,234"),true);
+is("plain text opt-in contains reading",pathShareText(input,true)?.includes("Reading: 2026-10-18T00:00:00.000Z"),true);
+is("plain text unknown money omitted",pathShareText({...input,moneyCents:null},true)?.includes("Sales kept"),false);
+is("invalid share has no text",pathShareText({...input,level:99}),null);
 done();
