@@ -39,7 +39,7 @@ export function PathOnboarding({currency, answers}: {currency: string; answers?:
   if(goalCents===null){setMessage("");setGoalError("Please enter a plain amount in your store's currency.");goalField.current?.focus();return;}
   void request({action:"start",answers:{goalCents,skills:form.get("skills"),subject:form.get("subject"),minutes:Number(form.get("minutes")),audience:form.get("audience"),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"}});
  }
- return <form onChange={event=>{setDirty(true);if((event.target as HTMLInputElement).name==="goal")setGoalError("");}} onSubmit={submit} aria-label={answers?"Your Path answers":"Start your Path"} aria-busy={busy} className="mt-6 grid max-w-xl gap-5">
+ return <form onChange={event=>{setDirty(true);if(event.target instanceof HTMLInputElement&&event.target.name==="goal")setGoalError("");}} onSubmit={submit} aria-label={answers?"Your Path answers":"Start your Path"} aria-busy={busy} className="mt-6 grid max-w-xl gap-5">
   <div className="grid gap-2">
    <label htmlFor={goalId} className="font-semibold">1. What is your personal monthly goal?</label>
    <p id={goalId+"-help"} className="text-sm text-ink-soft">Optional, in {currency.toUpperCase()}. Your own goal, without a forecast.</p>
