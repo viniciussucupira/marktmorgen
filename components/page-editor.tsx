@@ -2743,7 +2743,7 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
   return (
     <div aria-busy={loading}>
       <TestResultsBody counts={counts} failed={failed} currency={currency} declared={declared} shareB={shareB} what={what} sold={sold}/>
-      <button type="button" className="btn btn-ghost btn-sm mt-2 min-h-11" disabled={loading} onClick={refresh}>
+      <button type="button" className="btn btn-ghost btn-sm mt-2 inline-flex min-h-11 items-center justify-center" disabled={loading} onClick={refresh}>
         {loading ? "Refreshing results…" : "Refresh results"}
       </button>
     </div>
