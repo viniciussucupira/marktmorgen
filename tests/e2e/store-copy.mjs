@@ -258,6 +258,8 @@ try {
     await page.getByRole("button", { name: "See the journey and what you need", exact: true }).click();
     const nextAtWidth=page.locator('details[aria-label="Suggested next funnel check"]').first();
     await nextAtWidth.locator("summary").click();
+    // Stress a long unbroken customer title at the actual mobile and desktop widths.
+    await nextAtWidth.locator("summary > span").evaluate(node=>{node.textContent="Next check: "+"LongTitle".repeat(20);});
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     await page.addScriptTag({ content: axeSource });
     const found = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] } })).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`));
