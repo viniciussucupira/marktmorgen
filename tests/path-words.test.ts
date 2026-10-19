@@ -1,3 +1,4 @@
+import {CERTIFICATE_WORDS,CERTIFICATE_PRIVACY,pathCertificateText} from "@/lib/path-certificate";
 import {PATH_WORDING_WORDS,PATH_WORDING_PRIVACY} from "@/lib/path-wording-rules";
 /**
  * Marktmorgen Path never says what it must not (lib/path-rules.ts,
@@ -162,4 +163,10 @@ for(const platform of SCRIPT_PLATFORMS)for(const title of ["A guide","Bread & bu
 
 part("Optional wording controls and privacy");
 for(const text of [...Object.values(PATH_WORDING_WORDS),PATH_WORDING_PRIVACY])is("optional wording copy",forbiddenIn(text),null);
+part("Private certificate controls and artifacts");
+for(const text of [...Object.values(CERTIFICATE_WORDS),CERTIFICATE_PRIVACY])is("certificate copy",forbiddenIn(text),null);
+for(let level=0;level<6;level++)for(const includeMoney of [false,true]){
+ const text=pathCertificateText({level:5,days:20,recordedAt:Date.UTC(2026,9,19),moneyCents:123400,currency:"usd",moneyAt:Date.UTC(2026,9,19)},level,includeMoney);
+ is("certificate artifact text",forbiddenIn(text??""),null);
+}
 done();

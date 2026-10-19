@@ -291,7 +291,7 @@ inline error and focus correction; existing parser and bounds are unchanged.
 4. **Fixed Instagram, TikTok and YouTube post scripts.** Implementation and
    validation contract are recorded below; production evidence is kept separately.
 5. **Optional paid, reserved and fact-checked AI mission wording — pending.**
-6. **Private, accessible level certificates with money opt-in — pending.**
+6. **Private, accessible level certificates with money opt-in — implementation and verification below.**
 7. **Imported products/pages recognised without imported leads/sales — pending.**
 8. **Creator-local weekly factual studio summary — pending.**
 9. **Server-confirmed live PayPal sales with refunds — pending.**
@@ -360,3 +360,14 @@ The server selects the current own-store instruction, removing free-text topic a
 Each explicit attempt uses the existing writing counter (Pro 40, Scale 80), paid eligibility and monetary hold before provider fetch. One Haiku request is capped at 240 output tokens and 240 displayed characters, within the existing two-call job envelope. Started failures retain quota and monetary holds, without automatic retry or new budget. Existing owner-only bounded Path POST and studio allowances apply. Prices, limits, financial gates and PLANS_ON_SALE remain unchanged. Tax-adjusted net margin is not certified.
 
 Validation covers the canonical pre-change route negative control, strict parsing, current-source isolation, private-field exclusion, quota and monetary-hold ordering, trial/ended/no-quota refusal, retained holds after failure and no completion writes. Browser tests distinguish actual monetary-refusal fallback from intercepted client-only accepted replies. Provider tests exercise actual application reservation code with the existing contract double; actual Lua is independently checked by the Redis suite. These synthetic checks are not real provider calls, actual assistive technology evidence or comprehensive AAA certification. Full exact-head CI and confirmed production version are required before counting a delivery.
+
+
+## Private reached-level certificates (ordered item 6)
+
+The owner-only Path page offers a certificate for each level up to the server's saved best. First Light comes from the published store and listed product; later levels reuse the existing own-store, live paid Stripe reading and refund calculation. Selecting or downloading cannot raise a level. Saved levels and their certificates remain after refunds; the artifact explicitly distinguishes a saved level from the current sales reading. The saved highest-level reading time is labeled as such, never as the first date each earlier level was reached. Legacy records without a valid saved reading time show no certificate.
+
+There is no public certificate endpoint, verification URL, name, store address, buyer, free-text answer or personal goal in the artifact. Money defaults off independently from the share card, and is included only after explicit consent, with its own reading timestamp. Browser state resets on store or level-record changes. The download is a self-contained semantic US-English HTML document with a heading, labeled data and time, responsive readable text and print styling; a named read-only text field is the fallback. The artifact is a personal record, not a professional qualification or third-party signed credential.
+
+Creation is a local browser action on the existing bounded server response: no additional database, Stripe, model, email, push or storage request; no new recurring cost or automatic certificate notification. Explicit opening/download works at any hour; existing mayNotify and dispatch buffers are unchanged. No new stored certificate needs deletion; existing Path deletion removes its server source, while a downloaded copy remains under the owner's control. Prices, visible limits, receiving-cost assumptions, fiscal gates and PLANS_ON_SALE remain unchanged, without any all-tax margin certification.
+
+Verification contract: existing share-card render is a negative control for the new certificate action; reached-level bounds, retained levels/refunds, private default/explicit money/unknown readings, readable bounded HTML and no external resources; authenticated browser keyboard downloads for each reached level at390/1280, actual downloaded-file text and automated A/AA checks, no server writes, cross-owner refusal. Real NVDA, VoiceOver, TalkBack and comprehensive AAA remain pending. Publication is counted only after full exact-head CI and exact production domain/version confirmation.
