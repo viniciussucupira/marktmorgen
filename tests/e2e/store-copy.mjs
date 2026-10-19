@@ -180,6 +180,8 @@ try {
   await owner.getByRole("textbox", {name:"Your subject"}).fill("Sourdough");
   await owner.getByRole("button", {name:"Start your Path",exact:true}).click();
   await owner.getByRole("heading", {name:"Your next mission",exact:true}).waitFor();
+  is("Path explains live sales availability",await owner.getByRole("heading",{name:"Live sales are not available yet",exact:true}).isVisible(),true);
+  is("Path explains its current payment coverage",await owner.getByText("Path currently verifies Stripe orders. PayPal sales do not update its sale mission or levels yet.",{exact:true}).isVisible(),true);
   is("Path records published store facts", await owner.getByRole("heading", {name:"First Light",exact:true}).count(), 1);
   is("Path never asks to tick completion", await owner.locator('section[aria-labelledby="path-missions"] input[type="checkbox"], section[aria-labelledby="path-next"] input[type="checkbox"]').count(), 0);
   await owner.reload({waitUntil:"networkidle"});

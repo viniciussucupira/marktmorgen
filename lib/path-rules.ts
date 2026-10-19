@@ -280,7 +280,7 @@ export function dayMissions(facts: PathFacts, answers: Pick<PathAnswers, "minute
     {
       id: "product",
       day: 2,
-      title: "Sell your first digital product",
+      title: "Prepare your first digital product",
       why: "One product, with the file a buyer gets, is enough to start.",
       steps: [
         answers.subject ? `Make one product${about(answers.subject)}: a guide, a template, a checklist or a short course.` : "Make one product: a guide, a template, a checklist or a short course.",
@@ -357,12 +357,12 @@ export function dayMissions(facts: PathFacts, answers: Pick<PathAnswers, "minute
     {
       id: "sale",
       day: 7,
-      title: "Track every sale you make: your first real order",
+      title: "Record your first real sale through Stripe",
       why: "A paid order from somebody else, confirmed by Stripe.",
       steps: [
-        "Post again with a post link, and say plainly what the product is and what it costs.",
+        "Once your live checkout is available, share a post link and say plainly what the product is and what it costs.",
         "Answer every question you get the same day.",
-        ...(long ? ["Send the people who left their address one note about the product."] : []),
+        ...(long ? ["If they agreed to marketing, send the people on your list one note about the product."] : []),
       ],
       closesOn: facts.testMode
         ? "Closes when Stripe confirms a real paid order on your store. Your store's checkout runs in test mode now, so a real order can only come once it runs live."

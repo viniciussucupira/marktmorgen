@@ -225,3 +225,20 @@ studio page (81 commands / 404,096 bytes, tested against four studio units).
 Pure checks cover local day, roles, quiet hours and no mutation; browser checks
 the second-store link, mobile/desktop accessibility and removal after opening.
 This is an in-studio invitation, not an automatic scheduled push.
+
+## 12. Checkout context before promotion (19 October 2026)
+
+The owner's Path shows read-only checkout context from the existing opening,
+suspension, Stripe readiness and test-mode checks. Preview, paused, incomplete
+setup and test mode never appear as live checkout. Nothing here enables sales,
+changes the plan or bypasses a payment, tax or capacity check.
+
+The second mission is named "Prepare your first digital product" because its
+completion fact is a listed deliverable, not a paid order. The sale mission is
+explicitly a real Stripe sale. Its promotion step waits for live checkout;
+writing to a list is conditional on marketing consent. The studio also says
+that PayPal sales are not counted by Path yet, matching section 6.
+
+No additional provider read, data record, quota or price is introduced.
+The notice is checked with the Path page's existing mobile/desktop accessibility
+flow; synthetic checks exercise every combination of the four readiness flags.
