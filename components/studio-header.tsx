@@ -120,7 +120,7 @@ export function StudioHeader({
               </div>
             </div>
           </details>
-          {role === "owner" ? <Link href={"/studio/path?store=" + encodeURIComponent(current.sid)} className="btn btn-secondary btn-sm">Path</Link> : null}
+          {role === "owner" ? <Link prefetch={false} href={"/studio/path?store=" + encodeURIComponent(current.sid)} className="btn btn-secondary btn-sm">Path</Link> : null}
           <Link href={action.href} className="btn btn-secondary btn-sm shrink-0">
             <span className="hidden min-[400px]:inline">{action.label}</span>
             <span className="min-[400px]:hidden">{action.short}</span>
