@@ -11,7 +11,7 @@ const products=[{id:"one",title:"Workshop workbook"},{id:"two",title:"A second g
 const html=renderToStaticMarkup(createElement(PathSocialScripts,{products,answers:{minutes:15,audience:"youtube"},productsHref:"/studio?store=0123456789abcdef0123456789abcdef#products"}));
 part("The actual script controls render with labels, privacy and a bounded response");
 is("named script field is present",html.includes("Script to adapt"),true);
-is("native read-only text field",/<textarea[^>]*readonly/.test(html),true);
+is("native read-only text field",/<textarea[^>]*readonly/i.test(html),true);
 is("chosen audience starts on YouTube",html.includes("Video title: A closer look at Workshop workbook"),true);
 is("product picker is labeled",html.includes('for="path-script-product"'),true);
 is("platform picker is labeled",html.includes('for="path-script-platform"'),true);

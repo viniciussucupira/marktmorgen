@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceRevision": "a1e4d9ab15386e24de55bf6cc585f6217e10ea39",
+  "sourceRevision": "b6b3d18ee96d6099f2940392c60c378ffc67a52b",
   "brief": "User attachment bcc471cb-e0ea-4bd0-9b09-26c1d19e0ed5,19 October2026",
   "purpose": "Track actual accessibility/UX/performance coverage. An inventory is not a pass; unreviewed cases stay open. Dynamic route templates represent many content/state combinations.",
   "standard": "WCAG2.2 A/AA/AAA plus practical cognitive/usability/performance evaluation",
@@ -837,6 +837,7 @@
     "app/api/cron/courses/route.ts",
     "app/api/cron/discord/route.ts",
     "app/api/cron/imports/route.ts",
+    "app/api/cron/indexnow/route.ts",
     "app/api/cron/mail-check/route.ts",
     "app/api/cron/mail/route.ts",
     "app/api/cron/monthly/route.ts",

@@ -72,6 +72,10 @@
     {
       "path": "/api/cron/recount",
       "schedule": "35 * * * *"
+    },
+    {
+      "path": "/api/cron/indexnow",
+      "schedule": "50 13 * * *"
     }
   ]
 }

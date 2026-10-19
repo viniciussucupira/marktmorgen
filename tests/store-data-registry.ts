@@ -193,6 +193,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:dc:lock@app/api/cron/discord/route.ts": lock("The Discord job"),
   "nl:imports:lock@app/api/cron/imports/route.ts": lock("The imports job"),
   "nl:mail-check:last@app/api/cron/mail-check/route.ts": company("When the mail check last ran", "One key, the company's job."),
+  "nl:indexnow:sent@lib/indexnow.ts": company("The site's own pages already announced to IndexNow", "One set, the company's: only addresses from its own sitemap (app/sitemap.ts), each once, so it is as large as the sitemap and never holds a store's data."),
   "nl:mail-check:lock@app/api/cron/mail-check/route.ts": lock("The mail check"),
   "nl:mail:lock@app/api/cron/mail/route.ts": lock("The mail job"),
   "nl:monthly:lock@app/api/cron/monthly/route.ts": lock("The monthly job"),

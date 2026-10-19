@@ -14,6 +14,7 @@ export async function checkPathScripts({browser,LOCAL,session,sid,axeSource,is})
    await section.getByRole("heading",{name:"Post scripts you can adapt",exact:true}).waitFor();
    const field=section.getByLabel("Script to adapt",{exact:true});
    is("a public product supplies the first script at "+width,(await field.inputValue()).includes("First guide"),true);
+   is("actual script field stays read-only at "+width,await field.getAttribute("readonly")!==null,true);
    const product=section.getByLabel("Product",{exact:true});
    await product.selectOption({label:"Second guide"});
    const platform=section.getByLabel("Platform",{exact:true});
