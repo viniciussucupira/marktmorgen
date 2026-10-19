@@ -4,7 +4,7 @@ export function PathGrowthMissions({missions,hrefFor,read,moneyAt}:{missions:rea
  return <section className="mt-8" aria-labelledby="path-growth-title">
   <h2 id="path-growth-title" className="t-h3">After your first sale</h2>
   <p className="mt-3 text-ink-soft">Choose a useful next step. Your own store records decide what is recorded; opening these instructions changes nothing.</p>
-  <p className="mt-3 text-sm text-ink-soft">{read?"Available catalogue, campaign and review evidence was requested during this visit.":"Additional records could not be checked now."} {moneyAt?"Stripe checkout and refund reading: "+new Date(moneyAt).toISOString()+".":"Stripe checkout and refund evidence is not available in this reading."}</p>
+  <p className="mt-3 text-sm text-ink-soft">{read?"Available catalog, campaign and review evidence was requested during this visit.":"Additional records could not be checked now."} {moneyAt?"Stripe checkout and refund reading: "+new Date(moneyAt).toISOString()+".":"Stripe checkout and refund evidence is not available in this reading."}</p>
   <p className="mt-2 text-sm text-ink-soft">Checking these records uses eight requests from your existing studio allowance. Reads cover up to eight published products, three recent campaigns and three recent reviews. An inconclusive reading does not count as completion. Some older review records do not show whether their payment was live.</p>
   <ul className="mt-4 grid gap-3">
    {missions.map(mission=><li key={mission.id} className="rounded-xl border border-line bg-white p-4">

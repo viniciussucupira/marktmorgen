@@ -6,17 +6,21 @@ export function pathGrowthMoney(sales:readonly Sale[],refunds:readonly {cents:nu
  if(refunds===null)return {repeatBuyer:null,keptOrders:null};
  const back=new Map<string,number>(),currencies=new Map<string,string>();
  for(const row of refunds){
-  if(!Number.isSafeInteger(row.cents)||row.cents<0||typeof row.paymentIntent!=="string")return {repeatBuyer:null,keptOrders:null};
+  if(!Number.isSafeInteger(row.cents)||row.cents<0||typeof row.paymentIntent!=="string"||row.cents>0&&!row.paymentIntent||typeof row.currency!=="string"||!row.currency)return {repeatBuyer:null,keptOrders:null};
   if(currencies.has(row.paymentIntent)&&currencies.get(row.paymentIntent)!==row.currency)return {repeatBuyer:null,keptOrders:null};
   currencies.set(row.paymentIntent,row.currency);
-  back.set(row.paymentIntent,(back.get(row.paymentIntent)??0)+row.cents);
+  const total=(back.get(row.paymentIntent)??0)+row.cents;
+  if(!Number.isSafeInteger(total))return {repeatBuyer:null,keptOrders:null};
+  back.set(row.paymentIntent,total);
  }
  const seen=new Set<string>(),payments=new Set<string>(),buyers=new Set<string>();
- let kept=0,repeat=false,unknownBuyer=false;
+ let kept=0,repeat=false,unknownBuyer=false,incomplete=partial;
  for(const sale of sales){
   const row=sale.row,meta=row.metadata&&typeof row.metadata==="object"?row.metadata as Record<string,unknown>:{};
   if(sale.upsell||row.livemode!==true||row.status!=="complete"||row.payment_status!=="paid"||typeof meta.store!=="string"||!handles.has(meta.store)||meta.kind==="tip"||meta.kind==="request")continue;
-  if(typeof row.id!=="string"||!row.id.startsWith("cs_")||seen.has(row.id)||!sale.paymentIntent||payments.has(sale.paymentIntent)||!Number.isSafeInteger(sale.cents)||sale.cents<=0)continue;
+  if(sale.cents===0)continue;
+  if(typeof row.id!=="string"||!row.id.startsWith("cs_")||typeof sale.paymentIntent!=="string"||!sale.paymentIntent||!Number.isSafeInteger(sale.cents)||sale.cents<0){incomplete=true;continue;}
+  if(seen.has(row.id)||payments.has(sale.paymentIntent))continue;
   seen.add(row.id);payments.add(sale.paymentIntent);
   if(currencies.has(sale.paymentIntent)&&currencies.get(sale.paymentIntent)!==sale.currency)return {repeatBuyer:null,keptOrders:null};
   if((back.get(sale.paymentIntent)??0)>=sale.cents)continue;
@@ -28,5 +32,5 @@ export function pathGrowthMoney(sales:readonly Sale[],refunds:readonly {cents:nu
    buyers.add(email);
   }else unknownBuyer=true;
  }
- return {repeatBuyer:repeat?true:partial||unknownBuyer?null:false,keptOrders:kept>=10||!partial?kept:null};
+ return {repeatBuyer:repeat?true:incomplete||unknownBuyer?null:false,keptOrders:kept>=10||!incomplete?kept:null};
 }

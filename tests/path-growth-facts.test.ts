@@ -2,7 +2,7 @@ import {readPathGrowth,PATH_GROWTH_READ_UNITS} from "@/lib/path-growth-facts";
 import {calls,evidence,productSelections} from "./path-growth-world";
 import type {Store,Product} from "@/lib/store";
 import {done,is,part} from "./check";
-const store={handle:"own",statsId:"a".repeat(32),listId:"list1",catalog:{items:[{id:"p1",kind:0},{id:"p2",kind:0}]}} as unknown as Store;
+const store={handle:"own",statsId:"a".repeat(32),listId:"list1",catalog:{items:[{id:"p1",kind:0,options:[]},{id:"p2",kind:0,options:[]}]}} as unknown as Store;
 const money={at:1790000000000,test:false,real:1,cents:1000,currency:"usd",growth:{repeatBuyer:true,keptOrders:2}};
 async function main(){
  part("Admission precedes all optional evidence reads");
@@ -31,7 +31,7 @@ async function main(){
  is("no completed campaign", (await readPathGrowth(store,money,async()=>true)).facts.listEmailSent,false);
  evidence.campaigns=Array.from({length:3},()=>({handle:"own",listId:"list1",status:"draft",sent:0,finishedAt:0}));
  is("bounded recent absence is unknown",(await readPathGrowth(store,money,async()=>true)).facts.listEmailSent,null);
- const many={...store,catalog:{...store.catalog,items:Array.from({length:9},(_,i)=>({id:"p"+i,kind:0}))}};
+ const many={...store,catalog:{...store.catalog,items:Array.from({length:9},(_,i)=>({id:"p"+i,kind:0,options:[]}))}};
  evidence.products=Array.from({length:8},(_,i)=>({id:"p"+i,hidden:false,file:null,options:[],funnel:null})) as unknown as Product[];
  const bounded=await readPathGrowth(many,money,async()=>true);
  is("only eight product reads selected",productSelections.at(-1)?.length,8);

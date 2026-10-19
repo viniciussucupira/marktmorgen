@@ -18,7 +18,6 @@ for(const row of [
  {...sale(1).row,metadata:{store:"another-store"}},
  {...sale(1).row,metadata:{store:"own-store",kind:"tip"}},
  {...sale(1).row,metadata:{store:"own-store",kind:"request"}},
- {...sale(1).row,id:"pi_1"},
 ])is("unverified or unrelated payment excluded",read([sale(1,undefined,{row})]).keptOrders,0);
 is("previous own handle accepted",read([sale(1,undefined,{row:{...sale(1).row,metadata:{store:"old-own"}}})]).keptOrders,1);
 is("unknown refunds cannot prove completion",read([sale(1),sale(2)],null),{repeatBuyer:null,keptOrders:null});
@@ -30,4 +29,8 @@ is("incomplete positive repeat witness",read([sale(1),sale(2)],[],true).repeatBu
 is("ten remaining witnesses suffice",read(Array.from({length:10},(_,i)=>sale(i+1)),[],true).keptOrders,10);
 is("nine remaining are inconclusive in partial reading",read(Array.from({length:9},(_,i)=>sale(i+1)),[],true).keptOrders,null);
 is("missing buyer address cannot prove no repeat",read([sale(1,"")]).repeatBuyer,null);
+is("missing payment reference is not proof of absence",read([sale(1),sale(2,undefined,{paymentIntent:""})]),{repeatBuyer:null,keptOrders:null});
+is("malformed checkout identity leaves reading incomplete",read([sale(1,undefined,{row:{...sale(1).row,id:"pi_1"}})]),{repeatBuyer:null,keptOrders:null});
+is("unnamed positive refund cannot prove retained purchases",read([sale(1),sale(2)],[{cents:1000,currency:"usd",paymentIntent:""}]),{repeatBuyer:null,keptOrders:null});
+is("refund sum overflow is unavailable",read([sale(1)],[{cents:Number.MAX_SAFE_INTEGER,currency:"usd",paymentIntent:"pi_1"},{cents:1,currency:"usd",paymentIntent:"pi_1"}]),{repeatBuyer:null,keptOrders:null});
 done();
