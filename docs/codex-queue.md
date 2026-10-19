@@ -44,12 +44,12 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 2. **[FILA] Criar e manter este arquivo no repositório, com proveniência, ordem, custos, estados e histórico; incluir sua atualização no mesmo PR de cada próximo item.**
    - Pedido: P2 regras do arquivo; P3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (branch codex/durable-work-queue; PR #621)**.
+   - Estado: **feito (PR #621, mesclado em 19/10 19:54, horário de Fortaleza)**.
    - Custo e margem: Somente documentação e teste de consistência; sem custo de execução em produção.
 
 3. **[B1] Fixar inglês americano como idioma atual de site público, estúdio, Path e e-mails da plataforma; conteúdo dos criadores, citações em português e identificadores persistidos ficam intactos.**
    - Pedido: P2 B1; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (branch codex/platform-us-english; PR #622)**.
+   - Estado: **feito (PR #622, mesclado em 19/10 19:57, horário de Fortaleza; entrega42 confirmada)**.
    - Custo e margem: Conferir configuração e textos existentes; nenhum serviço de tradução ou custo por visita autorizado.
 
 4. **[B2] Revisar inglês americano página por página: mensagens, erros, estados vazios, e-mails, aria-label, alt e textos de testes; manter inventário de áreas e PRs pequenos, sem alterar significado.**
@@ -453,6 +453,8 @@ PR620: verificações completas do head edfd5c9 passaram (Product39335759627, Re
 
 B1: raiz HTML en-US e política de escopo em platform-language-policy.md; sem tradução ou remoção de idiomas escolhidos nas lojas. Auditoria ortográfica exaustiva e guardas B2/B3 ainda não concluídas. PR621 da fila é dependência documental desta branch; não incorporá-la antes de621.
 
-B2 primeira área:17fontes públicas/compartilhadas inspecionadas; ajustes pontuais em homepage/mission/help; cobertura e pendências em us-english-audit.md. Não representa revisão de todo o produto. CI/browser de texto real precisa passar antes da incorporação.
+B2 primeira área:18fontes públicas/compartilhadas inspecionadas; ajustes pontuais em homepage/mission/help; cobertura e pendências em us-english-audit.md. Não representa revisão de todo o produto. CI/browser de texto real precisa passar antes da incorporação.
 
 B2 segunda área:12fontes legais/entrada de conta inspecionadas, incluindo privacy/terms/refunds/signin; uma grafia exibida na descrição de feedback de cancelamento corrigida. Preservadas todas as declarações de IA e certificados. Auditoria de estúdio/e-mails ainda pendente; ver us-english-audit.md.
+
+PR624 integra a correção de Pricing do PR623 após os dois testes completos identificarem o mesmo rótulo britânico herdado; preserva a revisão legal, os testes visíveis e o histórico de621/622. Nova verificação completa obrigatória, sem rerun isolado.

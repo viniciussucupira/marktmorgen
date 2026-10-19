@@ -23,8 +23,9 @@ Sources inspected completely for the selected common British forms and a broader
 - `lib/help-content.ts`
 - `components/site-footer.tsx`
 - `components/site-nav.tsx`
+- `components/home-parts.tsx`
 
-Changes: homepage cancellation sentence uses Canceling; mission's checkout-field limitation says but not a checkbox; help text uses select it, canceling, color and license. Their meaning, numbers, availability limitations and privacy choice stay the same. Existing US-English licensed/license words remain correct. Comments and persisted technical names such as `feature-catalogue` and `catalogue-title` remain intact; they are not displayed platform copy.
+Changes: homepage pricing-label and cancellation sentence uses Canceling; mission's checkout-field limitation says but not a checkbox; help text uses select it, canceling, color and license. Their meaning, numbers, availability limitations and privacy choice stay the same. Existing US-English licensed/license words remain correct. Comments and persisted technical names such as `feature-catalogue` and `catalogue-title` remain intact; they are not displayed platform copy.
 
 Negative evidence: the live homepage before this change contained Cancelling is two clicks; the source baseline contained the other corrected strings. Browser verification opens actual homepage/mission/help documents and native help disclosures, checks the revised visible wording and refuses the selected old forms. This is text evidence, not a full usability or screen-reader study.
 
@@ -54,3 +55,5 @@ Read12additional sources at da6924e:
 The displayed privacy description of member cancellation feedback uses canceling. No legal meaning, consent, recipients, retention, rights or service availability changes. Both existing optional-AI and certificate privacy disclosures remain present. The catalogue word in affiliate-programs is a code comment and remains unchanged; the other inspected sources contain none of the selected British forms. This is selected-spelling source evidence, not proof of every content quality criterion. The public-page browser regression now opens the actual privacy page too, normalizes rendered whitespace, verifies the corrected sentence and rejects the old selected spellings.
 
 Remaining account-entry variants (confirm/move/join/lost-confirm), every studio area and platform email templates still require review. Each source is tracked here without claiming untouched dynamic states were manually assessed. No additional provider/data/storage/message work, price, limit or fiscal gate change; M0 remains unchanged and reprovado under the binding reading.
+
+Upstream PR623's visible-page regression found the shared Pricing label Cancelling. Its corrected Canceling label is included here, with the unchanged rejection test and18public-area source count. The independent privacy correction and expanded real-page checks remain intact.
