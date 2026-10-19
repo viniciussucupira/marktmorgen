@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceRevision": "d31e7b30f9a4b587ad28cfac736859a44f7ee2c0",
+  "sourceRevision": "a1e4d9ab15386e24de55bf6cc585f6217e10ea39",
   "brief": "User attachment bcc471cb-e0ea-4bd0-9b09-26c1d19e0ed5,19 October2026",
   "purpose": "Track actual accessibility/UX/performance coverage. An inventory is not a pass; unreviewed cases stay open. Dynamic route templates represent many content/state combinations.",
   "standard": "WCAG2.2 A/AA/AAA plus practical cognitive/usability/performance evaluation",
@@ -685,6 +685,7 @@
     "components/path-onboarding.tsx",
     "components/path-reminder-button.tsx",
     "components/path-share-card.tsx",
+    "components/path-social-scripts.tsx",
     "components/path-studio-reminder.tsx",
     "components/pause-editor.tsx",
     "components/payment-comparison.tsx",

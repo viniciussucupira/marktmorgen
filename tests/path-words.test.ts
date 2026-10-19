@@ -32,6 +32,7 @@ import {
   goalWords,
   forbiddenIn,
 } from "@/lib/path-rules";
+import {SCRIPT_WORDS,PLATFORM_NAMES,SCRIPT_PLATFORMS,pathPostScript} from "@/lib/path-script-rules";
 import {pathReturnMission,returnReminderOf,RETURN_HEADING,RETURN_PRIVACY_LINE} from "@/lib/path-return-rules";
 import {pathGrowthMissions} from "@/lib/path-growth-rules";
 import { done, is, part } from "./check";
@@ -148,6 +149,14 @@ part("Welcoming return mission copy, privacy and reminder");
  }
  is("return copy has no forbidden claim",texts.map(text=>forbiddenIn(text)).filter(Boolean),[]);
  is("return copy has no absence pressure",texts.some(text=>/missed|behind|failed|lost days/i.test(text)),false);
+}
+
+
+part("Fixed post scripts and every control sentence follow Path wording");
+for(const text of [...Object.values(SCRIPT_WORDS),...Object.values(PLATFORM_NAMES)])is("script control copy",forbiddenIn(text),null);
+for(const platform of SCRIPT_PLATFORMS)for(const title of ["A guide","Bread & butter"]){
+ const script=pathPostScript({id:"one",title},platform);
+ is("fixed script "+platform,forbiddenIn(script??""),null);
 }
 
 done();
