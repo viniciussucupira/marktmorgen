@@ -26,4 +26,13 @@ for(const name of ["ink-soft","ink-mute"]){
 const placeholder=css.match(/\.field::placeholder\s*\{([^}]+)\}/)?.[1]??"";
 is("placeholder uses readable secondary text",/color:\s*var\(--ink-mute\)/.test(placeholder),true);
 is("placeholder is not faded by browser defaults",/opacity:\s*1\s*;/.test(placeholder),true);
+part("Shared success copy uses a distinct enhanced-contrast token");
+is("success copy exceeds7.25:1 on mint-soft",contrast(token("mint-text"),token("mint-soft"))>=7.25,true);
+is("former success text fails the enhanced floor",contrast(token("mint-deep"),token("mint-soft"))<7,true);
+is("existing semantic action token is preserved",token("mint-deep"),"#0b6a4d");
+for(const name of ["tag-live","notice-success"]){
+  const rule=css.match(new RegExp("\\."+name+"\\s*\\{([^}]+)\\}"))?.[1]??"";
+  is(name+" keeps its success surface",/background:\s*var\(--mint-soft\)/.test(rule),true);
+  is(name+" uses enhanced success text",/color:\s*var\(--mint-text\)/.test(rule),true);
+}
 done();

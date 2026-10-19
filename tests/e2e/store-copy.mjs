@@ -572,6 +572,58 @@ try {
       // intercepted locally: this test cannot send a login message.
       await signin.evaluate(()=>document.querySelector("#field-focus-fixture")?.remove());
       await signin.emulateMedia({forcedColors:"none",reducedMotion:"reduce"});
+      // Disposable samples use the actual built shared CSS, with no app
+      // records or provider requests. This is component evidence, not every journey.
+      await signin.evaluate(()=>{
+        const root=document.createElement("section");
+        root.id="success-contrast-fixture";
+        root.style.cssText="position:relative;background:#fff;color:#111827;padding:16px";
+        for(const [className,text] of [["tag tag-live","Live"],["notice notice-success","Your changes are saved."]]){
+          const node=document.createElement("p");
+          node.className=className;
+          node.textContent=text;
+          root.append(node);
+        }
+        document.body.append(root);
+      });
+      const successReading=selector=>signin.locator(selector).evaluate(node=>{
+        const style=getComputedStyle(node);
+        const rgb=value=>{
+          const parts=value.match(/[0-9.]+/g)?.map(Number);
+          if(!parts||parts.length<3||(parts[3]??1)!==1)throw Error("Success copy must have opaque measured colours");
+          return parts.slice(0,3);
+        };
+        const luminance=values=>values.map(value=>value/255).map(value=>value<=.04045?value/12.92:((value+.055)/1.055)**2.4).reduce((total,value,index)=>total+value*[.2126,.7152,.0722][index],0);
+        if(Number(style.opacity)!==1)throw Error("Success sample is unexpectedly faded");
+        const text=luminance(rgb(style.color)),background=luminance(rgb(style.backgroundColor));
+        return {color:style.color,ratio:(Math.max(text,background)+.05)/(Math.min(text,background)+.05)};
+      });
+      for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
+        await signin.locator(selector).scrollIntoViewIfNeeded();
+        is("painted success copy exceeds7:1 "+selector+" at "+width,(await successReading(selector)).ratio>=7,true);
+        await checkSignInErrorContrast(signin,selector,"Shared success copy "+selector+" at "+width);
+      }
+      if(width===390){
+        const legacy=await signin.addStyleTag({content:"#success-contrast-fixture .tag-live,#success-contrast-fixture .notice-success{color:var(--mint-deep)!important}"});
+        // Wait for the browser's style/transition frame before sampling.
+        await signin.waitForFunction(()=>[...document.querySelectorAll("#success-contrast-fixture .tag-live,#success-contrast-fixture .notice-success")].every(node=>getComputedStyle(node).color==="rgb(11, 106, 77)"));
+        // Measure the same actual computed CSS guard in both directions.
+        // A scoped axe result alone must not make the negative control pass.
+        for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
+          const reading=await successReading(selector);
+          is("negative control applies the actual former text colour "+selector,reading.color,"rgb(11, 106, 77)");
+          is("painted success contrast guard rejects former colour "+selector,reading.ratio<7,true);
+          console.log("  former success contrast "+selector+": "+reading.ratio.toFixed(3));
+        }
+        await legacy.evaluate(node=>node.remove());
+        await signin.waitForFunction(()=>[...document.querySelectorAll("#success-contrast-fixture .tag-live,#success-contrast-fixture .notice-success")].every(node=>getComputedStyle(node).color==="rgb(7, 85, 62)"));
+        for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
+          is("restored success copy exceeds7:1 "+selector,(await successReading(selector)).ratio>=7,true);
+          await checkSignInErrorContrast(signin,selector,"Restored success copy "+selector);
+        }
+      }
+      await signin.evaluate(()=>document.querySelector("#success-contrast-fixture").remove());
+      await signin.locator("#signin-email").scrollIntoViewIfNeeded();
       let loginRequests=0;
       await signin.route("**/api/auth/request",async route=>{loginRequests++;await route.abort();});
       const backgroundAlerts=await signin.getByRole("alert").count();
