@@ -100,7 +100,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { session, second } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { session, second, abProduct, abStore } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -273,6 +273,33 @@ try {
     is(`Path at ${width}: no sideways scroll`,await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
     await ctx.close();
   }
+  const abUrl=LOCAL+"/studio/pages?store="+abStore+"&product="+abProduct+"&test=headline";
+  const unavailableText="Test counts are unavailable or inconsistent. No winner is selected from this reading. Reload to try again; your saved test settings have not been changed.";
+  for(const width of [390,1280]){
+    await owner.setViewportSize({width,height:900});
+    const unavailableReply=owner.waitForResponse(response=>response.url().includes("/api/store/ab?id="));
+    await owner.goto(abUrl,{waitUntil:"domcontentloaded",timeout:60_000});
+    is("malformed saved experiment reports HTTP503 at "+width,(await unavailableReply).status(),503);
+    const unavailable=owner.getByText(unavailableText,{exact:true});
+    await unavailable.waitFor();
+    is("experiment failure is visible at "+width,await unavailable.isVisible(),true);
+    is("experiment failure does not display a zero tally or winner at "+width,await owner.locator("[data-test-results]").count(),0);
+    is("experiment warning fits at "+width,await unavailable.evaluate(node=>node.scrollWidth<=node.clientWidth),true);
+    await owner.addScriptTag({content:axeSource});
+    is("experiment warning accessibility at "+width,await owner.evaluate(async()=>(await window.axe.run("#headline-test",{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22a","wcag22aa"]}})).violations.map(v=>v.id)),[]);
+  }
+  // Recovery uses a synthetic, coherent successful response; no payment is made.
+  let allocation=0;
+  await owner.route("**/api/store/ab?**",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,currency:"usd",declared:null,shareB:allocation,counts:{va:1000,vb:1000,ca:30,cb:90,sa:30,sb:90,ra:30000,rb:90000,qa:30000000,qb:90000000,t0:Date.now()-30*86400000}})}));
+  await open(owner,abUrl);
+  await owner.getByText(unavailableText,{exact:true}).waitFor();
+  is("invalid allocation is not silently replaced with an even split",await owner.locator("[data-test-results]").count(),0);
+  allocation=0.5;
+  await open(owner,abUrl);
+  await owner.locator("[data-test-results]").waitFor();
+  await owner.getByText("The second headline wins. Your page now shows it to everybody. Make it the hero's own headline and switch the test off to keep it.",{exact:true}).waitFor();
+  is("a coherent successful reading replaces the failure notice",await owner.getByText(unavailableText,{exact:true}).count(),0);
+  await owner.unroute("**/api/store/ab?**");
   const quotaDir=mkdtempSync(join(tmpdir(),"mm-path-quota-"));
   const quotaFile=join(quotaDir,"quota.cjs");
   await build({entryPoints:[join(here,"path-board-quota.ts")],bundle:true,platform:"node",format:"cjs",outfile:quotaFile,logLevel:"error",alias:{"@":root}});
@@ -297,6 +324,7 @@ try {
   failed += 1;
   console.error(error);
   console.error(appLog.slice(-3000));
+  if(browser){for(const context of browser.contexts())for(const page of context.pages()){if(page.url().includes("/studio/pages"))console.error("Experiment editor state:",await page.locator("body").innerText().then(text=>text.slice(-6000)).catch(()=>"unreadable"));}}
 } finally {
   await browser?.close().catch(() => {});
   if (app?.pid && app.exitCode === null) {

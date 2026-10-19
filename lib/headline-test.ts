@@ -38,6 +38,7 @@
  *   nl:ab:paid:<checkout id>               counted, 40 days
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { parseTestCounts, unavailableTestCounts } from "@/lib/headline-test-counts";
 import type { Counts, Version } from "@/lib/headline-test-rules";
 
 export * from "@/lib/headline-test-rules";
@@ -45,14 +46,12 @@ export * from "@/lib/headline-test-rules";
 const key = (statsId: string, productId: string, testId: string) => `nl:ab:${statsId}:${productId}:${testId}`;
 
 export async function readCounts(statsId: string | null, productId: string, testId: string): Promise<Counts> {
-  const zero = { va: 0, vb: 0, ca: 0, cb: 0 };
-  if (!statsId || !isRedisConfigured()) return zero;
-  const [raw] = await redisPipeline([["HGETALL", key(statsId, productId, testId)]]);
-  const pairs: Record<string, string> = {};
-  if (Array.isArray(raw)) for (let i = 0; i + 1 < raw.length; i += 2) pairs[String(raw[i])] = String(raw[i + 1]);
-  else if (raw && typeof raw === "object") Object.assign(pairs, raw);
-  const n = (k: string) => (Number.isFinite(Number(pairs[k])) ? Number(pairs[k]) : 0);
-  return { va: n("va"), vb: n("vb"), ca: n("ca"), cb: n("cb"), sa: n("sa"), sb: n("sb"), ra: n("ra"), rb: n("rb"), qa: n("qa"), qb: n("qb"), t0: n("t0") };
+  if (!statsId || !isRedisConfigured()) return unavailableTestCounts();
+  try {
+    const replies=await redisPipeline([["HGETALL",key(statsId,productId,testId)]]);
+    if(!Array.isArray(replies)||replies.length!==1)return unavailableTestCounts();
+    return parseTestCounts(replies[0]);
+  } catch { return unavailableTestCounts(); }
 }
 
 /** Counts one view or one checkout of a version. Best effort: a test is never worth a failed page. */

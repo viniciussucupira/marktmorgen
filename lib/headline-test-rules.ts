@@ -69,7 +69,7 @@ export type Version = "a" | "b";
  * unit), the sum of each sale's square (for how spread the money is), and
  * when the test was first seen (ms; 0 when not known).
  */
-export type Counts = { va: number; vb: number; ca: number; cb: number; sa?: number; sb?: number; ra?: number; rb?: number; qa?: number; qb?: number; t0?: number };
+export type Counts = { va: number; vb: number; ca: number; cb: number; sa?: number; sb?: number; ra?: number; rb?: number; qa?: number; qb?: number; t0?: number; unavailable?: boolean };
 /** How a test is decided: by money for a product sold, by checkouts for a free one. */
 export type Measure = "money" | "checkouts";
 /** Each version must have this many paid sales before money decides. */
@@ -145,7 +145,31 @@ export function splitMismatch(counts: Pick<Counts, "va" | "vb">, shareB = 0.5): 
 /** Why a test has no winner yet, or that it has one. */
 export type TestState =
   | { state: "won"; winner: Version }
-  | { state: "running" | "too_few" | "split" | "measure_changed" | "maturing"; winner: null };
+  | { state: "running" | "too_few" | "split" | "measure_changed" | "maturing" | "unavailable"; winner: null };
+
+
+/** A decision needs finite, exact nonnegative counts and coherent money moments. */
+export function usableTestCounts(counts: Counts | null | undefined, measure: Measure): boolean {
+  if(!counts || typeof counts!=="object" || Array.isArray(counts) || counts.unavailable)return false;
+  const fields=["va","vb","ca","cb","sa","sb","ra","rb","qa","qb","t0"] as const;
+  for(const field of fields) {
+    const value=counts[field];
+    if(value===undefined && !["va","vb","ca","cb"].includes(field))continue;
+    if(!Number.isSafeInteger(value) || Number(value)<0)return false;
+  }
+  if(!Number.isSafeInteger(counts.va+counts.vb))return false;
+  if(measure==="checkouts")return counts.ca<=counts.va && counts.cb<=counts.vb;
+  for(const version of ["a","b"] as const) {
+    const views=version==="a"?counts.va:counts.vb;
+    const sales=(version==="a"?counts.sa:counts.sb)??0;
+    const money=(version==="a"?counts.ra:counts.rb)??0;
+    const squares=(version==="a"?counts.qa:counts.qb)??0;
+    if(sales>views || (!sales && (money!==0 || squares!==0)) || (sales>0 && (money<=0 || squares<=0)))return false;
+    // Missing/corrupt squares must not be clamped into a fictitious zero variance.
+    if(sales>0 && squares*sales < money*money*(1-1e-12))return false;
+  }
+  return true;
+}
 
 /** The standard normal's cumulative chance, to within a ten-thousandth (Abramowitz and Stegun 7.1.26). */
 function phi(z: number): number {
@@ -164,6 +188,7 @@ export function perVisitor(money: number, views: number): number {
  * first, 0 to 1; null before both have been seen and something has sold.
  */
 export function chanceBBetter(counts: Counts): number | null {
+  if(!usableTestCounts(counts,"money"))return null;
   const { va, vb } = counts;
   const ra = counts.ra ?? 0;
   const rb = counts.rb ?? 0;
@@ -189,6 +214,7 @@ export function testState(
   options: { declared?: Measure | null; shareB?: number; now?: number } = {},
 ): TestState {
   const none = (state: Exclude<TestState["state"], "won">): TestState => ({ state, winner: null });
+  if(!usableTestCounts(counts,measure) || (options.shareB!==undefined && (!Number.isFinite(options.shareB)||options.shareB<=0||options.shareB>=1)) || (options.now!==undefined && (!Number.isSafeInteger(options.now)||options.now<=0)))return none("unavailable");
   if (options.declared && options.declared !== measure) return none("measure_changed");
   if (counts.va < MIN_VIEWS || counts.vb < MIN_VIEWS) return none("too_few");
   if (splitMismatch(counts, options.shareB ?? 0.5)) return none("split");
@@ -213,6 +239,7 @@ export function testState(
     if (se === 0) return none("running");
     z = (pb - pa) / se;
   }
+  if(!Number.isFinite(z) || !Number.isFinite(line))return none("unavailable");
   if (Math.abs(z) < line) return none("running");
   if (measure === "money") {
     const t0 = counts.t0 ?? 0;
@@ -240,6 +267,7 @@ export function rate(checkouts: number, views: number): number {
  * null when it cannot be said yet: no start, or nothing sold to set a pace by.
  */
 export function daysLeft(counts: Counts, measure: Measure, now = Date.now()): number | null {
+  if(!usableTestCounts(counts,measure) || !Number.isSafeInteger(now) || now<=0)return null;
   const t0 = counts.t0 ?? 0;
   if (!t0 || now <= t0) return null;
   const days = Math.max(1, (now - t0) / 86_400_000);
