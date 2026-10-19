@@ -180,3 +180,17 @@ policy says so (`/privacy#path`).
 2. The studio page, onboarding, the reminder, the plan line near a limit, the
    feature page.
 3. The ranking and the share card.
+
+## 9. Mission guidance in the studio (19 October 2026)
+
+The mission list shows each existing count as a visible fraction and a named
+native progress meter. Each open mission has a native keyboard-operable
+disclosure with its existing steps and a link to that store's studio destination.
+Opening instructions changes no mission state, sends no request and uses no AI.
+Recorded and unavailable missions have no action; in particular an unavailable
+test purchase never exposes test-payment instructions on a live checkout.
+
+The largest mission list stays below 30 KB of the existing Path page's 70 KB
+response bound; no supplier request, storage family or quota is added.
+The browser checks the keyboard disclosure, scoped link, unchanged mission state,
+and expanded instructions at 390 and 1280 pixels with axe and no overflow.

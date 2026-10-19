@@ -1,3 +1,4 @@
+import { PathMissions } from "@/components/path-missions";
 import { PathReminderButton } from "@/components/path-reminder-button";
 import { PathShareCard } from "@/components/path-share-card";
 import Link from "next/link";
@@ -9,7 +10,7 @@ import { allowanceUsed } from "@/lib/store-allowance";
 import { allowanceFor } from "@/lib/store-allowance-rules";
 import { pathPlanLine } from "@/lib/path-plan";
 import { readPath, visitPath } from "@/lib/path";
-import { LEVEL_NAMES, LEVELS, PATH_SLOGAN, PATH_TITLE, goalWords, localDay, pathProgress, streakOf } from "@/lib/path-rules";
+import { LEVEL_NAMES, LEVELS, PATH_SLOGAN, PATH_TITLE, goalWords, localDay, pathProgress, streakOf, type Place } from "@/lib/path-rules";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { PathOnboarding } from "@/components/path-onboarding";
@@ -31,8 +32,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
  const streak=record?streakOf(record.checkins,localDay(record.answers.timeZone,now)):null;
  const planLine=pathPlanLine(await allowanceUsed(store,"studio",now),allowanceFor(store,"studio",now/1000));
  const mission=progress?.today;
- const place=mission?.place;
- const href=place?.store?"/@"+encodeURIComponent(store.handle):studioPath(store,"",place?.page || "")+(place?.hash || "");
+ const hrefFor=(place:Place)=>place.store?"/@"+encodeURIComponent(store.handle):studioPath(store,"",place.page || "")+(place.hash || "");
  return <div className="min-h-screen bg-paper text-ink">
   <StudioHeader current={store} role={access.role} stores={access.stores} owned={access.owned} action={{href:studioPath(store),label:"Back to the studio",short:"Studio"}}/>
   <StudioStorePin sid={store.sid}><main id="content" className="container-page break-words pb-20 pt-10">
@@ -51,9 +51,9 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
      <p className="mt-2 text-sm text-ink-soft">{record.counts?"Visits and leads last read: "+new Date(record.counts.at).toISOString()+".":"Visits and leads have not been read yet."} {record.money?"Orders last read: "+new Date(record.money.at).toISOString()+".":"Orders have not been read yet."}</p>
     </section>
     <section className="mt-8" aria-labelledby="path-next"><h2 id="path-next" className="t-h3">{progress.complete?"Your first real sale is recorded":"Your next mission"}</h2>
-     {mission?<div className="mt-4 rounded-2xl border border-line bg-white p-6"><h3 className="text-xl font-semibold">{mission.title}</h3><p className="mt-3">{mission.why}</p><ol className="mt-4 list-decimal space-y-2 pl-6">{mission.steps.map(step=><li key={step}>{step}</li>)}</ol><p className="mt-4 text-sm text-ink-soft">Recorded when: {mission.closesOn}</p><a className="btn btn-primary mt-5" href={href}>{mission.place.label}</a></div>:<p className="mt-3">Keep listening to your customers and improving what you offer. Your reached level stays with you.</p>}
+     {mission?<div className="mt-4 rounded-2xl border border-line bg-white p-6"><h3 className="text-xl font-semibold">{mission.title}</h3><p className="mt-3">{mission.why}</p><ol className="mt-4 list-decimal space-y-2 pl-6">{mission.steps.map(step=><li key={step}>{step}</li>)}</ol><p className="mt-4 text-sm text-ink-soft">Recorded when: {mission.closesOn}</p><a className="btn btn-primary mt-5" href={hrefFor(mission.place)}>{mission.place.label}</a></div>:<p className="mt-3">Keep listening to your customers and improving what you offer. Your reached level stays with you.</p>}
     </section>
-    <section className="mt-8" aria-labelledby="path-missions"><h2 id="path-missions" className="t-h3">Your missions</h2><ul className="mt-4 grid gap-3">{[...progress.days,...progress.traffic].map(m=><li key={m.id} className="rounded-xl border border-line bg-white p-4"><h3 className="font-semibold">{m.title}</h3><p className="mt-1 text-sm">{m.state==="done"?"Recorded":m.state==="unavailable"?"Available only in Stripe test mode; continue with the other missions.":"Ready when you are"}</p><p className="mt-2 text-sm text-ink-soft">{m.closesOn}</p></li>)}</ul></section>
+    <PathMissions missions={[...progress.days,...progress.traffic]} hrefFor={hrefFor}/>
     <PathReminderButton phoneUrl={studioPath(store,"","phone")}/>
     <PathShareCard input={{level:record.best,days:progress.dayOnPath,moneyCents:record.money?.currency===store.currency?record.money.cents:null,currency:store.currency,moneyAt:record.money?.at || null}}/>
     <details className="mt-8"><summary className="cursor-pointer py-3 font-semibold">Your answers and privacy</summary><PathOnboarding currency={store.currency} answers={record.answers}/></details>
