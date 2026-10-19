@@ -59,3 +59,22 @@ including forced-colours emulation and synthetic invalid/readonly/select cases.
 See docs/accessibility-field-focus.md. This partially addresses the standard
 field focus entry; custom fields,all journeys/clipping and manual assistive/user
 coverage remain open.
+
+## Store fields and placeholder follow-up
+
+Delivery20 gives store .st-field controls an opaque two-tone keyboard focus and
+system outline in forced colours; scoped native-control screenshot checks use
+the actual production palettes. See docs/accessibility-store-field-focus.md.
+
+Delivery21 removes the faded creator-field placeholder and uses the theme's
+primary text colour at full opacity. Computed pseudo-element and background
+colours are measured in synthetic Chromium inputs for four themes/ten presets,
+textareas on four theme cards with a custom accent,and four viewport widths.
+The tests require7:1 after opacity compositing and confirm the example is
+actually shown; a negative control must reject the former faded Night style.
+Typing still replaces the example. Visible labels remain separate.
+
+This fixes the shared style,not every buyer journey or custom override.
+Read-only/disabled/error states,all browser/OS/assistive technology,real-user
+research and whole-product AAA remain open. No sales uplift or margin proof
+is inferred from this readability change.
