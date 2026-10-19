@@ -59,18 +59,20 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 5. **[B3] Adicionar teste de texto da plataforma que recuse grafias britânicas comuns: colour, centre, organise, licence, cancelled, behaviour, afterwards e tick/untick; distinguir texto exibido de código, citações e dados.**
    - Pedido: P2 B3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (branch codex/platform-us-english-guard)**.
+   - Estado: **feito; PR #627 incorporado19/10/2026 20:46:10 de Fortaleza; entrega47 confirmada no domínio, versão8afa047, READY20:48:01**.
+   - Evidência: [PR #627](https://github.com/viniciussucupira/marktmorgen/pull/627); Product39342585794/Redis/security39342585712 e navegador completos;8rotas com marcador exato; não declara B2 manual inteiro concluído.
    - Custo e margem: Teste de desenvolvimento; sem custo de produção.
 
 6. **[B4] Escrever docs/site-languages.md: traduções completas no código após abertura/autorização; alemão, francês, holandês, espanhol e italiano; seletor sem bandeiras, hreflang e frases proibidas por idioma; estudo fiscal por país para japonês/coreano/chinês; futuro português do Brasil.**
    - Pedido: P2 B4; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (documento completo em revisão; branch codex/site-language-design)**.
+   - Estado: **feito; documento incorporado no PR #628 em19/10/2026 20:49:55 de Fortaleza**.
+   - Evidência: [docs/site-languages.md](site-languages.md), [PR #628](https://github.com/viniciussucupira/marktmorgen/pull/628), commit `eb5b3167acee3a8f0f4ecbc50cd85103889d870a`; Product39342996924/security39342996915 completos. Documento apenas: não ativa traduções nem incrementa contador de entrega funcional.
    - Custo e margem: Só documento. Nenhuma tradução em tempo de requisição ou custo por visita; custo de conteúdo/manutenção e fiscalidade ainda precisam ser calculados.
 
 7. **[C-UE] Construir tratamento de IVA europeu do art.9a em docs/eu-vat-article-9a.md: OSS não-UE desde a primeira venda, duas provas de localização coerentes (24b/24f), retenção art.63c por10anos; imposto no comprador ou repasse, nunca na comissão. Dividir em PRs por caminho de checkout e prova.**
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
-   - Custo e margem: Custo de cálculo, registros10anos, evidências e operação ainda não aprovado: calcular fornecedor pago mais caro, mensal/anual por plano, antes/depois; registrar no plan-cost-registry e spend-floor, reservar tetos antes do trabalho. Falta de conta é reprovação, não zero.
+   - Estado: **em andamento; auditoria de13caminhos e registro, primeiro endurecimento de data no PR #629; coleta/duas provas/retenção/OSS ainda não implementados**.
+   - Custo e margem: Custo de cálculo, registros10anos, evidências e operação ainda não calculado/integrado: calcular fornecedor pago mais caro, mensal/anual por plano, antes/depois; registrar no plan-cost-registry e spend-floor, reservar tetos antes do trabalho. Falta de conta é reprovação, não zero.
 
 8. **[C-UK] Depois da UE, implementar tratamento do Reino Unido pela leitura com mais imposto, em todos os caminhos aplicáveis.**
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
@@ -445,7 +447,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 80. **[B2-SHARED] Documentos do estúdio e textos compartilhados de Meta/afiliados/recursos**
    - Pedido: P2 B2;19/10/2026, hora original não fornecida.
-   - Estado: **feito (PR #625, mesclado em 19/10, 20:15, horário de Fortaleza; confirmação de publicação em andamento)**.
+   - Estado: **feito (PR #625, mesclado em 19/10, 20:15, horário de Fortaleza; entrega45 confirmada, READY20:16:32)**.
    - Custo e margem: nenhum novo fornecedor/chamada/registro; envelope existente e M0 antes=depois, leitura vinculante ainda reprova60%.
    - Evidência: [PR #625](https://github.com/viniciussucupira/marktmorgen/pull/625), commit `9725e09b7198ae2f4f2eeea9f61bc230a30977bd`.
 
@@ -490,3 +492,10 @@ B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de d
    - Evidência: [PR #626](https://github.com/viniciussucupira/marktmorgen/pull/626), commit `c261e2380e6f6579748566be41a0bbee95cb4001`; incorporado19/10/2026 20:29:32 de Fortaleza, produção20:30:23.
    - Validação: Product39340663256/Redis/security39340663211 completos; editor real abre seletor e mostra check marks sem POST;7rotas do domínio com marcador exato; sem error/fatal23:26:43–23:31:43UTC. Escopo parcial B2; nomes técnicos e conteúdo salvo preservados.
    - Custo e margem: Sem chamadas, registros ou mensagens adicionais; M0 antes=depois, leitura mais onerosa ainda reprovada.
+
+
+82. **[C-UE-RECORD] Recusar datas fiscais impossíveis no registro de tratamentos**
+   - Pedido: P2 C-UE; endurecimento encontrado na auditoria de19/10/2026.
+   - Estado: **em andamento; testes sintéticos de calendário e gate completo antes de incorporar**.
+   - Evidência: lib/deemed-supplier.ts e tests/tax-gate.test.ts; não cria registro real nem implementa coleta/retenção/OSS.
+   - Custo e margem: Apenas validação local constante do registro existente, sem chamada/registro/mensagem adicional. M0 antes=depois para todos os planos/intervalos; leitura mais onerosa ainda reprovada.

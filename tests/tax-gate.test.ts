@@ -124,6 +124,18 @@ is("nor a jurisdiction recorded twice, or missing", [
   deemedSupplierReady(complete.filter((r) => r.jurisdiction !== "UK")),
 ], [false, false]);
 
+
+part("A tax treatment needs an actual calendar date");
+for (const date of ["2026-02-29", "2026-02-31", "2026-04-31", "1900-02-29", "2026-13-01", "2026-00-01", "2026-01-00", "2026-1-01", "", "not-a-date", null, undefined]) {
+  const records = complete.map(record => record.jurisdiction === "EU" ? { ...record, recordedOn: date as string } : record);
+  is("impossible or malformed record date keeps the gate closed", deemedSupplierProblems(records), ["EU: recordedOn"]);
+  is("an invalid calendar date never counts as ready", deemedSupplierReady(records), false);
+}
+for (const date of ["2024-02-29", "2000-02-29", "2026-02-28", "2026-04-30", "2026-12-31"]) {
+  is("valid month ends and leap days retain existing acceptance", deemedSupplierProblems(complete.map(record => ({ ...record, recordedOn: date }))), []);
+}
+is("date validation creates no actual treatment or permission to sell", [DEEMED_SUPPLIER_RECORDS.length, deemedSupplierReady(), PLANS_ON_SALE, ASSISTANT_ON_SALE], [0, false, false, false]);
+
 part("The documents say what the code does");
 const nine = read("docs/eu-vat-article-9a.md");
 is("the art. 9a reading cites the official texts and their day", [
