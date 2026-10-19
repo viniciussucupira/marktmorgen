@@ -572,7 +572,7 @@ function PlanTerms({ tier, yearly }: { tier: Tier; yearly: boolean }) {
       "Money back",
       `Ask within ${REFUND_DAYS} days of your first payment and it comes back in full, for any reason or none. A yearly plan is refunded for the months you have not started, at any time, less Stripe's card fee.`,
     ],
-    ["Cancelling", "Two clicks in your studio, any time. Inside the trial, the card is never charged."],
+    ["Canceling", "Two clicks in your studio, any time. Inside the trial, the card is never charged."],
     ["Fees", `${shareShown(tier) / 100}% of each sale. Stripe charges its own processing fee separately.`],
   ];
   return (
