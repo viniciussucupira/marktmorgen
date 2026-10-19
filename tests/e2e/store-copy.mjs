@@ -167,9 +167,10 @@ try {
   await owner.getByRole("button", {name:"Start your Path",exact:true}).click();
   await owner.getByRole("heading", {name:"Your next mission",exact:true}).waitFor();
   is("Path records published store facts", await owner.getByRole("heading", {name:"First Light",exact:true}).count(), 1);
-  is("Path never asks to tick completion", await owner.locator('main input[type="checkbox"]').count(), 0);
+  is("Path never asks to tick completion", await owner.locator('section[aria-labelledby="path-missions"] input[type="checkbox"], section[aria-labelledby="path-next"] input[type="checkbox"]').count(), 0);
   await owner.reload({waitUntil:"networkidle"});
   is("Path persists the answers", await owner.locator('input[name="subject"]').inputValue(), "Sourdough");
+  is("sales sharing starts switched off",await owner.getByLabel("Include sales kept after refunds",{exact:true}).isChecked(),false);
   const cardDownload=owner.waitForEvent("download");
   await owner.getByRole("button",{name:"Download card",exact:true}).click();
   const card=await cardDownload;
@@ -180,6 +181,9 @@ try {
   for await(const chunk of cardStream)cardText+=chunk.toString();
   is("the default card keeps sales private",cardText.includes("Sales kept after refunds"),false);
   is("the card contains the reached level",cardText.includes("First Light"),true);
+  await owner.getByLabel("Include sales kept after refunds",{exact:true}).check();
+  is("sales enter the preview only after explicit choice",await owner.getByText("Sales kept after refunds: $0",{exact:true}).isVisible(),true);
+  await owner.getByLabel("Include sales kept after refunds",{exact:true}).uncheck();
   for (const width of [390, 1280]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
     await ctx.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
