@@ -194,3 +194,17 @@ The largest mission list stays below 30 KB of the existing Path page's 70 KB
 response bound; no supplier request, storage family or quota is added.
 The browser checks the keyboard disclosure, scoped link, unchanged mission state,
 and expanded instructions at 390 and 1280 pixels with axe and no overflow.
+
+## 10. Campaign discovery from a mission (19 October 2026)
+
+An open product or sale mission links to the existing sales campaign category.
+An open lead mission or lead traffic target links to the audience category, with
+a clear distinction: a campaign form response alone is not a Path lead. The Path
+confirmation sources in section 1 remain unchanged. Test purchases, unavailable,
+recorded and unrelated missions have no campaign suggestion.
+
+The link keeps the chosen store, validates the category against the gallery's
+allowlist and scrolls to the gallery. It neither imports a campaign nor spends a
+preview or AI request. Changing filters stays local; choosing a starter still
+uses the existing metered preview, product mapping and capacity checks.
+There are no new provider calls, stored records, quotas or prices.

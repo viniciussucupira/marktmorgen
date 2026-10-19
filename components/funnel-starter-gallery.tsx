@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { STARTER_GOALS, STARTER_GOAL_LABELS, matchingStarters, type StarterCard, type StarterGoal } from "@/lib/funnel-starter-catalog";
 
-export function FunnelStarterGallery({ starters, busy, onChoose }: { starters: StarterCard[]; busy: boolean; onChoose: (id: string) => void }) {
-  const [goal, setGoal] = useState<StarterGoal | "all">("all");
+export function FunnelStarterGallery({ starters, busy, onChoose, initialGoal = "all" }: { starters: StarterCard[]; initialGoal?: StarterGoal | "all"; busy: boolean; onChoose: (id: string) => void }) {
+  const [goal, setGoal] = useState<StarterGoal | "all">(initialGoal);
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const shown = matchingStarters(starters, goal, query);
 
   return (
-    <div className="mt-5 border-t border-line pt-4">
+    <div id="campaign-starters" className="mt-5 scroll-mt-24 border-t border-line pt-4">
       <h3 className="font-semibold text-ink">Start with a campaign, with first words written</h3>
       <p className="mt-1 text-sm text-ink-soft">Choose your goal, inspect the journey, then match it to your own products. Everything is created as a draft for you to review.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">

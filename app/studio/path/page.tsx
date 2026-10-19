@@ -1,3 +1,4 @@
+import { pathCampaign } from "@/lib/path-campaign";
 import { PathMissions } from "@/components/path-missions";
 import { PathReminderButton } from "@/components/path-reminder-button";
 import { PathShareCard } from "@/components/path-share-card";
@@ -32,6 +33,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
  const streak=record?streakOf(record.checkins,localDay(record.answers.timeZone,now)):null;
  const planLine=pathPlanLine(await allowanceUsed(store,"studio",now),allowanceFor(store,"studio",now/1000));
  const mission=progress?.today;
+ const campaign=pathCampaign(mission);
  const hrefFor=(place:Place)=>place.store?"/@"+encodeURIComponent(store.handle):studioPath(store,"",place.page || "")+(place.hash || "");
  return <div className="min-h-screen bg-paper text-ink">
   <StudioHeader current={store} role={access.role} stores={access.stores} owned={access.owned} action={{href:studioPath(store),label:"Back to the studio",short:"Studio"}}/>
@@ -52,6 +54,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
     </section>
     <section className="mt-8" aria-labelledby="path-next"><h2 id="path-next" className="t-h3">{progress.complete?"Your first real sale is recorded":"Your next mission"}</h2>
      {mission?<div className="mt-4 rounded-2xl border border-line bg-white p-6"><h3 className="text-xl font-semibold">{mission.title}</h3><p className="mt-3">{mission.why}</p><ol className="mt-4 list-decimal space-y-2 pl-6">{mission.steps.map(step=><li key={step}>{step}</li>)}</ol><p className="mt-4 text-sm text-ink-soft">Recorded when: {mission.closesOn}</p><a className="btn btn-primary mt-5" href={hrefFor(mission.place)}>{mission.place.label}</a></div>:<p className="mt-3">Keep listening to your customers and improving what you offer. Your reached level stays with you.</p>}
+     {campaign?<aside className="mt-4 rounded-xl border border-line bg-white p-5" aria-label="Campaigns for this mission"><p>{campaign.why}</p><a className="btn mt-4" href={studioPath(store,"campaignGoal="+campaign.goal,"funnels")+"#campaign-starters"}>Explore campaigns for this mission</a><p className="mt-3 text-sm text-ink-soft">Browsing does not create anything or use your preview allowance. Choose a campaign, review its requirements and adapt it to your own offer.</p></aside>:null}
     </section>
     <PathMissions missions={[...progress.days,...progress.traffic]} hrefFor={hrefFor}/>
     <PathReminderButton phoneUrl={studioPath(store,"","phone")}/>
