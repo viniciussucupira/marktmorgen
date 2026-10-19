@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { studioPath, studioView } from "@/lib/studio-route";
-import { GROWTH_GOALS, growthActions, growthGoal, growthCampaignGoal } from "@/lib/growth-plan";
+import { GROWTH_GOALS, growthActions, growthGoal, growthCampaignGoal, growthReview } from "@/lib/growth-plan";
 
 import { FUNNEL_STARTERS } from "@/lib/funnel-starters";
 import { starterCard } from "@/lib/funnel-starter-catalog";
@@ -26,6 +26,7 @@ export default async function GrowthPage({ searchParams }: Params) {
   const { store, role } = view;
   const goal = growthGoal(query.goal);
   const actions = growthActions(goal, role);
+  const review = growthReview(goal,role);
   const campaignGoal = growthCampaignGoal(goal, role);
   const campaigns = campaignGoal ? FUNNEL_STARTERS.map(starterCard).filter(card => card.goal === campaignGoal) : [];
   const linkFor = (path: string) => path.startsWith("#") ? studioPath(store) + path : studioPath(store, "", path);
@@ -50,6 +51,19 @@ export default async function GrowthPage({ searchParams }: Params) {
           </li>)}</ol> : <p className="mt-4 text-sm text-ink-soft">Your role does not include the tools for this goal. Ask the store owner to work through this plan.</p>}
           <p className="mt-5 text-sm text-ink-soft">Open the relevant tool to review its current records. This guide does not check live checkout, delivery, consent or campaign readiness, and starts nothing automatically.</p>
         </section>
+        {review ? <section className="card mt-8 p-5 sm:p-8" aria-labelledby="growth-review">
+          <h2 id="growth-review" className="text-lg font-semibold">Measure one change</h2>
+          <p className="mt-3">{review.question}</p>
+          <details className="mt-3">
+            <summary className="flex min-h-11 cursor-pointer items-center font-semibold underline underline-offset-4">Plan a fair comparison</summary>
+            <ol className="mt-4 list-decimal space-y-4 pl-5 text-sm text-ink-soft">
+              <li><h3 className="font-semibold text-ink">Record your starting point</h3><p className="mt-1">{review.baseline}</p></li>
+              <li><h3 className="font-semibold text-ink">Choose one change</h3><p className="mt-1">{review.change}</p></li>
+              <li><h3 className="font-semibold text-ink">Review the evidence</h3><p className="mt-1">{review.review}</p></li>
+            </ol>
+            <p className="mt-4 text-sm text-ink-soft">Write down your question and review date before making the change. If records are missing or groups differ, the result is inconclusive. This guide does not run a test, calculate a result or verify profit.</p>
+          </details>
+        </section> : null}
         {campaigns.length ? <section className="mt-8" aria-labelledby="growth-campaigns">
           <h2 id="growth-campaigns" className="t-h3">Campaigns for this goal</h2>
           <p className="mt-3 max-w-2xl text-ink-soft">Compare the journey and what you need before choosing a starting structure for your own offer.</p>

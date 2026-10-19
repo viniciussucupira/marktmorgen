@@ -36,3 +36,13 @@ export function growthActions(goal: GrowthGoal, role: Role): GrowthAction[] { re
 export function growthCampaignGoal(goal: GrowthGoal, role: Role): import("@/lib/funnel-starter-catalog").StarterGoal | null {
   return goal !== "retention" && can(role,"page") ? goal : null;
 }
+
+export type GrowthReview={question:string;baseline:string;change:string;review:string};
+const REVIEWS:Record<GrowthGoal,GrowthReview>={
+ leads:{question:"Are the right people choosing to hear from you?",baseline:"Record the same date range and traffic source for visits and confirmed subscribers. Note how consent and duplicate sign-ups are counted.",change:"Change one part of the free offer or sign-up page. Keep the audience and other steps comparable; do not add anyone without consent.",review:"Compare confirmed subscribers with visits over the same period. A larger list alone does not show better buyers or profit; check unsubscribes and later purchases."},
+ sales:{question:"Where does the buying journey lose people?",baseline:"Record visits, paid orders, refunds and costs for the same offer and date range. Keep test traffic separate from real buyers.",change:"Change one page element or offer explanation. Use the funnel A/B tools when suitable, keeping its published waiting and evidence rules.",review:"Compare the same metric and date range. Gross payments are not profit: review refunds, disputes, fees, taxes and delivery costs separately before deciding."},
+ services:{question:"Are suitable enquiries becoming completed deals?",baseline:"Record qualified enquiries and won deals using the same qualification rule and date range. Allow for the time a service deal takes to close.",change:"Change one application question or follow-up step. Keep the service scope and qualification rule clear; follow up only with appropriate permission.",review:"Review the same enquiry cohort after enough time to close. Check completed delivery, cancellations and service costs, not just a larger pipeline value."},
+ retention:{question:"Are buyers getting value and choosing to return?",baseline:"Choose one group of buyers from the same starting period. Record repeat purchases or renewals, cancellations and refunds over a defined follow-up period.",change:"Improve one onboarding or follow-up step. Keep optional marketing consent separate from essential purchase help and honour stop requests.",review:"Compare groups with the same time to return. Review refunds, cancellations and support costs alongside repeat orders; repeat revenue alone is not profit."},
+};
+/** Static guidance only; never reads records or declares a winning change. */
+export function growthReview(goal:GrowthGoal,role:Role):GrowthReview|null{return can(role,"stats")?REVIEWS[goal]:null;}
