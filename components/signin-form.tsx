@@ -154,7 +154,7 @@ export function SignInForm() {
           className="field mt-2"
         />
         {shapeProblem && state.kind !== "error" ? (
-          <p id="signin-hint" className="mt-2 text-sm text-danger">
+          <p id="signin-hint" className="mt-2 text-sm text-danger-text">
             {shapeProblem}
           </p>
         ) : null}

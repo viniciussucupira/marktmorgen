@@ -77,6 +77,7 @@
   --amber-lift: #ffc77a;
   --violet-glow: #cfc7f2;
   --danger: #c2261f;
+  --danger-text: #8e211b; /* error copy on light surfaces, >=7.7:1 on danger-soft */
   --danger-soft: #fdecea;
 
   /*
@@ -182,6 +183,7 @@
   --color-amber-brand: var(--amber);
   --color-amber-soft: var(--amber-soft);
   --color-danger: var(--danger);
+  --color-danger-text: var(--danger-text);
   --color-danger-soft: var(--danger-soft);
   --color-cream: var(--cream);
 
@@ -1425,7 +1427,7 @@ a.chip {
 .notice-error {
   border-color: #f0c4c0;
   background: var(--danger-soft);
-  color: #8e211b;
+  color: var(--danger-text);
 }
 .notice-info {
   border-color: var(--lilac-deep);

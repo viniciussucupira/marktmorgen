@@ -78,3 +78,18 @@ This fixes the shared style,not every buyer journey or custom override.
 Read-only/disabled/error states,all browser/OS/assistive technology,real-user
 research and whole-product AAA remain open. No sales uplift or margin proof
 is inferred from this readability change.
+
+## Sign-in error copy
+
+Delivery22 separates light-surface error text from the brighter error-border
+token. The actual sign-in inline format hint uses the darker text token;the
+existing error notice uses the same value through the token. Border colours
+and other red actions do not change. This is scoped evidence,not a wholesale
+semantic-colour pass.
+
+Synthetic browser cases at320/390/768/1280 trigger blur/invalid submit/empty
+submit/correction. Enhanced-contrast axe checks must have actual passes,no
+violations and no incomplete readings on the visible hint/alerts. Tests also
+check field descriptions,invalid state,a single alert,correction cleanup and
+zero login API requests. Requests are intercepted locally;no message is sent.
+Other routes,colours,assistive technologies and user research remain open.

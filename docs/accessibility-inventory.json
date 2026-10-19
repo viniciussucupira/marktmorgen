@@ -1116,7 +1116,7 @@
   "openWork": [
     {
       "area": "Semantic/action text contrast",
-      "evidence": "Static palette pairs include danger5.11:1 on danger-soft,mint-deep5.89:1 on mint-soft,indigo5.54:1 on lilac-deep. Applicable rendered contexts and text sizes must be audited; no blanket AAA claim.",
+      "evidence": "Static palette pairs include danger5.11:1 on danger-soft,mint-deep5.89:1 on mint-soft,indigo5.54:1 on lilac-deep. Applicable rendered contexts and text sizes must be audited; no blanket AAA claim. Delivery22 adds a separate light-surface error-copy token used by actual sign-in inline validation and the existing notice-error,with enhanced contrast and validation-state browser tests at4 widths. Original danger token still used elsewhere;mint/indigo/other red contexts remain open.",
       "status": "open"
     },
     {
