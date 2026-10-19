@@ -36,9 +36,9 @@ async function main() {
     part("Confirmed cancellation and ownership");
     await seed();
     is("scheduled campaign cancels", await cancelBroadcast(store, id), true);
-    is("cancelled status is retained", JSON.parse(String((await original.call(redis, [["GET", key]]))[0])).status, "cancelled");
+    is("canceled status is retained", JSON.parse(String((await original.call(redis, [["GET", key]]))[0])).status, "cancelled");
     is("queue membership removed and lock released", await original.call(redis, [["SISMEMBER", queue, id], ["GET", lock]]), [0, null]);
-    is("already cancelled is refused", await cancelBroadcast(store, id), false);
+    is("already canceled is refused", await cancelBroadcast(store, id), false);
     for (const changed of [{ listId: "foreign" }, { id: "222222222222222222222222" }, { status: "sending" }, { listed: true }, { sent: 1 }]) {
       await seed({ ...record, ...changed });
       is("foreign, mismatched or started campaigns cannot cancel", await cancelBroadcast(store, id), false);
@@ -87,11 +87,11 @@ async function main() {
       await seed(); removeReply = reply;
       is("queue removal uncertainty is reported", await uncertain(), true);
       is("writes are not repeated", [saves, removals], [1, 1]);
-      is("cancelled state is not reverted", JSON.parse(String((await original.call(redis, [["GET", key]]))[0])).status, "cancelled");
+      is("canceled state is not reverted", JSON.parse(String((await original.call(redis, [["GET", key]]))[0])).status, "cancelled");
     }
     await seed(); saveReply = new Error("applied record reply lost"); apply = true;
     is("applied cancellation with lost reply is uncertain", await uncertain(), true);
-    is("applied cancellation remains cancelled", JSON.parse(String((await original.call(redis, [["GET", key]]))[0])).status, "cancelled");
+    is("applied cancellation remains canceled", JSON.parse(String((await original.call(redis, [["GET", key]]))[0])).status, "cancelled");
     saveReply = normal; apply = false;
     const recovered = await advanceBroadcast(id, async () => { throw new Error("cancelled campaign must not load sender"); }, Date.now() + 1000);
     is("worker observes applied cancellation without sending", recovered?.status, "cancelled");

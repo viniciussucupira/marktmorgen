@@ -7,7 +7,7 @@ async function main(){
  const product=parseProduct({id:"knife00001",title:"Knife guide",priceCents:1000,summary:"A useful guide"});
  if(!product)throw new Error("product fixture");
  const store={catalog:{...emptyCatalog("a".repeat(32)),items:[itemOf(product)]}} as Store;
- part("A strict catalogue witness cannot turn damaged data into absence");
+ part("A strict catalog witness cannot turn damaged data into absence");
  await redisPipeline(productWrites(store.catalog.id!,product));
  is("legitimate absent extras means no configured offer",(await readProductsStrict(store,[product.id]))[0].funnel,null);
  const real=redis.pipeline;

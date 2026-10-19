@@ -136,7 +136,7 @@ async function main(): Promise<void> {
   const second = await run(again.job.id);
   is("nothing new: no one added, no one stopped twice", [second?.counts.added, second?.counts.contacts, second?.counts.stopped], [0, 0, 0]);
   const later = await upsertContact(listId, "grace@example.com", { agreed: true, explicit: true, source: "free", at: new Date(Date.now() + 1000).toISOString() }, ROOM);
-  is("only Grace's own tick on a page of the store brings her back", later.joined, true);
+  is("only Grace's own check on a page of the store brings her back", later.joined, true);
 
   part("Contacts without the creator's word");
   const unconfirmed = await previewImport(store, "contacts", { ...input, agreed: false }, [["2", "zed@example.com", "Zed", "", "Subscribed"]]);

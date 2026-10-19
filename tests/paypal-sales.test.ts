@@ -189,7 +189,7 @@ async function main(): Promise<void> {
   is("not a call", sellsWithPayPal(base({ call: {} as Listing["call"] })), false);
   is("not with price options", sellsWithPayPal(base({ options: [{}] as Listing["options"] })), false);
   is("not pay what you want", sellsWithPayPal(base({ pwyw: {} as Listing["pwyw"] })), false);
-  is("not with licence keys", sellsWithPayPal(base({ keys: {} as Listing["keys"] })), false);
+  is("not with license keys", sellsWithPayPal(base({ keys: {} as Listing["keys"] })), false);
   is("not limited stock", sellsWithPayPal(base({ stock: 5 } as Partial<Listing>)), false);
   is("not a draft", sellsWithPayPal(base({ hidden: true })), false);
   is("not something that hands over nothing", sellsWithPayPal(base({ link: null })), false);

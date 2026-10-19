@@ -130,7 +130,7 @@ async function main(): Promise<void> {
   ];
   const sales = (await readSales(store, NOW))!;
   is("money by the buyer's country", sales.byCountryIn?.d7, [{ country: "DE", cents: 7000, sales: 2 }, { country: "US", cents: 3000, sales: 1 }]);
-  is("a campaign shared across channels is not labelled as only one", sales.byCampaignIn?.d7, [{ campaign: "launch", source: "", sources: ["instagram", "tiktok"], cents: 8000, sales: 2 }]);
+  is("a campaign shared across channels is not labeled as only one", sales.byCampaignIn?.d7, [{ campaign: "launch", source: "", sources: ["instagram", "tiktok"], cents: 8000, sales: 2 }]);
   is("and by the ad", sales.byContentIn?.d7, [{ content: "reel-b", source: "instagram", campaign: "launch", cents: 5000, sales: 1 }]);
   is("a refund under the channel of the sale it gave back, one that matches none apart", sales.refundsIn?.d7, [
     { source: "tiktok", refunds: 1, cents: 3000 },

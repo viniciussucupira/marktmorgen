@@ -70,7 +70,7 @@ async function main(): Promise<void> {
   const pics = back.blocks[4] as Extract<(typeof back.blocks)[number], { kind: "pictures" }>;
   const compare = back.blocks[3] as Extract<(typeof back.blocks)[number], { kind: "compare" }>;
   is("put back where they came from", [back.blocks[0].kind === "hero" && back.blocks[0].headline, pics.items[0].alt, back.seoTitle], ["BAKE BREAD ON SUNDAY", "A LOAF ON A BOARD", "SUNDAY BAKING"]);
-  is("with ids, files, ticks and the product picked untouched", [back.blocks.map((b) => b.id), pics.items[0].path, compare.rows[0].a, compare.rows[0].b, (back.blocks[5] as { product: string }).product], [page.blocks.map((b) => b.id), picture.path, CELL_YES, CELL_NO, "p".repeat(12)]);
+  is("with ids, files, checks and the product picked untouched", [back.blocks.map((b) => b.id), pics.items[0].path, compare.rows[0].a, compare.rows[0].b, (back.blocks[5] as { product: string }).product], [page.blocks.map((b) => b.id), picture.path, CELL_YES, CELL_NO, "p".repeat(12)]);
   is("a word missing keeps the original", withWords(page, ["Hornea pan"]).blocks[1], page.blocks[1]);
   const many = Array.from({ length: 30 }, () => "x".repeat(500));
   is("a long page split in parts of at most the size asked", translateParts(many).map((p) => p.join("").length <= TRANSLATE_PART_CHARS), Array(4).fill(true));

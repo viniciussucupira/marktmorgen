@@ -2515,7 +2515,7 @@ function CompareEditor({ base, rows, onChange }: { base: string; rows: CompareRo
             className="field min-w-0"
             maxLength={MAX_CELL}
             value={value === CELL_YES ? "" : value === CELL_NO ? "" : value}
-            placeholder={value === CELL_YES ? "A tick" : value === CELL_NO ? "A cross" : "A few words"}
+            placeholder={value === CELL_YES ? "A check mark" : value === CELL_NO ? "A cross" : "A few words"}
             onChange={(e) => set(i, { [side]: e.target.value })}
           />
           <button
@@ -2523,7 +2523,7 @@ function CompareEditor({ base, rows, onChange }: { base: string; rows: CompareRo
             aria-pressed={value === CELL_YES}
             onClick={() => set(i, { [side]: value === CELL_YES ? "" : CELL_YES })}
             className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-1 ring-line ${value === CELL_YES ? "bg-mint-soft text-mint-deep" : "text-ink-soft hover:bg-paper"}`}
-            aria-label={`A tick in ${label.toLowerCase()}`}
+            aria-label={`A check mark in ${label.toLowerCase()}`}
           >
             <Icon name="check" size={16} />
           </button>

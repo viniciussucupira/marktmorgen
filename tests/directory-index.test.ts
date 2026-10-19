@@ -108,7 +108,7 @@ test("a save drops the directory's kept rows, so taking a store out is immediate
   assert.equal(kept, null);
 });
 
-test("search engines are asked to show it only once there is a catalogue", () => {
+test("search engines are asked to show it only once there is a catalog", () => {
   assert.ok(INDEX_DIRECTORY_AT >= 5 && INDEX_DIRECTORY_AT <= 50);
 });
 

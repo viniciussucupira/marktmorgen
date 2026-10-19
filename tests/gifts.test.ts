@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   const withOptions = base({ link: null, options: [{ id: "a", priceCents: 900, file: null, link: "https://example.com/a" }, { id: "b", priceCents: 0, file: null, link: "https://example.com/b" }, { id: "c", priceCents: 500, file: null, link: null }] as Listing["options"] });
   is("with price options, at one that is paid and hands something over", [canGift(withOptions), givableOptions(withOptions).map((o) => o.id)], [true, ["a"]]);
   is("a course at several prices: every paid one", givableOptions(base({ link: null, course: {} as Listing["course"], options: [{ id: "a", priceCents: 900, file: null, link: null }] as Listing["options"] })).length, 1);
-  is("not with licence keys", canGift(base({ keys: {} as Listing["keys"] })), false);
+  is("not with license keys", canGift(base({ keys: {} as Listing["keys"] })), false);
   is("not something that hands over nothing", canGift(base({ link: null })), false);
 
   await claimHandle("owner@example.com", "harbor", "Harbor Kitchen", "");

@@ -16,7 +16,7 @@ const hero = (more: Record<string, unknown>) => parsePage({ blocks: [{ id: "hero
 async function main(): Promise<void> {
   part("What a hero keeps");
   is("side by side is left unsaid", (hero({}) as { layout?: string }).layout ?? "unsaid", "unsaid");
-  is("centred and behind the words are kept", ["centered", "cover"].map((layout) => (hero({ layout }) as { layout?: string }).layout), ["centered", "cover"]);
+  is("centered and behind the words are kept", ["centered", "cover"].map((layout) => (hero({ layout }) as { layout?: string }).layout), ["centered", "cover"]);
   is("anything else is the default", (hero({ layout: "parallax" }) as { layout?: string }).layout, undefined);
   is("a button only when asked for in so many words", [(hero({ button: true }) as { button?: boolean }).button, (hero({ button: "yes" }) as { button?: boolean }).button], [true, undefined]);
 

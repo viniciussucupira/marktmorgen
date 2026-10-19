@@ -14,7 +14,7 @@ const MESSAGES: Record<string, string> = {
   server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
 };
 
-/** Whether members may pause instead of cancelling, and for how long (lib/membership-pause-rules.ts). */
+/** Whether members may pause instead of canceling, and for how long (lib/membership-pause-rules.ts). */
 export function PauseEditor({ months }: { months: number }) {
   const router = useRouter();
   const [chosen, setChosen] = useState(months);
@@ -51,7 +51,7 @@ export function PauseEditor({ months }: { months: number }) {
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="pause-title" data-pause-editor>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="pause-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
-          Let members pause instead of cancelling
+          Let members pause instead of canceling
         </h2>
         <span className={`tag ${months ? "tag-live" : ""}`}>{months ? "On" : "Off"}</span>
       </div>

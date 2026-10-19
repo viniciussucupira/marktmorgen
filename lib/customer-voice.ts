@@ -11,7 +11,7 @@
  * Here four lists the studio already keeps, each shown on its own, are read
  * together:
  *
- *   - what members wrote when cancelling (lib/membership-numbers.ts);
+ *   - what members wrote when canceling (lib/membership-numbers.ts);
  *   - questions a product page or the store's guide could not answer
  *     (lib/answers.ts);
  *   - the words of reviews (lib/reviews.ts);
@@ -145,7 +145,7 @@ export async function gatherVoice(store: Store, now = Date.now()): Promise<Voice
 /** What the model is handed: each text by its number, where it came from, and nothing else. Pure. */
 export function voicePrompt(items: VoiceItem[]): string {
   const where: Record<VoiceSource, string> = {
-    cancel: "a member, when cancelling",
+    cancel: "a member, when canceling",
     question: "a visitor's question the page could not answer",
     review: "a buyer's review",
     search: "words searched for on the store that found nothing",
@@ -245,7 +245,7 @@ export async function makeVoice(store: Store, now = Date.now()): Promise<VoiceRe
     const done = await counted(store, now, async () => {
       const system = [
         "You sort what an online store's customers wrote into the few themes they repeat.",
-        "You are given numbered texts: words members wrote when cancelling, questions a product page could not answer, reviews, and words searched for on the store that found nothing.",
+        "You are given numbered texts: words members wrote when canceling, questions a product page could not answer, reviews, and words searched for on the store that found nothing.",
         `Group texts that say the same thing into at most ${MAX_THEMES} themes. A theme needs at least two texts. Leave out texts that fit no theme. Each text goes in one theme at most.`,
         "Name each theme in plain American English, at most 8 words, saying what customers said or wanted (for example: \"Wants a printable version\", \"Price feels high for what is inside\"). No numbers in a name, no judgment of the customers, nothing that is not in the texts.",
         "Return only a JSON object: {\"themes\": [{\"title\": string, \"ids\": [numbers of its texts]}]}, the most repeated theme first.",

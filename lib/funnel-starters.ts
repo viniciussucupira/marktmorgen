@@ -424,7 +424,7 @@ FUNNEL_STARTERS.push(
             { id: "cl03", kind: "fit", heading: "Choose the right course for you", yesLabel: "Designed for you if you", noLabel: "Choose something else if you", yes: ["[Experience, equipment and time needed]"], no: ["[Topics or support this course does not include]"] },
             { id: "cl04", kind: "bio", heading: "About your teacher", body: "", photo: true },
             { id: "cl05", kind: "faq", heading: "Before enrolling", items: [{ q: "How are lessons delivered?", a: "[Explain recorded or live lessons, release dates and how long access lasts.]" }, { q: "What support is included?", a: "[Explain questions, feedback and any calls included.]" }, { q: "Can I get a refund?", a: "[State the refund policy that applies to this course.]" }] },
-            { id: "cl06", kind: "cta", label: "See the course and enrolment options", note: "" },
+            { id: "cl06", kind: "cta", label: "See the course and enrollment options", note: "" },
           ],
         },
         nextSteps({ title: "Open your course", detail: "[Explain where to sign in, which lesson to start with and what to prepare.]" }),
