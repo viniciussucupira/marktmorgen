@@ -88,6 +88,8 @@ const env = {
   UPSTASH_REDIS_REST_TOKEN: "local",
   RESEND_API_KEY: "re_local_only_a_stand_in",
   RESEND_API_BASE: FAKE,
+  STRIPE_DEMO_SECRET_KEY: "sk_test_local_only_a_stand_in",
+  STRIPE_CONNECT_API_BASE: FAKE,
   NEXT_FONT_GOOGLE_MOCKED_RESPONSES: join(here, "google-fonts-mock.cjs"),
   E2E_FONT_ORIGIN: FAKE,
   NEXT_TELEMETRY_DISABLED: "1",

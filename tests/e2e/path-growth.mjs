@@ -12,7 +12,7 @@ export async function checkPostSalePath({browser,LOCAL,services,session,sid,prod
    await page.setViewportSize({width,height:900});
    await page.goto(LOCAL+"/studio/path?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
    const section=page.locator('section[aria-labelledby="path-growth-title"]');
-   await section.getByRole("heading",{name:"After your first sale",exact:true}).waitFor();
+   await section.getByRole("heading",{name:"After your first sale",exact:true}).waitFor().catch(async error=>{console.error("Synthetic post-sale Path state:",(await page.locator("body").innerText()).slice(-6000));throw error;});
    is("six post-sale missions at "+width,await section.locator(":scope > ul > li").count(),6);
    is("two recorded facts at "+width,await section.getByText("Recorded",{exact:true}).count(),2);
    is("four next steps at "+width,await section.getByText("Ready when you are",{exact:true}).count(),4);

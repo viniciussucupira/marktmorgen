@@ -1,3 +1,4 @@
+import {DEMO_CONNECTED_ACCOUNT} from "@/lib/demo-account";
 import { readFields, writeFields } from "@/lib/crm";
 import { findToken } from "@/lib/buyer-profile";
 import { KIND } from "@/lib/catalog";
@@ -59,7 +60,7 @@ async function main(): Promise<void> {
     const attached=await setProductFile(growthOwner,added.product.id,{pathname:"stores/path-growth/"+added.product.id+"/guide.pdf",name:"guide.pdf",bytes:100,contentType:"application/pdf",addedAt:new Date().toISOString()});
     if(!attached.ok)throw Error("No growth file");
   }
-  if(!(await setStripeAccount(growthOwner,"acct_1TestPath0000001",true)).ok)throw Error("No growth synthetic account");
+  if(!(await setStripeAccount(growthOwner,DEMO_CONNECTED_ACCOUNT,true)).ok)throw Error("No growth synthetic account");
   const growthStore=(await storeForEmail(growthOwner))!;
   if(!(await startPath(growthStore,{goalCents:0,goalCurrency:"usd",skills:"Teaching",subject:"Guides",minutes:15,audience:"none",timeZone:"America/New_York"})).ok)throw Error("No growth Path");
   const growthSession=await openSession(growthOwner);
