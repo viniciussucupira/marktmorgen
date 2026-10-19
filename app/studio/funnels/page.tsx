@@ -29,6 +29,7 @@ import { listShares } from "@/lib/funnel-share-store";
 import { accountStores } from "@/lib/store";
 import { shareLimitsFor } from "@/lib/funnel-share-rules";
 import { FUNNEL_STARTERS } from "@/lib/funnel-starters";
+import { starterCard } from "@/lib/funnel-starter-catalog";
 import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { monthlyAllowance } from "@/lib/mail";
 
@@ -223,7 +224,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
               funnels={savedFunnels.map(({ funnel }) => ({ id: funnel.id, name: funnel.name }))}
               shares={shares}
               limits={shareLimitsFor(store)}
-              starters={FUNNEL_STARTERS.map(({ id, label, hint }) => ({ id, label, hint }))}
+              starters={FUNNEL_STARTERS.map(starterCard)}
               sid={store.sid}
               otherStores={otherStores}
             />

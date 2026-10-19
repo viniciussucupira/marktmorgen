@@ -24,6 +24,7 @@ import { startServices } from "./services.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
+const nextCli = join(root, "node_modules/next/dist/bin/next");
 const SERVICES = Number(process.env.E2E_SERVICES_PORT || 4489);
 const APP = Number(process.env.E2E_APP_PORT || 3189);
 const LOCAL = `http://localhost:${APP}`;
@@ -102,10 +103,10 @@ try {
   const { session } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
-    const built = await run("npx", ["next", "build"]);
+    const built = await run(process.execPath, [nextCli, "build"]);
     if (built.status !== 0) throw new Error(`the app did not build:\n${built.said.slice(-3000)}`);
   }
-  app = spawn("npx", ["next", "start", "-p", String(APP)], { cwd: root, env, stdio: ["ignore", "pipe", "pipe"], detached: true });
+  app = spawn(process.execPath, [nextCli, "start", "-p", String(APP)], { cwd: root, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
   app.stdout.on("data", (chunk) => (appLog += chunk));
   app.stderr.on("data", (chunk) => (appLog += chunk));
   const started = Date.now();
@@ -132,6 +133,34 @@ try {
   await owner.getByRole("button", { name: /Copy into/ }).click();
   await owner.waitForFunction(() => document.querySelector('main [role="status"]')?.textContent?.startsWith("Done."), null, { timeout: 60_000 });
   is("the copy runs to the end and says what it made", (await owner.locator('main [role="status"]').innerText()).startsWith("Done. Made in Second Coaching: 3 products"), true);
+  // Campaign discovery must stay local; only choosing one starts a metered
+  // server preview. Exercise its real import route with a form-only campaign.
+  await open(owner, `${LOCAL}/studio/funnels`);
+  let previews = 0;
+  owner.on("request", (request) => {
+    if (request.url().includes("/api/store/funnel-share") && request.method() === "POST") previews += 1;
+  });
+  await owner.getByLabel("What do you want to do?").selectOption("sales");
+  await owner.getByLabel("Find a campaign").fill("digital toolkit");
+  await owner.getByRole("button", { name: "See the journey and what you need", exact: true }).click();
+  is("campaign requirements come from the actual bundle", await owner.getByText("Your download or toolkit (paid)", { exact: true }).isVisible(), true);
+  is("the journey is keyboard accessible", await owner.getByRole("button", { name: "Hide the journey", exact: true }).getAttribute("aria-expanded"), "true");
+  await owner.getByLabel("Find a campaign").fill("no-such-campaign");
+  is("unmatched search can be reset", await owner.getByText("No campaigns match these filters.", { exact: true }).isVisible(), true);
+  await owner.getByRole("button", { name: "Show all campaigns", exact: true }).click();
+  is("browsing spends no server previews", previews, 0);
+  await owner.getByRole("button", { name: "Set up the Build a launch waitlist campaign", exact: true }).click();
+  await owner.getByLabel("Name, for you", { exact: true }).waitFor();
+  is("choosing a campaign starts one server preview", previews, 1);
+  await owner.getByLabel("Name, for you", { exact: true }).fill("Browser waitlist campaign");
+  await owner.getByRole("button", { name: "Bring it in as a draft", exact: true }).click();
+  await owner.getByText("Made as a draft. It is in the list above, off, with its pages kept back.", { exact: true }).waitFor();
+  // A success notice precedes router.refresh(). Read a fresh page to prove
+  // persistence rather than racing the asynchronous refresh of the list.
+  await owner.reload({ waitUntil: "networkidle" });
+  const savedCampaign = owner.locator("#fs-funnel option").filter({ hasText: /^Browser waitlist campaign$/ });
+  await savedCampaign.waitFor({ state: "attached" });
+  is("a new waitlist campaign is saved by the real import", await savedCampaign.count(), 1);
   for (const width of [390, 1280]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
     await ctx.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
@@ -139,11 +168,17 @@ try {
     await open(page, `${LOCAL}/studio/copy`);
     await page.getByRole("button", { name: "See what it makes" }).click();
     await page.waitForSelector("ul[aria-label] li");
+    is(`copy page at ${width}: no sideways scroll`, await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0);
+    await page.addScriptTag({ content: axeSource });
+    is(`copy page at ${width}: axe`, await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] } })).violations.map((v) => v.id)), []);
+    await open(page, `${LOCAL}/studio/funnels`);
+    await page.getByLabel("Find a campaign").fill("launch waitlist");
+    await page.getByRole("button", { name: "See the journey and what you need", exact: true }).click();
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     await page.addScriptTag({ content: axeSource });
     const found = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] } })).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`));
-    is(`copy page at ${width}: no sideways scroll`, sideways, 0);
-    is(`copy page at ${width}: axe`, found, []);
+    is(`campaign page at ${width}: no sideways scroll`, sideways, 0);
+    is(`campaign page at ${width}: axe`, found, []);
     await ctx.close();
   }
   is("no page threw", errors, []);
@@ -155,7 +190,8 @@ try {
   await browser?.close().catch(() => {});
   if (app?.pid && app.exitCode === null) {
     try {
-      process.kill(-app.pid, "SIGTERM");
+      if (process.platform === "win32") app.kill("SIGTERM");
+      else process.kill(-app.pid, "SIGTERM");
     } catch {}
   }
   await services.close().catch(() => {});
