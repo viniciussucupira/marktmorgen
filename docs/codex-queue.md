@@ -39,17 +39,17 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 1. **[ATUAL-D6] Certificados privados por nível do Path: arquivo HTML acessível, valores desligados por padrão, dados do nível salvo no servidor a partir da própria loja.**
    - Pedido: P1 item6; P2 D6; datas/horas e grau de certeza em Proveniência.
-   - Estado: **feito (PR #620, mesclado em 19/10 19:43, horário de Fortaleza; confirmação de publicação em andamento)**.
+   - Estado: **feito (PR #620, mesclado em 19/10 19:43, horário de Fortaleza; publicado como entrega41, versão da6924e, em19/10 19:44 de Fortaleza)**.
    - Custo e margem: Sem chamadas ou registros adicionais: geração local a partir da resposta já admitida. Documento <4KB; novo trecho renderizado <10KB. Matriz M0 antes=depois; a leitura fiscal vinculante reprova os planos.
 
 2. **[FILA] Criar e manter este arquivo no repositório, com proveniência, ordem, custos, estados e histórico; incluir sua atualização no mesmo PR de cada próximo item.**
    - Pedido: P2 regras do arquivo; P3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (branch codex/durable-work-queue)**.
+   - Estado: **em andamento (branch codex/durable-work-queue; PR #621)**.
    - Custo e margem: Somente documentação e teste de consistência; sem custo de execução em produção.
 
 3. **[B1] Fixar inglês americano como idioma atual de site público, estúdio, Path e e-mails da plataforma; conteúdo dos criadores, citações em português e identificadores persistidos ficam intactos.**
    - Pedido: P2 B1; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **em andamento (branch codex/platform-us-english)**.
    - Custo e margem: Conferir configuração e textos existentes; nenhum serviço de tradução ou custo por visita autorizado.
 
 4. **[B2] Revisar inglês americano página por página: mensagens, erros, estados vazios, e-mails, aria-label, alt e textos de testes; manter inventário de áreas e PRs pequenos, sem alterar significado.**
@@ -450,3 +450,5 @@ O ledger operacional de publicações foi mantido na continuidade da conversa at
 Dados privados de criadores nunca são comparados/expostos entre lojas. Missão só fecha por fato próprio lido no servidor; IA nunca decide conclusão. Toda IA é opcional, paga pela franquia com reserva prévia, heldToFacts e fallback; nunca trial. Silêncio21:00–07:59 no fuso salvo e buffer de despacho seguem mayNotify; download/abertura explícitos podem ocorrer a qualquer hora. Sem promessa de ganho, pressão, testemunho falso ou superioridade sem evidência.
 
 PR620: verificações completas do head edfd5c9 passaram (Product39335759627, Redis118344739064, security39335759520); downloads reais de arquivos sintéticos390/1280/teclado/A-AA/privacidade/nenhum POST/isolamento de dono passaram. Mesclado da6924e; publicação ainda precisa de READY, domínio/versão e logs antes da entrega41.
+
+B1: raiz HTML en-US e política de escopo em platform-language-policy.md; sem tradução ou remoção de idiomas escolhidos nas lojas. Auditoria ortográfica exaustiva e guardas B2/B3 ainda não concluídas. PR621 da fila é dependência documental desta branch; não incorporá-la antes de621.
