@@ -1,3 +1,7 @@
+import {writePage} from "@/lib/sales-page-store";
+import {parsePage} from "@/lib/sales-page";
+import {redisPipeline} from "@/lib/redis";
+import {storeForEmail} from "@/lib/store";
 import { startPath } from "@/lib/path";
 import { mayNotify } from "@/lib/path-rules";
 /**
@@ -15,6 +19,12 @@ async function main(): Promise<void> {
   await setMailSettings(OWNER, { fromName: "Harbor Coaching", address: "1 Main St, Austin, TX 78701" });
   await ensureStatsId(OWNER);
   for (const t of ["One session", "Four sessions", "Free checklist"]) await addProduct(OWNER, t, "Words.", t.startsWith("Free") ? "0" : "40", null);
+  const abStore=(await storeForEmail(OWNER))!;
+  const abProduct=abStore.catalog.items[0].id;
+  const abPage=parsePage({blocks:[{id:"abhero01",kind:"hero",headline:"One session",sub:"A local synthetic fixture",media:"none",video:null}],test:{headline:"Try a coaching session",sub:""}});
+  if(!abPage.test || !abStore.statsId)throw Error("No synthetic experiment");
+  await writePage(abStore.statsId,abProduct,abPage,abStore);
+  await redisPipeline([["HSET",`nl:ab:${abStore.statsId}:${abProduct}:${abPage.test.id}`,"va","NaN"]]);
   const second = await createStore(OWNER, "secondshop", "Second Coaching", "");
   if (!second.ok) throw new Error("no second");
   await ensureStatsId(storeRef(second.store));
@@ -24,6 +34,6 @@ async function main(): Promise<void> {
   if(!reminderZone)throw new Error("No daytime test zone");
   const reminderStarted=await startPath(second.store,{goalCents:0,goalCurrency:"usd",skills:"",subject:"",minutes:15,audience:"none",timeZone:reminderZone},reminderNow-86400000);
   if(!reminderStarted.ok)throw new Error("No synthetic Path");
-  console.log(JSON.stringify({ session: await openSession(OWNER), second: second.store.sid }));
+  console.log(JSON.stringify({ session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

@@ -1,5 +1,6 @@
 "use client";
 
+import { TestCountsNotice } from "@/components/test-counts-notice";
 import { pasteExceedsLimit } from "@/lib/paste-limit";
 
 import { PageAnswers } from "@/components/page-answers";
@@ -1131,7 +1132,7 @@ export function PageEditor({
                       </p>
                     </div>
                   ) : null}
-                  <TestResults productId={product.id} running={initial.test !== null} what="headline" sold={!product.free} />
+                  <TestResults key={product.id+":headline:"+(initial.test?.id??"new")} productId={product.id} running={initial.test !== null} what="headline" sold={!product.free} />
                 </div>
               ) : null}
             </div>
@@ -1981,7 +1982,7 @@ export function PageEditor({
                     {`You are editing version ${onB ? "B" : "A"}: the blocks below and the preview are ${onB ? "B's" : "A's"}. Changing either version after a save starts the count again, so a result is never about a page visitors did not see.`}
                   </p>
                   <div className="mt-3">
-                    <TestResults productId={product.id} running={initial.variant !== null} what="page" sold={!product.free} />
+                    <TestResults key={product.id+":page:"+(initial.variant?.id??"new")} productId={product.id} running={initial.variant !== null} what="page" sold={!product.free} />
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" onClick={() => endPageTest("a")} className="btn btn-secondary btn-sm">
@@ -2705,6 +2706,7 @@ function times(n: number, word: string): string {
  * Shown only once a test is saved: a test being typed has nothing to show yet.
  */
 function TestResults({ productId, running, what, sold }: { productId: string; running: boolean; what: "headline" | "page"; sold: boolean }) {
+  const [failed,setFailed]=useState(false);
   const [counts, setCounts] = useState<Counts | null>(null);
   const [currency, setCurrency] = useState("usd");
   const [declared, setDeclared] = useState<Measure | null>(null);
@@ -2713,24 +2715,27 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
     if (!running) return;
     let live = true;
     fetch(`/api/store/ab?id=${encodeURIComponent(productId)}`, { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => {if(!r.ok)throw new Error("Test counts unavailable");return r.json();})
       .then((data: { ok?: boolean; counts?: Counts; currency?: string; declared?: Measure | null; shareB?: number }) => {
         if (live && data.ok && data.counts) {
+          setFailed(false);
           setCounts(data.counts);
           if (data.currency) setCurrency(data.currency);
           setDeclared(data.declared === "money" || data.declared === "checkouts" ? data.declared : null);
           if (typeof data.shareB === "number" && data.shareB > 0 && data.shareB < 1) setShareB(data.shareB);
-        }
+        } else if(live)setFailed(true);
       })
-      .catch(() => {});
+      .catch(() => {if(live)setFailed(true);});
     return () => {
       live = false;
     };
   }, [productId, running]);
   if (!running) return <p className="text-xs text-ink-soft">Save the page and the test starts with the next visitor.</p>;
-  if (!counts) return null;
+  if (failed) return <TestCountsNotice/>;
+  if (!counts) return <TestCountsNotice loading/>;
   const measure = sold ? "money" : "checkouts";
   const standing = testState(counts, measure, { declared, shareB });
+  if(standing.state==="unavailable")return <TestCountsNotice/>;
   const won = standing.winner;
   const edge = Math.round(boundary(counts.va + counts.vb) * 100) / 100;
   const page = what === "page";
