@@ -39,7 +39,7 @@ async function main() {
   is("short installment explained",savedOfferIssues(current,{...installment,priceCents:1500},[offer]).some(text=>text.includes("payment plan is not offered")),true);
   is("pure checks make no storage calls",storageCalls,0);
   is("pure checks leave configuration unchanged",JSON.stringify(current),before);
-  const page={id:"page000001",title:"Quiz",slug:"quiz",from:0};
+  const page={id:"page000001",title:"Quiz",slug:"quiz",nav:true,target:"",from:0};
   const form=parseForm({id:"form000001",name:"Quiz",fields:[{id:"email0",type:"email",label:"Email",required:true}],outcomes:[{id:"result",title:"Offer result",body:"",product:offer.id}]})!;
   const quizStore={...current,sitePages:[page]};
   const funnel={id:"funnel0001",steps:[{kind:"page",id:page.id}]} as PageFunnel;

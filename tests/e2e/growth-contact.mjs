@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 
 /** Synthetic local app only; fixture data and intercepted CRM refusals. */
 export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactToken,axeSource}) {
+ const errors=[];
  const growth=await owner.context().newPage();
+ growth.on("pageerror",error=>errors.push(String(error)));
  try {
   await growth.emulateMedia({reducedMotion:"reduce"});
   for(const width of [320,390,768,1280]) {
@@ -25,6 +27,7 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
  } finally {await growth.close();}
  for(const width of [390,1280]) {
   const contact=await owner.context().newPage();
+  contact.on("pageerror",error=>errors.push(String(error)));
   try {
    await contact.setViewportSize({width,height:900});
    await contact.emulateMedia({reducedMotion:"reduce"});
@@ -91,4 +94,5 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
    console.log("  ok    contact real-save/reload/refusal/retry/pending/uncertain/leave guard/AA/fit at "+width);
   } finally {await contact.close({runBeforeUnload:false});}
  }
+ assert.deepEqual(errors,[],"growth/contact pages have no uncaught browser errors");
 }
