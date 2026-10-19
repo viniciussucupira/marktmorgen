@@ -208,3 +208,20 @@ allowlist and scrolls to the gallery. It neither imports a campaign nor spends a
 preview or AI request. Changing filters stays local; choosing a starter still
 uses the existing metered preview, product mapping and capacity checks.
 There are no new provider calls, stored records, quotas or prices.
+
+## 11. Daily invitation inside the studio (19 October 2026)
+
+The studio can invite the owner to reopen an existing Path on a day they have
+not opened it, between 08:00 and 21:00 in their saved time zone. It is suppressed
+for team members, unavailable records, invalid time zones, future records,
+suspended stores and a kept reading with a real sale. Opening the studio does
+not record a Path check-in; the invitation's link disables prefetch.
+
+The invitation is deliberately generic: it asks the owner to read current facts
+inside Path, without treating stale cached counts as a current mission.
+There is no email, push, cron, model call, new key or stored completion.
+One additional existing-record GET, bounded at 4 KB, fits the same reserved
+studio page (81 commands / 404,096 bytes, tested against four studio units).
+Pure checks cover local day, roles, quiet hours and no mutation; browser checks
+the second-store link, mobile/desktop accessibility and removal after opening.
+This is an in-studio invitation, not an automatic scheduled push.

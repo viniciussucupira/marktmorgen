@@ -253,6 +253,7 @@ export function request(shape: keyof typeof SHAPES, commands: number, bytes = 0)
 /** Path page's own bounded reads, including one actual studio-usage count. Money refreshes are separately reserved as PATH_READ_UNITS. */
 /** Owner-only Path push: up to ten devices in parallel, eight-second timeout, no full-config rewrite for expired devices. Reserved before dispatch. */
 export const PATH_REMINDER_PUSH = request("wait", 45, 500_000);
+export const PATH_STUDIO_PAGE = request("heavy", 81, 404_096);
 export const PATH_PAGE = request("heavy", 42, 70_000);
 
 export const PATH_READ = request("heavy", 14, LIFE_WRITE_MAX * 96 + 16_384) + (PATH_SALE_PAGES + PATH_REFUND_PAGES) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
@@ -537,6 +538,7 @@ export const COST_LINES: CostLine[] = [
       { file: "lib/path-atomic.ts", names: ["WRITE_PATH", "FORGET_PATH", "PATH_DATA_CHANGE"] },
       { file: "components/path-missions.tsx", names: ["PathMissions"] },
       { file: "lib/path-campaign.ts", names: ["pathCampaign"] },
+      { file: "components/path-studio-reminder.tsx", names: ["readPath", "PathStudioReminder"] },
       { file: "lib/path-reminder-rules.ts", names: ["PATH_REMINDER_UNITS"] },
       { file: "lib/path-reminder.ts", names: ["sendPathReminder", "PATH_REMINDER_UNITS"] },
       { file: "lib/path-facts.ts", names: ["PATH_SALE_PAGES", "PATH_REFUND_PAGES", "PATH_MONEY_SECONDS"] },
