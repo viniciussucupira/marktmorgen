@@ -158,8 +158,9 @@ try {
   // A success notice precedes router.refresh(). Read a fresh page to prove
   // persistence rather than racing the asynchronous refresh of the list.
   await owner.reload({ waitUntil: "networkidle" });
-  await owner.getByText("Browser waitlist campaign", { exact: true }).first().waitFor();
-  is("a new waitlist campaign is saved by the real import", await owner.getByText("Browser waitlist campaign", { exact: true }).count() > 0, true);
+  const savedCampaign = owner.locator("#fs-funnel option").filter({ hasText: /^Browser waitlist campaign$/ });
+  await savedCampaign.waitFor({ state: "attached" });
+  is("a new waitlist campaign is saved by the real import", await savedCampaign.count(), 1);
   for (const width of [390, 1280]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
     await ctx.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
