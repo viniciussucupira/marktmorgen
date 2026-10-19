@@ -170,6 +170,16 @@ try {
   is("Path never asks to tick completion", await owner.locator('section[aria-labelledby="path-missions"] input[type="checkbox"], section[aria-labelledby="path-next"] input[type="checkbox"]').count(), 0);
   await owner.reload({waitUntil:"networkidle"});
   is("Path persists the answers", await owner.locator('input[name="subject"]').inputValue(), "Sourdough");
+  const postMission=owner.locator('section[aria-labelledby="path-missions"] > ul > li').filter({has:owner.getByRole("heading",{name:"Make 3 post links",exact:true})});
+  is("partial post progress is shown",await postMission.getByText("0 of 3 recorded",{exact:true}).isVisible(),true);
+  is("the progress meter has its verified count",await postMission.getByRole("progressbar").getAttribute("value"),"0");
+  const stepToggle=postMission.locator("summary");
+  await stepToggle.focus();
+  await owner.keyboard.press("Enter");
+  is("mission steps open with the keyboard",await postMission.locator("details").getAttribute("open"),"");
+  is("the mission links to its own store",await postMission.getByRole("link",{name:"Share the store: posts",exact:true}).getAttribute("href"),"/studio?store="+(new URL(await owner.getByRole("link",{name:"Back to the studio",exact:true}).getAttribute("href"),LOCAL)).searchParams.get("store")+"#details");
+  is("opening steps does not complete the mission",await postMission.getByText("Ready when you are",{exact:true}).isVisible(),true);
+  await owner.keyboard.press("Enter");
   is("sales sharing starts switched off",await owner.getByLabel("Include sales kept after refunds",{exact:true}).isChecked(),false);
   await owner.getByRole("button",{name:"Send your current mission",exact:true}).click();
   await owner.waitForFunction(()=>Boolean(document.querySelector('section[aria-labelledby="path-reminder-title"] [role="status"]')?.textContent));
@@ -206,6 +216,7 @@ try {
     is(`campaign page at ${width}: no sideways scroll`, sideways, 0);
     is(`campaign page at ${width}: axe`, found, []);
     await open(page, `${LOCAL}/studio/path`);
+    await page.locator('section[aria-labelledby="path-missions"] summary').first().click();
     await page.addScriptTag({content:axeSource});
     const pathViolations=await page.evaluate(async ()=>(await window.axe.run(document,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22a","wcag22aa"]}})).violations.map(v=>v.id));
     is(`Path at ${width}: axe`,pathViolations,[]);
