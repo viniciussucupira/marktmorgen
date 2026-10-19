@@ -41,6 +41,19 @@ async function storePlaceholderContrast(field){
   });
 }
 
+async function checkSignInErrorContrast(page,selector,label){
+  await page.addScriptTag({content:axeSource});
+  const report=await page.evaluate(async selector=>{
+    const node=document.querySelector(selector);
+    if(!node||!node.textContent.trim()||!node.getClientRects().length)throw Error("Expected visible error copy");
+    const result=await window.axe.run([node],{runOnly:{type:"rule",values:["color-contrast-enhanced"]}});
+    return {passes:result.passes.filter(rule=>rule.id==="color-contrast-enhanced").reduce((n,rule)=>n+rule.nodes.length,0),violations:result.violations.map(rule=>rule.id),incomplete:result.incomplete.map(rule=>rule.id)};
+  },selector);
+  is(label+": enhanced contrast evaluated",report.passes>0,true);
+  is(label+": no contrast violations",report.violations,[]);
+  is(label+": no inconclusive contrast readings",report.incomplete,[]);
+}
+
 async function checkSecondaryTextContrast(page,label){
   await page.addScriptTag({content:axeSource});
   const reading=await page.evaluate(async()=>{
@@ -554,6 +567,33 @@ try {
           is(kind+" forced-colours focus: rendered3:1 pixel area",forced.contrastingPixels>=forced.minimumArea,true);
         }
       }
+      // Actual sign-in validation only. Even an unexpected auth request is
+      // intercepted locally: this test cannot send a login message.
+      await signin.evaluate(()=>document.querySelector("#field-focus-fixture")?.remove());
+      await signin.emulateMedia({forcedColors:"none",reducedMotion:"reduce"});
+      let loginRequests=0;
+      await signin.route("**/api/auth/request",async route=>{loginRequests++;await route.abort();});
+      const email=signin.locator("#signin-email");
+      await email.fill("missing-domain");
+      await email.press("Tab");
+      await signin.locator("#signin-hint").waitFor();
+      is("invalid email hint describes its field at "+width,await email.getAttribute("aria-describedby"),"signin-hint");
+      is("invalid email marked at "+width,await email.getAttribute("aria-invalid"),"true");
+      await checkSignInErrorContrast(signin,"#signin-hint","Email hint at "+width);
+      await signin.getByRole("button",{name:"Email me a link",exact:true}).click();
+      await signin.locator("#signin-error").waitFor();
+      is("submitted invalid email has one alert at "+width,await signin.getByRole("alert").count(),1);
+      is("submitted error describes its field at "+width,await email.getAttribute("aria-describedby"),"signin-error");
+      await checkSignInErrorContrast(signin,"#signin-error","Submitted email error at "+width);
+      await email.fill("");
+      await signin.getByRole("button",{name:"Email me a link",exact:true}).click();
+      is("empty email has useful message at "+width,await signin.locator("#signin-error").innerText(),"Type your email first.");
+      await checkSignInErrorContrast(signin,"#signin-error","Empty email error at "+width);
+      await email.fill("synthetic@example.test");
+      is("correction clears invalid state at "+width,await email.getAttribute("aria-invalid"),null);
+      is("correction removes stale alerts at "+width,await signin.getByRole("alert").count(),0);
+      is("invalid attempts never request login email at "+width,loginRequests,0);
+      is("sign-in errors fit at "+width,await signin.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
 
     } finally {await guest.close();}
   }
