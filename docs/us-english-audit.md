@@ -112,7 +112,7 @@ No added provider/data/storage/message call or paid service; page envelopes and 
 
 ## Composer, import preview and template wording
 
-Fifty additional exact source files from bounded search candidates have been read. Search results alone are not proof (they referenced an older revision and can be capped); each changed source was read at the canonical revision before editing.
+One hundred fourteen additional exact source files from bounded search candidates have been read. Search results alone are not proof (they referenced an older revision and can be capped); each changed source was read at the canonical revision before editing.
 
 Corrections in this area:
 - `lib/sales-page.ts`: comparison block hint uses check marks.
@@ -125,3 +125,12 @@ Browser evidence opens the real product page editor and its native block picker,
 Next sources: the remaining search candidates and unreviewed components/API messages, plus mixed company/creator mail producers. Nineteen company-only producers from EMAIL_SITES were read; selected British hits there were comments, not sent copy. No mail was sent for this audit.
 
 No extra supplier/data/storage/message work, runtime translation, price, visible limit or financial gate changes. M0 before/after stays unchanged and fails the binding most-tax target; no tax clearance is implied.
+
+
+## B3 complete source guard and remaining manual work
+
+PR627 (merge8afa047) scans the current app/components/lib/test source inventory for selected common British forms using TypeScript syntax only in development. The full exact-head behavior, build/types, security and actual browser suites passed. Review corrected55initial word occurrences, preserved French buyer declarations and legacy statuses/module/class identifiers, and fixed the final diagnostic title before the passing whole run. This is complete inventory coverage for the guard's selected syntax/words, not proof of every English sentence or dynamic state.
+
+The114bounded-search candidates were read at canonical revisions, beyond the original50. Nineteen company-only email producers were reviewed using EMAIL_SITES; selected hits were comments. Mixed email.ts and inbound-mail.ts were also read with no selected British prose hits; mail.ts was included in the source review. No mail was sent. Continue the manual area/state audit, including dialogs, empty/error variants and accessibility wording; preserve authored creator content and existing buyer languages. Do not replace this remaining work with a claim that a passing guard proves usability, comprehension or actual assistive-technology testing.
+
+PR628's complete future-language design is documentation only, behind the existing owner/sales launch gates. Neither it nor this audit changes prices, visible limits, metered work or commercial/fiscal gates. M0 stays before=after and the binding most-tax margin still fails60%.
