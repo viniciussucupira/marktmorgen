@@ -1105,7 +1105,7 @@ export function PageEditor({
                       ? "A second version of the whole page is being tested, and a page runs one test at a time. Write a different headline in version B instead."
                       : product.free
                         ? `Half your visitors see this one, half see the second. Once each has been seen ${MIN_VIEWS} times, there are at least ${MIN_EXPECTED_SIGNUPS * 2} sign-ups between them and one brings clearly more, your page shows that one to everybody by itself. Only the words change.`
-                        : `Half your visitors see this one, half see the second. Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more money per visitor, your page shows that one to everybody by itself. Only the words change: never the price.`}
+                        : `Half your visitors see this one, half see the second. Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more gross payments per visitor, your page shows that one to everybody by itself. Only the words change: never the price.`}
                   </span>
                 </span>
               </label>
@@ -1957,7 +1957,7 @@ export function PageEditor({
               {other === null ? (
                 <>
                   <p className="mt-1 text-xs text-ink-soft">
-                    {`Make version B from this page and change anything in it: blocks, their order, words, pictures, video. Half your visitors see each version. ${product.free ? `Once each has been seen ${MIN_VIEWS} times, there are at least ${MIN_EXPECTED_SIGNUPS * 2} sign-ups between them and one brings clearly more` : `Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more money per visitor`}, your page shows that one to everybody by itself. The price and what is sold stay the same for everyone.`}
+                    {`Make version B from this page and change anything in it: blocks, their order, words, pictures, video. Half your visitors see each version. ${product.free ? `Once each has been seen ${MIN_VIEWS} times, there are at least ${MIN_EXPECTED_SIGNUPS * 2} sign-ups between them and one brings clearly more` : `Once each has ${MIN_VIEWS} views and ${MIN_SALES} paid sales, and one clearly brings more gross payments per visitor`}, your page shows that one to everybody by itself. The price and what is sold stay the same for everyone.`}
                   </p>
                   <button type="button" onClick={startPageTest} className="btn btn-secondary btn-sm mt-3">
                     Make version B
@@ -2743,20 +2743,25 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
   const money = (cents: number) => formatMoney(Math.round(cents), currency);
   const line = (name: string, views: number, checkouts: number, sales: number, cents: number) =>
     sold
-      ? `${name}: seen ${times(views, "time")}, ${times(sales, "sale")} paid, ${money(cents)} in all, ${money(perVisitor(cents, views))} per visitor.`
+      ? `${name}: seen ${times(views, "time")}, ${times(sales, "sale")} paid, ${money(cents)} in gross payments, ${money(perVisitor(cents, views))} per visitor.`
       : `${name}: seen ${times(views, "time")}, ${times(checkouts, "sign-up")} (${rate(checkouts, views)}%).`;
   const chance = sold ? chanceBBetter(counts) : null;
   const days = won ? null : daysLeft(counts, measure);
   const enough = sold ? `${MIN_VIEWS} views and ${MIN_SALES} paid sales` : `${MIN_VIEWS} views, with ${MIN_EXPECTED_SIGNUPS * 2} sign-ups between them`;
   return (
     <div className="text-sm text-ink" data-test-results>
+      {sold ? (
+        <p className="mb-2 rounded-lg bg-paper p-3 text-xs text-ink-soft" data-experiment-payment-basis>
+          Gross buyer payments are measured here, including any tax collected at checkout. Refunds, disputes and payment fees are not deducted. This is not net revenue or profit.
+        </p>
+      ) : null}
       <p>{line(a, counts.va, counts.ca, counts.sa ?? 0, counts.ra ?? 0)}</p>
       <p>{line(b, counts.vb, counts.cb, counts.sb ?? 0, counts.rb ?? 0)}</p>
       {chance !== null && !won ? (
         <p className="mt-1">
           {chance >= 0.5
-            ? `${b === "Second headline" ? "The second headline" : "Version B"} has a ${Math.round(chance * 100)}% chance of bringing more money per visitor.`
-            : `${a === "First headline" ? "The first headline" : "Version A"} has a ${Math.round((1 - chance) * 100)}% chance of bringing more money per visitor.`}
+            ? `${b === "Second headline" ? "The second headline" : "Version B"} has a ${Math.round(chance * 100)}% chance of bringing more gross payments per visitor.`
+            : `${a === "First headline" ? "The first headline" : "Version A"} has a ${Math.round((1 - chance) * 100)}% chance of bringing more gross payments per visitor.`}
         </p>
       ) : null}
       <p className="mt-1 font-semibold">
@@ -2769,15 +2774,15 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
               ? "Version A wins. Your page now shows it to everybody. Keep version A and save, or change version B and save to test again."
               : "The first headline wins. Your page now shows it to everybody. Switch the test off, or try another second headline."
             : standing.state === "measure_changed"
-              ? `No winner can be called: this test was started on ${declared === "money" ? "money per visitor" : "sign-ups"} and the product is now ${sold ? "sold for money" : "free"}. Change ${page ? "version B" : "the second headline"} and save to start a new test.`
+              ? `No winner can be called: this test was started on ${declared === "money" ? "gross payments per visitor" : "sign-ups"} and the product is now ${sold ? "sold for money" : "free"}. Change ${page ? "version B" : "the second headline"} and save to start a new test.`
               : standing.state === "split"
                 ? `No winner while the split is off: the versions were seen ${times(counts.va, "time")} and ${times(counts.vb, "time")}, further from the share each should get than chance allows. Something may be counting one version more (a cached page, a link that always opens one); the test goes on counting.`
                 : standing.state === "maturing"
-                  ? `One version is ahead, but a test decided by money waits until it has run ${REFUND_DAYS} days, so early sales can still be refunded. Refunds are not taken out of either version's money.`
+                  ? `One version is ahead, but a test decided by gross payments waits until it has run ${REFUND_DAYS} days. This waiting period does not deduct refunds from either version.`
                   : `Still running: no clear winner yet. Each needs at least ${enough}, and a lead clear enough to hold however often the test is read (now ${edge} standard errors).`}
       </p>
       <p className="mt-1 text-xs text-ink-soft">
-        {`The test is read on every visit, so the line a winner must cross is set to call a false winner no more than one time in twenty over the whole test, not at each look.${declared ? ` Decided by ${declared === "money" ? "money per visitor" : "sign-ups"}, as when it was saved.` : ""}`}
+        {`The test is read on every visit, so the line a winner must cross is set to call a false winner no more than one time in twenty over the whole test, not at each look.${declared ? ` Decided by ${declared === "money" ? "gross payments per visitor" : "sign-ups"}, as when it was saved.` : ""}`}
       </p>
       {!won ? (
         <p className="mt-1 text-xs text-ink-soft">
