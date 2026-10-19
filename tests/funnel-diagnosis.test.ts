@@ -38,7 +38,10 @@ is("read as a buyer would", unpaid[0].title + " | " + unpaid[0].detail, "Nobody 
 is("a free step says signed up", funnelFindings([product("Guide", 40, 0, true)])[0].title, "Nobody signed up at step 1");
 is("under the sample, a step with no buyer is not judged", codes([page("Guide", 200), product("Course", 20, 0)]), [["largest_fall", 0], ["too_few", null]]);
 is("a step with buyers is not flagged", codes([page("Guide", 200), product("Course", 150, 3)]), []);
-is("an unread completion count is not taken for none", codes([page("Guide", 200), product("Course", 150, null)]), []);
+is("an unread completion count is not taken for none", codes([page("Guide", 200), product("Course", 150, null)]), [["unavailable", null]]);
+
+is("negative completion is unavailable, not a successful reading",codes([product("Course",150,-1)]),[["unavailable",null]]);
+is("page-only counts do not require a completion metric",codes([page("Guide",150)]),[]);
 
 part("The largest fall");
 const fall = funnelFindings([page("Guide", 1000), page("Video", 400), page("Sales", 40)]);
@@ -53,6 +56,10 @@ const unread = funnelFindings([page("Guide", 200), page("Video", null), page("Sa
 is("an unread step is named, and its neighbor is not called unreached", unread.map((f) => [f.code, f.stepIndex ?? null]), [["unavailable", null]]);
 is("and it is never read as zero", unread[0].detail, "Step 2: the counts could not be read just now, so it is left out. Reload to try again.");
 is("a step visitors cannot open is left to the launch review", codes([page("Guide", 200), page("Video", 0, false), page("Sales", 150)]), []);
+
+const crowded=funnelFindings([...Array.from({length:9},(_,i)=>product("Offer "+i,100,0)),product("Unread orders",100,null)]);
+is("availability warning survives the eight-finding display cap",crowded[0].code,"unavailable");
+is("the bounded diagnosis stays at eight findings",crowded.length,8);
 
 part("Honest words");
 const all = [broken, unpaid, fall, unread, funnelFindings([page("Guide", 3)])].flat().map((f) => `${f.title} ${f.detail}`).join(" ") + " " + DIAGNOSIS_NOTE;

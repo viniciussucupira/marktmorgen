@@ -65,7 +65,7 @@ export function funnelFindings(steps: readonly DiagnosisStep[]): FunnelFinding[]
   const readable = (i: number) => steps[i].open && confirmed(steps[i].seen);
   const out: FunnelFinding[] = [];
 
-  const unavailable = steps.map((step, i) => (step.open && !confirmed(step.seen) ? i : -1)).filter((i) => i >= 0);
+  const unavailable = steps.map((step, i) => (step.open && (!confirmed(step.seen) || (step.product && !confirmed(step.done))) ? i : -1)).filter((i) => i >= 0);
   const counted = steps.map((_, i) => i).filter(readable);
   const most = counted.reduce<number | null>((best, i) => (best === null || (steps[i].seen as number) > (steps[best].seen as number) ? i : best), null);
 
@@ -144,5 +144,7 @@ export function funnelFindings(steps: readonly DiagnosisStep[]): FunnelFinding[]
       detail: `${list(unavailable)}: the counts could not be read just now, so ${unavailable.length === 1 ? "it is" : "they are"} left out. Reload to try again.`,
     });
   }
-  return out.slice(0, 8);
+  // Keep unavailable data visible even when many other findings fill the display limit.
+  const missing=out.find(finding=>finding.code==="unavailable");
+  return (missing?[missing,...out.filter(finding=>finding!==missing)]:out).slice(0,8);
 }
