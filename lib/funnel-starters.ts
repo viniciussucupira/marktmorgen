@@ -358,7 +358,7 @@ FUNNEL_STARTERS.push(
             { id: "dp02", kind: "benefits", heading: "What is inside", items: ["[The first file, template or resource]", "[The second file, template or resource]", "[Instructions or examples included]"] },
             { id: "dp03", kind: "fit", heading: "Before you buy", yesLabel: "Useful if you", noLabel: "Not a fit if you", yes: ["[Who can use this and what they need]"], no: ["[What this product does not do]"] },
             { id: "dp04", kind: "steps", heading: "How to use it", items: [{ title: "Get your files", detail: "[Say how the files are delivered.]" }, { title: "Open and start", detail: "[Name any software required and the first thing to do.]" }, { title: "Ask a question", detail: "[Explain what support is included and how to reach you.]" }] },
-            { id: "dp05", kind: "faq", heading: "Buying questions", items: [{ q: "What format is it?", a: "[List file formats, required tools and any compatibility limits.]" }, { q: "How may I use it?", a: "[Explain personal or commercial use, sharing and licence terms.]" }, { q: "What is the refund policy?", a: "[State the policy that applies to this product.]" }] },
+            { id: "dp05", kind: "faq", heading: "Buying questions", items: [{ q: "What format is it?", a: "[List file formats, required tools and any compatibility limits.]" }, { q: "How may I use it?", a: "[Explain personal or commercial use, sharing and license terms.]" }, { q: "What is the refund policy?", a: "[State the policy that applies to this product.]" }] },
             { id: "dp06", kind: "cta", label: "See the product and price", note: "" },
           ],
         },

@@ -1,3 +1,4 @@
+import {checkComposerAmericanEnglish} from "./us-english-composer.mjs";
 import {checkPublicAmericanEnglish,checkStudioAmericanEnglish} from "./public-us-english.mjs";
 import {checkPathCertificates} from "./path-certificates.mjs";
 /**
@@ -725,6 +726,7 @@ try {
   await checkPathCertificates({browser,LOCAL,session:growthSession,sid:growthSid,otherSession:wordingSession,axeSource,is});
   await checkPublicAmericanEnglish({browser,LOCAL,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});
+  await checkComposerAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,product:growthProduct,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;

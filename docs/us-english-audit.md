@@ -108,3 +108,20 @@ Displayed corrections: Meta closed-page notice says canceled; its permission ins
 Actual browser coverage extends the public checks to calls/email/insights/bundles/sales-pages and authenticated Meta notices plus affiliate attribution wording. It opens native disclosures for text inspection. This remains selected wording evidence; it is not a complete audit of every client dialog, error state, accessibility phrase or platform email. Continue through all unreviewed components and company email producers, using the metered EMAIL_SITES registry to define mail scope.
 
 No added provider/data/storage/message call or paid service; page envelopes and M0 before/after are unchanged, with the binding most-tax target still failing. No price/visible limit/gate changes.
+
+
+## Composer, import preview and template wording
+
+Fifty additional exact source files from bounded search candidates have been read. Search results alone are not proof (they referenced an older revision and can be capped); each changed source was read at the canonical revision before editing.
+
+Corrections in this area:
+- `lib/sales-page.ts`: comparison block hint uses check marks.
+- `lib/store-copy-rules.ts`: skipped-product explanation uses license keys.
+- `lib/funnel-starters.ts`: the platform's new-template instruction uses license terms; stored creator drafts are not rewritten.
+- `lib/licence-keys.ts`: an internal error sentence uses license; module names, URLs, rate-limit keys and existing data identifiers remain unchanged.
+
+Browser evidence opens the real product page editor and its native block picker, reads the comparison hint, and checks that no draft or AI POST was made. Other static prose edits were source-reviewed; this does not claim a forced live key-generation failure or real import/payment. Existing copy/starter/key regression suites run unchanged.
+
+Next sources: the remaining search candidates and unreviewed components/API messages, plus mixed company/creator mail producers. Nineteen company-only producers from EMAIL_SITES were read; selected British hits there were comments, not sent copy. No mail was sent for this audit.
+
+No extra supplier/data/storage/message work, runtime translation, price, visible limit or financial gate changes. M0 before/after stays unchanged and fails the binding most-tax target; no tax clearance is implied.

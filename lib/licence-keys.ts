@@ -262,7 +262,7 @@ export async function keyForSale(store: Store, product: Listing, reference: stri
       if (Number(fresh) !== 1) continue;
       return settle(store, product, reference, email, key, false);
     }
-    throw new Error("could not make a unique licence key");
+    throw new Error("could not make a unique license key");
   }
 
   const [popped] = await redisPipeline([["LPOP", poolKey(store, product)]]);
