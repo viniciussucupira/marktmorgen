@@ -22,6 +22,20 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { startServices } from "./services.mjs";
 
+async function checkSecondaryTextContrast(page,label){
+  await page.addScriptTag({content:axeSource});
+  const reading=await page.evaluate(async()=>{
+    const nodes=[...document.querySelectorAll(".text-ink-soft,.text-ink-mute,.field-hint")].filter(node=>node.children.length===0&&node.textContent.trim()&&node.getClientRects().length>0&&!node.closest('[aria-hidden="true"]'));
+    if(!nodes.length)return {count:0,violations:[],incomplete:[],passes:0};
+    const report=await window.axe.run(nodes,{runOnly:{type:"rule",values:["color-contrast-enhanced"]}});
+    return {count:nodes.length,violations:report.violations.map(violation=>({id:violation.id,targets:violation.nodes.map(node=>node.target)})),incomplete:report.incomplete.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)})),passes:report.passes.filter(rule=>rule.id==="color-contrast-enhanced").reduce((total,rule)=>total+rule.nodes.length,0)};
+  });
+  is(label+": actual leaf secondary text exists",reading.count>0,true);
+  is(label+": contrast was actually evaluated",reading.passes>0,true);
+  is(label+": selected secondary text passes enhanced contrast",reading.violations,[]);
+  is(label+": no inconclusive secondary contrast readings",reading.incomplete,[]);
+}
+
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
 const nextCli = join(root, "node_modules/next/dist/bin/next");
@@ -302,11 +316,13 @@ try {
     const found = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] } })).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`));
     is(`campaign page at ${width}: no sideways scroll`, sideways, 0);
     is(`campaign page at ${width}: axe`, found, []);
+    await checkSecondaryTextContrast(page,"Funnels at "+width);
     await open(page, `${LOCAL}/studio/path`);
     await page.locator('section[aria-labelledby="path-missions"] summary').first().click();
     await page.addScriptTag({content:axeSource});
     const pathViolations=await page.evaluate(async ()=>(await window.axe.run(document,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22a","wcag22aa"]}})).violations.map(v=>v.id));
     is(`Path at ${width}: axe`,pathViolations,[]);
+    await checkSecondaryTextContrast(page,"Path at "+width);
     is(`Path at ${width}: no sideways scroll`,await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
     await ctx.close();
   }
@@ -408,6 +424,31 @@ try {
   owner.off("request",watchExperimentWrites);
   is("refresh and retry never save the edited page",experimentWrites,0);
   await owner.unroute("**/api/store/ab?**");
+  // Added programme coverage uses only the disposable local fixtures.
+  for(const width of [320,768]){
+    await owner.setViewportSize({width,height:900});
+    for(const path of ["/studio/funnels","/studio/path"]){
+      await owner.goto(LOCAL+path,{waitUntil:"domcontentloaded",timeout:60_000});
+      await owner.locator("main").waitFor();
+      await checkSecondaryTextContrast(owner,path+" at "+width);
+      is(path+" at "+width+": no horizontal overflow",await owner.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
+    }
+  }
+  for(const width of [320,390,768,1280]){
+    const guest=await browser.newContext({viewport:{width,height:900}});
+    try{
+      const signin=await guest.newPage();
+      signin.on("pageerror",error=>errors.push(String(error)));
+      await signin.goto(LOCAL+"/signin",{waitUntil:"domcontentloaded",timeout:60_000});
+      await signin.locator("#signin-email").waitFor();
+      await checkSecondaryTextContrast(signin,"Sign-in at "+width);
+      is("sign-in at "+width+": no horizontal overflow",await signin.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
+      is("sign-in placeholder has readable colour and full opacity at "+width,await signin.locator("#signin-email").evaluate(input=>{
+        const placeholder=getComputedStyle(input,"::placeholder");
+        return placeholder.color==="rgb(57, 65, 80)"&&placeholder.opacity==="1";
+      }),true);
+    } finally {await guest.close();}
+  }
   const quotaDir=mkdtempSync(join(tmpdir(),"mm-path-quota-"));
   const quotaFile=join(quotaDir,"quota.cjs");
   await build({entryPoints:[join(here,"path-board-quota.ts")],bundle:true,platform:"node",format:"cjs",outfile:quotaFile,logLevel:"error",alias:{"@":root}});
