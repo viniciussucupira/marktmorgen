@@ -1149,13 +1149,13 @@
     },
     {
       "area": "Creator field placeholders",
-      "evidence": "app/globals.css .st-field::placeholder uses creator --st-muted and opacity0.75. Rendered custom-theme contrast has not been validated in this first slice.",
-      "status": "open"
+      "evidence": "Shared .st-field placeholders now use --st-text at full opacity. Synthetic Chromium reads actual computed pseudo-element/background colours and opacity; normal text ratio>=7 for all4 themes x10 presets and textarea4 themes/custom yellow. Negative control rejects former faded Night text. No entire-page/assistive/user conformance claim.",
+      "status": "Partially addressed in delivery21; actual full journeys/custom background overrides remain open"
     },
     {
       "area": "Focus appearance for standard fields",
-      "evidence": "Standard .field controls receive an opaque3px deep outline plus3px white inner band,with Highlight outline under forced colors. Actual Tab screenshot differences are measured for3:1 change area outside the original control,including invalid/readonly/select fixtures and real sign-in widths. Custom fields,clipping/occlusion across every journey,all browsers/OS/assistive users still need review.",
-      "status": "Partially addressed in delivery19; whole-product focus evaluation remains open"
+      "evidence": "Standard .field controls receive an opaque3px deep outline plus3px white inner band,with Highlight outline under forced colors. Actual Tab screenshot differences are measured for3:1 change area outside the original control,including invalid/readonly/select fixtures and real sign-in widths. Custom fields,clipping/occlusion across every journey,all browsers/OS/assistive users still need review. Delivery20 extends same-pixel checks to .st-field on actual production palettes;see docs/accessibility-store-field-focus.md.",
+      "status": "Partially addressed in deliveries19/20; whole-product focus evaluation remains open"
     }
   ],
   "currentEvidence": "Existing synthetic Chrome flows cover selected studio/campaign/Path/agreements states at390/1280 with AA automation and explicit keyboard cases. Added secondary-text tests are narrow evidence only; see docs/accessibility-programme.md.",

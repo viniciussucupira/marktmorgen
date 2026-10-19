@@ -2174,8 +2174,8 @@ a.chip {
   font-size: 1rem;
 }
 .st-field::placeholder {
-  color: var(--st-muted);
-  opacity: 0.75;
+  color: var(--st-text);
+  opacity: 1;
 }
 .st-field:focus {
   outline: none;
