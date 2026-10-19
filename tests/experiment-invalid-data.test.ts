@@ -28,6 +28,7 @@ async function main(){
  is("inconsistent revenue moments cannot decide",winner({...paid,qb:1},"money",{now}),null);
  is("unavailable marker suppresses even a previously clear result",winner({...paid,unavailable:true},"money",{now}),null);
  is("invalid split configuration cannot declare a winner",winner(clean,"checkouts",{shareB:NaN}),null);
+ is("a degenerate allocation cannot decide",winner(clean,"checkouts",{shareB:0}),null);
  is("invalid current time cannot waive refund maturity",winner(paid,"money",{now:NaN}),null);
  part("Database replies");
  is("empty hash is measured zero",parseTestCounts([]).unavailable,undefined);

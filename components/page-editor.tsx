@@ -2722,7 +2722,7 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
           setCounts(data.counts);
           if (data.currency) setCurrency(data.currency);
           setDeclared(data.declared === "money" || data.declared === "checkouts" ? data.declared : null);
-          if (typeof data.shareB === "number" && data.shareB > 0 && data.shareB < 1) setShareB(data.shareB);
+          setShareB(typeof data.shareB==="number"?data.shareB:NaN);
         } else if(live)setFailed(true);
       })
       .catch(() => {if(live)setFailed(true);});
