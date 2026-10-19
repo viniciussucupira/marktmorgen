@@ -119,6 +119,10 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_store_data_redis.py
+      - name: Actual Redis Path record and data-room atomic checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_path_atomic_redis.py
       - name: Actual Redis capped count checks
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"

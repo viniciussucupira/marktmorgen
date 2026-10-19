@@ -704,7 +704,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:rev:vis:@lib/reviews.ts": { what: "The reviews on a page", room: ["lib/reviews.ts"] },
   "nl:sale:told:@lib/sale-events.ts": short("A sale told to the creator", "order", 40, MARK),
   "nl:goal:@lib/sales-goal.ts": { what: "The store's sales goal", parts: [capped(KB, "One a store.")] },
-  "nl:path:@lib/path.ts": { what: "Marktmorgen Path: the owner's four answers, the days they opened it, the best level reached and the last reading of the money (18 October 2026): one slot, at what the record weighs", room: ["lib/path.ts"] },
+  "nl:path:@lib/path.ts": { what: "Marktmorgen Path: the owner's four answers, the days they opened it, the best level reached and the last reading of the money (18 October 2026): one slot, at what the record weighs", room: ["lib/path-atomic.ts"] },
   "nl:product:page:@lib/sales-page-store.ts": { what: "Products' and pages' blocks", room: ["lib/sales-page-store.ts"] },
   "nl:product:pages:@lib/sales-page-store.ts": { what: "A page's earlier versions", room: ["lib/sales-page-store.ts"] },
   "nl:product:pics:@lib/sales-page-store.ts": { what: "Which page a picture belongs to", room: ["lib/sales-page-store.ts"] },
