@@ -31,3 +31,8 @@ const ACTIONS: Record<GrowthGoal, GrowthAction[]> = {
   ],
 };
 export function growthActions(goal: GrowthGoal, role: Role): GrowthAction[] { return ACTIONS[goal].filter(a => can(role, a.need)); }
+
+/** Static discovery only; campaign setup needs the existing page permission. */
+export function growthCampaignGoal(goal: GrowthGoal, role: Role): import("@/lib/funnel-starter-catalog").StarterGoal | null {
+  return goal !== "retention" && can(role,"page") ? goal : null;
+}
