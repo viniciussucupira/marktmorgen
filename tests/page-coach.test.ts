@@ -121,7 +121,7 @@ async function main(): Promise<void> {
   is("an answer that cannot be read retains its started attempt", [broken.ok, broken.ok ? 0 : broken.reason], [false, "failed"]);
 
   part("Comparison cells read as words for the model");
-  is("a tick is kept as the tick character", CELL_YES, "✓");
+  is("a check is kept as the check character", CELL_YES, "✓");
 
   done();
 }

@@ -229,7 +229,7 @@ const en = {
       ? `The first affiliate link a buyer follows earns the sale, ${window} after that first click and ${kept}, even if they follow somebody else's link later.`
       : `The last affiliate link a buyer follows earns the sale, ${window} after that click and ${kept}.`;
     return isLifetime
-      ? `${rule} None of that applies once a sale has been credited: from then on the buyer stays with that affiliate, and everything the person buys afterwards earns them, with no time limit, on any device, with no cookie involved at all.`
+      ? `${rule} None of that applies once a sale has been credited: from then on the buyer stays with that affiliate, and everything the person buys afterward earns them, with no time limit, on any device, with no cookie involved at all.`
       : rule;
   },
   /** When the creator pays (lib/affiliate-setting.ts, payoutPromise): `n` the day of the month, 0 for none; `days` the wait. */

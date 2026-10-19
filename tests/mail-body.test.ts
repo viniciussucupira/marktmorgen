@@ -24,9 +24,9 @@ async function main(): Promise<void> {
   part("Drawn as an email");
   const html = bodyHtml(body, (href) => `${href}?utm_source=email`, "#ffdd00");
   is("a heading, escaped", bodyHtml("# <b>Hi</b>").includes("<h2") && bodyHtml("# <b>Hi</b>").includes("&lt;b&gt;Hi&lt;/b&gt;"), true);
-  is("a button in the store's colour, with words that read on it, carrying the email's tag", [html.includes('href="https://marktmorgen.com/@chef/p/guide?utm_source=email"'), html.includes("background:#ffdd00"), html.includes("color:#1c1917;font-weight:700")], [true, true, true]);
+  is("a button in the store's color, with words that read on it, carrying the email's tag", [html.includes('href="https://marktmorgen.com/@chef/p/guide?utm_source=email"'), html.includes("background:#ffdd00"), html.includes("color:#1c1917;font-weight:700")], [true, true, true]);
   is("a line across", html.includes("<hr"), true);
-  is("a colour that is not one falls back", bodyHtml("[Go](https://x.example)", undefined, "red;}x").includes("background:#4c1d95"), true);
+  is("a color that is not one falls back", bodyHtml("[Go](https://x.example)", undefined, "red;}x").includes("background:#4c1d95"), true);
 
   part("In plain text");
   is("a heading's words, a button's words and address, a dash for the line", bodyText(body).split("\n\n"), [

@@ -29,7 +29,7 @@ for (const goal of STARTER_GOALS) {
   const matches = matchingStarters(cards, goal, "");
   is(`${goal}: present and no unrelated campaigns`, matches.length > 0 && matches.every((card) => card.goal === goal), true);
 }
-is("filtering leaves the shared catalogue unchanged", cards.length, FUNNEL_STARTERS.length);
+is("filtering leaves the shared catalog unchanged", cards.length, FUNNEL_STARTERS.length);
 
 part("Waitlist records interest without inferring marketing consent");
 const waitlist = FUNNEL_STARTERS.find((starter) => starter.id === "launch-waitlist")!;

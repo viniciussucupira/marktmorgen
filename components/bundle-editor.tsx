@@ -326,7 +326,7 @@ export function BundleEditor({
           <span>
             <span className="block font-semibold text-ink">Let each buyer choose which ones they get</span>
             <span className="block text-sm text-ink-soft">
-              {`"Any ${pick} of these ${Math.max(items.length, pick + 1)} for one price." Its page lists them with their own prices, the buyer ticks that many, and gets exactly those. Bought from its own page only: not in a box at checkout, as an offer after paying, as a gift or through PayPal.`}
+              {`"Any ${pick} of these ${Math.max(items.length, pick + 1)} for one price." Its page lists them with their own prices, the buyer selects that many, and gets exactly those. Bought from its own page only: not in a box at checkout, as an offer after paying, as a gift or through PayPal.`}
             </span>
           </span>
         </label>

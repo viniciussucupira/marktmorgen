@@ -1340,7 +1340,7 @@ export function StatsPanel({
             <p className="mt-1 text-xs text-ink-soft">
               One column of email addresses, the file Meta (Audiences, Custom audience, Customer list) and TikTok (Audiences,
               Customer file) take. Use it to stop showing ads to people who already bought, or to ask for more people like them.
-              Only buyers who ticked the box to hear from you and have not left your list are in it, and nothing but their
+              Only buyers who selected the box to hear from you and have not left your list are in it, and nothing but their
               address. Upload it only where your buyers&apos; permission covers it: that is yours to answer for.
             </p>
             <form action="/api/store/audience" method="get" className="mt-3">

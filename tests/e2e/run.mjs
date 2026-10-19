@@ -950,7 +950,7 @@ try {
     is("who it is for, with the heading written for the creator", [main.includes("This is for you if"), main.includes("You fear the knife"), main.includes("This is not for you if")], [true, true, true]);
     is("the steps, numbered", await page.locator(".sp-step").count(), 3);
     is("the comparison, its other column named for the creator", [await page.locator('[data-block="comp0001"] .sp-compare tbody tr').count(), main.includes("Another way")], [2, true]);
-    is("ticks and crosses spoken as yes and no", [await page.locator('[data-block="comp0001"] .sp-compare [role="img"][aria-label="Yes"]').count(), await page.locator('[data-block="comp0001"] .sp-compare [role="img"][aria-label="No"]').count()], [1, 1]);
+    is("checks and crosses spoken as yes and no", [await page.locator('[data-block="comp0001"] .sp-compare [role="img"][aria-label="Yes"]').count(), await page.locator('[data-block="comp0001"] .sp-compare [role="img"][aria-label="No"]').count()], [1, 1]);
     is("the bonus on its card, numbered", [await page.locator(".sp-bonus").count(), /bonus 1/i.test(main)], [1, true]);
     is("no number is shown that the store has not counted", await page.locator(".sp-facts").count(), 0);
     // Six sections show on a phone (the numbers block has none to show yet), so three bands.
@@ -3004,7 +3004,7 @@ try {
     const before = await second.isVisible();
     await form.locator("input[name=consent]").check();
     const after = await second.isVisible();
-    is("a second box, empty, shown only once the box to hear from the creator is ticked", [before, after, await second.locator("input").isChecked(), (await words(second)).startsWith("Let Fresh Kitchen see which links")], [false, true, false, true]);
+    is("a second box, empty, shown only once the box to hear from the creator is checked", [before, after, await second.locator("input").isChecked(), (await words(second)).startsWith("Let Fresh Kitchen see which links")], [false, true, false, true]);
     await post("/api/store/product", { action: "remove", id: map });
   }
 
@@ -3715,7 +3715,7 @@ try {
     is("nobody but a signed-in affiliate can ask", signedOut, 401);
   }
 
-  part("A member pauses instead of cancelling, and comes back");
+  part("A member pauses instead of canceling, and comes back");
   {
     await open(studio, `${LOCAL}/studio`);
     const saved = await studio.evaluate(async () => (await fetch("/api/store/pause", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ months: 2 }) })).json());
@@ -3752,7 +3752,7 @@ try {
     await studio.evaluate(async () => fetch("/api/store/pause", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ months: 0 }) }));
   }
 
-  part("Asked why before cancelling, and answered");
+  part("Asked why before canceling, and answered");
   {
     await open(studio, `${LOCAL}/studio`);
     const saved = await studio.evaluate(async () =>

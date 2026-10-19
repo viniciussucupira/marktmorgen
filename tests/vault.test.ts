@@ -262,7 +262,7 @@ async function main() {
   is("a failed cancellation keeps the session available to retry", (await signPieces(cancelled.upload.pathname, [1]))?.length, 1);
   is("a retry confirms cancellation at the provider", await abortVaultUpload(cancelled.upload.pathname), true);
   is("a part URL from an aborted session cannot create a file", (await fetch(cancelPart.url, { method: "PUT", body: sessionBytes as BodyInit })).status, 404);
-  is("the cancelled file does not exist", objects.has(cancelled.upload.pathname), false);
+  is("the canceled file does not exist", objects.has(cancelled.upload.pathname), false);
 
   part("A file of text, which the store squeezes on its way out");
   const notes = bytesOf(3000, 23);

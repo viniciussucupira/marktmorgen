@@ -94,7 +94,7 @@ async function main(): Promise<void> {
   is("four of their own are refused", (await setLeaving(OWNER, { on: true, own: [{ text: "a" }, { text: "b" }, { text: "c" }, { text: "d" }] })).ok, false);
   const store = (await storeForEmail(OWNER))!;
 
-  part("Cancelling after saying why");
+  part("Canceling after saying why");
   const token = "a".repeat(64);
   await grantLink(token);
   const opened = await openCancel(store, token, "sub_Member0000001", "https://marktmorgen.com", "too_expensive");

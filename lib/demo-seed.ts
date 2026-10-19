@@ -240,7 +240,7 @@ A PDF you download the moment you pay.`,
 
 What is inside:
 - A grocery list grouped by aisle: produce, dairy and eggs, meat and fish, bakery, dry goods, frozen and household
-- A pantry checklist of the basics, to tick before you write the list
+- A pantry checklist of the basics, to check before you write the list
 
 A PDF you download the moment you pay. Print a copy for each week.`,
     image: {

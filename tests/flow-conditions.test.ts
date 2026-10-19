@@ -146,7 +146,7 @@ async function main(): Promise<void> {
   is("put on the list by whichever comes first, and not again", [await listOrder(store, order), await listOrder(store, order), (await listedAlready([order.sessionId]))[0]], ["done", "already", true]);
   const [dee] = await redis.pipeline([["HGET", leadsKey(list), "dee@example.com"]]);
   is("with everything the order handed over", parseContact(dee)?.ids, [course.product.id, extra.product.id]);
-  is("somebody who did not tick the box and is not on the list is added to nothing", [await listOrder(store, { ...order, sessionId: "cs_test_thanks0000002", email: "eve@example.com", news: false }), parseContact((await redis.pipeline([["HGET", leadsKey(list), "eve@example.com"]]))[0])], ["done", null]);
+  is("somebody who did not check the box and is not on the list is added to nothing", [await listOrder(store, { ...order, sessionId: "cs_test_thanks0000002", email: "eve@example.com", news: false }), parseContact((await redis.pipeline([["HGET", leadsKey(list), "eve@example.com"]]))[0])], ["done", null]);
 
   // Fay paid and closed the tab before the thanks page: the job finds her checkout.
   sessions = [
@@ -175,7 +175,7 @@ async function main(): Promise<void> {
   await upsertContact(list, "hal@example.com", { agreed: true, explicit: true, source: "free", productId: guide.product.id, title: "Pantry Guide" }, ROOM);
   await upsertContact(list, "ivy@example.com", { agreed: true, explicit: false, clicks: true, source: "import" }, ROOM);
   const row = async (email: string) => parseContact((await redis.pipeline([["HGET", leadsKey(list), email]]))[0]);
-  is("allowed only by somebody's own tick, with their yes to the list", [Boolean((await row("gus@example.com"))?.clicks), Boolean((await row("hal@example.com"))?.clicks), Boolean((await row("ivy@example.com"))?.clicks)], [true, false, false]);
+  is("allowed only by somebody's own check, with their yes to the list", [Boolean((await row("gus@example.com"))?.clicks), Boolean((await row("hal@example.com"))?.clicks), Boolean((await row("ivy@example.com"))?.clicks)], [true, false, false]);
   const firstClick = { delayHours: 0, subject: "The guide, and the course", body: `Hello.\n\nThe course: ${SITE_URL}/@harbor/p/${course.product.id}` };
   is("a condition on the email before cannot be on the first", (await saveFlow(store, { name: "Clicks", trigger: "product", productId: guide.product.id, active: true, steps: [{ ...firstClick, when: { if: "clicked" } }] }, { activate: true })).ok, false);
   const clicksFlow = await saveFlow(store, {
@@ -223,7 +223,7 @@ async function main(): Promise<void> {
     await noteClick(gusLink.searchParams.get("mk")!, gusLink.searchParams.get("utm_campaign")!),
     (await row("gus@example.com"))?.agreed && !(await row("gus@example.com"))?.unsub,
   ], [0, false, false, true]);
-  is("ticking it again after leaving the list asks again: coming back without it, it stays off", await (async () => {
+  is("checking it again after leaving the list asks again: coming back without it, it stays off", await (async () => {
     await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, clicks: true, source: "free" }, ROOM);
     const jo = await row("jo@example.com");
     // A token, as the first email to Jo would make.
@@ -235,7 +235,7 @@ async function main(): Promise<void> {
     return [Boolean(jo?.clicks), left, Boolean((await row("jo@example.com"))?.clicks), (await row("jo@example.com"))?.unsub];
   })(), [true, false, false, false]);
   const withClicks = await listOrder(store, { ...order, sessionId: "cs_test_thanks0000003", email: "kai@example.com", clicks: true });
-  is("a buyer who ticked both boxes at checkout", [withClicks, Boolean((await row("kai@example.com"))?.clicks)], ["done", true]);
+  is("a buyer who checked both boxes at checkout", [withClicks, Boolean((await row("kai@example.com"))?.clicks)], ["done", true]);
 
   Date.now = realNow;
   done();

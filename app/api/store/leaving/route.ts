@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 400 });
     return Response.json({ ok: true, leaving: result.store.leaving });
   } catch (error) {
-    console.error("saving the question before cancelling failed", error);
+    console.error("saving the question before canceling failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
   }
 }

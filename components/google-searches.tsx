@@ -4,7 +4,7 @@ const RESULTS: Record<string, string> = {
   connected: "Search Console is connected. Each store's searches appear in its numbers the next time they are opened.",
   disconnected: "Search Console is disconnected.",
   declined: "Google's page was closed without allowing access. Nothing changed.",
-  scope: "Access to Search Console was not ticked on Google's page. Connect again and leave it ticked.",
+  scope: "Access to Search Console was not selected on Google's page. Connect again and leave it selected.",
   expired: "That took too long or came from another session. Connect again.",
   error: "Google did not answer as expected. Try again in a moment.",
 };

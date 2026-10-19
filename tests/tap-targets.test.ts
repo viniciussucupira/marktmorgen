@@ -111,7 +111,7 @@ test("nothing in the markup pins an interactive element shorter than a thumb", (
   assert.deepEqual(bad, [], "an element somebody presses, set shorter than 44px");
 });
 
-test("a text link given the 44px box is also told to centre its text in it", () => {
+test("a text link given the 44px box is also told to center its text in it", () => {
   // min-h on its own only grows the box downward: the words stay at the top
   // and the control looks broken. Every one of these needs a display that
   // honours align-items, which is the mistake this caught across a dozen

@@ -16,7 +16,7 @@
  *     product the form names that no box offers, and a box that is not
  *     being shown add nothing; "yes" from a page drawn when there was one
  *     box is the first box; a gift adds nothing;
- *   - every product ticked, and every product of a bundle among them, is
+ *   - every product checked, and every product of a bundle among them, is
  *     handed over (deliveredIds), and a buyer's list of purchases has each.
  */
 import { addProduct, claimHandle, editProduct, ensureStatsId, setProductExtras, setProductLink, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
@@ -161,7 +161,7 @@ async function main(): Promise<void> {
   ];
   const purchases = (await purchasesFor(store, "buyer@example.com")) ?? [];
   const bought = purchases.find((p) => p.productId === ids.Course);
-  is("the buyer's list has each product ticked, with its own link", bought?.added.map((a) => [a.key, a.title, a.delivery?.link]), [
+  is("the buyer's list has each product checked, with its own link", bought?.added.map((a) => [a.key, a.title, a.delivery?.link]), [
     ["bump", "Workbook", "https://example.com/workbook"],
     ["bump2", "Checklist", "https://example.com/checklist"],
   ]);

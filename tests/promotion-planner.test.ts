@@ -13,7 +13,7 @@ const html=(d=data,p=products)=>renderToStaticMarkup(createElement(PromotionPlan
 part("The rendered planner uses public choices and communicates its limits");
 is("empty eligible list does not render",html(data,[]),"");
 is("product names are escaped",html().includes("&lt;Product&gt;"),true);
-is("gross values are labelled",html().includes("$123.45")&&html().includes("gross revenue"),true);
+is("gross values are labeled",html().includes("$123.45")&&html().includes("gross revenue"),true);
 is("every input has an explicit label",(html().match(/<label/g)??[]).length,6);
 is("store channel is not claimed for product",html().includes("does not prove this product sold through that channel"),true);
 is("no automatic post is promised",html().includes("Nothing is posted or sent for you"),true);

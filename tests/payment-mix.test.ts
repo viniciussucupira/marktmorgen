@@ -44,7 +44,7 @@ const rows=parseCsv(paymentMixReport(mix,"usd")).rows;
 is("csv amount, denominator and share",[rows[0][5],rows[0][6],rows[0][7],rows[0][9]],["60","60","100","80"]);
 is("zero decimal currency",parseCsv(paymentMixReport(mix,"jpy")).rows[0][5],"6000");
 is("three decimal currency",parseCsv(paymentMixReport(mix,"kwd")).rows[0][5],"6");
-is("unknown rows labelled",rows.find(r=>r[3]==="direct")?.[4],"No");
+is("unknown rows labeled",rows.find(r=>r[3]==="direct")?.[4],"No");
 is("formula source protected",parseCsv(paymentMixReport({...mix,rows:[{...mix.rows[0],source:"=1+1"}]},"usd")).rows[0][3],"'=1+1");
 const render=(value:StatsData)=>renderToStaticMarkup(createElement(PaymentMixPanel,{data:value,range:"d7"}));
 const html=render(data);

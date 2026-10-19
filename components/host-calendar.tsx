@@ -79,7 +79,7 @@ export function HostCalendar({ view: first, pin, tz, hosting }: { view: HostCale
       value: "google",
       label: "My Google Calendar (two-way)",
       note: view.googleOffered
-        ? "Busy times read from the calendars you tick; bookings you host written to the one you choose, with a Google Meet link, and moved or deleted with them."
+        ? "Busy times read from the calendars you select; bookings you host written to the one you choose, with a Google Meet link, and moved or deleted with them."
         : "Not switched on on Marktmorgen yet. Until it is, use your calendar's private iCal address.",
       disabled: !view.googleOffered || !view.google,
     },

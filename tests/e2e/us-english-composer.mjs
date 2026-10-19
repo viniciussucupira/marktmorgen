@@ -8,7 +8,7 @@ export async function checkComposerAmericanEnglish({browser,LOCAL,session,sid,pr
   await page.getByRole("button",{name:/^Add a block \(/}).click();
   const text=(await page.locator("main").innerText()).replace(/\s+/g," ");
   is("real comparison picker describes check marks",text.includes("with check marks, crosses or a few words"),true);
-  is("old tick wording is absent from composer hint",text.includes("with ticks, crosses"),false);
+  is("old check wording is absent from composer hint",text.includes("with ticks, crosses"),false);
   is("reading composer wording never posts a draft or AI request",writes,0);
  }finally{await context.close();}
 }

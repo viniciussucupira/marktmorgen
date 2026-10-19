@@ -222,7 +222,7 @@ async function main(): Promise<void> {
   const code = scriptCode({ handle: "harbor", productId: "k3j9x2p1ab", place: "blog", text: '</a><script>alert(1)</script>', mode: "overlay", fill: "#5a36ee", onFill: "#ffffff" });
   is("what the creator typed cannot leave the link", [code.includes("<script>alert"), code.split("<script>").length - 1], [false, 1]);
   is("the link says how it opens and asks for the site's origin only", /^<a href="https:\/\/marktmorgen\.com\/embed\/harbor\/k3j9x2p1ab\?mm=page&amp;[^"]+" data-mm="overlay" referrerpolicy="origin" style="[^"]*background:#5a36ee;color:#ffffff[^"]*">/.test(code), true);
-  is("a colour that is not one never reaches the style", scriptCode({ handle: "h", productId: "abcdef", place: "", text: "Buy", mode: "page", fill: "red;background:url(x)", onFill: "#fff" }).includes("url(x)"), false);
+  is("a color that is not one never reaches the style", scriptCode({ handle: "h", productId: "abcdef", place: "", text: "Buy", mode: "page", fill: "red;background:url(x)", onFill: "#fff" }).includes("url(x)"), false);
   is("and the script follows, exactly as its hash was made", code.endsWith(`\n${loaderTag()}`) && loaderTag() === `<script>${loaderSource()}</script>`, true);
   is("no key, no secret, no store record in it", /nl_live|sk_|secret|statsId/i.test(code), false);
 
