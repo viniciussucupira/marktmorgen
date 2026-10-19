@@ -24,6 +24,7 @@ import { startServices } from "./services.mjs";
 import { fieldFocusPixels,mountFieldFocusFixture } from "./field-focus.mjs";
 import { checkGrowthAndContact } from "./growth-contact.mjs";
 import { checkPathReminder, checkPathAnswers } from "./path-reminder.mjs";
+import { checkPathBoardReplies } from "./path-board-replies.mjs";
 
 async function storePlaceholderContrast(field){
   return field.evaluate(node=>{
@@ -276,6 +277,7 @@ try {
   is("Path never asks to tick completion", await owner.locator('section[aria-labelledby="path-missions"] input[type="checkbox"], section[aria-labelledby="path-next"] input[type="checkbox"]').count(), 0);
   await owner.reload({waitUntil:"networkidle"});
   is("Path persists the answers", await owner.locator('input[name="subject"]').inputValue(), "Sourdough");
+  await checkPathBoardReplies({owner,LOCAL,sid:second,axeSource,joined:false});
   const boardConsent=owner.getByLabel("Share my recorded mission count, a generated pseudonym and the reading time with other Path owners on the board.",{exact:true});
   is("board starts with unchecked explicit consent",await boardConsent.isChecked(),false);
   is("joining is disabled without consent",await owner.getByRole("button",{name:"Join the mission board",exact:true}).isDisabled(),true);
@@ -287,6 +289,7 @@ try {
   is("board uses a generated alias",await owner.locator('section[aria-labelledby="path-board-title"]').getByText(/Creator [0-9a-f]{12}/).count()>0,true);
   await owner.reload({waitUntil:"networkidle"});
   is("board participation persists",await owner.getByRole("button",{name:"Leave the mission board",exact:true}).isVisible(),true);
+  await checkPathBoardReplies({owner,LOCAL,sid:second,axeSource,joined:true});
   const postMission=owner.locator('section[aria-labelledby="path-missions"] > ul > li').filter({has:owner.getByRole("heading",{name:"Make 3 post links",exact:true})});
   is("partial post progress is shown",await postMission.getByText("0 of 3 recorded",{exact:true}).isVisible(),true);
   is("the progress meter has its verified count",await postMission.getByRole("progressbar").getAttribute("value"),"0");
