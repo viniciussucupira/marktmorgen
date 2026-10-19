@@ -1,11 +1,14 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { AUDIENCES, AUDIENCE_WORDS, MINUTES, type PathAnswers } from "@/lib/path-rules";
 import { readMoney, parseCurrency, moneyField, decimalsOf } from "@/lib/money";
 import { readPathWriteReply } from "@/lib/path-write-response";
 import { useLeaveGuard } from "@/components/leave-guard";
 export function PathOnboarding({currency, answers}: {currency: string; answers?: PathAnswers}) {
  const [busy,setBusy]=useState(false);
+ const goalId=useId();
+ const goalField=useRef<HTMLInputElement>(null);
+ const [goalError,setGoalError]=useState("");
  const [dirty,setDirty]=useState(false);
  const [acknowledged,setAcknowledged]=useState(false);
  useLeaveGuard(dirty&&!acknowledged);
@@ -33,14 +36,16 @@ export function PathOnboarding({currency, answers}: {currency: string; answers?:
   event.preventDefault();if(locked.current)return;
   const form=new FormData(event.currentTarget);
   const goalCents=readMoney(String(form.get("goal") || "0"),parseCurrency(currency));
-  if(goalCents===null){setMessage("Please enter a plain amount in your store's currency.");return;}
+  if(goalCents===null){setMessage("");setGoalError("Please enter a plain amount in your store's currency.");goalField.current?.focus();return;}
   void request({action:"start",answers:{goalCents,skills:form.get("skills"),subject:form.get("subject"),minutes:Number(form.get("minutes")),audience:form.get("audience"),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"}});
  }
- return <form onChange={()=>setDirty(true)} onSubmit={submit} aria-label={answers?"Your Path answers":"Start your Path"} aria-busy={busy} className="mt-6 grid max-w-xl gap-5">
-  <label className="grid gap-2 font-semibold">1. What is your personal monthly goal?
-   <span className="text-sm font-normal text-ink-soft">Optional, in {currency.toUpperCase()}. Your own goal, without a forecast.</span>
-   <input className="field" disabled={busy} name="goal" type="number" min="0" step={decimalsOf(currency)===0?"1":"0.01"} defaultValue={answers?.goalCurrency===currency?moneyField(answers.goalCents,currency):"0"}/>
-  </label>
+ return <form onChange={event=>{setDirty(true);if((event.target as HTMLInputElement).name==="goal")setGoalError("");}} onSubmit={submit} aria-label={answers?"Your Path answers":"Start your Path"} aria-busy={busy} className="mt-6 grid max-w-xl gap-5">
+  <div className="grid gap-2">
+   <label htmlFor={goalId} className="font-semibold">1. What is your personal monthly goal?</label>
+   <p id={goalId+"-help"} className="text-sm text-ink-soft">Optional, in {currency.toUpperCase()}. Your own goal, without a forecast.</p>
+   <input id={goalId} ref={goalField} className="field" disabled={busy} name="goal" type="number" inputMode={decimalsOf(currency)===0?"numeric":"decimal"} min="0" step={decimalsOf(currency)===0?"1":"0.01"} aria-invalid={goalError?true:undefined} aria-describedby={goalId+"-help"+(goalError?" "+goalId+"-error":"")} defaultValue={answers?.goalCurrency===currency?moneyField(answers.goalCents,currency):"0"}/>
+   {goalError?<p id={goalId+"-error"} role="alert" className="text-sm text-danger-text">{goalError}</p>:null}
+  </div>
   <fieldset className="grid gap-3"><legend className="font-semibold">2. What could you help someone with?</legend>
    <label className="grid gap-2">Your skills<input className="field" disabled={busy} name="skills" maxLength={120} required defaultValue={answers?.skills}/></label>
    <label className="grid gap-2">Your subject<input className="field" disabled={busy} name="subject" maxLength={80} required defaultValue={answers?.subject}/></label>
