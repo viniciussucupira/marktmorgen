@@ -33,3 +33,24 @@ No additional provider/database/storage call, message, allowance or price change
 ## Remaining coverage
 
 Public legal/refund/privacy, sign-in/recovery/invitations, buyer-library states, every studio screen/error/empty/aria/alt state and platform email templates still need their own review. Dynamic creator text, owner quotations and stored identifiers must not be rewritten. Record each subsequent area and PR here and in codex-queue.md, with exact tested scope and gaps.
+
+
+## Public legal and account-entry area
+
+Read12additional sources at da6924e: 
+- `app/privacy/page.tsx`
+- `app/terms/page.tsx`
+- `app/refunds/page.tsx`
+- `app/copyright/page.tsx`
+- `app/signin/page.tsx`
+- `app/signin/code/page.tsx`
+- `app/signin/lost/page.tsx`
+- `app/signin/rescue/page.tsx`
+- `app/report/page.tsx`
+- `app/help/zoom/page.tsx`
+- `app/affiliate/page.tsx`
+- `app/affiliate-programs/page.tsx`
+
+The displayed privacy description of member cancellation feedback uses canceling. No legal meaning, consent, recipients, retention, rights or service availability changes. Both existing optional-AI and certificate privacy disclosures remain present. The catalogue word in affiliate-programs is a code comment and remains unchanged; the other inspected sources contain none of the selected British forms. This is selected-spelling source evidence, not proof of every content quality criterion. The public-page browser regression now opens the actual privacy page too, normalizes rendered whitespace, verifies the corrected sentence and rejects the old selected spellings.
+
+Remaining account-entry variants (confirm/move/join/lost-confirm), every studio area and platform email templates still require review. Each source is tracked here without claiming untouched dynamic states were manually assessed. No additional provider/data/storage/message work, price, limit or fiscal gate change; M0 remains unchanged and reprovado under the binding reading.

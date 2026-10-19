@@ -54,7 +54,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 4. **[B2] Revisar inglês americano página por página: mensagens, erros, estados vazios, e-mails, aria-label, alt e textos de testes; manter inventário de áreas e PRs pequenos, sem alterar significado.**
    - Pedido: P2 B2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (branch codex/us-english-public-copy; primeira área pública)**.
+   - Estado: **em andamento (branch codex/us-english-legal-copy; áreas públicas/legais, após PR #623)**.
    - Custo e margem: Sem novo fornecedor; medir eventual mudança de payload dentro dos tetos existentes. M0 permanece referência, sem certificação fiscal.
 
 5. **[B3] Adicionar teste de texto da plataforma que recuse grafias britânicas comuns: colour, centre, organise, licence, cancelled, behaviour, afterwards e tick/untick; distinguir texto exibido de código, citações e dados.**
@@ -454,3 +454,5 @@ PR620: verificações completas do head edfd5c9 passaram (Product39335759627, Re
 B1: raiz HTML en-US e política de escopo em platform-language-policy.md; sem tradução ou remoção de idiomas escolhidos nas lojas. Auditoria ortográfica exaustiva e guardas B2/B3 ainda não concluídas. PR621 da fila é dependência documental desta branch; não incorporá-la antes de621.
 
 B2 primeira área:17fontes públicas/compartilhadas inspecionadas; ajustes pontuais em homepage/mission/help; cobertura e pendências em us-english-audit.md. Não representa revisão de todo o produto. CI/browser de texto real precisa passar antes da incorporação.
+
+B2 segunda área:12fontes legais/entrada de conta inspecionadas, incluindo privacy/terms/refunds/signin; uma grafia exibida na descrição de feedback de cancelamento corrigida. Preservadas todas as declarações de IA e certificados. Auditoria de estúdio/e-mails ainda pendente; ver us-english-audit.md.
