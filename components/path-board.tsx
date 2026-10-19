@@ -1,37 +1,36 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
+import { readPathBoardReply } from "@/lib/path-board-response";
 import type { PathBoardRow } from "@/lib/path-board-rules";
 
 export function PathBoard({joined,alias,rows,privacyHref,withdrawOnly=false}:{joined:boolean;alias:string|null;rows:PathBoardRow[]|null;privacyHref:string;withdrawOnly?:boolean}) {
-  const router=useRouter();
+  const locked=useRef(false);
+  const [uncertain,setUncertain]=useState(false);
   const [consent,setConsent]=useState(false);
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
   async function change(join:boolean) {
-    if(busy || (join && !consent))return;
-    setBusy(true);setMessage("");
+    if(locked.current || (join && !consent))return;
+    locked.current=true;setBusy(true);setMessage("");
     try {
       const response=await fetch("/api/store/path",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:join?"board_join":"board_leave",...(join?{consent:true}:{})})});
-      const result=await response.json();
-      if(!response.ok || !result.ok) {
-        const code=result.error;
-        setMessage(code==="stale"?"Open your Path to refresh its facts before joining.":code==="full"?"Your data room has no space for this entry. Nothing was shared.":code==="conflict"?"Your Path changed while saving. Reload and try again.":code==="allowance"?"Your studio allowance has no room to join right now.":"This could not be saved. Please try again.");
-      } else {
-        setConsent(false);
-        setMessage(join?"Your mission-board participation is saved.":"Your board entry was removed. Your private Path stays with you.");
-        router.refresh();
-      }
-    } catch { setMessage("This could not be confirmed. Reload and review your participation before trying again."); }
-    finally { setBusy(false); }
+      const result=readPathBoardReply(response.status,await response.json());
+      if(result.state==="saved"){window.location.reload();return;}
+      setMessage(result.message);
+      if(result.state==="uncertain")setUncertain(true);
+      else locked.current=false;
+      setBusy(false);
+    } catch {
+      setMessage(readPathBoardReply(0,null).message);setUncertain(true);setBusy(false);
+    }
   }
-  return <section className="mt-8 rounded-2xl border border-line bg-white p-5" aria-labelledby="path-board-title">
+  return <section className="mt-8 rounded-2xl border border-line bg-white p-5" aria-labelledby="path-board-title" aria-busy={busy}>
     <h2 id="path-board-title" className="text-xl font-semibold">{withdrawOnly?"Board participation":"Mission board"}</h2>
     <p className="mt-3">Optional, ordered only by recorded missions. No sales amounts or levels are shared. Your real name, store address, answers and goal stay private.</p>
-    {joined?<><p className="mt-3">You appear as <strong>{alias}</strong>.</p><button type="button" className="btn mt-3" disabled={busy} onClick={()=>void change(false)}>Leave the mission board</button></>:withdrawOnly?<p className="mt-3">You are not on the mission board.</p>:<>
+    {joined?<><p className="mt-3">You appear as <strong>{alias}</strong>.</p><button type="button" className="btn mt-3" disabled={busy||uncertain} onClick={()=>void change(false)}>Leave the mission board</button></>:withdrawOnly?<p className="mt-3">You are not on the mission board.</p>:<>
       <p className="mt-3 text-sm text-ink-soft">Joining uses four studio requests and about 2 KB of your data room, plus the small private record. Leaving stays available through privacy controls when your monthly studio allowance is used.</p>
-      <label className="mt-4 flex items-start gap-3"><input type="checkbox" className="mt-1" checked={consent} onChange={event=>setConsent(event.target.checked)} disabled={busy}/><span>Share my recorded mission count, a generated pseudonym and the reading time with other Path owners on the board.</span></label>
-      <button type="button" className="btn mt-4" disabled={!consent||busy} onClick={()=>void change(true)}>Join the mission board</button>
+      <label className="mt-4 flex items-start gap-3"><input type="checkbox" className="mt-1" checked={consent} onChange={event=>setConsent(event.target.checked)} disabled={busy||uncertain}/><span>Share my recorded mission count, a generated pseudonym and the reading time with other Path owners on the board.</span></label>
+      <button type="button" className="btn mt-4" disabled={!consent||busy||uncertain} onClick={()=>void change(true)}>Join the mission board</button>
     </>}
     <p className="mt-3 text-sm" role="status" aria-live="polite">{message}</p>
     {!withdrawOnly?<a href={privacyHref} className="mt-3 inline-flex min-h-11 items-center underline">Manage board privacy</a>:null}
