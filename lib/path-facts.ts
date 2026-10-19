@@ -23,7 +23,8 @@
  * sales carry no test mode and are not counted here (docs/marktmorgen-path.md).
  */
 import { KIND } from "@/lib/catalog";
-import type { Store } from "@/lib/store";
+import {saleHandles,type Store} from "@/lib/store";
+import {pathGrowthMoney,type PathGrowthMoney} from "@/lib/path-growth-money";
 import { readLifeRecord, readPaidSales, readStoreRefunds } from "@/lib/stats";
 import { countLinks } from "@/lib/short-links";
 import { sellsInTestMode } from "@/lib/stripe-connect";
@@ -37,6 +38,8 @@ export const PATH_MONEY_SECONDS = 600;
 
 /** What the path keeps of a reading of Stripe (lib/path.ts keeps it in the store's path record). */
 export type PathMoney = {
+  /** Non-identifying post-sale witnesses from the same bounded Stripe reading. */
+  growth?:PathGrowthMoney;
   /** When it was read, in milliseconds. */
   at: number;
   /** A paid checkout in test mode was seen. */
@@ -90,9 +93,9 @@ export function moneyFrom(sold: Sold[], refunds: { cents: number; currency: stri
  */
 export async function readPathMoney(store: Store, now = Date.now()): Promise<PathMoney | null> {
   if (!store.stripeAccountId) return { at: now, test: false, real: 0, cents: 0, currency: store.currency };
-  let sales;
+  let sales;let partial=false;
   try {
-    ({ sales } = await readPaidSales(store, 0, PATH_SALE_PAGES));
+    ({ sales,partial } = await readPaidSales(store, 0, PATH_SALE_PAGES));
   } catch (error) {
     console.error("reading a store's sales for its path failed", store.handle, error);
     return null;
@@ -117,7 +120,7 @@ export async function readPathMoney(store: Store, now = Date.now()): Promise<Pat
       refunds = null;
     }
   }
-  return moneyFrom(sold, refunds, store.currency, now);
+  return {...moneyFrom(sold, refunds, store.currency, now),growth:pathGrowthMoney(sales,refunds,saleHandles(store),partial)};
 }
 
 /** Whether a kept reading is still fresh enough to show without asking Stripe again. */

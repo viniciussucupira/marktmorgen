@@ -1129,3 +1129,31 @@ export async function buildHead(catalog: string, items: Item[], known: Map<strin
   );
   return headFrom(items, known);
 }
+
+/** Strict bounded-caller product snapshot: malformed/missing responses are unavailable,
+ * while an explicit missing extras key is the normal no-offer record. */
+export async function readProductsStrict(store:Store,ids:readonly string[]):Promise<Product[]>{
+ const asked=wanted(store,ids);
+ if(asked.length!==ids.length)throw new Error("Product selection is unavailable");
+ if(store.catalog.inline){
+  const found=asked.map(id=>store.catalog.inline!.find(product=>product.id===id));
+  if(found.some(product=>!product))throw new Error("Product snapshot is incomplete");
+  return found as Product[];
+ }
+ if(!asked.length)return [];
+ if(!store.catalog.id||!isRedisConfigured())throw new Error("Product storage is unavailable");
+ const raws=await getMany(asked.flatMap(id=>[listingKey(store.catalog.id!,id),extrasKey(store.catalog.id!,id)]));
+ if(raws.length!==asked.length*2)throw new Error("Product read is incomplete");
+ return asked.map((id,index)=>{
+  const listing=parseJson(raws[index*2]);
+  const rawExtras=raws[index*2+1];
+  const extras=rawExtras===null?null:parseJson(rawExtras);
+  if(!listing||typeof listing!=="object"||Array.isArray(listing)||rawExtras!==null&&(!extras||typeof extras!=="object"||Array.isArray(extras)))throw new Error("Product records are invalid");
+  const x=extras as {funnel?:unknown;fields?:unknown}|null;
+  if(x&&(!Array.isArray(x.fields)||x.funnel!==null&&!parseFunnel(x.funnel)))throw new Error("Product offer record is invalid");
+  if(typeof raws[index*2]!=="string"||rawExtras!==null&&typeof rawExtras!=="string"||new TextEncoder().encode(String(raws[index*2])+(rawExtras??"")).length>MAX_PRODUCT_BYTES)throw new Error("Product record exceeds its bound");
+  const product=parseProduct({...listing,...((extras as Record<string,unknown>|null)??{})});
+  if(!product||product.id!==id)throw new Error("Product association is invalid");
+  return product;
+ });
+}

@@ -308,3 +308,15 @@ hours and days use the existing rules, including DST and dispatch margin. No tri
 AI, unreserved supplier cost, inferred mission completion, public money or weaker
 commercial/tax gate is permitted. This list records scope, not proof of the60%
 net-after-tax requirement. Remaining items are not claimed built or tested.
+
+## Ordered Path item 2: post-sale evidence
+
+Six additional missions appear after the first verified live sale: a second published product with an attached file, a completed list campaign with a positive sent count, a returning buyer, a saved post-purchase offer, a current buyer-posted written review and ten distinct paid checkouts remaining after known refunds. Instructions never mark a mission complete. This section does not change the seven-day journey, levels, board score or reminder scheduling.
+
+Money witnesses reuse the existing bounded Stripe sale/refund reading. They exclude other stores, test payments, tips, requests, post-purchase extras and duplicate sessions/payment intents. Full refunds remove a purchase; partial refunds preserve a paid purchase. Missing refunds mean unknown. An incomplete sales reading may prove a positive witness but cannot prove its absence. Buyer email matching is transient within the server calculation: the Path record keeps only a boolean and count, never identities.
+
+Catalogue, campaign and review evidence reserve eight additional requests from the existing studio allowance before reading. This is an internal reservation, not a changed plan limit or price. Each visit reads at most eight published products, three recent campaigns and three recent reviews. The cost registry separately prices fifty database commands and three MB at the write-request shape and checks that the eight reserved studio requests cover it. No additional model, provider or email dispatch is introduced.
+
+Missing, malformed, out-of-scope or incomplete records remain unknown. An explicit missing product-extras key means no saved extra configuration; a malformed or truncated response does not. Current buyer-written reviews use the existing verified-buyer public-review submission and withdrawal flow. A review with only a payment-intent reference cannot prove live mode here. Neither a sent campaign nor a configured offer proves delivery or a sale. PayPal live-sale verification remains ordered item 9; it is not inferred here.
+
+Validation and production status: implementation in progress; not published or counted as a delivery. Required before completion: pure state/refund/scope/privacy tests, strict reader failure and admission tests, actual authenticated browser verification, full checks including actual Redis, exact-head production confirmation. No all-tax net-margin or comprehensive accessibility certification is asserted.

@@ -1,3 +1,5 @@
+import { PATH_GROWTH_READ_UNITS } from "@/lib/path-growth-facts";
+import { PATH_GROWTH_READ } from "./plan-cost-registry";
 import { PATH_BOARD_JOIN_UNITS } from "@/lib/path-board-rules";
 import { PATH_REMINDER_UNITS } from "@/lib/path-reminder-rules";
 /**
@@ -245,4 +247,10 @@ test("studio Path invitation fits the same reserved page with one bounded record
 test("board join and essential privacy fit their pre-reserved requests",()=>{
  assert.ok(PATH_BOARD_JOIN<=UNIT_COST.studio*PATH_BOARD_JOIN_UNITS);
  assert.ok(PATH_BOARD_PRIVACY<=request("heavy",40,200_000));
+});
+
+test("bounded post-sale evidence fits its separately reserved studio requests",()=>{
+ assert.ok(PATH_GROWTH_READ<=PATH_GROWTH_READ_UNITS*UNIT_COST.studio);
+ const source=read("lib/path-growth-facts.ts");
+ assert.ok(source.indexOf("await charge(PATH_GROWTH_READ_UNITS)")<source.indexOf("readProductsStrict(store,ids)"));
 });

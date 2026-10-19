@@ -982,3 +982,6 @@ export const EMAIL_SITES: Record<string, string[]> = {
   // A proposal or agreement to sign, its new versions and its signed copies are the store's own emails (18 October 2026).
   "lib/agreements.ts": STORE,
 };
+
+/** Additional Path growth reading: at most eight 256 KB products, three 80 KB campaigns, three bounded reviews and their indexes. Fifty commands and 3 MB include admission overhead; reserved separately before reading. No provider call. */
+export const PATH_GROWTH_READ = request("write", 50, 3_000_000);

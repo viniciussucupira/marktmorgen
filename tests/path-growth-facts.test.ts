@@ -1,0 +1,35 @@
+import {readPathGrowth,PATH_GROWTH_READ_UNITS} from "@/lib/path-growth-facts";
+import {calls,evidence} from "./path-growth-world";
+import type {Store,Product} from "@/lib/store";
+import {done,is,part} from "./check";
+const store={handle:"own",statsId:"a".repeat(32),listId:"list1",catalog:{items:[{id:"p1",kind:0},{id:"p2",kind:0}]}} as unknown as Store;
+const money={at:1790000000000,test:false,real:1,cents:1000,currency:"usd",growth:{repeatBuyer:true,keptOrders:2}};
+async function main(){
+ part("Admission precedes all optional evidence reads");
+ const no=await readPathGrowth(store,money,async units=>{calls.push("charge");is("reserved units",units,PATH_GROWTH_READ_UNITS);return false;});
+ is("quota refusal reads nothing",calls,["charge"]);
+ is("existing money witness survives quota refusal",no.facts.repeatBuyer,true);
+ is("unread product evidence unknown",no.facts.fileProducts,null);
+ calls.length=0;
+ await readPathGrowth(store,null,async()=>{calls.push("charge");return true;});
+ is("no sale does not charge or read",calls,[]);
+ await readPathGrowth(store,money,async()=>{throw new Error("unavailable allowance");});
+ is("allowance failure reads nothing",calls,[]);
+ evidence.products=[{id:"p1",hidden:false,file:{},options:[],funnel:null},{id:"p2",hidden:false,file:{},options:[],funnel:{steps:[{}]}}] as unknown as Product[];
+ evidence.campaigns=[{handle:"own",listId:"list1",status:"sent",sent:1,finishedAt:1790000000000}];
+ evidence.review=true;
+ const yes=await readPathGrowth(store,money,async()=>{calls.push("charge");return true;});
+ is("charge first",calls[0],"charge");
+ is("all bounded readers used",calls.length,4);
+ is("two published files",yes.facts.fileProducts,2);
+ is("configured saved offer",yes.facts.postPurchaseOffer,true);
+ is("completed campaign",yes.facts.listEmailSent,true);
+ is("current review",yes.facts.buyerReview,true);
+ evidence.campaigns=[{handle:"other",listId:"list1",status:"sent",sent:1,finishedAt:1790000000000}];
+ is("unrelated campaign not proof",(await readPathGrowth(store,money,async()=>true)).facts.listEmailSent,null);
+ evidence.fail=true;
+ const unknown=await readPathGrowth(store,money,async()=>true);
+ is("read failures stay unknown",[unknown.facts.fileProducts,unknown.facts.listEmailSent,unknown.facts.postPurchaseOffer,unknown.facts.buyerReview],[null,null,null,null]);
+ done();
+}
+main().catch(error=>{console.error(error);process.exit(1);});
