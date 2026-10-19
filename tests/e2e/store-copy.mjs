@@ -23,7 +23,7 @@ import { build } from "esbuild";
 import { startServices } from "./services.mjs";
 import { fieldFocusPixels,mountFieldFocusFixture } from "./field-focus.mjs";
 import { checkGrowthAndContact } from "./growth-contact.mjs";
-import { checkPathReminder } from "./path-reminder.mjs";
+import { checkPathReminder, checkPathAnswers } from "./path-reminder.mjs";
 
 async function storePlaceholderContrast(field){
   return field.evaluate(node=>{
@@ -184,6 +184,7 @@ try {
   await studioReminder.getByRole("link",{name:"Open your Path",exact:true}).click();
   await owner.getByRole("heading",{name:"Your next mission",exact:true}).waitFor();
   await checkPathReminder({owner,LOCAL,sid:second,axeSource});
+  await checkPathAnswers({owner,LOCAL,sid:second,axeSource});
   await open(owner,LOCAL+"/studio?store="+second);
   is("opening Path removes today's studio reminder",await owner.locator('aside[aria-labelledby="path-studio-reminder-title"]').count(),0);
   await open(owner, `${LOCAL}/studio`);

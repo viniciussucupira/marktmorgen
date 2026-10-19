@@ -67,3 +67,70 @@ export async function checkPathReminder({owner,LOCAL,sid,axeSource}){
  }
  assert.deepEqual(errors,[]);
 }
+
+/** All writes intercepted; confirmed mock acknowledgement tests reload only. */
+export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
+ const errors=[];
+ for(const width of [390,1280]){
+  const page=await owner.context().newPage();
+  page.on("pageerror",error=>errors.push(String(error)));
+  let mode="invalid",requests=0,release;
+  const gate=new Promise(resolve=>{release=resolve;});
+  try{
+   await page.setViewportSize({width,height:900});
+   await page.route("**/api/store/path*",async route=>{
+    if(route.request().method()!=="POST"){await route.continue();return;}
+    requests++;assert.equal(route.request().postDataJSON().action,"start");
+    if(mode==="pending")await gate;
+    if(mode==="network"){await route.abort("connectionreset");return;}
+    if(mode==="malformed"){await route.fulfill({status:200,contentType:"application/json",body:"{"});return;}
+    const [status,body]=mode==="invalid"?[400,{ok:false,error:"invalid"}]:mode==="pending"?[409,{ok:false,error:"full"}]:mode==="confirmed"?[200,{ok:true}]:[503,{ok:true}];
+    await route.fulfill({status,contentType:"application/json",body:JSON.stringify(body)});
+   });
+   await page.goto(LOCAL+"/studio/path?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
+   const form=page.getByRole("form",{name:"Your Path answers",exact:true});
+   async function reveal(){
+    await form.waitFor({state:"attached"});
+    const details=page.locator("details").filter({has:form});
+    if(!await details.evaluate(node=>node.open))await details.locator("summary").click();
+    await form.waitFor();
+   }
+   await reveal();
+   const skills=form.getByLabel("Your skills",{exact:true}),subject=form.getByLabel("Your subject",{exact:true});
+   const save=form.getByRole("button",{name:"Save your answers",exact:true});
+   const draft="Kept skills "+width;
+   await skills.fill(draft);await subject.fill("Kept subject");
+   await save.click();
+   await form.getByRole("alert").filter({hasText:"Review your answers and try again."}).waitFor();
+   assert.equal(await skills.inputValue(),draft);assert.equal(await save.isEnabled(),true);
+   mode="pending";
+   await Promise.all([page.waitForRequest(r=>r.url().includes("/api/store/path")&&r.method()==="POST"),save.evaluate(node=>{node.click();node.click();node.click();})]);
+   await form.getByRole("button",{name:"Saving…",exact:true}).waitFor();
+   assert.equal(requests,2);
+   for(const input of await form.locator("input,select,button").all())assert.equal(await input.isDisabled(),true,"pending form cannot accept edits that reload would lose");
+   release();
+   await form.getByRole("alert").filter({hasText:"Your store has no room"}).waitFor();
+   assert.equal(await skills.inputValue(),draft);assert.equal(await skills.isEnabled(),true);
+   for(const outcome of ["contradiction","malformed","network"]){
+    mode=outcome;
+    if(outcome!=="contradiction"){await page.reload({waitUntil:"domcontentloaded"});await reveal();await skills.fill(draft);await subject.fill("Kept subject");}
+    const before=requests;await save.click();
+    await form.getByRole("alert").filter({hasText:"The request could not be confirmed."}).waitFor();
+    assert.equal(await skills.inputValue(),draft);assert.equal(await skills.isEnabled(),true,"uncertain values remain selectable and editable");
+    assert.equal(await save.isDisabled(),true);
+    assert.equal(await form.getByRole("button",{name:"Delete your Path",exact:true}).isDisabled(),true);
+    await save.evaluate(node=>node.dispatchEvent(new MouseEvent("click",{bubbles:true})));
+    assert.equal(requests,before+1);
+   }
+   await page.addScriptTag({content:axeSource});
+   const violations=await form.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(rule=>rule.id));
+   assert.deepEqual(violations,[]);
+   assert.equal(await form.evaluate(node=>node.scrollWidth<=node.clientWidth),true);
+   mode="confirmed";await page.reload({waitUntil:"domcontentloaded"});await reveal();
+   await Promise.all([page.waitForNavigation({waitUntil:"domcontentloaded"}),save.click()]);
+   await reveal();
+   console.log("  ok    Path answers pending/retained/refusal/uncertainty/single-flight/confirmed reload/AA/fit at "+width);
+  }finally{release?.();await page.close();}
+ }
+ assert.deepEqual(errors,[]);
+}
