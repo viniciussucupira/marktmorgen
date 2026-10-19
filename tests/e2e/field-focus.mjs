@@ -6,13 +6,16 @@ export async function fieldFocusPixels(page,field) {
   await field.focus();
   await page.keyboard.press("Shift+Tab");
   if(await field.evaluate(node=>document.activeElement===node))throw Error("Field did not leave keyboard focus");
+  // Keep the real previous tab stop focused, but bring the unfocused field
+  // into view before comparing the same viewport pixels.
+  await field.evaluate(node=>node.scrollIntoView({block:"center",behavior:"instant"}));
+  const scroll=await page.evaluate(()=>({x:scrollX,y:scrollY}));
   const box=await field.boundingBox();
   if(!box)throw Error("Missing field bounds");
   const clip={x:Math.floor(box.x)-9,y:Math.floor(box.y)-9,width:Math.ceil(box.x+box.width)+9-(Math.floor(box.x)-9),height:Math.ceil(box.y+box.height)+9-(Math.floor(box.y)-9)};
   const viewport=page.viewportSize();
-  if(!viewport || clip.x<0||clip.y<0||clip.x+clip.width>viewport.width||clip.y+clip.height>viewport.height)throw Error("Field focus crop is outside the viewport");
-  if(!await page.evaluate(()=>scrollX===0&&scrollY===0))throw Error("Focus measurement scrolled before capture");
-  const before=await page.screenshot({clip,animations:"disabled",scale:"css"});
+  if(!viewport || clip.x<0||clip.y<0||clip.x+clip.width>viewport.width||clip.y+clip.height>viewport.height)throw Error("Field focus region is outside the viewport: "+JSON.stringify({box,clip,viewport,scroll}));
+  const before=await page.screenshot({animations:"disabled",scale:"css"});
   await page.keyboard.press("Tab");
   if(!await field.evaluate(node=>document.activeElement===node&&node.matches(":focus-visible")))throw Error("Tab did not restore visible field focus");
   const afterBox=await field.boundingBox();
@@ -21,9 +24,9 @@ export async function fieldFocusPixels(page,field) {
     const style=getComputedStyle(node);
     return {width:style.outlineWidth,offset:style.outlineOffset,style:style.outlineStyle,color:style.outlineColor,shadow:style.boxShadow,forcedColorAdjust:style.forcedColorAdjust};
   });
-  if(!await page.evaluate(()=>scrollX===0&&scrollY===0))throw Error("Focus measurement scrolled after Tab");
-  const after=await page.screenshot({clip,animations:"disabled",scale:"css"});
-  const pixels=await page.evaluate(async({before,after,box,clip})=>{
+  if(!await page.evaluate(previous=>scrollX===previous.x&&scrollY===previous.y,scroll))throw Error("Focus measurement scrolled after Tab");
+  const after=await page.screenshot({animations:"disabled",scale:"css"});
+  const pixels=await page.evaluate(async({before,after,box,clip,viewport})=>{
     async function decode(encoded) {
       const bytes=Uint8Array.from(atob(encoded),char=>char.charCodeAt(0));
       const bitmap=await createImageBitmap(new Blob([bytes],{type:"image/png"}));
@@ -36,14 +39,14 @@ export async function fieldFocusPixels(page,field) {
       return image;
     }
     const a=await decode(before),b=await decode(after);
-    if(a.width!==clip.width||a.height!==clip.height||b.width!==a.width||b.height!==a.height)throw Error("Unexpected screenshot scale");
+    if(a.width!==viewport.width||a.height!==viewport.height||b.width!==a.width||b.height!==a.height)throw Error("Unexpected screenshot scale");
     const luminance=(data,index)=>{
       const values=[data[index],data[index+1],data[index+2]].map(value=>value/255).map(value=>value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4);
       return values[0]*0.2126+values[1]*0.7152+values[2]*0.0722;
     };
     let contrastingPixels=0;
-    for(let y=0;y<a.height;y++)for(let x=0;x<a.width;x++){
-      const px=clip.x+x+0.5,py=clip.y+y+0.5;
+    for(let y=clip.y;y<clip.y+clip.height;y++)for(let x=clip.x;x<clip.x+clip.width;x++){
+      const px=x+0.5,py=y+0.5;
       // Exclude content/caret and the component's original border.
       if(px>=box.x&&px<box.x+box.width&&py>=box.y&&py<box.y+box.height)continue;
       const index=(y*a.width+x)*4;
@@ -52,7 +55,7 @@ export async function fieldFocusPixels(page,field) {
       if((Math.max(first,second)+0.05)/(Math.min(first,second)+0.05)>=3)contrastingPixels++;
     }
     return {contrastingPixels,minimumArea:Math.ceil(4*(box.width+box.height))};
-  },{before:before.toString("base64"),after:after.toString("base64"),box,clip});
+  },{before:before.toString("base64"),after:after.toString("base64"),box,clip,viewport});
   return {...styles,...pixels};
 }
 

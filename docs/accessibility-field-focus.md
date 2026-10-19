@@ -13,11 +13,13 @@ replaced,no focus order/value/submission is changed,and there is no layout shift
 
 ## Evidence and limits
 
-The disposable Chromium test uses actual Tab navigation and screenshot crops
-before/after focus. The browser's own PNG decoder and OffscreenCanvas compare
+The disposable Chromium test uses actual Tab navigation and screenshots
+before/after focus,comparing only the field's outer region. The previous tab stop
+stays focused while the unfocused field is brought into view; field geometry and
+scroll position must remain unchanged across the measured Tab. The browser's own PNG decoder and OffscreenCanvas compare
 the same pixels,excluding the component's original border/content/caret.
 Pixels changing by at least3:1 must cover at least the conservative rectangular
-2px-perimeter area4w+4h. Screenshots stay in memory; none are saved or sent to
+2px-perimeter area4w+4h. Viewport screenshots stay in memory; none are saved or sent to
 another service. Fonts are ready and animations are suppressed for measurement.
 
 Real sign-in fields are checked at320/390/768/1280. Explicit synthetic flat
