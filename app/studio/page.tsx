@@ -1,3 +1,4 @@
+import { PathStudioReminder } from "@/components/path-studio-reminder";
 import { UsageMeter } from "@/components/usage-meter";
 import { dataUsed } from "@/lib/store-data";
 import { dataFullWords, dataWords } from "@/lib/store-data-rules";
@@ -1146,6 +1147,7 @@ export default async function StudioPage({
               </div>
             ) : null}
             {role === "owner" ? <StudioStart steps={startSteps} /> : null}
+            {role === "owner" && !store.suspended ? <PathStudioReminder store={store} role={role} /> : null}
             {/* "How do I…?": answered from the help center's own answers (lib/help-ask.ts). */}
             {ai.on ? <StudioHelp left={ai.left} /> : null}
             {/* A store with nothing on it yet: its first draft, written with AI from a few sentences (lib/ai.ts, writeStoreSetup). */}

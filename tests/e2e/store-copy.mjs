@@ -100,7 +100,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { session } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { session, second } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -123,6 +123,20 @@ try {
   await studio.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
   const owner = await studio.newPage();
   watch(owner);
+  await open(owner,LOCAL+"/studio?store="+second);
+  const studioReminder=owner.locator('aside[aria-labelledby="path-studio-reminder-title"]');
+  is("an owner sees the unvisited-day reminder",await studioReminder.isVisible(),true);
+  is("reminder keeps the selected store",await studioReminder.getByRole("link",{name:"Open your Path",exact:true}).getAttribute("href"),"/studio/path?store="+second);
+  for(const width of [390,1280]) {
+    await owner.setViewportSize({width,height:900});
+    await owner.addScriptTag({content:axeSource});
+    is("studio Path reminder at "+width+": axe",await owner.evaluate(async()=>(await window.axe.run('aside[aria-labelledby="path-studio-reminder-title"]',{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22a","wcag22aa"]}})).violations.map(v=>v.id)),[]);
+    is("studio Path reminder at "+width+": fits",await studioReminder.evaluate(node=>node.scrollWidth<=node.clientWidth),true);
+  }
+  await studioReminder.getByRole("link",{name:"Open your Path",exact:true}).click();
+  await owner.getByRole("heading",{name:"Your next mission",exact:true}).waitFor();
+  await open(owner,LOCAL+"/studio?store="+second);
+  is("opening Path removes today's studio reminder",await owner.locator('aside[aria-labelledby="path-studio-reminder-title"]').count(),0);
   await open(owner, `${LOCAL}/studio`);
   is("the studio links to the copy", await owner.getByRole("link", { name: "Copy it into another store" }).count(), 1);
   await open(owner, `${LOCAL}/studio/copy`);
