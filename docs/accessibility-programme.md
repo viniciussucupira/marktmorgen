@@ -8,7 +8,7 @@ remain in force.
 
 ## Scope and evidence
 
-The inventory lists124 page templates,283 shared TSX components,309 API route
+The inventory lists125 page templates,284 shared TSX components,309 API route
 sources,4 layouts and3 error/not-found/loading boundaries at its source revision. Dynamic
 templates and integrations have many states; a listed source is not a tested
 journey. A test guard detects added/missing sources so the scope cannot silently
@@ -119,3 +119,7 @@ profile links on a light theme and forced-colours emulation. The former
 2px accent-colour profile-link outline must fail on custom yellow, then the
 restored style must pass. These are component samples, not all complete buyer
 journeys, clipping contexts, screen readers or whole-product AAA certification.
+
+## Path post-sale missions
+
+The post-sale section adds one server-rendered component to the inventory. Its six factual mission states, native keyboard disclosures, own-store navigation, no manual completion inputs, 390/1280 layout and AA browser checks are covered by synthetic tests. The browser verification must pass before publication. This adds no screen-reader or whole-product AAA certification; actual assistive-technology work remains ordered Path item 15.
