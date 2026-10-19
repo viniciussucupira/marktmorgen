@@ -278,7 +278,7 @@ try {
   for(const width of [390,1280]){
     await owner.setViewportSize({width,height:900});
     const unavailableReply=owner.waitForResponse(response=>response.url().includes("/api/store/ab?id="));
-    await open(owner,abUrl);
+    await owner.goto(abUrl,{waitUntil:"domcontentloaded",timeout:60_000});
     is("malformed saved experiment reports HTTP503 at "+width,(await unavailableReply).status(),503);
     const unavailable=owner.getByText(unavailableText,{exact:true});
     await unavailable.waitFor();
@@ -324,6 +324,7 @@ try {
   failed += 1;
   console.error(error);
   console.error(appLog.slice(-3000));
+  if(browser){for(const context of browser.contexts())for(const page of context.pages()){if(page.url().includes("/studio/pages"))console.error("Experiment editor state:",await page.locator("body").innerText().then(text=>text.slice(-6000)).catch(()=>"unreadable"));}}
 } finally {
   await browser?.close().catch(() => {});
   if (app?.pid && app.exitCode === null) {
