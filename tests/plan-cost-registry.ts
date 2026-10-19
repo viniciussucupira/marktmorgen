@@ -250,6 +250,9 @@ export function request(shape: keyof typeof SHAPES, commands: number, bytes = 0)
  * after another. Counted as PATH_READ_UNITS studio requests, taken before it
  * runs (tests/plan-cost-registry.test.ts holds the units above it).
  */
+/** Path page's own bounded reads, including one actual studio-usage count. Money refreshes are separately reserved as PATH_READ_UNITS. */
+export const PATH_PAGE = request("heavy", 41, 70_000);
+
 export const PATH_READ = request("heavy", 12, LIFE_WRITE_MAX * 96 + 16_384) + (PATH_SALE_PAGES + PATH_REFUND_PAGES) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
 
 /** One host's calendar read: its commands, and the wait for the calendar, held at 2 GB inside the page that asked. */

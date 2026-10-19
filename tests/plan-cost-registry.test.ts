@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { PATH_READ_UNITS } from "@/lib/path";
-import { ADD_ON_LINES, ASSIST_REMIND_READ, PATH_READ, COST_LINES, EMAIL_SITES, KIND_LINES, NEXT_OFFER_READ, NOT_A_COST, OPEN, PER_PAYMENT_LINES, PICTURE_READ, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
+import { ADD_ON_LINES, ASSIST_REMIND_READ, PATH_PAGE, PATH_READ, COST_LINES, EMAIL_SITES, KIND_LINES, NEXT_OFFER_READ, NOT_A_COST, OPEN, PER_PAYMENT_LINES, PICTURE_READ, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
 import { NEXT_OFFER_REQUEST_UNITS } from "@/lib/next-offer-rules";
 import { ASSIST_REMIND_REQUEST_UNITS } from "@/lib/assistant-reminder-rules";
 import { assessCustomerWorstCase } from "@/lib/net-margin-rules";
@@ -226,4 +226,8 @@ test("the uses the owner named on October 18, 2026 have left the open list, the 
   assert.deepEqual(open, [], "the open list is empty and stays so");
   // No scope of a counter may point at an open item any more.
   for (const [scope, kind] of Object.entries(SCOPES)) assert.ok(!("open" in kind), `${scope} is still open`);
+});
+
+test("Path page and its actual usage count fit its reserved studio page", () => {
+ assert.ok(PATH_PAGE <= UNIT_COST.studio * STUDIO_PAGE_UNITS);
 });

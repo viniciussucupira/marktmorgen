@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { studioPath, studioView } from "@/lib/studio-route";
+import { allowanceUsed } from "@/lib/store-allowance";
+import { allowanceFor } from "@/lib/store-allowance-rules";
+import { pathPlanLine } from "@/lib/path-plan";
 import { readPath, visitPath } from "@/lib/path";
 import { LEVEL_NAMES, LEVELS, PATH_SLOGAN, PATH_TITLE, goalWords, localDay, pathProgress, streakOf } from "@/lib/path-rules";
 import { StudioHeader } from "@/components/studio-header";
@@ -24,6 +27,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
  const record=visited?.record || saved;
  const progress=visited && record?pathProgress(visited.facts,record.answers,record.startedAt,now):null;
  const streak=record?streakOf(record.checkins,localDay(record.answers.timeZone,now)):null;
+ const planLine=pathPlanLine(await allowanceUsed(store,"studio",now),allowanceFor(store,"studio",now/1000));
  const mission=progress?.today;
  const place=mission?.place;
  const href=place?.store?"/@"+encodeURIComponent(store.handle):studioPath(store,"",place?.page || "")+(place?.hash || "");
@@ -31,6 +35,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
   <StudioHeader current={store} role={access.role} stores={access.stores} owned={access.owned} action={{href:studioPath(store),label:"Back to the studio",short:"Studio"}}/>
   <StudioStorePin sid={store.sid}><main id="content" className="container-page break-words pb-20 pt-10">
    <p className="eyebrow">Marktmorgen Path</p><Link className="mt-3 inline-block underline" href="/platform/path">How Path works</Link><h1 className="t-h2 mt-3">{PATH_TITLE}</h1><p className="mt-3 text-ink-soft">{PATH_SLOGAN}</p>
+   {planLine?<aside className="notice mt-6" aria-label="Your studio usage"><p>{planLine}</p><Link className="mt-2 inline-block underline" href="/pricing">Review plans</Link></aside>:null}
    {failed?<p role="alert" className="notice notice-error mt-6">Your Path could not be read just now. Please try again in a moment.</p>:null}
    {progress && record?<>
     <section className="mt-8 rounded-2xl border border-line bg-white p-6" aria-label="Your progress">
