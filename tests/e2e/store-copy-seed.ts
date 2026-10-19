@@ -1,7 +1,7 @@
 import {writePage} from "@/lib/sales-page-store";
 import {parsePage} from "@/lib/sales-page";
 import {redisPipeline} from "@/lib/redis";
-import {storeForEmail} from "@/lib/store";
+import {setProductPage,storeForEmail} from "@/lib/store";
 import { startPath } from "@/lib/path";
 import { mayNotify } from "@/lib/path-rules";
 /**
@@ -24,6 +24,7 @@ async function main(): Promise<void> {
   const abPage=parsePage({blocks:[{id:"abhero01",kind:"hero",headline:"One session",sub:"A local synthetic fixture",media:"none",video:null}],test:{headline:"Try a coaching session",sub:""}});
   if(!abPage.test || !abStore.statsId)throw Error("No synthetic experiment");
   await writePage(abStore.statsId,abProduct,abPage,abStore);
+  if(!(await setProductPage(OWNER,abProduct,true)).ok)throw Error("Synthetic page was not indexed");
   await redisPipeline([["HSET",`nl:ab:${abStore.statsId}:${abProduct}:${abPage.test.id}`,"va","NaN"]]);
   const second = await createStore(OWNER, "secondshop", "Second Coaching", "");
   if (!second.ok) throw new Error("no second");
