@@ -836,6 +836,7 @@
     "app/api/cron/courses/route.ts",
     "app/api/cron/discord/route.ts",
     "app/api/cron/imports/route.ts",
+    "app/api/cron/indexnow/route.ts",
     "app/api/cron/mail-check/route.ts",
     "app/api/cron/mail/route.ts",
     "app/api/cron/monthly/route.ts",
