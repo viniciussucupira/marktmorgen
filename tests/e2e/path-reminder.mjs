@@ -130,6 +130,8 @@ export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
    assert.deepEqual(violations,[]);
    assert.equal(await form.evaluate(node=>node.scrollWidth<=node.clientWidth),true);
    mode="confirmed";await page.reload({waitUntil:"domcontentloaded"});await reveal();
+   await skills.fill(draft);await subject.fill("Kept subject");
+   assert.equal(await form.evaluate(node=>node.checkValidity()),true,"confirmed save uses a valid completed form");
    await Promise.all([page.waitForNavigation({waitUntil:"domcontentloaded"}),save.click()]);
    await reveal();
    console.log("  ok    Path answers pending/retained/refusal/uncertainty/single-flight/confirmed reload/AA/fit at "+width);
