@@ -75,14 +75,14 @@ async function main(): Promise<void> {
   const returnSession=await openSession(returnOwner);
   const wordingOwner="path-wording-owner@example.test";
   if(!(await claimHandle(wordingOwner,"wordingpath","Wording Path","")).ok)throw Error("No wording owner");
-  await setSubscription(wordingOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:"sub_wording_synthetic",customerId:"cus_wording_synthetic",trialEnds:0,period:paidPeriod()});
+  if(!(await setSubscription(wordingOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:"sub_wordingSynthetic",customerId:"cus_wordingSynthetic",trialEnds:0,period:paidPeriod()})))throw Error("No paid wording subscription");
   const wordingStore=(await ensureStatsId(wordingOwner))!;
   const wordingAnswers={goalCents:700000,goalCurrency:"usd",skills:"Private skill words",subject:"Private topic words",minutes:15,audience:"instagram",timeZone:"America/New_York"} as const;
   if(!(await startPath(wordingStore,wordingAnswers)).ok)throw Error("No wording Path");
   const wordingSession=await openSession(wordingOwner);
   const wordingTrialOwner="path-wording-trial@example.test";
   if(!(await claimHandle(wordingTrialOwner,"wordingtrial","Trial Path","")).ok)throw Error("No wording trial");
-  await setSubscription(wordingTrialOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:"sub_wording_trial",customerId:"cus_wording_trial",trialEnds:Math.floor(Date.now()/1000)+86400});
+  if(!(await setSubscription(wordingTrialOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:"sub_wordingTrial",customerId:"cus_wordingTrial",trialEnds:Math.floor(Date.now()/1000)+86400})))throw Error("No trial wording subscription");
   const wordingTrialStore=(await ensureStatsId(wordingTrialOwner))!;
   if(!(await startPath(wordingTrialStore,wordingAnswers)).ok)throw Error("No trial Path");
   const wordingTrialSession=await openSession(wordingTrialOwner);
