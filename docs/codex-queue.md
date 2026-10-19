@@ -59,7 +59,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 5. **[B3] Adicionar teste de texto da plataforma que recuse grafias britânicas comuns: colour, centre, organise, licence, cancelled, behaviour, afterwards e tick/untick; distinguir texto exibido de código, citações e dados.**
    - Pedido: P2 B3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **em andamento (branch codex/platform-us-english-guard)**.
    - Custo e margem: Teste de desenvolvimento; sem custo de produção.
 
 6. **[B4] Escrever docs/site-languages.md: traduções completas no código após abertura/autorização; alemão, francês, holandês, espanhol e italiano; seletor sem bandeiras, hreflang e frases proibidas por idioma; estudo fiscal por país para japonês/coreano/chinês; futuro português do Brasil.**
@@ -480,3 +480,5 @@ PR624 integra a correção de Pricing do PR623 após os dois testes completos id
 B2 próxima área: documentos do estúdio/entrada de conta e16componentes/catálogo de recursos lidos; corrigidos apenas textos exibidos de Meta, afiliação e explicações públicas. Identificadores/statuses legados preservados. Casos reais de navegador ampliados. Produtores de e-mail da plataforma e componentes ainda não revisados seguem em andamento; não antecipar B2 feito.
 
 B2 composição/importação: correções pontuais de check marks/license em instruções do editor, razão de não copiar produto, modelo novo e erro interno, sem reescrever conteúdo já salvo. Verificação de navegador abre seletor real sem salvar ou chamar IA. O B2 completo segue em andamento; fontes restantes/e-mails mistos ainda pendentes.
+
+B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de desenvolvimento separa prosa exibida de comentários/imports/statuses e não executa código do produto. Fixtures positivas/negativas e varredura do corpus precisam passar; qualquer ocorrência é revisada antes da incorporação. Não declara B2 inteiro concluído. Dependência: integrar PR626 primeiro e manter correções de texto nos PRs de área.

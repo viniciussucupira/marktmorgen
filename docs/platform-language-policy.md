@@ -9,3 +9,12 @@ Code audit before this change: `app/layout.tsx` used generic `lang="en"` while i
 Verification: the production sign-in document before the change was inspected for its root language; the browser regression now checks the real platform document language during existing authenticated navigation. Complete-source spelling review, the British-spelling text guard (B3), and the future translation design (B4) remain separate queue work. No claim that every sentence has already been audited, nor that assistive technology pronunciation has been manually tested.
 
 Cost: no extra provider/database/storage/message call, record, runtime translation or allowance. The HTML language attribute grows by three ASCII bytes within the existing admitted page envelope; full-use plan ceilings remain unchanged. M0 in `codex-queue.md` records unchanged before/after monthly and annual model figures. The binding most-tax model still fails60%; prices, visible limits and all commercial/fiscal gates remain unchanged.
+
+
+## Source guard (queue B3)
+
+The development-only source guard parses TypeScript/TSX/JavaScript syntax without executing product code. It examines JSX text, human-facing attributes and prose-like string/template literals in app/components/lib, plus test diagnostic titles. Comments, import paths, property keys, literal types, ordinary lower-case protocol/status tokens and class/reference attributes are excluded; existing foreign buyer dictionaries remain outside the American-platform policy. New templates supplied by the platform are prose; stored creator content is never read or rewritten.
+
+Negative/positive fixtures cover British displayed text, American variants (including colored/colorful), legacy identifiers/status aliases, classes, templates, test titles and foreign dictionaries. The repository scan reports file/line/text so each violation can be reviewed and corrected. It is a spelling safeguard, not a proof of comprehension, accessibility, translation completeness or all content correctness. A passing guard does not declare B2's manual/state coverage complete.
+
+No production parser, runtime translation or provider call is introduced: TypeScript is an existing development dependency and this parser is used only in tests. Existing financial gates and M0 remain unchanged; no all-tax margin certification is inferred.
