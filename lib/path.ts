@@ -1,3 +1,5 @@
+import { PATH_BOARD_KEY, PATH_BOARD_OWNERS_KEY } from "@/lib/path-board";
+import { readPathBoard, pathBoardScore, type PathBoardEntry } from "@/lib/path-board-rules";
 import { randomBytes } from "node:crypto";
 import { WRITE_PATH, FORGET_PATH } from "@/lib/path-atomic";
 /**
@@ -31,7 +33,7 @@ import { WRITE_PATH, FORGET_PATH } from "@/lib/path-atomic";
  * The record is the owner's own: their goal, their words about what they
  * make, their time zone. It goes with the store (forgetPath, from the
  * store's deletion and its closing) and is in the account's own data
- * (lib/person-data.ts, "account"), never shown to anybody else.
+ * (lib/person-data.ts, "account"). Answers and money remain private; only explicit\n * board consent shares a pseudonym, verified mission count and reading time.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Store } from "@/lib/store";
@@ -49,6 +51,8 @@ export const PATH_SLOT = "path";
 const SID = /^[0-9a-f]{32}$/;
 
 export type PathRecord = {
+  /** Present only after explicit consent to the mission board. */
+  board?: PathBoardEntry;
   /** Opaque write token; absent on legacy records. Never reused after deletion. */
   revision?: string;
   answers: PathAnswers;
@@ -110,6 +114,7 @@ export function parsePath(raw: unknown): PathRecord | null {
   const best = Number(value.b);
   return {
     revision: typeof value.r === "string" ? value.r : "",
+    board: readPathBoard(value.g) ?? undefined,
     answers: {
       goalCents: goal,
       goalCurrency: typeof a.goalCurrency === "string" && isCurrency(a.goalCurrency) ? a.goalCurrency : "usd",
@@ -130,7 +135,7 @@ export function parsePath(raw: unknown): PathRecord | null {
 
 /** The record as it is written. Pure. */
 export function pathJson(record: PathRecord): string {
-  return JSON.stringify({ v: 1, r: record.revision ?? "", a: record.answers, at: record.startedAt, c: record.checkins, b: record.best, bAt: record.bestAt, m: record.money, n: record.counts });
+  return JSON.stringify({ v: 1, r: record.revision ?? "", a: record.answers, at: record.startedAt, c: record.checkins, b: record.best, bAt: record.bestAt, m: record.money, n: record.counts, g: record.board ?? null });
 }
 
 /** The store's path, or null when it has not begun one (or nothing can be read). */
@@ -150,7 +155,7 @@ async function writePath(store: Store, record: PathRecord, now: number, expected
   if (!SID.test(store.sid) || !room || !isRedisConfigured()) return { ok: false, reason: "unavailable" };
   const next: PathRecord = { ...record, revision: randomBytes(16).toString("hex") };
   const json = pathJson(next);
-  const [reply] = await redisPipeline([["EVAL", WRITE_PATH, 2, room, key(store.sid), contentRoomFor(store, now / 1000), monthOf(now), dataBytes(json), expected ?? "", expected === null ? "1" : "0", json]]);
+  const [reply] = await redisPipeline([["EVAL", WRITE_PATH, 4, room, key(store.sid), PATH_BOARD_KEY, PATH_BOARD_OWNERS_KEY, contentRoomFor(store, now / 1000), monthOf(now), dataBytes(json), expected ?? "", expected === null ? "1" : "0", json, store.sid]]);
   const state = Array.isArray(reply) ? Number(reply[0]) : NaN;
   if (state === 1) return { ok: true, record: next };
   return { ok: false, reason: state === 0 ? "full" : state === -2 ? "conflict" : "unavailable" };
@@ -198,6 +203,12 @@ export async function visitPath(store: Store, record: PathRecord, now = Date.now
   const best = levelKept(record.best, read);
   const next: PathRecord = { ...record, checkins, money, counts, best, bestAt: best > record.best ? now : record.bestAt };
   if (best !== record.best) changed = true;
+  if(record.board && moneyFresh(money,store,now) && countsFresh(counts,now)) {
+    const score=pathBoardScore(read,record.answers);
+    const at=Math.min(money!.at,counts!.at,now);
+    next.board={...record.board,score,at};
+    if(score!==record.board.score || at!==record.board.at)changed=true;
+  }
   if (changed) {
     const written = await writePath(store, next, now, record.revision ?? "").catch((error) => {
       console.error("keeping a store's path failed", store.handle, error);
@@ -216,6 +227,23 @@ export async function forgetPath(store: Store): Promise<void> {
   if (!SID.test(store.sid) || !isRedisConfigured()) return;
   const room = dataKey(store);
   if (!room) return;
-  const [reply] = await redisPipeline([["EVAL", FORGET_PATH, 2, room, key(store.sid), monthOf(Date.now())]]);
+  const [reply] = await redisPipeline([["EVAL", FORGET_PATH, 4, room, key(store.sid), PATH_BOARD_KEY, PATH_BOARD_OWNERS_KEY, monthOf(Date.now()), store.sid]]);
   if (!Array.isArray(reply) || Number(reply[0]) !== 1) throw new Error("the Path could not be forgotten");
+}
+
+/** Consent is explicit. No new facts are bought or inferred by joining. */
+export async function joinPathBoard(store: Store, now=Date.now()): Promise<PathWriteResult | {ok:false;reason:"stale"|"not_started"}> {
+  const record=await readPath(store);
+  if(!record)return {ok:false,reason:"not_started"};
+  if(record.board)return {ok:true,record};
+  if(!moneyFresh(record.money,store,now) || !countsFresh(record.counts,now))return {ok:false,reason:"stale"};
+  const board:PathBoardEntry={token:randomBytes(16).toString("hex"),score:pathBoardScore(factsFrom(store,record.counts,record.money),record.answers),at:Math.min(record.money!.at,record.counts!.at,now)};
+  return writePath(store,{...record,board},now,record.revision??"");
+}
+/** An essential withdrawal: private answers, days and reached level are preserved. */
+export async function leavePathBoard(store: Store, now=Date.now()): Promise<PathWriteResult> {
+  const record=await readPath(store);
+  if(!record)return {ok:false,reason:"unavailable"};
+  if(!record.board)return {ok:true,record};
+  return writePath(store,{...record,board:undefined},now,record.revision??"");
 }

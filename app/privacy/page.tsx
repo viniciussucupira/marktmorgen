@@ -1250,9 +1250,13 @@ export default function PrivacyPage() {
           own Stripe account, as counts and amounts, never who bought. The
           goal is only ever shown to its owner as their goal; nothing in Path
           predicts what anybody will earn. Missions are read from what the
-          store already records and are never stored as done. Path belongs to
-          the store&apos;s owner, is never shown to anybody else, and is deleted
-          when the owner deletes it from Path, or with the store.
+          store already records and are never stored as done. Your answers and money remain private. Only if you explicitly join the
+          mission board do we share a generated pseudonym, a count of verified
+          missions and its reading time with other Path owners. The board never
+          shares your real name, store address, goal, answers, level or sales
+          amounts. Leaving removes the shared entry and keeps your private Path.
+          Deleting Path, or closing or deleting the store, removes its board entry
+          too. <Link href="/studio/path/privacy" prefetch={false} className="underline">Manage Path board participation</Link>.
         </p>
         <p id="reviews">
           <strong className="text-black">Reviews.</strong> A buyer can review

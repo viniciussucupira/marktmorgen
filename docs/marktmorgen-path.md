@@ -242,3 +242,38 @@ that PayPal sales are not counted by Path yet, matching section 6.
 No additional provider read, data record, quota or price is introduced.
 The notice is checked with the Path page's existing mobile/desktop accessibility
 flow; synthetic checks exercise every combination of the four readiness flags.
+
+## Optional mission board (19 October 2026)
+
+The owner must explicitly check consent and choose Join. The board shares only
+a generated pseudonym, verified mission count and reading timestamp with joined
+Path owners. No real name, store URL, answers, goal, sales amount or level is shown.
+The score counts the seven day missions plus all eight traffic missions, independent
+of whether traffic suggestions are hidden after a sale. Money is never a sort key.
+The top 20 cached readings are shown; ties share a rank. The board is a snapshot,
+updated when its owner opens Path with fresh facts; it is not a live comparison.
+
+Joining reserves four studio requests and a conservative 2 KB shared-data allocation
+in that store's room, in addition to its measured private record. The shared sorted
+set and private owner reverse index are excluded from legacy room recount: each
+owner's allocation is already booked atomically. One Lua operation applies consent,
+revision, room and shared entry. CAS prevents an older visit restoring withdrawn
+consent. The reverse index permits cleanup even when private JSON is unreadable.
+Leaving preserves private answers, check-ins and reached level. Forgetting Path,
+deleting the store and closing it remove the shared entry too.
+
+The public privacy policy links to /studio/path/privacy, using the existing
+essential privacy allowance rather than monthly studio requests. It records no
+check-in or fresh facts. The owner can withdraw and download private Path JSON
+there even after the monthly allowance is exhausted. GET /api/store/path is owner
+only, scoped to the chosen store, no-store, and excludes the internal revision.
+The general store export may be available to collaborators; private Path is not
+added to it.
+
+Synthetic checks cover consent/default privacy, scores/refunds, pseudonyms,
+withdrawal/rejoin/deletion, room accounting and parser bounds. Disposable actual
+Redis checks exercise concurrent joins, stale writes, partial-failure prevention,
+corrupt-record cleanup and physical shared allocation at 1/16/128 entries.
+The real-browser fixture covers explicit consent, persistence, mobile/desktop axe,
+quota exhaustion, owner-only Path download and withdrawal without lost answers.
+No real payment, third-party message or provider read is triggered by board join.

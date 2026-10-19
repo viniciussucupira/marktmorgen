@@ -1,3 +1,4 @@
+import { isPathBoardSharedKey } from "@/lib/path-board";
 /**
  * The one-time count of what every store already keeps in the database
  * (added 18 October 2026), run before paid plans open.
@@ -256,7 +257,7 @@ export async function recountStep(deadline: number, now = Date.now()): Promise<R
     const [reply] = await redisPipeline([["SCAN", state.cursor, "MATCH", "nl:*", "COUNT", RECOUNT_PAGE_KEYS]]);
     if (!Array.isArray(reply) || reply.length < 2) break;
     const next = String(reply[0]);
-    const keys = (Array.isArray(reply[1]) ? (reply[1] as unknown[]).map(String) : []).filter((key) => countedInRoom(key) && !key.startsWith("nl:data:") && !key.startsWith("nl:recount:"));
+    const keys = (Array.isArray(reply[1]) ? (reply[1] as unknown[]).map(String) : []).filter((key) => !isPathBoardSharedKey(key) && countedInRoom(key) && !key.startsWith("nl:data:") && !key.startsWith("nl:recount:"));
     const owners = await ownersOf(keys);
     const sums = new Map<string, number>();
     for (const [key, ref] of owners) {

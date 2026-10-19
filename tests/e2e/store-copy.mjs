@@ -186,6 +186,17 @@ try {
   is("Path never asks to tick completion", await owner.locator('section[aria-labelledby="path-missions"] input[type="checkbox"], section[aria-labelledby="path-next"] input[type="checkbox"]').count(), 0);
   await owner.reload({waitUntil:"networkidle"});
   is("Path persists the answers", await owner.locator('input[name="subject"]').inputValue(), "Sourdough");
+  const boardConsent=owner.getByLabel("Share my recorded mission count, a generated pseudonym and the reading time with other Path owners on the board.",{exact:true});
+  is("board starts with unchecked explicit consent",await boardConsent.isChecked(),false);
+  is("joining is disabled without consent",await owner.getByRole("button",{name:"Join the mission board",exact:true}).isDisabled(),true);
+  is("API refuses missing board consent",await owner.evaluate(async()=>{const r=await fetch("/api/store/path",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"board_join"})});return r.status;}),400);
+  await boardConsent.check();
+  await owner.getByRole("button",{name:"Join the mission board",exact:true}).click();
+  await owner.getByRole("button",{name:"Leave the mission board",exact:true}).waitFor();
+  await owner.getByRole("table",{name:"Recorded mission counts and their reading times"}).waitFor();
+  is("board uses a generated alias",await owner.locator('section[aria-labelledby="path-board-title"]').getByText(/Creator [0-9a-f]{12}/).count()>0,true);
+  await owner.reload({waitUntil:"networkidle"});
+  is("board participation persists",await owner.getByRole("button",{name:"Leave the mission board",exact:true}).isVisible(),true);
   const postMission=owner.locator('section[aria-labelledby="path-missions"] > ul > li').filter({has:owner.getByRole("heading",{name:"Make 3 post links",exact:true})});
   is("partial post progress is shown",await postMission.getByText("0 of 3 recorded",{exact:true}).isVisible(),true);
   is("the progress meter has its verified count",await postMission.getByRole("progressbar").getAttribute("value"),"0");
@@ -252,6 +263,25 @@ try {
     is(`Path at ${width}: no sideways scroll`,await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
     await ctx.close();
   }
+  const quotaDir=mkdtempSync(join(tmpdir(),"mm-path-quota-"));
+  const quotaFile=join(quotaDir,"quota.cjs");
+  await build({entryPoints:[join(here,"path-board-quota.ts")],bundle:true,platform:"node",format:"cjs",outfile:quotaFile,logLevel:"error",alias:{"@":root}});
+  const exhausted=await run(process.execPath,[quotaFile]);
+  rmSync(quotaDir,{recursive:true,force:true});
+  if(exhausted.status!==0)throw new Error("synthetic quota setup failed: "+exhausted.said);
+  const pathSid=campaignUrl.searchParams.get("store");
+  await open(owner,LOCAL+"/studio/path/privacy?store="+pathSid);
+  await owner.getByRole("heading",{name:"Path board privacy",exact:true}).waitFor();
+  const privateFile=await owner.evaluate(async sid=>{const r=await fetch("/api/store/path?store="+sid);return {status:r.status,body:await r.json()};},pathSid);
+  is("private Path downloads after monthly quota exhaustion",privateFile.status,200);
+  is("private export includes the owner's answers",privateFile.body.path.answers.subject,"Sourdough");
+  is("private export includes explicit participation",Boolean(privateFile.body.path.board?.token),true);
+  is("internal revision is excluded",privateFile.body.path.revision,undefined);
+  await owner.getByRole("button",{name:"Leave the mission board",exact:true}).click();
+  await owner.getByText("You are not on the mission board.",{exact:true}).waitFor();
+  const afterLeave=await owner.evaluate(async sid=>(await fetch("/api/store/path?store="+sid)).json(),pathSid);
+  is("withdrawal preserves private Path answers",afterLeave.path.answers.subject,"Sourdough");
+  is("withdrawal removes exported membership",afterLeave.path.board,null);
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;

@@ -11,8 +11,9 @@ from test_form_opportunity_redis import Redis
 
 def scripts(root):
     constants = {}
-    for filename in ["lib/store-data.ts", "lib/path-atomic.ts"]:
+    for filename in ["lib/store-data.ts", "lib/path-board-rules.ts", "lib/path-atomic.ts"]:
         source = (root / filename).read_text(encoding="utf-8")
+        constants.update(re.findall(r"export const (\w+) = (\d+);", source))
         constants.update(re.findall(r"export const (\w+) = `([\s\S]*?)`;", source))
 
     def expand(name, stack=()):
@@ -23,6 +24,87 @@ def scripts(root):
             raise RuntimeError("Unresolved application script")
         return value
     return expand("WRITE_PATH"), expand("FORGET_PATH")
+
+
+
+def check_board(redis, write, forget, suffix):
+    board, owners = "marktmorgen:integration:board:" + suffix, "marktmorgen:integration:board-owners:" + suffix
+    touched = [board, owners]
+    sid = uuid.uuid4().hex
+    room, record = "marktmorgen:integration:board-room:" + sid, "marktmorgen:integration:board-record:" + sid
+    touched.extend([room, record])
+    def put(expected, entry=None, limit=100000, client=None):
+        client = client or redis
+        version = uuid.uuid4().hex
+        payload = json.dumps({"v": 1, "r": version, "g": entry})
+        return client.command("EVAL", write, 4, room, record, board, owners, limit, "2026-10", 400, expected or "", "1" if expected is None else "0", payload, sid), version
+    def remove(client=None):
+        return (client or redis).command("EVAL", forget, 4, room, record, board, owners, "2026-10", sid)
+    def entry(score=4):
+        return {"token": uuid.uuid4().hex, "score": score, "at": 1792411200000}
+    try:
+        result, initial = put(None)
+        assert result == [1, 464]
+        before = redis.command("GET", record)
+        assert put(initial, entry(), limit=1000)[0][0] == 0
+        assert redis.command("GET", record) == before and redis.command("ZCARD", board) == 0
+        redis.command("SET", board, "wrong-type")
+        assert put(initial, entry())[0][0] == -1
+        assert redis.command("GET", record) == before
+        redis.command("DEL", board)
+        redis.command("HSET", room, "#", "unknown")
+        assert put(initial, entry())[0][0] == -1
+        assert redis.command("ZCARD", board) == 0 and redis.command("HLEN", owners) == 0
+        redis.command("HSET", room, "#", 464)
+        print("PASS: board full-room, wrong-type and unknown-meter failures leave no partial membership")
+        participation = entry()
+        result, joined = put(initial, participation)
+        assert result == [1, 2576]
+        assert int(redis.command("HGET", room, "path-board")) == 2048
+        old_member = redis.command("HGET", owners, sid)
+        participation["score"] = 7
+        result, updated = put(joined, participation)
+        assert result[0] == 1 and redis.command("ZCARD", board) == 1
+        assert redis.command("ZSCORE", board, old_member) is None
+        result, withdrawn = put(updated)
+        assert result == [1, 464] and redis.command("ZCARD", board) == 0
+        assert redis.command("HGET", owners, sid) is None
+        assert put(updated, participation)[0][0] == -2
+        assert redis.command("ZCARD", board) == 0
+        # Simultaneous opt-ins from the same read may create exactly one membership.
+        def race_join(_):
+            client = Redis()
+            try:
+                return put(withdrawn, entry(), client=client)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(race_join, range(32)))
+        assert sum(result[0][0] == 1 for result in results) == 1
+        assert redis.command("ZCARD", board) == 1 and redis.command("HLEN", owners) == 1
+        print("PASS: consent, shared entry and reserved bytes change together; stale visits cannot undo withdrawal")
+        # Reverse membership lets deletion clean up even an unreadable private record.
+        redis.command("SET", record, "corrupt")
+        assert remove() == [1, 0]
+        assert redis.command("GET", record) is None and redis.command("ZCARD", board) == 0
+        assert redis.command("HLEN", owners) == 0 and int(redis.command("HGET", room, "#") or 0) == 0
+        print("PASS: forgetting also removes shared membership when the private record is unreadable")
+        # Real physical Redis allocation, including the entire shared-key overhead.
+        for index in range(128):
+            item_sid = uuid.uuid4().hex
+            item_room, item_record = "marktmorgen:integration:board-room:" + item_sid, "marktmorgen:integration:board-record:" + item_sid
+            touched.extend([item_room, item_record])
+            item = entry(index % 16)
+            payload = json.dumps({"v": 1, "r": uuid.uuid4().hex, "g": item})
+            result = redis.command("EVAL", write, 4, item_room, item_record, board, owners, 100000, "2026-10", 400, "", "1", payload, item_sid)
+            assert result[0] == 1
+            if index + 1 in [1, 16, 128]:
+                used = int(redis.command("MEMORY", "USAGE", board)) + int(redis.command("MEMORY", "USAGE", owners))
+                assert used <= (index + 1) * 2048, (index + 1, used)
+        assert redis.command("ZCARD", board) == 128 and redis.command("HLEN", owners) == 128
+        print("PASS: measured shared Redis allocation fits each owner's 2 KB reserve at 1, 16 and 128 entries")
+    finally:
+        redis.command("DEL", *touched)
 
 
 def main():
@@ -115,6 +197,7 @@ def main():
             assert all(item[0] in [1, -2] for item in results)
             assert redis.command("GET", record) is None and total() == 0
         print("PASS: deletion wins every ordering against an in-flight old edit")
+        check_board(redis, write, forget, suffix)
     finally:
         redis.command("DEL", room, record)
         redis.close()
