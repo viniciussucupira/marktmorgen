@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceRevision": "b6b3d18ee96d6099f2940392c60c378ffc67a52b",
+  "sourceRevision": "a040d70756c5d64e756e0cf97e8c23e2284450d0",
   "brief": "User attachment bcc471cb-e0ea-4bd0-9b09-26c1d19e0ed5,19 October2026",
   "purpose": "Track actual accessibility/UX/performance coverage. An inventory is not a pass; unreviewed cases stay open. Dynamic route templates represent many content/state combinations.",
   "standard": "WCAG2.2 A/AA/AAA plus practical cognitive/usability/performance evaluation",
@@ -678,6 +678,7 @@
     "components/pairs-editor.tsx",
     "components/passkey-manager.tsx",
     "components/passkey-signin.tsx",
+    "components/path-ai-wording.tsx",
     "components/path-board.tsx",
     "components/path-checkout-notice.tsx",
     "components/path-growth-missions.tsx",

@@ -1,3 +1,4 @@
+import {paidPeriod} from "../billing-period-fixture";
 import {DEMO_CONNECTED_ACCOUNT} from "@/lib/demo-account";
 import { readFields, writeFields } from "@/lib/crm";
 import { findToken } from "@/lib/buyer-profile";
@@ -72,6 +73,19 @@ async function main(): Promise<void> {
   returnStart.setUTCDate(returnStart.getUTCDate()-8);
   if(!(await startPath(returnStore,{goalCents:0,goalCurrency:"usd",skills:"Teaching",subject:"Guides",minutes:15,audience:"none",timeZone:"America/New_York"},returnStart.getTime())).ok)throw Error("No return Path");
   const returnSession=await openSession(returnOwner);
-  console.log(JSON.stringify({ returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  const wordingOwner="path-wording-owner@example.test";
+  if(!(await claimHandle(wordingOwner,"wordingpath","Wording Path","")).ok)throw Error("No wording owner");
+  if(!(await setSubscription(wordingOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:"sub_wordingSynthetic",customerId:"cus_wordingSynthetic",trialEnds:0,period:paidPeriod()})))throw Error("No paid wording subscription");
+  const wordingStore=(await ensureStatsId(wordingOwner))!;
+  const wordingAnswers={goalCents:700000,goalCurrency:"usd",skills:"Private skill words",subject:"Private topic words",minutes:15,audience:"instagram",timeZone:"America/New_York"} as const;
+  if(!(await startPath(wordingStore,wordingAnswers)).ok)throw Error("No wording Path");
+  const wordingSession=await openSession(wordingOwner);
+  const wordingTrialOwner="path-wording-trial@example.test";
+  if(!(await claimHandle(wordingTrialOwner,"wordingtrial","Trial Path","")).ok)throw Error("No wording trial");
+  if(!(await setSubscription(wordingTrialOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:"sub_wordingTrial",customerId:"cus_wordingTrial",trialEnds:Math.floor(Date.now()/1000)+86400})))throw Error("No trial wording subscription");
+  const wordingTrialStore=(await ensureStatsId(wordingTrialOwner))!;
+  if(!(await startPath(wordingTrialStore,wordingAnswers)).ok)throw Error("No trial Path");
+  const wordingTrialSession=await openSession(wordingTrialOwner);
+  console.log(JSON.stringify({ wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });
