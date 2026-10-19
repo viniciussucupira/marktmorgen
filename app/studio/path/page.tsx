@@ -1,3 +1,4 @@
+import {PathCertificates} from "@/components/path-certificates";
 import {PathAiWording} from "@/components/path-ai-wording";
 import {aiAvailableFor} from "@/lib/ai";
 import {currentWordingSource} from "@/lib/path-wording-source";
@@ -87,7 +88,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
     <PathSocialScripts products={pathScriptProducts(store)} answers={{audience:record.answers.audience,minutes:record.answers.minutes}} productsHref={studioPath(store)+"#products"}/></>:null}
     <PathBoard key={record.board?.token || "not-joined"} joined={Boolean(record.board)} alias={record.board?"Creator "+record.board.token.slice(0,12):null} rows={boardRows} privacyHref={studioPath(store,"","path/privacy")}/>
     <PathReminderButton phoneUrl={studioPath(store,"","phone")}/>
-    <PathShareCard input={{level:record.best,days:progress.dayOnPath,moneyCents:record.money?.currency===store.currency?record.money.cents:null,currency:store.currency,moneyAt:record.money?.at || null}}/>
+    <PathCertificates key={store.sid+"|"+record.best+"|"+record.bestAt} input={{level:record.best,recordedAt:record.bestAt,days:progress.dayOnPath,moneyCents:record.money?.currency===store.currency?record.money.cents:null,currency:store.currency,moneyAt:record.money?.at || null}}/><PathShareCard input={{level:record.best,days:progress.dayOnPath,moneyCents:record.money?.currency===store.currency?record.money.cents:null,currency:store.currency,moneyAt:record.money?.at || null}}/>
     <details className="mt-8"><summary className="cursor-pointer py-3 font-semibold">Your answers and privacy</summary><PathOnboarding currency={store.currency} answers={record.answers}/></details>
    </>:!failed?<PathOnboarding currency={store.currency}/>:null}
   </main></StudioStorePin>

@@ -1,3 +1,4 @@
+import {checkPathCertificates} from "./path-certificates.mjs";
 /**
  * Copying a whole store into another of the account's stores
  * (docs/store-copy.md), in a real browser: the studio's link to it, the page,
@@ -720,6 +721,7 @@ try {
   await checkReturnPath({browser,LOCAL,session:returnSession,sid:returnSid,otherSid:growthSid,axeSource,is});
   await checkPathScripts({browser,LOCAL,session:growthSession,sid:growthSid,axeSource,is});
   await checkPathWording({browser,LOCAL,services,session:wordingSession,sid:wordingSid,trialSession:wordingTrialSession,trialSid:wordingTrialSid,axeSource,is});
+  await checkPathCertificates({browser,LOCAL,session:growthSession,sid:growthSid,otherSession:wordingSession,axeSource,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;

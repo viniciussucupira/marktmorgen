@@ -1,3 +1,4 @@
+import {CERTIFICATE_PRIVACY} from "@/lib/path-certificate";
 import {PATH_WORDING_PRIVACY} from "@/lib/path-wording-rules";
 import {RETURN_PRIVACY_LINE} from "@/lib/path-return-rules";
 import { PAST_CALL_DAYS } from "@/lib/store-data-rules";
@@ -1252,7 +1253,7 @@ export default function PrivacyPage() {
           own Stripe account, as counts and amounts, never who bought. The
           goal is only ever shown to its owner as their goal; nothing in Path
           predicts what anybody will earn. Missions are read from what the
-          store already records and are never stored as done. Your answers and money remain private. {RETURN_PRIVACY_LINE} {PATH_WORDING_PRIVACY} Only if you explicitly join the
+          store already records and are never stored as done. Your answers and money remain private. {RETURN_PRIVACY_LINE} {CERTIFICATE_PRIVACY} {PATH_WORDING_PRIVACY} Only if you explicitly join the
           mission board do we share a generated pseudonym, a count of verified
           missions and its reading time with other Path owners. The board never
           shares your real name, store address, goal, answers, level or sales
