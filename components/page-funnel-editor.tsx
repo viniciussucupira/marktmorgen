@@ -1,5 +1,7 @@
 "use client";
 
+import { FunnelNextCheck } from "@/components/funnel-next-check";
+import { funnelNextCheck } from "@/lib/funnel-next-check";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import type { FunnelStepEditorLink } from "@/lib/funnel-editor-links";
@@ -265,6 +267,8 @@ export function PageFunnelEditor({
                   )}
                 </div>
               </div>
+
+              <FunnelNextCheck check={funnelNextCheck(launchIssues,findings)} editors={steps.map(step=>step.editor)} paymentReview={paymentReview} formsHref={formsHref} locked={locked} settingsDisabled={locked||draft!==null} onSettings={()=>start(funnel)} onNavigate={event=>{if(flight.current||recovery.current)event.preventDefault();}}/>
 
               <FunnelSharingReview
                 issues={launchIssues}

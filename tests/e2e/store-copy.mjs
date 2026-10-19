@@ -175,6 +175,12 @@ try {
   const savedCampaign = owner.locator("#fs-funnel option").filter({ hasText: /^Browser waitlist campaign$/ });
   await savedCampaign.waitFor({ state: "attached" });
   is("a new waitlist campaign is saved by the real import", await savedCampaign.count(), 1);
+  const nextCheck=owner.locator('details[aria-label="Suggested next funnel check"]').first();
+  const nextSummary=nextCheck.locator("summary");
+  await nextSummary.focus();
+  await owner.keyboard.press("Enter");
+  is("next funnel check opens with keyboard",await nextCheck.getAttribute("open"),"");
+  is("next funnel check explains its limits",await nextCheck.getByText("Suggested order for manual checks, from saved configuration and approximate counts. This is not a forecast or an experiment result.",{exact:true}).isVisible(),true);
   await open(owner, `${LOCAL}/studio/path`);
   await owner.getByRole("textbox", {name:"Your skills"}).fill("Baking");
   await owner.getByRole("textbox", {name:"Your subject"}).fill("Sourdough");
@@ -250,6 +256,8 @@ try {
     await open(page, `${LOCAL}/studio/funnels`);
     await page.getByLabel("Find a campaign").fill("launch waitlist");
     await page.getByRole("button", { name: "See the journey and what you need", exact: true }).click();
+    const nextAtWidth=page.locator('details[aria-label="Suggested next funnel check"]').first();
+    await nextAtWidth.locator("summary").click();
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     await page.addScriptTag({ content: axeSource });
     const found = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] } })).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`));

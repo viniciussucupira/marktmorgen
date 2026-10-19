@@ -38,7 +38,10 @@ is("read as a buyer would", unpaid[0].title + " | " + unpaid[0].detail, "Nobody 
 is("a free step says signed up", funnelFindings([product("Guide", 40, 0, true)])[0].title, "Nobody signed up at step 1");
 is("under the sample, a step with no buyer is not judged", codes([page("Guide", 200), product("Course", 20, 0)]), [["largest_fall", 0], ["too_few", null]]);
 is("a step with buyers is not flagged", codes([page("Guide", 200), product("Course", 150, 3)]), []);
-is("an unread completion count is not taken for none", codes([page("Guide", 200), product("Course", 150, null)]), []);
+is("an unread completion count is not taken for none", codes([page("Guide", 200), product("Course", 150, null)]), [["unavailable", null]]);
+
+is("negative completion is unavailable, not a successful reading",codes([product("Course",150,-1)]),[["unavailable",null]]);
+is("page-only counts do not require a completion metric",codes([page("Guide",150)]),[]);
 
 part("The largest fall");
 const fall = funnelFindings([page("Guide", 1000), page("Video", 400), page("Sales", 40)]);
