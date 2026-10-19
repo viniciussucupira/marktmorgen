@@ -14,15 +14,18 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
  if(!found.ok) redirect(found.reason==="signed_out"?"/signin":"/studio");
  const access=found.view;const store=access.store;
  if(access.role!=="owner")redirect(studioPath(store,"team=forbidden"));
- const now=Date.now();let failed=false;
- const saved=await readPath(store).catch(()=>{failed=true;return null;});
- const visited=saved?await visitPath(store,saved,now).catch(()=>{failed=true;return null;}):null;
+ const now=new Date().getTime();
+ const reading=await readPath(store).then(record=>({record,failed:false})).catch(()=>({record:null,failed:true}));
+ const saved=reading.record;
+ const result=saved?await visitPath(store,saved,now).then(value=>({value,failed:false})).catch(()=>({value:null,failed:true})):null;
+ const visited=result?.value;
+ const failed=reading.failed || result?.failed;
  const record=visited?.record || saved;
  const progress=visited && record?pathProgress(visited.facts,record.answers,record.startedAt,now):null;
  const streak=record?streakOf(record.checkins,localDay(record.answers.timeZone,now)):null;
  const mission=progress?.today;
  const place=mission?.place;
- const href=place?.store?"/"+encodeURIComponent(store.handle):studioPath(store,"",place?.page || "")+(place?.hash || "");
+ const href=place?.store?"/@"+encodeURIComponent(store.handle):studioPath(store,"",place?.page || "")+(place?.hash || "");
  return <div className="min-h-screen bg-paper text-ink">
   <StudioHeader current={store} role={access.role} stores={access.stores} owned={access.owned} action={{href:studioPath(store),label:"Back to the studio",short:"Studio"}}/>
   <StudioStorePin sid={store.sid}><main id="content" className="container-page pb-20 pt-10">

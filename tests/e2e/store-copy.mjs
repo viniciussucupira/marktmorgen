@@ -132,6 +132,15 @@ try {
   await owner.getByRole("button", { name: /Copy into/ }).click();
   await owner.waitForFunction(() => document.querySelector('main [role="status"]')?.textContent?.startsWith("Done."), null, { timeout: 60_000 });
   is("the copy runs to the end and says what it made", (await owner.locator('main [role="status"]').innerText()).startsWith("Done. Made in Second Coaching: 3 products"), true);
+  await open(owner, `${LOCAL}/studio/path`);
+  await owner.getByRole("textbox", {name:"Your skills"}).fill("Baking");
+  await owner.getByRole("textbox", {name:"Your subject"}).fill("Sourdough");
+  await owner.getByRole("button", {name:"Start your Path",exact:true}).click();
+  await owner.getByRole("heading", {name:"Your next mission",exact:true}).waitFor();
+  is("Path records published store facts", await owner.getByRole("heading", {name:"First Light",exact:true}).count(), 1);
+  is("Path never asks to tick completion", await owner.locator('main input[type="checkbox"]').count(), 0);
+  await owner.reload({waitUntil:"networkidle"});
+  is("Path persists the answers", await owner.locator('input[name="subject"]').inputValue(), "Sourdough");
   for (const width of [390, 1280]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
     await ctx.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
@@ -144,6 +153,11 @@ try {
     const found = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] } })).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`));
     is(`copy page at ${width}: no sideways scroll`, sideways, 0);
     is(`copy page at ${width}: axe`, found, []);
+    await open(page, `${LOCAL}/studio/path`);
+    await page.addScriptTag({content:axeSource});
+    const pathViolations=await page.evaluate(async ()=>(await window.axe.run(document,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22a","wcag22aa"]}})).violations.map(v=>v.id));
+    is(`Path at ${width}: axe`,pathViolations,[]);
+    is(`Path at ${width}: no sideways scroll`,await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
     await ctx.close();
   }
   is("no page threw", errors, []);
