@@ -21,6 +21,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { startServices } from "./services.mjs";
+import { fieldFocusPixels,mountFieldFocusFixture } from "./field-focus.mjs";
 
 async function checkSecondaryTextContrast(page,label){
   await page.addScriptTag({content:axeSource});
@@ -439,6 +440,7 @@ try {
     try{
       const signin=await guest.newPage();
       signin.on("pageerror",error=>errors.push(String(error)));
+      await signin.emulateMedia({reducedMotion:"reduce"});
       await signin.goto(LOCAL+"/signin",{waitUntil:"domcontentloaded",timeout:60_000});
       await signin.locator("#signin-email").waitFor();
       await checkSecondaryTextContrast(signin,"Sign-in at "+width);
@@ -447,6 +449,38 @@ try {
         const placeholder=getComputedStyle(input,"::placeholder");
         return placeholder.color==="rgb(57, 65, 80)"&&placeholder.opacity==="1";
       }),true);
+      const focus=await fieldFocusPixels(signin,signin.locator("#signin-email"));
+      is("email keyboard focus at "+width+": opaque3px outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&parseFloat(focus.offset)>=3,true);
+      is("email keyboard focus at "+width+": rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
+      console.log("  focus pixels email "+width+": "+focus.contrastingPixels+" / minimum "+focus.minimumArea);
+      if(width===390){
+        for(const surface of ["#ffffff","#111827","#888888"]){
+          for(const kind of ["input","select","textarea"]){
+            const target=await mountFieldFocusFixture(signin,{surface,kind});
+            const reading=await fieldFocusPixels(signin,target);
+            is(kind+" focus on "+surface+": rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
+          }
+          const invalid=await mountFieldFocusFixture(signin,{surface,kind:"input",invalid:true});
+          const invalidReading=await fieldFocusPixels(signin,invalid);
+          is("invalid field focus on "+surface+": visible paint area",invalidReading.contrastingPixels>=invalidReading.minimumArea,true);
+          is("invalid field keeps its error border on "+surface,await invalid.evaluate(node=>getComputedStyle(node).borderTopColor==="rgb(194, 38, 31)"),true);
+        }
+        // Reproduce the former suppression only in the disposable fixture:
+        // this pixel guard must reject its weak outside glow.
+        const baselineTarget=await mountFieldFocusFixture(signin,{surface:"#ffffff",kind:"input"});
+        const oldSuppression=await signin.addStyleTag({content:".field:focus-visible{outline:none!important;box-shadow:0 0 0 4px rgba(73,70,166,.16)!important}"});
+        const baseline=await fieldFocusPixels(signin,baselineTarget);
+        is("pixel guard rejects the former suppressed-outline style",baseline.contrastingPixels<baseline.minimumArea,true);
+        await oldSuppression.evaluate(node=>node.remove());
+        await signin.emulateMedia({forcedColors:"active",reducedMotion:"reduce"});
+        for(const kind of ["input","select","textarea"]){
+          const target=await mountFieldFocusFixture(signin,{surface:"#ffffff",kind});
+          const forced=await fieldFocusPixels(signin,target);
+          is(kind+" forced-colours focus: system outline remains",forced.style==="solid"&&parseFloat(forced.width)>=3&&forced.shadow==="none"&&forced.forcedColorAdjust==="auto",true);
+          is(kind+" forced-colours focus: rendered3:1 pixel area",forced.contrastingPixels>=forced.minimumArea,true);
+        }
+      }
+
     } finally {await guest.close();}
   }
   const quotaDir=mkdtempSync(join(tmpdir(),"mm-path-quota-"));
