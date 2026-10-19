@@ -21,9 +21,12 @@ import { HOUSE_HANDLE } from "@/lib/house-store";
 export default function sitemap(): MetadataRoute.Sitemap {
   const url = (path: string) => `${SITE_URL}${path}`;
 
-  // The one date we actually know for each article. Everything else gets
-  // today, because claiming a false last-modified date is worse than none.
-  const today = new Date();
+  // The one date we actually know is each article's. Every other page goes
+  // without one: stamping "today" on every request told Google that all 68
+  // pages had changed every day, which teaches it to ignore the field and
+  // left 15 pages "discovered, not indexed" (Search Console, Oct 2026).
+  // Google reads lastmod only when it is verifiably accurate; none is better
+  // than a false one.
 
   const fixed: { path: string; priority: number }[] = [
     { path: "/", priority: 1 },
@@ -46,13 +49,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...fixed.map((page) => ({
       url: url(page.path),
-      lastModified: today,
       changeFrequency: "weekly" as const,
       priority: page.priority,
     })),
     ...PAGES.map((page) => ({
       url: url(`/${page.section}/${page.slug}`),
-      lastModified: today,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
