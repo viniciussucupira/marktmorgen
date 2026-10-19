@@ -325,11 +325,11 @@ const META_NOTICES: Record<string, { title: string; body: string }> = {
   },
   declined: {
     title: "Nothing was connected",
-    body: "Meta's page was closed or cancelled. Connect again when you are ready.",
+    body: "Meta's page was closed or canceled. Connect again when you are ready.",
   },
   permission: {
     title: "Meta did not give the permission to read your ads",
-    body: "Nothing was kept. Connect again and leave “Read your ads” ticked on Meta's page.",
+    body: "Nothing was kept. Connect again and leave “Read your ads” selected on Meta's page.",
   },
   accounts: {
     title: "Meta found no ad account to read",

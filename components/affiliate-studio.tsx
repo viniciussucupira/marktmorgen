@@ -761,7 +761,7 @@ function Terms({
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {([
               ["last", "The last link wins", "An affiliate can win a buyer by offering something better, and the buyer picks whose link to use. What every platform does by default."],
-              ["first", "The first link wins", "The affiliate who found the buyer keeps the sale, however many links they follow afterwards. Rewards the one who made the introduction."],
+              ["first", "The first link wins", "The affiliate who found the buyer keeps the sale, however many links they follow afterward. Rewards the one who made the introduction."],
             ] as const).map(([value, title, why]) => (
               <label
                 key={value}
@@ -804,7 +804,7 @@ function Terms({
           <span className="text-sm">
             <span className="block font-semibold text-ink">A buyer stays with the affiliate who brought them</span>
             <span className="block text-ink-soft">
-              Once a sale is credited to an affiliate, everything that person buys afterwards earns the same affiliate — no
+              Once a sale is credited to an affiliate, everything that person buys afterward earns the same affiliate — no
               time limit, no second click, and whatever device they come back on. This is the one kind of credit no browser
               can shorten or throw away, because it is not kept in one. The window above is a cookie and lasts as long as
               the buyer&rsquo;s browser decides to keep it; this does not expire at all. Buyers are remembered as a one-way
@@ -1229,7 +1229,7 @@ function Member({
                 </ul>
               </fieldset>
               <p className="mt-2 text-xs">
-                {`${MIN_PARTNER_SHARE}% to ${MAX_PARTNER_SHARE}% of what a buyer pays before tax, on every sale of the products you tick — whoever brought the buyer. Partners and the affiliate commission together cannot pass ${MAX_COMMITTED_SHARE}% of a sale. "You keep" already counts the affiliate commission on that product, and Stripe's fee comes out of your part. They are paid by you, in the same batch as your affiliates, on the same day.`}
+                {`${MIN_PARTNER_SHARE}% to ${MAX_PARTNER_SHARE}% of what a buyer pays before tax, on every sale of the products you select — whoever brought the buyer. Partners and the affiliate commission together cannot pass ${MAX_COMMITTED_SHARE}% of a sale. "You keep" already counts the affiliate commission on that product, and Stripe's fee comes out of your part. They are paid by you, in the same batch as your affiliates, on the same day.`}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="submit" className="btn btn-primary btn-sm" disabled={busy !== null}>

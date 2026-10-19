@@ -57,3 +57,54 @@ The displayed privacy description of member cancellation feedback uses canceling
 Remaining account-entry variants (confirm/move/join/lost-confirm), every studio area and platform email templates still require review. Each source is tracked here without claiming untouched dynamic states were manually assessed. No additional provider/data/storage/message work, price, limit or fiscal gate change; M0 remains unchanged and reprovado under the binding reading.
 
 Upstream PR623's visible-page regression found the shared Pricing label Cancelling. Its corrected Canceling label is included here, with the unchanged rejection test and18public-area source count. The independent privacy correction and expanded real-page checks remain intact.
+
+
+## Studio documents and selected shared text
+
+Read the remaining account-entry and studio document sources (Path already reviewed with its earlier features):
+
+- `app/signin/confirm-move/page.tsx`
+- `app/signin/confirm/page.tsx`
+- `app/signin/join/page.tsx`
+- `app/signin/lost/confirm/page.tsx`
+- `app/studio/affiliates/page.tsx`
+- `app/studio/agreements/page.tsx`
+- `app/studio/blog/page.tsx`
+- `app/studio/bundles/page.tsx`
+- `app/studio/calendar/page.tsx`
+- `app/studio/community/page.tsx`
+- `app/studio/copy/page.tsx`
+- `app/studio/course/[product]/page.tsx`
+- `app/studio/deals/page.tsx`
+- `app/studio/discord/page.tsx`
+- `app/studio/email/page.tsx`
+- `app/studio/forms/page.tsx`
+- `app/studio/funnels/page.tsx`
+- `app/studio/growth/page.tsx`
+- `app/studio/import/page.tsx`
+- `app/studio/inbox/page.tsx`
+- `app/studio/integrations/page.tsx`
+- `app/studio/invite/page.tsx`
+- `app/studio/meetings/page.tsx`
+- `app/studio/memberships/page.tsx`
+- `app/studio/new/page.tsx`
+- `app/studio/outreach/page.tsx`
+- `app/studio/page.tsx`
+- `app/studio/pages/page.tsx`
+- `app/studio/path/privacy/page.tsx`
+- `app/studio/paused/page.tsx`
+- `app/studio/people/page.tsx`
+- `app/studio/phone/page.tsx`
+- `app/studio/podcast/[product]/page.tsx`
+- `app/studio/requests/page.tsx`
+- `app/studio/reviews/page.tsx`
+- `app/studio/site/page.tsx`
+- `app/studio/team/page.tsx`
+
+Also read shared look/mail/buy-button/passkey/community-event/phone/product/email-sync/review modules, the feature-page catalog, affiliate controls, exit offer and license controls. Most search hits were comments or technical names/statuses; these stay unchanged. In particular `BILLING_ALIASES`, `cancelled` records, clock `tick` callbacks and module names `licence-key-*` are not prose and must retain compatibility.
+
+Displayed corrections: Meta closed-page notice says canceled; its permission instruction says selected. Feature explanations use select/selects, color, canceling and check marks; affiliate explanations use afterward and select. Help's bundle explanation uses selects, including the inflected ticks missed by a narrow first scan. No amounts, percentages, promises, timing, consent choice or account state changes.
+
+Actual browser coverage extends the public checks to calls/email/insights/bundles/sales-pages and authenticated Meta notices plus affiliate attribution wording. It opens native disclosures for text inspection. This remains selected wording evidence; it is not a complete audit of every client dialog, error state, accessibility phrase or platform email. Continue through all unreviewed components and company email producers, using the metered EMAIL_SITES registry to define mail scope.
+
+No added provider/data/storage/message call or paid service; page envelopes and M0 before/after are unchanged, with the binding most-tax target still failing. No price/visible limit/gate changes.
