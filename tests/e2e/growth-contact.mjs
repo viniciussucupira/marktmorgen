@@ -19,6 +19,15 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
     const hrefs=await growth.locator('main a').evaluateAll(nodes=>nodes.map(node=>node.getAttribute("href")));
     assert(hrefs.length>=7&&hrefs.every(href=>href&&href.includes("store="+second)),"all growth destinations preserve selected store");
     assert.equal(await growth.locator("main").getByText("Your next steps",{exact:true}).count(),1);
+    const review=growth.getByRole("region",{name:"Measure one change",exact:true});
+    await review.waitFor();
+    const comparison=review.locator("details"),toggle=comparison.locator("summary");
+    await toggle.focus();await toggle.press("Enter");
+    assert.equal(await comparison.getAttribute("open"),"");
+    assert.equal(await comparison.locator("ol > li").count(),3);
+    assert((await review.innerText()).includes({leads:"confirmed subscribers",sales:"Gross payments are not profit",services:"same enquiry cohort",retention:"same time to return"}[goal]));
+    assert((await review.innerText()).includes("the result is inconclusive"));
+    await toggle.press("Enter");assert.equal(await comparison.getAttribute("open"),null);
     const campaigns=growth.getByRole("region",{name:"Campaigns for this goal",exact:true});
     if(goal==="retention"){
       assert.equal(await campaigns.count(),0,"retention is not assigned an unrelated acquisition campaign");
