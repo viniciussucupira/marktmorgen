@@ -181,6 +181,38 @@ try {
   await owner.keyboard.press("Enter");
   is("next funnel check opens with keyboard",await nextCheck.getAttribute("open"),"");
   is("next funnel check explains its limits",await nextCheck.getByText("Suggested order for manual checks, from saved configuration and approximate counts. This is not a forecast or an experiment result.",{exact:true}).isVisible(),true);
+  const launchChecklist=owner.locator('details[aria-label="Saved funnel launch checklist"]').first();
+  await launchChecklist.locator("summary").focus();
+  await owner.keyboard.press("Enter");
+  is("launch checklist opens with keyboard",await launchChecklist.getAttribute("open"),"");
+  const checklistField=launchChecklist.getByRole("textbox");
+  const checklistText=await checklistField.inputValue();
+  is("checklist retains disabled saved configuration",checklistText.includes("The funnel address is disabled"),true);
+  is("checklist never claims a performed checkout",checklistText.includes("not proof of a working checkout"),true);
+  let checklistMutations=0;
+  const watchChecklist=request=>{if(request.method()!=="GET"&&request.url().includes("/api/store/funnel"))checklistMutations++;};
+  owner.on("request",watchChecklist);
+  await owner.evaluate(()=>{
+    window.__originalChecklistClipboard=navigator.clipboard;
+    window.__copiedChecklist="";
+    window.__refuseChecklistClipboard=false;
+    Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async text=>{
+      if(window.__refuseChecklistClipboard)throw new Error("synthetic clipboard refusal");
+      window.__copiedChecklist=text;
+    }}});
+  });
+  const copyChecklist=launchChecklist.getByRole("button",{name:"Copy checklist",exact:true});
+  await copyChecklist.focus();
+  await owner.keyboard.press("Enter");
+  await owner.getByText("Launch checklist copied. Review it before sharing.",{exact:true}).waitFor();
+  is("clipboard gets exactly the reviewed checklist",await owner.evaluate(()=>window.__copiedChecklist),checklistText);
+  await owner.evaluate(()=>{window.__refuseChecklistClipboard=true;});
+  await copyChecklist.click();
+  await owner.getByText("Select the checklist text and copy it.",{exact:true}).waitFor();
+  is("clipboard refusal leaves readable selectable text",await checklistField.inputValue(),checklistText);
+  is("copying the checklist never mutates a funnel",checklistMutations,0);
+  owner.off("request",watchChecklist);
+  await owner.evaluate(()=>Object.defineProperty(navigator,"clipboard",{configurable:true,value:window.__originalChecklistClipboard}));
   await open(owner, `${LOCAL}/studio/path`);
   await owner.getByRole("textbox", {name:"Your skills"}).fill("Baking");
   await owner.getByRole("textbox", {name:"Your subject"}).fill("Sourdough");
@@ -260,6 +292,9 @@ try {
     await nextAtWidth.locator("summary").click();
     // Stress a long unbroken customer title at the actual mobile and desktop widths.
     await nextAtWidth.locator("summary > span").evaluate(node=>{node.textContent="Next check: "+"LongTitle".repeat(20);});
+    const checklistAtWidth=page.locator('details[aria-label="Saved funnel launch checklist"]').first();
+    await checklistAtWidth.locator("summary").click();
+    is("launch checklist text fits at "+width,await checklistAtWidth.getByRole("textbox").evaluate(node=>node.getBoundingClientRect().width<=node.parentElement.getBoundingClientRect().width),true);
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     await page.addScriptTag({ content: axeSource });
     const found = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] } })).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`));

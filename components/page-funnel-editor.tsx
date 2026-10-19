@@ -1,5 +1,6 @@
 "use client";
 
+import { funnelLaunchChecklist } from "@/lib/funnel-launch-checklist";
 import { FunnelNextCheck } from "@/components/funnel-next-check";
 import { funnelNextCheck } from "@/lib/funnel-next-check";
 import { useRef, useState } from "react";
@@ -221,6 +222,7 @@ export function PageFunnelEditor({
           const first = steps.find((s) => s.open)?.seen ?? null;
           const last = [...steps].reverse().find((s) => s.open);
           const findings = funnelFindings(steps);
+          const checklist = funnelLaunchChecklist(funnel.name,funnel.on,steps,launchIssues);
           return (
             <li key={funnel.id} id={`funnel-review-${funnel.id}`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -269,6 +271,20 @@ export function PageFunnelEditor({
               </div>
 
               <FunnelNextCheck check={funnelNextCheck(launchIssues,findings)} editors={steps.map(step=>step.editor)} paymentReview={paymentReview} formsHref={formsHref} locked={locked} settingsDisabled={locked||draft!==null} onSettings={()=>start(funnel)} onNavigate={event=>{if(flight.current||recovery.current)event.preventDefault();}}/>
+
+              <details aria-label="Saved funnel launch checklist" className="mt-3 rounded-xl border border-line p-3 text-sm">
+                <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-ink">Launch checklist to copy</summary>
+                <p className="mt-2 text-xs text-ink-soft">Includes saved funnel and step names and launch issues. Buyer records and performance totals are not added. Review before sharing.</p>
+                <textarea readOnly rows={12} wrap="soft" className="field mt-3 w-full max-w-full resize-y" aria-label={`Launch checklist for ${funnel.name}`} value={checklist}/>
+                <button type="button" className="btn btn-ghost btn-sm mt-2" disabled={locked} onClick={async()=>{
+                  try {
+                    await navigator.clipboard.writeText(checklist);
+                    toast("Launch checklist copied. Review it before sharing.");
+                  } catch {
+                    toast("Select the checklist text and copy it.");
+                  }
+                }}>Copy checklist</button>
+              </details>
 
               <FunnelSharingReview
                 issues={launchIssues}
