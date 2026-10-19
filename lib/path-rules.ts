@@ -451,11 +451,12 @@ export type PathProgress = {
 };
 
 /** Where the path stands, from the facts. Nothing in here is stored or ticked. */
-export function pathProgress(facts: PathFacts, answers: Pick<PathAnswers, "minutes" | "audience" | "subject" | "skills">, startedAt: number, now: number): PathProgress {
+export function pathProgress(facts: PathFacts, answers: Pick<PathAnswers, "minutes" | "audience" | "subject" | "skills"> & {timeZone?:string}, startedAt: number, now: number): PathProgress {
   const days = dayMissions(facts, answers);
   const possible = days.filter((m) => m.state !== "unavailable");
   const sale = days.find((m) => m.id === "sale") as Mission;
-  const dayOnPath = Math.max(1, Math.floor((now - startedAt) / DAY_MS) + 1);
+  const localDates=validTimeZone(answers.timeZone)&&Number.isFinite(startedAt)&&Number.isFinite(now)&&Math.abs(startedAt)<8.64e15&&Math.abs(now)<8.64e15;
+  const dayOnPath = localDates?Math.max(1,Math.round((asDate(localDay(answers.timeZone!,now)).getTime()-asDate(localDay(answers.timeZone!,startedAt)).getTime())/DAY_MS)+1):Math.max(1, Math.floor((now - startedAt) / DAY_MS) + 1);
   const beforeSale = days.filter((m) => m.id !== "sale" && m.state !== "unavailable");
   const reachedSale = beforeSale.every((m) => m.state === "done");
   const showTraffic = sale.state !== "done" && (reachedSale || dayOnPath > PATH_DAYS);
@@ -623,6 +624,21 @@ export const KEPT_CHECKINS = 60;
 export function withCheckin(checkins: readonly string[], today: string): string[] {
   if (!DAY.test(today)) return [...checkins];
   return [...new Set([...checkins.filter((d) => DAY.test(d)), today])].sort().slice(-KEPT_CHECKINS);
+}
+
+
+/** A real calendar date, using the same noon-UTC arithmetic as the streak. */
+export function validPathDay(day:unknown):day is string {
+ return typeof day==="string"&&DAY.test(day)&&Number.isFinite(asDate(day).getTime())&&shift(day,0)===day;
+}
+
+/** Seven creator-local date changes since the latest opening. No elapsed-hour or server-zone rule. */
+export function hasPathReturnGap(checkins:readonly string[],timeZone:string,now:number):boolean {
+ if(!validTimeZone(timeZone)||!Number.isFinite(now)||Math.abs(now)>=8.64e15)return false;
+ const today=localDay(timeZone,now);
+ if(!validPathDay(today)||!checkins.length||checkins.some(day=>!validPathDay(day)||day>today))return false;
+ const latest=[...new Set(checkins)].sort().at(-1)!;
+ return latest<=shift(today,-7);
 }
 
 // ---- The words a reminder carries -----------------------------------------------------

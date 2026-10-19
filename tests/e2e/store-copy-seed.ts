@@ -7,7 +7,7 @@ import {parsePage} from "@/lib/sales-page";
 import {redisPipeline} from "@/lib/redis";
 import {setProductPage,setProductFile,setStripeAccount,storeForEmail} from "@/lib/store";
 import { startPath } from "@/lib/path";
-import { mayNotify } from "@/lib/path-rules";
+import { localDay,mayNotify } from "@/lib/path-rules";
 /**
  * The stores tests/e2e/store-copy.mjs opens: one with three products, and a
  * second store of the same owner to copy it into, both on a running plan,
@@ -64,6 +64,14 @@ async function main(): Promise<void> {
   const growthStore=(await storeForEmail(growthOwner))!;
   if(!(await startPath(growthStore,{goalCents:0,goalCurrency:"usd",skills:"Teaching",subject:"Guides",minutes:15,audience:"none",timeZone:"America/New_York"})).ok)throw Error("No growth Path");
   const growthSession=await openSession(growthOwner);
-  console.log(JSON.stringify({ growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  const returnOwner="path-return-owner@example.test";
+  if(!(await claimHandle(returnOwner,"returnpath","Return Path","A first introduction.")).ok)throw Error("No return store");
+  await setSubscription(returnOwner,{active:true,tier:"creator",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0});
+  const returnStore=(await ensureStatsId(returnOwner))!;
+  const returnNow=Date.now(),returnStart=new Date(localDay("America/New_York",returnNow)+"T12:00:00Z");
+  returnStart.setUTCDate(returnStart.getUTCDate()-8);
+  if(!(await startPath(returnStore,{goalCents:0,goalCurrency:"usd",skills:"Teaching",subject:"Guides",minutes:15,audience:"none",timeZone:"America/New_York"},returnStart.getTime())).ok)throw Error("No return Path");
+  const returnSession=await openSession(returnOwner);
+  console.log(JSON.stringify({ returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

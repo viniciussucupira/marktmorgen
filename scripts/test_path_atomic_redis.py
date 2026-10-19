@@ -107,6 +107,31 @@ def check_board(redis, write, forget, suffix):
         redis.command("DEL", *touched)
 
 
+def check_return_step(redis, write, forget, suffix):
+    room = "marktmorgen:integration:return-room:" + suffix
+    record = "marktmorgen:integration:return-record:" + suffix
+    try:
+        initial = uuid.uuid4().hex
+        baseline = {"day": "2026-10-19", "introHash": "a" * 64}
+        payload = json.dumps({"v": 1, "r": initial, "w": baseline}, separators=(",", ":"))
+        size = len(payload.encode("utf-8"))
+        result = redis.command("EVAL", write, 2, room, record, 100000, "2026-10", size, "", "1", payload)
+        assert result[0] == 1
+        assert json.loads(redis.command("GET", record))["w"] == baseline
+        assert int(redis.command("HGET", room, "path")) == size
+        changed = json.dumps({"v": 1, "r": uuid.uuid4().hex, "w": {**baseline, "introHash": "b" * 64}})
+        stale = redis.command("EVAL", write, 2, room, record, 100000, "2026-10", len(changed.encode("utf-8")), "old-revision", "0", changed)
+        assert stale[0] == -2
+        assert redis.command("GET", record) == payload
+        assert redis.command("EVAL", forget, 2, room, record, "2026-10")[0] == 1
+        assert redis.command("GET", record) is None
+        assert int(redis.command("HGET", room, "path") or 0) == 0
+        assert int(redis.command("HGET", room, "#") or 0) == 0
+        print("PASS: private return baseline uses the existing measured atomic record, stale writes cannot replace it, forgetting releases it")
+    finally:
+        redis.command("DEL", room, record)
+
+
 def main():
     if os.environ.get("MARKTMORGEN_REDIS_INTEGRATION") != "1":
         raise RuntimeError("Use dedicated disposable loopback CI Redis only")
@@ -198,6 +223,7 @@ def main():
             assert redis.command("GET", record) is None and total() == 0
         print("PASS: deletion wins every ordering against an in-flight old edit")
         check_board(redis, write, forget, suffix)
+        check_return_step(redis, write, forget, suffix)
     finally:
         redis.command("DEL", room, record)
         redis.close()

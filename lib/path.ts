@@ -1,6 +1,7 @@
 import { PATH_BOARD_KEY, PATH_BOARD_OWNERS_KEY } from "@/lib/path-board";
 import { readPathBoard, pathBoardScore, type PathBoardEntry } from "@/lib/path-board-rules";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
+import {readReturnStep,pathReturnMission,type PathReturnStep} from "@/lib/path-return-rules";
 import { WRITE_PATH, FORGET_PATH } from "@/lib/path-atomic";
 /**
  * Where a store's Marktmorgen Path is kept (lib/path-rules.ts says what it
@@ -39,7 +40,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Store } from "@/lib/store";
 import { dataBytes, contentRoomFor } from "@/lib/store-data-rules";
 import { dataKey, monthOf } from "@/lib/store-data";
-import { type PathAnswers, AUDIENCES, LEVELS, MINUTES, cleanLine, MAX_SKILLS, MAX_SUBJECT, localDay, validTimeZone, withCheckin, levelKept, type PathFacts } from "@/lib/path-rules";
+import { type PathAnswers, AUDIENCES, LEVELS, MINUTES, cleanLine, MAX_SKILLS, MAX_SUBJECT, localDay, validTimeZone, hasPathReturnGap, withCheckin, levelKept, type PathFacts } from "@/lib/path-rules";
 import { type PathCounts, type PathMoney, PATH_REFUND_PAGES, PATH_SALE_PAGES, countsFresh, factsFrom, moneyFresh, readPathCounts, readPathMoney } from "@/lib/path-facts";
 import { countStudio } from "@/lib/studio-route";
 import { readGoal } from "@/lib/sales-goal-rules";
@@ -51,6 +52,8 @@ export const PATH_SLOT = "path";
 const SID = /^[0-9a-f]{32}$/;
 
 export type PathRecord = {
+  /** Private baseline for one short return step; never a stored completion flag. */
+  returnStep?:PathReturnStep;
   /** Present only after explicit consent to the mission board. */
   board?: PathBoardEntry;
   /** Opaque write token; absent on legacy records. Never reused after deletion. */
@@ -114,7 +117,9 @@ export function parsePath(raw: unknown): PathRecord | null {
   const startedAt = Number(value.at);
   if (!Number.isFinite(startedAt) || startedAt <= 0) return null;
   const best = Number(value.b);
+  const returnStep=readReturnStep(value.w);
   return {
+    ...(returnStep?{returnStep}:{}),
     revision: typeof value.r === "string" ? value.r : "",
     board: readPathBoard(value.g) ?? undefined,
     answers: {
@@ -135,9 +140,16 @@ export function parsePath(raw: unknown): PathRecord | null {
   };
 }
 
+/** A fingerprint, not a duplicate of the store introduction. */
+export const pathIntroHash=(intro:string):string=>createHash("sha256").update(intro.trim()).digest("hex");
+/** Current own-store publication is the only witness; no button input is accepted. */
+export function returnMissionFor(store:Pick<Store,"name"|"bio">,record:PathRecord,now=Date.now()){
+ return pathReturnMission(record.returnStep,record.answers.timeZone,{introHash:pathIntroHash(store.bio),introPublished:Boolean(store.name.trim()&&store.bio.trim())},now);
+}
+
 /** The record as it is written. Pure. */
 export function pathJson(record: PathRecord): string {
-  return JSON.stringify({ v: 1, r: record.revision ?? "", a: record.answers, at: record.startedAt, c: record.checkins, b: record.best, bAt: record.bestAt, m: record.money, n: record.counts, g: record.board ?? null });
+  return JSON.stringify({ v: 1, r: record.revision ?? "", a: record.answers, at: record.startedAt, c: record.checkins, b: record.best, bAt: record.bestAt, m: record.money, n: record.counts, g: record.board ?? null,...(record.returnStep?{w:record.returnStep}:{}) });
 }
 
 /** The store's path, or null when it has not begun one (or nothing can be read). */
@@ -200,10 +212,12 @@ export async function visitPath(store: Store, record: PathRecord, now = Date.now
   }
   const read = factsFrom(store, counts, money);
   const today = localDay(record.answers.timeZone, now);
+  const returning=hasPathReturnGap(record.checkins,record.answers.timeZone,now);
+  const returnStep=returning?{day:today,introHash:pathIntroHash(store.bio)}:record.returnStep;
   const checkins = withCheckin(record.checkins, today);
   if (checkins.length !== record.checkins.length || checkins[checkins.length - 1] !== record.checkins[record.checkins.length - 1]) changed = true;
   const best = levelKept(record.best, read);
-  const next: PathRecord = { ...record, checkins, money, counts, best, bestAt: best > record.best ? now : record.bestAt };
+  const next: PathRecord = { ...record,returnStep, checkins, money, counts, best, bestAt: best > record.best ? now : record.bestAt };
   if (best !== record.best) changed = true;
   if(record.board && moneyFresh(money,store,now) && countsFresh(counts,now)) {
     const score=pathBoardScore(read,record.answers);
