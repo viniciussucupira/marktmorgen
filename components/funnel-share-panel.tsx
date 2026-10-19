@@ -9,7 +9,7 @@ import { type BundleOutline, type ImportRoom, type PlanLine, type ReceiverProduc
 import { DEFAULT_SHARE_DAYS, SHARE_DAYS, type ShareLimits, bytesWords, codeFrom } from "@/lib/funnel-share-rules";
 import { MAX_FUNNEL_NAME } from "@/lib/page-funnel";
 import { FunnelStarterGallery } from "@/components/funnel-starter-gallery";
-import type { StarterCard } from "@/lib/funnel-starter-catalog";
+import type { StarterCard, StarterGoal } from "@/lib/funnel-starter-catalog";
 
 export type ShareRow = { id: string; name: string; funnelId: string; createdAt: number; expiresAt: number; hint: string };
 
@@ -84,6 +84,7 @@ export function FunnelSharePanel({
   starters,
   sid,
   otherStores = [],
+  starterGoal = "all",
 }: {
   /** The store this page was drawn for, so a download opens the same store's file. */
   sid: string;
@@ -92,6 +93,7 @@ export function FunnelSharePanel({
   shares: ShareRow[] | null;
   limits: ShareLimits;
   starters: StarterCard[];
+  starterGoal?: StarterGoal | "all";
   /** The account's other stores, for the owner: where a funnel can be copied to. */
   otherStores?: { sid: string; name: string }[];
 }) {
@@ -405,7 +407,7 @@ export function FunnelSharePanel({
         </div>
 
         {starters.length ? (
-          <FunnelStarterGallery starters={starters} busy={busy !== null} onChoose={(id) => void openPreview({ starter: id })} />
+          <FunnelStarterGallery key={starterGoal} initialGoal={starterGoal} starters={starters} busy={busy !== null} onChoose={(id) => void openPreview({ starter: id })} />
         ) : null}
 
         {preview && plan ? (

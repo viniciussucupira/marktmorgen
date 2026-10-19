@@ -29,7 +29,7 @@ import { listShares } from "@/lib/funnel-share-store";
 import { accountStores } from "@/lib/store";
 import { shareLimitsFor } from "@/lib/funnel-share-rules";
 import { FUNNEL_STARTERS } from "@/lib/funnel-starters";
-import { starterCard } from "@/lib/funnel-starter-catalog";
+import { readStarterGoal, starterCard } from "@/lib/funnel-starter-catalog";
 import { aiAvailableFor, aiLeft } from "@/lib/ai";
 import { monthlyAllowance } from "@/lib/mail";
 
@@ -49,6 +49,7 @@ const NAV_LIMIT = 50;
 
 export default async function StudioFunnelsPage({ searchParams }: Params) {
   const query = await searchParams;
+  const starterGoal = readStarterGoal(query.campaignGoal);
   // Which store, and whether this person's role there has "products" (lib/studio-route.ts).
   const found = await studioView(await cookies(), typeof query.store === "string" ? query.store : undefined, "products");
   if (!found.ok) {
@@ -225,6 +226,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
               shares={shares}
               limits={shareLimitsFor(store)}
               starters={FUNNEL_STARTERS.map(starterCard)}
+              starterGoal={starterGoal}
               sid={store.sid}
               otherStores={otherStores}
             />

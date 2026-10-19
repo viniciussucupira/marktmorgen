@@ -62,3 +62,8 @@ export function matchingStarters(cards: readonly StarterCard[], goal: StarterGoa
     return terms.every((term) => words.includes(term));
   });
 }
+
+/** Unknown and repeated URL values show everything. */
+export function readStarterGoal(raw: unknown): StarterGoal | "all" {
+  return typeof raw === "string" && (STARTER_GOALS as readonly string[]).includes(raw) ? raw as StarterGoal : "all";
+}
