@@ -1110,6 +1110,8 @@
     "app/api/v1/access/route.ts",
     "app/api/v1/affiliates/route.ts",
     "app/api/v1/bookings/route.ts",
+    "app/api/v1/events/route.ts",
+    "app/api/v1/hooks/route.ts",
     "app/api/v1/leads/labels/route.ts",
     "app/api/v1/leads/route.ts",
     "app/api/v1/members/route.ts",
