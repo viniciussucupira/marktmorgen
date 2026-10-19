@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
   try {
     const record=await readPath(creator.store);
     // The internal compare-and-swap revision is not part of the owner's data file.
-    const data=record?{answers:record.answers,startedAt:record.startedAt,checkins:record.checkins,best:record.best,bestAt:record.bestAt,money:record.money,counts:record.counts,board:record.board??null}:null;
+    const data=record?{answers:record.answers,startedAt:record.startedAt,checkins:record.checkins,best:record.best,bestAt:record.bestAt,money:record.money,counts:record.counts,returnStep:record.returnStep??null,board:record.board??null}:null;
     return Response.json({path:data},{headers:{"Cache-Control":"private, no-store","Content-Disposition":'attachment; filename="marktmorgen-path.json"',"X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex"}});
   } catch {
     return Response.json({ok:false,error:"unavailable"},{status:503,headers:{"Cache-Control":"no-store"}});

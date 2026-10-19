@@ -32,6 +32,7 @@ import {
   goalWords,
   forbiddenIn,
 } from "@/lib/path-rules";
+import {pathReturnMission,returnReminderOf,RETURN_HEADING,RETURN_PRIVACY_LINE} from "@/lib/path-return-rules";
 import {pathGrowthMissions} from "@/lib/path-growth-rules";
 import { done, is, part } from "./check";
 
@@ -133,4 +134,20 @@ for(const value of [null,false,true] as const){
  const missions=pathGrowthMissions({realSale:true,fileProducts:value===null?null:value?2:0,listEmailSent:value,repeatBuyer:value,postPurchaseOffer:value,buyerReview:value,keptOrders:value===null?null:value?10:0});
  for(const mission of missions)for(const text of [mission.title,mission.why,mission.closesOn,...mission.steps])is("post-sale copy "+mission.id,forbiddenIn(text),null);
 }
+
+
+part("Welcoming return mission copy, privacy and reminder");
+{
+ const step={day:"2026-10-19",introHash:"a".repeat(64)},now=Date.UTC(2026,9,19,16);
+ const texts=[RETURN_HEADING,RETURN_PRIVACY_LINE];
+ for(const hash of ["a".repeat(64),"b".repeat(64)])for(const introPublished of [false,true]){
+  const mission=pathReturnMission(step,"America/New_York",{introHash:hash,introPublished},now);
+  if(!mission)throw Error("No return fixture");
+  texts.push(mission.title,mission.why,mission.closesOn,mission.place.label,...mission.steps);
+  const reminder=returnReminderOf(mission);if(reminder)texts.push(reminder.title,reminder.body);
+ }
+ is("return copy has no forbidden claim",texts.map(text=>forbiddenIn(text)).filter(Boolean),[]);
+ is("return copy has no absence pressure",texts.some(text=>/missed|behind|failed|lost days/i.test(text)),false);
+}
+
 done();

@@ -284,10 +284,10 @@ inline error and focus correction; existing parser and bounds are unchanged.
    Stale documentation and test labels are now aligned, and path-words checks the
    documented level list and rejects the retired display name. Stable internal
    keys, reached levels and money thresholds are unchanged; no data migration.
-2. **Post-sale growth missions — pending.** Server facts for second deliverable,
-   sent list email, repeat buyer, configured offer, consented testimonial and ten
-   paid sales after refunds must be audited and bounded before implementation.
-3. **Return mission after seven local days — pending.**
+2. **Post-sale growth missions — complete (PR #613).** Six bounded server-fact
+   missions, unknown states and their quota reservations are described below.
+3. **Return mission after seven local days.** Implementation and validation
+   contract are recorded below; production evidence remains in continuity.
 4. **Fixed Instagram, TikTok and YouTube post scripts — pending.**
 5. **Optional paid, reserved and fact-checked AI mission wording — pending.**
 6. **Private, accessible level certificates with money opt-in — pending.**
@@ -320,3 +320,18 @@ Catalogue, campaign and review evidence reserve eight additional requests from t
 Missing, malformed, out-of-scope or incomplete records remain unknown. An explicit missing product-extras key means no saved extra configuration; a malformed or truncated response does not. Current buyer-written reviews use the existing verified-buyer public-review submission and withdrawal flow. A review with only a payment-intent reference cannot prove live mode here. Neither a sent campaign nor a configured offer proves delivery or a sale. PayPal live-sale verification remains ordered item 9; it is not inferred here.
 
 Validation contract: pure state/refund/scope/privacy tests, strict reader failure and admission tests, actual authenticated browser verification, full checks including actual Redis and exact-head production confirmation. Publication evidence and delivery numbering are recorded only after confirming the live domain and version. Missing checkout identities or payment references leave negative witnesses unknown; a positive refund without a payment reference, or unsafe refund arithmetic, leaves money witnesses unknown. No all-tax net-margin or comprehensive accessibility certification is asserted.
+
+
+## Ordered Path item 3: a small return step
+
+After seven consecutive creator-local date changes without a Path check-in, the owner opening Path receives one welcoming task: spend about ten minutes making one useful update to the store introduction. January 1 to January 8 is seven dates; elapsed 168-hour windows are not used. The saved browser time zone and the existing local-day arithmetic apply across midnight and daylight-saving changes. Path's own day counter uses the same creator-local dates when a saved time zone is available.
+
+The pending return task replaces the ordinary mission grid for that return date. It shows no absence counter or empty streak, and keeps the reached level, private answers, optional board and sharing controls. Opening Path is permitted at any hour. A later local date retires the cue without claiming completion or creating a backlog.
+
+The existing private measured Path JSON keeps only the return date and a SHA-256 comparison fingerprint of the introduction at first return. Reloading preserves that baseline through the existing compare-and-swap write. Only a non-empty, current server-read store name and introduction with a changed introduction can record this task. A link click, client success reply, unchanged save, empty description or model output cannot do so. There is no completion action or extra collection. Owner-only private export includes these markers; forgetting Path, closing or deleting the store removes them with its existing record.
+
+The optional owner-requested phone reminder uses the existing quiet-hours admission and dispatch margin: no unsolicited message from 21:00 through 07:59 in the saved time zone, no offline queue beyond quiet hours, the same twenty-unit reservation before dispatch and the same owner-device consent. There is no new schedule, email, provider read or AI call.
+
+Costs stay within the existing measured atomic write, capped four-KB Path read envelope and unchanged reminder reservation. The stored comparison marker is measured in the existing data-room slot, including refusal when full. No prices, visible plan limits, tax rates, sales switches or supplier ceilings change. A pending return also avoids reading the additional post-sale catalog evidence. None of this certifies the sixty-percent all-tax net margin.
+
+Validation contract: regression reproduced against the old midnight counter; local dates and both DST transitions in Los Angeles, New York, London, Berlin and Sydney; malformed history refusal; factual completion and reload persistence; private parser/export and deletion; stale-write refusal and actual Redis slot accounting; unchanged reminder admission and reservations; authenticated mobile/desktop browser checks including a forged client-only success reply; path-words and full exact-head CI. Automated checks do not certify NVDA, VoiceOver, TalkBack or comprehensive WCAG AAA. Publication and delivery numbering require the live domain and exact version afterward.

@@ -1,5 +1,6 @@
 import {claimHandle,ensureStatsId} from "@/lib/store";
-import type {PathRecord} from "@/lib/path";
+import {pathIntroHash,type PathRecord} from "@/lib/path";
+import {localDay} from "@/lib/path-rules";
 import {sendPathReminder} from "@/lib/path-reminder";
 import {PATH_REMINDER_UNITS} from "@/lib/path-reminder-rules";
 import {done,is,part} from "./check";
@@ -22,6 +23,28 @@ async function main(){
  is("sale leaves no next mission",await sendPathReminder(store,now,{...services,read:async()=>({...record,money:{...record.money!,real:1,cents:1900}})}),{ok:false,reason:"complete"});
  is("no push for any refusal",pushed,before);
  is("reminders never alter check-in days",record.checkins,[]);
+
+ part("One welcoming return step uses the existing reserved reminder channel");
+ const welcome={...record,returnStep:{day:"2026-10-19",introHash:pathIntroHash(store.bio)},money:{...record.money!,real:1,cents:1900}};
+ let returnBody="";
+ is("return is available after a real sale",await sendPathReminder(store,now,{...services,read:async()=>welcome,push:async alert=>{returnBody=alert.body;return 1;}}),{ok:true,devices:1});
+ is("return wording is welcoming",returnBody.includes("Welcome back."),true);
+ is("no absence pressure in return reminder",/missed|behind|failed|lost days/i.test(returnBody),false);
+ for(const [zone,morning,early,night,last] of [
+ ["America/Los_Angeles","2026-10-19T15:00Z","2026-10-19T14:59Z","2026-10-20T04:00Z","2026-10-20T03:59:49Z"],
+ ["America/New_York","2026-10-19T12:00Z","2026-10-19T11:59Z","2026-10-20T01:00Z","2026-10-20T00:59:49Z"],
+ ["Europe/London","2026-10-19T07:00Z","2026-10-19T06:59Z","2026-10-19T20:00Z","2026-10-19T19:59:49Z"],
+ ["Europe/Berlin","2026-10-19T06:00Z","2026-10-19T05:59Z","2026-10-19T19:00Z","2026-10-19T18:59:49Z"],
+ ["Australia/Sydney","2026-10-18T21:00Z","2026-10-18T20:59Z","2026-10-19T10:00Z","2026-10-19T09:59:49Z"]]){
+  for(const [stamp,allowed] of [[morning,true],[early,false],[night,false],[last,true],[new Date(Date.parse(last)+1000).toISOString(),false]] as const){
+   const at=Date.parse(stamp);let sent=0,reserved=0;
+   const fixture={...welcome,answers:{...welcome.answers,timeZone:zone},returnStep:{...welcome.returnStep,day:localDay(zone,at)},money:{...welcome.money,at},counts:{...welcome.counts!,at}};
+   const result=await sendPathReminder(store,at,{read:async()=>fixture,reserve:async units=>{reserved++;is("same bounded reservation",units,PATH_REMINDER_UNITS);return true;},push:async()=>{sent++;return 1;}});
+   is(zone+" quiet admission "+stamp,result.ok,allowed);
+   is(zone+" no unadmitted dispatch "+stamp,sent,allowed?1:0);
+   is(zone+" no quiet reservation "+stamp,reserved,allowed?1:0);
+  }
+ }
  done();
 }
 main().catch(error=>{console.error(error);process.exit(1);});
