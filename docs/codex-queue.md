@@ -64,7 +64,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 6. **[B4] Escrever docs/site-languages.md: traduções completas no código após abertura/autorização; alemão, francês, holandês, espanhol e italiano; seletor sem bandeiras, hreflang e frases proibidas por idioma; estudo fiscal por país para japonês/coreano/chinês; futuro português do Brasil.**
    - Pedido: P2 B4; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **em andamento (documento completo em revisão; branch codex/site-language-design)**.
    - Custo e margem: Só documento. Nenhuma tradução em tempo de requisição ou custo por visita; custo de conteúdo/manutenção e fiscalidade ainda precisam ser calculados.
 
 7. **[C-UE] Construir tratamento de IVA europeu do art.9a em docs/eu-vat-article-9a.md: OSS não-UE desde a primeira venda, duas provas de localização coerentes (24b/24f), retenção art.63c por10anos; imposto no comprador ou repasse, nunca na comissão. Dividir em PRs por caminho de checkout e prova.**
@@ -482,3 +482,11 @@ B2 próxima área: documentos do estúdio/entrada de conta e16componentes/catál
 B2 composição/importação: correções pontuais de check marks/license em instruções do editor, razão de não copiar produto, modelo novo e erro interno, sem reescrever conteúdo já salvo. Verificação de navegador abre seletor real sem salvar ou chamar IA. O B2 completo segue em andamento; fontes restantes/e-mails mistos ainda pendentes.
 
 B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de desenvolvimento separa prosa exibida de comentários/imports/statuses e não executa código do produto. Fixtures positivas/negativas e varredura do corpus precisam passar; qualquer ocorrência é revisada antes da incorporação. Não declara B2 inteiro concluído. Dependência: integrar PR626 primeiro e manter correções de texto nos PRs de área.
+
+
+81. **[B2-COMPOSER] Editor de páginas, importação e instruções de novos modelos**
+   - Pedido: P2 B2;19/10/2026, hora original não fornecida.
+   - Estado: **feito; entrega46 confirmada no domínio**.
+   - Evidência: [PR #626](https://github.com/viniciussucupira/marktmorgen/pull/626), commit `c261e2380e6f6579748566be41a0bbee95cb4001`; incorporado19/10/2026 20:29:32 de Fortaleza, produção20:30:23.
+   - Validação: Product39340663256/Redis/security39340663211 completos; editor real abre seletor e mostra check marks sem POST;7rotas do domínio com marcador exato; sem error/fatal23:26:43–23:31:43UTC. Escopo parcial B2; nomes técnicos e conteúdo salvo preservados.
+   - Custo e margem: Sem chamadas, registros ou mensagens adicionais; M0 antes=depois, leitura mais onerosa ainda reprovada.
