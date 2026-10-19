@@ -274,7 +274,7 @@ try {
     await ctx.close();
   }
   const abUrl=LOCAL+"/studio/pages?store="+abStore+"&product="+abProduct+"&test=headline";
-  const unavailableText="Test counts are unavailable or inconsistent. No winner is selected from this reading. Reload to try again; your saved test settings have not been changed.";
+  const unavailableText="Test counts are unavailable or inconsistent. No winner is selected from this reading. Use Refresh results to try again. Your unsaved page edits stay here.";
   for(const width of [390,1280]){
     await owner.setViewportSize({width,height:900});
     const unavailableReply=owner.waitForResponse(response=>response.url().includes("/api/store/ab?id="));
@@ -291,7 +291,17 @@ try {
   // Recovery uses a synthetic, coherent successful response; no payment is made.
   let allocation=0;
   let experimentAgeDays=30;
-  await owner.route("**/api/store/ab?**",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,currency:"usd",declared:null,shareB:allocation,counts:{va:1000,vb:1000,ca:30,cb:90,sa:30,sb:90,ra:30000,rb:90000,qa:30000000,qb:90000000,t0:Date.now()-experimentAgeDays*86400000}})}));
+  let transientFailure=false;
+  let holdReading=false;
+  let releaseReading;
+  let notifyHeldReading;
+  let experimentRequests=0;
+  await owner.route("**/api/store/ab?**",async route=>{
+    experimentRequests++;
+    if(holdReading)await new Promise(resolve=>{releaseReading=resolve;notifyHeldReading?.();});
+    if(transientFailure)return route.fulfill({status:503,contentType:"application/json",body:JSON.stringify({ok:false,error:"unavailable"})});
+    return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,currency:"usd",declared:null,shareB:allocation,counts:{va:1000,vb:1000,ca:30,cb:90,sa:30,sb:90,ra:30000,rb:90000,qa:30000000,qb:90000000,t0:Date.now()-experimentAgeDays*86400000}})});
+  });
   await owner.goto(abUrl,{waitUntil:"domcontentloaded",timeout:60_000});
   await owner.getByText(unavailableText,{exact:true}).waitFor();
   is("invalid allocation is not silently replaced with an even split",await owner.locator("[data-test-results]").count(),0);
@@ -316,6 +326,50 @@ try {
       is("paid experiment result accessibility at "+width+" age "+age,await owner.evaluate(async()=>(await window.axe.run("#headline-test",{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22a","wcag22aa"]}})).violations.map(v=>v.id)),[]);
     }
   }
+  const secondHeadline=owner.getByLabel("Second headline",{exact:true});
+  const originalHeadline=await secondHeadline.inputValue();
+  let experimentWrites=0;
+  const watchExperimentWrites=request=>{
+    if(request.method()!=="GET" && request.url().includes("/api/store/page"))experimentWrites++;
+  };
+  owner.on("request",watchExperimentWrites);
+  for(const width of [390,1280]){
+    await owner.setViewportSize({width,height:900});
+    const draftHeadline="Keep this unsaved headline "+width;
+    await secondHeadline.fill(draftHeadline);
+    const requestedBefore=experimentRequests;
+    const urlBefore=owner.url();
+    transientFailure=true;
+    const refresh=owner.getByRole("button",{name:"Refresh results",exact:true});
+    await refresh.click();
+    await owner.getByText(unavailableText,{exact:true}).waitFor();
+    is("failed manual refresh keeps draft at "+width,await secondHeadline.inputValue(),draftHeadline);
+    is("one request for manual refresh at "+width,experimentRequests,requestedBefore+1);
+    transientFailure=false;
+    holdReading=true;
+    const heldReading=new Promise(resolve=>{notifyHeldReading=resolve;});
+    await refresh.click();
+    await heldReading;
+    await owner.getByText("Loading test counts…",{exact:true}).waitFor();
+    const pendingRefresh=owner.getByRole("button",{name:"Refreshing results…",exact:true});
+    is("refresh disabled while reading at "+width,await pendingRefresh.isDisabled(),true);
+    is("old winner hidden during refresh at "+width,await owner.locator("[data-test-results]").count(),0);
+    await pendingRefresh.evaluate(button=>button.click());
+    if(!releaseReading)throw Error("Synthetic delayed experiment was not requested");
+    holdReading=false;
+    releaseReading();
+    releaseReading=undefined;
+    await owner.locator("[data-test-results]").waitFor();
+    is("retry makes only one extra request at "+width,experimentRequests,requestedBefore+2);
+    is("successful retry keeps draft at "+width,await secondHeadline.inputValue(),draftHeadline);
+    is("refresh stays on the editor at "+width,owner.url(),urlBefore);
+    is("refresh target is at least44 pixels at "+width,await refresh.evaluate(button=>button.getBoundingClientRect().height>=44),true);
+    await refresh.focus();
+    is("refresh remains keyboard reachable at "+width,await refresh.evaluate(button=>document.activeElement===button),true);
+    await secondHeadline.fill(originalHeadline);
+  }
+  owner.off("request",watchExperimentWrites);
+  is("refresh and retry never save the edited page",experimentWrites,0);
   await owner.unroute("**/api/store/ab?**");
   const quotaDir=mkdtempSync(join(tmpdir(),"mm-path-quota-"));
   const quotaFile=join(quotaDir,"quota.cjs");

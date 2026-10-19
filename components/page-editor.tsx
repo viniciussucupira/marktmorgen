@@ -2707,6 +2707,7 @@ function times(n: number, word: string): string {
  */
 function TestResults({ productId, running, what, sold }: { productId: string; running: boolean; what: "headline" | "page"; sold: boolean }) {
   const [failed,setFailed]=useState(false);
+  const [refreshIndex,setRefreshIndex]=useState(0);
   const [counts, setCounts] = useState<Counts | null>(null);
   const [currency, setCurrency] = useState("usd");
   const [declared, setDeclared] = useState<Measure | null>(null);
@@ -2714,7 +2715,8 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
   useEffect(() => {
     if (!running) return;
     let live = true;
-    fetch(`/api/store/ab?id=${encodeURIComponent(productId)}`, { cache: "no-store" })
+    const controller = new AbortController();
+    fetch(`/api/store/ab?id=${encodeURIComponent(productId)}`, { cache: "no-store", signal: controller.signal })
       .then((r) => {if(!r.ok)throw new Error("Test counts unavailable");return r.json();})
       .then((data: { ok?: boolean; counts?: Counts; currency?: string; declared?: Measure | null; shareB?: number }) => {
         if (live && data.ok && data.counts) {
@@ -2728,14 +2730,35 @@ function TestResults({ productId, running, what, sold }: { productId: string; ru
       .catch(() => {if(live)setFailed(true);});
     return () => {
       live = false;
+      controller.abort();
     };
-  }, [productId, running]);
+  }, [productId, running, refreshIndex]);
   if (!running) return <p className="text-xs text-ink-soft">Save the page and the test starts with the next visitor.</p>;
-  if (failed) return <TestCountsNotice/>;
+  function refresh() {
+    setCounts(null);
+    setFailed(false);
+    setRefreshIndex(index=>index+1);
+  }
+  const loading = !failed && counts === null;
+  return (
+    <div aria-busy={loading}>
+      <TestResultsBody counts={counts} failed={failed} currency={currency} declared={declared} shareB={shareB} what={what} sold={sold}/>
+      <button type="button" className="btn btn-ghost btn-sm mt-2 min-h-11" disabled={loading} onClick={refresh}>
+        {loading ? "Refreshing results…" : "Refresh results"}
+      </button>
+    </div>
+  );
+}
+
+function TestResultsBody({counts,failed,currency,declared,shareB,what,sold}:{
+  counts: Counts|null; failed: boolean; currency: string; declared: Measure|null; shareB: number;
+  what: "headline"|"page"; sold: boolean;
+}) {
+  if (failed) return <TestCountsNotice retryInPlace/>;
   if (!counts) return <TestCountsNotice loading/>;
   const measure = sold ? "money" : "checkouts";
   const standing = testState(counts, measure, { declared, shareB });
-  if(standing.state==="unavailable")return <TestCountsNotice/>;
+  if(standing.state==="unavailable")return <TestCountsNotice retryInPlace/>;
   const won = standing.winner;
   const edge = Math.round(boundary(counts.va + counts.vb) * 100) / 100;
   const page = what === "page";
