@@ -33,17 +33,17 @@ export function PathOnboarding({currency, answers}: {currency: string; answers?:
  return <form onSubmit={submit} aria-label={answers?"Your Path answers":"Start your Path"} aria-busy={busy} className="mt-6 grid max-w-xl gap-5">
   <label className="grid gap-2 font-semibold">1. What is your personal monthly goal?
    <span className="text-sm font-normal text-ink-soft">Optional, in {currency.toUpperCase()}. Your own goal, without a forecast.</span>
-   <input className="input" disabled={busy} name="goal" type="number" min="0" step={decimalsOf(currency)===0?"1":"0.01"} defaultValue={answers?.goalCurrency===currency?moneyField(answers.goalCents,currency):"0"}/>
+   <input className="field" disabled={busy} name="goal" type="number" min="0" step={decimalsOf(currency)===0?"1":"0.01"} defaultValue={answers?.goalCurrency===currency?moneyField(answers.goalCents,currency):"0"}/>
   </label>
   <fieldset className="grid gap-3"><legend className="font-semibold">2. What could you help someone with?</legend>
-   <label className="grid gap-2">Your skills<input className="input" disabled={busy} name="skills" maxLength={120} required defaultValue={answers?.skills}/></label>
-   <label className="grid gap-2">Your subject<input className="input" disabled={busy} name="subject" maxLength={80} required defaultValue={answers?.subject}/></label>
+   <label className="grid gap-2">Your skills<input className="field" disabled={busy} name="skills" maxLength={120} required defaultValue={answers?.skills}/></label>
+   <label className="grid gap-2">Your subject<input className="field" disabled={busy} name="subject" maxLength={80} required defaultValue={answers?.subject}/></label>
   </fieldset>
   <label className="grid gap-2 font-semibold">3. How much time would you like to set aside each day?
-   <select className="input" disabled={busy} name="minutes" defaultValue={answers?.minutes || 15}>{MINUTES.map(n=><option key={n} value={n}>{n} minutes</option>)}</select>
+   <select className="field" disabled={busy} name="minutes" defaultValue={answers?.minutes || 15}>{MINUTES.map(n=><option key={n} value={n}>{n} minutes</option>)}</select>
   </label>
   <label className="grid gap-2 font-semibold">4. Where do people already hear from you?
-   <select className="input" disabled={busy} name="audience" defaultValue={answers?.audience || "none"}>{AUDIENCES.map(a=><option key={a} value={a}>{AUDIENCE_WORDS[a]}</option>)}</select>
+   <select className="field" disabled={busy} name="audience" defaultValue={answers?.audience || "none"}>{AUDIENCES.map(a=><option key={a} value={a}>{AUDIENCE_WORDS[a]}</option>)}</select>
   </label>
   <p className="text-sm text-ink-soft">Your browser&apos;s time zone sets your check-in days. Sundays and two rest days each week are yours.</p>
   <div className="flex flex-wrap gap-3"><button disabled={busy||uncertain} className="btn btn-primary">{busy?"Saving…":answers?"Save your answers":"Start your Path"}</button>

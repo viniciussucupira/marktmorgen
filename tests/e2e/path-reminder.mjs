@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {fieldFocusPixels} from "./field-focus.mjs";
 /** Every reminder POST is intercepted: no push, provider or metered dispatch. */
 export async function checkPathReminder({owner,LOCAL,sid,axeSource}){
  const errors=[];
@@ -122,6 +123,8 @@ export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
     await save.evaluate(node=>node.dispatchEvent(new MouseEvent("click",{bubbles:true})));
     assert.equal(requests,before+1);
    }
+   const focus=await fieldFocusPixels(page,skills);
+   assert(focus.contrastingPixels>=focus.minimumArea,"actual Path answer keyboard focus has enough3:1 paint area");
    await page.addScriptTag({content:axeSource});
    const violations=await form.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(rule=>rule.id));
    assert.deepEqual(violations,[]);
