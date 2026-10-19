@@ -177,7 +177,7 @@ try {
   browser = await launch();
   const errors = [];
   const watch = (page) => page.on("pageerror", (error) => errors.push(String(error)));
-  const open = (page, url) => page.goto(url, { waitUntil: "networkidle", timeout: 60_000 });
+  const open = async (page, url) => { const response=await page.goto(url,{waitUntil:"networkidle",timeout:60000}); if(!new URL(url).pathname.startsWith("/@"))is("platform document declares American English",await page.locator("html").getAttribute("lang"),"en-US"); return response; };
   const studio = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   await studio.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
   const owner = await studio.newPage();

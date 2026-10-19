@@ -102,7 +102,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     // React loads (lib/reveal-scripts.ts); React is told that attribute is
     // expected, so it does not report the page as mismatched.
     <html
-      lang="en"
+      lang="en-US"
       className={`${geist.variable} ${accent.variable} ${STORE_FONTS} h-full antialiased`}
       suppressHydrationWarning
     >
