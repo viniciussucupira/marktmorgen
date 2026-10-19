@@ -586,19 +586,36 @@ try {
         }
         document.body.append(root);
       });
+      const successReading=selector=>signin.locator(selector).evaluate(node=>{
+        const style=getComputedStyle(node);
+        const rgb=value=>{
+          const parts=value.match(/[0-9.]+/g)?.map(Number);
+          if(!parts||parts.length<3||(parts[3]??1)!==1)throw Error("Success copy must have opaque measured colours");
+          return parts.slice(0,3);
+        };
+        const luminance=values=>values.map(value=>value/255).map(value=>value<=.04045?value/12.92:((value+.055)/1.055)**2.4).reduce((total,value,index)=>total+value*[.2126,.7152,.0722][index],0);
+        if(Number(style.opacity)!==1)throw Error("Success sample is unexpectedly faded");
+        const text=luminance(rgb(style.color)),background=luminance(rgb(style.backgroundColor));
+        return {color:style.color,ratio:(Math.max(text,background)+.05)/(Math.min(text,background)+.05)};
+      });
       for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
         await signin.locator(selector).scrollIntoViewIfNeeded();
+        is("painted success copy exceeds7:1 "+selector+" at "+width,(await successReading(selector)).ratio>=7,true);
         await checkSignInErrorContrast(signin,selector,"Shared success copy "+selector+" at "+width);
       }
       if(width===390){
         const legacy=await signin.addStyleTag({content:"#success-contrast-fixture .tag-live,#success-contrast-fixture .notice-success{color:var(--mint-deep)!important}"});
-        const rejected=await signin.evaluate(async()=>{
-          const report=await window.axe.run([document.querySelector("#success-contrast-fixture")],{runOnly:{type:"rule",values:["color-contrast-enhanced"]}});
-          return report.violations.filter(rule=>rule.id==="color-contrast-enhanced").reduce((count,rule)=>count+rule.nodes.length,0);
-        });
-        is("success contrast guard rejects both former colours",rejected,2);
+        // Measure the same actual computed CSS guard in both directions.
+        // A scoped axe result alone must not make the negative control pass.
+        for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
+          const reading=await successReading(selector);
+          is("negative control applies the actual former text colour "+selector,reading.color,"rgb(11, 106, 77)");
+          is("painted success contrast guard rejects former colour "+selector,reading.ratio<7,true);
+          console.log("  former success contrast "+selector+": "+reading.ratio.toFixed(3));
+        }
         await legacy.evaluate(node=>node.remove());
         for(const selector of ["#success-contrast-fixture .tag-live","#success-contrast-fixture .notice-success"]){
+          is("restored success copy exceeds7:1 "+selector,(await successReading(selector)).ratio>=7,true);
           await checkSignInErrorContrast(signin,selector,"Restored success copy "+selector);
         }
       }
