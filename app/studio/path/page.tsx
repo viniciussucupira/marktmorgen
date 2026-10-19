@@ -1,3 +1,5 @@
+import { PathBoard } from "@/components/path-board";
+import { readPathBoardRows } from "@/lib/path-board";
 import { PathCheckoutNotice } from "@/components/path-checkout-notice";
 import { pathCheckoutNotice } from "@/lib/path-checkout";
 import { PLANS_ON_SALE } from "@/lib/opening";
@@ -38,6 +40,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
  const progress=visited && record?pathProgress(visited.facts,record.answers,record.startedAt,now):null;
  const streak=record?streakOf(record.checkins,localDay(record.answers.timeZone,now)):null;
  const planLine=pathPlanLine(await allowanceUsed(store,"studio",now),allowanceFor(store,"studio",now/1000));
+ const boardRows=record?.board?await readPathBoardRows(record.board.token).catch(()=>null):[];
  const mission=progress?.today;
  const campaign=pathCampaign(mission);
  const hrefFor=(place:Place)=>place.store?"/@"+encodeURIComponent(store.handle):studioPath(store,"",place.page || "")+(place.hash || "");
@@ -64,6 +67,7 @@ export default async function PathPage({searchParams}:{searchParams:Promise<Reco
      {campaign?<aside className="mt-4 rounded-xl border border-line bg-white p-5" aria-label="Campaigns for this mission"><p>{campaign.why}</p><a className="btn mt-4" href={studioPath(store,"campaignGoal="+campaign.goal,"funnels")+"#campaign-starters"}>Explore campaigns for this mission</a><p className="mt-3 text-sm text-ink-soft">Browsing does not create anything or use your preview allowance. Choose a campaign, review its requirements and adapt it to your own offer.</p></aside>:null}
     </section>
     <PathMissions missions={[...progress.days,...progress.traffic]} hrefFor={hrefFor}/>
+    <PathBoard key={record.board?.token || "not-joined"} joined={Boolean(record.board)} alias={record.board?"Creator "+record.board.token.slice(0,12):null} rows={boardRows} privacyHref={studioPath(store,"","path/privacy")}/>
     <PathReminderButton phoneUrl={studioPath(store,"","phone")}/>
     <PathShareCard input={{level:record.best,days:progress.dayOnPath,moneyCents:record.money?.currency===store.currency?record.money.cents:null,currency:store.currency,moneyAt:record.money?.at || null}}/>
     <details className="mt-8"><summary className="cursor-pointer py-3 font-semibold">Your answers and privacy</summary><PathOnboarding currency={store.currency} answers={record.answers}/></details>

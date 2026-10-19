@@ -704,6 +704,8 @@ export const FAMILIES: Record<string, Family> = {
   "nl:rev:vis:@lib/reviews.ts": { what: "The reviews on a page", room: ["lib/reviews.ts"] },
   "nl:sale:told:@lib/sale-events.ts": short("A sale told to the creator", "order", 40, MARK),
   "nl:goal:@lib/sales-goal.ts": { what: "The store's sales goal", parts: [capped(KB, "One a store.")] },
+  "nl:path:board:v1@lib/path-board.ts": { what: "Shared mission board: one pseudonymous member per store, charged PATH_BOARD_ROOM_BYTES in its own room atomically", room: ["lib/path-atomic.ts"] },
+  "nl:path:board:owners:v1@lib/path-board.ts": { what: "Private reverse lookup for removal: one field per opted-in store, included in its board room charge", room: ["lib/path-atomic.ts"] },
   "nl:path:@lib/path.ts": { what: "Marktmorgen Path: the owner's four answers, the days they opened it, the best level reached and the last reading of the money (18 October 2026): one slot, at what the record weighs", room: ["lib/path-atomic.ts"] },
   "nl:product:page:@lib/sales-page-store.ts": { what: "Products' and pages' blocks", room: ["lib/sales-page-store.ts"] },
   "nl:product:pages:@lib/sales-page-store.ts": { what: "A page's earlier versions", room: ["lib/sales-page-store.ts"] },

@@ -1,3 +1,4 @@
+import { PATH_BOARD_KEY, PATH_BOARD_OWNERS_KEY } from "@/lib/path-board";
 /**
  * The one-time count of what every store already keeps (lib/data-recount.ts):
  * the families it measures are the registry's, every key of a counted family
@@ -47,6 +48,9 @@ async function main() {
   redis.run(["HSET", leads, "ana@example.com", JSON.stringify({ agreed: true, titles: ["A guide"] })]);
   redis.run(["HSET", leads, "ben@example.com", JSON.stringify({ agreed: false, titles: ["A course"] })]);
   redis.run(["SET", link, JSON.stringify({ s: statsId, e: "ana@example.com", h: "recount" })]);
+  // The shared indexes were charged from their first write; never walk the whole board here.
+  redis.run(["ZADD",PATH_BOARD_KEY,4,"a".repeat(32)+":4:1792380000000"]);
+  redis.run(["HSET",PATH_BOARD_OWNERS_KEY,store.sid,"a".repeat(32)+":4:1792380000000"]);
   // Not the room's: a rate count, and another store's record.
   redis.run(["SET", `nl:rl:x:${statsId}`, "3"]);
   redis.run(["SET", `nl:blog:body:${"9".repeat(32)}:p1`, "y".repeat(5_000)]);

@@ -254,9 +254,11 @@ export function request(shape: keyof typeof SHAPES, commands: number, bytes = 0)
 /** Owner-only Path push: up to ten devices in parallel, eight-second timeout, no full-config rewrite for expired devices. Reserved before dispatch. */
 export const PATH_REMINDER_PUSH = request("wait", 45, 500_000);
 export const PATH_STUDIO_PAGE = request("heavy", 81, 404_096);
-export const PATH_PAGE = request("heavy", 42, 70_000);
+export const PATH_PAGE = request("heavy", 54, 120_000);
+export const PATH_BOARD_JOIN = request("heavy",70,30_000);
+export const PATH_BOARD_PRIVACY = request("heavy",30,120_000);
 
-export const PATH_READ = request("heavy", 14, LIFE_WRITE_MAX * 96 + 16_384) + (PATH_SALE_PAGES + PATH_REFUND_PAGES) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
+export const PATH_READ = request("heavy", 26, LIFE_WRITE_MAX * 96 + 20_480) + (PATH_SALE_PAGES + PATH_REFUND_PAGES) * EXPORT_PAGE_SECONDS * MEMORY_SECOND;
 
 /** One host's calendar read: its commands, and the wait for the calendar, held at 2 GB inside the page that asked. */
 export const TEAM_READING = 7 * COMMAND + 1 * MEMORY_SECOND + 0.05 * CPU_SECOND;
@@ -536,6 +538,8 @@ export const COST_LINES: CostLine[] = [
       // Marktmorgen Path reading its store's money and counts again takes PATH_READ_UNITS studio requests first, at most once every PATH_MONEY_SECONDS (18 October 2026).
       { file: "lib/path.ts", names: ["PATH_READ_UNITS", "countStudio(store, null, units)"] },
       { file: "lib/path-atomic.ts", names: ["WRITE_PATH", "FORGET_PATH", "PATH_DATA_CHANGE"] },
+      { file: "lib/path-board-rules.ts", names: ["PATH_BOARD_ROOM_BYTES", "PATH_BOARD_ROWS", "PATH_BOARD_JOIN_UNITS"] },
+      { file: "app/api/store/path/route.ts", names: ["PATH_BOARD_JOIN_UNITS", "board_leave", "delete"] },
       { file: "components/path-missions.tsx", names: ["PathMissions"] },
       { file: "lib/path-campaign.ts", names: ["pathCampaign"] },
       { file: "lib/path-checkout.ts", names: ["pathCheckoutNotice"] },

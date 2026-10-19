@@ -1,3 +1,4 @@
+import { PATH_BOARD_JOIN_UNITS } from "@/lib/path-board-rules";
 import { PATH_REMINDER_UNITS } from "@/lib/path-reminder-rules";
 /**
  * The registry of every metered feature's worst month
@@ -12,7 +13,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { PATH_READ_UNITS } from "@/lib/path";
-import { ADD_ON_LINES, ASSIST_REMIND_READ, PATH_REMINDER_PUSH, PATH_PAGE, PATH_STUDIO_PAGE, PATH_READ, COST_LINES, EMAIL_SITES, KIND_LINES, NEXT_OFFER_READ, NOT_A_COST, OPEN, PER_PAYMENT_LINES, PICTURE_READ, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
+import { ADD_ON_LINES, ASSIST_REMIND_READ, PATH_REMINDER_PUSH, PATH_BOARD_JOIN, PATH_BOARD_PRIVACY, PATH_PAGE, PATH_STUDIO_PAGE, PATH_READ, COST_LINES, EMAIL_SITES, KIND_LINES, NEXT_OFFER_READ, NOT_A_COST, OPEN, PER_PAYMENT_LINES, PICTURE_READ, SCOPES, UNIT_COST, nonPayingWorst, request } from "./plan-cost-registry";
 import { NEXT_OFFER_REQUEST_UNITS } from "@/lib/next-offer-rules";
 import { ASSIST_REMIND_REQUEST_UNITS } from "@/lib/assistant-reminder-rules";
 import { assessCustomerWorstCase } from "@/lib/net-margin-rules";
@@ -239,4 +240,9 @@ test("Path push fits its reserved studio requests", () => {
 
 test("studio Path invitation fits the same reserved page with one bounded record read", () => {
  assert.ok(PATH_STUDIO_PAGE <= UNIT_COST.studio * STUDIO_PAGE_UNITS);
+});
+
+test("board join and essential privacy fit their pre-reserved requests",()=>{
+ assert.ok(PATH_BOARD_JOIN<=UNIT_COST.studio*PATH_BOARD_JOIN_UNITS);
+ assert.ok(PATH_BOARD_PRIVACY<=request("heavy",40,200_000));
 });

@@ -1,3 +1,4 @@
+import { PATH_BOARD_ROOM_BYTES, readPathBoard, pathBoardMember } from "@/lib/path-board-rules";
 /**
  * A Redis that lives in memory, for testing the parts of this codebase whose
  * behaviour only shows up across several commands.
@@ -324,39 +325,58 @@ export class MemoryRedis {
           return removed;
         }
         if (key.startsWith("-- marktmorgen:path-write:v1\n")) {
-          if (args[0] !== "2" || args.length !== 9) return [-1, 0];
-          const [, room, target, limit, month, size, expected, create, json] = args;
+          const count=Number(args[0]);
+          if(!((count===2 && args.length===9)||(count===4 && args.length===12)))return [-1,0];
+          const [room,target,boardKey,mapKey]=args.slice(1,1+count);
+          const [limit,month,size,expected,create,json,sid]=args.slice(1+count);
+          const map=this.data.get(mapKey);
+          const shared=this.data.get(boardKey);
+          if(count===4 && (!/^[0-9a-f]{32}$/.test(sid) || (map!==undefined && !(map instanceof Map)) || (shared!==undefined && (!Array.isArray(shared) || (shared.length>0 && typeof shared[0]!=="object")))))return [-1,0];
+          const oldMember=count===4 && map instanceof Map?map.get(sid):undefined;
           this.live(target);
-          const old = this.data.get(target);
-          if (create === "1") {
-            if (old !== undefined) return [-2, 0];
-            if (expected !== "") return [-1, 0];
-          } else if (create === "0") {
-            if (old === undefined) return [-2, 0];
-            try {
-              const before = JSON.parse(String(old));
-              if (!before || before.v !== 1) return [-1, 0];
-              if ((typeof before.r === "string" ? before.r : "") !== expected) return [-2, 0];
-            } catch { return [-1, 0]; }
-          } else return [-1, 0];
-          try {
-            const next = JSON.parse(json);
-            if (!next || next.v !== 1 || typeof next.r !== "string" || !/^[0-9a-f]{32}$/.test(next.r) || next.r === expected) return [-1, 0];
-          } catch { return [-1, 0]; }
-          const taken = this.storeData([room, limit, "0", month, "s", "path", size]);
-          if (Array.isArray(taken) && taken[0] === 1) {
-            this.data.set(target, json);
-            this.until.delete(target);
+          const old=this.data.get(target);
+          let before:Record<string,unknown>|null=null;
+          if(create==="1") { if(old!==undefined)return [-2,0]; if(expected!=="")return [-1,0]; }
+          else if(create==="0") {
+            if(old===undefined)return [-2,0];
+            try { before=JSON.parse(String(old)); if(!before||before.v!==1)return [-1,0]; if((typeof before.r==="string"?before.r:"")!==expected)return [-2,0]; } catch { return [-1,0]; }
+          } else return [-1,0];
+          let next:Record<string,unknown>;
+          try { next=JSON.parse(json); if(!next||next.v!==1||typeof next.r!=="string"||!/^[0-9a-f]{32}$/.test(next.r)||next.r===expected)return [-1,0]; } catch { return [-1,0]; }
+          const board=readPathBoard(next.g);
+          if(next.g!==undefined && next.g!==null && !board)return [-1,0];
+          if(board && count!==4)return [-1,0];
+          if(board && before && readPathBoard(before.g) && !oldMember)return [-2,0];
+          const extra=count===4?["s","path-board",board?String(PATH_BOARD_ROOM_BYTES):"0"]:[];
+          const taken=this.storeData([room,limit,"0",month,"s","path",size,...extra]);
+          if(Array.isArray(taken)&&taken[0]===1) {
+            this.data.set(target,json);this.until.delete(target);
+            if(count===4) {
+              if(oldMember)this.run(["ZREM",boardKey,oldMember]);
+              if(board) { const member=pathBoardMember(board);this.run(["ZADD",boardKey,board.score,member]);this.run(["HSET",mapKey,sid,member]); }
+              else if(map instanceof Map) { map.delete(sid); if(!map.size)this.data.delete(mapKey); }
+              const held=this.data.get(boardKey); if(Array.isArray(held)&&!held.length)this.data.delete(boardKey);
+            }
           }
           return taken;
         }
         if (key.startsWith("-- marktmorgen:path-forget:v1\n")) {
-          if (args[0] !== "2" || args.length !== 4) return [-1, 0];
-          const [, room, target, month] = args;
-          const taken = this.storeData([room, "0", "1", month, "s", "path", "0"]);
-          if (Array.isArray(taken) && taken[0] === 1) {
-            this.data.delete(target);
-            this.until.delete(target);
+          const count=Number(args[0]);
+          if(!((count===2 && args.length===4)||(count===4 && args.length===7)))return [-1,0];
+          const [room,target,boardKey,mapKey]=args.slice(1,1+count);
+          const [month,sid]=args.slice(1+count);
+          const map=this.data.get(mapKey);
+          const shared=this.data.get(boardKey);
+          if(count===4 && (!/^[0-9a-f]{32}$/.test(sid) || (map!==undefined && !(map instanceof Map)) || (shared!==undefined && (!Array.isArray(shared) || (shared.length>0 && typeof shared[0]!=="object")))))return [-1,0];
+          const oldMember=count===4 && map instanceof Map?map.get(sid):undefined;
+          const taken=this.storeData([room,"0","1",month,"s","path","0",...(count===4?["s","path-board","0"]:[])]);
+          if(Array.isArray(taken)&&taken[0]===1) {
+            this.data.delete(target);this.until.delete(target);
+            if(count===4) {
+              if(oldMember)this.run(["ZREM",boardKey,oldMember]);
+              if(map instanceof Map) { map.delete(sid);if(!map.size)this.data.delete(mapKey); }
+              const held=this.data.get(boardKey);if(Array.isArray(held)&&!held.length)this.data.delete(boardKey);
+            }
           }
           return taken;
         }
