@@ -92,7 +92,7 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
    const violations=await contact.evaluate(async()=>{const result=await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}});return result.violations.map(rule=>rule.id);});
    assert.deepEqual(violations,[]);
    console.log("  ok    contact real-save/reload/refusal/retry/pending/uncertain/leave guard/AA/fit at "+width);
-  } finally {await contact.close({runBeforeUnload:false});}
+  } catch(error) {console.error("Synthetic contact recovery state:",await contact.locator("body").innerText().then(text=>text.slice(-6000)).catch(()=>"unreadable"));throw error;} finally {await contact.close({runBeforeUnload:false});}
  }
  assert.deepEqual(errors,[],"growth/contact pages have no uncaught browser errors");
 }

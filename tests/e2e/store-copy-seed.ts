@@ -1,4 +1,4 @@
-import { writeFields } from "@/lib/crm";
+import { readFields, writeFields } from "@/lib/crm";
 import { findToken } from "@/lib/buyer-profile";
 import { KIND } from "@/lib/catalog";
 import {writePage} from "@/lib/sales-page-store";
@@ -31,7 +31,8 @@ async function main(): Promise<void> {
   if(!(await setProductPage(OWNER,abProduct,true)).ok)throw Error("Synthetic page was not indexed");
   await redisPipeline([["HSET",`nl:ab:${abStore.statsId}:${abProduct}:${abPage.test.id}`,"va","NaN"]]);
   if(!abStore.statsId)throw Error("No contact fixture store");
-  await writeFields(abStore.statsId,[{id:"company001",name:"Company",type:"text",options:[]},{id:"segment001",name:"Segment",type:"choice",options:["New","Returning"]}]);
+  await writeFields(abStore.statsId,[{id:"cmp001",name:"Company",type:"text",options:[]},{id:"seg001",name:"Segment",type:"choice",options:["New","Returning"]}]);
+  if((await readFields(abStore.statsId)).length!==2)throw Error("Invalid synthetic contact field schema");
   const contactToken=await findToken(abStore,"contact-fixture@example.test");
   if(!contactToken)throw Error("No contact fixture token");
   const second = await createStore(OWNER, "secondshop", "Second Coaching", "");
