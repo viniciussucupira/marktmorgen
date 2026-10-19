@@ -104,3 +104,18 @@ with actual passes and no incomplete results. At390 a negative control must
 reject both former colours, then the restored styles must pass again.
 This is component-level evidence; it does not certify every rendered route,
 custom override, screen reader or whole-product AAA.
+
+## Store action keyboard focus
+Primary and secondary store buttons and creator-profile links receive opaque
+black/white keyboard rings independent of the creator's accent. In forced
+colours the system Highlight outline remains and the shadow is removed.
+Focus overrides promotional shadow animation only while keyboard-focused.
+No action, destination, provider request or payment rule changes.
+
+Actual compiled CSS is measured with real Tab and same-pixel before/after
+screenshots using the existing3:1 area guard. Samples cover three action
+classes across four themes/ten presets, Night at four widths, custom yellow
+profile links on a light theme and forced-colours emulation. The former
+2px accent-colour profile-link outline must fail on custom yellow, then the
+restored style must pass. These are component samples, not all complete buyer
+journeys, clipping contexts, screen readers or whole-product AAA certification.

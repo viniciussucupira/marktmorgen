@@ -496,6 +496,11 @@ try {
       const storeFocus=await fieldFocusPixels(signin,storeTarget);
       is("store input focus at "+width+": rendered3:1 pixel area",storeFocus.contrastingPixels>=storeFocus.minimumArea,true);
       const storeHint=await storePlaceholderContrast(storeTarget);
+      for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
+        const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className,paint:storePaint});
+        const reading=await fieldFocusPixels(signin,target);
+        is("store action "+className+" at "+width+": rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
+      }
       is("store placeholder at "+width+": enhanced contrast",storeHint.shown&&storeHint.ratio>=7&&storeHint.opacity===1,true);
 
       if(width===390){
@@ -509,6 +514,11 @@ try {
             is("store placeholder "+theme.id+"/"+accent.label+": actually shown",hint.shown,true);
             is("store placeholder "+theme.id+"/"+accent.label+": enhanced contrast",hint.ratio>=7,true);
             is("store placeholder "+theme.id+"/"+accent.label+": opaque",hint.opacity,1);
+            for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
+              const action=await mountFieldFocusFixture(signin,{surface:paint["--st-bg"],kind,className,paint});
+              const focus=await fieldFocusPixels(signin,action);
+              is("store action "+className+" "+theme.id+"/"+accent.label+": rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
+            }
 
           }
           const paint=lookStyle({theme:theme.id,accent:"#ffff00"});
@@ -526,6 +536,16 @@ try {
 
           }
         }
+        const socialPaint=lookStyle({theme:"light",accent:"#ffff00"});
+        const social=await mountFieldFocusFixture(signin,{surface:socialPaint["--st-bg"],kind:"a",className:"st-social",paint:socialPaint});
+        const socialCurrent=await fieldFocusPixels(signin,social);
+        is("custom yellow social focus: opaque rings pass",socialCurrent.contrastingPixels>=socialCurrent.minimumArea,true);
+        const oldSocialStyle=await signin.addStyleTag({content:".st-social:focus-visible{outline:2px solid var(--st-accent)!important;outline-offset:2px!important;box-shadow:none!important}"});
+        const socialOld=await fieldFocusPixels(signin,social);
+        is("pixel guard rejects former custom-yellow social focus",socialOld.contrastingPixels<socialOld.minimumArea,true);
+        await oldSocialStyle.evaluate(node=>node.remove());
+        const socialRestored=await fieldFocusPixels(signin,social);
+        is("restored social focus passes",socialRestored.contrastingPixels>=socialRestored.minimumArea,true);
         const oldHintTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
         const oldHintStyle=await signin.addStyleTag({content:".st-field::placeholder{color:var(--st-muted)!important;opacity:.75!important}"});
         const oldHint=await storePlaceholderContrast(oldHintTarget);
@@ -555,6 +575,12 @@ try {
         is("pixel guard rejects the former suppressed-outline style",baseline.contrastingPixels<baseline.minimumArea,true);
         await oldSuppression.evaluate(node=>node.remove());
         await signin.emulateMedia({forcedColors:"active",reducedMotion:"reduce"});
+        for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
+          const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className,paint:storePaint});
+          const focus=await fieldFocusPixels(signin,target);
+          is("store action "+className+" forced colours: system outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&focus.shadow==="none"&&focus.forcedColorAdjust==="auto",true);
+          is("store action "+className+" forced colours: rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
+        }
         for(const kind of ["input","select","textarea"]){
           const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className:"st-field",paint:storePaint});
           const reading=await fieldFocusPixels(signin,target);
