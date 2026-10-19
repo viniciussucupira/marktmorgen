@@ -79,6 +79,7 @@ export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
   const gate=new Promise(resolve=>{release=resolve;});
   try{
    await page.setViewportSize({width,height:900});
+   await page.emulateMedia({reducedMotion:"reduce"});
    await page.route("**/api/store/path*",async route=>{
     if(route.request().method()!=="POST"){await route.continue();return;}
     requests++;assert.equal(route.request().postDataJSON().action,"start");
@@ -123,6 +124,8 @@ export async function checkPathAnswers({owner,LOCAL,sid,axeSource}){
     await save.evaluate(node=>node.dispatchEvent(new MouseEvent("click",{bubbles:true})));
     assert.equal(requests,before+1);
    }
+   // Keep viewport pixels stable; focus paint and keyboard order remain the real page styles.
+   await page.addStyleTag({content:"html { scroll-behavior: auto !important; }"});
    const focus=await fieldFocusPixels(page,skills);
    assert(focus.contrastingPixels>=focus.minimumArea,"actual Path answer keyboard focus has enough3:1 paint area");
    await page.addScriptTag({content:axeSource});
