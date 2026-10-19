@@ -139,7 +139,7 @@ async function main(): Promise<void> {
 
   part("What is handed over");
   const meta = { store: "harbor", product: ids.Course, bump: ids.Workbook, bump2: ids.Checklist, bump3_bundle: "aaaaaa1,bbbbbb2", bump3: ids.Templates };
-  is("every product ticked, and every product of a bundle among them", deliveredIds(meta), [ids.Course, ids.Workbook, ids.Checklist, ids.Templates, "aaaaaa1", "bbbbbb2"]);
+  is("every selected product, and every product of a bundle among them", deliveredIds(meta), [ids.Course, ids.Workbook, ids.Checklist, ids.Templates, "aaaaaa1", "bbbbbb2"]);
   is("read back in the order of the boxes", bumpsFromMeta(meta).map((b) => b.key), ["bump", "bump2", "bump3"]);
   is("an order from when there was one box reads the same as before", deliveredIds({ product: ids.Course, bump: ids.Templates }), [ids.Course, ids.Templates]);
   is("a gift hands the buyer none of them", deliveredIds({ ...meta, gift: "gft_x" }), []);
