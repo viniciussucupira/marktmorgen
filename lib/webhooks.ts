@@ -461,6 +461,42 @@ export async function webhooksView(store: Store): Promise<WebhooksView> {
   };
 }
 
+/** Most messages recentMessages gives back. */
+export const RECENT_MESSAGES_MAX = 10;
+
+/**
+ * The store's recent messages of one event, newest first, each once, as they
+ * were sent: read from its last LOG_SIZE deliveries, each kept a week. What a
+ * tool such as Zapier shows the creator as an example while they set a step
+ * up, so it is only what already left the store; nothing new is read.
+ */
+export async function recentMessages(store: Store, type: WebhookEvent, limit = 3): Promise<Record<string, unknown>[]> {
+  if (!store.statsId || !isRedisConfigured()) return [];
+  const most = Math.max(1, Math.min(RECENT_MESSAGES_MAX, Math.floor(limit)));
+  const [rawLog] = await redisPipeline([["LRANGE", logKey(store.statsId), 0, LOG_SIZE - 1]]);
+  const ids = Array.isArray(rawLog) ? (rawLog as unknown[]).map(String).filter((id) => DELIVERY_ID_PATTERN.test(id)) : [];
+  if (!ids.length) return [];
+  const deliveries = (await redisPipeline(ids.map((id) => ["GET", deliveryKey(id)]))).map(parseDelivery);
+  const seen = new Set<string>();
+  const out: Record<string, unknown>[] = [];
+  for (const delivery of deliveries) {
+    if (!delivery || delivery.type !== type || delivery.statsId !== store.statsId || seen.has(delivery.eventId)) continue;
+    seen.add(delivery.eventId);
+    try {
+      out.push(JSON.parse(delivery.body) as Record<string, unknown>);
+    } catch {
+      continue;
+    }
+    if (out.length >= most) break;
+  }
+  return out;
+}
+
+/** Whether a word is one of the events an endpoint can hear. */
+export function isWebhookEvent(value: unknown): value is WebhookEvent {
+  return isEvent(value);
+}
+
 export type AddEndpointResult =
   | { ok: true; secret: string; view: WebhooksView }
   | { ok: false; reason: "full" | "invalid" | "events" | "duplicate"; message: string };
