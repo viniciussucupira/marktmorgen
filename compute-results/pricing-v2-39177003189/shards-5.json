@@ -1,0 +1,182 @@
+[
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-000.pkl",
+  "kind": "company",
+  "index": 0,
+  "seconds": 6.9,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-001.pkl",
+  "kind": "company",
+  "index": 1,
+  "seconds": 4.9,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-002.pkl",
+  "kind": "company",
+  "index": 2,
+  "seconds": 7.7,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-003.pkl",
+  "kind": "company",
+  "index": 3,
+  "seconds": 7.8,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-004.pkl",
+  "kind": "company",
+  "index": 4,
+  "seconds": 5.6,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-005.pkl",
+  "kind": "company",
+  "index": 5,
+  "seconds": 5.7,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-006.pkl",
+  "kind": "company",
+  "index": 6,
+  "seconds": 9.3,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-007.pkl",
+  "kind": "company",
+  "index": 7,
+  "seconds": 9.6,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-008.pkl",
+  "kind": "company",
+  "index": 8,
+  "seconds": 7.3,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-009.pkl",
+  "kind": "company",
+  "index": 9,
+  "seconds": 4.6,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-010.pkl",
+  "kind": "company",
+  "index": 10,
+  "seconds": 7.0,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-011.pkl",
+  "kind": "company",
+  "index": 11,
+  "seconds": 10.1,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-012.pkl",
+  "kind": "company",
+  "index": 12,
+  "seconds": 11.7,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-013.pkl",
+  "kind": "company",
+  "index": 13,
+  "seconds": 7.6,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-014.pkl",
+  "kind": "company",
+  "index": 14,
+  "seconds": 7.8,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-015.pkl",
+  "kind": "company",
+  "index": 15,
+  "seconds": 13.0,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-016.pkl",
+  "kind": "company",
+  "index": 16,
+  "seconds": 5.6,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-017.pkl",
+  "kind": "company",
+  "index": 17,
+  "seconds": 5.8,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-018.pkl",
+  "kind": "company",
+  "index": 18,
+  "seconds": 5.9,
+  "cpu": [
+   "X86_V3"
+  ]
+ },
+ {
+  "file": "1d2d03348d9261deeca3dfaaafb8026d-019.pkl",
+  "kind": "company",
+  "index": 19,
+  "seconds": 14.7,
+  "cpu": [
+   "X86_V3"
+  ]
+ }
+]

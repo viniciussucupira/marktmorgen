@@ -1,0 +1,80 @@
+[
+ {
+  "kind": "programs",
+  "size": "43 tasks",
+  "key": "c63a57f2e6a778d4de97669781ca66d0",
+  "shards": 20,
+  "cpu": [
+   "X86_V3"
+  ],
+  "slowestShardSeconds": 955.9,
+  "meanShardSeconds": 335.9,
+  "totalShardSeconds": 6718.4,
+  "assembleSeconds": 0.0
+ },
+ {
+  "kind": "company",
+  "size": "1000 draws x 13288 designs",
+  "key": "c65620200c26f5876f4e897f5a2b52fd",
+  "shards": 20,
+  "cpu": [
+   "X86_V3"
+  ],
+  "slowestShardSeconds": 12.7,
+  "meanShardSeconds": 9.8,
+  "totalShardSeconds": 196.6,
+  "assembleSeconds": 0.4
+ },
+ {
+  "kind": "company",
+  "size": "1000 draws x 215 designs",
+  "key": "8fb2ce00f360fbb2d3160fa70fcc1d49",
+  "shards": 20,
+  "cpu": [
+   "X86_V3"
+  ],
+  "slowestShardSeconds": 1.8,
+  "meanShardSeconds": 1.1,
+  "totalShardSeconds": 22.7,
+  "assembleSeconds": 0.0
+ },
+ {
+  "kind": "company",
+  "size": "10000 draws x 107 designs",
+  "key": "fc1cc2418394f6d31eb0dec55f25a7b5",
+  "shards": 20,
+  "cpu": [
+   "X86_V3"
+  ],
+  "slowestShardSeconds": 14.9,
+  "meanShardSeconds": 9.6,
+  "totalShardSeconds": 191.6,
+  "assembleSeconds": 0.1
+ },
+ {
+  "kind": "company",
+  "size": "10000 draws x 107 designs",
+  "key": "1d2d03348d9261deeca3dfaaafb8026d",
+  "shards": 20,
+  "cpu": [
+   "X86_V3"
+  ],
+  "slowestShardSeconds": 14.7,
+  "meanShardSeconds": 7.9,
+  "totalShardSeconds": 158.6,
+  "assembleSeconds": 0.1
+ },
+ {
+  "kind": "cohort",
+  "size": "4000 draws x 48 designs",
+  "key": "fda3d4a522fdfde77edddc74cc95b21c",
+  "shards": 20,
+  "cpu": [
+   "X86_V3"
+  ],
+  "slowestShardSeconds": 5.2,
+  "meanShardSeconds": 2.8,
+  "totalShardSeconds": 55.9,
+  "assembleSeconds": 0.0
+ }
+]
