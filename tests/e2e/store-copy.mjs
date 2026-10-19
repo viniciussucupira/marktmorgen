@@ -289,9 +289,10 @@ try {
     is("experiment warning accessibility at "+width,await owner.evaluate(async()=>(await window.axe.run("#headline-test",{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wcag22a","wcag22aa"]}})).violations.map(v=>v.id)),[]);
   }
   // Recovery uses a synthetic, coherent successful response; no payment is made.
-  await owner.route("**/api/store/ab?**",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,currency:"usd",declared:"money",shareB:0.5,counts:{va:1000,vb:1000,ca:30,cb:90,sa:30,sb:90,ra:30000,rb:90000,qa:30000000,qb:90000000,t0:Date.now()-30*86400000}})}));
+  await owner.route("**/api/store/ab?**",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,currency:"usd",declared:null,shareB:0.5,counts:{va:1000,vb:1000,ca:30,cb:90,sa:30,sb:90,ra:30000,rb:90000,qa:30000000,qb:90000000,t0:Date.now()-30*86400000}})}));
   await open(owner,abUrl);
   await owner.locator("[data-test-results]").waitFor();
+  await owner.getByText("The second headline wins. Your page now shows it to everybody. Make it the hero's own headline and switch the test off to keep it.",{exact:true}).waitFor();
   is("a coherent successful reading replaces the failure notice",await owner.getByText(unavailableText,{exact:true}).count(),0);
   await owner.unroute("**/api/store/ab?**");
   const quotaDir=mkdtempSync(join(tmpdir(),"mm-path-quota-"));
