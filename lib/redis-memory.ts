@@ -323,6 +323,43 @@ export class MemoryRedis {
           }
           return removed;
         }
+        if (key.startsWith("-- marktmorgen:path-write:v1\n")) {
+          if (args[0] !== "2" || args.length !== 9) return [-1, 0];
+          const [, room, target, limit, month, size, expected, create, json] = args;
+          this.live(target);
+          const old = this.data.get(target);
+          if (create === "1") {
+            if (old !== undefined) return [-2, 0];
+            if (expected !== "") return [-1, 0];
+          } else if (create === "0") {
+            if (old === undefined) return [-2, 0];
+            try {
+              const before = JSON.parse(String(old));
+              if (!before || before.v !== 1) return [-1, 0];
+              if ((typeof before.r === "string" ? before.r : "") !== expected) return [-2, 0];
+            } catch { return [-1, 0]; }
+          } else return [-1, 0];
+          try {
+            const next = JSON.parse(json);
+            if (!next || next.v !== 1 || typeof next.r !== "string" || !/^[0-9a-f]{32}$/.test(next.r) || next.r === expected) return [-1, 0];
+          } catch { return [-1, 0]; }
+          const taken = this.storeData([room, limit, "0", month, "s", "path", size]);
+          if (Array.isArray(taken) && taken[0] === 1) {
+            this.data.set(target, json);
+            this.until.delete(target);
+          }
+          return taken;
+        }
+        if (key.startsWith("-- marktmorgen:path-forget:v1\n")) {
+          if (args[0] !== "2" || args.length !== 4) return [-1, 0];
+          const [, room, target, month] = args;
+          const taken = this.storeData([room, "0", "1", month, "s", "path", "0"]);
+          if (Array.isArray(taken) && taken[0] === 1) {
+            this.data.delete(target);
+            this.until.delete(target);
+          }
+          return taken;
+        }
         if (key.startsWith("-- marktmorgen:store-data:v1\n") && args[0] === "1") return this.storeData(args.slice(1));
         if (key.startsWith("-- marktmorgen:order-write:v1\n")) return this.orderWrite(args);
         if (key.startsWith("-- marktmorgen:recount-page:v1\n") && args[0] === "2") {
