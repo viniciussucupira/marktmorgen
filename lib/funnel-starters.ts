@@ -338,6 +338,101 @@ export const FUNNEL_STARTERS: FunnelStarter[] = [
   },
 ];
 
+// Campaigns use the same strict reader, product mapping and draft-only import
+// as shared funnels. No new sending, AI or storage path is introduced.
+FUNNEL_STARTERS.push(
+  {
+    id: "digital-product",
+    label: "Sell a digital product",
+    hint: "Explain your download or toolkit, answer buying questions, and lead to its checkout and getting-started page.",
+    bundle: {
+      format: BUNDLE_FORMAT, schema: BUNDLE_SCHEMA, name: "Digital product",
+      products: [{ ref: "x1", label: "Your download or toolkit", wants: "paid" }],
+      forms: [],
+      steps: [{ kind: "page", ref: "p1" }, { kind: "product", ref: "x1" }, { kind: "page", ref: "p2" }],
+      pages: [
+        {
+          ref: "p1", title: "Your digital product", slug: "digital-product", target: "x1", style: "cards",
+          blocks: [
+            { id: "dp01", kind: "hero", headline: "[Your product] for [the people it helps]", sub: "[Explain what it helps someone do and the format they receive.]", media: "none", video: null, button: true },
+            { id: "dp02", kind: "benefits", heading: "What is inside", items: ["[The first file, template or resource]", "[The second file, template or resource]", "[Instructions or examples included]"] },
+            { id: "dp03", kind: "fit", heading: "Before you buy", yesLabel: "Useful if you", noLabel: "Not a fit if you", yes: ["[Who can use this and what they need]"], no: ["[What this product does not do]"] },
+            { id: "dp04", kind: "steps", heading: "How to use it", items: [{ title: "Get your files", detail: "[Say how the files are delivered.]" }, { title: "Open and start", detail: "[Name any software required and the first thing to do.]" }, { title: "Ask a question", detail: "[Explain what support is included and how to reach you.]" }] },
+            { id: "dp05", kind: "faq", heading: "Buying questions", items: [{ q: "What format is it?", a: "[List file formats, required tools and any compatibility limits.]" }, { q: "How may I use it?", a: "[Explain personal or commercial use, sharing and licence terms.]" }, { q: "What is the refund policy?", a: "[State the policy that applies to this product.]" }] },
+            { id: "dp06", kind: "cta", label: "See the product and price", note: "" },
+          ],
+        },
+        nextSteps({ title: "Get your product", detail: "[Tell the buyer where their files are and how to open them.]" }),
+      ],
+    },
+  },
+  {
+    id: "launch-waitlist",
+    label: "Build a launch waitlist",
+    hint: "Describe what you are preparing and collect interested people's details, without taking payment or promising an unannounced launch date.",
+    bundle: {
+      format: BUNDLE_FORMAT, schema: BUNDLE_SCHEMA, name: "Launch waitlist",
+      products: [],
+      forms: [{
+        ref: "f1", name: "Launch interest",
+        fields: [
+          { id: "lwnm01", type: "short", label: "Your name", required: false, options: [] },
+          { id: "lwem01", type: "email", label: "Your email", required: true, options: [] },
+          { id: "lwhp01", type: "long", label: "What would you like this to help you with?", required: false, options: [] },
+        ],
+        button: "Register my interest", doneHeading: "Your interest is recorded",
+        doneBody: "[Explain whether and how you will reply. This form does not reserve a place or take payment.]",
+        outcomes: [], offerList: false,
+      }],
+      steps: [{ kind: "page", ref: "p1" }, { kind: "page", ref: "p2" }],
+      pages: [
+        {
+          ref: "p1", title: "Coming next", slug: "launch-interest", target: "", style: "plain",
+          blocks: [
+            { id: "lw01", kind: "hero", headline: "I am preparing [your offer]", sub: "[Describe what you are working on and who it is for.] Register your interest below. No payment is taken.", media: "none", video: null },
+            { id: "lw02", kind: "benefits", heading: "What I am working on", items: ["[The first part you plan to include]", "[The second part you plan to include]", "[What is still being decided]"] },
+            { id: "lw03", kind: "text", heading: "About your details", body: "[Explain how you will use these answers, who can access them and how to ask for their deletion. If you offer marketing updates, configure the separate optional mailing-list choice before publishing.]" },
+            { id: "lw04", kind: "form", heading: "Register your interest", form: "f1" },
+            { id: "lw05", kind: "faq", heading: "Questions", items: [{ q: "Does this reserve a place?", a: "No. This records your interest. It is not a booking or purchase." }, { q: "When will it be ready?", a: "[Say what you can confirm today. Leave out dates you cannot confirm.]" }] },
+          ],
+        },
+        {
+          ref: "p2", title: "After registering interest", slug: "after-registering-interest", target: "", style: "plain",
+          blocks: [
+            { id: "li01", kind: "hero", headline: "What happens after registering interest", sub: "[Explain your next step and whether you will contact them.]", media: "none", video: null },
+            { id: "li02", kind: "text", heading: "No payment or reservation", body: "Registering interest is not a booking or purchase. [Explain how someone can update or remove their details.]" },
+            { id: "li03", kind: "cta", label: "Visit the store", note: "" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    id: "course-launch",
+    label: "Launch a complete course",
+    hint: "Present the curriculum, required experience, teaching format and support before sending learners to your course checkout.",
+    bundle: {
+      format: BUNDLE_FORMAT, schema: BUNDLE_SCHEMA, name: "Course launch",
+      products: [{ ref: "x1", label: "Your complete course", wants: "paid" }], forms: [],
+      steps: [{ kind: "page", ref: "p1" }, { kind: "product", ref: "x1" }, { kind: "page", ref: "p2" }],
+      pages: [
+        {
+          ref: "p1", title: "About the course", slug: "about-the-course", target: "x1", style: "bands",
+          blocks: [
+            { id: "cl01", kind: "hero", headline: "Learn [your subject] with [your course]", sub: "[Explain who it is for, what it teaches and the format.]", media: "none", video: null, button: true },
+            { id: "cl02", kind: "steps", heading: "Inside the curriculum", items: [{ title: "[First module]", detail: "[What learners study and practise here.]" }, { title: "[Second module]", detail: "[What learners study and practise here.]" }, { title: "[Final module]", detail: "[What learners study and practise here.]" }] },
+            { id: "cl03", kind: "fit", heading: "Choose the right course for you", yesLabel: "Designed for you if you", noLabel: "Choose something else if you", yes: ["[Experience, equipment and time needed]"], no: ["[Topics or support this course does not include]"] },
+            { id: "cl04", kind: "bio", heading: "About your teacher", body: "", photo: true },
+            { id: "cl05", kind: "faq", heading: "Before enrolling", items: [{ q: "How are lessons delivered?", a: "[Explain recorded or live lessons, release dates and how long access lasts.]" }, { q: "What support is included?", a: "[Explain questions, feedback and any calls included.]" }, { q: "Can I get a refund?", a: "[State the refund policy that applies to this course.]" }] },
+            { id: "cl06", kind: "cta", label: "See the course and enrolment options", note: "" },
+          ],
+        },
+        nextSteps({ title: "Open your course", detail: "[Explain where to sign in, which lesson to start with and what to prepare.]" }),
+      ],
+    },
+  },
+);
+
 export function funnelStarter(id: unknown): FunnelStarter | null {
   return FUNNEL_STARTERS.find((starter) => starter.id === id) ?? null;
 }

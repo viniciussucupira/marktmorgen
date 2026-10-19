@@ -8,6 +8,8 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { type BundleOutline, type ImportRoom, type PlanLine, type ReceiverProduct, planImport } from "@/lib/funnel-bundle";
 import { DEFAULT_SHARE_DAYS, SHARE_DAYS, type ShareLimits, bytesWords, codeFrom } from "@/lib/funnel-share-rules";
 import { MAX_FUNNEL_NAME } from "@/lib/page-funnel";
+import { FunnelStarterGallery } from "@/components/funnel-starter-gallery";
+import type { StarterCard } from "@/lib/funnel-starter-catalog";
 
 export type ShareRow = { id: string; name: string; funnelId: string; createdAt: number; expiresAt: number; hint: string };
 
@@ -89,7 +91,7 @@ export function FunnelSharePanel({
   /** Null when the store's links could not be read. */
   shares: ShareRow[] | null;
   limits: ShareLimits;
-  starters: { id: string; label: string; hint: string }[];
+  starters: StarterCard[];
   /** The account's other stores, for the owner: where a funnel can be copied to. */
   otherStores?: { sid: string; name: string }[];
 }) {
@@ -403,21 +405,7 @@ export function FunnelSharePanel({
         </div>
 
         {starters.length ? (
-          <div className="mt-5 border-t border-line pt-4">
-            <p className="field-label">Or start from one of ours, with first words written</p>
-            <ul className="mt-2 grid gap-3 sm:grid-cols-3">
-              {starters.map((s) => (
-                <li key={s.id} className="flex flex-col rounded-2xl bg-white p-4 ring-1 ring-line">
-                  <p className="text-sm font-semibold text-ink">{s.label}</p>
-                  <p className="mt-1 flex-1 text-xs text-ink-soft">{s.hint}</p>
-                  <button type="button" className="btn btn-secondary btn-sm mt-3 self-start" disabled={busy !== null} onClick={() => void openPreview({ starter: s.id })} aria-label={`Preview the ${s.label} starter`}>
-                    Preview
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 text-xs text-ink-soft">Every sentence in a starter is one you can say as it stands, or a part in [brackets] for you to fill in. None states a result, a number or a deadline.</p>
-          </div>
+          <FunnelStarterGallery starters={starters} busy={busy !== null} onChoose={(id) => void openPreview({ starter: id })} />
         ) : null}
 
         {preview && plan ? (
