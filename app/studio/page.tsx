@@ -1160,6 +1160,7 @@ export default async function StudioPage({
             ) : null}
             <StudioTools
               tools={[
+                { href: studioPath(store, "", "growth"), title: "Growth", text: "Choose a goal and connect the tools for your next action.", icon: "chart" as const, prefetch: false },
                 ...(may("products")
                   ? [
                       { href: studioPath(store, "", "pages"), title: "Sales pages", text: "Build each product's page from blocks, or a landing page for something free.", icon: "layout" as const },

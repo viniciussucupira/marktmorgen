@@ -411,6 +411,10 @@
       "status": "AAA review not completed"
     },
     {
+      "source": "app/studio/growth/page.tsx",
+      "status": "Scoped synthetic Chromium4 goals/4 widths and role tests;whole-page AAA/manual assistive/user research pending"
+    },
+    {
       "source": "app/studio/import/page.tsx",
       "status": "AAA review not completed"
     },

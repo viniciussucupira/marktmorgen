@@ -1,3 +1,4 @@
+import { cachedOfferListings, savedOfferIssues } from "@/lib/funnel-offer-review";
 import type { Metadata } from "next";
 import { BUMP_CHOICES, idsOfKind, readCards, readListings, readProduct } from "@/lib/catalog";
 import Link from "next/link";
@@ -124,13 +125,14 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
     canEditProducts: can(view.role, "products"),
   };
   const inventory = await readPageFunnelsStrict(store.statsId).catch(() => null);
-  const formReviews = readFunnelFormReviews(store, inventory ?? []);
+  const formReviews = readFunnelFormReviews(store, inventory ?? [], { reviewOffers: true });
   const savedFunnels: SavedFunnel[] = await Promise.all(
     (inventory ?? []).map(async (funnel) => {
-      const [states, counts, pageReviews] = await Promise.all([stepStates(store, funnel, { strictProducts: true }).catch(() => null), readFunnelCountsStrict(store.statsId, funnel).catch(() => null), formReviews]);
+      const [states, counts, pageReviews] = await Promise.all([stepStates(store, funnel, { strictProducts: true, includeReviewProduct: true }).catch(() => null), readFunnelCountsStrict(store.statsId, funnel).catch(() => null), formReviews]);
+      const offerRecords = cachedOfferListings(store, (states ?? []).flatMap(state => state.reviewProduct ? [state.reviewProduct] : []));
       return {
         funnel,
-        pageIssues: pageReviews.get(funnel.id) ?? [],
+        pageIssues: [...(pageReviews.get(funnel.id) ?? []), ...(states ?? []).flatMap((state,stepIndex) => (state.reviewProduct ? savedOfferIssues(store,state.reviewProduct,offerRecords) : []).map(detail => ({ code: "step" as const, title: `Step ${stepIndex + 1}: ${state.title}`, detail, stepIndex })))],
         steps: (states ?? funnel.steps.map(step => ({
           step,
           title: choices.find(choice => choice.kind === step.kind && choice.id === step.id)?.title ?? "Saved step",

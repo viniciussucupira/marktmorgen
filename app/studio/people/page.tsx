@@ -376,7 +376,7 @@ function Profile({ store, profile, fields, values, eraseToken }: { store: Store;
             {fields.length ? "Change the fields" : "Make your first field"}
           </Link>
         </p>
-        {profile.person && fields.length ? <PersonFields person={profile.person} fields={fields} initial={values} /> : null}
+        {profile.person && fields.length ? <PersonFields key={profile.person} person={profile.person} fields={fields} initial={values} /> : null}
       </section>
 
       <section aria-labelledby="notes-title" className="card mt-8 p-6 sm:p-8">

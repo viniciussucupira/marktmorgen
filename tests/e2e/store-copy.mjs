@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { startServices } from "./services.mjs";
 import { fieldFocusPixels,mountFieldFocusFixture } from "./field-focus.mjs";
+import { checkGrowthAndContact } from "./growth-contact.mjs";
 
 async function storePlaceholderContrast(field){
   return field.evaluate(node=>{
@@ -146,7 +147,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { session, second, abProduct, abStore } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { session, second, abProduct, abStore, contactToken } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -601,6 +602,7 @@ try {
 
     } finally {await guest.close();}
   }
+  await checkGrowthAndContact({owner,LOCAL,abStore,second,contactToken,axeSource});
   const quotaDir=mkdtempSync(join(tmpdir(),"mm-path-quota-"));
   const quotaFile=join(quotaDir,"quota.cjs");
   await build({entryPoints:[join(here,"path-board-quota.ts")],bundle:true,platform:"node",format:"cjs",outfile:quotaFile,logLevel:"error",alias:{"@":root}});
