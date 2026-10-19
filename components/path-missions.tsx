@@ -5,7 +5,7 @@ export function PathMissions({ missions, hrefFor }: { missions: readonly Mission
   return (
     <section className="mt-8" aria-labelledby="path-missions">
       <h2 id="path-missions" className="t-h3">Your missions</h2>
-      <p className="mt-3 text-ink-soft">Open a mission for its steps. Your store's records decide when it is complete.</p>
+      <p className="mt-3 text-ink-soft">Open a mission for its steps. Your store&apos;s records decide when it is complete.</p>
       <ul className="mt-4 grid gap-3">
         {missions.map((mission) => (
           <li key={mission.id} className="rounded-xl border border-line bg-white p-4">
