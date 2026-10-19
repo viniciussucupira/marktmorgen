@@ -54,7 +54,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 4. **[B2] Revisar inglês americano página por página: mensagens, erros, estados vazios, e-mails, aria-label, alt e textos de testes; manter inventário de áreas e PRs pequenos, sem alterar significado.**
    - Pedido: P2 B2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (branch codex/us-english-public-copy; primeira área pública)**.
+   - Estado: **em andamento (branch codex/us-english-legal-copy; áreas públicas/legais, após PR #623)**.
    - Custo e margem: Sem novo fornecedor; medir eventual mudança de payload dentro dos tetos existentes. M0 permanece referência, sem certificação fiscal.
 
 5. **[B3] Adicionar teste de texto da plataforma que recuse grafias britânicas comuns: colour, centre, organise, licence, cancelled, behaviour, afterwards e tick/untick; distinguir texto exibido de código, citações e dados.**
@@ -455,4 +455,6 @@ B1: raiz HTML en-US e política de escopo em platform-language-policy.md; sem tr
 
 B2 primeira área:18fontes públicas/compartilhadas inspecionadas; ajustes pontuais em homepage/mission/help; cobertura e pendências em us-english-audit.md. Não representa revisão de todo o produto. CI/browser de texto real precisa passar antes da incorporação.
 
-Correção de validação do PR623: o navegador identificou também o rótulo Cancelling do componente de preços compartilhado; alterado para Canceling sem mudar nenhum valor ou condição. O guard visível não foi afrouxado.621/622 agora constam feitos com metadados reais de mesclagem;622 publicado2c061ff como entrega42.
+B2 segunda área:12fontes legais/entrada de conta inspecionadas, incluindo privacy/terms/refunds/signin; uma grafia exibida na descrição de feedback de cancelamento corrigida. Preservadas todas as declarações de IA e certificados. Auditoria de estúdio/e-mails ainda pendente; ver us-english-audit.md.
+
+PR624 integra a correção de Pricing do PR623 após os dois testes completos identificarem o mesmo rótulo britânico herdado; preserva a revisão legal, os testes visíveis e o histórico de621/622. Nova verificação completa obrigatória, sem rerun isolado.
