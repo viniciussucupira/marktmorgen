@@ -103,6 +103,37 @@ export class MemoryRedis {
 
     switch (name) {
       case "EVAL": {
+        if (key.startsWith("-- marktmorgen:ab-sale:v1\n") && args[0] === "2" && args.length === 6) {
+          const [, target, marker, version, rawCents, rawSquare] = args;
+          this.live(target); this.live(marker);
+          const held = this.data.get(target), mark = this.data.get(marker);
+          if (held !== undefined && !(held instanceof Map)) return -1;
+          if (mark !== undefined && typeof mark !== "string") return -1;
+          if (mark !== undefined) return 0;
+          if (version !== "a" && version !== "b") return -1;
+          const integer = (raw: string): number | null => /^\d+$/.test(raw) && Number.isSafeInteger(Number(raw)) ? Number(raw) : null;
+          const cents = integer(rawCents), square = integer(rawSquare);
+          const invalid = () => {
+            this.hash(target).set("invalid", "1");
+            this.until.set(target, this.now() + 34560000 * 1000);
+            return -1;
+          };
+          if (!cents || !square) return invalid();
+          const fields = [`s${version}`, `r${version}`, `q${version}`];
+          const additions = [1, cents, square];
+          const values: number[] = [];
+          for (let i = 0; i < fields.length; i++) {
+            const raw = held instanceof Map ? held.get(fields[i]) : undefined;
+            const value = raw === undefined ? 0 : integer(raw);
+            if (value === null || value > Number.MAX_SAFE_INTEGER - additions[i]) return invalid();
+            values.push(value + additions[i]);
+          }
+          fields.forEach((field, i) => this.hash(target).set(field, String(values[i])));
+          this.until.set(target, this.now() + 34560000 * 1000);
+          this.data.set(marker, "1");
+          this.until.set(marker, this.now() + 3456000 * 1000);
+          return 1;
+        }
         if (key.startsWith("-- marktmorgen:funnel-save:v1\n") && args[0] === "1" && args.length === 6) {
           const target = args[1];
           this.live(target);

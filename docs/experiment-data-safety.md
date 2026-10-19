@@ -29,7 +29,28 @@ No real payment or message is used.
 This continues the source-based comparison of experiment tools:
 https://support.myclickfunnels.com/docs/managing-ab-split-testing-in-funnel-steps/
 
-Known separate work: noteTestSales currently claims deduplication before its metrics
-write, so a lost write can omit a sale. That requires a separate atomic-write change
-and real Redis concurrency/failure coverage. Refunds are still not subtracted per
-version and remain disclosed; no change here certifies financial margin or causal lift.
+Paid-sale recording now commits its three totals and checkout acknowledgment in
+one Lua operation, after checking types and every affected value. Failed requests
+can retry without a marker written ahead of the totals; a lost successful response
+replays without counting twice. Existing 40-day markers and 400-day test retention
+remain unchanged. Legacy markers are honored; missing historical sales are not
+guessed or backfilled.
+
+Unsafe arithmetic or malformed affected totals writes one bounded invalid flag,
+preserves all previous totals and leaves the checkout unacknowledged. The strict
+reader above then refuses decisions from that incomplete reading. It requires
+investigation, not automatic reset. Wrong Redis key types are refused before any
+metric/marker mutation. Lua prevents interleaving; this does not claim rollback
+from arbitrary Redis infrastructure failures such as an out-of-memory write.
+
+The operation uses at most eight Redis commands including EVAL, within the existing
+ORDER_COMPUTE allowance ($0.0003/order); no new request, key family, AI call or
+retention window. The single invalid field fits AB_RECORD_BYTES=1024, checked
+against actual Redis memory usage. Existing data-room/cost admission and sale gates
+stay in force. Real Redis tests cover simultaneous duplicates/distinct orders,
+replay after a discarded response, legacy marks, malformed data, overflow, types,
+TTLs and the existing room charge. Adapter tests also inject transport failure
+before execution and response loss after execution.
+
+Refunds are still not subtracted per version and remain disclosed; no change here
+certifies financial margin or causal lift.

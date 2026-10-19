@@ -141,3 +141,7 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_assistant_pool_redis.py
+      - name: Actual Redis atomic experiment sale checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_experiment_sale_redis.py

@@ -38,6 +38,7 @@
  *   nl:ab:paid:<checkout id>               counted, 40 days
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { RECORD_TEST_SALE } from "@/lib/headline-test-atomic";
 import { parseTestCounts, unavailableTestCounts } from "@/lib/headline-test-counts";
 import type { Counts, Version } from "@/lib/headline-test-rules";
 
@@ -84,21 +85,20 @@ export async function noteTestSales(statsId: string | null, currency: string, pa
   if (!statsId || !isRedisConfigured()) return 0;
   // In the store's currency only: money in two currencies does not add up, and a sale without its money would skew the version it counts for.
   const rows = paid.filter(
-    (row) => typeof row.id === "string" && AB_META.test(row.metadata?.ab ?? "") && typeof row.metadata?.product === "string" && row.currency === currency && typeof row.amount_total === "number" && row.amount_total > 0,
+    (row) => typeof row.id === "string" && AB_META.test(row.metadata?.ab ?? "") && typeof row.metadata?.product === "string" && row.currency === currency && typeof row.amount_total === "number" && Number.isSafeInteger(row.amount_total) && row.amount_total > 0,
   );
   let noted = 0;
   for (const row of rows) {
     const [, test, version] = (row.metadata?.ab ?? "").match(AB_META) as RegExpMatchArray;
-    const [claimed] = await redisPipeline([["SET", `nl:ab:paid:${row.id as string}`, "1", "NX", "EX", 40 * 86_400]]);
-    if (claimed === null) continue;
-    const cents = Math.round(row.amount_total as number);
-    const k = key(statsId, row.metadata?.product as string, test);
-    await redisPipeline([
-      ["HINCRBY", k, `s${version}`, 1],
-      ["HINCRBY", k, `r${version}`, cents],
-      ["HINCRBY", k, `q${version}`, cents * cents],
-      ["EXPIRE", k, 400 * 86_400],
-    ]);
+    const cents = row.amount_total as number;
+    const square = cents * cents;
+    const [recorded] = await redisPipeline([[
+      "EVAL", RECORD_TEST_SALE, 2,
+      key(statsId, row.metadata?.product as string, test), `nl:ab:paid:${row.id as string}`,
+      version, cents, Number.isSafeInteger(square) ? square : "overflow",
+    ]]);
+    if (recorded === 0) continue;
+    if (recorded !== 1) throw new Error("Test sale totals unavailable; checkout not acknowledged");
     noted += 1;
   }
   return noted;
