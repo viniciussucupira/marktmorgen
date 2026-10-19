@@ -1,0 +1,94 @@
+# The loss study (scripts/pricing-study-v2-loss.py) split across runners: 20 runners, each running 5 of its 100 shards
+# at once (it is single-threaded; a runner has 4 cores). Its seeds are fixed per block of draws, so the shard count does
+# not change a number. One merge puts them together on Actions and pushes the two documents, with every shard's
+# digest, to compute-results/pricing-loss-<run id>. Runs only on pushes to compute/pricing-loss-*; never on main.
+name: Pricing loss shards
+on:
+  push:
+    branches: ["compute/pricing-loss-*"]
+permissions:
+  contents: read
+concurrency:
+  group: pricing-loss-shards-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  SHARDS: "100"
+  PER_RUNNER: "5"
+  # One vector path on every runner (some have AVX-512, some do not), so every shard rounds the same way.
+  NPY_DISABLE_CPU_FEATURES: "X86_V4 AVX512_ICL AVX512_SPR"
+  PYTHONHASHSEED: "0"
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+jobs:
+  shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: true
+      matrix:
+        runner: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - name: Shards ${{ matrix.runner }}*5 to ${{ matrix.runner }}*5+4, at once
+        env:
+          RUNNER_INDEX: ${{ matrix.runner }}
+        run: |
+          mkdir -p shards logs
+          python -c "from numpy._core._multiarray_umath import __cpu_dispatch__ as d, __cpu_features__ as f; print('numpy dispatch', [k for k in d if f.get(k)])"
+          pids=()
+          for k in $(seq 0 $((PER_RUNNER - 1))); do
+            i=$((RUNNER_INDEX * PER_RUNNER + k))
+            ( start=$(date +%s); python3 scripts/pricing-study-v2-loss.py --shard "$i" --of "$SHARDS" --out "shards/pricing-loss-shard-$i-of-$SHARDS.json" --demand-root demand-pin > "logs/shard-$i.log" 2>&1; rc=$?; echo "shard $i exit $rc in $(( $(date +%s) - start ))s" >> "logs/shard-$i.log"; exit $rc ) &
+            pids+=($!)
+          done
+          fail=0
+          for p in "${pids[@]}"; do wait "$p" || fail=1; done
+          tail -n 3 logs/*.log
+          exit $fail
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: loss-shards-${{ matrix.runner }}
+          path: shards
+          retention-days: 7
+          if-no-files-found: error
+  merge:
+    needs: [shard]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: numpy and scipy
+        run: python -m pip install --disable-pip-version-check numpy==2.5.3 scipy==1.18.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: loss-shards-*
+          path: shards
+          merge-multiple: true
+      - name: Merge the shards
+        run: |
+          ls shards | wc -l
+          python3 scripts/pricing-study-v2-loss.py --merge shards --demand-root demand-pin
+      - name: Push the result to compute-results/pricing-loss-${{ github.run_id }}
+        env:
+          RUN: ${{ github.run_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "compute-results/pricing-loss-$RUN"
+          mkdir -p "compute-results/pricing-loss-$RUN"
+          (cd shards && sha256sum *.json) > "compute-results/pricing-loss-$RUN/shards.sha256"
+          git add -f docs/pricing-study-v2-loss-2026-10-18.json docs/pricing-study-v2-loss-2026-10-18.md "compute-results/pricing-loss-$RUN"
+          git commit -m "Pricing study v2 loss: sharded run $RUN of ${{ github.sha }}"
+          git push origin "compute-results/pricing-loss-$RUN"
