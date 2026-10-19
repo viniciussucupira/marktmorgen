@@ -4,7 +4,7 @@ export type PathCertificateInput=PathShareInput & {recordedAt:number};
 export const CERTIFICATE_WORDS={
  title:"Your private level certificates",
  help:"Choose a reached level and download a personal record. Nothing is posted or sent. Your name is omitted. Sales amounts are off by default.",
- level:"Reached level",money:"Include sales kept after refunds",download:"Download certificate",
+ level:"Reached level",money:"Include sales in this certificate",download:"Download certificate",
  requested:"Certificate download requested. Check your browser's downloads.",
  unavailable:"The download could not be requested. You can copy the certificate text below.",
  text:"Certificate text",textHelp:"The download contains the same information in an accessible web page. Keep it private, or review it before sharing it yourself.",
