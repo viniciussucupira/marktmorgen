@@ -2811,3 +2811,8 @@ Fontes principaisGeist/Instrument usamdisplayoptional para impedir troca tardia 
 #### HT16 — conteúdo da home opaco e estável durante leitura/interação
 
 Após displayoptional, todas as27amostras coletadas deHT16/HT17/HT13 mostraramCLS0 nas3rotas; entretanto primeiro clique frio da home ainda chegou264–272ms emHT13/HT14, e esses jobs foram reprovados. Conteúdo da home agora permanece visível sem transição de opacidade por scroll; observador React duplicado removido dessa página e regra escopada cobre seus componentes filhos. Mesma marca/layout/links/planos/limites, sem tocar temas do criador. Nenhuma exclusão de amostra/regra ou relaxamento de200ms; nova verificação integral no novohead. Histórico e baseline preservados emdocs/ht16-public-design.md.
+
+
+#### HT15 — rótulos explícitos dos filtros da biblioteca
+
+Product checks39467027754/verify118781108709 passou build/regressões, mas navegador expirou procurando o rótulo exatoGoal. Cada filtro novo agora usa label/htmlFor e id explícitos separados das opções, mantendo nome acessível curto e inequívoco. Mesmo ajuste nos novos campos do planejadorHT14. Não afrouxar seletor nem ignorar etapa: filtros, teclado/AA e suíte integral devem passar no novohead. Nenhuma operação/custo/permissão/identificador persistido alterado.
