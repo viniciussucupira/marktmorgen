@@ -2469,7 +2469,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 185. **[HT3] Valor antes do preço e comparação honesta do modelo de taxas**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado — publicação funcional110 confirmada**.
 - Registro:20/10/2026 às12:48:20 de Fortaleza. Base conferida `54865f3c02c18bb1f77a866a2e4b1e6ca195c709`; commit de implementação: `440f43d01e961e2b93f435fb23cd8e92d20926ac` (criado em2026-10-20 12:49:13 de Fortaleza).
 - Home #pricing e /pricing reutilizam um componente estático único, com Checkout, Upsells, Affiliates, Funnels, Email automation, Community, Courses, Video calls, Analytics e CRM antes dos preços. Cada grupo aponta a recurso real já existente; nenhum recurso é ativado. Preços/limites/termos anuais/add-ons preservados.
 - Reutiliza COMPETITOR_PRICES.hotmart, feeWords e a ToolsCalculator existente, sem segundo modelo/calculadora. Fontes oficiais rechecadas20/10: https://hotmart.com/en/pricing ; https://hotmart.com/en/legal/payments-policy (versão21/09/2026, seção5/tabelas); help oficial208298448. Política/tabela/FAQ atuais usam taxa fixaUSD1,00 para faixa geral; trecho antigo do help ainda mencionaUSD0,50. Escopo/limiares/moedas/custos extras e necessidade de orçamento aplicável permanecem explícitos; nenhuma promessa de custo total menor, ganhos ou margem certificada.
@@ -2480,7 +2480,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Verificação HT3: CI integral39451939003 no head `6dfd61c1a9b0e3189a0929ebea7107cbebb5b83a` reprovou o inventário de acessibilidade porque o componente compartilhado novo não estava listado. Registro adicionado a docs/accessibility-inventory.json; exige nova execução integral no novo head, sem rerun isolado. HT0 incorporado via PR712, merge `7e5b166093cbcb9737b6900f8abcde2285eb1902`, em20/10/2026 às12:55:08 de Fortaleza; Product39449636974, verify118720699159, Redis118720696721 e security39449637090 aprovados. Alteração documental, sem incrementar publicação funcional.
 
 186. **[HT4] Completar a comparação existente com a Hotmart**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado — publicação funcional111 confirmada**.
 - Registro:20/10/2026 às12:56:49 de Fortaleza. Base conferida `e19fc44a46ac799088bb70ad05631c081675789d`; commit de implementação: `b1277da95f9586100d11dffa65d8f7f2ce707fef` (criado em2026-10-20T15:57:28Z, UTC; Fortaleza UTC−3).
 - A página existente /proof/hotmart recebe comparação de prazos de saque, marca/domínio e dependências do ecossistema. Preserva preços canônicos, taxas e ressalvas existentes, vantagens reais da Hotmart, SEO, rota e inventário de comparações; nenhuma página duplicada.
 - Fontes oficiais lidas20/10: política/taxas já registradas, artigo Hotmart360028608652 sobre disponibilidade de comissões, página oficial Club update-your-members-area e docs.stripe.com/payouts. Saque internacional pode começar em15 dias corridos, sujeito à garantia/elegibilidade; não confundir com BRL ou prometer saque imediato/mais rápido no Stripe. Hotmart Club tem personalização visual/domínio; não alegar ausência ou white-label completo. Domínio Marktmorgen segue configuração existente, plano, DNS e certificado.
@@ -2685,3 +2685,28 @@ HT2/PR714 incorporado em20/10/2026 às13:32:08 de Fortaleza. READY em13:33:12.64
 #### HT12 — correção de verificação integral (2026-10-20T16:52:29Z)
 
 O CI integral do head d8b5f7c2bc0162f776da886429deb5d05759f7ad encontrou uma ocorrência de “afterwards” no guia de sessões, incompatível com o padrão en-US vigente. Corrigida para “afterward” no commit f23e100193e76839dc9c8bb9c8faafe10fbf2a81. Product checks 39459453441 / verify 118754920432: falhou; Redis e Dependency security passaram. Nova verificação integral obrigatória no novo head; nenhum job isolado reexecutado para declarar conclusão. Sem mudança de custos, preços, limites ou gates; publicação permanece pendente.
+
+
+### Publicação funcional110
+
+- Item 185; PR #715; incorporação em Fortaleza: 2026-10-20 13:34:10 (UTC−3). Head verificado `6579085b13fae9f93685639dc156b3eeeac14e43`; versão exata publicada `cf2c5a0b92f45186d73c816bf3c661e179ef0da8`.
+- READY 2026-10-20T16:35:12.467Z; domínio marktmorgen.com confirmado no alias e nas rotas; deployment `dpl_F7618e1MiUQGq6H3RSoQu4ovaP8Z`. 6 rotas HTTP200 na mesma versão; 138 verificações específicas sintéticas aprovadas. Product checks 39454883085, verify 118739147060, Redis 118739146674 e Dependency security 39454883042: aprovados no head completo.
+- Runtime: zero erros/fatais no intervalo 2026-10-20T16:31:36.317Z → 2026-10-20T16:36:36.317Z. Custos: sem nova operação/fornecedor ou custo variável; preços, limites, opt-in e gates fiscais/comerciais preservados. PLANS_ON_SALE=false, margem global não certificada. Contador incrementado somente após essas provas; aviso 110 já enviado.
+
+
+### Publicação funcional111
+
+- Item 186; PR #716; incorporação em Fortaleza: 2026-10-20 13:36:57 (UTC−3). Head verificado `45bb035291c19399e86ace7920ab94cafc8bfd05`; versão exata publicada `f9bca29fe6386648f76351de70955d4a93f7aa89`.
+- READY 2026-10-20T16:38:13.894Z; domínio marktmorgen.com confirmado no alias e nas rotas; deployment `dpl_7Vx2JdDbxt5Uc6DyqUjTPe5LF6R1`. 7 rotas HTTP200 na mesma versão; 34 verificações específicas sintéticas aprovadas. Product checks 39454886874, verify 118739165109, Redis 118739164818 e Dependency security 39454887142: aprovados no head completo.
+- Runtime: zero erros/fatais no intervalo 2026-10-20T16:35:33.246Z → 2026-10-20T16:40:33.245Z. Custos: sem nova operação/fornecedor ou custo variável; preços, limites, opt-in e gates fiscais/comerciais preservados. PLANS_ON_SALE=false, margem global não certificada. Contador incrementado somente após essas provas; aviso 111 já enviado.
+
+
+193. **[HT15] Reunir os modelos existentes numa biblioteca com filtros, prévia e uso em rascunho**
+
+- Estado: **Em implementação; verificação integral e publicação pendentes**.
+- Registro:20/10/2026 às13:56:53 de Fortaleza. Base remota conferida `47f19942b46348ae36e0d61cce059cc8a5bc0f4c`; implementação `c488f4c03f38634c078331600575f8e957c17b70` (2026-10-20T16:56:53Z).
+- Biblioteca privada em Growth reúne definições existentes de páginas, funnel-starters, mail-starters, layouts de email e saved-blocks; filtros por objetivo/tipo/texto e prévias locais. Sessões salvas só lidas por botão explícito na API privada existente; falha continua desconhecida, nunca vazia por suposição.
+- Usar abre rascunho não salvo no editor existente, sequência pausada ou preview de setup existente do funil; não grava/importa/publica/ativa/envia automaticamente. Páginas, testes, variantes, textos dos criadores, idiomas e IDs persistidos preservados. Sequência existente no mesmo trigger não é substituída; gatilhos, limites, revisão e consentimento existentes mantidos.
+- Sem chamada de IA ou fornecedor novo, novo pool/teto/reserva, job ou armazenamento. Operações explícitas existentes continuam sujeitas às quotas atuais. Nenhuma mudança de preço, limite visível, comissão, PLANS_ON_SALE=false, tax gate, art.9a ou revisão comercial. Piso líquido de60% continua obrigatório por cliente no pior cenário e global, todos os impostos; não há declaração de margem certificada ou vendas abertas.
+- Testes adicionados: catálogo/filtros/destinos canônicos; fixture sintética isolada com página vazia e página existente; navegador390/1280 verifica filtros/prévias/leitura privada explícita, rascunho de página, conteúdo salvo preservado, placeholders de email, sequência pausada, largura/axe e nenhuma write. CI integral no head final obrigatório; publicação só conta após READY/domínio/SHA. Nenhuma conta real, pagamento, mensagem ou submissão externa.
+- Proveniência: docs/ht15-template-library.md. PróximoHT16/17, depois cálculosHT10/11/13/14; nenhum B2 novo à frente.
