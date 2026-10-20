@@ -273,7 +273,7 @@ export const EVERGREEN_GUIDES:BlogPost[]=[
       },
       {
         "type": "p",
-        "text": "Write a short agenda and a preparation list. If you need a file or a question before the meeting, explain when and how the buyer provides it. Keep personal information limited to what the session needs. A preparation form should not become a request for sensitive information simply because a field can be added. Tell the buyer what they receive afterwards, and avoid implying that a recording is included unless you actually provide one with the necessary consent."
+        "text": "Write a short agenda and a preparation list. If you need a file or a question before the meeting, explain when and how the buyer provides it. Keep personal information limited to what the session needs. A preparation form should not become a request for sensitive information simply because a field can be added. Tell the buyer what they receive afterward, and avoid implying that a recording is included unless you actually provide one with the necessary consent."
       },
       {
         "type": "steps",
