@@ -1,3 +1,4 @@
+import { checkButtonContrast } from "./button-contrast.mjs";
 import { checkDetailsAcknowledgment } from "./details-acknowledgment.mjs";
 import {checkEmailCapabilities} from "./email-capabilities.mjs";
 import {checkRenameAcknowledgment} from "./rename-acknowledgment.mjs";
@@ -542,6 +543,7 @@ try {
               const action=await mountFieldFocusFixture(signin,{surface:paint["--st-bg"],kind,className,paint});
               const focus=await fieldFocusPixels(signin,action);
               is("store action "+className+" "+theme.id+"/"+accent.label+": rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
+              if(className==="btn st-btn") await checkButtonContrast({page:signin,target:action,label:theme.id+"/"+accent.label,is});
             }
 
           }

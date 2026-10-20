@@ -60,6 +60,13 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Estado: **em andamento (branch codex/us-english-composer-copy; áreas públicas/legais, após PR #623)**.
    - Custo e margem: Sem novo fornecedor; medir eventual mudança de payload dentro dos tetos existentes. M0 permanece referência, sem certificação fiscal.
 
+138. **[P0-BUTTON-CONTRAST] Contraste do texto dos botões das lojas durante interação**
+   - Pedido: P0/P4, excelência transversal; não é declaração de AAA do site inteiro.
+   - Estado: **em andamento; branch codex/store-button-contrast, após PR639**.
+   - Achado: branco sobre violeta #5a36ee tem contraste menor que7:1. O filtro de brilho/saturação ao apontar podia reduzir o contraste derivado. Ajustar preenchimento e texto juntos para7:1 e borda do botão contra o cartão para3:1, preservando a escolha persistida do criador. Manter realce pelo sombreado, sem filtro que altere o par de cores.
+   - Prova: propriedades em quatro temas, predefinições e grade RGB; gradiente sem sobreposição; CSS real dos botões em estado normal/ponteiro/foco no navegador sintético. Os testes de foco existentes permanecem. Fotos/sobreposições translúcidas/outros estilos de texto e AT manual não são cobertos por esta prova.
+   - Custo: função pura já existente, remove a segunda busca opcional de cor, no máximo quatro buscas de26passos em vez de cinco; fonte total menor, sem rede/registro/provedor/franquia/preço/gate novo. M0 antes=depois, leitura onerosa ainda reprova60%; PLANS_ON_SALE=false.
+
 5. **[B3] Adicionar teste de texto da plataforma que recuse grafias britânicas comuns: colour, centre, organise, licence, cancelled, behaviour, afterwards e tick/untick; distinguir texto exibido de código, citações e dados.**
    - Pedido: P2 B3; datas/horas e grau de certeza em Proveniência.
    - Estado: **feito; PR #627 incorporado19/10/2026 20:46:10 de Fortaleza; entrega47 confirmada no domínio, versão8afa047, READY20:48:01**.

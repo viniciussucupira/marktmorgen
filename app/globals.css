@@ -2047,7 +2047,8 @@ a.chip {
   box-shadow: 0 10px 24px -14px var(--st-accent);
 }
 .st-btn:hover {
-  filter: brightness(1.07) saturate(1.05);
+  /* Keep the derived foreground/fill contrast unchanged while pointing. */
+  box-shadow: 0 12px 26px -12px var(--st-accent);
 }
 /* The second way to pay, under the first: outlined, in the store's own colors. */
 .st-btn-ghost {
