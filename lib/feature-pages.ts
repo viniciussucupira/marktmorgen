@@ -742,7 +742,7 @@ export const FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do yet",
         items: [
-          "Emails are written, not designed: text with links, lists and up to six pictures, one under another. No templates or columns.",
+          "Email layouts use one column. You can start from four templates or design your own with headings, text, lists, buttons, dividers and up to six pictures.",
           "No open counts, on purpose: nothing in an email reports back. A visit is a page of your store opened through one of the email's links, so a link to anywhere else is not counted, and a sale is one made on the page a link opened; somebody who comes back later by themselves is not counted for it.",
           "A test compares two subject lines, not two versions of the email itself, and only for a one-off email, not a sequence.",
           `During the free trial a store sends up to ${TRIAL_EMAILS} emails; the full ${PRO_EMAILS} opens with the first payment.`,

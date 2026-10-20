@@ -97,7 +97,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 90. **[C2-EMAIL-HONESTY] Corrigir imediatamente a contradição pública sobre modelos de e-mail**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **em andamento; branch codex/email-template-claims; depende da fila636**.
    - Escopo e prova: Conferir os quatro modelos reais e o editor em lib/mail-body.ts/components/mail-designer.tsx. Em lib/feature-pages.ts, a seção de recursos anuncia quatro, mas a seção What it does not do yet ainda diz No templates. Corrigir a limitação para descrever o que existe e o que falta, com regressão na página real; sem prometer colunas ou capacidades ausentes.
    - Custo e margem: Texto dentro da página existente, sem novo envio/chamada/armazenamento/franquia. Medir payload; M0 antes=depois somente se o envelope não aumentar. Preços/limites/gates preservados, sem certificação de60%.
 
@@ -896,3 +896,9 @@ Direito de arrependimento: pedido de conferir EUR-Lex2011/83/UE arts.9/14/16 e20
 Validação636: a execução integral39351663737 terminou com seletor global de alerta ambíguo entre signin-error e o anunciador de rotas do Next. O teste agora procura o alerta dentro do formulário real; nenhuma asserção/cenário ou comportamento de produção foi removido. Novo head exige suíte integral. Atualização documental/teste, sem entrega funcional própria.
 
 Publicação posterior à inserção da fila: item88/PR635 incorporado19/10/2026 22:12:37 de Fortaleza, entrega53 confirmada READY22:13:24, versão4eabb47; Product39351259991/Redis/security39351260069 completos, nove cenários390/1280 com largura correta, sete rotas do domínio exatas e sem error/fatal01:10:20.439–01:15:20.439UTC. O registro original do item88 acima foi preservado no acréscimo P4; esta evidência posterior registra sua conclusão.
+
+
+Item90/P4: quatro modelos conferidos diretamente em MAIL_TEMPLATES (news/launch/welcome/spotlight) e no editor MailBodyEditor, sem reescrever conteúdo salvo ou enviar e-mail. Limitação pública corrigida para uma coluna, com quatro modelos/blocos disponíveis. Novo teste da página real390/1280 recusa a contradição e qualquer escritaAPI; suíte integral pendente. Fonte aumenta28caracteres, sem nova operação/franquia e M0 inalterado/reprovado. AGENTS/CLAUDE/cross-product-handoff lidos; guia local Next ausente, orientação oficial de Server/Client consultada, sem mudar fronteira ou introduzir import/runtime.
+
+
+Validação637: a primeira execução integral39351868509/security39351868522 passou, inclusive página real /platform/email390/1280, descrição consistente, largura e nenhuma escritaAPI. Após concluir essa execução, integrada a correção de seletor de636 e sua fila atualizada; nova suíte completa obrigatória no novo head antes da incorporação/publicação.
