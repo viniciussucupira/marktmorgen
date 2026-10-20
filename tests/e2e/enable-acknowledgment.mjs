@@ -37,7 +37,7 @@ export async function checkEnableAcknowledgment({browser,LOCAL,fixture,is}){
     let release;const held=new Promise(resolve=>{release=resolve;});pending={scenario,release:held};
     const name=kind+"/"+scenario.name+"/"+width;
     const seen=page.waitForRequest(r=>r.method()==="POST"&&new URL(r.url()).pathname==="/api/store/"+kind);seen.catch(()=>{});
-    const destinationSeen=scenario.confirmed?page.waitForRequest(r=>new URL(r.url()).pathname===destination):null;destinationSeen?.catch(()=>{});
+    const destinationSeen=scenario.confirmed?page.waitForResponse(r=>new URL(r.url()).pathname===destination):null;destinationSeen?.catch(()=>{});
     try{
      await button.click();is("enable exact request "+name,(await seen).postDataJSON(),{action:"enable",id:fixture.product});
      is("enable pending disabled "+name,await button.isDisabled(),true);
