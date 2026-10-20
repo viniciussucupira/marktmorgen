@@ -50,3 +50,10 @@ A verificação da página2 passa a aguardar URL page=2 e o título anexado apó
 Head7169 Firefox25casos/1falha: título do produto25 apareceu após esperar página2; contagem2 era expectativa incorreta. StoreBeacon tem efeito por handle/front/product, sem dependência da query page, portanto navegação cliente não cria novo beacon de documento. Mantém-se exatamente1interceptação, sem alterar rastreamento ou cotas.
 
 WebKit25casos/9falhas: retirados os inputs da evidência, a largura ainda veio de conteúdo do SharePanel dentro de details fechado (retângulos visuais zero, descendentes com scroll interno). O main do Studio explicita display none só para filhos não-summary de details sem open, reproduzindo a semântica nativa; quando open, conteúdo reaparece normalmente. Não aplica clipping à página nem suprime texto aberto. Diagnóstico de overflow prioriza caixas visíveis com largura maior que1, excluindo caixas já contidas e sr-only; assertion raiz continua integral. CI completo novo, revisão manual de rolagem permanece aberta.
+
+
+## Grade de promoção e origem estável — 20/10/2026
+
+Head7bec preservado: Firefox25/2marcas target-size; WebKit continuou overflow. Diagnóstico mais profundo mostrou PromotionPlanner com coluna implícita, label Product client206/scroll386 e nome de produto longo no select. O painel declara grid-cols-1/minmax0, labels/controles min-width0 e limites nativos, sem mudar escolha, URL, limites50, métricas, fórmulas ou custos. Texto comum do Studio pode quebrar palavras longas em colunas estreitas. Os controles Edit/mover/remover passam a mínimo48px; antes To the top media21px.
+
+scrollTo(0,0) seguia CSS smooth e não concluía antes de axe; há evidência de retângulos parcialmente sob cabeçalho após o pedido. Preparação passa a desfocar o campo, rolar instantaneamente e esperar dois frames, exigindo scrollX/Y0 antes da auditoria integral; posição após axe é registrada. Nenhuma regra/falha removida; lacuna de sobreposição intermediária permanece. Alterações anteriores de SharePanel/details não resolveram sozinhas a largura e não são declaradas causa exclusiva. CI integral novo obrigatório.

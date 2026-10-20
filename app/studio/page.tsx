@@ -1062,7 +1062,7 @@ export default async function StudioPage({
       )}
 
       <StudioStorePin sid={store?.sid ?? ""}>
-      <main id="content" className="container-page pb-20 pt-10 sm:pt-14 [&_details:not([open])>:not(summary)]:hidden">
+      <main id="content" className="container-page pb-20 pt-10 sm:pt-14 [overflow-wrap:anywhere] [&_details:not([open])>:not(summary)]:hidden">
         <p className="eyebrow">Studio</p>
         <h1 className="t-h2 mt-3 break-words">
           {!store ? "You are logged in" : role === "owner" ? (view && view.owned > 1 ? store.name : "Your store") : store.name}

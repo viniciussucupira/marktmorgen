@@ -79,7 +79,7 @@ try{
     if(!focused)throw Error("No keyboard target reached");
    }
    // Audit at a repeatable document origin, rather than a different product row under the sticky navigation after each fill.
-   await page.evaluate(()=>window.scrollTo(0,0));
+   await page.evaluate(async()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));if(scrollX!==0||scrollY!==0)throw Error("Audit viewport did not settle at document origin");});
    gaps.push({path,width,mode,reason:"Whole-document axe is anchored at scroll0. Intermediate scroll positions under sticky navigation still require manual occlusion review; this run does not close that gap."});
    await page.addScriptTag({content:axe});
    const report=await page.evaluate(async()=>{
@@ -87,7 +87,7 @@ try{
     const selected=window.axe.getRules().filter(rule=>rule.tags.some(tag=>tags.includes(tag)));
     if(!selected.some(rule=>rule.ruleId==="color-contrast-enhanced"))throw Error("AAA enhanced-contrast rule missing");
     const result=await window.axe.run(document,{runOnly:{type:"tag",values:tags}});
-    return {rules:selected.map(rule=>rule.ruleId),violations:result.violations.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target),nodes:rule.nodes.map(node=>({target:node.target,html:node.html.slice(0,600),summary:node.failureSummary,geometry:(()=>{const element=document.querySelector(node.target[0]);if(!element)return null;const b=element.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height,viewport:{width:innerWidth,height:innerHeight},hits:[b.top+2,b.top+b.height/2,b.bottom-2].map(y=>{const hit=document.elementFromPoint(b.left+b.width/2,y);return {y,inside:!!hit&&element.contains(hit),html:hit?.outerHTML.slice(0,250)??null};})};})()}))})),incomplete:result.incomplete.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)}))};
+    return {auditScroll:{x:scrollX,y:scrollY},rules:selected.map(rule=>rule.ruleId),violations:result.violations.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target),nodes:rule.nodes.map(node=>({target:node.target,html:node.html.slice(0,600),summary:node.failureSummary,geometry:(()=>{const element=document.querySelector(node.target[0]);if(!element)return null;const b=element.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height,viewport:{width:innerWidth,height:innerHeight},hits:[b.top+2,b.top+b.height/2,b.bottom-2].map(y=>{const hit=document.elementFromPoint(b.left+b.width/2,y);return {y,inside:!!hit&&element.contains(hit),html:hit?.outerHTML.slice(0,250)??null};})};})()}))})),incomplete:result.incomplete.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)}))};
    });
    if(report.incomplete.length)gaps.push({path,width,mode,manualReview:report.incomplete});
    console.log("PRODUCT_MATRIX_CASE:"+JSON.stringify({engine,path,width,mode,viewportWidth,writes,foreign,...report,errors}));
