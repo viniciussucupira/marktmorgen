@@ -962,3 +962,86 @@ Item89/C2: docs/plan-capacity-precheck.md deriva preços e36quantidades de seis 
 - PR644, ensaio completo39357799943: compilação/regressões anteriores passaram; o navegador não encontrou PauseEditor porque as novas fixtures pagas não tinham período de cobrança válido para a admissão do estúdio. O código de studioView/countStudio/allowanceWindow preserva a recusa de janela desconhecida. Corrigido somente o setup local com paidPeriod() e validação de catálogo/estado/período; diagnóstico limitado de URL/página acrescentado para futuras falhas. Nenhum gate/teto de produção foi reduzido. Nova verificação completa no novo head, sem rerun isolado. A seção S solicitada no anexo524cc7f9 será acrescentada somente depois de concluir este item, preservando números/estados existentes.
 
 - PR644, segundo ensaio completo39359031954: fixture com período válido alcançou o formulário; o teste parou no getByLabel com exact:true porque o label envolve também as opções do select. Seleção corrigida para papel acessível combobox e nome contendo Members may pause for; mesma verificação de valores/pending/erros/sucesso/viewport, nenhum cenário removido. Compilação, tipos, regressões e Redis/segurança passaram; nova execução integral obrigatória do novo head.
+
+### PR644 — conclusão anterior à seção S
+
+- Incorporado19/10/2026 às23:50:49Fortaleza, commitca31becced39e7e15ec7b8ff1746336ba6860861. Entrega59 confirmada em marktmorgen.com, READY19/10 às23:51:47Fortaleza, deploydpl_4jfhChFhdehLkGyF44fLVUDXpdu4; Product39360090491/verify118424006916/Redis118424007302/segurança39360090581 completos.56casos reais de formulário interceptados para ativar/desativar em390/1280;229bundles, lint/tipos/build/regressões/contratos/suíte de navegador verdes.9rotas200 com marcador exato, sem error/fatal02:47:54.198–02:52:54.194UTC. Sem assinatura/cobrança/email real, mesmo POST e gates preservados; M0 igual e ainda reprova60%. Preparações anteriores permanecem no histórico; item141 está concluído por esta evidência, sem reescrever seu estado antigo por pedido P5.
+
+## S — Site de vendas do Marktmorgen (dono, 19/10/2026, 23h de Fortaleza)
+
+Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10/2026 às23:19Fortaleza. O dono informa análise do Claude de dois PDFs Copilot "Blueprint Supremo" contra main977b0c00; PDFs não foram lidos pelo agente, e essa proveniência não equivale a dados concorrentes reconferidos. Após concluir o item atual141/PR644, executar S1–S12 nesta ordem, antes de retomar itens anteriores acionáveis. Os números, estados e conteúdos anteriores ficam preservados; anotações antigas de preparação continuam históricas.
+
+### Regras comuns de S
+
+- Inglês americano correto; descrever apenas capacidades existentes no main conferido antes de cada item. Preservar Claude, conteúdo dos criadores, idiomas de compradores e IDs persistidos. Não atribuir ao Marktmorgen app de loja de aplicativos nem usar a expressão vetada pelo dono.
+- CTA principal "Start your store"; demonstração autoatendida em /demo; sem liderança "free"/"Create a free account", marcação de ligação ou Book a demo. USD; sem reais ou argumento de parcelamento.
+- Nenhuma prova social, logo, métrica, resultado, urgência ou escassez inventada; sem promessa de receita/ROI ou superioridade sem evidência na própria página.
+- Preços e limites próprios de lib/plan.ts/regras reais, nunca cópias manuais. Preços, limites visíveis, número de planos e gates preservados; PLANS_ON_SALE=false. A M0 vinculante continua reprovada, não certificada. Cálculo estático/no navegador não amplia envelope por cliente; novas operações exigem maior custo pago, uso integral mensal/anual por plano, impostos Brasil/EUA, reservas e teto automático antes da operação. Custo fixo de vídeo/banda também exige conta e teto; não instalar vídeo por padrão.
+- Fatos concorrentes reconferidos em fonte oficial antes da publicação; fonte e data visíveis. Dados do anexo são ponto de partida do dono, não prova atual. Todas as comparações incluem "Where they are ahead" no mesmo tamanho do texto; taxas de processamento, condições regionais e lacunas não são omitidas.
+- Nenhuma imagem repetida, inclusive miniaturas; foto de banco explicitamente não é cliente. Teclado, semântica/leitor de tela, contraste e390px sem overflow, sem declarar conformidade geral de AT/AAA.
+- Páginas públicas novas no app/sitemap.ts; preservar IndexNow existente /api/cron/indexnow, sem mecanismo adicional. Testes sintéticos, sem pagamentos/mensagens/contas/submissões externas reais.
+- Cada item: PR codex/* com escopo, lacunas, M0 antes/depois e custo; lint/typecheck/testes integrais no novo head. Documento ou PR pendente não é entrega funcional; só contar após READY, SHA e domínio exatos. Não esperar confirmação para o próximo item.
+
+142. **[S1-COMPARISONS] Comparações oficiais e índice público**
+   - Estado: **a fazer; prioridade S1**.
+   - Escopo: lib/site-pages.ts, seção proof, resumo curto, tabela com fontes/datas, citação literal curta apenas se útil, SEO "Marktmorgen vs Kajabi" e descrição "A Kajabi alternative where...", mesmo padrão adaptado aos demais. Índice ligado no menu/rodapé. Ordem: Kajabi, Skool, ClickFunnels, Circle, Kit, Whop, Hotmart, HighLevel; depois Teachable, Substack, Patreon, Linktree, Podia, Thinkific, Systeme.io.
+   - Conferir cada lado no main: comissão zero, conta própria Stripe, produtos/cursos/comunidade/email/funis/CRM conforme limites/capacidades reais, sem declarar venda aberta. Não confundir pagamento direto com dispensa das obrigações fiscais de plataforma. Cada concorrente tem vantagens/lacunas verificadas e "Where they are ahead" do mesmo tamanho. ClickFunnels liga para /platform/move-from-clickfunnels e vice-versa, sem duplicar migração.
+   - Prova: fontes oficiais datadas e condições de taxas, URLs/SEO/índice/nav/footer/sitemap, teclado/390px/contraste, testes de dados e de páginas reais. Sub-PR por concorrente pode registrar progresso; S1 só fica concluído com os15e índice. Custo: conteúdo estático, sem chamada paga por visita; M0 antes/depois igual se envelope não aumenta.
+
+143. **[S2-PRICING] Página própria /pricing**
+   - Estado: **a fazer; após S1**.
+   - Escopo: três planos mensal/anual diretamente de lib/plan.ts, todos os limites das respectivas regras, "0% of each sale" com taxa do processador explicada; assistente e legendas de IA com preços reais, FAQ e espaço integrado para S3. Home#pricing liga /pricing; indexável/sitemap.
+   - Prova: preços/limites coincidem com fontes canônicas e gates fechados; navegação/semântica/390px. Custo: renderização estática, M0 igual sem novo envelope; S3 é o próximo incremento, não fingir calculadora pronta.
+
+144. **[S3-TOOLS-CALCULATOR] One plan instead of several tools**
+   - Estado: **a fazer; após S2**.
+   - Escopo: calculadora exclusivamente no navegador dentro de /pricing. Seleção de ferramentas e vendas mensais; assinaturas e comissões oficiais aplicáveis contra plano próprio com comissão zero. lib/competitor-prices.ts único, compartilhado com S1, com fonte/data por preço. Estimativa clara, processamento nos dois lados, sem promessa de resultado; não somar taxas inclusas duas vezes nem tratar taxa por transação como percentual sem quantidade.
+   - Prova: preços próprios de lib/plan.ts, dados concorrentes sem fonte/data reprovam; condições/volumes/limites explícitos; entradas inválidas e nenhuma chamada de servidor. Custo: cálculo local, sem novo custo operacional por cálculo; M0 preservada.
+
+145. **[S4-HOME-SALES] Página inicial com módulos reais**
+   - Estado: **a fazer; após S3**.
+   - Escopo: manter "Your store. Your Stripe. Your money." e "See the live demo". Everything in one place: store page, courses, memberships, community, email, calls, funnels and sales pages, checkout, affiliates, CRM, insights, AI writing, Path, cada um com link e capacidade conferidos. Faixa para calculadora S3; capturas reais do estúdio da demo sem dados reais, únicas e com alt. Fecho honesto: um lugar para vender/ensinar/comunidade/email/chamadas, sem promessa de ganhos.
+   - Prova: links/recursos/preços verdadeiros, screenshots sintéticos com origem e sem repetição, layout390px/teclado/contraste/performance. Vídeo só com custo fixo/teto aprovado antes; não é requisito para completar o item. M0/custos explicitados.
+
+146. **[S5-PUBLIC-CRM] People, deals and pipelines**
+   - Estado: **a fazer; após S4**.
+   - Escopo: página em lib/feature-pages.ts para capacidades reais de app/studio/deals e people; pipelineLimit e demais limites por plano de lib/crm-rules.ts. "What it does not do": sem SMS, WhatsApp ou telefone. Menu/homeS4/comparaçãoHighLevel ligados; sitemap.
+   - Prova: regras por plano e permissões existentes, links, leitura acessível/390px. Custo: página estática, sem operação nova de CRM; M0 igual.
+
+147. **[S6-FEATURE-MECHANISMS] Como cada recurso ajuda a vender ou reter**
+   - Estado: **a fazer; após S5**.
+   - Escopo: bloco curto em cada página de lib/feature-pages.ts explicando mecanismo factual, por exemplo oferta no checkout e menor barreira inicial de assinatura, sem números/percentuais/promessas de resultado. Não afirmar integração/capacidade que não exista no main.
+   - Prova: inventário completo de páginas/links, revisão US English, semântica/390px/contraste. Custo: texto estático, sem novo envelope, M0 igual.
+
+148. **[S7-CREATOR-PAGES] Páginas por situação de criador**
+   - Estado: **a fazer; após S6**.
+   - Escopo: course creators, community builders, newsletter writers, consultants and mentors, preservando coaches/cooks/fitness/designers. Padrão existente com ladder e foto única por página; situação descrita, nunca depoimento atribuído. Consultoria: chamadas pagas, pagamentos agendados Stripe, formulários, contratos assinados e lembretes apenas conforme código; sem argumento de parcelamento brasileiro.
+   - Prova: capacidades e fontes próprias, imagens únicas/licença/aviso não-cliente, links reais/sitemap/teclado/390px/contraste. Sem novas operações, M0 igual.
+
+149. **[S8-VERIFIED-SOCIAL-REFERENCE] Referência ao93, sem duplicação**
+   - Estado: **aguardando o dono; condicionado à abertura comercial válida e primeiro caso real consentido; seguir para S9**.
+   - Escopo: executar junto de93/D2-VERIFIED-SOCIAL, não construir segunda solução nem alterar seu estado anterior. Só lojas reais, consentimento escrito, fatos da conta Stripe, situação/ação/resultado medido/data. Até existir caso real, página e faixa ficam ausentes, sem X provisório.
+   - Dependências: PLANS_ON_SALE continua false; exige todos os gates fiscais/comerciais/custos, não apenas ato manual de abertura. Nenhum contato ao criador/Stripe real autorizado neste trabalho. Custo de leitura/armazenamento/modelo/tetos reservado no93 antes de operar; desconhecido reprova. M0 não certificada.
+
+150. **[S9-DECISION-BLOG] Posts úteis para decisão**
+   - Estado: **a fazer; após itens anteriores acionáveis e salto condicional de S8**.
+   - Escopo: textos honestos como How much Kajabi costs in2026, Skool fees explained, Kajabi vs Teachable vs Marktmorgen, com fontes oficiais datadas e links para S1. Conferir posts/categorias atuais no main; criar categoria Courses/Community/Email/Sales apenas com primeiro post real.
+   - Prova: nenhum dado inventado/desatualizado, condições de preço/taxa e limites visíveis, links/sitemap/SEO/390px/teclado. Custo: posts estáticos, nenhum pedido externo ao leitor; M0 igual. Depois seguir S10–S12 e a fila acionável sem confirmação.
+
+151. **[S10-HOME-PRICING-FAQ] Perguntas factuais na home e /pricing**
+   - Pedido: continuação direta do dono, S10–S12; horário exato da mensagem não fornecido, registro de leitura na continuidade.
+   - Estado: **a fazer; após S9**.
+   - Escopo: preservar perguntas existentes de lib/home-faq.ts; acrescentar How much does it cost? (lib/plan.ts), Is there a contract? Can I cancel anytime? (termos reais), Can I move from Kajabi, Stan or another platform? (contatos/produtos/compradores conforme importadores e /platform/switching-to-marktmorgen), Does it connect to my other tools? (Zapier/webhooks/API reais e /developers), Is there support, and how? (canal real sem SLA inventado), How long does it take to open a store? (somente passos/tempo demonstráveis, sem promessa).
+   - Prova: conferir código/main e páginas antes de responder; preços sem duplicação, links, FAQ acessível,390px, lint/tipos/testes integrais. Custo/M0 antes/depois: texto e links no envelope existente; nova chamada/email/IA/banda exige registry/spend-floor, maior custo pago, impostos e teto automático antes. A leitura vinculante continua reprovada, não certificada; vendas fechadas.
+
+152. **[S11-HOME-CTAS] Ações ao longo da home**
+   - Pedido: mesma continuação direta S10–S12.
+   - Estado: **a fazer; após S10**.
+   - Escopo: a cada uma ou duas seções, botão Start your store e segunda opção See the live demo, com destinos existentes e nomes consistentes. Sem free no CTA, Talk to an expert ou Book a demo; sem pop-up/urgência.
+   - Prova: sequência real de seções, links, foco/teclado, nomes acessíveis e390px sem overflow. Sem telemetria/chamada/custo novo por inserir botões; registrar M0 antes/depois, não mudar preço/limite/gate nem afirmar60% fiscal comprovado.
+
+153. **[S12-HOME-PATH] Jornada factual do Marktmorgen Path na home**
+   - Pedido: mesma continuação direta S10–S12.
+   - Estado: **a fazer; após S11**.
+   - Escopo: seção com passos reais e nomes do código atual, ligada a /platform/path. Cada passo distingue o que o criador faz e o que o produto faz por ele. Não prometer resultado, scale your business, conclusão por clique ou função ausente.
+   - Prova: passos/nomes/estados conferidos no main, narrativa US English, link/teclado/390px/contraste, lint/tipos/testes integrais. Texto estático sem novo fato consultado em servidor; eventual operação nova só com conta/teto prévios. M0 antes/depois registrada; piso obrigatório60% não é certificação do modelo atual, vendas continuam fechadas.
