@@ -2598,3 +2598,8 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 #### Correção de regressões públicas compartilhadas — 2026-10-20 17:01:00 UTC
 
 As execuções integrais identificaram contraste durante entrada animada no template público (Hotmart/mostruário) e, emHT7, contagem que incluía o CTA geral da demo além do único criador fictício. Removida a animação de opacidade da primeira dobra das páginas de tópico, mantendo conteúdo visível desde o início; auditoria AA preservada e diagnóstico detalhado adicionado. O teste deHT7 conta o registro na seção de listagens, separado dos CTAs de navegação. Sem exclusão de regra de contraste. CI completo obrigatório no novo head; nenhuma publicação contabilizada enquanto pendente. Sem novas operações, custos, preços, limites ou gates alterados.
+
+
+#### Contraste do corpo de páginas de tópico — 2026-10-20 17:24:39 UTC
+
+Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda estavam em transição de opacidade (texto efetivo#888c91/#979a9e em fundo#f7f5f0; contraste2,59–3,10:1). O cabeçalho já estava estático. Removidas também as classes de reveal dos blocos desse template: conteúdo legível e opaco desde o início, incluindo navegação entre páginas. Sem aguardar artificialmente para esconder falha, sem desativar regraAA. Execuções anteriores39462581781/39462582467/39462598661/39462608086 reprovadas ficam históricas; nova suíte integral obrigatória em cada head corrigido. Sem nova operação/custo ou gates alterados.
