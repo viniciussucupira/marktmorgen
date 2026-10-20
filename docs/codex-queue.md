@@ -2876,3 +2876,8 @@ verify118791597731 executou filtros/prévias/AA e identificou duas expectativas 
 #### HT10 — nome acessível dos IDs separado da ajuda
 
 Os verifies118803842951/118803901027/118804022774 expiraram procurando o nome exatoMeta Pixel ID. O label implícito incluía também todo o texto de ajuda, alterando o nome acessível. Os quatro campos agora têm label/htmlFor/id explícitos; a ajuda permanece via aria-describedby. Nenhum seletor foi afrouxado, nenhuma verificação removida e IDs de pixel/consentimento persistidos não mudam. CI integral no novohead obrigatório; sem nova operação/custo/limite/preço/gate.
+
+
+#### HT10 — distinguir beacon de visita e evento publicitário com payload estrito
+
+verifies118813493380/118813533888 passaram salvamento/AA/atribuição e bloqueio de fornecedor/GPC, mas o teste contavaPOST/api/store/hit como evento publicitário. StoreBeacon e a rota hit foram lidos: esse contador interno já existe, não define cookie nem encaminha anúncios. Agora o teste intercepta exatamente umPOST dessa rota com h=templatelibraryfixture/k=v e somente os campos string já emitidos (h/k/r/u/m/g), devolvendo204 sem executar a gravação. /api/store/ads-event continua exigido emzero, qualquer outra write reprova e nenhum fornecedor externo é chamado. A fixtureGPC inclui também Sec-GPC:1, além do sinalnavigator e do yes antigo, para coerência cliente/servidor. Não altera código de consentimento/analytics de produção nem dispensa controle: testes sintéticos e suíte completa no novohead obrigatórios. Sem custo/operação/direito/gate novo.

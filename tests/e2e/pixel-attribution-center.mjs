@@ -28,15 +28,15 @@ export async function checkPixelAttributionCenter({browser,LOCAL,fixture,axeSour
  is("HT10 attribution links same center "+width,await attribution.getByRole("link",{name:"Review pixel IDs and consent",exact:true}).getAttribute("href"),"#pixels-title");
  is("HT10 all center writes intercepted "+width,intercepted,4);
  }finally{await context.close();}
- const gpc=await browser.newContext({viewport:{width,height:1000}});try{
+ const gpc=await browser.newContext({viewport:{width,height:1000},extraHTTPHeaders:{"Sec-GPC":"1"}});try{
  await gpc.addInitScript(()=>{Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true});localStorage.setItem("nl_px_consent:templatelibraryfixture","yes");});
  await gpc.addCookies([{name:"nl_ads_templatelibraryfixture",value:"y",url:LOCAL}]);
- const page=await gpc.newPage();let vendor=0,writes=0;
- await page.route("**/*",route=>{const request=route.request(),url=new URL(request.url());if(url.origin!==new URL(LOCAL).origin){if(/facebook|google-analytics|googletagmanager|tiktok|pinterest/.test(url.hostname))vendor++;return route.abort();}if(!["GET","HEAD"].includes(request.method())){writes++;return route.abort();}return route.continue();});
+ const page=await gpc.newPage();let vendor=0,adWrites=0,visitHits=0;const unexpectedWrites=[];
+ await page.route("**/*",route=>{const request=route.request(),url=new URL(request.url());if(url.origin!==new URL(LOCAL).origin){if(/facebook|google-analytics|googletagmanager|tiktok|pinterest/.test(url.hostname))vendor++;return route.abort();}if(!["GET","HEAD"].includes(request.method())){let payload;try{payload=request.postDataJSON();}catch{}if(url.pathname==="/api/store/hit"&&request.method()==="POST"&&payload?.h==="templatelibraryfixture"&&payload?.k==="v"&&Object.keys(payload).every(key=>["h","k","r","u","m","g"].includes(key)&&typeof payload[key]==="string")){visitHits++;return route.fulfill({status:204,body:""});}if(url.pathname==="/api/store/ads-event")adWrites++;else unexpectedWrites.push({method:request.method(),path:url.pathname});return route.abort();}return route.continue();});
  await page.goto(LOCAL+"/@templatelibraryfixture");await page.getByText("Your browser’s Global Privacy Control keeps ad measurement off. Manage this signal in your browser settings.",{exact:true}).waitFor();
  is("HT10 GPC beats previous yes "+width,await page.getByRole("button",{name:"Allow",exact:true}).count(),0);
  is("HT10 GPC clears server yes "+width,(await gpc.cookies()).some(cookie=>cookie.name==="nl_ads_templatelibraryfixture"),false);
- is("HT10 no ad platform request "+width,vendor,0);is("HT10 no ad event write "+width,writes,0);
+ is("HT10 no ad platform request "+width,vendor,0);is("HT10 no ad event write "+width,adWrites,0);is("HT10 existing cookieless visit intercepted "+width,visitHits,1);is("HT10 no unexpected write "+width,unexpectedWrites,[]);
  }finally{await gpc.close();}
  }
 }
