@@ -7,6 +7,8 @@ export type CompetitorPlanPrice = {
   name: string;
   monthlyCents: number | null;
   annualCents: number | null;
+  /** Advertised monthly equivalent under annual billing; not an invoice or monthly purchase. */
+  annualEquivalentMonthlyCents?: number;
   source: OfficialPriceSource;
   platformFeeBps: number | null;
   feeSource?: OfficialPriceSource;
@@ -25,6 +27,8 @@ const skoolPricing: OfficialPriceSource = { label: "Skool plans", url: "https://
 const skoolFees: OfficialPriceSource = { label: "Skool payment fees, payouts and Growth Boost", url: "https://help.skool.com/article/86-subscriptions-faq", readOn: "2026-10-20" };
 const cfPricing: OfficialPriceSource = { label: "ClickFunnels plan prices and limits", url: "https://support.myclickfunnels.com/docs/clickfunnels-pricing/", readOn: "2026-10-20" };
 const cfPayments: OfficialPriceSource = { label: "ClickFunnels Stripe and processor fees", url: "https://support.myclickfunnels.com/docs/setting-up-stripe-as-a-payment-gateway-in-clickfunnels/", readOn: "2026-10-20" };
+const circlePricing: OfficialPriceSource = { label: "Circle pricing and plan scope", url: "https://circle.so/pricing", readOn: "2026-10-20" };
+const circleFees: OfficialPriceSource = { label: "Circle paywall and Stripe fees", url: "https://help.circle.so/p/payments/paywall-setup/paywall-transaction-fees", readOn: "2026-10-20" };
 export const COMPETITOR_PRICES = {
   kajabi: {
     name: "Kajabi",
@@ -65,5 +69,19 @@ export const COMPETITOR_PRICES = {
     trial: { days: 14, source: { label: "ClickFunnels trial FAQs", url: "https://support.myclickfunnels.com/docs/clickfunnels-faqs/", readOn: "2026-10-20" } },
     split: { source: { label: "ClickFunnels page split-test scope", url: "https://support.myclickfunnels.com/docs/managing-ab-split-testing-in-funnel-steps/", readOn: "2026-10-20" } },
     editor: { source: { label: "ClickFunnels editor and feature overview", url: "https://www.clickfunnels.com/pricing", readOn: "2026-10-20" } },
+  },
+  circle: {
+    name: "Circle",
+    currency: "USD",
+    plans: [
+      { name: "Professional", monthlyCents: null, annualCents: null, annualEquivalentMonthlyCents: 8900, source: circlePricing, platformFeeBps: 200, feeSource: circleFees },
+      { name: "Business", monthlyCents: null, annualCents: null, annualEquivalentMonthlyCents: 19900, source: circlePricing, platformFeeBps: 100, feeSource: circleFees },
+      { name: "Scale", monthlyCents: null, annualCents: null, annualEquivalentMonthlyCents: 41900, source: circlePricing, platformFeeBps: 100, feeSource: circleFees },
+    ] satisfies CompetitorPlanPrice[],
+    annualScope: "These are advertised monthly equivalents with annual billing, before taxes. A monthly purchase price and the exact annual invoice have not been verified; neither is calculated from the display. Circle Plus needs a custom quote.",
+    feeScope: "Professional: 2%; Business and Scale: 1%; Circle Plus: 0.5%, plus Stripe. The US subscription example adds 2.9% + $0.30 processing and 0.7% Billing. Country, method, currency conversion and optional services can change the total.",
+    trial: { days: 14, source: circlePricing },
+    live: { source: { label: "Circle native live streams and rooms", url: "https://help.circle.so/p/live-and-events/live-setup/circle-live-overview", readOn: "2026-10-20" } },
+    messaging: { source: { label: "Circle direct and group messaging", url: "https://help.circle.so/p/chat/dm/get-to-know-direct-messaging", readOn: "2026-10-20" } },
   },
 } as const;
