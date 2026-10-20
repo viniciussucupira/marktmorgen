@@ -1367,3 +1367,5 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Custo: fontecliente+599caracteres,mesmoPOST/resposta/parseJoinexistentes,semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
 
 - Integração explícita com mainc7370298f145a4682726b95b3872b0c675b8d2f6 preserva CRM eS6,resolveconflitodedocumentação semdescartar histórico. Alerta decontatousa danger-text existente para contraste7:1 emfundosclaros,comaxe-enhancedrealnoalertaeprovanãoincompleta. EscoponãocertificaAAAgeral. Novasuíteintegralnoheadfinal.
+
+- Product39379168729/verify118484047589: confirmações/erros/pending/64lembretes e28contatos funcionaram, mas46asserções de largura global em390falharam aoabrirtodososdisclosuresdafixtureHarborKitchen. Guardglobalmantido; acrescentardiagnósticoboundeddeDOMlargoeimagemsintéticasomenteCI paraidentificarcausa,semcapturapública/dadosreais/relaxamentodeteste. Novasuíteintegralnecessária.
