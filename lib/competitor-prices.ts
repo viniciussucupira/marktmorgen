@@ -15,6 +15,7 @@ export type CompetitorPlanPrice = {
   listedPaymentFeeBps?: number;
   listedPaymentFixedCents?: number;
   externalProviderFeeBps?: number;
+  usRecurringBillingBps?: number;
   usCardProcessingBps?: number;
   usCardProcessingFixedCents?: number;
 };
@@ -37,6 +38,15 @@ const hlPricing: OfficialPriceSource = { label: "HighLevel subscription prices a
 const hlUsage: OfficialPriceSource = { label: "HighLevel usage costs and rebilling guide", url: "https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide", readOn: "2026-10-20" };
 const teachablePricing: OfficialPriceSource = { label: "Teachable plan prices and product limits", url: "https://www.teachable.com/pricing", readOn: "2026-10-20" };
 const teachableFees: OfficialPriceSource = { label: "Teachable plan fees, processing and bundles", url: "https://support.teachable.com/en/articles/15661316-understand-your-transaction-fees-and-bundles", readOn: "2026-10-20" };
+const substackPricing: OfficialPriceSource = { label: "Substack publishing, subscription and Stripe fees", url: "https://support.substack.com/hc/en-us/articles/360037607131-How-much-does-Substack-cost", readOn: "2026-10-20" };
+const patreonPricing: OfficialPriceSource = { label: "Patreon standard plan and publishing", url: "https://www.patreon.com/pricing", readOn: "2026-10-20" };
+const patreonFees: OfficialPriceSource = { label: "Patreon standard and legacy fee rules", url: "https://support.patreon.com/hc/en-us/articles/11111747095181-Creator-fees-overview", readOn: "2026-10-20" };
+const linktreePricing: OfficialPriceSource = { label: "Linktree monthly prices and annual-billing display", url: "https://linktr.ee/s/pricing", readOn: "2026-10-20" };
+const linktreeFees: OfficialPriceSource = { label: "Linktree direct and partner earnings fees", url: "https://linktr.ee/help/en/articles/11410206-understanding-transaction-and-processing-fees-on-linktree", readOn: "2026-10-20" };
+const podiaPricing: OfficialPriceSource = { label: "Podia annual invoices, fees and migration help", url: "https://www.podia.com/pricing", readOn: "2026-10-20" };
+const thinkificPricing: OfficialPriceSource = { label: "Thinkific prices, course limits and trial", url: "https://www.thinkific.com/pricing/", readOn: "2026-10-20" };
+const thinkificFees: OfficialPriceSource = { label: "Thinkific conditional third-party gateway fees", url: "https://support.thinkific.com/hc/en-us/articles/22383950439575-Third-Party-Payment-Gateway-Fee-FAQ", readOn: "2026-10-20" };
+const systemePricing: OfficialPriceSource = { label: "Systeme.io plan prices and FAQ limits", url: "https://systeme.io/pricing", readOn: "2026-10-20" };
 export const COMPETITOR_PRICES = {
   kajabi: {
     name: "Kajabi",
@@ -151,5 +161,67 @@ export const COMPETITOR_PRICES = {
     feeScope: "The plan fee is 7.5% on Starter and 0% on Builder and Growth, across Teachable Payments and custom gateways. Payment processing and optional bundles are separate; 0% plan fee is not free payment processing.",
     annualScope: "Displayed monthly equivalents under annual billing are $29, $69 and $139. An exact annual invoice has not been verified here; do not infer it from the displayed equivalent. Custom needs a quote.",
     trial: { days: 7, source: teachablePricing },
+  },
+  substack: {
+    name: "Substack",
+    currency: "USD",
+    plans: [
+      { name: "Publishing", monthlyCents: 0, annualCents: 0, source: substackPricing, platformFeeBps: 1000, usCardProcessingBps: 290, usCardProcessingFixedCents: 30, usRecurringBillingBps: 70 },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "No publishing subscription fee; paid subscriptions incur a 10% Substack share. The published US-card example adds Stripe 2.9% + $0.30 processing and 0.7% recurring Billing. Local methods, country and iOS purchases can change the total. Optional custom-domain connection is $50 once.",
+    trial: { days: null, source: substackPricing },
+    discovery: { source: { label: "Substack reader app and discovery feed", url: "https://support.substack.com/hc/en-us/articles/19291693034004-Getting-started-on-the-Substack-app", readOn: "2026-10-20" } },
+  },
+  patreon: {
+    name: "Patreon", currency: "USD",
+    plans: [{ name: "Standard for new creators", monthlyCents: 0, annualCents: 0, source: patreonPricing, platformFeeBps: 1000, feeSource: patreonFees }] satisfies CompetitorPlanPrice[],
+    feeScope: "The standard platform share is 10% for creator pages published after August 4, 2025, plus payment processing, payout, conversion and applicable taxes. Continuously published legacy pages can retain different rates; unpublishing and republishing can move them to standard pricing. iOS purchases can add different charges.",
+    trial: { days: null, source: patreonPricing },
+  },
+  linktree: {
+    name: "Linktree", currency: "USD",
+    plans: [
+      { name: "Free", monthlyCents: 0, annualCents: 0, source: linktreePricing, platformFeeBps: null, feeSource: linktreeFees },
+      { name: "Starter", monthlyCents: 800, annualCents: null, annualEquivalentMonthlyCents: 600, source: linktreePricing, platformFeeBps: null, feeSource: linktreeFees },
+      { name: "Pro", monthlyCents: 1500, annualCents: null, annualEquivalentMonthlyCents: 1200, source: linktreePricing, platformFeeBps: null, feeSource: linktreeFees },
+      { name: "Premium", monthlyCents: 3500, annualCents: null, annualEquivalentMonthlyCents: 3000, source: linktreePricing, platformFeeBps: null, feeSource: linktreeFees },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "The pricing page advertises 0% selling fees on Pro, while its link-in-bio feature page still lists a 9% Pro digital-product fee. The applicable platform rate remains unconfirmed, not zero. Direct earnings have separate Stripe processing; the $0.25 partner-earnings payout fee is not a per-purchase fee.",
+    annualScope: "Paid annual-billing displays are $6, $12 and $30 per month equivalent; exact annual invoices are not verified here. Digital-product selling is documented for eligible Pro and Premium accounts in supported countries.",
+    trial: { days: 7, scope: "Pro and Premium only", source: linktreePricing },
+    eligibility: { source: { label: "Linktree digital-product eligibility", url: "https://linktr.ee/help/en/articles/10631437-how-to-share-and-sell-digital-products-on-your-linktree", readOn: "2026-10-20" } },
+    conflictingDisplay: { source: { label: "Linktree older Pro fee display", url: "https://linktr.ee/features/link-in-bio", readOn: "2026-10-20" } },
+  },
+  podia: {
+    name: "Podia", currency: "USD",
+    plans: [
+      { name: "Mover", monthlyCents: null, annualCents: 50400, source: podiaPricing, platformFeeBps: 500 },
+      { name: "Shaker", monthlyCents: null, annualCents: 100800, source: podiaPricing, platformFeeBps: 0 },
+      { name: "Earthquaker", monthlyCents: null, annualCents: 180000, source: podiaPricing, platformFeeBps: 0 },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "Mover: 5% platform fee; Shaker and Earthquaker: 0%. Stripe or PayPal processing is separate. Monthly purchase quotes are unverified.",
+    trial: { days: 14, source: podiaPricing },
+  },
+  thinkific: {
+    name: "Thinkific", currency: "USD",
+    plans: [
+      { name: "Basic", monthlyCents: 5400, annualCents: null, annualEquivalentMonthlyCents: 4000, source: thinkificPricing, platformFeeBps: 0, externalProviderFeeBps: 500, feeSource: thinkificFees },
+      { name: "Start", monthlyCents: 10900, annualCents: null, annualEquivalentMonthlyCents: 8200, source: thinkificPricing, platformFeeBps: 0, externalProviderFeeBps: 200, feeSource: thinkificFees },
+      { name: "Grow", monthlyCents: 21900, annualCents: null, annualEquivalentMonthlyCents: 16400, source: thinkificPricing, platformFeeBps: 0, externalProviderFeeBps: 100, feeSource: thinkificFees },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "The third-party gateway fee is 5% on Basic, 2% on Start and 1% on Grow where the FAQ's country and provider rules apply. Thinkific Payments does not incur that gateway fee; processing and enabled payment services still cost separately. This is not a universal 0% payment quote.",
+    annualScope: "Advertised annual-billing monthly equivalents are $40, $82 and $164. Exact annual invoices are unverified, not inferred from rounded displays. Plus requires a custom quote.",
+    trial: { days: 30, source: thinkificPricing },
+  },
+  systeme: {
+    name: "Systeme.io", currency: "USD",
+    plans: [
+      { name: "Free", monthlyCents: 0, annualCents: 0, source: systemePricing, platformFeeBps: 0 },
+      { name: "Startup", monthlyCents: 1700, annualCents: null, source: systemePricing, platformFeeBps: 0 },
+      { name: "Webinar", monthlyCents: 4700, annualCents: null, source: systemePricing, platformFeeBps: 0 },
+      { name: "Unlimited", monthlyCents: 9700, annualCents: null, source: systemePricing, platformFeeBps: 0 },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "Systeme.io advertises 0% platform transaction fees; Stripe or PayPal processing is separate. Exact paid annual invoices are not verified from the two-months-free headline.",
+    trial: { days: null, source: systemePricing },
   },
 } as const;

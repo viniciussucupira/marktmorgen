@@ -19,18 +19,16 @@ test("official comparison prices carry an HTTPS source and a real read date", ()
       assert.match(plan.source.readOn, /^\d{4}-\d{2}-\d{2}$/);
       assert.equal(new Date(plan.source.readOn).toISOString().slice(0, 10), plan.source.readOn);
     }
-    const extraSources: OfficialPriceSource[] = [competitor.trial.source];
-    if ("brandedApp" in competitor) extraSources.push(competitor.brandedApp.source);
-    if ("discovery" in competitor) extraSources.push(competitor.discovery.source);
-    if ("usage" in competitor) extraSources.push(competitor.usage.source);
-    if ("feeDetails" in competitor) extraSources.push(competitor.feeDetails.source);
-    if ("sponsorship" in competitor) extraSources.push(competitor.sponsorship.source);
-    if ("messaging" in competitor) extraSources.push(competitor.messaging.source);
-    if ("live" in competitor) extraSources.push(competitor.live.source);
-    if ("webinar" in competitor) extraSources.push(competitor.webinar.source);
-    if ("split" in competitor) extraSources.push(competitor.split.source);
-    if ("editor" in competitor) extraSources.push(competitor.editor.source);
-    for (const plan of competitor.plans) if ("feeSource" in plan) extraSources.push(plan.feeSource);
+    const extraSources: OfficialPriceSource[] = [];
+    const visit = (value: unknown): void => {
+      if (!value || typeof value !== "object") return;
+      if (Array.isArray(value)) { for (const entry of value) visit(entry); return; }
+      const record=value as Record<string, unknown>;
+      if (typeof record.url==="string" && typeof record.label==="string" && typeof record.readOn==="string")
+        extraSources.push({url:record.url,label:record.label,readOn:record.readOn});
+      for (const entry of Object.values(record)) visit(entry);
+    };
+    visit(competitor);
     for (const source of extraSources) {
       assert.equal(new URL(source.url).protocol, "https:");
       assert.match(source.readOn, /^\d{4}-\d{2}-\d{2}$/);
@@ -58,7 +56,7 @@ test("the comparison reads every own published price, email limit and catalog ca
   assert.ok(table.rows.find(r => r[0] === "Getting started")![2].includes("not open yet"));
 });
 test("new proof pages are in the existing sitemap and the index links only actual proof pages", () => {
-  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "hotmart", "highlevel", "teachable", "comparisons"]) {
+  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "hotmart", "highlevel", "teachable", "substack", "patreon", "linktree", "podia", "thinkific", "systeme", "comparisons"]) {
     assert.equal(sitemap().filter(e => new URL(e.url).pathname === "/proof/" + slug).length, 1);
   }
   const index = findPage("proof", "comparisons");
@@ -188,4 +186,34 @@ test("Teachable current catalog caps and annual equivalents do not invent an inv
  assert.ok(table.rows.find(r=>r[0]==="Product catalog")![2].includes(MAX_PRODUCTS.toLocaleString("en-US")));
  for(const tier of TIERS)assert.ok(table.rows.find(r=>r[0]==="Monthly subscription")![2].includes(publishedPriceWords(tier,"month")));
  assert.ok(table.rows.find(r=>r[0]==="Platform and processing fees")![1].includes("not free payment"));
+});
+
+const finalComparisonSlugs = ["substack","patreon","linktree","podia","thinkific","systeme"] as const;
+test("all fifteen S1 comparisons are real indexed pages with canonical own prices and readable tradeoffs", () => {
+ const slugs=["kajabi","skool","clickfunnels","circle","kit","whop","hotmart","highlevel","teachable",...finalComparisonSlugs];
+ const index=findPage("proof","comparisons");assert.ok(index);
+ const hrefs=index.blocks.flatMap(b=>b.kind==="features"?b.items.map(i=>i.href):[]);
+ assert.deepEqual(hrefs.filter(h=>slugs.some(s=>h==="/proof/"+s)),slugs.map(s=>"/proof/"+s));
+ for(const slug of finalComparisonSlugs){
+  const page=findPage("proof",slug);assert.ok(page);
+  assert.equal(page.seo?.title,"Marktmorgen vs "+COMPETITOR_PRICES[slug].name);
+  const table=page.blocks.find(b=>b.kind==="table");assert.ok(table && table.kind==="table");
+  for(const tier of TIERS){
+   assert.ok(table.rows.find(r=>r[0]==="Monthly subscription")![2].includes(publishedPriceWords(tier,"month")));
+   assert.ok(table.rows.find(r=>r[0]==="Annual billing")![2].includes(publishedPriceWords(tier,"year")));
+  }
+  assert.ok(table.rows.find(r=>r[0]==="Getting started")![2].includes("paid selling are not open yet"));
+  assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead" && b.items.length>=2));
+ }
+});
+test("uncertain quotes, legacy cohorts and conditional payment fees are not favorable zeroes", () => {
+ assert.ok(COMPETITOR_PRICES.linktree.plans.every(p=>p.platformFeeBps===null));
+ assert.ok(COMPETITOR_PRICES.linktree.feeScope.includes("9%") && COMPETITOR_PRICES.linktree.feeScope.includes("unconfirmed"));
+ assert.ok(COMPETITOR_PRICES.patreon.feeScope.includes("August 4, 2025") && COMPETITOR_PRICES.patreon.feeScope.includes("legacy"));
+ assert.ok(COMPETITOR_PRICES.podia.plans.every(p=>p.monthlyCents===null));
+ assert.deepEqual(COMPETITOR_PRICES.podia.plans.map(p=>p.annualCents),[50400,100800,180000]);
+ assert.equal(COMPETITOR_PRICES.substack.plans[0].usRecurringBillingBps,70);
+ assert.deepEqual(COMPETITOR_PRICES.thinkific.plans.map(p=>p.externalProviderFeeBps),[500,200,100]);
+ assert.ok(COMPETITOR_PRICES.thinkific.plans.every(p=>p.annualCents===null));
+ assert.ok(COMPETITOR_PRICES.systeme.plans.slice(1).every(p=>p.annualCents===null && p.platformFeeBps===0));
 });

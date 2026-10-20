@@ -5,6 +5,7 @@ import { isDomainsConfigured } from "@/lib/domains";
 import { PRO_MONTHLY_EMAILS, TIERS, PLAN_TITLES, publishedPriceWords, monthlyEmails, commissionBps } from "@/lib/plan";
 import { pipelineLimitWords } from "@/lib/crm-rules";
 import { MAX_PRODUCTS } from "@/lib/catalog-rules";
+import { FINAL_COMPARISON_PAGES } from "@/lib/final-comparison-pages";
 import { COMPETITOR_PRICES } from "@/lib/competitor-prices";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
@@ -86,6 +87,7 @@ const PROOF = { label: "Checked and dated", tone: "proof" as const };
 export const PAGES: TopicPage[] = [
   ...FEATURE_PAGES,
   ...CREATOR_PAGES,
+  ...FINAL_COMPARISON_PAGES,
   {
     slug: "teachable",
     section: "proof",
@@ -399,7 +401,7 @@ export const PAGES: TopicPage[] = [
     title: "Compare",
     highlight: "the platforms.",
     intro: "Published prices, payment fees and practical limits, with official sources and an honest account of where another platform is ahead.",
-    seo: { title: "Compare Marktmorgen with other creator platforms", description: "Compare Marktmorgen with Kajabi, Skool, ClickFunnels, Circle, Kit, Whop, Hotmart, HighLevel, Teachable, Stan, Gumroad and Beacons using dated official sources, published limits and honest tradeoffs." },
+    seo: { title: "Compare Marktmorgen with other creator platforms", description: "Compare Marktmorgen with creator platforms using dated official sources, published prices, practical limits and honest tradeoffs." },
     badge: PROOF,
     accent: "#6d4aff",
     blocks: [
@@ -413,6 +415,12 @@ export const PAGES: TopicPage[] = [
         { icon: "scale", title: "Marktmorgen vs Hotmart", body: "Current USD fee bands, payment model and distribution tools.", href: "/proof/hotmart" },
         { icon: "scale", title: "Marktmorgen vs HighLevel", body: "CRM, channel costs and agency scope.", href: "/proof/highlevel" },
         { icon: "scale", title: "Marktmorgen vs Teachable", body: "Course catalogs, student experience and processing fees.", href: "/proof/teachable" },
+        { icon: "scale", title: "Marktmorgen vs Substack", body: "Publication networks, subscription share and email.", href: "/proof/substack" },
+        { icon: "scale", title: "Marktmorgen vs Patreon", body: "Standard versus legacy fees and the fan experience.", href: "/proof/patreon" },
+        { icon: "scale", title: "Marktmorgen vs Linktree", body: "Link pages, selling eligibility and conflicting fee quotes.", href: "/proof/linktree" },
+        { icon: "scale", title: "Marktmorgen vs Podia", body: "Annual invoices, catalogs and migration help.", href: "/proof/podia" },
+        { icon: "scale", title: "Marktmorgen vs Thinkific", body: "Learning products and conditional gateway fees.", href: "/proof/thinkific" },
+        { icon: "scale", title: "Marktmorgen vs Systeme.io", body: "Email, funnels and actual plan limits.", href: "/proof/systeme" },
         { icon: "scale", title: "Marktmorgen and Stan", body: "The existing side-by-side comparison and its sources.", href: "/proof/compare" },
         { icon: "calculator", title: "Marktmorgen and Gumroad", body: "Subscription costs, sales fees and tax responsibilities.", href: "/proof/gumroad" },
         { icon: "scale", title: "Marktmorgen and Beacons", body: "Its plans and sales fees, and when they are a better fit.", href: "/proof/beacons" },
