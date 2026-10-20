@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await setAnnouncement(guarded.ref, { text: guarded.body.text, product: guarded.body.product });
     if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "unknown" ? 404 : 400 });
-    return Response.json({ ok: true, on: result.store.announcement !== null });
+    return Response.json({ ok: true, on: result.store.announcement !== null, announcement: result.store.announcement });
   } catch (error) {
     console.error("saving a store's announcement failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await setSections(guarded.ref, guarded.body.sections);
     if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "unknown" ? 404 : 400 });
-    return Response.json({ ok: true, sections: result.store.sections.length });
+    return Response.json({ ok: true, sections: result.store.sections.length, savedSections: result.store.sections });
   } catch (error) {
     console.error("saving a store's sections failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

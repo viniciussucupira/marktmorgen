@@ -1,3 +1,4 @@
+import { checkLayoutAcknowledgment } from "./layout-acknowledgment.mjs";
 import { checkLookAcknowledgment } from "./look-acknowledgment.mjs";
 import { checkLanguageAcknowledgment } from "./language-acknowledgment.mjs";
 import { checkThanksAcknowledgment } from "./thanks-note-acknowledgment.mjs";
@@ -761,7 +762,8 @@ try {
   await checkPdfStampAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkPdfPreviewAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkFaqAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
-  await checkLookAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
+  await checkLayoutAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid},is});
+await checkLookAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkLanguageAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkThanksAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
 await checkNoCountAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
