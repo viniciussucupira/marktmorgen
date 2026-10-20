@@ -158,26 +158,30 @@ const env = {
 };
 
 const require = createRequire(join(root, "package.json"));
-let chromium;
+const engine = process.env.E2E_BROWSER ?? "chromium";
+if (!["chromium", "firefox", "webkit"].includes(engine)) throw new Error(`Unsupported E2E_BROWSER: ${engine}`);
+let browserType;
 for (const name of ["playwright", "playwright-core", process.env.PLAYWRIGHT_CORE].filter(Boolean)) {
   try {
-    ({ chromium } = require(name));
+    browserType = require(name)[engine];
     break;
   } catch {}
 }
-if (!chromium) {
+if (!browserType) {
   console.error("This needs Playwright or playwright-core on the machine (PLAYWRIGHT_CORE=<its folder> to name one). Nothing was run.");
   process.exit(2);
 }
 const axeSource = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
 async function launch() {
-  if (process.env.CHROMIUM) return chromium.launch({ executablePath: process.env.CHROMIUM });
+  // Firefox/WebKit must fail visibly if unavailable; never substitute Chromium.
+  if (engine !== "chromium") return browserType.launch();
+  if (process.env.CHROMIUM) return browserType.launch({ executablePath: process.env.CHROMIUM });
   try {
-    return await chromium.launch();
+    return await browserType.launch();
   } catch (first) {
     try {
-      return await chromium.launch({ channel: "chrome" });
+      return await browserType.launch({ channel: "chrome" });
     } catch {
       throw first;
     }
@@ -231,6 +235,7 @@ try {
   }
 
   browser = await launch();
+  console.log(`BROWSER_ENGINE_REPORT:${JSON.stringify({ requested: engine, actual: browserType.name(), version: browser.version() })}`);
   const errors = [];
   const watch = (page) => page.on("pageerror", (error) => errors.push(String(error)));
   const open = async (page, url) => { const response=await page.goto(url,{waitUntil:"networkidle",timeout:60000}); if(!new URL(url).pathname.startsWith("/@"))is("platform document declares American English",await page.locator("html").getAttribute("lang"),"en-US"); return response; };

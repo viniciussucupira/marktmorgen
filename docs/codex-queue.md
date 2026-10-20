@@ -2958,7 +2958,7 @@ verify118824851029 reprovou somente HT10 matching window confirmed1280: save lim
 
 Pedido: revisão em andamento antes do pedido P0 de 20/10/2026; registro em 20/10/2026 16:51 de Fortaleza.
 
-Estado: implementado em `fd970c191f68431c0f7b4ed73bde7c6fd46fd529`; suíte completa e publicação pendentes.
+Estado: concluído; PR729 incorporado em20/10/2026 17:25:41 de Fortaleza, publicação123 confirmada. Implementação inicial preservada no histórico; head integralmente testado b21710d58b1b4a346cd6c79a47e2c4c55770b30a.
 
 Escopo e prova: o editor conserva o rascunho quando não confirma um título e explica que tentativas iniciadas contam na franquia. Mensagem anunciada por status acessível. Mesma chamada, reserva, tetos e tratamento de respostas; remove a afirmação incorreta “nothing was counted”. Verificação completa no novo head obrigatória.
 
@@ -2968,7 +2968,7 @@ Custo e margem: apenas texto e status, sem operação ou custo variável novo. P
 
 Pedido: P0, pedido de excelência/acessibilidade de 19/10/2026; acrescentado por pedido do dono em 20/10/2026, às16:51 de Fortaleza.
 
-Estado: na fila; executar após concluir o item200 e os PRs HT, antes do item202 e de qualquer novo B2.
+Estado: em andamento, iniciado em20/10/2026 17:29 de Fortaleza após publicação123. Primeira etapa: executar a suíte existente também emFirefox/WebKit, sem substituir motores silenciosamente. Matriz completa de jornadas/larguras/modos AAA ainda pendente; item não concluído. Antes do item202 e de qualquer novo B2.
 
 Escopo e prova: acrescentar Firefox e WebKit (Safari) aos testes Playwright existentes, sem serviço pago; se a instalação não for possível, registrar motivo exato e requisitos. Exercitar home, preços, cadastro, criação de produto, publicação da loja, página da loja, checkout e área do comprador nas larguras320,390,768,1280 e1920px: axe incluindo regras AAA, teclado, zoom400% com reflow, espaçamento WCAG1.4.12, movimento reduzido e alto contraste. Corrigir falhas em PRs pequenos com prova de falha antes e aprovação depois. Inventariar lacunas de aparelhos reais (iPhone, Android, Windows/Edge, tablets), custos de aparelhos ou nuvem como BrowserStack/Sauce Labs com fonte oficial e data. Não contratar, criar conta nem realizar submissão externa. Ao concluir registrar data/hora Fortaleza, commits, testes, publicação e lacunas; evidência sintética não equivale a aparelho real.
 
@@ -2988,3 +2988,41 @@ Custo e margem: nenhum gasto autorizado; apenas calcular e registrar. Custo desc
 #### B2-200 — corrigir a regressão móvel antes da conclusão
 
 20/10/2026 16:59 Fortaleza: mobile118850448202 reprovou a primeira amostra fria da home no head145d59a81ac417f20cb6c9cefebf57dbc692780f: LCP2936ms e interação448ms (demais oito amostras preservadas). Sem excluir amostra ou mudar limiar: FAQ nativo e faixa CSS estática saem do módulo cliente para componente de servidor, com o mesmo conteúdo/markup/comportamento. Reduz código e execução do cliente na home. Nova suíte completa obrigatória no novohead; não é entrega ainda. Sem serviço, operação, preço, limite ou gate alterado. P0s201/202 continuam antes de qualquer novo B2.
+
+
+### Publicação funcional121
+
+Item196/PR726 incorporado em2026-10-20 16:35:15 de Fortaleza. Head testado `29a240e18bd5e7fd35e0341a62f4b2bee50ab2bf`; versão `c52c70f08037fd2c180569782e98acc0bb4e748b`, árvore idêntica à verificada. READY `2026-10-20T19:37:12.852Z`, domínio marktmorgen.com, deployment `dpl_E3Dqe8yv39iy686orEFx8xDZ1cLZ`.
+
+CI completo aprovado: {"product":39482139984,"verify":118833735036,"redis":118833734875,"mobile":118833734449,"security":39482139975}. 6 rotas com o mesmo deployment; runtime error/fatal zero somente na janela 2026-10-20T19:32:55.874Z → 2026-10-20T19:37:55.874Z. Medição móvel sintética: {"samples":9,"lcpMax":908,"clsMax":0,"interactionMax":104,"fieldINP":null}. Não é INP real/certificação CWV.
+
+Custo/escopo: Own cost review committed before code: zero incremental supplier/read/write/model entitlement in all6 plan/interval cases, existing counters/reserves unchanged; most-tax M0 stays failed. No sale opening.. Piso líquido mínimo60% por cliente100% dos direitos no pior mês e global, após todos os custos e impostos Brasil/EUA, obrigatório; desconhecido reprova. M0 mais oneroso, PLANS_ON_SALE=false, comissão, preços, limites, permissões e todos os gates preservados.
+
+
+### Publicação funcional122
+
+Item199/PR728 incorporado em2026-10-20 16:39:39 de Fortaleza. Head testado `c0def34523d30289be3ee7e733405683c79751a9`; versão `7002c8835a12a4fee76780d1cf31b5bacec68240`, árvore idêntica à verificada. READY `2026-10-20T19:40:43.848Z`, domínio marktmorgen.com, deployment `dpl_zWqSgmGSRTybihJ4K4X7jWnd6Uov`.
+
+CI completo aprovado: {"product":39482166907,"verify":118833227853,"redis":118833228144,"mobile":118833227589,"security":39482166896}. 8 rotas com o mesmo deployment; runtime error/fatal zero somente na janela 2026-10-20T19:36:47.629Z → 2026-10-20T19:41:47.629Z. Medição móvel sintética: {"samples":9,"lcpMax":700,"clsMax":0,"interactionMax":64,"fieldINP":null}. Não é INP real/certificação CWV.
+
+Custo/escopo: Own six-scenario cost decision before code: deterministic planner reuses already-read catalog, no extra AI/provider/query/write/job/budget. Accept/reject/edit stays local unsaved; prices/rights/gates unchanged; M0 most-tax sales gate remains failed.. Piso líquido mínimo60% por cliente100% dos direitos no pior mês e global, após todos os custos e impostos Brasil/EUA, obrigatório; desconhecido reprova. M0 mais oneroso, PLANS_ON_SALE=false, comissão, preços, limites, permissões e todos os gates preservados.
+
+
+### Publicação funcional123
+
+Item200/PR729 incorporado em2026-10-20 17:25:41 de Fortaleza. Head testado `b21710d58b1b4a346cd6c79a47e2c4c55770b30a`; versão `3e56a89c3943f4545aae004c75a63820f42beb46`, árvore idêntica à verificada. READY `2026-10-20T20:26:57.457Z`, domínio marktmorgen.com, deployment `dpl_FVF8sD5qNx1RDHNBXcYT59dpQxoj`.
+
+CI completo aprovado: {"product":39489155558,"security":39489155836,"verify":118857331098,"redis":118857330724,"mobile":118857331064}. 6 rotas com o mesmo deployment; runtime error/fatal zero somente na janela 2026-10-20T20:22:50.682Z → 2026-10-20T20:27:50.682Z. Medição móvel sintética: {"samples":9,"maxLCP":952,"maxCLS":0,"maxInteraction":104,"fieldINP":null}. Não é INP real/certificação CWV.
+
+Custo/escopo: No new customer/provider/AI operation, rights, prices or limits. Existing public standard CI; no paid service/account. All financial and sales gates unchanged.. Piso líquido mínimo60% por cliente100% dos direitos no pior mês e global, após todos os custos e impostos Brasil/EUA, obrigatório; desconhecido reprova. M0 mais oneroso, PLANS_ON_SALE=false, comissão, preços, limites, permissões e todos os gates preservados.
+
+
+#### HT11/HT13 — registro de custo incorporado, sem implantação das funcionalidades
+
+PR727 incorporado em20/10/2026 16:38:48 de Fortaleza, versão9446c5c42209cc5038c984eaafe6e5b51aa762f4, head974259fdda495ca6019da36629a70b7eb0726d6f integralmente verificado. Comunidade compartilhada/novo tutor permanecem não implementados: custos completos desconhecidos reprovam todos os cenários; aguardam custos limitados/revisão do dono. Documentos docs/ht11-community-cost-review.md e docs/ht13-student-tutor-cost-review.md. PR documental não incrementou contador.
+
+#### P0-BROWSERS-DEVICES — etapa inicial de compatibilidade
+
+20/10/2026 17:29 Fortaleza: nova matriz Linux Firefox/WebKit com Playwright-core1.56.1 já fixado no projeto, instalações e dependências apenas no CI remoto. O harness existente inteiro recebe E2E_BROWSER e registra motor/versão; Firefox/WebKit indisponível reprova, nunca usa Chrome como substituto. Chromium e todas as verificações anteriores permanecem. Ainda não cobre todas as oito jornadas×cinco larguras×todos os modos AAA do pedido: esta etapa não encerra201. Correções e verificação completa no novohead são obrigatórias.
+
+Custo: até2×45=90minutos Linux adicionais por execução (teto, não consumo observado); repositório público com runners padrão gratuitos conforme fonte oficial consultada20/10/2026. Sem runner maior, artefato ou serviço pago novo; custo variável por cliente zero. Consumo real será registrado após execução. Eventual mudança de elegibilidade/custo fixo exige novo cálculo antes de operar; não alterar preços/limites/gates. Fontes e lacunas em docs/accessibility-browsers-devices.md.
