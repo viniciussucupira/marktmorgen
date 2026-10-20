@@ -124,26 +124,26 @@ export function SaleEditor({
             );
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block min-w-0">
               <span className="field-label">Its name (optional)</span>
-              <input className="field mt-1" maxLength={MAX_SALE_NAME} value={name} onChange={(e) => setName(e.target.value)} placeholder="Black Friday" />
+              <input className="field mt-1 min-w-0 max-w-full" maxLength={MAX_SALE_NAME} value={name} onChange={(e) => setName(e.target.value)} placeholder="Black Friday" />
             </label>
-            <label className="block">
+            <label className="block min-w-0">
               <span className="field-label">Off every product it covers</span>
-              <select className="field mt-1" value={percent} onChange={(e) => setPercent(Number(e.target.value))}>
+              <select className="field mt-1 min-w-0 max-w-full" value={percent} onChange={(e) => setPercent(Number(e.target.value))}>
                 {SALE_PERCENTS.map((p) => (
                   <option key={p} value={p}>{`${p}% off`}</option>
                 ))}
               </select>
             </label>
-            <label className="block">
+            <label className="block min-w-0">
               <span className="field-label">Starts</span>
-              <input className="field mt-1" type="datetime-local" value={starts} onChange={(e) => setStarts(e.target.value)} />
+              <input className="field mt-1 min-w-0 max-w-full" type="datetime-local" value={starts} onChange={(e) => setStarts(e.target.value)} />
             </label>
-            <label className="block">
+            <label className="block min-w-0">
               <span className="field-label">Ends</span>
-              <input className="field mt-1" type="datetime-local" value={ends} onChange={(e) => setEnds(e.target.value)} required />
+              <input className="field mt-1 min-w-0 max-w-full" type="datetime-local" value={ends} onChange={(e) => setEnds(e.target.value)} required />
             </label>
           </div>
           <p className="text-xs text-ink-soft">In your computer&apos;s time zone. At most {MAX_SALE_DAYS} days.</p>

@@ -45,7 +45,7 @@ export function StudioTools({ tools }: { tools: StudioTool[] }) {
               {/* The arrow follows the last word, so a title that wraps keeps it beside it. */}
               <span className="font-semibold text-ink">
                 {tool.title.includes(" ") ? `${tool.title.slice(0, tool.title.lastIndexOf(" "))} ` : ""}
-                <span className="whitespace-nowrap">
+                <span className="whitespace-normal [overflow-wrap:anywhere]">
                   {tool.title.slice(tool.title.lastIndexOf(" ") + 1)}
                   <Icon
                     name="arrow-right"
