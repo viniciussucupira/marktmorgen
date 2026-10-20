@@ -1,3 +1,4 @@
+import { checkPlatformProof } from "./platform-proof.mjs";
 import { checkCreatorShowcase } from "./creator-showcase.mjs";
 import { checkSigninTerms } from "./signin-terms.mjs";
 import { checkStoreActivation } from "./store-activation.mjs";
@@ -802,6 +803,7 @@ await checkThanksAcknowledgment({browser,LOCAL,fixture:{session:growthSession,si
 await checkNoCountAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
+  await checkPlatformProof({browser,LOCAL,is});
   await checkCreatorShowcase({browser,LOCAL,axeSource,is});
   await checkSigninTerms({browser,LOCAL,prices:signinPrices,axeSource,is});
   await checkStoreActivation({browser,LOCAL,fixture:activationFixture,axeSource,is});

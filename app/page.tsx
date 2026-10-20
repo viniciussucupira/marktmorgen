@@ -1,4 +1,4 @@
-import { CreatorShowcase } from "@/components/creator-showcase";
+import { CreatorShowcase, PlatformProof } from "@/components/creator-showcase";
 import { PricingValue } from "@/components/pricing-value";
 import { PATH_HOME_STEPS } from "@/lib/path-home";
 import type { Metadata } from "next";
@@ -579,6 +579,7 @@ export default function Home() {
 
         <HomeActions place="plans"/>
         <CreatorShowcase/>
+        <PlatformProof/>
 
         {/* ------------------------------------------------------------ faq */}
         <section id="faq" className="section scroll-mt-20">
