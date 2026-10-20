@@ -821,47 +821,21 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
 }
 
 export function Faq({ questions = HOME_QUESTIONS }: { questions?: typeof HOME_QUESTIONS } = {}) {
-  const [open, setOpen] = useState<number | null>(0);
-  return (
-    <ul className="divide-y divide-line border-y border-line">
-      {questions.map((item, i) => {
-        const isOpen = open === i;
-        return (
-          <li key={item.q}>
-            <h3>
-              <button
-                type="button"
-                id={`faq-q-${i}`}
-                aria-expanded={isOpen}
-                aria-controls={`faq-a-${i}`}
-                onClick={() => setOpen((cur) => (cur === i ? null : i))}
-                className="flex w-full items-center justify-between gap-6 py-5 text-left text-[1.0625rem] font-semibold text-ink transition-colors hover:text-violet-deep sm:text-lg"
-              >
-                {item.q}
-                <span
-                  className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line text-ink-soft transition-transform duration-300 ${
-                    isOpen ? "rotate-45 border-violet-brand text-violet-deep" : ""
-                  }`}
-                >
-                  <Icon name="plus" size={16} />
-                </span>
-              </button>
-            </h3>
-            <div
-              id={`faq-a-${i}`}
-              role="region"
-              aria-labelledby={`faq-q-${i}`}
-              hidden={!isOpen}
-              className="pb-6 pr-12"
-            >
-              <p className="text-ink-soft">{item.a}</p>
-              {item.links?.length ? <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-3">{item.links.map(link=><li key={link.href}><Link href={link.href} prefetch={false} className="link">{link.label}</Link></li>)}</ul> : null}
-            </div>
-          </li>
-        );
-      })}
-    </ul>
-  );
+  return <ul className="divide-y divide-line border-y border-line">
+    {questions.map((item,i)=><li key={item.q}>
+      <details name="home-faq" open={i===0} className="group">
+        <summary id={`faq-q-${i}`} aria-controls={`faq-a-${i}`} className="cursor-pointer list-none py-5 text-left text-[1.0625rem] font-semibold text-ink hover:text-violet-deep sm:text-lg">
+          <h3 className="flex w-full items-center justify-between gap-6">{item.q}
+            <span aria-hidden="true" className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line text-ink-soft group-open:rotate-45 group-open:border-violet-brand group-open:text-violet-deep"><Icon name="plus" size={16}/></span>
+          </h3>
+        </summary>
+        <div id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} className="pb-6 pr-12">
+          <p className="text-ink-soft">{item.a}</p>
+          {item.links?.length?<ul className="mt-4 flex flex-wrap gap-x-5 gap-y-3">{item.links.map(link=><li key={link.href}><Link href={link.href} prefetch={false} className="link">{link.label}</Link></li>)}</ul>:null}
+        </div>
+      </details>
+    </li>)}
+  </ul>;
 }
 
 /*
