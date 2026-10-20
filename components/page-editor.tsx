@@ -103,6 +103,9 @@ import { blockWords } from "@/lib/buyer-words/blocks";
 import type { LanguageCode } from "@/lib/store-language";
 import { NewTab } from "@/components/new-tab";
 
+// Started provider attempts stay counted even when their reply is unusable (lib/ai.ts).
+const HEADLINE_UNCONFIRMED_NOTE = "A replacement headline was not confirmed. Your current draft was kept. Started attempts count toward your monthly writing allowance. Check your allowance before trying again.";
+
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
   too_many: `A page can have up to ${MAX_BLOCKS} blocks.`,
@@ -339,10 +342,10 @@ export function PageEditor({
         setTestHeadline(data.value.headline);
         setTestSub(data.value.sub);
       } else {
-        setTestNote(data.error === "used" ? "This month's writing help is used up. It starts again with your next billing month." : data.error === "notes" ? "Write the hero's own headline first." : "No headline came back, and nothing was counted. Try again.");
+        setTestNote(data.error === "used" ? "This month's writing help is used up. It starts again with your next billing month." : data.error === "notes" ? "Write the hero's own headline first." : HEADLINE_UNCONFIRMED_NOTE);
       }
     } catch {
-      setTestNote("No headline came back, and nothing was counted. Try again.");
+      setTestNote(HEADLINE_UNCONFIRMED_NOTE);
     } finally {
       setWritingTest(false);
     }
@@ -1130,7 +1133,7 @@ export function PageEditor({
                       <button type="button" className="btn btn-secondary btn-sm" disabled={writingTest} aria-busy={writingTest} onClick={() => void writeTest({ headline: block.headline, sub: block.sub })} data-write-test>
                         {writingTest ? "Writing…" : "Write a second headline with AI"}
                       </button>
-                      <p className="mt-1 text-xs text-ink-soft">
+                      <p role="status" aria-atomic="true" className="mt-1 text-xs text-ink-soft">
                         {testNote ?? "From your page and product only, said another way, with no number your page does not state. One of your month's AI jobs; read it before you save."}
                       </p>
                     </div>

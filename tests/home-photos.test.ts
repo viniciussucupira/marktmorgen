@@ -78,7 +78,7 @@ const VERIFIED = new Set([
   "photo-1780585328302-747a6eee7694", "photo-1535473895227-bdecb20fb157",
 ]);
 
-const FILES = ["app/page.tsx", "components/home-parts.tsx", "components/buyer-path.tsx"];
+const FILES = ["app/page.tsx", "components/home-parts.tsx", "components/home-static.tsx", "components/buyer-path.tsx"];
 
 /*
  * The runner compiles each test into a temporary directory, so a path
@@ -161,7 +161,7 @@ test("no British spelling in the things people sell", () => {
    * market strip because the list was written in a hurry; this is the
    * cheapest possible guard against the next one.
    */
-  const src = readFileSync(join(process.cwd(), "components/home-parts.tsx"), "utf8");
+  const src = FILES.map(file => readFileSync(join(process.cwd(), file), "utf8")).join("\n");
   const labels = [...src.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
   const british = /\b\w*(colour|favourite|organis|centre|licence|catalogue|programme)\w*\b/i;
   for (const label of labels) {

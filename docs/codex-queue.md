@@ -2952,3 +2952,39 @@ Custo incremental/escopo: Shared microcopy only; persisted refusal keys, creator
 #### HT10 — aguardar relatório confirmado, não só limpar o alerta
 
 verify118824851029 reprovou somente HT10 matching window confirmed1280: save limpa o alerta ao iniciar a tentativa, antes do fetch terminar; desaparecer o erro não é confirmação. O teste agora aguarda o próprio texto within the60daysbefore do relatório antes da mesma asserção estrita. Falha/mismatch continuam reprovando, sem sleep artificial, resposta real, seletor afrouxado ou assert removido. GPC/zero ads/visita interna exata/zero write inesperada passaram. Nova suíte completa no novohead é obrigatória, sem operação/custo/preço/limite/gate alterado.
+
+
+200. **[B2-200] Explicar tentativas de título sem prometer uso gratuito**
+
+Pedido: revisão em andamento antes do pedido P0 de 20/10/2026; registro em 20/10/2026 16:51 de Fortaleza.
+
+Estado: implementado em `fd970c191f68431c0f7b4ed73bde7c6fd46fd529`; suíte completa e publicação pendentes.
+
+Escopo e prova: o editor conserva o rascunho quando não confirma um título e explica que tentativas iniciadas contam na franquia. Mensagem anunciada por status acessível. Mesma chamada, reserva, tetos e tratamento de respostas; remove a afirmação incorreta “nothing was counted”. Verificação completa no novo head obrigatória.
+
+Custo e margem: apenas texto e status, sem operação ou custo variável novo. Piso líquido mínimo60% por cliente a100% dos direitos no pior mês e global após todos os custos/impostos Brasil/EUA permanece obrigatório. M0 e vendas fechadas, preços, limites, comissão e gates intactos.
+
+201. **[P0-BROWSERS-DEVICES] Testar o site e o studio em outros navegadores e aparelhos**
+
+Pedido: P0, pedido de excelência/acessibilidade de 19/10/2026; acrescentado por pedido do dono em 20/10/2026, às16:51 de Fortaleza.
+
+Estado: na fila; executar após concluir o item200 e os PRs HT, antes do item202 e de qualquer novo B2.
+
+Escopo e prova: acrescentar Firefox e WebKit (Safari) aos testes Playwright existentes, sem serviço pago; se a instalação não for possível, registrar motivo exato e requisitos. Exercitar home, preços, cadastro, criação de produto, publicação da loja, página da loja, checkout e área do comprador nas larguras320,390,768,1280 e1920px: axe incluindo regras AAA, teclado, zoom400% com reflow, espaçamento WCAG1.4.12, movimento reduzido e alto contraste. Corrigir falhas em PRs pequenos com prova de falha antes e aprovação depois. Inventariar lacunas de aparelhos reais (iPhone, Android, Windows/Edge, tablets), custos de aparelhos ou nuvem como BrowserStack/Sauce Labs com fonte oficial e data. Não contratar, criar conta nem realizar submissão externa. Ao concluir registrar data/hora Fortaleza, commits, testes, publicação e lacunas; evidência sintética não equivale a aparelho real.
+
+Custo e margem: calcular minutos de CI e qualquer outro custo. Testes não têm custo por cliente; eventual custo fixo novo entra nos custos fixos da empresa, nunca em preços ou limites. Não contratar serviço. Mínimo60% líquido por cliente isolado com100% dos direitos no pior mês e no consolidado, após todos os custos/impostos inclusive brasileiros; desconhecido reprova. PLANS_ON_SALE, tax gate, art.9a, revisão comercial, preços, limites e comissão intactos.
+
+202. **[P0-REAL-PEOPLE] Planejar testes com pessoas reais com deficiência e calcular o custo**
+
+Pedido: P0, pedido de excelência/acessibilidade de 19/10/2026; acrescentado por pedido do dono em 20/10/2026, às16:51 de Fortaleza.
+
+Estado: na fila; executar após201, antes de qualquer novo B2. Termina com plano e custo; contratação depende exclusivamente do dono.
+
+Escopo e prova: pesquisar somente fontes oficiais datadas sobre testes com cegos/leitores de tela, baixa visão, surdos, deficiência motora, neurodivergentes e idosos; custos por sessão e rodada de recrutamento/serviços, por exemplo Fable, AbilityNet, UserTesting e Access Works. Criar docs/accessibility-real-people-plan.md com perfis, mínimo de participantes por perfil, tarefas de cadastro/criar produto/publicar loja/comprar/baixar produto, roteiro, medidas, proteção e consentimento dos dados e custo total por rodada. Calcular impacto nos custos fixos e número mínimo de clientes pagantes para preservar60% no consolidado. Nenhuma contratação, conta, contato com pessoas/empresas ou recrutamento. Ao concluir registrar data/hora Fortaleza, commits, testes, publicação e lacunas; plano não representa testes com pessoas realizados.
+
+Custo e margem: nenhum gasto autorizado; apenas calcular e registrar. Custo desconhecido ou sob consulta não vale zero. Mínimo60% líquido por cliente isolado com100% dos direitos no pior mês e no consolidado após todos os custos/impostos inclusive brasileiros. Não alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial.
+
+
+#### B2-200 — corrigir a regressão móvel antes da conclusão
+
+20/10/2026 16:59 Fortaleza: mobile118850448202 reprovou a primeira amostra fria da home no head145d59a81ac417f20cb6c9cefebf57dbc692780f: LCP2936ms e interação448ms (demais oito amostras preservadas). Sem excluir amostra ou mudar limiar: FAQ nativo e faixa CSS estática saem do módulo cliente para componente de servidor, com o mesmo conteúdo/markup/comportamento. Reduz código e execução do cliente na home. Nova suíte completa obrigatória no novohead; não é entrega ainda. Sem serviço, operação, preço, limite ou gate alterado. P0s201/202 continuam antes de qualquer novo B2.
