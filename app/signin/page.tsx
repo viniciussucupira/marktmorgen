@@ -6,7 +6,7 @@ import { SignInForm } from "@/components/signin-form";
 import { PasskeySignIn } from "@/components/passkey-signin";
 import { ToastOnLoad } from "@/components/toast";
 import { isConnectConfigured } from "@/lib/stripe-connect";
-import { PLAN_TITLES as PLAN_NAMES, TRIAL_DAYS, parseTier, publishedPriceWords as priceWords } from "@/lib/plan";
+import { PLAN_TITLES as PLAN_NAMES, TIERS, TRIAL_DAYS, parseTier, publishedPriceWords as priceWords } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { formatMoney } from "@/lib/money";
 import { INVITE_PROGRAM_OPEN, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
@@ -187,15 +187,22 @@ export default async function SignInPage({
           <p className="mt-4 text-ink-soft">
             {returning
               ? "Type the email your store is under and we'll send you a link that opens it. No password here, on purpose. New here? The same link starts a store."
-              : "Type your email and we'll send you a link. It opens your store if you already have one, and starts one if you do not. There is no password here, on purpose, and nothing to pay to begin."}
+              : "Type your email and we'll send you a link. It opens your store if you already have one, and starts one if you do not. There is no password to create. After the link, you choose a store address and prepare your first offer."}
           </p>
+
+          {!returning ? <section aria-labelledby="signin-plan-title" className="notice mt-6" data-signin-terms>
+            <h2 id="signin-plan-title" className="font-semibold">Monthly plan prices</h2>
+            <ul className="mt-2 space-y-1">{TIERS.map(plan => <li key={plan} data-signin-price={plan}>{PLAN_NAMES[plan]}: {priceWords(plan, "month")}</li>)}</ul>
+            <p className="mt-3 text-sm">Store setup starts without a card. Requesting a login link does not subscribe you to a plan or charge you.</p>
+            <p className="mt-2 text-sm">{PLANS_ON_SALE ? `Choose a plan separately in your studio. A ${TRIAL_DAYS}-day trial applies only to an eligible first store; returning and additional stores may not qualify. Review the current terms before starting.` : "Paid plans and paid selling are not open yet. You can prepare your store today; setup is not a free paid plan or an active trial."}</p>
+          </section> : null}
 
           {picked ? (
             <div className="notice mt-6" role="status">
               <p className="font-semibold">{`You picked ${picked.name}, ${picked.words}`}</p>
               <p className="mt-1">
                 {PLANS_ON_SALE
-                  ? `Nothing is paid here. Your store is made first and the ${TRIAL_DAYS} free days start when you switch your checkout on in your studio, where ${picked.name} at ${picked.words} is one of the plans waiting for you. You can take the other one instead, or move between them later.`
+                  ? `Nothing is paid here. Your store is made first and an eligible first store can start a ${TRIAL_DAYS}-day trial when you choose a plan separately in your studio. Returning or additional stores may not qualify. ${picked.name} at ${picked.words} is one of the plan choices. You can take the other one instead, or move between them later.`
                   : `Nothing is paid here, and no plan is on sale yet. Your store is made first, and you can set it up today. ${picked.name} at ${picked.words} is one of the plans that will be in your studio on the day they open.`}
               </p>
             </div>
@@ -233,7 +240,7 @@ export default async function SignInPage({
                   body: !PLANS_ON_SALE
                     ? "Set everything up today. Plans are not on sale yet, so taking a card starts on the day they are."
                     : isConnectConfigured()
-                    ? `Connect your own Stripe account when you are ready to take a card. The first ${TRIAL_DAYS} days of the plan are free.`
+                    ? `Connect your own Stripe account when you are ready to take a card. An eligible first store may start a ${TRIAL_DAYS}-day plan trial; review eligibility and billing terms in your studio.`
                     : "Taking a card is not switched on yet; everything else is.",
                 },
               ].map((step, i) => (
