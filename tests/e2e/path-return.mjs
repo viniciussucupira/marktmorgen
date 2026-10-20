@@ -41,10 +41,14 @@ export async function checkReturnPath({browser,LOCAL,session,sid,otherSid,axeSou
    await page.getByRole("button",{name:"Edit name and description",exact:true}).click();
    await page.getByLabel("One line about it",{exact:true}).fill(bio);
    const form=page.locator("form").filter({has:page.getByLabel("One line about it",{exact:true})});
+   await page.waitForLoadState("networkidle");
+   const refresh=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().method()==="GET"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);refresh.catch(()=>{});
    const reply=page.waitForResponse(response=>response.url().includes("/api/store/details")&&response.request().method()==="POST");
    await form.getByRole("button",{name:"Save",exact:true}).click();is("details endpoint responds", (await reply).ok(),true);
    await page.locator(".nb-toast-text").filter({hasText:"Name and description saved."}).waitFor();
-   // DetailsForm follows its toast with router.refresh(); do not cancel that RSC request.
+   // Idle can still describe the previous request set before React starts refresh.
+   const refreshed=await refresh;is("details RSC refresh responds",refreshed.ok(),true);
+   if(await refreshed.finished())throw Error("Details RSC refresh did not finish");
    await page.waitForLoadState("networkidle");
   };
   await page.route("**/api/store/details",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,name:"Return Path",bio:"A reply that never reached storage."})}));
