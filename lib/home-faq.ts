@@ -6,6 +6,7 @@
  * engine reads. One list, so the two can never say different things.
  */
 import { PUBLISHED_PRICE_CENTS as PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
+import { MAX_PRODUCTS } from "@/lib/catalog-rules";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";
 
@@ -27,7 +28,7 @@ return [
   },
   {
     q: "What does Stan have that Marktmorgen does not, yet?",
-    a: `Among other things: automatic Instagram replies, ${paypalAvailable ? "" : "PayPal at checkout, "}an iPhone app from the App Store, Zoom links made for each booking and webinar, affiliate payouts that need no PayPal account of your own, and stores with no limit on products, where ours hold 2,000. What we have in their place: a studio that installs from the browser with notifications, Google Meet links made on your own Google Calendar, a private Jitsi Meet room for each booking and each live event, and an affiliate program whose payouts leave your own PayPal, in one press or on payday by itself. Each gap is listed by name on the feature-by-feature page, with where we stand on it, and nothing is advertised here before it exists.`,
+    a: `Among other things: automatic Instagram replies, ${paypalAvailable ? "" : "PayPal at checkout, "}an iPhone app from the App Store, affiliate payouts that need no PayPal account of your own, and stores with no limit on products, where ours hold ${MAX_PRODUCTS.toLocaleString("en-US")}. What we have in their place: a studio that installs from the browser with notifications, Google Meet and Zoom links for supported connected accounts, subject to provider availability and connection requirements, a private Jitsi Meet room for each booking and each live event, and an affiliate program whose payouts leave your own PayPal, in one press or on payday by itself. Each gap is listed by name on the feature-by-feature page, with where we stand on it, and nothing is advertised here before it exists.`,
   },
   {
     q: "Who is behind this?",

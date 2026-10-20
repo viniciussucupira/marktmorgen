@@ -1,6 +1,7 @@
 /** Actual studio pixels, local synthetic demo content only. Never signs in to production. */
 export async function captureHomeStudio({browser,LOCAL,fixture,is}){
- if(new URL(LOCAL).hostname!=="127.0.0.1")throw Error("Captures require local synthetic services.");
+ const local=new URL(LOCAL);
+ if(local.protocol!=="http:"||!["127.0.0.1","localhost"].includes(local.hostname)||!local.port)throw Error("Captures require local synthetic services.");
  const context=await browser.newContext({viewport:{width:1280,height:820},deviceScaleFactor:1});
  try{
   await context.addCookies([{name:"nl_session",value:fixture.session,url:LOCAL}]);
