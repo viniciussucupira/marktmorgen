@@ -24,7 +24,6 @@ export function decisionQuestions(): HomeQuestion[] { return [
 
 export function homeQuestions(paypalAvailable = false): HomeQuestion[] {
 return [
-  ...decisionQuestions(),
   {
     q: "Can I sign up and start selling today?",
     a: !PLANS_ON_SALE
@@ -47,6 +46,7 @@ return [
     q: "Who is behind this?",
     a: "Marktmorgen’s creator also handles support, in English and in writing.",
   },
+  ...decisionQuestions(),
 ];
 }
 

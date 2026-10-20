@@ -1333,3 +1333,5 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Revisão de estilo: novas respostas usam center, conforme guard de inglês americano do produto; sem mudar idiomas ou relaxar testes. Novo head requer suíte integral.
 
 - Revisão tipada de S9: a prova negativa de categoria ainda não criada usa ReadonlySet<string>, sem comparar literais fora da união, sem cast/any/supressão nem enfraquecer verificação. Nova suíte integral obrigatória.
+
+- S10/Product39377984156/verify118480407335: novosFAQs antes dosanterioresquebraramaguardadeaberturacomercialnaprimeirapergunta ebuscafactualStan. Preservaros5FAQsoriginaisnaordem eacrescentaros6depois,conformepedido; nenhumaasserçãosuprimida. Novasuítecompletanoheadcorrigidoobrigatória.
