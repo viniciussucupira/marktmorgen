@@ -22,7 +22,8 @@ export async function checkDecisionFaq({browser,LOCAL,axeSource,is}){
     }
     for(const node of await section.locator(".reveal").all()){await node.scrollIntoViewIfNeeded();await page.waitForFunction(el=>getComputedStyle(el).opacity==="1",await node.elementHandle(),{timeout:5000});}
     await page.addScriptTag({content:axeSource});
-    const issues=await section.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>v.id));
+    const issues=await section.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})));
+    if(path==="/pricing")for(const target of await section.locator("summary,a").all()){const box=await target.boundingBox();is("pricing FAQ target height "+width+" "+await target.innerText(),Boolean(box&&box.height>=44),true);}
     is("FAQ accessibility "+path+"/"+width,issues,[]);
     is("FAQ fits "+path+"/"+width,await section.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
    }

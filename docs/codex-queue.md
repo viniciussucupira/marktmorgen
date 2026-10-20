@@ -2003,3 +2003,13 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
   "costs": "Same existing operation, cookie scope/expiry and limits; source+430 characters not measured bundle bytes; binding M0 12.02–12.21% still fails60%; sales remain closed."
 }
 ```
+
+
+166. **[B2-166] Confirm existing buyer-language settings accurately.**
+- Estado: **Em implementação**.
+- Require successful HTTP, strict boolean confirmation, no error and the exact supported selected language. Lock the selector while pending and retain the draft on uncertainty. Preserve existing en/es/fr/de/it/nl/pt identifiers and creator content; no platform translation, new buyer language, AI call or gate activation.
+- Synthetic26 intercepted cases at390/1280, full final-head CI pending. Existing settings operation only; client source+260 characters is not measured bundle size. M0 12.02–12.21% still fails60%; sales closed and future translations remain deferred under docs/site-languages.md.
+
+
+#### B2-166 verification repair
+Full run39407143422 failed pricing FAQ mobile axe target-size; all26 language cases passed. Fix FAQ summaries/links to at least44px high and separate wrapping footer links; retain axe checks and add explicit actual target-height checks plus diagnostic selectors. Full new-head CI required; no isolated rerun or accessibility certification. No new operation, plan limit or price.
