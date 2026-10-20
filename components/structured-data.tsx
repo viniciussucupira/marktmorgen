@@ -110,7 +110,7 @@ export function HomeData({ questions }: { questions: { q: string; a: string }[] 
 
 /** An article: who wrote it, when, and what it belongs to. */
 export function ArticleData({ post }: { post: BlogPost }) {
-  return (
+  return (<>
     <JsonLd
       data={{
         "@context": "https://schema.org",
@@ -128,5 +128,6 @@ export function ArticleData({ post }: { post: BlogPost }) {
         inLanguage: "en",
       }}
     />
-  );
+    {post.faq?.length ? <JsonLd data={{"@context":"https://schema.org","@type":"FAQPage","@id":`${SITE_URL}/blog/${post.slug}#faq`,mainEntity:post.faq.map(item=>({"@type":"Question",name:item.q,acceptedAnswer:{"@type":"Answer",text:item.a}}))}}/> : null}
+  </>);
 }
