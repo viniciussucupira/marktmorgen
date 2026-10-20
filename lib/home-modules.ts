@@ -10,7 +10,7 @@ export const HOME_MODULES = [
  {name:"Sales pages",href:"/platform/sales-pages",body:"Arrange blocks, product details and published reviews around an offer."},
  {name:"Checkout",href:"/platform/checkout",body:"Show your prices and optional offers with payment through your own Stripe account."},
  {name:"Affiliates",href:"/platform/affiliates",body:"Set commissions and review affiliate links, recorded sales and payout status."},
- {name:"CRM",href:"/proof/highlevel",body:"Keep contact fields, deals and pipeline stages together. Read the CRM comparison and plan limits."},
+ {name:"CRM",href:"/platform/crm",body:"Keep contact fields, deals and pipeline stages together, within the published plan limits."},
  {name:"Insights",href:"/platform/insights",body:"Review recorded visits, payments and campaign sources before choosing a next step."},
  {name:"AI writing",href:"/platform/ai-writing",body:"Draft from your own product facts, then review the words before publishing."},
  {name:"Path",href:"/platform/path",body:"Follow missions checked against facts your store records, with opt-in reminders and sharing."},

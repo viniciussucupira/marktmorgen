@@ -39,7 +39,7 @@ export type Block =
   | { kind: "table"; title: string; note?: string; head: [string, string, string]; rows: [string, string, string][] }
   | { kind: "quote"; text: string; source: string }
   | { kind: "note"; title: string; body: string }
-  | { kind: "storecard"; title: string; creator: string; tagline: string; photo: string; alt: string; items: { label: string; detail: string; price: string }[] }
+  | { kind: "storecard"; title: string; creator: string; tagline: string; photo?: string; alt: string; example?: string; items: { label: string; detail: string; price: string }[] }
   /** Three numbered steps side by side: how the thing works, start to end. */
   | { kind: "how"; title: string; items: { title: string; body: string }[] }
   /** What it does, one card each, optionally leading to its own page. */
@@ -146,7 +146,7 @@ export const PAGES: TopicPage[] = [
         ["Getting started", COMPETITOR_PRICES.highlevel.trial.days + "-day trial; usage charges can still apply.", PLANS_ON_SALE ? "Check the current plan terms before starting." : "Store setup is available. Paid plans and paid selling are not open yet."],
       ] },
       { kind: "features", title: "Inspect the existing tools", items: [
-        { icon: "mail", title: "Email, workflows and CRM records", body: "Read the current contact fields, pipeline rules, sequence actions and communication limits.", href: "/platform/email" },
+        { icon: "users", title: "People, deals and pipelines", body: "Read the current contact fields, recorded deal values, pipeline rules and workflow conditions.", href: "/platform/crm" },
         { icon: "layout", title: "Store pages and funnels", body: "Inspect the existing page blocks and experiments before assuming they replace an agency's setup.", href: "/platform/sales-pages" },
       ] },
       { kind: "limits", title: "Where they are ahead", items: [

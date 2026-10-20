@@ -37,7 +37,12 @@ export async function checkPathWording({browser,LOCAL,services,session,sid,trial
   for(const width of [390,1280]){
    await page.setViewportSize({width,height:900});await page.goto(url,{waitUntil:"domcontentloaded",timeout:60000});
    const button=region.getByRole("button",{name:"Try AI wording",exact:true});
+   // React installs this public DOM click handler during hydration. An SSR-visible
+   // button can precede it; pressing Enter then sends no request.
+   await page.waitForFunction(element=>typeof element.onclick==="function",await button.elementHandle(),{timeout:10000});
+   const acceptedReply=page.waitForResponse(reply=>reply.request().method()==="POST"&&reply.url().includes(endpoint));
    await button.focus();await page.keyboard.press("Enter");
+   await acceptedReply;
    await region.getByText("AI wording suggestion",{exact:true}).waitFor();
    is("validated synthetic client wording at "+width,await region.getByText(text,{exact:true}).isVisible(),true);
    is("original instruction remains at "+width,await page.getByText(source,{exact:true}).count()>=1,true);
