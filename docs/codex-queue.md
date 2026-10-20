@@ -1173,3 +1173,10 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Provas adicionadas: todas as fontes aninhadas, preços próprios em cada página, cohorts/unknowns/fees condicionais,15 comparações na ordem e sitemap existente; navegador390/1280 para índice e15 páginas com SEO/fonte/paidclosed, texto de vantagens equivalente, axe, overflow, teclado e ausência de APIwrites. Todos os testes anteriores e a espera de pintura permanecem.
 - S1 continua em andamento até os pais e estas seis páginas passarem suite completa e estiverem READY no domínio com SHA exato. Um único deploy destas seis conta uma entrega funcional, não seis; PR pendente/documento não conta.
 - M0 antes/depois: mesmo envelope estático e controles de custo; sem endpoint, dependência, provedor, email, IA, storagewrite ou telemetria novos, nem ampliação de franquia/preço/limite/gate. Banda/custo/imposto desconhecido continua reprovação, não zero. Modelo oneroso12,02–12,21% permanece abaixo60%; vendas fechadas, PLANS_ON_SALE=false, sem certificação fiscal ou de margem.
+
+
+### S1 — correção da tipagem das seis últimas comparações
+
+- Head inicial6553e2a3eccc474c5255715b20f1b777941d90f41ca: Product39367250412, verify118446785948 falhou em TypeScript após lint, regressões e229bundles verdes. Redis e segurança passaram.
+- Causa: Detail.rows foi declarado string[][], amplo demais para a tabela existente, que exige tuplas de exatamente três células. Corrigir para [string,string,string][] sem cast, any, supressão ou mudança no tipo/base existente. Dados e comportamento permanecem os mesmos; cada linha agora é verificada em compilação.
+- Novo head exige CI completo incluindo navegador; não concluir por typecheck isolado ou por testes do head anterior. Custo/M0/PLANS_ON_SALE/preços/limites/gates inalterados; S1 ainda em andamento.

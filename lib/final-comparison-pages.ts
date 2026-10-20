@@ -9,7 +9,7 @@ type Key = "substack" | "patreon" | "linktree" | "podia" | "thinkific" | "system
 type FeatureLinks = Extract<Block, { kind: "features" }>["items"];
 type Detail = {
   key: Key; intro: string; lead: string;
-  rows: string[][]; ahead: string[];
+  rows: [string, string, string][]; ahead: string[];
   tools: FeatureLinks; sources: OfficialPriceSource[];
   starting: string;
 };
