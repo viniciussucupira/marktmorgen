@@ -1009,7 +1009,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: regras por plano e permissões existentes, links, leitura acessível/390px. Custo: página estática, sem operação nova de CRM; M0 igual.
 
 147. **[S6-FEATURE-MECHANISMS] Como cada recurso ajuda a vender ou reter**
-   - Estado: **a fazer; após S5**.
+   - Estado: **em andamento; branch codex/feature-selling-mechanisms, publicação após S5**.
    - Escopo: bloco curto em cada página de lib/feature-pages.ts explicando mecanismo factual, por exemplo oferta no checkout e menor barreira inicial de assinatura, sem números/percentuais/promessas de resultado. Não afirmar integração/capacidade que não exista no main.
    - Prova: inventário completo de páginas/links, revisão US English, semântica/390px/contraste. Custo: texto estático, sem novo envelope, M0 igual.
 
@@ -1221,3 +1221,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 ### S5 — página pública de CRM
 - People, deals and pipelines usa lib/crm-rules e record-space para2/5/10pipelines, campos/stages/deals e limites compartilhados. Registro de valor não é previsão. Campos/etapas privados para a equipe, email/workflows condicionados a opt-in, permissões e franquias; não prometer SMS/WhatsApp/telefone ou agênciaSaaS. Navegação e HighLevel ligados à página; sitemap vem de PAGES. HomeS4 será ligado ao publicar a página e preservar o head final de S4.
 - Testes de fatos/caps por plano, sitemap e links recíprocos; leitura390/1280,axe,teclado e nenhuma APIwrite. Conteúdo estático no renderer existente, sem endpoint/execuçãoCRM/dependência/imagem paga/operação nova, sem preço/limite/gate novo. M0 antes/depois mesmo modelo;12,02–12,21% vinculante abaixo60%, desconhecido reprova, PLANS_ON_SALE=false. Nenhuma certificação fiscal/margem; versão final exige CI completo.
+
+### S6 — mecanismos factuais de uso em38páginas
+- Bloco curto distinto em cada uma das34páginas de recursos e4páginas existentes de criadores de lib/feature-pages.ts. Inventário por slug verificável, sem órfão ou mudança de IDs/conteúdo dos criadores. Descreve escolha do comprador, confirmação de pagamento, acesso, consentimento e registros; sem números/percentuais/promessa de resultado, integração nova ou previsão de receita. Reutiliza renderer e preserva todos os blocos anteriores.
+- Dados estáticos, helper puro sem mutação das páginas base e type-only import para evitar ciclo em runtime. Nenhum endpoint/provedor/email/IA/operação/franquia/dependência/imagem nova. M0 antes/depois mesmo envelope;12,02–12,21% vinculante abaixo60%, desconhecido reprova, venda fechada. CI integral e leitura390/1280/axe do novo bloco nas38URLs exigidos; não é certificaçãoAAA.
