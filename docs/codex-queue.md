@@ -2770,3 +2770,8 @@ Após displayoptional, todas as27amostras coletadas deHT16/HT17/HT13 mostraramCL
 #### HT15 — rótulos explícitos dos filtros da biblioteca
 
 Product checks39467027754/verify118781108709 passou build/regressões, mas navegador expirou procurando o rótulo exatoGoal. Cada filtro novo agora usa label/htmlFor e id explícitos separados das opções, mantendo nome acessível curto e inequívoco. Mesmo ajuste nos novos campos do planejadorHT14. Não afrouxar seletor nem ignorar etapa: filtros, teclado/AA e suíte integral devem passar no novohead. Nenhuma operação/custo/permissão/identificador persistido alterado.
+
+
+#### HT16 — aguardar carregamento real da captura lazy antes de decodificar
+
+O verify118791813859 deHT17 encontrou EncodingError ao chamar decode imediatamente depois de rolar até uma imagem lazy. O teste passa a esperar, por no máximo10segundos, o carregamento real com complete e naturalWidth positivo antes de decodificar; mantém verificação das duas capturas distintas, dimensões1280×820, pixels decodificáveis e acessibilidade. Não altera imagens/atributos lazy/limites nem descarta falha: toda a suíte deve passar no novohead. Sem operação/custo variável de cliente, preço ou gate alterado.
