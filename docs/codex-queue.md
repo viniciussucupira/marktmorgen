@@ -1934,7 +1934,7 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 164. **[B2-164] Confirm the browser visit-exclusion setting accurately.**
-- Estado: **Em implementação**.
+- Estado: **Concluído e publicado na entrega 90**.
 - Existing device setting must require successful HTTP, boolean confirmation, no contradictory error and the exact requested boolean before changing its displayed state. Pending controls lock and announce busy; uncertain replies request reloading to check.
 - Synthetic intercepted cases cover both directions at 390/1280; no real cookie or account writes. Preserve cookie scope/expiry, stats permission and all limits. Same existing operation, no new provider or recurring cost; source +430 characters is not a bundled-byte measurement. Binding M0 remains 12.02–12.21%, fails 60%; sales closed and Hotmart features gated. Full final-head CI required before incorporation.
 
@@ -1943,3 +1943,63 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 - Estado: **Em implementação**.
 - Require successful HTTP, strict boolean confirmation, no contradictory error and the matching canonical note; removals require explicit null. Lock all fields while pending and preserve the creator draft on uncertain replies. Reuse existing note parsers and existing response; no additional data/provider operation.
 - Synthetic intercepted save/removal cases at 390/1280; full final-head CI pending. Preserve creator content, all note limits and delivery behavior. Client source +728 characters is not bundled size; existing M0 12.02–12.21% still fails60%, sales and Hotmart features remain gated.
+
+
+### Verified functional publication 90
+
+```json
+{
+  "number": 90,
+  "pr": 682,
+  "url": "https://github.com/viniciussucupira/marktmorgen/pull/682",
+  "head": "5f1e3b3c699811c67475d252e567e79f691d26c2",
+  "sha": "749a7caa5422a17600724f5933cbc2ce05507d0c",
+  "deployment": "dpl_8sJ1xBJZFRtQyfsE5azGTocgLZ4s",
+  "domain": "marktmorgen.com",
+  "mergedAt": "2026-10-20T10:09:38Z",
+  "mergedFortaleza": "2026-10-20 07:09:38",
+  "readyAt": "2026-10-20T10:10:34.969Z",
+  "tests": {
+    "product": 39403803309,
+    "verify": 118564721529,
+    "redis": 118564721842,
+    "security": 39403803323,
+    "syntheticCases": 40
+  },
+  "live": [
+    {
+      "path": "/",
+      "status": 200,
+      "marker": "dpl_8sJ1xBJZFRtQyfsE5azGTocgLZ4s"
+    },
+    {
+      "path": "/signin",
+      "status": 200,
+      "marker": "dpl_8sJ1xBJZFRtQyfsE5azGTocgLZ4s"
+    },
+    {
+      "path": "/studio",
+      "status": 200,
+      "marker": "dpl_8sJ1xBJZFRtQyfsE5azGTocgLZ4s"
+    },
+    {
+      "path": "/platform/path",
+      "status": 200,
+      "marker": "dpl_8sJ1xBJZFRtQyfsE5azGTocgLZ4s"
+    },
+    {
+      "path": "/pricing",
+      "status": 200,
+      "marker": "dpl_8sJ1xBJZFRtQyfsE5azGTocgLZ4s"
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "marker": "dpl_8sJ1xBJZFRtQyfsE5azGTocgLZ4s"
+    }
+  ],
+  "runtime": "No error/fatal logs 2026-10-20T10:06:18.479Z–2026-10-20T10:11:18.479Z",
+  "changes": "Exact acknowledged browser visit-exclusion setting; strict HTTP/boolean/error/on confirmation, pending lock/busy and honest uncertainty.",
+  "costs": "Same existing operation, cookie scope/expiry and limits; source+430 characters not measured bundle bytes; binding M0 12.02–12.21% still fails60%; sales remain closed."
+}
+```
