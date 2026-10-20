@@ -1470,7 +1470,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 154. **[B2-CONTACT-ACKNOWLEDGMENT] Confirmar a configuração do formulário de contato sem confundir com publicação**
    - Pedido: continuaçãoB2/P0/P3 após implementaçõesS; nenhum número/estado anterior alterado.
-   - Estado: **em implementação; branchcodex/contact-acknowledgment; publicar após itensS acionáveis emverificação**.
+   - Estado: **concluído; PR666 incorporado20/10/2026 04:18:34 Fortaleza; publicação funcional80 confirmada**.
    - Escopo: comparar HTTP/okbooleano/ausênciadeerro/snapshotcontact já devolvido pelo servidor com parseJoin canônico; bloquearcampos enquantoespera,aria-busy,semduplosenvios;perdaderespostamandaconferirsemalegarnadamudou. Sucessoconfirmaconfiguração,nãovisibilidadedependente deemail/plano. Conteúdodocriador/idiomaspreservados.
    - Prova:14respostasinterceptadasem390/1280,28casos,normalizaçãocanônica,HTTP/truthy/contradição/objetosinválidos/errosherdados/perda/sucesso;nenhumPOSTdecontatochegaaoservidor,nenhummensagemoucontareal. Suíteintegralnocabeçalfinalobrigatória.
    - Custo: fontecliente+599caracteres,mesmoPOST/resposta/parseJoinexistentes,semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
@@ -1523,6 +1523,29 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: 14 respostas interceptadas em390/1280,28casos; nenhuma inscrição, conta, mensagem ou POST real; contraste real do alerta e largura integral mantidos. CI integral obrigatório no head final.
    - Custo: +592caracteres cliente, mesmo POST/resposta/parseJoin; nenhuma operação ou fornecedor novo. M0 antes/depois12,02–12,21%, reprova60%; PLANS_ON_SALE=false, preços/limites/gates preservados.
 
+
+### Publicação funcional80 — confirmação de contato e largura móvel
+```json
+{
+  "number": 80,
+  "pr": 666,
+  "queueItem": 154,
+  "feature": "Contact editor confirms canonical saved settings, locks pending fields and gives honest uncertainty; long media-kit address wraps on mobile",
+  "head": "b35f3653b1bf5961088a8317025295997423d84d",
+  "commit": "9849f0b03610892dc468c181ee777b31444940c5",
+  "deployment": "dpl_H15K6dpXTgiE9ehthQh2eND9hSNh",
+  "readyUTC": "2026-10-20T07:19:31.161Z",
+  "readyFortaleza": "2026-10-20 04:19:31",
+  "mergedUTC": "2026-10-20T07:18:34Z",
+  "mergedFortaleza": "2026-10-20 04:18:34",
+  "run": 39384360673,
+  "verify": 118500526220,
+  "redis": 118500526528,
+  "securityRun": 39384360628,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and complete synthetic browser passed, including28intercepted contact responses at390/1280, pending locks, canonical values, draft retention, actual enhanced alert contrast and unchanged global fit guard. READY exactSHA+marktmorgen.com alias;6routes200sameDPL including studio anonymous sign-in redirect. No private production writes/accounts/messages. Noerror/fatal07:15:49.307–07:20:49.307UTC.",
+  "limitations": "Client+599characters, existing request/response/parser;localized12character wrapping class, no new provider/price/allowance/gate. BindingM0 unchanged12.02–12.21%,fails60%;sales closed,no margin certification."
+}
+```
 
 ## H — Lições da auditoria da Hotmart (20/10/2026)
 
