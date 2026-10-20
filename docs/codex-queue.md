@@ -2727,3 +2727,8 @@ As execuções integrais identificaram contraste durante entrada animada no temp
 - Matriz sintética isolada constrói baseline publicadof9bca29fe6386648f76351de70955d4a93f7aa89 e candidato exato, mesmo servidor local;3amostras/3páginas390×844, CPU4×,150ms,1,6Mbps, cache frio. Registra LCP/CLS/ponteiro→pintura e EventTiming; metasLCP<2,5s/CLS<0,1/interação<200ms, falha do candidato bloqueia conclusão. Proxy sintético não é INP real/p75/certificação Core Web Vitals; desconhecido não é zero. Resultados antes/depois a registrar após CI.
 - Testes navegador390/1280: quatro termos/destinos reais, largura/axe, dois JPEGs únicos decodificados, rótulos sintéticos, zero write. Suíte inteira/lint/build/tipos/Redis/security e medições obrigatórios no novo head. Sem conta real, pagamento, mensagem ou submissão externa.
 - PLANS_ON_SALE=false, preços/limites/opt-in/comissão/tax gate/art.9a/revisão comercial preservados;60% líquido por cliente no pior mês e global após todos os impostos permanece obrigatório. Evidência docs/ht16-public-design.md. PróximoHT17; depois custosHT10/11/13/14; nenhum B2 novo.
+
+
+#### HT15 — verificação de identificador da biblioteca privada
+
+Product checks39462624653/verify118766157526 aprovou regressões mas recusou o build: statsId pode ser null em loja sem histórico. A biblioteca agora só lê uma seção salva quando o identificador existe; ausência preserva a página e apresenta estado não confirmado, sem ler outra loja nem inventar seção vazia. CI integral novamente obrigatório no novo head; sem reexecução isolada ou publicação contada.
