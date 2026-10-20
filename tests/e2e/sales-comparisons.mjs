@@ -8,7 +8,7 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
     if(route.request().method()!=="GET"){writes++;await route.abort();return;}
     await route.continue();
    });
-   for(const slug of ["comparisons","kajabi","skool","clickfunnels","circle","kit","whop","hotmart","highlevel","teachable"]){
+   for(const slug of ["comparisons","kajabi","skool","clickfunnels","circle","kit","whop","hotmart","highlevel","teachable","substack","patreon","linktree","podia","thinkific","systeme"]){
     await page.goto(LOCAL+"/proof/"+slug,{waitUntil:"domcontentloaded",timeout:60000});
     await page.locator("main h1").waitFor({state:"visible"});
     // Reveal actual sections before checking their rendered contrast.
@@ -17,7 +17,7 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
      await page.waitForFunction(element=>getComputedStyle(element).opacity==="1",await node.elementHandle(),{timeout:5000});
     }
     if(slug!=="comparisons"){
-     const name={kajabi:"Kajabi",skool:"Skool",clickfunnels:"ClickFunnels",circle:"Circle",kit:"Kit",whop:"Whop",hotmart:"Hotmart",highlevel:"HighLevel",teachable:"Teachable"}[slug];
+     const name={kajabi:"Kajabi",skool:"Skool",clickfunnels:"ClickFunnels",circle:"Circle",kit:"Kit",whop:"Whop",hotmart:"Hotmart",highlevel:"HighLevel",teachable:"Teachable",substack:"Substack",patreon:"Patreon",linktree:"Linktree",podia:"Podia",thinkific:"Thinkific",systeme:"Systeme.io"}[slug];
      is(name+" search title "+width,await page.title(),"Marktmorgen vs "+name);
      is(name+" search description "+width,(await page.locator('meta[name="description"]').getAttribute("content")).startsWith("A "+name+" alternative where"),true);
      await page.getByRole("heading",{name:"Where they are ahead",exact:true}).scrollIntoViewIfNeeded();
@@ -28,8 +28,8 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
      });
      is("competitor advantages have the comparison's text size "+width,sameSize.ahead,sameSize.row);
      is("paid selling closure is visible "+width,(await page.locator("main").innerText()).includes("paid selling are not open yet"),true);
-     const source=page.getByRole("link",{name:{kajabi:/Kajabi pricing and payment fees/,skool:/Skool plans/,clickfunnels:/ClickFunnels plan prices and limits/,circle:/Circle pricing and plan scope/,kit:/Kit prices and inclusive commerce fees/,whop:/Whop standard payment and payout prices/,hotmart:/Hotmart subscription and product pricing/,highlevel:/HighLevel subscription prices and scope/,teachable:/Teachable plan prices and product limits/}[slug]});
-     is("official source is linked "+width,await source.getAttribute("href"),{kajabi:"https://www.kajabi.com/pricing",skool:"https://www.skool.com/pricing",clickfunnels:"https://support.myclickfunnels.com/docs/clickfunnels-pricing/",circle:"https://circle.so/pricing",kit:"https://kit.com/pricing",whop:"https://whop.com/network/pricing/",hotmart:"https://hotmart.com/en/pricing",highlevel:"https://www.gohighlevel.com/pricing",teachable:"https://www.teachable.com/pricing"}[slug]);
+     const source=page.getByRole("link",{name:{kajabi:/Kajabi pricing and payment fees/,skool:/Skool plans/,clickfunnels:/ClickFunnels plan prices and limits/,circle:/Circle pricing and plan scope/,kit:/Kit prices and inclusive commerce fees/,whop:/Whop standard payment and payout prices/,hotmart:/Hotmart subscription and product pricing/,highlevel:/HighLevel subscription prices and scope/,teachable:/Teachable plan prices and product limits/,substack:/Substack publishing, subscription and Stripe fees/,patreon:/Patreon standard plan and publishing/,linktree:/Linktree monthly prices and annual-billing display/,podia:/Podia annual invoices, fees and migration help/,thinkific:/Thinkific prices, course limits and trial/,systeme:/Systeme.io plan prices and FAQ limits/}[slug]});
+     is("official source is linked "+width,await source.getAttribute("href"),{kajabi:"https://www.kajabi.com/pricing",skool:"https://www.skool.com/pricing",clickfunnels:"https://support.myclickfunnels.com/docs/clickfunnels-pricing/",circle:"https://circle.so/pricing",kit:"https://kit.com/pricing",whop:"https://whop.com/network/pricing/",hotmart:"https://hotmart.com/en/pricing",highlevel:"https://www.gohighlevel.com/pricing",teachable:"https://www.teachable.com/pricing",substack:"https://support.substack.com/hc/en-us/articles/360037607131-How-much-does-Substack-cost",patreon:"https://www.patreon.com/pricing",linktree:"https://linktr.ee/s/pricing",podia:"https://www.podia.com/pricing",thinkific:"https://www.thinkific.com/pricing/",systeme:"https://systeme.io/pricing"}[slug]);
     }else{
      is("index links the real Kajabi page "+width,await page.locator('main a[href="/proof/kajabi"]').count(),1);
      is("index links the real Skool page "+width,await page.locator('main a[href="/proof/skool"]').count(),1);
@@ -40,6 +40,12 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
      is("index links the real Hotmart page "+width,await page.locator('main a[href="/proof/hotmart"]').count(),1);
      is("index links the real HighLevel page "+width,await page.locator('main a[href="/proof/highlevel"]').count(),1);
      is("index links the real Teachable page "+width,await page.locator('main a[href="/proof/teachable"]').count(),1);
+     is("index links the real substack page "+width,await page.locator('main a[href="/proof/substack"]').count(),1);
+     is("index links the real patreon page "+width,await page.locator('main a[href="/proof/patreon"]').count(),1);
+     is("index links the real linktree page "+width,await page.locator('main a[href="/proof/linktree"]').count(),1);
+     is("index links the real podia page "+width,await page.locator('main a[href="/proof/podia"]').count(),1);
+     is("index links the real thinkific page "+width,await page.locator('main a[href="/proof/thinkific"]').count(),1);
+     is("index links the real systeme page "+width,await page.locator('main a[href="/proof/systeme"]').count(),1);
      is("footer links comparison index "+width,await page.locator('footer a[href="/proof/comparisons"]').count(),1);
     }
     await page.addScriptTag({content:axeSource});

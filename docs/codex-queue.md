@@ -1159,3 +1159,17 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Nenhummudançaprodução/custo/preço/limite/gate;M0igualreprovada60,vendasfechadas.
 
 - Propagação no PR654: depois de o Product39365615875/verify118441669129 terminar, incorporar pai653corrigido571ce044150735da5e833fedcee4e21a75cf3176 com ambos os pais, preservando todas as páginas e provas. Log confirmou timeout de60segundos aguardando networkidle em /proof/kit depois de as páginas anteriores passarem; novo CI completo obrigatório no head corrigido, sem concluir por rerun isolado.
+
+
+### S1 — seis comparações finais em um incremento
+
+- Base: head corrigido 27030ea4ee2144c73b60cd8964fb43b52e033211 do PR654. A correção de espera dos pais651–653 permanece; nenhum job isolado ou head anterior certifica este conjunto.
+- Ordem preservada no índice: Substack, Patreon, Linktree, Podia, Thinkific e Systeme.io depois das nove anteriores. Cada página tem SEO próprio, tabela, vantagens com o mesmo corpo, fontes oficiais lidas em20/10/2026, limites e CTA existente. Módulo estático compartilha a estrutura e lê preços próprios canônicos.
+- Substack: share10%, Stripe e Billing separados, recorteUS e diferenças iOS/domínio; não afirmar que só Marktmorgen usa Stripe. Patreon: padrão10% pós4/8/2025, com legacy contínuo distinto.
+- Linktree: pricing mensal8/15/35 e equivalentes anuais6/12/30; fatura anual exata não inferida. Pricing Pro0% e feature page Pro9% contraditórios: platformFeeBps permanece null. Não escolher9% ou0% como universal. Payout parceiro.25 não é fee de compra direta; selling documentado para Pro/Premium elegíveis.
+- Podia: faturas anuais504/1008/1800USD exatas, mensal não verificado null; Mover5%, demais0% de plataforma, processing separado, catálogo50/150/unlimited e migration help. Contatos não equivalem a envios.
+- Thinkific: mensal54/109/219, equivalentes anuais40/82/164 sem fatura inventada; gateway externo5/2/1 apenas no escopoFAQ; Thinkific Payments não cobra esse gateway fee, mas processing continua separado. Cursos unlimited, downloads Basic5, branded199extra/selectPlus, trial30.
+- Systeme.io: mensal0/17/47/97 e plataforma0% comprovados no FAQ, processing separado. Anual pago não inferido de two months free. Free2k contacts/3funnels/1course; unlimited emails e evergreen Webinar documentados, sem equiparar a calls agendadas.
+- Provas adicionadas: todas as fontes aninhadas, preços próprios em cada página, cohorts/unknowns/fees condicionais,15 comparações na ordem e sitemap existente; navegador390/1280 para índice e15 páginas com SEO/fonte/paidclosed, texto de vantagens equivalente, axe, overflow, teclado e ausência de APIwrites. Todos os testes anteriores e a espera de pintura permanecem.
+- S1 continua em andamento até os pais e estas seis páginas passarem suite completa e estiverem READY no domínio com SHA exato. Um único deploy destas seis conta uma entrega funcional, não seis; PR pendente/documento não conta.
+- M0 antes/depois: mesmo envelope estático e controles de custo; sem endpoint, dependência, provedor, email, IA, storagewrite ou telemetria novos, nem ampliação de franquia/preço/limite/gate. Banda/custo/imposto desconhecido continua reprovação, não zero. Modelo oneroso12,02–12,21% permanece abaixo60%; vendas fechadas, PLANS_ON_SALE=false, sem certificação fiscal ou de margem.
