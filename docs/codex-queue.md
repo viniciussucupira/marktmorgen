@@ -2680,3 +2680,8 @@ HT2/PR714 incorporado em20/10/2026 às13:32:08 de Fortaleza. READY em13:33:12.64
 - Somente conteúdo/template estático; sem nova operação, IA, email, conta, armazenamento, fornecedor ou custo variável por cliente. Preços/limites, PLANS_ON_SALE=false, comissão, opt-in, tax gate, art.9a e revisão comercial preservados.
 - Testes: URLs únicas/conteúdo substantivo/FAQ/links reais; navegador390/1280 nos5guias comparaFAQvisível/schema, navegação/CTA/avisofechado/axe/largura/nenhuma write. CI integral e publicação READY/domínio/SHA exato pendentes; nenhum pagamento, conta, mensagem ou submissão externa.
 - Documentação: docs/ht12-evergreen-guides.md. PróximoHT15, depoisHT16/17, custosHT10/11/13/14 e só depoisB2.
+
+
+#### HT12 — correção de verificação integral (2026-10-20T16:52:29Z)
+
+O CI integral do head d8b5f7c2bc0162f776da886429deb5d05759f7ad encontrou uma ocorrência de “afterwards” no guia de sessões, incompatível com o padrão en-US vigente. Corrigida para “afterward” no commit f23e100193e76839dc9c8bb9c8faafe10fbf2a81. Product checks 39459453441 / verify 118754920432: falhou; Redis e Dependency security passaram. Nova verificação integral obrigatória no novo head; nenhum job isolado reexecutado para declarar conclusão. Sem mudança de custos, preços, limites ou gates; publicação permanece pendente.
