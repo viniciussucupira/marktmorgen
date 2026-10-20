@@ -608,6 +608,8 @@ function PlanCard({
   const saving = yearSaving(tier) / 100;
   return (
     <div
+      data-pricing-card
+      style={{ contain: "layout" }}
       className={`relative flex flex-col p-7 sm:p-9 ${
         featured
           ? "card border-violet-brand/35 shadow-[var(--shadow-md)] ring-1 ring-violet-brand/15"

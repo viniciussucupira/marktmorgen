@@ -2894,3 +2894,8 @@ verify118791597731 executou filtros/prévias/AA e identificou duas expectativas 
 #### HT10 — nome acessível dos IDs separado da ajuda
 
 Os verifies118803842951/118803901027/118804022774 expiraram procurando o nome exatoMeta Pixel ID. O label implícito incluía também todo o texto de ajuda, alterando o nome acessível. Os quatro campos agora têm label/htmlFor/id explícitos; a ajuda permanece via aria-describedby. Nenhum seletor foi afrouxado, nenhuma verificação removida e IDs de pixel/consentimento persistidos não mudam. CI integral no novohead obrigatório; sem nova operação/custo/limite/preço/gate.
+
+
+#### HT16/HT14 — isolar layout dos cartões ao expandir benefícios
+
+O novo mobile118813573960/HT14 mediu224ms na primeira interação da home (LCP752ms/CLS0); a amostra reprova e não é descartada. O primeiro disclosure medido é a lista de benefícios do cartão de plano. Os cartões recebem contain:layout, sem corte de pintura/overflow nem tamanho presumido: o conteúdo e as alturas continuam naturais, mas o navegador pode limitar o trabalho interno ao cartão. Diagnóstico de EventTiming passa a incluir tempos de entrada/processamento e long tasks; mesmos3cliques/3amostras/3rotas e limiaresLCP<2500/CLS<0,1/interação<200. Nenhuma espera nova, exclusão ou certificaçãoINP real. Toda a suíte no novohead é obrigatória; zero operação/custo novo e preços/limites/gates preservados.
