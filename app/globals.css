@@ -1378,7 +1378,7 @@ a.chip {
 }
 @media (forced-colors: active) {
   .field:focus-visible {
-    outline: 3px solid Highlight;
+    outline: 3px solid CanvasText;
     outline-offset: 3px;
     box-shadow: none;
   }
@@ -2195,7 +2195,7 @@ a.chip {
 }
 @media (forced-colors: active) {
   .st-field:focus-visible {
-    outline: 3px solid Highlight;
+    outline: 3px solid CanvasText;
     outline-offset: 3px;
     box-shadow: none;
   }
@@ -2305,7 +2305,7 @@ a.chip {
   .st-btn:focus-visible,
   .st-btn-ghost:focus-visible,
   .st-social:focus-visible {
-    outline: 3px solid Highlight;
+    outline: 3px solid CanvasText;
     box-shadow: none !important;
     forced-color-adjust: auto;
   }
@@ -2313,6 +2313,11 @@ a.chip {
 /* Rounded social pills need enough painted area after corner antialiasing. */
 .st-social:focus-visible {
   outline-width: 4px;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 4px #fff !important;
+}
+@media (forced-colors: active) {
+  .st-social:focus-visible { box-shadow: none !important; }
 }
 /* Keep native select semantics and keyboard behavior, but draw the control
    in CSS so WebKit paints the same visible focus bands as other fields. */
