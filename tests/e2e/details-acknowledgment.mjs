@@ -7,6 +7,8 @@ export async function checkDetailsAcknowledgment({browser,LOCAL,session,sid,is})
   {name:"different name",body:value=>({ok:true,...value,name:"Different"})},
   {name:"different description",body:value=>({ok:true,...value,bio:"Different"})},
   {name:"null",body:()=>null},
+  {name:"array",body:()=>[]},
+  {name:"unknown inherited error",body:()=>({ok:false,error:"__proto__"})},
   {name:"malformed",raw:"<html>error</html>"},
   {name:"contradictory error",body:value=>({ok:true,...value,error:"server_error"})},
   {name:"known refusal",status:400,body:()=>({ok:false,error:"name"}),specific:true},
@@ -22,7 +24,7 @@ export async function checkDetailsAcknowledgment({browser,LOCAL,session,sid,is})
     if(!pending)throw Error("Unexpected details write");
     const work=pending;requests++;
     const sent=route.request().postDataJSON();
-    const value={name:sent.name.trim().slice(0,60),bio:sent.bio.trim().slice(0,160)};
+    const value={name:sent.name.slice(0,60).trim(),bio:sent.bio.slice(0,160).trim()};
     await work.release;
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(value))});
    });
