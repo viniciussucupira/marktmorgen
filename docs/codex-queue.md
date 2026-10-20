@@ -1504,21 +1504,21 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 155. **[B2-RECOVERY-ACKNOWLEDGMENT] Confirmar preferências de lembrete sem alterar consentimento**
    - Pedido: continuaçãoB2/P0/P3, apósSacionáveis; preservar estados/IDsanteriores.
-   - Estado: **em implementação; branchcodex/recovery-acknowledgment; CIcompletopendente**.
+   - Estado: **concluído; PR667 incorporado20/10/2026 04:24:41 Fortaleza; publicação funcional81 confirmada**.
    - Escopo: respostaHTTP/okbooleano/semcontradição eRecoverySettingcomenabled/addresscanônicos easksbooleano. asksseguepaísdaStripejádecididopeloservidor,nãopreferênciainventadadocliente. Bloquearcamposduranteespera,aria-busy,semduplosenvios;errodesconhecidosóusaentradaspróprias,perdaderespostamandaconferirsemalegarnadamudou. Nãoalterar política/envio/opt-in/tetos.
    - Prova:16respostasinterceptadas×2larguras×2flagsdeconta,64casos,semPOSTreal/SMTP/provider/assinatura. IncluiHTTP,truthey,camposdivergentes,flaginválida,JSONinválido,errosherdados,perda,recusaconhecidaesucessocanônico. Suíteintegralobrigatórianoheadfinal.
    - Custo: fontecliente+656caracteres,mesmoPOST/resposta/parseRecovery;semnovafranquia/operação/fornecedor/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
 
 156. **[B2-SOCIAL-PROFILE-ACKNOWLEDGMENT] Confirmar perfis canônicos, ordem e remoção sem perder o rascunho**
    - Pedido: continuaçãoB2/P0/P3, publicar apósS e154/155; números/estadosanteriorespreservados.
-   - Estado: **em implementação; branchcodex/social-profile-acknowledgment; CIcompletopendente**.
+   - Estado: **concluído; PR668 incorporado20/10/2026 04:27:15 Fortaleza; publicação funcional82 confirmada**.
    - Escopo: HTTP/okbooleano/semcontradição earrayexatocomparseSocials,mesmaordem/URLs/canonicalização/remoçãovazia. Nenhumaentrada inválida édeclaradasalva. Bloquearcampos,reordenar/remover/adicionar/cancelarduranteespera;errosherdadosnãoescolhempropriedades;índicesrejeitadosinteirosválidos;incertezamandaconferir. Alerta/errodecampousadanger-text existente;conteúdooriginalpreservado.
    - Prova:18respostaspara2perfis+6pararemoçãovazia em390/1280=48casos,semPOSTrealouaberturadeperfil/remotemensagem/conta. Incluiordem,rede,URL,contagem,HTTP/truthy,JSON/errosherdados/perda/índicesinválidos,acessibilidadecontrast-enhancedrealdoalerta. Suíteintegralobrigatórianoheadfinal.
    - Custo: fontecliente+1198caracteres,mesmoPOST/resposta/parseSocials;semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
 
 
 157. **[B2-SIGNUP-SETTING-ACKNOWLEDGMENT] Confirmar configuração de inscrição sem prometer publicação**
-   - Estado: **em implementação; codex/signup-setting-acknowledgment; verificação completa pendente**.
+   - Estado: **concluído; PR669 incorporado20/10/2026 04:30:29 Fortaleza; publicação funcional83 confirmada**.
    - Escopo: sucesso apenas com HTTP válido, ok booleano, sem erro contraditório e snapshot join canônico já retornado; bloquear campos enquanto salva, anunciar aria-busy e preservar rascunho. Incerteza pede recarregar para conferir. Confirmação dupla, disponibilidade por plano/email, idiomas e conteúdo preservados.
    - Prova: 14 respostas interceptadas em390/1280,28casos; nenhuma inscrição, conta, mensagem ou POST real; contraste real do alerta e largura integral mantidos. CI integral obrigatório no head final.
    - Custo: +592caracteres cliente, mesmo POST/resposta/parseJoin; nenhuma operação ou fornecedor novo. M0 antes/depois12,02–12,21%, reprova60%; PLANS_ON_SALE=false, preços/limites/gates preservados.
@@ -1544,6 +1544,75 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
   "securityRun": 39384360628,
   "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and complete synthetic browser passed, including28intercepted contact responses at390/1280, pending locks, canonical values, draft retention, actual enhanced alert contrast and unchanged global fit guard. READY exactSHA+marktmorgen.com alias;6routes200sameDPL including studio anonymous sign-in redirect. No private production writes/accounts/messages. Noerror/fatal07:15:49.307–07:20:49.307UTC.",
   "limitations": "Client+599characters, existing request/response/parser;localized12character wrapping class, no new provider/price/allowance/gate. BindingM0 unchanged12.02–12.21%,fails60%;sales closed,no margin certification."
+}
+```
+
+### Publicação funcional81
+```json
+{
+  "number": 81,
+  "pr": 667,
+  "queueItem": 155,
+  "feature": "Recovery settings confirm canonical saved preference and server-owned consent flag, lock pending edits and preserve honest uncertainty",
+  "head": "feee65dbc692b7bb325dfd218de6e768e61633ec",
+  "commit": "21be41488c6e76e9c08cdcebec5b96b8aa8eff03",
+  "deployment": "dpl_2E2Sfc8HU5F3Jt4trvGcS7cus5mY",
+  "readyUTC": "2026-10-20T07:25:39.502Z",
+  "readyFortaleza": "2026-10-20 04:25:39",
+  "mergedUTC": "2026-10-20T07:24:41Z",
+  "mergedFortaleza": "2026-10-20 04:24:41",
+  "run": 39384589896,
+  "verify": 118501283729,
+  "redis": 118501283822,
+  "securityRun": 39384589930,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and complete synthetic browser passed,64intercepted recovery replies across390/1280 and both server consent flags. Pending locks, canonical enabled/address, boolean asks, refusal draft retention and global fit. READY exactSHA+marktmorgen.com alias;6routes200sameDPL, anonymous studio correctly redirects signin. No production private writes, accounts, payments or emails. Noerror/fatal07:21:46.878–07:26:46.878UTC.",
+  "limitations": "Client+656characters, existing POST/response/parseRecovery, no new provider operations/prices/allowances/gates. Consent, timing, recipient/spend limits unchanged. BindingM0 12.02–12.21%fails60%;sales closed."
+}
+```
+
+### Publicação funcional82
+```json
+{
+  "number": 82,
+  "pr": 668,
+  "queueItem": 156,
+  "feature": "Social profile editor confirms exact canonical networks, URLs and order, deliberate removal and preserved drafts on uncertain replies",
+  "head": "3ec4d4e275242898bec62cedd60e1541397fa620",
+  "commit": "de0deb03fa859d4fad7a023793fb53eda002f436",
+  "deployment": "dpl_EjzWSDEFvba6AzgKUsMoYrDkTCVx",
+  "readyUTC": "2026-10-20T07:28:13.429Z",
+  "readyFortaleza": "2026-10-20 04:28:13",
+  "mergedUTC": "2026-10-20T07:27:15Z",
+  "mergedFortaleza": "2026-10-20 04:27:15",
+  "run": 39384647340,
+  "verify": 118501475212,
+  "redis": 118501475610,
+  "securityRun": 39384647286,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed,48intercepted social replies at390/1280 including empty removal, canonical order/URLs, pending control locks, row-index validation, enhanced alert contrast and global mobile fit. READY exactSHA+marktmorgen.com alias;6routes200sameDPL, anonymous studio signin redirect expected. No production private writes, profile requests or accounts/messages. Noerror/fatal07:24:18.925–07:29:18.925UTC.",
+  "limitations": "Client+1198characters, existing parseSocials/POST/response, no new provider/price/allowance/gate. BindingM0 remains12.02–12.21%,fails60%;salesclosed,no certification."
+}
+```
+
+### Publicação funcional83
+```json
+{
+  "number": 83,
+  "pr": 669,
+  "queueItem": 157,
+  "feature": "Email sign-up editor confirms canonical saved settings, locks pending fields and preserves drafts after uncertain replies without claiming public availability",
+  "head": "cb9c3c9bd37641d48f983dedd32feedcfc9288ff",
+  "commit": "1799593c0a059036b4bb92b225d12ca8ccbb8ad9",
+  "deployment": "dpl_DMo5F4WLrypzqGnGkVEV6csyA1wG",
+  "readyUTC": "2026-10-20T07:31:30.925Z",
+  "readyFortaleza": "2026-10-20 04:31:30",
+  "mergedUTC": "2026-10-20T07:30:29Z",
+  "mergedFortaleza": "2026-10-20 04:30:29",
+  "run": 39384827452,
+  "verify": 118502064187,
+  "redis": 118502063870,
+  "securityRun": 39384827319,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed,28intercepted signup-setting replies at390/1280; canonical saved fields,pending locks,draft retention,real enhanced alert contrast and global fit. READY exactSHA+marktmorgen.com alias;6routes200sameDPL including anonymous studio signin redirect. No production private write,email,signup,account or payment. Noerror/fatal07:27:23.981–07:32:23.981UTC.",
+  "limitations": "Client+592characters, existing parseJoin/POST/response,no new provider/price/allowance/gate. Double opt-in,plan/mail availability,creator text and buyer languages unchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
 }
 ```
 
