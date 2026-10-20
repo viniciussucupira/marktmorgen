@@ -2747,8 +2747,16 @@ Product checks39462624653/verify118766157526 aprovou regressões mas recusou o b
 
 196. **[HT10] Unir navegação de pixels e atribuição preservando consentimento e custo existente**
 
-- Estado: **Cálculo próprio registrado antes da implementação; sem fornecedor/ operação nova; implementação pendente**.
+- Estado: **Cálculo próprio registrado antes da implementação; implementado; CI integral e publicação pendentes**.
 - Registro UTC:2026-10-20 17:16:50 UTC; Fortaleza UTC−3. Base canônica da sequência conferida `98690ce0ca790bc8ab691e2721890362a4f1b57d`. Revisão antes de código em docs/ht10-cost-review.md.
 - Escopo autorizado sem custo novo: configuraçõesMeta/Google/TikTok/Pinterest e atribuição por canal já existem; apenas navegação entre elas, explicação visível de consentimento/GPC e confirmação local estrita do retorno das duas gravações existentes. Nenhuma nova operação, endpoint, provider/IA, pixel/evento, job, retenção ou direito de uso; mesmo custo nos tetos atuais. Não iniciar anúncios nem conectar conta.
 - Custo adicional de fornecedor por cliente no pior mês:US$0/mês eUS$0/ano em Store/Studio/Scale, ambos intervalos. Leitura de dimensionamento existente, com todos custos/impostos/reservas e maior taxa por cobrança, permanece60,31/60,59/60,38/60,06/60,46/60,07% nos6cenários (Store mês/ano, Studio mês/ano, Scale mês/ano), sem preço/limite/receita nova. Não confundir com gateM0: leitura tributária mais onerosa continua12,02–12,21%, reprovada para vendas. Desconhecido reprova; operação nova exige cálculo antes de uso.
 - PLANS_ON_SALE=false, comissão, preços/limites, permissões/opt-in/GPC, tax gate/art.9a/revisão comercial preservados. Cálculo é de delta zero sob os contadores existentes, não certificação de margem global nem abertura de vendas. Testes/commit funcional/publicação pendentes; nenhum contador incrementado por este registro.
+
+
+#### HT10 — implementação após cálculo próprio
+
+- Cálculo prévio `eca67f388ea9b6df86f6109e3ab399617f5899d6`; implementação `9e515fa272b878ca08a371e80fd0edf52b77c380` (2026-10-20T17:23:01Z; Fortaleza 2026-10-20 14:23:01.000,UTC−3). Mesmo número de operações/custos/tetos existentes; nenhum custo novo de fornecedor.
+- Centro existente ligaPixel IDs↔Numbers/atribuição conforme papel. Consentimento/GlobalPrivacyControl visíveis antes da edição. Confirmação dos saves exigeHTTPok, booleanotrue, ausência de erro contraditório, pixels canônicos completos iguais ao pedido e janela exata válida. Inputs bloqueados durante gravação, rascunhos não confirmados preservados; texto do relatório só usa janela confirmada, com retry explícito.
+- Bug de consentimento corrigido: antigo “yes” salvo não prevalece mais sobreGPC; navegador mantémoff e apaga cookie de consentimento servidor. allowedBy também recusaSec-GPC:1 com cookieyesantigo, antes de reter contexto/enviar evento. Mesmo ask-first das regiões/countrydesconhecido, nenhuma permissão/opt-in relaxado; requisições evitadas não geram novo custo.
+- Testes hostis/unitários de resposta, todas janelas, matrizGPC/escolha/região e servidor; navegador390/1280 nos formulários existentes com gravações interceptadas, erros/rascunhos preservados, confirmação exata, links/consentimento/axe/largura; loja sintética comyesantigo+GPC deve fazerzerochamadas a fornecedor ou eventos. CI integral e evidência de produção pendentes. Docs/ht10-pixels-attribution.md. PróximoHT11,HT13,HT14; nenhum B2 novo.
