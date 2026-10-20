@@ -2593,3 +2593,8 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 - Mesmo orçamento/caps/cache/opt-in/idiomas e operações existentes; sem custo variável novo, fornecedor, conta, IA ou armazenamento extra. Preços/limites, PLANS_ON_SALE=false, comissão, tax gate, art.9a e revisão comercial preservados.
 - Testes sintéticos: limiar/exato/nulo/fonte/datas; eventos sem data/futuros/cache/produto oculto e nenhuma chamada adicional. Navegador390/1280 confirma contadores reais desconhecidos ausentes e nenhuma write/notificação fictícia. CI integral/publicação exata pendentes. Nenhum pagamento, conta, mensagem ou submissão externa.
 - Documentação: docs/ht8-platform-proof.md. PróximoHT9; B2 depois da sequência HT.
+
+
+#### Correção de regressões públicas compartilhadas — 2026-10-20 17:01:00 UTC
+
+As execuções integrais identificaram contraste durante entrada animada no template público (Hotmart/mostruário) e, emHT7, contagem que incluía o CTA geral da demo além do único criador fictício. Removida a animação de opacidade da primeira dobra das páginas de tópico, mantendo conteúdo visível desde o início; auditoria AA preservada e diagnóstico detalhado adicionado. O teste deHT7 conta o registro na seção de listagens, separado dos CTAs de navegação. Sem exclusão de regra de contraste. CI completo obrigatório no novo head; nenhuma publicação contabilizada enquanto pendente. Sem novas operações, custos, preços, limites ou gates alterados.
