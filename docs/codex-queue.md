@@ -1841,7 +1841,31 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 161. **[B2-PDF-PREVIEW-ACKNOWLEDGMENT] Confirmar páginas de prévia sem prometer disponibilidade**
-   - Estado: **em implementação; codex/pdf-preview-acknowledgment; CI integral pendente**.
+   - Estado: **concluído; PR676 incorporado20/10/2026 05:50:10 Fortaleza; publicação funcional87 confirmada**.
    - Escopo: resposta POST usa id/preview do result.product já retornado pelo setter, sem leitura adicional; cliente exige HTTP/okbooleano/semcontradição/id/páginas exatos,aria-busy,duploenvio bloqueado,incerteza honesta. Sucesso confirma configuração, não geração/disponibilidade.
    - Prova:24respostas interceptadas em390/1280 com fixturegrowthPDFexistente de metadados;nenhumGETdeprévia/download/geração/upload/pagamento/conta real. Off e geração real não são alegados como cobertos pela matriz. Verificação completa obrigatória.
    - Custo:cliente+259caracteres,resposta+54caracteres de fonte,campos já retornados;nenhuma operação/leitura/fornecedor/franquia/preço/gate novo. TetosPDF/free-download/spendexistentes preservados.M0antes/depois12,02–12,21%reprova60%;vendas fechadas.
+
+
+### Publicação funcional87 — confirmação da prévia
+```json
+{
+  "number": 87,
+  "pr": 676,
+  "queueItem": 161,
+  "feature": "PDF preview control confirms exact saved product/pages and honest uncertainty without claiming file generation or public availability",
+  "head": "37aec1554e1e626da37f3a00a17deedef916759e",
+  "commit": "177ecb7898727187a7708675ba9cd5c7687ad8be",
+  "deployment": "dpl_Ei9d3tAb8NLb6b93nYtut9rSNoGm",
+  "readyUTC": "2026-10-20T08:51:06.881Z",
+  "readyFortaleza": "2026-10-20 05:51:06",
+  "mergedUTC": "2026-10-20T08:50:10Z",
+  "mergedFortaleza": "2026-10-20 05:50:10",
+  "run": 39394157956,
+  "verify": 118532617897,
+  "redis": 118532618109,
+  "securityRun": 39394157972,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed24intercepted replies at390/1280:HTTP/boolean/id/pages/JSON/lostresponse checks,pendinglock,globalfit;zeroPDFGET. READY exactSHA/domainalias;6routes200sameDPL,anonymous studio signinredirect expected. No productionprivatewrite/account/payment/PDFgeneration/download. Noerror/fatal08:47:21.689–08:52:21.689UTC.",
+  "limitations": "Off andactualgenerationnotbrowsercovered. Client+259characters,route+54sourcecharacters;id/pagesfromexistingresult.product,no newread/provider/operation/price/allowance/gate. ExistingPDF/free-downloadlimitsunchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
+}
+```
