@@ -30,7 +30,7 @@ export async function checkIntroAcknowledgment({browser,LOCAL,fixture,axeSource,
     if(item.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:item.scenario.status??200,contentType:"application/json",body:item.scenario.raw??JSON.stringify(item.scenario.reply(source.video))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.waitForLoadState("networkidle");
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    await page.addScriptTag({content:axeSource});

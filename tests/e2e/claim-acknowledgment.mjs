@@ -28,7 +28,7 @@ export async function checkClaimAcknowledgment({browser,LOCAL,session,sid,is}){
     await work.release;
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(value))});
    });
-   await page.goto(LOCAL+"/studio/new",{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio/new",{waitUntil:"networkidle",timeout:60000});
    const form=page.locator("form:has(#store-handle)"),field=form.getByLabel("Your address",{exact:true}),name=form.getByLabel("Store name",{exact:true}),bio=form.locator("#store-bio");
    for(const scenario of scenarios){
     await field.fill(" @Synthetic.Store ");await name.fill("Synthetic store");await bio.fill("A synthetic description.");

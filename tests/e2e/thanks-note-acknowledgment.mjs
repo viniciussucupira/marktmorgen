@@ -25,7 +25,7 @@ export async function checkThanksAcknowledgment({browser,LOCAL,fixture,is}){
     await work.release;if(work.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.reply(note))});
    });
-   await page.goto(LOCAL+"/studio/pages?store="+fixture.sid+"&product="+fixture.product,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio/pages?store="+fixture.sid+"&product="+fixture.product,{waitUntil:"networkidle",timeout:60000});
    const section=page.locator("#after-paying");await section.waitFor();
    for(const remove of [false,true]){
     for(const scenario of cases){

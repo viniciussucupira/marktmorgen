@@ -21,7 +21,7 @@ export async function checkSigninAcknowledgment({browser,LOCAL,is}){
     const work=pending;requests++;await work.release;
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body)});
    });
-   await page.goto(LOCAL+"/signin",{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/signin",{waitUntil:"networkidle",timeout:60000});
    for(const scenario of scenarios){
     const field=page.getByLabel("Your email",{exact:true});
     await field.fill("synthetic-access@example.com");
