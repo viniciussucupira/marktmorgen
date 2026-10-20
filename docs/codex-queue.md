@@ -1470,7 +1470,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 154. **[B2-CONTACT-ACKNOWLEDGMENT] Confirmar a configuração do formulário de contato sem confundir com publicação**
    - Pedido: continuaçãoB2/P0/P3 após implementaçõesS; nenhum número/estado anterior alterado.
-   - Estado: **em implementação; branchcodex/contact-acknowledgment; publicar após itensS acionáveis emverificação**.
+   - Estado: **concluído; PR666 incorporado20/10/2026 04:18:34 Fortaleza; publicação funcional80 confirmada**.
    - Escopo: comparar HTTP/okbooleano/ausênciadeerro/snapshotcontact já devolvido pelo servidor com parseJoin canônico; bloquearcampos enquantoespera,aria-busy,semduplosenvios;perdaderespostamandaconferirsemalegarnadamudou. Sucessoconfirmaconfiguração,nãovisibilidadedependente deemail/plano. Conteúdodocriador/idiomaspreservados.
    - Prova:14respostasinterceptadasem390/1280,28casos,normalizaçãocanônica,HTTP/truthy/contradição/objetosinválidos/errosherdados/perda/sucesso;nenhumPOSTdecontatochegaaoservidor,nenhummensagemoucontareal. Suíteintegralnocabeçalfinalobrigatória.
    - Custo: fontecliente+599caracteres,mesmoPOST/resposta/parseJoinexistentes,semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
@@ -1504,21 +1504,243 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 155. **[B2-RECOVERY-ACKNOWLEDGMENT] Confirmar preferências de lembrete sem alterar consentimento**
    - Pedido: continuaçãoB2/P0/P3, apósSacionáveis; preservar estados/IDsanteriores.
-   - Estado: **em implementação; branchcodex/recovery-acknowledgment; CIcompletopendente**.
+   - Estado: **concluído; PR667 incorporado20/10/2026 04:24:41 Fortaleza; publicação funcional81 confirmada**.
    - Escopo: respostaHTTP/okbooleano/semcontradição eRecoverySettingcomenabled/addresscanônicos easksbooleano. asksseguepaísdaStripejádecididopeloservidor,nãopreferênciainventadadocliente. Bloquearcamposduranteespera,aria-busy,semduplosenvios;errodesconhecidosóusaentradaspróprias,perdaderespostamandaconferirsemalegarnadamudou. Nãoalterar política/envio/opt-in/tetos.
    - Prova:16respostasinterceptadas×2larguras×2flagsdeconta,64casos,semPOSTreal/SMTP/provider/assinatura. IncluiHTTP,truthey,camposdivergentes,flaginválida,JSONinválido,errosherdados,perda,recusaconhecidaesucessocanônico. Suíteintegralobrigatórianoheadfinal.
    - Custo: fontecliente+656caracteres,mesmoPOST/resposta/parseRecovery;semnovafranquia/operação/fornecedor/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
 
 156. **[B2-SOCIAL-PROFILE-ACKNOWLEDGMENT] Confirmar perfis canônicos, ordem e remoção sem perder o rascunho**
    - Pedido: continuaçãoB2/P0/P3, publicar apósS e154/155; números/estadosanteriorespreservados.
-   - Estado: **em implementação; branchcodex/social-profile-acknowledgment; CIcompletopendente**.
+   - Estado: **concluído; PR668 incorporado20/10/2026 04:27:15 Fortaleza; publicação funcional82 confirmada**.
    - Escopo: HTTP/okbooleano/semcontradição earrayexatocomparseSocials,mesmaordem/URLs/canonicalização/remoçãovazia. Nenhumaentrada inválida édeclaradasalva. Bloquearcampos,reordenar/remover/adicionar/cancelarduranteespera;errosherdadosnãoescolhempropriedades;índicesrejeitadosinteirosválidos;incertezamandaconferir. Alerta/errodecampousadanger-text existente;conteúdooriginalpreservado.
    - Prova:18respostaspara2perfis+6pararemoçãovazia em390/1280=48casos,semPOSTrealouaberturadeperfil/remotemensagem/conta. Incluiordem,rede,URL,contagem,HTTP/truthy,JSON/errosherdados/perda/índicesinválidos,acessibilidadecontrast-enhancedrealdoalerta. Suíteintegralobrigatórianoheadfinal.
    - Custo: fontecliente+1198caracteres,mesmoPOST/resposta/parseSocials;semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
 
 
 157. **[B2-SIGNUP-SETTING-ACKNOWLEDGMENT] Confirmar configuração de inscrição sem prometer publicação**
-   - Estado: **em implementação; codex/signup-setting-acknowledgment; verificação completa pendente**.
+   - Estado: **concluído; PR669 incorporado20/10/2026 04:30:29 Fortaleza; publicação funcional83 confirmada**.
    - Escopo: sucesso apenas com HTTP válido, ok booleano, sem erro contraditório e snapshot join canônico já retornado; bloquear campos enquanto salva, anunciar aria-busy e preservar rascunho. Incerteza pede recarregar para conferir. Confirmação dupla, disponibilidade por plano/email, idiomas e conteúdo preservados.
    - Prova: 14 respostas interceptadas em390/1280,28casos; nenhuma inscrição, conta, mensagem ou POST real; contraste real do alerta e largura integral mantidos. CI integral obrigatório no head final.
    - Custo: +592caracteres cliente, mesmo POST/resposta/parseJoin; nenhuma operação ou fornecedor novo. M0 antes/depois12,02–12,21%, reprova60%; PLANS_ON_SALE=false, preços/limites/gates preservados.
+
+
+### Publicação funcional80 — confirmação de contato e largura móvel
+```json
+{
+  "number": 80,
+  "pr": 666,
+  "queueItem": 154,
+  "feature": "Contact editor confirms canonical saved settings, locks pending fields and gives honest uncertainty; long media-kit address wraps on mobile",
+  "head": "b35f3653b1bf5961088a8317025295997423d84d",
+  "commit": "9849f0b03610892dc468c181ee777b31444940c5",
+  "deployment": "dpl_H15K6dpXTgiE9ehthQh2eND9hSNh",
+  "readyUTC": "2026-10-20T07:19:31.161Z",
+  "readyFortaleza": "2026-10-20 04:19:31",
+  "mergedUTC": "2026-10-20T07:18:34Z",
+  "mergedFortaleza": "2026-10-20 04:18:34",
+  "run": 39384360673,
+  "verify": 118500526220,
+  "redis": 118500526528,
+  "securityRun": 39384360628,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and complete synthetic browser passed, including28intercepted contact responses at390/1280, pending locks, canonical values, draft retention, actual enhanced alert contrast and unchanged global fit guard. READY exactSHA+marktmorgen.com alias;6routes200sameDPL including studio anonymous sign-in redirect. No private production writes/accounts/messages. Noerror/fatal07:15:49.307–07:20:49.307UTC.",
+  "limitations": "Client+599characters, existing request/response/parser;localized12character wrapping class, no new provider/price/allowance/gate. BindingM0 unchanged12.02–12.21%,fails60%;sales closed,no margin certification."
+}
+```
+
+### Publicação funcional81
+```json
+{
+  "number": 81,
+  "pr": 667,
+  "queueItem": 155,
+  "feature": "Recovery settings confirm canonical saved preference and server-owned consent flag, lock pending edits and preserve honest uncertainty",
+  "head": "feee65dbc692b7bb325dfd218de6e768e61633ec",
+  "commit": "21be41488c6e76e9c08cdcebec5b96b8aa8eff03",
+  "deployment": "dpl_2E2Sfc8HU5F3Jt4trvGcS7cus5mY",
+  "readyUTC": "2026-10-20T07:25:39.502Z",
+  "readyFortaleza": "2026-10-20 04:25:39",
+  "mergedUTC": "2026-10-20T07:24:41Z",
+  "mergedFortaleza": "2026-10-20 04:24:41",
+  "run": 39384589896,
+  "verify": 118501283729,
+  "redis": 118501283822,
+  "securityRun": 39384589930,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and complete synthetic browser passed,64intercepted recovery replies across390/1280 and both server consent flags. Pending locks, canonical enabled/address, boolean asks, refusal draft retention and global fit. READY exactSHA+marktmorgen.com alias;6routes200sameDPL, anonymous studio correctly redirects signin. No production private writes, accounts, payments or emails. Noerror/fatal07:21:46.878–07:26:46.878UTC.",
+  "limitations": "Client+656characters, existing POST/response/parseRecovery, no new provider operations/prices/allowances/gates. Consent, timing, recipient/spend limits unchanged. BindingM0 12.02–12.21%fails60%;sales closed."
+}
+```
+
+### Publicação funcional82
+```json
+{
+  "number": 82,
+  "pr": 668,
+  "queueItem": 156,
+  "feature": "Social profile editor confirms exact canonical networks, URLs and order, deliberate removal and preserved drafts on uncertain replies",
+  "head": "3ec4d4e275242898bec62cedd60e1541397fa620",
+  "commit": "de0deb03fa859d4fad7a023793fb53eda002f436",
+  "deployment": "dpl_EjzWSDEFvba6AzgKUsMoYrDkTCVx",
+  "readyUTC": "2026-10-20T07:28:13.429Z",
+  "readyFortaleza": "2026-10-20 04:28:13",
+  "mergedUTC": "2026-10-20T07:27:15Z",
+  "mergedFortaleza": "2026-10-20 04:27:15",
+  "run": 39384647340,
+  "verify": 118501475212,
+  "redis": 118501475610,
+  "securityRun": 39384647286,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed,48intercepted social replies at390/1280 including empty removal, canonical order/URLs, pending control locks, row-index validation, enhanced alert contrast and global mobile fit. READY exactSHA+marktmorgen.com alias;6routes200sameDPL, anonymous studio signin redirect expected. No production private writes, profile requests or accounts/messages. Noerror/fatal07:24:18.925–07:29:18.925UTC.",
+  "limitations": "Client+1198characters, existing parseSocials/POST/response, no new provider/price/allowance/gate. BindingM0 remains12.02–12.21%,fails60%;salesclosed,no certification."
+}
+```
+
+### Publicação funcional83
+```json
+{
+  "number": 83,
+  "pr": 669,
+  "queueItem": 157,
+  "feature": "Email sign-up editor confirms canonical saved settings, locks pending fields and preserves drafts after uncertain replies without claiming public availability",
+  "head": "cb9c3c9bd37641d48f983dedd32feedcfc9288ff",
+  "commit": "1799593c0a059036b4bb92b225d12ca8ccbb8ad9",
+  "deployment": "dpl_DMo5F4WLrypzqGnGkVEV6csyA1wG",
+  "readyUTC": "2026-10-20T07:31:30.925Z",
+  "readyFortaleza": "2026-10-20 04:31:30",
+  "mergedUTC": "2026-10-20T07:30:29Z",
+  "mergedFortaleza": "2026-10-20 04:30:29",
+  "run": 39384827452,
+  "verify": 118502064187,
+  "redis": 118502063870,
+  "securityRun": 39384827319,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed,28intercepted signup-setting replies at390/1280; canonical saved fields,pending locks,draft retention,real enhanced alert contrast and global fit. READY exactSHA+marktmorgen.com alias;6routes200sameDPL including anonymous studio signin redirect. No production private write,email,signup,account or payment. Noerror/fatal07:27:23.981–07:32:23.981UTC.",
+  "limitations": "Client+592characters, existing parseJoin/POST/response,no new provider/price/allowance/gate. Double opt-in,plan/mail availability,creator text and buyer languages unchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
+}
+```
+
+## H — Lições da auditoria da Hotmart (20/10/2026)
+
+Pedido do dono recebido20/10/2026; proveniência: attachment a64d5c80-7b29-4ff0-a7cd-9a03478b9fbf/Texto colado.txt. Executar depois de todos os itens acima, sem interromper154–157. Nenhum número ou estado anterior foi alterado.
+
+REGRA DE MARGEM (obrigatória em todos os itens): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60% após todos os custos e todos os impostos, inclusive os brasileiros. Os 60% são o piso: a margem pode ser maior, nunca menor. Nenhum item pode alterar preços, reduzir limites visíveis, ativar comissão (COMMISSION_LIVE permanece false) nem afrouxar qualquer gate (tax gate, art. 9a e revisão comercial). Todo recurso com IA deve reservar o custo antes da chamada, ter teto de entrada e de saída e recorrer a uma versão sem IA quando o pool se esgotar. Se um item não couber na margem, registre esse fato no próprio item e não o implemente.
+
+
+**Gate vinculante atual:** M0 mais oneroso12,02–12,21%, abaixo de60%. Portanto, registrar a fila não autoriza implementarH1–H17 enquanto não houver comprovação fiscal/custos por cliente, plano e intervalo que atenda ao piso exigido neste pedido. Custo desconhecido reprova. PLANS_ON_SALE=false e COMMISSION_LIVE=false. Registrar bloqueio e evidência no item antes de qualquer implementação que não caiba; não alegar margem certificada. A auditoria externa é contexto fornecido pelo dono, não prova independente: fontes oficiais e código atual devem ser verificados antes de alegações públicas.
+
+REGRAS DE EXECUÇÃO PARA CADA ITEM
+1. Antes de programar, verifique no repositório (lib/, app/, components/ e docs/) se o recurso já existe. Se existir, aprimore-o; nunca crie um segundo.
+2. As páginas só podem mencionar recursos que existam no código e funcionem hoje.
+3. Todo texto público deve estar em inglês americano.
+4. Crie testes para cada alteração; a suíte inteira deve continuar passando.
+5. Atualize a documentação do recurso e registre, no item da fila, o que foi feito e o commit correspondente.
+
+
+### H1 — Hero orientado a resultado. Reescreva o hero da home (app/page.tsx) para vender o resultado do criador, e não a ferramenta: headline com benefício econômico direto e subheadline no formato "estado atual → estado desejado" (da primeira venda ao negócio completo), sem jargão. Mantenha o pilar "Your store. Your Stripe. Your money." como diferencial. Use um único CTA dominante (Lei de Hick), com botão grande e repetido ao longo da página (Lei de Fitts).
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H2 — Página "How it works" organizada pela jornada. Crie ou reorganize uma página de soluções que siga a sequência mental do criador: Create → Charge → Deliver → Sell more → Automate → Grow. Em cada etapa, apresente os recursos reais do Marktmorgen que a resolvem, com link para a respectiva página de recurso já existente em lib/feature-pages.ts.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H3 — Página de preços que vende valor antes do preço. Na seção #pricing e na página de preços, apresente, antes do preço, o catálogo de recursos organizado por benefício: Checkout, Upsells, Affiliates, Funnels, Email automation, Community, Courses, Video calls, Analytics e CRM. Use o contraste honesto com a Hotmart: ela cobra um percentual sobre cada venda, que cresce à medida que o criador cresce; o Marktmorgen fica com 0% das vendas e cobra um preço fixo. Pode-se incluir uma calculadora do tipo "what a % fee would cost you at X in sales", desde que as taxas dos concorrentes provenham de fonte pública citada, com data. Não altere nenhum preço.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H4 — Página de comparação "Marktmorgen vs Hotmart", em inglês e voltada ao público internacional, no mesmo padrão das páginas de prova já existentes (compare, gumroad e beacons, em lib/site-pages.ts). Compare: taxa por venda versus preço fixo; prazo de recebimento (o dinheiro vai diretamente para a conta Stripe do criador); white-label e domínio próprio; dependência de ecossistema. Use somente fatos verificáveis, com fonte e data, e nenhuma alegação de superioridade sem prova.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H5 — Ativação "do prompt à loja pronta". O rascunho da loja gerado por IA já existe. Transforme-o no caminho principal do onboarding: o criador descreve em uma frase o que vende e recebe nome, bio, perguntas frequentes e até três produtos em rascunho; em seguida, segue um checklist guiado até a PRIMEIRA OFERTA PUBLICADA (reaproveite funnel-launch-checklist e store-guide). Meça o time-to-value (do cadastro à primeira oferta publicada) e mostre o progresso ao criador. Mantenha a regra atual: nada é colocado à venda sem que o criador o publique.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H6 — Reversão de risco e cadastro sem fricção. Revise o fluxo de cadastro: use o menor número possível de campos e não exija cartão para começar, se o modelo atual de teste gratuito permitir. O CTA deve informar exatamente o que acontece ("Start your store" ou "Try it free for X days", se isso for verdade). O texto sobre o que é gratuito e o que é pago deve ser honesto e seguir o padrão Pieter Levels: primeiro o preço mensal; o gratuito, apenas como complemento.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H7 — Vitrine de criadores com prova real. Prepare a seção e a página de vitrine de lojas reais, com autorização expressa de cada criador, registrada com data. Até que exista a primeira loja real autorizada, a seção deve exibir apenas a loja de demonstração, identificada como demo. Nunca use nome, foto ou resultado de criador sem autorização; nunca invente nada.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H8 — Prova social quantitativa honesta. Prepare contadores da plataforma (lojas criadas, vendas processadas e criadores ativos) alimentados por dados reais. Cada contador deve permanecer OCULTO até atingir um limiar mínimo configurado e deve exibir a data da contagem. É proibido: arredondar números para cima, usar "+X" sem base e exibir notificações de "pessoas vendo agora" ou de "compras recentes" que não sejam reais e auditáveis (a Hotmart faz isso no checkout; nós não copiaremos essa prática). Se lib/recent-sales.ts já faz isso de forma honesta, apenas revise-o.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H9 — Alavancas de receita visíveis para o criador. Order bump, upsell, downsell, bundles, recuperação de checkout e "next offer" já existem. Crie no studio uma tela "Grow your sales" (ou aprimore app/grow-sales) que mostre cada alavanca, indique se está ativada e informe quanto ela realmente gerou naquela loja (apenas dados medidos; nenhuma estimativa apresentada como fato). Ative por padrão as alavancas que não têm custo variável e que são opcionais para o comprador.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H10 — Central de pixels e atribuição. lib/pixels.ts e o módulo de atribuição já existem. Garanta uma central única (Meta, Google e TikTok) que respeite o consentimento e um painel de atribuição simples por canal. Não deve haver custo novo de fornecedor; se houver, ele entra no cálculo da margem.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H11 — Comunidade de criadores do Marktmorgen por estágio. Avalie a criação de um espaço para os criadores clientes, organizado por estágio (Starting, First sales, Growing), e não por faturamento declarado, e só o implemente se a margem permitir, com custo zero ou limitado. Reaproveite a comunidade e o acesso ao Discord já existentes. Objetivo: pertencimento e retenção, sem promessa de resultado.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H12 — Educação gratuita como canal de aquisição (SEO de intenção). Use o blog e o learn.ts já existentes. Crie um cluster de guias evergreen em inglês sobre venda de produtos digitais, cursos, memberships, chamadas pagas e afiliados, cada um com perguntas frequentes em dados estruturados (schema FAQPage), links internos para as páginas de recurso e um CTA para começar. Não produza conteúdo raso nem repetido.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H13 — Tutor ou assistente do aluno. Verifique o que lib/answers-rules.ts já faz. Se fizer sentido, ofereça ao criador um assistente que responda às dúvidas dos alunos exclusivamente com base no conteúdo do curso, no mesmo padrão do Store assistant: rótulo de IA desenhado pela página, resposta restrita aos fatos, encaminhamento ao criador, pool reservado e teto de custo. Implemente-o somente se couber na margem; caso contrário, registre o motivo e não o implemente.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H14 — Copiloto de preço e de funil. O funil com IA já existe. Acrescente uma sugestão de preço e de estrutura de oferta baseada apenas nos dados da própria loja e em regras declaradas, sempre como sugestão que o criador aceita ou recusa, com a justificativa exibida. Não apresente projeções do tipo "você venderá X".
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H15 — Biblioteca de modelos. Reúna em um único lugar os modelos de página, funil, e-mail e sequência que já existem (funnel-starters, mail-starters e saved-blocks), com pré-visualização, filtros por objetivo e opção "usar este modelo" em um clique.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H16 — Design premium e confiança. Revise a home, a página de preços e as páginas de recurso quanto aos seguintes pontos: espaço em branco generoso; hierarquia "benefício → prova → CTA" em cada seção; cards limpos; mockups reais do produto (capturas do próprio Marktmorgen, sem nenhuma imagem repetida); e sinais de confiança verdadeiros (pagamento direto na conta Stripe do criador, exportação dos dados, cancelamento simples e política de reembolso). Core Web Vitals no celular: LCP inferior a 2,5 s, INP inferior a 200 ms e CLS inferior a 0,1; meça antes e depois.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+### H17 — Tom de voz de parceiro. Padronize a microcopy do site e do studio com tom de parceiro e mentor: frases curtas, orientadas à ação, sem linguagem corporativa e sem promessa de resultado garantido.
+
+- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
+
+
+PRÁTICAS DA HOTMART QUE NÃO DEVEM SER COPIADAS (registre-as na seção, para que nenhuma delas seja implementada no futuro)
+- Notificações de "X pessoas vendo agora" ou de "compras recentes" sem dados reais e auditáveis.
+- Urgência ou escassez artificial e contadores falsos.
+- Números da plataforma sem base (por exemplo, "+250 mil" ou "4,9 com 350 mil avaliações") enquanto não tivermos os nossos, reais.
+- Nomes ou resultados de criadores sem autorização.
+- Modelo de cobrança por percentual sobre a venda (já está decidido: 0% de comissão).
+
+
+Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dados de cadastro/contadores e atribuição exigem minimização e consentimento; ativação por padrão emH9 não substitui o opt-in já exigido. H1 mantém a proibição vigente de promessas de ganhos/resultado garantido. Capturas e mediçõesH16 seguem também os gates de banda/custos, sem certificar Core Web Vitals com dados insuficientes.
