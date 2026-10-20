@@ -891,3 +891,8 @@ Teachable: https://teachable.com/pricing ; https://support.teachable.com/en/arti
 Substack: https://faq.substack.com/p/how-do-paid-subscriptions-on-substack ; https://on.substack.com/p/what-you-get-when-you-start-a-substack ; https://on.substack.com/p/subscriber-referrals
 
 Direito de arrependimento: pedido de conferir EUR-Lex2011/83/UE arts.9/14/16 e2019/2161 antes da implementação. Nenhuma submissão/conta/mensagem/pagamento real autorizado pela atualização.
+
+
+Validação636: a execução integral39351663737 terminou com seletor global de alerta ambíguo entre signin-error e o anunciador de rotas do Next. O teste agora procura o alerta dentro do formulário real; nenhuma asserção/cenário ou comportamento de produção foi removido. Novo head exige suíte integral. Atualização documental/teste, sem entrega funcional própria.
+
+Publicação posterior à inserção da fila: item88/PR635 incorporado19/10/2026 22:12:37 de Fortaleza, entrega53 confirmada READY22:13:24, versão4eabb47; Product39351259991/Redis/security39351260069 completos, nove cenários390/1280 com largura correta, sete rotas do domínio exatas e sem error/fatal01:10:20.439–01:15:20.439UTC. O registro original do item88 acima foi preservado no acréscimo P4; esta evidência posterior registra sua conclusão.
