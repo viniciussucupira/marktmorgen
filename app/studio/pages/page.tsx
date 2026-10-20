@@ -1,3 +1,5 @@
+import { readSection } from "@/lib/saved-block-store";
+import { fitsPage, blocksForPage } from "@/lib/saved-blocks";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { readableFile } from "@/lib/product-file";
@@ -14,7 +16,7 @@ import { canSell } from "@/lib/store-checkout";
 import { imageUrl } from "@/lib/product-image";
 import { photoUrl } from "@/lib/photo-limits";
 import { readAbout } from "@/lib/product-about";
-import { EMPTY_PAGE, MAX_BLOCKS } from "@/lib/sales-page";
+import { PAGE_TEMPLATES, blocksFromTemplate, BLOCK_KINDS, type SalesPage, EMPTY_PAGE, MAX_BLOCKS } from "@/lib/sales-page";
 import { readPage } from "@/lib/sales-page-store";
 import { summaryOf, visibleReviews } from "@/lib/reviews";
 import { bumpTargets } from "@/lib/product-extras";
@@ -87,6 +89,27 @@ export default async function StudioPagesPage({ searchParams }: Params) {
         summaryOf(store.statsId, selected.id).catch(() => null),
       ])
     : [null, "", null];
+  // Library intents only seed an unsaved empty page. Saved creator content wins.
+  const template = typeof query.template === "string" ? PAGE_TEMPLATES.find(item => item.id === query.template) : undefined;
+  const sectionId = typeof query.sectionTemplate === "string" && /^[a-zA-Z0-9_-]{10}$/.test(query.sectionTemplate) ? query.sectionTemplate : "";
+  let templateDraft: SalesPage | undefined;
+  let templateNotice = "";
+  if (selected && page && (template || sectionId)) {
+    if (page.blocks.length || page.test || page.variant || query.test) {
+      templateNotice = "Your saved page was preserved. Library templates only start an empty page; use the editor to change existing content.";
+    } else if (template && template.free !== isFree(selected)) {
+      templateNotice = "Choose a template that matches this product: a free landing page or a paid sales page.";
+    } else if (template) {
+      templateDraft = { ...page, blocks: blocksFromTemplate(template.id, { title: selected.title, summary: selected.summary, picture: Boolean(selected.image) }) };
+      templateNotice = "Template opened as an unsaved draft. Review every block before saving; nothing has been published.";
+    } else {
+      const section = await readSection(store.statsId, sectionId).catch(() => null);
+      if (section && fitsPage(section, BLOCK_KINDS.map(item => item.kind).filter(kind => kind !== "form"))) {
+        templateDraft = { ...page, blocks: [...blocksFromTemplate(isFree(selected) ? "free" : "guide", {title:selected.title,summary:selected.summary,picture:Boolean(selected.image)}).slice(0,1), ...blocksForPage(section)] };
+        templateNotice = "Your saved section opened in an unsaved page draft. The saved section and existing pages remain unchanged.";
+      } else templateNotice = "This saved section could not be confirmed for this page. Your page was preserved.";
+    }
+  }
   // The newest reviews, to pick up to three to show first, with the ones already picked even when older.
   const picked = page?.blocks.find((block) => block.kind === "reviews")?.first ?? [];
   const reviews = selected && summary && summary.visible > 0 ? await visibleReviews(store.statsId, selected.id, 0, PICKABLE_REVIEWS, picked).catch(() => []) : [];
@@ -122,6 +145,7 @@ export default async function StudioPagesPage({ searchParams }: Params) {
           {`Build each product's own page from up to ${MAX_BLOCKS} blocks: a hero with its picture or a video, text, benefits, what's inside, about you, questions, your guarantee, buttons to the checkout and your buyers' verified reviews. Something free gets a landing page with the sign-up form, to send ads to. Pages follow your store's look, and a product without blocks keeps the page it has.`}
         </p>
 
+        {templateNotice ? <p role="status" className="card mt-6 p-5 text-sm text-ink-soft">{templateNotice}</p> : null}
         {products.length === 0 || !selected || !page || !action ? (
           <div className="card mt-8 p-6 sm:p-8">
             <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Nothing to build a page for yet</p>
@@ -200,6 +224,7 @@ export default async function StudioPagesPage({ searchParams }: Params) {
                 pdf: readableFile(selected) !== null,
               }}
               initial={page}
+              templateDraft={templateDraft}
               folder={await imageFolder(view.ref)}
               about={about}
               look={store.look}

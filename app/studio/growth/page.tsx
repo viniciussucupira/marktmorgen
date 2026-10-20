@@ -1,3 +1,7 @@
+import { TemplateLibrary } from "@/components/template-library";
+import { templateLibraryCards } from "@/lib/template-library";
+import { storeBase } from "@/lib/purchase-email";
+import { isFree } from "@/lib/store";
 import { can } from "@/lib/team-roles";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -14,8 +18,8 @@ import { starterCard } from "@/lib/funnel-starter-catalog";
 export const metadata: Metadata = { title: "Growth — Marktmorgen", robots: { index: false, follow: false } };
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
-/** Navigation only beyond the existing counted studio view. No CRM/funnel
- * snapshots, provider calls, new records or automatic actions. */
+/** Canonical templates and already loaded catalog metadata. Private saved sections
+ * are read only after their explicit button through the existing quota-checked API. */
 export default async function GrowthPage({ searchParams }: Params) {
   const query = await searchParams;
   const found = await studioView(await cookies(), typeof query.store === "string" ? query.store : undefined, "member");
@@ -85,6 +89,14 @@ export default async function GrowthPage({ searchParams }: Params) {
           <Link prefetch={false} className="btn btn-secondary mt-5" href={studioPath(store,"campaignGoal=" + campaignGoal,"funnels") + "#campaign-starters"}>Explore matching campaigns</Link>
           <p className="mt-3 text-sm text-ink-soft">These outlines come from the campaign templates. Review product choices, available room, consent and delivery in the setup preview before creating anything.</p>
         </section> : null}
+        <TemplateLibrary
+          cards={templateLibraryCards({fromName:store.mail?.fromName || store.name,storeLink:storeBase(store),ordersLink:storeBase(store)+"/orders",product:null,paidCount:0})}
+          sid={store.sid}
+          products={(store.catalog.inline ?? store.catalog.head).map(product => ({id:product.id,title:product.title,free:isFree(product)}))}
+          canPage={can(role,"products") && can(role,"page")}
+          canEmail={can(role,"draft")}
+          canSequence={can(role,"send")}
+        />
       </main>
     </StudioStorePin>
   </div>;

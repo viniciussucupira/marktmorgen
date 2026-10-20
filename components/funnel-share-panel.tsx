@@ -154,6 +154,12 @@ export function FunnelSharePanel({
   // A link opened from someone else: /studio/funnels#import=<code>, read once after the first draw.
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      const starterId = new URLSearchParams(window.location.hash.slice(1)).get("starter");
+      if (starterId && starters.some(item => item.id === starterId)) {
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+        void openPreview({ starter: starterId });
+        return;
+      }
       const found = codeFrom(window.location.hash);
       if (!found) return;
       setCode(found);
