@@ -2075,3 +2075,9 @@ Prior run39404559381 failed four synthetic contradictory-response wording checks
   "failedPriorRun": 39404559381
 }
 ```
+
+
+167. **[B2-167] Confirm saved appearance choices accurately.**
+- Estado: **Em implementação**.
+- Require successful HTTP, boolean confirmation, no contradictory error and exact saved theme/accent/badge/sold/font/backdrop. Lock appearance fields and Undo while pending; preserve draft on uncertainty. Existing response already returns look, no additional read or provider operation. Keep photo processing/requests, branding permission, counted-proof opt-in and contrast transforms unchanged.
+- Synthetic32 intercepted appearance replies at390/1280, no photo operation; full final-head CI pending. Source+1086 characters is not a bundle measurement. M0 12.02–12.21% still fails60%; sales remain closed.

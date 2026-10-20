@@ -150,16 +150,25 @@ export function LookEditor({
     if (status.kind === "working") return;
     setStatus({ kind: "working", what: "look" });
     try {
-      const data = await post("/api/store/look", { theme, accent, badge, sold, font, backdrop });
-      if (data.ok) {
+      const expected = { theme, accent: normaliseHex(accent), badge, sold, font, backdrop };
+      const response = await fetch("/api/store/look", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(expected),
+      });
+      const raw: unknown = await response.json().catch(() => null);
+      const data = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      const snapshot = data?.look && typeof data.look === "object" && !Array.isArray(data.look) ? data.look as Record<string, unknown> : null;
+      if (response.ok && data?.ok === true && !data.error && snapshot && Object.entries(expected).every(([key, value]) => snapshot[key] === value)) {
         setStatus({ kind: "idle" });
         toast("Look saved.");
         router.refresh();
         return;
       }
-      setStatus({ kind: "error", message: MESSAGES[data.error ?? ""] ?? MESSAGES.server_error });
+      const problem = data?.ok === true ? undefined : data?.error;
+      setStatus({ kind: "error", message: typeof problem === "string" && Object.prototype.hasOwnProperty.call(MESSAGES, problem) ? MESSAGES[problem] : "We could not confirm this look. Reload this page to check before trying again." });
     } catch {
-      setStatus({ kind: "error", message: MESSAGES.server_error });
+      setStatus({ kind: "error", message: "We could not confirm this look. Reload this page to check before trying again." });
     }
   }
 
@@ -209,7 +218,7 @@ export function LookEditor({
   const working = status.kind === "working";
 
   return (
-    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="look-title">
+    <section data-look-editor aria-busy={working} className="card mt-8 p-6 sm:p-8" aria-labelledby="look-title">
       <h2 id="look-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
         How your page looks
       </h2>
@@ -271,7 +280,7 @@ export function LookEditor({
           </div>
 
           {/* Theme */}
-          <fieldset>
+          <fieldset disabled={working}>
             <legend className="field-label">Theme</legend>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {THEMES.map((option) => {
@@ -308,7 +317,7 @@ export function LookEditor({
           </fieldset>
 
           {/* Colour */}
-          <fieldset>
+          <fieldset disabled={working}>
             <legend className="field-label">Your color</legend>
             <div className="mt-3 flex flex-wrap items-center gap-2.5">
               {ACCENTS.map((option) => (
@@ -358,7 +367,7 @@ export function LookEditor({
           </fieldset>
 
           {/* Letters */}
-          <fieldset>
+          <fieldset disabled={working}>
             <legend className="field-label">Letters</legend>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {FONTS.map((option) => (
@@ -382,7 +391,7 @@ export function LookEditor({
           </fieldset>
 
           {/* Backdrop */}
-          <fieldset>
+          <fieldset disabled={working}>
             <legend className="field-label">Background</legend>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {BACKDROPS.map((option) => (
@@ -416,7 +425,7 @@ export function LookEditor({
             cheaper plan is worse than one that says so. On Creator it is
             disabled and says what it costs; on Pro it is a switch.
           */}
-          <fieldset className="mt-2">
+          <fieldset disabled={working} className="mt-2">
             <legend className="field-label">Our name on your page</legend>
             <label className="mt-2 flex items-start gap-3">
               <input
@@ -444,7 +453,7 @@ export function LookEditor({
             (lib/sold-count.ts): read from the creator's own Stripe account,
             never typed, and only said from ten sales up.
           */}
-          <fieldset className="mt-2">
+          <fieldset disabled={working} className="mt-2">
             <legend className="field-label">How many times each product was bought</legend>
             <label className="mt-2 flex items-start gap-3">
               <input
@@ -489,6 +498,7 @@ export function LookEditor({
                   setBackdrop(look.backdrop);
                   setStatus({ kind: "idle" });
                 }}
+                disabled={working}
                 className="btn btn-ghost"
               >
                 Undo changes
