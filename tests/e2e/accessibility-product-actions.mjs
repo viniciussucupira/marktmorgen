@@ -48,10 +48,10 @@ try{
   const context=await browser.newContext({viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
-  let writes=0,foreign=0,localProductWrites=0;const errors=[],blockedWrites=[];
+  let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0;const errors=[],blockedWrites=[];
   try{
    const page=await context.newPage();page.on("pageerror",error=>errors.push(String(error)));
-   await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
+   await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(url.origin===origin&&url.pathname==="/api/store/hit"&&r.method()==="POST"){const input=r.postDataJSON();if(input?.h!=="activationonboarding"||input?.k!=="v"){writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}interceptedVisits++;return route.fulfill({status:204});}if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
    const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});if(response.status()!==200)throw Error("HTTP "+response.status());
    if(new URL(page.url()).pathname.startsWith("/signin"))throw Error("Synthetic authenticated journey redirected to sign-in");
    if(!await page.locator("main").count())throw Error("Authenticated main missing");
@@ -66,7 +66,7 @@ try{
     if(!active)gaps.push({path,width,mode,reason:"Engine did not activate forced-colors media after emulation request; real OS/device validation remains open."});
    }
    if(mode==="reduced-motion"&&!await page.evaluate(()=>matchMedia("(prefers-reduced-motion: reduce)").matches))throw Error("Reduced-motion request not honored");
-   const overflow=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,offenders:[...document.querySelectorAll("body *")].filter(node=>{const b=node.getBoundingClientRect();if(!(b.width>0&&(b.right>document.documentElement.clientWidth+1||b.left< -1)))return false;for(let parent=node.parentElement;parent&&parent!==document.documentElement;parent=parent.parentElement){if(["auto","scroll","hidden","clip"].includes(getComputedStyle(parent).overflowX))return false;}return true;}).slice(0,12).map(node=>({html:node.outerHTML.slice(0,400),left:node.getBoundingClientRect().left,right:node.getBoundingClientRect().right}))}));
+   const overflow=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,internalOverflow:[...document.querySelectorAll("body *")].filter(node=>node.clientWidth>0&&node.scrollWidth>node.clientWidth+1).slice(0,16).map(node=>({html:node.outerHTML.slice(0,300),scroll:node.scrollWidth,client:node.clientWidth,overflow:getComputedStyle(node).overflowX})),offenders:[...document.querySelectorAll("body *")].filter(node=>{const b=node.getBoundingClientRect();if(!(b.width>0&&(b.right>document.documentElement.clientWidth+1||b.left< -1)))return false;for(let parent=node.parentElement;parent&&parent!==document.documentElement;parent=parent.parentElement){if(["auto","scroll","hidden","clip"].includes(getComputedStyle(parent).overflowX))return false;}return true;}).slice(0,12).map(node=>({html:node.outerHTML.slice(0,400),left:node.getBoundingClientRect().left,right:node.getBoundingClientRect().right}))}));
    if(overflow.scroll>overflow.client)throw Error("Horizontal overflow "+JSON.stringify(overflow));
    // Actual keyboard events; no scripted focus or focus-style suppression.
    if(mode==="baseline"){
@@ -110,6 +110,7 @@ try{
     if(!response.ok()||data.ok!==true||!data.product||Boolean(data.product.hidden)!==hidden)throw Error("Local visibility refused "+JSON.stringify({status:response.status(),data}));
     const refresh=await refreshed;if(!refresh.ok()||await refresh.finished())throw Error("Visibility RSC refresh failed");
     await page.waitForLoadState("networkidle");
+    console.log("PRODUCT_VISIBILITY_RENDER:"+JSON.stringify({engine,width,mode,hidden,buttons:await row.getByRole("button").allTextContents()}));
    }
    if(await row.getByRole("button",{name:"Unpublish",exact:true}).count()){
     await visibility(row.getByRole("button",{name:"Unpublish",exact:true}),true);expectedWrites++;
@@ -121,8 +122,8 @@ try{
    await page.waitForLoadState("networkidle");
    await page.goto(origin+"/@activationonboarding",{waitUntil:"networkidle"});
    if(!await page.getByText(title,{exact:true}).count())throw Error("Published local product absent from actual storefront");
-   if(writes||foreign||localProductWrites!==expectedWrites)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites,blockedWrites}));
-   console.log("PRODUCT_ACTION_PROOF:"+JSON.stringify({engine,width,mode,title,localProductWrites,expectedWrites,createdAndReloaded:true,explicitPublication:true,storefrontVisible:true,scope:"Disposable local fixture only; no checkout, email, delivery or real account."}));
+   if(writes||foreign||localProductWrites!==expectedWrites||interceptedVisits!==1)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites,interceptedVisits,blockedWrites}));
+   console.log("PRODUCT_ACTION_PROOF:"+JSON.stringify({engine,width,mode,title,localProductWrites,expectedWrites,interceptedVisits,createdAndReloaded:true,explicitPublication:true,storefrontVisible:true,scope:"Disposable local fixture only; no checkout, email, delivery or real account."}));
   }catch(error){failed++;console.error("PRODUCT_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
   finally{cases++;await context.close();}
  }
