@@ -1508,3 +1508,10 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Escopo: respostaHTTP/okbooleano/semcontradição eRecoverySettingcomenabled/addresscanônicos easksbooleano. asksseguepaísdaStripejádecididopeloservidor,nãopreferênciainventadadocliente. Bloquearcamposduranteespera,aria-busy,semduplosenvios;errodesconhecidosóusaentradaspróprias,perdaderespostamandaconferirsemalegarnadamudou. Nãoalterar política/envio/opt-in/tetos.
    - Prova:16respostasinterceptadas×2larguras×2flagsdeconta,64casos,semPOSTreal/SMTP/provider/assinatura. IncluiHTTP,truthey,camposdivergentes,flaginválida,JSONinválido,errosherdados,perda,recusaconhecidaesucessocanônico. Suíteintegralobrigatórianoheadfinal.
    - Custo: fontecliente+656caracteres,mesmoPOST/resposta/parseRecovery;semnovafranquia/operação/fornecedor/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
+
+156. **[B2-SOCIAL-PROFILE-ACKNOWLEDGMENT] Confirmar perfis canônicos, ordem e remoção sem perder o rascunho**
+   - Pedido: continuaçãoB2/P0/P3, publicar apósS e154/155; números/estadosanteriorespreservados.
+   - Estado: **em implementação; branchcodex/social-profile-acknowledgment; CIcompletopendente**.
+   - Escopo: HTTP/okbooleano/semcontradição earrayexatocomparseSocials,mesmaordem/URLs/canonicalização/remoçãovazia. Nenhumaentrada inválida édeclaradasalva. Bloquearcampos,reordenar/remover/adicionar/cancelarduranteespera;errosherdadosnãoescolhempropriedades;índicesrejeitadosinteirosválidos;incertezamandaconferir. Alerta/errodecampousadanger-text existente;conteúdooriginalpreservado.
+   - Prova:18respostaspara2perfis+6pararemoçãovazia em390/1280=48casos,semPOSTrealouaberturadeperfil/remotemensagem/conta. Incluiordem,rede,URL,contagem,HTTP/truthy,JSON/errosherdados/perda/índicesinválidos,acessibilidadecontrast-enhancedrealdoalerta. Suíteintegralobrigatórianoheadfinal.
+   - Custo: fontecliente+1198caracteres,mesmoPOST/resposta/parseSocials;semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
