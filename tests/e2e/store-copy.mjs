@@ -1,3 +1,4 @@
+import {placeholderPaint} from "./placeholder-paint.mjs";
 import {checkOfferPlanning} from "./offer-planning.mjs";
 import { checkPixelAttributionCenter } from "./pixel-attribution-center.mjs";
 import { checkPartnerCopy } from "./partner-copy.mjs";
@@ -88,22 +89,8 @@ import {checkReturnPath} from "./path-return.mjs";
 import {checkPostSalePath} from "./path-growth.mjs";
 import { checkPathCardText } from "./path-card-text.mjs";
 
-async function storePlaceholderContrast(field){
-  return field.evaluate(node=>{
-    const style=getComputedStyle(node),placeholder=getComputedStyle(node,"::placeholder");
-    const channels=color=>{
-      const values=color.match(/[0-9.]+/g)?.map(Number);
-      if(!values||values.length<3)throw Error("Unreadable computed colour: "+color);
-      return values;
-    };
-    const background=channels(style.backgroundColor),text=channels(placeholder.color);
-    if((background[3]??1)!==1)throw Error("Placeholder needs an opaque measured field background");
-    const opacity=Number(placeholder.opacity)*(text[3]??1);
-    const painted=text.slice(0,3).map((value,index)=>value*opacity+background[index]*(1-opacity));
-    const luminance=rgb=>rgb.slice(0,3).map(value=>value/255).map(value=>value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4).reduce((total,value,index)=>total+value*[0.2126,0.7152,0.0722][index],0);
-    const a=luminance(painted),b=luminance(background);
-    return {ratio:(Math.max(a,b)+0.05)/(Math.min(a,b)+0.05),opacity,shown:node.matches(":placeholder-shown")};
-  });
+async function storePlaceholderContrast(page,field){
+  return placeholderPaint(page,field);
 }
 
 async function checkSignInErrorContrast(page,selector,label){
@@ -564,9 +551,9 @@ try {
       await signin.locator("#signin-email").waitFor();
       await checkSecondaryTextContrast(signin,"Sign-in at "+width);
       is("sign-in at "+width+": no horizontal overflow",await signin.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
-      const signinHint=await signin.locator("#signin-email").evaluate(input=>{const style=getComputedStyle(input,"::placeholder");return {color:style.color,opacity:style.opacity};});
-      if(signinHint.color!=="rgb(57, 65, 80)"||signinHint.opacity!=="1")console.error("SIGNIN_PLACEHOLDER_DIAGNOSTIC:"+JSON.stringify({width,...signinHint}));
-      is("sign-in placeholder has readable colour and full opacity at "+width,signinHint.color==="rgb(57, 65, 80)"&&signinHint.opacity==="1",true);
+      const signinHint=await placeholderPaint(signin,signin.locator("#signin-email"));
+      console.log("SIGNIN_PLACEHOLDER_PAINT:"+JSON.stringify({width,...signinHint}));
+      is("sign-in placeholder has readable colour and full opacity at "+width,signinHint.ratio>=7&&signinHint.corePixels>=8&&signinHint.opacity===1,true);
       const focus=await fieldFocusPixels(signin,signin.locator("#signin-email"));
       is("email keyboard focus at "+width+": opaque3px outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&parseFloat(focus.offset)>=3,true);
       is("email keyboard focus at "+width+": rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
@@ -575,13 +562,13 @@ try {
       const storeTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
       const storeFocus=await fieldFocusPixels(signin,storeTarget);
       is("store input focus at "+width+": rendered3:1 pixel area",storeFocus.contrastingPixels>=storeFocus.minimumArea,true);
-      const storeHint=await storePlaceholderContrast(storeTarget);
+      const storeHint=await storePlaceholderContrast(signin,storeTarget);
       for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
         const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className,paint:storePaint});
         const reading=await fieldFocusPixels(signin,target);
         is("store action "+className+" at "+width+": rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
       }
-      is("store placeholder at "+width+": enhanced contrast",storeHint.shown&&storeHint.ratio>=7&&storeHint.opacity===1,true);
+      is("store placeholder at "+width+": enhanced contrast",storeHint.shown&&storeHint.ratio>=7&&storeHint.corePixels>=8&&storeHint.opacity===1,true);
 
       if(width===390){
         for(const theme of THEMES){
@@ -590,9 +577,9 @@ try {
             const target=await mountFieldFocusFixture(signin,{surface:paint["--st-bg"],kind:"input",className:"st-field",paint});
             const reading=await fieldFocusPixels(signin,target);
             is("store input "+theme.id+"/"+accent.label+": rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
-            const hint=await storePlaceholderContrast(target);
+            const hint=await storePlaceholderContrast(signin,target);
             is("store placeholder "+theme.id+"/"+accent.label+": actually shown",hint.shown,true);
-            is("store placeholder "+theme.id+"/"+accent.label+": enhanced contrast",hint.ratio>=7,true);
+            is("store placeholder "+theme.id+"/"+accent.label+": enhanced contrast",hint.ratio>=7&&hint.corePixels>=8,true);
             is("store placeholder "+theme.id+"/"+accent.label+": opaque",hint.opacity,1);
             for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
               const action=await mountFieldFocusFixture(signin,{surface:paint["--st-bg"],kind,className,paint});
@@ -609,8 +596,8 @@ try {
             is("store "+kind+" "+theme.id+"/custom yellow card: rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
             if(kind==="textarea"){
               await target.evaluate(node=>{node.readOnly=false;node.value="";node.placeholder="Write a question";});
-              const hint=await storePlaceholderContrast(target);
-              is("store textarea placeholder "+theme.id+": visible enhanced contrast",hint.shown&&hint.ratio>=7&&hint.opacity===1,true);
+              const hint=await storePlaceholderContrast(signin,target);
+              is("store textarea placeholder "+theme.id+": visible enhanced contrast",hint.shown&&hint.ratio>=7&&hint.corePixels>=8&&hint.opacity===1,true);
               await target.fill("A synthetic question");
               is("typed textarea text replaces the example "+theme.id,await target.evaluate(node=>node.value==="A synthetic question"&&!node.matches(":placeholder-shown")),true);
             }
@@ -629,7 +616,7 @@ try {
         is("restored social focus passes",socialRestored.contrastingPixels>=socialRestored.minimumArea,true);
         const oldHintTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
         const oldHintStyle=await signin.addStyleTag({content:".st-field::placeholder{color:var(--st-muted)!important;opacity:.75!important}"});
-        const oldHint=await storePlaceholderContrast(oldHintTarget);
+        const oldHint=await storePlaceholderContrast(signin,oldHintTarget);
         console.log("PLACEHOLDER_NEGATIVE_CONTROL:"+JSON.stringify(oldHint));
         is("placeholder guard rejects former faded Night text",oldHint.shown&&oldHint.ratio<7,true);
         await oldHintStyle.evaluate(node=>node.remove());
