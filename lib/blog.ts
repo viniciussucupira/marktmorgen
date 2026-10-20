@@ -1,3 +1,4 @@
+import {EVERGREEN_GUIDES,DIGITAL_FILE_GUIDE_EXTRA,DIGITAL_FILE_GUIDE_FAQ} from "@/lib/evergreen-guides";
 /**
  * The whole blog lives here: categories, posts and the blocks each post is
  * built from. Nothing is fetched at run time, so a post page is a static file.
@@ -28,6 +29,7 @@ export type BlogPost = {
   from: string;
   to: string;
   body: BlogBlock[];
+  faq?: {q:string;a:string}[];
 };
 
 export const BLOG_CATEGORIES = [
@@ -41,7 +43,8 @@ export const BLOG_CATEGORIES = [
   "Community",
 ] as const;
 
-export const BLOG_POSTS: BlogPost[] = [
+const BASE_BLOG_POSTS: BlogPost[] = [
+...EVERGREEN_GUIDES,
 {
   "slug": "how-much-kajabi-costs-in-2026",
   "title": "How much Kajabi costs in 2026",
@@ -963,6 +966,9 @@ export const BLOG_POSTS: BlogPost[] = [
     ],
   },
 ];
+
+/** Preserve existing URLs/content; deepen the existing file guide rather than duplicate its search intent. */
+export const BLOG_POSTS:BlogPost[]=BASE_BLOG_POSTS.map(post=>post.slug==="sell-a-digital-file-from-your-bio"?{...post,body:[...post.body,...DIGITAL_FILE_GUIDE_EXTRA],faq:DIGITAL_FILE_GUIDE_FAQ,readMinutes:Math.max(post.readMinutes,7)}:post);
 
 /** The one we point new readers at first. */
 export const FEATURED_SLUG = "what-selling-on-gumroad-costs";

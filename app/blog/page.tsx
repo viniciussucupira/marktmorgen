@@ -1,3 +1,6 @@
+import {CREATOR_GUIDE_SLUGS} from "@/lib/evergreen-guides";
+import {postBySlug} from "@/lib/blog";
+import {PLANS_ON_SALE} from "@/lib/opening";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BlogBrowser } from "@/components/blog-browser";
@@ -46,6 +49,12 @@ export default function BlogIndexPage() {
               <span>Facts about other companies carry their source</span>
             </p>
           </div>
+        </section>
+
+        <section className="container-page py-10" aria-labelledby="creator-guides-title" data-creator-guides>
+          <h2 id="creator-guides-title" className="t-h2">Start with the offer you want to build</h2>
+          <p className="mt-4 max-w-3xl text-ink-soft">Five practical guides: prepare the deliverable, explain its terms, test the access and review real records. Read the one that fits your work; none promises demand or earnings.</p>
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">{CREATOR_GUIDE_SLUGS.map(slug=>{const guide=postBySlug(slug)!;return <li key={slug}><Link href={"/blog/"+slug} prefetch={false} className="block rounded-2xl border border-line bg-white p-5 font-semibold text-violet-deep underline underline-offset-4">{guide.title}</Link></li>;})}</ul>
         </section>
 
         {featured ? (
@@ -106,8 +115,7 @@ export default function BlogIndexPage() {
             <div>
               <h2 className="t-h2 balance">Reading about it is useful. Having a store is better.</h2>
               <p className="mt-4 max-w-xl text-ink-soft">
-                The store address, the page and the editor cost nothing. Selling takes the {`$${PRICE_CENTS / 100}`} plan,
-                free for the first {TRIAL_DAYS} days. {feeWords().blogCta}
+                {PLANS_ON_SALE ? `The published plan starts at USD ${PRICE_CENTS / 100} a month. An eligible first store may have a ${TRIAL_DAYS}-day trial; review its terms in your studio.` : `Published plan price: USD ${PRICE_CENTS / 100} a month when it opens. Paid plans and paid selling remain closed. You can prepare your store without starting a paid plan or an active trial.`} {feeWords().blogCta}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-4 lg:justify-end">

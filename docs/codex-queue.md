@@ -2458,7 +2458,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 184. **[HT2] Jornada do criador na página de recursos existente**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado como funcional109; CI integral e produção exata confirmados**.
 - Registro:20/10/2026 às12:41:40 de Fortaleza. Base conferida `fb2aab77bdead03f6cb212ae13a09d6b5c75d26e`; commit de implementação: `ecb387de5484b68d56d7be6462bc54c17abf45e5` (criado em2026-10-20 12:42:33 de Fortaleza).
 - Reorganiza /platform, sem segunda página paralela: Create→Charge→Deliver→Sell more→Automate→Grow,18links para recursos reais já existentes em lib/feature-pages.ts, catálogo/âncora e escolhas por criador preservados. Texto em inglês americano, sem previsão de vendas; requisitos de Stripe, disponibilidade, plano, consentimento, custos e domínio visíveis nas páginas vinculadas. Aviso explícito de venda fechada enquanto PLANS_ON_SALE=false.
 - Dados estáticos/texto/layout somente; mesmas rotas/assets/serviços, sem nova leitura de conta/provedor, armazenamento, IA, email ou operação. Links de recurso sem prefetch. Sem custo variável adicional por cliente; nenhum preço/limite, comissão, permissão ou gate fiscal/comercial/vendas alterado. Não certifica margem.
@@ -2603,6 +2603,88 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 - Nenhuma nova operação, envio, conta, armazenamento, fornecedor, IA ou custo variável por cliente. Preços/limites, PLANS_ON_SALE=false, comissão, tax gate, art.9a e revisão comercial preservados.
 - Testes sintéticos: pagamentos etiquetados/moeda/atribuição ausente/leitura parcial e estado imutável; navegador390/1280 verifica6linhas/ressalvas/sem controles de ativação/sem writes/teclado/axe/largura. Componente incluído no inventário. CI integral e publicação exata pendentes; nenhum pagamento, conta, mensagem ou submissão externa.
 - Documentação: docs/ht9-sales-levers.md. PróximoHT12, seguidoHT15/16/17; só então custosHT10/11/13/14 e depoisB2.
+
+### Publicação funcional109
+
+HT2/PR714 incorporado em20/10/2026 às13:32:08 de Fortaleza. READY em13:33:12.648, versão `653b978ef808ba7cf1b00f23c7e3fa3ec8f92f0a`, deployment `dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci`, domínio marktmorgen.com confirmado. Jornada6etapas em /platform, recursos reais e catálogo preservados, âncora nativa/foco corrigidos. Product39454833261, verify118738836351, Redis118738836809, security39454833211;170verificações específicas aprovadas no head corrigido. Sete rotas200 com marcador igual e nenhum erro/fatal em16:28:52.620–16:33:52.620UTC. Sem custo variável adicional ou alteração de gates. Contador109, próximo110.
+
+```json
+{
+  "number": 109,
+  "pr": 714,
+  "item": 184,
+  "head": "87e4e2fdfa492f65f51f9d457e38d92eb06e3ae7",
+  "sha": "653b978ef808ba7cf1b00f23c7e3fa3ec8f92f0a",
+  "mergedAt": "2026-10-20T16:32:08Z",
+  "mergedFortaleza": "2026-10-20 13:32:08",
+  "readyAt": "2026-10-20T16:33:12.648Z",
+  "domain": "marktmorgen.com",
+  "deploymentId": "dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci",
+  "cases": 170,
+  "ci": {
+    "product": 39454833261,
+    "verify": 118738836351,
+    "redis": 118738836809,
+    "security": 39454833211
+  },
+  "routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "dpl": "dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci"
+    },
+    {
+      "path": "/signin",
+      "status": 200,
+      "dpl": "dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci"
+    },
+    {
+      "path": "/studio",
+      "status": 200,
+      "dpl": "dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci"
+    },
+    {
+      "path": "/platform/path",
+      "status": 200,
+      "dpl": "dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci"
+    },
+    {
+      "path": "/pricing",
+      "status": 200,
+      "dpl": "dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci"
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "dpl": "dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci"
+    },
+    {
+      "path": "/platform",
+      "status": 200,
+      "dpl": "dpl_NfPvNmWG8sC4aQPScPRMz9hwP2Ci"
+    }
+  ],
+  "runtimeErrors": 0,
+  "runtimeWindow": "2026-10-20T16:28:52.620Z → 2026-10-20T16:33:52.620Z",
+  "cost": "Static existing platform journey; no provider/account operation or new variable client cost. All sales/tax/art9a/commercial/prices/limits unchanged.",
+  "notified": true
+}
+```
+
+192. **[HT12] Cluster evergreen de guias práticos com FAQ visível e dados estruturados**
+- Estado: **Em implementação; verificação integral pendente**.
+- Registro:20/10/2026 às13:35:31 de Fortaleza. Base conferida `275ef11290de759759efbb2fb5832120ff294bc9`; commit de implementação: `f27debb5147fec8a5824b7446b768ab6768e3af9` (criado em2026-10-20T16:35:30Z; Fortaleza UTC−3).
+- Reutiliza journal/blog estático, template, sitemap e capas existentes. Quatro guias distintos: cursos, memberships, sessões pagas e programas de afiliados; URL e corpo anterior do guia de arquivo digital preservados e aprofundados. Cada guia tem escopo/entrega/aceite/testes específicos, links de recursos reais, interligação do cluster e CTA existente, sem promessas de demanda/ganhos/margem.
+- FAQPage usa exatamente as3perguntas/respostas visíveis de cada um dos5guias, junto do BlogPosting existente; nenhuma promessa de rich result ou conteúdo apenas no schema. Índice facilita encontrar o cluster.
+- CTA do blog qualifica teste da primeira loja elegível e respeita vendas fechadas; preparar loja não é teste ativo. learn.ts foi lido: é acesso/progresso de aluno pago, não CMS público de educação; apenas seu comportamento real informa o guia, sem alterar acesso/idiomas/identificadores.
+- Somente conteúdo/template estático; sem nova operação, IA, email, conta, armazenamento, fornecedor ou custo variável por cliente. Preços/limites, PLANS_ON_SALE=false, comissão, opt-in, tax gate, art.9a e revisão comercial preservados.
+- Testes: URLs únicas/conteúdo substantivo/FAQ/links reais; navegador390/1280 nos5guias comparaFAQvisível/schema, navegação/CTA/avisofechado/axe/largura/nenhuma write. CI integral e publicação READY/domínio/SHA exato pendentes; nenhum pagamento, conta, mensagem ou submissão externa.
+- Documentação: docs/ht12-evergreen-guides.md. PróximoHT15, depoisHT16/17, custosHT10/11/13/14 e só depoisB2.
+
+
+#### HT12 — correção de verificação integral (2026-10-20T16:52:29Z)
+
+O CI integral do head d8b5f7c2bc0162f776da886429deb5d05759f7ad encontrou uma ocorrência de “afterwards” no guia de sessões, incompatível com o padrão en-US vigente. Corrigida para “afterward” no commit f23e100193e76839dc9c8bb9c8faafe10fbf2a81. Product checks 39459453441 / verify 118754920432: falhou; Redis e Dependency security passaram. Nova verificação integral obrigatória no novo head; nenhum job isolado reexecutado para declarar conclusão. Sem mudança de custos, preços, limites ou gates; publicação permanece pendente.
 
 
 #### Correção de regressões públicas compartilhadas — 2026-10-20 17:01:00 UTC

@@ -1,3 +1,5 @@
+import {CREATOR_GUIDE_SLUGS} from "@/lib/evergreen-guides";
+import {PLANS_ON_SALE} from "@/lib/opening";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -194,6 +196,12 @@ export default async function BlogPostPage({
             ))}
           </div>
 
+          {post.faq?.length ? <section aria-labelledby="article-faq-title" className="mt-12" data-article-faq>
+            <h2 id="article-faq-title" className="t-h3">Frequently asked questions</h2>
+            <dl className="mt-5 space-y-5">{post.faq.map(item=><div key={item.q}><dt className="font-semibold text-ink">{item.q}</dt><dd className="mt-2 leading-relaxed text-ink-soft">{item.a}</dd></div>)}</dl>
+          </section> : null}
+
+          {post.faq?.length ? <nav aria-label="More creator guides" className="mt-10"><h2 className="t-h3">Continue with the next kind of offer</h2><ul className="mt-4 space-y-2">{CREATOR_GUIDE_SLUGS.filter(slug=>slug!==post.slug).map(slug=><li key={slug}><Link href={"/blog/"+slug} prefetch={false} className="link inline-flex min-h-11 items-center">{postBySlug(slug)!.title}</Link></li>)}</ul></nav> : null}
           <ShareRow url={`${SITE_URL}/blog/${post.slug}`} title={post.title} />
 
           <aside className="surface-night on-dark mt-16 overflow-hidden rounded-[var(--r-xl)] p-8 sm:p-10">
@@ -201,6 +209,7 @@ export default async function BlogPostPage({
             <p className="mt-3 max-w-lg text-white/80">
               The demo store is a real Stripe checkout with a test card. Buy the file, watch it arrive, then decide.
             </p>
+            {!PLANS_ON_SALE ? <p className="mt-3 text-sm text-white/80">Paid plans and paid selling remain closed. Start by preparing your store; a login link does not begin a paid plan.</p> : null}
             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
               <Link href="/demo" className="btn btn-light">
                 Open the live demo store
