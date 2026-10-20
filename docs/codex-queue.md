@@ -2295,6 +2295,15 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 174. **[B2-174] Confirm existing page-part ordering accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega100**.
 - Require successful HTTP, strict confirmation, no contradictory error and the exact returned order before confirming save/reset. Reuse existing bounded setter snapshot; no new read or operation. Lock and announce pending controls, preserve uncertain draft order and only advance local saved baseline after confirmation. Confirm settings rather than public visibility.
 - Synthetic48 intercepted move-save/usual-reset cases planned at390/1280; full final-head CI pending. Preserve all eight persisted part IDs, usual-order and search-first behavior, creator content, page permissions and visible limits. No provider/paid unit/recurring cost added. M0 remains12.02–12.21%, fails60%; sales closed and no H activated.
+
+
+### Publicação funcional100 — 2026-10-20 (Fortaleza)
+
+- **PR#699 incorporado às10:25:06**, merge `ae095dfdd9f939927af247321fb7e156295cc4bf`, head `3aa59c45281263cc053b22cef53279dae63a369d`. Salvar/restaurar a ordem da página exige HTTP bem-sucedido, true estrito, ausência de erro e snapshot exato; mantém rascunho incerto, bloqueia controles pendentes e avança baseline somente após confirmação. Mensagem confirma configuração, sem alegar visibilidade pública.
+- CI completo aprovado: Product39427724429/verify118644396730/Redis118644396950/security39427724297, incluindo48casos sintéticos interceptados (mover/salvar e restaurar padrão em390/1280). Nenhuma gravação autenticada em produção; oito IDs persistidos, conteúdo, ordem padrão, precedência dos resultados de busca e permissões preservados.
+- READY às10:26:34.335, domínio marktmorgen.com, deployment `dpl_EuJMzQw6H4QjHAV6QZZvhPRMQ4SV`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com esse deployment. Nenhum log error/fatal na janela13:22:22.657–13:27:22.657UTC. Fluxo privado verificado somente sinteticamente no CI.
+- Custos100: mesmo snapshot limitado do setter, nenhuma leitura/requisição/provedor/unidade paga/custo recorrente adicional. Preços, limites, idiomas/conteúdo/IDs, permissões, opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou H ativado.
+- **PR#697 documental incorporado às10:10:16**, merge `3684a5367529349e29324e6eaa8a77a33b56022f`, head `e77d2ea5ed0a038df85888142f90e920ea5edd96`; Product39425357044/verify118636429019/Redis118636429300/security39425357239 aprovados. **PR#698 documental incorporado às10:24:47**, merge `d055b55795c847da1fa2fb74894df05c0078fe1c`, head `d41e8b8b4a8f28f3cc7839912fc68830b9d1a1a6`; Product39427475120/verify118643550999/Redis118643551516/security39427475081 aprovados. Ambos registram entregas anteriores e não incrementam contador. Este registro100 também é documental.
