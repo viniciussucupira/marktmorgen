@@ -27,6 +27,8 @@ export async function checkHomeHero({browser,LOCAL,axeSource,is}){
    await page.keyboard.press("Tab");is("HT1 keyboard secondary follows "+width,await demo.evaluate(node=>node===document.activeElement),true);
    is("HT1 hero fits "+width,await hero.evaluate(node=>node.scrollWidth<=node.clientWidth+1),true);
    is("HT1 page fits "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   await page.evaluate(()=>document.fonts.ready);
+   await hero.evaluate(async node=>{const animations=node.getAnimations({subtree:true}).filter(animation=>Number.isFinite(animation.effect?.getComputedTiming().iterations));await Promise.all(animations.map(animation=>animation.finished.catch(()=>{})));});
    await page.addScriptTag({content:axeSource});
    const audit=await hero.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>v.id));
    is("HT1 hero accessibility "+width,audit,[]);
