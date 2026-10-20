@@ -11,6 +11,7 @@ import {
   MAX_COLLECTION_PRODUCTS,
   MAX_COLLECTION_TITLE,
   collectionSegment,
+  parseCollections,
 } from "@/lib/store-collections";
 import { NewTab } from "@/components/new-tab";
 
@@ -22,7 +23,7 @@ const MESSAGES: Record<string, string> = {
   unknown: "One of those products is no longer in your store. Reload the page and try again.",
   store_full: "Your store record is full. Remove something from it and try again.",
 };
-const FAILED = "It could not be saved just now. Try again in a moment.";
+const FAILED = "We could not confirm these collections. Reload this page to check before trying again.";
 
 type Row = { id: string; title: string; blurb: string; products: string[] };
 
@@ -42,17 +43,19 @@ export function CollectionsEditor({
   handle: string;
 }) {
   const router = useRouter();
+  const [saved, setSaved] = useState(collections);
   const [rows, setRows] = useState<Row[]>(collections.map((c) => ({ ...c, products: [...c.products] })));
   const [adding, setAdding] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const titles = new Map(products.map((p) => [p.id, p.title]));
-  const changed = JSON.stringify(rows) !== JSON.stringify(collections);
+  const changed = JSON.stringify(rows) !== JSON.stringify(saved);
   const incomplete = rows.some((row) => !row.title.trim() || row.products.length === 0);
   const update = (index: number, change: Partial<Row>) => setRows((all) => all.map((row, i) => (i === index ? { ...row, ...change } : row)));
 
   async function save() {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -61,13 +64,23 @@ export function CollectionsEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ collections: rows.map((row) => ({ id: row.id || undefined, title: row.title.trim(), blurb: row.blurb.trim(), products: row.products })) }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; collections?: Collection[] };
-      if (!data.ok) {
-        setError(MESSAGES[data.error ?? ""] ?? FAILED);
+      const raw: unknown = await response.json().catch(() => null);
+      const data = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      const received = parseCollections(data?.collections);
+      const matches = Array.isArray(data?.collections) && data.collections.length === rows.length && received.length === rows.length && received.every((collection, index) => {
+        const row = rows[index];
+        const sameId = row.id ? collection.id === row.id : !saved.some(previous => previous.id === collection.id);
+        const expected = parseCollections([{ ...row, id: collection.id }])[0];
+        return sameId && expected && JSON.stringify(collection) === JSON.stringify(expected);
+      });
+      if (!response.ok || data?.ok !== true || data.error || !matches) {
+        const problem = data?.ok === true ? undefined : data?.error;
+        setError(typeof problem === "string" && Object.prototype.hasOwnProperty.call(MESSAGES, problem) ? MESSAGES[problem] : FAILED);
         return;
       }
-      if (data.collections) setRows(data.collections.map((c) => ({ ...c, products: [...c.products] })));
-      toast(rows.length ? "Collections saved. They are on your store now." : "Collections taken off your store.");
+      setSaved(received);
+      setRows(received.map(collection => ({ ...collection, products: [...collection.products] })));
+      toast("Collection settings saved.");
       router.refresh();
     } catch {
       setError(FAILED);
@@ -77,7 +90,7 @@ export function CollectionsEditor({
   }
 
   return (
-    <div className="card p-6 sm:p-8">
+    <div data-collections-editor aria-busy={busy} className="card p-6 sm:p-8">
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Collections</p>
       <p className="mt-2 text-ink-soft">
         {`Group products under a name, like "Beginner guides" or "Everything for weddings". Each collection gets a page of its own you can link to, and a link above your products on your store page. A product can be in more than one. Up to ${MAX_COLLECTIONS} collections of up to ${MAX_COLLECTION_PRODUCTS} products each.`}
@@ -102,10 +115,11 @@ export function CollectionsEditor({
                         <span className="field-label">{`Collection ${index + 1}: name`}</span>
                         <span className="text-xs tabular-nums text-ink-mute">{`${row.title.length}/${MAX_COLLECTION_TITLE}`}</span>
                       </span>
-                      <input className="field mt-1" maxLength={MAX_COLLECTION_TITLE} value={row.title} placeholder="For example: Beginner guides" onChange={(event) => update(index, { title: event.target.value })} />
+                      <input disabled={busy} className="field mt-1" maxLength={MAX_COLLECTION_TITLE} value={row.title} placeholder="For example: Beginner guides" onChange={(event) => update(index, { title: event.target.value })} />
                     </label>
                     <button
                       type="button"
+                      disabled={busy}
                       onClick={() => setRows((all) => all.filter((_, i) => i !== index))}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-danger-soft hover:text-danger"
                       aria-label={`Remove collection ${index + 1}`}
@@ -118,7 +132,7 @@ export function CollectionsEditor({
                       <span className="field-label">A line about it (optional)</span>
                       <span className="text-xs tabular-nums text-ink-mute">{`${row.blurb.length}/${MAX_COLLECTION_BLURB}`}</span>
                     </span>
-                    <textarea className="field mt-1" rows={2} maxLength={MAX_COLLECTION_BLURB} value={row.blurb} onChange={(event) => update(index, { blurb: event.target.value })} />
+                    <textarea disabled={busy} className="field mt-1" rows={2} maxLength={MAX_COLLECTION_BLURB} value={row.blurb} onChange={(event) => update(index, { blurb: event.target.value })} />
                   </label>
                   <p className="field-label mt-3">{`Products in it (${row.products.length} of ${MAX_COLLECTION_PRODUCTS}), in the order shown`}</p>
                   {row.products.length === 0 ? <p className="mt-1 text-sm text-ink-soft">Nothing yet. Add a product below.</p> : null}
@@ -129,7 +143,7 @@ export function CollectionsEditor({
                         <span className="flex shrink-0 items-center gap-1">
                           <button
                             type="button"
-                            disabled={at === 0}
+                            disabled={busy || at === 0}
                             className="inline-flex h-9 w-9 items-center justify-center rounded-full text-ink-soft hover:bg-lilac disabled:opacity-40"
                             aria-label={`Move ${titles.get(id) ?? "this product"} up`}
                             onClick={() => {
@@ -143,6 +157,7 @@ export function CollectionsEditor({
                           <button
                             type="button"
                             className="inline-flex h-9 w-9 items-center justify-center rounded-full text-ink-soft hover:bg-danger-soft hover:text-danger"
+                            disabled={busy}
                             aria-label={`Take ${titles.get(id) ?? "this product"} out`}
                             onClick={() => update(index, { products: row.products.filter((other) => other !== id) })}
                           >
@@ -156,7 +171,7 @@ export function CollectionsEditor({
                     <div className="mt-3 flex flex-wrap items-end gap-3">
                       <label className="min-w-[12rem] flex-1">
                         <span className="sr-only">{`Product to add to collection ${index + 1}`}</span>
-                        <select className="field" value={pick} onChange={(event) => setAdding((all) => ({ ...all, [index]: event.target.value }))}>
+                        <select disabled={busy} className="field" value={pick} onChange={(event) => setAdding((all) => ({ ...all, [index]: event.target.value }))}>
                           {free.map((p) => (
                             <option key={p.id} value={p.id}>
                               {p.title}
@@ -164,7 +179,7 @@ export function CollectionsEditor({
                           ))}
                         </select>
                       </label>
-                      <button type="button" className="btn btn-secondary btn-sm" disabled={!pick} onClick={() => update(index, { products: [...row.products, pick] })}>
+                      <button type="button" className="btn btn-secondary btn-sm" disabled={busy || !pick} onClick={() => update(index, { products: [...row.products, pick] })}>
                         <Icon name="plus" size={15} />
                         Add to this collection
                       </button>
@@ -173,7 +188,7 @@ export function CollectionsEditor({
                   {row.id ? (
                     <p className="mt-3 text-xs text-ink-mute">
                       {"Its page: "}
-                      <a className="underline" href={`/@${handle}/shop/${collectionSegment({ id: row.id, title: row.title || "collection" })}`} target="_blank" rel="noreferrer">
+                      <a className="break-all underline" href={`/@${handle}/shop/${collectionSegment({ id: row.id, title: row.title || "collection" })}`} target="_blank" rel="noreferrer">
                         {`/@${handle}/shop/${collectionSegment({ id: row.id, title: row.title || "collection" })}`}
                       <NewTab /></a>
                     </p>
@@ -186,7 +201,7 @@ export function CollectionsEditor({
           </ul>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {rows.length < MAX_COLLECTIONS ? (
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setRows((all) => [...all, { id: "", title: "", blurb: "", products: [] }])}>
+              <button type="button" disabled={busy} className="btn btn-secondary btn-sm" onClick={() => setRows((all) => [...all, { id: "", title: "", blurb: "", products: [] }])}>
                 <Icon name="plus" size={15} />
                 {`Add a collection (${rows.length} of ${MAX_COLLECTIONS})`}
               </button>
