@@ -25,7 +25,7 @@ export function quoteLine(line:StackLine,cycle:Cycle):LineQuote{
  const plan:CompetitorPlanPrice|undefined=tool?.plans[line.planIndex];
  const unknown:string[]=[];
  if(!tool||!plan)return {name:"Unknown plan",subscriptionCents:null,paymentCents:null,otherCents:null,monthlyCents:null,unknown:["Choose a listed tool and plan."],sources:[]};
- const invalid=[line.monthlySalesCents,line.monthlyOrders].some(n=>!Number.isSafeInteger(n)||n<0||n>10000000000);
+ const invalid=[line.monthlySalesCents,line.monthlyOrders].some(n=>!Number.isSafeInteger(n)||n<0||n>10000000000)||line.monthlyOrders>100000000;
  if(invalid)unknown.push("Enter non-negative sales and a whole number of paid transactions.");
  if(line.monthlySalesCents>0&&line.monthlyOrders===0)unknown.push("Paid sales need a transaction count; fixed fees are charged per transaction.");
  if(line.monthlySalesCents===0&&line.monthlyOrders>0)unknown.push("This model is for paid transactions; give their gross sales amount.");
@@ -33,8 +33,9 @@ export function quoteLine(line:StackLine,cycle:Cycle):LineQuote{
  if(subscriptionCents===null)unknown.push("The exact subscription invoice for this billing interval is unverified.");
  if(!line.conditionsConfirmed)unknown.push("Check the linked country, provider, eligibility, subscriber and legacy-plan conditions.");
  let paymentCents:number|null=null;
- if(line.monthlySalesCents===0&&!invalid){paymentCents=0;}
- else if(!invalid){
+ const inconsistentVolume=(line.monthlySalesCents>0&&line.monthlyOrders===0)||(line.monthlySalesCents===0&&line.monthlyOrders>0);
+ if(line.monthlySalesCents===0&&!invalid&&!inconsistentVolume){paymentCents=0;}
+ else if(!invalid&&!inconsistentVolume){
   // These inclusive quotes already contain processing; never add a visitor's processor twice.
   if(line.tool==="kit"||line.tool==="whop"||(line.tool==="skool"&&line.planIndex===0)){
    if(plan.listedPaymentFeeBps===undefined||plan.listedPaymentFixedCents===undefined)unknown.push("Inclusive payment quote is unverified.");
@@ -60,11 +61,16 @@ export function quoteLine(line:StackLine,cycle:Cycle):LineQuote{
    }
   }
  }
+ if(!line.conditionsConfirmed&&line.monthlySalesCents>0)paymentCents=null;
+ if(paymentCents!==null&&(!Number.isFinite(paymentCents)||Math.abs(paymentCents)>Number.MAX_SAFE_INTEGER)){paymentCents=null;unknown.push("This payment quote exceeds the calculator\'s safe numeric range.");}
  const otherCents=line.otherMonthlyCents;
- if(otherCents===null||!Number.isSafeInteger(otherCents)||otherCents<0)unknown.push("Other applicable fees need a monthly quote, including an explicit zero when verified.");
- return {name:tool.name+" — "+plan.name,subscriptionCents,paymentCents,otherCents,monthlyCents:unknown.length||subscriptionCents===null||paymentCents===null||otherCents===null?null:subscriptionCents+paymentCents+otherCents,unknown,sources:[plan.source,...(plan.feeSource?[plan.feeSource]:[])]};
+ if(otherCents===null||!Number.isSafeInteger(otherCents)||otherCents<0||otherCents>10000000000)unknown.push("Other applicable fees need a monthly quote, including an explicit zero when verified.");
+ let monthlyCents=unknown.length||subscriptionCents===null||paymentCents===null||otherCents===null?null:subscriptionCents+paymentCents+otherCents;
+ if(monthlyCents!==null&&(!Number.isFinite(monthlyCents)||Math.abs(monthlyCents)>Number.MAX_SAFE_INTEGER)){unknown.push("This total exceeds the calculator's safe numeric range.");monthlyCents=null;}
+ return {name:tool.name+" — "+plan.name,subscriptionCents,paymentCents,otherCents,monthlyCents,unknown,sources:[plan.source,...(plan.feeSource?[plan.feeSource]:[])]};
 }
 export function quoteOwn(tier:Tier,cycle:Cycle,salesCents:number,orders:number,bps:number|null,fixed:number|null,other:number|null):number|null{
- if(!Number.isSafeInteger(salesCents)||salesCents<0||!Number.isSafeInteger(orders)||orders<0||(salesCents>0&&orders===0)||(salesCents===0&&orders>0)||bps===null||fixed===null||other===null||!Number.isFinite(bps)||bps<0||bps>10000||!Number.isFinite(fixed)||fixed<0||!Number.isSafeInteger(other)||other<0)return null;
- return (cycle==="month"?PUBLISHED_PLAN_PRICES[tier].month:PUBLISHED_PLAN_PRICES[tier].year/12)+salesCents*(bps+(COMMISSION_PLANS_PUBLISHED?COMMISSION_BPS[tier]:0))/10000+orders*fixed+other;
+ if(!Number.isSafeInteger(salesCents)||salesCents<0||!Number.isSafeInteger(orders)||orders<0||(salesCents>0&&orders===0)||(salesCents===0&&orders>0)||bps===null||fixed===null||other===null||!Number.isFinite(bps)||bps<0||bps>10000||!Number.isFinite(fixed)||fixed<0||fixed>100000000||salesCents>10000000000||orders>100000000||!Number.isSafeInteger(other)||other<0||other>10000000000)return null;
+ const total=(cycle==="month"?PUBLISHED_PLAN_PRICES[tier].month:PUBLISHED_PLAN_PRICES[tier].year/12)+salesCents*(bps+(COMMISSION_PLANS_PUBLISHED?COMMISSION_BPS[tier]:0))/10000+orders*fixed+other;
+ return Number.isFinite(total)&&Math.abs(total)<=Number.MAX_SAFE_INTEGER?total:null;
 }
