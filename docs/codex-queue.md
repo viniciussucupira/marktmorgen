@@ -1097,3 +1097,18 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Preserva email existenteClaude: templates, sequências, IF/ELSEeações existem; nãoinventarlacuna. Diferençaprova: teste própriocorposnão, apenasassunto; KitProcorpo, recomendações/patrocínios. Capacidadedesubscritoresnãoéfranquiadeenvios.
 - Provasadicionadas: fontes/datas/unknowns/inclusivefee/canonicalownpricing/email/sitemap, navegadorreal390/1280metadados/axe/textoequivalente/teclado/noAPIwrites; suitecompletanonovoheadnecessária.
 - M0antes/depois: mesmoenvelopeestático, nenhumanovadependência/endpoint/provedor/email/IA/storagewrite/telemetria, nenhumlimite/preço/gateafrouxado. Leituralíquidaonerosa12,02–12,21%continuareprovadaante60%,não certificada;PLANS_ON_SALE=false. NãocontarPRpendentecomofuncional.
+
+
+### S1 — prova final ClickFunnels, entrega62
+
+- PR648head7ba32f42d453331dc42a1e44fb36eb9b11674725 passou Product39363480658(verify118434795621/Redis118434795794) e segurança39363480625completos. Incorporado20/10/2026 00:29:05Fortaleza, mergebef945b72b5342f1e49e8e8c1994d5856f5e894f.
+- Produçãodpl_EkDzsET2Vu5P4L5UsyG1whxtKEQcREADY00:30:04Fortaleza, SHAexato/aliasmarktmorgen.com.14rotas200marcadordeploymentexato; título/source/paidclosedCF e ambas ligações guiaexistentecomparação confirmadas. Semerror/fatal03:26:10.480–03:31:10.480UTC. Contador61→62apósprova, próximo63. S1terceirode15, nãofinalizado.
+- Preservados variantesdepáginainteiraClaude e guiaimportador, semafirmarlacunahHeadline-only. M0igualreprovada;vendasfechadas.
+
+### S1 — sexto incremento: Whop
+
+- Branchcodex/whop-comparison sobreheade375c28284fc0d57b8107b3051d098a5b989b86f(PR650) enquanto649/650terminamCI. Mainbef945b72b5342f1e49e8e8c1994d5856f5e894fconsultado;nenhumaediçãoconcorrentedessasbranches.
+- FontesoficiaisWhopnetwork/pricing e Discover lidas20/10/2026. Standardsemassinaturamensal; cartão doméstico2,7%+.30, internacional+1,5%,FX+1%, orchestration.8/Billing.5/taxremit2condicionais, tudohabilitado6%+.30antesextras. NãoimporStripeoutra veznemusar3%antigo. Parcelaespecíficaplataforma inconnunull,nãozero; nãoinventartrial.
+- PayoutACH2.50/instant4%+2.50distintosdecadacompra, diretóriorealsemgarantiadetráfego; semalegarisençãofiscaluniversalouMoRcertificado. App-getredirectretornouhome; nãousadocomoprovanativastorelisting.
+- Dadosestáticoscomfontesdatadas, /proof/whop/índice/sitemapexistente, vantagensmesmocorpo, testesfeescondicionais/null/canonicalownpricinge390/1280metadados/axe/teclado/noAPIwrites. Suiteintegralnovohadantesdeincorporar.
+- M0antes/depois: envelopeestáticoexistente, semnovaoperação/endpoint/dependência/provedor/email/IA/storagewrite/telemetria; preços/limites/gatesiguais. M0onerosa12,02–12,21%falha60%,não certificada; PLANS_ON_SALE=false. Não contarpendente/documentocomoentrega.
