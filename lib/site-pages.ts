@@ -3,6 +3,7 @@
 import { AI_PLANS_WORDS } from "@/lib/ai-rules";
 import { isDomainsConfigured } from "@/lib/domains";
 import { PRO_MONTHLY_EMAILS, TIERS, PLAN_TITLES, publishedPriceWords, monthlyEmails, commissionBps } from "@/lib/plan";
+import { pipelineLimitWords } from "@/lib/crm-rules";
 import { MAX_PRODUCTS } from "@/lib/catalog-rules";
 import { COMPETITOR_PRICES } from "@/lib/competitor-prices";
 import { PLANS_ON_SALE } from "@/lib/opening";
@@ -85,6 +86,44 @@ const PROOF = { label: "Checked and dated", tone: "proof" as const };
 export const PAGES: TopicPage[] = [
   ...FEATURE_PAGES,
   ...CREATOR_PAGES,
+  {
+    slug: "highlevel",
+    section: "proof",
+    eyebrow: "A sourced comparison",
+    title: "Marktmorgen vs",
+    highlight: "HighLevel",
+    intro: "A HighLevel alternative where CRM records sit beside a creator's store and products. Compare the audience, channels and agency model before treating these as equivalent subscriptions.",
+    seo: { title: "Marktmorgen vs HighLevel", description: "A HighLevel alternative where CRM and products share a creator's store. Compare subscription prices, usage costs, channels and agency scope. Marktmorgen paid plans remain closed." },
+    badge: { label: "Sources read October 20, 2026", tone: "proof" },
+    accent: "#6d4aff",
+    blocks: [
+      { kind: "lead", text: "Marktmorgen already has custom contact fields, deals, pipelines and branching workflows. That does not make it a phone system or an agency-resale platform. Choose by the work and channels you need, including the usage bill." },
+      { kind: "table", title: "CRM, subscriptions and channel costs", head: ["Compare", "HighLevel", "Marktmorgen"], note: "USD. Sources read October 20, 2026. Subscription prices do not include every optional service, provider charge or tax. A store is not the same billing unit as an agency sub-account.", rows: [
+        ["Monthly subscription", COMPETITOR_PRICES.highlevel.plans.map(p => p.name + ": $" + p.monthlyCents / 100).join("; "), TIERS.map(t => PLAN_TITLES[t] + ": " + publishedPriceWords(t, "month")).join("; ")],
+        ["Annual subscription", COMPETITOR_PRICES.highlevel.plans.map(p => p.name + ": $" + (p.annualCents / 100).toLocaleString("en-US") + "/year").join("; "), TIERS.map(t => PLAN_TITLES[t] + ": " + publishedPriceWords(t, "year")).join("; ")],
+        ["CRM and accounts", "CRM and pipelines. Starter has 3 sub-accounts; Unlimited and Agency Pro have unlimited sub-accounts.", "Contact fields, deals and pipelines within each store. " + pipelineLimitWords()],
+        ["Communication channels", "Email, SMS, calling and social-media tools; usage and add-on costs apply.", "Opt-in email with published send limits; no SMS, WhatsApp or phone-call sending. Booked video calls are a different product."],
+        ["Usage charges", COMPETITOR_PRICES.highlevel.feeScope, "List emails use published plan allowances. Stripe charges separately for payments; bounded paid add-ons keep their own limits."],
+        ["Agency resale", "Agency Pro includes SaaS Mode and automated sub-account creation.", "No equivalent agency SaaS resale or marked-up phone/email rebilling is offered by this comparison."],
+        ["Getting started", COMPETITOR_PRICES.highlevel.trial.days + "-day trial; usage charges can still apply.", PLANS_ON_SALE ? "Check the current plan terms before starting." : "Store setup is available. Paid plans and paid selling are not open yet."],
+      ] },
+      { kind: "features", title: "Inspect the existing tools", items: [
+        { icon: "mail", title: "Email, workflows and CRM records", body: "Read the current contact fields, pipeline rules, sequence actions and communication limits.", href: "/platform/email" },
+        { icon: "layout", title: "Store pages and funnels", body: "Inspect the existing page blocks and experiments before assuming they replace an agency's setup.", href: "/platform/sales-pages" },
+      ] },
+      { kind: "limits", title: "Where they are ahead", items: [
+        "HighLevel has native phone and SMS tooling plus social-media management. Marktmorgen does not offer those communication channels.",
+        "HighLevel Agency Pro has SaaS Mode and automated client sub-account creation. Marktmorgen is not a replacement for that resale model.",
+        "HighLevel offers agency-wide account management. Marktmorgen's pipelines and their limits belong to individual stores.",
+        "HighLevel sells paid subscriptions today. Marktmorgen's paid plans remain closed.",
+      ] },
+      { kind: "features", title: "Official sources and scope", intro: "Read October 20, 2026. No result, revenue, cost-saving or net-margin claim is made from either subscription price.", items: [
+        { icon: "list", title: COMPETITOR_PRICES.highlevel.plans[0].source.label, body: "Monthly and annual prices, sub-accounts, channels and SaaS Mode.", href: COMPETITOR_PRICES.highlevel.plans[0].source.url },
+        { icon: "calculator", title: COMPETITOR_PRICES.highlevel.usage.source.label, body: "Usage billing, wallets, optional services and rebilling.", href: COMPETITOR_PRICES.highlevel.usage.source.url },
+        { icon: "scale", title: "All published comparisons", body: "Read other comparisons and their own dated sources.", href: "/proof/comparisons" },
+      ] },
+    ],
+  },
   {
     slug: "hotmart",
     section: "proof",
@@ -324,7 +363,7 @@ export const PAGES: TopicPage[] = [
     title: "Compare",
     highlight: "the platforms.",
     intro: "Published prices, payment fees and practical limits, with official sources and an honest account of where another platform is ahead.",
-    seo: { title: "Compare Marktmorgen with other creator platforms", description: "Compare Marktmorgen with Kajabi, Skool, ClickFunnels, Circle, Kit, Whop, Hotmart, Stan, Gumroad and Beacons using dated official sources, published limits and honest tradeoffs." },
+    seo: { title: "Compare Marktmorgen with other creator platforms", description: "Compare Marktmorgen with Kajabi, Skool, ClickFunnels, Circle, Kit, Whop, Hotmart, HighLevel, Stan, Gumroad and Beacons using dated official sources, published limits and honest tradeoffs." },
     badge: PROOF,
     accent: "#6d4aff",
     blocks: [
@@ -336,6 +375,7 @@ export const PAGES: TopicPage[] = [
         { icon: "scale", title: "Marktmorgen vs Kit", body: "Email allowances, commerce fees and newsletter tools.", href: "/proof/kit" },
         { icon: "scale", title: "Marktmorgen vs Whop", body: "Payment fees, payouts and public discovery.", href: "/proof/whop" },
         { icon: "scale", title: "Marktmorgen vs Hotmart", body: "Current USD fee bands, payment model and distribution tools.", href: "/proof/hotmart" },
+        { icon: "scale", title: "Marktmorgen vs HighLevel", body: "CRM, channel costs and agency scope.", href: "/proof/highlevel" },
         { icon: "scale", title: "Marktmorgen and Stan", body: "The existing side-by-side comparison and its sources.", href: "/proof/compare" },
         { icon: "calculator", title: "Marktmorgen and Gumroad", body: "Subscription costs, sales fees and tax responsibilities.", href: "/proof/gumroad" },
         { icon: "scale", title: "Marktmorgen and Beacons", body: "Its plans and sales fees, and when they are a better fit.", href: "/proof/beacons" },

@@ -1121,6 +1121,15 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Assinaturamensal/anual0comprovadapricing, nãohátrialinventado. Appcomprador/offlineeafiliadossãofunçõesdocumentadas; nãoprometer tráfego. Própriospreços/taxascanônicos/gatespreservados. Fontescontasdatadas, sitemapviaPAGESexistente, vantagensmesmocorpoe390/1280axe/teclado/metadata/noAPIwrites; testesnovosbandas/conflito/Player/nopaymenttrial.
 - M0antes/depois: mesmoenvelopeestático;semnovaoperação/dependência/endpoint/provedor/email/IA/storagewrite/telemetria, sem franquia/preço/gatealterado. Leituraonerosa12,02–12,21%reprovadaante60%;vendasfechadasPLANS_ON_SALE=false. Exige CI completo finalhead/READY/domínio/SHAantesdecontar/publicar.
 
+
+### S1 — oitavo incremento: HighLevel
+
+- Branchcodex/highlevel-comparison sobreheada7c17e0b9afdc1d08123057aea2eee963627e3bePR652, main7d8fff4e79982eb5eac6d49b831562758b992786consultado. Pais650/651/652CI e649aguardaprovaprodução; nãocontarincorporaçãosemREADY/domínio/SHA.
+- Pricing/guideoficiaisHighLevellidos20/10/2026:97/297/497USDmês;970/2970/4970anoexatos. Starter3subaccounts, Unlimited/Prosemcapdecontasnãoequivaleconsumográtis. Telefone/SMS/email/IAusageextra, SaaSModePro. Taxauniversalpagamentonãoverificadanull.
+- CRMprópriojapossui campos/deals/pipelines/IFELSEClaude, fonte lib/crm-rules.tsconsultada. Texto delimitedpipelines usa pipelineLimitWords canônico, nãonúmeroendurado. Nãoequivalerlojaasubaccount,nãoprometernativoSMS/WhatsApp/voz,SocialourevendaSaaS.
+- Página/índice/sitemap,fontesdatadas,custosexplícitos, vantagensmesmocorpoe390/1280axe/metadata/teclado/noAPIwrites. TestesCRMcapscanonical/unknownfees/subscriptions e suitecompletanofinalheadobrigatórios.
+- M0antes/depois: mesmomecanismoestático; nenhumnovocanal/operação/provedor/email/IA/storagewrite/dependência/telemetria. Nenhumapreço/franquia/gatealterado; M0onerosa12,02–12,21%continuafalha60%,nãocertificada; PLANS_ON_SALE=false. PáginaCRMdedicadaS5permaneceposterior, nãofingirconclusãoduplicada.
+
 ### S1 — prova final Circle, entrega63
 
 - PR649head8ae6fb16e0bc039d205f2cb0409fbc8d9e7c6805 passou Product39364211790(verify118437145001/Redis118437145249) e segurança39364211735completos. Incorporado20/10/2026 00:36:23Fortaleza, merge7d8fff4e79982eb5eac6d49b831562758b992786.
@@ -1141,4 +1150,4 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Corrigir esperadenavegação de páginaspúblicas para domcontentloaded+H1realvisível. Todasfontes/títulos/descrições/paidclosed/vantagens/axe/overflow/teclado/noAPIwrites eesperadepinturapermanecem. Não aumentar timeout, não suprimiraxe/rota/erros. Suitecompletanovofinalheadobrigatória; semrerunisolado. Propagarfixaosdescendentesapósruncompletoatualdeterminar, antesdeincorporar.
 - Nenhummudançaprodução/custo/preço/limite/gate;M0igualreprovada60,vendasfechadas.
 
-- Propagação no PR652: o primeiro head a7c17e0b9afdc1d08123057aea2eee963627e3be terminou com Product39365094460 verde. Mesmo assim, incorporar a correção de navegação do pai651 (77438cd20a6fbb10241421bccb20ceee86354191) por commit com ambos os pais, sem reset/descarte, e exigir suite completa no novo head antes de concluir.
+- Propagação no PR653: Product inicial39365428989/verify118441076494 terminou com falha no mesmo networkidle60s, desta vez ao navegar para /proof/skool após Kajabi390 passar título/fonte/paidclosed/axe/teclado. Incorporar pai652corrigido3e749c1941edc4f3d6f82971cf80078d8aa768ce com ambos os pais, DOMContentLoaded+H1visível e todas as assertivas intactas. Novo CI completo obrigatório; não concluir pelo job individual ou por outro head.
