@@ -177,12 +177,12 @@ export default async function SignInPage({
         </Link>
       </aside>
 
-      <main id="content" className="flex min-h-screen flex-col px-4 py-8 sm:px-8 lg:min-h-0 lg:justify-center lg:py-16">
+      <main id="content" className="flex min-h-screen min-w-0 flex-col px-4 py-8 [overflow-wrap:anywhere] sm:px-8 lg:min-h-0 lg:justify-center lg:py-16">
         <Link href="/" className="inline-flex min-h-11 w-fit items-center rounded-[10px] lg:hidden" aria-label="Marktmorgen, home">
           <Logo />
         </Link>
 
-        <div className="mx-auto w-full max-w-md flex-1 pt-12 lg:flex-none lg:pt-0">
+        <div className="mx-auto w-full min-w-0 max-w-md flex-1 pt-12 lg:flex-none lg:pt-0">
           <h1 className="t-h1">{returning ? "Log in to your store" : "Start your store"}</h1>
           <p className="mt-4 text-ink-soft">
             {returning

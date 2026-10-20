@@ -471,7 +471,7 @@ export default function Home() {
             */}
             <div className="mt-14 flex flex-col gap-4 rounded-[var(--r-lg)] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09)] sm:p-7 lg:flex-row lg:items-center lg:gap-8">
               <div className="lg:w-[17rem] lg:shrink-0">
-                <span className="tag tag-next">Not here yet</span>
+                <span className="tag tag-next" style={{ color: "var(--ink)" }}>Not here yet</span>
                 <p className="mt-3 text-[0.9375rem] text-ink-soft">
                   Currently unavailable. Each one is explained on the feature page.
                 </p>
