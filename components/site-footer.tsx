@@ -65,7 +65,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: "Account & billing",
     links: [
       { label: "Log in", href: "/signin?to=login" },
-      { label: "Pricing", href: "/#pricing" },
+      { label: "Pricing", href: "/pricing" },
       // Section 3 of the Refund Policy is the one that says how to cancel.
       { label: "Cancel subscription", href: "/refunds#cancel" },
       { label: "Request a refund", href: "/refunds" },

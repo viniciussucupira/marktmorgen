@@ -983,13 +983,13 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Cada item: PR codex/* com escopo, lacunas, M0 antes/depois e custo; lint/typecheck/testes integrais no novo head. Documento ou PR pendente não é entrega funcional; só contar após READY, SHA e domínio exatos. Não esperar confirmação para o próximo item.
 
 142. **[S1-COMPARISONS] Comparações oficiais e índice público**
-   - Estado: **em andamento; branch codex/kajabi-comparison, primeiro dos15concorrentes; S1 não concluído**.
+   - Estado: **concluído; 15 comparações e índice publicados, entrega69, PR655, 20/10/2026 01:22:54 Fortaleza**.
    - Escopo: lib/site-pages.ts, seção proof, resumo curto, tabela com fontes/datas, citação literal curta apenas se útil, SEO "Marktmorgen vs Kajabi" e descrição "A Kajabi alternative where...", mesmo padrão adaptado aos demais. Índice ligado no menu/rodapé. Ordem: Kajabi, Skool, ClickFunnels, Circle, Kit, Whop, Hotmart, HighLevel; depois Teachable, Substack, Patreon, Linktree, Podia, Thinkific, Systeme.io.
    - Conferir cada lado no main: comissão zero, conta própria Stripe, produtos/cursos/comunidade/email/funis/CRM conforme limites/capacidades reais, sem declarar venda aberta. Não confundir pagamento direto com dispensa das obrigações fiscais de plataforma. Cada concorrente tem vantagens/lacunas verificadas e "Where they are ahead" do mesmo tamanho. ClickFunnels liga para /platform/move-from-clickfunnels e vice-versa, sem duplicar migração.
    - Prova: fontes oficiais datadas e condições de taxas, URLs/SEO/índice/nav/footer/sitemap, teclado/390px/contraste, testes de dados e de páginas reais. Sub-PR por concorrente pode registrar progresso; S1 só fica concluído com os15e índice. Custo: conteúdo estático, sem chamada paga por visita; M0 antes/depois igual se envelope não aumenta.
 
 143. **[S2-PRICING] Página própria /pricing**
-   - Estado: **a fazer; após S1**.
+   - Estado: **em andamento; branch codex/pricing-page, após S1 publicado**.
    - Escopo: três planos mensal/anual diretamente de lib/plan.ts, todos os limites das respectivas regras, "0% of each sale" com taxa do processador explicada; assistente e legendas de IA com preços reais, FAQ e espaço integrado para S3. Home#pricing liga /pricing; indexável/sitemap.
    - Prova: preços/limites coincidem com fontes canônicas e gates fechados; navegação/semântica/390px. Custo: renderização estática, M0 igual sem novo envelope; S3 é o próximo incremento, não fingir calculadora pronta.
 
@@ -1180,3 +1180,35 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Head inicial6553e2a3eccc474c5255715b20f1b777941d90f41ca: Product39367250412, verify118446785948 falhou em TypeScript após lint, regressões e229bundles verdes. Redis e segurança passaram.
 - Causa: Detail.rows foi declarado string[][], amplo demais para a tabela existente, que exige tuplas de exatamente três células. Corrigir para [string,string,string][] sem cast, any, supressão ou mudança no tipo/base existente. Dados e comportamento permanecem os mesmos; cada linha agora é verificada em compilação.
 - Novo head exige CI completo incluindo navegador; não concluir por typecheck isolado ou por testes do head anterior. Custo/M0/PLANS_ON_SALE/preços/limites/gates inalterados; S1 ainda em andamento.
+
+
+### S1 concluído — produção e verificação integral
+{
+  "number": 69,
+  "pr": 655,
+  "queueItem": 142,
+  "feature": "Final six sourced comparisons: Substack, Patreon, Linktree, Podia, Thinkific, Systeme.io; all15 S1 comparisons published",
+  "head": "5ef9e996b5739ee56b37dcbf2a75e8a8271758f0",
+  "commit": "df67aa025f0b17aacc5eddac0462ff1134331a98",
+  "deployment": "dpl_DAYPFVD7C1Uhw71BzAHGjxqn6K7o",
+  "readyUTC": "2026-10-20T04:22:54.280Z",
+  "readyFortaleza": "2026-10-20 01:22:54",
+  "mergedUTC": "2026-10-20T04:21:54Z",
+  "mergedFortaleza": "2026-10-20 01:21:54",
+  "run": 39367979460,
+  "securityRun": 39367979463,
+  "validation": "Full corrected-head verify118449081110/Redis118449080832/security success: lint, regressions, typecheck/build, wholebrowser, index+15comparisons at390/1280 with axe/keyboard/overflow/noAPIwrites. READY exactSHA and marktmorgen.com alias;25routes200exactdeploymentmarker, all15actualtitles/closed-sale copy. Noerror/fatal04:19:34.386–04:24:34.386UTC.",
+  "limitations": "Unknown Linktree fee remains unknown; legacy cohorts, annual equivalents vs invoice, country/provider fee scopes explicit. Existingstaticenvelope unchanged, no provider operation/cap/price/gate changes. Binding M0 12.02–12.21% remains below60%; PLANS_ON_SALE=false. S1 complete; S2 pricing inprogress."
+}
+
+### S2 — preços, limites e condições canônicos
+- Nova página /pricing renderizada no servidor, três planos com mensal/anual de plan.ts, tabelas semânticas e listas móveis, FAQ nativo operável por teclado, preços reais dos adicionais e link para comparações. Home, menu, rodapé e sitemap apontam para a página. Calculadora S3 ainda não implementada; nenhum resultado simulado.
+- API não foi falsamente restringida ao Studio; permissões e unidades existentes continuam. Delivery200GB não é descrito como bloqueio de download pago. UTC day/calendar/billing-month são distinguidos. Conteúdo/idiomas/IDs e regras operacionais permanecem.
+- M0 antes/depois: mesmo modelo de custos/franquias/preços; nenhuma operação paga, email, IA ou provedor novo, nenhuma ampliação de limites nem dependência. Renderização estática no envelope existente; banda ou impostos desconhecidos continuam reprovação. Leitura vinculante12,02–12,21% segue abaixo60%, PLANS_ON_SALE=false. Esta alteração não certifica60% nem abre venda. Suite integral, typecheck, lint e navegador requeridos antes de publicação.
+
+### S2 — correção após verificação completa inicial
+- Product39369571852 verify118454148405: testes de preços novos passaram; suíte completa detectou2arquivos com falha: inventário de acessibilidade não listava a nova página e fee-words exigiu texto centralizado. Redis passou. Registrar a página como revisãoAAA não concluída; não remover o teste nem declarar conformidade global. Centralizar cada plano com planShareWords e cabeçalho com feeWords, mantendo a diferença entre oferta publicada e cobrança habilitada. Corrigir também destino/foco do skip link #content e cobrir por teclado. Novo head recebe suíte completa, sem reexecutar somente um job.
+
+- Product39370331078 verify118456593166: lint/regressões/types/build/Redis passaram, navegador detectou18falhas porque next.config.ts ainda redirecionava /pricing para home/#pricing. Remover somente /pricing dos sources e apontar aliases /price,/prices,/plans à rota nova. Cobrir configuração e URL real no navegador; manter todas as18asserções e repetir suíte inteira. Não publicar rota que ainda redireciona.
+
+- Product39371460847 verify118460042973: rota real, preços, comparação, teclado,axe/overflow e tipos passaram;2asserções contavam duas cópias legítimas do aviso fechado (header visível + resposta FAQ). Escopar a verificação ao aviso visível de main/header, sem apagar FAQ/aviso e sem mudar PLANS_ON_SALE. Nova suíte integral no novo head; não concluir por reexecução de job.

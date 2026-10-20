@@ -35,6 +35,11 @@ export function shareOfSaleWords(tier: Tier, live = COMMISSION_PLANS_PUBLISHED):
   return bps > 0 ? `${percent(bps)} of each sale` : "nothing from a sale";
 }
 
+/** A plan's published platform share, including a printed zero. Processing stays separate. */
+export function planShareWords(tier: Tier, live = COMMISSION_PLANS_PUBLISHED): string {
+  return `${percent(live ? COMMISSION_BPS[tier] : 0)} of each sale`;
+}
+
 export type FeeWords = ReturnType<typeof feeWords>;
 
 /** Every sentence about what is taken from a sale. */
