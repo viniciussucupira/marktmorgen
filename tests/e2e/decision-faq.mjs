@@ -20,7 +20,7 @@ export async function checkDecisionFaq({browser,LOCAL,axeSource,is}){
      is("FAQ answer visible "+path+"/"+item.q+"/"+width,await answer.isVisible(),true);
      for(const href of item.hrefs){const link=answer.locator('a[href="'+href+'"]');is("FAQ evidence link "+path+"/"+href+"/"+width,await link.count(),1);await link.focus();is("FAQ evidence keyboard focus "+href,await link.evaluate(el=>el===document.activeElement),true);}
     }
-    for(const node of await section.locator(".reveal").all())await page.waitForFunction(el=>getComputedStyle(el).opacity==="1",await node.elementHandle(),{timeout:5000});
+    for(const node of await section.locator(".reveal").all()){await node.scrollIntoViewIfNeeded();await page.waitForFunction(el=>getComputedStyle(el).opacity==="1",await node.elementHandle(),{timeout:5000});}
     await page.addScriptTag({content:axeSource});
     const issues=await section.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>v.id));
     is("FAQ accessibility "+path+"/"+width,issues,[]);
