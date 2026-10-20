@@ -1253,7 +1253,7 @@ export default async function StudioPage({
                   : []),
               ]}
             />
-            <div className="grid items-start gap-x-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+            <div className="grid min-w-0 grid-cols-1 items-start gap-x-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
             <div className="min-w-0">
             <div id="details" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
               <p className="text-lg font-semibold tracking-[-0.02em] text-ink">

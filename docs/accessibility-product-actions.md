@@ -12,3 +12,8 @@ Primeira execução Firefox, head59f0c2d, job118927517023:25casos,27marcas de fa
 ## Diagnóstico completo do head0dca (20/10/2026)
 
 Firefox e WebKit falharam; nenhuma prova completa é declarada. O POST bloqueado foi identificado como `/api/store/hit`: código da rota revisado confirma beacon de visita/estatísticas, que pode gravar contagem. O teste agora intercepta somente a visita `h=activationonboarding,k=v` e responde204 sem executar a rota; exige exatamente uma interceptação por caso concluído. Não permite nova escrita nem chamada externa. Outras operações continuam falhando. A falta de atualização visível após o POST de visibilidade e o overflow WebKit continuam abertos, com diagnóstico dos botões renderizados e caixas com overflow interno. Alvos de remoção44px dependem de nova verificação completa, sem relaxar axe ou a largura.
+
+
+## 20/10/2026 — diagnóstico WebKit no headc8ec
+
+25casos/25falhas WebKit e25/4marcas Firefox preservados. Diagnóstico: painel fechado do seletor de lojas com largura20–37px e conteúdo interno excedente; passa a ficar explicitamente oculto enquanto details está fechado e ganha largura móvel calc(100vw - 2rem), preservando abertura nativa/teclado. Grade principal Studio declara grid-cols-1/minmax(0,1fr) abaixo de lg; nenhuma ocultação de overflow da página ou relaxamento do teste. Diagnóstico de visibilidade passa a registrar trecho sintético RSC; beacon WebKit inesperado continua bloqueado com h/k e tamanho do corpo. CI completo novo obrigatório; sem publicação ou conclusão201.

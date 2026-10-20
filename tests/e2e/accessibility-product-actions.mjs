@@ -51,7 +51,7 @@ try{
   let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0;const errors=[],blockedWrites=[];
   try{
    const page=await context.newPage();page.on("pageerror",error=>errors.push(String(error)));
-   await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(url.origin===origin&&url.pathname==="/api/store/hit"&&r.method()==="POST"){const input=r.postDataJSON();if(input?.h!=="activationonboarding"||input?.k!=="v"){writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}interceptedVisits++;return route.fulfill({status:204});}if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
+   await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(url.origin===origin&&url.pathname==="/api/store/hit"&&r.method()==="POST"){const input=r.postDataJSON();if(input?.h!=="activationonboarding"||input?.k!=="v"){writes++;blockedWrites.push({method:r.method(),path:url.pathname,handle:input?.h,kind:input?.k,bodyBytes:r.postData()?.length??0});return route.abort();}interceptedVisits++;return route.fulfill({status:204});}if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
    const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});if(response.status()!==200)throw Error("HTTP "+response.status());
    if(new URL(page.url()).pathname.startsWith("/signin"))throw Error("Synthetic authenticated journey redirected to sign-in");
    if(!await page.locator("main").count())throw Error("Authenticated main missing");
@@ -109,6 +109,7 @@ try{
     const response=await reply,data=await response.json();
     if(!response.ok()||data.ok!==true||!data.product||Boolean(data.product.hidden)!==hidden)throw Error("Local visibility refused "+JSON.stringify({status:response.status(),data}));
     const refresh=await refreshed;if(!refresh.ok()||await refresh.finished())throw Error("Visibility RSC refresh failed");
+    const flight=await refresh.text();const savedAt=flight.indexOf('"id":"'+data.product.id+'"');console.log("PRODUCT_VISIBILITY_RESPONSE:"+JSON.stringify({engine,width,mode,hidden,url:refresh.url(),productFragment:savedAt<0?"not found":flight.slice(savedAt,savedAt+1600)}));
     await page.waitForLoadState("networkidle");
     console.log("PRODUCT_VISIBILITY_RENDER:"+JSON.stringify({engine,width,mode,hidden,buttons:await row.getByRole("button").allTextContents()}));
    }
