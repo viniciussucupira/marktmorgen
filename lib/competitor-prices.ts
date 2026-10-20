@@ -35,6 +35,8 @@ const hotmartPricing: OfficialPriceSource = { label: "Hotmart subscription and p
 const hotmartPolicy: OfficialPriceSource = { label: "Hotmart payment policy updated September 21, 2026", url: "https://hotmart.com/en/legal/payments-policy", readOn: "2026-10-20" };
 const hlPricing: OfficialPriceSource = { label: "HighLevel subscription prices and scope", url: "https://www.gohighlevel.com/pricing", readOn: "2026-10-20" };
 const hlUsage: OfficialPriceSource = { label: "HighLevel usage costs and rebilling guide", url: "https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide", readOn: "2026-10-20" };
+const teachablePricing: OfficialPriceSource = { label: "Teachable plan prices and product limits", url: "https://www.teachable.com/pricing", readOn: "2026-10-20" };
+const teachableFees: OfficialPriceSource = { label: "Teachable plan fees, processing and bundles", url: "https://support.teachable.com/en/articles/15661316-understand-your-transaction-fees-and-bundles", readOn: "2026-10-20" };
 export const COMPETITOR_PRICES = {
   kajabi: {
     name: "Kajabi",
@@ -137,5 +139,17 @@ export const COMPETITOR_PRICES = {
     feeScope: "The subscription is not an all-in usage quote: phone numbers, calls, SMS, email sends and AI can cost extra. Rebilling does not make usage free. Provider, method and enabled services determine payment costs; no universal transaction fee is assumed here.",
     trial: { days: 14, source: hlPricing },
     usage: { source: hlUsage },
+  },
+  teachable: {
+    name: "Teachable",
+    currency: "USD",
+    plans: [
+      { name: "Starter", monthlyCents: 3900, annualCents: null, annualEquivalentMonthlyCents: 2900, source: teachablePricing, platformFeeBps: 750, feeSource: teachableFees },
+      { name: "Builder", monthlyCents: 8900, annualCents: null, annualEquivalentMonthlyCents: 6900, source: teachablePricing, platformFeeBps: 0, feeSource: teachableFees },
+      { name: "Growth", monthlyCents: 18900, annualCents: null, annualEquivalentMonthlyCents: 13900, source: teachablePricing, platformFeeBps: 0, feeSource: teachableFees },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "The plan fee is 7.5% on Starter and 0% on Builder and Growth, across Teachable Payments and custom gateways. Payment processing and optional bundles are separate; 0% plan fee is not free payment processing.",
+    annualScope: "Displayed monthly equivalents under annual billing are $29, $69 and $139. An exact annual invoice has not been verified here; do not infer it from the displayed equivalent. Custom needs a quote.",
+    trial: { days: 7, source: teachablePricing },
   },
 } as const;

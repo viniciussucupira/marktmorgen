@@ -1129,3 +1129,17 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - CRMprópriojapossui campos/deals/pipelines/IFELSEClaude, fonte lib/crm-rules.tsconsultada. Texto delimitedpipelines usa pipelineLimitWords canônico, nãonúmeroendurado. Nãoequivalerlojaasubaccount,nãoprometernativoSMS/WhatsApp/voz,SocialourevendaSaaS.
 - Página/índice/sitemap,fontesdatadas,custosexplícitos, vantagensmesmocorpoe390/1280axe/metadata/teclado/noAPIwrites. TestesCRMcapscanonical/unknownfees/subscriptions e suitecompletanofinalheadobrigatórios.
 - M0antes/depois: mesmomecanismoestático; nenhumnovocanal/operação/provedor/email/IA/storagewrite/dependência/telemetria. Nenhumapreço/franquia/gatealterado; M0onerosa12,02–12,21%continuafalha60%,nãocertificada; PLANS_ON_SALE=false. PáginaCRMdedicadaS5permaneceposterior, nãofingirconclusãoduplicada.
+
+
+### S1 — prova final Circle, entrega63
+
+- PR649head8ae6fb16e0bc039d205f2cb0409fbc8d9e7c6805 passou Product39364211790(verify118437145001/Redis118437145249) e segurança39364211735completos. Incorporado20/10/2026 00:36:23Fortaleza, merge7d8fff4e79982eb5eac6d49b831562758b992786.
+- Produçãodpl_Ago96HJXiMNMYP1NEDHYyMWU2pEZREADY00:37:10Fortaleza,SHAexato/aliasmarktmorgen.com,14rotas200marcadordeploymentexato, Circletitle/source/paidclosed/índiceconfirmados. Semerror/fatal03:33:32.279–03:38:32.279UTC. Contador62→63apósprova, próximo64.
+- ChatClaudeexistente preservado, preçosmensais/faturaanualnãoverificadosnullseparadosequivalenteanual. M0igualfalha/vendasfechadas. S1quartode15emandamento.
+
+### S1 — nono incremento: Teachable
+
+- Branchcodex/teachable-comparison sobrehead3f64290b0407cc29fcfae2753cbd68ca97e64b95PR653;main7d8fff4e79982eb5eac6d49b831562758b992786consultado. Pais650/651/652/653emCI,nãoeditaressasbranchesemparalelo.
+- Fontesoficiaispricing/feesbundleslidas20/10/2026:mensais39/89/189USD, equivalentesanuais29/69/139semfaturaanualexatainventada; feesStarter7,5%,Builder/Growth0%separadosprocessing/bundles. Trial7dias, catálogos5/10/50atuais, não1antigo. OwnMAX_PRODUCTS/planpricescanônicos,limitesupload/storage/deliverycontinuam.
+- Preservacursos/quizzes/certificadosClaude,nãoinventarlacuna. Appsalunos/Custommigrationassistancedocumentadoscomescopo,semserviçofictíciopróprio. Página/índice/sitemap,fontesdatadas, vantagensmesmocorpo e testespreços/caps/unknownfee/390/1280axe/keyboard/noAPIwrites, suiteintegralnovofinalhead.
+- M0antes/depois: mesmoenvelopeestático;semnovaoperação/dependência/endpoint/provedor/email/IA/storagewrite/telemetria,nenhumpreço/limite/gatealterado. M0onerosa12,02–12,21%falha60%,não certificada;vendasfechadasPLANS_ON_SALE=false. PublicaçãosóapósCIcompleto+READY/domínio/versão.
