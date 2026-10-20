@@ -2904,3 +2904,8 @@ O novo mobile118813573960/HT14 mediu224ms na primeira interação da home (LCP75
 #### HT16/HT14 — preparar formatação estática dos planos antes da interação
 
 A contenção não bastou: mobile118816830403 mediu264ms no primeiro clique da home. EventTiming mostrou pointerdown com33,7ms de espera e125,4ms de processamento; long task de240ms sobre a interação. Mantida a reprovação integral. A renderização dos cartões repetia Number.toLocaleString para dezenas de preços/limites. Agora dois Intl.NumberFormat imutáveis, com a mesma locale e opções originais, são reutilizados, e as figuras canônicas dos três planos são calculadas uma vez no módulo. Preços, strings resultantes, limites, mensal/anual, detalhes nativos e sua ordem permanecem; nenhuma espera/amostra removida ou limiar alterado. Nova suíte completa e medições estritas obrigatórias. Sem IO/fornecedor/operação/direito/custo novo; M0 e todos os gates intactos.
+
+
+#### HT16/HT14 — animar wrapper HTML do ícone
+
+A rotação decorativa do disclosure de benefícios passa doSVG para um wrapper HTML inline-flex (mesmo ícone/tamanho/200ms/estado visual), conforme revisão React: permite composição da transformação sem animar o próprio vetor. Texto/nome acessível, limites e ordem permanecem. Faz parte da correção em verificação; não altera o teste/limiar, e a suíte completa no novohead continua obrigatória. Sem operação/custo/gate novo.
