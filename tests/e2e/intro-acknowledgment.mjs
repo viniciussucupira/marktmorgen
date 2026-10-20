@@ -31,11 +31,13 @@ export async function checkIntroAcknowledgment({browser,LOCAL,fixture,axeSource,
     await route.fulfill({status:item.scenario.status??200,contentType:"application/json",body:item.scenario.raw??JSON.stringify(item.scenario.reply(source.video))});
    });
    await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.waitForLoadState("networkidle");
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    await page.addScriptTag({content:axeSource});
    const input=page.getByLabel("Welcome video (optional)",{exact:true});const form=input.locator("..");
    for(const scenario of cases){
     await input.fill(source.url);
+    await page.waitForFunction(provider=>document.querySelector("#intro-note")?.textContent?.includes("A "+provider+" video, under your name."),{youtube:"YouTube",vimeo:"Vimeo",loom:"Loom"}[source.video.provider]);
     let release;const held=new Promise(resolve=>{release=resolve;});work={scenario,held};
     const seen=page.waitForRequest(r=>r.method()==="POST"&&new URL(r.url()).pathname==="/api/store/intro");seen.catch(()=>{});
     const name=source.video.provider+"/"+scenario.name+"/"+width;
