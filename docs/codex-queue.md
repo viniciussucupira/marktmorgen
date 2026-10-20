@@ -2738,3 +2738,8 @@ As execuções integrais identificaram contraste durante entrada animada no temp
 - Testes: chaves de recusa preservadas, próxima ação e sem falso sucesso; boundary real renderizado com referência/retry; navegador390/1280 no404 verifica título, destinos, ausência de motivo inventado, status/largura/axe e zero write. Suíte inteira, build/tipos/lint, Redis/security e medições herdadas deHT16 obrigatórios no head final; READY/domínio/SHA antes de contar publicação.
 - Nenhuma nova IA, fornecedor, operação variável, conta, pagamento, mensagem ou submissão externa. PLANS_ON_SALE=false, comissão, preços/limites, permissões/opt-in, tax gate/art.9a/revisão comercial preservados. Piso líquido60% por cliente usando100% no pior mês e global após todos os impostos Brasil/EUA continua obrigatório, sem certificação de margem.
 - Documentação: docs/ht17-partner-copy.md. Próximos: cálculos própriosHT10,HT11,HT13,HT14, nessa ordem; implementar somente o que couber. Novas revisõesB2 só depois.
+
+
+#### HT15 — verificação de identificador da biblioteca privada
+
+Product checks39462624653/verify118766157526 aprovou regressões mas recusou o build: statsId pode ser null em loja sem histórico. A biblioteca agora só lê uma seção salva quando o identificador existe; ausência preserva a página e apresenta estado não confirmado, sem ler outra loja nem inventar seção vazia. CI integral novamente obrigatório no novo head; sem reexecução isolada ou publicação contada.
