@@ -2501,3 +2501,8 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 - Verificação posterior HT5: Product39456167133/verify118743492412 reprovou contraste do hero em390 durante a entrada animada; os mesmos casos nos headsHT2/3/4/6 passaram. O teste agora aguarda fontes e término das animações finitas antes do axe/captura, sem desativar regras de contraste. Exige CI integral no novo head e nos derivados integrados; não é rerun isolado.
 - Documentação: docs/ht5-store-activation.md. Próximo itemHT6; B2 continua depois de todos os HT liberados/condicionados.
+
+
+#### Correção de regressões públicas compartilhadas — 2026-10-20 17:01:00 UTC
+
+As execuções integrais identificaram contraste durante entrada animada no template público (Hotmart/mostruário) e, emHT7, contagem que incluía o CTA geral da demo além do único criador fictício. Removida a animação de opacidade da primeira dobra das páginas de tópico, mantendo conteúdo visível desde o início; auditoria AA preservada e diagnóstico detalhado adicionado. O teste deHT7 conta o registro na seção de listagens, separado dos CTAs de navegação. Sem exclusão de regra de contraste. CI completo obrigatório no novo head; nenhuma publicação contabilizada enquanto pendente. Sem novas operações, custos, preços, limites ou gates alterados.
