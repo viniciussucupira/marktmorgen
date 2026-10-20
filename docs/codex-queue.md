@@ -2465,6 +2465,8 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Testes: resolução de todos os slugs contra as páginas existentes e ordem das seis etapas; navegador local sintético em390/1280 com GET200 dos destinos, teclado/alvos, catálogo/âncora, largura, axe e nenhuma API write. Sem cadastro, conta, checkout, mensagem ou pagamento real. CI integral no head final e publicação READY/domínio/SHA exato pendentes.
 - Documentação: docs/ht2-creator-journey.md. Próximo item: HT3; nenhum B2 novo antes da ordem HT aprovada.
 
+- Verificação HT2: CI integral39451679128 no head `54865f3c02c18bb1f77a866a2e4b1e6ca195c709` reprovou o salto para o catálogo nas duas larguras. O salto usa agora âncora HTML nativa, alvo com margem de rolagem e teste aguarda a navegação e confirma foco no título. Todos os heads derivados exigem CI integral novo; nenhum job isolado declara conclusão.
+
 
 185. **[HT3] Valor antes do preço e comparação honesta do modelo de taxas**
 - Estado: **Em implementação; verificação integral pendente**.
