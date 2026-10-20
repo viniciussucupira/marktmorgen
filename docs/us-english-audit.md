@@ -205,3 +205,7 @@ Queue160 reuses parseFaq and the existing saved FAQ response. Manual success req
 
 ## PDF preview setting: saved pages without availability claims
 Queue161 returns id/pages from the setter's existing result.product, without another read. The client requires successful HTTP, boolean ok, no contradictory error and exact product/pages. Pending selection locks and announces busy; uncertainty requests checking after reload. Success confirms the setting, not generated file availability.24intercepted cases at390/1280 reuse growth synthetic PDF metadata and block preview GETs; off and actual generation are not claimed covered. FullCIpending. Client+259characters,route+54characters,sameoperation,no newprovider/read/price/allowance/gate. PDF/free-download limits remain;bindingM0 below60%,salesclosed.
+
+
+## PDF marking setting: honest acknowledgment and own error messages
+Queue162 returns id/on from existing result.product without another read. The client requires successful HTTP, boolean ok, no contradictory error and exact identity/choice; error mapping uses own properties only. Pending control locks and announces busy. Success confirms the setting, preserving size/password/unreadable fallback. Existing GET notes/effect unchanged.26intercepted cases at390/1280 reuse growth PDF metadata and block stamp GETs; off and actual stamping are not claimed covered. FullCIpending. Client+416characters,route+49characters,sameoperation,no newprovider/read/price/allowance/gate;bindingM0 below60%,salesclosed.

@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await setProductStamp(guarded.ref, id, guarded.body.on === true);
     if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "unknown" ? 404 : 400 });
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, id: result.product.id, on: result.product.stamp });
   } catch (error) {
     console.error("changing stamping failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

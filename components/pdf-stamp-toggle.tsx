@@ -13,7 +13,7 @@ const MESSAGES: Record<string, string> = {
   unknown: "This product was not found. It may have been deleted; reload the page.",
   none: "This account has no store yet.",
   unavailable: "Stores are not switched on yet, so nothing was saved.",
-  server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
+  server_error: "We could not confirm whether your PDF marking setting was saved. Reload this page to check before trying again.",
 };
 
 type Problem = { name: string; bytes: number; reason: "too_big" | "unreadable" };
@@ -51,6 +51,7 @@ export function PdfStampToggle({ product }: { product: Product }) {
   if (pdfs.length === 0 && !on) return null;
 
   async function change(next: boolean) {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -59,12 +60,14 @@ export function PdfStampToggle({ product }: { product: Product }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: product.id, on: next }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (!data.ok) {
-        setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      if (!response.ok || data.ok !== true || data.error !== undefined || data.id !== product.id || data.on !== next) {
+        const reason = typeof data.error === "string" ? data.error : "";
+        setError(data.ok === false && !response.ok && Object.prototype.hasOwnProperty.call(MESSAGES, reason) ? MESSAGES[reason] : MESSAGES.server_error);
         return;
       }
-      toast(next ? "Buyers' PDFs will be stamped." : "PDFs go out unstamped.");
+      toast(next ? "PDF marking setting saved." : "PDF marking switched off.");
       router.refresh();
     } catch {
       setError(MESSAGES.server_error);
@@ -75,7 +78,7 @@ export function PdfStampToggle({ product }: { product: Product }) {
 
   const id = `stamp-${product.id}`;
   return (
-    <div className="mt-3 rounded-[var(--r-sm)] border border-line bg-white p-4">
+    <div aria-busy={busy} className="mt-3 rounded-[var(--r-sm)] border border-line bg-white p-4">
       <label htmlFor={id} className="flex min-h-11 cursor-pointer items-start gap-3 text-sm font-semibold text-ink">
         <input
           id={id}

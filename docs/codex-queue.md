@@ -1869,3 +1869,10 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
   "limitations": "Off andactualgenerationnotbrowsercovered. Client+259characters,route+54sourcecharacters;id/pagesfromexistingresult.product,no newread/provider/operation/price/allowance/gate. ExistingPDF/free-downloadlimitsunchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
 }
 ```
+
+
+162. **[B2-PDF-STAMP-ACKNOWLEDGMENT] Confirmar configuração de marcação sem prometer que todo PDF será marcado**
+   - Estado: **em implementação; codex/pdf-stamp-acknowledgment; CI integral pendente**.
+   - Escopo: retornoPOST id/on a partir de result.product existente;clienteexigeHTTP/okbooleano/semcontradição/id/onexatos,erroapenaspropriedadespróprias,aria-busy e semduploenvio. Sucesso confirma configuração; fallback por tamanho/senha/arquivo permanece. GETnotas/efeito existente intactos.
+   - Prova:26respostas interceptadas em390/1280 comgrowthPDFmetadata,zeroGETdecarimbo,semgeração/download/upload/pagamento real. Off e processamento real não cobertos;verificação integral obrigatória.
+   - Custo:cliente+416caracteres,rota+49caracteresdefonte,camposjáretornados;nenhuma nova leitura/operação/fornecedor/franquia/preço/gate.M0antes/depois12,02–12,21%reprova60%;vendasfechadas.
