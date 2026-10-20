@@ -2355,7 +2355,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 178. **[B2-178] Confirm existing read-only numbers links accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega104**.
 - Require successful HTTP, strict true, no contradictory error, canonical label/revenue choice, valid existing20character ID, exact canonical URL and exact server-created lifetime (using the existing record creation time, independent of the creator device clock) before displaying a created link or clearing drafts. Removal confirms the existing requested ID in the same response; no extra read/write. Lock and announce pending controls; preserve uncertain label/password/choices and instruct reload before retry.
 - Synthetic94 intercepted creation/revocation replies at390/1280 planned, with isolated local link fixture; full final-head CI pending. No link opened, password sent, third-party message, real account or payment. Existing5live-link cap,7/30/90days,8–100password bounds,300opens/day, read-only scope/revenue opt-in and settings permissions unchanged. No new provider/unit/operation/cost; M0 binding12.02–12.21% fails60%; sales and H gates closed.
 
@@ -2376,3 +2376,12 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Estado: **Em implementação**.
 - Require successful HTTP, strict true, no contradictory error and exact ordered canonical origins from the existing setter snapshot. Preserve raw uncertain drafts and saved allowlist baseline, lock the pending website list and announce busy/error. Confirm settings without claiming an actual checkout. The separate code generator keeps using the last confirmed list.
 - Synthetic48 intercepted save/clear replies planned at390/1280 with existing isolated demo fixture; no listed website visited, checkout opened, signup submitted, third-party message, account or payment. Existing10origin cap, HTTPS-only parsing, strict origin/return-address permissions, buyer opt-in and visible limits unchanged. No new request/read/provider/unit/cost; binding M0 fails60%, sales and H gates closed.
+
+
+### Publicação funcional104 — 2026-10-20 (Fortaleza)
+
+- **PR#707 incorporado às12:09:56**, merge `78e1d23da2c9f29af55a606c46d31f42b031a533`, head `9210720950381f7f62c4657a94fbe326afaf612f`. Links de números exigem HTTP bem-sucedido, true estrito, ausência de erro, ID válido, endereço canônico e label/receita/validade exatos; usam o horário já existente do servidor para validar duração sem depender do relógio do criador. Revogação confirma o ID solicitado na mesma resposta. Campos pendentes bloqueados; rascunhos/senha preservados em incerteza, com orientação de recarregar antes de repetir.
+- CI completo aprovado: Product39442697854/verify118697230944/Redis118697230395/security39442697859, incluindo94casos sintéticos interceptados em390/1280. Sem abrir link, enviar senha/mensagem, conta ou pagamento real. Mantidos5links vivos,7/30/90dias, senhas8–100caracteres,300aberturas/dia, escopo somente leitura, receita apenas por opção e permissão settings.
+- READY às12:10:56.798, domínio marktmorgen.com, deployment `dpl_2DRL2AzrREfvZbTJHgjBU1yMt3jA`, SHA exato do merge. /, /signin, /studio (redirecionamento anônimo esperado), /platform/path, /pricing e /privacy retornaram200 com esse deployment. Nenhum log error/fatal na janela15:06:37.224–15:11:37.224UTC. Fluxos privados apenas sintéticos no CI, sem gravação autenticada em produção.
+- Custos104: mesmas operações/respostas limitadas já existentes; apenas metadado do registro já criado, sem nova leitura/chamada/provedor/unidade paga/custo recorrente. Preços, limites, idiomas/conteúdo/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% reprova60%. Desconhecido não é zero; sem certificação geral ou ativação de H.
+- **PR#706 documental incorporado às12:02:47**, merge `d2812b1ea60b1a5f7b27f20a27bb047d52d59c18`, head `af0ed88530ddec12170ebee1cd54a1b5396571c6`; Product39441741219/verify118693079154/Redis118693080798/security39441741299 aprovados. Registra103 e não incrementa contador. Este registro104 é documental, empilhado após710; não antecipar incorporação de708/709/710 ou contar documento como publicação funcional.
