@@ -1,3 +1,5 @@
+import { makeLink } from "@/lib/numbers-links";
+import { addNumbersLink } from "@/lib/store";
 import { DEMO_STORE, DEMO_PRODUCT, DEMO_EXTRAS, DEMO_PAGE } from "@/lib/demo-seed";
 import {paidPeriod} from "../billing-period-fixture";
 import {DEMO_CONNECTED_ACCOUNT} from "@/lib/demo-account";
@@ -143,9 +145,11 @@ async function main(): Promise<void> {
     if(!added.ok)throw Error("No tier product fixture");
     tierProductIds.push(added.product.id);
   }
+  const numbersMade=makeLink({label:"Synthetic partner",password:"synthetic-password",days:30,money:false},Date.now());
+  if(!numbersMade.ok || !(await addNumbersLink(tierOwner,numbersMade.link,Date.now())).ok)throw Error("No synthetic numbers link");
   const tierStore=await storeForEmail(tierOwner);
   if(!tierStore)throw Error("No saved tier fixture");
-  const tierFixture={session:await openSession(tierOwner),sid:tierStore.sid,ids:tierProductIds};
+  const tierFixture={session:await openSession(tierOwner),sid:tierStore.sid,ids:tierProductIds,numbersLinkId:numbersMade.link.id};
   console.log(JSON.stringify({ tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

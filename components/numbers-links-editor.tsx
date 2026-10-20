@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { SITE_URL } from "@/lib/site-url";
 import { NewTab } from "@/components/new-tab";
 
 const MESSAGES: Record<string, string> = {
@@ -14,7 +15,7 @@ const MESSAGES: Record<string, string> = {
   full: "Five links at most work at once. Take one back first.",
   none: "This account has no store yet.",
   signed_out: "Your session ended. Log in again.",
-  server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
+  server_error: "We could not confirm this link change. Reload this page to check before trying again.",
 };
 
 export type LinkRow = { id: string; label: string; expires: number; money: boolean; url: string };
@@ -33,25 +34,38 @@ export function NumbersLinksEditor({ links, now }: { links: LinkRow[]; now: numb
   const [made, setMade] = useState<LinkRow | null>(null);
   const live = links.filter((l) => l.expires > now);
 
-  async function send(body: Record<string, unknown>): Promise<{ ok?: boolean; error?: string; link?: LinkRow }> {
+  async function send(body: Record<string, unknown>) {
     const response = await fetch("/api/store/numbers-links", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    return (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; link?: LinkRow };
+    const raw: unknown = await response.json().catch(() => null);
+    const reply = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+    return { confirmed: response.ok && reply?.ok === true && !("error" in reply), reply };
+  }
+
+  function problem(reply: Record<string, unknown> | null) {
+    return reply?.ok !== true && typeof reply?.error === "string" && Object.hasOwn(MESSAGES, reply.error) ? MESSAGES[reply.error] : MESSAGES.server_error;
   }
 
   async function create() {
+    if (busy) return;
+    const expectedLabel = label.replace(/\s+/g, " ").trim().slice(0, 60);
+    const duration = Number(days) * 86_400;
     setBusy(true);
     setError(null);
     try {
-      const data = await send({ action: "create", label, password, days: Number(days), money });
-      if (data.ok && data.link) {
-        setMade(data.link);
+      const { confirmed, reply } = await send({ action: "create", label, password, days: Number(days), money });
+      const link = reply?.link && typeof reply.link === "object" && !Array.isArray(reply.link) ? reply.link as Record<string, unknown> : null;
+      if (confirmed && link && typeof link.id === "string" && /^[a-z0-9]{20}$/.test(link.id) &&
+          link.label === expectedLabel && link.money === money && typeof link.made === "number" && Number.isSafeInteger(link.made) && link.made > 0 &&
+          typeof link.expires === "number" && Number.isSafeInteger(link.expires) && link.expires === link.made + duration &&
+          link.url === `${SITE_URL}/numbers/${link.id}`) {
+        setMade({ id: link.id, label: expectedLabel, expires: link.expires, money, url: String(link.url) });
         setLabel("");
         setPassword("");
         toast("Link made. Send the password apart from it.");
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      setError(problem(reply));
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -60,17 +74,18 @@ export function NumbersLinksEditor({ links, now }: { links: LinkRow[]; now: numb
   }
 
   async function remove(id: string) {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
-      const data = await send({ action: "remove", id });
-      if (data.ok) {
+      const { confirmed, reply } = await send({ action: "remove", id });
+      if (confirmed && reply?.id === id) {
         if (made?.id === id) setMade(null);
         toast("Taken back. The link no longer opens.");
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      setError(problem(reply));
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -79,7 +94,7 @@ export function NumbersLinksEditor({ links, now }: { links: LinkRow[]; now: numb
   }
 
   return (
-    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="numbers-links-title" data-numbers-links>
+    <section aria-busy={busy} className="card mt-8 p-6 sm:p-8" aria-labelledby="numbers-links-title" data-numbers-links>
       <h2 id="numbers-links-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
         Share your numbers with a link
       </h2>
@@ -97,22 +112,22 @@ export function NumbersLinksEditor({ links, now }: { links: LinkRow[]; now: numb
       >
         <label className="block" htmlFor="numbers-link-label">
           <span className="field-label">Who it is for</span>
-          <input id="numbers-link-label" className="field mt-2" maxLength={60} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Acme sponsorship" />
+          <input disabled={busy} id="numbers-link-label" className="field mt-2" maxLength={60} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Acme sponsorship" />
         </label>
         <label className="block" htmlFor="numbers-link-password">
           <span className="field-label">Password, 8 characters or more</span>
-          <input id="numbers-link-password" type="password" autoComplete="new-password" className="field mt-2" maxLength={100} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input disabled={busy} id="numbers-link-password" type="password" autoComplete="new-password" className="field mt-2" maxLength={100} value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         <label className="block" htmlFor="numbers-link-days">
           <span className="field-label">Works for</span>
-          <select id="numbers-link-days" className="field mt-2" value={days} onChange={(e) => setDays(e.target.value)}>
+          <select disabled={busy} id="numbers-link-days" className="field mt-2" value={days} onChange={(e) => setDays(e.target.value)}>
             <option value="7">7 days</option>
             <option value="30">30 days</option>
             <option value="90">90 days</option>
           </select>
         </label>
         <label className="flex min-h-11 items-center gap-3 self-end text-sm font-semibold text-ink" htmlFor="numbers-link-money">
-          <input id="numbers-link-money" type="checkbox" className="h-5 w-5" checked={money} onChange={(e) => setMoney(e.target.checked)} />
+          <input disabled={busy} id="numbers-link-money" type="checkbox" className="h-5 w-5" checked={money} onChange={(e) => setMoney(e.target.checked)} />
           <span>Show revenue too, not only how many sales</span>
         </label>
         <div className="sm:col-span-2">

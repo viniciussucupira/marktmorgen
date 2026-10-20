@@ -1,3 +1,4 @@
+import { checkNumbersAcknowledgment } from "./numbers-acknowledgment.mjs";
 import { checkYearlyAcknowledgment } from "./yearly-acknowledgment.mjs";
 import { checkDunningAcknowledgment } from "./dunning-acknowledgment.mjs";
 import { checkTierAcknowledgment } from "./tier-acknowledgment.mjs";
@@ -771,6 +772,7 @@ try {
   await checkPdfStampAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkPdfPreviewAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkFaqAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
+  await checkNumbersAcknowledgment({browser,LOCAL,fixture:tierFixture,is});
   await checkYearlyAcknowledgment({browser,LOCAL,fixture:tierFixture,is});
 await checkDunningAcknowledgment({browser,LOCAL,fixture:tierFixture,is});
 await checkTierAcknowledgment({browser,LOCAL,fixture:tierFixture,is});

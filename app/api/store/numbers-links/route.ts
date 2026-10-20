@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       const done = await removeNumbersLink(ref, id);
       await unindexLink(id);
       if (!done.ok) return Response.json({ ok: false, error: done.reason }, { status: 404 });
-      return Response.json({ ok: true });
+      return Response.json({ ok: true, id });
     }
     if (body.action !== "create") return Response.json({ ok: false, error: "invalid" }, { status: 400 });
     if (!store.sid) return Response.json({ ok: false, error: "none" }, { status: 404 });
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     await indexLink(store.sid, made.link, now);
     // The numbers it shows: read now the first time, then once a day (lib/verified-numbers.ts).
     if (!(await readVerified(added.store).catch(() => null))) await refreshVerified(added.store).catch((error) => console.error("reading the counted numbers failed", error));
-    const { id, label, expires, money } = made.link;
-    return Response.json({ ok: true, link: { id, label, expires, money, url: `${SITE_URL}/numbers/${id}` } });
+    const { id, label, expires, money, made: created } = made.link;
+    return Response.json({ ok: true, link: { id, label, expires, money, made: created, url: `${SITE_URL}/numbers/${id}` } });
   } catch (error) {
     console.error("saving a numbers link failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
