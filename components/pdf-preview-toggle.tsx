@@ -23,6 +23,7 @@ export function PdfPreviewToggle({ product }: { product: Product }) {
   const tooBig = file !== null && file.bytes > MAX_STAMP_BYTES;
 
   async function change(pages: number) {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -31,15 +32,16 @@ export function PdfPreviewToggle({ product }: { product: Product }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: product.id, pages }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean };
-      if (!data.ok) {
-        setError("It could not be saved just now. Nothing was changed; try again in a moment.");
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      if (!response.ok || data.ok !== true || data.error !== undefined || data.id !== product.id || data.pages !== pages) {
+        setError("We could not confirm whether your preview setting was saved. Reload this page to check before trying again.");
         return;
       }
-      toast(pages ? `Anyone can read the first ${pages === 1 ? "page" : `${pages} pages`} now.` : "Preview switched off.");
+      toast(pages ? "Preview setting saved." : "Preview switched off.");
       router.refresh();
     } catch {
-      setError("It could not be saved just now. Nothing was changed; try again in a moment.");
+      setError("We could not confirm whether your preview setting was saved. Reload this page to check before trying again.");
     } finally {
       setBusy(false);
     }
@@ -47,7 +49,7 @@ export function PdfPreviewToggle({ product }: { product: Product }) {
 
   const id = `preview-${product.id}`;
   return (
-    <div className="mt-3 rounded-[var(--r-sm)] border border-line bg-white p-4">
+    <div aria-busy={busy} className="mt-3 rounded-[var(--r-sm)] border border-line bg-white p-4">
       <label htmlFor={id} className="field-label">
         Let anyone read the first pages before buying
       </label>

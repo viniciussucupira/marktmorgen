@@ -1,3 +1,4 @@
+import { checkPdfPreviewAcknowledgment } from "./pdf-preview-acknowledgment.mjs";
 import { checkFaqAcknowledgment } from "./faq-acknowledgment.mjs";
 import { checkTipsAcknowledgment } from "./support-setting-acknowledgment.mjs";
 import { checkIntroAcknowledgment } from "./intro-acknowledgment.mjs";
@@ -751,6 +752,7 @@ try {
   await checkJoinAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
   await checkIntroAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
   await checkTipsAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
+  await checkPdfPreviewAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkFaqAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
   await checkHomeModules({browser,LOCAL,axeSource,is});
