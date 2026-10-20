@@ -2717,6 +2717,18 @@ O CI integral do head d8b5f7c2bc0162f776da886429deb5d05759f7ad encontrou uma oco
 As execuções integrais identificaram contraste durante entrada animada no template público (Hotmart/mostruário) e, emHT7, contagem que incluía o CTA geral da demo além do único criador fictício. Removida a animação de opacidade da primeira dobra das páginas de tópico, mantendo conteúdo visível desde o início; auditoria AA preservada e diagnóstico detalhado adicionado. O teste deHT7 conta o registro na seção de listagens, separado dos CTAs de navegação. Sem exclusão de regra de contraste. CI completo obrigatório no novo head; nenhuma publicação contabilizada enquanto pendente. Sem novas operações, custos, preços, limites ou gates alterados.
 
 
+194. **[HT16] Mostrar o studio real, esclarecer confiança e medir renderização móvel antes/depois**
+
+- Estado: **Em implementação; medições e CI integral pendentes**.
+- Registro em Fortaleza:2026-10-20 14:09:21.000 (UTC−3); implementação `9d13587ac912d35c6784ebf600966fcc789ab266` (2026-10-20T17:09:21Z); base remota `36219ed767b8d7ec128d23475c603653f759968a` conferida.
+- Home com cards de categoria limpos e espaçosos, sem8fotos de banco; duas capturas distintas do próprio app com fixture fictícia, data e legenda honesta, sem imagem repetida ou cliente/resultado implícito. Capturas revisadas visualmente: studio/checklist e editor de página; origem verify118743492412/head6e145f31243af004b1feece62cbbb52f7ef7eb2d. Benefício, evidência e CTA existente agrupados. Conteúdo principal visível desde o início, sem entrada por opacidade.
+- Home, preços e recursos compartilham sinais verdadeiros: conta Stripe própria e condições de payout/taxas, exportação dos registros autorizados, cancelamento pelo Account e política de reembolso da plataforma, separada do reembolso do produto do criador. Links aos termos/código existente, nenhuma promessa de ganhos ou vendas abertas.
+- Pixels JPEG estáticos inline, dimensões1280×820, carregamento/decodificação preguiçoso, cada<140KB; sem nova requisição de imagem, otimização, host externo, evento analítico, fornecedor, IA, job operacional ou operação variável por cliente.219mil caracteres codificados/164KB decodificados; páginas públicas estáticas, sem importar imagens nos fluxos pagos de loja/comprador. Limites e cobrança vigente de host/CDN continuam vinculantes; não declarar banda grátis nem margem certificada.
+- Matriz sintética isolada constrói baseline publicadof9bca29fe6386648f76351de70955d4a93f7aa89 e candidato exato, mesmo servidor local;3amostras/3páginas390×844, CPU4×,150ms,1,6Mbps, cache frio. Registra LCP/CLS/ponteiro→pintura e EventTiming; metasLCP<2,5s/CLS<0,1/interação<200ms, falha do candidato bloqueia conclusão. Proxy sintético não é INP real/p75/certificação Core Web Vitals; desconhecido não é zero. Resultados antes/depois a registrar após CI.
+- Testes navegador390/1280: quatro termos/destinos reais, largura/axe, dois JPEGs únicos decodificados, rótulos sintéticos, zero write. Suíte inteira/lint/build/tipos/Redis/security e medições obrigatórios no novo head. Sem conta real, pagamento, mensagem ou submissão externa.
+- PLANS_ON_SALE=false, preços/limites/opt-in/comissão/tax gate/art.9a/revisão comercial preservados;60% líquido por cliente no pior mês e global após todos os impostos permanece obrigatório. Evidência docs/ht16-public-design.md. PróximoHT17; depois custosHT10/11/13/14; nenhum B2 novo.
+
+
 #### HT15 — verificação de identificador da biblioteca privada
 
 Product checks39462624653/verify118766157526 aprovou regressões mas recusou o build: statsId pode ser null em loja sem histórico. A biblioteca agora só lê uma seção salva quando o identificador existe; ausência preserva a página e apresenta estado não confirmado, sem ler outra loja nem inventar seção vazia. CI integral novamente obrigatório no novo head; sem reexecução isolada ou publicação contada.
@@ -2732,9 +2744,26 @@ Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda es
 HT6/Product checks39462558715/verify118765503722 foi cancelado pelo limite de25minutos, ainda executando os testes de navegador, sem conclusão integral. A suíte cresceu; limite do verify ajustado para35minutos, mantendo todos os casos/asserts e os demais jobs. Nenhuma reexecução isolada ou redução de cobertura. Nova execução integral no novo head é obrigatória antes de incorporar. Ajuste apenas do limite da execução de desenvolvimento, sem operação/direito/custo variável do cliente, preço ou gate modificado.
 
 
+#### HT16 — medidas reais e correção de estabilidade/FAQ
+
+Baseline antes (f9bca29fe6386648f76351de70955d4a93f7aa89), run39467038220/job118781215518:9amostras390×844/CPU4×/150ms/1,6Mbps/cachefrio registradas; homeLCP1156–1948ms, interação216–368ms; preçosCLS atingiu0,1318. CandidatoHT16/run39467038220/job118781215637 teve9amostras sob metas (homeLCP628–812ms/interação56–144ms, preçosCLS0, recursoCLS≤0,0555), mas descendentesHT17/HT13 tiveram oscilaçãoCLS0,1318 e interação200ms, portanto não basta um passe para concluir. Nenhuma amostra falha foi apagada ou tratada comozero.
+
+Fontes principaisGeist/Instrument usamdisplayoptional para impedir troca tardia durante página fria; faces escolhidas pelo criador permanecem como estavam. FAQ passa a disclosure nativo, mantendo perguntas/respostas/links/teclado e dispensando renderização React para abrir. Mesmas metas estritasLCP<2500/CLS<0,1/interação<200; nova coleta inclui fontes de layout-shift para diagnosticar eventual falha. Baseline imutável completo salvo emtests/fixtures/mobile-render-before.json comSHA/run/job; não reconstruir baseline inalterado a cadaPR. Candidato e suíte completa continuam obrigatórios em cada novohead. Proxy sintético não é INP real/p75/certificaçãoCWV. Sem novos requests/fornecedor/custo operacional de cliente ou gates alterados.
+
+
+#### HT16 — conteúdo da home opaco e estável durante leitura/interação
+
+Após displayoptional, todas as27amostras coletadas deHT16/HT17/HT13 mostraramCLS0 nas3rotas; entretanto primeiro clique frio da home ainda chegou264–272ms emHT13/HT14, e esses jobs foram reprovados. Conteúdo da home agora permanece visível sem transição de opacidade por scroll; observador React duplicado removido dessa página e regra escopada cobre seus componentes filhos. Mesma marca/layout/links/planos/limites, sem tocar temas do criador. Nenhuma exclusão de amostra/regra ou relaxamento de200ms; nova verificação integral no novohead. Histórico e baseline preservados emdocs/ht16-public-design.md.
+
+
 #### HT15 — rótulos explícitos dos filtros da biblioteca
 
 Product checks39467027754/verify118781108709 passou build/regressões, mas navegador expirou procurando o rótulo exatoGoal. Cada filtro novo agora usa label/htmlFor e id explícitos separados das opções, mantendo nome acessível curto e inequívoco. Mesmo ajuste nos novos campos do planejadorHT14. Não afrouxar seletor nem ignorar etapa: filtros, teclado/AA e suíte integral devem passar no novohead. Nenhuma operação/custo/permissão/identificador persistido alterado.
+
+
+#### HT16 — aguardar carregamento real da captura lazy antes de decodificar
+
+O verify118791813859 deHT17 encontrou EncodingError ao chamar decode imediatamente depois de rolar até uma imagem lazy. O teste passa a esperar, por no máximo10segundos, o carregamento real com complete e naturalWidth positivo antes de decodificar; mantém verificação das duas capturas distintas, dimensões1280×820, pixels decodificáveis e acessibilidade. Não altera imagens/atributos lazy/limites nem descarta falha: toda a suíte deve passar no novohead. Sem operação/custo variável de cliente, preço ou gate alterado.
 
 
 ### Publicação funcional113

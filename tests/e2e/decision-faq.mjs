@@ -10,13 +10,11 @@ export async function checkDecisionFaq({browser,LOCAL,axeSource,is}){
     const section=path==="/"?page.locator("#faq"):page.locator('section[aria-labelledby="faq-heading"]');
     await section.scrollIntoViewIfNeeded();
     for(const item of questions){
-     const control=path==="/"?section.getByRole("button",{name:item.q,exact:true}):section.locator("summary").filter({hasText:item.q});
-     if(path==="/"){
-      await page.waitForFunction(el=>typeof el.onclick==="function",await control.elementHandle());
-      if(await control.getAttribute("aria-expanded")!=="true"){await control.focus();await page.keyboard.press("Enter");}
-      await page.waitForFunction(el=>el.getAttribute("aria-expanded")==="true",await control.elementHandle());
-     }else{await control.focus();await page.keyboard.press("Enter");}
-     const answer=path==="/"?page.locator("#"+await control.getAttribute("aria-controls")):control.locator("..");
+     const control=section.locator("summary").filter({hasText:item.q});
+     const disclosure=control.locator("..");
+     if(await disclosure.getAttribute("open")===null){await control.focus();await page.keyboard.press("Enter");}
+     await page.waitForFunction(el=>el.hasAttribute("open"),await disclosure.elementHandle());
+     const answer=path==="/"?page.locator("#"+await control.getAttribute("aria-controls")):disclosure;
      is("FAQ answer visible "+path+"/"+item.q+"/"+width,await answer.isVisible(),true);
      for(const href of item.hrefs){const link=answer.locator('a[href="'+href+'"]');is("FAQ evidence link "+path+"/"+href+"/"+width,await link.count(),1);await link.focus();is("FAQ evidence keyboard focus "+href,await link.evaluate(el=>el===document.activeElement),true);}
     }

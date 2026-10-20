@@ -1,3 +1,5 @@
+import { TrustChecks } from "@/components/trust-checks";
+import { StudioScreens } from "@/components/studio-screens";
 import { CreatorShowcase, PlatformProof } from "@/components/creator-showcase";
 import { PricingValue } from "@/components/pricing-value";
 import { PATH_HOME_STEPS } from "@/lib/path-home";
@@ -9,7 +11,7 @@ import { BuyerPath } from "@/components/buyer-path";
 import { SiteNav } from "@/components/site-nav";
 import { Icon, type IconName } from "@/components/icons";
 import { FeatureVisual, type VisualKey } from "@/components/feature-visuals";
-import { Faq, HeroFlow, Pricing, RevealOnScroll, SoldMarquee } from "@/components/home-parts";
+import { Faq, HeroFlow, Pricing, SoldMarquee } from "@/components/home-parts";
 import { HOME_MODULES } from "@/lib/home-modules";
 import { HomeData } from "@/components/structured-data";
 import { homeQuestions } from "@/lib/home-faq";
@@ -195,14 +197,13 @@ export default function Home() {
   const questions = homeQuestions(paypalSalesConfigured());
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <RevealOnScroll />
       <SiteNav />
 
-      <main id="content">
+      <main id="content" data-static-reading>
         {/* ------------------------------------------------------------ hero */}
         <section aria-labelledby="home-hero-heading" className="surface-daybreak on-dark overflow-hidden" data-home-hero>
           <div className="container-page grid items-center gap-12 pb-28 pt-12 sm:gap-14 sm:pt-16 lg:grid-cols-[1.04fr_1fr] lg:gap-12 lg:pb-32 lg:pt-20">
-            <div className="nb-fade-up">
+            <div className="">
               <p className="mb-5 text-base font-semibold text-white/85" data-home-pillar>
                 Your store. Your Stripe. Your money.
               </p>
@@ -256,7 +257,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="nb-fade-up nb-delay-2">
+            <div className="">
               <HeroFlow />
             </div>
           </div>
@@ -312,7 +313,7 @@ export default function Home() {
                 body: "Files up to 5 GB each. Past it we write to you rather than cutting anything off.",
               },
             ].map((f) => (
-              <li key={f.title} className="reveal flex gap-3.5">
+              <li key={f.title} className="flex gap-3.5">
                 <span className="icon-tile icon-tile-sm">
                   <Icon name={f.icon} size={18} />
                 </span>
@@ -346,7 +347,7 @@ export default function Home() {
         {/* ------------------------------------------------------ who it's for */}
         <section className="surface-sand section">
           <div className="container-page">
-            <div className="reveal flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div className="max-w-2xl">
                 <h2 className="t-h2 balance">People who sell what they know</h2>
               </div>
@@ -356,87 +357,20 @@ export default function Home() {
               </Link>
             </div>
 
-            {/*
-              The photograph carries the card, not the caption.
-
-              The words used to sit in a white tray under the picture, which
-              split each card in two and made a grid of eight read as
-              sixteen things. The name and the line now sit on the
-              photograph itself, over a gradient dark enough to hold white
-              text at any crop, so each card is one object: a person, and
-              what they sell.
-
-              The first two run tall and wide; the other six fill a denser
-              grid beside them. Eight equal tiles would be the wallpaper
-              this section is trying to stop being.
-            */}
-            <ul className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              {CREATORS.map((c, i) => (
-                <li key={c.href} className={`reveal ${i < 2 ? "lg:col-span-2 lg:row-span-2" : ""}`}>
-                  <Link
-                    href={c.href}
-                    className="group relative block h-full overflow-hidden rounded-[var(--r-lg)] bg-sand-deep shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09),0_14px_32px_-16px_rgba(42,23,144,0.22)]"
-                  >
-                    <div className={`relative overflow-hidden ${i < 2 ? "aspect-[4/5] lg:aspect-[1.12]" : "aspect-[4/5]"}`}>
-                      {/* A photograph served at the sizes asked for by its own host, never through the image optimizer, which is billed per image. */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={PHOTO(c.photo, 560, 700)}
-                        srcSet={`${PHOTO(c.photo, 400, 500)} 400w, ${PHOTO(c.photo, 560, 700)} 560w, ${PHOTO(c.photo, 900, 1125)} 900w`}
-                        sizes={i < 2 ? "(min-width: 1024px) 45vw, 46vw" : "(min-width: 1024px) 22vw, 46vw"}
-                        alt={c.alt}
-                        width={560}
-                        height={700}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover transition-transform duration-700 [transition-timing-function:var(--ease)] group-hover:scale-[1.04]"
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                        <p className={`flex items-center justify-between gap-2 font-semibold leading-snug text-white ${i < 2 ? "text-base sm:text-xl" : "text-[0.9375rem] sm:text-base"}`}>
-                          {c.label}
-                          <Icon
-                            name="arrow-right"
-                            size={18}
-                            className="shrink-0 text-white/70 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-white"
-                          />
-                        </p>
-                        <p className={`mt-1 text-white/80 ${i < 2 ? "text-[0.875rem] sm:text-[0.9375rem]" : "text-[0.8125rem]"}`}>
-                          {c.sells}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
+            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {CREATORS.map(creator=><li key={creator.href}><Link href={creator.href} prefetch={false} className="card flex h-full min-h-36 flex-col justify-between gap-4 p-6">
+                <h3 className="text-lg font-semibold">{creator.label}</h3><p className="text-sm text-ink-soft">{creator.sells}</p><span className="link inline-flex min-h-11 items-center">Explore this kind of work<Icon name="arrow-right" size={16}/></span>
+              </Link></li>)}
             </ul>
+            <p className="mt-6 max-w-3xl text-sm text-ink-soft">These pages show fictional examples of work you can sell. They are not customer testimonials or evidence of earnings. <Link href="/demo" className="link">Explore the live demo</Link>.</p>
 
-            {/*
-              Said plainly, under the photographs themselves. We have no
-              customers to show yet, and a stock photograph presented as one
-              would be the first lie on a site whose whole argument is that we
-              do not tell them.
-            */}
-            <p className="reveal mt-6 flex items-start gap-2.5 text-[0.875rem] text-ink-mute">
-              <Icon name="info" size={16} className="mt-0.5 shrink-0" />
-              <span className="measure-wide">
-                Licensed photographs of people at work, not customers of ours. Every store behind these links is an
-                example we built, and the one store here you can buy from is the{" "}
-                <Link href="/demo" className="link">
-                  live demo
-                </Link>
-                .
-              </span>
-            </p>
           </div>
         </section>
 
         <HomeActions place="situations"/>
 
         {/* ------------------------------------------------ the buyer's path */}
+        <StudioScreens />
         <BuyerPath />
 
         <section className="section" aria-labelledby="home-modules-heading">
@@ -478,13 +412,13 @@ export default function Home() {
         {/* ------------------------------------------------------ why Marktmorgen */}
         <section className="section">
           <div className="container-page">
-            <div className="reveal max-w-2xl">
+            <div className="max-w-2xl">
               <h2 className="t-h2 balance">Built for the people who use it</h2>
             </div>
 
             <div className="mt-14 space-y-16 sm:mt-16 sm:space-y-20">
               {REASONS.map((r, i) => (
-                <article key={r.title} className="reveal grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+                <article key={r.title} className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
                   <div className={i % 2 === 1 ? "lg:order-2" : ""}>
                     <span className="icon-tile">
                       <Icon name={r.icon} size={22} />
@@ -534,7 +468,7 @@ export default function Home() {
               only what works is worth nothing unless it also names what
               does not. One row, five names, no padding around them.
             */}
-            <div className="reveal mt-14 flex flex-col gap-4 rounded-[var(--r-lg)] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09)] sm:p-7 lg:flex-row lg:items-center lg:gap-8">
+            <div className="mt-14 flex flex-col gap-4 rounded-[var(--r-lg)] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09)] sm:p-7 lg:flex-row lg:items-center lg:gap-8">
               <div className="lg:w-[17rem] lg:shrink-0">
                 <span className="tag tag-next">Not here yet</span>
                 <p className="mt-3 text-[0.9375rem] text-ink-soft">
@@ -563,14 +497,15 @@ export default function Home() {
         {/* -------------------------------------------------------- pricing */}
         <section id="pricing" className="surface-sand section scroll-mt-20">
           <div className="container-page">
-            <PricingValue place="home" />
-            <div className="reveal mx-auto mt-10 max-w-2xl text-center">
+            <TrustChecks place="home" />
+            <div className="mt-12"><PricingValue place="home" /></div>
+            <div className="mx-auto mt-10 max-w-2xl text-center">
               <h2 className="t-h2 balance">Three plans, with the monthly price and sales fee shown together.</h2>
               <p className="mt-5 text-ink-soft">
                 {feeWords().costLine}
               </p>
             </div>
-            <div className="reveal mx-auto mt-12 max-w-5xl" data-plan-prices>
+            <div className="mx-auto mt-12 max-w-5xl" data-plan-prices>
               <Pricing domains={DOMAINS} />
               <p className="mt-6 text-center"><Link href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</Link></p>
             </div>
@@ -584,7 +519,7 @@ export default function Home() {
         {/* ------------------------------------------------------------ faq */}
         <section id="faq" className="section scroll-mt-20">
           <div className="container-page grid gap-10 lg:grid-cols-[1fr_1.6fr]">
-            <div className="reveal">
+            <div className="">
               <h2 className="t-h2 balance">Questions</h2>
               <p className="mt-5 text-ink-soft">
                 Something else?{" "}
@@ -594,7 +529,7 @@ export default function Home() {
                 answers the rest, in writing.
               </p>
             </div>
-            <div className="reveal">
+            <div className="">
               <Faq questions={questions} />
             </div>
           </div>
