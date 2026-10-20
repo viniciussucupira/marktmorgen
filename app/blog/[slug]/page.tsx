@@ -106,6 +106,9 @@ function Block({ block }: { block: BlogBlock }) {
         </ol>
       );
 
+    case "links":
+      return <nav aria-label="Sources and next steps"><ul>{block.items.map(item=><li key={item.href}><Link href={item.href} prefetch={false}>{item.label}</Link></li>)}</ul></nav>;
+
     case "note":
       return (
         <aside className="rounded-[var(--r-md)] border border-line bg-sand p-6 text-[1rem]">

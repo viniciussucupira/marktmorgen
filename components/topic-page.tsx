@@ -6,7 +6,7 @@ import { SiteNav } from "@/components/site-nav";
 import { FeatureVisual } from "@/components/feature-visuals";
 import { JsonLd } from "@/components/structured-data";
 import { PAGES, type Block, type TopicPage } from "@/lib/site-pages";
-import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, TRIAL_DAYS } from "@/lib/plan";
+import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, PLAN_TITLES, TRIAL_DAYS } from "@/lib/plan";
 import { PLANS_ON_SALE, startWords } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";
 
@@ -26,8 +26,8 @@ const BADGE_CLASS = {
 const dollars = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 
 const PLAN_LINE = {
-  creator: `On the ${dollars(PLAN_PRICES.creator.month)} plan, and on Pro`,
-  pro: `On the ${dollars(PLAN_PRICES.pro.month)} Pro plan`,
+  creator: "All plans; limits apply",
+  pro: `${PLAN_TITLES.pro} and ${PLAN_TITLES.scale}`,
 } as const;
 
 /** A heading id from its words, so a section can be linked to. */
@@ -43,15 +43,13 @@ function StoreCard({ block, hero = false }: { block: Extract<Block, { kind: "sto
   return (
     <div className="overflow-hidden rounded-[var(--r-xl)] border border-line bg-white text-ink shadow-[var(--shadow-md)]">
       <div className="flex items-center gap-4 border-b border-line bg-paper p-5 sm:p-6">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={PHOTO(block.photo)}
-          alt={block.alt}
-          width={64}
-          height={64}
-          loading={hero ? "eager" : "lazy"}
-          className="h-16 w-16 rounded-full bg-sand-deep object-cover"
-        />
+        {block.photo ? (
+          // Direct delivery keeps the existing no-image-optimizer cost model.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={PHOTO(block.photo)} alt={block.alt} width={64} height={64} loading={hero ? "eager" : "lazy"} className="h-16 w-16 rounded-full bg-sand-deep object-cover" />
+        ) : (
+          <div aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-sand-deep"><Icon name="store" size={28} /></div>
+        )}
         <div className="min-w-0">
           <p className="text-lg font-semibold text-ink">{block.creator}</p>
           <p className="text-ink-soft">{block.tagline}</p>
@@ -71,9 +69,9 @@ function StoreCard({ block, hero = false }: { block: Extract<Block, { kind: "sto
       <p className="flex items-start gap-2 border-t border-line bg-paper px-5 py-3 text-sm text-ink-soft sm:px-6">
         <Icon name="info" size={16} className="mt-0.5 shrink-0" />
         <span>
-          {block.creator === "Harbor Kitchen"
+          {block.example ?? (block.creator === "Harbor Kitchen"
             ? "The live demo store. Jenny is a fictional cook; the checkout is a real Stripe checkout in test mode, and the files are real."
-            : `An example: ${block.creator} is an invented creator, and every product type shown works today.`}
+            : `An example: ${block.creator} is an invented creator, and every product type shown works today.`)}
         </span>
       </p>
     </div>
@@ -546,7 +544,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                     <Icon name="arrow-right" size={18} />
                   </Link>
                   <Link
-                    href={pro ? "/#pricing" : "/demo"}
+                    href={pro ? "/pricing" : "/demo"}
                     className={`btn btn-lg ${light ? "btn-secondary" : "btn-outline-light"}`}
                   >
                     {pro ? "Compare the plans" : "See the live demo"}
@@ -616,14 +614,14 @@ export function TopicPageView({ page }: { page: TopicPage }) {
 
         <section className="surface-sand">
           <div className="container-narrow py-16 text-center sm:py-20">
-            <h2 className="t-h2 balance">{pro ? "Pro, when you are ready for it" : "Want this on your own store?"}</h2>
+            <h2 className="t-h2 balance">{pro ? PLAN_TITLES.pro+", when you are ready for it" : "Want this on your own store?"}</h2>
             <p className="mx-auto mt-4 max-w-xl text-ink-soft">
               {!PLANS_ON_SALE
                 ? pro
-                  ? `Pro is ${dollars(PLAN_PRICES.pro.month)} a month, or ${dollars(PLAN_PRICES.pro.year)} a year, with everything on the ${dollars(PLAN_PRICES.creator.month)} plan. Neither plan is on sale yet. You can open a store and set it up today.`
+                  ? `${PLAN_TITLES.pro} is ${dollars(PLAN_PRICES.pro.month)} a month, or ${dollars(PLAN_PRICES.pro.year)} a year, with everything on the ${dollars(PLAN_PRICES.creator.month)} plan. Paid plans are not on sale yet. You can open a store and set it up today.`
                   : `Take your address and put your first product up today. The plan is ${feeWords().planLine(dollars(PLAN_PRICES.creator.month))}, and it is not on sale yet.`
                 : pro
-                ? `Pro is ${dollars(PLAN_PRICES.pro.month)} a month, or ${dollars(PLAN_PRICES.pro.year)} a year, with everything on the ${dollars(PLAN_PRICES.creator.month)} plan. Start on either, try it free for ${TRIAL_DAYS} days, and switch from your studio whenever you like.`
+                ? `${PLAN_TITLES.pro} is ${dollars(PLAN_PRICES.pro.month)} a month, or ${dollars(PLAN_PRICES.pro.year)} a year, with everything on the ${dollars(PLAN_PRICES.creator.month)} plan. Start on either, try it free for ${TRIAL_DAYS} days, and switch from your studio whenever you like.`
                 : `Take your address, connect your own Stripe account and put your first product up. ${feeWords().planLine(dollars(PLAN_PRICES.creator.month))}, free for the first ${TRIAL_DAYS} days.`}
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
@@ -631,8 +629,8 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                 Start your store
                 <Icon name="arrow-right" size={18} />
               </Link>
-              <Link href={pro ? "/#pricing" : "/demo"} className="link-arrow">
-                {pro ? "See both plans" : "See the live demo"}
+              <Link href="/demo" className="link-arrow">
+                See the live demo
                 <Icon name="arrow-right" size={18} className="arrow" />
               </Link>
             </div>
