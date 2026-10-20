@@ -67,6 +67,13 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Prova: dois novos erros inesperados interceptados em cada formulário real390/1280, preservando casos de sucesso, recusa específica, HTTP, dados incompletos e controles pendentes. Total: login20, endereço22 e fiscal26 casos; nenhuma mensagem/gravação real. CI completo no novo head pendente.
    - Custo: fonte cliente+43caracteres em três componentes, sem nova operação/chamada/registro/serviço/franquia/preço/gate. M0 igual, ainda reprova60%; PLANS_ON_SALE=false.
 
+141. **[B2-PAUSE-ACKNOWLEDGMENT] Confirmar a configuração de pausa sem prometer gravação incerta**
+   - Pedido: B2/P0/P4, revisão de mensagens/estados de preferências de assinatura.
+   - Estado: **em andamento; branch codex/pause-acknowledgment, após PR643**.
+   - Escopo: o servidor já devolve pause; o cliente exige HTTP bem-sucedido, ok booleano, ausência de erro e pause numérico igual ao escolhido. Bloquear seletor durante espera, anunciar aria-busy, recusar submissão duplicada e usar só mensagens próprias. Resposta incerta manda conferir a página; não afirma que nada mudou.
+   - Prova:14respostas interceptadas por estado inicial em390/1280, com duas fixtures exclusivamente locais para ativar e desativar:56casos. Inclui valores ausentes/diferentes/em texto, HTTP, JSON inválido, erros herdados, perda de resposta, recusa conhecida e sucesso; nenhum POST de pausa chega ao servidor, nenhuma assinatura/cobrança real é alterada.
+   - Custo: fonte cliente+323caracteres; mesmo POST/resposta existentes. Novas fixtures somente em desenvolvimento. Nenhuma chamada/gravação/provedor/franquia/preço/gate de produção novo; M0 igual e ainda reprova60%, PLANS_ON_SALE=false.
+
 139. **[B2-CLAIM-ACKNOWLEDGMENT] Confirmação coerente ao criar outra loja**
    - Pedido: B2/P0/P4, revisão de mensagens/estados de formulários.
    - Estado: **feito; PR642 incorporado19/10/2026 às23:04:11Fortaleza, entrega57 confirmada**.
@@ -951,3 +958,7 @@ Item89/C2: docs/plan-capacity-precheck.md deriva preços e36quantidades de seis 
 - PR641: relatório de premissas incorporado19/10/2026 às23:01:52Fortaleza, commitba84fc60f22218924715e95093bda73e9205ce53; Product39355538964/Redis/segurança39355538931 completos. Somente documentação, sem incrementar contador. Item89 continua em andamento, configurações/tarifas/tetos não aprovados.
 - PR642: incorporado19/10/2026 às23:04:11Fortaleza, commit977b0c00fb52b845c75238d6396585ffd68568c9. Entrega57, READY23:05:08, deploydpl_9ybccusZPuWLVj32ZdHhTbxB3XcY; Product39355867711/Redis/segurança39355867680 completos,24casos da página de outra loja390/1280 interceptados,9rotas200/exato, sem error/fatal02:01:00.346–02:06:00.346UTC. Nenhuma loja/conta criada, sucesso navega à fixture existente; fonte+498caracteres, mesmo POST/limite de cinco lojas.
 - As verificações de domínio foram em marktmorgen.com com SHA/alias/READY e marcador exatos antes de cada contador. Rotas privadas anônimas levam ao login; a prova autenticada é sintética. Custos/M0/gates/limites/preços preservados. Estados antigos em notas de preparação são históricos; esta seção registra o resultado posterior, sem apagar os ensaios.
+
+- PR644, ensaio completo39357799943: compilação/regressões anteriores passaram; o navegador não encontrou PauseEditor porque as novas fixtures pagas não tinham período de cobrança válido para a admissão do estúdio. O código de studioView/countStudio/allowanceWindow preserva a recusa de janela desconhecida. Corrigido somente o setup local com paidPeriod() e validação de catálogo/estado/período; diagnóstico limitado de URL/página acrescentado para futuras falhas. Nenhum gate/teto de produção foi reduzido. Nova verificação completa no novo head, sem rerun isolado. A seção S solicitada no anexo524cc7f9 será acrescentada somente depois de concluir este item, preservando números/estados existentes.
+
+- PR644, segundo ensaio completo39359031954: fixture com período válido alcançou o formulário; o teste parou no getByLabel com exact:true porque o label envolve também as opções do select. Seleção corrigida para papel acessível combobox e nome contendo Members may pause for; mesma verificação de valores/pending/erros/sucesso/viewport, nenhum cenário removido. Compilação, tipos, regressões e Redis/segurança passaram; nova execução integral obrigatória do novo head.

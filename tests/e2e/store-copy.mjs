@@ -1,3 +1,4 @@
+import { checkPauseAcknowledgment } from "./pause-acknowledgment.mjs";
 import { checkClaimAcknowledgment } from "./claim-acknowledgment.mjs";
 import { checkButtonContrast } from "./button-contrast.mjs";
 import { checkDetailsAcknowledgment } from "./details-acknowledgment.mjs";
@@ -168,7 +169,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -740,6 +741,7 @@ try {
   await checkRenameAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkDetailsAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkClaimAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
+  await checkPauseAcknowledgment({browser,LOCAL,fixtures:pauseFixtures,is});
   await checkEmailCapabilities({browser,LOCAL,is});
   is("no page threw", errors, []);
 } catch (error) {
