@@ -104,7 +104,7 @@ function MetaAds({
             <div className="mt-2 flex flex-wrap items-end gap-2">
               <label className="min-w-0">
                 <span className="field-label">Ad account</span>
-                <select className="field mt-1 py-2" value={pick} onChange={(e) => setPick(e.target.value)}>
+                <select className="field mt-1 min-w-0 max-w-full py-2" value={pick} onChange={(e) => setPick(e.target.value)}>
                   {meta.accounts.map((a) => (
                     <option key={a.id} value={a.id}>{`${a.name || a.id} (${a.currency.toUpperCase()})`}</option>
                   ))}
@@ -144,7 +144,7 @@ function MetaAds({
                 <>
                   <label className="min-w-0">
                     <span className="field-label">Ad account</span>
-                    <select className="field mt-1 py-2" value={pick} onChange={(e) => setPick(e.target.value)}>
+                    <select className="field mt-1 min-w-0 max-w-full py-2" value={pick} onChange={(e) => setPick(e.target.value)}>
                       {meta.accounts.map((a) => (
                         <option key={a.id} value={a.id}>{`${a.name || a.id} (${a.currency.toUpperCase()})`}</option>
                       ))}
@@ -297,7 +297,7 @@ export function AdSpendEditor({
         </ul>
       ) : null}
       <form
-        className="mt-3 grid gap-2 sm:grid-cols-2"
+        className="mt-3 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2"
         onSubmit={async (event) => {
           event.preventDefault();
           const where = channel === "~other" ? other : channel;
@@ -308,9 +308,9 @@ export function AdSpendEditor({
           }
         }}
       >
-        <label>
+        <label className="min-w-0">
           <span className="field-label">Where it ran</span>
-          <select className="field mt-1 py-2" value={channel} onChange={(e) => setChannel(e.target.value)}>
+          <select className="field mt-1 min-w-0 max-w-full py-2" value={channel} onChange={(e) => setChannel(e.target.value)}>
             {channels.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}
@@ -320,28 +320,28 @@ export function AdSpendEditor({
           </select>
         </label>
         {channel === "~other" ? (
-          <label>
+          <label className="min-w-0">
             <span className="field-label">Its name, as in your links&apos; utm_source</span>
-            <input required className="field mt-1 py-2" maxLength={30} value={other} onChange={(e) => setOther(e.target.value)} placeholder="podcast-sponsor" />
+            <input required className="field mt-1 min-w-0 max-w-full py-2" maxLength={30} value={other} onChange={(e) => setOther(e.target.value)} placeholder="podcast-sponsor" />
           </label>
         ) : (
-          <label>
+          <label className="min-w-0">
             <span className="field-label">Post or campaign (optional)</span>
-            <input className="field mt-1 py-2" maxLength={40} value={campaign} onChange={(e) => setCampaign(e.target.value)} placeholder="october-reel" />
+            <input className="field mt-1 min-w-0 max-w-full py-2" maxLength={40} value={campaign} onChange={(e) => setCampaign(e.target.value)} placeholder="october-reel" />
           </label>
         )}
-        <label>
+        <label className="min-w-0">
           <span className="field-label">{`Amount (${currency.toUpperCase()})`}</span>
-          <input required inputMode="decimal" className="field mt-1 py-2" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="120.00" />
+          <input required inputMode="decimal" className="field mt-1 min-w-0 max-w-full py-2" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="120.00" />
         </label>
-        <div className="flex gap-2">
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
           <label className="min-w-0 flex-1">
             <span className="field-label">First day</span>
-            <input type="date" required className="field mt-1 py-2" value={from} max={today} onChange={(e) => setFrom(e.target.value)} />
+            <input type="date" required className="field mt-1 min-w-0 max-w-full py-2" value={from} max={today} onChange={(e) => setFrom(e.target.value)} />
           </label>
           <label className="min-w-0 flex-1">
             <span className="field-label">Last day</span>
-            <input type="date" required className="field mt-1 py-2" value={to} max={today} onChange={(e) => setTo(e.target.value)} />
+            <input type="date" required className="field mt-1 min-w-0 max-w-full py-2" value={to} max={today} onChange={(e) => setTo(e.target.value)} />
           </label>
         </div>
         <div className="sm:col-span-2">

@@ -1,0 +1,35 @@
+name: Studio accessibility matrix
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: studio-accessibility-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  studio-matrix:
+    name: Studio AAA (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      E2E_BROWSER: ${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
+      - run: npm run build
+      - name: Authenticated studio and page editor at five widths with AAA and access modes
+        run: node tests/e2e/accessibility-studio-matrix.mjs
