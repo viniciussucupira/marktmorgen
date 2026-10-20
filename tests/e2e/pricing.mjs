@@ -13,7 +13,7 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    await page.locator('a[href="#content"]').first().focus();await page.keyboard.press("Enter");
    check(await page.locator("main").evaluate(node=>node===document.activeElement),"skip link focuses content "+width);
    check((await page.title()).includes("Pricing"),"pricing title "+width);
-   check(await page.locator("main").getByText("Paid plans and paid selling are not open yet.",{exact:false}).count()===1,"pricing keeps paid selling closed "+width);
+   check(await page.locator("main header").getByText("Paid plans and paid selling are not open yet.",{exact:false}).isVisible(),"pricing keeps paid selling closed "+width);
    const text=await page.locator("main").innerText();
    for(const price of ["$69 a month","$449 a month","$999 a month","$690 a year","$4,490 a year","$9,990 a year"])check(text.includes(price),"pricing shows "+price+" "+width);
    check(await page.locator("main a[href='/proof/comparisons']").count()===1,"real comparison destination "+width);
