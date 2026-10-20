@@ -53,7 +53,7 @@ export function StudioStart({ steps, activation, launchChecklist }: { steps: Sta
       >
         <div className="h-full rounded-full bg-violet-brand transition-[width] duration-500" style={{ width: `${percent}%` }} />
       </div>
-      {launchChecklist ? <details className="mt-5"><summary className="min-h-11 cursor-pointer py-3 font-semibold text-ink">Review the saved launch checklist</summary><pre className="mt-3 whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-ink-soft">{launchChecklist}</pre></details> : null}
+      {launchChecklist ? <details className="group mt-5"><summary className="flex min-h-11 cursor-pointer items-center gap-2 py-3 font-semibold text-ink"><span aria-hidden="true" className="transition-transform group-open:rotate-90">▸</span>Review the saved launch checklist</summary><pre className="mt-3 whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-ink-soft">{launchChecklist}</pre></details> : null}
       <ol className="mt-6 grid gap-x-6 gap-y-4 sm:grid-cols-2">
         {steps.map((step, i) => (
           <li key={step.key} className="flex gap-3">
