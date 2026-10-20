@@ -1082,3 +1082,18 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Preservação Claude: community-chat.ts e community-dm.ts já implementam sala com consultas periódicas e mensagens privadas textuais; não alegar ausência de chat. Diferenças comprovadas Circle: grupos/multimídia, live/recordingnativo, appscomuns/Plusbranded. Nenhuma implementação nova nesses módulos.
 - Página/proof/circle no catálogo/sitemap existente, linknoíndice, título/descrição próprios, fontesdatadas, vantagens do concorrente mesmo tamanho, CTAexistente epaidclosed. Dadoscentraisdistinguem annualEquivalentMonthlyCents de annualCents. Testes de unknowns/canonicalprices/sitemap e navegador390/1280/axe/teclado/nãoescrita adicionados à suiteintegra.
 - M0 antes/depois: mesmo envelope estático e distribuição existentes; sem dependência/endpoint/chamada ao provedor/email/IA/storagewrite/telemetria nova; nenhum aumento de franquia/preço/limite/gate. A leitura fiscal vinculante continua12,02–12,21%, reprovada contra60%, não certificada; PLANS_ON_SALE=false. Não contar PR/documento como entrega; aguardar suitecompleta+READY/domínio/SHA.
+
+
+### S1 — prova final Skool, entrega61
+
+- PR647head086d91445c43a7fbeccc2d76d19ee2eb44c8a223 passou suiteintegra39363385353(verify118434486655/Redis118434486450) e segurança39363385355. Incorporado20/10/2026 00:24:46Fortaleza, merge5ecc38e4dd633140d23928c3408f935fdf4205a1.
+- Produçãodpl_6Mhqwxg6vP7LxXsno8FGiDjiWaewREADY20/10/2026 00:25:34Fortaleza, SHAexato/domainaliasmarktmorgen.com. Dozerotas200commarcador deploymentexato; título/source/paidclosed/índiceSkoolconfirmados. Semerror/fatal03:21:41.050–03:26:41.050UTC. Contador60→61apósprova, próximo62.
+- Falhainicialdecontrastepegouopacidadetransitória; headcorrigidoaguardacada seção totalmente pintada, semsuprimiraxe. M0igual/reprovada, vendasfechadas. S1segundode15, aindaemandamento.
+
+### S1 — quinto incremento: Kit
+
+- Branchcodex/kit-comparison encadeada no head6498ae6fb16e0bc039d205f2cb0409fbc8d9e7c6805 enquanto648/649rodam, main5ecc38e4dd633140d23928c3408f935fdf4205a1conferido. Nenhuma edição da mesma branch em paralelo.
+- Fontes oficiais Kit pricing/recommendations/newsletter-sponsorships lidas20/10/2026. Preço pagoescopo1000subscribers; Creator390USDano exato, Pro66equivalentemensalanual e593primeiroanopromocional. Renovaçãoanualexata/mensaispagos nãoverificadosnull; nãoinventarrecorrênciado desconto. Free0real. Commerce3,5%+.30incluiprocessamento, parcelaKit.6% não é taxaextra.
+- Preserva email existenteClaude: templates, sequências, IF/ELSEeações existem; nãoinventarlacuna. Diferençaprova: teste própriocorposnão, apenasassunto; KitProcorpo, recomendações/patrocínios. Capacidadedesubscritoresnãoéfranquiadeenvios.
+- Provasadicionadas: fontes/datas/unknowns/inclusivefee/canonicalownpricing/email/sitemap, navegadorreal390/1280metadados/axe/textoequivalente/teclado/noAPIwrites; suitecompletanonovoheadnecessária.
+- M0antes/depois: mesmoenvelopeestático, nenhumanovadependência/endpoint/provedor/email/IA/storagewrite/telemetria, nenhumlimite/preço/gateafrouxado. Leituralíquidaonerosa12,02–12,21%continuareprovadaante60%,não certificada;PLANS_ON_SALE=false. NãocontarPRpendentecomofuncional.

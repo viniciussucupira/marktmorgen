@@ -29,6 +29,7 @@ const cfPricing: OfficialPriceSource = { label: "ClickFunnels plan prices and li
 const cfPayments: OfficialPriceSource = { label: "ClickFunnels Stripe and processor fees", url: "https://support.myclickfunnels.com/docs/setting-up-stripe-as-a-payment-gateway-in-clickfunnels/", readOn: "2026-10-20" };
 const circlePricing: OfficialPriceSource = { label: "Circle pricing and plan scope", url: "https://circle.so/pricing", readOn: "2026-10-20" };
 const circleFees: OfficialPriceSource = { label: "Circle paywall and Stripe fees", url: "https://help.circle.so/p/payments/paywall-setup/paywall-transaction-fees", readOn: "2026-10-20" };
+const kitPricing: OfficialPriceSource = { label: "Kit prices and inclusive commerce fees", url: "https://kit.com/pricing", readOn: "2026-10-20" };
 export const COMPETITOR_PRICES = {
   kajabi: {
     name: "Kajabi",
@@ -83,5 +84,19 @@ export const COMPETITOR_PRICES = {
     trial: { days: 14, source: circlePricing },
     live: { source: { label: "Circle native live streams and rooms", url: "https://help.circle.so/p/live-and-events/live-setup/circle-live-overview", readOn: "2026-10-20" } },
     messaging: { source: { label: "Circle direct and group messaging", url: "https://help.circle.so/p/chat/dm/get-to-know-direct-messaging", readOn: "2026-10-20" } },
+  },
+  kit: {
+    name: "Kit",
+    currency: "USD",
+    plans: [
+      { name: "Free", monthlyCents: 0, annualCents: 0, source: kitPricing, platformFeeBps: 60, listedPaymentFeeBps: 350, listedPaymentFixedCents: 30 },
+      { name: "Creator", monthlyCents: null, annualCents: 39000, source: kitPricing, platformFeeBps: 60, listedPaymentFeeBps: 350, listedPaymentFixedCents: 30 },
+      { name: "Pro", monthlyCents: null, annualCents: null, annualEquivalentMonthlyCents: 6600, source: kitPricing, platformFeeBps: 60, listedPaymentFeeBps: 350, listedPaymentFixedCents: 30 },
+    ] satisfies CompetitorPlanPrice[],
+    billingScope: "Paid quotes are for 1,000 subscribers. Creator: $390/year. Pro displays a $66/month annual-billing equivalent and a $593 first-year promotion, renewing at the standard rate. The exact standard renewal invoice and paid monthly quotes are not verified here; do not infer them from rounded equivalents or the promotion.",
+    feeScope: "The published digital-product and subscription fee is 3.5% + $0.30, including card processing; Kit states its share is 0.6%. Do not add standard card processing a second time.",
+    trial: { days: 14, source: kitPricing },
+    discovery: { source: { label: "Kit creator recommendations", url: "https://kit.com/features/recommendations", readOn: "2026-10-20" } },
+    sponsorship: { source: { label: "Kit newsletter sponsorships", url: "https://kit.com/features/newsletter-sponsorships", readOn: "2026-10-20" } },
   },
 } as const;
