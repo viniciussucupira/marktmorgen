@@ -14,7 +14,8 @@ export type BlogBlock =
   | { type: "h2"; text: string }
   | { type: "ul"; items: string[] }
   | { type: "steps"; items: { title: string; text: string }[] }
-  | { type: "note"; text: string };
+  | { type: "note"; text: string }
+  | { type: "links"; items: { label: string; href: string }[] };
 
 export type BlogPost = {
   slug: string;
@@ -36,9 +37,263 @@ export const BLOG_CATEGORIES = [
   "Marketing and audience",
   "Comparisons",
   "Behind the build",
+  "Courses",
+  "Community",
 ] as const;
 
 export const BLOG_POSTS: BlogPost[] = [
+{
+  "slug": "how-much-kajabi-costs-in-2026",
+  "title": "How much Kajabi costs in 2026",
+  "category": "Comparisons",
+  "date": "2026-10-20",
+  "readMinutes": 4,
+  "excerpt": "Separate the plan, billing interval and applicable payment fees before comparing your quote.",
+  "kicker": "A dated buying checklist",
+  "from": "#6c3bff",
+  "to": "#2546a6",
+  "body": [
+    {
+      "type": "p",
+      "text": "A useful quote starts with your own workload: products, contacts, community, payment country and billing interval. Comparing a headline with a complete invoice answers the wrong question."
+    },
+    {
+      "type": "h2",
+      "text": "Start with the published plan"
+    },
+    {
+      "type": "p",
+      "text": "On October 20, Kajabi listed Basic at $179 monthly, Growth at $249 and Pro at $499. Annual billing displayed monthly equivalents of $143, $199 and $399. Those equivalents describe an annual commitment, not monthly purchase prices."
+    },
+    {
+      "type": "h2",
+      "text": "Read the payment conditions"
+    },
+    {
+      "type": "p",
+      "text": "Its US Kajabi Payments card rates were 2.9% + $0.30, 2.8% + $0.30 and 2.7% + $0.30 respectively. When Kajabi Payments is available but another provider is selected, the page lists additional rates of 2%, 1% and 0.5%; PayPal is excluded. Country and provider conditions matter."
+    },
+    {
+      "type": "h2",
+      "text": "Compare an actual workload"
+    },
+    {
+      "type": "steps",
+      "items": [
+        {
+          "title": "Write down what you will use",
+          "text": "List the products, contacts, payment methods and staff access you need before choosing a plan."
+        },
+        {
+          "title": "Keep the invoice and fees separate",
+          "text": "Ask which charges repeat, which depend on transactions and which are optional. A missing quote stays unknown."
+        },
+        {
+          "title": "Inspect the alternative",
+          "text": "Use the feature comparison and demo below. Marktmorgen has published limits and currently keeps paid sales closed; a demo is not a promise of availability or equivalent scope."
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "text": "Sources read October 20, 2026. These are dated published USD figures, not a personalised checkout quote, earnings forecast or assertion that one product replaces everything in another."
+    },
+    {
+      "type": "links",
+      "items": [
+        {
+          "label": "Kajabi official pricing and payment conditions",
+          "href": "https://www.kajabi.com/pricing"
+        },
+        {
+          "label": "Kajabi and Marktmorgen: feature and scope comparison",
+          "href": "/proof/kajabi"
+        },
+        {
+          "label": "Marktmorgen plans, limits and local cost calculator",
+          "href": "/pricing"
+        },
+        {
+          "label": "See the live demo",
+          "href": "/demo"
+        }
+      ]
+    }
+  ]
+},
+{
+  "slug": "skool-fees-explained",
+  "title": "Skool fees explained: plan, transactions and Growth Boost",
+  "category": "Community",
+  "date": "2026-10-20",
+  "readMinutes": 4,
+  "excerpt": "The monthly plan is only one line. Check transaction bands and whether discovery adds a separate commission.",
+  "kicker": "Read the conditions beside the rate",
+  "from": "#f5a623",
+  "to": "#a94910",
+  "body": [
+    {
+      "type": "p",
+      "text": "Skool's pricing page listed Hobby at $9 a month and Pro at $99 when read on October 20, 2026. It advertises two months free for yearly billing; this article does not turn that headline into a verified annual invoice."
+    },
+    {
+      "type": "h2",
+      "text": "The payment FAQ adds detail"
+    },
+    {
+      "type": "p",
+      "text": "The FAQ lists Hobby at 10% + $0.30 per transaction. Pro is 2.9% + $0.30 up to $899 and 3.9% + $0.30 above $900. Its wording leaves the exact $900 boundary unclear: confirm it rather than invent a rate. Transaction fees are non-refundable."
+    },
+    {
+      "type": "h2",
+      "text": "Discovery can be another line"
+    },
+    {
+      "type": "p",
+      "text": "Growth Boost charges a 30% commission plus the selected plan's fees when Skool brings a paying member. The FAQ says it is on by default, can be switched off, and its cut follows recurring charges while that membership remains active. It uses Stripe Express for payouts, rather than your existing Stripe account."
+    },
+    {
+      "type": "h2",
+      "text": "Use your mix of transactions"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "Keep payment amounts and counts separate; one average can hide a pricing band.",
+        "Check whether a member arrived through Growth Boost before applying its commission.",
+        "Compare payout arrangements and the community experience as well as subscription costs. Lower fixed cost alone does not establish a better fit."
+      ]
+    },
+    {
+      "type": "note",
+      "text": "Official sources read October 20, 2026. No exact annual invoice or unresolved transaction band is treated as zero. Marktmorgen paid sales remain closed; its community and pricing pages describe actual scope and limits, not a Skool Discovery substitute."
+    },
+    {
+      "type": "links",
+      "items": [
+        {
+          "label": "Skool official plan prices",
+          "href": "https://www.skool.com/pricing"
+        },
+        {
+          "label": "Skool official payment and Growth Boost FAQ",
+          "href": "https://help.skool.com/article/86-subscriptions-faq"
+        },
+        {
+          "label": "Skool and Marktmorgen comparison",
+          "href": "/proof/skool"
+        },
+        {
+          "label": "Marktmorgen community scope",
+          "href": "/platform/community"
+        },
+        {
+          "label": "Plans and local cost calculator",
+          "href": "/pricing"
+        }
+      ]
+    }
+  ]
+},
+{
+  "slug": "kajabi-vs-teachable-vs-marktmorgen",
+  "title": "Kajabi vs Teachable vs Marktmorgen: what to check",
+  "category": "Courses",
+  "date": "2026-10-20",
+  "readMinutes": 4,
+  "excerpt": "Compare the teaching experience, payment arrangement and full quote against the work you actually need to do.",
+  "kicker": "Choose by the work, not a promised result",
+  "from": "#145b67",
+  "to": "#313080",
+  "body": [
+    {
+      "type": "p",
+      "text": "Begin with a small acceptance checklist: show a lesson, grant access, issue a refund, export permitted records and explain a renewal. A product name on a feature list does not prove that all three platforms handle those tasks in the same way."
+    },
+    {
+      "type": "h2",
+      "text": "Choose the teaching experience"
+    },
+    {
+      "type": "p",
+      "text": "Teachable's October 20 pricing listed Starter, Builder and Growth at $39, $89 and $189 monthly, with annual monthly equivalents of $29, $69 and $139. Product counts were 5, 10 and 50. Custom needs a quote; the annual display is not an independently verified invoice."
+    },
+    {
+      "type": "h2",
+      "text": "Separate the fees"
+    },
+    {
+      "type": "p",
+      "text": "Teachable distinguishes its plan fee from processing: Starter is 7.5%; Builder and Growth have no plan transaction fee. Processing depends on country, method, gateway and bundle. Its help centre also identifies a 2% integration fee for US custom-gateway schools; that is separate from Stripe processing."
+    },
+    {
+      "type": "h2",
+      "text": "Check Marktmorgen's actual boundaries"
+    },
+    {
+      "type": "p",
+      "text": "Marktmorgen's course page describes its lesson and access tools. Its pricing page reads the current plan prices and allowances from the product's own configuration. Paid sales remain closed. Inspect the demo, compare the published limits and verify migration needs before treating any option as a replacement."
+    },
+    {
+      "type": "steps",
+      "items": [
+        {
+          "title": "Test a representative lesson",
+          "text": "Check the format, navigation and access rules your buyers will encounter. An attractive cover does not establish a teaching workflow."
+        },
+        {
+          "title": "Ask for the complete applicable quote",
+          "text": "Include the invoice interval, processing, recurring charges, integrations, tax handling and optional bundles. Unanswered lines remain unknown."
+        },
+        {
+          "title": "Keep a migration checklist",
+          "text": "Confirm which contacts, purchases and content can move with permission, and which subscriptions or settings need separate handling. Do not assume a logo comparison proves portability."
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "text": "Sources read October 20, 2026. This checklist makes no earnings, savings or blanket feature-equivalence claim. Existing buyer languages, creator content and permissions must survive any migration."
+    },
+    {
+      "type": "links",
+      "items": [
+        {
+          "label": "Kajabi official pricing",
+          "href": "https://www.kajabi.com/pricing"
+        },
+        {
+          "label": "Teachable official pricing",
+          "href": "https://www.teachable.com/pricing"
+        },
+        {
+          "label": "Teachable official processing, bundles and gateway fees",
+          "href": "https://support.teachable.com/en/articles/15661316-understand-your-transaction-fees-and-bundles"
+        },
+        {
+          "label": "Detailed Kajabi comparison",
+          "href": "/proof/kajabi"
+        },
+        {
+          "label": "Detailed Teachable comparison",
+          "href": "/proof/teachable"
+        },
+        {
+          "label": "Marktmorgen course capabilities",
+          "href": "/platform/courses"
+        },
+        {
+          "label": "Marktmorgen prices and limits",
+          "href": "/pricing"
+        },
+        {
+          "label": "Migration scope and limitations",
+          "href": "/platform/switching-to-marktmorgen"
+        }
+      ]
+    }
+  ]
+},
   {
     slug: "what-selling-on-gumroad-costs",
     title: "What selling on Gumroad actually costs, in money and in days",

@@ -1024,7 +1024,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Dependências: PLANS_ON_SALE continua false; exige todos os gates fiscais/comerciais/custos, não apenas ato manual de abertura. Nenhum contato ao criador/Stripe real autorizado neste trabalho. Custo de leitura/armazenamento/modelo/tetos reservado no93 antes de operar; desconhecido reprova. M0 não certificada.
 
 150. **[S9-DECISION-BLOG] Posts úteis para decisão**
-   - Estado: **a fazer; após itens anteriores acionáveis e salto condicional de S8**.
+   - Estado: **em implementação; três artigos factuais, CI integral pendente; S8 continua aguardando o dono**.
    - Escopo: textos honestos como How much Kajabi costs in2026, Skool fees explained, Kajabi vs Teachable vs Marktmorgen, com fontes oficiais datadas e links para S1. Conferir posts/categorias atuais no main; criar categoria Courses/Community/Email/Sales apenas com primeiro post real.
    - Prova: nenhum dado inventado/desatualizado, condições de preço/taxa e limites visíveis, links/sitemap/SEO/390px/teclado. Custo: posts estáticos, nenhum pedido externo ao leitor; M0 igual. Depois seguir S10–S12 e a fila acionável sem confirmação.
 
@@ -1271,3 +1271,8 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Acrescenta course-creators, community-builders, newsletter-writers e consultants-and-mentors preservando as quatro páginas anteriores. Ladder com ações reais, newsletter com opt-in e sem equivalência inventada de paywall; consultoria com data de vencimento distinta de débito automático e registro de assinatura sem garantia jurídica.
 - Quatro fotografias diferentes, fonte/autoria/licença verificadas em20/10/2026 em docs/creator-photographs-2026-10-20.md. Mesmo host direto já existente, sem API de imagens, otimizador, nova conta, integração ou operação por cliente. Exemplos não representam clientes nem loja publicada; preços dos produtos são escolhas do criador, não promessas.
 - M0 antes/depois: mesmo envelope vinculante12,02–12,21%, abaixo do mínimo60%; desconhecidos reprovam e vendas continuam fechadas. Não altera preço/franquia/gate. Cobertura dos mecanismos42páginas, sitemap, navegação, imagens e leitura390/1280/axe exigidas no head final.
+
+
+### S9 — três artigos de decisão e categorias com conteúdo real
+- Fontes primárias relidas20/10/2026: Kajabi pricing; Skool pricing e paymentFAQ; Teachable pricing e understand-your-transaction-fees-and-bundles. Três artigos sobre custoKajabi2026, taxasSkool e escolhaKajabi/Teachable/Marktmorgen. Links de fonte e páginasS1; preços datados conferidos contra lib/competitor-prices.ts. Não inferir fatura anual de equivalente; bandaSkool900desconhecida; gatewayTeachableUS separado; vendasMarktmorgenfechadas. Nenhuma promessa de ganho/economia/equivalência total.
+- Preserva nove posts/categorias anteriores; Courses eCommunity só entram com seu primeiro artigo. Email/Sales ausentes enquanto sem post. BlogBlock links renderizado semanticamente, sem fetch externo, analytics novo, imagem nova ou operação por leitor. M0antes/depois mesmoenvelope12,02–12,21%reprovado sob60%;gates/preços/franquiasinalterados. ExigeCIintegarl,SEO/sitemap/390/1280/filtros/teclado/axe/nenhum requestexterno.
