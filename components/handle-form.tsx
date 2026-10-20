@@ -20,7 +20,7 @@ const MESSAGES: Record<string, string> = {
   first: "Make your first store before another one.",
   signed_out: "Your session ended. Log in again.",
   unavailable: "Stores are not switched on yet, so nothing was saved.",
-  server_error: "Something went wrong on our side. Try again in a moment.",
+  server_error: "We could not confirm whether your store was created. Check the studio before trying again.",
 };
 
 /**
@@ -47,15 +47,22 @@ export function HandleForm({ another = false }: { another?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ handle, name, bio, another }),
       });
-      const data = (await response.json()) as { ok?: boolean; error?: string; store?: string };
-      if (data.ok) {
-        if (another && data.store) router.push(`/studio?store=${data.store}`);
+      const raw: unknown = await response.json().catch(() => null);
+      const data = raw && typeof raw === "object" && !Array.isArray(raw)
+        ? raw as Record<string, unknown> : {};
+      if (
+        response.ok && data.ok === true && !data.error &&
+        data.handle === preview &&
+        typeof data.store === "string" && /^[0-9a-f]{32}$/.test(data.store)
+      ) {
+        if (another) router.push(`/studio?store=${encodeURIComponent(data.store)}`);
         else router.refresh();
         return;
       }
       setState({
         kind: "error",
-        message: MESSAGES[data.error ?? ""] ?? MESSAGES.server_error,
+        message: typeof data.error === "string" && Object.hasOwn(MESSAGES, data.error)
+          ? MESSAGES[data.error] : MESSAGES.server_error,
       });
     } catch {
       setState({ kind: "error", message: MESSAGES.server_error });
@@ -63,7 +70,8 @@ export function HandleForm({ another = false }: { another?: boolean }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5" noValidate>
+    <form onSubmit={submit} aria-busy={state.kind === "saving"} noValidate>
+      <fieldset disabled={state.kind === "saving"} className="min-w-0 space-y-5">
       <div>
         <label htmlFor="store-handle" className="field-label">
           Your address
@@ -81,7 +89,7 @@ export function HandleForm({ another = false }: { another?: boolean }) {
             value={handle}
             onChange={(event) => setHandle(event.target.value)}
             placeholder="yourname"
-            className="w-full rounded-r-2xl bg-transparent px-1 py-3.5 text-ink outline-none placeholder:text-ink-soft/60"
+            className="min-w-0 w-full rounded-r-2xl bg-transparent px-1 py-3.5 text-ink outline-none placeholder:text-ink-soft/60"
           />
         </div>
         <p className="mt-2 text-sm text-ink-soft">
@@ -140,6 +148,7 @@ export function HandleForm({ another = false }: { another?: boolean }) {
       >
         {state.kind === "saving" ? "Creating…" : another ? "Create this store" : "Create my store"}
       </button>
+      </fieldset>
     </form>
   );
 }
