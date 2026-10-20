@@ -96,7 +96,7 @@ export const BLOG_POSTS: BlogPost[] = [
     },
     {
       "type": "note",
-      "text": "Sources read October 20, 2026. These are dated published USD figures, not a personalised checkout quote, earnings forecast or assertion that one product replaces everything in another."
+      "text": "Sources read October 20, 2026. These are dated published USD figures, not a personalized checkout quote, earnings forecast or assertion that one product replaces everything in another."
     },
     {
       "type": "links",
@@ -224,7 +224,7 @@ export const BLOG_POSTS: BlogPost[] = [
     },
     {
       "type": "p",
-      "text": "Teachable distinguishes its plan fee from processing: Starter is 7.5%; Builder and Growth have no plan transaction fee. Processing depends on country, method, gateway and bundle. Its help centre also identifies a 2% integration fee for US custom-gateway schools; that is separate from Stripe processing."
+      "text": "Teachable distinguishes its plan fee from processing: Starter is 7.5%; Builder and Growth have no plan transaction fee. Processing depends on country, method, gateway and bundle. Its help center also identifies a 2% integration fee for US custom-gateway schools; that is separate from Stripe processing."
     },
     {
       "type": "h2",
