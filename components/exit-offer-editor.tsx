@@ -12,10 +12,12 @@ import { toast } from "@/components/toast";
 export function ExitOfferEditor({ current, free }: { current: string | null; free: { id: string; title: string }[] }) {
   const router = useRouter();
   const [choice, setChoice] = useState(current ?? "");
+  const [saved, setSaved] = useState(current ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -24,22 +26,24 @@ export function ExitOfferEditor({ current, free }: { current: string | null; fre
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product: choice }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (!data.ok) {
-        setError(data.error === "not_free" ? "Only something free, and published, can be offered here." : "It could not be saved just now. Try again in a moment.");
+      const data: unknown = await response.json().catch(() => null);
+      const reply = data && typeof data === "object" && !Array.isArray(data) ? data as Record<string, unknown> : null;
+      if (!response.ok || reply?.ok !== true || "error" in reply || reply.exitOffer !== (choice || null)) {
+        setError(reply?.ok !== true && reply?.error === "not_free" ? "Only something free, and published, can be offered here." : "We could not confirm this offer setting. Reload this page to check before trying again.");
         return;
       }
-      toast(choice ? "Offer saved." : "Offer switched off.");
+      setSaved(choice);
+      toast("Exit offer settings saved.");
       router.refresh();
     } catch {
-      setError("It could not be saved just now. Try again in a moment.");
+      setError("We could not confirm this offer setting. Reload this page to check before trying again.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="card p-6 sm:p-8">
+    <div data-exit-offer-editor aria-busy={busy} className="card p-6 sm:p-8">
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">When a visitor is about to leave</p>
       <p className="mt-2 text-ink-soft">
         Offer one of your free products, once, to a visitor on a computer whose pointer heads for the tabs to leave your store or a
@@ -54,7 +58,7 @@ export function ExitOfferEditor({ current, free }: { current: string | null; fre
         <div className="mt-4 flex flex-wrap items-end gap-3">
           <label className="min-w-[14rem] flex-1">
             <span className="field-label">What to offer</span>
-            <select className="field mt-1" value={choice} onChange={(event) => setChoice(event.target.value)}>
+            <select disabled={busy} className="field mt-1" value={choice} onChange={(event) => setChoice(event.target.value)}>
               <option value="">Nothing (off)</option>
               {free.map((product) => (
                 <option key={product.id} value={product.id}>
@@ -63,7 +67,7 @@ export function ExitOfferEditor({ current, free }: { current: string | null; fre
               ))}
             </select>
           </label>
-          <button type="button" className="btn btn-primary" onClick={() => void save()} disabled={busy || choice === (current ?? "")} aria-busy={busy}>
+          <button type="button" className="btn btn-primary" onClick={() => void save()} disabled={busy || choice === saved} aria-busy={busy}>
             {busy ? "Saving…" : "Save"}
           </button>
         </div>
