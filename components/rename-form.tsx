@@ -22,7 +22,7 @@ const MESSAGES: Record<string, string> = {
   none: "This account has no store yet.",
   signed_out: "Your session ended. Log in again.",
   unavailable: "Stores are not switched on yet, so nothing was saved.",
-  server_error: "Something went wrong on our side. Try again in a moment.",
+  server_error: "We could not confirm whether your address changed. Reload this page to check before trying again.",
 };
 
 export function RenameForm({ current }: { current: string }) {
@@ -43,12 +43,9 @@ export function RenameForm({ current }: { current: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ handle }),
       });
-      const data = (await response.json()) as {
-        ok?: boolean;
-        error?: string;
-        limit?: number;
-      };
-      if (data.ok) {
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      if (response.ok && data.ok === true && data.error === undefined && data.handle === preview) {
         setState({ kind: "closed" });
         setHandle("");
         toast("Address changed.");
@@ -59,8 +56,8 @@ export function RenameForm({ current }: { current: string }) {
         kind: "error",
         message:
           data.error === "too_many"
-            ? `A store keeps up to ${data.limit ?? MAX_ADDRESSES} addresses, and yours is full. Going back to one you already had still works.`
-            : (MESSAGES[data.error ?? ""] ?? MESSAGES.server_error),
+            ? `A store keeps up to ${typeof data.limit === "number" && Number.isSafeInteger(data.limit) && data.limit > 0 && data.limit <= MAX_ADDRESSES ? data.limit : MAX_ADDRESSES} addresses, and yours is full. Going back to one you already had still works.`
+            : (typeof data.error === "string" ? MESSAGES[data.error] ?? MESSAGES.server_error : MESSAGES.server_error),
       });
     } catch {
       setState({ kind: "error", message: MESSAGES.server_error });
@@ -80,7 +77,7 @@ export function RenameForm({ current }: { current: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="mt-5 space-y-3" noValidate>
+    <form onSubmit={submit} aria-busy={state.kind === "saving"} className="mt-5 w-full min-w-0 space-y-3" noValidate>
       <label htmlFor="new-handle" className="field-label">
         New address
       </label>
@@ -95,9 +92,10 @@ export function RenameForm({ current }: { current: string }) {
           autoCorrect="off"
           spellCheck={false}
           value={handle}
+          disabled={state.kind === "saving"}
           onChange={(event) => setHandle(event.target.value)}
           placeholder={current}
-          className="w-full rounded-r-2xl bg-transparent px-1 py-3 text-ink outline-none placeholder:text-ink-soft/50"
+          className="min-w-0 flex-1 rounded-r-2xl bg-transparent px-1 py-3 text-ink outline-none placeholder:text-ink-soft/50"
         />
       </div>
 
@@ -127,6 +125,7 @@ export function RenameForm({ current }: { current: string }) {
         <button
           type="button"
           onClick={() => setState({ kind: "closed" })}
+          disabled={state.kind === "saving"}
           className="btn btn-ghost"
         >
           Cancel

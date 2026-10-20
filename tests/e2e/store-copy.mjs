@@ -1,3 +1,4 @@
+import {checkRenameAcknowledgment} from "./rename-acknowledgment.mjs";
 import {checkTaxSaveAcknowledgment} from "./tax-save-acknowledgment.mjs";
 import {checkTaxScope} from "./tax-scope.mjs";
 import {checkComposerAmericanEnglish} from "./us-english-composer.mjs";
@@ -731,6 +732,7 @@ try {
   await checkComposerAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,product:growthProduct,is});
   await checkTaxScope({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkTaxSaveAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
+  await checkRenameAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;

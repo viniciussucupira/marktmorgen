@@ -531,7 +531,7 @@ Correção complementar da fixture #630: a execução integral mostrou que o rel
 
 86. **[C-TAX-SAVE-CONFIRMATION] Confirmar os valores fiscais antes de anunciar salvamento**
    - Pedido: auditoria de usabilidade/fiscal autorizada,19/10/2026,21h de Fortaleza (aproximado).
-   - Estado: **em andamento; branch codex/tax-save-confirmation; CI integral pendente**.
+   - Estado: **feito; PR #633 incorporado19/10/2026 21:53:43 de Fortaleza; entrega51 confirmada, READY21:54:36, versão6ae61fc; Product39349329266/Redis/security39349329333 completos**.
    - Evidência: TaxEditor exige HTTP de sucesso, ok booleano e os quatro valores retornados iguais ao pedido. Respostas incompletas, contraditórias ou perdidas deixam resultado desconhecido e orientam recarregar; controles ficam bloqueados durante confirmação. Onze cenários interceptados em390/1280; nenhum POST fiscal alcança o servidor no teste.
    - Custo e margem: Mesmo POST existente, sem fornecedor, armazenamento, mensagem, limite ou franquia adicional. Validação local limitada; M0 antes=depois em todos os planos/intervalos, leitura mais onerosa continua reprovada. Não conclui coleta/retenção fiscal nem abre vendas.
 
@@ -541,9 +541,19 @@ Validação633: primeira suíte integral encontrou apenas seletor de sucesso amb
 
 87. **[B2-SIGNIN-ACKNOWLEDGMENT] Manter o endereço de acesso coerente com o pedido pendente**
    - Pedido: revisão contínua B2/usabilidade autorizada; achado19/10/2026,21h de Fortaleza (aproximado).
-   - Estado: **em andamento; branch codex/signin-confirmation; dependência explícita633; integra a fila86 sem sobrepor os componentes/testes de633**.
+   - Estado: **feito; PR #634 incorporado19/10/2026 21:59:03 de Fortaleza; entrega52 confirmada, READY21:59:55, versão89b757e; Product39349828671/Redis/security39349828561 completos**.
    - Evidência: E-mail bloqueado durante envio; sucesso exige HTTP válido, ok booleano e ausência de erro contraditório. Oito respostas interceptadas em390/1280, endereço, reabertura após erro e cooldown existentes. Nenhum pedido chega ao endpoint de autenticação, nenhuma conta/e-mail real criado.
    - Custo e margem: Mesmo fluxo existente de autenticação, sem novo fornecedor/chamada/dado/teto; validação local constante e335caracteres adicionais de fonte. M0 antes=depois, modelo vinculante ainda reprova60%; PLANS_ON_SALE=false e regras fiscais preservadas.
 
 
 Validação634: a execução integral antiga terminou com a mesma ambiguidade herdada no teste de633; os oito cenários próprios de acesso passaram em390/1280. Integrada a correção de633 por ancestralidade explícita, sem remover nenhum cenário; nova suíte completa no novo head obrigatória.
+
+
+88. **[B2-ADDRESS-ACKNOWLEDGMENT] Confirmar endereço retornado e preservar o pedido pendente**
+   - Pedido: revisão contínua B2/usabilidade autorizada; achado19/10/2026,21h de Fortaleza (aproximado).
+   - Estado: **em andamento; branch codex/address-confirmation; depende explicitamente634; alterações próprias em RenameForm e suíte store-copy, sem editar SignInForm/agreements**.
+   - Evidência: A interface exigirá HTTP válido, ok booleano, ausência de erro e endereço normalizado igual ao solicitado; edição/cancelamento ficam bloqueados durante pedido. Campos passam a poder encolher no celular. Nove respostas interceptadas em390/1280; não renomeia nenhuma loja real. CI integral pendente.
+   - Custo e margem: Validação local limitada dentro da página existente; sem chamada, armazenamento, mensagem ou franquia adicional. M0 antes=depois em todos os planos/intervalos, modelo vinculante continua reprovando60%; nenhum gate de vendas/fiscal alterado.
+
+
+Validação635: execução integral39350012931 terminou com os nove contratos corretos em390/1280, mas oito estados abertos excediam a largura móvel. Formulário era um item flex sem largura limitada; agora ocupa a linha disponível com min-width zero, sem esconder conteúdo. Mantida a reprovação por rolagem lateral e adicionada geometria de diagnóstico; nova suíte integral obrigatória no novo head. Sem incorporação/publicação de635 até passar.
