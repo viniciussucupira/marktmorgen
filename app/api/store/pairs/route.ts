@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await setProductPairs(guarded.ref, id, guarded.body.pairs);
     if (!result.ok) return Response.json({ ok: false, error: result.reason, max: MAX_PAIRS }, { status: result.reason === "none" || result.reason === "unknown" ? 404 : 400 });
-    return Response.json({ ok: true, pairs: result.product.pairs ?? [] });
+    return Response.json({ ok: true, id: result.product.id, pairs: result.product.pairs ?? [] });
   } catch (error) {
     if (error instanceof StoreFullError) return Response.json({ ok: false, error: "store_full" }, { status: 409 });
     console.error("saving a product's picks failed", error);
