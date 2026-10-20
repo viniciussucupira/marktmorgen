@@ -1872,7 +1872,31 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 162. **[B2-PDF-STAMP-ACKNOWLEDGMENT] Confirmar configuração de marcação sem prometer que todo PDF será marcado**
-   - Estado: **em implementação; codex/pdf-stamp-acknowledgment; CI integral pendente**.
+   - Estado: **concluído; PR678 incorporado20/10/2026 06:14:38 Fortaleza; publicação funcional88 confirmada**.
    - Escopo: retornoPOST id/on a partir de result.product existente;clienteexigeHTTP/okbooleano/semcontradição/id/onexatos,erroapenaspropriedadespróprias,aria-busy e semduploenvio. Sucesso confirma configuração; fallback por tamanho/senha/arquivo permanece. GETnotas/efeito existente intactos.
    - Prova:26respostas interceptadas em390/1280 comgrowthPDFmetadata,zeroGETdecarimbo,semgeração/download/upload/pagamento real. Off e processamento real não cobertos;verificação integral obrigatória.
    - Custo:cliente+416caracteres,rota+49caracteresdefonte,camposjáretornados;nenhuma nova leitura/operação/fornecedor/franquia/preço/gate.M0antes/depois12,02–12,21%reprova60%;vendasfechadas.
+
+
+### Publicação funcional88 — confirmação de marcação
+```json
+{
+  "number": 88,
+  "pr": 678,
+  "queueItem": 162,
+  "feature": "PDF marking control confirms exact saved product/on setting and own error messages without promising every file will be stamped",
+  "head": "6932186b3fe3a8de014b16003dd7173316c58cba",
+  "commit": "2f4cc2193627b624a4c04fe1688f602e8ee2833a",
+  "deployment": "dpl_FyxN7Ns49pmffebZ8xFshDKVKtRP",
+  "readyUTC": "2026-10-20T09:16:10.516Z",
+  "readyFortaleza": "2026-10-20 06:16:10",
+  "mergedUTC": "2026-10-20T09:14:38Z",
+  "mergedFortaleza": "2026-10-20 06:14:38",
+  "run": 39397125501,
+  "verify": 118542494111,
+  "redis": 118542494618,
+  "securityRun": 39397125574,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed26intercepted replies at390/1280:HTTP/boolean/id/on/JSON/lostresponse/inheritederror checks,pendinglock,globalfit;zero stampGET. READY exactSHA/domainalias;6routes200sameDPL,anonymous studio signinredirect expected. No productionprivatewrite/account/payment/PDFprocessing/download. Noerror/fatal09:11:53.980–09:16:53.980UTC.",
+  "limitations": "Off andactualprocessingnotbrowsercovered. Client+416characters,route+49sourcecharacters;id/onfromexistingresult.product,no newread/provider/operation/price/allowance/gate. ExistingGET/effect,size/password/unreadablefallbackunchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
+}
+```
