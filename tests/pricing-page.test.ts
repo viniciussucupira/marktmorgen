@@ -39,3 +39,9 @@ test("pricing is discoverable and uses a real comparison link, native FAQ and sc
  for(const path of ["components/site-nav.tsx","components/site-footer.tsx","app/page.tsx"])assert.ok(readFileSync(path,"utf8").includes('"/pricing"'),path);
  assert.doesNotMatch(page,/fetch\(|useEffect|Book a demo|Talk to an expert/);
 });
+
+test("pricing is a real route and legacy aliases point to it without shadowing it",()=>{
+ const config=readFileSync("next.config.ts","utf8");
+ assert.ok(config.includes('...to("/pricing", "/price", "/prices", "/plans")'));
+ assert.ok(!config.includes('...to("/#pricing", "/pricing"'));
+});

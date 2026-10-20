@@ -1215,3 +1215,5 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - M0 antes/depois segue mesmo modelo e envelope estático, sem operação paga/dependência/limite novo.12,02–12,21% vinculante abaixo60%; desconhecido reprova; venda fechada, preços/limites/gates preservados. Nenhuma promessa de ganho, equivalência funcional ou certificação fiscal.
 
 - Verificação39370350533 verify118456653258 encontrou ausência de aviso de nova aba em fontes externas. Acrescentar NewTab existente ao próprio link, mantendo a navegação e os idiomas existentes; não suprimir regra nem criar tradução. Testes do cálculo passaram. Nova verificação completa no head corrigido obrigatória.
+
+- Herdar correção S2 do redirect legado de /pricing (af5365b); /price,/prices,/plans apontam à página real. A calculadora só pode ser validada na rota de verdade; repetir suíte completa e exigir URL /pricing no browser.
