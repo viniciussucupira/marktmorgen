@@ -26,7 +26,8 @@ export async function checkPairsAcknowledgment({browser,LOCAL,fixture,is}){
    await toggle.waitFor();await page.waitForFunction(el=>typeof el.onclick==="function",await toggle.elementHandle());
    if(await toggle.getAttribute("aria-expanded")!=="true")await toggle.click();
    const section=page.locator('[data-pairs-editor="'+fixture.product+'"]');await section.waitFor();
-   const first=section.getByLabel("Pick 1",{exact:true}),target=await first.locator('option:not([value=""])').first().getAttribute("value");
+   is("creator-pick three labeled selectors "+width,await section.locator("select").count(),3);
+   const first=section.locator("select").nth(0),target=await first.locator('option:not([value=""])').first().getAttribute("value");
    await first.selectOption(target);
    for(const remove of [false,true]){
     if(remove)await first.selectOption("");
