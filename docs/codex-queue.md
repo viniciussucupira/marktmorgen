@@ -2447,7 +2447,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 183. **[HT1] Hero orientado ao resultado do criador**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado como funcional108; CI integral e produção exata confirmados**.
 - Início:20/10/2026 às12:36:27 de Fortaleza, após conclusão/publicação dos PRs708/709/710 e implementação documental HT0 no PR712. Base conferida `586e6df03f485e6e0fee68e8a8a86db4b9d1aa9c`; commit de implementação: `04b77e0f1088ef0087ac8d5b388023ead2083321` (criado em2026-10-20 12:38:35 de Fortaleza).
 - Reutiliza a home e HomeActions existentes, sem criar segundo mecanismo. Headline em inglês americano orientada ao trabalho/negócio do criador, subheadline primeira venda→próximas ofertas, pilar exato “Your store. Your Stripe. Your money.” preservado. Um CTA dominante para /signin; demo como link secundário; mesmo CTA grande repetido pela página. Sem promessa de ganhos, vendas garantidas ou recurso inexistente.
 - Texto e hierarquia apenas: mesmas rotas, nenhuma chamada IA/provedor, leitura de dados, imagem, armazenamento, pool ou operação nova; nenhum custo variável por cliente adicional. Todos os preços/limites, PLANS_ON_SALE=false, comissão, tax gate, art.9a e revisão comercial preservados; aviso de venda fechada permanece visível. Não certifica margem de vendas.
@@ -2506,3 +2506,76 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Texto/layout somente; nenhuma nova operação, email, conta, armazenamento, chamada ou custo variável por cliente. Preços/limites, PLANS_ON_SALE=false, comissão, permissões/opt-in, tax gate, art.9a e revisão comercial inalterados.
 - Navegador sintético390/1280 verifica preços canônicos, um campo humano/email, ausência cartão/senha, CTA/avisos, ordem do preço, login retornante, axe/largura e nenhuma submissão. Sem email, conta, pagamento, mensagem ou submissão externa. CI integral e publicação READY/domínio/SHA exato pendentes.
 - Documentação: docs/ht6-signup-clarity.md. PróximoHT7; nenhum B2 à frente dos HT.
+
+### Publicação funcional108
+
+HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. Home destaca o negócio do criador, mantém o pilar Your store. Your Stripe. Your money., CTA principal e demo secundária. Versão exata `571c6cd4daf51162ec61ea0a4ead0b7b24ccbd90`, deployment `dpl_41YdBAiNcyCSpoM7kr4puoeJZb2E`, domínio marktmorgen.com confirmado. Product39451674299, verify118727821763, Redis118727822457 e security39451674487 passaram no head corrigido;56 verificações específicas, revisão visual390/1280, seis rotas200 com mesmo marcador e nenhum erro/fatal na janela16:07:01.641–16:12:01.641UTC. Nenhum custo variável novo ou gate alterado. Contador108, próximo109.
+
+```json
+{
+  "number": 108,
+  "pr": 713,
+  "item": 183,
+  "head": "1d5feb0852d3bd0244eeb4467eb61315f67d1a12",
+  "sha": "571c6cd4daf51162ec61ea0a4ead0b7b24ccbd90",
+  "mergedAt": "2026-10-20T16:09:39Z",
+  "mergedFortaleza": "2026-10-20 13:09:39",
+  "readyAt": "2026-10-20T16:11:16.455Z",
+  "readyFortaleza": "2026-10-20 13:11:16",
+  "domain": "marktmorgen.com",
+  "deploymentId": "dpl_41YdBAiNcyCSpoM7kr4puoeJZb2E",
+  "cases": 56,
+  "ci": {
+    "product": 39451674299,
+    "verify": 118727821763,
+    "redis": 118727822457,
+    "security": 39451674487
+  },
+  "routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "dpl": "dpl_41YdBAiNcyCSpoM7kr4puoeJZb2E"
+    },
+    {
+      "path": "/signin",
+      "status": 200,
+      "dpl": "dpl_41YdBAiNcyCSpoM7kr4puoeJZb2E"
+    },
+    {
+      "path": "/studio",
+      "status": 200,
+      "dpl": "dpl_41YdBAiNcyCSpoM7kr4puoeJZb2E"
+    },
+    {
+      "path": "/platform/path",
+      "status": 200,
+      "dpl": "dpl_41YdBAiNcyCSpoM7kr4puoeJZb2E"
+    },
+    {
+      "path": "/pricing",
+      "status": 200,
+      "dpl": "dpl_41YdBAiNcyCSpoM7kr4puoeJZb2E"
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "dpl": "dpl_41YdBAiNcyCSpoM7kr4puoeJZb2E"
+    }
+  ],
+  "runtimeErrors": 0,
+  "runtimeWindow": "2026-10-20T16:07:01.641Z → 2026-10-20T16:12:01.641Z",
+  "cost": "Static existing home hero; no variable client/provider/AI cost. Prices/limits/consent/sales/tax/art9a/commercial gates unchanged.",
+  "visual": "390/1280 CI hero captures visually reviewed",
+  "notified": true
+}
+```
+
+189. **[HT7] Vitrine com autorização datada e somente demo enquanto não houver permissão real**
+- Estado: **Em implementação; verificação integral pendente**.
+- Registro:20/10/2026 às13:15:00 de Fortaleza. Base conferida `3fdac83c8b70726342035f1c1915a34d4c8916ac`; commit de implementação: pendente.
+- Home e /proof/creator-showcase reutilizam um registro estático de permissões revisadas. Nenhuma autorização real encontrada: somente Harbor Kitchen, explicitamente demo fictícia, sem foto/resultado/depoimento de cliente adicionado.
+- Uma futura entrada real exige autorização expressa no escopo public-showcase, datas de concessão/registro e referência de evidência. Ausente, revogada, inválida, futura ou fora do escopo fica oculta; a data autorizada aparece, a referência privada não. Nenhuma inferência de resultado financeiro.
+- Componente compartilhado incluído no inventário de acessibilidade; mesma infraestrutura/template/sitemap, sem nova leitura de conta, operação, fornecedor, foto/asset, armazenamento, mensagem ou custo variável por cliente. PLANS_ON_SALE=false, preços/limites, comissão, opt-in, tax gate, art.9a e revisão comercial inalterados.
+- Testes: registro real vazio/demo; permissões sintéticas válidas e ausentes/revogadas/inválidas/futuras/fora do escopo. Navegador390/1280 verifica descoberta home/página, rótulo/link/data da demo, teclado/alvos, ausência de resultados inventados, axe/largura/nenhuma API write. CI integral e publicação exata pendentes. Nenhum contato, conta, pagamento ou submissão externa.
+- Documentação: docs/ht7-creator-showcase.md. PróximoHT8; B2 fica depois da sequência HT.

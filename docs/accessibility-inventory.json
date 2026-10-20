@@ -589,6 +589,7 @@
     "components/course-work-studio.tsx",
     "components/cover-maker.tsx",
     "components/creator-research-form.tsx",
+    "components/creator-showcase.tsx",
     "components/custom-range.tsx",
     "components/customer-voice.tsx",
     "components/daily-cashflow.tsx",
