@@ -266,7 +266,7 @@ export function CheckoutScriptEditor({
             </ul>
             <p className="mt-4 font-semibold text-ink">If your site sends a Content-Security-Policy</p>
             <p className="mt-1 text-sm text-ink-soft">Add these to it. The hash is the script&apos;s own, so it changes only with a new version of the script.</p>
-            <pre className="mt-2 overflow-x-auto rounded-xl bg-white p-3 font-mono text-xs text-ink ring-1 ring-line">{hash ? cspLines(hash).join("\n") : "Working out the hash…"}</pre>
+            <pre tabIndex={0} role="region" aria-label="Content Security Policy directives" className="mt-2 overflow-x-auto rounded-xl bg-white p-3 font-mono text-xs text-ink ring-1 ring-line">{hash ? cspLines(hash).join("\n") : "Working out the hash…"}</pre>
           </div>
         </>
       ) : (

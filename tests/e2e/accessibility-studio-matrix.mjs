@@ -60,7 +60,7 @@ try{
     if(!active)gaps.push({path,width,mode,reason:"Engine did not activate forced-colors media after emulation request; real OS/device validation remains open."});
    }
    if(mode==="reduced-motion"&&!await page.evaluate(()=>matchMedia("(prefers-reduced-motion: reduce)").matches))throw Error("Reduced-motion request not honored");
-   const overflow=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,offenders:[...document.querySelectorAll("main *")].filter(node=>{const b=node.getBoundingClientRect();return b.width>0&&(b.right>document.documentElement.clientWidth+1||b.left< -1);}).slice(0,8).map(node=>({html:node.outerHTML.slice(0,220),left:node.getBoundingClientRect().left,right:node.getBoundingClientRect().right}))}));
+   const overflow=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,offenders:[...document.querySelectorAll("main *")].filter(node=>{const b=node.getBoundingClientRect();if(!(b.width>0&&(b.right>document.documentElement.clientWidth+1||b.left< -1)))return false;for(let parent=node.parentElement;parent&&parent!==document.documentElement;parent=parent.parentElement){if(["auto","scroll","hidden","clip"].includes(getComputedStyle(parent).overflowX))return false;}return true;}).slice(0,12).map(node=>({html:node.outerHTML.slice(0,400),left:node.getBoundingClientRect().left,right:node.getBoundingClientRect().right}))}));
    if(overflow.scroll>overflow.client)throw Error("Horizontal overflow "+JSON.stringify(overflow));
    // Actual keyboard events; no scripted focus or focus-style suppression.
    if(mode==="baseline"){

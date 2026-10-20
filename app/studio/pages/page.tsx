@@ -190,7 +190,7 @@ export default async function StudioPagesPage({ searchParams }: Params) {
                         <span className="max-w-[14rem] truncate font-semibold">{p.title}</span>
                         <span
                           className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${
-                            p.page ? "bg-mint-soft text-mint-deep" : "bg-sand text-ink-mute"
+                            p.page ? "bg-mint-soft text-ink" : "bg-sand text-ink-mute"
                           }`}
                         >
                           {p.page ? (isFree(p) ? "Landing" : "Sales") : "Plain"}
