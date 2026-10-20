@@ -46,7 +46,8 @@ export async function checkTaxSaveAcknowledgment({browser,LOCAL,session,sid,is})
     }finally{release();}
     await page.waitForFunction(()=>{const form=document.querySelector('[aria-labelledby="tax-title"] form');return form?.getAttribute("aria-busy")==="false";});
     if(scenario.confirmed){
-     await page.getByText("Sales tax settings saved.",{exact:true}).waitFor();
+     await page.locator(".nb-toast-region [role=status]").getByText("Sales tax settings saved.",{exact:true}).waitFor({state:"attached"});
+     await page.locator(".nb-toast-text").filter({hasText:"Sales tax settings saved."}).waitFor();
      is("matching confirmation clears prior errors "+width,await form.getByRole("alert").count(),0);
     }else{
      const alert=form.getByRole("alert");await alert.waitFor();

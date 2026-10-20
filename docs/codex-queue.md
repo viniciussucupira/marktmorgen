@@ -534,3 +534,6 @@ Correção complementar da fixture #630: a execução integral mostrou que o rel
    - Estado: **em andamento; branch codex/tax-save-confirmation; CI integral pendente**.
    - Evidência: TaxEditor exige HTTP de sucesso, ok booleano e os quatro valores retornados iguais ao pedido. Respostas incompletas, contraditórias ou perdidas deixam resultado desconhecido e orientam recarregar; controles ficam bloqueados durante confirmação. Onze cenários interceptados em390/1280; nenhum POST fiscal alcança o servidor no teste.
    - Custo e margem: Mesmo POST existente, sem fornecedor, armazenamento, mensagem, limite ou franquia adicional. Validação local limitada; M0 antes=depois em todos os planos/intervalos, leitura mais onerosa continua reprovada. Não conclui coleta/retenção fiscal nem abre vendas.
+
+
+Validação633: primeira suíte integral encontrou apenas seletor de sucesso ambíguo entre a região acessível e sua cópia visual aria-hidden. Teste agora verifica ambas separadamente; casos negativos permanecem sem enfraquecimento. Correção somente de teste, nova suíte integral obrigatória.
