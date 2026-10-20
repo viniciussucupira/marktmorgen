@@ -1,0 +1,51 @@
+"use client";
+import { useState } from "react";
+import { COMPETITOR_PRICES } from "@/lib/competitor-prices";
+import { TIERS, PLAN_TITLES, type Tier, type Cycle } from "@/lib/plan";
+import { TOOL_IDS, centsInput, countInput, quoteLine, quoteOwn, type ToolId } from "@/lib/tools-calculator";
+type Choice={tool:ToolId;planIndex:number;sales:string;orders:string;processing:string;fixed:string;other:string;confirmed:boolean};
+const fresh=(tool:ToolId):Choice=>({tool,planIndex:0,sales:"0",orders:"0",processing:"",fixed:"",other:"",confirmed:false});
+const money=(cents:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
+function Amount({label,value,onChange,whole=false}:{label:string;value:string;onChange:(value:string)=>void;whole?:boolean}){
+ return <label className="block text-sm font-medium">{label}<input type="text" inputMode={whole?"numeric":"decimal"} value={value} onChange={e=>onChange(e.target.value)} className="mt-2 block w-full rounded-lg border border-neutral-400 bg-white p-3 text-neutral-950" /></label>;
+}
+export function ToolsCalculator(){
+ const [choices,setChoices]=useState<Choice[]>([]);
+ const [tool,setTool]=useState<ToolId>("kajabi");
+ const [tier,setTier]=useState<Tier>("creator");
+ const [cycle,setCycle]=useState<Cycle>("month");
+ const [ownRate,setOwnRate]=useState("");
+ const [ownFixed,setOwnFixed]=useState("");
+ const [ownOther,setOwnOther]=useState("");
+ const patch=(index:number,change:Partial<Choice>)=>setChoices(current=>current.map((item,i)=>i===index?{...item,...change}:item));
+ const quotes=choices.map(choice=>quoteLine({tool:choice.tool,planIndex:choice.planIndex,monthlySalesCents:centsInput(choice.sales)??-1,monthlyOrders:countInput(choice.orders)??-1,processingBps:centsInput(choice.processing),processingFixedCents:centsInput(choice.fixed),otherMonthlyCents:centsInput(choice.other),conditionsConfirmed:choice.confirmed},cycle));
+ const sales=choices.reduce((sum,choice)=>sum+(centsInput(choice.sales)??-1),0);
+ const orders=choices.reduce((sum,choice)=>sum+(countInput(choice.orders)??-1),0);
+ const validVolumes=choices.every(choice=>centsInput(choice.sales)!==null&&countInput(choice.orders)!==null);
+ const own=choices.length&&validVolumes?quoteOwn(tier,cycle,sales,orders,centsInput(ownRate),centsInput(ownFixed),centsInput(ownOther)):null;
+ const total=choices.length&&quotes.every(quote=>quote.monthlyCents!==null)?quotes.reduce((sum,quote)=>sum+quote.monthlyCents!,0):null;
+ return <section aria-labelledby="calculator-heading" className="mt-20 rounded-2xl border border-neutral-300 p-5 sm:p-8">
+  <h2 id="calculator-heading" className="text-3xl font-semibold">One plan instead of several tools?</h2>
+  <p className="mt-4 max-w-3xl text-neutral-700">Build a cost estimate from published prices and your applicable fee quotes. This is a cost comparison, not a claim of equivalent features or future earnings. Everything is calculated in this browser; nothing is submitted.</p>
+  <p className="mt-3 text-sm text-neutral-700">Allocate each sale to one tool only. Subscription-only tools can have zero sales. Enter the actual number of paid transactions: a fixed fee cannot be calculated from revenue alone. Annual subscription figures are monthly averages of a verified annual invoice; payment fees remain monthly.</p>
+  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+   <label className="font-medium">Billing interval<select className="mt-2 block w-full rounded-lg border border-neutral-400 bg-white p-3" value={cycle} onChange={e=>setCycle(e.target.value as Cycle)}><option value="month">Monthly billing</option><option value="year">Annual billing, monthly equivalent</option></select></label>
+   <label className="font-medium">Marktmorgen plan<select className="mt-2 block w-full rounded-lg border border-neutral-400 bg-white p-3" value={tier} onChange={e=>setTier(e.target.value as Tier)}>{TIERS.map(value=><option key={value} value={value}>{PLAN_TITLES[value]}</option>)}</select></label>
+  </div>
+  <div className="mt-6 flex flex-wrap items-end gap-3"><label className="grow font-medium">Tool to add<select className="mt-2 block w-full rounded-lg border border-neutral-400 bg-white p-3" value={tool} onChange={e=>setTool(e.target.value as ToolId)}>{TOOL_IDS.map(value=><option key={value} value={value}>{COMPETITOR_PRICES[value].name}</option>)}</select></label><button type="button" disabled={choices.some(choice=>choice.tool===tool)} onClick={()=>setChoices(current=>[...current,fresh(tool)])} className="rounded-lg border border-neutral-500 px-5 py-3 font-semibold disabled:opacity-60">Add tool</button></div>
+  {choices.map((choice,index)=>{const provider=COMPETITOR_PRICES[choice.tool];const quote=quotes[index];const inclusive=choice.tool==="kit"||choice.tool==="whop";return <fieldset key={choice.tool} className="mt-8 rounded-xl border border-neutral-300 p-4"><legend className="px-2 text-xl font-semibold">{provider.name}</legend>
+   <label className="block font-medium">Plan<select value={choice.planIndex} onChange={e=>patch(index,{planIndex:Number(e.target.value),confirmed:false})} className="mt-2 block w-full rounded-lg border border-neutral-400 bg-white p-3">{provider.plans.map((plan,i)=><option key={plan.name} value={i}>{plan.name}</option>)}</select></label>
+   <p className="mt-4 text-sm text-neutral-700">{provider.feeScope}</p>
+   {"billingScope" in provider&&<p className="mt-3 text-sm text-neutral-700">{provider.billingScope}</p>}
+   {"annualScope" in provider&&<p className="mt-3 text-sm text-neutral-700">{provider.annualScope}</p>}
+   <div className="mt-4 grid gap-4 sm:grid-cols-2"><Amount label="Monthly gross sales (USD)" value={choice.sales} onChange={sales=>patch(index,{sales})}/><Amount label="Paid transactions per month" whole value={choice.orders} onChange={orders=>patch(index,{orders})}/>{!inclusive&&<><Amount label="Applicable processing percentage (for example 2.9)" value={choice.processing} onChange={processing=>patch(index,{processing})}/><Amount label="Processing fixed fee per payment (USD)" value={choice.fixed} onChange={fixed=>patch(index,{fixed})}/></>}<Amount label="Other applicable fees per month (USD; enter a verified zero if none)" value={choice.other} onChange={other=>patch(index,{other})}/></div>
+   {inclusive&&<p className="mt-4 text-sm">The listed inclusive payment quote is used once. Add applicable international, conversion, optional Billing and payout charges in other fees.</p>}
+   <p className="mt-4 text-sm">{quote.sources.map((source,i)=><span key={source.url}>{i>0?" · ":""}<a className="underline" href={source.url} target="_blank" rel="noreferrer">{source.label}</a> (read {source.readOn})</span>)}</p>
+   <label className="mt-4 flex items-start gap-3"><input type="checkbox" checked={choice.confirmed} onChange={e=>patch(index,{confirmed:e.target.checked})} className="mt-1 h-5 w-5 shrink-0"/><span>I checked that this plan, country, provider, subscriber count and fee conditions apply. Other fees include applicable usage, billing, gateway, payout, conversion and tax charges.</span></label>
+   <div className="mt-4"><p>Subscription: {quote.subscriptionCents===null?"Quote unverified":money(quote.subscriptionCents)+"/month equivalent"}</p><p>Payment fees: {quote.paymentCents===null?"Quote incomplete":money(quote.paymentCents)+"/month"}</p>{quote.unknown.length>0&&<ul className="mt-3 list-disc space-y-2 pl-5 text-sm">{quote.unknown.map(reason=><li key={reason}>{reason}</li>)}</ul>}</div>
+   <button type="button" className="mt-4 underline" onClick={()=>setChoices(current=>current.filter((_,i)=>i!==index))}>Remove {provider.name}</button>
+  </fieldset>;})}
+  <fieldset className="mt-8 rounded-xl border border-neutral-300 p-4"><legend className="px-2 text-xl font-semibold">Your Marktmorgen processing and other costs</legend><p className="text-sm text-neutral-700">0% platform share is not free processing. Enter your Stripe account's applicable quote and other monthly fees, including taxes, billing and conversion where relevant. These inputs are estimates supplied by you, not a universal Stripe rate.</p><div className="mt-4 grid gap-4 sm:grid-cols-3"><Amount label="Processing percentage" value={ownRate} onChange={setOwnRate}/><Amount label="Fixed processing fee per payment (USD)" value={ownFixed} onChange={setOwnFixed}/><Amount label="Other applicable monthly fees (USD)" value={ownOther} onChange={setOwnOther}/></div></fieldset>
+  <div role="status" aria-live="polite" className="mt-8 rounded-xl bg-neutral-100 p-5"><p>Selected tools: {total===null?"Complete the applicable quotes above":money(total)+"/month equivalent"}</p><p className="mt-2">{PLAN_TITLES[tier]} plus your entered fees: {own===null?"Complete the processing and fee inputs":money(own)+"/month equivalent"}</p>{total!==null&&own!==null&&<p className="mt-3 font-semibold">Estimated cost difference: {money(Math.abs(total-own))}/month equivalent; {total>own?"the selected tools cost more":total<own?"the selected Marktmorgen configuration costs more":"the two totals are equal"}.</p>}<p className="mt-3 text-sm">Unknown prices or fees are not zero. Check usage limits and feature fit in the comparisons. Sales remain closed; this estimate does not activate a plan or certify a profit margin.</p></div>
+ </section>;
+}

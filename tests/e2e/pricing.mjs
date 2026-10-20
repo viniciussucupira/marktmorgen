@@ -1,5 +1,7 @@
+import { checkToolsCalculator } from "./tools-calculator.mjs";
 /** Public pricing only: no account, payment or outbound submission. */
 export async function checkPricing({browser,LOCAL,axeSource,is}){
+ await checkToolsCalculator({browser,LOCAL,is});
  for(const width of [390,1280]){
   const context=await browser.newContext({viewport:{width,height:900}});
   try{
@@ -8,6 +10,8 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    await page.goto(LOCAL+"/pricing",{waitUntil:"domcontentloaded"});
    await page.locator("main h1").waitFor({state:"visible"});
+   await page.locator('a[href="#content"]').first().focus();await page.keyboard.press("Enter");
+   is(await page.locator("main").evaluate(node=>node===document.activeElement),"skip link focuses content "+width);
    is((await page.title()).includes("Pricing"),"pricing title "+width);
    is(await page.locator("main").getByText("Paid plans and paid selling are not open yet.",{exact:false}).count()===1,"pricing keeps paid selling closed "+width);
    const text=await page.locator("main").innerText();
