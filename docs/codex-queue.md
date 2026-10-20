@@ -547,3 +547,10 @@ Validação633: primeira suíte integral encontrou apenas seletor de sucesso amb
 
 
 Validação634: a execução integral antiga terminou com a mesma ambiguidade herdada no teste de633; os oito cenários próprios de acesso passaram em390/1280. Integrada a correção de633 por ancestralidade explícita, sem remover nenhum cenário; nova suíte completa no novo head obrigatória.
+
+
+88. **[B2-ADDRESS-ACKNOWLEDGMENT] Confirmar endereço retornado e preservar o pedido pendente**
+   - Pedido: revisão contínua B2/usabilidade autorizada; achado19/10/2026,21h de Fortaleza (aproximado).
+   - Estado: **em andamento; branch codex/address-confirmation; depende explicitamente634; alterações próprias em RenameForm e suíte store-copy, sem editar SignInForm/agreements**.
+   - Evidência: A interface exigirá HTTP válido, ok booleano, ausência de erro e endereço normalizado igual ao solicitado; edição/cancelamento ficam bloqueados durante pedido. Campos passam a poder encolher no celular. Nove respostas interceptadas em390/1280; não renomeia nenhuma loja real. CI integral pendente.
+   - Custo e margem: Validação local limitada dentro da página existente; sem chamada, armazenamento, mensagem ou franquia adicional. M0 antes=depois em todos os planos/intervalos, modelo vinculante continua reprovando60%; nenhum gate de vendas/fiscal alterado.
