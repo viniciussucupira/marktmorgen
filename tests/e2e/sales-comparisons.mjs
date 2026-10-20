@@ -8,14 +8,18 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
     if(route.request().method()!=="GET"){writes++;await route.abort();return;}
     await route.continue();
    });
-   for(const slug of ["comparisons","kajabi"]){
+   for(const slug of ["comparisons","kajabi","skool"]){
     await page.goto(LOCAL+"/proof/"+slug,{waitUntil:"networkidle",timeout:60000});
     await page.locator("main").waitFor();
     // Reveal actual sections before checking their rendered contrast.
-    for(const node of await page.locator("main .reveal").all())await node.scrollIntoViewIfNeeded();
-    if(slug==="kajabi"){
-     is("Kajabi search title "+width,await page.title(),"Marktmorgen vs Kajabi");
-     is("Kajabi search description "+width,(await page.locator('meta[name="description"]').getAttribute("content")).startsWith("A Kajabi alternative where"),true);
+    for(const node of await page.locator("main .reveal").all()){
+     await node.scrollIntoViewIfNeeded();
+     await page.waitForFunction(element=>getComputedStyle(element).opacity==="1",await node.elementHandle(),{timeout:5000});
+    }
+    if(slug!=="comparisons"){
+     const name=slug==="kajabi"?"Kajabi":"Skool";
+     is(name+" search title "+width,await page.title(),"Marktmorgen vs "+name);
+     is(name+" search description "+width,(await page.locator('meta[name="description"]').getAttribute("content")).startsWith("A "+name+" alternative where"),true);
      await page.getByRole("heading",{name:"Where they are ahead",exact:true}).scrollIntoViewIfNeeded();
      const sameSize=await page.evaluate(()=>{
       const ahead=document.querySelector("#where-they-are-ahead").closest("section").querySelector("li");
@@ -24,10 +28,11 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
      });
      is("competitor advantages have the comparison's text size "+width,sameSize.ahead,sameSize.row);
      is("paid selling closure is visible "+width,(await page.locator("main").innerText()).includes("paid selling are not open yet"),true);
-     const source=page.getByRole("link",{name:/Kajabi pricing and payment fees/});
-     is("official source is linked "+width,await source.getAttribute("href"),"https://www.kajabi.com/pricing");
+     const source=page.getByRole("link",{name:slug==="kajabi"?/Kajabi pricing and payment fees/:/Skool plans/});
+     is("official source is linked "+width,await source.getAttribute("href"),slug==="kajabi"?"https://www.kajabi.com/pricing":"https://www.skool.com/pricing");
     }else{
      is("index links the real Kajabi page "+width,await page.locator('main a[href="/proof/kajabi"]').count(),1);
+     is("index links the real Skool page "+width,await page.locator('main a[href="/proof/skool"]').count(),1);
      is("footer links comparison index "+width,await page.locator('footer a[href="/proof/comparisons"]').count(),1);
     }
     await page.addScriptTag({content:axeSource});
