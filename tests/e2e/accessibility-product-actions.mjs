@@ -95,19 +95,21 @@ try{
    const creationRefresh=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);creationRefresh.catch(()=>{});
    const creation=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/product"&&response.request().method()==="POST");
    await page.keyboard.press("Enter");
-   const created=await creation;if(!created.ok()||(await created.json()).ok!==true)throw Error("Local product creation refused");
+   const created=await creation,creationData=await created.json();if(!created.ok()||creationData.ok!==true||!creationData.product||creationData.product.title!==title||!/^[a-z0-9]+$/.test(creationData.product.id))throw Error("Local product creation refused");
+   const createdId=creationData.product.id;
    await page.locator(".nb-toast-region [role=status]").getByText("Product added.",{exact:true}).waitFor({state:"attached"});
    const createdRefresh=await creationRefresh;if(!createdRefresh.ok()||await createdRefresh.finished())throw Error("Create RSC refresh failed");
    await page.waitForLoadState("networkidle");
    await page.reload({waitUntil:"networkidle"});
-   const row=page.locator("#products li").filter({has:page.getByText(title,{exact:true})}).first();
+   const row=page.locator("#products li").filter({has:page.locator('button[aria-controls="product-panel-'+createdId+'"]')});
+   if(await row.count()!==1)throw Error("Created product row is not unique");
    await row.waitFor();
    async function visibility(button,hidden){
     const refreshed=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);refreshed.catch(()=>{});
     const reply=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/product"&&response.request().method()==="POST"&&response.request().postDataJSON()?.action==="visibility");
     await button.focus();await page.keyboard.press("Enter");
     const response=await reply,data=await response.json();
-    if(!response.ok()||data.ok!==true||!data.product||Boolean(data.product.hidden)!==hidden)throw Error("Local visibility refused "+JSON.stringify({status:response.status(),data}));
+    if(response.request().postDataJSON()?.id!==createdId||!response.ok()||data.ok!==true||!data.product||data.product.id!==createdId||Boolean(data.product.hidden)!==hidden)throw Error("Local visibility refused "+JSON.stringify({status:response.status(),data}));
     const refresh=await refreshed;if(!refresh.ok()||await refresh.finished())throw Error("Visibility RSC refresh failed");
     const flight=await refresh.text();const savedAt=flight.indexOf('"id":"'+data.product.id+'"');console.log("PRODUCT_VISIBILITY_RESPONSE:"+JSON.stringify({engine,width,mode,hidden,url:refresh.url(),productFragment:savedAt<0?"not found":flight.slice(savedAt,savedAt+1600)}));
     await page.waitForLoadState("networkidle");

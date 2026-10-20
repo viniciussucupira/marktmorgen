@@ -17,3 +17,8 @@ Firefox e WebKit falharam; nenhuma prova completa é declarada. O POST bloqueado
 ## 20/10/2026 — diagnóstico WebKit no headc8ec
 
 25casos/25falhas WebKit e25/4marcas Firefox preservados. Diagnóstico: painel fechado do seletor de lojas com largura20–37px e conteúdo interno excedente; passa a ficar explicitamente oculto enquanto details está fechado e ganha largura móvel calc(100vw - 2rem), preservando abertura nativa/teclado. Grade principal Studio declara grid-cols-1/minmax(0,1fr) abaixo de lg; nenhuma ocultação de overflow da página ou relaxamento do teste. Diagnóstico de visibilidade passa a registrar trecho sintético RSC; beacon WebKit inesperado continua bloqueado com h/k e tamanho do corpo. CI completo novo obrigatório; sem publicação ou conclusão201.
+
+
+## Identidade da linha no teste — 20/10/2026
+
+Diagnóstico Firefox mostrou resposta de visibilidade do produto anterior enquanto o caso buscava o recém-criado. O filtro por texto em qualquer descendente da linha também alcançava nomes em seletores de produtos relacionados. O teste passa a vincular a linha ao ID realmente retornado pela criação e ao botão com aria-controls product-panel-ID, exige exatamente uma linha e confere o mesmo ID no pedido e na resposta de visibilidade. Não altera identificadores persistidos nem força a interface a aparentar publicação. Todas as provas de reload, ativação manual, visibilidade, overflow e axe permanecem; CI completo no novo head. Não atribuir as falhas anteriores a bug confirmado de produção.
