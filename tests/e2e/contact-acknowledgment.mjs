@@ -1,7 +1,22 @@
 
 async function reportLayout(page,label){
- const details=await page.evaluate(()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth,wide:[...document.querySelectorAll("body *")].map(node=>{const r=node.getBoundingClientRect();return {tag:node.tagName,id:node.id,classes:typeof node.className==="string"?node.className:"",left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width),text:node.textContent?.replace(/\s+/g," ").slice(0,160)};}).filter(node=>node.width>0&&(node.right>innerWidth+1||node.left< -1)).sort((a,b)=>b.right-a.right).slice(0,24)}));
+ const details=await page.evaluate(()=>{
+  const items=[...document.querySelectorAll("body *")].map(node=>{
+   const r=node.getBoundingClientRect(),style=getComputedStyle(node);
+   let right=r.right,left=r.left,depth=0;
+   if(node instanceof HTMLElement && !["INPUT","TEXTAREA","SELECT"].includes(node.tagName) && style.overflowX==="visible")right=Math.max(right,r.left+node.scrollWidth);
+   const parents=[];for(let parent=node.parentElement;parent;parent=parent.parentElement){
+    depth++;if(parent.tagName==="BODY"||parent.tagName==="HTML")continue;
+    const ps=getComputedStyle(parent),pr=parent.getBoundingClientRect();
+    if(ps.overflowX!=="visible"){right=Math.min(right,pr.right);left=Math.max(left,pr.left);}
+    if(parents.length<5)parents.push({tag:parent.tagName,id:parent.id,classes:typeof parent.className==="string"?parent.className:"",overflow:ps.overflowX,width:Math.round(pr.width)});
+   }
+   return{tag:node.tagName,id:node.id,classes:typeof node.className==="string"?node.className:"",left:Math.round(left),right:Math.round(right),width:Math.round(r.width),client:node.clientWidth,scroll:node.scrollWidth,depth,shown:style.display!=="none"&&style.visibility!=="hidden"&&r.width>0&&r.height>0,text:node.textContent?.replace(/\s+/g," ").slice(0,120),parents};
+  });
+  return{viewport:innerWidth,scroll:document.documentElement.scrollWidth,wide:items.filter(n=>n.shown&&n.right>n.left&&(n.right>innerWidth+1||n.left< -1)).sort((a,b)=>b.right-a.right||b.depth-a.depth).slice(0,24)};
+ });
  console.log(label+"_LAYOUT_DIAGNOSTIC:"+JSON.stringify(details));
+ if(details.wide[0]?.id)await page.locator('[id="'+details.wide[0].id+'"]').first().scrollIntoViewIfNeeded();
  const capture=await page.screenshot({type:"jpeg",quality:60});console.log(label+"_LAYOUT_CAPTURE:"+capture.toString("base64"));
 }
 
