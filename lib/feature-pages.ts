@@ -1,3 +1,4 @@
+import { withFeatureMechanisms } from "@/lib/feature-mechanisms";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { BUYER_RESERVE_BPS, SETUP_VISITS, VISITS_INCLUDED, countWords, publicVisitLimit } from "@/lib/traffic-rules";
 import { hoursWords } from "@/lib/watch-rules";
@@ -20,7 +21,8 @@ import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
 import { SAMPLE_VIEWS } from "@/lib/funnel-diagnosis";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { workflowLimitWords } from "@/lib/flow-limits";
-import { pipelineLimitWords } from "@/lib/crm-rules";
+import { pipelineLimitWords, PIPELINES_BY_TIER, MAX_CRM_FIELDS, MAX_STAGES, MAX_DEALS } from "@/lib/crm-rules";
+import { DATA_ROOM_BYTES, dataWords } from "@/lib/store-data-rules";
 import { EXPECTATION, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
 import type { TopicPage } from "@/lib/site-pages";
 import { PLAN_AT, feeWords } from "@/lib/fee-words";
@@ -31,7 +33,7 @@ import { TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { storageWords } from "@/lib/storage-quota";
 import { MAX_AUTO_REMINDERS, MAX_LINES, OPEN_DAYS, REQUEST_LIMITS } from "@/lib/payment-request-rules";
 import { MAX_VERSIONS as AGREEMENT_VERSIONS, SIGN_DAYS } from "@/lib/agreement-rules";
-import { PLAN_TITLES } from "@/lib/plan";
+import { PLAN_TITLES, TIERS } from "@/lib/plan";
 
 /** Whether stores can be put on their own domain on this deployment. */
 const DOMAINS = isDomainsConfigured();
@@ -43,7 +45,44 @@ const WORKING = { label: "Working today", tone: "live" as const };
 
 /* ------------------------------------------------------------ features ---- */
 
-export const FEATURE_PAGES: TopicPage[] = [
+const BASE_FEATURE_PAGES: TopicPage[] = [
+  {
+    slug: "crm",
+    section: "platform",
+    eyebrow: "The people behind your store",
+    title: "People, deals",
+    highlight: "and pipelines",
+    intro: "Keep contact facts, deal stages and the next conversation in the same studio as your products. Deal values are what your team records, not a forecast or a promise of revenue.",
+    seo: { title: "People, deals and pipelines — Marktmorgen CRM", description: "Custom contact fields, deal stages and separate pipelines for a creator's store, with published limits and opt-in email workflows. Paid selling remains closed." },
+    badge: WORKING,
+    accent: "from-violet-brand to-pink-brand",
+    plan: "creator",
+    group: "grow",
+    menu: { label: "People, deals and pipelines", description: "Contact fields and recorded deals, in pipelines you name.", icon: "users" },
+    related: ["email", "insights", "calls", "funnels"],
+    blocks: [
+      { kind: "lead", text: "A contact and an opportunity are different records. Keep the facts someone gave you on their contact, then use a deal for a conversation about a sale outside checkout. Only your team sees these records. Paid plan availability and your store's limits still apply." },
+      { kind: "how", title: "From a person to a recorded next step", items: [
+        { title: "Keep the facts you need", body: "Add custom contact fields for the details your work uses, such as a company, date or product of interest. Their export includes those fields as columns; import and record-space rules still apply." },
+        { title: "Give each kind of work its own pipeline", body: "Name stages for coaching, partnerships or another process. Move a deal as the conversation changes; mark it open, won or lost. Removing a stage or pipeline asks where its deals should go." },
+        { title: "Connect a stage to a workflow", body: "A team member moving a deal for someone on your list into the stage you selected can start a configured workflow. Email consent, permissions, active-workflow and daily-run limits still apply; moving a card is not permission to send marketing." },
+      ] },
+      { kind: "table", title: "Published CRM ceilings", head: ["Plan", "Pipelines", "Other per-store ceilings"], note: "Held at once, not monthly quotas. Contacts, products, orders and community share record space; a byte limit can be reached before a count ceiling.", rows: TIERS.map((tier): [string,string,string] => [
+        PLAN_TITLES[tier], String(PIPELINES_BY_TIER[tier]),
+        MAX_CRM_FIELDS + " custom contact fields; " + MAX_DEALS.toLocaleString("en-US") + " deals; " + MAX_STAGES + " stages per pipeline; " + dataWords(DATA_ROOM_BYTES[tier]) + " shared record space.",
+      ]) },
+      { kind: "features", title: "Use the recorded facts", items: [
+        { icon: "list", title: "Separate recorded value from a forecast", body: "Each pipeline adds up open, won and lost values from the deals your team entered. A total does not predict what a contact will buy." },
+        { icon: "mail", title: "Follow up with permission", body: "Use the existing email and workflow tools within their plan allowances. Email is separate from SMS, WhatsApp and phone-call sending; those channels are not included here.", href: "/platform/email" },
+        { icon: "chart", title: "Review what the store recorded", body: "Read visits, paid records and sources in Numbers alongside the work your team recorded in CRM. Missing attribution is not proof of a channel's performance.", href: "/platform/insights" },
+      ] },
+      { kind: "features", title: "Choose the scope you need", items: [
+        { icon: "scale", title: "Compare with HighLevel", body: "HighLevel's agency accounts, phone and SMS tools and SaaS resale have different scope and usage costs. CRM records in a creator's store are not an equivalent phone system or agency platform.", href: "/proof/highlevel" },
+        { icon: "list", title: "Read all the plan allowances", body: "Record space, contacts, email sends and workflow starts have their own limits. Stripe processing and optional add-ons are separate.", href: "/pricing" },
+      ] },
+    ],
+  },
+
   {
     slug: "store-page",
     section: "platform",
@@ -2444,7 +2483,7 @@ export const FEATURE_PAGES: TopicPage[] = [
 
 /* ------------------------------------------------------- for creators ---- */
 
-export const CREATOR_PAGES: TopicPage[] = [
+const BASE_CREATOR_PAGES: TopicPage[] = [
   {
     slug: "coaches",
     section: "for",
@@ -2714,3 +2753,6 @@ export const CREATOR_PAGES: TopicPage[] = [
     ],
   },
 ];
+
+export const FEATURE_PAGES = withFeatureMechanisms(BASE_FEATURE_PAGES);
+export const CREATOR_PAGES = withFeatureMechanisms(BASE_CREATOR_PAGES);

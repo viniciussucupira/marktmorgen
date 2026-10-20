@@ -167,7 +167,9 @@ Queue154 reviews components/contact-box-editor.tsx and its existing contact-box 
 
 Synthetic browser coverage intercepts14reply variants at390/1280,28cases, including normalized returned text, contradictory fields, missing/invalid JSON, inherited error names, lost replies and confirmed values. No POST reaches the route and no message, store record or real account changes. The existing local Harbor Kitchen fixture is reused. Original creator input and buyer languages remain unchanged. Full final-head CI required; actual assistive-technology testing and other unreviewed forms remain open.
 
-Client source grows594characters, reusing existing parseJoin and the same POST/response with no provider/data/message/allowance/price/gate change. Binding M0 remains12.02–12.21%, below60%, paid sales closed; no fiscal or AAA certification.
+Client source grows599characters, reusing existing parseJoin and the same POST/response with no provider/data/message/allowance/price/gate change. Binding M0 remains12.02–12.21%, below60%, paid sales closed; no fiscal or AAA certification.
+
+The selected contact error uses the existing danger-text token; actual rendered alert checks require an enhanced-contrast pass and no incomplete reading. This does not certify every state or page.
 
 
 ## Checkout reminder preference: recorded response, unchanged consent

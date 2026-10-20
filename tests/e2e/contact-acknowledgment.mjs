@@ -1,5 +1,5 @@
 /** Every contact-setting POST is intercepted; no message or store write occurs. */
-export async function checkContactAcknowledgment({browser,LOCAL,fixture,is}){
+export async function checkContactAcknowledgment({browser,LOCAL,fixture,axeSource,is}){
  const scenarios=[
  {name:"HTTP failure",status:500,body:value=>({ok:true,contact:value})},
  {name:"truthy confirmation",body:value=>({ok:"true",contact:value})},
@@ -32,7 +32,7 @@ export async function checkContactAcknowledgment({browser,LOCAL,fixture,is}){
    });
    await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
-   const form=page.locator("form#contact");await form.waitFor({state:"visible"});
+   const form=page.locator("form#contact");await form.waitFor({state:"visible"});await page.addScriptTag({content:axeSource});
    const toggle=form.getByRole("checkbox",{name:"Show the contact form on my store page",exact:true});
    const heading=form.getByLabel("Heading (optional)",{exact:true});const line=form.getByLabel("One line under it (optional)",{exact:true});
    const original=await toggle.isChecked();await toggle.setChecked(!original);
@@ -54,6 +54,8 @@ export async function checkContactAcknowledgment({browser,LOCAL,fixture,is}){
     }else{
      const alert=form.getByRole("alert");await alert.waitFor();
      is("contact uncertain result stays honest "+name,(await alert.innerText()).includes("Reload this page to check before trying again"),true);
+     const contrast=await alert.evaluate(async node=>{const r=await window.axe.run(node,{runOnly:{type:"rule",values:["color-contrast-enhanced"]}});return {violations:r.violations.map(v=>v.id),incomplete:r.incomplete.map(v=>v.id),passed:r.passes.some(v=>v.id==="color-contrast-enhanced")};});
+     is("contact error enhanced contrast "+name,contrast,{violations:[],incomplete:[],passed:true});
      is("contact has no false success "+name,await page.getByText("Contact form settings saved.",{exact:true}).count(),0);
      for(const field of [toggle,heading,line])is("contact fields unlock "+name,await field.isEnabled(),true);
      is("creator line remains untouched "+name,await line.inputValue(),"Écrivez   votre question.");

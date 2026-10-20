@@ -1004,7 +1004,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: links/recursos/preços verdadeiros, screenshots sintéticos com origem e sem repetição, layout390px/teclado/contraste/performance. Vídeo só com custo fixo/teto aprovado antes; não é requisito para completar o item. M0/custos explicitados.
 
 146. **[S5-PUBLIC-CRM] People, deals and pipelines**
-   - Estado: **a fazer; após S4**.
+   - Estado: **em andamento; PR659, homeS4 ligada à páginaCRM; novo head integrado requer CI integral**.
    - Escopo: página em lib/feature-pages.ts para capacidades reais de app/studio/deals e people; pipelineLimit e demais limites por plano de lib/crm-rules.ts. "What it does not do": sem SMS, WhatsApp ou telefone. Menu/homeS4/comparaçãoHighLevel ligados; sitemap.
    - Prova: regras por plano e permissões existentes, links, leitura acessível/390px. Custo: página estática, sem operação nova de CRM; M0 igual.
 
@@ -1293,7 +1293,27 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Desde04:38UTC até05:43UTC houve investigação do custo: modelo vigente condiciona bytes inclusos aFlatRateCDN; leitura de cobrança histórica não prova preço máximo nem configuração, e leitura do painel falhou duas vezes por timeout. Sem essa condição confirmada, banda é desconhecida/reprovação, nunca0. Ativos não serão servidos. Pendência específica aguardando o dono; nenhuma permissão de nova conta/custo/upgrade foi inferida, nada cancelado. M0 permanece reprovada, vendas fechadas. Seguir demais itens sem esperar resposta.
 
 
-### Entrega72 — módulos funcionais publicados, ativos visuais pendentes
+### S5 — página pública de CRM
+- People, deals and pipelines usa lib/crm-rules e record-space para2/5/10pipelines, campos/stages/deals e limites compartilhados. Registro de valor não é previsão. Campos/etapas privados para a equipe, email/workflows condicionados a opt-in, permissões e franquias; não prometer SMS/WhatsApp/telefone ou agênciaSaaS. Navegação e HighLevel ligados à página; sitemap vem de PAGES. HomeS4 será ligado ao publicar a página e preservar o head final de S4.
+- Testes de fatos/caps por plano, sitemap e links recíprocos; leitura390/1280,axe,teclado e nenhuma APIwrite. Conteúdo estático no renderer existente, sem endpoint/execuçãoCRM/dependência/imagem paga/operação nova, sem preço/limite/gate novo. M0 antes/depois mesmo modelo;12,02–12,21% vinculante abaixo60%, desconhecido reprova, PLANS_ON_SALE=false. Nenhuma certificação fiscal/margem; versão final exige CI completo.
+
+- Product39371589383 verify118460446530: lint/regressões passaram; TypeScript detectou inferência autorreferente de row no teste da tabela. Declarar matched como tupla exata [string,string,string]|undefined e callback cells, sem any/cast/supressão nem mudança do contrato. S6 herdou o mesmo erro em39371922139/118461472562; propagar correção e todos os guards/avisos atuais de S2/S3, exigir nova suíte integral em ambos.
+
+- Integração explícita dos módulosS4 com a páginaCRM; homeagoraaponta/platform/crm. Preserva fixture/capturas somenteemCI ependência específica de banda dasimagens aguardandoo dono; nenhumativo novo servido. Herda entrega71 eexigenovasuíteintegral nestehead, semreutilizarsuíteantigaparadeclararconclusão.
+
+
+### S6 — mecanismos factuais de uso em38páginas
+- Bloco curto distinto em cada uma das34páginas de recursos e4páginas existentes de criadores de lib/feature-pages.ts. Inventário por slug verificável, sem órfão ou mudança de IDs/conteúdo dos criadores. Descreve escolha do comprador, confirmação de pagamento, acesso, consentimento e registros; sem números/percentuais/promessa de resultado, integração nova ou previsão de receita. Reutiliza renderer e preserva todos os blocos anteriores.
+- Dados estáticos, helper puro sem mutação das páginas base e type-only import para evitar ciclo em runtime. Nenhum endpoint/provedor/email/IA/operação/franquia/dependência/imagem nova. M0 antes/depois mesmo envelope;12,02–12,21% vinculante abaixo60%, desconhecido reprova, venda fechada. CI integral e leitura390/1280/axe do novo bloco nas38URLs exigidos; não é certificaçãoAAA.
+
+- Herdar correção tipada do teste CRM (d899caf) e todos os guards de taxas/aviso visível das basesS2/S3. Falha herdada em39371922139/118461472562 não é tratada como sucesso nem corrigida por rerun isolado; este head requer nova execução integral.
+
+- Product39373120622 verify118465254513: lint/tipos/regressões passaram, navegador parou no teste PathWording já existente na segunda largura antes dos novos38casos. Evidência: botão SSR visível podia receber Enter antes da hidratação; ReactDOM19.2.8 instalado atribui onclick na hidratação (fonte primária react-dom-client.production.js). Esperar esse manipulador DOM real e armar a resposta POST antes do mesmo Enter, mantendo exatamente2requests fake, payload, foco,axe e recusa monetária real. Nenhum sleep, aumento do timeout de resposta, provider real ou mudança no componente/gate de produção. Nova suíte integral obrigatória.
+
+- Integração com homeS4/CRMS5 e históricoentrega71 preservados; novoheadrequerCIintegral. CapturascontinuamsóemCI,bandaaguardandoo dono,semimagemservida.
+
+
+### Entrega72 — confirmação funcional e ativos retidos
 ```json
 {
   "number": 72,
@@ -1316,12 +1336,37 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 }
 ```
 
+### Entrega73 — CRM confirmado no domínio
+```json
+{
+  "number": 73,
+  "pr": 659,
+  "queueItem": 146,
+  "feature": "Public /platform/crm explains people, deals and pipelines with canonical2/5/10pipeline limits, shared record-space ceilings, consent boundaries and actual home/menu/HighLevel/sitemap discovery",
+  "head": "5488b650b41eedd1950d75ff84ad3bf120c7726e",
+  "commit": "5253f69124a99251e183a634051b88615f7f075e",
+  "deployment": "dpl_BQ1reNJUemNeEUces7WRCXYWWMbK",
+  "readyUTC": "2026-10-20T06:09:24.468Z",
+  "readyFortaleza": "2026-10-20 03:09:24",
+  "mergedUTC": "2026-10-20T06:07:39Z",
+  "mergedFortaleza": "2026-10-20 03:07:39",
+  "run": 39377432627,
+  "verify": 118478617948,
+  "redis": 118478618078,
+  "securityRun": 39377432578,
+  "validation": "Full final-head CI passed lint/regressions/typecheck/build/whole synthetic browser, CRM390/1280 keyboard/axe/fit/noAPIwrites, actual home link and shared data limits. READY exactSHA+marktmorgen.com alias;8HTMLroutes200exactDPL plus sitemap200;real CRM plan rows2/5/10,home+HighLevel links,scope+closure present. Noerror/fatal06:06:06.772–06:11:06.772UTC.",
+  "limitations": "No new CRM operation/provider/allowance/price/gate; recorded deal values not forecasts; no SMS/WhatsApp/phone sending or SaaS agency equivalence. Binding M0 unchanged12.02–12.21%,fails60%;sales closed. S4 screenshot assets still held for unconfirmed bandwidth billing condition;no fiscal/margin/AAA certification."
+}
+```
+
 154. **[B2-CONTACT-ACKNOWLEDGMENT] Confirmar a configuração do formulário de contato sem confundir com publicação**
    - Pedido: continuaçãoB2/P0/P3 após implementaçõesS; nenhum número/estado anterior alterado.
    - Estado: **em implementação; branchcodex/contact-acknowledgment; publicar após itensS acionáveis emverificação**.
    - Escopo: comparar HTTP/okbooleano/ausênciadeerro/snapshotcontact já devolvido pelo servidor com parseJoin canônico; bloquearcampos enquantoespera,aria-busy,semduplosenvios;perdaderespostamandaconferirsemalegarnadamudou. Sucessoconfirmaconfiguração,nãovisibilidadedependente deemail/plano. Conteúdodocriador/idiomaspreservados.
    - Prova:14respostasinterceptadasem390/1280,28casos,normalizaçãocanônica,HTTP/truthy/contradição/objetosinválidos/errosherdados/perda/sucesso;nenhumPOSTdecontatochegaaoservidor,nenhummensagemoucontareal. Suíteintegralnocabeçalfinalobrigatória.
-   - Custo: fontecliente+594caracteres,mesmoPOST/resposta/parseJoinexistentes,semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
+   - Custo: fontecliente+599caracteres,mesmoPOST/resposta/parseJoinexistentes,semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
+
+- Integração explícita com mainc7370298f145a4682726b95b3872b0c675b8d2f6 preserva CRM eS6,resolveconflitodedocumentação semdescartar histórico. Alerta decontatousa danger-text existente para contraste7:1 emfundosclaros,comaxe-enhancedrealnoalertaeprovanãoincompleta. EscoponãocertificaAAAgeral. Novasuíteintegralnoheadfinal.
 
 
 155. **[B2-RECOVERY-ACKNOWLEDGMENT] Confirmar preferências de lembrete sem alterar consentimento**
