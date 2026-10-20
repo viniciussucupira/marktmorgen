@@ -2498,6 +2498,8 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Testes sintéticos: criação já oculta, primeira publicação/manual/republicação, datas inválidas/históricas, nenhum fornecedor; navegador390/1280 com fixture isolada, resposta da única solicitação manual existente interceptada, checklist/progresso/preview/axe/largura. Nenhuma conta ou pagamento real, mensagem, IA real ou submissão externa. CI integral e publicação exata pendentes.
 
 - Correção de verificação HT5: Product39454894591/verify118739058968 reprovou o alinhamento explícito do controle de abrir o checklist. O summary recebeu flex/items-center e indicador visual de expansão, mantendo44px e teclado nativo. Exige novo CI integral em cada head derivado, sem rerun isolado.
+
+- Verificação posterior HT5: Product39456167133/verify118743492412 reprovou contraste do hero em390 durante a entrada animada; os mesmos casos nos headsHT2/3/4/6 passaram. O teste agora aguarda fontes e término das animações finitas antes do axe/captura, sem desativar regras de contraste. Exige CI integral no novo head e nos derivados integrados; não é rerun isolado.
 - Documentação: docs/ht5-store-activation.md. Próximo itemHT6; B2 continua depois de todos os HT liberados/condicionados.
 
 188. **[HT6] Esclarecer cadastro sem cartão, preços mensais e elegibilidade do teste**
