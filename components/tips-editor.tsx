@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { tipsWords } from "@/lib/buyer-words/tips";
 import { type Currency, fieldPrefix, formatMoney, moneyField } from "@/lib/money";
-import { MAX_TIPS_HEADING, MAX_TIPS_LINE, MAX_TIP_AMOUNTS, type StoreTips, tipAmounts, tipBounds } from "@/lib/store-tips";
+import { MAX_TIPS_HEADING, MAX_TIPS_LINE, MAX_TIP_AMOUNTS, type StoreTips, tipAmounts, tipBounds, parseTips, readTipAmount } from "@/lib/store-tips";
 
 /**
  * "Support my work" on the store page (lib/store-tips.ts): on or off, the
@@ -53,27 +53,38 @@ export function TipsEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ on, heading, line, amounts }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; bad?: number[] };
-      if (data.ok) {
-        toast(on ? "Support my work is on your store page." : "Support my work is off.");
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      const typed = amounts.filter(value => value.trim() !== "");
+      const parsed = typed.map(value => readTipAmount(value, currency));
+      const expected = parseTips({on,heading,line,amounts:parsed});
+      const saved = data.tips && typeof data.tips === "object" && !Array.isArray(data.tips) ? data.tips as Record<string, unknown> : {};
+      const matches = parsed.every(value => value !== null) && saved.on === expected.on
+        && saved.heading === expected.heading && saved.line === expected.line
+        && Array.isArray(saved.amounts) && saved.amounts.length === expected.amounts.length
+        && saved.amounts.every((value, i) => value === expected.amounts[i]);
+      if (response.ok && data.ok === true && data.error === undefined && matches) {
+        toast("Support settings saved.");
         router.refresh();
         return;
       }
-      if (data.error === "amount") {
-        setBad(data.bad ?? []);
+      const indexes = Array.isArray(data.bad) ? data.bad : [];
+      if (!response.ok && data.ok === false && data.error === "amount" && indexes.length > 0
+        && indexes.every(index => Number.isInteger(index) && index >= 0 && index < amounts.length)) {
+        setBad(indexes as number[]);
         setError(`Each amount has to be a plain number from ${money(min)} to ${money(max)}, like ${moneyField(min * 5, currency)}.`);
         return;
       }
-      setError("Something went wrong on our side. Nothing was changed. Try again in a moment.");
+      setError("We could not confirm whether your support settings were saved. Reload this page to check before trying again.");
     } catch {
-      setError("Something went wrong on our side. Nothing was changed. Try again in a moment.");
+      setError("We could not confirm whether your support settings were saved. Reload this page to check before trying again.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <form id="support" onSubmit={save} className="card mt-8 scroll-mt-32 p-6 sm:p-8" noValidate>
+    <form id="support" onSubmit={save} aria-busy={saving} className="card mt-8 scroll-mt-32 p-6 sm:p-8" noValidate>
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Support my work</p>
       <p className="mt-2 text-ink-soft">
         A box on your store page where a fan who has nothing to buy today can still say thank you: three amounts to press, or
@@ -83,7 +94,7 @@ export function TipsEditor({
       </p>
 
       <label className="mt-5 flex items-start gap-3 text-ink">
-        <input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} className="mt-1 size-5 shrink-0 accent-violet-brand" />
+        <input type="checkbox" disabled={saving} checked={on} onChange={(e) => setOn(e.target.checked)} className="mt-1 size-5 shrink-0 accent-violet-brand" />
         <span className="font-semibold">Show Support my work on my store page</span>
       </label>
       {on && blocked ? (
@@ -102,6 +113,7 @@ export function TipsEditor({
                 <span aria-hidden="true" className="text-sm font-semibold text-ink-soft">{fieldPrefix(currency)}</span>
                 <input
                   id={`tip-amount-${i}`}
+                  disabled={saving}
                   type="text"
                   inputMode="decimal"
                   maxLength={12}
@@ -124,6 +136,7 @@ export function TipsEditor({
           <label htmlFor="tips-heading-field" className="field-label">Heading (optional)</label>
           <input
             id="tips-heading-field"
+            disabled={saving}
             type="text"
             maxLength={MAX_TIPS_HEADING}
             value={heading}
@@ -136,6 +149,7 @@ export function TipsEditor({
           <label htmlFor="tips-line-field" className="field-label">One line under it (optional)</label>
           <textarea
             id="tips-line-field"
+            disabled={saving}
             rows={2}
             maxLength={MAX_TIPS_LINE}
             value={line}
@@ -167,7 +181,7 @@ export function TipsEditor({
         </div>
       </div>
 
-      {error ? <p role="alert" className="mt-4 text-sm font-semibold text-danger">{error}</p> : null}
+      {error ? <p role="alert" className="mt-4 text-sm font-semibold text-danger-text">{error}</p> : null}
       <button type="submit" disabled={saving || !changed} className="btn btn-primary mt-5">
         {saving ? "Saving…" : "Save"}
       </button>
