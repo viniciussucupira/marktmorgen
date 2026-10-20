@@ -1,3 +1,4 @@
+import { checkJoinAcknowledgment } from "./signup-setting-acknowledgment.mjs";
 import { checkSocialAcknowledgment } from "./social-acknowledgment.mjs";
 import { checkRecoveryAcknowledgment } from "./recovery-acknowledgment.mjs";
 import { checkContactAcknowledgment } from "./contact-acknowledgment.mjs";
@@ -744,6 +745,7 @@ try {
   await checkContactAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
   await checkRecoveryAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
   await checkSocialAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
+  await checkJoinAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
   await checkHomeModules({browser,LOCAL,axeSource,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});

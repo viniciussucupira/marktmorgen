@@ -185,3 +185,7 @@ Queue156 reviews SocialsEditor against its existing saved socials array. Success
 Synthetic48cases cover18profile replies and6empty-removal replies at390/1280, intercept every POST and open no external profile or real account/message. The selected alert's enhanced contrast requires an actual pass/no incomplete result; existing darker error text also applies to row hints. Full final-head CI required, not whole-product AAA or actual AT proof.
 
 Client+1198characters, existing pure parseSocials and same request/response; no new provider/data/message operation, price, visible limit, buyer language or commercial gate. Binding M0 still12.02–12.21%,fails60%;salesclosed.
+
+
+## Email sign-up setting: canonical acknowledgment
+Queue157 requires exact saved join fields from the existing response, successful HTTP, boolean ok and no contradictory error. Pending fields lock and announce busy. Uncertain replies request checking again without claiming no change; success confirms settings rather than public availability. Double opt-in and plan/mail availability are unchanged. Synthetic28cases intercept every POST, preserve creator text and buyer language, check actual alert contrast and global mobile fit. Full final-head CI pending. Client+592characters, same operation and pure parser; binding M0 unchanged12.02–12.21%, fails60%, sales closed.

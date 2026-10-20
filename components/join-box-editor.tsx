@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
-import { MAX_JOIN_HEADING, MAX_JOIN_LINE, type StoreJoin } from "@/lib/store-field-rules";
+import { MAX_JOIN_HEADING, MAX_JOIN_LINE, parseJoin, type StoreJoin } from "@/lib/store-field-rules";
 import { joinWords } from "@/lib/buyer-words/join";
 
 /**
@@ -43,22 +43,25 @@ export function JoinBoxEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ on, heading, line }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean };
-      if (data.ok) {
-        toast(on ? "The sign-up box is on your store page." : "The sign-up box is off.");
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      const saved = data.join && typeof data.join === "object" && !Array.isArray(data.join) ? data.join as Record<string, unknown> : {};
+      const expected = parseJoin({on,heading,line});
+      if (response.ok && data.ok === true && data.error === undefined && saved.on === expected.on && saved.heading === expected.heading && saved.line === expected.line) {
+        toast("Email sign-up settings saved.");
         router.refresh();
         return;
       }
-      setError("Something went wrong on our side. Nothing was changed. Try again in a moment.");
+      setError("We could not confirm whether your email sign-up settings were saved. Reload this page to check before trying again.");
     } catch {
-      setError("Something went wrong on our side. Nothing was changed. Try again in a moment.");
+      setError("We could not confirm whether your email sign-up settings were saved. Reload this page to check before trying again.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <form id="signup" onSubmit={save} className="card mt-8 scroll-mt-32 p-6 sm:p-8" noValidate>
+    <form id="signup" onSubmit={save} aria-busy={saving} className="card mt-8 scroll-mt-32 p-6 sm:p-8" noValidate>
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Email sign-up box</p>
       <p className="mt-2 text-ink-soft">
         A box on your store page where visitors join your email list, without having to take anything. Each address joins only
@@ -67,7 +70,7 @@ export function JoinBoxEditor({
       </p>
 
       <label className="mt-5 flex items-start gap-3 text-ink">
-        <input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} className="mt-1 size-5 shrink-0 accent-violet-brand" />
+        <input type="checkbox" disabled={saving} checked={on} onChange={(e) => setOn(e.target.checked)} className="mt-1 size-5 shrink-0 accent-violet-brand" />
         <span className="font-semibold">Show the sign-up box on my store page</span>
       </label>
       {on && blocked ? (
@@ -83,6 +86,7 @@ export function JoinBoxEditor({
           <label htmlFor="join-heading-field" className="field-label">Heading (optional)</label>
           <input
             id="join-heading-field"
+            disabled={saving}
             type="text"
             maxLength={MAX_JOIN_HEADING}
             value={heading}
@@ -95,6 +99,7 @@ export function JoinBoxEditor({
           <label htmlFor="join-line-field" className="field-label">One line under it (optional)</label>
           <textarea
             id="join-line-field"
+            disabled={saving}
             rows={2}
             maxLength={MAX_JOIN_LINE}
             value={line}
@@ -116,7 +121,7 @@ export function JoinBoxEditor({
         </div>
       </div>
 
-      {error ? <p role="alert" className="mt-4 text-sm font-semibold text-danger">{error}</p> : null}
+      {error ? <p role="alert" className="mt-4 text-sm font-semibold text-danger-text">{error}</p> : null}
       <button type="submit" disabled={saving || !changed} className="btn btn-primary mt-5">
         {saving ? "Saving…" : "Save"}
       </button>
