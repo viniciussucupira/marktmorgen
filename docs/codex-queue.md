@@ -1940,7 +1940,7 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 165. **[B2-165] Confirm after-payment note saves and removals accurately.**
-- Estado: **Em implementação**.
+- Estado: **Concluído e publicado na entrega 91**.
 - Require successful HTTP, strict boolean confirmation, no contradictory error and the matching canonical note; removals require explicit null. Lock all fields while pending and preserve the creator draft on uncertain replies. Reuse existing note parsers and existing response; no additional data/provider operation.
 - Synthetic intercepted save/removal cases at 390/1280; full final-head CI pending. Preserve creator content, all note limits and delivery behavior. Client source +728 characters is not bundled size; existing M0 12.02–12.21% still fails60%, sales and Hotmart features remain gated.
 
@@ -2013,3 +2013,65 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 #### B2-166 verification repair
 Full run39407143422 failed pricing FAQ mobile axe target-size; all26 language cases passed. Fix FAQ summaries/links to at least44px high and separate wrapping footer links; retain axe checks and add explicit actual target-height checks plus diagnostic selectors. Full new-head CI required; no isolated rerun or accessibility certification. No new operation, plan limit or price.
+
+
+### Verified functional publication 91
+
+Prior run39404559381 failed four synthetic contradictory-response wording checks. Corrected client handling and reran the entire Product/Redis/security verification on the new head; no isolated rerun was used.
+
+```json
+{
+  "number": 91,
+  "pr": 683,
+  "head": "b7e18d02f755645e7b7375c42a49b935fb790fba",
+  "sha": "ffbeee19487f417bd97373546c6e31a521bbb52e",
+  "deployment": "dpl_CMoS2rcjD6XGxR5XwwdQiVQmnTGZ",
+  "domain": "marktmorgen.com",
+  "mergedAt": "2026-10-20T10:34:46Z",
+  "mergedFortaleza": "2026-10-20 07:34:46",
+  "readyAt": "2026-10-20T10:35:37.183Z",
+  "tests": {
+    "product": 39406820644,
+    "verify": 118574655031,
+    "redis": 118574655306,
+    "security": 39406820676,
+    "syntheticCases": 44
+  },
+  "live": [
+    {
+      "path": "/",
+      "status": 200,
+      "marker": "dpl_CMoS2rcjD6XGxR5XwwdQiVQmnTGZ"
+    },
+    {
+      "path": "/signin",
+      "status": 200,
+      "marker": "dpl_CMoS2rcjD6XGxR5XwwdQiVQmnTGZ"
+    },
+    {
+      "path": "/studio",
+      "status": 200,
+      "marker": "dpl_CMoS2rcjD6XGxR5XwwdQiVQmnTGZ"
+    },
+    {
+      "path": "/platform/path",
+      "status": 200,
+      "marker": "dpl_CMoS2rcjD6XGxR5XwwdQiVQmnTGZ"
+    },
+    {
+      "path": "/pricing",
+      "status": 200,
+      "marker": "dpl_CMoS2rcjD6XGxR5XwwdQiVQmnTGZ"
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "marker": "dpl_CMoS2rcjD6XGxR5XwwdQiVQmnTGZ"
+    }
+  ],
+  "runtime": "No error/fatal logs 2026-10-20T10:31:09.995Z–2026-10-20T10:36:09.995Z",
+  "changes": "Canonical note save and explicit-null removal confirmation; all fields locked while pending; creator draft preserved and honest uncertainty.",
+  "costs": "Existing storage/provider operations and limits unchanged; no delivery operation added. Binding M0 still12.02–12.21%, fails60%, sales closed.",
+  "failedPriorRun": 39404559381
+}
+```
